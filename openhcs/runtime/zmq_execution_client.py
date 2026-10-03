@@ -79,6 +79,8 @@ if TYPE_CHECKING:
         CustomFunctionRegistrationDestinationRequest,
         CustomFunctionRegistrationRequest,
         CustomFunctionRegistrationResult,
+        CustomFunctionRegistrationHandle,
+        CustomFunctionRegistrationObservation,
         FunctionCatalogControlRequest,
         FunctionCatalogControlRequestABC,
         FunctionCatalogPage,
@@ -789,7 +791,6 @@ class FunctionCatalogExecutionClient(
         from openhcs.agent.dto.functions import (
             CustomFunctionRegistrationDestinationControlResponse,
         )
-
         response = self._send_function_catalog_exchange(
             request,
             operation_deadline=operation_deadline,
@@ -799,6 +800,19 @@ class FunctionCatalogExecutionClient(
                 response
             ).destination
         )
+
+    def observe_custom_function_registration(
+        self, handle: CustomFunctionRegistrationHandle,
+    ) -> CustomFunctionRegistrationObservation:
+        """One read-only exchange; never register/load the requested source."""
+        from openhcs.agent.dto.functions import (
+            CustomFunctionRegistrationObservationRequest,
+            CustomFunctionRegistrationObservationControlResponse,
+        )
+        response = self._send_function_catalog_exchange(
+            CustomFunctionRegistrationObservationRequest(handle),
+        )
+        return CustomFunctionRegistrationObservationControlResponse.from_control_response(response).value
 
     def function_catalog_preparation(
         self,

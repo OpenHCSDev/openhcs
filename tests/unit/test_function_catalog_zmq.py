@@ -930,10 +930,10 @@ def test_native_registration_does_not_start_or_wait_for_cold_preparation(monkeyp
     response = ZMQControlMessageRouter.handle(
         FunctionCatalogControlPayload.from_request(request).to_dict(), context
     )
-    assert (
-        response["status"] == "error"
-        and "No source was dispatched" in response["error"]
-    )
+    result = CustomFunctionRegistrationControlResponse.from_control_response(response).result
+    assert result.errors[0].code == "function_catalog_not_ready"
+    assert "No source was dispatched" in result.errors[0].message
+    assert result.observation_handle.server_identity == ProcessIdentity.current()
     assert context.function_catalog_preparation._future is None
 
 

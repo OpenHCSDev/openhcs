@@ -475,8 +475,10 @@ class CustomFunctionRegistrationRenderer(McpDevOutputRenderer):
         if errors:
             return "\n".join(
                 (
-                    "Custom function registration: failed",
+                    "Custom function registration: incomplete observation or projection",
+                    f"Retained native receipt registered_count: {McpDevPayloadProjection.text(payload.get('registered_count'))} (zero/absent does not prove no mutation)",
                     *ViewerValidationRenderer._error_lines(errors),
+                    "Read-only observation handle: " + json.dumps(payload.get("observation_handle"), sort_keys=True),
                 )
             )
         functions = McpDevPayloadProjection.sequence_of_mappings(

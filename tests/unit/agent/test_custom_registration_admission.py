@@ -24,7 +24,6 @@ from openhcs.agent.dto.functions import (
 )
 from openhcs.agent.path_policy import AgentPathPolicy, AgentPathPolicyError
 from openhcs.agent.services.endpoint_function_catalog_service import (
-    CustomFunctionRegistrationUncertainError,
     ZMQFunctionCatalogService,
 )
 from openhcs.agent.services.function_catalog_service import FunctionCatalogService
@@ -169,8 +168,10 @@ def test_exact_owned_route_and_store_precede_mutation(tmp_path, wrong_store, tim
             catalog.register_custom_function(request(root))
         assert not mutations
     elif timeout:
-        with pytest.raises(CustomFunctionRegistrationUncertainError, match="uncertain"):
-            catalog.register_custom_function(request(root))
+        result = catalog.register_custom_function(request(root))
+        assert result.errors[0].code == "custom_function_registration_uncertain"
+        assert result.errors[0].exception_type == "TimeoutError"
+        assert result.observation_handle.server_identity == ProcessIdentity.current()
         assert len(mutations) == 1
         assert catalog._config_provider().default_port == 15993
     else:
@@ -332,10 +333,10 @@ def test_wrong_owner_mutation_receipt_is_uncertain_not_replayed(tmp_path):
         path_policy=policy(tmp_path),
     )
     try:
-        with pytest.raises(
-            CustomFunctionRegistrationUncertainError, match="Selected server"
-        ):
-            catalog.register_custom_function(request(tmp_path))
+        result = catalog.register_custom_function(request(tmp_path))
+        assert result.errors[0].code == "custom_function_registration_uncertain"
+        assert result.errors[0].message == "Registration returned a different execution owner."
+        assert result.observation_handle.server_identity == ProcessIdentity.current()
         assert len(mutations) == 1
         assert catalog._config_provider().default_port == 15993
     finally:
@@ -382,7 +383,7 @@ def test_readiness_failure_precedes_mutation_and_is_not_postdispatch_uncertainty
     try:
         with pytest.raises(FunctionCatalogNotReadyError) as failure:
             catalog.register_custom_function(request(tmp_path))
-        assert not isinstance(failure.value, CustomFunctionRegistrationUncertainError)
+        assert failure.value.preparation.outcome is not FunctionCatalogPreparationOutcome.READY
         assert observed == ["destination", "read-only-preparation"]
         assert catalog._config_provider().default_port == 15993
     finally:

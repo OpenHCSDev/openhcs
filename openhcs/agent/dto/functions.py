@@ -17,6 +17,7 @@ from zmqruntime.startup import EndpointStartupStatus
 
 from openhcs.agent.dto.common import (
     SCHEMA_VERSION,
+    AgentError,
     AgentDataclassCliRequest,
     AgentResultEnvelope,
 )
@@ -25,6 +26,7 @@ from openhcs.agent.exceptions import AgentFacingErrorMixin
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.core.artifacts import ArtifactViewerStreaming
 from openhcs.core.function_reference import FunctionReference
+from openhcs.processing.custom_functions.source_namespace import CustomFunctionSource
 
 DEFAULT_FUNCTION_DETAIL_DOC_CHARS = 6_000
 
@@ -37,6 +39,7 @@ class FunctionCatalogControlMessageType(str, Enum):
     READ_DETAIL = "openhcs_function_detail_read"
     READ_REFERENCE = "openhcs_function_reference_read"
     REGISTER_CUSTOM = "openhcs_custom_function_register"
+    OBSERVE_CUSTOM_REGISTRATION = "openhcs_custom_function_registration_observe"
     CUSTOM_REGISTRATION_DESTINATION = "openhcs_custom_function_registration_destination"
     START_PREPARATION = "openhcs_function_catalog_prepare"
     READ_PREPARATION = "openhcs_function_catalog_preparation_status"
@@ -108,8 +111,8 @@ class FunctionSearchRequest(FunctionCatalogControlRequestABC):
 
 
 @dataclass(frozen=True, slots=True)
-class FunctionCatalogPreparationHandle(AgentDataclassCliRequest):
-    """The one preparation owner in this exact execution-server incarnation."""
+class FunctionCatalogOperationHandle(AgentDataclassCliRequest):
+    """Incarnation authority shared by catalog lifecycle operations."""
 
     connection: ExecutionConnectionSpec
     server_identity: ProcessIdentity
@@ -117,8 +120,68 @@ class FunctionCatalogPreparationHandle(AgentDataclassCliRequest):
     def require_current_owner(self) -> None:
         if self.server_identity != ProcessIdentity.current():
             raise RuntimeError(
-                "Function catalog preparation owner changed; handle is stale."
+                "Function catalog operation owner changed; handle is stale."
             )
+
+
+@dataclass(frozen=True, slots=True)
+class FunctionCatalogPreparationHandle(FunctionCatalogOperationHandle):
+    """The one preparation owner in this exact execution-server incarnation."""
+
+
+@dataclass(frozen=True, slots=True)
+class CustomFunctionRegistrationHandle(FunctionCatalogOperationHandle):
+    """Content/owner proof for observing publication, not replay permission."""
+
+    content_sha256: str
+    function_name: str | None
+    persist: bool
+    storage_dir: str | None
+
+    @classmethod
+    def from_request(cls, request: CustomFunctionRegistrationRequest) -> Self:
+        if request.server_identity is None:
+            raise ValueError("Registration observation requires an admitted server identity.")
+        return cls(
+            connection=request.connection, server_identity=request.server_identity,
+            content_sha256=hashlib.sha256(request.source_code.encode("utf-8")).hexdigest(),
+            function_name=request.function_name, persist=request.persist,
+            storage_dir=request.storage_dir,
+        )
+
+    def require_named_source(self) -> CustomFunctionSource:
+        if self.function_name is None:
+            raise ValueError("Persisted registration observation requires its admitted name.")
+        return CustomFunctionSource(self.function_name, self.content_sha256)
+
+
+class CustomFunctionRegistrationObservationOutcome(str, Enum):
+    """Current canonical proofs; absence never establishes a failed mutation."""
+
+    NOT_OBSERVED = "not_observed"
+    PUBLISHED = "published"
+    PERSISTED_ONLY = "persisted_only"
+    REGISTERED = "registered"
+
+    @classmethod
+    def from_proofs(cls, *, published: bool, persisted: bool, persist: bool) -> Self:
+        if published:
+            return cls.REGISTERED if persisted or not persist else cls.PUBLISHED
+        return cls.PERSISTED_ONLY if persisted else cls.NOT_OBSERVED
+
+
+@dataclass(frozen=True, kw_only=True)
+class CustomFunctionRegistrationObservation(AgentResultEnvelope):
+    handle: CustomFunctionRegistrationHandle
+    published_sources: tuple[CustomFunctionSource, ...] = ()
+    persisted_source: CustomFunctionSource | None = None
+    outcome: CustomFunctionRegistrationObservationOutcome = field(init=False)
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "outcome", CustomFunctionRegistrationObservationOutcome.from_proofs(
+            published=bool(self.published_sources), persisted=self.persisted_source is not None,
+            persist=self.handle.persist,
+        ))
 
 
 class FunctionCatalogPreparationOutcome(str, Enum):
@@ -261,6 +324,12 @@ class CustomFunctionRegistrationDestinationRequest(FunctionCatalogControlRequest
 
     function_name: str | None = None
     message_type = FunctionCatalogControlMessageType.CUSTOM_REGISTRATION_DESTINATION
+
+
+@dataclass(frozen=True, slots=True)
+class CustomFunctionRegistrationObservationRequest(FunctionCatalogControlRequestABC):
+    handle: CustomFunctionRegistrationHandle
+    message_type = FunctionCatalogControlMessageType.OBSERVE_CUSTOM_REGISTRATION
 
 
 @dataclass(frozen=True, slots=True)
@@ -660,6 +729,25 @@ class CustomFunctionRegistrationResult(AgentResultEnvelope):
     next_steps: tuple[str, ...] = ()
     connection: ExecutionConnectionSpec = field(default_factory=ExecutionConnectionSpec)
     server_identity: ProcessIdentity | None = None
+    observation_handle: CustomFunctionRegistrationHandle | None = None
+
+    @classmethod
+    def uncertain(
+        cls, request: CustomFunctionRegistrationRequest, error: Exception,
+    ) -> Self:
+        """Preserve the actual cause and same-owner read-only recovery identity."""
+        handle = CustomFunctionRegistrationHandle.from_request(request)
+        cause = error.to_agent_error() if isinstance(error, AgentFacingErrorMixin) else AgentError.from_exception(
+            "custom_function_registration_uncertain", error,
+            hint="Preserve the original request. Observe this handle; do not replay registration. Absence is not proof of no mutation.",
+        )
+        return cls(
+            schema_version=SCHEMA_VERSION, persisted=request.persist,
+            storage_dir=request.storage_dir, connection=request.connection,
+            server_identity=request.server_identity, observation_handle=handle,
+            errors=(cause,),
+            next_steps=("Observe this observation_handle with openhcs_get_custom_function_registration_status; do not replay source.",),
+        )
 
 
 class CustomFunctionRegistrationControlResponse(
@@ -684,6 +772,13 @@ class CustomFunctionRegistrationDestinationControlResponse(
     @property
     def destination(self) -> CustomFunctionRegistrationDestination:
         return self.value
+
+
+class CustomFunctionRegistrationObservationControlResponse(
+    FunctionCatalogControlResponseBase[CustomFunctionRegistrationObservation]
+):
+    field = FunctionCatalogControlField.RESULT
+    value_type = CustomFunctionRegistrationObservation
 
 
 def catalog_page(
