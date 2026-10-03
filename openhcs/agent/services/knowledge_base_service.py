@@ -1027,7 +1027,11 @@ class KnowledgeBaseService:
             hit
             for _, _, hit in sorted(
                 ranked_hits,
-                key=lambda item: (-item[0], item[1]),
+                key=lambda item: (
+                    -item[0],
+                    item[2].section is not None,
+                    item[1],
+                ),
             )[:hit_limit]
         )
 

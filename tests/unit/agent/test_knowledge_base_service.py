@@ -120,6 +120,48 @@ def test_knowledge_base_search_returns_source_sections():
     assert "ObjectState" in result.hits[0].snippet
 
 
+def test_search_prefers_declared_document_matches_over_equal_body_matches(tmp_path):
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    (docs / "notes.md").write_text(
+        "# Setup notes\n\n"
+        + "\n".join(
+            f"## Note {index}\n\nThis body mentions a recipe.\n"
+            for index in range(8)
+        ),
+        encoding="utf-8",
+    )
+    (docs / "catalog.md").write_text("# Catalog\n", encoding="utf-8")
+    (docs / "handbook.md").write_text("# Handbook\n", encoding="utf-8")
+    (docs / "protocol.md").write_text(
+        "# Protocol\n\n## Recipe details\n\nThis recipe has specific instructions.\n",
+        encoding="utf-8",
+    )
+    service = KnowledgeBaseService(
+        repo_root=tmp_path,
+        document_specs=(
+            _document_spec("notes", "Setup notes", "docs/notes.md"),
+            _document_spec("catalog", "Recipe catalog", "docs/catalog.md"),
+            _document_spec("handbook", "Recipe handbook", "docs/handbook.md"),
+            _document_spec("protocol", "Protocol", "docs/protocol.md"),
+        ),
+    )
+
+    result = service.search(KnowledgeBaseSearchRequest(query="recipe", limit=4))
+
+    specific, catalog, handbook, body = result.hits
+    assert specific.document.document_id == "protocol"
+    assert specific.section.section_id == "recipe-details"
+    assert specific.score > catalog.score
+    assert catalog.document.document_id == "catalog"
+    assert catalog.section is None
+    assert handbook.document.document_id == "handbook"
+    assert handbook.section is None
+    assert body.document.document_id == "notes"
+    assert body.section.section_id == "note-0"
+    assert catalog.score == handbook.score == body.score
+
+
 def test_biological_evidence_is_retrievable_with_primary_source_attribution():
     service = KnowledgeBaseService()
     document_id = "openhcs_biological_image_analysis_evidence"
