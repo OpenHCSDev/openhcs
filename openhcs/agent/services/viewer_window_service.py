@@ -1099,6 +1099,7 @@ class ZMQViewerWindowGateway(ViewerWindowGatewayABC):
         )
 
     def presentation_control(self, request: ViewerWindowPresentationRequest) -> JsonObject:
+        request = request.start_operation()
         return self._send_control_message(
             request,
             {
@@ -1404,7 +1405,7 @@ class ViewerWindowService:
             response = self._gateway.presentation_control(request)
             return request.result_type.from_native_response(
                 request.connection, response,
-            )
+            ).admit_request(request)
         except Exception as error:
             return request.result_type.from_error(
                 connection=request.connection,

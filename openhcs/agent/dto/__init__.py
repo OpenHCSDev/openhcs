@@ -148,6 +148,8 @@ __all__ = (
     "ViewerWindowLayerValidationSummary",
     "ViewerWindowLayerIsolationRequest",
     "ViewerWindowLayerIsolationResult",
+    "ViewerWindowLayerRetirementRequest",
+    "ViewerWindowLayerRetirementResult",
     "ViewerWindowLayerVisibilityRecord",
     "ViewerWindowImageSampleRequest",
     "ViewerWindowImageSampleResult",
