@@ -186,6 +186,8 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowIntensityWindowResult,
     ViewerWindowLayerIsolationRequest,
     ViewerWindowLayerIsolationResult,
+    ViewerWindowLayerRetirementRequest,
+    ViewerWindowLayerRetirementResult,
     ViewerWindowNavigationRequest,
     ViewerWindowNavigationResult,
     ViewerWindowPayloadRequest,
@@ -3375,6 +3377,26 @@ class NavigateViewerWindowCapability(ViewerWindowCliConnectionCapability):
         service=lambda context: context.viewer_window_service,
         method=lambda service, request: service.navigate_window(request),
     )
+
+
+class RetireViewerWindowLayersCapability(ViewerNativePresentationCapability):
+    name = "openhcs_retire_viewer_window_layers"
+    cli_command = "retire-viewer"
+    title = "Retire explicit viewer layers"
+    description = (
+        "After viewer settlement, removes only explicitly selected mounted routes "
+        "and releases their native layers and receiver payload caches. Supply "
+        "expected_producers as a route-key mapping to each route's complete "
+        "producer_identities from viewer state, including invocation_key. The "
+        "whole set is checked before removal. Pending intake/display mutations "
+        "must reach a known terminal state first; known terminal failed candidates "
+        "can be retired. Untargeted routes and persisted source/results remain "
+        "intact. Hiding layers is not retirement."
+    )
+    side_effects = ("retires_explicit_viewer_layers",)
+    data_exposure = ("viewer_layer_retirement",)
+    input_contract = ViewerWindowLayerRetirementRequest
+    output_contract = ViewerWindowLayerRetirementResult
 
 
 class IsolateViewerWindowLayersCapability(ViewerWindowCliConnectionCapability):
