@@ -323,3 +323,23 @@ and untouched. Full hashes, commands, ownership and release boundaries are in
 Source and installed writer/projection behavior are ready. Actual public MCP
 live settlement and persisted reopening/alignment remain unverified until
 parent releases one exact engineering slot; no runtime/viewer was launched.
+
+Public journey preparation checkpoint
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Parent named the future existing H00294 helpers (VNC5998), native6012/7012
+and viewer6013/7013; custody remains scientific and NOT released at preparation.
+Complete ``pipeline-live01.py``, reviewed ``point_volume_fixture_494.py``,
+global config and original journalled ``launch-live01.sh`` are now saved in
+engineering494. ``LIVE01-PREPARATION.rst`` records the ordered producer,
+automatic-settlement, same-viewer persisted reopening, calibration/feature
+linkage and genuine XY/XZ/YZ acceptance journey. Only the original four own
+5x7 uint16 source planes are admitted; source-domain/metadata construction
+remains with the original declarations and runtime. No SCI source is consulted.
+
+Stdlib AST/JSON and shell syntax checks pass (``preparation01.log``); this is
+NOT registration, public validation/compile or native acceptance. No project
+imports/client/native/viewer start occurs. Runtime remains one aggregate4GiB,
+noSwap/CPU1, ordinary10s observations and original handle custody. Packaged
+target01 stays unchanged and requires no rebuild for this documentation-only
+checkpoint. Actual slot/resource admission and every live contract are pending.
