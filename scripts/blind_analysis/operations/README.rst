@@ -1,0 +1,84 @@
+One funded programme, immutable run permissions
+==============================================
+
+These NEXT versions complete the original Bash/JQ operations family. One fixed
+funding root owns current membership, retained history, aggregate hardware and
+joint disk admission. Each immutable run owns its author declarations, source,
+configuration, operations, permissions, helpers, recording paths and75min clock.
+No Python runtime, client timeout, installed science or current packet changes.
+
+Project and publish through the existing projector
+------------------------------------------------
+
+An initial reviewed run declares funding_root and funded_members references to
+its own authors. Parent freezes its run and release before ONE initialization::
+
+  FLEET_PARENT_RELEASED=1 bash operations/project-program.sh initialize FUNDING RUN absent
+
+For a successor, declare predecessor_program_root=FUNDING, run_template_root
+pointing to the original immutable configuration owner, and the original
+members/retired_members/additional_authors hooks with exact custody receipts.
+The template supplies defaults, not funding membership or current reservations::
+
+  bash operations/project-program.sh prepare FUNDING NEXT PACKAGE-QUALIFICATION.json
+
+The original successor JQ produces only NEXT's own physical author declarations
+and a funded_members proposal of references. The parent freezes NEXT, including
+all operation dependencies, source/skill/config/input identities and the actual
+release. Funding is deliberately mutable and is never listed as an immutable
+file in the run freeze. Parent alone publishes against its reviewed revision::
+
+  FLEET_PARENT_RELEASED=1 bash operations/project-program.sh publish FUNDING NEXT EXPECTED_SHA256
+
+Publication and admission share program.lock at FUNDING. Publication exclusively
+commits membership and FULL retired output roots together using atomic rename;
+admission reads one shared-locked revision. Missing custody, stale revision,
+unknown or ambiguous members, missing original owners and overlapping ledger
+roots are rejected. No failed/UNKNOWN client or PID absence implies retirement.
+The original custody files and explicit parent release authorize retirement.
+
+The current funding document has only references and joint-budget fields. It
+stores no source, configuration, per-run permission or physical helper catalog.
+Run funded_members is a frozen publication proposal, never an ongoing roster.
+Continuing authors keep the SAME FUNDING path throughout, so the next admission
+sees retirement without modifying their immutable run or source dependencies.
+
+Launch and record through the same original owners
+------------------------------------------------
+
+Use operations/launch-author.sh FUNDING SLOT --preflight for an inert source
+projection. Actual author launch needs parent release, exact writer/helper
+custody, original admission and the immutable RUN freeze. The launcher preserves
+fresh masked history, readonly raw input, original configured model/provider,
+per-author lock, recording and CLI scope. It does not adopt an existing author.
+
+Use the canonical AUTHOR-PACKET.rst for every new declaration. Start the ONE
+recorded interactive client with tools.exec_command tty=true::
+
+  FLEET_PARENT_RELEASED=1 bash "$FLEET_OPERATIONS/recorded-mcp.sh" "$FLEET_ROOT" "$FLEET_SLOT" startup01
+
+The recorder calls admission once BEFORE MCP journals. Known pre-dispatch
+rejection leaves a unique observation, not client custody. A later authorized
+checkpoint may use a new observation name within the original deadline. Once
+any MCP journal/first-start marker exists, retain the same handle: exact child
+failure or UNKNOWN is never converted into retryable admission. The client
+reads SCI/CPU limits from its own run, not the newest funding budget. Original
+environment, path masks, first-start clock and10s request idle remain unchanged.
+
+Before scientific actions resource-check.sh FUNDING SLOT UNIQUE_PHASE consumes
+current membership and sums each run's own output/scratch limits. FULL closed
+outputs remain once; contained scratch is not charged twice. Helpers use the
+original lifecycle performers and declared InvocationID custody; scientific
+writer retirement is independent. No helper/provider/native operation is part
+of the source controls. Future installed entrypoint and operational release are
+parent-owned acceptance after this source checkpoint.
+
+Historical borrowers
+--------------------
+
+Only operations/ is the canonical tracked NEXT family. At the reused worker
+checkout, old root-level shell/JQ files remain physically byte-identical,
+untracked, for historical frozen symlink borrowers. No current packet, target,
+deadline, permission or transitive dependency is redirected. They are evidence
+custody, not a future compatibility path. Do not clean or checkout another
+revision over them until parent confirms every borrower terminal/detached.
