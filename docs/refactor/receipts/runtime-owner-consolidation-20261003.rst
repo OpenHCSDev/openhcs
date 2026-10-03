@@ -62,6 +62,18 @@ passes all 100 tests. After merging PR #538, the exact retained-plane and alias
 controls pass all ten tests; an identical test duplicated by Git's merge is
 removed, leaving its original definition intact.
 
+``CellProfilerOutputRecordRequest`` now specializes the existing input-binding
+owner. Adapter, kwargs and current image are inherited once, and two temporary
+binding-holder constructions are removed. The binding edge operation remains
+``artifact_value(edge)``; the record's distinct declaration operation is
+``declared_artifact_value(spec)``. Output-plan admission, exact endpoints,
+reference broadcasts, live per-read validation and mutation epochs remain
+separate and tested. Explicit subsets satisfy the inherited admission law;
+record construction is keyword-only. PR #544 is merged, closing #542. After
+merging latest main ``8ab4a0df7``, its clean candidate ``a23978e3c`` passes
+all 470 tests in the seven-file CP gate. No pipeline timing gain is claimed
+for this lane.
+
 Publication reader consolidation uses the existing document handler and source
 projection builder. Required projection-only viewer consumers remain. Its 94
 reader controls pass; four saved-operand replays remove 151ms median locally
@@ -94,6 +106,14 @@ their counts are not a combined whole-branch pass. NRA original-class census,
 family projection and method comparison support ownership inspection, not
 complete runtime equivalence. Unchanged method bodies do not prove constructor
 or effect behavior; those have separate executed controls.
+
+Fresh paired evidence at ``c59eaa55f`` is retained under
+``benchmark/results/perf_invocation_owner_paired_20261003``. All eight strict
+scientific comparisons pass. Mean 3D execution is 9.021577s versus native
+14.793260s (1.640x); Speckles is 1.554196s versus 1.964025s (1.264x).
+Two observations have substantial spread and do not establish a causal gain.
+This source precedes the output-record specialization. Its remaining execution
+gap to 2x is 1.624947s for 3D and 0.572183s for Speckles.
 
 PR #394 remains draft. Its original whole-branch R0/R1 obligations, installed
 consumer acceptance, full-catalog parity and fresh full30/scaling figures
