@@ -298,7 +298,7 @@ def test_plate_reference_prepares_compiles_and_runs_in_original_parent(
                 source.name, path, artifact_type=source.artifact_type,
             ),),
             artifact_output=ArtifactOutputPlan(
-                output.name, f"/memory/{axis_id}/summary",
+                output.name, "/memory/plate/summary",
                 artifact_type=output.artifact_type, relations=output.relations,
             ),
             metadata_writer=axis_id == "axis-a",
