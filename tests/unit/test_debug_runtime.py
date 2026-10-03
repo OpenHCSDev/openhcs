@@ -79,7 +79,15 @@ from openhcs.core.artifacts import (
     ImageArtifactType,
     ObjectLabelsArtifactType,
     MeasurementsArtifactType,
+    NoMainFlowOutput,
     RelationshipsArtifactType,
+)
+from openhcs.core.artifact_key_selection import (
+    AdapterRecordedArtifactOutputPolicy,
+    NativeReturnArtifactOutputPolicy,
+)
+from openhcs.interop.cellprofiler.runtime.adapter import (
+    CellProfilerRecordedArtifactOutputPolicy,
 )
 from openhcs.core.runtime_adapters import RuntimeAdapterSpec
 from openhcs.core.measurement_row_materialization import (
@@ -656,6 +664,42 @@ def test_debug_execution_config_normalizes_compile_cache_payload():
     assert (
         compile_payload["replay_mode"] == DebugReplayMode.PERSISTENT_PAUSED_WORKER.value
     )
+
+
+@pytest.mark.parametrize(
+    "output_policy",
+    [
+        CellProfilerRecordedArtifactOutputPolicy,
+        AdapterRecordedArtifactOutputPolicy,
+        NativeReturnArtifactOutputPolicy,
+    ],
+)
+def test_outputless_chain_uses_declared_owner_instead_of_selected_output_count(
+    output_policy,
+):
+    def publish(image, *, runtime):
+        return image
+
+    invocation = DebugRuntimeFixture.compiled_invocation(
+        publish,
+        runtime_adapter=RuntimeAdapterSpec(
+            "runtime",
+            lambda request: object(),
+            artifact_output_policy=output_policy,
+        ),
+    )
+    assert not invocation.adapter_records_artifact_outputs
+    image = np.arange(6, dtype=np.uint16).reshape(1, 2, 3)
+    result = DebugRuntimeFixture.execute_function_chain(
+        initial_data_stack=image,
+        invocations=(invocation,),
+        context=DebugExecutionContextStub(debug_event_sink=NoOpDebugEventSink()),
+    )
+    if output_policy is CellProfilerRecordedArtifactOutputPolicy:
+        assert isinstance(result, NoMainFlowOutput)
+    else:
+        assert not isinstance(result, NoMainFlowOutput)
+        np.testing.assert_array_equal(image_payload_data(result), image)
 
 
 def test_execute_chain_emits_debug_invocation_events():

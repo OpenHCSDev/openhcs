@@ -1550,7 +1550,7 @@ class FunctionRuntimeScope(PatternGroupExecutionScope):
                 return current_stack
             current_memory_type = executor.memory_types().output_type
         if self.compiled_group.preserves_input_main_flow() and all(
-            invocation.adapter_records_artifact_outputs
+            invocation.contract.artifact_output_policy.records_outputs
             for invocation in self.compiled_group.invocations
         ):
             return NoMainFlowOutput()

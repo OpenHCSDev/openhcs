@@ -945,7 +945,7 @@ class CallableContract(ArtifactPlanKeySelector):
     def preserves_input_main_flow(self) -> bool:
         """Return whether declared artifact outputs leave main flow unchanged."""
 
-        return bool(self.artifact_outputs) and not self.main_flow_outputs
+        return self.artifact_output_policy.preserves_input_main_flow(self)
 
     @property
     def runtime_adapter(self) -> RuntimeAdapterSpec | None:

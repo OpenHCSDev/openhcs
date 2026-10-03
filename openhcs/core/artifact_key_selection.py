@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
-from typing import ClassVar, TypeVar
+from typing import TYPE_CHECKING, ClassVar, TypeVar
 
 from openhcs.core.artifacts import (
     ArtifactOutputPlan,
@@ -17,11 +17,19 @@ from openhcs.core.artifacts import (
 
 ArtifactPlanT = TypeVar("ArtifactPlanT", bound=ArtifactPlan)
 
+if TYPE_CHECKING:
+    from openhcs.core.callable_contract import CallableContract
+
 
 class ArtifactOutputPolicy(ABC):
     """Declaration-owned recording and payload obligations for output artifacts."""
 
     records_outputs: ClassVar[bool]
+
+    @classmethod
+    def preserves_input_main_flow(cls, contract: CallableContract) -> bool:
+        """Derive native return behavior from the declared output roster."""
+        return bool(contract.artifact_outputs) and not contract.main_flow_outputs
 
     @classmethod
     def validate_output_declarations(cls, specs: ArtifactSpecCollection) -> None:
