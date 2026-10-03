@@ -23,12 +23,19 @@ terms = (
 for path, root in roots:
     repo = Repository(path)
     revision = repo.git("rev-parse", "HEAD").strip()
-    package = Package.load(repo, revision, root)
-    print(json.dumps({"root": str(path), "scope": root, "revision": revision,
-                      "parsed": len(package.modules), "unparsed": package.unparsed}))
-    assert not package.unparsed
-    for module in package.modules:
-        if path != Path.cwd() or any(term in module.text for term in terms):
-            print(json.dumps({"root": str(path), "path": module.path,
-                              "ast": ast.dump(module.tree, include_attributes=True)}))
+    # Same complete tracked source set, loaded serially through Package's owner.
+    scopes = sorted({
+        str(Path(root) / Path(source).relative_to(root).parts[0])
+        for source in repo.python_files(revision, root)
+    })
+    for scope in scopes:
+        package = Package.load(repo, revision, scope)
+        print(json.dumps({"root": str(path), "scope": scope, "revision": revision,
+                          "parsed": len(package.modules), "unparsed": package.unparsed}), flush=True)
+        assert not package.unparsed
+        for module in package.modules:
+            if path != Path.cwd() or any(term in module.text for term in terms):
+                print(json.dumps({"root": str(path), "path": module.path,
+                                  "ast": ast.dump(module.tree, include_attributes=True)}))
+        del package
 print(json.dumps({"limits": "original parser, full selected module ASTs; not global R1/runtime proof"}))
