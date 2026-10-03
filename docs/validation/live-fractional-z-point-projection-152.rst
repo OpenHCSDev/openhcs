@@ -343,3 +343,60 @@ imports/client/native/viewer start occurs. Runtime remains one aggregate4GiB,
 noSwap/CPU1, ordinary10s observations and original handle custody. Packaged
 target01 stays unchanged and requires no rebuild for this documentation-only
 checkpoint. Actual slot/resource admission and every live contract are pending.
+Actual public failure03 and source-owner repair04
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Parent released the original programme on recovered94. Original client
+PTY39222/InvocationID1a31b8490e614741865cca14e6775244/start1790998807 ran
+unchanged target01. The read-only original input could not admit workspace
+initialization; four326B TIFFs were staged byte-identically under admitted
+output/input-staged01, preserving original plate_path through the public
+execution_plate_path contract. The original rejection and session-1 remain;
+only distinct session-2 compiled and executed. No source or registration replay.
+
+Compile871111d1-764e-434f-a8f9-e2c22329839d COMPLETE. Single public execution
+113462a1-229b-478a-b4a5-0e1cd1a53cb7 FAILED in original point writer/core3268,
+ROIFractionalZ.source_component_domain92: ``3D point ROI source planes vary
+outside Z.`` This occurred before returning PointROIOutput/point settlement.
+One main image route streamed; no point archive or runtime-values export was
+completed. Actual raw PNG opened personally. Point triples/calibration/row
+alignment/reopen are MISSING, not a native acceptance. All original journals,
+full trace, PNG and typed closes are frozen in engineering494/LIVE03-TERMINAL.rst
+and LIVE03-FROZEN.sha256. Native2005980/create1790998932.22 and viewer2039581/
+create1790999389.18 both public ACK/process_exited/endpoint_terminated/succeeded
+true; four ports and all owned PIDs gone, original scope inactive. Client exit1
+is retained (earlier strict argument rejections), separate from failed science.
+Peak2403676160B/noSwap under4GiB. Helpers and three SCI remain untouched.
+
+Actual public compiled source facts are retained in
+engineering494/PUBLIC-PLANE-FACTS03.json. The original guard's only non-Z raw-map
+disagreements are OriginalSourceMetadata containing literal Z000..003 and
+SourceFilterPaths containing each distinct original TIFF path. Canonical
+well/site/channel/time and source calibration agree; Z is ordered0..3. Failed
+runtime table metadata was not exported, so this is compiled-source evidence,
+not a fabricated recovered runtime table. Original source flow passes complete
+plane provenance through the measurement projection to the original writer.
+
+This is IDEN-7 (a check wider than the coordinate question) and BOUND-2 (bypassing
+the existing component owner). Fix ONLY ROIFractionalZ.source_component_domain:
+derive coordinates through source_component_metadata_items and its original
+SourceComponentProjectionStrategy/SourceMetadataRoleView, compare nominal
+non-Z membership/values, validate uniform SourceVoxelSpacing through its owner,
+and return the FULL original domain unchanged. Delete raw all-key equality;
+do not discard provenance, duplicate a component roster, fabricate canonical
+metadata, modify compiler/source construction/stack, or weaken Z bounds.
+Original writer and persisted-reopen service already consume this one guard.
+Necessary exact seam was posted to Root394, comment5965305655. Parent explicitly
+released source-only494 repair; no new runtime/wheel release is inferred.
+
+Original refactor-audit AST traversal was reused file-at-a-time, including
+registered coordinate/role/calibration families and every guard consumer:
+engineering494/AST-FAMILY04.json,704 OpenHCS and95 actual paired PolyStore/ZMQ
+modules, no parse omissions. Named AST coverage is not a global NRA proof or
+dynamic equivalence proof. Current main87d9a99a integrated normally; determining
+#509 changes only knowledge-service/test, no point production seam. All five
+foreign dirty gitlinks and immutable installed target01 are untouched.
+
+Coherent source correction and expanded original writer/reopen/anchor rejection
+controls are prepared. Bounded source validation follows this checkpoint;
+neither its result nor a future installed/native acceptance is claimed yet.

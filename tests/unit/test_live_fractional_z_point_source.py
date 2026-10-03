@@ -30,6 +30,9 @@ from openhcs.core.runtime_measurements import (
 )
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source_metadata import (
+    OriginalSourceMetadata, SourceFilterPathMetadata, SourceVoxelSpacing,
+)
 from openhcs.core.steps.function_artifact_materialization import ArtifactStreamSourceMetadataAuthority
 from openhcs.core.steps.stream_component_semantics import StreamComponentMessageExtraAuthority
 from openhcs.core.streaming_config_declarations import ViewerType
@@ -51,12 +54,22 @@ class SyntheticMicroscope:
     parser = SourceSchemaFilenameParser()
 
 
-def point_fixture(root: Path, planes: int, origin: int):
+def point_fixture(root: Path, planes: int, origin: int, *, source_records=False):
     components = tuple(
         dict(well='A01', site=1, channel=1, z_index=origin + index, timepoint=1)
         for index in range(planes)
     )
     paths = tuple(str(root / f'A01_s001_w1_z{origin + index:03d}_t001.tif') for index in range(planes))
+    if source_records:
+        for component, path in zip(components, paths, strict=True):
+            OriginalSourceMetadata.from_mapping({
+                'well': 'A01', 'site': '001', 'channel': '1',
+                'timepoint': '001', 'z_index': f"{component['z_index']:03d}",
+            }).merge_into(component, path=path)
+            SourceFilterPathMetadata.from_paths((Path(path).name, path)).merge_into(
+                component, path=path,
+            )
+            SourceVoxelSpacing((2.0, 0.65, 0.65)).merge_into(component, path=path)
     volume = np.zeros((planes, 5, 7), dtype=np.uint16)
     volume[:, 1:3, 2:4] = 1
     for path, plane in zip(paths, volume):
@@ -82,8 +95,9 @@ def point_fixture(root: Path, planes: int, origin: int):
 
 @pytest.mark.parametrize('planes,origin', ((1, 0), (4, 0), (4, 10)))
 @pytest.mark.parametrize('selected', (False, True))
-def test_original_point_writer_live_domain_anchor_and_reopen(tmp_path, planes, origin, selected):
-    table, components, paths = point_fixture(tmp_path, planes, origin)
+@pytest.mark.parametrize('source_records', (False, True))
+def test_original_point_writer_live_domain_anchor_and_reopen(tmp_path, planes, origin, selected, source_records):
+    table, components, paths = point_fixture(tmp_path, planes, origin, source_records=source_records)
     feature = ObjectCoreMeasurementFeature
     options = PointROIOptions(
         z_feature=feature.CENTER_Z, y_feature=feature.CENTER_Y, x_feature=feature.CENTER_X,
@@ -166,3 +180,50 @@ def test_point_source_admission_reuses_original_typed_payload_contract():
     options = PointROIOptions(z_feature=feature.CENTER_Z, y_feature=feature.CENTER_Y, x_feature=feature.CENTER_X)
     with pytest.raises(TypeError, match='requires a MeasurementTable'):
         options.stream_source_identities(np.zeros((1, 5, 7)))
+
+
+@pytest.mark.parametrize('field,value,error', (
+    ('well', 'B01', 'vary outside Z'),
+    ('site', 2, 'vary outside Z'),
+    ('channel', 2, 'vary outside Z'),
+    ('timepoint', 2, 'vary outside Z'),
+    ('well', None, 'inconsistent components'),
+    ('site', None, 'inconsistent components'),
+    ('channel', None, 'inconsistent components'),
+    ('timepoint', None, 'inconsistent components'),
+    ('z_index', 0, 'consecutive and ordered'),
+    ('z_index', 3, 'consecutive and ordered'),
+    ('z_index', None, 'require z_index'),
+    ('z_index', True, 'must be integers'),
+    ('z_index', 1.5, 'must be integers'),
+    ('z_index', '1.5', 'must be integers'),
+    ('OpenHCSSourceVoxelSpacingZYX', '2,0.7,0.7', 'inconsistent calibration'),
+    ('OpenHCSSourceVoxelSpacingUnit', 'relative', 'inconsistent calibration'),
+))
+def test_point_domain_preserves_real_coordinate_and_calibration_rejections(tmp_path, field, value, error):
+    table, components, paths = point_fixture(tmp_path, 4, 0, source_records=True)
+    invalid = tuple(dict(plane) for plane in components)
+    if value is None:
+        del invalid[1][field]
+    else:
+        invalid[1][field] = value
+    metadata = ImagePayloadMetadata(
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=paths, component_metadata=invalid,
+        ),
+    )
+    from polystore.roi import ROI, PointShape
+    rois = [ROIFractionalZ(1.5).bind(ROI(shapes=[PointShape(y=1.5, x=2.5)]))]
+    with pytest.raises(ValueError, match=error):
+        ROIFractionalZ.source_component_domain(rois, metadata)
+
+
+@pytest.mark.parametrize('coordinate', (-0.5, 3.5))
+def test_point_domain_preserves_fractional_z_bounds_with_literal_provenance(tmp_path, coordinate):
+    table, components, paths = point_fixture(tmp_path, 4, 0, source_records=True)
+    from polystore.roi import ROI, PointShape
+    rois = [ROIFractionalZ(coordinate).bind(ROI(shapes=[PointShape(y=1.5, x=2.5)]))]
+    with pytest.raises(ValueError, match='outside its source planes'):
+        ROIFractionalZ.source_component_domain(
+            rois, ImagePayloadMetadata(source_provenance=table.source_provenance),
+        )
