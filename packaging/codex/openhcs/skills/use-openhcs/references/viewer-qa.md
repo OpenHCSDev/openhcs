@@ -41,15 +41,6 @@ If remote-desktop compression is suspected, open a native MCP PNG capture at
 the same viewport before attributing absent paths to the transport. Distinguish
 hidden raw signal from paths actually missing in a saved processing stage.
 
-For feature-bearing 3-D point results, check the persisted point coordinates
-against the viewer's native point geometry, declared Z domain, and selected
-feature row. Select a point by its data index through MCP and verify that the
-same row and exact Z coordinate remain attached. A result-only Points layer
-may have a native slice range determined solely by its points, so a displayed
-integer Z label or `current_step` alone does not establish the point's Z or
-its alignment with raw planes. Confirm that alignment in the combined view;
-record any disagreement rather than treating a visible point as a QA pass.
-
 ## Choose a distributed, multiscale sample
 
 Inspect the whole field raw-only, with results hidden, for illumination, tissue,
@@ -130,6 +121,38 @@ Open all bitmaps yourself. If canvas, coordinates, axes, camera or presentation
 changed during capture, re-establish state and recapture the matched set before
 comparison. Repeat at necessary field, context and object scales; no single
 view is an acceptance witness.
+
+### Points and centres
+
+Point results need the same three-view comparison; selected raw-plus-points
+captures or point counts alone are insufficient. Identify the intended final
+Points layer and its persisted result/source identity, excluding earlier result
+versions and unrelated Labels, Shapes or Points from the matched set.
+
+- **Raw only:** hide the point result and other result layers.
+- **Point only:** hide **every image layer**, not just the selected raw image,
+  and show only the intended final Points result. Keep raw mounted but hidden
+  so its source/domain context remains available; do not unload it for this
+  comparison.
+- **Combined:** restore the matching raw image and that same Points layer,
+  retaining the raw window and the set's native coordinates, camera and axes.
+
+For feature-bearing points, select by the final layer's `data_index` through
+MCP and verify the attached feature row against the persisted point and native
+geometry. For 3-D results record the exact, possibly fractional, Z coordinate
+and declared source Z domain, not only the displayed integer slice label.
+Visibility or selection changes can alter a point-only view's native slice
+range. Read back camera, axes and coordinates after each transition; restore
+the matched view if they changed. Keeping raw mounted is not proof that the
+viewer preserved that state. Inspect genuine XY/XZ/YZ views when the source
+and exposed contracts support them; record unavailable views without inventing
+a projection or source domain.
+
+Open all three captures and judge raw support, placement and separation at
+distributed positions and scales. Relate points to masks or structures only
+when that association belongs to the intended measurement; there is no
+universal requirement that every centroid lie inside a mask. Record geometry,
+row or alignment disagreements instead of treating a visible point as a pass.
 
 ## Diagnose one failure and preserve a regression control
 
