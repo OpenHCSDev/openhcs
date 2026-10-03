@@ -185,7 +185,7 @@ def test_new_declaration_reuses_composition_and_executor(slice_count, aligned):
             kwargs={},
             module_type=IndependentlyDeclaredSourceEchoModule,
         )
-        payload = invocation.image
+        payload = invocation.payload
         execution_mode = invocation.execution_mode
         plane_projection = invocation.plane_projection
     assert execution_mode is ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK

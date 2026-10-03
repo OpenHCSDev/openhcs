@@ -78,7 +78,6 @@ from openhcs.core.pipeline.function_contracts import (
     runtime_bound_parameters,
     special_inputs,
 )
-from openhcs.core.runtime_adapters import RuntimeFunctionInvocationRequest
 from openhcs.core.runtime_artifact_queries import (
     MeasurementTableAxisProjection,
     MeasurementTableUnion,
@@ -632,14 +631,8 @@ def test_output_recording_preserves_complete_callable_return_abi() -> None:
             ),
         ),
     )
-    image_request = CellProfilerImageRequest(
+    invocation = CellProfilerImageRequest(
         payload=stack,
-        source_image_name=None,
-        image_count=1,
-        plane_projection=projection,
-    )
-    invocation = RuntimeFunctionInvocationRequest(
-        image=stack,
         kwargs={},
         source_image_name=None,
         image_count=1,
@@ -658,7 +651,6 @@ def test_output_recording_preserves_complete_callable_return_abi() -> None:
         ),
         matched_outputs=(),
         invocation=invocation,
-        image_request=image_request,
         current_image=stack,
     )
 
@@ -8245,7 +8237,7 @@ def test_illumination_apply_projects_broadcast_input_to_selected_primary_site(
     result = CellProfilerFunctionContractExecutor().execute(
         contract,
         executor.raw_func,
-        invocation.image,
+        invocation.payload,
         invocation.kwargs,
         execution_mode=invocation.execution_mode,
         plane_projection=invocation.plane_projection,
@@ -9438,6 +9430,58 @@ def test_pattern_group_runtime_leaves_variable_shape_aligned_outputs_uncached():
 
     assert output == [first, second]
     assert output.stack_payload is None
+
+
+def test_invocation_request_keeps_original_aliases_when_labels_change_image_domain(
+    monkeypatch,
+):
+    contract = _compiled_callable_contract(IdentifyTertiaryObjectsModule.require_callable())
+    executor = _module_executor(contract)
+    larger = ObjectLabelSet(
+        name="Larger",
+        variant_data=ObjectLabelVariantData(labels=np.ones((2, 3), dtype=np.int32)),
+    )
+    smaller = ObjectLabelSet(
+        name="Smaller",
+        variant_data=ObjectLabelVariantData(labels=np.ones((4, 5), dtype=np.int32)),
+    )
+    monkeypatch.setattr(
+        CellProfilerModuleExecutor,
+        "_runtime_input_kwargs",
+        lambda self, *args, **kwargs: {
+            "secondary_labels": larger,
+            "primary_labels": smaller,
+        },
+    )
+    original = CellProfilerImageRequest(
+        payload=np.zeros((6, 7), dtype=np.float32),
+        source_image_name="Carrier",
+        source_aliases=("CarrierA", "CarrierB"),
+        image_count=2,
+    )
+    marker = []
+    authored_kwargs = {"secondary_labels": "authored", "marker": marker}
+    invocation = executor._invocation_request(
+        image_request=original,
+        adapter=_FakeCellProfilerRuntime({}, callable_contract=contract),
+        current_image=original.payload,
+        kwargs=authored_kwargs,
+        module_type=IdentifyTertiaryObjectsModule,
+    )
+
+    assert isinstance(invocation, CellProfilerImageRequest)
+    assert invocation.source_aliases is original.source_aliases
+    assert invocation.source_image_name is None
+    assert invocation.image_count == 1
+    assert image_payload_data(invocation.payload).shape == (2, 3)
+    assert invocation.kwargs["secondary_labels"] is larger
+    assert invocation.kwargs["primary_labels"] is smaller
+    assert invocation.kwargs["marker"] is marker
+    assert authored_kwargs == {"secondary_labels": "authored", "marker": marker}
+    assert original.source_image_name == "Carrier"
+    assert original.image_count == 2
+    assert original.kwargs == {}
+    assert original.payload.shape == (6, 7)
 
 
 def test_cellprofiler_main_flow_output_preserves_input_source_planes():
