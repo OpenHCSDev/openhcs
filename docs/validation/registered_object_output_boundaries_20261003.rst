@@ -1,6 +1,146 @@
 Registered object-output boundary investigation
 ==============================================
 
+Actual02 scope negative and source-owner receiving03
+---------------------------------------------------
+
+Parent default02 artifact-plan FAILED before new source session/compile/execute:
+compile_inspection_failed / ValueError, MeasureObjectSizeShape cannot resolve
+ObjectLabels Objects group scope; axes0/steps0. Original public4839..4842 and
+all02 documents preserved; no unchanged replay. Issue521 / Root394 shared-owner
+contact5966037153 and correction5966060807 retain the exact boundary.
+
+Observed engineering input metadata is still Labels-only primary projection,
+BioFormats parser/receipt, no Objects artifact. Exact small observed copy hash
+``7b895ddc1710748d46e46d644e9df7384d25958a57eb62176e5cfdc0d60b46ca``.
+Existing AUTO/PREPARED_WORKSPACE owner intentionally prevents new raw declarations
+from silently replacing a prepared receipt. Exact failed handler/internal state
+was not captured; source-selection/config mismatch is the determining candidate,
+NOT demonstrated resolver bug under explicitly selected SOURCE_BINDINGS.
+
+NEW complete default03/removed03 documents explicitly select original
+``microscope=Microscope.SOURCE_BINDINGS`` and declare primary Grayscale Labels
+plus categorical Objects SOURCE_ARTIFACT from SAME unchanged TIFF. Original
+NamesAndTypes Metadata matching joins well/site/channel/Z/timepoint filename
+fields; it supports shared physical references and unique virtual role paths.
+ORDER would reject identical alias universes and is not bypassed. No manually
+authored groups/metadata/bindings or label intensity remapping. Existing source
+workspace/typed artifact loader/domain builder own preparation and categorical
+IDs. This does not claim a primary carrier is universally mandatory.
+
+Exact commands/files/source proof/hashes and unchanged2/7->6/20->kept7/removed2
+joins: ``engineering503/PUBLIC95-CATEGORICAL03-RECEIVING.rst``. Distinct
+results-default03/results-removed03, new exclusive03 VALUES exports decoded by
+original ZMQRuntimeExecutionObservationExport.read, not JSON/manual pickle.
+Only Python AST syntax checked; parent sole83658/native6014 owns actual public
+plan/session/compile/execute/joins. No live call/import/test/build/install/shared
+source/scientific input/contact by Singer; qualifiedc031/target02 unchanged.
+Earlier02 and01 receiving designs below are historical negatives/prepared intent,
+not permission to replay. Original errors/archives/input/output remain intact.
+
+Byte-exact7-member03 source/metadata/packet archive:
+``registered-object-output-categorical03-20261003.tar.gz``,6737bytes, SHA256
+``cfb5acbc8b132d3287a3f484586211598c6ec0004425da71b350b4e98e02c521``.
+Original02 prepared archive is preserved byte-exact; its newly superseded local
+receipt is not substituted inside that historical archive.
+
+Actual upstream image-domain negative; categorical receiving02
+-------------------------------------------------------------
+
+Parent default01 job-2 COMPLETE, public raw uint16 IDs2/7 but Objects_step0
+int32 ALLZERO (maximum0); shape/filter empty. This is NOT503 public acceptance.
+Original source/raw/result/export and first full-five #516 error stay frozen.
+Removed01 artifact-plan passed/session2 created ONLY; do NOT compile/execute
+that known-bad source. Sole parent PTY83658/native6014 unchanged by Singer.
+
+Source trace: NamesAndTypes Grayscale declares ImageArtifactType; the original
+ImageArtifactTypeStrategy/CellProfilerModuleExecutor input path normalizes
+integer intensity before ConvertImageToObjects preserve_label casts to int32.
+Single-channel grayscale loading itself does NOT normalize. The conventional
+uint16 intensity scale makes2/7 fractions that cast to0; actual normalized
+intermediate was not separately captured. This precedes the shape-row repair.
+
+Original supported NamesAndTypes Objects declares ObjectLabelsArtifactType /
+SOURCE_ARTIFACT. Its original workspace/VFS loader and nominal object-label
+strategy preserve scalar categorical IDs, construct present-ID domain/provenance,
+and support artifact-only source sets. New complete ordinary importer documents
+labels503-default02.cppipe/pipeline-default02.py and removed02 counterparts
+declare Objects directly, Shape then one FilterObjects; no numeric conversion
+of labels through intensity. Separate results-default02/results-removed02 and
+exclusive VALUES paths. Raw12x15uint16 hash unchanged, categorical IDs2/7,
+areas6/20, exact masks and directed kept7->1/removed2->1 assertions unchanged.
+Actual returned producer declaration owns numbering, not historical01 guesses.
+
+Exact new documents/commands/source trace/hashes/canonical VALUES loader:
+``engineering503/PUBLIC95-CATEGORICAL02-RECEIVING.rst``. The VALUES .json suffix
+does not change its canonical gzip/pickle format; use original
+ZMQRuntimeExecutionObservationExport.read(Path(export_path)), not JSON/manual
+unpickle/schema mirrors. No export decoding or product import by Singer.
+
+New source documents only AST-syntax checked, NOT imported/executed here.
+Public02 import/compile/execution/pixel/table/lineage acceptance remains parent.
+Whole qualifiedc031/target02 production unchanged; source/target hashes of
+original declaration/image semantics/runtime binding match. Root394 now
+b312148855b6 remains shared owner; #516 contact5965875069 remains independent.
+Existing full AST/scoped R0/21 installed controls were not rerun. NRA/audit
+IDEN-1/BOUND-2 select original categorical owner rather than an intensity hack.
+No tests/build/install/new client/native/scientific input/contact/source patch.
+
+Byte-exact8-member new categorical packet/source receipt:
+``registered-object-output-categorical95-20261003.tar.gz``,11219bytes, SHA256
+``16d29b1c1629c1908211ed1280504ae02fe0fc07b1ad63fedfd2f805bd4dc3c7``.
+Original11-member split/source-audit archive retained separately:
+``registered-object-output-split95-20261003.tar.gz``,999728bytes, SHA256
+``9be6f11b2dfd749aec5a2f0b71eb26515744e44d1299ccf76129236bc3a19003``.
+Its original module4 receipt inference is historical and superseded, not edited
+to hide the mistake. Original first AST-cwd failure and raw completed census
+remain in that archive; no live parent journal or raw output was overwritten.
+
+Historical receiving snapshots below remain tiered evidence, not current
+release/readiness assertions. Parent has released95 and owns its live handles.
+
+Actual public lineage negative and independent receiving documents
+------------------------------------------------------------------
+
+Parent original83658/native6014 reached READY/catalog READY, then complete
+five-module artifact-plan failed before session/compile/execution: equal
+RetainedEnabled output identity has Objects versus RetainedDefault source
+lineage. Full original reply/input/hash stay frozen. Concrete #516 is filed
+and sent to Root394 shared reconstruction/context/artifact owner via
+comment5965875069. No competing shared or installed product patch.
+
+Parent authorized two independent complete ordinary documents, prepared via
+apply_patch under the SAME output root: labels503-default01.cppipe/
+pipeline-default01.py -> results-default01, labels503-removed01.cppipe/
+pipeline-removed01.py -> results-removed01. Both use original importer, exact
+source2/7, shape areas6/20, kept7->1/removed2->complement1, typed domains,
+strict4/6 slot ABI and directed lineage. No fabricated bindings or algorithm.
+Original full-five error is not reclassified as fixed by the split receiving
+design; #516 remains Root-owned. Parent owns sole client and every native call.
+
+Parent actual default public artifact-plan PASS, session-1/compile job-1 COMPLETE,
+execution job-2 COMPLETE with ALLZERO upstream labels, NOT joins accepted. Public
+plan numbers typed FilterObjects producer3 after NamesAndTypes is consumed;
+actual module_3 relationship identity is authoritative, NOT external CPPipe4
+or old full-five4/5. First inferred4 receiving archive is retained separately;
+corrected receipt does not change any CPPipe/PipelineDocument source.
+
+Current main236644e43b6c is merged514 and already included in this source census.
+514 touches only ObjectState/python-introspect dependency pins, registry_service
+and its readiness test. #503 production diff versus currentmain remains only
+shape.py/object_filtering.py,18added/51deleted, byte-equal qualifiedc031/f9.
+No testing/R0/build/install replay, new source edit or qualification invalidation.
+
+Original audit Repository/ParsedModule/FunctionFacts/orchestration reused for
+FULL704 production+6metaclass_registry dependency files at c031/currentmain/
+Root8e06a382, selected111/111/112 related modules, zero parse omissions.
+Serial CPU1/512MiB/Swap0/60s:50.548s/45.4M/terminal0. First wrong-systemd-cwd
+source attempt remains raw/terminal1; no product/native request was replayed.
+NRA/authoritative catalog lenses IDEN-1, BOUND-2, IMPL-5 preserve named source
+versus current main-flow identity and existing nominal contract owner.
+Complete durable RCA: ``engineering503/CROSS-STEP-LINEAGE-SOURCE-RECEIPT.rst``;
+actual split commands/keys: ``engineering503/PUBLIC95-SPLIT-RECEIVING.rst``.
+
 Public50395 original journey preparation, 2026-10-03
 ---------------------------------------------------
 
