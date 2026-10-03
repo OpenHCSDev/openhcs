@@ -123,12 +123,11 @@ FLEET_NATIVE_ACK=$(jq -er '.native_ack_port' <<< "$slot")
 FLEET_VIEWER=$(jq -er '.viewer_port' <<< "$slot")
 FLEET_VIEWER_ACK=$(jq -er '.viewer_ack_port' <<< "$slot")
 FLEET_VNC=$(jq -er '.vnc_port' <<< "$slot")
-FLEET_PARENT_RELEASED=${FLEET_PARENT_RELEASED:-0}
 FLEET_UNIT=$(fleet_unit_for "$FLEET_SLOT")
 FLEET_AGGREGATE_BYTES=$(jq -er '.proposed_resource_envelope.aggregate_memory_max_bytes | select(type=="number" and .>0 and .%1048576==0)' <<< "$FLEET_PROGRAM")
 FLEET_COMBINED_MIB=$((FLEET_AGGREGATE_BYTES/1048576))
 export FLEET_ROOT FLEET_SLOT FLEET_RUN_ROOT FLEET_RUN_PROGRAM FLEET_WORKSPACE FLEET_SLICE FLEET_INSTALL FLEET_PYTHON FLEET_OPERATIONS FLEET_PHASE
-export FLEET_DISPLAY FLEET_CPU FLEET_INPUT FLEET_NATIVE FLEET_NATIVE_ACK FLEET_VIEWER FLEET_VIEWER_ACK FLEET_VNC FLEET_PARENT_RELEASED FLEET_UNIT FLEET_COMBINED_MIB
+export FLEET_DISPLAY FLEET_CPU FLEET_INPUT FLEET_NATIVE FLEET_NATIVE_ACK FLEET_VIEWER FLEET_VIEWER_ACK FLEET_VNC FLEET_UNIT FLEET_COMBINED_MIB
 helper_root=$(jq -er '.helper_custody.program_root' <<< "$slot")
 helper_slot=$(jq -er '.helper_custody.slot' <<< "$slot")
 jq -e --arg member "$helper_slot" --argjson display "$FLEET_DISPLAY" \

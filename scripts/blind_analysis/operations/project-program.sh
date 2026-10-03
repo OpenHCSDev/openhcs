@@ -69,9 +69,9 @@ case "$mode" in
       .members==[] and .additional_authors==[] and
       (.retired_members|length)>0 and .resource_policy=={}
     ' "$run/successor-declaration.json" >/dev/null; then
-      # Creating/replacing permissions or changing policy still needs release.
+      # The authorized publisher grants permission once in the existing FUND.
+      # A repeated parent-owned file is not another permission authority.
       test "${FLEET_PARENT_RELEASED:-0}" = 1
-      test -f "$run/PARENT-RELEASE.rst"
     else
       # Standing retirement authority cannot introduce grants or change policy.
       # Reuse the original projector; do not maintain another expected roster.

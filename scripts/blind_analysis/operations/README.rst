@@ -11,7 +11,7 @@ Project and publish through the existing projector
 ------------------------------------------------
 
 An initial reviewed run declares funding_root and funded_members references to
-its own authors. Parent freezes its run and release before ONE initialization::
+its own authors. The authorized operator freezes the run before ONE initialization::
 
   FLEET_PARENT_RELEASED=1 bash operations/project-program.sh initialize FUNDING RUN absent
 
@@ -24,8 +24,8 @@ The template supplies defaults, not funding membership or current reservations::
 
 The original successor JQ produces only NEXT's own physical author declarations
 and a funded_members proposal of references. The parent freezes NEXT, including
-all operation dependencies, source/skill/config/input identities and the actual
-release. Funding is deliberately mutable and is never listed as an immutable
+all operation dependencies and source/skill/config/input identities.
+Funding is deliberately mutable and is never listed as an immutable
 file in the run freeze. The authorized publisher uses its reviewed revision::
 
   FLEET_PARENT_RELEASED=1 bash operations/project-program.sh publish FUNDING NEXT EXPECTED_SHA256
@@ -41,7 +41,11 @@ change) does not require another parent release file or release flag. The
 publisher reuses the original projector to verify the sealed proposal against
 current funding before its atomic transition. Missing terminal proof, stale
 revision or changed permissions still reject. Creating/replacing permissions
-and policy changes retain their explicit release requirement.
+and policy changes retain the authorized publisher's explicit release invocation.
+No separate PARENT-RELEASE file is required. The existing publication flag is
+consumed only by this writer; successful canonical FUND publication owns the
+resulting permission. Routine authorized publication needs no repeated parent
+file or acknowledgement. No additional authority store is introduced.
 
 The current funding document has only references and joint-budget fields. It
 stores no source, configuration, per-run permission or physical helper catalog.
@@ -53,7 +57,7 @@ Launch and record through the same original owners
 ------------------------------------------------
 
 Use operations/launch-author.sh FUNDING SLOT --preflight for an inert source
-projection. Actual author launch needs parent release, exact writer/helper
+projection. Actual author launch needs funded membership, exact writer/helper
 custody, original admission and the immutable RUN freeze. The launcher preserves
 fresh masked history, readonly raw input, original configured model/provider,
 per-author lock, recording and CLI scope. It does not adopt an existing author.
@@ -61,7 +65,13 @@ per-author lock, recording and CLI scope. It does not adopt an existing author.
 Use the canonical AUTHOR-PACKET.rst for every new declaration. Start the ONE
 recorded interactive client with tools.exec_command tty=true::
 
-  FLEET_PARENT_RELEASED=1 bash "$FLEET_OPERATIONS/recorded-mcp.sh" "$FLEET_ROOT" "$FLEET_SLOT" startup01
+  bash "$FLEET_OPERATIONS/recorded-mcp.sh" "$FLEET_ROOT" "$FLEET_SLOT" startup01
+
+The original slot owner resolves canonical funding before any performer starts.
+Launch, recording, client and helper consumers take that granted member; none
+rechecks a release flag or a parent file. Missing, retired, ambiguous or foreign
+members still reject before provider/client/helper dispatch. Immutable seal,
+exact custody, measured admission and one retained handle remain unchanged.
 
 The recorder calls admission once BEFORE MCP journals. Known pre-dispatch
 rejection leaves a unique observation, not client custody. A later authorized
