@@ -1815,7 +1815,9 @@ def test_napari_display_pipeline_projects_route_axes_locally():
     assert second.component_values == {"channel": [4], "site": [1, 2]}
     assert second.axis_offsets == (3, 0)
     assert second.scalar_component_values == {}
-    assert second.translate() == (3.0, 0.0, 0.0, 0.0)
+    assert second.spatial_layer_kwargs([_layer_item({"channel": 4, "site": 1})])[
+        "translate"
+    ] == (3.0, 0.0, 0.0, 0.0)
 
 
 def test_napari_display_pipeline_uses_declared_domain_independent_of_arrival_order():
@@ -1851,7 +1853,9 @@ def test_napari_display_pipeline_uses_declared_domain_independent_of_arrival_ord
     assert source.axis_offsets == (0,)
     assert derived.component_values == {"channel": [4]}
     assert derived.axis_offsets == (2,)
-    assert derived.translate() == (2.0, 0.0, 0.0)
+    assert derived.spatial_layer_kwargs([_layer_item({"channel": 4})])[
+        "translate"
+    ] == (2.0, 0.0, 0.0)
 
 
 def test_napari_display_pipeline_aligns_scalar_and_stack_routes_by_semantic_value():
@@ -2181,7 +2185,9 @@ def test_napari_display_pipeline_projects_aggregate_payload_axes_into_route_doma
     assert projection.projected_axis_components == ("z_index",)
     assert projection.component_values == {"z_index": [1, 2]}
     assert projection.scalar_component_values == {"channel": [1]}
-    assert projection.translate() == (0.0, 0.0, 0.0)
+    assert projection.spatial_layer_kwargs([
+        _layer_item({"channel": 1}, data=np.ones((2, 4, 4)))
+    ])["translate"] == (0.0, 0.0, 0.0)
 
 
 def test_napari_axis_projector_validates_declared_domain_and_drops_route_singletons():
