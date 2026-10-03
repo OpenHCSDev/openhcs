@@ -15,7 +15,7 @@ from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlane
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
-    RuntimeArtifactInputRequest, RuntimeArtifactTypeStrategy,
+    RuntimeArtifactTypeStrategy,
 )
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import CellProfilerFunctionContractExecutor
 from openhcs.processing.backends.cellprofiler.shape import MeasureObjectSizeShapeModule, measure_object_size_shape
@@ -37,7 +37,7 @@ def _source(labels, *, axis=RuntimePlaneAxis.RUNTIME_SLICE, plane_count=None, sp
 def _saved_label_input(source):
     spec = ArtifactSpec.input("saved_labels", ObjectLabelsArtifactType, parameter_name="labels")
     return RuntimeArtifactTypeStrategy.for_artifact_type(spec.artifact_type).runtime_input_value(
-        RuntimeArtifactInputRequest(spec=spec, value=source)
+        spec=spec, value=source
     )
 
 
@@ -50,7 +50,7 @@ def test_original_artifact_admission_and_full_stack_shape_keep_2d_planes(axis):
     source_bytes = labels.tobytes()
     spec = ArtifactSpec.input("saved_labels", ObjectLabelsArtifactType, parameter_name="labels")
     value = RuntimeArtifactTypeStrategy.for_artifact_type(spec.artifact_type).runtime_input_value(
-        RuntimeArtifactInputRequest(spec=spec, value=source)
+        spec=spec, value=source
     )
     assert value.domain.scope is ObjectLabelDomainScope.PLANE
     assert value.plane_axis is axis
