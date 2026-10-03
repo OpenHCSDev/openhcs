@@ -75,8 +75,13 @@ Before scientific actions resource-check.sh FUNDING SLOT UNIQUE_PHASE consumes
 current membership and sums each run's own output/scratch limits. FULL closed
 outputs remain once and are measured, not compared to a cumulative historical
 ceiling. They already consume actual HOME space. Admission requires physical
-free HOME for all remaining funded growth plus its reserve, and still rejects
-per-run output/scratch overages. Contained scratch is not charged twice. Helpers use the
+free HOME for all remaining funded growth plus its reserve. Only the selected
+member's own output/scratch permission can reject its operation; sibling
+overages remain measured physical usage, not a veto on another member's
+status/read-only work. Remaining growth is derived independently for retained
+and scratch components, clamped to zero once each is exhausted; an overage
+cannot subtract from a sibling's unused reservation. Contained scratch is not
+charged twice. Helpers use the
 original lifecycle performers and declared InvocationID custody; scientific
 writer retirement is independent. No helper/provider/native operation is part
 of the source controls. Future installed entrypoint and operational release are
