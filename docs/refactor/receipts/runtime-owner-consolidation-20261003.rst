@@ -278,8 +278,33 @@ qualified performance evidence. The ``v3`` campaign at ``c50a947f4`` completed
 both ordinary sweeps and fresh native runs but failed strict comparison with
 42 missing origMemb intensity features. Its faster timings are also unqualified.
 The missing explicit source-roster edge is repaired by the invocation selector;
-fresh complete scientific comparison remains required. All failed campaigns
-are retained, and no output exclusion or tolerance change is admitted.
+the corrected scientific comparison below covers both original pipelines.
+All failed campaigns are retained, and no output exclusion or tolerance change
+is admitted.
+
+The corrected ``canonical-producer-transport-paired-v5`` campaign at
+``102d6e491`` passes all eight strict scientific comparisons, including complete
+measurement inventories and images with existing CP tolerances. Active source
+aliases derive from the current payload for each invocation, preserving outputs
+and mutations within a function chain. The existing artifact source-relation
+family supplies the explicitly selected image-set context to object inputs;
+exact producer addresses and unrelated fixed coordinates remain strict.
+
+Means of two independent ordinary and two fresh native observations are:
+
+* 3D: compile 1.112773s, execution 7.401238s, total 9.284819s, native invocation
+  14.204229s; 1.919169x execution and 1.529834x total.
+* Speckles: compile 0.677950s, execution 1.290954s, total 2.292555s, native
+  invocation 1.930783s; 1.495625x execution and 0.842197x total.
+
+These observations do not establish a causal gain or full30/scaling behavior.
+Speckles still loses on total. The existing benchmark figure owner produces
+fresh PNG/SVG runtime and speedup figures in the campaign's ``figures-v2``
+directory. Native invocation includes its pre-first-module work; startup,
+imports/JVM setup and the excluded warmup observation are outside this clock.
+Ordinary total includes compilation and normal OUTCOMES/RSS completion.
+The ``v4`` namespace is explicitly aborted before measurement, after independent
+review found stale binding selection within a multi-function chain.
 
 PR #394 remains draft. Its original whole-branch R0/R1 obligations, installed
 consumer acceptance, full-catalog parity and fresh full30/scaling figures
