@@ -824,7 +824,11 @@ def test_fractional_spatial_selection_survives_real_qt_rematerialization(receive
     old = receiver.layer_route_state.layer(route)
     feature = NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE
     identity = old.features.iloc[1][feature]
-    original_coordinates = old.data[1, -3:].copy()
+    presentation = receiver.layer_route_state.dimension_state_for(route).presentation
+    spatial_dimensions = tuple(
+        presentation.axis_labels.index(axis) for axis in presentation.spatial_axis_labels
+    )
+    original_coordinates = old.data[1, spatial_dimensions].copy()
     sources = receiver.component_groups.existing_items_for(route)
     navigation = NapariNavigationControlMessageAction()
 
@@ -845,7 +849,7 @@ def test_fractional_spatial_selection_survives_real_qt_rematerialization(receive
             presentation.axis_labels.index(axis) for axis in pair
         )
         assert set(layer.features.iloc[list(layer.selected_data)][feature]) == {identity}
-        np.testing.assert_array_equal(layer.data[member, -3:], original_coordinates)
+        np.testing.assert_array_equal(layer.data[member, spatial_dimensions], original_coordinates)
         # Implicit displayed dimensions and explicit pair overrides have the same contract.
         assert navigation.result_element_axis_indices(receiver, layer, route, member) == (
             prepared.request.axis_indices
@@ -898,5 +902,7 @@ def test_declared_point_coordinate_capability_executes_cooperative_hooks(receive
             displayed_axis_indices=tuple(presentation.axis_labels.index(axis) for axis in pair),
         )
     assert admitted.count("z_index") == admitted.count("y") == admitted.count("x") == 1
-    np.testing.assert_array_equal(layer.data[0, -3:], (1.5, 1.5, 2.5))
+    np.testing.assert_array_equal(layer.data[0, tuple(
+        presentation.axis_labels.index(axis) for axis in presentation.spatial_axis_labels
+    )], (1.5, 1.5, 2.5))
     assert RecordedPointsHandler.result_coordinate_authority is RecordedPointCoordinates
