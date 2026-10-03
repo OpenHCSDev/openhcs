@@ -109,7 +109,7 @@ capability with the existing common-presentation ancestor through cooperative
 super(). Points/Shapes leaves declare it only; generic reconciliation and
 registry consumers are unchanged. No second algorithm or row cache is added.
 
-Latest NRA/current authoritative audit ZIP and applicable IDEN-1/6, BOUND-2/8,
+Latest NRA/current authoritative audit ZIP and applicable IDEN-1/6, BOUND-2,
 IMPL-12/13, MEMB-1/2 and TIME-9 catalog entries informed this original-owner
 choice. Existing audit caller selection-family01 parses704 production/669tests/
 401 actual dependencies (including native Points/Shapes/base/events), zero
@@ -263,7 +263,7 @@ typed-or-original StreamProducerPayloadMapping acceptance is now annotated
 honestly. The generic generated tool binding/codec, retirement whole-set and
 invocation guards, receipt MRO and deadlines are unchanged. No central leaf
 switch, field/schema roster, anonymous/named JSON replacement, compatibility
-reader, Any escape or larger recursion/timeout limit. BOUND-2/8 and MEMB-5 apply:
+reader, Any escape or larger recursion/timeout limit. BOUND-2 and MEMB-5 apply:
 carry the original identity, derive schema from its declaration, delete the
 overly broad producer record annotation.
 
@@ -615,7 +615,7 @@ Source evidence and proof limits
 Read latest NRA skill and authoritative nominal-refactor-advisor/skills/
 refactor-audit.skill SKILL/catalog README plus full identity, membership,
 implementation, boundaries and over-time pattern files. Applicable patterns:
-IDEN-1/6 (route versus generation/visibility), BOUND-2/8 (typed source/domain/
+IDEN-1/6 (route versus generation/visibility), BOUND-2 (typed source/domain/
 producer facts across request/reply), IMPL-12/13 (copied purge/settlement loops),
 MEMB-1/2 (parallel tool/route rosters), TIME-9 (alternate codec/compatibility).
 Existing behavior-owning classes and shared registered ABCs remain load bearing;
