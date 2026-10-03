@@ -42,7 +42,6 @@ from openhcs.core.source_bindings import (
 )
 from openhcs.core.source_binding_selection import (
     SourceBindingMatchedImageSet,
-    SourcePatternResolutionContext,
 )
 from openhcs.core.source_image_provenance import (
     SourceImageIdentity,
@@ -305,10 +304,12 @@ class RuntimeAdapterRequest:
             projection,
             axis_id=self.axis_scope.axis_id,
         )
-        source_context = SourcePatternResolutionContext.from_projection(
-            parser=self.context.microscope_handler.parser,
-            projection=projection,
-            metadata_rules=self.source_binding_plan.metadata_rules,
+        source_context = (
+            self.context.runtime_source_binding_context_cache.source_pattern_context(
+                parser=self.context.microscope_handler.parser,
+                projection=projection,
+                metadata_rules=self.source_binding_plan.metadata_rules,
+            )
         )
         matched_set = SourceBindingMatchedImageSet.from_plan(
             bindings=self.source_binding_plan.binding_declarations,
@@ -475,7 +476,9 @@ class RuntimeAdapterSpec:
     parameter_name: str
     factory: RuntimeAdapterFactory
     manages_artifact_inputs: bool = False
-    artifact_output_policy: type[ArtifactOutputPolicy] = NativeReturnArtifactOutputPolicy
+    artifact_output_policy: type[ArtifactOutputPolicy] = (
+        NativeReturnArtifactOutputPolicy
+    )
     runtime_callable_factory: RuntimeCallableFactory | None = None
 
     def __post_init__(self) -> None:
@@ -530,7 +533,9 @@ def runtime_adapter(
     factory: RuntimeAdapterFactory,
     *,
     manages_artifact_inputs: bool = False,
-    artifact_output_policy: type[ArtifactOutputPolicy] = NativeReturnArtifactOutputPolicy,
+    artifact_output_policy: type[
+        ArtifactOutputPolicy
+    ] = NativeReturnArtifactOutputPolicy,
     runtime_callable_factory: RuntimeCallableFactory | None = None,
 ) -> Callable[[_F], _F]:
     """Declare that a callable needs an invocation-scoped runtime adapter."""

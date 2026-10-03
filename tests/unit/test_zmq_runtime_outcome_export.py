@@ -110,6 +110,7 @@ def test_value_export_rejects_an_uncompiled_execution_axis() -> None:
         compiled_contexts={},
         execution_results={"A01": ExecutionResult.success("A01")},
         output_roots=(),
+        runtime_observations=(),
     )
     with pytest.raises(RuntimeError, match="execution outcomes have no compiled axis"):
         exported.require_valid_observation()
@@ -167,6 +168,7 @@ def test_previous_runtime_export_versions_remain_readable(tmp_path: Path) -> Non
             execution_results={},
             output_roots=(),
             execution_id="new-job",
+            runtime_observations=(),
         ),
         schema_version=6,
         execution_id=None,
@@ -178,6 +180,7 @@ def test_previous_runtime_export_versions_remain_readable(tmp_path: Path) -> Non
             execution_results={},
             output_roots=(),
             execution_id="other-job",
+            runtime_observations=(),
         ).write(observation_path)
     assert observation_path.read_bytes() == retained_bytes
     assert (

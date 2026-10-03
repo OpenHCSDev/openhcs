@@ -45,7 +45,7 @@ from openhcs.core.source_metadata import (
     OriginalSourceMetadata,
     SourceFilterPathMetadata,
     SourceMetadataMapping,
-    SourceMetadataRoleView,
+    SourceMetadataFields,
     SourceMetadataScalar,
     SourceVoxelSpacing,
     SourceComponentProjectionStrategy,
@@ -1373,7 +1373,7 @@ def _shared_candidate_metadata(
     value_sets_by_key: dict[str, set[object]] = {}
     counts_by_key: dict[str, int] = {}
     for candidate in candidates:
-        for key, value in SourceMetadataRoleView(candidate.metadata).scalar_items():
+        for key, value in SourceMetadataFields.scalar_items(candidate.metadata):
             value_sets_by_key.setdefault(key, set()).add(value)
             counts_by_key[key] = counts_by_key.get(key, 0) + 1
     candidate_count = len(candidates)

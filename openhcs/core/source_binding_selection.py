@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Iterator
 from dataclasses import dataclass, field, replace
 from enum import Enum
 from functools import lru_cache
@@ -33,8 +32,9 @@ from openhcs.core.source_image_provenance import (
     SourceImageProvenance,
 )
 from openhcs.core.source_metadata import (
+    SourceMetadataFields,
     SourceMetadataMapping,
-    SourceMetadataRoleView,
+    SourceMetadataRecord,
     SourceMetadataValue,
 )
 from openhcs.core.source_matching import (
@@ -77,27 +77,48 @@ def _cached_source_candidate_pattern_keys(pattern_path: str) -> tuple[str, ...]:
     return tuple(dict.fromkeys((pattern_path, path.as_posix(), path.name)))
 
 
-@dataclass(frozen=True, slots=True)
-class SourceMetadataRecord(Mapping[str, SourceMetadataValue]):
-    """Normalized source metadata carried across source-binding selection."""
-
-    fields: tuple[tuple[str, SourceMetadataValue], ...]
+@dataclass(frozen=True, slots=True, eq=False)
+class DeclaredSourceMetadataRecord(SourceMetadataRecord):
+    """Live declared metadata that still requires path-specific fallbacks."""
 
     @classmethod
-    def from_mapping(cls, metadata: SourceMetadataMapping) -> "SourceMetadataRecord":
+    def from_mapping(
+        cls, metadata: SourceMetadataMapping
+    ) -> "DeclaredSourceMetadataRecord":
         return cls(tuple((str(key), value) for key, value in metadata.items()))
 
-    def __getitem__(self, key: str) -> SourceMetadataValue:
-        for field_key, value in self.fields:
-            if field_key == key:
-                return value
-        raise KeyError(key)
-
-    def __iter__(self) -> Iterator[str]:
-        return (key for key, _value in self.fields)
-
-    def __len__(self) -> int:
-        return len(self.fields)
+    def resolve(
+        self,
+        path: str,
+        parser: "FilenameParser",
+        metadata_rules: tuple[MetadataExtractionRule, ...],
+    ) -> "SourceMetadataRecord | None":
+        """Fill parser and extraction-rule fields absent from declarations."""
+        metadata: dict[str, SourceMetadataValue] = {}
+        merge_source_metadata(metadata, self, path=path)
+        parsed_metadata = parser.parse_filename(path)
+        if parsed_metadata is not None:
+            merge_source_metadata(
+                metadata,
+                {
+                    key: value
+                    for key, value in parsed_metadata.wire_mapping().items()
+                    if key not in metadata
+                },
+                path=path,
+            )
+        rule_metadata = metadata_from_rules(path, metadata_rules)
+        if rule_metadata:
+            merge_source_metadata(
+                metadata,
+                {
+                    key: value
+                    for key, value in rule_metadata.items()
+                    if key not in metadata
+                },
+                path=path,
+            )
+        return self.from_mapping(metadata) if metadata else None
 
 
 @dataclass(frozen=True, slots=True)
@@ -176,7 +197,7 @@ class SourcePatternResolutionContext:
                 str(path): (
                     metadata
                     if isinstance(metadata, SourceMetadataRecord)
-                    else SourceMetadataRecord.from_mapping(metadata)
+                    else DeclaredSourceMetadataRecord.from_mapping(metadata)
                 )
                 for path, metadata in source_metadata_by_path.items()
             }
@@ -244,9 +265,9 @@ class SourcePatternResolutionContext:
             dict.fromkeys(
                 source_filter_path
                 for metadata in self.metadata_for_paths(resolution.metadata_paths())
-                for source_filter_path in SourceMetadataRoleView(
+                for source_filter_path in SourceMetadataFields.source_filter_paths(
                     metadata
-                ).source_filter_paths()
+                )
             )
         )
         if source_filter_paths:
@@ -404,35 +425,10 @@ class SourcePatternResolutionContext:
         )
 
     def metadata_for_path(self, path: str) -> SourceMetadataRecord | None:
-        metadata: dict[str, SourceMetadataValue] = {}
-        declared_metadata = self.source_metadata_by_path.get(path)
-        if declared_metadata is not None:
-            merge_source_metadata(metadata, declared_metadata, path=path)
-        parsed_metadata = self.parser.parse_filename(path)
-        if parsed_metadata is not None:
-            merge_source_metadata(
-                metadata,
-                {
-                    key: value
-                    for key, value in parsed_metadata.wire_mapping().items()
-                    if key not in metadata
-                },
-                path=path,
-            )
-        rule_metadata = metadata_from_rules(path, self.metadata_rules)
-        if rule_metadata:
-            merge_source_metadata(
-                metadata,
-                {
-                    key: value
-                    for key, value in rule_metadata.items()
-                    if key not in metadata
-                },
-                path=path,
-            )
-        if metadata:
-            return SourceMetadataRecord.from_mapping(metadata)
-        return None
+        record = self.source_metadata_by_path.get(path)
+        if record is None:
+            record = DeclaredSourceMetadataRecord(())
+        return record.resolve(path, self.parser, self.metadata_rules)
 
     def merged_metadata_for_paths(
         self,
@@ -445,7 +441,7 @@ class SourcePatternResolutionContext:
             if path_metadata is not None:
                 merge_source_metadata(metadata, path_metadata, path=path)
         if metadata:
-            return SourceMetadataRecord.from_mapping(metadata)
+            return DeclaredSourceMetadataRecord.from_mapping(metadata)
         return None
 
     def source_metadata_by_paths(
@@ -1369,7 +1365,7 @@ class SourceBindingMatchedImageSet(SourceIdentityResolutionContext):
         metadata = (
             metadata_candidates.values[0]
             if metadata_candidates.values
-            else SourceMetadataRecord(())
+            else DeclaredSourceMetadataRecord(())
         )
         return SourceImageSetIdentity.from_metadata(
             metadata,
@@ -1708,7 +1704,7 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
     def source_context(self) -> SourcePatternResolutionContext:
         metadata_rules = self.plan.source_binding_plan.metadata_rules
         if self.source_projection is not None:
-            return SourcePatternResolutionContext.from_projection(
+            return self.context.runtime_source_binding_context_cache.source_pattern_context(
                 parser=self.context.microscope_handler.parser,
                 projection=self.source_projection,
                 metadata_rules=metadata_rules,

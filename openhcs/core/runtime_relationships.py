@@ -27,7 +27,12 @@ from abc import ABC
 from abc import abstractmethod
 from collections.abc import Iterable
 from openhcs.core.registry_strategies import MostDerivedContextStrategyMixin
-from openhcs.core.runtime_measurements import MeasurementRowAxisField
+from openhcs.core.runtime_measurements import (
+    MeasurementRowAxisField,
+    ObjectReferenceFeatureMarker,
+    RuntimeMeasurementFeatureDeclaration,
+    MeasurementScalarLiteral,
+)
 from openhcs.core.source_spatial_domain import SourceSpatialDomainAdapter
 from openhcs.core.runtime_object_label_domains import ObjectLabelDomainMetadataStrategy
 from openhcs.core.runtime_object_label_domains import ObjectLabelDomainScope
@@ -41,9 +46,105 @@ if TYPE_CHECKING:
     from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
 
 
+class DirectParentReferenceFeatureMarker(ObjectReferenceFeatureMarker):
+    """Semantic marker for a child's direct parent-object reference."""
+
+
+@dataclass(frozen=True, slots=True)
+class DirectParentReferenceMeasurementFeature:
+    """Nominal identity encoded by a ``Parent_<object>`` measurement name."""
+
+    parent_object_name: str
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.parent_object_name, str) or not self.parent_object_name:
+            raise ValueError("Direct parent-reference object name cannot be empty.")
+
+
+class DirectParentReferenceFeatureDeclaration(RuntimeMeasurementFeatureDeclaration):
+    """Parse and render direct parent references at their row-production owner."""
+
+    declaration_key = "direct_parent_reference"
+    semantic_marker_types = (DirectParentReferenceFeatureMarker,)
+    prefix = "Parent_"
+
+    @classmethod
+    def from_feature_name(
+        cls,
+        feature_name: str,
+    ) -> DirectParentReferenceMeasurementFeature | None:
+        if not feature_name.startswith(cls.prefix):
+            return None
+        parent_object_name = feature_name[len(cls.prefix) :]
+        if not parent_object_name:
+            return None
+        return DirectParentReferenceMeasurementFeature(parent_object_name)
+
+    @classmethod
+    def feature_name(cls, identity: object) -> str:
+        if not isinstance(identity, DirectParentReferenceMeasurementFeature):
+            raise TypeError(
+                f"{cls.__name__}.feature_name requires "
+                "DirectParentReferenceMeasurementFeature."
+            )
+        return f"{cls.prefix}{identity.parent_object_name}"
+
+
+class ChildCountFeatureDeclaration(RuntimeMeasurementFeatureDeclaration):
+    """Own the child-name grammar shared by export readers and CP producers."""
+
+    declaration_key = "child_count_reference"
+    prefix = "Children_"
+    suffix = "_Count"
+
+    @classmethod
+    def from_feature_name(cls, feature_name: str) -> str | None:
+        if not feature_name.startswith(cls.prefix) or not feature_name.endswith(
+            cls.suffix
+        ):
+            return None
+        name = feature_name[len(cls.prefix) : -len(cls.suffix)].strip()
+        return name or None
+
+    @classmethod
+    def feature_name(cls, identity: str) -> str:
+        name = identity.strip()
+        if not name:
+            raise ValueError(
+                "Child-count feature requires a non-empty child object name."
+            )
+        return f"{cls.prefix}{name}{cls.suffix}"
+
+
 @dataclass(frozen=True)
 class ObjectRelationshipDeclaration(ArtifactSpecRelation):
     """Authoritative directed relationship semantics for one artifact output."""
+
+    exported_field_names: ClassVar[tuple[str, ...]] = (
+        "relationship_type",
+        "source_role",
+        "target_role",
+        "source_object",
+        "target_object",
+        "producer_module_number",
+    )
+
+    def exported_columns(self) -> dict[str, object]:
+        """Render the declaration owned by every exported edge row."""
+        return dict(
+            zip(
+                self.exported_field_names,
+                (
+                    self.relationship_type,
+                    self.source_role,
+                    self.target_role,
+                    self.source.name,
+                    self.target.name,
+                    self.producer_module_number,
+                ),
+                strict=True,
+            )
+        )
 
     relation_key = "object_relationship_declaration"
     target_plan_type: ClassVar[type[ArtifactPlan] | None] = None
@@ -120,6 +221,45 @@ class ObjectRelationshipDeclaration(ArtifactSpecRelation):
             producer_module_number=producer_module_number,
             source_runtime_slice_offset=source_runtime_slice_offset,
             target_runtime_slice_offset=target_runtime_slice_offset,
+        )
+
+    @classmethod
+    def from_exported_values(
+        cls,
+        relationship_type: str,
+        source_role: str,
+        target_role: str,
+        source_object: str,
+        target_object: str,
+        producer_module_number: object,
+    ) -> Self:
+        """Restore the complete declared parent/child edge grammar from CSV."""
+        source = ArtifactSpec.output(source_object, ObjectLabelsArtifactType).ref()
+        target = ArtifactSpec.output(target_object, ObjectLabelsArtifactType).ref()
+        module = MeasurementScalarLiteral(producer_module_number).integer_value
+        if module is None:
+            raise ValueError("Relationship producer module number is required.")
+        canonical = cls.parent_child(
+            source=source, target=target, producer_module_number=module
+        )
+        roles = (source_role, target_role)
+        canonical_roles = (canonical.source_role, canonical.target_role)
+        fields = (canonical.source_id_field, canonical.target_id_field)
+        if roles == canonical_roles:
+            source_field, target_field = fields
+        elif roles == canonical_roles[::-1]:
+            target_field, source_field = fields
+        else:
+            raise ValueError(f"Unsupported exported relationship roles {roles!r}.")
+        return cls(
+            source=source,
+            target=target,
+            relationship_type=relationship_type,
+            source_role=roles[0],
+            target_role=roles[1],
+            source_id_field=source_field,
+            target_id_field=target_field,
+            producer_module_number=module,
         )
 
     def require_target_spec(self, spec: ArtifactSpec) -> None:
@@ -218,9 +358,7 @@ class ObjectRelationship(
 
     def __post_init__(self, *source_provenance_values: object) -> None:
         self.validate_artifact_name()
-        self.absorb_explicit_source_provenance(
-            SourceImageProvenance.from_init_values(source_provenance_values)
-        )
+        self.absorb_explicit_source_provenance(source_provenance_values)
         self.normalize_source_provenance_fields()
         if not isinstance(self.declaration, ObjectRelationshipDeclaration):
             raise TypeError(
@@ -246,16 +384,9 @@ class ObjectRelationship(
     def relationship_columns(self) -> dict[str, Any]:
         """Return semantic relationship columns without payload provenance."""
 
-        columns = {
-            "relationship_type": self.declaration.relationship_type,
-            "source_role": self.declaration.source_role,
-            "target_role": self.declaration.target_role,
-            "source_object": self.declaration.source.name,
-            "target_object": self.declaration.target.name,
-            "producer_module_number": self.declaration.producer_module_number,
-            self.declaration.source_id_field: self.payload.source_ids,
-            self.declaration.target_id_field: self.payload.target_ids,
-        }
+        columns = self.declaration.exported_columns()
+        columns[self.declaration.source_id_field] = self.payload.source_ids
+        columns[self.declaration.target_id_field] = self.payload.target_ids
         if self.payload.slice_indices:
             columns["slice_index"] = self.payload.slice_indices
         if self.payload.slice_count is not None:
@@ -820,6 +951,12 @@ class ObjectInstanceKey:
         object.__setattr__(self, "object_id", object_id)
         object.__setattr__(self, "slice_index", slice_index)
 
+    def required_slice_index(self) -> int:
+        """Admit this object identity for a comparison requiring an explicit plane."""
+        if self.slice_index is None:
+            raise ValueError("Object instance requires an explicit image or slice identity.")
+        return self.slice_index
+
     @classmethod
     def from_measurement_row(
         cls,
@@ -952,6 +1089,10 @@ class ObjectInstanceRelationship:
                 ),
             )
         }
+
+    def reverse_endpoints(self) -> Self:
+        """Transpose the same directed instance pairs without losing their axes."""
+        return type(self)(self.target_keys, self.source_keys, self.slice_count)
 
     def parent_key_by_child(self) -> dict[ObjectInstanceKey, ObjectInstanceKey]:
         """Return source identity for each target identity."""

@@ -6,9 +6,10 @@ import logging
 import time
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from pathlib import Path
-from typing import ClassVar
+from types import MappingProxyType
+from typing import ClassVar, TypeVar
 
 import numpy as np
 from metaclass_registry import (
@@ -52,14 +53,16 @@ from openhcs.core.source_projection import (
     OpenHCSPlaneAddress,
     SourceArtifactProjection,
     SourcePlaneProjection,
+    SourceProjection,
     SourceProjectionMetadataSerializer,
     SourceProjectionSet,
 )
+from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.steps.function_artifact_materialization import (
+    MaterializedRuntimeArtifact,
     PersistentArtifactMaterializationTargetPlan,
     StreamingOnlyArtifactMaterializationTargetPlan,
     materialize_artifact_outputs,
-    runtime_artifact_materializations,
 )
 from openhcs.core.steps.function_io import (
     prepare_storage_image_payloads,
@@ -137,50 +140,61 @@ class ProducedMemoryPathsAuthority:
 def finalize_function_step_outputs(
     context: ProcessingContext,
     plan: CompiledStepPlan,
-) -> None:
-    """Persist images, streams, metadata, and non-image artifacts for one step."""
+) -> StepExecutionObservation:
+    """Save and publish one step's actual outputs before releasing their payloads."""
     if not RuntimeProfileLogger.enabled():
         MemoryOutputWriter.write_if_needed(context, plan)
         MaterializedImageOutputWriter.write_if_needed(context, plan)
         StreamOutputsAuthority.stream_outputs(context, plan)
-        RuntimeArtifactMaterializationAuthority.materialize(context, plan)
-        OpenHCSMetadataWriter.write(context, plan)
-        return
+        materializations = RuntimeArtifactMaterializationAuthority.materialize(
+            context, plan
+        )
+        OpenHCSMetadataWriter.write(
+            context, plan, artifact_materializations=materializations
+        )
+    else:
+        _profile_finalization_phase(
+            "finalize_memory_outputs",
+            lambda: MemoryOutputWriter.write_if_needed(context, plan),
+            plan,
+        )
+        _profile_finalization_phase(
+            "finalize_materialized_images",
+            lambda: MaterializedImageOutputWriter.write_if_needed(context, plan),
+            plan,
+        )
+        _profile_finalization_phase(
+            "finalize_stream_outputs",
+            lambda: StreamOutputsAuthority.stream_outputs(context, plan),
+            plan,
+        )
+        materializations = _profile_finalization_phase(
+            "finalize_runtime_artifacts",
+            lambda: RuntimeArtifactMaterializationAuthority.materialize(context, plan),
+            plan,
+        )
+        _profile_finalization_phase(
+            "finalize_openhcs_metadata",
+            lambda: OpenHCSMetadataWriter.write(
+                context, plan, artifact_materializations=materializations
+            ),
+            plan,
+        )
+    return StepExecutionObservation.combine(
+        item.observation(plan) for item in materializations
+    )
 
-    _profile_finalization_phase(
-        "finalize_memory_outputs",
-        lambda: MemoryOutputWriter.write_if_needed(context, plan),
-        plan,
-    )
-    _profile_finalization_phase(
-        "finalize_materialized_images",
-        lambda: MaterializedImageOutputWriter.write_if_needed(context, plan),
-        plan,
-    )
-    _profile_finalization_phase(
-        "finalize_stream_outputs",
-        lambda: StreamOutputsAuthority.stream_outputs(context, plan),
-        plan,
-    )
-    _profile_finalization_phase(
-        "finalize_runtime_artifacts",
-        lambda: RuntimeArtifactMaterializationAuthority.materialize(context, plan),
-        plan,
-    )
-    _profile_finalization_phase(
-        "finalize_openhcs_metadata",
-        lambda: OpenHCSMetadataWriter.write(context, plan),
-        plan,
-    )
+
+_FinalizationResult = TypeVar("_FinalizationResult")
 
 
 def _profile_finalization_phase(
     label: str,
-    operation: Callable[[], None],
+    operation: Callable[[], _FinalizationResult],
     plan: CompiledStepPlan,
-) -> None:
+) -> _FinalizationResult:
     started_at = time.perf_counter()
-    operation()
+    result = operation()
     RuntimeProfileLogger.log(
         logger,
         label,
@@ -189,6 +203,7 @@ def _profile_finalization_phase(
         step_name=plan.step_name,
         axis_id=plan.axis_id,
     )
+    return result
 
 
 class MemoryOutputWriter:
@@ -691,6 +706,9 @@ class OpenHCSMetadataWriter:
         plate_root: str
         sub_dir: str
         results_dir: str | None
+        artifact_materializations: tuple[MaterializedRuntimeArtifact, ...] = field(
+            default=(), compare=False, hash=False, repr=False
+        )
 
         @classmethod
         @abstractmethod
@@ -719,17 +737,25 @@ class OpenHCSMetadataWriter:
 
         @classmethod
         def for_execution(
-            cls, context: ProcessingContext, plan: CompiledStepPlan
+            cls,
+            context: ProcessingContext,
+            plan: CompiledStepPlan,
+            *,
+            artifact_materializations: tuple[MaterializedRuntimeArtifact, ...] = (),
         ) -> tuple[OpenHCSMetadataWriter.OutputTarget, ...]:
             return tuple(
                 target
                 for declaration in cls.__registry__.values()
                 if (owner := declaration.from_execution(context, plan)) is not None
-                for target in owner.production_targets(context, plan)
+                for target in replace(
+                    owner, artifact_materializations=artifact_materializations
+                ).production_targets(context, plan)
             )
 
         def production_targets(
-            self, context: ProcessingContext, plan: CompiledStepPlan
+            self,
+            context: ProcessingContext,
+            plan: CompiledStepPlan,
         ) -> tuple[OpenHCSMetadataWriter.OutputTarget, ...]:
             """Project this declaration's exact storage destinations for the step."""
             return (self,)
@@ -747,27 +773,36 @@ class OpenHCSMetadataWriter:
             return ()
 
         def runtime_artifact_projection_paths(
-            self, context: ProcessingContext, plan: CompiledStepPlan
+            self,
+            context: ProcessingContext,
+            plan: CompiledStepPlan,
+            *,
+            produced_projections: Mapping[
+                Path, tuple[ProducedOutputSemantics, SourceProjection]
+            ] = MappingProxyType({}),
         ) -> tuple[tuple[SourceArtifactProjection, str], ...]:
             """Publish artifacts persisted in this declared storage target."""
             materialization = plan.runtime_artifact_materialization
             if materialization.persists_to_backend(self.backend):
-                return self.project_runtime_artifacts(context, plan)
+                return self.project_runtime_artifacts(
+                    context, plan, produced_projections=produced_projections
+                )
             return ()
 
-        def contains_images(self, context: ProcessingContext) -> bool:
-            """Return whether the completed target contains image outputs."""
+        def stored_output_paths(self, context: ProcessingContext) -> tuple[str, ...]:
+            """Return this declaration's outputs eligible for publication."""
+            return tuple(
+                context.filemanager.list_image_files(self.output_dir, self.backend)
+            )
+
+        def contains_outputs(self, context: ProcessingContext) -> bool:
+            """Return whether this declared destination has publishable outputs."""
 
             if context.filemanager is None:
                 raise ValueError("OpenHCS metadata requires a file manager.")
             if not context.filemanager.is_dir(self.output_dir, self.backend):
                 return False
-            return bool(
-                context.filemanager.list_image_files(
-                    self.output_dir,
-                    self.backend,
-                )
-            )
+            return bool(self.stored_output_paths(context))
 
         def write(
             self,
@@ -806,7 +841,10 @@ class OpenHCSMetadataWriter:
                 component_labels=context.metadata_cache,
                 backend=self.backend,
                 is_main=self.is_main,
-                results_dir=(Path(self.results_dir).name if self.results_dir else None),
+                results_dir=(
+                    str(Path(self.results_dir).relative_to(self.plate_root))
+                    if self.results_dir is not None else None
+                ),
             )
 
         def produced_projection_metadata(
@@ -820,7 +858,9 @@ class OpenHCSMetadataWriter:
             if context.filemanager is None:
                 raise ValueError("OpenHCS metadata requires a file manager.")
             target = type(self).from_plan(plan)
-            if target is None or self not in target.production_targets(context, plan):
+            if target is None or self not in replace(
+                target, artifact_materializations=self.artifact_materializations
+            ).production_targets(context, plan):
                 raise ValueError(
                     "Produced metadata plan does not own this output target."
                 )
@@ -837,6 +877,7 @@ class OpenHCSMetadataWriter:
                 else ()
             )
             projection_paths = []
+            produced_projections = {}
             declared_addresses: set[OpenHCSPlaneAddress] = set()
             parser_context = FunctionOutputParserContext.from_processing_context(
                 context
@@ -863,11 +904,15 @@ class OpenHCSMetadataWriter:
                             SourcePlaneProjection(
                                 address=address,
                                 ref=SourcePixelRef(self.backend, virtual_path),
+                                source_alias=record.output_context.persisted_source_alias,
                                 source_metadata=source_metadata,
                                 image_metadata=metadata,
                             ),
                             virtual_path,
                         )
+                    )
+                    produced_projections[Path(destination)] = (
+                        record, projection_paths[-1][0]
                     )
                     continue
                 projection_paths.append(
@@ -883,8 +928,13 @@ class OpenHCSMetadataWriter:
                         virtual_path,
                     )
                 )
+                produced_projections[Path(destination)] = (
+                    record, projection_paths[-1][0]
+                )
             projection_paths.extend(
-                self.runtime_artifact_projection_paths(context, plan)
+                self.runtime_artifact_projection_paths(
+                    context, plan, produced_projections=produced_projections
+                )
             )
             if not projection_paths:
                 return None
@@ -906,20 +956,17 @@ class OpenHCSMetadataWriter:
             self,
             context: ProcessingContext,
             plan: CompiledStepPlan,
+            *,
+            produced_projections: Mapping[
+                Path, tuple[ProducedOutputSemantics, SourceProjection]
+            ] = MappingProxyType({}),
         ) -> tuple[tuple[SourceArtifactProjection, str], ...]:
             """Project persisted image artifacts into the target source authority."""
 
             projection_paths = []
-            for materialization in runtime_artifact_materializations(plan, context):
-                if (
-                    not materialization.spec.participates_in_persistent_materialization()
-                ):
-                    continue
-                for output in materialization.outputs(
-                    plan,
-                    context,
-                    output_path_filter=ImageFileFormat.is_image_path,
-                ):
+            for saved_artifact in self.artifact_materializations:
+                materialization = saved_artifact.materialization
+                for output in saved_artifact.outputs_for_backend(self.backend):
                     if not ImageFileFormat.is_image_path(output.path) or Path(
                         output.path
                     ).parent != Path(self.output_dir):
@@ -942,6 +989,21 @@ class OpenHCSMetadataWriter:
                             metadata
                         )
                     )
+                    produced = produced_projections.get(Path(destination))
+                    if produced is not None:
+                        record, projection = produced
+                        if record.owns_persisted_artifact(
+                            materialization.output_plan, destination, self.output_dir
+                        ):
+                            if (
+                                projection.address != address
+                                or projection.image_metadata != metadata
+                            ):
+                                raise ValueError(
+                                    "Conflicting metadata for persisted image "
+                                    f"occurrence {destination!r}."
+                                )
+                            continue
                     source_metadata = metadata.source_component_metadata or {}
                     persisted_source_metadata = dict(source_metadata)
                     metadata.source_voxel_spacing.merge_into(
@@ -1005,8 +1067,12 @@ class OpenHCSMetadataWriter:
         cls,
         context: ProcessingContext,
         plan: CompiledStepPlan,
+        *,
+        artifact_materializations: tuple[MaterializedRuntimeArtifact, ...] = (),
     ) -> None:
-        for target in cls.OutputTarget.for_execution(context, plan):
+        for target in cls.OutputTarget.for_execution(
+            context, plan, artifact_materializations=artifact_materializations
+        ):
             if not plan.create_openhcs_metadata:
                 structured_metadata = target.produced_projection_metadata(context, plan)
                 if structured_metadata is None:
@@ -1038,7 +1104,7 @@ class OpenHCSMetadataWriter:
 
         for owner, context in target_contexts.items():
             for target in owner.reconciliation_targets(context):
-                if target.contains_images(context):
+                if target.contains_outputs(context):
                     target.write(context)
 
 
@@ -1121,32 +1187,36 @@ class MaterializedImageMetadataTarget(
 
 
 class RuntimeArtifactMetadataTarget(OpenHCSMetadataWriter.OutputTarget):
-    """Image artifacts persist independently of main-flow image/checkpoint storage."""
+    """Saved artifacts own result destinations independently of image storage."""
+
+    def stored_output_paths(self, context: ProcessingContext) -> tuple[str, ...]:
+        """Include every saved format in this declared result destination."""
+        return tuple(context.filemanager.list_files(self.output_dir, self.backend))
 
     def production_targets(
-        self, context: ProcessingContext, plan: CompiledStepPlan
+        self,
+        context: ProcessingContext,
+        plan: CompiledStepPlan,
     ) -> tuple[RuntimeArtifactMetadataTarget, ...]:
         """Derive directories from the same writer outputs used to save artifacts."""
         directories = dict.fromkeys(
             Path(output.path).parent
-            for materialization in runtime_artifact_materializations(plan, context)
-            if materialization.spec.participates_in_persistent_materialization()
-            for output in materialization.outputs(
-                plan, context, output_path_filter=ImageFileFormat.is_image_path
-            )
-            if ImageFileFormat.is_image_path(output.path)
+            for materialization in self.artifact_materializations
+            for output in materialization.outputs_for_backend(self.backend)
         )
         return tuple(
             target
             for directory in directories
             for target in (self.for_directory(directory),)
-            if target.contains_images(context)
+            if target.contains_outputs(context)
         )
 
     def reconciliation_targets(
         self, context: ProcessingContext
     ) -> tuple[RuntimeArtifactMetadataTarget, ...]:
         """Use durable typed projections, without reloading cleaned artifact values."""
+        from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
+
         subdirectories = OpenHCSMetadataSubdirectories.from_path(
             METADATA_CONFIG.metadata_path(self.plate_root)
         )
@@ -1159,15 +1229,26 @@ class RuntimeArtifactMetadataTarget(OpenHCSMetadataWriter.OutputTarget):
             if isinstance(projection, SourceArtifactProjection)
             and projection.ref.backend == self.backend
         )
+        result_directories = OpenHCSMetadataHandler(
+            context.filemanager
+        ).analysis_result_directories(self.plate_root)
         return tuple(
             self.for_directory(directory)
-            for directory in dict.fromkeys((self.output_dir, *directories))
+            for directory in dict.fromkeys(
+                (
+                    self.output_dir,
+                    *directories,
+                    *(directory.path for directory in result_directories),
+                )
+            )
         )
 
     def for_directory(self, directory: Path) -> RuntimeArtifactMetadataTarget:
         """Retain the compiled plate/backend while projecting one declared directory."""
         sub_dir = directory.relative_to(self.plate_root)
-        return replace(self, output_dir=directory, sub_dir=str(sub_dir))
+        return replace(
+            self, output_dir=directory, sub_dir=str(sub_dir), results_dir=str(directory)
+        )
 
     @classmethod
     def from_plan(cls, plan: CompiledStepPlan) -> RuntimeArtifactMetadataTarget | None:
@@ -1181,7 +1262,7 @@ class RuntimeArtifactMetadataTarget(OpenHCSMetadataWriter.OutputTarget):
             backend=materialization.require_persistent_backend(),
             plate_root=plate_root,
             sub_dir=str(output_dir.relative_to(plate_root)),
-            results_dir=None,
+            results_dir=str(output_dir),
         )
 
 
@@ -1193,27 +1274,28 @@ class RuntimeArtifactMaterializationAuthority:
         cls,
         context: ProcessingContext,
         plan: CompiledStepPlan,
-    ) -> None:
+    ) -> tuple[MaterializedRuntimeArtifact, ...]:
         if not plan.artifact_outputs:
-            return
+            return ()
         materialization_plan = plan.runtime_artifact_materialization
         has_persistent_target = materialization_plan.has_persistent_target
         has_streaming_target = bool(plan.streaming_configs)
         if not has_persistent_target and not has_streaming_target:
             logger.info("Skipping runtime artifact materialization and streaming")
-            return
+            return ()
 
         logger.info(
             "Starting materialization for %s artifact outputs",
             len(plan.artifact_outputs),
         )
-        materialize_artifact_outputs(
+        materializations = materialize_artifact_outputs(
             context.filemanager,
             plan,
             cls.target_plan(materialization_plan),
             context,
         )
         logger.info("Completed artifact materialization")
+        return materializations
 
     @staticmethod
     def target_plan(

@@ -423,6 +423,26 @@ class ImagePayloadStackComposition(ABC):
     @abstractmethod
     def composition_metadata_mode(self) -> ImagePayloadMetadataCompositionMode: ...
 
+    @staticmethod
+    def copy_whole_image(
+        value: RuntimeArrayData,
+        *,
+        memory_type: str,
+        device_id: int | None,
+    ) -> RuntimeArrayData:
+        """Copy pixels, mask and metadata without adding a composition axis."""
+        copied_data = stack_runtime_slices(
+            (image_payload_data(value),), memory_type, device_id,
+        )[0]
+        mask = image_payload_mask(value)
+        copied_mask = (
+            None if mask is None
+            else stack_runtime_slices((mask,), memory_type, device_id)[0]
+        )
+        return image_payload_metadata(value).replace_fields().payload_with(
+            copied_data, copied_mask,
+        )
+
     def composition_source_metadata(self) -> tuple[ImagePayloadMetadata, ...]:
         return tuple(
             self.composition_payload_metadata(image_payload_metadata(payload))
@@ -992,6 +1012,11 @@ class AlignedImageSliceContext:
     projection_key: str
     artifact_kind: str | None = None
 
+    @property
+    def persisted_source_alias(self) -> str | None:
+        """Expose a declared artifact name, preserving anonymous main flow."""
+        return self.output_key if self.artifact_kind is not None else None
+
     @classmethod
     def main_flow(
         cls,
@@ -1140,6 +1165,17 @@ class AlignedImageStack(ImagePayloadStackComposition):
     def composition_metadata_mode(self) -> ImagePayloadMetadataCompositionMode:
         return ImagePayloadMetadataCompositionMode.STACK
 
+    @property
+    def projected_output_composition_mode(self) -> ImagePayloadMetadataCompositionMode | None:
+        """Declare the outer runtime axis retained by projected output members."""
+        return self.composition_metadata_mode
+
+    def plane_axis_for_output_context(
+        self, context: AlignedImageSliceContext,
+    ) -> RuntimePlaneAxis | None:
+        """An explicitly aligned stack declares its outer runtime-slice domain."""
+        return RuntimePlaneAxis.RUNTIME_SLICE
+
     def composition_payload_metadata(
         self, metadata: ImagePayloadMetadata
     ) -> ImagePayloadMetadata:
@@ -1194,6 +1230,58 @@ class AlignedImageStack(ImagePayloadStackComposition):
             for output_slice in payload_slices_for_alignment(payload):
                 yield output_slice, context
 
+    def output_values_for_artifact_specs(
+        self,
+        canonical_specs: tuple[ArtifactSpec, ...],
+    ) -> dict[ArtifactSpecRef, Any]:
+        """Bind one complete declared main-flow roster to exact slice contexts."""
+
+        if not self.slice_contexts:
+            raise ValueError(
+                "Multiple canonical output specs require exact AlignedImageStack "
+                "slice contexts; positional slice order is not artifact identity."
+            )
+
+        specs_by_context = {
+            (spec.name, spec.artifact_type.value): spec for spec in canonical_specs
+        }
+        if len(specs_by_context) != len(canonical_specs):
+            raise ValueError("Canonical output ABI contains duplicate named contexts.")
+        resolved: dict[ArtifactSpecRef, Any] = {}
+        for payload, context in zip(
+            self.slices,
+            self.slice_contexts,
+            strict=True,
+        ):
+            if context.output_kind != AlignedImageSliceContext.MAIN_FLOW_OUTPUT_KIND:
+                raise ValueError(
+                    "Canonical AlignedImageStack contains a non-main-flow slice "
+                    f"context: {context!r}."
+                )
+            context_key = (context.output_key, context.artifact_kind)
+            spec = specs_by_context.get(context_key)
+            if spec is None:
+                raise ValueError(
+                    "Canonical AlignedImageStack context is not declared by the "
+                    f"callable ABI: {context!r}."
+                )
+            ref = spec.ref()
+            if ref in resolved:
+                raise ValueError(
+                    "Canonical AlignedImageStack contains duplicate context for "
+                    f"{ref!r}."
+                )
+            resolved[ref] = payload
+        missing = tuple(
+            spec.ref() for spec in canonical_specs if spec.ref() not in resolved
+        )
+        if missing:
+            raise ValueError(
+                "Canonical AlignedImageStack does not carry every declared output: "
+                f"{missing!r}."
+            )
+        return resolved
+
     def output_payload(
         self,
         artifact_ref: ArtifactSpecRef,
@@ -1233,6 +1321,33 @@ class ImageOutputBundle(AlignedImageStack):
     @property
     def composition_metadata_mode(self) -> ImagePayloadMetadataCompositionMode:
         return ImagePayloadMetadataCompositionMode.BUNDLE
+
+    @property
+    def projected_output_composition_mode(self) -> ImagePayloadMetadataCompositionMode | None:
+        """Flatten declared inner runtime planes, retaining other named image domains."""
+        if any(
+            image_payload_metadata(payload).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+            for payload in self.slices
+        ):
+            return ImagePayloadMetadataCompositionMode.STACK
+        if len(self.slices) == 1:
+            return None
+        return self.composition_metadata_mode
+
+    def plane_axis_for_output_context(
+        self, context: AlignedImageSliceContext,
+    ) -> RuntimePlaneAxis | None:
+        """Resolve a named output's original inner domain before leaf projection."""
+        payloads = tuple(
+            payload for payload, declared_context in zip(self.slices, self.slice_contexts, strict=True)
+            if declared_context == context
+        )
+        if len(payloads) != 1:
+            raise ValueError(
+                "Named image output context requires exactly one original payload: "
+                f"{context!r}; found {len(payloads)}."
+            )
+        return image_payload_metadata(payloads[0]).plane_axis
 
     def composition_payload_metadata(
         self, metadata: ImagePayloadMetadata

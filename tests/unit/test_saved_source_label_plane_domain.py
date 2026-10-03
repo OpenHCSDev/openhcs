@@ -42,6 +42,34 @@ def _saved_label_input(source):
 
 
 @pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
+@pytest.mark.parametrize("plane_count", (1, 2))
+def test_explicit_object_projection_preserves_axis_without_acquisition_provenance(
+    axis, plane_count,
+):
+    labels = np.ones((plane_count, 6, 7), dtype=np.int32)
+    source = ImagePayloadMetadata(plane_axis=axis).payload_with(labels)
+    projection = RuntimePlaneAxisValueProjection.preserve(
+        axis=axis, axis_size=plane_count,
+    )
+    payload = SourceImageObjectLabelBuildRequest(
+        image=source, labels=labels, plane_projection=projection,
+    ).payload()
+
+    assert payload.plane_axis is axis
+    assert payload.domain.declared_object_id_domains == ((1,),) * plane_count
+    assert payload.source_provenance == source.metadata.source_provenance
+    np.testing.assert_array_equal(payload.labels, labels)
+    other_axis = next(member for member in RuntimePlaneAxis if member is not axis)
+    with pytest.raises(ValueError, match="conflicts with the source-image axis"):
+        SourceImageObjectLabelBuildRequest(
+            image=source, labels=labels,
+            plane_projection=RuntimePlaneAxisValueProjection.preserve(
+                axis=other_axis, axis_size=plane_count,
+            ),
+        ).payload()
+
+
+@pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
 def test_original_artifact_admission_and_full_stack_shape_keep_2d_planes(axis):
     labels = np.zeros((2, 8, 9), dtype=np.int32)
     labels[0, 1:3, 2:5] = 29

@@ -16,6 +16,9 @@ from openhcs.core.config import (
     ProcessingConfig,
 )
 from openhcs.core.execution_state import ExecutionOutputPlateSummary
+from openhcs.core.orchestrator.compiled_plate_execution import (
+    CompiledPlateExecutionResults,
+)
 from openhcs.core.orchestrator.execution_result import (
     ExecutionResult,
     RuntimeContextObservation,
@@ -196,20 +199,22 @@ def test_server_exports_outcomes_without_projecting_compiled_values(
     server._export_runtime_observation(
         request_context=request_context,
         compilation=compilation,
-        execution_results={
-            "A01": ExecutionResult.success(
-                "A01",
-                runtime_observation=RuntimeExecutionObservation(
-                    contexts=(
-                        RuntimeContextObservation(
-                            "context",
-                            (),
-                            runtime_export_paths=(declared_output,),
-                        ),
-                    )
-                ),
-            )
-        },
+        execution_results=CompiledPlateExecutionResults(
+            {
+                "A01": ExecutionResult.success(
+                    "A01",
+                    runtime_observation=RuntimeExecutionObservation(
+                        contexts=(
+                            RuntimeContextObservation(
+                                "context",
+                                (),
+                                runtime_export_paths=(declared_output,),
+                            ),
+                        )
+                    ),
+                )
+            }
+        ),
     )
 
     export = ZMQRuntimeExecutionOutcomeExport.read(export_path)

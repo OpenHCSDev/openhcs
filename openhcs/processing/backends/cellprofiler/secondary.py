@@ -38,6 +38,7 @@ from openhcs.core.registry_strategies import (
     EnumKeyedStrategyMixin,
     RegisteredLeafClassSpec,
 )
+from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     image_payload_data,
     image_payload_mask,
@@ -1147,7 +1148,7 @@ def _replacement_primary_output_from_relationship(
 
 
 def _execute_identify_secondary_objects(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     primary_labels: ObjectLabelValue,
     method: SecondaryMethod = SecondaryMethod.PROPAGATION,
     threshold_scope: CellProfilerThresholdScope = CellProfilerThresholdScope.GLOBAL,
@@ -1337,7 +1338,7 @@ def _execute_identify_secondary_objects(
 @numpy(contract=ProcessingContract.PURE_2D)
 @special_inputs("primary_labels")
 def identify_secondary_objects(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     primary_labels: ObjectLabelValue,
     method: SecondaryMethod = SecondaryMethod.PROPAGATION,
     threshold_scope: CellProfilerThresholdScope = CellProfilerThresholdScope.GLOBAL,
@@ -1407,7 +1408,7 @@ def identify_secondary_objects(
 @numpy(contract=ProcessingContract.PURE_2D)
 @special_inputs("primary_labels")
 def identify_secondary_objects_with_replacement_primary(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     primary_labels: ObjectLabelValue,
     method: SecondaryMethod = SecondaryMethod.PROPAGATION,
     threshold_scope: CellProfilerThresholdScope = CellProfilerThresholdScope.GLOBAL,

@@ -303,6 +303,7 @@ from openhcs.core.runtime_measurements import (
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
 )
+from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     ImageMetadataPayload,
     MaskedImagePayload,
@@ -1560,7 +1561,7 @@ def _object_intensity_batch_key(
 @object_label_input_execution_mode(ObjectLabelInputExecutionMode.SLICE_ALIGNED)
 @runtime_bound_parameters(SliceIndexRuntimeParameter)
 def measure_object_intensity(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     labels: ObjectLabelValue,
     object_intensity_backend_provider: BackendProviderInput = DEFAULT_CELLPROFILER_BACKEND_SELECTION,
     slice_index: int = OBJECT_INTENSITY_DEFAULT_SLICE_INDEX,
@@ -1857,7 +1858,7 @@ class DivideByValueRescaleMethodRunner(RescaleMethodRunner):
 @runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
 @numpy_decorator(contract=ProcessingContract.PURE_2D)
 def rescale_intensity(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     rescale_method: RescaleMethod = RescaleMethod.STRETCH,
     automatic_low: AutomaticLow = AutomaticLow.EACH_IMAGE,
     automatic_high: AutomaticHigh = AutomaticHigh.EACH_IMAGE,

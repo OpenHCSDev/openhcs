@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 from polystore.disk import DiskStorageBackend
 from polystore.filemanager import FileManager
-from polystore.roi import ROI, PointShape
+from polystore.roi import ROI, PointShape, load_rois_from_zip
 from polystore.roi_converters import NapariROIConverter
 from polystore.streaming.identity import (
     FixedStreamProducerIdentityKind,
@@ -954,9 +954,10 @@ def test_reopen_native_roi_archives_preserves_per_file_source_and_calibration(
             stream.source.metadata.metadata_by_path[batch_paths[0]]
             == expected.source_component_metadata
         )
-        assert data[0][0].metadata == {
+        assert ROIArchiveSourceMetadata.feature_metadata(data[0][0].metadata) == {
             "label": expected.source_component_metadata["channel"]
         }
+        assert ROIArchiveSourceMetadata.decode(data[0]) == expected
         assert data[0][0].shapes == [PointShape(32.25, 40.5)]
 
 
@@ -1030,6 +1031,7 @@ def test_3d_point_archive_reopens_with_native_z_domain_and_features(tmp_path):
         ),
     )
     config = NapariStreamingConfig(enabled=True)
+    saved_source = ROIArchiveSourceMetadata.decode(load_rois_from_zip(Path(archive)))
     result = StreamingService(filemanager, handler, tmp_path).stream_rois(
         RoiStreamingRequest(
             viewer=FakeViewer(),
@@ -1047,6 +1049,13 @@ def test_3d_point_archive_reopens_with_native_z_domain_and_features(tmp_path):
     assert paths == [archive]
     assert data[0][0].metadata["response"] == 4.75
     assert data[0][0].metadata["openhcs_fractional_z"] == 2.375
+    reopened_source = ROIArchiveSourceMetadata.decode(data[0])
+    assert reopened_source is not None
+    assert reopened_source == saved_source
+    assert (
+        reopened_source.source_image_provenance_planes
+        == table.source_image_provenance_planes
+    )
     assert stream.source.metadata.metadata_by_path[archive]["z_index"] == 0
     assert stream.message_extra[ViewerBatchWireField.COMPONENT_VALUE_DOMAIN.value][
         "z_index"

@@ -24,7 +24,10 @@ from openhcs.core.source_bindings import (
     NamedSourceBinding,
     SourceProjectionRole,
 )
-from openhcs.core.source_metadata import SourceMetadataMapping
+from openhcs.core.source_metadata import (
+    SourceMetadataFields,
+    SourceMetadataMapping,
+)
 from openhcs.core.source_matching import (
     source_component_metadata_values,
     source_metadata_value,
@@ -553,12 +556,8 @@ class VirtualWorkspaceImagePayloadProjection:
         """Apply declared component metadata and source aliases to one payload."""
         source_metadata = self.source_metadata
         if source_metadata is not None:
-            source_metadata = MappingProxyType(
-                {
-                    field: value
-                    for field, value in source_metadata.items()
-                    if field != SOURCE_BINDING_ALIAS_METADATA_FIELD
-                }
+            source_metadata = SourceMetadataFields.with_fields(
+                source_metadata, {}, without=(SOURCE_BINDING_ALIAS_METADATA_FIELD,)
             )
         current_metadata = image_payload_metadata(payload)
         metadata = self.metadata(current_metadata)
@@ -839,7 +838,7 @@ class VirtualWorkspaceSourceProjectionBuilder:
         virtual_path: str,
         metadata_fields: SourceMetadataMapping,
     ) -> None:
-        normalized_metadata = MappingProxyType(dict(metadata_fields))
+        normalized_metadata = SourceMetadataFields.readonly_snapshot(metadata_fields)
         self.source_metadata_by_path[virtual_path] = normalized_metadata
         self.source_metadata_by_path[str(self.plate_path / virtual_path)] = (
             normalized_metadata

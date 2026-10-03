@@ -1704,7 +1704,7 @@ def test_managed_runtime_adapter_output_preserves_authoritative_source_metadata(
     }
 
 
-def test_pattern_group_runtime_stacks_nominal_scalar_rgb_output_as_one_slice():
+def test_pattern_group_runtime_retains_nominal_scalar_rgb_output_as_one_image():
     scalar_output = ImagePayloadMetadata(
         source_path="/input/A01_s1_w3.tif",
         source_component_metadata={
@@ -1767,10 +1767,10 @@ def test_pattern_group_runtime_stacks_nominal_scalar_rgb_output_as_one_slice():
             artifact_kind=ImageArtifactType.value,
         ),
     )
-    assert image_payload_data(output.stack_payload).shape == (1, 2, 3, 3)
+    assert image_payload_data(output.stack_payload).shape == (2, 3, 3)
     stack_metadata = image_payload_metadata(output.stack_payload)
-    assert stack_metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
-    assert stack_metadata.source_channel_axis == 3
+    assert stack_metadata.plane_axis is None
+    assert stack_metadata.source_channel_axis == -1
 
 
 def test_pattern_group_runtime_uses_declared_output_slice_cardinality():

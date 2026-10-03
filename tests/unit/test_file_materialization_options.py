@@ -85,7 +85,7 @@ def test_source_identity_image_file_projects_addressable_stack_planes() -> None:
     assert primary_path == "/analysis/site1_saved.npy"
     assert spec.emits_variable_component_planes(payload)
     assert tuple(
-        identity.path for identity in spec.emitted_source_identities(payload)
+        identity.path for identity in spec.stream_source_identities(payload)
     ) == tuple(f"/input/site{index}.tif" for index in range(1, 4))
     for index, plane in enumerate(planes, start=1):
         np.testing.assert_array_equal(

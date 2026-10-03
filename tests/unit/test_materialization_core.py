@@ -2394,7 +2394,7 @@ def test_roi_materialization_spec_reports_projected_source_identities() -> None:
     assert spec.emits_variable_component_planes(payload) is True
     assert [
         identity.component_metadata
-        for identity in spec.emitted_source_identities(payload)
+        for identity in spec.stream_source_identities(payload)
     ] == [
         {
             "well": "A01",

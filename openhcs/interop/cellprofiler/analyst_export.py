@@ -69,7 +69,7 @@ from openhcs.core.source_image_provenance import (
     SourceImageProvenance,
 )
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
-from openhcs.core.source_metadata import SourceMetadataRoleView, SourceMetadataScalar
+from openhcs.core.source_metadata import SourceMetadataFields, SourceMetadataScalar
 from openhcs.core.source_workspace_projection import (
     VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjectionAuthority,
@@ -955,7 +955,7 @@ class CPATableRowProjection:
                 ] = source_path.as_uri()
             if component_metadata is not None:
                 metadata_items.update(
-                    SourceMetadataRoleView(component_metadata).original_items()
+                    SourceMetadataFields.original_items(component_metadata)
                 )
             image_number = self.image_set_numbering.for_source_slice(
                 scope=scope,

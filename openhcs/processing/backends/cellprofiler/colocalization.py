@@ -2522,7 +2522,7 @@ def _colocalization_unit_interval_scale(
 @numpy(contract=ProcessingContract.FLEXIBLE)
 @runtime_bound_parameters(_ColocalizationThresholdMaskOutputsRuntimeParameter)
 def measure_colocalization(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     channel_1: int = 0,
     channel_2: int = 1,
     threshold_percent: float = 15.0,
@@ -2790,7 +2790,7 @@ def _measure_colocalization_objects_core(
     _ColocalizationCostesThresholdBatchRuntimeParameter,
 )
 def measure_colocalization_objects(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     labels: ObjectLabelValue,
     measurement_scope: CellProfilerMeasurementTargetScope = CellProfilerMeasurementTargetScope.OBJECT,
     channel_1: int = 0,
@@ -2881,7 +2881,7 @@ def measure_colocalization_objects(
 
 
 def _colocalization_threshold_mask_canonical_output(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     *,
     threshold_mask_groups: tuple[ColocalizationThresholdMaskGroup, ...],
     threshold_mask_outputs: tuple[ColocalizationThresholdMaskRuntimeOutput, ...],
@@ -2911,7 +2911,7 @@ def _colocalization_threshold_mask_canonical_output(
 
 
 def _colocalization_threshold_mask(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     request: ColocalizationThresholdMaskRuntimeOutput,
 ) -> RuntimeArrayData:
     """Apply CellProfiler's whole-image or per-object percentage threshold."""

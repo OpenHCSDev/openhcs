@@ -43,7 +43,6 @@ from openhcs.core.artifacts import (
 )
 from openhcs.core.callable_contract import (
     CallableRuntimeCacheKey,
-    prepare_processing_callable,
 )
 from openhcs.core.component_group_scope import (
     ComponentGroupScope,
@@ -75,6 +74,7 @@ from openhcs.core.aligned_image_payload import (
     AlignedImageStack,
     AlignedImageSliceContext,
     ImagePayloadBundleContext,
+    ImagePayloadStackComposition,
     ImageOutputBundle,
     flatten_aligned_image_payload_slices,
     stack_image_payload_context,
@@ -245,9 +245,6 @@ class FunctionInvocationCallableResolver:
     def prepare(cls, invocation: CompiledFunctionInvocation) -> None:
         """Resolve and cache one invocation callable before timed execution."""
         cls.resolve(invocation)
-        prepare_processing_callable(
-            invocation.contract.resolve_canonical_raw_callable()
-        )
 
     @classmethod
     def resolve(cls, invocation: CompiledFunctionInvocation) -> Callable:
@@ -1580,6 +1577,69 @@ class PatternGroupData:
     )
 
 
+    @staticmethod
+    def validate_main_flow_cohort(
+        producer_records: Sequence[ProducedOutputSemantics] | None,
+    ) -> None:
+        """One input cohort has one declared whole-image composition domain."""
+        if producer_records and len({record.main_flow_plane_axis for record in producer_records}) != 1:
+            raise ValueError("One main-flow cohort cannot combine different declared image axes.")
+
+    @classmethod
+    def from_loaded_images(
+        cls,
+        matching_files: list[str],
+        payloads: Sequence[RuntimeArrayData],
+        *,
+        producer_records: Sequence[ProducedOutputSemantics] | None,
+        source_binding_context: SourceBindingRuntimeContext,
+        execution_plan: CompiledStepPlan,
+        source_projection: VirtualWorkspaceSourceProjection | None,
+        workspace_source_lookups: Sequence[VirtualWorkspacePathLookup],
+    ) -> "PatternGroupData":
+        """Compose a selected admissible input cohort in its declared image domain."""
+        if (
+            producer_records
+            and len(producer_records) == 1
+            and producer_records[0].main_flow_plane_axis is image_payload_metadata(payloads[0]).plane_axis
+        ):
+            main_data_stack = ImagePayloadStackComposition.copy_whole_image(
+                payloads[0], memory_type=execution_plan.input_memory_type,
+                device_id=execution_plan.device_id_for(execution_plan.input_memory_type),
+            )
+        else:
+            metadata_mode = ImagePayloadMetadataCompositionMode.STACK
+            if producer_records:
+                declared_axis = producer_records[0].main_flow_plane_axis
+                metadata_mode = (
+                    ImagePayloadMetadataCompositionMode.BUNDLE
+                    if declared_axis is None
+                    else ImagePayloadMetadataCompositionMode.for_plane_axis(declared_axis)
+                )
+            if source_projection is not None and workspace_source_lookups:
+                metadata_mode = source_projection.payload_composition_mode(
+                    workspace_source_lookups
+                )
+            if metadata_mode is ImagePayloadMetadataCompositionMode.STACK:
+                main_data_stack = stack_runtime_slices(
+                    tuple(image_payload_data(payload) for payload in payloads),
+                    execution_plan.input_memory_type,
+                    execution_plan.device_id_for(execution_plan.input_memory_type),
+                )
+                main_data_stack = stack_image_payload_context(
+                    payloads, main_data_stack, metadata_mode=metadata_mode,
+                )
+            elif metadata_mode is ImagePayloadMetadataCompositionMode.BUNDLE:
+                main_data_stack = ImagePayloadBundleContext.from_payloads(
+                    tuple(payloads), metadata_mode=metadata_mode,
+                ).compose()
+        return cls(
+            matching_files=matching_files,
+            main_data_stack=main_data_stack,
+            source_binding_context=source_binding_context,
+        )
+
+
 @dataclass(frozen=True, slots=True)
 class OutputPathBatchEntry:
     """Resolved identity for one output path in a runtime save batch."""
@@ -2084,7 +2144,7 @@ class FunctionCoreExecutor(FunctionInvocationArtifactScope):
         if component is None or self.group_key is None:
             return source_payload
         metadata = image_payload_metadata(source_payload)
-        component_metadata = dict(metadata.source_component_metadata or {})
+        component_metadata = metadata.source_component_metadata or {}
         component_metadata = with_source_component_metadata(
             component_metadata,
             component,
@@ -2425,6 +2485,7 @@ class PatternGroupOutputData:
     slices: list[RuntimeArrayData]
     slice_contexts: tuple[AlignedImageSliceContext, ...] = ()
     stack_payload: RuntimeArrayData | None = None
+    main_flow_source: RuntimeArrayData | None = None
 
     def __post_init__(self) -> None:
         if not self.slice_contexts:
@@ -2438,6 +2499,69 @@ class PatternGroupOutputData:
             )
 
     @classmethod
+    def from_single_image(
+        cls,
+        value: RuntimeArrayData,
+        *,
+        slice_contexts: tuple[AlignedImageSliceContext, ...] = (),
+        memory_type: MemoryType,
+        device_id: int | None,
+    ) -> "PatternGroupOutputData":
+        """Copy one whole image for main-flow reuse without declaring a new axis."""
+        return cls(
+            slices=(value,),
+            slice_contexts=slice_contexts,
+            stack_payload=ImagePayloadStackComposition.copy_whole_image(
+                value, memory_type=memory_type, device_id=device_id,
+            ),
+            main_flow_source=value,
+        )
+
+    def plane_axis_for_output_context(
+        self, context: AlignedImageSliceContext,
+    ) -> RuntimePlaneAxis | None:
+        """Derive each persisted member's domain from its original nominal producer."""
+        if isinstance(self.main_flow_source, AlignedImageStack):
+            return self.main_flow_source.plane_axis_for_output_context(context)
+        if isinstance(self.main_flow_source, ImagePayloadMetadataCarrier):
+            return image_payload_metadata(self.main_flow_source).plane_axis
+        return RuntimePlaneAxis.RUNTIME_SLICE
+
+    def cache_payload_for_outputs(
+        self,
+        payloads: Sequence[RuntimeArrayData],
+        metadata: Sequence[ImagePayloadMetadata],
+    ) -> RuntimeArrayData | None:
+        """Keep the original whole-image domain while applying saved output context."""
+        if self.stack_payload is None:
+            return None
+        data = image_payload_data(self.stack_payload)
+        if (
+            len(payloads) == 1
+            and self.plane_axis_for_output_context(self.slice_contexts[0]) is metadata[0].plane_axis
+            and np.shape(data) == np.shape(image_payload_data(payloads[0]))
+        ):
+            return metadata[0].replace_fields().payload_with(
+                data, image_payload_mask(self.stack_payload),
+            )
+        if np.shape(data)[:1] != (len(payloads),):
+            raise ValueError(
+                "PatternGroupOutputData.stack_payload must match its declared "
+                f"output slice count: stack shape {np.shape(data)!r}, "
+                f"slice count {len(payloads)}."
+            )
+        return stack_image_payload_context_from_metadata(
+            payloads, data, metadata,
+            metadata_mode=(
+                ImagePayloadMetadataCompositionMode.for_plane_axis(
+                    image_payload_metadata(self.stack_payload).plane_axis,
+                )
+                if isinstance(self.stack_payload, ImagePayloadMetadataCarrier)
+                else ImagePayloadMetadataCompositionMode.STACK
+            ),
+        )
+
+    @classmethod
     def from_aligned_stack(
         cls,
         value: AlignedImageStack,
@@ -2448,15 +2572,32 @@ class PatternGroupOutputData:
         """Materialize correlated output slices through the alignment owner."""
         projected_outputs = tuple(value.projected_output_slices())
         payloads = [payload for payload, _context in projected_outputs]
+        metadata_mode = value.projected_output_composition_mode
+        if metadata_mode is None:
+            result = cls.from_single_image(
+                payloads[0],
+                slice_contexts=tuple(context for _payload, context in projected_outputs),
+                memory_type=memory_type,
+                device_id=device_id,
+            )
+            result.main_flow_source = value
+            return result
         data = tuple(image_payload_data(payload) for payload in payloads)
         stack_payload = None
-        if len({tuple(np.shape(item)) for item in data}) == 1:
-            stacked = stack_runtime_slices(data, memory_type, device_id)
-            stack_payload = stack_image_payload_context(
-                payloads,
-                stacked,
-                metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
-            )
+        declared_axes = {
+            value.plane_axis_for_output_context(context)
+            for _payload, context in projected_outputs
+        }
+        if len(declared_axes) == 1 and len({tuple(np.shape(item)) for item in data}) == 1:
+            if metadata_mode is ImagePayloadMetadataCompositionMode.BUNDLE:
+                stack_payload = ImagePayloadBundleContext.from_payloads(
+                    tuple(payloads), metadata_mode=metadata_mode,
+                ).compose()
+            else:
+                stacked = stack_runtime_slices(data, memory_type, device_id)
+                stack_payload = stack_image_payload_context(
+                    payloads, stacked, metadata_mode=metadata_mode,
+                )
         return cls(
             slices=payloads,
             slice_contexts=(
@@ -2465,6 +2606,7 @@ class PatternGroupOutputData:
                 else ()
             ),
             stack_payload=stack_payload,
+            main_flow_source=value,
         )
 
     def __iter__(self) -> Iterator[RuntimeArrayData]:
@@ -2647,21 +2789,20 @@ class PatternGroupRuntime:
             return
         plan = self.request.execution_plan
         parser = self.request.context.microscope_handler.parser
-        output_contexts = self._producer_output_contexts(matching_files)
-        records = tuple(
-            ProducedOutputSemantics.from_existing_main_flow_path(
-                plan,
-                self._input_memory_path(plan.input_dir, matching_file),
-                parser,
-                output_context=output_context,
+        manifest = step_output_manifest(self.request.context)
+        producer_records = manifest.producer_output_records_for_paths(plan, matching_files, parser)
+        if producer_records is None:
+            records = tuple(
+                ProducedOutputSemantics.from_existing_main_flow_path(
+                    plan,
+                    self._input_memory_path(plan.input_dir, matching_file),
+                    parser,
+                )
+                for matching_file in matching_files
             )
-            for matching_file, output_context in zip(
-                matching_files,
-                output_contexts,
-                strict=True,
-            )
-        )
-        step_output_manifest(self.request.context).record_outputs(plan, records)
+        else:
+            records = tuple(record.passed_through(plan) for record in producer_records)
+        manifest.record_outputs(plan, records)
 
     def _producer_output_contexts(
         self,
@@ -2761,6 +2902,14 @@ class PatternGroupRuntime:
             matching_files=matching_files,
             source_projection=source_projection,
         ).runtime_context()
+        producer_records = (
+            output_manifest.producer_output_records_for_paths(
+                plan, matching_files, context.microscope_handler.parser,
+            )
+            if plan.main_input_dependency.kind is StepInputDependencyKind.STEP_OUTPUT
+            else None
+        )
+        PatternGroupData.validate_main_flow_cohort(producer_records)
         cached_stack = context.runtime_image_stack_cache.get(
             tuple(full_file_paths),
             memory_type=plan.input_memory_type,
@@ -2797,32 +2946,17 @@ class PatternGroupRuntime:
                     f"Check file integrity and format compatibility."
                 )
 
-            metadata_mode = ImagePayloadMetadataCompositionMode.STACK
-            if source_projection is not None and workspace_source_lookups:
-                metadata_mode = source_projection.payload_composition_mode(
-                    workspace_source_lookups
-                )
-            if metadata_mode is ImagePayloadMetadataCompositionMode.STACK:
-                raw_slice_data = tuple(
-                    image_payload_data(slice_data) for slice_data in raw_slices
-                )
-                main_data_stack = stack_runtime_slices(
-                    raw_slice_data,
-                    plan.input_memory_type,
-                    plan.device_id_for(plan.input_memory_type),
-                )
-                main_data_stack = stack_image_payload_context(
-                    raw_slices,
-                    main_data_stack,
-                    metadata_mode=metadata_mode,
-                )
-            elif metadata_mode is ImagePayloadMetadataCompositionMode.BUNDLE:
-                main_data_stack = ImagePayloadBundleContext.from_payloads(
-                    tuple(raw_slices),
-                    metadata_mode=metadata_mode,
-                ).compose()
+            return PatternGroupData.from_loaded_images(
+                matching_files,
+                raw_slices,
+                producer_records=producer_records,
+                source_binding_context=source_binding_context,
+                execution_plan=plan,
+                source_projection=source_projection,
+                workspace_source_lookups=workspace_source_lookups,
+            )
         else:
-            main_data_stack = cached_stack.stack
+            main_data_stack = cached_stack
 
         return PatternGroupData(
             matching_files=matching_files,
@@ -2949,7 +3083,7 @@ class PatternGroupRuntime:
 
     def _source_binding_candidate_context(self) -> SourcePatternResolutionContext:
         projection = self.source_workspace_projection_authority().projection_or_empty()
-        return SourcePatternResolutionContext.from_projection(
+        return self.request.context.runtime_source_binding_context_cache.source_pattern_context(
             parser=self.request.context.microscope_handler.parser,
             projection=self.source_workspace_projection_cache().filtered_by_axis(
                 projection,
@@ -3121,16 +3255,8 @@ class PatternGroupRuntime:
             and processed_stack.metadata.plane_axis is None
         ):
             output_context = self._unwrapped_main_flow_output_context()
-            scalar_data = image_payload_data(processed_stack)
-            stacked_data = stack_runtime_slices(
-                (scalar_data,),
-                self.request.execution_plan.output_memory_type,
-                self.request.execution_plan.device_id_for(
-                    self.request.execution_plan.output_memory_type
-                ),
-            )
-            return PatternGroupOutputData(
-                slices=(processed_stack,),
+            return PatternGroupOutputData.from_single_image(
+                processed_stack,
                 slice_contexts=(
                     (output_context,)
                     if output_context is not None
@@ -3140,10 +3266,9 @@ class PatternGroupRuntime:
                         else ()
                     )
                 ),
-                stack_payload=stack_image_payload_context(
-                    (processed_stack,),
-                    stacked_data,
-                    metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
+                memory_type=self.request.execution_plan.output_memory_type,
+                device_id=self.request.execution_plan.device_id_for(
+                    self.request.execution_plan.output_memory_type
                 ),
             )
         if isinstance(processed_stack, AlignedImageStack):
@@ -3233,6 +3358,7 @@ class PatternGroupRuntime:
             slices=output_payloads,
             slice_contexts=slice_contexts,
             stack_payload=processed_stack,
+            main_flow_source=processed_stack,
         )
 
     def _unwrapped_main_flow_output_context(
@@ -3340,6 +3466,7 @@ class PatternGroupRuntime:
                 output_identity,
                 output_context=output_context,
                 image_metadata=output_metadata,
+                main_flow_plane_axis=output_data.plane_axis_for_output_context(output_context),
             )
 
             if output_directory_exists and context.filemanager.exists(
@@ -3377,24 +3504,10 @@ class PatternGroupRuntime:
             output_paths_batch,
             Backend.MEMORY.value,
         )
-        stack_payload_data = (
-            image_payload_data(output_data.stack_payload)
-            if output_data.stack_payload is not None
-            else None
+        stack_payload = output_data.cache_payload_for_outputs(
+            output_payloads, output_payload_metadata,
         )
-        if output_data.stack_payload is not None:
-            if np.shape(stack_payload_data)[:1] != (len(output_payloads),):
-                raise ValueError(
-                    "PatternGroupOutputData.stack_payload must match its declared "
-                    f"output slice count: stack shape {np.shape(stack_payload_data)!r}, "
-                    f"slice count {len(output_payloads)}."
-                )
-            stack_payload = stack_image_payload_context_from_metadata(
-                output_payloads,
-                stack_payload_data,
-                output_payload_metadata,
-                metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
-            )
+        if stack_payload is not None:
             context.runtime_image_stack_cache.store(
                 tuple(output_paths_batch),
                 memory_type=self.request.execution_plan.output_memory_type,
