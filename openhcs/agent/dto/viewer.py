@@ -52,6 +52,7 @@ from openhcs.runtime.viewer_controls import (
     ViewerRegionControlOptions,
     ViewerIntensityWindowControlOptions,
     ViewerLayerIsolationControlOptions,
+    ViewerLayerRetirementControlOptions,
     ViewerNavigationControlOptions,
     ViewerNativeDimensions,
     ViewerPayloadControlOptions,
@@ -67,6 +68,7 @@ from openhcs.runtime.viewer_protocol import (
     OpenHCSViewerControlMessageType, ViewerProtocolStatus,
     ViewerImageColorControlOptions, ViewerNativeImageColorPresentation,
     ViewerNativeWindowControlOptions, ViewerNativeWindowState,
+    ViewerLayerRetirementReceipt,
 )
 
 VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT = 5000
@@ -98,9 +100,15 @@ class ViewerWindowControlRequest(ExecutionConnectionProjection):
 
     timeout_ms: int = VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT
     include_response: bool = True
+    operation_deadline: OperationDeadline | None = field(default=None, repr=False)
+
+    def start_operation(self) -> Self:
+        from dataclasses import replace
+
+        return replace(self, operation_deadline=self.control_deadline())
 
     def control_deadline(self) -> OperationDeadline:
-        return OperationDeadline.after_milliseconds(
+        return self.operation_deadline or OperationDeadline.after_milliseconds(
             self.timeout_ms, operation="viewer control request",
         )
 
@@ -192,7 +200,6 @@ class ViewerWindowSnapshotRequest(
         WindowSnapshotFrameCondition.RENDER_COMPLETE
     )
     observation_timeout_s: float | None = None
-    operation_deadline: OperationDeadline | None = field(default=None, repr=False)
 
     def __post_init__(self) -> None:
         if (
@@ -217,22 +224,6 @@ class ViewerWindowSnapshotRequest(
             raise ValueError(
                 "Snapshot observation timeout must be less than transport timeout."
             )
-
-    def start_operation(self) -> Self:
-        from dataclasses import replace
-
-        return replace(
-            self,
-            operation_deadline=super(
-                ViewerWindowSnapshotRequest, self
-            ).control_deadline(),
-        )
-
-    def control_deadline(self) -> OperationDeadline:
-        return (
-            self.operation_deadline
-            or super(ViewerWindowSnapshotRequest, self).control_deadline()
-        )
 
     def snapshot_operation_deadline(self) -> OperationDeadline | None:
         return self.operation_deadline
@@ -609,6 +600,33 @@ class ViewerWindowLayerIsolationRequest(ViewerWindowControlRequest):
             }
         )
         return payload
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerWindowLayerRetirementRequest(ViewerWindowControlRequest):
+    retirement: ViewerLayerRetirementControlOptions
+
+    @classmethod
+    def from_fields(
+        cls, *, connection: ExecutionConnectionSpec,
+        expected_producers: dict[str, list[dict[str, JsonValue]]],
+        timeout_ms: int = VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT,
+    ) -> Self:
+        return cls(
+            connection=connection, timeout_ms=timeout_ms,
+            retirement=ViewerLayerRetirementControlOptions.from_overrides(
+                expected_producers=expected_producers,
+            ),
+        )
+
+    def as_tool_arguments(self) -> dict[str, JsonValue]:
+        return {
+            **self.connection_tool_arguments(),
+            "expected_producers": {
+                route: [to_jsonable(producer.to_payload()) for producer in producers]
+                for route, producers in self.retirement.expected_producers.items()
+            },
+        }
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1385,6 +1403,18 @@ class ViewerWindowLayerVisibilityRecord:
     title: str | None
     visible: bool
     selected: bool
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerWindowLayerRetirementResult(
+    ViewerWindowObservedErrorResultMixin,
+    AgentResultEnvelope,
+    ExecutionConnectionProjection,
+    ViewerLayerRetirementReceipt,
+):
+    registry_key: ClassVar[str] = "layer_retirement"
+
+    observed: bool
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

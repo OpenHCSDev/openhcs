@@ -58,6 +58,8 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowIntensityWindowResult,
     ViewerWindowLayerIsolationRequest,
     ViewerWindowLayerIsolationResult,
+    ViewerWindowLayerRetirementRequest,
+    ViewerWindowLayerRetirementResult,
     ViewerWindowLayerPayloads,
     ViewerWindowLayerState,
     ViewerWindowLayerValidationSummary,
@@ -104,6 +106,7 @@ from openhcs.runtime.viewer_protocol import (
     ViewerIntensityWindowField,
     ViewerLayerField,
     ViewerLayerIsolationField,
+    ViewerLayerRetirementReceipt,
     ViewerPayloadField,
     ViewerPayloadSummary,
     ViewerArrayValueSummary,
@@ -1058,6 +1061,9 @@ class ViewerWindowGatewayABC(ABC):
     ) -> JsonObject:
         raise NotImplementedError
 
+    def retire_layers(self, request: ViewerWindowLayerRetirementRequest) -> JsonObject:
+        raise NotImplementedError
+
 
 class ZMQViewerWindowGateway(ViewerWindowGatewayABC):
     """Viewer gateway backed by the existing ZMQ control socket."""
@@ -1132,6 +1138,13 @@ class ZMQViewerWindowGateway(ViewerWindowGatewayABC):
             host=request.connection.host,
             config=OPENHCS_ZMQ_CONFIG,
         )
+
+    def retire_layers(self, request: ViewerWindowLayerRetirementRequest) -> JsonObject:
+        request = request.start_operation()
+        return self._send_control_message(request, {
+            ViewerControlResponseField.TYPE.value: OpenHCSViewerControlMessageType.RETIRE_LAYERS.value,
+            ViewerControlResponseField.PAYLOAD.value: request,
+        })
 
     def apply_intensity_window(
         self,
@@ -1479,6 +1492,31 @@ class ViewerWindowService:
                 error=AgentError.from_exception(
                     "viewer_window_navigation_response_invalid", exc
                 ),
+            )
+
+    def retire_layers(
+        self, request: ViewerWindowLayerRetirementRequest,
+    ) -> ViewerWindowLayerRetirementResult:
+        try:
+            response = self._gateway.retire_layers(request)
+            if response[ViewerControlResponseField.STATUS.value] != self.SUCCESS_STATUS:
+                raise ValueError(response[ViewerControlResponseField.MESSAGE.value])
+            receipt = ViewerLayerRetirementReceipt.from_wire_mapping(response["retirement"])
+            if not receipt.applied:
+                raise ValueError("Native retirement did not apply the requested set.")
+            requested = frozenset(request.retirement.expected_producers)
+            if frozenset(receipt.retired_route_keys) != requested:
+                raise ValueError("Native retirement acknowledgement has a different route set.")
+            if requested.intersection(receipt.remaining_route_keys):
+                raise ValueError("Retired routes remain mounted in the acknowledgement.")
+            return project_dataclass(
+                ViewerWindowLayerRetirementResult, receipt,
+                schema_version=SCHEMA_VERSION, connection=request.connection, observed=True,
+            )
+        except Exception as error:
+            return ViewerWindowLayerRetirementResult.from_error(
+                connection=request.connection,
+                error=AgentError.from_exception("viewer_layer_retirement_failed", error),
             )
 
     def isolate_layers(

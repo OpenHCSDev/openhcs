@@ -186,6 +186,8 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowIntensityWindowResult,
     ViewerWindowLayerIsolationRequest,
     ViewerWindowLayerIsolationResult,
+    ViewerWindowLayerRetirementRequest,
+    ViewerWindowLayerRetirementResult,
     ViewerWindowNavigationRequest,
     ViewerWindowNavigationResult,
     ViewerWindowPayloadRequest,
@@ -3374,6 +3376,34 @@ class NavigateViewerWindowCapability(ViewerWindowCliConnectionCapability):
     request_invocation = AgentViewerWindowRequestServiceInvocation(
         service=lambda context: context.viewer_window_service,
         method=lambda service, request: service.navigate_window(request),
+    )
+
+
+class RetireViewerWindowLayersCapability(ViewerWindowCliConnectionCapability):
+    name = "openhcs_retire_viewer_window_layers"
+    cli_command = "retire-viewer"
+    kind = CapabilityKind.TOOL
+    title = "Retire explicit viewer layers"
+    description = (
+        "After viewer settlement, removes only explicitly selected mounted routes "
+        "and releases their native layers and receiver payload caches. Supply "
+        "expected_producers as a route-key mapping to each route's complete "
+        "producer_identities from viewer state, including invocation_key. The "
+        "whole set is checked before removal. Pending intake/display mutations "
+        "must reach a known terminal state first; known terminal failed candidates "
+        "can be retired. Untargeted routes and persisted source/results remain "
+        "intact. Hiding layers is not retirement."
+    )
+    service = "viewer_window"
+    mutating = True
+    side_effects = ("retires_explicit_viewer_layers",)
+    runtime_requirements = ("running_openhcs_viewer_server",)
+    data_exposure = ("viewer_layer_retirement",)
+    input_contract = ViewerWindowLayerRetirementRequest
+    output_contract = ViewerWindowLayerRetirementResult
+    request_invocation = AgentViewerWindowRequestServiceInvocation(
+        service=lambda context: context.viewer_window_service,
+        method=lambda service, request: service.retire_layers(request),
     )
 
 

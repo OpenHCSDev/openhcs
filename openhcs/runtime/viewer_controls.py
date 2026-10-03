@@ -868,6 +868,35 @@ class ViewerNavigationControlOptions:
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerLayerRetirementControlOptions:
+    """Explicit routes guarded by their complete observed producer incarnations."""
+
+    expected_producers: Mapping[str, tuple[StreamProducerIdentity, ...]]
+
+    def __post_init__(self) -> None:
+        if not self.expected_producers:
+            raise ValueError("Layer retirement requires explicit route identities.")
+        for route, producers in self.expected_producers.items():
+            if not isinstance(route, str) or not route:
+                raise ValueError("Retirement route keys must be non-empty strings.")
+            if not producers or any(
+                not isinstance(producer, StreamProducerIdentity) for producer in producers
+            ):
+                raise ValueError("Retirement requires full typed producer identities.")
+            if len(frozenset(producers)) != len(producers):
+                raise ValueError("Retirement producer identities must be distinct.")
+
+    @classmethod
+    def from_overrides(
+        cls, *, expected_producers: Mapping[str, Sequence[Mapping[str, object]]],
+    ) -> Self:
+        return cls(expected_producers={
+            route: tuple(StreamProducerIdentity.from_payload(value) for value in values)
+            for route, values in expected_producers.items()
+        })
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
 class ViewerLayerIsolationControlOptions:
     """Atomic visibility, selection, and navigation for a viewer layer set."""
 

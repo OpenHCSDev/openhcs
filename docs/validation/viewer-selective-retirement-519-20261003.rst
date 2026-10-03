@@ -4,6 +4,48 @@ Selective managed-viewer retirement519: original-owner source checkpoint
 Scope and custody
 -----------------
 
+Current implementation checkpoint (2026-10-03)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Parent released the native coordinator/reconciliation, original route-state/
+settlement/batch/display-work hooks and typed protocol/request/gateway/service/
+capability family. Singer implements on the existing522 branch. Root394 core
+producer, persistence and materialization remain untouched. Current Root claim
+checked at0fe0482d2784bd6ab1d3a7b3fbb6e5ddfb473e55; no other selective-retirement
+implementation is published. The original investigation below and its source
+archive remain historical evidence, not the implementation qualification.
+
+The coordinator now owns one purge recipe used by native-deleted reconciliation,
+unmounted clear-state cleanup and explicit typed retirement. Route state stops
+its timer and releases retired terminal settlement items; each original store
+releases its route entry. Known failed terminal settlements are eligible, while
+pending/accepted intake, active settlement and deferred display work are refused.
+The entire explicitly requested producer identity set is compared by exact typed
+equality before mutation, including invocation identity; no hidden-layer/name/
+candidate-age policy decides disposal. Existing source/result files are not read,
+changed or deleted by retirement.
+
+Survivor pruning uses the existing registered display/rematerialization traversal.
+The display ancestor preserves common native presentation; the independent image
+presentation capability cooperates through super() to preserve intensity/gamma/
+colormap/interpolation. A rematerialization request's small publication hook leaves
+peer traversal with its original owner instead of recursively re-deciding domains.
+The existing request ancestor now carries the operation deadline shared by snapshot
+and retirement; the snapshot-specific copy is deleted. The new capability is
+discovered by the existing generated MCP binding, with no server/context roster
+edit. A CLI leaf supplies the exact producer mapping through the same request.
+
+Qualification is pending at this first implementation checkpoint. Source controls
+exercise real Qt scheduling and ViewerModel, typed queue/gateway/service, payload
+release, exact stale-incarnation refusal, terminal-failure retirement and independent
+cooperative capability hooks. No installed/live/RSS-reduction claim is made. There
+is no new runtime/client/viewer launch, package installation or scientific contact.
+Unexpected native removal/rematerialization errors are not an atomic rollback;
+their failed operation disposition must not be replayed as if nothing happened.
+
+Original investigation checkpoint
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Singer owns this source investigation under the parent's explicit assignment;
 parent retains302/308 mounted-route integration and later installed/native
 acceptance. This checkpoint contains source evidence and a narrow integration

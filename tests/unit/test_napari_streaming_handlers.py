@@ -4546,6 +4546,8 @@ def test_napari_component_display_coordinator_purges_deleted_route_domain():
             self.layer_route_state = NapariLayerRouteStateStore.empty()
             self.component_groups = NapariComponentGroupStore()
             self.component_values = ViewerRouteComponentValueTracker()
+            self.batch_processors = napari_viewer_server.NapariBatchProcessorStore()
+            self.display_pipeline = napari_viewer_server.NapariLayerDisplayPipeline(self)
 
     server = _FakeServer()
     route_key = "deleted-channel-1"
