@@ -1799,8 +1799,9 @@ class NapariLayerDisplayRequest:
         self.pipeline.reconcile_mounted_axis_projections(
             updated_route_key=self.presentation.route_key,
             display_layout=self.presentation.layout,
-            viewer_component_values=self.pipeline.server.component_values.shared_values_for(
-                self.presentation.display_axis_components,
+            viewer_component_values=self.pipeline.server.layer_route_state.shared_component_values(
+                self.pipeline.server.component_values,
+                self.presentation.layout,
                 replacement_route=self.presentation.route_key,
                 additional_component_values=self.presentation.component_values(),
             ),
@@ -2690,8 +2691,9 @@ class NapariLayerDisplayPipeline:
         ).layout()
         display_layout = self.server.layer_route_state.shared_display_layout(display_layout)
         projection_semantics = display_payload.for_display_layout(display_layout)
-        preview_values = self.server.component_values.shared_values_for(
-            display_layout.components_for_mode(ViewerComponentMode.STACK),
+        preview_values = self.server.layer_route_state.shared_component_values(
+            self.server.component_values,
+            display_layout,
             replacement_route=layer_key,
             additional_component_values=display_payload.component_values(),
         )
@@ -2707,6 +2709,7 @@ class NapariLayerDisplayPipeline:
             items,
             aggregate_axis_bindings,
             publish=False,
+            viewer_component_values=preview_values,
         )
         work = NapariLayerDisplayHandler.for_data_type(data_type).display_work(
             NapariLayerDisplayRequest(

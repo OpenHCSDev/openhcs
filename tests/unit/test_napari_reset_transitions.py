@@ -120,7 +120,9 @@ def enqueue(
             }
         ),
         ViewerComponentValueDomainPayload.from_ordered_wire_mapping(
-            {"well": domain or [well], "channel": [channel]}, context="synthetic transition"
+            {"well": domain or [well], "channel": [channel],
+             "site": [1], "z_index": [1], "timepoint": [1]},
+            context="synthetic transition"
         ),
     )
     context = NapariStreamLayerContext(

@@ -34,6 +34,7 @@ from openhcs.runtime.viewer_component_system import (
     ViewerComponentAxisSemantics,
     ViewerComponentLayout,
     ViewerComponentValueDomainPayload,
+    ViewerRouteComponentValueTracker,
     ViewerLayerAxisProjection,
 )
 from openhcs.runtime.viewer_protocol import (
@@ -1708,6 +1709,38 @@ class NapariLayerRouteStateStore:
             for _route, state in self.mounted_dimension_states()
             for mounted_layout in state.display_layouts
         ))
+
+    def shared_component_values(
+        self,
+        tracker: ViewerRouteComponentValueTracker,
+        layout: ViewerComponentLayout,
+        *,
+        replacement_route: str,
+        additional_component_values: ComponentValues,
+    ) -> ComponentValues:
+        """Project mounted declarations, including axes previously shown as layers.
+
+        The tracker owns observed stack coordinates. A newly shared stack slot
+        must also include the original source declarations of mounted peers;
+        those values were not stack coordinates in their former presentation.
+        No route domain is mutated during this preview.
+        """
+        declarations = (
+            additional_component_values,
+            *(state.presentation.component_values()
+              for route, state in self.mounted_dimension_states()
+              if route != replacement_route and state.presentation is not None),
+        )
+        axes = layout.components_for_mode(ViewerComponentMode.STACK)
+        return tracker.shared_values_for(
+            axes,
+            replacement_route=replacement_route,
+            additional_component_values={
+                component: [value for declaration in declarations
+                            for value in declaration.get(component, ())]
+                for component in axes
+            },
+        )
 
     def axis_origins_for(self, axis_labels: tuple[str, ...]) -> tuple[int, ...]:
         """Return normalized-viewer origins derived from mounted route offsets."""
