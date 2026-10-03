@@ -27,6 +27,32 @@ invoke() { bash "$operations/launch-author.sh" "$scratch/fund" A --preflight; }
 invoke > "$scratch/fresh.log"
 rg -F 'history_args=[]' "$scratch/fresh.log"
 original=$(sha256sum "$scratch/fund/program.json" | cut -d' ' -f1)
+# The immutable run is not current funding. Failure must survive both a
+# command substitution and a caller conditional (which disable errexit).
+set +e
+bash "$operations/launch-author.sh" "$scratch/run" A --preflight > "$scratch/wrong-root.stdout" 2> "$scratch/wrong-root.stderr"
+status=$?
+set -e
+test "$status" = 64
+test ! -s "$scratch/wrong-root.stdout"
+rg -F 'Canonical funding root required' "$scratch/wrong-root.stderr"
+bash -c '
+  source "$1/slot-env.sh" "$2/fund" A
+  FLEET_ROOT="$2/run"
+  for consumer in fleet_member fleet_limits_for fleet_workspace_for fleet_unit_for fleet_helper_unit_for; do
+    if result=$("$consumer" A); then exit 91; else status=$?; fi
+    test "$status" = 64
+    test -z "$result"
+  done
+' _ "$operations" "$scratch" > "$scratch/consumer-rejection.stdout" 2> "$scratch/consumer-rejection.stderr"
+test ! -s "$scratch/consumer-rejection.stdout"
+set +e
+bash "$operations/slot-env.sh" "$scratch/run" --project-members > "$scratch/wrong-projection.stdout" 2> "$scratch/wrong-projection.stderr"
+status=$?
+set -e
+test "$status" = 64
+test ! -s "$scratch/wrong-projection.stdout"
+printf 'PASS canonical-root owner rejects run snapshots through launcher, projection and five conditional consumers\n'
 set_context() {
   jq --argjson fresh "$1" --argjson id "$2" \
     '.authors[0].fresh_history=$fresh | .authors[0].native_thread_id=$id' \

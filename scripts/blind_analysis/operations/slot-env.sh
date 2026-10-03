@@ -9,9 +9,12 @@ FLEET_PROGRAM=$(<"$FLEET_ROOT/program.json")
 fleet_member() {
   local reference owner
   reference=$(jq -ce --arg member "$1" '[.authors[] | select(.slot == $member)] |
-    if length == 1 then .[0] else error("missing or ambiguous funded member") end' <<< "$FLEET_PROGRAM")
-  owner=$(jq -er '.run_owner_root' <<< "$reference")
-  test "$(jq -er '.funding_root' "$owner/program.json")" = "$FLEET_ROOT"
+    if length == 1 then .[0] else error("missing or ambiguous funded member") end' <<< "$FLEET_PROGRAM") || return
+  owner=$(jq -er '.run_owner_root' <<< "$reference") || return
+  test "$(jq -er '.funding_root' "$owner/program.json")" = "$FLEET_ROOT" || {
+    printf 'Canonical funding root required; refused run snapshot %s\n' "$FLEET_ROOT" >&2
+    return 64
+  }
   # Funding owns membership; the immutable run owns its actual declaration.
   jq -ce --arg member "$1" --arg owner "$owner" '[.authors[] |
     select(.slot==$member and .run_owner_root==$owner)] |
@@ -20,8 +23,8 @@ fleet_member() {
 
 fleet_limits_for() {
   local member owner
-  member=$(fleet_member "$1")
-  owner=$(jq -er '.run_owner_root' <<< "$member")
+  member=$(fleet_member "$1") || return
+  owner=$(jq -er '.run_owner_root' <<< "$member") || return
   jq -ce '.proposed_resource_envelope' "$owner/program.json"
 }
 
@@ -35,9 +38,9 @@ fleet_workspace_for() {
 
 fleet_unit_for() {
   local member owner phase
-  member=$(fleet_member "$1")
-  owner=$(jq -er '.run_owner_root' <<< "$member")
-  phase=$(jq -er '.phase' "$owner/program.json")
+  member=$(fleet_member "$1") || return
+  owner=$(jq -er '.run_owner_root' <<< "$member") || return
+  phase=$(jq -er '.phase' "$owner/program.json") || return
   printf '%s-%s\n' "$phase" "${1,,}"
 }
 
@@ -93,7 +96,7 @@ if [[ "${2:-}" == --project-members ]]; then
   selected=$(jq -ce '.authors | map(.slot)' <<< "$FLEET_PROGRAM")
   projected='[]'
   while IFS= read -r member_name; do
-    declaration=$(fleet_member "$member_name")
+    declaration=$(fleet_member "$member_name") || exit
     projected=$(jq -ce --argjson member "$declaration" '. + [$member]' <<< "$projected")
   done < <(jq -r '.[]' <<< "$selected")
   printf '%s\n' "$projected"
@@ -101,7 +104,7 @@ if [[ "${2:-}" == --project-members ]]; then
 fi
 
 FLEET_SLOT=${2:?declared slot}
-slot=$(fleet_member "$FLEET_SLOT")
+slot=$(fleet_member "$FLEET_SLOT") || exit
 FLEET_RUN_ROOT=$(jq -er '.run_owner_root' <<< "$slot")
 FLEET_RUN_PROGRAM=$(<"$FLEET_RUN_ROOT/program.json")
 FLEET_WORKSPACE=$(fleet_workspace_for "$FLEET_SLOT")
@@ -131,10 +134,10 @@ jq -e --arg member "$helper_slot" --argjson display "$FLEET_DISPLAY" \
 
 fleet_helper_unit_for() {
   local member root predecessor phase
-  member=$(fleet_member "$1")
-  root=$(jq -er '.helper_custody.program_root' <<< "$member")
-  predecessor=$(jq -er '.helper_custody.slot' <<< "$member")
-  phase=$(jq -er '.phase' "$root/program.json")
+  member=$(fleet_member "$1") || return
+  root=$(jq -er '.helper_custody.program_root' <<< "$member") || return
+  predecessor=$(jq -er '.helper_custody.slot' <<< "$member") || return
+  phase=$(jq -er '.phase' "$root/program.json") || return
   printf '%s-%s\n' "$phase" "${predecessor,,}"
 }
 
