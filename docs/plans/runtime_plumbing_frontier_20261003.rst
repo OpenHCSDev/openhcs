@@ -170,7 +170,9 @@ output is retained in a lossless, individually hash-verified archive at
 ``/var/tmp/openhcs-current-3d-owner-ledger-v2-20261003/scientific-output.tar.gz``;
 its custody receipt records every original path, mode, size and hash. Later
 readers must use or restore that archive rather than assume those extracted
-files remain present. Previous baselines and frozen failures are unchanged.
+files remain present. The 25-hook output uses the same verified custody protocol
+at ``/var/tmp/openhcs-current-3d-gc-ledger-v1-20261003/scientific-output.tar.gz``.
+Previous baselines and frozen failures are unchanged.
 
 Source and consumer audits reject two tempting shortcuts. Artifact-only groups
 already return ``NoMainFlowOutput`` and skip unstacking and saving. Canonical CP
