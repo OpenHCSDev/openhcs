@@ -28,6 +28,95 @@ def _source(name: str, expression: str = "image") -> str:
     return f"@numpy\ndef {name}(image):\n    return {expression}\n"
 
 
+def _plate_source(name: str) -> str:
+    return f'''from openhcs.core.artifacts import ArtifactSpec, SpecialArtifactType
+from openhcs.core.callable_contract import FunctionStepExecutionScope
+from openhcs.core.pipeline.function_contracts import (
+    artifact_outputs, execution_scope, runtime_bound_parameters,
+)
+from openhcs.core.runtime_stores import RuntimeArtifactBatch
+
+@execution_scope(FunctionStepExecutionScope.PLATE)
+@runtime_bound_parameters(RuntimeArtifactBatch)
+@artifact_outputs(ArtifactSpec.output("EngineeringBundle", SpecialArtifactType))
+def {name}(*, artifact_batch: RuntimeArtifactBatch):
+    return {{"engineering.txt": b"independent ABI fixture"}}
+'''
+
+
+@pytest.mark.parametrize("persist", (True, False))
+def test_custom_plate_uses_native_abi_projection_and_source_lifecycle(
+    isolated_custom_runtime, persist,
+) -> None:
+    from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
+    from openhcs.core.pipeline.funcstep_contract_validator import FuncStepContractValidator
+    from openhcs.processing.custom_functions.runtime_registry import CustomFunctionMetadata
+    from openhcs.processing.func_registry import get_function
+
+    source = _plate_source("engineering_plate_probe")
+    manager = CustomFunctionManager()
+    [function] = manager.register_from_code(source, persist=persist)
+    metadata = CustomFunctionRuntimeRegistry.metadata_by_name()["engineering_plate_probe"]
+    assert isinstance(metadata, CustomFunctionMetadata)
+    assert get_function(metadata.composite_key) is function
+    contract = CallableContract.from_callable(function)
+    assert contract.execution_scope is FunctionStepExecutionScope.PLATE
+    assert not contract.declared_memory_types
+    assert contract.processing_contract is None
+    assert metadata.tags == ["openhcs", "custom"]
+    FuncStepContractValidator.validate_plate_callable_contracts((contract,), "engineering")
+    reference = FunctionReferenceTransportAuthority.function_reference(function)
+    assert reference.resolve() is function
+
+    if persist:
+        assert manager.source_path_for_function(function).read_text() == source
+        [info] = manager.list_custom_functions()
+        assert info.name == "engineering_plate_probe"
+        assert info.memory_type is None
+        assert info.backend_label == "plate"
+        CustomFunctionRuntimeRegistry.clear()
+        assert manager.load_all_custom_functions() == 1
+        reloaded = get_function(metadata.composite_key)
+        assert CallableContract.from_callable(reloaded).processing_contract is None
+        manager.update_custom_function("engineering_plate_probe", source.replace("fixture", "replacement"))
+        with pytest.raises(RuntimeError, match="changed"):
+            reference.resolve()
+    else:
+        assert not tuple(isolated_custom_runtime.glob("*.py"))
+
+
+@pytest.mark.parametrize(
+    "replacement",
+    (
+        "artifact_batch: int",
+        "artifact_batch: RuntimeArtifactBatch = None",
+        "artifact_batch: RuntimeArtifactBatch",
+    ),
+)
+def test_custom_plate_rejects_invalid_original_batch_abi_without_publication(
+    isolated_custom_runtime, replacement,
+) -> None:
+    source = _plate_source("engineering_invalid_plate_probe")
+    source = source.replace("*, artifact_batch: RuntimeArtifactBatch", replacement)
+    with pytest.raises(ValidationError):
+        CustomFunctionManager().register_from_code(source)
+    assert not tuple(isolated_custom_runtime.glob("*.py"))
+    assert CustomFunctionRuntimeRegistry.metadata_by_name() == {}
+    assert "engineering_invalid_plate_probe" not in vars(custom_functions)
+
+
+def test_custom_plate_does_not_admit_axis_memory_contract(
+    isolated_custom_runtime,
+) -> None:
+    source = _plate_source("engineering_mixed_scope_probe").replace(
+        "@execution_scope", "@numpy\n@execution_scope",
+    )
+    with pytest.raises(ValidationError, match="cannot declare axis-local"):
+        CustomFunctionManager().register_from_code(source)
+    assert not tuple(isolated_custom_runtime.glob("*.py"))
+    assert CustomFunctionRuntimeRegistry.metadata_by_name() == {}
+
+
 def _measurement_source(name: str) -> str:
     return f"""from dataclasses import dataclass
 from openhcs.core.artifacts import (
