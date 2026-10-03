@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import inspect
 from typing import Any, get_args, get_origin
 
 import numpy as np
@@ -85,6 +86,8 @@ def _annotation_leaf_types(annotation: object) -> tuple[type, ...]:
 def test_cellprofiler_runtime_parameter_types_declare_slice_projection() -> None:
     missing: list[str] = []
     for parameter_type in _subclasses(KeywordRuntimeParameter):
+        if inspect.isabstract(parameter_type):
+            continue
         if not parameter_type.__module__.startswith(
             ("openhcs.processing.backends.cellprofiler", "openhcs.interop.cellprofiler")
         ):

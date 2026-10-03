@@ -5,6 +5,7 @@ from collections.abc import Callable
 from typing import Any
 from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.callable_contract import runtime_image_execution_mode
+from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     image_payload_data,
     with_image_payload_data,
@@ -790,7 +791,7 @@ def _fit_polynomial(
 
 
 def smooth_image(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     smoothing_method: SmoothingMethod = SmoothingMethod.GAUSSIAN_FILTER,
     auto_object_size: bool = True,
     object_size: float = 16.0,
@@ -839,7 +840,7 @@ def smooth_image(
 
 @numpy_decorator(contract=ProcessingContract.PURE_2D)
 def smooth(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     smoothing_method: SmoothingMethod = SmoothingMethod.GAUSSIAN_FILTER,
     auto_object_size: bool = True,
     object_size: float = 16.0,
@@ -862,7 +863,7 @@ def smooth(
 @runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
 @numpy_decorator(contract=ProcessingContract.FLEXIBLE)
 def reducenoise(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     patch_size: int = 5,
     patch_distance: int = 6,
     cutoff_distance: float = 0.1,

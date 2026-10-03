@@ -33,7 +33,11 @@ from openhcs.core.function_patterns import (
 from openhcs.core.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
 )
-from openhcs.core.orchestrator.execution_result import ExecutionResult
+from openhcs.core.orchestrator.execution_result import (
+    ExecutionResult,
+    RuntimeContextObservation,
+    RuntimeExecutionObservation,
+)
 from openhcs.core.pipeline.function_contracts import execution_scope
 from openhcs.core.runtime_artifact_values import (
     ArtifactKey,
@@ -120,7 +124,8 @@ def _streaming_context(
 
 def test_runtime_execution_validation_detects_missing_artifact_kind() -> None:
     observation = RuntimeArtifactExecutionObservation.from_contexts(
-        {"A01": ProcessingContext(axis_id="A01")}
+        {"A01": ProcessingContext(axis_id="A01")},
+        runtime_observations=(),
     )
 
     failures = runtime_artifact_execution_failures(
@@ -186,7 +191,9 @@ def test_runtime_execution_observation_reads_context_stores() -> None:
         backend="memory",
     )
 
-    observation = RuntimeArtifactExecutionObservation.from_contexts({"A01": context})
+    observation = RuntimeArtifactExecutionObservation.from_contexts(
+        {"A01": context}, runtime_observations=()
+    )
 
     assert observation.record_counts_by_axis["A01"][MeasurementsArtifactType] == 1
 
@@ -204,7 +211,9 @@ def test_runtime_execution_observation_ignores_uncontracted_files(
 
     context = ProcessingContext(axis_id="A01")
 
-    observation = RuntimeArtifactExecutionObservation.from_contexts({"A01": context})
+    observation = RuntimeArtifactExecutionObservation.from_contexts(
+        {"A01": context}, runtime_observations=()
+    )
 
     assert observation.exports.table_outputs == ()
     assert observation.exports.image_outputs == ()
@@ -239,16 +248,23 @@ def test_zmq_observation_exports_exact_compiler_owned_artifacts(
         },
         axis_id="A01",
     )
-    monkeypatch.setattr(
-        "openhcs.core.steps.function_artifact_materialization."
-        "runtime_export_artifact_output_paths",
-        lambda _plan, _context: (contracted_output,),
+    runtime_observations = (
+        RuntimeExecutionObservation(
+            contexts=(
+                RuntimeContextObservation(
+                    context_key="A01",
+                    records=(),
+                    runtime_export_paths=(contracted_output,),
+                ),
+            )
+        ),
     )
 
     export = ZMQRuntimeExecutionObservationExport.from_execution(
         compiled_contexts={"A01": context},
         execution_results={"A01": ExecutionResult.success("A01")},
         output_roots=(tmp_path,),
+        runtime_observations=runtime_observations,
     )
 
     assert export.expectation.artifact_kinds == frozenset((MeasurementsArtifactType,))
@@ -258,7 +274,9 @@ def test_zmq_observation_exports_exact_compiler_owned_artifacts(
     assert export.exports.output_files == (contracted_output,)
     assert unrelated_output not in export.exports.output_files
     assert (
-        RuntimeExportObservation.from_execution_contexts({"A01": context}).output_files
+        RuntimeExportObservation.from_runtime_observations(
+            runtime_observations
+        ).output_files
         == export.exports.output_files
     )
 
@@ -514,22 +532,22 @@ def test_runtime_execution_observation_reads_plate_export_from_exact_owner(
         )
         for axis_id, owns_output in (("A01", True), ("A02", False))
     }
-    observed_axes: list[str] = []
-
-    def output_paths(plan, _context):
-        observed_axes.append(plan.axis_id)
-        return (contracted_output,)
-
-    monkeypatch.setattr(
-        "openhcs.core.steps.function_artifact_materialization."
-        "runtime_export_artifact_output_paths",
-        output_paths,
+    runtime_observations = (
+        RuntimeExecutionObservation(
+            contexts=(
+                RuntimeContextObservation(
+                    context_key="A01",
+                    records=(),
+                    runtime_export_paths=(contracted_output,),
+                ),
+            )
+        ),
     )
-
-    observation = RuntimeArtifactExecutionObservation.from_contexts(contexts)
+    observation = RuntimeArtifactExecutionObservation.from_contexts(
+        contexts, runtime_observations=runtime_observations
+    )
     expectation = RuntimeArtifactExecutionExpectation.from_compiled_contexts(contexts)
 
-    assert observed_axes == ["A01"]
     assert observation.exports.table_outputs == (contracted_output,)
     assert expectation.artifact_kinds == frozenset((MeasurementsArtifactType,))
     assert tuple(
@@ -578,6 +596,7 @@ def test_zmq_observation_compresses_and_preserves_exact_runtime_records(
         compiled_contexts={"A01": context},
         execution_results={"A01": ExecutionResult.success("A01")},
         output_roots=(tmp_path,),
+        runtime_observations=(),
     )
     path = tmp_path / "observation.pkl"
 

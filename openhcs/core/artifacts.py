@@ -24,6 +24,7 @@ from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.component_set import ComponentSet
 
 if TYPE_CHECKING:
+    from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
     from openhcs.core.callable_contract import FunctionStepExecutionScope
     from openhcs.core.function_patterns import FunctionInvocationKey
     from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
@@ -216,6 +217,11 @@ class ArtifactType(ABC, metaclass=AutoRegisterMeta):
         return Path(analysis_output_dir) / descriptor_filename
 
     @classmethod
+    def retained_filename_qualifier(cls, artifact_name: str) -> str | None:
+        """Retain families whose existing paths already own artifact identity."""
+        return None
+
+    @classmethod
     def normalize_runtime_payload(
         cls,
         name: str,
@@ -384,6 +390,11 @@ class ImageArtifactType(ArtifactType):
     participates_in_measurement_source_names = True
     participates_in_main_flow_output = True
     carries_source_image_context = True
+
+    @classmethod
+    def retained_filename_qualifier(cls, artifact_name: str) -> str:
+        """Distinguish named retained images sharing one physical source plane."""
+        return artifact_name
 
     @classmethod
     def projected_materialization_base_path(
@@ -1053,6 +1064,19 @@ class ArtifactMaterializationPayload(ABC):
     @abstractmethod
     def uses_source_identity_filename(self) -> bool:
         """Return whether this materialization names files by source identity."""
+
+    @abstractmethod
+    def filename_qualifier(self, output_plan: ArtifactOutputPlan | None) -> str | None:
+        """Derive the output role required by this materialization purpose."""
+
+    def filename_identity_for_output(
+        self,
+        identity: FunctionOutputIdentity,
+        output_plan: ArtifactOutputPlan | None,
+    ) -> FunctionOutputIdentity:
+        """Apply a declared role through the shared filename identity algorithm."""
+        qualifier = self.filename_qualifier(output_plan)
+        return identity if qualifier is None else identity.with_filename_qualifier(qualifier)
 
 
 def _coerce_artifact_plan_type(
@@ -2152,6 +2176,37 @@ class ArtifactSpecCollection(Sequence[ArtifactSpec]):
 
     def __getitem__(self, index):
         return self.specs[index]
+
+    def stack_broadcast_source_indices(self) -> tuple[int | None, ...]:
+        """Resolve exact stack-broadcast owners from declared input relations."""
+
+        indices_by_ref: dict[ArtifactSpecRef, list[int]] = {}
+        for input_index, spec in enumerate(self.specs):
+            indices_by_ref.setdefault(spec.ref(), []).append(input_index)
+
+        result: list[int | None] = []
+        for input_index, spec in enumerate(self.specs):
+            sources = spec.stack_broadcast_sources()
+            if len(sources) > 1:
+                raise ValueError(
+                    f"Input {spec.ref()!r} declares multiple stack-broadcast "
+                    f"owners: {sources!r}."
+                )
+            if not sources:
+                result.append(None)
+                continue
+            source_indices = tuple(indices_by_ref.get(sources[0], ()))
+            if len(source_indices) != 1:
+                raise ValueError(
+                    f"Input {spec.ref()!r} requires exactly one active occurrence "
+                    f"of stack-broadcast owner {sources[0]!r}, got "
+                    f"{source_indices!r}."
+                )
+            source_index = source_indices[0]
+            if source_index == input_index:
+                raise ValueError(f"Input {spec.ref()!r} cannot broadcast from itself.")
+            result.append(source_index)
+        return tuple(result)
 
     def of_artifact_type(
         self,

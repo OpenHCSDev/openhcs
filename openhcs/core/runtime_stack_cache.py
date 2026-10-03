@@ -27,18 +27,11 @@ class RuntimeImageStackCacheKey:
         return cls(tuple(str(path) for path in paths), str(memory_type))
 
 
-@dataclass(frozen=True, slots=True)
-class RuntimeImageStackCacheValue:
-    """Cached payload for an ordered runtime-slice path set."""
-
-    stack: RuntimeArrayData
-
-
 @dataclass(slots=True)
 class RuntimeImageStackCache:
     """Processing-context-local cache for adjacent step stack reuse."""
 
-    stacks: dict[RuntimeImageStackCacheKey, RuntimeImageStackCacheValue] = field(
+    stacks: dict[RuntimeImageStackCacheKey, RuntimeArrayData] = field(
         default_factory=dict
     )
 
@@ -47,7 +40,7 @@ class RuntimeImageStackCache:
         paths: tuple[str, ...],
         *,
         memory_type: str,
-    ) -> RuntimeImageStackCacheValue | None:
+    ) -> RuntimeArrayData | None:
         """Return a cached stack for the exact ordered path and memory contract."""
         return self.stacks.get(
             RuntimeImageStackCacheKey.from_paths(paths, memory_type=memory_type)
@@ -63,7 +56,7 @@ class RuntimeImageStackCache:
         """Store a stack produced for a just-saved ordered path set."""
         self.stacks[
             RuntimeImageStackCacheKey.from_paths(paths, memory_type=memory_type)
-        ] = RuntimeImageStackCacheValue(stack=stack)
+        ] = stack
 
     def discard_paths(self, paths: tuple[str, ...]) -> None:
         """Discard cached stacks that include any of the supplied paths."""

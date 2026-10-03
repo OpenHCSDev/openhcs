@@ -770,17 +770,8 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
             is ZMQRuntimeObservationExportScope.OUTCOMES
         ):
             observed_exports = RuntimeExportObservation.from_runtime_observations(
-                tuple(
-                    result.runtime_observation for result in execution_results.values()
-                )
+                execution_results.runtime_observations
             )
-            if execution_bundle.requires_parent_runtime_observation:
-                parent_exports = RuntimeExportObservation.from_execution_contexts(
-                    execution_bundle.runtime_contexts
-                )
-                observed_exports = RuntimeExportObservation.from_output_paths(
-                    (*observed_exports.output_files, *parent_exports.output_files)
-                )
             export = ZMQRuntimeExecutionOutcomeExport.from_execution(
                 compiled_axis_ids=execution_bundle.runtime_contexts,
                 execution_results=execution_results,
@@ -793,6 +784,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
             export = ZMQRuntimeExecutionObservationExport.from_execution(
                 compiled_contexts=execution_bundle.runtime_contexts,
                 execution_results=execution_results,
+                runtime_observations=execution_results.runtime_observations,
                 output_roots=output_roots,
                 server_environment=self._server_environment,
                 execution_id=request_context.execution_id,

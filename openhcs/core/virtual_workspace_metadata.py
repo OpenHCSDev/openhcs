@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import os
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import MappingProxyType
@@ -21,9 +21,9 @@ from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_bindings import SourceProjectionRole
 from openhcs.core.source_metadata import (
+    DurableSourceMetadata,
     SourceMetadataMapping,
     SourceMetadataScalar,
-    SourceMetadataValue,
     SourceVoxelSpacing,
 )
 from openhcs.core.source_projection import (
@@ -97,7 +97,12 @@ class AtomicMetadataWriter:
                         }
                     else:
                         subdirectory[key] = value
-                self._update_projection_geometry(subdirectory)
+                self._update_projection_geometry(
+                    subdirectory,
+                    VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
+                        subdirectory
+                    ).entries.values(),
+                )
             return data
 
         self._execute_update(
@@ -139,7 +144,12 @@ class AtomicMetadataWriter:
                 subdirectory_name, {}
             )
             self._merge_source_projection_fields(subdirectory, projection_metadata)
-            self._update_projection_geometry(subdirectory)
+            self._update_projection_geometry(
+                subdirectory,
+                VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
+                    subdirectory
+                ).entries.values(),
+            )
             return data
 
         self._execute_update(metadata_path, update)
@@ -222,37 +232,45 @@ class AtomicMetadataWriter:
                 )
             )
             subdirectory.update(serializer.projection_fields(retained_paths))
-            projections = SourceProjectionSet(
-                tuple(entries[path] for path in published_paths)
-            )
-            subdirectory.update(
-                serializer.component_metadata(projections, labels=component_labels)
-            )
+            if published_paths:
+                projections = SourceProjectionSet(
+                    tuple(entries[path] for path in published_paths)
+                )
+                subdirectory.update(
+                    serializer.component_metadata(projections, labels=component_labels)
+                )
             subdirectory[FIELDS.IMAGE_FILES] = list(published_paths)
             subdirectory[FIELDS.MICROSCOPE_HANDLER_NAME] = microscope_handler_name
-            subdirectory[FIELDS.SOURCE_FILENAME_PARSER_NAME] = source_filename_parser_name
+            subdirectory[FIELDS.SOURCE_FILENAME_PARSER_NAME] = (
+                source_filename_parser_name
+            )
             subdirectory[FIELDS.AVAILABLE_BACKENDS] = {
-                **subdirectory.get(FIELDS.AVAILABLE_BACKENDS, {}), backend: True
+                **subdirectory.get(FIELDS.AVAILABLE_BACKENDS, {}),
+                backend: True,
             }
             if is_main:
                 subdirectory[serializer.MAIN_FIELD] = True
             if results_dir is not None:
                 subdirectory[serializer.RESULTS_DIR_FIELD] = results_dir
-            self._update_projection_geometry(subdirectory)
+            self._update_projection_geometry(
+                subdirectory,
+                (projection for projection, _path in retained_paths),
+            )
             return data
 
         self._execute_update(metadata_path, update)
 
     @staticmethod
-    def _update_projection_geometry(subdirectory: dict[str, Any]) -> None:
-        entries = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
-            subdirectory
-        ).entries
-        if not entries:
-            return
+    def _update_projection_geometry(
+        subdirectory: dict[str, Any],
+        source_projections: Iterable[SourceProjection],
+    ) -> None:
+        """Derive geometry from the transaction's current nominal projections."""
         unique_projections: dict[tuple[object, ...], SourceProjection] = {}
-        for projection in entries.values():
+        for projection in source_projections:
             unique_projections.setdefault(projection.identity_key, projection)
+        if not unique_projections:
+            return
         projections = SourceProjectionSet(tuple(unique_projections.values()))
         subdirectory[FIELDS.GRID_DIMENSIONS] = (
             SourceTileLayout.metadata_grid_dimensions(projections)
@@ -674,51 +692,7 @@ class VirtualWorkspaceSourceMetadataEntries:
             raise RuntimeError(
                 "virtual_workspace source metadata values must be mappings."
             )
-        return MappingProxyType(
-            {
-                str(
-                    key
-                ): VirtualWorkspaceSourceMetadataEntries.normalize_metadata_value(value)
-                for key, value in metadata_fields.items()
-            }
-        )
-
-    @staticmethod
-    def normalize_metadata_value(value: JsonValue) -> SourceMetadataValue:
-        if isinstance(value, Mapping):
-            return MappingProxyType(
-                {
-                    str(
-                        nested_key
-                    ): VirtualWorkspaceSourceMetadataEntries.require_scalar_metadata_value(
-                        nested_value
-                    )
-                    for nested_key, nested_value in value.items()
-                }
-            )
-        return VirtualWorkspaceSourceMetadataEntries.require_scalar_metadata_value(
-            value
-        )
-
-    @staticmethod
-    def require_scalar_metadata_value(value: JsonValue) -> SourceMetadataScalar:
-        # Scalar fast path first: metadata values are overwhelmingly scalars,
-        # and the container ABC isinstance checks below are comparatively
-        # expensive per field.
-        if value is None or isinstance(value, (str, int, float, bool)):
-            return value
-        if isinstance(value, Mapping) or (
-            isinstance(value, Sequence) and not isinstance(value, str)
-        ):
-            raise RuntimeError(
-                "virtual_workspace source metadata supports scalar values and "
-                "one-level scalar mappings only."
-            )
-        raise RuntimeError(
-            "virtual_workspace source metadata scalar values must be strings, "
-            "numbers, booleans, or null."
-        )
-        return value
+        return DurableSourceMetadata.from_mapping(metadata_fields)
 
     def metadata_for(self, virtual_path: str) -> SourceMetadataMapping:
         metadata = self.entries.get(virtual_path)

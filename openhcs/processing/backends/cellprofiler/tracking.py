@@ -39,6 +39,7 @@ from openhcs.core.public_api import public_names_from_objects
 from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
+    dense_label_centers_2d_numba,
     object_label_dense_array,
 )
 from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
@@ -830,7 +831,7 @@ class NumbaNumpyObjectTrackingBackendStrategy(ObjectTrackingBackendStrategy):
         label_count = int(labels_array.max()) if labels_array.size else 0
         if label_count == 0:
             return (np.array([], dtype=np.float64), np.array([], dtype=np.float64))
-        centers = _label_centers_numba(np.ascontiguousarray(labels_array), label_count)
+        centers = dense_label_centers_2d_numba(np.ascontiguousarray(labels_array), label_count)
         return (centers[1:, 0], centers[1:, 1])
 
     def track_by_overlap(
@@ -1462,29 +1463,6 @@ def _apply_final_age_measurements(frame_results: TrackingFrameResults) -> None:
 
 
 @njit(cache=True)
-def _label_centers_numba(labels: np.ndarray, label_count: int) -> np.ndarray:
-    sums = np.zeros((label_count + 1, 2), dtype=np.float64)
-    counts = np.zeros(label_count + 1, dtype=np.int64)
-    height, width = labels.shape
-    for y in range(height):
-        for x in range(width):
-            label_id = int(labels[y, x])
-            if label_id > 0 and label_id <= label_count:
-                sums[label_id, 0] += y
-                sums[label_id, 1] += x
-                counts[label_id] += 1
-    centers = np.empty((label_count + 1, 2), dtype=np.float64)
-    for label_id in range(label_count + 1):
-        if counts[label_id] == 0:
-            centers[label_id, 0] = np.nan
-            centers[label_id, 1] = np.nan
-        else:
-            centers[label_id, 0] = sums[label_id, 0] / counts[label_id]
-            centers[label_id, 1] = sums[label_id, 1] / counts[label_id]
-    return centers
-
-
-@njit(cache=True)
 def _track_by_overlap_numba(
     frame: TrackingKernelFrame,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, int]:
@@ -1528,8 +1506,8 @@ def _track_by_overlap_numba(
 def _track_by_distance_numba(
     frame: TrackingKernelFrame, pixel_radius: int
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, int]:
-    current_centers = _label_centers_numba(frame.current_labels, frame.current_count)
-    old_centers = _label_centers_numba(frame.old_labels, frame.old_count)
+    current_centers = dense_label_centers_2d_numba(frame.current_labels, frame.current_count)
+    old_centers = dense_label_centers_2d_numba(frame.old_labels, frame.old_count)
     new_labels = np.zeros(frame.current_count, dtype=np.int64)
     parent_object_numbers = np.zeros(frame.current_count, dtype=np.int64)
     parent_image_numbers = np.zeros(frame.current_count, dtype=np.int64)

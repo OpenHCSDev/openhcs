@@ -878,7 +878,7 @@ class OverlayOutlineExecutionContext:
 @object_label_input_execution_mode(ObjectLabelInputExecutionMode.MATCH_IMAGE_STACK)
 @special_inputs("object_labels")
 def overlay_outlines(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     *,
     blank_image: bool = False,
     display_mode: OutlineDisplayMode = OutlineDisplayMode.COLOR,
@@ -922,7 +922,7 @@ def overlay_outlines(
 @object_label_input_execution_mode(ObjectLabelInputExecutionMode.MATCH_IMAGE_STACK)
 @special_inputs("labels")
 def overlay_objects(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     labels: ObjectLabelValue,
     opacity: float = 0.3,
     max_label: int | None = None,
@@ -1000,7 +1000,7 @@ def overlay_objects(
 
 
 def _overlay_objects_array(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     labels: np.ndarray,
     *,
     opacity: float,
@@ -1181,7 +1181,7 @@ def _draw_object_labels(
 
 def _draw_outline_image(
     output: np.ndarray,
-    outline_image: np.ndarray,
+    outline_image: RuntimeArrayData,
     color: tuple[float, float, float],
     *,
     outline_intensity: float,
@@ -1200,7 +1200,7 @@ def _draw_outline_image(
     return output
 
 
-def _outline_image_mask(outline_image: np.ndarray) -> np.ndarray:
+def _outline_image_mask(outline_image: RuntimeArrayData) -> np.ndarray:
     mask = np.asarray(image_payload_data(outline_image)) > 0
     channel_axis = image_payload_metadata(outline_image).normalized_source_channel_axis(
         outline_image

@@ -189,8 +189,10 @@ def test_startup_prepares_entire_catalog_and_dynamic_compilation_remains_guarded
     )
     dynamic_invocation = CompiledFunctionInvocation(
         key=FunctionInvocationKey("dynamic", "default", 1),
-        contract=CallableContract.from_callable(dynamic),
+        contract=CallableContract.from_prepared_callable(dynamic),
     )
+    assert events == ["selected", "unselected", "dynamic"]
+    assert dynamic_invocation.contract.metadata.canonical_signature is not None
     group = CompiledFunctionGroup("default", (invocation, dynamic_invocation))
     pattern = CompiledFunctionPattern(groups=(group,), is_grouped=False)
     context = SimpleNamespace(step_plans={0: SimpleNamespace(step_index=0, compiled_function_pattern=pattern)})

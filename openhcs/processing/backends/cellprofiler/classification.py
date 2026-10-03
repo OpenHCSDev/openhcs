@@ -2028,7 +2028,7 @@ def object_classification_backend(
     SliceIndexRuntimeParameter,
 )
 def classify_objects_single_measurement(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     labels: ObjectLabelValue,
     measurement_feature: str = "",
     measurement_values: np.ndarray | None = None,

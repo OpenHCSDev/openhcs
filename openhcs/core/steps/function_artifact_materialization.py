@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
+from types import MappingProxyType
 from typing import TYPE_CHECKING, ClassVar, cast
 
 import numpy as np
@@ -50,6 +51,7 @@ from openhcs.core.source_matching import (
     with_source_component_metadata,
 )
 from openhcs.core.source_projection import OpenHCSPlaneAddress
+from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.steps.function_output_identity import (
     FunctionOutputIdentity,
     FunctionOutputIdentityAuthority,
@@ -71,9 +73,11 @@ from openhcs.processing.materialization.core import (
     MaterializationSpec,
     MaterializationValue,
     Output,
+    SavedMaterializationOutputs,
     RawBackendKwargs,
     ViewerStreamBackendCallKwargs,
     materialization_outputs,
+    prepare_materialization,
 )
 
 if TYPE_CHECKING:
@@ -754,7 +758,7 @@ class AnalysisOutputDescriptorAuthority:
             )
         elif scope.component is not None:
             component_metadata = with_source_component_metadata(
-                dict(metadata.source_component_metadata or {}),
+                metadata.source_component_metadata or {},
                 scope.component,
                 scope.require_value_text(),
             )
@@ -817,6 +821,9 @@ class AnalysisOutputDescriptorAuthority:
                 variable_components=plan.variable_components,
             )
         if identity is not None:
+            identity = materialization_spec.filename_identity_for_output(
+                identity, output_plan,
+            )
             try:
                 filename = Path(
                     FunctionOutputPathAuthority.filename_for_identity(
@@ -1221,18 +1228,6 @@ def runtime_artifact_materializations(
     return tuple(materializations)
 
 
-def observed_runtime_artifact_materializations(
-    plan: CompiledStepPlan,
-    context: "ProcessingContext",
-) -> tuple[RuntimeArtifactMaterialization, ...]:
-    """Derive historical materializations from the runtime observation ledger."""
-    return runtime_artifact_materializations_from_records(
-        plan,
-        context,
-        context.runtime_value_store.observed_values,
-    )
-
-
 def runtime_artifact_materializations_from_records(
     plan: CompiledStepPlan,
     context: "ProcessingContext",
@@ -1271,62 +1266,12 @@ def runtime_artifact_materializations_from_records(
     return tuple(materializations)
 
 
-def materialized_artifact_output_paths(
-    plan: CompiledStepPlan,
-    context: "ProcessingContext",
-) -> tuple[Path, ...]:
-    """Re-derive exact persistent output paths from runtime materializations."""
-
-    if not plan.runtime_artifact_materialization.has_persistent_target:
-        return ()
-    return tuple(
-        Path(output.path)
-        for materialization in runtime_artifact_materializations(plan, context)
-        if materialization.spec.participates_in_persistent_materialization()
-        for output in materialization.outputs(plan, context)
-    )
-
-
-def runtime_export_artifact_output_paths(
-    plan: CompiledStepPlan,
-    context: "ProcessingContext",
-) -> tuple[Path, ...]:
-    """Derive exact pipeline-declared export paths from runtime materializations."""
-
-    if not plan.runtime_artifact_materialization.has_persistent_target:
-        return ()
-    return tuple(
-        Path(output.path)
-        for materialization in runtime_artifact_materializations(plan, context)
-        if materialization.spec.participates_in_runtime_export_observation()
-        for output in materialization.outputs(plan, context)
-    )
-
-
-def observed_materialized_artifact_output_paths(
+def preview_reused_runtime_export_paths(
     plan: CompiledStepPlan,
     context: "ProcessingContext",
     records: tuple[StoredRuntimeValue, ...],
 ) -> tuple[Path, ...]:
-    """Derive exact persistent outputs from one execution-owned observation."""
-
-    return tuple(
-        Path(location.path)
-        for locations in observed_materialized_artifact_locations_by_address(
-            plan,
-            context,
-            records,
-        ).values()
-        for location in locations
-    )
-
-
-def observed_runtime_export_artifact_output_paths(
-    plan: CompiledStepPlan,
-    context: "ProcessingContext",
-    records: tuple[StoredRuntimeValue, ...],
-) -> tuple[Path, ...]:
-    """Derive exact pipeline-declared exports from worker-observed records."""
+    """Predict historical debug-reuse exports, independently of new save outcomes."""
 
     if not plan.runtime_artifact_materialization.has_persistent_target:
         return ()
@@ -1342,12 +1287,12 @@ def observed_runtime_export_artifact_output_paths(
     )
 
 
-def observed_materialized_artifact_locations_by_address(
+def preview_reused_materialized_artifact_locations(
     plan: CompiledStepPlan,
     context: "ProcessingContext",
     records: tuple[StoredRuntimeValue, ...],
 ) -> Mapping[RuntimeArtifactAddress, tuple[RuntimeArtifactLocation, ...]]:
-    """Project exact persistent destinations for observed runtime artifacts."""
+    """Predict historical debug-reuse destinations from retained logical values."""
 
     if not plan.runtime_artifact_materialization.has_persistent_target:
         return {}
@@ -1432,15 +1377,41 @@ def _planned_materialization_path(
     )
 
 
+@dataclass(frozen=True, slots=True)
+class MaterializedRuntimeArtifact(SavedMaterializationOutputs):
+    """Actual writer outputs saved for one reduced runtime artifact."""
+
+    materialization: RuntimeArtifactMaterialization
+
+    def observation(self, plan: CompiledStepPlan) -> StepExecutionObservation:
+        target = plan.runtime_artifact_materialization
+        if not target.has_persistent_target:
+            return StepExecutionObservation.empty()
+        backend = target.require_persistent_backend()
+        outputs = self.outputs_for_backend(backend)
+        if not outputs:
+            return StepExecutionObservation.empty()
+        address = RuntimeArtifactAddress.from_record(self.materialization.record)
+        locations = tuple(
+            RuntimeArtifactLocation(path=output.path, backend=backend)
+            for output in outputs
+        )
+        paths = (
+            tuple(Path(output.path) for output in outputs)
+            if self.materialization.spec.participates_in_runtime_export_observation()
+            else ()
+        )
+        return StepExecutionObservation(MappingProxyType({address: locations}), paths)
+
+
 def materialize_artifact_outputs(
     filemanager: "FileManager",
     plan: CompiledStepPlan,
     target_plan: ArtifactMaterializationTargetPlan,
     context: "ProcessingContext",
-) -> None:
-    """Materialize planned artifact outputs to persistent and streaming backends."""
-    from openhcs.processing.materialization import materialize
-
+) -> tuple[MaterializedRuntimeArtifact, ...]:
+    """Save each exact artifact batch once and return its successful outputs."""
+    saved_materializations = []
     images_dir = plan.artifact_images_dir
 
     for materialization in runtime_artifact_materializations(plan, context):
@@ -1458,7 +1429,7 @@ def materialize_artifact_outputs(
         )
         if not backends:
             continue
-        materialize(
+        batch = prepare_materialization(
             materialization.spec,
             data,
             str(materialization.base_path),
@@ -1488,3 +1459,12 @@ def materialize_artifact_outputs(
             pipeline_position=plan.pipeline_position,
             output_plan=materialization.output_plan,
         )
+        saved_materializations.append(
+            MaterializedRuntimeArtifact(
+                outputs_by_backend=MappingProxyType(
+                    dict(batch.save().outputs_by_backend)
+                ),
+                materialization=materialization,
+            )
+        )
+    return tuple(saved_materializations)
