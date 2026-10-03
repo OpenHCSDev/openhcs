@@ -9,8 +9,10 @@ from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.artifacts import ArtifactSpec, ObjectLabelsArtifactType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.runtime_measurements import MeasurementRowAxisField
 from openhcs.core.runtime_object_label_building import SourceImageObjectLabelBuildRequest
 from openhcs.core.runtime_object_label_domains import ObjectLabelDomainScope
+from openhcs.core.runtime_tabular_values import MeasurementObjectRowIdentity
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneAxisValueProjection
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_metadata import SourceVoxelSpacing
@@ -97,13 +99,17 @@ def test_original_artifact_admission_and_full_stack_shape_keep_2d_planes(axis):
         execution_mode=ImagePayloadExecutionMode.FULL_STACK,
     )
     area = MeasureObjectSizeShapeModule.MeasurementFeature.AREA.value
-    # The original AreaShape owner declares ROW_SEQUENCE and a dense extent
-    # through each plane's maximum ID, not two sparse-ID measurement rows.
-    # Check the entire existing vector, including every missing-value slot.
-    expected_area = np.full(29 + 106, np.nan)
-    expected_area[0] = 6.0
-    expected_area[29] = 12.0
-    np.testing.assert_array_equal(tuple(row[area] for row in rows), expected_area)
+    # Raw shape rows retain the exact authored label domain of each plane.
+    # Export completion separately projects that domain to CP row ordinals.
+    assert rows.object_row_identity is MeasurementObjectRowIdentity.LABEL_ID
+    assert tuple(
+        (
+            row[MeasurementRowAxisField.SLICE_INDEX.value],
+            row[MeasurementRowAxisField.OBJECT_LABEL.value],
+            row[area],
+        )
+        for row in rows
+    ) == ((0, 29, 6.0), (1, 106, 12.0))
     assert "AreaShape_Volume" not in tuple(field.name for field in rows.fields)
     assert labels.tobytes() == source_bytes
 
