@@ -2387,9 +2387,9 @@ class NapariLayerDisplayPipeline:
             display_config=layer_route.display_config,
             items=items,
         )
-        timer.timeout.connect(
-            lambda: self.execute_scheduled_layer_update(layer_key, update)
-        )
+        timer.timeout.connect(update.retained_callback(
+            partial(self.execute_scheduled_layer_update, layer_key),
+        ))
         self.server.layer_batch_processor_debounce_policy.start_timer(timer)
         self.server.layer_route_state.set_pending_update(layer_key, update)
         logger.debug(
@@ -2417,7 +2417,7 @@ class NapariLayerDisplayPipeline:
                 return
             QTimer.singleShot(
                 NAPARI_SETTLEMENT_UPDATE_YIELD_MS,
-                lambda: self.execute_scheduled_layer_update(layer_key, update),
+                update.retained_callback(partial(self.execute_scheduled_layer_update, layer_key)),
             )
         except Exception as error:
             self.server.layer_route_state.record_update_error(layer_key, error)
@@ -2526,11 +2526,7 @@ class NapariLayerDisplayPipeline:
         route_key, update = claimed_update
         QTimer.singleShot(
             NAPARI_SETTLEMENT_UPDATE_YIELD_MS,
-            lambda: self._execute_settlement_update(
-                settlement,
-                route_key,
-                update,
-            ),
+            update.retained_callback(partial(self._execute_settlement_update, settlement, route_key)),
         )
 
     def _execute_settlement_update(
@@ -2551,11 +2547,7 @@ class NapariLayerDisplayPipeline:
                 settlement.complete_active_work_unit(route_key)
                 QTimer.singleShot(
                     NAPARI_SETTLEMENT_UPDATE_YIELD_MS,
-                    lambda: self._execute_settlement_update(
-                        settlement,
-                        route_key,
-                        update,
-                    ),
+                    update.retained_callback(partial(self._execute_settlement_update, settlement, route_key)),
                 )
                 return
         except Exception as error:
@@ -5744,7 +5736,7 @@ class NapariLayerRetirementControlMessageAction(NapariControlMessageAction):
             response = ViewerControlReplyHeader(
                 ViewerProtocolStatus.SUCCESS, response_type="layer_retirement_ack",
             ).to_wire_mapping()
-            response["retirement"] = receipt.to_wire_mapping()
+            response[ViewerControlField.RETIREMENT.value] = receipt.to_wire_mapping()
             return response
         except Exception as error:
             return ViewerControlReplyHeader(

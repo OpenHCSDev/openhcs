@@ -35,7 +35,23 @@ and retirement; the snapshot-specific copy is deleted. The new capability is
 discovered by the existing generated MCP binding, with no server/context roster
 edit. A CLI leaf supplies the exact producer mapping through the same request.
 
-Qualification is pending at this first implementation checkpoint. Source controls
+The first source runs retained two collection failures: source dependencies must
+be activated before PolyStore, and the unchanged foreign pyqt gitlink predates
+the merged render-complete contract. The clean, already-owned paired pyqt checkout
+ad4948775ab81180a354d4b793d17ee5ddff3972 is borrowed read-only. Its snapshot module
+SHA256 is bced886e6bbfd69ae9bdebf950027b809e72c23eddadcaa5fcf7151adf7ae913.
+Neither foreign gitlinks nor installed dependencies are changed.
+
+The first behavioral shard proved17 controls but failed payload-release despite
+all selected stores being cleared. Original Qt callbacks still strongly held the
+update. The debounce-only correction was insufficient: original singleShot
+settlement/continuation callbacks also capture that same update. The existing
+NapariPendingLayerUpdate now owns a weak retained_callback hook used by all four
+timer/continuation sites; every copied strong-capture lambda is deleted. No new
+timer, painter or event loop was added. The missing weakref slot in the first hook
+attempt and the next retained-reference failure are preserved in original logs.
+
+Qualification is in progress at this implementation checkpoint. Source controls
 exercise real Qt scheduling and ViewerModel, typed queue/gateway/service, payload
 release, exact stale-incarnation refusal, terminal-failure retirement and independent
 cooperative capability hooks. No installed/live/RSS-reduction claim is made. There

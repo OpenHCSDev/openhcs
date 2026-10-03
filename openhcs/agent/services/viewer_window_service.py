@@ -1501,7 +1501,9 @@ class ViewerWindowService:
             response = self._gateway.retire_layers(request)
             if response[ViewerControlResponseField.STATUS.value] != self.SUCCESS_STATUS:
                 raise ValueError(response[ViewerControlResponseField.MESSAGE.value])
-            receipt = ViewerLayerRetirementReceipt.from_wire_mapping(response["retirement"])
+            receipt = ViewerLayerRetirementReceipt.from_wire_mapping(
+                response[ViewerControlField.RETIREMENT.value],
+            )
             if not receipt.applied:
                 raise ValueError("Native retirement did not apply the requested set.")
             requested = frozenset(request.retirement.expected_producers)

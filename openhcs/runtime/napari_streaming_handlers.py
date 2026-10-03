@@ -5,6 +5,7 @@ from __future__ import annotations
 import colorsys
 import logging
 import threading
+import weakref
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping, Sequence, Sized
 from contextlib import contextmanager
@@ -254,7 +255,7 @@ class NapariTimerHandle(ABC):
         """Stop the pending layer update."""
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True, slots=True, weakref_slot=True)
 class NapariPendingLayerUpdate(ViewerComponentAxisSemantics):
     """Queued debounced layer update with flush-local runtime residue."""
 
@@ -286,6 +287,19 @@ class NapariPendingLayerUpdate(ViewerComponentAxisSemantics):
         """Stop the Qt timer that would otherwise execute this update later."""
 
         self.timer.stop()
+
+    def retained_callback(
+        self, callback: Callable[["NapariPendingLayerUpdate"], None],
+    ) -> Callable[[], None]:
+        """Qt continuations borrow the update; route/settlement state owns it."""
+        update_ref = weakref.ref(self)
+
+        def advance() -> None:
+            update = update_ref()
+            if update is not None:
+                callback(update)
+
+        return advance
 
 
 @dataclass(slots=True)
