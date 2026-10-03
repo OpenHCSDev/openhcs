@@ -1,6 +1,22 @@
 NEXT funded-programme owner: publication checkpoint
 ==================================================
 
+Completed NEXT consumer checkpoint
+---------------------------------
+
+The canonical tracked family is now operations/ in this directory. See its
+README.rst for the original prepare/initialize/publish and launch entrypoints,
+and VALIDATION.rst for complete owner/consumer, borrower and controlled-path
+evidence. The previously listed remaining launcher/client/packet permission
+reads below are historical checkpoints: they are now deleted in the NEXT
+family. Current live/frozen programmes have not been redirected or changed.
+Old root-level source remains untracked on disk for exact historical borrower
+custody, not a second future implementation. Installed acceptance and explicit
+parent NEXT publication remain required; no optional hosted CI gate.
+
+Prior published checkpoints (preserved)
+--------------------------------------
+
 The original programme projector now has a parent-only publication transition
 at ONE fixed funding root. It atomically replaces that owner's program.json
 with the reviewed proposal, whose membership and full retained ledger are
