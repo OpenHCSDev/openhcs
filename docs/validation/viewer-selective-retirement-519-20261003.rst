@@ -11,7 +11,9 @@ Parent released the native coordinator/reconciliation, original route-state/
 settlement/batch/display-work hooks and typed protocol/request/gateway/service/
 capability family. Singer implements on the existing522 branch. Root394 core
 producer, persistence and materialization remain untouched. Current Root claim
-checked at0fe0482d2784bd6ab1d3a7b3fbb6e5ddfb473e55; no other selective-retirement
+checked at30ebacf907273ee0d0767f392ac21281915f5a0e; the related protocol/viewer/
+agent/MCP family is byte-equal this branch's main base, before this implementation.
+No other selective-retirement
 implementation is published. The original investigation below and its source
 archive remain historical evidence, not the implementation qualification.
 
@@ -51,11 +53,36 @@ timer/continuation sites; every copied strong-capture lambda is deleted. No new
 timer, painter or event loop was added. The missing weakref slot in the first hook
 attempt and the next retained-reference failure are preserved in original logs.
 
-Qualification is in progress at this implementation checkpoint. Source controls
-exercise real Qt scheduling and ViewerModel, typed queue/gateway/service, payload
-release, exact stale-incarnation refusal, terminal-failure retirement and independent
-cooperative capability hooks. No installed/live/RSS-reduction claim is made. There
-is no new runtime/client/viewer launch, package installation or scientific contact.
+The initially added retirement-only gateway/service/invocation methods were
+deleted after original R0 reported service growth and foreign-state probes.
+ViewerWindowPresentationRequest/Result and ViewerNativePresentationCapability
+already own native operation transport, decode and error lifecycle. They now
+carry retirement via small request/result admission hooks. Retirement's agent
+result composes that existing envelope with the original native receipt through
+MI. Its cooperative super call explicitly names the declared slotted-dataclass
+owner; Python's dataclass transformation replaces the pre-transformation type.
+The original image-intensity availability guard is unchanged; retirement resolves
+availability through NapariViewerServer.require_viewer, not a second leaf probe.
+
+The latest coherent source batch is33PASS (owner-controls10):20 real-Qt/ViewerModel
+transitions including image/Shapes/Points retirement,6 typed MCP/CLI contract
+controls and7 existing deletion/clear/shutdown controls. Actual payload and layer
+weak references become None after removal, with no late callback resurrection.
+Two survivor image handlers preserve source-item identity, sparse domains,
+calibration, intensity/gamma/colormap/opacity/visibility/camera; an independent
+declared capability executes its cooperative enter/exit hooks with no generic
+consumer edit. These are source model/queue proofs, NOT native GL scene release
+or process-RSS measurements. Generated MCP callable tests are not live MCP calls.
+
+Original constructor-order and slotted zero-argument-super failures are retained.
+The combined snapshot/retirement process also retained a Vispy Qt5/Qt6 import
+refusal. A separate existing snapshot shard exited1 during hidden Vispy setup
+after three passing controls, without a Python traceback; its cause is not proved.
+No backend/environment forcing, installed repair or weaker assertion is used.
+Final source census and original R0 at the corrected production commit follow.
+No installed/live/RSS-reduction claim is made. There is no new runtime/client/
+viewer launch, package installation or scientific contact. Planck494's Points
+domain, spatial calibration and feature-metadata hunks are explicitly disjoint.
 Unexpected native removal/rematerialization errors are not an atomic rollback;
 their failed operation disposition must not be replayed as if nothing happened.
 

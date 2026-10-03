@@ -448,6 +448,34 @@ def test_selected_retirement_uses_registered_queue_and_releases_payloads(receive
     assert route not in receiver.layer_route_state.layers  # No late resurrection.
 
 
+@pytest.mark.parametrize("data_type,payload", [
+    (StreamingDataType.SHAPES, [{"type": "polygon", "coordinates": [[0, 0], [0, 1], [1, 1]],
+                                "metadata": {"label": 7}}]),
+    (StreamingDataType.POINTS, [{"type": "points", "coordinates": [[1, 2]],
+                                "metadata": {"label": 7}}]),
+])
+def test_registered_geometry_family_retires_through_same_queue(receiver, data_type, payload):
+    keep, update = enqueue(receiver, np.ones((2, 2)), producer="source")
+    advance_in_qt(receiver, keep, update)
+    original_items = receiver.component_groups.existing_items_for(keep)
+    route, update = enqueue(receiver, payload, producer="geometry", data_type=data_type)
+    advance_in_qt(receiver, route, update)
+    layer_ref = weakref.ref(receiver.layer_route_state.layer(route))
+    update_ref = weakref.ref(update)
+    del update
+    result = ViewerWindowService(QueuedRetirementGateway(receiver)).presentation(
+        retirement_request(receiver, route),
+    )
+    assert result.applied and not result.errors
+    assert result.retired_route_keys == (route,) and result.remaining_route_keys == (keep,)
+    assert receiver.component_groups.existing_items_for(keep) is original_items
+    import gc
+    gc.collect()
+    assert layer_ref() is None and update_ref() is None
+    QApplication.instance().processEvents()
+    assert route not in receiver.layer_route_state.layers
+
+
 @pytest.mark.parametrize("blocked", ["pending", "intake", "display", "running", "stale", "missing", "deadline"])
 def test_retirement_prevalidates_entire_set_without_collateral_mutation(receiver, blocked):
     first, update = enqueue(receiver, np.ones((2, 2)), producer="first")

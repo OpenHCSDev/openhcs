@@ -1430,6 +1430,7 @@ class ViewerWindowLayerRetirementResult(
     registry_key: ClassVar[str] = "layer_retirement"
     response_field = ViewerControlField.RETIREMENT
     snapshot_type = ViewerLayerRetirementReceipt
+    observed: bool = field(kw_only=True)
 
     @classmethod
     def from_snapshot(cls, connection, snapshot):
@@ -1439,7 +1440,9 @@ class ViewerWindowLayerRetirementResult(
         )
 
     def admit_request(self, request: ViewerWindowLayerRetirementRequest) -> Self:
-        super().admit_request(request)
+        # slots=True replaces the dataclass type; use that declared MRO owner,
+        # not the pre-transformation __class__ captured by zero-argument super.
+        super(ViewerWindowLayerRetirementResult, self).admit_request(request)
         if not self.applied:
             raise ValueError("Native retirement did not apply the requested set.")
         requested = frozenset(request.retirement.expected_producers)

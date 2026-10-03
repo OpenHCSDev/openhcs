@@ -5112,6 +5112,8 @@ class NapariImageIntensityControlMessageAction(NapariMountedRouteControlMessageA
         request = message.get(ViewerControlResponseField.PAYLOAD.value)
         acknowledgement = ViewerControlMessageType.IMAGE_INTENSITY.acknowledgement_type
         try:
+            if server.viewer is None:
+                raise RuntimeError("Napari viewer is not available.")
             if not isinstance(request, ViewerImageIntensityControlOptions):
                 raise TypeError(
                     "Image intensity payload must be ViewerImageIntensityControlOptions."
@@ -5725,8 +5727,6 @@ class NapariLayerRetirementControlMessageAction(NapariControlMessageAction):
             request = message.get(ViewerControlResponseField.PAYLOAD.value)
             if not isinstance(request, ViewerWindowLayerRetirementRequest):
                 raise TypeError("Retirement requires ViewerWindowLayerRetirementRequest.")
-            if server.viewer is None:
-                raise RuntimeError("Napari viewer is not available.")
             retired = _NAPARI_COMPONENT_DISPLAY_COORDINATOR.retire_layers(server, request)
             receipt = ViewerLayerRetirementReceipt(
                 applied=True, retired_route_keys=retired,
