@@ -1429,13 +1429,16 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
         dimensions = self.viewer_dimension_indices(dims.ndim)
         names = dict(zip(dimensions, self.axis_labels, strict=True))
         points = {name: dims.point[axis] for axis, name in names.items()}
+        ranges = {name: dims.range[axis] for axis, name in names.items()}
         order = tuple(names[axis] for axis in dims.order if axis in names)
         yield
         target_dimensions = replacement.viewer_dimension_indices(dims.ndim)
         target_axes = dict(zip(replacement.axis_labels, target_dimensions, strict=True))
         point = list(dims.point)
+        native_ranges = list(dims.range)
         for name, value in points.items():
             point[target_axes[name]] = value
+            native_ranges[target_axes[name]] = ranges[name]
         transform = replacement.spatial_layer_kwargs(items, replacement.payload_axis_labels)
         for name in replacement.display_axis_components:
             if name in points:
@@ -1449,6 +1452,12 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
             # This newly inserted singleton's source-local index is zero.
             # The original transform already contains its shared-domain offset.
             point[target_axes[name]] = transform["translate"][axis]
+            native_ranges[target_axes[name]] = (
+                point[target_axes[name]], point[target_axes[name]], transform["scale"][axis],
+            )
+        # Dims clips points to its ranges. Remap the detached snapshot's bounds
+        # first; the live viewer's bounds remain owned by its mounted layers.
+        dims.range = tuple(native_ranges)
         dims.point = tuple(point)
         retained_order = tuple(target_axes[name] for name in order)
         dims.order = tuple(
