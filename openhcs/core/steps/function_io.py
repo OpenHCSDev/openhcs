@@ -10,7 +10,6 @@ from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING, Callable, ClassVar, Mapping, Sequence, TypeAlias
 
 from metaclass_registry import AutoRegisterMeta
-from polystore.config import tiff_write_batches
 from polystore.zarr_batch import ZarrBatchAxis, ZarrBatchAxisRole, ZarrBatchLayout
 
 from openhcs.constants.constants import (
@@ -19,7 +18,10 @@ from openhcs.constants.constants import (
     Backend,
 )
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
-from openhcs.core.image_file_serialization import prepare_disk_image_payloads
+from openhcs.core.image_file_serialization import (
+    ImageFileFormat,
+    prepare_disk_image_payloads,
+)
 from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
@@ -384,7 +386,11 @@ def save_materialized_data(
     tiff_config = (
         context.tiff_config if materialized_backend == Backend.DISK.value else None
     )
-    for indices, batch_config in tiff_write_batches(materialized_paths, tiff_config):
+    for indices, batch_config in ImageFileFormat.storage_write_batches(
+        memory_data,
+        materialized_paths,
+        tiff_config,
+    ):
         filemanager.save_batch(
             [payloads[index] for index in indices],
             [materialized_paths[index] for index in indices],

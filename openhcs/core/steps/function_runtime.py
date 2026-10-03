@@ -439,7 +439,6 @@ class ProjectedFunctionOutputContextStrategy(UnchangedFunctionOutputContextStrat
         )
 
 
-
 class ImageFunctionOutputContextStrategy(ProjectedFunctionOutputContextStrategy):
     """Preserve source-image metadata for image outputs derived from the main input."""
 
@@ -1393,10 +1392,17 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
         return runtime._load_input_stack()
 
     def loaded_plane_count(
-        self, matching_files: Sequence[str], payload: RuntimeArrayData,
+        self,
+        matching_files: Sequence[str],
+        payload: RuntimeArrayData,
     ) -> int:
         """The source path roster declares the initial runtime plane count."""
-        return len(matching_files)
+        return image_payload_metadata(
+            payload
+        ).source_spatial_domain.intrinsic_plane_count(
+            np.shape(image_payload_data(payload)),
+            len(matching_files),
+        )
 
     def loaded_fixed_component_values(
         self, payload: RuntimeArrayData,
@@ -2664,6 +2670,15 @@ class PatternGroupRuntime:
                 source_projection=source_projection,
                 workspace_source_lookups=workspace_source_lookups,
             )
+            if not producer_records:
+                metadata = image_payload_metadata(main_data_stack)
+                domain = request.source_binding_plan.source_spatial_domain.admit_source_cohort(
+                    metadata.source_spatial_domain,
+                    depth=len(matching_files),
+                )
+                main_data_stack = metadata.replace_fields(
+                    source_spatial_domain=domain,
+                ).attach_to(main_data_stack)
         else:
             main_data_stack = cached_stack
 
@@ -3032,16 +3047,15 @@ class PatternGroupRuntime:
             return NoMainFlowOutput()
         return current_stack
 
-
     def _project_output_slices(
         self,
         processed_stack: RuntimeArrayData,
         matching_files: Sequence[str],
     ) -> tuple[tuple[RuntimeArrayData, AlignedImageSliceContext | None], ...]:
         """Project the original output through its nominal image topology."""
-        if (
-            isinstance(processed_stack, ImagePayloadMetadataCarrier)
-            and processed_stack.metadata.plane_axis is None
+        if isinstance(processed_stack, ImagePayloadMetadataCarrier) and (
+            processed_stack.metadata.plane_axis is None
+            or processed_stack.metadata.persists_whole_image()
         ):
             output_context = self._unwrapped_main_flow_output_context()
             contexts = (
@@ -3168,9 +3182,9 @@ class PatternGroupRuntime:
                 memory_type=plan.output_memory_type,
                 device_id=plan.device_id_for(plan.output_memory_type),
             )
-        elif (
-            isinstance(processed_stack, ImagePayloadMetadataCarrier)
-            and processed_stack.metadata.plane_axis is None
+        elif isinstance(processed_stack, ImagePayloadMetadataCarrier) and (
+            processed_stack.metadata.plane_axis is None
+            or processed_stack.metadata.persists_whole_image()
         ):
             stack_payload = ImagePayloadStackComposition.copy_whole_image(
                 processed_stack,

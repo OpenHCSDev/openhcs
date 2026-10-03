@@ -835,6 +835,8 @@ class SourceArtifactProjection(SourceProjection):
     ) -> OpenHCSPlaneAddress | None:
         """Return a plane address only when the whole artifact is scalar."""
 
+        if metadata.persists_whole_image():
+            return None
         return OpenHCSPlaneAddress.from_complete_source_metadata(
             metadata.source_component_metadata
         )

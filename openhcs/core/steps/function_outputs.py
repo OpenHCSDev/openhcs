@@ -192,10 +192,7 @@ class MemoryOutputWriter:
         produced_outputs = step_output_manifest(context).image_records_for(plan)
         if not produced_outputs:
             return
-        memory_paths = [
-            record.memory_path(plan)
-            for record in produced_outputs
-        ]
+        memory_paths = [record.memory_path(plan) for record in produced_outputs]
         memory_data = context.filemanager.load_batch(
             memory_paths,
             Backend.MEMORY.value,
@@ -210,18 +207,30 @@ class MemoryOutputWriter:
             plan.output_dir,
             plan.write_backend,
         )
-        context.filemanager.save_batch(
-            cls.payloads(memory_data, output_paths, plan),
-            output_paths,
-            plan.write_backend,
-            chunk_name=plan.axis_id,
-            zarr_config=plan.zarr_config,
-            batch_layout=zarr_output_batch_layout(produced_outputs),
-            row=row,
-            col=col,
-            parser_name=parser_context.parser_name,
-            microscope_type=parser_context.microscope_type,
+        payloads = cls.payloads(memory_data, output_paths, plan)
+        batches = (
+            ImageFileFormat.storage_write_batches(
+                memory_data, output_paths, context.tiff_config
+            )
+            if plan.write_backend == Backend.DISK.value
+            else ((tuple(range(len(output_paths))), None),)
         )
+        for indices, config in batches:
+            context.filemanager.save_batch(
+                [payloads[index] for index in indices],
+                [output_paths[index] for index in indices],
+                plan.write_backend,
+                chunk_name=plan.axis_id,
+                zarr_config=plan.zarr_config,
+                batch_layout=zarr_output_batch_layout(
+                    tuple(produced_outputs[index] for index in indices)
+                ),
+                row=row,
+                col=col,
+                parser_name=parser_context.parser_name,
+                microscope_type=parser_context.microscope_type,
+                **({"tiff_config": config} if config is not None else {}),
+            )
 
     @staticmethod
     def payloads(
@@ -811,6 +820,25 @@ class OpenHCSMetadataWriter:
                     metadata, destination
                 )
                 address = record.filename_address
+                if metadata.persists_whole_image():
+                    projection_paths.append(
+                        (
+                            SourceArtifactProjection(
+                                address=None,
+                                ref=SourcePixelRef(self.backend, virtual_path),
+                                source_alias=record.producer_identity.output_key,
+                                artifact_kind=ImageArtifactType,
+                                source_metadata=source_metadata,
+                                image_metadata=metadata,
+                                execution_scope=record.execution_scope(plan),
+                            ),
+                            virtual_path,
+                        )
+                    )
+                    produced_projections[Path(destination)] = (
+                        record, projection_paths[-1][0]
+                    )
+                    continue
                 if address not in declared_addresses:
                     declared_addresses.add(address)
                     projection_paths.append(
@@ -902,9 +930,20 @@ class OpenHCSMetadataWriter:
                             # A collapsed image retains filename coordinates while
                             # its semantic source address can be absent. Validate
                             # the occurrence against its producer's filename view.
+                            whole_image = metadata.persists_whole_image()
+                            expected_address = (
+                                None if whole_image else record.filename_address
+                            )
                             if (
-                                projection.address != record.filename_address
+                                projection.address != expected_address
                                 or projection.image_metadata != metadata
+                                or (
+                                    whole_image
+                                    and projection.execution_scope
+                                    != record.execution_scope(
+                                        materialization.output_plan
+                                    )
+                                )
                             ):
                                 raise ValueError(
                                     "Conflicting metadata for persisted image "

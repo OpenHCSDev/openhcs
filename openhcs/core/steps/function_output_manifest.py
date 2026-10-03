@@ -32,6 +32,8 @@ from openhcs.core.steps.function_output_identity import (
 )
 from openhcs.microscopes.microscope_interfaces import FilenameParser
 from openhcs.core.compiled_step_plan import CompiledStepPlan
+from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.constants import AllComponents
 
 
 @dataclass(frozen=True, slots=True)
@@ -108,6 +110,27 @@ class ProducedOutputSemantics(FunctionOutputIdentity):
         )
         metadata.source_voxel_spacing.merge_into(source_metadata, path=destination)
         return source_metadata
+
+    def execution_scope(self, plan: CompiledStepPlan) -> RuntimeExecutionAxisScope:
+        """Retain the exact producer coordinates of a whole intrinsic image."""
+        group_component = plan.execution_group_scope.component
+        group_value = (
+            None
+            if group_component is None
+            else self.component_values.get(group_component.value)
+        )
+        return RuntimeExecutionAxisScope.from_raw(
+            plan.axis_id,
+            component=group_component if group_value is not None else None,
+            value=group_value,
+            fixed_component_values=tuple(
+                (component, str(value))
+                for component in AllComponents
+                if not component.is_multiprocessing_axis()
+                and component is not group_component
+                and (value := self.component_values.get(component.value)) is not None
+            ),
+        )
 
     def owns_persisted_artifact(
         self,

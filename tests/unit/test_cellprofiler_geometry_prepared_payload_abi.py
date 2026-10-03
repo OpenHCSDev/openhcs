@@ -16,7 +16,10 @@ from openhcs.core.runtime_image_values import (
     image_payload_metadata,
 )
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
-from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.source_spatial_domain import (
+    SourceSpatialDomain,
+    VolumeSourceSpatialDomain,
+)
 from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import (
     CellProfilerFunctionContractExecutor,
@@ -53,7 +56,14 @@ def test_prepared_resize_preserves_typed_primary_and_bare_array(func):
 
 @pytest.mark.parametrize("axis", (None, RuntimePlaneAxis.RUNTIME_SLICE))
 @pytest.mark.parametrize("z_factor", (1.0, 2.0))
-def test_prepared_full_stack_resize_preserves_existing_metadata_and_mask(axis, z_factor):
+@pytest.mark.parametrize(
+    "domain_type", (SourceSpatialDomain, VolumeSourceSpatialDomain)
+)
+def test_prepared_full_stack_resize_preserves_existing_metadata_and_mask(
+    axis,
+    z_factor,
+    domain_type,
+):
     planes = tuple(
         ImagePayloadMetadata(
             source_path=f"/images/z{index}.tif",
@@ -66,6 +76,15 @@ def test_prepared_full_stack_resize_preserves_existing_metadata_and_mask(axis, z
         for index in (3, 1, 2)
     )
     metadata = ImagePayloadMetadata.compose(planes).replace_fields(plane_axis=axis)
+    if domain_type is VolumeSourceSpatialDomain:
+        metadata = metadata.replace_fields(
+            source_spatial_domain=VolumeSourceSpatialDomain(
+                source_depth=3
+            ).admit_source_cohort(
+                metadata.source_spatial_domain,
+                depth=3,
+            )
+        )
     pixels = np.stack(tuple(image_payload_data(plane) for plane in planes))
     mask = np.ones(pixels.shape, dtype=bool)
     mask[:, 0, 0] = False
@@ -82,13 +101,21 @@ def test_prepared_full_stack_resize_preserves_existing_metadata_and_mask(axis, z
         execution_mode=ImagePayloadExecutionMode.FULL_STACK,
     )
 
-    np.testing.assert_array_equal(image_payload_data(result), image_payload_data(expected))
-    np.testing.assert_array_equal(image_payload_mask(result), image_payload_mask(expected))
+    np.testing.assert_array_equal(
+        image_payload_data(result), image_payload_data(expected)
+    )
+    np.testing.assert_array_equal(
+        image_payload_mask(result), image_payload_mask(expected)
+    )
     assert image_payload_metadata(result) == image_payload_metadata(expected)
     assert image_payload_metadata(result).plane_axis is axis
     assert image_payload_metadata(result).source_image_paths == metadata.source_image_paths
     assert image_payload_metadata(result).source_provenance == metadata.source_provenance
     assert image_payload_metadata(result).source_spatial_domain.source_shape_yx == (2, 3)
+    assert isinstance(image_payload_metadata(result).source_spatial_domain, domain_type)
+    if domain_type is VolumeSourceSpatialDomain:
+        assert image_payload_metadata(result).source_spatial_domain.source_depth == 3
+        assert image_payload_data(result).shape[0] == int(3 * z_factor)
     assert image_payload_metadata(source) is metadata
     np.testing.assert_array_equal(image_payload_data(source), pixels)
     np.testing.assert_array_equal(image_payload_mask(source), mask)

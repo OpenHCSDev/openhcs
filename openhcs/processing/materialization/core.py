@@ -23,7 +23,7 @@ from typing import TYPE_CHECKING, ClassVar, TypeAlias
 import numpy as np
 import pandas as pd
 from metaclass_registry import AutoRegisterMeta
-from polystore.config import TiffConfig, tiff_write_batches
+from polystore.config import TiffConfig
 from polystore.streaming.viewer_transport import (
     PathMappedViewerStreamSourceMetadata,
     ViewerStreamBackendKwargs,
@@ -200,8 +200,17 @@ class RawBackendKwargs(BackendCallKwargs, Mapping[str, MaterializationValue]):
                     **({"tiff_config": config} if config is not None else {}),
                 },
             )
-            for indices, config in tiff_write_batches(
-                tuple(output.path for output in outputs), self.tiff_config
+            for indices, config in ImageFileFormat.storage_write_batches(
+                tuple(
+                    (
+                        output.metadata.attach_to(output.content)
+                        if output.metadata is not None
+                        else output.content
+                    )
+                    for output in outputs
+                ),
+                tuple(output.path for output in outputs),
+                self.tiff_config,
             )
         )
 
@@ -1303,6 +1312,47 @@ class MaterializationInput:
             sequence_type=_materialization_sequence_type(projected),
             source_plane_projection=SourcePlaneProjectionContract.from_payloads(
                 source_payloads
+            ),
+        )
+
+    @classmethod
+    def from_image_value(
+        cls,
+        value: MaterializationValue,
+        options: SourceOptions,
+    ) -> "MaterializationInput":
+        """Preserve intrinsic images while projecting ordinary runtime planes."""
+        unprojected = cls.from_value(value, options)
+        items = []
+        for image in unprojected.items:
+            if image.metadata.persists_whole_image():
+                items.append(image)
+            else:
+                items.extend(
+                    MaterializationInputItem(
+                        value=item.value,
+                        source_description=item.source_description,
+                        runtime_plane_metadata=item.runtime_plane_metadata,
+                    )
+                    for item in (
+                        RuntimeProjectionSourceIdentityRequirement.OPTIONAL
+                    ).project_payload_items(
+                        RuntimeProjectionSourceIdentityRequest(
+                            value=image.value,
+                            source_description=image.source_description,
+                            plane_projection=(
+                                image.value.declared_plane_projection()
+                                if isinstance(image.value, ObjectLabelValue)
+                                else None
+                            ),
+                        )
+                    )
+                )
+        return replace(
+            unprojected,
+            items=tuple(items),
+            source_plane_projection=SourcePlaneProjectionContract.from_payloads(
+                tuple(item.value for item in unprojected.items)
             ),
         )
 
@@ -2544,7 +2594,7 @@ def write_image_file(
     context: MaterializationContext,
 ) -> list[Output]:
     """Write image payloads through the nominal image serialization format."""
-    materialization_input = MaterializationInput.from_runtime_slice_projected_value(
+    materialization_input = MaterializationInput.from_image_value(
         data,
         options,
     )
@@ -3465,12 +3515,7 @@ def image_file_emits_variable_component_planes(
         or _image_template_uses_sequence_index(options.relative_path_template)
     ):
         return False
-    return (
-        len(
-            MaterializationInput.from_runtime_slice_projected_value(data, options).items
-        )
-        > 1
-    )
+    return len(MaterializationInput.from_image_value(data, options).items) > 1
 
 
 @materialization_emits_variable_component_planes.register(ROIOptions)

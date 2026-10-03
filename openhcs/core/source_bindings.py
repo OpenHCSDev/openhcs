@@ -47,6 +47,7 @@ from openhcs.core.source_metadata import (
     source_metadata_scalar,
 )
 from openhcs.core.xdg_paths import get_openhcs_cache_dir
+from openhcs.core.source_spatial_domain import SourceSpatialDomain
 
 if TYPE_CHECKING:
     from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
@@ -1231,6 +1232,7 @@ class SourceBindingDeclarationsMixin:
 
     bindings: tuple[NamedSourceBinding, ...] | None
     source_stack_components: tuple[AllComponents, ...]
+    source_spatial_domain: SourceSpatialDomain
 
     @property
     def binding_declarations(self) -> tuple[NamedSourceBinding, ...]:
@@ -1790,6 +1792,11 @@ class SourceBindingsConfig(SourceBindingDeclarationsMixin, _SourceBindingPlanBas
     source_stack_components: tuple[AllComponents, ...] = ()
     """Ordered plate components that form one logical source image stack."""
 
+    source_spatial_domain: SourceSpatialDomain = field(
+        default_factory=SourceSpatialDomain
+    )
+    """Declared intrinsic image dimensions, independent of stack transport."""
+
     grouping_metadata_fields: tuple[str, ...] = ()
     """Metadata field names used to partition matched sources into execution groups."""
 
@@ -2207,6 +2214,9 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
     registry_key: ClassVar[str] = "compiled"
     bindings: tuple[NamedSourceBinding, ...] = ()
     source_stack_components: tuple[AllComponents, ...] = ()
+    source_spatial_domain: SourceSpatialDomain = field(
+        default_factory=SourceSpatialDomain
+    )
 
     @classmethod
     def empty(cls) -> CompiledSourceBindingPlan:
@@ -2232,6 +2242,7 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
                 realized_source_metadata
             ),
             source_stack_components=config.source_stack_components,
+            source_spatial_domain=config.source_spatial_domain,
         )
 
     def __post_init__(self) -> None:
@@ -2294,6 +2305,7 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
             SourceBindingMatchPlan | None,
             tuple[FieldSpec, ...],
             tuple[AllComponents, ...],
+            SourceSpatialDomain,
         ],
     ]:
         """Serialize source-binding plan state for multiprocessing."""
@@ -2305,6 +2317,7 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
                 self.match_plan,
                 self.metadata_fields,
                 self.source_stack_components,
+                self.source_spatial_domain,
             ),
         )
 
@@ -2326,6 +2339,7 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
         match_plan: SourceBindingMatchPlan | None,
         metadata_fields: tuple[FieldSpec, ...],
         source_stack_components: tuple[AllComponents, ...],
+        source_spatial_domain: SourceSpatialDomain,
     ) -> CompiledSourceBindingPlan:
         return cls(
             bindings=bindings,
@@ -2333,6 +2347,7 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
             match_plan=match_plan,
             metadata_fields=metadata_fields,
             source_stack_components=source_stack_components,
+            source_spatial_domain=source_spatial_domain,
         )
 
 

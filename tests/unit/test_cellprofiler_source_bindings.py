@@ -960,6 +960,9 @@ def test_names_and_types_contributes_3d_axis_and_voxel_spacing() -> None:
 
     config = _fold_setup_modules(module)
 
+    from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
+
+    assert isinstance(config.source_spatial_domain, VolumeSourceSpatialDomain)
     assert config.source_stack_components == (AllComponents.Z_INDEX,)
     assert config.source_voxel_spacing.values_zyx == (2.0, 1.0, 0.5)
     assert config.source_voxel_spacing.unit is SourceVoxelSpacingUnit.RELATIVE

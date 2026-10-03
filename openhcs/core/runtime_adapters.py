@@ -347,13 +347,23 @@ class RuntimeAdapterRequest:
                     ),
                 )
             )
-        return stack_image_payloads(
-            projected_payloads,
-            metadata_mode=ImagePayloadMetadataCompositionMode.for_plane_axis(
-                RuntimePlaneAxis.RUNTIME_SLICE
-            ),
+        payload = (
+            projected_payloads[0]
+            if len(projected_payloads) == 1
+            and image_payload_metadata(projected_payloads[0]).persists_whole_image()
+            else stack_image_payloads(
+                projected_payloads,
+                metadata_mode=ImagePayloadMetadataCompositionMode.for_plane_axis(
+                    RuntimePlaneAxis.RUNTIME_SLICE
+                ),
+            )
         )
-
+        metadata = image_payload_metadata(payload)
+        domain = self.source_binding_plan.source_spatial_domain.admit_source_cohort(
+            metadata.source_spatial_domain,
+            depth=len(members),
+        )
+        return metadata.replace_fields(source_spatial_domain=domain).attach_to(payload)
 
 
 RuntimeAdapterFactory = Callable[[RuntimeAdapterRequest], object]

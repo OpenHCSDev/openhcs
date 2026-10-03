@@ -507,3 +507,31 @@ def test_png_image_format_uses_registered_png_leaf() -> None:
 def test_unknown_image_serialization_suffix_fails_loudly(path) -> None:
     with pytest.raises(ValueError, match="image|suffix|format"):
         ImageFileFormat.require_path(path)
+
+
+@pytest.mark.parametrize("channel_axis", (None, -1, 1))
+def test_intrinsic_tiff_write_uses_declared_axes_not_rgb_shaped_dimensions(
+    tmp_path, channel_axis
+):
+    from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
+
+    shape = (
+        (3, 4, 4)
+        if channel_axis is None
+        else ((3, 4, 4, 3) if channel_axis == -1 else (3, 3, 4, 4))
+    )
+    pixels = np.arange(np.prod(shape), dtype=np.uint16).reshape(shape)
+    metadata = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        source_channel_axis=channel_axis,
+        source_spatial_domain=VolumeSourceSpatialDomain(source_depth=3),
+    )
+    path = tmp_path / "volume.tif"
+    image_format = TiffImageFileFormat()
+    image_format.write(path, metadata.payload_with(pixels))
+    np.testing.assert_array_equal(image_format.read(path), pixels)
+    header = image_format.require_source_metadata(path)
+    assert header.source_frame_shape == ((3,) if channel_axis != 1 else None)
+    assert header.pixel_semantics.channel_axis == channel_axis
+    assert header.pixel_semantics.channel_count == (None if channel_axis is None else 3)
+    assert header.image_shape_yx == (4, 4)

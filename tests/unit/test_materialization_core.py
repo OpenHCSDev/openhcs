@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 from functools import partial
 from multiprocessing.shared_memory import SharedMemory
 from types import SimpleNamespace
@@ -2431,3 +2432,136 @@ def test_roi_materialization_treats_non_spatial_label_payload_as_empty() -> None
 
     assert out == "/tmp/A01_Worms_step3_segmentation_summary.txt"
     assert "No ROIs extracted" in fm.load(out, "memory")
+
+
+@pytest.mark.parametrize("intrinsic", (False, True))
+def test_declared_volume_save_preserves_pixels_and_exact_plane_selection(
+    tmp_path, intrinsic
+):
+    from openhcs.core.artifacts import ImageArtifactType
+    from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+    from openhcs.core.image_file_serialization import TiffImageFileFormat
+    from openhcs.core.runtime_image_values import image_payload_data, image_payload_mask
+    from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+    from openhcs.core.source_projection import SourceArtifactProjection, SourcePixelRef
+    from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
+    from openhcs.core.source_workspace_projection import (
+        VirtualWorkspaceImagePayloadProjection,
+    )
+    from openhcs.core.virtual_workspace_metadata import (
+        VirtualWorkspaceSourceProjectionEntries,
+    )
+    from openhcs.processing.materialization import prepare_materialization
+    import tifffile
+
+    pixels = np.arange(3 * 4 * 5, dtype=np.uint16).reshape(3, 4, 5)
+    mask = pixels % 3 != 0
+    paths = tuple(f"/source/A01_s001_w2_z{z:03d}_t001.tif" for z in (1, 2, 3))
+    components = tuple(
+        {"well": "A01", "site": 1, "channel": 2, "z_index": z, "timepoint": 1}
+        for z in (1, 2, 3)
+    )
+    domain = (
+        VolumeSourceSpatialDomain(
+            source_depth=3, source_shape_yx=(4, 5), origin_yx=(0, 0)
+        )
+        if intrinsic
+        else SourceSpatialDomain(source_shape_yx=(4, 5), origin_yx=(0, 0))
+    )
+    metadata = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        source_spatial_domain=domain,
+        source_voxel_spacing=SourceVoxelSpacing((2.0, 1.0, 0.5)),
+        source_image_names=("DNA",),
+        source_component_metadata={
+            "well": "A01",
+            "site": 1,
+            "channel": 2,
+            "timepoint": 1,
+            "extension": ".tif",
+        },
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=paths,
+            component_metadata=components,
+        ),
+    )
+    payload = metadata.payload_with(pixels, mask)
+    manager = FileManager({"disk": DiskStorageBackend()})
+    spec = MaterializationSpec(ImageFileOptions(filename_suffix=".tif"))
+    batch = prepare_materialization(
+        spec,
+        payload,
+        str(tmp_path / ("A01_s001_w2_z001_t001.tif" if intrinsic else "output")),
+        manager,
+        ("disk",),
+        context=_SourceSchemaProcessingContext(),
+        variable_components=(VariableComponents.Z_INDEX,),
+    )
+    batch.save()
+    assert len(batch.outputs) == (1 if intrinsic else 3)
+    if not intrinsic:
+        for index, output in enumerate(batch.outputs):
+            np.testing.assert_array_equal(tifffile.imread(output.path), pixels[index])
+        return
+
+    (output,) = batch.outputs
+    np.testing.assert_array_equal(tifffile.imread(output.path), pixels)
+    saved_metadata = TiffImageFileFormat().persisted_metadata(
+        Path(output.path), payload
+    )
+    projection = SourceArtifactProjection(
+        address=SourceArtifactProjection.scalar_address_for_image_metadata(
+            saved_metadata
+        ),
+        ref=SourcePixelRef("disk", output.path),
+        source_alias="DNA",
+        artifact_kind=ImageArtifactType,
+        image_metadata=saved_metadata,
+        execution_scope=RuntimeExecutionAxisScope.from_raw(
+            "A01",
+            component="channel",
+            value="2",
+            fixed_component_values=(
+                (AllComponents.SITE, "1"),
+                (AllComponents.TIMEPOINT, "1"),
+            ),
+        ),
+    )
+    assert projection.address is None
+    entries = VirtualWorkspaceSourceProjectionEntries.from_projection_paths(
+        ((projection, "images/volume.tif"),)
+    )
+    document = {}
+    entries.merge_into_subdirectory(document)
+    decoded = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
+        json.loads(json.dumps(document))
+    )
+    restored = decoded.entries["images/volume.tif"]
+    assert restored.execution_scope == projection.execution_scope
+    assert isinstance(
+        restored.image_metadata.source_spatial_domain, VolumeSourceSpatialDomain
+    )
+    assert restored.image_metadata.source_spatial_domain.source_depth == 3
+    reloaded = VirtualWorkspaceImagePayloadProjection(
+        persisted_metadata=restored.image_metadata
+    ).apply(metadata.payload_with(tifffile.imread(output.path), mask.copy()))
+    for index in range(3):
+        physical_plane = SourcePixelRef(
+            "disk", output.path, source_axis_indices=(index,)
+        ).load(
+            {"disk": manager._get_backend("disk")},
+            base_path=tmp_path,
+        )
+        np.testing.assert_array_equal(physical_plane, pixels[index])
+        plane = RuntimeSliceProjection.value_for_slice(
+            reloaded,
+            RuntimePlaneAxisValueProjection.preserve(
+                axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=3
+            ).selected_plane(index),
+        )
+        np.testing.assert_array_equal(image_payload_data(plane), pixels[index])
+        np.testing.assert_array_equal(image_payload_mask(plane), mask[index])
+        assert plane.metadata.source_path == paths[index]
+        assert plane.metadata.source_component_metadata["z_index"] == index + 1
+        assert type(plane.metadata.source_spatial_domain) is SourceSpatialDomain
+        assert plane.metadata.source_voxel_spacing == metadata.source_voxel_spacing

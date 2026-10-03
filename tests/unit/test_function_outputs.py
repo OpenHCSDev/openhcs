@@ -34,7 +34,7 @@ from openhcs.core.compiled_step_plan import (
 )
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
-from openhcs.core.config import WellFilterMode
+from openhcs.core.config import TiffConfig, WellFilterMode
 from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.runtime_image_values import (
@@ -347,6 +347,7 @@ def context_stub(filemanager, parser=None):
     context.input_dir = Path("/tmp/plate/images")
     context.execution_runtime = SimpleNamespace(execution_axis_values=("A01",))
     context.axis_id = "A01"
+    context.tiff_config = TiffConfig()
     context.step_axis_filters = {}
     return context
 
@@ -2669,3 +2670,110 @@ def test_stream_batch_validates_cardinality_and_routes_before_projecting(monkeyp
         StreamOutputBatch.from_projection(
             parser=parser, payloads=arrays, paths=paths, produced_outputs=records,
         )
+
+
+def test_whole_volume_checkpoint_publication_retains_exact_producer_scope(tmp_path):
+    from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
+    from openhcs.core.source_projection import SourceArtifactProjection
+
+    plate_root = tmp_path / "plate"
+    output_dir = plate_root / "images"
+    output_dir.mkdir(parents=True)
+    path = output_dir / "A01_s001_w2_z001_t001.tif"
+    pixels = np.arange(5 * 6 * 7, dtype=np.uint16).reshape(5, 6, 7)
+    components = tuple(
+        {
+            "well": "A01",
+            "site": 1,
+            "channel": 2,
+            "z_index": z,
+            "timepoint": 1,
+            "extension": ".tif",
+        }
+        for z in range(1, 6)
+    )
+    metadata = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        source_spatial_domain=VolumeSourceSpatialDomain(
+            source_depth=5,
+            origin_yx=(0, 0),
+            source_shape_yx=(6, 7),
+        ),
+        source_component_metadata={
+            "well": "A01",
+            "site": 1,
+            "channel": 2,
+            "timepoint": 1,
+            "extension": ".tif",
+        },
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=tuple(f"/input/A01_s001_w2_z{z:03d}_t001.tif" for z in range(1, 6)),
+            component_metadata=components,
+        ),
+    )
+    manager = FileManager(
+        {"disk": DiskStorageBackend(), "memory": MemoryStorageBackend()}
+    )
+    manager.ensure_directory(output_dir, "memory")
+    manager.save(metadata.payload_with(pixels), str(path), "memory")
+    context = context_stub(manager, parser=SourceSchemaFilenameParser())
+    plan = function_step_plan(
+        "Volume checkpoint", variable_components=(VariableComponents.Z_INDEX,)
+    )
+    plan.output_dir = output_dir
+    plan.output_plate_root = str(plate_root)
+    plan.sub_dir = "images"
+    plan.analysis_results_dir = str(plate_root / "results")
+    plan.write_backend = "disk"
+    identity = FunctionOutputIdentity(
+        component_values={"well": "A01", "site": 1, "channel": 2, "timepoint": 1},
+        filename_component_values=components[0],
+        extension=".tif",
+        source="declared volume",
+    )
+    record_output_path(
+        context,
+        plan,
+        str(path),
+        image_metadata=metadata,
+        identity=identity,
+        output_context=AlignedImageSliceContext.main_flow(
+            output_key="DNA", artifact_kind=ImageArtifactType.value
+        ),
+    )
+    MemoryOutputWriter.write_if_needed(context, plan)
+    np.testing.assert_array_equal(tifffile.imread(path), pixels)
+    (target,) = OpenHCSMetadataWriter.OutputTarget.for_execution(context, plan)
+    entries = target.produced_projection_entries(context, plan)
+    assert entries is not None
+    (projection,) = entries.entries.values()
+    assert isinstance(projection, SourceArtifactProjection)
+    assert projection.address is None
+    assert projection.source_alias == "DNA"
+    assert (
+        projection.execution_scope.value_text_for_component(AllComponents.CHANNEL)
+        == "2"
+    )
+    assert (
+        projection.execution_scope.value_text_for_component(AllComponents.SITE) == "1"
+    )
+    assert (
+        projection.execution_scope.value_text_for_component(AllComponents.TIMEPOINT)
+        == "1"
+    )
+    assert (
+        projection.execution_scope.value_text_for_component(AllComponents.Z_INDEX)
+        is None
+    )
+    assert (
+        projection.image_metadata.source_image_provenance_planes.component_metadata
+        == metadata.source_image_provenance_planes.component_metadata
+    )
+    document = {}
+    entries.merge_into_subdirectory(document)
+    decoded = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(
+        json.loads(json.dumps(document))
+    )
+    restored = decoded.entries["images/A01_s001_w2_z001_t001.tif"]
+    assert restored.execution_scope == projection.execution_scope
+    assert restored.image_metadata.source_spatial_domain.source_depth == 5

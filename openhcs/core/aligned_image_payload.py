@@ -52,7 +52,6 @@ from openhcs.core.source_spatial_domain import (
     SourceSpatialDomainAdapter,
 )
 
-
 if TYPE_CHECKING:
     from openhcs.core.compiled_step_plan import CompiledStepPlan
     from openhcs.core.steps.function_output_manifest import ProducedOutputSemantics
@@ -447,11 +446,14 @@ class ImagePayloadStackComposition(ABC):
         workspace_source_lookups: Sequence[VirtualWorkspacePathLookup],
     ) -> RuntimeArrayData:
         """Compose a selected admissible input cohort in its declared image domain."""
-        if (
-            producer_records
-            and len(producer_records) == 1
-            and producer_records[0].main_flow_plane_axis
-            is image_payload_metadata(payloads[0]).plane_axis
+        if len(payloads) == 1 and (
+            image_payload_metadata(payloads[0]).persists_whole_image()
+            or (
+                producer_records
+                and len(producer_records) == 1
+                and producer_records[0].main_flow_plane_axis
+                is image_payload_metadata(payloads[0]).plane_axis
+            )
         ):
             main_data_stack = ImagePayloadStackComposition.copy_whole_image(
                 payloads[0],
@@ -1194,8 +1196,11 @@ class AlignedImageStack(ImagePayloadStackComposition):
         """Project each output once together with its declaration-owned context."""
         contexts = self.slice_contexts or (None,) * len(self.slices)
         for payload, context in zip(self.slices, contexts, strict=True):
-            for output_slice in payload_slices_for_alignment(payload):
-                yield output_slice, context
+            if image_payload_metadata(payload).persists_whole_image():
+                yield payload, context
+            else:
+                for output_slice in payload_slices_for_alignment(payload):
+                    yield output_slice, context
 
     def copy_projected_output_stack(
         self,

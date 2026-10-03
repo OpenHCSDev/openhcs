@@ -532,7 +532,6 @@ def test_workspace_source_loading_preserves_declared_tiff_intensity_scale(
     assert metadata.source_image_names == ("OrigBlue",)
 
 
-
 def test_physical_source_loading_preserves_tiff_calibration_and_live_buffers(
     tmp_path: Path,
 ) -> None:
@@ -594,6 +593,7 @@ def test_physical_source_loading_preserves_tiff_calibration_and_live_buffers(
     mask[0, 0] = False
     assert image_payload_data(loaded)[0, 0] == 17
     assert not image_payload_mask(loaded)[0, 0]
+
 
 def test_virtual_workspace_source_filters_use_persisted_candidate_identity(
     tmp_path: Path,
@@ -5707,3 +5707,40 @@ def test_producer_loader_validates_ambiguity_before_cache(
 
     with pytest.raises(NoStepOutputManifestMatch, match="found 2"):
         runtime._load_input_stack()
+
+
+def test_whole_volume_checkpoint_load_preserves_depth_and_independent_buffers():
+    from openhcs.core.aligned_image_payload import ImagePayloadStackComposition
+    from openhcs.core.runtime_image_values import image_payload_mask
+    from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
+
+    pixels = np.arange(3 * 4 * 5, dtype=np.float32).reshape(3, 4, 5)
+    mask = pixels % 2 == 0
+    metadata = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        source_spatial_domain=VolumeSourceSpatialDomain(source_depth=3),
+    )
+    source = metadata.payload_with(pixels, mask)
+    plan = CompiledStepPlan(
+        step_index=0,
+        step_name="Volume",
+        step_type="FunctionStep",
+        axis_id="A01",
+        step_scope_id="volume",
+        input_memory_type="numpy",
+    )
+    loaded = ImagePayloadStackComposition.from_loaded_images(
+        (source,),
+        producer_records=None,
+        execution_plan=plan,
+        source_projection=None,
+        workspace_source_lookups=(),
+    )
+    assert image_payload_data(loaded).shape == pixels.shape
+    assert loaded.metadata.source_spatial_domain.source_depth == 3
+    assert not np.shares_memory(image_payload_data(loaded), pixels)
+    assert not np.shares_memory(image_payload_mask(loaded), mask)
+    pixels[:] = -1
+    mask[:] = False
+    assert np.all(image_payload_data(loaded) >= 0)
+    assert np.any(image_payload_mask(loaded))

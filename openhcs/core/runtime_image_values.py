@@ -195,6 +195,10 @@ class ImagePayloadMetadata(
             decoded["source_provenance"] = SourceImageProvenance.from_mapping(
                 decoded["source_provenance"]
             )
+        if "source_spatial_domain" in decoded:
+            decoded["source_spatial_domain"] = SourceSpatialDomain.from_mapping(
+                decoded["source_spatial_domain"]
+            )
         return dataclass_from_mapping(cls, decoded)
 
     def retained_plane_component_values(
@@ -609,6 +613,13 @@ class ImagePayloadMetadata(
         """Return metadata after an operation collapses the source channel axis."""
         return self.replace_fields(source_channel_axis=None)
 
+    def persists_whole_image(self) -> bool:
+        """Keep intrinsic pixels whole, excluding a distinct image-binding axis."""
+        return (
+            self.source_spatial_domain.persists_whole_image()
+            and self.plane_axis is not RuntimePlaneAxis.SOURCE_BINDING
+        )
+
     def for_leading_source_plane(self, plane_index: int) -> "ImagePayloadMetadata":
         """Project metadata after explicitly removing its leading plane axis."""
         return LeadingSourcePlaneMetadataProjection(self, plane_index).project()
@@ -633,6 +644,10 @@ class ImagePayloadMetadata(
         projected = projection.project_source_provenance(
             self, self.source_provenance.with_runtime_planes_as_contributors()
         )
+        if self.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE:
+            projected.source_spatial_domain = (
+                projected.source_spatial_domain.for_intrinsic_plane()
+            )
         projected.plane_axis = None
         projected.source_channel_axis = source_channel_axis
         projected.source_plane_intensity_scales = ()
@@ -1763,13 +1778,8 @@ class _ImagePayloadMetadataComposer:
             unit_interval_intensity=self.composed_unit_interval_intensity(
                 source_plane_metadata_records
             ),
-            source_spatial_domain=SourceSpatialDomain(
-                origin_yx=self.common_metadata_value(
-                    metadata.spatial_origin_yx for metadata in metadata_by_payload
-                ),
-                source_shape_yx=self.common_metadata_value(
-                    metadata.source_spatial_shape_yx for metadata in metadata_by_payload
-                ),
+            source_spatial_domain=SourceSpatialDomain.common_from_domains(
+                metadata.source_spatial_domain for metadata in metadata_by_payload
             ),
             source_voxel_spacing=common_source_voxel_spacing,
             physical_border_edges_yx=self.common_metadata_value(
