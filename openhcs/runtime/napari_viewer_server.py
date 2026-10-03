@@ -1164,13 +1164,14 @@ def _build_nd_points(
                 all_properties["component"].append(
                     metadata.value(VisualMetadataField.COMPONENT, 0)
                 )
-                point_metadata.append(metadata.metadata)
+                point_metadata.append(
+                    ROIArchiveSourceMetadata.feature_metadata(metadata.metadata)
+                )
 
     excluded = {
         "label",
         "component",
         ROIFractionalZ.FIELD,
-        ROIArchiveSourceMetadata.FIELD,
     }
     feature_fields = {
         key
@@ -1840,14 +1841,12 @@ class NapariImageLayerDisplayHandler(NapariLayerDisplayHandler):
             presentation,
             payload_axis_labels=payload_axis_labels,
         )
-        translate = presentation.translate(payload_axis_labels)
         request = replace(request, presentation=presentation)
         axis_labels = presentation.axis_labels
 
         layer_kwargs = image_presentation.layer_kwargs(request.display_config.colormap)
         if axis_labels is not None:
             layer_kwargs["axis_labels"] = axis_labels
-        layer_kwargs["translate"] = translate
         layer_kwargs.update(
             presentation.spatial_layer_kwargs(layer_items, payload_axis_labels)
         )
@@ -2026,7 +2025,6 @@ class NapariShapesLayerDisplayHandler(NapariLayerDisplayHandler):
             "face_color_cycle": color_projection.cycle,
             "opacity": 0.7,
             "ndim": shape_payload.ndim,
-            "translate": presentation.translate(),
             "visible": False,
         }
         if shape_payload.result_metadata:
@@ -2062,7 +2060,7 @@ class NapariPointsLayerDisplayHandler(NapariLayerDisplayHandler):
         items: Sequence[NapariStreamLayerItem],
         component_axis_semantics: ViewerComponentAxisSemantics,
     ) -> ComponentValues:
-        """Keep the declared Z span containing fractional-Z points navigable."""
+        """Keep the represented source span, not just occupied point Z, navigable."""
         z_component = AllComponents.Z_INDEX.value
         coordinates = tuple(
             (item, fractional_z)
@@ -2083,7 +2081,7 @@ class NapariPointsLayerDisplayHandler(NapariLayerDisplayHandler):
         domain = component_axis_semantics.required_component_values((z_component,))[
             z_component
         ]
-        occupied: set[ComponentValue] = set()
+        represented: set[ComponentValue] = set()
         for item, fractional_z in coordinates:
             anchor = ViewerComponentCoordinateAuthority.required_value(
                 item.address.components,
@@ -2103,8 +2101,8 @@ class NapariPointsLayerDisplayHandler(NapariLayerDisplayHandler):
                     f"Fractional-Z point {fractional_z.value!r} exceeds the "
                     f"declared Z domain from anchor {anchor!r}."
                 )
-            occupied.update(domain[start : stop + 1])
-        return {z_component: [value for value in domain if value in occupied]}
+            represented.update(domain[start:])
+        return {z_component: [value for value in domain if value in represented]}
 
     def handle(self, request: NapariLayerDisplayRequest) -> None:
         pipeline = request.pipeline
@@ -2126,7 +2124,6 @@ class NapariPointsLayerDisplayHandler(NapariLayerDisplayHandler):
             "properties": properties,
             "face_color": "green",
             "size": 3,
-            "translate": presentation.translate(),
         }
         layer_kwargs.update(presentation.spatial_layer_kwargs(request.items))
         if axis_labels is not None:
@@ -2267,7 +2264,9 @@ class NapariLayerDisplayPipeline:
             if not apply:
                 continue
             layer = self.server.layer_route_state.layer(route_key)
-            layer.translate = presentation.translate(presentation.payload_axis_labels)
+            layer.translate = presentation.spatial_layer_kwargs(
+                items, presentation.payload_axis_labels
+            )["translate"]
             self.dimension_label_store.apply(presentation)
 
     def schedule_layer_update(
