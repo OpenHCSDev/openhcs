@@ -1532,7 +1532,10 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
         self,
         output: Output,
     ) -> dict:
-        output_fields = self._output_fields(output)
+        projected_outputs = self.projected_outputs((output,))
+        if len(projected_outputs) != 1 or projected_outputs[0] is not output:
+            raise ValueError("Projected viewer materialization requires batch saving.")
+        output_fields = self._output_fields(projected_outputs[0])
         if output_fields is None:
             return self.values.to_kwargs()
         component_metadata, item_fields = output_fields
@@ -1553,7 +1556,7 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
             ]
         ] = []
         unprojected_outputs: list[Output] = []
-        for output in outputs:
+        for output in self.projected_outputs(outputs):
             output_fields = self._output_fields(output)
             if output_fields is None:
                 unprojected_outputs.append(output)
@@ -1601,6 +1604,49 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
                 )
             )
         return tuple(batches)
+
+    def projected_outputs(self, outputs: Sequence[Output]) -> tuple[Output, ...]:
+        """Derive stream items without changing persisted aggregate outputs."""
+        result: list[Output] = []
+        display_semantics = self.values.stream_request.display_semantics
+        parser = self.values.stream_request.source.identity.microscope_handler.parser
+        for output in outputs:
+            if output.metadata is None:
+                result.append(output)
+                continue
+            items = StreamImagePayloadMetadataProjector.payload_items_for_display(
+                output.content,
+                metadata=output.metadata,
+                plane_components=output.variable_components,
+                component_modes=display_semantics.component_modes,
+                source_description=output.path,
+            )
+            if len(items) == 1 and items[0].value is output.content:
+                result.append(output)
+                continue
+            output_path = Path(output.path)
+            for item in items:
+                identity = FunctionOutputIdentityAuthority.identity_from_metadata(
+                    parser,
+                    item.metadata,
+                    fallback_identity_path=output.path,
+                )
+                if identity is None:
+                    raise ValueError("Projected viewer output requires a filename identity.")
+                identity = replace(identity, extension=output_path.suffix)
+                filename = FunctionOutputPathAuthority.filename_for_identity(
+                    parser,
+                    identity.with_filename_qualifier(output_path.stem),
+                )
+                result.append(
+                    replace(
+                        output,
+                        path=str(output_path.parent / filename),
+                        content=item.data,
+                        metadata=item.metadata,
+                    )
+                )
+        return tuple(result)
 
     def _output_fields(
         self,
@@ -1688,6 +1734,7 @@ class BackendSaver:
                 kwargs_payload = self.backend_kwargs[backend]
             else:
                 kwargs_payload = EMPTY_BACKEND_CALL_KWARGS
+            written_outputs: list[Output] = []
             for batch_outputs, kwargs in kwargs_payload.filemanager_batches(
                 supported_outputs
             ):
@@ -1697,7 +1744,8 @@ class BackendSaver:
                     backend,
                     **kwargs,
                 )
-            saved_outputs[backend] = supported_outputs
+                written_outputs.extend(batch_outputs)
+            saved_outputs[backend] = tuple(written_outputs)
         return saved_outputs
 
     def _prepare_path(self, backend: str, backend_instance, path: str) -> None:
