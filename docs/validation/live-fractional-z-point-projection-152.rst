@@ -397,6 +397,22 @@ dynamic equivalence proof. Current main87d9a99a integrated normally; determining
 #509 changes only knowledge-service/test, no point production seam. All five
 foreign dirty gitlinks and immutable installed target01 are untouched.
 
-Coherent source correction and expanded original writer/reopen/anchor rejection
-controls are prepared. Bounded source validation follows this checkpoint;
-neither its result nor a future installed/native acceptance is claimed yet.
+Published source87c841f16 independently reproduces the original rejection from
+EXACT retained public plane records at unchanged target01, then accepts the
+same full unmodified records at corrected source. Original reproduction
+terminal0/32,124,928B/noSwap/OOM0. Source05 controls:25 PASS/6 FAIL in4.36s,
+terminal1/319,324,160B/512MiB/noSwap/CPU1/60s/OOM0. Original test-plugin harness
+failure04 retained; distinct05 adds only the actual test-package import root.
+
+Passing25 retain genuine non-Z/invalid/duplicate/disordered/fractional Z,
+calibration/unit, original writer/ZIP/anchor/projection and payload guards.
+Six enriched-source writer/ZIP checks preserve every original metadata value,
+but full provenance identity differs after nested JSON keys reorder. No assertion
+is relaxed or fixture artificially sorted. Root-owned
+source_image_provenance._component_metadata_identity uses repr of nested raw
+maps; existing SourceMetadataIdentityProjection already owns canonical nested
+identity. Exact delegation hunk and six failures posted Root394
+comment5965364042, not patched across its protected source owner. Named remaining
+dependency is that precise seam release/owner implementation. Full receipt:
+engineering494/SOURCE04-QUALIFICATION.rst. No fresh wheel/runtime or installed
+native acceptance is claimed; original03 stays FAILED/frozen.
