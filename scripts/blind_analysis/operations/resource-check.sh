@@ -8,7 +8,15 @@ source "$(dirname "${BASH_SOURCE[0]}")/slot-env.sh" "$1" "${2:?slot}"
 phase=${3:?unique observation}
 case "$phase" in ''|*[!a-zA-Z0-9_-]*) exit 64;; esac
 mode=${4:-ongoing}
-case "$mode" in ongoing|full|replacement|bootstrap|ledger) ;; *) exit 64;; esac
+# A bounded continuation checks current stalls inside existing enforced caps.
+# Admission of future growth also checks the sustained pressure history.
+# Keep the window policy with this original operation-mode owner, not callers.
+case "$mode" in
+  ongoing) psi_windows='avg10' ;;
+  full|replacement|bootstrap) psi_windows='avg10 avg60 avg300' ;;
+  ledger) psi_windows='' ;;
+  *) exit 64 ;;
+esac
 runtime="$FLEET_WORKSPACE/output/runtime"
 mkdir -p "$runtime"
 if [[ -e "$runtime/first-mcp-started.epoch" ]]; then
@@ -100,5 +108,21 @@ if [[ "$mode" == replacement || "$mode" == bootstrap ]]; then
 fi
 psi_max=$(jq -er '.proposed_resource_envelope.full_memory_psi_max_percent' <<< "$FLEET_PROGRAM")
 awk -v floor="$floor" '/MemAvailable:/ {printf "MemAvailable %.3f GiB; required %d MiB\n",$2/1048576,floor; if($2<floor*1024) exit 76}' /proc/meminfo | tee "$receipt.ram"
-awk -v limit="$psi_max" '/^full / {print; for(i=2;i<=NF;i++){split($i,a,"="); if((a[1]=="avg60" || a[1]=="avg300") && a[2]>limit) exit 77}}' /proc/pressure/memory | tee "$receipt.psi"
+printf 'Pressure admission mode=%s selected=%s limit=%s%%; all windows retained below\n' "$mode" "$psi_windows" "$psi_max" | tee "$receipt.psi-policy"
+awk -v limit="$psi_max" -v windows="$psi_windows" '
+  BEGIN {count=split(windows, required, " ")}
+  /^full / {
+    print
+    for(i=2;i<=NF;i++) {
+      split($i, field, "=")
+      for(j=1;j<=count;j++) if(field[1]==required[j]) {
+        if(seen[field[1]]++ || field[2] !~ /^[0-9]+([.][0-9]+)?$/ || field[2]+0>limit) invalid=1
+      }
+    }
+  }
+  END {
+    for(j=1;j<=count;j++) if(seen[required[j]]!=1) invalid=1
+    if(invalid) exit 77
+  }
+' /proc/pressure/memory | tee "$receipt.psi"
 printf 'Admission PASS\n'

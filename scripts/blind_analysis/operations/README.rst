@@ -73,6 +73,32 @@ writer retirement is independent. No helper/provider/native operation is part
 of the source controls. Future installed entrypoint and operational release are
 parent-owned acceptance after this source checkpoint.
 
+Operation-scoped pressure and disabled endpoints
+------------------------------------------------
+
+The original resource-check.sh owns pressure-window selection. ``ongoing``
+is a bounded continuation within existing enforced process/slice caps: it
+checks the kernel's full-stall ``avg10`` against the funding declaration's
+``full_memory_psi_max_percent``. ``full``, ``replacement`` and ``bootstrap``
+admit future growth and check ``avg10``, ``avg60`` and ``avg300`` against that
+SAME limit. No threshold is raised. The ``full`` in the field name refers to
+the kernel pressure category, not a second numeric limit for an operation.
+
+Every observation preserves all kernel pressure windows plus a separate
+selected-window policy receipt. Missing, repeated or malformed selected
+measurements reject. Low available RAM, exhausted disk reservations, inactive
+or mismatched aggregate caps, expired clocks and missing custody still reject
+through their original owners. High current pressure is not declared safe
+merely because the operation is small. ``ledger`` remains ledger-only, never
+scientific admission. New clients still require replacement admission; do not
+use an ongoing observation as permission to launch unreserved growth.
+
+The original successor projector treats endpoint ``0`` as declared disabled,
+not as a port claim. A headless administrative row may disable all five ports.
+All positive ports remain unique across members AND endpoint roles. Missing,
+negative, fractional, out-of-range or nonnumeric ports reject. This changes
+neither live endpoint custody nor the allocation of scientific ports.
+
 Historical borrowers
 --------------------
 
