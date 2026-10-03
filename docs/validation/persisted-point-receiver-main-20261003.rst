@@ -1,10 +1,76 @@
 Persisted point receiver: main-only source split
 ===============================================
 
+Current merge-ready acceptance, 2026-10-03
+----------------------------------------
+
+PR524 now normally integrates remote main532b13f5f0f872590d2f9022b33b575126bd02f3
+(merged526). Its FIVE production files and four related control files are
+byte-unchanged from published a8bf54fbcd03982bcb35fa0ac2b76961d3b34e3f;
+the merge receives only the canonical526 guide/manifest/documentation/checks.
+No Root394 ancestry, compiler/publication change, dependency floor, foreign
+gitlink or combined522/511 commit is added through this PR.
+
+The original parent standalone95 public receiving journey is now verified at
+its actual strength on immutable target06, source d92fd0b8c786d52c4290bf764b3cc3a84da9b600,
+ordinary wheel SHA25646070edad4363d406b47ea771d07e795bff5eb268c4fa58d564881b5ec48ca04.
+This main-based private package separately includes reviewed511/522/524 source;
+that is its honest installed provenance, NOT the merge contents of PR524.
+Target04's later bootstrap failure and target05's decoder-semantic gap remain
+historical; their earlier source controls are not fresh-server readiness claims.
+Target06's healthy MCP construction/decoder/whole-package evidence is retained
+in engineering494/READY-MCP28.json and PACKAGE28-QUALIFICATION.json.
+
+Parent launched the original dev-client shell from a non-source cwd on the
+released existing95 helpers. No pipeline, custom registration or failedjob9292
+was replayed. Its public four-image stream reads the unchanged four326B TIFFs,
+full physicalZ0..3, raw native scale2/.65/.65um. The unchanged989B archive
+reopens with all four source records, the same complete Z domain, object7 and
+fractional native centre Z1.5/Y1.5/X2.5, feature row/data_index0 selected.
+The complete original nine-field producer map retires ONLY the point route
+through the public native operation, appliedtrue/errors[]; raw source/payload,
+scale, domain and camera remain. A deliberately NEW stream reopens the SAME
+original ZIP on that same viewer, not an UNKNOWN-operation retry.
+
+Planck independently read the original public stdout, opened ALL nine actual
+XY/XZ/YZ raw-only/point-only/combined1440x950 PNGs, and compared the nine preceding
+native state records. Each triplet shares camera, dimensions, numeric slice,
+fullZdomain and calibration; visibility is raw/point=(true,false),(false,true),
+(true,true), with raw mounted throughout. XY shows the marker centre in the
+2x2 raw square; genuine XZ/YZ show it centred in the two-plane raw rectangle.
+XY camera centre0/1.3000000000000114/1.9499999999999886,zoom93.53846153846152;
+XZ centre0/3/1.9500000000000002 and YZ centre0/3/1.3000000000000007,
+both zoom53.19999999999999. All use native canvas962x448, full window1440x950.
+No screenshot count or visibility-only JSON substitutes for this inspection.
+
+The rejected800x600 native-minimum request is retained. Parent separately
+reallocated the SAME64MiB case funding to56MiB retained/8MiB scratch using the
+actual1440x950 capture bound, not a Qt bypass or product change. The dev-client
+terminal remains1 because it retains that definitive rejected request; it is
+NOT relabelled a wholly error-free session. Exact public close ACK reports
+PID3457301/create_time1791021595.84, process_exitedtrue/endpoint_terminatedtrue/
+succeededtrue. Original journals, all native captures and allocation receipt:
+/home/ts/wt/openhcs-issue-batch-20260929/engineering494/standalone95-live30/.
+Public stdout SHA2561acda7973aee96bcd1bdc3fb6f86c5930a7ca16ff05b270f35ec4474a29340ae.
+
+Source-family review reuses the original named AST evidence:
+RECEIVER-MAIN12-FAMILY-AFTER.json covers704 production+95 actual dependency
+modules/898 sites/zero parse omissions. This is NOT a full global NRA/R1 proof.
+The declaration owners and their migrated consumers remain those below;
+current-main integration has no processing/native product delta requiring a
+new package or duplicate native run. Foreign seven dirty gitlinks untouched.
+
+Acceptance is standalone source-bearing archive receiving with actual calibrated
+orthogonal alignment and typed retirement/reopen. Root435 automatic producer
+settlement/publication, failed compile/execution9292, selected-row preservation
+when a SURVIVING result remounts (Singer522), full152 closure and biological
+analysis are NOT claimed by this PR. Parent remains final integration owner;
+no hosted-CI hold or mutation of the two scientists' borrowed target06.
+
 Base and custody
 ----------------
 
-Pinned remote main f7de9efad393bce83a3756a271f0cd4383783ea9, fetched on
+Historical initial base: remote main f7de9efad393bce83a3756a271f0cd4383783ea9, fetched on
 2026-10-03. Local main2bc579ca9 is older and is not this base. The existing
 checkout is reused only after no active source builder/runtime borrower was
 found; seven foreign dirty gitlinks remain unchanged and excluded from commits.
@@ -107,9 +173,6 @@ The qualification archive alongside this receipt preserves actual original
 source/control callers, before/after AST records, positive and failed logs,
 unchanged-archive source evidence and whole-package receipts.
 
-Newest parent allocation gives idle95 to the fourth independent P001 author.
-Public receiving is DEFERRED until an exact existing slot is released and the
-parent's full growth/resource guard passes, not replaced by a new X/client/native
-fleet. Parent owns the future standalone unchanged-archive calibrated XY/XZ/YZ,
-typed retirement/reopen and catalog lifecycle journey. Package qualification is
-demonstrated; public native calibration/retirement acceptance is not yet claimed.
+This initial qualification checkpoint deferred public receiving for scientific
+priority. The current acceptance section above supersedes that old disposition
+without changing the original package receipts or relabelling failed operations.
