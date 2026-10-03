@@ -11,6 +11,8 @@ from polystore.roi import ROI
 from openhcs.constants.constants import AllComponents
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_image_provenance import SourceComponentMetadata
+from openhcs.core.source_matching import source_component_metadata_items
+from openhcs.core.source_metadata import SourceVoxelSpacing
 
 
 @dataclass(frozen=True, slots=True)
@@ -83,11 +85,24 @@ class ROIFractionalZ:
             raise ValueError(
                 "3D point ROI Z coordinate lies outside its source planes."
             )
-        common_keys = set(domain[0]) - {z_field}
-        if any(set(plane) - {z_field} != common_keys for plane in domain):
+        components = tuple(
+            dict(source_component_metadata_items(plane)) for plane in domain
+        )
+        common_keys = set(components[0]) - {AllComponents.Z_INDEX}
+        if any(
+            set(plane) - {AllComponents.Z_INDEX} != common_keys
+            for plane in components
+        ):
             raise ValueError("3D point ROI source planes have inconsistent components.")
         if any(
-            any(plane[key] != domain[0][key] for key in common_keys) for plane in domain
+            any(plane[key] != components[0][key] for key in common_keys)
+            for plane in components
         ):
             raise ValueError("3D point ROI source planes vary outside Z.")
+        spacing = SourceVoxelSpacing.from_source_metadata(domain[0])
+        if any(
+            SourceVoxelSpacing.from_source_metadata(plane) != spacing
+            for plane in domain
+        ):
+            raise ValueError("3D point ROI source planes have inconsistent calibration.")
         return tuple(domain)

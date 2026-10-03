@@ -3,6 +3,7 @@
 import pytest
 
 from openhcs.runtime.napari_streaming_handlers import NapariAxisPresentation
+from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.runtime.viewer_component_system import (
     ViewerComponentAxisSemanticsAuthority,
     ViewerComponentLayout,
@@ -37,5 +38,8 @@ def test_navigation_inverts_route_placement_with_inserted_singleton_axes(
     )
     display_index = presentation.viewer_axis_index(0)
     step = presentation.viewer_step(0, display_index, viewer_axis_origin=viewer_origin)
-    assert step + viewer_origin == presentation.translate()[display_index]
+    scale = tuple(
+        1.0 for _ in presentation.display_axis_components
+    ) + SourceVoxelSpacing().spacing_for_ndim(2)
+    assert step + viewer_origin == presentation.translate(scale=scale)[display_index]
     assert presentation.label_index(step, 0, viewer_axis_origin=viewer_origin) == 0
