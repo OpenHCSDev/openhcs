@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from collections.abc import Mapping
+from dataclasses import dataclass, field, replace
 from typing import ClassVar
 
 import numpy as np
@@ -21,7 +22,6 @@ from openhcs.core.measurement_image_alignment import (
 )
 from openhcs.core.runtime_adapters import (
     RuntimeImageExecutionContext,
-    RuntimeImageRequest,
 )
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
@@ -177,13 +177,16 @@ class CellProfilerSourceIdentityMixin:
 @dataclass(frozen=True, slots=True, kw_only=True)
 class CellProfilerImageRequest(
     CellProfilerSourceIdentityMixin,
-    RuntimeImageRequest,
+    RuntimeImageExecutionContext,
 ):
-    """CellProfiler image invocation payload with ordered source-plane aliases."""
+    """CellProfiler image domain, callable kwargs, and ordered source aliases."""
 
     SOURCE_ALIASES_FIELD_NAME: ClassVar[str] = "CellProfilerImageRequest.source_aliases"
 
+    image_count: int
+    payload: RuntimeCallableArgument
     source_aliases: tuple[str, ...] = ()
+    kwargs: Mapping[str, object] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         self.validate_source_identity()

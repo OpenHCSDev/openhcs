@@ -105,7 +105,7 @@ def test_public_rescale_preserves_one_source_plane_through_stream_binding(method
                 "source_high": 20.0, "divisor_value": 2.0},
     )
     result = CellProfilerFunctionContractExecutor().execute(
-        contract, rescale_intensity, execution.image, execution.kwargs,
+        contract, rescale_intensity, execution.payload, execution.kwargs,
         execution_mode=execution.execution_mode, plane_projection=execution.plane_projection,
     )
     (item,) = tuple(StreamOutputBatch.project_item(RuntimeProjectionSourceIdentityRequest(

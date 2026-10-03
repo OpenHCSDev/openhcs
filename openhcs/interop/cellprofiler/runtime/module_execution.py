@@ -40,7 +40,6 @@ from openhcs.core.pipeline.function_contracts import (
 )
 from openhcs.core.runtime_adapters import (
     RuntimeAdapterRequest,
-    RuntimeFunctionInvocationRequest,
 )
 from openhcs.core.runtime_artifact_queries import MeasurementTableUnion
 from openhcs.core.runtime_batch_contracts import RuntimeBatchExecutionDomain
@@ -396,7 +395,7 @@ class CellProfilerModuleExecutor:
         raw_output = _CELLPROFILER_FUNCTION_CONTRACT_EXECUTOR.execute(
             self.callable_contract,
             self.raw_func,
-            invocation.image,
+            invocation.payload,
             invocation.kwargs,
             execution_mode=invocation.execution_mode,
             plane_projection=invocation.plane_projection,
@@ -407,7 +406,7 @@ class CellProfilerModuleExecutor:
             lambda: {
                 "module": module_name,
                 "function": self.callable_contract.function_name,
-                **cellprofiler_profile_payload_fields("input", invocation.image),
+                **cellprofiler_profile_payload_fields("input", invocation.payload),
                 **cellprofiler_profile_payload_fields("output", raw_output),
             },
         )
@@ -430,7 +429,6 @@ class CellProfilerModuleExecutor:
             returned_values=returned_values,
             matched_outputs=matched_outputs,
             invocation=invocation,
-            image_request=image_request,
             current_image=image,
         )
         CellProfilerRuntimeProfileLogger.log_module_profile(
@@ -445,7 +443,7 @@ class CellProfilerModuleExecutor:
             declared_only_outputs=declared_only_outputs,
             adapter=adapter,
             current_image=image,
-            invocation_image=invocation.image,
+            invocation_image=invocation.payload,
             plane_projection=invocation.plane_projection,
         )
         CellProfilerRuntimeProfileLogger.log_module_profile(
@@ -1421,7 +1419,7 @@ class CellProfilerModuleExecutor:
         current_image: RuntimeCallableArgument,
         kwargs: RuntimeCallableKwargs,
         module_type: type[CellProfilerModule],
-    ) -> "RuntimeFunctionInvocationRequest":
+    ) -> "CellProfilerImageRequest":
         profile_enabled = CellProfilerRuntimeProfileLogger.enabled()
         if profile_enabled:
             phase_started_at = time.perf_counter()
@@ -1479,6 +1477,7 @@ class CellProfilerModuleExecutor:
                 module=module_name,
             )
             phase_started_at = time.perf_counter()
+        source_aliases = image_request.source_aliases
         image_request = module_type.project_invocation_image_request(
             image_request=image_request,
             runtime_kwargs=runtime_kwargs,
@@ -1507,13 +1506,13 @@ class CellProfilerModuleExecutor:
                 execution_mode,
             ),
         )
-        return RuntimeFunctionInvocationRequest(
-            image=image_request.payload,
+        # Source aliases name the original input surfaces even when an object
+        # input supplies the callable's projected image domain.
+        return replace(
+            image_request,
             kwargs=invocation_kwargs,
-            source_image_name=image_request.source_image_name,
-            image_count=image_request.image_count,
+            source_aliases=source_aliases,
             execution_mode=execution_mode,
-            plane_projection=image_request.plane_projection,
         )
 
 

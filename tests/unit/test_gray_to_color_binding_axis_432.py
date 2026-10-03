@@ -98,7 +98,7 @@ def test_declared_fitc_runtime_plane_retains_values_and_physical_identity(explic
         kwargs={"color_scheme": GrayToColorModule.Scheme.STACK, "rescale_intensity": False},
     )
     result = CellProfilerFunctionContractExecutor().execute(
-        contract, contract.resolve_canonical_raw_callable(), execution.image, execution.kwargs,
+        contract, contract.resolve_canonical_raw_callable(), execution.payload, execution.kwargs,
         execution_mode=execution.execution_mode, plane_projection=execution.plane_projection,
     )
     # Float32 is the original Stack runner's output contract, not unit normalization.

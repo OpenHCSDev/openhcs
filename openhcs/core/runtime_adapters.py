@@ -5,7 +5,7 @@ from __future__ import annotations
 import inspect
 from collections.abc import Callable, Mapping, MutableMapping
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from python_introspect import add_parameter_exclusions
 
@@ -67,7 +67,6 @@ if TYPE_CHECKING:
 
 
 _F = TypeVar("_F", bound=Callable[..., Any])
-PayloadT = TypeVar("PayloadT")
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -77,26 +76,6 @@ class RuntimeImageExecutionContext:
     source_image_name: str | None
     execution_mode: ImagePayloadExecutionMode = ImagePayloadExecutionMode.NATURAL
     plane_projection: RuntimePlaneAxisValueProjection | None = None
-
-
-@dataclass(frozen=True, slots=True, kw_only=True)
-class RuntimeImageRequest(RuntimeImageExecutionContext, Generic[PayloadT]):
-    """Resolved image payload and source metadata for one runtime invocation."""
-
-    image_count: int
-    payload: PayloadT
-
-
-@dataclass(frozen=True, slots=True, kw_only=True)
-class RuntimeFunctionInvocationRequest(
-    RuntimeImageExecutionContext,
-    Generic[PayloadT],
-):
-    """Resolved callable inputs for one runtime function invocation."""
-
-    image_count: int
-    image: PayloadT
-    kwargs: Mapping[str, object]
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
