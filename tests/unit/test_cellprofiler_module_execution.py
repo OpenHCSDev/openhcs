@@ -2574,7 +2574,7 @@ def test_track_objects_retained_image_uses_tracked_object_source_payload() -> No
             execution_mode=ImagePayloadExecutionMode.FULL_STACK,
         ),
         current_image=current_payload,
-        call_kwargs={},
+        kwargs={},
     )
 
     source_payload = _module_type_for_contract(
@@ -2738,7 +2738,7 @@ def test_object_label_output_source_preserves_matching_input_object_plane_contex
         spec=output,
         output_value=np.zeros((2, 4, 5), dtype=np.int32),
         source_image_name=None,
-        call_kwargs={},
+        kwargs={},
         current_image=current_image,
     )
 
@@ -2813,7 +2813,7 @@ def test_resize_objects_output_source_policy_uses_input_object_context() -> None
         spec=output,
         output_value=np.zeros((4, 5), dtype=np.int32),
         source_image_name="ReferenceImage",
-        call_kwargs={},
+        kwargs={},
         source_image_payload=image_payload,
         current_image=image_payload,
     )
@@ -2855,7 +2855,7 @@ def test_watershed_output_source_policy_uses_declared_image_as_parent() -> None:
         spec=output,
         output_value=np.zeros((3, 4, 5), dtype=np.int32),
         source_image_name="DNA",
-        call_kwargs={},
+        kwargs={},
         source_aliases=("DNA",),
         source_image_payload=image_payload,
         current_image=image_payload,
@@ -2957,7 +2957,7 @@ def test_object_label_recorder_suppresses_parent_spacing_when_policy_declares_no
             domain=ObjectLabelDomain(declared_object_count=0),
         ),
         source_image_name="ReferenceImage",
-        call_kwargs={},
+        kwargs={},
         source_image_payload=image_payload,
         current_image=image_payload,
     )
@@ -3019,7 +3019,7 @@ def test_contextual_object_label_recorder_fills_missing_parent_spacing_from_decl
         spec=output,
         output_value=output_labels,
         source_image_name="Memb",
-        call_kwargs={},
+        kwargs={},
         source_aliases=("Memb",),
         source_image_payload=image_payload,
         current_image=image_payload,
@@ -3099,7 +3099,7 @@ def test_measure_object_size_shape_record_builder_keeps_shape_features_unqualifi
             declared_field_names=("object_label", "Area"),
         ),
         source_image_name="BF_image",
-        call_kwargs={},
+        kwargs={},
         source_image_payload=ImagePayloadMetadata(
             source_path="/input/A01_s001_w1.tif"
         ).payload_with(np.zeros((3, 3), dtype=np.float32), None),
@@ -3182,7 +3182,7 @@ def test_object_output_measurements_derive_count_and_locations_from_output_label
         source_image_name="Mask",
         source_image_payload=mask_payload,
         current_image=mask_payload,
-        call_kwargs={},
+        kwargs={},
     )
     CellProfilerOutputRecorder.for_artifact_type(ObjectLabelsArtifactType).record(
         replace(
@@ -3345,7 +3345,7 @@ def test_compiled_measurement_output_preserves_image_and_object_row_ownership() 
         source_image_name="Mask",
         source_image_payload=source_image,
         current_image=source_image,
-        call_kwargs={},
+        kwargs={},
     )
     adapter.add_objects(object_spec.name, labels)
 
@@ -3442,7 +3442,7 @@ def test_object_label_output_source_payload_uses_primary_object_input() -> None:
         spec=output,
         output_value=np.zeros((2, 2), dtype=np.int32),
         source_image_name=None,
-        call_kwargs={},
+        kwargs={},
         source_image_payload=object(),
         current_image=None,
     )
@@ -3504,7 +3504,7 @@ def test_object_label_output_source_payload_uses_declared_primary_object_input()
         spec=output,
         output_value=np.zeros((2, 2), dtype=np.int32),
         source_image_name=None,
-        call_kwargs={},
+        kwargs={},
         source_image_payload=source_payload,
         current_image=current_image,
     )
@@ -4389,7 +4389,7 @@ def test_object_label_output_domain_scope_preserves_declared_source_stack() -> N
             source_image_name="Threshold",
         ),
         current_image=np.ones((3, 4, 5), dtype=np.float32),
-        call_kwargs={},
+        kwargs={},
     )
 
     assert request.object_label_output_domain_scope() is None
@@ -4427,7 +4427,7 @@ def test_object_label_output_domain_scope_uses_declared_group_lineage() -> None:
             source_image_name="Threshold",
         ),
         current_image=np.ones((3, 4, 5), dtype=np.float32),
-        call_kwargs={},
+        kwargs={},
     )
 
     assert request.object_label_output_domain_scope() is ObjectLabelDomainScope.PAYLOAD
@@ -8407,7 +8407,7 @@ def test_illumination_apply_image_output_uses_original_input_source_payload() ->
             source_aliases=("OrigMito", "IllumMito"),
             source_image_payload=stale_invocation_payload,
             current_image=np.zeros((2, 3, 4), dtype=np.float32),
-            call_kwargs={},
+            kwargs={},
         )
     )
 
@@ -8509,7 +8509,7 @@ def test_image_output_projection_uses_exact_invocation_projection(
                 plane_projection=plane_projection,
             ),
             current_image=source_payload,
-            call_kwargs={},
+            kwargs={},
         )
     )
 
@@ -8593,7 +8593,7 @@ def test_declared_output_source_uses_projected_object_input_value() -> None:
             plane_projection=None,
         ),
         current_image=current_image,
-        call_kwargs={},
+        kwargs={},
     )
 
     projected_source = MeasureObjectNeighborsModule.source_payload(request)
@@ -8676,7 +8676,7 @@ def test_image_output_recording_projects_masked_singleton_rgb_payload() -> None:
                 execution_mode=ImagePayloadExecutionMode.FULL_STACK,
             ),
             current_image=source_payload,
-            call_kwargs={},
+            kwargs={},
         )
     )
 
@@ -8751,7 +8751,7 @@ def test_illumination_apply_image_output_preserves_declared_stack_value() -> Non
             source_aliases=("OrigMito", "IllumMito"),
             source_image_payload=duplicate_output,
             current_image=np.zeros((5, 6), dtype=np.float32),
-            call_kwargs={},
+            kwargs={},
         )
     )
 
@@ -8826,7 +8826,7 @@ def test_illumination_apply_image_output_preserves_singleton_volume_value() -> N
             source_aliases=("OrigMito", "IllumMito"),
             source_image_payload=singleton_output,
             current_image=np.zeros((5, 6), dtype=np.float32),
-            call_kwargs={},
+            kwargs={},
         )
     )
 
@@ -11383,7 +11383,7 @@ def test_image_measurement_table_retains_exact_declared_current_image() -> None:
         output_value=MeasurementSparseColumnarRows.from_rows((), fields=()),
         source_image_name="OrigGreen",
         source_image_payload=np.zeros((4, 5), dtype=np.float32),
-        call_kwargs={},
+        kwargs={},
     )
 
     module_type = _module_type_for_contract(executor.callable_contract)
@@ -11512,7 +11512,7 @@ def test_colocalization_record_builder_derives_source_pair_table_identity() -> N
                     FieldSpec("manders_m1", float),
                 ),
             ),
-            call_kwargs={},
+            kwargs={},
             source_aliases=("DNA", "ER"),
         )
     )
@@ -11588,7 +11588,7 @@ def test_measure_object_neighbors_records_object_topology_without_image_source()
                 row_type=NeighborMeasurements,
             ),
             source_image_name="OrigBlue",
-            call_kwargs={
+            kwargs={
                 "distance_method": DistanceMethod.WITHIN,
                 "neighbor_distance": 4,
             },
@@ -11679,7 +11679,7 @@ def test_track_objects_record_builder_uses_nominal_image_table_ownership() -> No
                 )
             ),
             source_image_name="OrigColor",
-            call_kwargs={"pixel_radius": 50},
+            kwargs={"pixel_radius": 50},
         )
     )
 
@@ -11782,7 +11782,7 @@ def test_object_label_output_recorder_uses_output_label_domain() -> None:
             spec=_output_from_input("ExpandedObjects", "InputObjects"),
             output_value=output_payload,
             source_image_name=None,
-            call_kwargs={},
+            kwargs={},
         )
     )
 
@@ -11946,7 +11946,7 @@ def test_align_measurement_builder_records_output_scoped_shifts() -> None:
             row_type=AlignShiftMeasurement,
         ),
         source_image_name="Stain1Raw__Stain2Raw",
-        call_kwargs={},
+        kwargs={},
     )
     _seed_align_output_provenance(
         request,
@@ -12018,7 +12018,7 @@ def test_align_measurement_builder_records_additional_output_shifts() -> None:
             row_type=AlignShiftMeasurement,
         ),
         source_image_name=None,
-        call_kwargs={},
+        kwargs={},
     )
     _seed_align_output_provenance(
         request,
@@ -12099,7 +12099,7 @@ def test_classification_rows_include_unclassified_objects() -> None:
                 classify_like(np.zeros((2, 2), dtype=np.float32))[1]
             ),
             source_image_name=None,
-            call_kwargs={},
+            kwargs={},
         )
     ).rows.row_mappings()
 
@@ -12218,7 +12218,7 @@ def test_untangle_measurement_object_names_use_compiled_relations(
             rows=MeasurementSparseColumnarRows.from_rows((), fields=()),
             subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
         ),
-        call_kwargs={},
+        kwargs={},
     )
 
     assert (
@@ -12280,7 +12280,7 @@ def test_untangle_object_measurements_do_not_inherit_input_image_identity() -> N
         ),
         source_image_name="WormObjectsBinary",
         source_image_payload=np.zeros((8, 8), dtype=np.uint8),
-        call_kwargs={"overlap_style": OverlapStyle.BOTH},
+        kwargs={"overlap_style": OverlapStyle.BOTH},
     )
 
     source_image_name = UntangleWormsModule.measurement_record_source_image_name(
@@ -12549,7 +12549,7 @@ def test_relationship_measurements_preserve_pure_2d_slice_indices() -> None:
         spec=executor.callable_contract.artifact_outputs.specs[0],
         output_value=payload,
         source_image_name=None,
-        call_kwargs={},
+        kwargs={},
     )
 
     _record_output(request, request.spec, payload)
@@ -12628,7 +12628,7 @@ def test_relationship_rows_use_exact_compiled_endpoint_plane(
         spec=relationship_spec,
         output_value=payload,
         source_image_name=None,
-        call_kwargs={},
+        kwargs={},
     )
 
     _record_output(request, relationship_spec, payload)
@@ -12672,7 +12672,7 @@ def test_output_record_request_rejects_ref_equivalent_endpoint_reconstruction() 
         spec=relationship_spec,
         output_value=DirectedObjectRelationshipPayload(source_ids=(), target_ids=()),
         source_image_name=None,
-        call_kwargs={},
+        kwargs={},
     )
     ref_equivalent_spec = replace(endpoint_spec)
 
@@ -12713,7 +12713,7 @@ def test_output_record_request_rejects_ambiguous_exact_endpoint_occurrence() -> 
         spec=relationship_spec,
         output_value=DirectedObjectRelationshipPayload(source_ids=(), target_ids=()),
         source_image_name=None,
-        call_kwargs={},
+        kwargs={},
     )
 
     with pytest.raises(RuntimeError, match="multiple exact compiled input edges"):
@@ -12804,7 +12804,7 @@ def test_relationship_rows_project_temporal_endpoints_to_their_declared_slices()
         output_value=payload,
         source_image_name=None,
         source_image_payload=np.zeros((2, 5, 5), dtype=np.float32),
-        call_kwargs={},
+        kwargs={},
     )
 
     _record_output(request, relationship_spec, payload)
@@ -12917,7 +12917,7 @@ def test_relationship_measurements_reject_singleton_label_domain_broadcast() -> 
         spec=executor.callable_contract.artifact_outputs.specs[0],
         output_value=payload,
         source_image_name=None,
-        call_kwargs={},
+        kwargs={},
     )
 
     _record_output(request, request.spec, payload)
@@ -12978,7 +12978,7 @@ def test_relationship_rows_use_declared_relationship_outputs_for_measurement_onl
         spec=measurement_spec,
         output_value=MeasurementSparseColumnarRows.from_rows((), fields=()),
         source_image_name=None,
-        call_kwargs={},
+        kwargs={},
         declared_only_outputs=MappingProxyType({relationship_spec.ref(): payload}),
     )
 
@@ -13108,7 +13108,7 @@ def test_object_measurement_table_uses_provenance_without_image_ownership() -> N
                 "test-axis", component=None, value=None
             ),
         ),
-        call_kwargs={},
+        kwargs={},
     )
 
     empty_rows = MeasurementSparseColumnarRows.from_rows((), fields=())
@@ -13203,7 +13203,7 @@ def test_object_output_table_uses_provenance_without_image_ownership() -> None:
         source_image_name=None,
         source_image_payload=np.zeros((2, 5, 5), dtype=np.float32),
         adapter=runtime,
-        call_kwargs={},
+        kwargs={},
     )
 
     rows = MeasurementSparseColumnarRows.from_rows((), fields=())
@@ -13306,7 +13306,7 @@ def test_relate_objects_measurement_table_rejects_distinct_image_set_axes() -> N
                 "test-axis", component=None, value=None
             ),
         ),
-        call_kwargs={},
+        kwargs={},
     )
 
     with pytest.raises(ValueError, match="source image-set axis"):
@@ -13347,7 +13347,7 @@ def test_object_lineage_measurement_table_preserves_current_payload_metadata() -
         output_value=MeasurementSparseColumnarRows.from_rows((), fields=()),
         source_image_payload=carrier,
         adapter=_FakeCellProfilerRuntime({}),
-        call_kwargs={},
+        kwargs={},
     )
 
     source_metadata = MaskObjectsModule.measurement_record_source_metadata(
@@ -13401,7 +13401,7 @@ def test_relationship_rows_do_not_slice_payload_scoped_3d_lineage_by_z_plane() -
         spec=relationship_spec,
         output_value=payload,
         source_image_name=None,
-        call_kwargs={},
+        kwargs={},
     )
 
     CellProfilerOutputRecorder.for_artifact_type(ObjectLabelsArtifactType).record(
@@ -13487,7 +13487,7 @@ def test_object_lineage_transform_measurement_record_includes_parent_rows() -> N
         source_image_name="Carrier",
         source_image_payload=np.ones((2, 2), dtype=np.float32),
         current_image=np.ones((2, 2), dtype=np.float32),
-        call_kwargs={},
+        kwargs={},
     )
 
     payload = DirectedObjectRelationshipPayload(source_ids=(1, 2), target_ids=(1, 2))
@@ -13554,7 +13554,7 @@ def test_relateobjects_relationship_rows_project_distances_nominally() -> None:
         spec=executor.callable_contract.artifact_outputs.specs[0],
         output_value=MeasurementSparseColumnarRows.from_rows((), fields=()),
         source_image_name=None,
-        call_kwargs={},
+        kwargs={},
     )
 
     _record_output(request, request.spec, payload)
@@ -13623,7 +13623,7 @@ def test_relateobjects_relationship_rows_project_parent_mean_distances() -> None
         spec=executor.callable_contract.artifact_outputs.specs[0],
         output_value=MeasurementSparseColumnarRows.from_rows((), fields=()),
         source_image_name=None,
-        call_kwargs={"calculate_per_parent_means": True},
+        kwargs={"calculate_per_parent_means": True},
     )
 
     _record_output(request, request.spec, payload)
@@ -13806,7 +13806,7 @@ def test_relateobjects_parent_means_align_scoped_child_tables_by_source_plane() 
         spec=executor.callable_contract.artifact_outputs.specs[0],
         output_value=MeasurementSparseColumnarRows.from_rows((), fields=()),
         source_image_name=None,
-        call_kwargs={"calculate_per_parent_means": True},
+        kwargs={"calculate_per_parent_means": True},
     )
 
     _record_output(request, request.spec, payload)
@@ -13934,7 +13934,7 @@ def test_relateobjects_relationship_rows_project_distances_from_slice_measuremen
         spec=executor.callable_contract.artifact_outputs.specs[0],
         output_value=MeasurementSparseColumnarRows.from_rows((), fields=()),
         source_image_name=None,
-        call_kwargs={},
+        kwargs={},
     )
 
     _record_output(request, request.spec, payload)
@@ -14046,7 +14046,7 @@ def test_spatial_grid_output_recorder_accepts_pure_2d_grid_sequence() -> None:
         adapter=runtime,
         spec=grid_spec,
         output_value=None,
-        call_kwargs={},
+        kwargs={},
     )
     grids = [
         SpatialGrid(
@@ -14365,7 +14365,7 @@ def test_identify_objects_in_grid_location_rows_preserve_empty_grid_slots() -> N
         spec=measurement_spec,
         output_value=stats,
         source_image_name=None,
-        call_kwargs={
+        kwargs={
             "topology_inputs": (grid, guide_labels),
             "shape_choice": "natural_shape_and_location",
         },
@@ -14497,7 +14497,7 @@ def test_identify_objects_in_grid_location_rows_use_slice_aligned_grid() -> None
         spec=measurement_spec,
         output_value=RuntimeSliceAlignedValues(tuple(output[1] for output in outputs)),
         source_image_name=None,
-        call_kwargs={
+        kwargs={
             "topology_inputs": (
                 RuntimeSliceAlignedValues((grid, grid)),
                 np.stack((first_guides, second_guides), axis=0),

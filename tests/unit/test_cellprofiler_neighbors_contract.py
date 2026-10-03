@@ -588,7 +588,7 @@ def test_compiled_neighbor_distance_contract_drives_runtime_rows() -> None:
     )
     projected = MeasureObjectNeighborsModule.MeasurementRows.for_request(
         MeasureObjectNeighborsModule,
-        SimpleNamespace(output_value=rows, call_kwargs=invocation.kwargs_dict),
+        SimpleNamespace(output_value=rows, kwargs=invocation.kwargs_dict),
     ).rows()
 
     assert len(projected) == 2

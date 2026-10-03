@@ -152,7 +152,7 @@ def test_relationship_recording_uses_exact_artifact_relation() -> None:
             target_ids=(2,),
         ),
         source=source,
-        call_kwargs={},
+        kwargs={},
         current_image=source.payload,
     )
 
@@ -233,7 +233,7 @@ def test_image_output_recording_uses_exact_invocation_projection_for_rgb(
                 execution_mode=ImagePayloadExecutionMode.NATURAL,
                 plane_projection=plane_projection,
             ),
-            call_kwargs={},
+            kwargs={},
             current_image=source_slice,
         )
     )
@@ -288,7 +288,7 @@ def test_output_recording_carries_exact_invocation_plane_projection(
 
     request = recorder.record.call_args.args[0]
     assert request.source is invocation
-    assert request.call_kwargs is call_kwargs
+    assert request.kwargs is call_kwargs
     assert request.source.payload is image
     assert request.source.source_aliases == ("OriginalCarrier",)
     assert request.source.image_count == 2

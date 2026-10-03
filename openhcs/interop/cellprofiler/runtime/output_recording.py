@@ -158,7 +158,7 @@ class CellProfilerOutputRecorder(
                     output_plan=output_plan,
                     output_value=output_value,
                     source=invocation,
-                    call_kwargs=invocation.kwargs,
+                    kwargs=invocation.kwargs,
                     current_image=current_image,
                     declared_only_outputs=declared_only_outputs,
                 )
