@@ -44,7 +44,9 @@ only retain the merge. A faint object present in support but absent after
 splitting or size filtering needs a different repair from one absent in support.
 Use the retained stages to locate the first loss before choosing the next
 change. Recheck both original controls and distributed raw/result/combined
-views; a corrected count or repaired cluster cannot excuse new faint misses.
+views; judge new faint misses by the
+[distributed, claim-scoped quality criteria](analysis-strategy.md#scope-conclusions-to-the-evidence),
+not by count agreement or a requirement of zero errors.
 
 ## Touching round objects and watershed
 
