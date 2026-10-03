@@ -387,3 +387,53 @@ evidence. The saved downstream cache hit constructs no new provenance objects;
 it does not establish the payoff of a broader loading/recording/publication fix.
 The next capture must retain actual nested caches in the same graph, under the
 existing admission bounds, without rewarming or inventing state.
+
+Current graph-owned replay qualification (#510)
+------------------------------------------------
+
+The fresh V10 capture at ``4c636a281de4da7341f4f9f6bb8f718c75644a1d`` completes
+that bounded qualification. Its four independent producer-13/loader-14 graphs
+total 1,027,681,056 bytes, below the unchanged 1 GiB combined limit; each remains
+below 384 MiB and 150,000 nodes. Original processing succeeds, with no capture
+errors. The complete six-CSV/120-TIFF inventory and bytes, 180 ordered source
+references and three physical input-volume hashes pass the original science
+gate. Native agreement uses the retained qualified two-repeat witness; native
+CellProfiler was not rerun by this diagnostic.
+
+Before serialization, the adapters retain actual manifest membership, source
+cache dictionaries, process-ID key owners and physically stored nested fields
+in each same graph. Restoration validates anchors and declarations before
+reconnecting exact references; process-ID keys are rekeyed from retained owners.
+Stored field absence, ordered metadata views, birth fingerprints and array
+aliases remain intact. Fresh interpreters preserve the original hash seed zero.
+
+The smaller save oracle must also retain its actual memory backend. Its existing
+parser must point to the receiver's exact FileManager; restoration reconnects
+that backend through ``register_backend`` before restoring nested fields. This
+closes V9's nine detached-owner failures without reconstructing missing state,
+adding a receiver, unioning graphs, excluding owners or increasing bounds.
+
+Original producer replay restores all 1,112 after-oracle owners and matches all
+60 records, output data, named values, VFS planes and whole-stack cache, including
+123 complete array roles and their object/shared-memory relationships. Original
+loader replay restores all 1,116 after-oracle owners and matches the complete
+loaded result, runtime store, observations and stack cache, including 104 array
+roles. Immediately after the original calls, before equality or property queries,
+all 1,050 producer and 1,115 loader retained owners have unchanged stored fields
+and cached entries; newly reachable owners are reported separately.
+
+The determining receipt is
+``benchmark/results/perf_current_cohort_v10_20261003/qualification.json``;
+its SHA-256 is
+``17bb47f609d95ca6044f92810dbbf1c5f31e066ef330955aab264a5d8d7e6273``.
+It identifies every immutable helper, snapshot, sidecar, log and consumer gate
+under ``~/.local/state/openhcs-maintenance/20261003/current-cohort-capture-v10``.
+The authoritative outer preparation/launch directory is the canonical OpenHCS
+checkout; the public child still uses the owned temporary directory and CPU5.
+The failed outer-environment preflight started no pipeline and remains retained.
+
+This completes the replay friction in #510. It qualifies only these actual
+graph-owned warm occurrences, not process-global LRU state or a whole-pipeline
+heap. Diagnostic durations are not ordinary performance gains. V7/V8/V9 failures
+remain immutable, and the broad branch's architecture gates, fresh native runs,
+full-catalog scaling and figures remain outstanding.
