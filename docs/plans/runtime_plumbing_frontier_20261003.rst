@@ -210,3 +210,79 @@ Additional retained receipts:
 
 This checkpoint changes documentation only. No optimization, merge, original
 R0/R1 waiver, installed acceptance or full-catalog/scaling completion is claimed.
+
+Current producer/consumer evidence and compilation frontier
+----------------------------------------------------------
+
+Fresh diagnostics at ``bb9c49c2ad70f1cee49fa0cde47592681edb2be3`` preserve
+main ``87d9a99a9``, shared dependency/native/input pins, normal READY warmup,
+inline 1w_1t execution, OUTCOMES completion and the normal memory observer.
+Their observation clocks are not ordinary performance improvements.
+
+The bounded V7 capture retains four actual step-13 ImageMath producer and
+step-14 Resize load states, totaling 856,419,294 bytes under the unchanged
+384 MiB per-item and 1 GiB total limits. Its full six-CSV/120-TIFF parity,
+complete scientific inventory, all 180 ordered physical source references,
+and three native input-volume witnesses pass. Original step-13 replay matches
+all 60 records, named/VFS/cache outputs and the complete 123-array identity,
+sharing, dtype, stride and writeability graph.
+
+Original step-14 replay is RED before cache lookup: the actual producer
+manifest lives in module ``_STEP_OUTPUT_MANIFESTS``, a WeakKeyDictionary outside
+ProcessingContext transport. Reconstructing it from the separate producer
+oracle would fabricate a receiver state and is rejected. Independently,
+RuntimeSourceBindingContextCache deliberately drops four derived caches through
+its reducer. The actual after-load graph proves the result is the retained
+whole image for its exact 60-path cache key, but cold restored clocks cannot
+represent warm pipeline work. A future replay must carry actual manifest/cache
+owners in the same graph and rekey identity indexes only from real owner
+references, or obtain live production confirmation. Original failed artifacts
+remain preserved; schema completeness is not complete transaction state.
+
+A six-group ephemeral layout experiment validates the proposed existing-class
+projection ancestor layout, constructor signatures, default factories, frozen
+assignment, cooperative projection order, errors and fresh public provenance.
+This proves layout feasibility only. Lazy read algorithms, custom subclass
+behavior, combined transaction acceptance and sufficient elapsed savings
+remain unproved. No new wrapper or cache authority is implemented.
+
+Illumination remains the weakest known total comparison. Its current V3
+diagnostic records compilation 1.125192s, execution job 0.377852s and total
+1.844212s, with both authored NPY files, full inventory and actual physical
+TIFF/pipeline/native witnesses matching the retained qualified reference.
+The compilation partition places 0.302983s exclusive in dataclass analysis
+and 0.285258s in nested documentation extraction: 0.588241s together. Four
+client pipeline renders plus three config renders take 0.235231s. The joint
+0.823472s envelope contains required work; it is not a saving estimate.
+Ten effective-config getters include the schema/state subtree and cannot be
+added to it. Completion alone is too small to close the remaining gap.
+
+The separate V4 diagnostic also passes full science and distinguishes actual
+cache topology: compilation has 40 successful first-use misses and 338 hits
+across 44 class identities; execution has 94 hits. There are no uncached empty
+results. This rejects repeated failing analysis or fresh proxy churn as the
+mechanism. Exact runtime class names were not retained because the diagnostic
+read a type-owned attribute from the class dictionary; that metadata omission
+is explicit. A separate declaration inspection finds 22 registered public/proxy
+pairs and 95 differing fields, including Optional annotations and None defaults.
+Canonical-class ParameterInfo substitution would change real reset and
+reconstruction consumers, so it is rejected. The remaining candidate must
+separate reusable declaration work from correctly timed value/default-factory
+evaluation using the existing schema and preparation owners.
+
+Local source-qualified receipts:
+
+* ``/home/ts/.local/state/openhcs-maintenance/20261003/current-cohort-capture-v7-science-verification-v2.json``
+  (SHA-256 ``99f2f830861eb1ecd1492c50ff6bbb2a66172674211e0a925f9f6a85359a1be0``).
+* ``/home/ts/.local/state/openhcs-maintenance/20261003/current-cohort-v7-original-replay-v3.json``.
+* ``/home/ts/.local/state/openhcs-maintenance/20261003/current-cohort-v7-load-owned-role-review.json``
+  (SHA-256 ``bd08002bbb535911ba189b1b97bf8cbceb03c938b89c5ec8d0c061e4743735a7``).
+* ``/home/ts/.local/state/openhcs-maintenance/20261003/projection_ancestor_feasibility_bb9c_v3.json``
+  (SHA-256 ``b5ff353e33c70d4066de5315c0bef2046e1e8680056125404a7c393eb2e531ae``).
+* ``/home/ts/.local/state/openhcs-maintenance/20261003/illumination-compiler-ledger-v3-science.json``
+  (SHA-256 ``e042e25aa0fd9e087459c77613150f0db6447e91d0fc943acf2ea638312cc850``).
+* ``/home/ts/.local/state/openhcs-maintenance/20261003/illumination-schema-cache-topology-v4-20261003.json``
+  (SHA-256 ``134244ea39004ccfc86d20fa14d4fdc49e78aa72f4a92349092c6f420c1b89e3``).
+
+No production optimization, new native repetition, original R0/R1 waiver,
+full-catalog/scaling completion or accepted ordinary speedup is claimed here.
