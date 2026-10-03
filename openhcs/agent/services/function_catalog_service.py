@@ -780,7 +780,7 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
         warnings = ()
         if handle.persist:
             manager = custom_function_manager.CustomFunctionManager(create_storage=False)
-            if handle.storage_dir is None or Path(handle.storage_dir).resolve(strict=False) != manager.storage_dir.resolve(strict=False):
+            if handle.require_storage_dir().resolve(strict=False) != manager.storage_dir.resolve(strict=False):
                 raise ValueError("Registration observation reached a different native source store.")
             source = handle.require_named_source()
             self._path_policy.assert_readable_location(manager.source_path_for_name(manager.storage_dir, source.function_name))

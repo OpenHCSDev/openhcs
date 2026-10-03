@@ -140,10 +140,8 @@ class CustomFunctionRegistrationHandle(FunctionCatalogOperationHandle):
 
     @classmethod
     def from_request(cls, request: CustomFunctionRegistrationRequest) -> Self:
-        if request.server_identity is None:
-            raise ValueError("Registration observation requires an admitted server identity.")
         return cls(
-            connection=request.connection, server_identity=request.server_identity,
+            connection=request.connection, server_identity=request.require_server_identity(),
             content_sha256=CustomFunctionSource.content_digest(request.source_code.encode("utf-8")),
             function_name=request.function_name, persist=request.persist,
             storage_dir=request.storage_dir,
@@ -153,6 +151,12 @@ class CustomFunctionRegistrationHandle(FunctionCatalogOperationHandle):
         if self.function_name is None:
             raise ValueError("Persisted registration observation requires its admitted name.")
         return CustomFunctionSource(self.function_name, self.content_sha256)
+
+    def require_storage_dir(self) -> Path:
+        """Decode this handle's admitted source store once for native/path owners."""
+        if self.storage_dir is None:
+            raise ValueError("Persisted registration observation requires its admitted store.")
+        return Path(self.storage_dir)
 
 
 class CustomFunctionRegistrationObservationOutcome(str, Enum):

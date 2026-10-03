@@ -497,10 +497,8 @@ class ZMQFunctionCatalogService(EndpointFunctionCatalogServiceABC):
         if handle.persist:
             from openhcs.processing.custom_functions.manager import CustomFunctionManager
             source = handle.require_named_source()
-            if handle.storage_dir is None:
-                raise ValueError("Persisted registration observation requires its admitted store.")
             self._path_policy.assert_readable_location(CustomFunctionManager.source_path_for_name(
-                handle.storage_dir, source.function_name,
+                handle.require_storage_dir(), source.function_name,
             ))
         endpoint = self._endpoint_for_connection(handle.connection)
         result = self._client_for(endpoint).observe_custom_function_registration(handle)

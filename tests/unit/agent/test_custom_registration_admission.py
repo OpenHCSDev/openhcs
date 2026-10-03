@@ -605,7 +605,8 @@ def test_generated_mcp_retains_native_cause_and_observes_without_replay(tmp_path
         second = await server.call_tool("openhcs_get_custom_function_registration_status", handle)
         content = second[0] if isinstance(second, tuple) else second.content
         observed = json.loads(content[0].text)
-        assert observed["handle"] == handle
+        print(json.dumps({"registration_observation_public_reply": observed}, sort_keys=True))
+        assert observed.get("handle") == handle, observed
         assert observed["outcome"] == "not_observed"
         assert observed["published_sources"] == []
         assert len(dispatched) == 1
