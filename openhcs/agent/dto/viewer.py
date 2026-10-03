@@ -17,7 +17,7 @@ from pyqt_reactive.services.window_snapshot import (
     WindowSnapshotFrameCondition,
     WindowVisualObservation,
 )
-from python_introspect import dataclass_from_mapping
+from python_introspect import dataclass_from_mapping, project_dataclass
 from pydantic import StrictFloat, StrictInt
 from zmqruntime.timeouts import OperationDeadline
 from zmqruntime.viewer_protocol import (
@@ -52,6 +52,7 @@ from openhcs.runtime.viewer_controls import (
     ViewerRegionControlOptions,
     ViewerIntensityWindowControlOptions,
     ViewerLayerIsolationControlOptions,
+    ViewerLayerRetirementControlOptions,
     ViewerNavigationControlOptions,
     ViewerNativeDimensions,
     ViewerPayloadControlOptions,
@@ -67,6 +68,7 @@ from openhcs.runtime.viewer_protocol import (
     OpenHCSViewerControlMessageType, ViewerProtocolStatus,
     ViewerImageColorControlOptions, ViewerNativeImageColorPresentation,
     ViewerNativeWindowControlOptions, ViewerNativeWindowState,
+    ViewerLayerRetirementReceipt,
 )
 
 VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT = 5000
@@ -98,9 +100,15 @@ class ViewerWindowControlRequest(ExecutionConnectionProjection):
 
     timeout_ms: int = VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT
     include_response: bool = True
+    operation_deadline: OperationDeadline | None = field(default=None, repr=False)
+
+    def start_operation(self) -> Self:
+        from dataclasses import replace
+
+        return replace(self, operation_deadline=self.control_deadline())
 
     def control_deadline(self) -> OperationDeadline:
-        return OperationDeadline.after_milliseconds(
+        return self.operation_deadline or OperationDeadline.after_milliseconds(
             self.timeout_ms, operation="viewer control request",
         )
 
@@ -192,7 +200,6 @@ class ViewerWindowSnapshotRequest(
         WindowSnapshotFrameCondition.RENDER_COMPLETE
     )
     observation_timeout_s: float | None = None
-    operation_deadline: OperationDeadline | None = field(default=None, repr=False)
 
     def __post_init__(self) -> None:
         if (
@@ -217,22 +224,6 @@ class ViewerWindowSnapshotRequest(
             raise ValueError(
                 "Snapshot observation timeout must be less than transport timeout."
             )
-
-    def start_operation(self) -> Self:
-        from dataclasses import replace
-
-        return replace(
-            self,
-            operation_deadline=super(
-                ViewerWindowSnapshotRequest, self
-            ).control_deadline(),
-        )
-
-    def control_deadline(self) -> OperationDeadline:
-        return (
-            self.operation_deadline
-            or super(ViewerWindowSnapshotRequest, self).control_deadline()
-        )
 
     def snapshot_operation_deadline(self) -> OperationDeadline | None:
         return self.operation_deadline
@@ -609,6 +600,42 @@ class ViewerWindowLayerIsolationRequest(ViewerWindowControlRequest):
             }
         )
         return payload
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerWindowLayerRetirementRequest(ViewerWindowPresentationRequest):
+    retirement: ViewerLayerRetirementControlOptions
+    message_type = OpenHCSViewerControlMessageType.RETIRE_LAYERS.value
+
+    @property
+    def result_type(self):
+        return ViewerWindowLayerRetirementResult
+
+    @property
+    def control_payload(self):
+        return self
+
+    @classmethod
+    def from_fields(
+        cls, *, connection: ExecutionConnectionSpec,
+        expected_producers: dict[str, list[dict[str, JsonValue]]],
+        timeout_ms: int = VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT,
+    ) -> Self:
+        return cls(
+            connection=connection, timeout_ms=timeout_ms,
+            retirement=ViewerLayerRetirementControlOptions.from_overrides(
+                expected_producers=expected_producers,
+            ),
+        )
+
+    def as_tool_arguments(self) -> dict[str, JsonValue]:
+        return {
+            **self.connection_tool_arguments(),
+            "expected_producers": {
+                route: [to_jsonable(producer.to_payload()) for producer in producers]
+                for route, producers in self.retirement.expected_producers.items()
+            },
+        }
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1314,8 +1341,16 @@ class ViewerWindowPresentationResult(
         if not isinstance(payload, Mapping):
             raise TypeError("Native presentation readback must be a mapping.")
         snapshot = cls.snapshot_type.from_wire_mapping(payload)
+        return cls.from_snapshot(connection, snapshot)
+
+    @classmethod
+    def from_snapshot(cls, connection, snapshot):
         return cls(schema_version=SCHEMA_VERSION, connection=connection,
                    observed=True, applied=True, **{cls.response_field.value: snapshot})
+
+    def admit_request(self, request: ViewerWindowPresentationRequest) -> Self:
+        """Operation-specific reply custody; concrete declarations supply hooks."""
+        return self
 
 
 @dataclass(frozen=True, slots=True)
@@ -1385,6 +1420,37 @@ class ViewerWindowLayerVisibilityRecord:
     title: str | None
     visible: bool
     selected: bool
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ViewerWindowLayerRetirementResult(
+    ViewerWindowPresentationResult,
+    ViewerLayerRetirementReceipt,
+):
+    registry_key: ClassVar[str] = "layer_retirement"
+    response_field = ViewerControlField.RETIREMENT
+    snapshot_type = ViewerLayerRetirementReceipt
+    observed: bool = field(kw_only=True)
+
+    @classmethod
+    def from_snapshot(cls, connection, snapshot):
+        return project_dataclass(
+            cls, snapshot, schema_version=SCHEMA_VERSION,
+            connection=connection, observed=True,
+        )
+
+    def admit_request(self, request: ViewerWindowLayerRetirementRequest) -> Self:
+        # slots=True replaces the dataclass type; use that declared MRO owner,
+        # not the pre-transformation __class__ captured by zero-argument super.
+        super(ViewerWindowLayerRetirementResult, self).admit_request(request)
+        if not self.applied:
+            raise ValueError("Native retirement did not apply the requested set.")
+        requested = frozenset(request.retirement.expected_producers)
+        if frozenset(self.retired_route_keys) != requested:
+            raise ValueError("Native retirement acknowledgement has a different route set.")
+        if requested.intersection(self.remaining_route_keys):
+            raise ValueError("Retired routes remain mounted in the acknowledgement.")
+        return self
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

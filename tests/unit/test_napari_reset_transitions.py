@@ -1,6 +1,11 @@
 """Real Qt scheduling and native Napari model transitions, no server or GL canvas."""
 
 import threading
+import pickle
+import queue
+import weakref
+from contextlib import contextmanager
+from dataclasses import replace
 
 import numpy as np
 import pytest
@@ -25,13 +30,26 @@ from openhcs.runtime.napari_streaming_handlers import (
     NapariStreamLayerAddress,
 )
 from openhcs.runtime.napari_viewer_server import (
+    NapariAcceptedControlRequest,
+    NapariControlMessageAction,
     NapariComponentAwareDisplayCoordinator,
     NapariImagePayloadLayoutRole,
     NapariLayerDisplayPipeline,
+    NapariImageLayerDisplayHandler,
+    NapariImagePresentationRetention,
     NapariShapesLayerDisplayHandler,
     NapariResultSelectionController,
     NapariStreamLayerContext,
     NapariViewerServer,
+)
+from openhcs.agent.dto.execution import ExecutionConnectionSpec
+from openhcs.agent.dto.viewer import ViewerWindowLayerRetirementRequest
+from openhcs.agent.services.viewer_window_service import (
+    ViewerWindowService, ZMQViewerWindowGateway,
+)
+from openhcs.runtime.viewer_controls import ViewerLayerRetirementControlOptions
+from openhcs.runtime.viewer_protocol import (
+    OpenHCSViewerControlMessageType, ViewerSettlePhase,
 )
 from openhcs.runtime.viewer_component_system import (
     ViewerComponentAxisSemanticsAuthority,
@@ -56,6 +74,8 @@ def receiver():
     server.layer_batch_processor_debounce_policy = NapariLayerBatchDebouncePolicy()
     server.batch_processors = NapariBatchProcessorStore()
     server.display_pipeline = NapariLayerDisplayPipeline(server)
+    server.accepted_stream_batches = queue.Queue()
+    server.accepted_control_requests = queue.Queue()
     # Exercise native selection event binding, without mounting an unrelated Qt dock.
     server.result_selection_controller = NapariResultSelectionController(server)
     server.bind_result_selection_layer = server.result_selection_controller.bind
@@ -351,3 +371,212 @@ def test_native_deletion_with_queued_replacement_clear_cannot_resurrect_route(re
     assert not receiver.layer_route_state.layer_titles
     assert not receiver.component_groups.groups
     assert not receiver.component_values.domains
+
+
+def retirement_request(server, *routes):
+    return ViewerWindowLayerRetirementRequest.from_fields(
+        connection=ExecutionConnectionSpec(port=5584),
+        expected_producers={
+            route: [producer.to_payload() for producer in
+                    server.component_groups.producer_identities_for(route)]
+            for route in routes
+        },
+    )
+
+
+class QueuedRetirementGateway(ZMQViewerWindowGateway):
+    """Exercise the real gateway message hook and Qt queue, with no socket/server."""
+
+    def __init__(self, server):
+        self.server = server
+
+    def _send_control_message(self, request, message):
+        assert request.operation_deadline is not None
+        assert request.control_deadline() is request.operation_deadline
+        reply = queue.Queue(maxsize=1)
+        self.server.accepted_control_requests.put(NapariAcceptedControlRequest(
+            pickle.loads(pickle.dumps(message)), reply,
+        ))
+        loop = QEventLoop()
+        def dispatch():
+            self.server.process_messages()
+            loop.quit()
+        QTimer.singleShot(0, dispatch)
+        loop.exec()
+        response = pickle.loads(reply.get_nowait())
+        assert reply.empty()
+        return response
+
+
+def test_selected_retirement_uses_registered_queue_and_releases_payloads(receiver):
+    raw = np.full((2, 2), 4, dtype=np.uint16)
+    keep, update = enqueue(receiver, raw, producer="raw")
+    advance_in_qt(receiver, keep, update)
+    doomed = np.full((2, 2), 9, dtype=np.uint16)
+    payload_ref = weakref.ref(doomed)
+    route, update = enqueue(receiver, doomed, producer="candidate")
+    # Genuine original terminal settlement, not a manually fabricated complete flag.
+    receiver.display_pipeline.settlement_progress()
+    app = QApplication.instance()
+    while receiver.layer_route_state.existing_settlement_progress().phase is ViewerSettlePhase.RUNNING:
+        app.processEvents()
+    assert receiver.layer_route_state.existing_settlement_progress().phase is ViewerSettlePhase.COMPLETE
+    native = receiver.layer_route_state.layer(route)
+    native_ref = weakref.ref(native)
+    receiver.batch_processors.get_or_create(layer_key=route, napari_server=receiver)
+    request = retirement_request(receiver, route)
+    keep_native = receiver.layer_route_state.layer(keep)
+    original_items = receiver.component_groups.existing_items_for(keep)
+    del update, doomed, native
+    result = ViewerWindowService(QueuedRetirementGateway(receiver)).presentation(request)
+    assert result.applied and not result.errors and result.observed
+    assert result.retired_route_keys == (route,)
+    assert result.remaining_route_keys == (keep,)
+    assert route not in receiver.layer_route_state.layer_titles
+    assert route not in receiver.layer_route_state.layer_dimension_states
+    assert route not in receiver.batch_processors.processors
+    assert route not in receiver.component_groups.groups
+    assert not any(key[0] == route for key in receiver.component_values.domains)
+    assert not receiver.layer_route_state.layer_settlement.updates
+    assert receiver.layer_route_state.layer(keep) is keep_native
+    assert receiver.component_groups.existing_items_for(keep) is original_items
+    assert original_items[0].data is raw
+    import gc
+    gc.collect()
+    assert payload_ref() is None and native_ref() is None
+    app.processEvents()
+    assert route not in receiver.layer_route_state.layers  # No late resurrection.
+
+
+@pytest.mark.parametrize("data_type,payload", [
+    (StreamingDataType.SHAPES, [{"type": "polygon", "coordinates": [[0, 0], [0, 1], [1, 1]],
+                                "metadata": {"label": 7}}]),
+    (StreamingDataType.POINTS, [{"type": "points", "coordinates": [[1, 2]],
+                                "metadata": {"label": 7}}]),
+])
+def test_registered_geometry_family_retires_through_same_queue(receiver, data_type, payload):
+    keep, update = enqueue(receiver, np.ones((2, 2)), producer="source")
+    advance_in_qt(receiver, keep, update)
+    original_items = receiver.component_groups.existing_items_for(keep)
+    route, update = enqueue(receiver, payload, producer="geometry", data_type=data_type)
+    advance_in_qt(receiver, route, update)
+    layer_ref = weakref.ref(receiver.layer_route_state.layer(route))
+    update_ref = weakref.ref(update)
+    del update
+    result = ViewerWindowService(QueuedRetirementGateway(receiver)).presentation(
+        retirement_request(receiver, route),
+    )
+    assert result.applied and not result.errors
+    assert result.retired_route_keys == (route,) and result.remaining_route_keys == (keep,)
+    assert receiver.component_groups.existing_items_for(keep) is original_items
+    import gc
+    gc.collect()
+    assert layer_ref() is None and update_ref() is None
+    QApplication.instance().processEvents()
+    assert route not in receiver.layer_route_state.layers
+
+
+@pytest.mark.parametrize("blocked", ["pending", "intake", "display", "running", "stale", "missing", "deadline"])
+def test_retirement_prevalidates_entire_set_without_collateral_mutation(receiver, blocked):
+    first, update = enqueue(receiver, np.ones((2, 2)), producer="first")
+    advance_in_qt(receiver, first, update)
+    second, update = enqueue(receiver, np.full((2, 2), 2), producer="second")
+    advance_in_qt(receiver, second, update)
+    request = retirement_request(receiver, first, second)
+    if blocked == "pending":
+        enqueue(receiver, np.full((2, 2), 3), producer="second")
+    elif blocked == "intake":
+        receiver.accepted_stream_batches.put(object())
+    elif blocked == "display":
+        receiver.display_pipeline._display_work_by_route[second] = (update, object())
+    elif blocked == "running":
+        enqueue(receiver, np.full((2, 2), 3), producer="second")
+        receiver.layer_route_state.begin_settlement()
+    elif blocked == "stale":
+        items = receiver.component_groups.existing_items_for(second)
+        items[0] = replace(items[0], producer=replace(items[0].producer, invocation_key="new-incarnation"))
+    elif blocked == "missing":
+        expected = dict(request.retirement.expected_producers)
+        expected["foreign"] = expected[second]
+        request = replace(request, retirement=ViewerLayerRetirementControlOptions(expected_producers=expected))
+    elif blocked == "deadline":
+        from zmqruntime.timeouts import OperationDeadline
+        request = replace(request, operation_deadline=OperationDeadline("expired", 5000, 0))
+    layers = tuple(receiver.viewer.layers)
+    groups = dict(receiver.component_groups.groups)
+    response = NapariControlMessageAction.for_message_type(
+        OpenHCSViewerControlMessageType.RETIRE_LAYERS.value,
+    ).handle(receiver, {"payload": request})
+    assert response["status"] == "error"
+    assert tuple(receiver.viewer.layers) == layers
+    assert receiver.component_groups.groups == groups
+    assert first in receiver.layer_route_state.layers and second in receiver.layer_route_state.layers
+    # Dispose only this test's synthetic unsettled state through original owners.
+    if blocked == "running":
+        receiver.layer_route_state.layer_settlement.fail()
+
+
+def test_terminal_failed_candidate_is_retirable_without_erasing_other_failure(receiver):
+    keep, update = enqueue(receiver, np.ones((2, 2)), producer="keep")
+    advance_in_qt(receiver, keep, update)
+    route, update = enqueue(receiver, np.full((2, 2), 2), producer="failed")
+    advance_in_qt(receiver, route, update)
+    enqueue(receiver, np.full((2, 2), 3), producer="failed")
+    settlement = receiver.layer_route_state.begin_settlement()
+    claimed, _ = settlement.begin_next()
+    settlement.begin_active_work_unit(claimed)
+    settlement.fail_active(claimed)
+    receiver.layer_route_state.record_update_error(route, ValueError("retained original failure"))
+    receiver.layer_route_state.record_update_error(keep, ValueError("other original failure"))
+    result = ViewerWindowService(QueuedRetirementGateway(receiver)).presentation(retirement_request(receiver, route))
+    assert result.applied and not result.errors
+    assert settlement.phase is ViewerSettlePhase.FAILED
+    assert not settlement.updates
+    assert receiver.layer_route_state.layer_update_errors == {keep: "other original failure"}
+    assert keep in receiver.layer_route_state.layers
+
+
+def test_retirement_prunes_multiple_survivors_with_cooperative_presentation_hooks(receiver, monkeypatch):
+    calls = []
+    monkeypatch.setitem(NapariImageLayerDisplayHandler.__registry__, StreamingDataType.IMAGE, NapariImageLayerDisplayHandler)
+    class IndependentPresentationCapability:
+        @contextmanager
+        def preserve_native_presentation(self, request):
+            calls.append(("enter", request.presentation.route_key))
+            with super().preserve_native_presentation(request):
+                yield
+            calls.append(("exit", request.presentation.route_key))
+    class NewDeclaredImageHandler(IndependentPresentationCapability, NapariImageLayerDisplayHandler):
+        streaming_data_type = StreamingDataType.IMAGE
+    # Class declaration is the only new case; the original generic consumer is untouched.
+    middle, update = enqueue(receiver, np.full((2, 2), 2), well="A02", producer="middle")
+    advance_in_qt(receiver, middle, update)
+    originals = {}
+    for name in ("sparse-a", "sparse-b"):
+        route, _ = enqueue(receiver, np.ones((2, 2)), well="A01", producer=name, domain=["A01", "A03"])
+        route, update = enqueue(receiver, np.full((2, 2), 3), well="A03", producer=name, domain=["A01", "A03"])
+        advance_in_qt(receiver, route, update)
+        layer = receiver.layer_route_state.layer(route)
+        layer.contrast_limits, layer.gamma = (0, 10), 0.7
+        layer.opacity, layer.visible = 0.4, False
+        layer.colormap = "magenta"
+        originals[route] = receiver.component_groups.existing_items_for(route)
+    receiver.viewer.camera.center = (0, 1, 1)
+    receiver.viewer.camera.zoom = 31
+    result = ViewerWindowService(QueuedRetirementGateway(receiver)).presentation(retirement_request(receiver, middle))
+    assert result.applied and not result.errors
+    assert len(calls) == 4
+    for route, items in originals.items():
+        layer = receiver.layer_route_state.layer(route)
+        assert layer.data.shape == (2, 2, 2)
+        np.testing.assert_array_equal(layer.data[0], items[0].data)
+        np.testing.assert_array_equal(layer.data[1], items[1].data)
+        assert receiver.component_groups.existing_items_for(route) is items
+        assert tuple(layer.scale[-2:]) == (0.65, 0.65)
+        assert layer.gamma == 0.7 and tuple(layer.contrast_limits) == (0, 10)
+        assert layer.opacity == 0.4 and not layer.visible
+        assert layer.colormap.name == "magenta"
+    assert receiver.viewer.camera.zoom == 31
+    assert tuple(receiver.viewer.camera.center) == (0, 1, 1)
+    assert receiver.component_values.shared_values_for(["well"]) == {"well": ["A01", "A03"]}
+    assert issubclass(NewDeclaredImageHandler, NapariImagePresentationRetention)
