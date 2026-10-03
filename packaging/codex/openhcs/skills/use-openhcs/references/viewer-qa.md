@@ -171,13 +171,45 @@ only chosen routes with `openhcs_isolate_viewer_window_layers` changes visibilit
 not buffer lifetime. A new execution's stream reset is not selective retirement
 of earlier mounted results. Do not budget hidden layers as released memory.
 
-Discover a supported selective layer-retirement capability before attempting
-it. If exposed, retire only explicitly identified superseded candidate routes
-at a settled boundary, then read back surviving payload/source identities,
-axes and camera and verify the current matched comparison still works. Keep
-the needed raw source mounted, including its domain for point-only review.
-Do not use blanket scene clearing, history deletion or viewer restarts as an
-iteration policy.
+Discover the installed selective-retirement capability and reflect its request
+before using it. When the compatible `openhcs_retire_viewer_window_layers`
+contract is exposed:
+
+1. Preserve durable candidate files, source/declarations, captures and decisions.
+   Resolve execution/stream mutations to a known terminal disposition and let
+   receiver work settle before retirement. UNKNOWN, pending or in-flight work
+   is not permission to discard a route. A known failed terminal candidate can
+   be explicitly retired once no mutation is outstanding and its evidence is
+   retained; failure does not require keeping its buffers forever.
+2. Read fresh, unfiltered viewer state on the same viewer incarnation. Choose
+   only explicitly superseded routes; retain the current matched candidate,
+   raw/source domain and reference routes still needed for the next comparison.
+   Build `expected_producers` by mapping each chosen **exact `route_key`** to
+   its **complete `producer_identities` array** from that readback, including
+   `invocation_key`. Do not shorten, fabricate or substitute identities from a
+   previous candidate, title or port. The receiving owner checks the whole set
+   before removal; a changed producer requires a fresh disposition/readback,
+   not a weaker identity check.
+3. Submit that explicit mapping once. Retain the typed acknowledgement and
+   check `observed`, `applied`, errors, exact `retired_route_keys` and untargeted
+   `remaining_route_keys`. After a timeout or error, preserve the original
+   reply/disposition and inspect actual state read-only; do not assume rollback
+   or replay the mutation. This operation releases the selected scene/cache
+   entries, not persisted files or scientific history.
+4. Read back survivor payload/source identities, domain, native calibration,
+   axes, camera and presentation, then verify the current matched comparison.
+   Check selected feature-row indices too: preserving the active layer/style
+   does not establish preserved Points/Shapes `selected_data`. Record a lost
+   or changed row as a receiving discrepancy, not another object's evidence.
+
+Compare permitted **actual memory telemetry** for the same native process or
+scope before and after settled retirement. A removed/hidden layer count is not
+an RSS/PSS measurement. Native cache/scene release and lower process RSS are
+different observations: allocators may retain released memory, and a small
+retirement need not show a measurable RSS drop. Record the measured change or
+missing attribution and keep resource accounting conservative; do not assume
+reclaimed headroom from the UI. Do not use blanket scene clearing, history
+deletion or viewer restarts as an iteration policy.
 
 If no compatible retirement operation is exposed, record that contract gap
 and request its original runtime owner; do not invent a remove-layer command,
