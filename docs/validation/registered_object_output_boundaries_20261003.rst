@@ -1,6 +1,43 @@
 Registered object-output boundary investigation
 ==============================================
 
+Final public04 delivery: exact pixel/table/directed-lineage acceptance PASS
+-------------------------------------------------------------------------
+
+Parent's original83658/qualified target02/native6014 completed BOTH04 ordinary
+public journeys. Original PARENT-PUBLIC04-ACCEPTANCE.rst received/read in full:
+exact12x15 persisted masks, categorical object_label2/Area6 and7/Area20, retained
+7->1/removed2->1 directed raw/typed relationships in distinct domains, actual
+producer2, default4/enabled6 canonical records and no default removed artifact.
+Canonical installed VALUES/require_valid_observation scopes terminal0 under
+512MiB/CPU1/Swap0; no counts-only proof or private decoder. This accepts501 and
+the optional-removed502 portion, not Root's unbounded ABI or full-five516 repair.
+
+Native public close ACK/endpoint_terminated/process_exited/succeededtrue;
+parent verified exact PID/listeners gone. Original83658 terminalexit2 confirmed
+by final unchanged Script done record; child numeric native exit remains UNKNOWN,
+not falsely recorded0. No engineering viewer started. All01/02/03 negatives,
+original sources/raw/exports/journals and foreign evidence preserved.
+
+Normally fetched currentmain e3dba241597ab6c584b8380e31edc015b258d3f0 changes
+only viewer-qa.md from reviewed236644e43. BOTH503 leaves unchanged on main;
+same scoped18+/51- patch and equal c031/currentHEAD/source/installed leaf bytes.
+No production/tests differ from qualifiedc031; no merge/build/retest/install/
+runtime or Root shared-file mutation. Parent owns final normal receiving merge.
+
+Complete final receiving/source-byte/custody reference:
+``engineering503/RECEIVED-PUBLIC04-DELIVERY.rst``; original independent parent
+``engineering503/PARENT-PUBLIC04-ACCEPTANCE.rst``. Historical snapshots below
+retain original pending/error dispositions and are superseded for current status.
+
+Byte-exact final14-member receiving archive (compared against original files):
+``registered-object-output-public04-accepted-20261003.tar.gz``,66728bytes,
+SHA256 ``e9e5ef2aeddfc3c274790a8752a708b66d3d0c4d7fa400650c67b18737ebc470``.
+Includes original parent acceptance, final receiving reference, both04 CPPipe/
+pipeline documents, original raw TIFF, three persisted masks, canonical VALUES
+and complete terminal stdin/stdout. Authentic log whitespace is unchanged;
+production/docs diff checks are separate from evidence-only raw log formatting.
+
 Actual03 physical-rank negative; scalar-source receiving04
 ---------------------------------------------------------
 
