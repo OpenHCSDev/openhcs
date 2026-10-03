@@ -1780,8 +1780,8 @@ def prepare_compiled_context_callables(
 
 
 @dataclass(frozen=True, slots=True)
-class FunctionInvocationArtifactScope:
-    """Own exact invocation artifact sources and their callable argument binding."""
+class FunctionCoreExecutor:
+    """Execute one scoped callable invocation and route declared artifact I/O."""
 
     runtime_scope: FunctionRuntimeScope
     invocation: CompiledFunctionInvocation
@@ -1791,6 +1791,8 @@ class FunctionInvocationArtifactScope:
     ]
     group_key: str | None
     plane_projection: RuntimePlaneProjection
+    main_data_arg: RuntimeArrayData
+    source_memory_type: str
 
     @property
     def selected_artifact_input_edges(
@@ -1966,21 +1968,6 @@ class FunctionInvocationArtifactScope:
         )
         return loaded_values
 
-
-@dataclass(frozen=True, slots=True)
-class FunctionCoreExecutor(FunctionInvocationArtifactScope):
-    """Execute one scoped callable invocation and route declared artifact I/O."""
-
-    runtime_scope: FunctionRuntimeScope
-    invocation: CompiledFunctionInvocation
-    artifacts: ComponentArtifactPlans[
-        InvocationArtifactInputProjectionKey,
-        InvocationArtifactInputEdgePlan,
-    ]
-    group_key: str | None
-    plane_projection: RuntimePlaneProjection
-    main_data_arg: RuntimeArrayData
-    source_memory_type: str
 
     def debug_cursor(self) -> DebugCursor:
         return DebugCursor.from_invocation(
