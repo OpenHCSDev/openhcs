@@ -5268,10 +5268,11 @@ def test_function_output_path_keeps_payload_split_axis_over_input_alignment(
 def test_save_outputs_positional_lowering_preserves_explicit_payload_identity(
     tmp_path: Path,
 ) -> None:
-    from openhcs.core.steps.function_runtime import (
-        PatternGroupOutputData,
-        PatternGroupRuntime,
-    )
+    from openhcs.core.steps.function_runtime import PatternGroupRuntime
+    from openhcs.core.runtime_stack_cache import RuntimeImageStackCache
+    from openhcs.core.compiled_step_plan import CompiledStepPlan
+    from openhcs.core.component_group_scope import ComponentGroupScope
+    from openhcs.core.function_patterns import compile_function_pattern
 
     class OutputFileManager:
         saved_payloads: list[object] = []
@@ -5303,13 +5304,21 @@ def test_save_outputs_positional_lowering_preserves_explicit_payload_identity(
                     parser=SourceSchemaFilenameParser(),
                 ),
                 runtime_function_output_identity_cache=FunctionOutputIdentityCache(),
+                runtime_image_stack_cache=RuntimeImageStackCache(),
             ),
-            execution_plan=SimpleNamespace(
+            compiled_group=compile_function_pattern(lambda image: image, {}, {}).default_group,
+            component_key=None,
+            execution_plan=CompiledStepPlan(
+                step_index=0,
+                step_type="FunctionStep",
+                axis_id="A01",
                 output_dir=tmp_path,
+                output_memory_type="numpy",
                 variable_components=(VariableComponents.SITE,),
                 step_name="ExplicitIdentity",
                 pipeline_position=0,
                 step_scope_id="explicit-identity",
+                execution_group_scope=ComponentGroupScope.ungrouped(),
             ),
             pattern_group_info="A01_s{iii}_w1_z001_t001.tif",
         )
@@ -5326,7 +5335,7 @@ def test_save_outputs_positional_lowering_preserves_explicit_payload_identity(
     ).payload_with(np.zeros((4, 5), dtype=np.float32), None)
 
     records = runtime._save_outputs(
-        PatternGroupOutputData(slices=[payload]),
+        payload,
         ["A01_s003_w1_z001_t001.tif"],
     )
 

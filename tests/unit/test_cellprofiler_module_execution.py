@@ -9432,11 +9432,13 @@ def test_pattern_group_runtime_unstacks_aligned_image_stack_output():
     )
     runtime = _pattern_group_runtime_for_output_memory("numpy")
 
-    output = runtime._validate_and_unstack(aligned, loaded)
-
-    assert output == [dna_payload, rna_payload]
+    output = runtime._project_output_slices(aligned, loaded.matching_files)
+    stack_payload = aligned.copy_projected_output_stack(
+        output, memory_type="numpy", device_id=None,
+    )
+    assert [payload for payload, _context in output] == [dna_payload, rna_payload]
     assert image_payload_metadata(
-        output.stack_payload
+        stack_payload
     ).source_plane_intensity_scales == (65535, 65535)
 
 
@@ -9488,7 +9490,8 @@ def test_pattern_group_runtime_does_not_invent_nested_axes_from_image_rank():
     )
     runtime = _pattern_group_runtime_for_output_memory("numpy")
 
-    output_slices = runtime._validate_and_unstack(aligned, loaded)
+    projected = runtime._project_output_slices(aligned, loaded.matching_files)
+    output_slices = tuple(payload for payload, _context in projected)
 
     assert len(output_slices) == 2
     np.testing.assert_array_equal(image_payload_data(output_slices[0]), first_site.data)
@@ -9514,10 +9517,11 @@ def test_pattern_group_runtime_leaves_variable_shape_aligned_outputs_uncached():
     )
     runtime = _pattern_group_runtime_for_output_memory("numpy")
 
-    output = runtime._validate_and_unstack(aligned, loaded)
-
-    assert output == [first, second]
-    assert output.stack_payload is None
+    output = runtime._project_output_slices(aligned, loaded.matching_files)
+    assert [payload for payload, _context in output] == [first, second]
+    assert aligned.copy_projected_output_stack(
+        output, memory_type="numpy", device_id=None,
+    ) is None
 
 
 def test_cellprofiler_main_flow_output_preserves_input_source_planes():

@@ -51,13 +51,13 @@ def test_runtime_projects_mixed_output_planes_once_with_their_contexts(monkeypat
             ),
         )
     )
-    result = runtime._validate_and_unstack(bundle, None)
+    result = runtime._project_output_slices(bundle, [])
 
     assert len(calls) == 2
     assert calls[0] is payloads[0] and calls[1] is payloads[1]
-    assert result.slice_contexts == (contexts[0],) * 3 + (contexts[1],) * 2
+    assert tuple(context for _payload, context in result) == (contexts[0],) * 3 + (contexts[1],) * 2
     assert len(result) == 5
-    for index, payload in enumerate(result.slices):
+    for index, payload in enumerate(payload for payload, _context in result):
         source = first if index < 3 else second
         plane = index if index < 3 else index - 3
         np.testing.assert_array_equal(image_payload_data(payload), source[plane])

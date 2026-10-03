@@ -443,6 +443,43 @@ class ImagePayloadStackComposition(ABC):
             copied_data, copied_mask,
         )
 
+    @staticmethod
+    def with_saved_output_context(
+        stack_payload: RuntimeArrayData,
+        payloads: Sequence[RuntimeArrayData],
+        metadata: Sequence[ImagePayloadMetadata],
+        *,
+        single_output_plane_axis: RuntimePlaneAxis | None,
+    ) -> RuntimeArrayData:
+        """Attach saved member context without replacing the independent buffer."""
+        data = image_payload_data(stack_payload)
+        if (
+            len(payloads) == 1
+            and single_output_plane_axis is metadata[0].plane_axis
+            and np.shape(data) == np.shape(image_payload_data(payloads[0]))
+        ):
+            return metadata[0].replace_fields().payload_with(
+                data, image_payload_mask(stack_payload),
+            )
+        if np.shape(data)[:1] != (len(payloads),):
+            raise ValueError(
+                "Output stack must match its declared output slice count: "
+                f"stack shape {np.shape(data)!r}, slice count {len(payloads)}."
+            )
+        mode = (
+            ImagePayloadMetadataCompositionMode.for_plane_axis(
+                image_payload_metadata(stack_payload).plane_axis,
+            )
+            if isinstance(stack_payload, ImagePayloadMetadataCarrier)
+            else ImagePayloadMetadataCompositionMode.STACK
+        )
+        output_metadata = ImagePayloadMetadata.compose(
+            tuple(payloads), mode=mode, source_metadata=tuple(metadata),
+        )
+        return output_metadata.payload_with(
+            data, _stack_image_payload_mask(tuple(payloads), data),
+        )
+
     def composition_source_metadata(self) -> tuple[ImagePayloadMetadata, ...]:
         return tuple(
             self.composition_payload_metadata(image_payload_metadata(payload))
@@ -512,23 +549,6 @@ def stack_image_payloads(
     """Stack image payloads in their declared memory domain with full context."""
 
     return ImagePayloadStackContext(image_payloads, metadata_mode).compose()
-
-
-def stack_image_payload_context_from_metadata(
-    image_payloads: Sequence[Any],
-    stack: RuntimeArrayData,
-    metadata_by_payload: Sequence[ImagePayloadMetadata],
-    *,
-    metadata_mode: ImagePayloadMetadataCompositionMode,
-) -> Any:
-    """Attach composed image context using already resolved payload metadata."""
-    payloads = tuple(image_payloads)
-    metadata = ImagePayloadMetadata.compose(
-        payloads,
-        mode=metadata_mode,
-        source_metadata=tuple(metadata_by_payload),
-    )
-    return metadata.payload_with(stack, _stack_image_payload_mask(payloads, stack))
 
 
 def _stack_image_payload_mask(
@@ -1229,6 +1249,36 @@ class AlignedImageStack(ImagePayloadStackComposition):
         for payload, context in zip(self.slices, contexts, strict=True):
             for output_slice in payload_slices_for_alignment(payload):
                 yield output_slice, context
+
+    def copy_projected_output_stack(
+        self,
+        projected_outputs: Sequence[tuple[Any, AlignedImageSliceContext | None]],
+        *,
+        memory_type: str,
+        device_id: int | None,
+    ) -> RuntimeArrayData | None:
+        """Prepare an independent output buffer in this owner's declared domain."""
+        payloads = tuple(payload for payload, _context in projected_outputs)
+        metadata_mode = self.projected_output_composition_mode
+        if metadata_mode is None:
+            return self.copy_whole_image(
+                payloads[0], memory_type=memory_type, device_id=device_id,
+            )
+        data = tuple(image_payload_data(payload) for payload in payloads)
+        declared_axes = {
+            self.plane_axis_for_output_context(context)
+            for _payload, context in projected_outputs
+        }
+        if len(declared_axes) != 1 or len({tuple(np.shape(item)) for item in data}) != 1:
+            return None
+        if metadata_mode is ImagePayloadMetadataCompositionMode.BUNDLE:
+            return ImagePayloadBundleContext.from_payloads(
+                payloads, metadata_mode=metadata_mode,
+            ).compose()
+        stacked = stack_runtime_slices(data, memory_type, device_id)
+        return stack_image_payload_context(
+            payloads, stacked, metadata_mode=metadata_mode,
+        )
 
     def output_values_for_artifact_specs(
         self,

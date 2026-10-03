@@ -20,7 +20,7 @@ from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.steps.function_runtime import PatternGroupData, PatternGroupRuntime
-from openhcs.core.aligned_image_payload import AlignedImageStack, ImageOutputBundle, AlignedImageSliceContext
+from openhcs.core.aligned_image_payload import AlignedImageStack, ImageOutputBundle, AlignedImageSliceContext, ImagePayloadStackComposition
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.steps.function_output_manifest import step_output_manifest, StepOutputManifestStore
 from openhcs.core.source_bindings import CompiledSourceBindingPlan, SourceBindingRuntimeContext
@@ -75,16 +75,14 @@ def test_opaque_whole_image_is_copied_without_a_new_execution_axis(shape, channe
         ),
     )
     payload = metadata.payload_with(pixels, mask)
-    output = _runtime()._validate_and_unstack(
-        payload,
-        PatternGroupData(
-            matching_files=["/input/A01_s001_w1_z001_t001.tif", "/input/A01_s001_w1_z002_t001.tif"],
-            main_data_stack=np.zeros((2, 4, 5), dtype=np.float32),
-        ),
+    projected = _runtime()._project_output_slices(
+        payload, ["/input/A01_s001_w1_z001_t001.tif", "/input/A01_s001_w1_z002_t001.tif"],
     )
-    assert len(output.slices) == 1
-    assert output.slices[0] is payload
-    cached = output.stack_payload
+    assert len(projected) == 1
+    assert projected[0][0] is payload
+    cached = ImagePayloadStackComposition.copy_whole_image(
+        payload, memory_type=MEMORY_TYPE_NUMPY, device_id=None,
+    )
     assert image_payload_data(cached).shape == shape
     assert image_payload_metadata(cached) == metadata
     np.testing.assert_array_equal(image_payload_data(cached), pixels)
@@ -105,14 +103,11 @@ def test_opaque_whole_image_is_copied_without_a_new_execution_axis(shape, channe
 def test_declared_runtime_axis_retains_its_exact_count(count):
     pixels = np.arange(count * 4 * 5, dtype=np.float32).reshape(count, 4, 5)
     payload = ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE).payload_with(pixels)
-    output = _runtime()._validate_and_unstack(
-        payload,
-        PatternGroupData(matching_files=["source-1.tif", "source-2.tif"], main_data_stack=pixels),
-    )
-    assert len(output.slices) == count
-    assert output.stack_payload is payload
-    assert image_payload_data(output.stack_payload).shape == (count, 4, 5)
-    assert image_payload_metadata(output.stack_payload).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    projected = _runtime()._project_output_slices(payload, ["source-1.tif", "source-2.tif"])
+    assert len(projected) == count
+    assert all(image_payload_metadata(value).plane_axis is None for value, _context in projected)
+    assert image_payload_data(payload).shape == (count, 4, 5)
+    assert image_payload_metadata(payload).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
 
 
 @pytest.mark.parametrize("named", [False, True])
@@ -122,16 +117,17 @@ def test_nominal_alignment_owner_preserves_single_output_topology(named, axis):
     payload = ImagePayloadMetadata(plane_axis=axis).payload_with(np.ones(shape, dtype=np.float32))
     context = AlignedImageSliceContext.main_flow("Image")
     value = (ImageOutputBundle if named else AlignedImageStack)((payload,), (context,))
-    output = _runtime()._validate_and_unstack(
-        value, PatternGroupData(matching_files=["source.tif"], main_data_stack=payload),
+    projected = _runtime()._project_output_slices(value, ["source.tif"])
+    stack_payload = value.copy_projected_output_stack(
+        projected, memory_type=MEMORY_TYPE_NUMPY, device_id=None,
     )
     if named and axis is not RuntimePlaneAxis.RUNTIME_SLICE:
         expected_shape, expected_axis = shape, axis
     else:
         expected_shape = (1, 4, 5) if axis is RuntimePlaneAxis.RUNTIME_SLICE else (1, *shape)
         expected_axis = RuntimePlaneAxis.RUNTIME_SLICE
-    assert image_payload_data(output.stack_payload).shape == expected_shape
-    assert image_payload_metadata(output.stack_payload).plane_axis is expected_axis
+    assert image_payload_data(stack_payload).shape == expected_shape
+    assert image_payload_metadata(stack_payload).plane_axis is expected_axis
 
 
 @pytest.mark.parametrize("count", [1, 3])
@@ -140,10 +136,12 @@ def test_raw_array_fallback_keeps_explicit_runtime_unstack_contract(count):
     runtime.request.context = ProcessingContext(axis_id="A01")
     runtime.request.context.microscope_handler = SimpleNamespace(parser=SourceSchemaFilenameParser())
     pixels = np.arange(count * 4 * 5, dtype=np.float32).reshape(count, 4, 5)
-    output = runtime._validate_and_unstack(
-        pixels, PatternGroupData(matching_files=[f"source-{i}.tif" for i in range(count)], main_data_stack=pixels),
+    projected = runtime._project_output_slices(pixels, [f"source-{i}.tif" for i in range(count)])
+    payloads = tuple(payload for payload, _context in projected)
+    cached = ImagePayloadStackComposition.with_saved_output_context(
+        pixels, payloads, [image_payload_metadata(payload) for payload in payloads],
+        single_output_plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
     )
-    cached = output.cache_payload_for_outputs(output.slices, [image_payload_metadata(p) for p in output.slices])
     assert image_payload_data(cached).shape == (count, 4, 5)
     assert image_payload_metadata(cached).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
 
@@ -200,9 +198,9 @@ def test_save_and_next_load_preserve_domain_and_independent_cache(tmp_path, monk
     context.microscope_handler = SimpleNamespace(parser=SourceSchemaFilenameParser())
     producer.request.context = context
     producer.pattern_repr = "whole"
-    output = producer._validate_and_unstack(
-        ImageOutputBundle((payload,), (AlignedImageSliceContext.main_flow("WholeImage"),)) if axis is not None or raw_named else payload,
-        PatternGroupData(matching_files=[path, "/input/A01_s001_w1_z002_t001.tif"], main_data_stack=pixels),
+    output = (
+        ImageOutputBundle((payload,), (AlignedImageSliceContext.main_flow("WholeImage"),))
+        if axis is not None or raw_named else payload
     )
     records = producer._save_outputs(output, [path])
     manifest = step_output_manifest(context)
@@ -251,10 +249,11 @@ def test_mixed_named_outputs_retain_each_original_axis_before_projection(runtime
     planes = ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE).payload_with(np.ones((runtime_count, 4, 5), dtype=np.float32))
     volume = ImagePayloadMetadata().payload_with(np.ones((4, 5) if runtime_count == 1 else (2, 4, 5), dtype=np.float32))
     bundle = ImageOutputBundle((planes, volume), contexts)
-    output = _runtime()._validate_and_unstack(bundle, PatternGroupData(matching_files=[], main_data_stack=planes))
-    assert output.stack_payload is None
-    assert [output.plane_axis_for_output_context(c) for c in output.slice_contexts] == [RuntimePlaneAxis.RUNTIME_SLICE] * runtime_count + [None]
-    assert output.main_flow_source is bundle
+    projected = _runtime()._project_output_slices(bundle, [])
+    assert bundle.copy_projected_output_stack(
+        projected, memory_type=MEMORY_TYPE_NUMPY, device_id=None,
+    ) is None
+    assert [bundle.plane_axis_for_output_context(context) for _payload, context in projected] == [RuntimePlaneAxis.RUNTIME_SLICE] * runtime_count + [None]
 
 
 def test_passed_through_record_preserves_collapsed_and_filename_coordinates(tmp_path):
@@ -357,11 +356,10 @@ def test_saved_mixed_named_cohort_rejects_joint_load_and_preserves_selected_doma
     # A prior homogeneous producer caches the same physical paths. Mixed replacement
     # must invalidate that cache rather than leave a false joint runtime domain.
     old_bundle = ImageOutputBundle((planes, declared_metadata.payload_with(opaque_pixels[None])), contexts)
-    old_records = producer._save_outputs(producer._validate_and_unstack(old_bundle, loaded), [source, source])
+    old_records = producer._save_outputs(old_bundle, [source, source])
     assert context.runtime_image_stack_cache.get(tuple(r.output_path for r in old_records), memory_type=MEMORY_TYPE_NUMPY) is not None
     bundle = ImageOutputBundle((planes, opaque), contexts)
-    output = producer._validate_and_unstack(bundle, loaded)
-    records = producer._save_outputs(output, [source, source])
+    records = producer._save_outputs(bundle, [source, source])
     manifest = step_output_manifest(context)
     manifest.record_outputs(plan, records)
     assert tuple(r.output_path for r in records) == tuple(r.output_path for r in old_records)
@@ -401,7 +399,8 @@ def test_multiple_unprojected_named_binding_domains_fail_existing_bundle_grammar
     payloads = tuple(ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.SOURCE_BINDING).payload_with(
         np.ones((1, 4, 5), dtype=np.float32)) for _ in contexts)
     with pytest.raises(ValueError, match="plane axis to be projected"):
-        _runtime()._validate_and_unstack(ImageOutputBundle(payloads, contexts), PatternGroupData(matching_files=[], main_data_stack=payloads[0]))
+        bundle = ImageOutputBundle(payloads, contexts)
+        bundle.copy_projected_output_stack(tuple(bundle.projected_output_slices()), memory_type=MEMORY_TYPE_NUMPY, device_id=None)
 
 
 def test_opaque_named_bundle_uses_existing_same_slice_mask_composition():
@@ -413,11 +412,12 @@ def test_opaque_named_bundle_uses_existing_same_slice_mask_composition():
     payloads = tuple(ImagePayloadMetadata(source_image_names=(name,)).payload_with(
         np.ones((4, 5), dtype=np.float32) * i, mask)
         for i, (name, mask) in enumerate(zip(("First", "Second"), (first_mask, second_mask), strict=True)))
-    output = _runtime()._validate_and_unstack(ImageOutputBundle(payloads, contexts), PatternGroupData(matching_files=[], main_data_stack=payloads[0]))
+    bundle = ImageOutputBundle(payloads, contexts)
+    stack_payload = bundle.copy_projected_output_stack(tuple(bundle.projected_output_slices()), memory_type=MEMORY_TYPE_NUMPY, device_id=None)
     expected = ImagePayloadBundleContext.from_payloads(payloads).compose()
-    assert image_payload_metadata(output.stack_payload).plane_axis is RuntimePlaneAxis.SOURCE_BINDING
-    np.testing.assert_array_equal(image_payload_data(output.stack_payload), image_payload_data(expected))
-    np.testing.assert_array_equal(image_payload_mask(output.stack_payload), image_payload_mask(expected))
+    assert image_payload_metadata(stack_payload).plane_axis is RuntimePlaneAxis.SOURCE_BINDING
+    np.testing.assert_array_equal(image_payload_data(stack_payload), image_payload_data(expected))
+    np.testing.assert_array_equal(image_payload_mask(stack_payload), image_payload_mask(expected))
 
 
 def test_input_bundle_composition_retains_lazy_plan_device_resolution(tmp_path, monkeypatch):
