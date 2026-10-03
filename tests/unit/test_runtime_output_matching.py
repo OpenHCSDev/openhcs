@@ -194,9 +194,7 @@ def test_runtime_invocation_selects_storage_without_truncating_callable_abi() ->
         ),
         artifact_output_plans=(first_plan, second_plan),
     )
-    runtime = compiled.for_runtime_outputs(
-        output_plans=(second_plan,),
-    )
+    runtime_output_plans = (second_plan,)
     first_value = np.zeros((4, 5), dtype=np.float32)
     second_value = np.ones((4, 5), dtype=np.float32)
     returned_stack = AlignedImageStack(
@@ -214,12 +212,12 @@ def test_runtime_invocation_selects_storage_without_truncating_callable_abi() ->
     )
 
     resolved, matched = RuntimeReturnedOutputMatcher(
-        callable_contract=runtime.contract,
+        callable_contract=compiled.contract,
         returned_output=returned_stack,
-    ).resolve_plan_values(runtime.artifact_output_plans)
+    ).resolve_plan_values(runtime_output_plans)
 
-    assert runtime.contract.canonical_return_output_specs.specs == (first, second)
-    assert runtime.contract.artifact_inputs.specs == (first_input, second_input)
+    assert compiled.contract.canonical_return_output_specs.specs == (first, second)
+    assert compiled.contract.artifact_inputs.specs == (first_input, second_input)
     assert resolved == {
         first.ref(): first_value,
         second.ref(): second_value,

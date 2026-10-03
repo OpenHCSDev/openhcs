@@ -1214,14 +1214,16 @@ class ComponentArtifactPlans(Generic[ArtifactInputPlanKeyT, ArtifactInputPlanT])
         declared_source_bindings: CompiledSourceBindingPlan = CompiledSourceBindingPlan(),
         active_source_bindings: CompiledSourceBindingPlan = CompiledSourceBindingPlan(),
     ) -> "ComponentArtifactPlans[InvocationArtifactInputProjectionKey, InvocationArtifactInputEdgePlan] | None":
-        projected = invocation.for_component_execution(
+        active_outputs = invocation.output_plans_for_component(
             execution_scope,
             component_key,
         )
-        if projected is None:
+        if active_outputs is None:
             return None
         inputs = {}
-        for edge_key, edge in projected.select_inputs(self.inputs).items():
+        for edge_key, edge in invocation.select_inputs(
+            self.inputs, active_output_plans=active_outputs,
+        ).items():
             if (
                 edge.main_flow_projection is not None
                 and declared_source_bindings.declares_artifact_ref(edge.spec.ref())
@@ -1239,7 +1241,9 @@ class ComponentArtifactPlans(Generic[ArtifactInputPlanKeyT, ArtifactInputPlanT])
             inputs[edge_key] = edge
         return ComponentArtifactPlans(
             inputs=inputs,
-            outputs=projected.select_outputs(self.outputs),
+            outputs=invocation.select_outputs(
+                self.outputs, compiled_output_plans=active_outputs,
+            ),
         )
 
     @classmethod
@@ -2143,7 +2147,7 @@ class FunctionCoreExecutor:
             )
             artifact_refs = (
                 *(edge.spec.ref() for edge in self.selected_artifact_input_edges),
-                *(plan.ref() for plan in self.invocation.artifact_output_plans),
+                *self.artifacts.outputs,
             )
             raise type(exc)(
                 f"{exc} Invocation boundary: step_index={cursor.step_index}; "
@@ -2971,14 +2975,11 @@ class PatternGroupRuntime:
             )
             if artifacts is None:
                 continue
-            runtime_invocation = invocation.for_runtime_outputs(
-                output_plans=tuple(artifacts.outputs.values()),
-            )
             executor = FunctionCoreExecutor(
                 main_data_arg=current_stack,
                 source_memory_type=current_memory_type,
                 group_data=group_data,
-                invocation=runtime_invocation,
+                invocation=invocation,
                 artifacts=artifacts,
                 group_key=group_key,
                 plane_projection=RuntimePlaneProjection.stack(

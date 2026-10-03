@@ -752,11 +752,51 @@ def test_component_projection_uses_compiled_per_group_source_lineage() -> None:
     assert group.main_flow_input_refs_for_component(execution_scope, "2") == (
         green.ref(),
     )
-    green_projection = invocation.for_component_execution(execution_scope, "2")
-    assert green_projection is not None
+    green_outputs = invocation.output_plans_for_component(execution_scope, "2")
+    assert green_outputs is not None
     assert tuple(
-        edge.key.input_index for edge in green_projection.artifact_input_edges
+        edge.key.input_index
+        for edge in invocation.input_edges_for_outputs(green_outputs)
     ) == (1,)
+
+    storage_plans = {
+        source.ref(): ArtifactInputPlan(
+            name=source.name,
+            artifact_type=source.artifact_type,
+            path=f"/memory/{source.name}.pkl",
+            source_step_id=0,
+        )
+        for source in (blue, green)
+    }
+    stored_invocation = invocation.with_artifact_input_edges(tuple(
+        replace(
+            edge,
+            storage_plan=storage_plans[edge.spec.ref()],
+            projection=ArtifactInputProjectionPlan(
+                invocation_scope=execution_scope,
+                producer_selection_scope=storage_plans[edge.spec.ref()].producer_group_scope(),
+            ),
+        )
+        for edge in invocation.artifact_input_edges
+    ))
+    artifacts = ComponentArtifactPlans(
+        inputs=storage_plans, outputs={plan.ref(): plan for plan in green_outputs},
+    )
+    selected = artifacts.select_for_invocation(
+        stored_invocation, execution_scope=execution_scope, component_key="2",
+    )
+    assert selected is not None
+    assert tuple(key.input_index for key in selected.inputs) == (1,)
+    assert tuple(selected.outputs.values()) == green_outputs
+    assert stored_invocation.artifact_output_plans == (output_plan,)
+
+    # Sparse admission still validates the complete compiled producer owner at
+    # this epoch, including a producer whose output lineage is inactive here.
+    storage_plans.pop(blue.ref())
+    with pytest.raises(ValueError, match="input plan.*unavailable"):
+        artifacts.select_for_invocation(
+            stored_invocation, execution_scope=execution_scope, component_key="2",
+        )
 
 
 def test_unscoped_active_output_retains_complete_compiled_invocation_inputs() -> None:
@@ -817,7 +857,7 @@ def test_unscoped_active_output_retains_complete_compiled_invocation_inputs() ->
     )
     invocation = invocation.with_artifact_input_edges((edge,))
 
-    projection = invocation.for_component_execution(
+    active_outputs = invocation.output_plans_for_component(
         ComponentGroupScope.from_raw(
             ("1", "2"),
             component=AllComponents.CHANNEL,
@@ -825,11 +865,9 @@ def test_unscoped_active_output_retains_complete_compiled_invocation_inputs() ->
         "2",
     )
 
-    assert projection is not None
-    assert tuple(plan.name for plan in projection.artifact_output_plans) == (
-        "Aggregate",
-    )
-    assert projection.artifact_input_edges == (edge,)
+    assert active_outputs is not None
+    assert tuple(plan.name for plan in active_outputs) == ("Aggregate",)
+    assert invocation.input_edges_for_outputs(active_outputs) == (edge,)
 
 
 def test_shared_output_plan_uses_each_invocation_declared_group_lineage() -> None:
@@ -890,10 +928,10 @@ def test_shared_output_plan_uses_each_invocation_declared_group_lineage() -> Non
         component=AllComponents.CHANNEL,
     )
 
-    assert blue_invocation.for_component_execution(execution_scope, "1") is not None
-    assert blue_invocation.for_component_execution(execution_scope, "2") is None
-    assert green_invocation.for_component_execution(execution_scope, "1") is None
-    assert green_invocation.for_component_execution(execution_scope, "2") is not None
+    assert blue_invocation.output_plans_for_component(execution_scope, "1") is not None
+    assert blue_invocation.output_plans_for_component(execution_scope, "2") is None
+    assert green_invocation.output_plans_for_component(execution_scope, "1") is None
+    assert green_invocation.output_plans_for_component(execution_scope, "2") is not None
 
 
 def test_artifact_only_group_preserves_empty_explicit_main_flow_refs() -> None:
