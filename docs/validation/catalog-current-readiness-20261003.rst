@@ -197,8 +197,31 @@ also matched a historical pytest .txt transcript: its non-Python parse error is
 retained, not erased. Subsequent source enumeration explicitly selects .py files;
 the transcript is evidence, not a source module.
 
+Expanded AST attempt04 also remains retained: a Git pathspec union accidentally
+selected an unpackaged benchmark script, causing a missing installed-comparison
+file error. Corrected attempt05 restricts the additional family to Python files
+under tests: 28 production modules/5291 sites, 27 test modules/3561 sites and
+8 original receiving-dependency modules, zero parse errors. Source identity is
+5dc21d5720baca32f8170f89b2359c8b8408b4ba; receipt SHA256
+f63738f8a40989b50f133b4db8a220f6da54f088c5c9d72f6434b7f642fe5645.
+The selected production family has exactly one self._state_lock declaration and
+one prepare_projections recipe, both on FunctionCatalogServiceABC. This is
+focused static source evidence, not global/dynamic or installed proof.
+
+Two targeted startup-fixture checks were already submitted before the parent's
+instruction to resolve main514 origins before more checks; attempt10 completed
+2 passed/1.80s, unit5.103s/peak139.8MiB/Swap0/exit0. It verifies the final nominal
+fixture consumes the shared two-view recipe; it does not supersede attempt09's
+failed real-registry startup control. No more tests/builds were submitted after
+that instruction. Main514/issue513 and the determining upstream PR bodies were
+read completely: their named owner is Tristan/trissim, with recorded21-pass/
+5-skip integration controls and R0/R1 acceptance, but no published exact qualified
+dependency-origin receipt path. Parent was asked for the original tested artifact
+or source snapshot through its ordinary dependency mechanism. Current foreign
+dependency worktrees and their missing-object boundary were left unchanged.
+
 Owned receiving-control scratch is recorded under the original receipt root's
-scratch/catalog511-controls06, 07, 08 and 09 (pytest/data/cache), with the earlier
+scratch/catalog511-controls06, 07, 08, 09 and 10 (pytest/data/cache), with the earlier
 attempt scratch retained alongside it. No uncertain request or science evidence
 is disposable. All bounded source-control processes have known terminal exits;
 there is no retained engineering native/server/viewer handle.
