@@ -27,7 +27,10 @@ from openhcs.core.callable_contract import (
     FunctionStepExecutionScope,
 )
 from openhcs.core.config import ProcessingConfig, StepSourceBindingsConfig
-from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.invocation_artifacts import (
+    ArtifactDeclarationStepContext,
+    ArtifactInputPlan,
+)
 from openhcs.core.source_bindings import (
     SourceBindingsConfig,
 )
@@ -882,6 +885,31 @@ class CellProfilerModule(
         return cls.require_callable()
 
     @classmethod
+    def input_source_for_contract(
+        cls,
+        callable_contract: CallableContract,
+        *,
+        step_context: ArtifactDeclarationStepContext,
+    ) -> InputSource:
+        """Resolve the main-flow anchor independently of auxiliary source inputs."""
+        produced_refs = frozenset(
+            producer.spec.ref().for_plan_type(ArtifactInputPlan)
+            for producer in step_context.available_artifact_producers
+        )
+        if any(
+            step_context.main_flow_artifacts.by_ref(spec.ref()) is not None
+            and spec.ref() in produced_refs
+            for spec in callable_contract.artifact_inputs
+        ):
+            return InputSource.PREVIOUS_STEP
+        if any(
+            step_context.source_bindings.binding_for_artifact_ref(spec.ref()) is not None
+            for spec in callable_contract.artifact_inputs
+        ):
+            return InputSource.PIPELINE_START
+        return InputSource.PREVIOUS_STEP
+
+    @classmethod
     def processing_config(
         cls,
         *,
@@ -919,11 +947,7 @@ class CellProfilerModule(
                 grouping_component = AllComponents.from_value(group_by.value)
                 source_anchor_group_keys = step_context.source_bindings.component_group_keys_for_artifact_specs(
                     grouping_component,
-                    tuple(
-                        spec
-                        for spec in callable_contract.artifact_inputs
-                        if spec.parameter_name is None
-                    ),
+                    cls.processing_group_scope_inputs(callable_contract),
                     step_context.available_artifacts,
                 )
                 if len(source_anchor_group_keys) > 1:
@@ -933,4 +957,16 @@ class CellProfilerModule(
             variable_components=list(variable_components),
             group_by=group_by,
             input_source=input_source,
+        )
+
+    @classmethod
+    def processing_group_scope_inputs(
+        cls,
+        callable_contract: CallableContract,
+    ) -> tuple[ArtifactSpec, ...]:
+        """Keep the complete unbound payload domain available for an invocation."""
+        return tuple(
+            spec
+            for spec in callable_contract.artifact_inputs
+            if spec.parameter_name is None
         )

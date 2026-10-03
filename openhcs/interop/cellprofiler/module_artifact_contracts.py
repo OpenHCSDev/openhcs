@@ -28,7 +28,6 @@ from openhcs.interop.cellprofiler_setting_normalization import (
     normalize_cellprofiler_setting_name,
 )
 from openhcs.interop.cellprofiler.setting_names import (
-    setting_name_matches,
     setting_names,
     setting_values,
 )
@@ -122,39 +121,6 @@ class CellProfilerModuleArtifactContracts:
             for value in setting_values(module, binding.setting_name)
             for name in split_symbol_names(value)
         )
-
-    @classmethod
-    def split_invocation_blocks_for_binding(
-        cls,
-        modules: tuple["ModuleBlock", ...],
-        binding: SettingToKeywordBinding,
-    ) -> tuple["ModuleBlock", ...]:
-        """Split repeated artifact selections into exact scalar invocations."""
-
-        split_blocks: list[ModuleBlock] = []
-        for module in modules:
-            names = cls.artifact_names_for_binding(module, binding)
-            if len(names) <= 1:
-                split_blocks.append(module)
-                continue
-            retained_records = tuple(
-                record
-                for record in module.iter_settings()
-                if not setting_name_matches(record.name, binding.setting_name)
-            )
-            split_blocks.extend(
-                replace(
-                    module,
-                    setting_records=[
-                        *retained_records,
-                        *binding.records_from_kwargs(
-                            {binding.require_parameter_name(): name}
-                        ),
-                    ],
-                )
-                for name in names
-            )
-        return tuple(split_blocks)
 
     @classmethod
     def main_flow_output_specs(

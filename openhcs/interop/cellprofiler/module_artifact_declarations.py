@@ -12,6 +12,7 @@ from typing import (
     ClassVar,
 )
 
+from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
@@ -1189,6 +1190,29 @@ class ImageMeasurementInputModule(
     )
 
     @classmethod
+    def input_source_for_contract(
+        cls,
+        callable_contract: CallableContract,
+        *,
+        step_context: "ArtifactDeclarationStepContext",
+    ) -> InputSource:
+        """Keep original measurement images alongside produced image subjects."""
+        produced_refs = frozenset(
+            producer.spec.ref().for_plan_type(ArtifactInputPlan)
+            for producer in step_context.available_artifact_producers
+        )
+        if any(
+            spec.ref() not in produced_refs
+            and step_context.source_bindings.binding_for_artifact_ref(spec.ref()) is not None
+            for spec in callable_contract.artifact_inputs.of_artifact_type(ImageArtifactType)
+        ):
+            return InputSource.PIPELINE_START
+        return super().input_source_for_contract(
+            callable_contract,
+            step_context=step_context,
+        )
+
+    @classmethod
     def measurement_output_relations(
         cls,
         module: "ModuleBlock",
@@ -1216,29 +1240,6 @@ class ImageMeasurementInputModule(
                 artifact_inputs=artifact_inputs,
             ),
             *image_subjects,
-        )
-
-    @classmethod
-    def invocation_module_blocks(
-        cls,
-        module: "ModuleBlock",
-    ) -> tuple["ModuleBlock", ...]:
-        """Expose each natural measurement image as one public invocation."""
-
-        blocks = super().invocation_module_blocks(module)
-        if (
-            CallableContract.from_callable(
-                cls.require_callable()
-            ).image_payload_consumption
-            is ImagePayloadConsumption.COMPOSED
-        ):
-            return blocks
-        (binding,) = cls.declared_artifact_bindings(
-            plan_type=ArtifactInputPlan, artifact_type=ImageArtifactType
-        )
-        return cls.split_invocation_blocks_for_binding(
-            blocks,
-            binding,
         )
 
     @classmethod
@@ -1312,15 +1313,21 @@ class ObjectMeasurementInputModule(
     )
 
     @classmethod
-    def invocation_module_blocks(
+    def processing_group_scope_inputs(
         cls,
-        module: "ModuleBlock",
-    ) -> tuple["ModuleBlock", ...]:
-        """Expose each measured object set as one scalar-label invocation."""
-
-        return cls.split_invocation_blocks_for_binding(
-            super().invocation_module_blocks(module),
-            cls.object_measurement_binding,
+        callable_contract: CallableContract,
+    ) -> tuple[ArtifactSpec, ...]:
+        """Keep all declared measurement subjects in one logical module batch."""
+        source_refs = frozenset(
+            spec.ref() for spec in (
+                *super().processing_group_scope_inputs(callable_contract),
+                *callable_contract.group_scope_inputs,
+            )
+        )
+        return tuple(
+            spec
+            for spec in callable_contract.artifact_inputs
+            if spec.ref() in source_refs
         )
 
 

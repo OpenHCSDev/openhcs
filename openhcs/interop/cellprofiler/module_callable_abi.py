@@ -200,7 +200,7 @@ class CellProfilerModuleCallableABI:
             ObjectLabelsArtifactType
         )
         if cls.executes_per_object_measurements(object_inputs):
-            return object_inputs[:1]
+            return object_inputs
         return tuple(
             artifact_input
             for artifact_input in declared_inputs
