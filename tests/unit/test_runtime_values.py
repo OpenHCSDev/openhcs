@@ -1140,17 +1140,17 @@ def test_shape_object_feature_table_uses_registered_nominal_contract() -> None:
 
     rows = table.rows()
     assert rows[0]["object_label"] == 1
-    assert rows[0][MeasureObjectSizeShapeModule.MeasurementFeature.AREA.value] == 10.0
+    assert np.isnan(rows[0][MeasureObjectSizeShapeModule.MeasurementFeature.AREA.value])
     assert (
         rows[0][MeasureObjectSizeShapeModule.MeasurementFeature.MAXIMUM_RADIUS.value]
-        == 2.0
+        == 0.0
     )
     assert MeasureObjectSizeShapeModule.MeasurementFeature.CENTER_Z.value not in rows[0]
     assert rows[1]["object_label"] == 2
-    assert np.isnan(rows[1][MeasureObjectSizeShapeModule.MeasurementFeature.AREA.value])
+    assert rows[1][MeasureObjectSizeShapeModule.MeasurementFeature.AREA.value] == 10.0
     assert (
         rows[1][MeasureObjectSizeShapeModule.MeasurementFeature.MAXIMUM_RADIUS.value]
-        == 0.0
+        == 2.0
     )
 
 
@@ -1167,7 +1167,7 @@ def test_shape_object_feature_table_rejects_undeclared_dense_feature_domain() ->
         table.rows()
 
 
-def test_shape_descriptor_row_ordinal_domain_is_registered_nominally() -> None:
+def test_shape_descriptors_align_with_measured_ids_not_missing_declared_labels() -> None:
     table = ShapeObjectFeatureValueTable.from_feature_arrays(
         {
             MeasureObjectSizeShapeModule.MeasurementFeature.MAX_FERET_DIAMETER.value: np.asarray(
@@ -1198,16 +1198,16 @@ def test_shape_descriptor_row_ordinal_domain_is_registered_nominally() -> None:
         rows[1][
             MeasureObjectSizeShapeModule.MeasurementFeature.MAX_FERET_DIAMETER.value
         ]
-        == 20.0
+        == 0.0
     )
     assert (
         rows[2][
             MeasureObjectSizeShapeModule.MeasurementFeature.MAX_FERET_DIAMETER.value
         ]
-        == 0.0
+        == 20.0
     )
-    assert rows[1]["Zernike_0_0"] == 0.2
-    assert np.isnan(rows[2]["Zernike_0_0"])
+    assert np.isnan(rows[1]["Zernike_0_0"])
+    assert rows[2]["Zernike_0_0"] == 0.2
 
 
 def test_shape_center_features_align_to_measured_sparse_object_ids() -> None:

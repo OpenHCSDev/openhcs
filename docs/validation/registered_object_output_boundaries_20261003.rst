@@ -1,6 +1,109 @@
 Registered object-output boundary investigation
 ==============================================
 
+Working source checkpoint, 2026-10-03
+------------------------------------
+
+Singer now owns the working #501 shape/domain/row-lookup family and the
+declaration-side #502 repair in this same PR503. Root's affirmative release is
+PR394 comment5964451823; current Root head22e7acfa6e653649a89fd773d1c5159676bb1f4f
+was checked. Shared callable ABI validators and the output matcher remain
+Root-owned and unchanged. This supersedes the historical investigation-only
+ownership below. It does not claim installed or scientific acceptance.
+
+The finished505 source checkout at
+``/home/ts/wt/openhcs-ui-workflow-rendering-20261001`` was explicitly released by
+Copernicus through Dalton. Existing503 branch was selected nonrecursively;
+main87d9a99a9 was normally merged at ae9389f94. Four foreign dirty gitlinks,
+all retained evidence and the separate installed505 target were left untouched.
+Borrowed436/507 source and scripts were not switched or edited. Release receipt:
+``neurite-development-skill383-20261001/output/resource-owner-20261002/SINGER503-RELEASED-SOURCE-REUSE.rst``
+under the original issue-batch root.
+
+Required relation and original owners
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Each measured feature value must stay associated with its categorical object
+ID through label pixels, shape vectors, completed rows and feature lookup.
+Equal counts cannot establish this relation. The synthetic controls use
+distinct areas/volumes for IDs2 and7 and an explicitly declared absent ID1.
+
+``ObjectFeatureValueTable.rows`` already owns identity-aware indexing and
+completion. The competing shape positional zipper is deleted. Its leaf keeps
+only vocabulary validation and its declared missing-value hook, calling the
+ancestor cooperatively. The existing feature-array measurement owner emits
+radius, Feret and Zernike vectors in measured-ID order, just like its other
+vectors; the three prefix-padded radius copies are removed. Dense measurement
+rows take the original validated typed label domain through
+``dense_object_label_measurement_row_domain``, rather than inferring a range.
+The shape carrier declares LABEL_ID and the redundant module ROW_SEQUENCE
+override is deleted. Existing row completion, feature lookup, rendering and
+CSV consumers receive that declaration without new switches or local remaps.
+
+The independent new feature-table declaration composes annotation and slice
+stamp capabilities by genuine cooperative ``super()``. Both hooks execute
+through the original ancestor, while its own declared ordinal feature and a
+compact measured-ID feature coexist. No generic consumer edit is needed.
+The original ROW_SEQUENCE projection control still passes; its legitimate
+ordinal behavior was not globally changed to categorical identity.
+
+FilterObjects now declares the exact six-slot removed-output return, including
+two ObjectLabelValue slots and two directed relationships. The inaccurate raw
+array member of its variadic annotation becomes ObjectLabelValue. Its default
+four-slot declaration remains intact. Empty/nonempty, enabled/disabled cases
+pass the original registered callable/module contract, unchanged ABI validator
+and exact output matcher; strict object-type and missing-slot failures remain.
+The unbounded repeated additional-output family is a separate remaining ABI
+dependency: Ellipsis still cannot prove exact slots. No finite-count roster,
+validator override or invented maximum is added, and this checkpoint does not
+claim that larger additional-plus-removed topology is admitted.
+
+Fresh source evidence and controls
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The original audit ParsedModule/FunctionFacts/Repository owners were reused
+module-by-module at ae9389f94. All704 production modules and six original
+metaclass_registry dependency modules parsed, zero omissions;71 selected
+family modules retain declarations, imports, writes/reads and decision facts.
+Current Root includes broader runtime changes from main; byte equality is not
+claimed for those consumers. The earlier full Root family source evidence is
+retained, and396-to22e7 changes are disjoint registry/knowledge files. This is
+static family evidence, not a complete global NRA detector or behavioral proof.
+The source recipe and original stdout/stderr remain in ``validation/labels503*``.
+Runtime8.16s, peak49080KiB, cgroup48.2M, swap0, one CPU/512M/60s.
+Two terminal source-run harness negatives (unit collision and missing explicit
+working directory) are retained; neither ran product or scientific code.
+
+Ten new original-owner controls pass in6.09s (outer7.48s, peak372424KiB,
+cgroup246.7M, swap0). Eleven existing shape/feature and original ordinal
+controls pass in5.18s (outer5.95s, peak311584KiB, cgroup172.4M, swap0).
+Every run has MemoryMax512M, MemorySwapMax0, CPUQuota100%, RuntimeMaxSec60.
+Existing paired Python and installed dependency backings are read only;
+plugin autoload, conftest, bytecode and Numba JIT are disabled. These are tiny
+synthetic source controls, not native preparation, scientific execution,
+installed-wheel or public MCP acceptance. Original OOM evidence below remains.
+Production/docs whitespace checks pass. Original pinned R0 qualification is
+the next source gate; PR503 stays draft.
+
+The independent H003 original public reply is retained at
+``next-recorded-admission-20261003/H003_REPEAT02/author-workspace/output/runtime/mcp.stdout``
+lines97300-97343 under the issue-batch root. It records the exact five-trailing
+slot compile rejection through ``openhcs_inspect_pipeline_source_artifact_plan``.
+The current candidate04 file has already been independently repaired by its
+author and is not presented as the failed source version. The original reply
+and first failed document disposition are preserved; nothing was replayed or
+sent back to a scientific author. Public engineering witness: issue502
+comment5965039646. Acceptance of future installed source belongs to parent.
+
+NRA/catalog review: IDEN-1 separates categorical identity from ordinal;
+BOUND-2/8 reuse and carry the original typed domain; IMPL-4 closes the shape
+family at its row and lookup boundary; IMPL-12 deletes the competing zipper
+and prefix-padding mechanism. No registry, consumer type/string switch,
+compatibility reader, output-store copy or ornamental inheritance was added.
+
+Historical source-only investigation
+-----------------------------------
+
 Scope and source pins
 ---------------------
 
