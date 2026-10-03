@@ -33,7 +33,9 @@ fleet_funded_slots() {
 }
 
 fleet_workspace_for() {
-  fleet_member "$1" | jq -er '.run_owner_root + "/" + .slot + "/author-workspace"'
+  local member
+  member=$(fleet_member "$1") || return
+  jq -er '.run_owner_root + "/" + .slot + "/author-workspace"' <<< "$member"
 }
 
 fleet_unit_for() {
