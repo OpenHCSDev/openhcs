@@ -1,0 +1,1085 @@
+{
+  "status": "FULL6CSV120TIFF_AND180_PHYSICAL_SOURCE_REFS_PASS",
+  "validator_sha256": "efc570f4a6026079704335a8be989800427d2c7d9db3afc9379700c1121e998d",
+  "source_revision": "480aed49b30448de4380af5c9274e48084e67b63",
+  "diagnostic_gate": "PASS",
+  "science_does_not_waive_diagnostic_failure": true,
+  "original_scientific_comparison": {
+    "reference_root": "/var/tmp/openhcs-owned-metadata-90c30-ordinary-abba-20261002/0-main/cp_tutorial_3d_monolayer/wells_1/workers_1/images_3d_monolayer_final_source_workspace_well_throughput",
+    "counts": {
+      "csv": 6,
+      "tiff": 120
+    },
+    "comparisons": [
+      {
+        "name": "images/W001_s001_w0_z001_t001_CellsLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z002_t001_CellsLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z003_t001_CellsLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z004_t001_CellsLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z005_t001_CellsLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z006_t001_CellsLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z007_t001_CellsLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z008_t001_CellsLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z009_t001_CellsLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z010_t001_CellsLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z011_t001_CellsLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z012_t001_CellsLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z013_t001_CellsLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z014_t001_CellsLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z015_t001_CellsLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z016_t001_CellsLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z017_t001_CellsLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z018_t001_CellsLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z019_t001_CellsLabels.tiff",
+        "actual_sha256": "ec6ef1d319f2732c47b06f5cf02775c8cd94540f2f30a6c002f0aace1d317955",
+        "reference_sha256": "ec6ef1d319f2732c47b06f5cf02775c8cd94540f2f30a6c002f0aace1d317955",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z020_t001_CellsLabels.tiff",
+        "actual_sha256": "e8105a4f04198ac75de9831247030084d6f65bf98691d7444ead7e178072fa22",
+        "reference_sha256": "e8105a4f04198ac75de9831247030084d6f65bf98691d7444ead7e178072fa22",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z021_t001_CellsLabels.tiff",
+        "actual_sha256": "daa31cb1e537e5c32b1936ab7647c5690741d2bc1d0e15c60b59ba1310a8c0ce",
+        "reference_sha256": "daa31cb1e537e5c32b1936ab7647c5690741d2bc1d0e15c60b59ba1310a8c0ce",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z022_t001_CellsLabels.tiff",
+        "actual_sha256": "7d7ec170ed3652efa99e43d8db546c51b696821dca7727d0ff4d2f2ead7fdbaa",
+        "reference_sha256": "7d7ec170ed3652efa99e43d8db546c51b696821dca7727d0ff4d2f2ead7fdbaa",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z023_t001_CellsLabels.tiff",
+        "actual_sha256": "2f06989618050934c73473f9342c2fe3410fd834a0ddb976cf602fe6198db7a6",
+        "reference_sha256": "2f06989618050934c73473f9342c2fe3410fd834a0ddb976cf602fe6198db7a6",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z024_t001_CellsLabels.tiff",
+        "actual_sha256": "39899adabca74b10b9950d1f97e8b0b3bbaf136d75e7a46ef4a6e86896e3119f",
+        "reference_sha256": "39899adabca74b10b9950d1f97e8b0b3bbaf136d75e7a46ef4a6e86896e3119f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z025_t001_CellsLabels.tiff",
+        "actual_sha256": "03aabe5528198cfd6ec23a058dab540fb8be0870207c6dc94a62d9b621d1f2f9",
+        "reference_sha256": "03aabe5528198cfd6ec23a058dab540fb8be0870207c6dc94a62d9b621d1f2f9",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z026_t001_CellsLabels.tiff",
+        "actual_sha256": "5b433d931fa6637fc793b23880199c01000ef6d9e610903bb38bb8cea5574563",
+        "reference_sha256": "5b433d931fa6637fc793b23880199c01000ef6d9e610903bb38bb8cea5574563",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z027_t001_CellsLabels.tiff",
+        "actual_sha256": "ee9056587a19e581f5feb6078b41fa1004d923a5ddf1725aefc4b8b8c5201ad6",
+        "reference_sha256": "ee9056587a19e581f5feb6078b41fa1004d923a5ddf1725aefc4b8b8c5201ad6",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z028_t001_CellsLabels.tiff",
+        "actual_sha256": "fef31040e0c54501c3bf965eb98f055cdb1d42c96f91cf1c239033d0a9a06534",
+        "reference_sha256": "fef31040e0c54501c3bf965eb98f055cdb1d42c96f91cf1c239033d0a9a06534",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z029_t001_CellsLabels.tiff",
+        "actual_sha256": "b3bdde5f751b8f5d41ca8b5219a3427e450cb1b8795401d0ec638940d1ad7bd9",
+        "reference_sha256": "b3bdde5f751b8f5d41ca8b5219a3427e450cb1b8795401d0ec638940d1ad7bd9",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z030_t001_CellsLabels.tiff",
+        "actual_sha256": "b71a2e05d270ae0cd237d6c0d97ea82a63e5ad3633723e7255c35d34e585ec80",
+        "reference_sha256": "b71a2e05d270ae0cd237d6c0d97ea82a63e5ad3633723e7255c35d34e585ec80",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z031_t001_CellsLabels.tiff",
+        "actual_sha256": "1b14aab71bf3623458ea9373852b0baf28be9727877b32f894407927ecfb6d65",
+        "reference_sha256": "1b14aab71bf3623458ea9373852b0baf28be9727877b32f894407927ecfb6d65",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z032_t001_CellsLabels.tiff",
+        "actual_sha256": "8a2c5774044326ae722e41aae517266197fbebb0e4dd5eab4b22414fbfea309f",
+        "reference_sha256": "8a2c5774044326ae722e41aae517266197fbebb0e4dd5eab4b22414fbfea309f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z033_t001_CellsLabels.tiff",
+        "actual_sha256": "a320b99ee129d97b99f9fac66aabb89fc1652930b3bb8b2b3fbba7b57e994f85",
+        "reference_sha256": "a320b99ee129d97b99f9fac66aabb89fc1652930b3bb8b2b3fbba7b57e994f85",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z034_t001_CellsLabels.tiff",
+        "actual_sha256": "3f6c1d8cdbce20aac8f70e7315bea70b147b7b6a034432845b27eeb6cfba083c",
+        "reference_sha256": "3f6c1d8cdbce20aac8f70e7315bea70b147b7b6a034432845b27eeb6cfba083c",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z035_t001_CellsLabels.tiff",
+        "actual_sha256": "eedeb489b46abf1eafbd9c81491cb3f85ce1cb3ce877844ad22e72547fc3c438",
+        "reference_sha256": "eedeb489b46abf1eafbd9c81491cb3f85ce1cb3ce877844ad22e72547fc3c438",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z036_t001_CellsLabels.tiff",
+        "actual_sha256": "28b68d1300cf7b08e21dbcd4858447862520dded5c27f2d84cf223513a119eed",
+        "reference_sha256": "28b68d1300cf7b08e21dbcd4858447862520dded5c27f2d84cf223513a119eed",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z037_t001_CellsLabels.tiff",
+        "actual_sha256": "aa1f449f1769b27cd9f1076e70f49f0242e2549f288a77984ca159cb07cf6a40",
+        "reference_sha256": "aa1f449f1769b27cd9f1076e70f49f0242e2549f288a77984ca159cb07cf6a40",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z038_t001_CellsLabels.tiff",
+        "actual_sha256": "6ac8fd9c95acc1f261e96a8fb9332e5d6a403548842f9b85ecb977e6213b4c9b",
+        "reference_sha256": "6ac8fd9c95acc1f261e96a8fb9332e5d6a403548842f9b85ecb977e6213b4c9b",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z039_t001_CellsLabels.tiff",
+        "actual_sha256": "22fa79a76e64013f10373be2ca2af98a2173275c5d43c9cad33135acdc376d14",
+        "reference_sha256": "22fa79a76e64013f10373be2ca2af98a2173275c5d43c9cad33135acdc376d14",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z040_t001_CellsLabels.tiff",
+        "actual_sha256": "1635ea20dd80ce99f0e86494666825a52a66645837d598fd3a3fa91f0bb77d53",
+        "reference_sha256": "1635ea20dd80ce99f0e86494666825a52a66645837d598fd3a3fa91f0bb77d53",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z041_t001_CellsLabels.tiff",
+        "actual_sha256": "be7762756eb65f08cb337904165c6f43b5351f39405461f65ad28669abfe3899",
+        "reference_sha256": "be7762756eb65f08cb337904165c6f43b5351f39405461f65ad28669abfe3899",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z042_t001_CellsLabels.tiff",
+        "actual_sha256": "88d2e9964455459499656c4f0a762cd86376c678756635aaa6b6c8d98be01852",
+        "reference_sha256": "88d2e9964455459499656c4f0a762cd86376c678756635aaa6b6c8d98be01852",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z043_t001_CellsLabels.tiff",
+        "actual_sha256": "bd0df007524ea4e555e4d2fdbebe6a274caa03bc360a1cf90d601659155984b2",
+        "reference_sha256": "bd0df007524ea4e555e4d2fdbebe6a274caa03bc360a1cf90d601659155984b2",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z044_t001_CellsLabels.tiff",
+        "actual_sha256": "e03946d94c789ee787cc29a3c8f5e5d9c56b37a0044b297ba8f403abc98eb55e",
+        "reference_sha256": "e03946d94c789ee787cc29a3c8f5e5d9c56b37a0044b297ba8f403abc98eb55e",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z045_t001_CellsLabels.tiff",
+        "actual_sha256": "c678f2100c7431e5a43c391af86a79e3436d4cf13f050f98c25f62682e4632fe",
+        "reference_sha256": "c678f2100c7431e5a43c391af86a79e3436d4cf13f050f98c25f62682e4632fe",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z046_t001_CellsLabels.tiff",
+        "actual_sha256": "dc081df050be6cd19b5d5bbfe21c96c350eecf9bc6f10f608dc361a36056632a",
+        "reference_sha256": "dc081df050be6cd19b5d5bbfe21c96c350eecf9bc6f10f608dc361a36056632a",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z047_t001_CellsLabels.tiff",
+        "actual_sha256": "b926aa64e1fa8aa52279a69d91dc23cf14bf0ae76107f9b360c7ae77bdf53719",
+        "reference_sha256": "b926aa64e1fa8aa52279a69d91dc23cf14bf0ae76107f9b360c7ae77bdf53719",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z048_t001_CellsLabels.tiff",
+        "actual_sha256": "133a58f6fac8b07f79bfed9634867ccb5428b83e63682031a1def16c6a694568",
+        "reference_sha256": "133a58f6fac8b07f79bfed9634867ccb5428b83e63682031a1def16c6a694568",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z049_t001_CellsLabels.tiff",
+        "actual_sha256": "28d83dfbf5bbf7e4da9c3e4806353e9fd0a89680dcdab4b43ca2fd19b80f669c",
+        "reference_sha256": "28d83dfbf5bbf7e4da9c3e4806353e9fd0a89680dcdab4b43ca2fd19b80f669c",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z050_t001_CellsLabels.tiff",
+        "actual_sha256": "ea7654a6fe1f92ad274a54935420923eec4bec5ad030187afc0ac7af02690af5",
+        "reference_sha256": "ea7654a6fe1f92ad274a54935420923eec4bec5ad030187afc0ac7af02690af5",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z051_t001_CellsLabels.tiff",
+        "actual_sha256": "73483bd10a0f37990084013ad054768086d6d3c929da6bc7e74f4aee37e9dbf2",
+        "reference_sha256": "73483bd10a0f37990084013ad054768086d6d3c929da6bc7e74f4aee37e9dbf2",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z052_t001_CellsLabels.tiff",
+        "actual_sha256": "7bb98f0587062e01b965e486fc687872651d7d90d271a2fdf0d35d67b464b233",
+        "reference_sha256": "7bb98f0587062e01b965e486fc687872651d7d90d271a2fdf0d35d67b464b233",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z053_t001_CellsLabels.tiff",
+        "actual_sha256": "ff17f538baaf179752412026a250bdbee016e3101037bf4e0dbb81199fc4c8ed",
+        "reference_sha256": "ff17f538baaf179752412026a250bdbee016e3101037bf4e0dbb81199fc4c8ed",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z054_t001_CellsLabels.tiff",
+        "actual_sha256": "25ff2ec586a568e42286f73713d64aab1208c38c016099299211f04368ac49c8",
+        "reference_sha256": "25ff2ec586a568e42286f73713d64aab1208c38c016099299211f04368ac49c8",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z055_t001_CellsLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z056_t001_CellsLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z057_t001_CellsLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z058_t001_CellsLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z059_t001_CellsLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w0_z060_t001_CellsLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z001_t001_NucleiLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z002_t001_NucleiLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z003_t001_NucleiLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z004_t001_NucleiLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z005_t001_NucleiLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z006_t001_NucleiLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z007_t001_NucleiLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z008_t001_NucleiLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z009_t001_NucleiLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z010_t001_NucleiLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z011_t001_NucleiLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z012_t001_NucleiLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z013_t001_NucleiLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z014_t001_NucleiLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z015_t001_NucleiLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z016_t001_NucleiLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z017_t001_NucleiLabels.tiff",
+        "actual_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "reference_sha256": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z018_t001_NucleiLabels.tiff",
+        "actual_sha256": "03ba7a4d6ae53e6c84aab5926ae1e2592b5f8ca24a839a256c82f08544df4270",
+        "reference_sha256": "03ba7a4d6ae53e6c84aab5926ae1e2592b5f8ca24a839a256c82f08544df4270",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z019_t001_NucleiLabels.tiff",
+        "actual_sha256": "250cb56a8054c28cea894bc3d9edaddcdce01f5151a05da78da20157c3c3be9f",
+        "reference_sha256": "250cb56a8054c28cea894bc3d9edaddcdce01f5151a05da78da20157c3c3be9f",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z020_t001_NucleiLabels.tiff",
+        "actual_sha256": "b0cd031b448d8bd2075e65710bd76c064161b25242f85ee150da7cd139fcc1a8",
+        "reference_sha256": "b0cd031b448d8bd2075e65710bd76c064161b25242f85ee150da7cd139fcc1a8",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z021_t001_NucleiLabels.tiff",
+        "actual_sha256": "71a10b0539f3fc4cba600b275b7e948258c6a435ba33ef522faa0869ac085518",
+        "reference_sha256": "71a10b0539f3fc4cba600b275b7e948258c6a435ba33ef522faa0869ac085518",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z022_t001_NucleiLabels.tiff",
+        "actual_sha256": "50aef20e28a2f9e18ca2e28eabf6d87ec2ad20c79898e56f8d63a959ba5bb507",
+        "reference_sha256": "50aef20e28a2f9e18ca2e28eabf6d87ec2ad20c79898e56f8d63a959ba5bb507",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z023_t001_NucleiLabels.tiff",
+        "actual_sha256": "ecb7f78c8ca0bad2b9d0495659609b9023781b6a936d6afb0a04653eac176555",
+        "reference_sha256": "ecb7f78c8ca0bad2b9d0495659609b9023781b6a936d6afb0a04653eac176555",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z024_t001_NucleiLabels.tiff",
+        "actual_sha256": "9e96a05ed9860cac9c57c618db2f4fe5e4b769a9d235aac6fd1d628486317df0",
+        "reference_sha256": "9e96a05ed9860cac9c57c618db2f4fe5e4b769a9d235aac6fd1d628486317df0",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z025_t001_NucleiLabels.tiff",
+        "actual_sha256": "9cc33676a0177130609ab1331feab1722bbde8d55b2f49031730fd5a2a40029c",
+        "reference_sha256": "9cc33676a0177130609ab1331feab1722bbde8d55b2f49031730fd5a2a40029c",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z026_t001_NucleiLabels.tiff",
+        "actual_sha256": "ad22809ff3f43d15c838f697061c263070dbf1da1031da39900681cdfbf9d54c",
+        "reference_sha256": "ad22809ff3f43d15c838f697061c263070dbf1da1031da39900681cdfbf9d54c",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z027_t001_NucleiLabels.tiff",
+        "actual_sha256": "8c8f402d3a7c65c04e7f1575dd34de0427eeeb433ff2956d20e07d06eb48fb8d",
+        "reference_sha256": "8c8f402d3a7c65c04e7f1575dd34de0427eeeb433ff2956d20e07d06eb48fb8d",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z028_t001_NucleiLabels.tiff",
+        "actual_sha256": "1676f21bd3b7e105601c83f206890507c32ba2447988be2a75d0e8153d069b65",
+        "reference_sha256": "1676f21bd3b7e105601c83f206890507c32ba2447988be2a75d0e8153d069b65",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z029_t001_NucleiLabels.tiff",
+        "actual_sha256": "34bce0f06f674e20667554eed0075fde8d9d33c9c0eaeffd88a1c558499cc432",
+        "reference_sha256": "34bce0f06f674e20667554eed0075fde8d9d33c9c0eaeffd88a1c558499cc432",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z030_t001_NucleiLabels.tiff",
+        "actual_sha256": "c54c8b98a5c38a47e0cf9391a1afab09b4c8c58e06294cdb650a15add4a32b58",
+        "reference_sha256": "c54c8b98a5c38a47e0cf9391a1afab09b4c8c58e06294cdb650a15add4a32b58",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z031_t001_NucleiLabels.tiff",
+        "actual_sha256": "247490c261fecc26c7379ab2eebaa01e4bea523218b3cc5491d2fe2b9aadfe11",
+        "reference_sha256": "247490c261fecc26c7379ab2eebaa01e4bea523218b3cc5491d2fe2b9aadfe11",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z032_t001_NucleiLabels.tiff",
+        "actual_sha256": "97b09fe5444ad439c3c2007d75971dce2766d94c93268eccfee9ae49b8a04aa1",
+        "reference_sha256": "97b09fe5444ad439c3c2007d75971dce2766d94c93268eccfee9ae49b8a04aa1",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z033_t001_NucleiLabels.tiff",
+        "actual_sha256": "512a3a0ed8025d14b0556a72ebfc13b173d14f7046817ca09876242ab63b9d6b",
+        "reference_sha256": "512a3a0ed8025d14b0556a72ebfc13b173d14f7046817ca09876242ab63b9d6b",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z034_t001_NucleiLabels.tiff",
+        "actual_sha256": "08af61857cfb97fd95fcb08d1ce18139ce7087b192044c63452bee533c5b1aa4",
+        "reference_sha256": "08af61857cfb97fd95fcb08d1ce18139ce7087b192044c63452bee533c5b1aa4",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z035_t001_NucleiLabels.tiff",
+        "actual_sha256": "13e69afc324152bb91329fa758d131d849127e8fd346078d94c6adc25582b3a6",
+        "reference_sha256": "13e69afc324152bb91329fa758d131d849127e8fd346078d94c6adc25582b3a6",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z036_t001_NucleiLabels.tiff",
+        "actual_sha256": "4fa967c78709aa400246a50528a36b24ca366e825dd0e64561643369e814906b",
+        "reference_sha256": "4fa967c78709aa400246a50528a36b24ca366e825dd0e64561643369e814906b",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z037_t001_NucleiLabels.tiff",
+        "actual_sha256": "927d52441c57cb3a4014effaca3e3c23c76275fb264c26e1942a9c58b85ee6d2",
+        "reference_sha256": "927d52441c57cb3a4014effaca3e3c23c76275fb264c26e1942a9c58b85ee6d2",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z038_t001_NucleiLabels.tiff",
+        "actual_sha256": "e2852ea83c62ab30d77681b4e39f88d3cee74ae052f1c948675ae3581c9fc28a",
+        "reference_sha256": "e2852ea83c62ab30d77681b4e39f88d3cee74ae052f1c948675ae3581c9fc28a",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z039_t001_NucleiLabels.tiff",
+        "actual_sha256": "f93e8293a37886a36844b8748083a1f8e717efab092652755263e797f12f0364",
+        "reference_sha256": "f93e8293a37886a36844b8748083a1f8e717efab092652755263e797f12f0364",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z040_t001_NucleiLabels.tiff",
+        "actual_sha256": "e0bd66b166e9f92120dbee183973849eda0afbbe6fed9d03fc4cfd2c56a96280",
+        "reference_sha256": "e0bd66b166e9f92120dbee183973849eda0afbbe6fed9d03fc4cfd2c56a96280",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z041_t001_NucleiLabels.tiff",
+        "actual_sha256": "744eab7cd170d5af8d2f72ced3893dd939c4e1b0f415afab799a37ded5d046c7",
+        "reference_sha256": "744eab7cd170d5af8d2f72ced3893dd939c4e1b0f415afab799a37ded5d046c7",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z042_t001_NucleiLabels.tiff",
+        "actual_sha256": "e07252ca1a55c5195c99666d8d3f0d70db636b4ef4b99e1a0049ca22b182d87a",
+        "reference_sha256": "e07252ca1a55c5195c99666d8d3f0d70db636b4ef4b99e1a0049ca22b182d87a",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z043_t001_NucleiLabels.tiff",
+        "actual_sha256": "81a705d05b0a5bfa8783df28990c1d70634c1f4aa2bca23e02cfa8a4bc861b86",
+        "reference_sha256": "81a705d05b0a5bfa8783df28990c1d70634c1f4aa2bca23e02cfa8a4bc861b86",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z044_t001_NucleiLabels.tiff",
+        "actual_sha256": "a78264f2f5e245a3913a69f89105e94df30048b1aaef4eb80fc5c3235e78b196",
+        "reference_sha256": "a78264f2f5e245a3913a69f89105e94df30048b1aaef4eb80fc5c3235e78b196",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z045_t001_NucleiLabels.tiff",
+        "actual_sha256": "94bd6a65795ad6395cc18a4fd63dc591354bef612ee49fffd2d9f63e4ed9db84",
+        "reference_sha256": "94bd6a65795ad6395cc18a4fd63dc591354bef612ee49fffd2d9f63e4ed9db84",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z046_t001_NucleiLabels.tiff",
+        "actual_sha256": "c1250e060d32f2cfc07fc7e1594fdb1d6cbb4d0483fa94a8113efa695397963c",
+        "reference_sha256": "c1250e060d32f2cfc07fc7e1594fdb1d6cbb4d0483fa94a8113efa695397963c",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z047_t001_NucleiLabels.tiff",
+        "actual_sha256": "995d5ce77cbf61a9be8590f34987ef3f1dd698ae6ed393cac4d0960bc9e7a66a",
+        "reference_sha256": "995d5ce77cbf61a9be8590f34987ef3f1dd698ae6ed393cac4d0960bc9e7a66a",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z048_t001_NucleiLabels.tiff",
+        "actual_sha256": "325478230529e94ba372f38f0bf512292f131d337b6ac09ce5a91b0266724e02",
+        "reference_sha256": "325478230529e94ba372f38f0bf512292f131d337b6ac09ce5a91b0266724e02",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z049_t001_NucleiLabels.tiff",
+        "actual_sha256": "e92e493078672a0e0d90e31409612e215bf8486300d5c765d0e0504ff8888e7a",
+        "reference_sha256": "e92e493078672a0e0d90e31409612e215bf8486300d5c765d0e0504ff8888e7a",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z050_t001_NucleiLabels.tiff",
+        "actual_sha256": "565b4f08f7503086c1f2f8e631d19063129e02a5767d2f979c0cec8fdec23601",
+        "reference_sha256": "565b4f08f7503086c1f2f8e631d19063129e02a5767d2f979c0cec8fdec23601",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z051_t001_NucleiLabels.tiff",
+        "actual_sha256": "f0f36ccaf744d42da036948682cfd226e6dd4a3cfb94aed38729b2d25ede5dff",
+        "reference_sha256": "f0f36ccaf744d42da036948682cfd226e6dd4a3cfb94aed38729b2d25ede5dff",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z052_t001_NucleiLabels.tiff",
+        "actual_sha256": "0daf51526658e23b7c9ab8872e992ebe9322399286f95741d0ccdbd357e5d631",
+        "reference_sha256": "0daf51526658e23b7c9ab8872e992ebe9322399286f95741d0ccdbd357e5d631",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z053_t001_NucleiLabels.tiff",
+        "actual_sha256": "b8613192175a4615b58aed607474657668429cb6ac635cd012569b19667f2d3d",
+        "reference_sha256": "b8613192175a4615b58aed607474657668429cb6ac635cd012569b19667f2d3d",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z054_t001_NucleiLabels.tiff",
+        "actual_sha256": "b841c5d901c65a6138d9ff2b0ec4aa04f00765b1dd21bcd6fc9f8dc974c6035d",
+        "reference_sha256": "b841c5d901c65a6138d9ff2b0ec4aa04f00765b1dd21bcd6fc9f8dc974c6035d",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z055_t001_NucleiLabels.tiff",
+        "actual_sha256": "44e02416cc94a70528165a4b6c42b9e19b205f9c91528076796272cb1a8504ea",
+        "reference_sha256": "44e02416cc94a70528165a4b6c42b9e19b205f9c91528076796272cb1a8504ea",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z056_t001_NucleiLabels.tiff",
+        "actual_sha256": "ca0723c8b9764d5b77034719bb75a2940be35da2e04119af4c0e6d3552c08718",
+        "reference_sha256": "ca0723c8b9764d5b77034719bb75a2940be35da2e04119af4c0e6d3552c08718",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z057_t001_NucleiLabels.tiff",
+        "actual_sha256": "695517641e9fe4b8421d4a7db56b24c755b6957c98ce32bb24ad5b25f52661eb",
+        "reference_sha256": "695517641e9fe4b8421d4a7db56b24c755b6957c98ce32bb24ad5b25f52661eb",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z058_t001_NucleiLabels.tiff",
+        "actual_sha256": "a37c63c6052e40d73db918a014e6f2a18be4d0cbfbeeef65a9c26096a38a4c09",
+        "reference_sha256": "a37c63c6052e40d73db918a014e6f2a18be4d0cbfbeeef65a9c26096a38a4c09",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z059_t001_NucleiLabels.tiff",
+        "actual_sha256": "76c785cf0f481c73ad3cf34ccb576eaa19dd1bdd9c74f9eaf92adfbde5d44b97",
+        "reference_sha256": "76c785cf0f481c73ad3cf34ccb576eaa19dd1bdd9c74f9eaf92adfbde5d44b97",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "images/W001_s001_w2_z060_t001_NucleiLabels.tiff",
+        "actual_sha256": "7cc3c6c6a22f558e62194277090bdea2deb79475dd91fe7d0e49eac3c0187388",
+        "reference_sha256": "7cc3c6c6a22f558e62194277090bdea2deb79475dd91fe7d0e49eac3c0187388",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "results/3d_monolayer_Cells.csv",
+        "actual_sha256": "6f6e7431171ed5ea73a01784105147eca0e43a6e3e41f8720df93106353c9c79",
+        "reference_sha256": "6f6e7431171ed5ea73a01784105147eca0e43a6e3e41f8720df93106353c9c79",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "results/3d_monolayer_Image.csv",
+        "actual_sha256": "75ac32ff5ef57bc285ec4eae1c9b501c27a35b486bf35435af5d499d856d34a4",
+        "reference_sha256": "75ac32ff5ef57bc285ec4eae1c9b501c27a35b486bf35435af5d499d856d34a4",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "results/3d_monolayer_Nuclei.csv",
+        "actual_sha256": "17500f5d4321bbf255df31f7a3503339029c2b077045a6c10e4d4f6f0db9ad1e",
+        "reference_sha256": "17500f5d4321bbf255df31f7a3503339029c2b077045a6c10e4d4f6f0db9ad1e",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "results/3d_monolayer_downsizedNuclei.csv",
+        "actual_sha256": "a7b998c5a524e11747fc5452fd763fc3d9abe16f46e961f62e09e9393b6a8adf",
+        "reference_sha256": "a7b998c5a524e11747fc5452fd763fc3d9abe16f46e961f62e09e9393b6a8adf",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "results/3d_monolayer_erodedDownsizedNuclei.csv",
+        "actual_sha256": "ee507fb9c2387f86fc768184baf2596ebe1f8e40f7fc5eb24f252345fee63ae6",
+        "reference_sha256": "ee507fb9c2387f86fc768184baf2596ebe1f8e40f7fc5eb24f252345fee63ae6",
+        "exact_scientific_values": true
+      },
+      {
+        "name": "results/3d_monolayer_erodedResizedNuclei.csv",
+        "actual_sha256": "cca23f86a85bb3ee7a5c3a1d174c34b5f026ca7f399be98458e1a8c6e12d5c77",
+        "reference_sha256": "cca23f86a85bb3ee7a5c3a1d174c34b5f026ca7f399be98458e1a8c6e12d5c77",
+        "exact_scientific_values": true
+      }
+    ],
+    "scope": "Exact saved CSV cells and TIFF dtype/shape/pixels against specified retained ordinary output. Not a current native ratio or new paired timing."
+  },
+  "complete_inventory": {
+    "scientific_hashes": {
+      "images/W001_s001_w0_z001_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z002_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z003_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z004_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z005_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z006_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z007_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z008_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z009_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z010_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z011_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z012_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z013_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z014_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z015_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z016_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z017_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z018_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z019_t001_CellsLabels.tiff": "ec6ef1d319f2732c47b06f5cf02775c8cd94540f2f30a6c002f0aace1d317955",
+      "images/W001_s001_w0_z020_t001_CellsLabels.tiff": "e8105a4f04198ac75de9831247030084d6f65bf98691d7444ead7e178072fa22",
+      "images/W001_s001_w0_z021_t001_CellsLabels.tiff": "daa31cb1e537e5c32b1936ab7647c5690741d2bc1d0e15c60b59ba1310a8c0ce",
+      "images/W001_s001_w0_z022_t001_CellsLabels.tiff": "7d7ec170ed3652efa99e43d8db546c51b696821dca7727d0ff4d2f2ead7fdbaa",
+      "images/W001_s001_w0_z023_t001_CellsLabels.tiff": "2f06989618050934c73473f9342c2fe3410fd834a0ddb976cf602fe6198db7a6",
+      "images/W001_s001_w0_z024_t001_CellsLabels.tiff": "39899adabca74b10b9950d1f97e8b0b3bbaf136d75e7a46ef4a6e86896e3119f",
+      "images/W001_s001_w0_z025_t001_CellsLabels.tiff": "03aabe5528198cfd6ec23a058dab540fb8be0870207c6dc94a62d9b621d1f2f9",
+      "images/W001_s001_w0_z026_t001_CellsLabels.tiff": "5b433d931fa6637fc793b23880199c01000ef6d9e610903bb38bb8cea5574563",
+      "images/W001_s001_w0_z027_t001_CellsLabels.tiff": "ee9056587a19e581f5feb6078b41fa1004d923a5ddf1725aefc4b8b8c5201ad6",
+      "images/W001_s001_w0_z028_t001_CellsLabels.tiff": "fef31040e0c54501c3bf965eb98f055cdb1d42c96f91cf1c239033d0a9a06534",
+      "images/W001_s001_w0_z029_t001_CellsLabels.tiff": "b3bdde5f751b8f5d41ca8b5219a3427e450cb1b8795401d0ec638940d1ad7bd9",
+      "images/W001_s001_w0_z030_t001_CellsLabels.tiff": "b71a2e05d270ae0cd237d6c0d97ea82a63e5ad3633723e7255c35d34e585ec80",
+      "images/W001_s001_w0_z031_t001_CellsLabels.tiff": "1b14aab71bf3623458ea9373852b0baf28be9727877b32f894407927ecfb6d65",
+      "images/W001_s001_w0_z032_t001_CellsLabels.tiff": "8a2c5774044326ae722e41aae517266197fbebb0e4dd5eab4b22414fbfea309f",
+      "images/W001_s001_w0_z033_t001_CellsLabels.tiff": "a320b99ee129d97b99f9fac66aabb89fc1652930b3bb8b2b3fbba7b57e994f85",
+      "images/W001_s001_w0_z034_t001_CellsLabels.tiff": "3f6c1d8cdbce20aac8f70e7315bea70b147b7b6a034432845b27eeb6cfba083c",
+      "images/W001_s001_w0_z035_t001_CellsLabels.tiff": "eedeb489b46abf1eafbd9c81491cb3f85ce1cb3ce877844ad22e72547fc3c438",
+      "images/W001_s001_w0_z036_t001_CellsLabels.tiff": "28b68d1300cf7b08e21dbcd4858447862520dded5c27f2d84cf223513a119eed",
+      "images/W001_s001_w0_z037_t001_CellsLabels.tiff": "aa1f449f1769b27cd9f1076e70f49f0242e2549f288a77984ca159cb07cf6a40",
+      "images/W001_s001_w0_z038_t001_CellsLabels.tiff": "6ac8fd9c95acc1f261e96a8fb9332e5d6a403548842f9b85ecb977e6213b4c9b",
+      "images/W001_s001_w0_z039_t001_CellsLabels.tiff": "22fa79a76e64013f10373be2ca2af98a2173275c5d43c9cad33135acdc376d14",
+      "images/W001_s001_w0_z040_t001_CellsLabels.tiff": "1635ea20dd80ce99f0e86494666825a52a66645837d598fd3a3fa91f0bb77d53",
+      "images/W001_s001_w0_z041_t001_CellsLabels.tiff": "be7762756eb65f08cb337904165c6f43b5351f39405461f65ad28669abfe3899",
+      "images/W001_s001_w0_z042_t001_CellsLabels.tiff": "88d2e9964455459499656c4f0a762cd86376c678756635aaa6b6c8d98be01852",
+      "images/W001_s001_w0_z043_t001_CellsLabels.tiff": "bd0df007524ea4e555e4d2fdbebe6a274caa03bc360a1cf90d601659155984b2",
+      "images/W001_s001_w0_z044_t001_CellsLabels.tiff": "e03946d94c789ee787cc29a3c8f5e5d9c56b37a0044b297ba8f403abc98eb55e",
+      "images/W001_s001_w0_z045_t001_CellsLabels.tiff": "c678f2100c7431e5a43c391af86a79e3436d4cf13f050f98c25f62682e4632fe",
+      "images/W001_s001_w0_z046_t001_CellsLabels.tiff": "dc081df050be6cd19b5d5bbfe21c96c350eecf9bc6f10f608dc361a36056632a",
+      "images/W001_s001_w0_z047_t001_CellsLabels.tiff": "b926aa64e1fa8aa52279a69d91dc23cf14bf0ae76107f9b360c7ae77bdf53719",
+      "images/W001_s001_w0_z048_t001_CellsLabels.tiff": "133a58f6fac8b07f79bfed9634867ccb5428b83e63682031a1def16c6a694568",
+      "images/W001_s001_w0_z049_t001_CellsLabels.tiff": "28d83dfbf5bbf7e4da9c3e4806353e9fd0a89680dcdab4b43ca2fd19b80f669c",
+      "images/W001_s001_w0_z050_t001_CellsLabels.tiff": "ea7654a6fe1f92ad274a54935420923eec4bec5ad030187afc0ac7af02690af5",
+      "images/W001_s001_w0_z051_t001_CellsLabels.tiff": "73483bd10a0f37990084013ad054768086d6d3c929da6bc7e74f4aee37e9dbf2",
+      "images/W001_s001_w0_z052_t001_CellsLabels.tiff": "7bb98f0587062e01b965e486fc687872651d7d90d271a2fdf0d35d67b464b233",
+      "images/W001_s001_w0_z053_t001_CellsLabels.tiff": "ff17f538baaf179752412026a250bdbee016e3101037bf4e0dbb81199fc4c8ed",
+      "images/W001_s001_w0_z054_t001_CellsLabels.tiff": "25ff2ec586a568e42286f73713d64aab1208c38c016099299211f04368ac49c8",
+      "images/W001_s001_w0_z055_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z056_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z057_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z058_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z059_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z060_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z001_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z002_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z003_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z004_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z005_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z006_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z007_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z008_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z009_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z010_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z011_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z012_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z013_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z014_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z015_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z016_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z017_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z018_t001_NucleiLabels.tiff": "03ba7a4d6ae53e6c84aab5926ae1e2592b5f8ca24a839a256c82f08544df4270",
+      "images/W001_s001_w2_z019_t001_NucleiLabels.tiff": "250cb56a8054c28cea894bc3d9edaddcdce01f5151a05da78da20157c3c3be9f",
+      "images/W001_s001_w2_z020_t001_NucleiLabels.tiff": "b0cd031b448d8bd2075e65710bd76c064161b25242f85ee150da7cd139fcc1a8",
+      "images/W001_s001_w2_z021_t001_NucleiLabels.tiff": "71a10b0539f3fc4cba600b275b7e948258c6a435ba33ef522faa0869ac085518",
+      "images/W001_s001_w2_z022_t001_NucleiLabels.tiff": "50aef20e28a2f9e18ca2e28eabf6d87ec2ad20c79898e56f8d63a959ba5bb507",
+      "images/W001_s001_w2_z023_t001_NucleiLabels.tiff": "ecb7f78c8ca0bad2b9d0495659609b9023781b6a936d6afb0a04653eac176555",
+      "images/W001_s001_w2_z024_t001_NucleiLabels.tiff": "9e96a05ed9860cac9c57c618db2f4fe5e4b769a9d235aac6fd1d628486317df0",
+      "images/W001_s001_w2_z025_t001_NucleiLabels.tiff": "9cc33676a0177130609ab1331feab1722bbde8d55b2f49031730fd5a2a40029c",
+      "images/W001_s001_w2_z026_t001_NucleiLabels.tiff": "ad22809ff3f43d15c838f697061c263070dbf1da1031da39900681cdfbf9d54c",
+      "images/W001_s001_w2_z027_t001_NucleiLabels.tiff": "8c8f402d3a7c65c04e7f1575dd34de0427eeeb433ff2956d20e07d06eb48fb8d",
+      "images/W001_s001_w2_z028_t001_NucleiLabels.tiff": "1676f21bd3b7e105601c83f206890507c32ba2447988be2a75d0e8153d069b65",
+      "images/W001_s001_w2_z029_t001_NucleiLabels.tiff": "34bce0f06f674e20667554eed0075fde8d9d33c9c0eaeffd88a1c558499cc432",
+      "images/W001_s001_w2_z030_t001_NucleiLabels.tiff": "c54c8b98a5c38a47e0cf9391a1afab09b4c8c58e06294cdb650a15add4a32b58",
+      "images/W001_s001_w2_z031_t001_NucleiLabels.tiff": "247490c261fecc26c7379ab2eebaa01e4bea523218b3cc5491d2fe2b9aadfe11",
+      "images/W001_s001_w2_z032_t001_NucleiLabels.tiff": "97b09fe5444ad439c3c2007d75971dce2766d94c93268eccfee9ae49b8a04aa1",
+      "images/W001_s001_w2_z033_t001_NucleiLabels.tiff": "512a3a0ed8025d14b0556a72ebfc13b173d14f7046817ca09876242ab63b9d6b",
+      "images/W001_s001_w2_z034_t001_NucleiLabels.tiff": "08af61857cfb97fd95fcb08d1ce18139ce7087b192044c63452bee533c5b1aa4",
+      "images/W001_s001_w2_z035_t001_NucleiLabels.tiff": "13e69afc324152bb91329fa758d131d849127e8fd346078d94c6adc25582b3a6",
+      "images/W001_s001_w2_z036_t001_NucleiLabels.tiff": "4fa967c78709aa400246a50528a36b24ca366e825dd0e64561643369e814906b",
+      "images/W001_s001_w2_z037_t001_NucleiLabels.tiff": "927d52441c57cb3a4014effaca3e3c23c76275fb264c26e1942a9c58b85ee6d2",
+      "images/W001_s001_w2_z038_t001_NucleiLabels.tiff": "e2852ea83c62ab30d77681b4e39f88d3cee74ae052f1c948675ae3581c9fc28a",
+      "images/W001_s001_w2_z039_t001_NucleiLabels.tiff": "f93e8293a37886a36844b8748083a1f8e717efab092652755263e797f12f0364",
+      "images/W001_s001_w2_z040_t001_NucleiLabels.tiff": "e0bd66b166e9f92120dbee183973849eda0afbbe6fed9d03fc4cfd2c56a96280",
+      "images/W001_s001_w2_z041_t001_NucleiLabels.tiff": "744eab7cd170d5af8d2f72ced3893dd939c4e1b0f415afab799a37ded5d046c7",
+      "images/W001_s001_w2_z042_t001_NucleiLabels.tiff": "e07252ca1a55c5195c99666d8d3f0d70db636b4ef4b99e1a0049ca22b182d87a",
+      "images/W001_s001_w2_z043_t001_NucleiLabels.tiff": "81a705d05b0a5bfa8783df28990c1d70634c1f4aa2bca23e02cfa8a4bc861b86",
+      "images/W001_s001_w2_z044_t001_NucleiLabels.tiff": "a78264f2f5e245a3913a69f89105e94df30048b1aaef4eb80fc5c3235e78b196",
+      "images/W001_s001_w2_z045_t001_NucleiLabels.tiff": "94bd6a65795ad6395cc18a4fd63dc591354bef612ee49fffd2d9f63e4ed9db84",
+      "images/W001_s001_w2_z046_t001_NucleiLabels.tiff": "c1250e060d32f2cfc07fc7e1594fdb1d6cbb4d0483fa94a8113efa695397963c",
+      "images/W001_s001_w2_z047_t001_NucleiLabels.tiff": "995d5ce77cbf61a9be8590f34987ef3f1dd698ae6ed393cac4d0960bc9e7a66a",
+      "images/W001_s001_w2_z048_t001_NucleiLabels.tiff": "325478230529e94ba372f38f0bf512292f131d337b6ac09ce5a91b0266724e02",
+      "images/W001_s001_w2_z049_t001_NucleiLabels.tiff": "e92e493078672a0e0d90e31409612e215bf8486300d5c765d0e0504ff8888e7a",
+      "images/W001_s001_w2_z050_t001_NucleiLabels.tiff": "565b4f08f7503086c1f2f8e631d19063129e02a5767d2f979c0cec8fdec23601",
+      "images/W001_s001_w2_z051_t001_NucleiLabels.tiff": "f0f36ccaf744d42da036948682cfd226e6dd4a3cfb94aed38729b2d25ede5dff",
+      "images/W001_s001_w2_z052_t001_NucleiLabels.tiff": "0daf51526658e23b7c9ab8872e992ebe9322399286f95741d0ccdbd357e5d631",
+      "images/W001_s001_w2_z053_t001_NucleiLabels.tiff": "b8613192175a4615b58aed607474657668429cb6ac635cd012569b19667f2d3d",
+      "images/W001_s001_w2_z054_t001_NucleiLabels.tiff": "b841c5d901c65a6138d9ff2b0ec4aa04f00765b1dd21bcd6fc9f8dc974c6035d",
+      "images/W001_s001_w2_z055_t001_NucleiLabels.tiff": "44e02416cc94a70528165a4b6c42b9e19b205f9c91528076796272cb1a8504ea",
+      "images/W001_s001_w2_z056_t001_NucleiLabels.tiff": "ca0723c8b9764d5b77034719bb75a2940be35da2e04119af4c0e6d3552c08718",
+      "images/W001_s001_w2_z057_t001_NucleiLabels.tiff": "695517641e9fe4b8421d4a7db56b24c755b6957c98ce32bb24ad5b25f52661eb",
+      "images/W001_s001_w2_z058_t001_NucleiLabels.tiff": "a37c63c6052e40d73db918a014e6f2a18be4d0cbfbeeef65a9c26096a38a4c09",
+      "images/W001_s001_w2_z059_t001_NucleiLabels.tiff": "76c785cf0f481c73ad3cf34ccb576eaa19dd1bdd9c74f9eaf92adfbde5d44b97",
+      "images/W001_s001_w2_z060_t001_NucleiLabels.tiff": "7cc3c6c6a22f558e62194277090bdea2deb79475dd91fe7d0e49eac3c0187388",
+      "results/3d_monolayer_Cells.csv": "6f6e7431171ed5ea73a01784105147eca0e43a6e3e41f8720df93106353c9c79",
+      "results/3d_monolayer_Image.csv": "75ac32ff5ef57bc285ec4eae1c9b501c27a35b486bf35435af5d499d856d34a4",
+      "results/3d_monolayer_Nuclei.csv": "17500f5d4321bbf255df31f7a3503339029c2b077045a6c10e4d4f6f0db9ad1e",
+      "results/3d_monolayer_downsizedNuclei.csv": "a7b998c5a524e11747fc5452fd763fc3d9abe16f46e961f62e09e9393b6a8adf",
+      "results/3d_monolayer_erodedDownsizedNuclei.csv": "ee507fb9c2387f86fc768184baf2596ebe1f8e40f7fc5eb24f252345fee63ae6",
+      "results/3d_monolayer_erodedResizedNuclei.csv": "cca23f86a85bb3ee7a5c3a1d174c34b5f026ca7f399be98458e1a8c6e12d5c77"
+    },
+    "complete_inventory": {
+      "images/W001_s001_w0_z001_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z002_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z003_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z004_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z005_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z006_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z007_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z008_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z009_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z010_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z011_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z012_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z013_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z014_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z015_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z016_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z017_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z018_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z019_t001_CellsLabels.tiff": "ec6ef1d319f2732c47b06f5cf02775c8cd94540f2f30a6c002f0aace1d317955",
+      "images/W001_s001_w0_z020_t001_CellsLabels.tiff": "e8105a4f04198ac75de9831247030084d6f65bf98691d7444ead7e178072fa22",
+      "images/W001_s001_w0_z021_t001_CellsLabels.tiff": "daa31cb1e537e5c32b1936ab7647c5690741d2bc1d0e15c60b59ba1310a8c0ce",
+      "images/W001_s001_w0_z022_t001_CellsLabels.tiff": "7d7ec170ed3652efa99e43d8db546c51b696821dca7727d0ff4d2f2ead7fdbaa",
+      "images/W001_s001_w0_z023_t001_CellsLabels.tiff": "2f06989618050934c73473f9342c2fe3410fd834a0ddb976cf602fe6198db7a6",
+      "images/W001_s001_w0_z024_t001_CellsLabels.tiff": "39899adabca74b10b9950d1f97e8b0b3bbaf136d75e7a46ef4a6e86896e3119f",
+      "images/W001_s001_w0_z025_t001_CellsLabels.tiff": "03aabe5528198cfd6ec23a058dab540fb8be0870207c6dc94a62d9b621d1f2f9",
+      "images/W001_s001_w0_z026_t001_CellsLabels.tiff": "5b433d931fa6637fc793b23880199c01000ef6d9e610903bb38bb8cea5574563",
+      "images/W001_s001_w0_z027_t001_CellsLabels.tiff": "ee9056587a19e581f5feb6078b41fa1004d923a5ddf1725aefc4b8b8c5201ad6",
+      "images/W001_s001_w0_z028_t001_CellsLabels.tiff": "fef31040e0c54501c3bf965eb98f055cdb1d42c96f91cf1c239033d0a9a06534",
+      "images/W001_s001_w0_z029_t001_CellsLabels.tiff": "b3bdde5f751b8f5d41ca8b5219a3427e450cb1b8795401d0ec638940d1ad7bd9",
+      "images/W001_s001_w0_z030_t001_CellsLabels.tiff": "b71a2e05d270ae0cd237d6c0d97ea82a63e5ad3633723e7255c35d34e585ec80",
+      "images/W001_s001_w0_z031_t001_CellsLabels.tiff": "1b14aab71bf3623458ea9373852b0baf28be9727877b32f894407927ecfb6d65",
+      "images/W001_s001_w0_z032_t001_CellsLabels.tiff": "8a2c5774044326ae722e41aae517266197fbebb0e4dd5eab4b22414fbfea309f",
+      "images/W001_s001_w0_z033_t001_CellsLabels.tiff": "a320b99ee129d97b99f9fac66aabb89fc1652930b3bb8b2b3fbba7b57e994f85",
+      "images/W001_s001_w0_z034_t001_CellsLabels.tiff": "3f6c1d8cdbce20aac8f70e7315bea70b147b7b6a034432845b27eeb6cfba083c",
+      "images/W001_s001_w0_z035_t001_CellsLabels.tiff": "eedeb489b46abf1eafbd9c81491cb3f85ce1cb3ce877844ad22e72547fc3c438",
+      "images/W001_s001_w0_z036_t001_CellsLabels.tiff": "28b68d1300cf7b08e21dbcd4858447862520dded5c27f2d84cf223513a119eed",
+      "images/W001_s001_w0_z037_t001_CellsLabels.tiff": "aa1f449f1769b27cd9f1076e70f49f0242e2549f288a77984ca159cb07cf6a40",
+      "images/W001_s001_w0_z038_t001_CellsLabels.tiff": "6ac8fd9c95acc1f261e96a8fb9332e5d6a403548842f9b85ecb977e6213b4c9b",
+      "images/W001_s001_w0_z039_t001_CellsLabels.tiff": "22fa79a76e64013f10373be2ca2af98a2173275c5d43c9cad33135acdc376d14",
+      "images/W001_s001_w0_z040_t001_CellsLabels.tiff": "1635ea20dd80ce99f0e86494666825a52a66645837d598fd3a3fa91f0bb77d53",
+      "images/W001_s001_w0_z041_t001_CellsLabels.tiff": "be7762756eb65f08cb337904165c6f43b5351f39405461f65ad28669abfe3899",
+      "images/W001_s001_w0_z042_t001_CellsLabels.tiff": "88d2e9964455459499656c4f0a762cd86376c678756635aaa6b6c8d98be01852",
+      "images/W001_s001_w0_z043_t001_CellsLabels.tiff": "bd0df007524ea4e555e4d2fdbebe6a274caa03bc360a1cf90d601659155984b2",
+      "images/W001_s001_w0_z044_t001_CellsLabels.tiff": "e03946d94c789ee787cc29a3c8f5e5d9c56b37a0044b297ba8f403abc98eb55e",
+      "images/W001_s001_w0_z045_t001_CellsLabels.tiff": "c678f2100c7431e5a43c391af86a79e3436d4cf13f050f98c25f62682e4632fe",
+      "images/W001_s001_w0_z046_t001_CellsLabels.tiff": "dc081df050be6cd19b5d5bbfe21c96c350eecf9bc6f10f608dc361a36056632a",
+      "images/W001_s001_w0_z047_t001_CellsLabels.tiff": "b926aa64e1fa8aa52279a69d91dc23cf14bf0ae76107f9b360c7ae77bdf53719",
+      "images/W001_s001_w0_z048_t001_CellsLabels.tiff": "133a58f6fac8b07f79bfed9634867ccb5428b83e63682031a1def16c6a694568",
+      "images/W001_s001_w0_z049_t001_CellsLabels.tiff": "28d83dfbf5bbf7e4da9c3e4806353e9fd0a89680dcdab4b43ca2fd19b80f669c",
+      "images/W001_s001_w0_z050_t001_CellsLabels.tiff": "ea7654a6fe1f92ad274a54935420923eec4bec5ad030187afc0ac7af02690af5",
+      "images/W001_s001_w0_z051_t001_CellsLabels.tiff": "73483bd10a0f37990084013ad054768086d6d3c929da6bc7e74f4aee37e9dbf2",
+      "images/W001_s001_w0_z052_t001_CellsLabels.tiff": "7bb98f0587062e01b965e486fc687872651d7d90d271a2fdf0d35d67b464b233",
+      "images/W001_s001_w0_z053_t001_CellsLabels.tiff": "ff17f538baaf179752412026a250bdbee016e3101037bf4e0dbb81199fc4c8ed",
+      "images/W001_s001_w0_z054_t001_CellsLabels.tiff": "25ff2ec586a568e42286f73713d64aab1208c38c016099299211f04368ac49c8",
+      "images/W001_s001_w0_z055_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z056_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z057_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z058_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z059_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w0_z060_t001_CellsLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z001_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z002_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z003_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z004_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z005_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z006_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z007_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z008_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z009_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z010_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z011_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z012_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z013_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z014_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z015_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z016_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z017_t001_NucleiLabels.tiff": "abfe34a68285c9292a8b8ffce8d8ab1a3cf4fe8d09258071ed888461a454000f",
+      "images/W001_s001_w2_z018_t001_NucleiLabels.tiff": "03ba7a4d6ae53e6c84aab5926ae1e2592b5f8ca24a839a256c82f08544df4270",
+      "images/W001_s001_w2_z019_t001_NucleiLabels.tiff": "250cb56a8054c28cea894bc3d9edaddcdce01f5151a05da78da20157c3c3be9f",
+      "images/W001_s001_w2_z020_t001_NucleiLabels.tiff": "b0cd031b448d8bd2075e65710bd76c064161b25242f85ee150da7cd139fcc1a8",
+      "images/W001_s001_w2_z021_t001_NucleiLabels.tiff": "71a10b0539f3fc4cba600b275b7e948258c6a435ba33ef522faa0869ac085518",
+      "images/W001_s001_w2_z022_t001_NucleiLabels.tiff": "50aef20e28a2f9e18ca2e28eabf6d87ec2ad20c79898e56f8d63a959ba5bb507",
+      "images/W001_s001_w2_z023_t001_NucleiLabels.tiff": "ecb7f78c8ca0bad2b9d0495659609b9023781b6a936d6afb0a04653eac176555",
+      "images/W001_s001_w2_z024_t001_NucleiLabels.tiff": "9e96a05ed9860cac9c57c618db2f4fe5e4b769a9d235aac6fd1d628486317df0",
+      "images/W001_s001_w2_z025_t001_NucleiLabels.tiff": "9cc33676a0177130609ab1331feab1722bbde8d55b2f49031730fd5a2a40029c",
+      "images/W001_s001_w2_z026_t001_NucleiLabels.tiff": "ad22809ff3f43d15c838f697061c263070dbf1da1031da39900681cdfbf9d54c",
+      "images/W001_s001_w2_z027_t001_NucleiLabels.tiff": "8c8f402d3a7c65c04e7f1575dd34de0427eeeb433ff2956d20e07d06eb48fb8d",
+      "images/W001_s001_w2_z028_t001_NucleiLabels.tiff": "1676f21bd3b7e105601c83f206890507c32ba2447988be2a75d0e8153d069b65",
+      "images/W001_s001_w2_z029_t001_NucleiLabels.tiff": "34bce0f06f674e20667554eed0075fde8d9d33c9c0eaeffd88a1c558499cc432",
+      "images/W001_s001_w2_z030_t001_NucleiLabels.tiff": "c54c8b98a5c38a47e0cf9391a1afab09b4c8c58e06294cdb650a15add4a32b58",
+      "images/W001_s001_w2_z031_t001_NucleiLabels.tiff": "247490c261fecc26c7379ab2eebaa01e4bea523218b3cc5491d2fe2b9aadfe11",
+      "images/W001_s001_w2_z032_t001_NucleiLabels.tiff": "97b09fe5444ad439c3c2007d75971dce2766d94c93268eccfee9ae49b8a04aa1",
+      "images/W001_s001_w2_z033_t001_NucleiLabels.tiff": "512a3a0ed8025d14b0556a72ebfc13b173d14f7046817ca09876242ab63b9d6b",
+      "images/W001_s001_w2_z034_t001_NucleiLabels.tiff": "08af61857cfb97fd95fcb08d1ce18139ce7087b192044c63452bee533c5b1aa4",
+      "images/W001_s001_w2_z035_t001_NucleiLabels.tiff": "13e69afc324152bb91329fa758d131d849127e8fd346078d94c6adc25582b3a6",
+      "images/W001_s001_w2_z036_t001_NucleiLabels.tiff": "4fa967c78709aa400246a50528a36b24ca366e825dd0e64561643369e814906b",
+      "images/W001_s001_w2_z037_t001_NucleiLabels.tiff": "927d52441c57cb3a4014effaca3e3c23c76275fb264c26e1942a9c58b85ee6d2",
+      "images/W001_s001_w2_z038_t001_NucleiLabels.tiff": "e2852ea83c62ab30d77681b4e39f88d3cee74ae052f1c948675ae3581c9fc28a",
+      "images/W001_s001_w2_z039_t001_NucleiLabels.tiff": "f93e8293a37886a36844b8748083a1f8e717efab092652755263e797f12f0364",
+      "images/W001_s001_w2_z040_t001_NucleiLabels.tiff": "e0bd66b166e9f92120dbee183973849eda0afbbe6fed9d03fc4cfd2c56a96280",
+      "images/W001_s001_w2_z041_t001_NucleiLabels.tiff": "744eab7cd170d5af8d2f72ced3893dd939c4e1b0f415afab799a37ded5d046c7",
+      "images/W001_s001_w2_z042_t001_NucleiLabels.tiff": "e07252ca1a55c5195c99666d8d3f0d70db636b4ef4b99e1a0049ca22b182d87a",
+      "images/W001_s001_w2_z043_t001_NucleiLabels.tiff": "81a705d05b0a5bfa8783df28990c1d70634c1f4aa2bca23e02cfa8a4bc861b86",
+      "images/W001_s001_w2_z044_t001_NucleiLabels.tiff": "a78264f2f5e245a3913a69f89105e94df30048b1aaef4eb80fc5c3235e78b196",
+      "images/W001_s001_w2_z045_t001_NucleiLabels.tiff": "94bd6a65795ad6395cc18a4fd63dc591354bef612ee49fffd2d9f63e4ed9db84",
+      "images/W001_s001_w2_z046_t001_NucleiLabels.tiff": "c1250e060d32f2cfc07fc7e1594fdb1d6cbb4d0483fa94a8113efa695397963c",
+      "images/W001_s001_w2_z047_t001_NucleiLabels.tiff": "995d5ce77cbf61a9be8590f34987ef3f1dd698ae6ed393cac4d0960bc9e7a66a",
+      "images/W001_s001_w2_z048_t001_NucleiLabels.tiff": "325478230529e94ba372f38f0bf512292f131d337b6ac09ce5a91b0266724e02",
+      "images/W001_s001_w2_z049_t001_NucleiLabels.tiff": "e92e493078672a0e0d90e31409612e215bf8486300d5c765d0e0504ff8888e7a",
+      "images/W001_s001_w2_z050_t001_NucleiLabels.tiff": "565b4f08f7503086c1f2f8e631d19063129e02a5767d2f979c0cec8fdec23601",
+      "images/W001_s001_w2_z051_t001_NucleiLabels.tiff": "f0f36ccaf744d42da036948682cfd226e6dd4a3cfb94aed38729b2d25ede5dff",
+      "images/W001_s001_w2_z052_t001_NucleiLabels.tiff": "0daf51526658e23b7c9ab8872e992ebe9322399286f95741d0ccdbd357e5d631",
+      "images/W001_s001_w2_z053_t001_NucleiLabels.tiff": "b8613192175a4615b58aed607474657668429cb6ac635cd012569b19667f2d3d",
+      "images/W001_s001_w2_z054_t001_NucleiLabels.tiff": "b841c5d901c65a6138d9ff2b0ec4aa04f00765b1dd21bcd6fc9f8dc974c6035d",
+      "images/W001_s001_w2_z055_t001_NucleiLabels.tiff": "44e02416cc94a70528165a4b6c42b9e19b205f9c91528076796272cb1a8504ea",
+      "images/W001_s001_w2_z056_t001_NucleiLabels.tiff": "ca0723c8b9764d5b77034719bb75a2940be35da2e04119af4c0e6d3552c08718",
+      "images/W001_s001_w2_z057_t001_NucleiLabels.tiff": "695517641e9fe4b8421d4a7db56b24c755b6957c98ce32bb24ad5b25f52661eb",
+      "images/W001_s001_w2_z058_t001_NucleiLabels.tiff": "a37c63c6052e40d73db918a014e6f2a18be4d0cbfbeeef65a9c26096a38a4c09",
+      "images/W001_s001_w2_z059_t001_NucleiLabels.tiff": "76c785cf0f481c73ad3cf34ccb576eaa19dd1bdd9c74f9eaf92adfbde5d44b97",
+      "images/W001_s001_w2_z060_t001_NucleiLabels.tiff": "7cc3c6c6a22f558e62194277090bdea2deb79475dd91fe7d0e49eac3c0187388",
+      "openhcs_metadata.json": "d0cc10b9362796e0894c240460684bd8dbbaa423069032e8ac8efb9ffdbe2e1e",
+      "openhcs_metadata.json.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "results/3d_monolayer_Cells.csv": "6f6e7431171ed5ea73a01784105147eca0e43a6e3e41f8720df93106353c9c79",
+      "results/3d_monolayer_Image.csv": "75ac32ff5ef57bc285ec4eae1c9b501c27a35b486bf35435af5d499d856d34a4",
+      "results/3d_monolayer_Nuclei.csv": "17500f5d4321bbf255df31f7a3503339029c2b077045a6c10e4d4f6f0db9ad1e",
+      "results/3d_monolayer_downsizedNuclei.csv": "a7b998c5a524e11747fc5452fd763fc3d9abe16f46e961f62e09e9393b6a8adf",
+      "results/3d_monolayer_erodedDownsizedNuclei.csv": "ee507fb9c2387f86fc768184baf2596ebe1f8e40f7fc5eb24f252345fee63ae6",
+      "results/3d_monolayer_erodedResizedNuclei.csv": "cca23f86a85bb3ee7a5c3a1d174c34b5f026ca7f399be98458e1a8c6e12d5c77"
+    },
+    "managed_metadata": {
+      "openhcs_metadata.json": {
+        "baseline_sha256": "0af41a148e9dd6ff40febf786b819d84cb689cfeff93500f6aa7f5c8912219ec",
+        "actual_sha256": "d0cc10b9362796e0894c240460684bd8dbbaa423069032e8ac8efb9ffdbe2e1e",
+        "changed": true
+      },
+      "openhcs_metadata.json.lock": {
+        "baseline_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "actual_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "changed": false
+      }
+    },
+    "unknown_exclusions": []
+  },
+  "completion": {
+    "observation_export": {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261003/compiler-config-coarse-ledger-v1/output/public/cp_tutorial_3d_monolayer/wells_1/workers_1/ordinary_run_evidence/cp_tutorial_3d_monolayer-1w_1t-1791020555970061852/runtime_outcomes.pkl.gz",
+      "sha256": "51f80d2dab3f0abcdad31b7c8bb77a58a2fa4c0f0d315f68c503d7c669a6e4fa",
+      "bytes": 5435
+    },
+    "results_summary": {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261003/compiler-config-coarse-ledger-v1/output/public/cp_tutorial_3d_monolayer/wells_1/workers_1/ordinary_run_evidence/cp_tutorial_3d_monolayer-1w_1t-1791020555970061852/zmq_results_summary.json",
+      "sha256": "14228fa5cdc6f005e3605f5b5a4c9bf76271a139068139375b8da5f78713a6d6",
+      "bytes": 655
+    }
+  },
+  "actual_receipt": "/home/ts/.local/state/openhcs-maintenance/20261003/compiler-config-coarse-ledger-v1/output/public/cp_tutorial_3d_monolayer/wells_1/workers_1/ordinary_run_evidence/cp_tutorial_3d_monolayer-1w_1t-1791020555970061852/measured_pipeline_receipt.json",
+  "actual_receipt_sha256": "4a9bbba130e8175a3d3a0d27530e802eb347f0b665fef2b58a089a32fef630c0",
+  "source_freeze_sha256": "0aa8d013c340ed52de584cc006becc832dfa1a9875745213d2d2e4c0904656cf",
+  "observations_sha256": "07c19d9a2b6183d1cbb69691258862f3b89b65149481989557b0d1029bf728e3",
+  "controller_source_env_native_input_freeze": "Original root controller passed actual before/after gate; source/deps/native/input/helper freeze independently revalidated here.",
+  "original_root_effective_environment_sha256": "00b7f550f6e584e34d6070f79bdd60d37859cb58c752b866fc95ac7f5293dabd",
+  "validator_environment_scope": "Separate CPU3 read-only process; original controller full effective environment also revalidated from the authenticated original agent environment. Root session-specific CODEX_THREAD_ID prelaunch refusal preserved separately.",
+  "physical_resources": {
+    "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/3d_monolayer/images/3d_monolayer_xy1_ch2.tif": "191754bc7f43856223180483e2737ea93bab4d0cf98b1b2a4c27425e9908147d",
+    "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/3d_monolayer/images/3d_monolayer_xy1_ch1.tif": "a7d9abf632850875c22613c4b740fc01153cf60e9773c16d4a670a97b46e5751",
+    "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/3d_monolayer/images/3d_monolayer_xy1_ch0.tif": "63114f614fec95664f718a39cddac58449f0edb5cc31b57584e4ba5b1f4994c7"
+  },
+  "ordered_source_ref_count": 180,
+  "per_volume_ordered_source_refs": 60,
+  "source_metadata_path": "/home/ts/.local/state/openhcs-maintenance/20261003/compiler-config-coarse-ledger-v1/output/public/cp_tutorial_3d_monolayer/wells_1/workers_1/images_3d_monolayer_final_source_workspace/openhcs_metadata.json",
+  "source_metadata_sha256": "a42ec413a0ec213d22f4ba96fac785bfbfac167dd5d2da7cbd1acc8cf9c2d862",
+  "input_reference_output_bytes_unchanged_after_validation": true,
+  "qualified_prior_evidence": {
+    "/var/tmp/openhcs-current-3d-gc-ledger-v1-scientific-byte-gate-20261003.json": "d0b8d6af1b8a1777b03624cf6435d67b04746e9477a5cefbc7a962feaa2d667d",
+    "/var/tmp/openhcs-3d-b764-abba-science-clocks-20261002.json": "49c088e2e257f094c7e205caf9743882d41e7574a0733cd190e9edbc0a2e3f76",
+    "/var/tmp/openhcs-spatial-plane-sourceborn-resize-aba4-diagnostic-20261002/source-freeze.json": "c6d26196dc23e330fcd2614d68a33e35b454223d65b4e9c66a5e0ae021113ace",
+    "/var/tmp/run_spatial_plane_sourceborn_diagnostic_v2_20261002.py": "d11f91b71129862f623bc62dd4909643f1f589128122c08c7559cb5c12b6c5a4",
+    "/var/tmp/validate_current_3d_runtime_ledger_scientific_bytes_v1_20261003.py": "f86bcb1c440714e6e5b7d9c2d9a62cc813de7985fb586a59a3edba6cf9f081d0",
+    "/var/tmp/openhcs-native-3d-aba4-qualification-20261002/source-environment-input-witness.json": "e0fd1afeb2d4a9c73c2aa9c6f43f71055e9b93c7211a45d096789d42633d1120",
+    "/var/tmp/openhcs-native-3d-aba4-qualification-20261002/fresh-native-scientific-comparison-supplemental.json": "002cd9b5aa5beb22d10621da971d63ad2fa18af009d3bd93072d9a9957cab6c4"
+  },
+  "native_scope": "TRANSITIVE ONLY: exact current saved science equals retained reference and B764-qualified bytes with actual same3physicalvolume inputs/180orderedrefs. Retained2native repetitions verified; native was NOT rerun for current source/environment. Original native compare API RED retained separately; no current native timing ratio or performance claim."
+}

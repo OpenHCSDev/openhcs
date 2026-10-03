@@ -15,7 +15,6 @@ from openhcs.core.runtime_tabular_values import (
     MeasurementObjectRowIdentity,
 )
 from openhcs.core.source_image_provenance import (
-    SourceImageProvenance,
     SourceImageProvenanceFields,
 )
 
@@ -75,9 +74,7 @@ class MeasurementTable(
         return self.rows.iter_row_mappings()
 
     def __post_init__(self, *source_provenance_values: object) -> None:
-        self.absorb_explicit_source_provenance(
-            SourceImageProvenance.from_init_values(source_provenance_values)
-        )
+        self.absorb_explicit_source_provenance(source_provenance_values)
         self.normalize_source_provenance_fields()
         self.validate_artifact_name()
         if self.source_image_name == "":

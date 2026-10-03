@@ -111,7 +111,7 @@ def test_wrapper_preparation_does_not_resurrect_context_inference():
         return image
 
     prepare_processing_callable(process)
-    contract = CallableContract.from_callable(process)
+    contract = CallableContract.from_callable(process).with_prepared_signature()
     assert contract.runtime_context_parameter is None
     assert "context" not in contract.runtime_owned_parameter_names
     assert "context" not in parameter_exclusions(process)

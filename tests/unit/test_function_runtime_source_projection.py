@@ -3733,6 +3733,9 @@ def test_producer_anchored_pipeline_start_paths_use_exact_source_projection_bund
     """Producer bookkeeping must not override exact workspace source ownership."""
 
     from openhcs.core.steps import function_runtime
+    from openhcs.core.runtime_source_binding_cache import (
+        RuntimeSourceBindingContextCache,
+    )
 
     virtual_paths = (
         "A01_s001_w1_z001_t001.tif",
@@ -3870,6 +3873,7 @@ def test_producer_anchored_pipeline_start_paths_use_exact_source_projection_bund
         ),
         filemanager=SourceFileManager(),
         runtime_image_stack_cache=RuntimeImageStackCache(),
+        runtime_source_binding_context_cache=RuntimeSourceBindingContextCache(),
         runtime_source_workspace_projection_cache=(
             VirtualWorkspaceSourceProjectionCache()
         ),
@@ -5261,13 +5265,17 @@ def test_function_output_path_keeps_payload_split_axis_over_input_alignment(
     assert identity.filename_component_values["site"] == 1
 
 
+@pytest.mark.parametrize("named_topology", ["anonymous", "unwrapped", "explicit"])
 def test_save_outputs_positional_lowering_preserves_explicit_payload_identity(
     tmp_path: Path,
+    named_topology: str,
 ) -> None:
-    from openhcs.core.steps.function_runtime import (
-        PatternGroupOutputData,
-        PatternGroupRuntime,
-    )
+    from openhcs.core.steps.function_runtime import PatternGroupRuntime
+    from openhcs.core.runtime_stack_cache import RuntimeImageStackCache
+    from openhcs.core.compiled_step_plan import CompiledStepPlan
+    from openhcs.core.component_group_scope import ComponentGroupScope
+    from openhcs.core.function_patterns import compile_function_pattern
+    from openhcs.core.aligned_image_payload import AlignedImageStack
 
     class OutputFileManager:
         saved_payloads: list[object] = []
@@ -5290,6 +5298,17 @@ def test_save_outputs_positional_lowering_preserves_explicit_payload_identity(
             self.saved_payloads = payloads
             self.saved_paths = paths
 
+    output_plans = {}
+    func = lambda image: image
+    if named_topology != "anonymous":
+        spec = ArtifactSpec.output("Corrected", ImageArtifactType)
+        output_plan = ArtifactOutputPlan(
+            name=spec.name,
+            path=str(tmp_path / "Corrected.pkl"),
+            artifact_type=spec.artifact_type,
+        )
+        output_plans[output_plan.ref()] = output_plan
+        func = artifact_outputs(spec)(func)
     filemanager = OutputFileManager()
     runtime = PatternGroupRuntime(
         SimpleNamespace(
@@ -5299,13 +5318,22 @@ def test_save_outputs_positional_lowering_preserves_explicit_payload_identity(
                     parser=SourceSchemaFilenameParser(),
                 ),
                 runtime_function_output_identity_cache=FunctionOutputIdentityCache(),
+                runtime_image_stack_cache=RuntimeImageStackCache(),
             ),
-            execution_plan=SimpleNamespace(
+            compiled_group=compile_function_pattern(func, {}, output_plans).default_group,
+            component_key=None,
+            execution_plan=CompiledStepPlan(
+                step_index=0,
+                step_type="FunctionStep",
+                axis_id="A01",
                 output_dir=tmp_path,
+                output_memory_type="numpy",
                 variable_components=(VariableComponents.SITE,),
                 step_name="ExplicitIdentity",
                 pipeline_position=0,
                 step_scope_id="explicit-identity",
+                execution_group_scope=ComponentGroupScope.ungrouped(),
+                artifact_outputs=output_plans,
             ),
             pattern_group_info="A01_s{iii}_w1_z001_t001.tif",
         )
@@ -5321,12 +5349,22 @@ def test_save_outputs_positional_lowering_preserves_explicit_payload_identity(
         },
     ).payload_with(np.zeros((4, 5), dtype=np.float32), None)
 
+    named_context = AlignedImageSliceContext.main_flow(
+        "Corrected", artifact_kind=ImageArtifactType.value,
+    )
+    output = (
+        AlignedImageStack((payload,), (named_context,))
+        if named_topology == "explicit" else payload
+    )
     records = runtime._save_outputs(
-        PatternGroupOutputData(slices=[payload]),
+        output,
         ["A01_s003_w1_z001_t001.tif"],
     )
 
-    assert Path(filemanager.saved_paths[0]).name == "A01_s001_w1_z001_t001.tif"
+    expected = "A01_s001_w1_z001_t001"
+    if named_topology == "explicit":
+        expected += "_Corrected"
+    assert Path(filemanager.saved_paths[0]).name == expected + ".tif"
     assert (
         image_payload_metadata(filemanager.saved_payloads[0]).source_component_metadata[
             "site"
@@ -5334,14 +5372,23 @@ def test_save_outputs_positional_lowering_preserves_explicit_payload_identity(
         == "1"
     )
     assert records[0].component_values["site"] == 1
+    if named_topology != "anonymous":
+        assert records[0].output_context == named_context
+        assert image_payload_metadata(filemanager.saved_payloads[0]).source_image_names == (
+            "Corrected",
+        )
+    assert image_payload_data(filemanager.saved_payloads[0]) is image_payload_data(payload)
 
 
 @pytest.fixture
 def qualified_producer_manifest(tmp_path):
     parser = SourceSchemaFilenameParser()
     producer = SimpleNamespace(
-        step_scope_id="producer", step_name="Producer", pipeline_position=0,
-        axis_id="A01", output_dir=tmp_path,
+        step_scope_id="producer",
+        step_name="Producer",
+        pipeline_position=0,
+        axis_id="A01",
+        output_dir=tmp_path,
     )
     consumer = SimpleNamespace(
         axis_id="A01",
@@ -5355,14 +5402,22 @@ def qualified_producer_manifest(tmp_path):
         parsed = parser.parse_filename(f"A01_s001_w2_z{plane:03d}_t001.tif")
         identity = FunctionOutputIdentity(
             component_values=dict(parsed.component_wire_mapping()),
-            extension=".tif", source="test", filename_qualifier=f"Output{plane}",
+            extension=".tif",
+            source="test",
+            filename_qualifier=f"Output{plane}",
         )
-        records.append(ProducedOutputSemantics.from_output(
-            producer, tmp_path / FunctionOutputPathAuthority.filename_for_identity(parser, identity),
-            identity, output_context=AlignedImageSliceContext.main_flow(
-                output_key=f"Output{plane}", artifact_kind=ImageArtifactType.value,
-            ),
-        ))
+        records.append(
+            ProducedOutputSemantics.from_output(
+                producer,
+                tmp_path
+                / FunctionOutputPathAuthority.filename_for_identity(parser, identity),
+                identity,
+                output_context=AlignedImageSliceContext.main_flow(
+                    output_key=f"Output{plane}",
+                    artifact_kind=ImageArtifactType.value,
+                ),
+            )
+        )
     store = StepOutputManifestStore()
     store.begin_step(producer)
     store.record_outputs(producer, records)
@@ -5370,7 +5425,8 @@ def qualified_producer_manifest(tmp_path):
 
 
 def test_step_output_manifest_batch_lookup_preserves_aliases_order_and_duplicates(
-    qualified_producer_manifest, monkeypatch,
+    qualified_producer_manifest,
+    monkeypatch,
 ):
     store, _producer, consumer, records, parser = qualified_producer_manifest
     calls = []
@@ -5380,7 +5436,9 @@ def test_step_output_manifest_batch_lookup_preserves_aliases_order_and_duplicate
         calls.append(identity)
         return original(parser, identity)
 
-    monkeypatch.setattr(FunctionOutputPathAuthority, "filename_for_identity", count_filename)
+    monkeypatch.setattr(
+        FunctionOutputPathAuthority, "filename_for_identity", count_filename
+    )
     paths = (
         records[1].output_path,
         "A01_s001_w2_z001_t001.tif",
@@ -5389,7 +5447,10 @@ def test_step_output_manifest_batch_lookup_preserves_aliases_order_and_duplicate
     )
     result = store.producer_output_contexts_for_paths(consumer, paths, parser)
     assert tuple(context.output_key for context in result) == (
-        "Output2", "Output1", "Output2", "Output1",
+        "Output2",
+        "Output1",
+        "Output2",
+        "Output1",
     )
     assert len(calls) == len(records)
 
@@ -5407,12 +5468,17 @@ def test_step_output_manifest_batch_lookup_template_deduplicates_record_aliases(
     assert index.matching_records(path) == (records[0],)
 
 
-@pytest.mark.parametrize("path, count", [
-    ("missing.tif", 0),
-    ("A01_s001_w2_z{plane}_t001.tif", 2),
-])
+@pytest.mark.parametrize(
+    "path, count",
+    [
+        ("missing.tif", 0),
+        ("A01_s001_w2_z{plane}_t001.tif", 2),
+    ],
+)
 def test_step_output_manifest_batch_lookup_rejects_missing_and_ambiguous_templates(
-    qualified_producer_manifest, path, count,
+    qualified_producer_manifest,
+    path,
+    count,
 ):
     store, _producer, consumer, _records, parser = qualified_producer_manifest
     with pytest.raises(NoStepOutputManifestMatch, match=f"found {count}"):
@@ -5425,10 +5491,12 @@ def test_step_output_manifest_batch_lookup_rejects_shared_basename(
     store, producer, consumer, records, parser = qualified_producer_manifest
     alias = records[0].relative_output_path
     other = ProducedOutputSemantics.from_output(
-        producer, producer.output_dir / "another" / alias,
+        producer,
+        producer.output_dir / "another" / alias,
         FunctionOutputIdentity(
             component_values=records[1].component_values,
-            extension=".tif", source="test",
+            extension=".tif",
+            source="test",
         ),
         output_context=records[1].output_context,
     )

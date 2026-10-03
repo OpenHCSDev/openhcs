@@ -201,9 +201,7 @@ class SpatialGraph(SourceImageProvenanceFields, NamedArtifactPayload):
     source_plane_index: int | None = None
 
     def __post_init__(self, *source_provenance_values: object) -> None:
-        self.absorb_explicit_source_provenance(
-            SourceImageProvenance.from_init_values(source_provenance_values)
-        )
+        self.absorb_explicit_source_provenance(source_provenance_values)
         self.normalize_source_provenance_fields()
         self.validate_artifact_name()
         nodes = tuple(self.nodes)

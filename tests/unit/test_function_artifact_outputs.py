@@ -1704,7 +1704,7 @@ def test_managed_runtime_adapter_output_preserves_authoritative_source_metadata(
     }
 
 
-def test_pattern_group_runtime_stacks_nominal_scalar_rgb_output_as_one_slice():
+def test_pattern_group_runtime_retains_nominal_scalar_rgb_output_as_one_image():
     scalar_output = ImagePayloadMetadata(
         source_path="/input/A01_s1_w3.tif",
         source_component_metadata={
@@ -1752,25 +1752,22 @@ def test_pattern_group_runtime_stacks_nominal_scalar_rgb_output_as_one_slice():
         component_key=None,
     )
 
-    output = runtime._validate_and_unstack(
-        scalar_output,
-        PatternGroupData(
-            matching_files=["source-1.tif", "source-2.tif"],
-            main_data_stack=np.zeros((2, 2, 3), dtype=np.uint16),
-        ),
-    )
-
-    assert output.slices == (scalar_output,)
-    assert output.slice_contexts == (
+    output = runtime._project_output_slices(scalar_output, ["source-1.tif", "source-2.tif"])
+    assert tuple(payload for payload, _context in output) == (scalar_output,)
+    assert tuple(context for _payload, context in output) == (
         AlignedImageSliceContext.main_flow(
             "RGBImage",
             artifact_kind=ImageArtifactType.value,
         ),
     )
-    assert image_payload_data(output.stack_payload).shape == (1, 2, 3, 3)
-    stack_metadata = image_payload_metadata(output.stack_payload)
-    assert stack_metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
-    assert stack_metadata.source_channel_axis == 3
+    from openhcs.core.aligned_image_payload import ImagePayloadStackComposition
+    stack_payload = ImagePayloadStackComposition.copy_whole_image(
+        scalar_output, memory_type=MEMORY_TYPE_NUMPY, device_id=None,
+    )
+    assert image_payload_data(stack_payload).shape == (2, 3, 3)
+    stack_metadata = image_payload_metadata(stack_payload)
+    assert stack_metadata.plane_axis is None
+    assert stack_metadata.source_channel_axis == -1
 
 
 def test_pattern_group_runtime_uses_declared_output_slice_cardinality():
@@ -1794,17 +1791,10 @@ def test_pattern_group_runtime_uses_declared_output_slice_cardinality():
         component_key=None,
     )
 
-    output = runtime._validate_and_unstack(
-        declared_output,
-        PatternGroupData(
-            matching_files=["source-1.tif", "source-2.tif"],
-            main_data_stack=np.zeros((2, 4, 5), dtype=np.float32),
-        ),
-    )
-
-    assert len(output.slices) == 1
-    assert image_payload_data(output.slices[0]).shape == (4, 5)
-    assert output.stack_payload is declared_output
+    output = runtime._project_output_slices(declared_output, ["source-1.tif", "source-2.tif"])
+    assert len(output) == 1
+    assert image_payload_data(output[0][0]).shape == (4, 5)
+    assert image_payload_metadata(declared_output).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
 
 
 def test_pattern_group_runtime_projects_nominal_object_label_stack():
@@ -1841,28 +1831,21 @@ def test_pattern_group_runtime_projects_nominal_object_label_stack():
         component_key=None,
     )
 
-    output = runtime._validate_and_unstack(
-        declared_output,
-        PatternGroupData(
-            matching_files=["source-anchor.tif"],
-            main_data_stack=np.zeros((2, 2, 3), dtype=np.float32),
-        ),
-    )
-
-    assert output.stack_payload is declared_output
-    assert len(output.slices) == 2
-    assert all(isinstance(value, ObjectLabelSet) for value in output.slices)
-    assert [value.name for value in output.slices] == ["SavedChildren"] * 2
-    assert [value.plane_axis for value in output.slices] == [None, None]
-    assert [value.domain.scope for value in output.slices] == [
+    projected = runtime._project_output_slices(declared_output, ["source-anchor.tif"])
+    output = tuple(payload for payload, _context in projected)
+    assert len(output) == 2
+    assert all(isinstance(value, ObjectLabelSet) for value in output)
+    assert [value.name for value in output] == ["SavedChildren"] * 2
+    assert [value.plane_axis for value in output] == [None, None]
+    assert [value.domain.scope for value in output] == [
         ObjectLabelDomainScope.PAYLOAD,
         ObjectLabelDomainScope.PAYLOAD,
     ]
-    assert [value.domain.declared_object_ids for value in output.slices] == [
+    assert [value.domain.declared_object_ids for value in output] == [
         (1,),
         (2,),
     ]
-    for output_slice, expected in zip(output.slices, label_planes, strict=True):
+    for output_slice, expected in zip(output, label_planes, strict=True):
         np.testing.assert_array_equal(output_slice.labels, expected)
 
 

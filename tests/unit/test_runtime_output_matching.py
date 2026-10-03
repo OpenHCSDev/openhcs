@@ -21,6 +21,12 @@ from openhcs.core.callable_contract import (
     FunctionStepExecutionScope,
 )
 from openhcs.core.runtime_output_matching import RuntimeReturnedOutputMatcher
+from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payload_data
+from openhcs.core.runtime_plane_projection import (
+    RuntimePlaneAxis,
+    RuntimePlaneAxisValueProjection,
+)
+from openhcs.core.runtime_slice_projection import RuntimeSliceProjectionDeclarationError
 from openhcs.core.function_patterns import (
     CompiledFunctionInvocation,
     FunctionInvocationKey,
@@ -57,6 +63,58 @@ def test_runtime_output_matcher_maps_canonical_and_trailing_slots() -> None:
         image.ref(): "image",
         measurements.ref(): "measurements",
     }
+
+
+def test_matcher_contextualizes_declared_axis_before_resolving_complete_abi() -> None:
+    first = ArtifactSpec.output("First", ImageArtifactType)
+    second = ArtifactSpec.output("Second", ImageArtifactType)
+    measurements = ArtifactSpec.output("Measurements", MeasurementsArtifactType)
+    data = np.arange(24, dtype=np.float32).reshape((2, 3, 4))
+    payload = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
+    ).payload_with(data, None)
+    trailing = object()
+    contract = _contract(first, second, measurements)
+    matcher = RuntimeReturnedOutputMatcher(contract, (payload, trailing))
+    projection = RuntimePlaneAxisValueProjection.preserve(
+        axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        axis_size=2,
+    )
+
+    returned = matcher.contextualize_canonical_output(plane_projection=projection)
+    resolved = RuntimeReturnedOutputMatcher(contract, returned).resolve()
+
+    assert returned[1] is trailing
+    assert resolved[measurements.ref()] is trailing
+    for index, spec in enumerate((first, second)):
+        selected = image_payload_data(resolved[spec.ref()])
+        np.testing.assert_array_equal(selected, data[index])
+        assert np.shares_memory(selected, data)
+    assert (
+        RuntimeReturnedOutputMatcher(contract, returned).contextualize_canonical_output()
+        is returned
+    )
+
+    with pytest.raises(RuntimeSliceProjectionDeclarationError, match="without a compiled"):
+        matcher.contextualize_canonical_output()
+    with pytest.raises(RuntimeSliceProjectionDeclarationError, match="already selected"):
+        matcher.contextualize_canonical_output(
+            plane_projection=projection.selected_plane(0)
+        )
+    with pytest.raises(ValueError, match="projection declares 3 value"):
+        matcher.contextualize_canonical_output(
+            plane_projection=RuntimePlaneAxisValueProjection.preserve(
+                axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                axis_size=3,
+            )
+        )
+    with pytest.raises(RuntimeSliceProjectionDeclarationError, match="plane axis"):
+        matcher.contextualize_canonical_output(
+            plane_projection=RuntimePlaneAxisValueProjection.preserve(
+                axis=RuntimePlaneAxis.SOURCE_BINDING,
+                axis_size=2,
+            )
+        )
 
 
 def test_runtime_output_matcher_uses_exact_multi_canonical_contexts() -> None:

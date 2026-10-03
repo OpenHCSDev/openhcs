@@ -1192,7 +1192,7 @@ class CellProfilerModuleArtifactContracts:
             group_key=invocation_key.group_key,
         )
         func = cls.require_callable(invocation_key.function_name)
-        callable_contract = CallableContract.from_callable(func)
+        callable_contract = CallableContract.from_prepared_callable(func)
         inputs = cls.artifact_contract_inputs(
             module,
             invocation_key=invocation_key,

@@ -17,6 +17,7 @@ from collections.abc import Callable, Mapping, Sequence, Sized
 from dataclasses import dataclass, field, is_dataclass, replace
 from functools import lru_cache, singledispatch
 from pathlib import Path, PurePosixPath, PureWindowsPath
+from types import MappingProxyType
 from typing import TYPE_CHECKING, ClassVar, TypeAlias
 
 import numpy as np
@@ -72,6 +73,7 @@ from openhcs.core.source_matching import (
     source_component_metadata_value,
     source_metadata_value,
 )
+from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.steps.function_output_identity import (
     FunctionOutputIdentityAuthority,
@@ -1701,7 +1703,8 @@ class BackendSaver:
     def save_all(
         self,
         outputs: Sequence[Output],
-    ) -> None:
+    ) -> Mapping[str, tuple[Output, ...]]:
+        saved_outputs: dict[str, tuple[Output, ...]] = {}
         for backend in self.backends:
             backend_instance = self.filemanager._get_backend(backend)
             output_acceptance = tuple(
@@ -1731,6 +1734,7 @@ class BackendSaver:
                 kwargs_payload = self.backend_kwargs[backend]
             else:
                 kwargs_payload = EMPTY_BACKEND_CALL_KWARGS
+            written_outputs: list[Output] = []
             for batch_outputs, kwargs in kwargs_payload.filemanager_batches(
                 supported_outputs
             ):
@@ -1740,6 +1744,9 @@ class BackendSaver:
                     backend,
                     **kwargs,
                 )
+                written_outputs.extend(batch_outputs)
+            saved_outputs[backend] = tuple(written_outputs)
+        return saved_outputs
 
     def _prepare_path(self, backend: str, backend_instance, path: str) -> None:
         if not backend_instance.requires_filesystem_validation:
@@ -1774,6 +1781,25 @@ class MaterializationContext:
     source_paths: tuple[str, ...] = ()
     pipeline_position: int | None = None
     output_plan: ArtifactOutputPlan | None = None
+    materialization_spec: MaterializationSpec | None = None
+
+    def named_source_filename(
+        self, metadata: ImagePayloadMetadata, extension: str,
+    ) -> str | None:
+        """Name a retained image from the actual rendering purpose and role."""
+        if self.materialization_spec is None:
+            return None
+        qualifier = self.materialization_spec.filename_qualifier(self.output_plan)
+        if qualifier is None:
+            return None
+        parser = SourceStemAuthoritySelection.from_processing_context(self.context).required_parser()
+        identity = FunctionOutputIdentityAuthority.filename_identity_from_metadata(parser, metadata)
+        if identity is None:
+            raise ValueError("Retained image output has no addressable source filename identity.")
+        identity = self.materialization_spec.filename_identity_for_output(
+            replace(identity, extension=extension), self.output_plan,
+        )
+        return FunctionOutputPathAuthority.filename_for_identity(parser, identity)
 
     def paths(self, options: FileOutputOptions) -> PathHelper:
         return PathHelper(self.base_path, options)
@@ -2553,32 +2579,23 @@ def write_image_file(
         options.filename_identity is MaterializedFilenameIdentity.ARTIFACT_NAME
         or paths.source_identity_base_path(options) is not None
     )
-    outputs = tuple(
-        (
-            (
-                _image_relative_output_path(
-                    item.value,
-                    options,
-                    context,
-                    sequence_index=sequence_index,
+    outputs = []
+    for sequence_index, item in enumerate(projected_items, start=1):
+        if options.relative_path_template is not None:
+            path = _image_relative_output_path(
+                item.value, options, context, sequence_index=sequence_index,
+            )
+        elif preserves_planned_path:
+            path = paths.primary_output_path(options)
+        else:
+            filename = context.named_source_filename(item.metadata, options.primary_output_suffix)
+            if filename is None:
+                filename = (
+                    source_stem_authority.required_source_stem(item.metadata)
+                    + options.primary_output_suffix
                 )
-                if options.relative_path_template is not None
-                else (
-                    paths.primary_output_path(options)
-                    if preserves_planned_path
-                    else str(
-                        paths.parent
-                        / (
-                            source_stem_authority.required_source_stem(item.metadata)
-                            + options.primary_output_suffix
-                        )
-                    )
-                )
-            ),
-            item,
-        )
-        for sequence_index, item in enumerate(projected_items, start=1)
-    )
+            path = str(paths.parent / filename)
+        outputs.append((path, item))
     output_paths = tuple(path for path, _item in outputs)
     if len(set(output_paths)) != len(output_paths):
         raise ValueError(
@@ -3330,6 +3347,8 @@ def _write_spatial_graph_roi_zip(
 
     from polystore.roi import ROI, PolylineShape
 
+    from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
+
     materialization_input = MaterializationInput.from_value(data, options)
     graph = materialization_input.data
     if not isinstance(graph, SpatialGraph):
@@ -3338,6 +3357,10 @@ def _write_spatial_graph_roi_zip(
             f"got {type(graph).__name__}."
         )
 
+    source_metadata = ImagePayloadMetadata(
+        source_provenance=graph.source_provenance,
+        source_voxel_spacing=SourceVoxelSpacing(graph.coordinate_spacing),
+    )
     rois = []
     for edge in graph.edges:
         coordinates = np.asarray(edge.coordinates, dtype=float)
@@ -3379,7 +3402,8 @@ def _write_spatial_graph_roi_zip(
     return [
         Output(
             path=ctx.paths(options).primary_output_path(options),
-            content=rois,
+            content=ROIArchiveSourceMetadata.bind(rois, source_metadata),
+            metadata=source_metadata,
         )
     ]
 
@@ -4045,6 +4069,10 @@ class MaterializationSpec(ArtifactMaterializationPayload):
         """Explicit materialization specs are externally observed exports."""
         return True
 
+    def filename_qualifier(self, output_plan: ArtifactOutputPlan | None) -> str | None:
+        """Preserve the source filenames authored by an explicit export."""
+        return None
+
     def participates_in_persistent_materialization(self) -> bool:
         """Explicit materialization specs write to configured persistent targets."""
         return True
@@ -4179,28 +4207,70 @@ class AllowedBackendsAuthority:
             )
 
 
-def _materialization_output_groups(
-    spec: MaterializationSpec,
-    data: MaterializationValue,
-    context: MaterializationContext,
-    *,
-    output_path_filter: Callable[[Path], bool] | None = None,
-) -> tuple[tuple[WriterSpec, tuple[Output, ...]], ...]:
-    """Render requested outputs through each writer's declared path projection."""
+@dataclass(frozen=True)
+class SavedMaterializationOutputs:
+    """Backend-indexed outputs from completed saves, independent of artifact kind."""
 
-    return tuple(
-        (
-            writer,
-            tuple(
-                output.with_source_identity_fallback(
-                    context.artifact_source_identity
-                ).with_variable_components(context.variable_components)
-                for output in writer.outputs(data, options, context, output_path_filter)
-            ),
+    outputs_by_backend: Mapping[str, tuple[Output, ...]]
+
+    def outputs_for_backend(self, backend: str) -> tuple[Output, ...]:
+        return self.outputs_by_backend.get(backend, ())
+
+
+@dataclass(frozen=True)
+class MaterializationBatch:
+    """One rendered writer batch shared by saving and immediate publication."""
+
+    context: MaterializationContext
+    output_groups: tuple[tuple[WriterSpec, tuple[Output, ...]], ...]
+    primary: int
+
+    @classmethod
+    def render(
+        cls,
+        spec: MaterializationSpec,
+        data: MaterializationValue,
+        context: MaterializationContext,
+        *,
+        output_path_filter: Callable[[Path], bool] | None = None,
+    ) -> MaterializationBatch:
+        context = replace(context, materialization_spec=spec)
+        groups = tuple(
+            (
+                writer,
+                tuple(
+                    output.with_source_identity_fallback(
+                        context.artifact_source_identity
+                    ).with_variable_components(context.variable_components)
+                    for output in writer.outputs(
+                        data, options, context, output_path_filter
+                    )
+                ),
+            )
+            for options in spec.outputs
+            for writer in (_WRITERS_BY_OPTIONS[options.__class__],)
         )
-        for options in spec.outputs
-        for writer in (_WRITERS_BY_OPTIONS[options.__class__],)
-    )
+        return cls(context=context, output_groups=groups, primary=spec.primary)
+
+    @property
+    def outputs(self) -> tuple[Output, ...]:
+        return tuple(
+            output for _writer, outputs in self.output_groups for output in outputs
+        )
+
+    @property
+    def primary_path(self) -> str:
+        writer, outputs = self.output_groups[self.primary]
+        return writer.primary_path(list(outputs))
+
+    def save(self) -> SavedMaterializationOutputs:
+        """Return only outputs accepted and successfully saved by each backend."""
+        saved: dict[str, tuple[Output, ...]] = {}
+        saver = self.context.saver
+        for _writer, outputs in self.output_groups:
+            for backend, saved_outputs in saver.save_all(outputs).items():
+                saved[backend] = (*saved.get(backend, ()), *saved_outputs)
+        return SavedMaterializationOutputs(MappingProxyType(saved))
 
 
 def materialization_outputs(
@@ -4240,19 +4310,15 @@ def materialization_outputs(
         pipeline_position=pipeline_position,
         output_plan=output_plan,
     )
-    return tuple(
-        output
-        for _writer, outputs in _materialization_output_groups(
-            spec,
-            data,
-            materialization_context,
-            output_path_filter=output_path_filter,
-        )
-        for output in outputs
-    )
+    return MaterializationBatch.render(
+        spec,
+        data,
+        materialization_context,
+        output_path_filter=output_path_filter,
+    ).outputs
 
 
-def materialize(
+def prepare_materialization(
     spec: MaterializationSpec,
     data: MaterializationValue,
     path: str,
@@ -4268,8 +4334,8 @@ def materialize(
     source_paths: Sequence[str] = (),
     pipeline_position: int | None = None,
     output_plan: ArtifactOutputPlan | None = None,
-) -> str:
-    """Materialize data to one or more backends."""
+) -> MaterializationBatch:
+    """Prepare one exact batch for saving and immediate publication."""
 
     normalized_backends = BackendSequenceAuthority.normalize(backends)
     AllowedBackendsAuthority.validate(spec, normalized_backends)
@@ -4295,11 +4361,42 @@ def materialize(
         output_plan=output_plan,
     )
 
-    primary_path = ""
+    return MaterializationBatch.render(spec, data, ctx)
 
-    for i, (writer, outs) in enumerate(_materialization_output_groups(spec, data, ctx)):
-        ctx.saver.save_all(outs)
-        if i == spec.primary:
-            primary_path = writer.primary_path(list(outs))
 
-    return primary_path
+def materialize(
+    spec: MaterializationSpec,
+    data: MaterializationValue,
+    path: str,
+    filemanager: FileManager,
+    backends: Sequence[str] | str,
+    backend_kwargs: BackendKwargsInput = BACKEND_KWARGS_ABSENT,
+    context: ProcessingContext | None = None,
+    extra_inputs: dict | None = None,
+    *,
+    artifact_source_identity: SourceImageIdentity | None = None,
+    artifact_filename_identity: SourceImageIdentity | None = None,
+    variable_components: Sequence[VariableComponents] = (),
+    source_paths: Sequence[str] = (),
+    pipeline_position: int | None = None,
+    output_plan: ArtifactOutputPlan | None = None,
+) -> str:
+    """Materialize data and return the primary path derived from its writer batch."""
+    batch = prepare_materialization(
+        spec,
+        data,
+        path,
+        filemanager,
+        backends,
+        backend_kwargs,
+        context=context,
+        extra_inputs=extra_inputs,
+        artifact_source_identity=artifact_source_identity,
+        artifact_filename_identity=artifact_filename_identity,
+        variable_components=variable_components,
+        source_paths=source_paths,
+        pipeline_position=pipeline_position,
+        output_plan=output_plan,
+    )
+    batch.save()
+    return batch.primary_path

@@ -148,11 +148,11 @@ class RegistryService:
             cls._metadata_cache = cls._metadata_from_instances(
                 cls._available_registry_instances()
             )
-        callables = tuple(
+        callables = tuple(dict.fromkeys(
             target
             for metadata in cls._metadata_cache.values()
             for target in CallableProjection.from_callable(metadata.func).prepare_targets()
-        )
+        ))
         emit_status("Preparing registered kernel caches")
         PreparationCacheBatch.from_callables(callables).populate_child_caches(
             max_workers=os.cpu_count() or 1,
@@ -164,6 +164,9 @@ class RegistryService:
             emit_status(
                 f"Prepared callable {preparation.projection.module_name}.{preparation.projection.name}"
             )
+        emit_status("Resolving prepared callable signatures")
+        for func in callables:
+            CallableProjection.from_callable(func).warm_canonical_signature()
         emit_status("Preparing registered configuration source declarations")
         for declaration in dict.fromkeys(
             declaration

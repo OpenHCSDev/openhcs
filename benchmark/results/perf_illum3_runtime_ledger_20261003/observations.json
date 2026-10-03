@@ -1,0 +1,93 @@
+{
+  "returncode": 0,
+  "diagnostic_admission": true,
+  "public_rows": [
+    {
+      "case_name": "ExampleIlluminationCorrection_Example3",
+      "mode_name": "1w_1t",
+      "worker_count": "1",
+      "well_count": "1",
+      "compile_seconds": "0.5973687171936035",
+      "prepare_seconds": "0.0",
+      "execute_seconds": "0.42289090156555176",
+      "total_seconds": "1.419051312841475",
+      "wells_per_second": "2.3646760814620915",
+      "successful_wells": "1",
+      "native_single_sample_execution_seconds": "",
+      "projected_native_execution_seconds": "",
+      "projected_execution_speedup": "",
+      "peak_memory_mb": "1007.28515625",
+      "status": "success",
+      "memory_limit_mb": "",
+      "error_message": "",
+      "execution_route": "ordinary-zmq-outcomes-v1",
+      "server_lifecycle": "reused-per-sweep",
+      "run_input_sha256": "53cbf79d64350e46b2692cfd3b96a8bb1be943d75193a52d3fb5a2f98cfa91df"
+    }
+  ],
+  "regions": [
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/regions/region-2078682-140361443509952-0001.json",
+      "sha256": "cc69523fdae5fe92c4e96ec59609a19eb889fe744316b6ed8419ed0398313ab9"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/regions/region-2078682-140361443509952-0002.json",
+      "sha256": "f3c9e01926b069a0103ebb9c70d638a4944c1f429b809b3a7b2e9755efbf80e5"
+    }
+  ],
+  "numba_event_admission": true,
+  "numba_root_flushes_complete": true,
+  "numba_event_total_bytes": 3107,
+  "numba_event_aggregate_cap": 262144,
+  "numba_event_files": [
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/regions/numba-events-2078555-0001.json",
+      "sha256": "df39cc4538c692418c9590759ee2be67c03e712d31b38e59909a2acc414299da",
+      "counts": {},
+      "complete": true
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/regions/numba-events-2078682-0001.json",
+      "sha256": "0cc87c64a35b572441cac162e7a953685af095892641222cef4b52a71d7ace03",
+      "counts": {},
+      "complete": true
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/regions/numba-events-2078682-0002.json",
+      "sha256": "a80829256ff2e4f13f8cb14257b45138aacefb6e2726339b64be55d585c90fde",
+      "counts": {},
+      "complete": true
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/regions/numba-events-2078682-0003.json",
+      "sha256": "c615a8d1c29b5da41bba3237cd1ee02e6f8eba72af2f73290f11ec684571661b",
+      "counts": {},
+      "complete": true
+    }
+  ],
+  "root_sequence_complete": true,
+  "actual_index_calls": 0,
+  "actual_declared_calls": 11,
+  "compile_only_actual_calls": {
+    "PipelineCompiler.compile_pipelines": 1,
+    "PipelineCompiler._register_and_resolve_pipeline_once": 1,
+    "PipelineCompiler._capture_pipeline_config": 1,
+    "AxisCompilationRequest.context_for": 1,
+    "CompilationSession.from_context": 1,
+    "PipelineOrchestrator.create_context": 3,
+    "PipelineOrchestrator.get_effective_config": 10,
+    "ObjectState.__init__": 23,
+    "ObjectState._compute_resolved_snapshot": 46,
+    "ObjectState._reconstruct_from_resolved": 343,
+    "ObjectState.to_saved_resolved_object": 21
+  },
+  "all_required_compiler_boundaries_reached": true,
+  "all41_hooks_installed": true,
+  "retained_json_bytes": 40594,
+  "generated_output_bytes": 2993187,
+  "public_log_bytes": 438,
+  "profiler_artifacts_absent": true,
+  "source_env_native_input_freeze": "PASS",
+  "science": "NOT_RUN: original declared2NPY/fullphysicalinventory/numerical/nativeinput witness separate gate. No exclusions or missing outputs waived.",
+  "scope": "One source-pinned ordinary IlluminationCorrection Example3 1w1t compiler/runtime diagnostic with NEW41 coarse nominal hooks: inherited24 plus17 compiler/state boundaries. Site is versioned/changed, not byte-identical. cProfile and runtime profiler OFF, no captures/percell hooks. Existing defaultOUTCOMES/memory observers/READY clocks unchanged. Same-thread nested exclusive clocks exclude query from its real ancestors; worker independent roots are not added to parent waits. Nearordinary diagnostic only; wrapper overhead remains, no scale factors/causal performance promotion. Full2NPY image-only declared export science/native source witness independently required. Passive installed-native Numba compile events distinguish startup and timed roots; bounded event batches flush AFTER original root elapsed is measured, cumulative counts retained, atexit supplementary only; event cap/refusal stays diagnostic RED, no dispatcher/signature retention."
+}

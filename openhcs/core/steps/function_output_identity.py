@@ -23,9 +23,9 @@ from openhcs.core.source_image_provenance import (
     SourceImageIdentity,
     SourceImageProvenanceIdentity,
 )
+from openhcs.core.source_metadata import SourceMetadataFields
 from openhcs.core.source_matching import (
     source_component_metadata_items,
-    with_source_component_metadata,
 )
 from openhcs.core.source_projection import OpenHCSPlaneAddress
 from openhcs.microscopes.microscope_interfaces import FilenameParser
@@ -144,13 +144,15 @@ class FunctionOutputIdentity:
         source_metadata: SourceComponentMetadata | None = None,
     ) -> SourceComponentMetadata:
         """Return parser-compatible component metadata for this output identity."""
-        metadata = dict(source_metadata or {})
-        metadata.update(self.component_values)
-        for component, value in source_component_metadata_items(self.component_values):
-            metadata = with_source_component_metadata(metadata, component, value)
-        if self.extension is not None:
-            metadata["extension"] = self.extension
-        return metadata
+        metadata = source_metadata if source_metadata is not None else {}
+        return SourceMetadataFields.with_fields(
+            SourceMetadataFields.composition_snapshot(metadata),
+            self.component_values,
+            components=source_component_metadata_items(self.component_values),
+            after_components=(
+                {"extension": self.extension} if self.extension is not None else None
+            ),
+        )
 
     def filename_component_metadata(self) -> SourceComponentMetadata:
         """Return parser-compatible metadata used to construct the output filename."""

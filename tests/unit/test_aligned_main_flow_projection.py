@@ -52,6 +52,62 @@ def _input_ref(
     return ArtifactSpec.input(name, artifact_type).ref()
 
 
+@pytest.mark.parametrize("carrier_type", (AlignedImageStack, ImageOutputBundle))
+def test_aligned_stack_binds_complete_declared_output_roster(
+    carrier_type: type[AlignedImageStack],
+) -> None:
+    first = ArtifactSpec.output("First", ImageArtifactType)
+    second = ArtifactSpec.output("Second", ImageArtifactType)
+    first_context, second_context = AlignedImageSliceContext.main_flow_for_artifact_specs(
+        (first, second)
+    )
+    first_value = object()
+    carrier = carrier_type(
+        (None, first_value),
+        (second_context, first_context),
+    )
+
+    assert carrier.output_values_for_artifact_specs((first, second)) == {
+        first.ref(): first_value,
+        second.ref(): None,
+    }
+    with pytest.raises(ValueError, match="duplicate named contexts"):
+        carrier.output_values_for_artifact_specs((first, first))
+
+
+@pytest.mark.parametrize(
+    ("contexts", "message"),
+    (
+        ((), "require exact AlignedImageStack"),
+        (("first", "first"), "contains duplicate context"),
+        (("first",), "does not carry every declared output"),
+        (("first", "unknown"), "context is not declared"),
+        (("first", "non-main"), "contains a non-main-flow"),
+    ),
+)
+def test_aligned_stack_rejects_incomplete_or_conflicting_output_rosters(
+    contexts: tuple[str, ...],
+    message: str,
+) -> None:
+    first = ArtifactSpec.output("First", ImageArtifactType)
+    second = ArtifactSpec.output("Second", ImageArtifactType)
+    first_context, second_context = AlignedImageSliceContext.main_flow_for_artifact_specs(
+        (first, second)
+    )
+    selected = {
+        "first": first_context,
+        "unknown": replace(second_context, output_key="Unknown"),
+        "non-main": replace(second_context, output_kind="artifact"),
+    }
+    carrier = AlignedImageStack(
+        tuple(object() for _ in contexts) if contexts else (object(), object()),
+        tuple(selected[name] for name in contexts),
+    )
+
+    with pytest.raises(ValueError, match=message):
+        carrier.output_values_for_artifact_specs((first, second))
+
+
 def _named_carrier() -> tuple[AlignedImageStack, np.ndarray, np.ndarray]:
     mcherry = np.full((3, 4), 3.0, dtype=np.float32)
     gfp = np.full((3, 4), 2.0, dtype=np.float32)

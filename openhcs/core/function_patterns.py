@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, TypeAlias
 if TYPE_CHECKING:
     from openhcs.core.aligned_image_payload import AlignedImageSliceContext
     from openhcs.core.pipeline.compilation_session import CompilationPathResolver
-    from openhcs.core.steps.function_runtime import FunctionInvocationArtifactScope
+    from openhcs.core.steps.function_runtime import FunctionCoreExecutor
 
 from pyqt_reactive.pattern_metadata import PatternScopeToken
 from python_introspect import Enableable
@@ -281,7 +281,7 @@ class InvocationArtifactInputEdgePlan:
 
     def resolve_unstored_payload(
         self,
-        scope: "FunctionInvocationArtifactScope",
+        scope: "FunctionCoreExecutor",
         primary_source_payload: object,
     ) -> object:
         """Resolve source input through the existing exact-origin authority."""
@@ -342,7 +342,7 @@ class CompiledMetadataArtifactInputEdgePlan(InvocationArtifactInputEdgePlan):
 
     def resolve_unstored_payload(
         self,
-        scope: "FunctionInvocationArtifactScope",
+        scope: "FunctionCoreExecutor",
         primary_source_payload: object,
     ) -> object:
         return scope.invocation.artifact_parameter_value(self.spec)
@@ -1313,7 +1313,7 @@ class NormalizeFunctionGroupAuthority:
             func, kwargs = _split_function_item(item)
             if RUNTIME_CALLABLE_KWARG_POLICY.item_is_disabled(kwargs):
                 continue
-            contract = CallableContract.from_callable(func)
+            contract = CallableContract.from_prepared_callable(func)
             position = len(normalized_items)
             normalized_items.append(
                 NormalizedFunctionItem(

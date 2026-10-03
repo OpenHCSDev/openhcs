@@ -10,6 +10,10 @@ import skimage.morphology
 
 import openhcs.processing.backends.cellprofiler.secondary as iso
 import openhcs.processing.backends.cellprofiler.secondary as ito
+from openhcs.core.runtime_relationships import (
+    DirectParentReferenceFeatureDeclaration,
+    DirectParentReferenceMeasurementFeature,
+)
 from openhcs.constants.constants import (
     AllComponents,
     Backend,
@@ -50,6 +54,7 @@ from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
 from openhcs.core.callable_contract import (
     CallableContract,
     CallableMetadata,
+    ImagePayloadConsumption,
     attach_callable_contract_metadata,
     runtime_image_execution_mode,
 )
@@ -249,8 +254,6 @@ from openhcs.interop.cellprofiler.runtime.output_recording import (
     CellProfilerOutputRecorder,
 )
 from openhcs.interop.cellprofiler.runtime.relationship_measurement_rows import (
-    DirectParentReferenceFeatureDeclaration,
-    DirectParentReferenceMeasurementFeature,
     RelationshipMeasurementRows,
 )
 from openhcs.processing.backends.cellprofiler.alignment import (
@@ -1359,7 +1362,9 @@ def test_runtime_binding_uses_full_compiled_special_input_contract() -> None:
     np.testing.assert_array_equal(image_payload_data(topology_inputs[1]), 1.0)
 
 
-def test_image_artifact_resolution_uses_declared_artifact_alias() -> None:
+def test_image_artifact_resolution_uses_declared_artifact_alias(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     spec = ArtifactSpec.input("IllumStain1", ImageArtifactType)
     source = ImagePayloadMetadata(
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
@@ -1382,6 +1387,17 @@ def test_image_artifact_resolution_uses_declared_artifact_alias() -> None:
         ).source_image_name(spec=spec, value=source)
         is None
     )
+    strategy = RuntimeArtifactTypeStrategy.for_artifact_type(ImageArtifactType)
+
+    def reject_second_resolution(*args, **kwargs):
+        raise AssertionError("Source-name projection resolved the image again")
+
+    monkeypatch.setattr(
+        type(strategy), "raw_runtime_input_value", reject_second_resolution
+    )
+    # The original name remains a contributor; the alias alone is not a
+    # unique represented source name.
+    assert strategy.source_image_name_from_value(payload) is None
 
 
 def test_main_flow_image_artifact_selects_declared_alias_plane() -> None:
@@ -1578,7 +1594,9 @@ def test_main_flow_image_artifact_preserves_declared_runtime_slice_stack() -> No
     assert image_payload_metadata(payload).source_image_names == ("Stain1",)
 
 
-def test_main_flow_projection_binds_singleton_broadcast_artifact_as_2d() -> None:
+def test_main_flow_projection_binds_singleton_broadcast_artifact_as_2d(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     original_spec = ArtifactSpec.input("OrigStain1", ImageArtifactType)
     illumination_spec = ArtifactSpec.input(
         "IllumStain1",
@@ -1631,12 +1649,25 @@ def test_main_flow_projection_binds_singleton_broadcast_artifact_as_2d() -> None
     executor = _module_executor(contract)
     _activate_runtime_contract(executor.callable_contract, runtime)
 
+    strategy_type = type(
+        RuntimeArtifactTypeStrategy.for_artifact_type(ImageArtifactType)
+    )
+    resolve_image = strategy_type.raw_runtime_input_value
+    resolved_specs: list[ArtifactSpec] = []
+
+    def record_resolution(self, spec: ArtifactSpec, value):
+        resolved_specs.append(spec)
+        return resolve_image(self, spec, value)
+
+    monkeypatch.setattr(strategy_type, "raw_runtime_input_value", record_resolution)
+
     image_request = executor._image_request(
         current_image,
         runtime,
         module_type=CorrectIlluminationApplyModule,
         active_input_specs=contract.artifact_inputs.specs,
     )
+    assert resolved_specs == [original_spec]
     runtime_kwargs = executor._runtime_input_kwargs(
         runtime,
         current_image,
@@ -1647,6 +1678,55 @@ def test_main_flow_projection_binds_singleton_broadcast_artifact_as_2d() -> None
 
     assert image_payload_data(image_request.payload).shape == (4, 5)
     assert image_payload_data(runtime_kwargs["illumination_function"]).shape == (4, 5)
+
+
+def test_composed_measurement_images_keep_declared_aliases_and_resolved_payload() -> None:
+    image_spec = ArtifactSpec.input("DeclaredImage", ImageArtifactType)
+    contract = _compiled_callable_contract(
+        CellProfilerModule.require_module("MeasureObjectIntensity").require_callable(),
+        artifact_inputs=(image_spec,),
+    )
+    contract = replace(
+        contract,
+        metadata=replace(
+            contract.metadata,
+            image_payload_consumption=ImagePayloadConsumption.COMPOSED,
+        ),
+    )
+    image = np.ones((4, 5), dtype=np.float32)
+    runtime = _FakeCellProfilerRuntime(
+        {image_spec.name: image},
+        artifact_input_edges=(_artifact_input_edge_for_test(image_spec),),
+    )
+    executor = _module_executor(contract)
+    _activate_runtime_contract(contract, runtime)
+    image_request = CellProfilerImageRequest(
+        payload=image,
+        source_image_name="RuntimeAlias",
+        source_aliases=("RuntimeAlias",),
+        image_count=1,
+        execution_mode=ImagePayloadExecutionMode.NATURAL,
+    )
+
+    (measurement_image,) = executor._measurement_image_inputs(
+        runtime,
+        image,
+        image_request,
+        module_type=MeasureObjectIntensityModule,
+    )
+
+    assert measurement_image.source_aliases == (image_spec.name,)
+    assert measurement_image.payload is image_request.payload
+    assert measurement_image.execution_mode is image_request.execution_mode
+    assert measurement_image.plane_projection is image_request.plane_projection
+    assert not measurement_image.align_to_labels
+    with pytest.raises(ValueError, match="requires a composed measurement image request"):
+        executor._measurement_image_inputs(
+            runtime,
+            image,
+            None,
+            module_type=MeasureObjectIntensityModule,
+        )
 
 
 def test_repeated_broadcast_inputs_consume_their_declared_source_group_axes() -> None:
@@ -9344,11 +9424,13 @@ def test_pattern_group_runtime_unstacks_aligned_image_stack_output():
     )
     runtime = _pattern_group_runtime_for_output_memory("numpy")
 
-    output = runtime._validate_and_unstack(aligned, loaded)
-
-    assert output == [dna_payload, rna_payload]
+    output = runtime._project_output_slices(aligned, loaded.matching_files)
+    stack_payload = aligned.copy_projected_output_stack(
+        output, memory_type="numpy", device_id=None,
+    )
+    assert [payload for payload, _context in output] == [dna_payload, rna_payload]
     assert image_payload_metadata(
-        output.stack_payload
+        stack_payload
     ).source_plane_intensity_scales == (65535, 65535)
 
 
@@ -9400,7 +9482,8 @@ def test_pattern_group_runtime_does_not_invent_nested_axes_from_image_rank():
     )
     runtime = _pattern_group_runtime_for_output_memory("numpy")
 
-    output_slices = runtime._validate_and_unstack(aligned, loaded)
+    projected = runtime._project_output_slices(aligned, loaded.matching_files)
+    output_slices = tuple(payload for payload, _context in projected)
 
     assert len(output_slices) == 2
     np.testing.assert_array_equal(image_payload_data(output_slices[0]), first_site.data)
@@ -9426,10 +9509,11 @@ def test_pattern_group_runtime_leaves_variable_shape_aligned_outputs_uncached():
     )
     runtime = _pattern_group_runtime_for_output_memory("numpy")
 
-    output = runtime._validate_and_unstack(aligned, loaded)
-
-    assert output == [first, second]
-    assert output.stack_payload is None
+    output = runtime._project_output_slices(aligned, loaded.matching_files)
+    assert [payload for payload, _context in output] == [first, second]
+    assert aligned.copy_projected_output_stack(
+        output, memory_type="numpy", device_id=None,
+    ) is None
 
 
 def test_invocation_request_keeps_original_aliases_when_labels_change_image_domain(

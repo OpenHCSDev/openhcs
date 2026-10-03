@@ -58,7 +58,7 @@ from openhcs.core.source_image_provenance import (
     source_component_metadata_consensus,
 )
 from openhcs.core.source_metadata import (
-    SourceMetadataRoleView,
+    SourceMetadataFields,
 )
 from openhcs.interop.cellprofiler.image_set_numbering import (
     CellProfilerImageSetNumbering,
@@ -583,8 +583,7 @@ def _source_metadata_measurement_rows(
         ).source_component_metadata
         if metadata is None:
             continue
-        role_view = SourceMetadataRoleView(metadata)
-        original_metadata = dict(role_view.original_items())
+        original_metadata = dict(SourceMetadataFields.original_items(metadata))
         if original_metadata:
             rows.append((image_numbers_by_slice[slice_index], original_metadata))
     return tuple(rows)

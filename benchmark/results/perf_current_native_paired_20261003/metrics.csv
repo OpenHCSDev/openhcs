@@ -1,0 +1,7 @@
+pipeline_name,method,assay_category,module_category,accuracy_fraction,raw_seconds,speedup,peak_memory_mb
+ExampleSpeckles,CellProfiler,,,1.0,1.9542299311142415,1.0,
+ExampleSpeckles,OH execution,,,1.0,1.2313504219055176,1.5870623799276133,
+ExampleSpeckles,OH total,,,1.0,2.2460867043118924,0.870059881198102,
+cp_tutorial_3d_monolayer,CellProfiler,,,1.0,14.422176547115669,1.0,
+cp_tutorial_3d_monolayer,OH execution,,,1.0,9.127214908599854,1.580128954071936,
+cp_tutorial_3d_monolayer,OH total,,,1.0,11.153506982140243,1.2930620449881318,

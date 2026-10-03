@@ -1,0 +1,261 @@
+{
+  "status": "ALL4_ORDINARY_AUTHORED_IMAGES_EXACT_AND_RETAINED_NATIVE_INPUT_PARITY_PASS",
+  "case": "ExampleIlluminationCorrection_Example3",
+  "mode": "1w_1t",
+  "cpu": 5,
+  "candidate_openhcs_commit": "7258826d7198f2bb7010763276dba02320d62142",
+  "variants": [
+    {
+      "path": "/home/ts/code/projects/openhcs-shared-runtime-plumbing/openhcs/processing/backends/lib_registry/registry_service.py",
+      "baseline_revision": "4eaacf17e5de3dba59ec217f133fa6e1821c8641",
+      "repository": "/home/ts/code/projects/openhcs-shared-runtime-plumbing",
+      "relative": "openhcs/processing/backends/lib_registry/registry_service.py",
+      "A": "/home/ts/.local/state/openhcs-maintenance/20261003/schema-source-readiness-ordinary-abba-v1/0-A.source",
+      "B": "/home/ts/.local/state/openhcs-maintenance/20261003/schema-source-readiness-ordinary-abba-v1/0-B.source",
+      "A_sha256": "73e0d41f98d7ea5bb3fe076b97b97d9980b621c54f2d23b808550e00bae481d4",
+      "B_sha256": "d9e6e30b627fae7b01e08872c58ad26ee060919b6b6bd9fd9174223f2ec5a95b"
+    },
+    {
+      "path": "/home/ts/code/projects/openhcs-shared-runtime-plumbing/external/python-introspect/src/python_introspect/signature_analyzer.py",
+      "baseline_revision": "13f6ff3b43aaa430f5e771848f08d99faf941158",
+      "repository": "/home/ts/code/projects/openhcs-shared-runtime-plumbing/external/python-introspect",
+      "relative": "src/python_introspect/signature_analyzer.py",
+      "A": "/home/ts/.local/state/openhcs-maintenance/20261003/schema-source-readiness-ordinary-abba-v1/1-A.source",
+      "B": "/home/ts/.local/state/openhcs-maintenance/20261003/schema-source-readiness-ordinary-abba-v1/1-B.source",
+      "A_sha256": "51f4729861062ab857153c57d64b01bd7b0f47daa6f18fc4443819fb75c77b45",
+      "B_sha256": "7e25a0355159c86d361a21a7afc449ec758cbf8a32e9b72d06de66a924f04159"
+    },
+    {
+      "path": "/home/ts/code/projects/openhcs-shared-runtime-plumbing/external/ObjectState/src/objectstate/lazy_factory.py",
+      "baseline_revision": "b0004daf3223326ac78689ba7b2e68abc18ae298",
+      "repository": "/home/ts/code/projects/openhcs-shared-runtime-plumbing/external/ObjectState",
+      "relative": "src/objectstate/lazy_factory.py",
+      "A": "/home/ts/.local/state/openhcs-maintenance/20261003/schema-source-readiness-ordinary-abba-v1/2-A.source",
+      "B": "/home/ts/.local/state/openhcs-maintenance/20261003/schema-source-readiness-ordinary-abba-v1/2-B.source",
+      "A_sha256": "f81ce722695dbab98fd02658f2015e5cb93c1e1e69547d24249e62d896e2a828",
+      "B_sha256": "90637bdad398bae1348168e62533d69618ec965341b1b27057292e709c2a1f85"
+    }
+  ],
+  "means": {
+    "A": {
+      "compile_seconds": 0.9621515274047852,
+      "execute_seconds": 0.38265538215637207,
+      "total_seconds": 1.693764767376706
+    },
+    "B": {
+      "compile_seconds": 0.5876049995422363,
+      "execute_seconds": 0.40058863162994385,
+      "total_seconds": 1.3636944827158004
+    }
+  },
+  "saved_seconds": {
+    "compile_seconds": 0.37454652786254883,
+    "execute_seconds": -0.017933249473571777,
+    "total_seconds": 0.3300702846609056
+  },
+  "runs": [
+    {
+      "label": "A",
+      "public_rows": [
+        {
+          "case_name": "ExampleIlluminationCorrection_Example3",
+          "mode_name": "1w_1t",
+          "worker_count": "1",
+          "well_count": "1",
+          "compile_seconds": "0.9799041748046875",
+          "prepare_seconds": "0.0",
+          "execute_seconds": "0.38725757598876953",
+          "total_seconds": "1.7173671890050173",
+          "wells_per_second": "2.5822606502835725",
+          "successful_wells": "1",
+          "native_single_sample_execution_seconds": "",
+          "projected_native_execution_seconds": "",
+          "projected_execution_speedup": "",
+          "peak_memory_mb": "1011.84765625",
+          "status": "success",
+          "memory_limit_mb": "",
+          "error_message": "",
+          "execution_route": "ordinary-zmq-outcomes-v1",
+          "server_lifecycle": "reused-per-sweep",
+          "run_input_sha256": "a37695e774a71b04c3e2a390df76245c973458380fca25a9aac513dbf5e8be8e"
+        }
+      ],
+      "receipt_sha256": "6805ee89e2872aea6199e959e53b956ef144e2ff82516fbf6ac68042450d6fd2",
+      "source_freeze_sha256": "d71dcaef08a9eb2ac12a00b5e004aedfcd9b9606d860e6a8bca5da73baa9900b"
+    },
+    {
+      "label": "B",
+      "public_rows": [
+        {
+          "case_name": "ExampleIlluminationCorrection_Example3",
+          "mode_name": "1w_1t",
+          "worker_count": "1",
+          "well_count": "1",
+          "compile_seconds": "0.593247652053833",
+          "prepare_seconds": "0.0",
+          "execute_seconds": "0.42087531089782715",
+          "total_seconds": "1.4185294113121927",
+          "wells_per_second": "2.3760006208650304",
+          "successful_wells": "1",
+          "native_single_sample_execution_seconds": "",
+          "projected_native_execution_seconds": "",
+          "projected_execution_speedup": "",
+          "peak_memory_mb": "1043.54296875",
+          "status": "success",
+          "memory_limit_mb": "",
+          "error_message": "",
+          "execution_route": "ordinary-zmq-outcomes-v1",
+          "server_lifecycle": "reused-per-sweep",
+          "run_input_sha256": "3c135c9fa72e1a8ec100dca796e96c7f6721cccfab82316b3836236b6b4e75b0"
+        }
+      ],
+      "receipt_sha256": "c8f76ce4b6acaa60f5bbfe13c5a5ca924e299d5c8834e249f757dd53adc434c7",
+      "source_freeze_sha256": "ac0a8d0ad5938927dbddf01b937ef15387a15c6701d87d292ed486fbcbec7870"
+    },
+    {
+      "label": "B",
+      "public_rows": [
+        {
+          "case_name": "ExampleIlluminationCorrection_Example3",
+          "mode_name": "1w_1t",
+          "worker_count": "1",
+          "well_count": "1",
+          "compile_seconds": "0.5819623470306396",
+          "prepare_seconds": "0.0",
+          "execute_seconds": "0.38030195236206055",
+          "total_seconds": "1.3088595541194081",
+          "wells_per_second": "2.629489524807818",
+          "successful_wells": "1",
+          "native_single_sample_execution_seconds": "",
+          "projected_native_execution_seconds": "",
+          "projected_execution_speedup": "",
+          "peak_memory_mb": "1043.19140625",
+          "status": "success",
+          "memory_limit_mb": "",
+          "error_message": "",
+          "execution_route": "ordinary-zmq-outcomes-v1",
+          "server_lifecycle": "reused-per-sweep",
+          "run_input_sha256": "3c135c9fa72e1a8ec100dca796e96c7f6721cccfab82316b3836236b6b4e75b0"
+        }
+      ],
+      "receipt_sha256": "8a7f0ecb3274b47312e8ee1431b4bd75f9aaba713fd76d3e9ec28ab038aa93da",
+      "source_freeze_sha256": "d6608b629bb37ecb89d30797258d674d816857671e77fcf580bec3d62910a7a2"
+    },
+    {
+      "label": "A",
+      "public_rows": [
+        {
+          "case_name": "ExampleIlluminationCorrection_Example3",
+          "mode_name": "1w_1t",
+          "worker_count": "1",
+          "well_count": "1",
+          "compile_seconds": "0.9443988800048828",
+          "prepare_seconds": "0.0",
+          "execute_seconds": "0.3780531883239746",
+          "total_seconds": "1.6701623457483947",
+          "wells_per_second": "2.6451304495891326",
+          "successful_wells": "1",
+          "native_single_sample_execution_seconds": "",
+          "projected_native_execution_seconds": "",
+          "projected_execution_speedup": "",
+          "peak_memory_mb": "1012.59375",
+          "status": "success",
+          "memory_limit_mb": "",
+          "error_message": "",
+          "execution_route": "ordinary-zmq-outcomes-v1",
+          "server_lifecycle": "reused-per-sweep",
+          "run_input_sha256": "a37695e774a71b04c3e2a390df76245c973458380fca25a9aac513dbf5e8be8e"
+        }
+      ],
+      "receipt_sha256": "4a804982debefcd6cd075ac16520e85036281b3eddd78cabaf86f41f2841b4c6",
+      "source_freeze_sha256": "6b40a27bf359bb67febc0af967221829a7719cac0d965704609c0d36991f608e"
+    }
+  ],
+  "tests": {
+    "python_introspect": 136,
+    "objectstate_lazy_factory": 25,
+    "openhcs_readiness": 119
+  },
+  "upstream_prs": [
+    "https://github.com/OpenHCSDev/python-introspect/pull/6",
+    "https://github.com/OpenHCSDev/ObjectState/pull/9"
+  ],
+  "science_runs": [
+    {
+      "label": "A",
+      "directory": "/home/ts/.local/state/openhcs-maintenance/20261003/schema-source-readiness-ordinary-abba-v1/0-A",
+      "receipt_sha256": "6805ee89e2872aea6199e959e53b956ef144e2ff82516fbf6ac68042450d6fd2",
+      "scientific_npy_bytes": {
+        "results/reference_image__PolynomialCorrected.npy": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6",
+        "results/reference_image__ConvexHullCorrWorm.npy": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      "physical_selected_inputs": {
+        "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/ADSAStaphInfection2_A01_w2247376DD-6ADD-442D-AE47-F54A05F3EA94.tif": "5a57b7557bb0da5e241b48851b82d936c7ec36ede7aaca5e77b28ac4bfebf502"
+      },
+      "image_differences": [],
+      "table_differences": [],
+      "full_physical_inventory": "PASS"
+    },
+    {
+      "label": "B",
+      "directory": "/home/ts/.local/state/openhcs-maintenance/20261003/schema-source-readiness-ordinary-abba-v1/1-B",
+      "receipt_sha256": "c8f76ce4b6acaa60f5bbfe13c5a5ca924e299d5c8834e249f757dd53adc434c7",
+      "scientific_npy_bytes": {
+        "results/reference_image__ConvexHullCorrWorm.npy": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a",
+        "results/reference_image__PolynomialCorrected.npy": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      "physical_selected_inputs": {
+        "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/ADSAStaphInfection2_A01_w2247376DD-6ADD-442D-AE47-F54A05F3EA94.tif": "5a57b7557bb0da5e241b48851b82d936c7ec36ede7aaca5e77b28ac4bfebf502"
+      },
+      "image_differences": [],
+      "table_differences": [],
+      "full_physical_inventory": "PASS"
+    },
+    {
+      "label": "B",
+      "directory": "/home/ts/.local/state/openhcs-maintenance/20261003/schema-source-readiness-ordinary-abba-v1/2-B",
+      "receipt_sha256": "8a7f0ecb3274b47312e8ee1431b4bd75f9aaba713fd76d3e9ec28ab038aa93da",
+      "scientific_npy_bytes": {
+        "results/reference_image__PolynomialCorrected.npy": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6",
+        "results/reference_image__ConvexHullCorrWorm.npy": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+      },
+      "physical_selected_inputs": {
+        "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/ADSAStaphInfection2_A01_w2247376DD-6ADD-442D-AE47-F54A05F3EA94.tif": "5a57b7557bb0da5e241b48851b82d936c7ec36ede7aaca5e77b28ac4bfebf502"
+      },
+      "image_differences": [],
+      "table_differences": [],
+      "full_physical_inventory": "PASS"
+    },
+    {
+      "label": "A",
+      "directory": "/home/ts/.local/state/openhcs-maintenance/20261003/schema-source-readiness-ordinary-abba-v1/3-A",
+      "receipt_sha256": "4a804982debefcd6cd075ac16520e85036281b3eddd78cabaf86f41f2841b4c6",
+      "scientific_npy_bytes": {
+        "results/reference_image__ConvexHullCorrWorm.npy": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a",
+        "results/reference_image__PolynomialCorrected.npy": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+      },
+      "physical_selected_inputs": {
+        "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/ADSAStaphInfection2_A01_w2247376DD-6ADD-442D-AE47-F54A05F3EA94.tif": "5a57b7557bb0da5e241b48851b82d936c7ec36ede7aaca5e77b28ac4bfebf502"
+      },
+      "image_differences": [],
+      "table_differences": [],
+      "full_physical_inventory": "PASS"
+    }
+  ],
+  "scope": "Four ordinary uninstrumented public Illumination runs ABBA, CPU5 1w_1t INLINE, default OUTCOMES and memory observer. Server READY preparation/startup and shutdown excluded. A is exact prior source bytes for three files; dependency Git HEADs identify containing checkout, file hashes identify actual baseline contents. Only source lookup, existing registered type projection and registry readiness differ. No scientific processing or numerical changes. No new native CP execution.",
+  "limits": [
+    "Two observations per variant; no execution speedup is claimed.",
+    "Authored workload exports two images and no tables.",
+    "Native comparison is retained matched CP4.2.8.1 evidence, not a fresh native run.",
+    "Ordinary pipeline total excludes mandatory server startup and shutdown."
+  ],
+  "artifact_hashes": {
+    "freeze.json": "2c5d9272f1693e1da821ad45c6db3190cd046f12f446142f9c263611f8a81da8",
+    "observations.json": "aa72dc885608831f3bbc21efc62f2739d86ec74d64f5ae56d0ee27cd129792fd",
+    "science.json": "918c36612ec20738ad2d2760da85c9e9be07e81d4cd4bf0f60ec91dfcf906488",
+    "controller.py": "6fcf1cb1008ac32ee3ceaff8fd61f6db1fdba87544e1ffee1e4b3d484ce30b90",
+    "validate_science.py": "86fd34f0ca552309a453c5c169a97b949304aa37fb642a66972f4d12f9940684"
+  },
+  "authoritative_artifacts": "/home/ts/.local/state/openhcs-maintenance/20261003/schema-source-readiness-ordinary-abba-v1",
+  "remaining_work": "No execution speedup claimed. Runtime plumbing, other workloads, fresh native/scaling sweeps and figures remain outstanding."
+}

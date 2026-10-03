@@ -1321,6 +1321,7 @@ class CellProfilerModuleExecutor:
                     adapter,
                 ),
             )
+        image_input_specs = ArtifactSpecCollection(image_inputs)
         payloads = []
         source_names: list[str | None] = []
         image_strategy = RuntimeArtifactTypeStrategy.for_artifact_type(
@@ -1329,8 +1330,11 @@ class CellProfilerModuleExecutor:
         input_binding = replace(input_binding, current_image=current_runtime_payload)
         for spec in image_inputs:
             value = input_binding.artifact_value_for_spec(spec)
-            payloads.append(image_strategy.runtime_input_value(spec, value))
-            source_names.append(image_strategy.source_image_name(spec, value))
+            payload = image_strategy.runtime_input_value(spec, value)
+            payloads.append(payload)
+            source_names.append(
+                image_strategy.source_image_name_from_value(payload)
+            )
         parameter_image_inputs = input_binding.image_inputs
         broadcast_sources = tuple(
             sources[0]
@@ -1356,8 +1360,8 @@ class CellProfilerModuleExecutor:
                 if align_primary_images
                 else ()
             ),
-            stack_broadcast_source_indices=self._stack_broadcast_source_indices(
-                image_inputs
+            stack_broadcast_source_indices=(
+                image_input_specs.stack_broadcast_source_indices()
             ),
         )
         return CellProfilerImageRequest(
@@ -1365,12 +1369,12 @@ class CellProfilerModuleExecutor:
             source_image_name=self._primary_image_source_name_from_sources(
                 image_inputs, tuple(source_names)
             ),
-            source_aliases=ArtifactSpecCollection(image_inputs).names(),
+            source_aliases=image_input_specs.names(),
             image_count=len(payloads),
             execution_mode=composition.execution_mode,
             plane_projection=composition.preserved_plane_projection(
                 adapter,
-                source_aliases=ArtifactSpecCollection(image_inputs).names(),
+                source_aliases=image_input_specs.names(),
             ),
         )
 
@@ -1406,40 +1410,6 @@ class CellProfilerModuleExecutor:
         if not source_names:
             return None
         return source_names[0]
-
-    @staticmethod
-    def _stack_broadcast_source_indices(
-        input_specs: tuple[ArtifactSpec, ...],
-    ) -> tuple[int | None, ...]:
-        """Resolve exact stack-broadcast owners from declared input relations."""
-
-        indices_by_ref: dict[ArtifactSpecRef, list[int]] = {}
-        for input_index, spec in enumerate(input_specs):
-            indices_by_ref.setdefault(spec.ref(), []).append(input_index)
-
-        result: list[int | None] = []
-        for input_index, spec in enumerate(input_specs):
-            sources = spec.stack_broadcast_sources()
-            if len(sources) > 1:
-                raise ValueError(
-                    f"Input {spec.ref()!r} declares multiple stack-broadcast "
-                    f"owners: {sources!r}."
-                )
-            if not sources:
-                result.append(None)
-                continue
-            source_indices = tuple(indices_by_ref.get(sources[0], ()))
-            if len(source_indices) != 1:
-                raise ValueError(
-                    f"Input {spec.ref()!r} requires exactly one active occurrence "
-                    f"of stack-broadcast owner {sources[0]!r}, got "
-                    f"{source_indices!r}."
-                )
-            source_index = source_indices[0]
-            if source_index == input_index:
-                raise ValueError(f"Input {spec.ref()!r} cannot broadcast from itself.")
-            result.append(source_index)
-        return tuple(result)
 
     def _invocation_request(
         self,

@@ -11,7 +11,7 @@ from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.source_bindings import SourceProjectionRole
 from openhcs.core.source_metadata import (
     ORIGINAL_SOURCE_METADATA_FIELD,
-    SourceMetadataRoleView,
+    SourceMetadataFields,
 )
 from openhcs.core.source_projection import (
     OpenHCSPlaneAddress,
@@ -269,7 +269,7 @@ def test_source_projection_preserves_provenance_owned_component_remaps(
 
     assert source_metadata[component.value] == address_value
     assert (
-        dict(SourceMetadataRoleView(source_metadata).original_items())[component.value]
+        dict(SourceMetadataFields.original_items(source_metadata))[component.value]
         == source_value
     )
 

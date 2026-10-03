@@ -2461,7 +2461,7 @@ def _radial_distribution_arrays_from_bin_totals_numba(
     _IntensityDistributionHeatmapOutputsRuntimeParameter,
 )
 def measure_object_intensity_distribution(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     labels: ObjectLabelValue,
     bin_count: int = 4,
     wants_scaled: bool = True,
@@ -2562,7 +2562,7 @@ def measure_object_intensity_distribution(
 
 
 def _intensity_distribution_heatmap(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     request: IntensityDistributionHeatmapRuntimeOutput,
     *,
     radial_backend: "RadialDistributionBackendStrategy",

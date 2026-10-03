@@ -8,10 +8,11 @@ validation, and state management.
 
 import abc
 import inspect
+from pathlib import Path
 from collections.abc import Mapping
-from dataclasses import dataclass, is_dataclass
+from dataclasses import dataclass, field, is_dataclass
 from types import MappingProxyType
-from typing import TYPE_CHECKING, get_type_hints
+from typing import TYPE_CHECKING, Iterable, get_type_hints
 
 from objectstate import get_base_type_for_lazy, semantic_values_equal
 
@@ -49,9 +50,28 @@ class StepExecutionObservation:
         tuple[RuntimeArtifactLocation, ...],
     ]
 
+    runtime_export_paths: tuple[Path, ...] = field(default_factory=tuple)
+
     @classmethod
     def empty(cls) -> "StepExecutionObservation":
         return cls(MappingProxyType({}))
+
+    @classmethod
+    def combine(
+        cls, observations: Iterable["StepExecutionObservation"]
+    ) -> "StepExecutionObservation":
+        locations = {}
+        paths = []
+        for observation in observations:
+            for (
+                address,
+                values,
+            ) in observation.materialized_locations_by_address.items():
+                locations[address] = tuple(
+                    dict.fromkeys((*locations.get(address, ()), *values))
+                )
+            paths.extend(observation.runtime_export_paths)
+        return cls(MappingProxyType(locations), tuple(dict.fromkeys(paths)))
 
 
 # def get_step_id(step: 'AbstractStep') -> str:

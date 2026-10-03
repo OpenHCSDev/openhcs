@@ -1,0 +1,16 @@
+{
+  "source_head": "ee8f97552b349499655bb3f961860b34dc784071",
+  "main_merge": "ba7b26b82717a7bc4de5c9701b413aa64ba13e35",
+  "fix_pr": "https://github.com/OpenHCSDev/openhcs/pull/531",
+  "closed_issue": 530,
+  "focused_main_tests_passed": 381,
+  "preexisting_shape_test_failures": 5,
+  "preexisting_failures_reproduced_on_unmodified_main": "6afc9a32514a204424d74527092ea318bc1cdd5e",
+  "freeze_path": "/home/ts/.local/state/openhcs-maintenance/20261003/canonical-output-policy-paired-v1/source-freeze.json",
+  "freeze_sha256": "1aaf1ce6405470eafe86a07db009d0477d55b8b8e2dbf0e8227b9be4e345ffba",
+  "nra_census_path": "/tmp/openhcs-source-cohort-5af63/policy-family-current-census-v2.json",
+  "nra_census_sha256": "91849adb21adacacd055a0c1a52b32c71cd58b4443916639fc38d6e6c4348f9c",
+  "science": "PASS: eight full ordinary/native comparisons",
+  "remaining_2x_execution_gap_3d_seconds": 1.835302054649219,
+  "performance_decision": "No causal gain admitted from two descriptive observations; joined dominant plumbing optimization remains active."
+}

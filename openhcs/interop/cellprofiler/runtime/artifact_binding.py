@@ -159,6 +159,14 @@ class RuntimeArtifactTypeStrategy(
         del spec, value
         return None
 
+    def source_image_name_from_value(
+        self,
+        value: RuntimeCallableArgument,
+    ) -> str | None:
+        """Project a source name from an already resolved artifact value."""
+        del value
+        return None
+
     def source_image_payload(
         self,
         spec: ArtifactSpec,
@@ -234,10 +242,14 @@ class ImageArtifactTypeStrategy(RuntimeArtifactTypeStrategy):
         spec: ArtifactSpec,
         value: RuntimeCallableArgument,
     ) -> str | None:
+        return self.source_image_name_from_value(self.raw_runtime_input_value(spec, value))
+
+    def source_image_name_from_value(
+        self,
+        value: RuntimeCallableArgument,
+    ) -> str | None:
         return single_source_name(
-            image_payload_metadata(
-                self.raw_runtime_input_value(spec, value)
-            ).source_provenance.represented_source_image_names
+            image_payload_metadata(value).source_provenance.represented_source_image_names
         )
 
     def source_image_payload(
@@ -318,7 +330,13 @@ class ObjectLabelsArtifactTypeStrategy(RuntimeArtifactTypeStrategy):
         spec: ArtifactSpec,
         value: RuntimeCallableArgument,
     ) -> str | None:
-        return self.object_labels(spec, value).source_image_name
+        return self.source_image_name_from_value(self.object_labels(spec, value))
+
+    def source_image_name_from_value(
+        self,
+        value: RuntimeCallableArgument,
+    ) -> str | None:
+        return cast(ObjectLabelSet, value).source_image_name
 
     def source_image_payload(
         self,
