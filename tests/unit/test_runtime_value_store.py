@@ -514,18 +514,28 @@ def test_runtime_value_store_find_matching_cache_invalidates_after_replace():
         name="measurements",
         artifact_type=MeasurementsArtifactType,
         axis_id="A01",
-        target=RuntimeArtifactDynamicComponentTarget(AllComponents.CHANNEL),
+        target=RuntimeArtifactDynamicComponentTarget(
+            ArtifactInputPlan(
+                name="measurements",
+                path="/memory/measurements.pkl",
+                artifact_type=MeasurementsArtifactType,
+                group_component=AllComponents.CHANNEL,
+            ),
+            "memory",
+        ),
     )
 
     assert store.find_matching(query) == (original,)
 
     replacement = store.replace(
         value,
-        path="/other/measurements.pkl",
+        path="/memory/measurements.pkl",
         backend="memory",
     )
 
-    assert store.find_matching(query) == (original, replacement)
+    assert store.find_matching(query) == (replacement,)
+    assert store.find_matching(query)[0] is replacement
+    assert store.get(value.key) is replacement
 
 
 def test_runtime_artifact_query_from_input_plan_uses_group_path():
@@ -564,9 +574,9 @@ def test_runtime_artifact_query_from_dynamic_input_plan_matches_discovered_group
     assert isinstance(query.target, RuntimeArtifactDynamicComponentTarget)
     assert query.matches(
         StoredRuntimeValue(
-            value=_runtime_value(path="/memory/measurements_w1.pkl"),
+            value=_runtime_value(path="/memory/measurements_wDAPI.pkl"),
             location=RuntimeArtifactLocation(
-                path="/memory/measurements_w1.pkl",
+                path="/memory/measurements_wDAPI.pkl",
                 backend="memory",
             ),
         )
@@ -1969,3 +1979,249 @@ def test_runtime_value_store_clear_releases_records_and_advances_revision():
     assert store.revision > revision
     assert store.values() == ()
     assert store.observed_values == ()
+
+
+def test_dynamic_input_query_distinguishes_compiled_paths_with_same_backend():
+    store = RuntimeValueStore()
+    value = _runtime_value()
+    original = store.record(value, path="/first/measurements.pkl", backend="memory")
+    later = store.replace(value, path="/second/measurements.pkl", backend="memory")
+    queries = tuple(
+        RuntimeArtifactQuery.from_input_plan(
+            ArtifactInputPlan(
+                name="measurements",
+                path=record.path,
+                artifact_type=MeasurementsArtifactType,
+                group_component=AllComponents.CHANNEL,
+                paths_by_group={None: record.path, "DAPI": record.path},
+            ),
+            axis_id="A01",
+            backend="memory",
+        )
+        for record in (original, later)
+    )
+    assert queries[0] != queries[1]
+    assert store.find_matching(queries[0]) == (original,)
+    assert store.find_matching(queries[1]) == (later,)
+    assert store.find_matching(queries[0]) == (original,)
+
+
+def test_dynamic_input_query_retains_discovery_order_and_ignores_wrong_component():
+    store = RuntimeValueStore()
+    value = _runtime_value()
+    wrong = RuntimeValue.normalize(
+        ArtifactOutputPlan(
+            name="measurements",
+            path="/memory/measurements.pkl",
+            artifact_type=MeasurementsArtifactType,
+            group_component=AllComponents.SITE,
+            group_keys=("DAPI",),
+        ),
+        value.data,
+        axis_id="A01",
+    )
+    store.record(wrong, path="/memory/measurements.pkl", backend="memory")
+    original = store.record(value, path="/memory/measurements.pkl", backend="memory")
+    query = RuntimeArtifactQuery.from_input_plan(
+        ArtifactInputPlan(
+            name="measurements",
+            path="/memory/measurements.pkl",
+            artifact_type=MeasurementsArtifactType,
+            group_component=AllComponents.CHANNEL,
+        ),
+        axis_id="A01",
+        backend="memory",
+    )
+    assert store.find_matching(query) == (original,)
+
+
+def test_dynamic_query_snapshots_address_mapping_without_mutating_source_plan():
+    paths = {None: "/memory/measurements.pkl", "DAPI": "/first/measurements.pkl"}
+    plan = ArtifactInputPlan(
+        name="measurements",
+        path="/memory/measurements.pkl",
+        artifact_type=MeasurementsArtifactType,
+        group_component=AllComponents.CHANNEL,
+        paths_by_group=paths,
+    )
+    old_query = RuntimeArtifactQuery.from_input_plan(
+        plan, axis_id="A01", backend="memory"
+    )
+    same_query = RuntimeArtifactQuery.from_input_plan(
+        plan, axis_id="A01", backend="memory"
+    )
+    old_hash = hash(old_query)
+    assert old_query == same_query
+    store = RuntimeValueStore()
+    value = _runtime_value()
+    first = store.record(value, path=paths["DAPI"], backend="memory")
+    assert store.find_matching(old_query) == (first,)
+    paths["DAPI"] = "/second/measurements.pkl"
+    assert plan.paths_by_group is paths
+    assert old_query.target.input_plan.paths_by_group["DAPI"] == first.path
+    assert hash(old_query) == old_hash
+    assert old_query == same_query
+    assert store.find_matching(old_query) == (first,)
+    new_query = RuntimeArtifactQuery.from_input_plan(
+        plan, axis_id="A01", backend="memory"
+    )
+    assert new_query != old_query
+    assert store.find_matching(new_query) == ()
+    second = store.replace(value, path=paths["DAPI"], backend="memory")
+    assert store.find_matching(old_query) == (first,)
+    assert store.find_matching(new_query) == (second,)
+    with pytest.raises(TypeError):
+        old_query.target.input_plan.paths_by_group["DAPI"] = "/mutated/query.pkl"
+
+
+@pytest.mark.parametrize("paths", (None, {}))
+def test_dynamic_query_retains_absent_and_empty_path_declarations(paths):
+    plan = ArtifactInputPlan(
+        name="measurements",
+        path="/memory/measurements.pkl",
+        artifact_type=MeasurementsArtifactType,
+        group_component=AllComponents.CHANNEL,
+        paths_by_group=paths,
+    )
+    query = RuntimeArtifactQuery.from_input_plan(plan, axis_id="A01", backend="memory")
+    assert query.target.input_plan.paths_by_group == paths
+    assert plan.paths_by_group is paths
+    assert query.target.input_plan.path_for_runtime_query("DAPI") == plan.path
+
+
+def test_input_plan_owns_independent_immutable_runtime_address_snapshot():
+    paths = {None: "/memory/measurements.pkl", "DAPI": "/first/measurements.pkl"}
+    plan = ArtifactInputPlan(
+        name="measurements",
+        path="/memory/measurements.pkl",
+        artifact_type=MeasurementsArtifactType,
+        group_component=AllComponents.CHANNEL,
+        paths_by_group=paths,
+        source_step_id=7,
+        source_step_scope_id="producer-scope",
+    )
+    snapshot = plan.runtime_query_snapshot()
+    assert snapshot == plan
+    assert snapshot is not plan
+    assert snapshot.paths_by_group is not paths
+    assert plan.paths_by_group is paths
+    paths["DAPI"] = "/second/measurements.pkl"
+    assert snapshot.path_for_runtime_query("DAPI") == "/first/measurements.pkl"
+    assert plan.path_for_runtime_query("DAPI") == "/second/measurements.pkl"
+    assert snapshot.source_step_id == plan.source_step_id
+    assert snapshot.source_step_scope_id == plan.source_step_scope_id
+    with pytest.raises(TypeError):
+        snapshot.paths_by_group["DAPI"] = "/mutated/query.pkl"
+
+
+def test_store_transport_excludes_all_derived_lookup_caches():
+    store = RuntimeValueStore()
+    value = _runtime_value()
+    value.data.rows = MeasurementProjectedColumnarRows(
+        {"object_id": (1,)}, fields=(FieldSpec("object_id", int),)
+    )
+    record = store.record(value, path="/memory/measurements.pkl", backend="memory")
+    latest = store.replace(
+        value, path="/later/measurements.pkl", backend="memory"
+    )
+    original_transport = pickle.dumps(store, protocol=5)
+    query = RuntimeArtifactQuery.from_input_plan(
+        ArtifactInputPlan(
+            name="measurements",
+            path=record.path,
+            artifact_type=MeasurementsArtifactType,
+            group_component=AllComponents.CHANNEL,
+            paths_by_group={"DAPI": record.path},
+        ),
+        axis_id="A01",
+        backend="memory",
+    )
+    assert store.find(name=value.key.name) == (record, latest)
+    assert store.find_matching(query) == (record,)
+    store.query_cache(RuntimeObjectLabelMeasurementQueryCache).store_value(
+        _label_query(), (np.ones(100_000),)
+    )
+    assert pickle.dumps(store, protocol=5) == original_transport
+    restored = pickle.loads(original_transport)
+    assert restored.revision == store.revision
+    assert "_find_cache" not in vars(store)
+    assert "_find_matching_cache" not in vars(store)
+    assert "_find_cache" not in vars(restored)
+    assert "_find_matching_cache" not in vars(restored)
+    assert restored._query_caches == {}
+    assert restored.values()[0].key == record.key
+    assert restored.values()[0].location == record.location
+    assert restored.values()[0].value.data.row_mappings() == value.data.row_mappings()
+    assert restored.find_matching(query) == (restored.values()[0],)
+    assert restored.get(record.key) is restored.values()[1]
+    assert restored.get(record.key).location == latest.location
+    assert restored.observed_values == restored.values()
+    assert restored.values()[0] is restored.observed_values[0]
+    assert restored.values()[0].value is restored.values()[1].value
+
+
+def test_unified_store_cache_keeps_both_query_domains_and_empty_results():
+    from openhcs.core.process_local_cache import BoundedCache
+
+    store = RuntimeValueStore()
+    record = store.record(_runtime_value(), path="/memory/measurements.pkl", backend="memory")
+    query = RuntimeArtifactQuery.from_input_plan(
+        ArtifactInputPlan(
+            name="measurements",
+            path=record.path,
+            artifact_type=MeasurementsArtifactType,
+            group_component=AllComponents.CHANNEL,
+        ),
+        axis_id="A01",
+        backend="memory",
+    )
+    semantic = store.find(name=record.key.name)
+    planned = store.find_matching(query)
+    empty = store.find(name="absent")
+    assert semantic == planned == (record,)
+    assert store.find(name=record.key.name) is semantic
+    assert store.find_matching(query) is planned
+    cache = store.query_cache(BoundedCache)
+    assert len(cache.entries) == 3
+    assert empty == ()
+    assert sum(value == () for value in cache.entries.values()) == 1
+    assert store.find(name="absent") is empty
+    assert len(cache.entries) == 3
+
+
+def test_unified_store_cache_eviction_recomputes_order_without_changing_record_aliases():
+    from openhcs.core.process_local_cache import BoundedCache
+
+    store = RuntimeValueStore()
+    first_value = _runtime_value(name="first")
+    second_value = _runtime_value(name="second")
+    first = store.record(first_value, path="/memory/first.pkl", backend="memory")
+    second = store.record(second_value, path="/memory/second.pkl", backend="memory")
+    cache = store.query_cache(BoundedCache)
+    cache.max_entries = 2
+    all_records = store.find()
+    assert all_records == (first, second)
+    query = RuntimeArtifactQuery.from_output_plan(
+        ArtifactOutputPlan(
+            name="first",
+            path=first.path,
+            artifact_type=MeasurementsArtifactType,
+            group_component=AllComponents.CHANNEL,
+            group_keys=("DAPI",),
+        ),
+        axis_id="A01",
+        backend="memory",
+        group_key="DAPI",
+    )
+    assert store.find_matching(query) == (first,)
+    assert store.find(name="missing") == ()
+    assert len(cache.entries) == 2
+    recomputed = store.find()
+    assert recomputed == all_records
+    assert recomputed is not all_records
+    assert recomputed[0] is first and recomputed[1] is second
+    replacement = store.replace(first_value, path=first.path, backend="memory")
+    assert cache.entries == {}
+    assert store.find_matching(query)[0] is replacement
+    assert store.find() == (replacement, second)
+    assert store.find()[1] is second
