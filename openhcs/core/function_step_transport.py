@@ -226,9 +226,10 @@ class FunctionStepTransportAuthority:
         if (
             normalized_func is contract.func
             and normalized_raw is contract.raw_processing_function
+            and contract.metadata.prepare is None
         ):
             return contract
-        metadata = contract.metadata
+        metadata = contract.metadata.without_prepare()
         if normalized_raw is not contract.raw_processing_function:
             metadata = metadata.with_raw_processing_function(normalized_raw)
         return replace(

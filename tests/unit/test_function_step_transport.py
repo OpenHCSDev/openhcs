@@ -418,6 +418,16 @@ def test_bundle_transport_preserves_prepared_runtime_contract_identity() -> None
     )
     pattern = compile_function_pattern(reference, {}, {})
     (invocation,) = tuple(pattern.iter_invocations())
+    invocation = replace(
+        invocation,
+        contract=replace(
+            invocation.contract,
+            metadata=replace(invocation.contract.metadata, prepare=lambda: None),
+        ),
+    )
+    pattern = replace(
+        pattern, groups=(replace(pattern.groups[0], invocations=(invocation,)),)
+    )
     prepared_callable = FunctionInvocationCallableResolver.resolve(invocation)
     plan = CompiledStepPlan(
         step_index=0, step_name="Crop", step_type="FunctionStep", axis_id="A01",
@@ -440,6 +450,9 @@ def test_bundle_transport_preserves_prepared_runtime_contract_identity() -> None
     assert transport_context is not context
     assert transport_plan is not plan
     assert transport_plan.func.metadata.prepare is None
+    (transport_invocation,) = tuple(transport_plan.compiled_function_pattern.iter_invocations())
+    assert transport_invocation.contract.metadata.prepare is None
+    assert invocation.contract.metadata.prepare is not None
     assert plan.func is reference and reference.metadata.prepare is not None
     assert plan.compiled_function_pattern is pattern
     assert FunctionInvocationCallableResolver.resolve(invocation) is prepared_callable
