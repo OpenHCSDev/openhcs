@@ -476,3 +476,59 @@ qualification is in ``benchmark/results/perf_dependency_source_readiness_2026100
 The unchanged original R0/R1 failures, full30/scaling work and other workloads'
 unresolved native image differences remain open. No whole-goal completion is
 claimed.
+
+Current delivery and dominant transport investigation
+---------------------------------------------------
+
+The aggregate-to-layer producer fix is merged into main as PR #523, closing
+#515 through its formal closing link. The final PR head ``1419c5bd`` has the
+same production source, tests and build configuration as the tested
+``cab5363c`` checkpoint: 447 selected controls pass, with no deselections.
+The subsequent main merge changes documentation only. A first temporary
+checkout run failed collection because it lacked native extensions; the
+passing run reused the existing binaries after checking both C++ sources
+were byte-identical. This is local integration evidence, not installed GUI
+acceptance or a performance gain. The temporary checkout has been retired.
+The performance branch is synced with main ``6afc9a325`` at ``c49754e4c``;
+its production and test bytes are unchanged from ``21934dad3``.
+
+The native-annotation experiment is stopped. Four alternating pairs of the
+original five-write/publication/reconciliation sequence save 23--97ms, with
+58.4ms median paired savings. All 16 controls pass, including the complete
+609,001-byte ordered wire sequence, 120 produced entries and 180 source
+entries. These savings do not materially close the current 1.916s 3D execution
+gap. Definition-time alias binding still differs from deferred annotations;
+this test-only experiment is not a universal annotation migration proof.
+No production annotations, schema cache or benchmark driver were changed.
+The determining decision is retained at
+``~/.local/state/openhcs-maintenance/20261003/native-annotations-three-owner-replay-v1/decision.json``
+(SHA-256 ``c1159f2fda79a88e751228ad8215e1e64e79ecc5371313b79263f12b17af0396``).
+
+Unconditional manifest filename-cache routing is also rejected. An actual
+uncached SourceSchema parser accepts ``z_index=[]`` and emits ``z[]``; the
+existing explicit cache instead raises ``TypeError`` before construction.
+The current filename-value mappings and parser have no persistent nominal
+eligibility law. No graph replay or source patch was made. The determining
+receipt is
+``~/.local/state/openhcs-maintenance/20261003/manifest-filename-cache-eligibility-stop-v1.json``
+(SHA-256 ``188b02df644b1c7e6a3db0f8b222a87783e1d2b26e99137c2b4bb0285727baba``).
+This does not reject a store-owned path index governed by the existing
+records-revision boundary; that distinct structural route is being audited.
+
+The principal destination under investigation is the existing whole-stack
+transport and compiled step-output dependency. Saving currently projects
+per-path payloads and records, then recomposes their metadata for the stack
+cache. Loading derives path, workspace and source-binding information before
+checking that cache. The existing cache, manifest and compiled binding owners
+must account for this handoff without another ledger. Actual VFS access,
+selectors, source-identity birth epochs, independently mutable outputs and
+publication remain production consumers to preserve.
+
+The retained coarse 3D ledger assigns about 1.646s to load, save and unstack
+combined. That is an investigation ceiling including mandatory work, not
+removable time. Retained profile call counts identify 10,680 normalizations
+in axis-removal and source-projection operations; profiled time is not scaled
+into an ordinary saving. A saved warm loader occurrence takes only 9.8ms and
+cannot establish whole-pipeline payoff. The next evidence must determine
+actual step-level cache hits, cohort fanout and metadata births, followed by
+a consumer-complete replay and ordinary end-to-end verification.
