@@ -97,7 +97,7 @@ viewer-selective-retirement-522-shared-selection-20261003.tar.gz, SHA256
 04cbde5af7c74ad751b090562905d056fa1aee62ae17474547cf04b8c4e1b5b0.
 It includes current three production files, both fixtures, all original callers
 and the complete before/after/R0/failed-and-passing raw logs. Older archives,
-untracked ledgers and all seven foreign gitlinks remain preserved. All four
+untracked ledgers and all seven foreign gitlinks remain preserved. All five
 source scopes are terminal; no owned runtime/client or UNKNOWN source handle.
 
 Remaining acceptance is unchanged: ONE parent-reviewed ordinary installed
