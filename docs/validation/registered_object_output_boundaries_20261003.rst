@@ -100,6 +100,17 @@ The source trace distinguishes producer IDs from exported row identity:
 * ``DenseObjectSizeShapeMeasurement`` / ``ObjectSizeShapeFeatureMeasurement``
   construct raw geometry vectors and row domains. Two-dimensional raw vectors
   use the positive label extent; volume feature rows can use compact ordinals.
+  The original table HEADER declares AreaShape_Area and the two-dimensional
+  bounding-box family, not Volume; no scientific feature values were read.
+  More precisely, ``ShapeObjectFeatureValueTable.rows`` creates rows from its
+  row domain and zips each vector onto them. The generic existing ancestor
+  ``ObjectFeatureValueTable.rows`` instead resolves feature indexes through
+  ``ObjectFeatureArrayDomainStrategy`` and measured object IDs. The shape
+  override does not use those measured IDs to key the emitted rows. The region
+  backend returns compact vectors with actual present IDs; shape's object-index
+  and Feret requests also use the dense positive extent, and radius vectors
+  copy measured values into a dense-length prefix. Those distinct vector
+  domains must not be treated as one categorical-ID axis merely by equal count.
   ``ShapeObjectMeasurementRows`` explicitly declares ROW_SEQUENCE, as does
   ``MeasureObjectSizeShapeModule``. That explicit row declaration takes priority
   in ``CellProfilerObjectMeasurementRowPolicy.object_identity_for_rows``.
@@ -127,6 +138,14 @@ producer declaration. Neither equality of counts nor a local export renumbering
 repairs this relation. Preserve legitimate CellProfiler ordinal semantics while
 making the existing object-domain/row-projection owners carry an unambiguous
 association through feature lookup and persisted table/label consumers.
+The earliest source projection owner is ShapeObjectFeatureValueTable and its
+feature-array owner, before row completion. The existing ancestor's shared
+identity-aware rows algorithm and minimal declared feature-domain hooks are
+the integration proposal; do not copy another zipper or add a parallel map.
+This checkpoint does NOT establish that the final object's geometry was
+discarded: a missing categorical key can also denote a compact ordinal row.
+Distinct known per-object geometry is required to distinguish misassociation,
+padding and actual loss in behavioral acceptance.
 Do not globally replace every ROW_SEQUENCE declaration with LABEL_ID, infer
 object identity from pixel rank, or change scientific detector settings.
 
