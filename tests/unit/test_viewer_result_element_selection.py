@@ -213,7 +213,7 @@ def test_native_navigation_acknowledges_exact_bound_linked_selection(qtbot):
         np.testing.assert_array_equal(before, after)
 
 
-def test_singleton_selection_stays_strict_with_bound_group(qtbot):
+def test_singleton_selection_expands_only_after_queued_navigation(qtbot):
     from napari.components import ViewerModel
 
     viewer = ViewerModel()
@@ -221,9 +221,68 @@ def test_singleton_selection_stays_strict_with_bound_group(qtbot):
     layer = viewer.add_shapes(paths, shape_type="path", features={"owner": [8, 8, 9]})
     binding = NapariResultSelectionGroupBinding("native-test-subject", "owner")
     _viewer_server(viewer, layer, group_binding=binding)
-    with pytest.raises(RuntimeError, match="requested native data selection"):
-        NapariResultElementSelectionAuthority.select(layer, 1)
-    assert layer.selected_data == {0, 1}
+    state = NapariResultElementSelectionAuthority.select(layer, 1)
+    assert state.selected_data_indices == (1,)
+    assert layer.selected_data == {1}
+    qtbot.waitUntil(lambda: layer.selected_data == {0, 1}, timeout=1000)
+
+
+def test_linked_selection_projects_off_slice_members_without_changing_subject(qtbot):
+    from napari.components import ViewerModel
+
+    viewer = ViewerModel()
+    viewer.add_image(np.zeros((2, 8, 8), dtype=np.uint8))
+    paths = [np.array([[0, i, i], [0, i + 1, i + 1]], dtype=float) for i in range(2)]
+    layer = viewer.add_shapes(paths, shape_type="path", features={"owner": [8, 8]})
+    linked_paths = [coordinates + [1, 0, 0] for coordinates in paths]
+    linked = viewer.add_shapes(linked_paths, shape_type="path", features={"owner": [8, 8]})
+    viewer.dims.current_step = (0, 0, 0)
+    binding = NapariResultSelectionGroupBinding("native-test-subject", "owner")
+    server, _, _, _ = _viewer_server(viewer, layer, group_binding=binding)
+    server.result_selection_controller.bind(linked, group_binding=binding)
+    original_data = [coordinates.copy() for coordinates in linked.data]
+
+    # Original native behaviour reproduces the retained failure signature.
+    with pytest.raises(ValueError, match="zero-size array.*minimum"):
+        linked.selected_data = {0, 1}
+    linked.selected_data = set()
+
+    state = server.result_selection_controller.select(layer, 1)
+
+    assert state.selected_data_indices == (0, 1)
+    assert linked.selected_data == set()
+    assert server.result_selection_controller._linked_group_members(layer, 1) == (
+        (layer, (0, 1)), (linked, (0, 1)),
+    )
+    assert viewer.dims.current_step == (0, 0, 0)
+    for before, after in zip(original_data, linked.data, strict=True):
+        np.testing.assert_array_equal(before, after)
+
+
+def test_linked_points_use_the_same_native_slice_projection(qtbot):
+    from napari.components import ViewerModel
+
+    viewer = ViewerModel()
+    viewer.add_image(np.zeros((2, 8, 8), dtype=np.uint8))
+    layer = viewer.add_shapes(
+        [np.array([[0, 0, 0], [0, 1, 1]], dtype=float)],
+        shape_type="path", features={"owner": [8]},
+    )
+    linked = viewer.add_points(
+        np.array([[0, 2, 2], [1, 3, 3]], dtype=float), features={"owner": [8, 8]},
+    )
+    viewer.dims.current_step = (0, 0, 0)
+    binding = NapariResultSelectionGroupBinding("native-test-subject", "owner")
+    server, _, _, _ = _viewer_server(viewer, layer, group_binding=binding)
+    server.result_selection_controller.bind(linked, group_binding=binding)
+
+    state = server.result_selection_controller.select(layer, 0)
+
+    assert state.selected_data_indices == (0,)
+    assert linked.selected_data == {0}
+    assert server.result_selection_controller._linked_group_members(layer, 0) == (
+        (layer, (0,)), (linked, (0, 1)),
+    )
 
 
 def test_bound_selection_rejects_unrelated_native_members(qtbot):
@@ -247,7 +306,7 @@ def test_bound_selection_rejects_unrelated_native_members(qtbot):
             mutating = False
 
     layer.events.highlight.connect(add_unrelated_member)
-    with pytest.raises(RuntimeError, match="canonical linked result selection"):
+    with pytest.raises(RuntimeError, match="requested native data selection"):
         server.result_selection_controller.select(layer, 1)
 
 
@@ -289,7 +348,7 @@ def test_napari_navigation_selects_native_feature_row_and_projects_evidence(qtbo
             np.array([[4, 4], [4, 6], [6, 6]], dtype=float),
         ],
         shape_type=["polygon", "polygon"],
-        features={"label": [11, 12], "area": [3.0, 4.0]},
+        features={"label": [11, 12], "area": [3.0, 4.0], "owner": [8, 8]},
         name="Result ROIs",
     )
     roi_manager = QRoiManager(viewer)
@@ -483,6 +542,7 @@ def test_napari_navigation_moves_to_selected_roi_component_slice(qtbot) -> None:
     server, _overlay, _result_selection_dock, _qt_window = _viewer_server(
         viewer,
         layer,
+        group_binding=NapariResultSelectionGroupBinding("native-test-subject", "owner"),
     )
     projection = ViewerLayerAxisProjection(
         projected_axis_components=("channel", "z"),
@@ -529,6 +589,9 @@ def test_napari_navigation_moves_to_selected_roi_component_slice(qtbot) -> None:
     assert response["status"] == "success"
     assert viewer.dims.current_step[:2] == (2, 3)
     assert layer.selected_data == {1}
+    assert server.result_selection_controller._linked_group_members(layer, 1) == (
+        (layer, (0, 1)),
+    )
 
     conflicting_response = NapariNavigationControlMessageAction().handle(
         server,

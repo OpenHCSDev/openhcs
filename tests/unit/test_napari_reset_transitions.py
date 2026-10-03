@@ -738,7 +738,7 @@ def test_controller_remount_retains_linked_subject_members_and_binding(receiver)
     binding = NapariResultSelectionGroupBinding("independent-subject", "owner")
     controller.bind(old, binding)
     controller.bind(linked, binding)
-    old.selected_data = {0}
+    controller.select(old, 0)
     assert old.selected_data == {0, 1} and linked.selected_data == {0}
     receiver.layer_route_state.set_layer("retained-selection", old)
     with controller.preserve_selection("retained-selection"):
@@ -776,6 +776,42 @@ def test_controller_retains_empty_native_geometry_without_invented_identity(rece
         replacement = receiver.viewer.add_shapes(ndim=2)
         receiver.layer_route_state.set_layer("retained-selection", replacement)
     assert not replacement.selected_data
+
+
+@pytest.mark.parametrize("data_type", [StreamingDataType.POINTS, StreamingDataType.SHAPES])
+def test_controller_refuses_off_slice_remapped_selection_before_native_assignment(
+    receiver, data_type,
+):
+    viewer = receiver.viewer
+    viewer.add_image(np.zeros((2, 8, 8), dtype=np.uint8))
+    feature = NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE
+    coordinates = [np.asarray([[0, i, i], [0, i + 1, i + 1]], dtype=float) for i in range(2)]
+
+    def mount(z_index):
+        data = [path + [z_index, 0, 0] for path in coordinates]
+        features = {feature: ["a", "b"], "owner": [8, 8]}
+        if data_type is StreamingDataType.POINTS:
+            return viewer.add_points([path[0] for path in data], features=features)
+        return viewer.add_shapes(data, shape_type="path", features=features)
+
+    old = mount(0)
+    viewer.dims.current_step = (0, 0, 0)
+    controller = receiver.result_selection_controller
+    controller.bind(old, NapariResultSelectionGroupBinding("retained-subject", "owner"))
+    controller.select(old, 0)
+    assert old.selected_data == {0, 1}
+    receiver.layer_route_state.set_layer("retained-selection", old)
+    with pytest.raises(ValueError, match="selected source members have no displayed geometry"):
+        with controller.preserve_selection("retained-selection"):
+            viewer.layers.remove(old)
+            replacement = mount(1)
+            receiver.layer_route_state.set_layer("retained-selection", replacement)
+    assert not replacement.selected_data
+    assert tuple(replacement.features[feature]) == ("a", "b")
+    assert viewer.dims.current_step == (0, 0, 0)
+    step = viewer.dims.current_step
+    QApplication.instance().processEvents()
+    assert viewer.dims.current_step == step and not replacement.selected_data
 
 
 def test_controller_preservation_cancels_queued_navigation_without_unmount(receiver):

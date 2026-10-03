@@ -4,6 +4,49 @@ Selective managed-viewer retirement519: original-owner source checkpoint
 Scope and custody
 -----------------
 
+Shared native selection projection received (2026-10-03)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Singer receives only Planck549f1b9607f0's two released source/fixture hunks,
+not its branch ancestry, after reading current claims. Normal maineda0121a8
+integration changes only the disjoint operational funding family. Root394
+c50a947f4 still owns publication/source-frame/unit integration; its relevant
+viewer and unit-source diff from74693f589 is empty. The named receiving
+dependency is394comment5971678466;541's unit/frame request5970482598 remains
+unreleased. No native/installed change or new worktree.
+
+NapariResultElementSelectionAuthority now owns both current-slice projection
+and the exact native selection assignment/readback. Logical subject membership
+remains on the existing group index. Controller synchronization and remount
+restore use that one owner. Premature expansion and failure-finally replay are
+deleted, as are both controller-native selected_data writes and the restore's
+copied readback check. A remapped retained member outside the native slice is
+explicitly rejected before native assignment, not silently dropped. Legitimate
+empty native selection remains supported. No new registry, selection store,
+layer-kind switch or alternate frame/camera authority is introduced.
+
+Original Napari Points/Shapes _indices_view owns visible row membership; Shapes
+multi-member interaction_box calls create_box on displayed vertices and fails
+if they are empty. Both original implementations were read. IMPL-12 and BOUND-2
+apply to the deleted writer/readback copies; IDEN-6 applies to preserving source
+member identity instead of its former native row. Existing independent
+selectable/presentation capabilities and cooperative MRO remain load bearing.
+
+The existing audit caller before01 parses704 production/675tests/401dependencies,
+zero omissions, selected71/53/43, pinned872d42940/Rootc50a947f4. Original sources,
+imports, declarations, checks, native writes and consumers are recorded in
+projection-family-before01.stdout. Terminal0,19.513s,94.5MiB,Swap0. This is
+complete family source evidence, not complete NRA/R1 proof; the historical
+global OOM remains a limitation.
+
+Dalton's20:32:53Z read-only capacity check confirms one serial512MiB/CPU1/Swap0/
+60s source scope fits inside the same common slice and conservative remaining
+science growth, with10MiB evidence allowance. Source controls follow the
+coherent implementation; results will be recorded without rewriting negatives.
+Public selected Points/Shapes remount remains the sole native receiving gate,
+with Root's producer prerequisite and parent funding/custody. New three-author
+launches do not wait on522/541. No scientific author was contacted.
+
 Resumed spatial-point selection owner (2026-10-03)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
