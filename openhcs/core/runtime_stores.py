@@ -44,6 +44,7 @@ from openhcs.core.source_matching import (
     SourceAxisMetadataScope,
     SourceImageSetIdentityCompatibility,
     SourceImageSetIdentityPolicy,
+    semantic_source_metadata_value,
 )
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
 from openhcs.serialization.json import to_jsonable
@@ -304,19 +305,7 @@ class RuntimeArtifactInput:
         if producer_scope.is_ungrouped:
             return self._records(store, producer_scope, None)
         selection_scope = projection.producer_selection_scope
-        if projection.selects_declared_complete_producer(
-            self.edge_plan.spec, storage_plan
-        ):
-            return self.all_records(store)
-        if storage_plan.composes_producer_groups(
-            ComponentSet.coerce(projection.consumer_variable_components)
-        ):
-            return self.all_records(store)
-        if (
-            selection_scope == producer_scope
-            and not selection_scope.is_dynamic
-            and len(selection_scope.keys) > 1
-        ):
+        if self.selects_complete_producer():
             return self.all_records(store)
 
         runtime_key = self.axis_scope.value_text_for_component(
@@ -326,6 +315,136 @@ class RuntimeArtifactInput:
             selection_scope.select_runtime_key(runtime_key)
         )
         return self._records(store, producer_scope, selected_key)
+
+    def selects_complete_producer(self) -> bool:
+        """Derive whole-producer selection from this exact compiled projection."""
+
+        storage_plan = self.edge_plan.storage_plan
+        projection = self.edge_plan.projection
+        producer_scope = storage_plan.producer_group_scope()
+        selection_scope = projection.producer_selection_scope
+        return (
+            projection.selects_declared_complete_producer(self.edge_plan.spec, storage_plan)
+            or storage_plan.composes_producer_groups(
+                ComponentSet.coerce(projection.consumer_variable_components)
+            )
+            or (
+                selection_scope == producer_scope
+                and not selection_scope.is_dynamic
+                and len(selection_scope.keys) > 1
+            )
+        )
+
+    def candidate_execution_scopes(
+        self,
+        store: "RuntimeValueStore",
+        execution_scope: ComponentGroupScope,
+        *,
+        variable_components: ComponentSet,
+    ) -> dict[RuntimeExecutionAxisScope, str]:
+        """Discover correlated consumer coordinates from exact producer records.
+
+        Discovery retains addresses for diagnostics; admission through records()
+        subsequently validates and resolves the current producer value.
+        """
+
+        storage_plan = self.edge_plan.storage_plan
+        producer_scope = storage_plan.producer_group_scope()
+        projection = self.edge_plan.projection
+        selection_scope = projection.producer_selection_scope
+        selects_complete_producer = self.selects_complete_producer()
+        projected_components = projection.projected_variable_components(storage_plan)
+        identity_policy = self._source_context_identity_policy()
+        candidates = tuple(
+            record
+            for group_key in ((None,) if producer_scope.is_dynamic else producer_scope.keys)
+            for record in store.find_matching(
+                RuntimeArtifactQuery.from_input_plan(
+                    storage_plan,
+                    axis_id=self.axis_scope.axis_id,
+                    backend=self.backend,
+                    group_key=group_key,
+                )
+            )
+        )
+        scopes = {}
+        for record in candidates:
+            record_scope = record.key.scope
+            if record_scope.component is not producer_scope.component:
+                continue
+            if not selects_complete_producer and not selection_scope.contains_runtime_key(
+                record_scope.value_text
+            ):
+                continue
+            record_coordinates = dict(record_scope.source_component_values)
+            if selects_complete_producer:
+                record_coordinates.pop(producer_scope.component, None)
+            if projected_components:
+                provenance = image_payload_metadata(record.value.data).source_provenance
+                plane_metadata = provenance.source_image_provenance_planes.runtime_component_metadata
+                metadata_rows = plane_metadata or (
+                    (provenance.source_component_metadata,)
+                    if provenance.source_component_metadata is not None else ()
+                )
+            else:
+                metadata_rows = (None,)
+            for metadata in metadata_rows:
+                if metadata is None and projected_components:
+                    continue
+                coordinates = dict(record_coordinates)
+                for component in projected_components:
+                    component_scope = projection.component_scope(component)
+                    if component_scope.is_dynamic:
+                        component_value = semantic_source_metadata_value(
+                            metadata, component.value,
+                        )
+                        if component_value is None:
+                            break
+                        component_value = str(component_value)
+                    else:
+                        component_value = component_scope.select_runtime_key(None)
+                    if not SourceAxisMetadataScope.constraint_matches_metadata(
+                        metadata, component.value, component_value,
+                    ):
+                        break
+                    existing_value = coordinates.get(component)
+                    if existing_value is not None and not SourceAxisMetadataScope.constraint_matches_metadata(
+                        metadata, component.value, existing_value,
+                    ):
+                        break
+                    coordinates.setdefault(component, component_value)
+                else:
+                    runtime_value = coordinates.get(execution_scope.component)
+                    if execution_scope.is_dynamic and runtime_value is None:
+                        continue
+                    component_keys = execution_scope.runtime_keys((runtime_value,))
+                    for component_key in component_keys:
+                        if (
+                            not selects_complete_producer
+                            and selection_scope.is_dynamic
+                            and selection_scope.component is execution_scope.component
+                            and record_scope.value_text != component_key
+                        ):
+                            continue
+                        fixed_group_value = coordinates.get(execution_scope.component)
+                        if fixed_group_value is not None and fixed_group_value != component_key:
+                            continue
+                        fixed_values = tuple(
+                            (component, value)
+                            for component, value in coordinates.items()
+                            if component is not execution_scope.component
+                            and not component.is_multiprocessing_axis()
+                            and component not in variable_components
+                            and identity_policy.is_identity_component(component)
+                        )
+                        scope = RuntimeExecutionAxisScope.from_raw(
+                            self.axis_scope.axis_id,
+                            component=execution_scope.component,
+                            value=component_key,
+                            fixed_component_values=fixed_values,
+                        )
+                        scopes.setdefault(scope, record.path)
+        return scopes
 
     def all_records(
         self,
@@ -585,16 +704,7 @@ class RuntimeArtifactInput:
             (component for component, _value in self.axis_scope.fixed_component_values),
             (component for component, _value in record_scope.fixed_component_values),
         ).excluding(projected_components)
-        # Only a declared source-context relation supplies plane membership.
-        # Unrelated visible bindings must not relax an exact artifact input.
-        context_sources = self.edge_plan.spec.source_context_sources()
-        identity_policy = (
-            SourceImageSetIdentityPolicy.from_source_bindings(
-                self.source_binding_plan.for_artifact_refs(context_sources)
-            )
-            if context_sources
-            else SourceImageSetIdentityPolicy()
-        )
+        identity_policy = self._source_context_identity_policy()
         context_components = (
             context_components
             .intersection(record_scope.source_components)
@@ -614,6 +724,16 @@ class RuntimeArtifactInput:
                 identity_policy, components=context_components,
             ),
         ).matches()
+
+    def _source_context_identity_policy(self) -> SourceImageSetIdentityPolicy:
+        """Derive plane membership only from this edge's context declarations."""
+
+        context_sources = self.edge_plan.spec.source_context_sources()
+        if not context_sources:
+            return SourceImageSetIdentityPolicy()
+        return SourceImageSetIdentityPolicy.from_source_bindings(
+            self.source_binding_plan.for_artifact_refs(context_sources)
+        )
 
 
 @dataclass(frozen=True, slots=True)

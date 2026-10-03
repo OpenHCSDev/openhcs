@@ -227,8 +227,8 @@ class RuntimeAdapterRequest:
         first = matches[0]
         if any(
             edge.spec != first.spec
-            or (edge.storage_plan, edge.projection, edge.consumes_main_flow)
-            != (first.storage_plan, first.projection, first.consumes_main_flow)
+            or (edge.storage_plan, edge.projection, edge.main_flow_projection)
+            != (first.storage_plan, first.projection, first.main_flow_projection)
             for edge in matches[1:]
         ):
             raise ValueError(

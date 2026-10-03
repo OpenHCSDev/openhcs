@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Mapping, Sequence
 from polystore.streaming.identity import StreamProducerIdentity
 
 from openhcs.constants.constants import (
+    Backend,
     GPU_MEMORY_TYPES,
     MemoryType,
     SequentialComponents,
@@ -23,7 +24,11 @@ from openhcs.core.artifacts import (
 )
 from openhcs.core.callable_contract import FunctionStepExecutionScope
 from openhcs.core.component_group_scope import ComponentGroupScope
-from openhcs.core.function_patterns import CompiledFunctionPattern
+from openhcs.core.function_patterns import (
+    CompiledFunctionGroup,
+    CompiledFunctionPattern,
+    InvocationArtifactInputEdgePlan,
+)
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     CompiledSourceUniversePlan,
@@ -319,6 +324,66 @@ class CompiledStepPlan:
     create_openhcs_metadata: bool = False
     chainbreaker: bool = False
     error: str | None = None
+
+    def stored_primary_input_edges_for_group(
+        self, group: CompiledFunctionGroup, component_key: str | None,
+    ) -> tuple[InvocationArtifactInputEdgePlan, ...] | None:
+        """Admit exact producer transport only without path-based transforms."""
+        if self.input_conversion is not None or self.sequential_filter_plan.enabled:
+            return None
+        edges = group.stored_primary_input_edges_for_component(
+            self.execution_group_scope, component_key,
+        )
+        if edges and any(
+            edge.storage_plan.source_step_scope_id == self.step_scope_id
+            if edge.storage_plan.source_step_scope_id is not None
+            else edge.storage_plan.source_step_id in (
+                self.step_index, self.step_scope_id,
+            )
+            for edge in edges
+        ):
+            return None
+        return edges
+
+    def requires_main_flow_checkpoint(
+        self, plans: Mapping[int, "CompiledStepPlan"],
+    ) -> bool:
+        """Derive pixel transport demand, including preserved input lifetimes."""
+        if not plans or self.step_index not in plans:
+            return True
+        demanded: set[int] = set()
+        for plan in plans.values():
+            if (
+                plan.write_backend != Backend.MEMORY.value
+                or plan.materialized_output is not None
+                or plan.streaming_configs
+                or plan.visualize
+            ):
+                demanded.add(plan.step_index)
+            pattern = plan.compiled_function_pattern
+            if pattern is None or any(
+                (group := pattern.group_for_component(component_key)) is None
+                or plan.stored_primary_input_edges_for_group(
+                    group, component_key,
+                ) is None
+                for component_key in plan.execution_group_scope.keys
+            ):
+                predecessor = plan.main_input_dependency.predecessor_step_index()
+                if predecessor is not None:
+                    demanded.add(predecessor)
+        pending = list(demanded)
+        while pending:
+            current = plans.get(pending.pop())
+            if current is None:
+                continue
+            pattern = current.compiled_function_pattern
+            if pattern is None or not pattern.preserves_input_main_flow():
+                continue
+            predecessor = current.main_input_dependency.predecessor_step_index()
+            if predecessor is not None and predecessor not in demanded:
+                demanded.add(predecessor)
+                pending.append(predecessor)
+        return self.step_index in demanded
 
     def producer_identity(
         self,

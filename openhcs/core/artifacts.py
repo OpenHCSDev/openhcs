@@ -243,6 +243,11 @@ class ArtifactType(ABC, metaclass=AutoRegisterMeta):
         return data, channel_axis
 
     @classmethod
+    def source_image_payload_from_runtime_value(cls, value: object) -> object | None:
+        """Read image context from this artifact's currently resolved payload."""
+        return None
+
+    @classmethod
     def compose_runtime_values(
         cls,
         values: Sequence["RuntimeValue"],
@@ -390,6 +395,10 @@ class ImageArtifactType(ArtifactType):
     participates_in_measurement_source_names = True
     participates_in_main_flow_output = True
     carries_source_image_context = True
+
+    @classmethod
+    def source_image_payload_from_runtime_value(cls, value: object) -> object:
+        return value
 
     @classmethod
     def retained_filename_qualifier(cls, artifact_name: str) -> str:
@@ -558,6 +567,10 @@ class ObjectLabelsArtifactType(ArtifactType):
     participates_in_main_flow_output = True
     carries_source_image_context = True
     payload_description = "object_labels payload"
+
+    @classmethod
+    def source_image_payload_from_runtime_value(cls, value: object) -> object:
+        return value
 
     @classmethod
     def runtime_parameter_types(cls) -> tuple[type, ...]:

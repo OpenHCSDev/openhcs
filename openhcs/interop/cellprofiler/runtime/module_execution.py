@@ -295,7 +295,11 @@ class CellProfilerModuleExecutor:
                 module_type=module_type,
             )
             image_request = None
-            if primary_image_inputs:
+            if (
+                primary_image_inputs
+                and self.callable_contract.image_payload_consumption
+                is ImagePayloadConsumption.COMPOSED
+            ):
                 image_request = self._image_request(
                     image,
                     cellprofiler_runtime,
@@ -321,6 +325,7 @@ class CellProfilerModuleExecutor:
                 adapter=cellprofiler_runtime,
                 kwargs=kwargs,
                 image_request=image_request,
+                image_inputs=primary_image_inputs,
                 module_type=module_type,
                 active_input_specs=active_inputs.specs,
                 active_output_plans=active_outputs,
@@ -616,13 +621,9 @@ class CellProfilerModuleExecutor:
         current_image: RuntimeCallableArgument,
         image_request: CellProfilerImageRequest | None,
         *,
+        image_inputs: tuple[ArtifactSpec, ...],
         module_type: type[CellProfilerModule],
     ) -> tuple[CellProfilerMeasurementImage, ...]:
-        image_inputs = self._primary_image_inputs(
-            current_image,
-            adapter,
-            module_type=module_type,
-        )
         if not image_inputs:
             return ()
         if (
@@ -720,22 +721,21 @@ class CellProfilerModuleExecutor:
                 ImageArtifactType,
             ).raw_runtime_input_value(spec, value)
         )
-        metadata = image_payload_metadata(payload)
-        plane_axis = metadata.plane_axis
+        plane_projection = (
+            preserved_image_plane_projection(payload, adapter, source_aliases)
+            if image_payload_metadata(payload).plane_axis is not None
+            else None
+        )
         return CellProfilerMeasurementImage(
             source_image_name=spec.name,
             source_aliases=source_aliases,
             payload=payload,
             plane_projection=(
                 replace(
-                    preserved_image_plane_projection(
-                        payload,
-                        adapter,
-                        source_aliases,
-                    ),
+                    plane_projection,
                     source_aliases=source_aliases,
                 )
-                if plane_axis is not None
+                if plane_projection is not None
                 else None
             ),
             reference_domain=reference_domain,
@@ -776,6 +776,7 @@ class CellProfilerModuleExecutor:
         adapter: CellProfilerRuntimeAdapter,
         kwargs: RuntimeCallableKwargs,
         image_request: "CellProfilerImageRequest | None",
+        image_inputs: tuple[ArtifactSpec, ...],
         module_type: type[CellProfilerModule],
         active_input_specs: tuple[ArtifactSpec, ...],
         active_output_plans: tuple[ArtifactOutputPlan, ...],
@@ -784,9 +785,6 @@ class CellProfilerModuleExecutor:
         current_image = image
         input_image = image
         cellprofiler_runtime = adapter
-        source_image_name = (
-            None if image_request is None else image_request.source_image_name
-        )
         kwargs = dict(kwargs)
         function_name = self.callable_contract.function_name
         profiler = CellProfilerRuntimeProfiler(
@@ -805,8 +803,49 @@ class CellProfilerModuleExecutor:
             cellprofiler_runtime,
             current_image,
             image_request,
+            image_inputs=image_inputs,
             module_type=module_type,
         )
+        if image_request is not None:
+            source_image_name = image_request.source_image_name
+        elif not image_inputs:
+            source_image_name = None
+        else:
+            image_strategy = RuntimeArtifactTypeStrategy.for_artifact_type(ImageArtifactType)
+            runtime_projection = RuntimePlaneAxisValueProjection.from_projector(
+                adapter, RuntimePlaneAxis.RUNTIME_SLICE, (),
+            )
+            projected_binding = (
+                RuntimeInputBindingRequest(
+                    adapter=adapter, kwargs={},
+                    current_image=RuntimeSliceProjection.value_for_slice(
+                        current_image, runtime_projection,
+                    ),
+                )
+                if runtime_projection is not None and runtime_projection.plane_index is not None
+                else None
+            )
+            source_names = []
+            for spec, measurement_image in zip(image_inputs, measurement_images, strict=True):
+                edge = (
+                    adapter.request.require_artifact_input_edge(spec.ref())
+                    if projected_binding is not None else None
+                )
+                if edge is not None and edge.main_flow_projection is not None:
+                    source_name = image_strategy.source_image_name(
+                        spec,
+                        projected_binding.main_flow_value(
+                            spec, projection=edge.main_flow_projection,
+                        ),
+                    )
+                else:
+                    source_name = image_strategy.source_image_name_from_value(
+                        measurement_image.payload
+                    )
+                source_names.append(source_name)
+            source_image_name = self._primary_image_source_name_from_sources(
+                image_inputs, tuple(source_names),
+            )
         if not measurement_images:
             measurement_images = tuple(
                 self._object_label_measurement_image(

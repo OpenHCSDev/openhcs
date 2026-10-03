@@ -35,6 +35,7 @@ from openhcs.core.function_patterns import (
     FunctionPatternSyntax,
     InvocationArtifactInputEdgePlan,
     InvocationArtifactInputProjectionKey,
+    MainFlowInputProjection,
     RuntimeParameterBinding,
     compile_function_pattern,
     inject_artifact_input_values,
@@ -1259,14 +1260,10 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
     ) -> CompiledFunctionPattern:
         """Compile exact invocation-to-input projections from nominal contracts."""
 
-        main_flow_refs = main_flow_artifacts.ref_set()
         groups: list[CompiledFunctionGroup] = []
         for group in compiled_pattern.groups:
             invocations: list[CompiledFunctionInvocation] = []
             for invocation in group.invocations:
-                relation_owned_main_flow_refs = main_flow_refs.intersection(
-                    invocation.contract.output_group_scope_sources
-                )
                 if compiled_pattern.is_grouped:
                     if execution_group_scope.is_ungrouped:
                         raise ValueError(
@@ -1298,17 +1295,24 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
                     len(invocation.contract.artifact_inputs),
                 )
                 selected_plans_by_ref = {plan.ref(): plan for plan in selected_plans}
+                adapter = invocation.contract.runtime_adapter
+                owns_artifact_inputs = (
+                    adapter is not None and adapter.manages_artifact_inputs
+                )
+                raw_main_flow_refs = (
+                    main_flow_artifacts.ref_set()
+                    .intersection(invocation.contract.output_group_scope_sources)
+                    if not owns_artifact_inputs
+                    else frozenset()
+                )
                 edges: list[InvocationArtifactInputEdgePlan] = []
                 for input_edge_key, input_spec in zip(
                     input_edge_keys,
                     invocation.contract.artifact_inputs,
                     strict=True,
                 ):
-                    # A declared lineage source already travels in the primary
-                    # payload; its producer storage is not a second ABI argument.
                     storage_plan = (
-                        None
-                        if input_spec.ref() in relation_owned_main_flow_refs
+                        None if input_spec.ref() in raw_main_flow_refs
                         else selected_plans_by_ref.get(input_spec.ref())
                     )
                     if storage_plan is None:
@@ -1334,7 +1338,11 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
                             consumer_variable_components=consumer_variable_components,
                             source_bindings=source_bindings,
                             available_artifacts=available_artifacts,
-                            consumes_main_flow=False,
+                            main_flow_projection=InvocationArtifactInputEdgePlan.source_projection(
+                                input_spec,
+                                main_flow_artifacts,
+                                invocation.contract.group_scope_inputs,
+                            ) if owns_artifact_inputs else None,
                         )
                     )
                 invocations.append(invocation.with_artifact_input_edges(tuple(edges)))
@@ -1356,7 +1364,7 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
         consumer_variable_components: ComponentSet,
         source_bindings: StepSourceBindingsConfig,
         available_artifacts: ArtifactSpecCollection,
-        consumes_main_flow: bool,
+        main_flow_projection: MainFlowInputProjection | None,
     ) -> InvocationArtifactInputEdgePlan:
         """Compile one exact relation-owned invocation input edge."""
 
@@ -1381,7 +1389,7 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
                 spec=input_spec,
                 storage_plan=storage_plan,
                 projection=projection,
-                consumes_main_flow=consumes_main_flow,
+                main_flow_projection=main_flow_projection,
             )
 
         relation_scopes = tuple(
@@ -1439,7 +1447,7 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
             spec=input_spec,
             storage_plan=storage_plan,
             projection=projection,
-            consumes_main_flow=consumes_main_flow,
+            main_flow_projection=main_flow_projection,
         )
 
     @staticmethod

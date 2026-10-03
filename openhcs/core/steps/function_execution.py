@@ -18,12 +18,16 @@ from openhcs.constants.constants import (
     LOADABLE_IMAGE_EXTENSIONS,
     Backend,
 )
+from openhcs.core.component_set import ComponentSet
+from openhcs.core.component_group_scope import ComponentGroupScope, RuntimeExecutionAxisScope
+from openhcs.core.runtime_stores import RuntimeArtifactInput
 from openhcs.core.callable_contract import ImagePayloadConsumption
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import (
     CompiledFunctionGroup,
     FunctionGroupKey,
+    InvocationArtifactInputEdgePlan,
     RuntimeInvocationDomain,
 )
 from openhcs.core.progress import ProgressPhase, ProgressStatus, emit
@@ -55,6 +59,7 @@ from openhcs.core.steps.function_output_manifest import (
 from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.steps.function_outputs import finalize_function_step_outputs
 from openhcs.core.steps.function_runtime import (
+    ArtifactPatternGroupExecutionRequest,
     PatternGroupExecutionRequest,
     _process_single_pattern_group,
 )
@@ -202,6 +207,141 @@ class PatternGroups:
                 for group_key, pattern_list in self.groups.items()
             }
         )
+
+    def execution_requests(
+        self,
+        context: ProcessingContext,
+        plan: CompiledStepPlan,
+    ) -> tuple[PatternGroupExecutionRequest, ...]:
+        """Admit source anchors to their complete compiled execution coordinates."""
+
+        requests = []
+        for component_index, (component_value, patterns) in enumerate(self.items()):
+            compiled_group = plan.compiled_function_pattern.group_for_component(
+                component_value
+            )
+            if compiled_group is None:
+                raise ValueError(
+                    f"No compiled function group for component {component_value!r}."
+                )
+            requests.extend(
+                PatternGroupExecutionRequest(
+                    context=context,
+                    execution_plan=plan,
+                    pattern_group_info=pattern,
+                    compiled_group=compiled_group,
+                    component_value=component_value,
+                    component_index=component_index,
+                    component_count=len(self),
+                )
+                for pattern in patterns
+            )
+        return tuple(requests)
+
+    @classmethod
+    def artifact_execution_requests(
+        cls,
+        context: ProcessingContext,
+        plan: CompiledStepPlan,
+    ) -> tuple[ArtifactPatternGroupExecutionRequest, ...] | None:
+        """Discover complete correlated cohorts from their compiled producers."""
+
+        pattern = plan.compiled_function_pattern
+        scope = plan.execution_group_scope
+
+        def candidate_scopes(
+            edge: InvocationArtifactInputEdgePlan,
+            execution_scope: ComponentGroupScope,
+        ) -> dict[RuntimeExecutionAxisScope, str]:
+            return RuntimeArtifactInput(
+                edge_plan=edge,
+                axis_scope=RuntimeExecutionAxisScope.from_raw(
+                    plan.axis_id, component=None, value=None,
+                ),
+                backend=Backend.MEMORY.value,
+                source_binding_plan=plan.source_binding_plan,
+            ).candidate_execution_scopes(
+                context.runtime_value_store,
+                execution_scope,
+                variable_components=ComponentSet.coerce(plan.variable_components),
+            )
+
+        if scope.is_dynamic:
+            discovered_keys = []
+            for group in pattern.groups:
+                for invocation in group.invocations:
+                    group_refs = invocation.contract.group_scope_inputs.ref_set()
+                    for edge in invocation.artifact_input_edges:
+                        if edge.storage_plan is None or not (
+                            edge.main_flow_projection is not None
+                            or edge.spec.ref() in group_refs
+                        ):
+                            continue
+                        discovered_keys.extend(
+                            candidate.value_text
+                            for candidate in candidate_scopes(edge, scope)
+                        )
+            if not any(key is not None for key in discovered_keys):
+                return None
+            component_keys = scope.runtime_keys(discovered_keys)
+        else:
+            component_keys = scope.runtime_keys(())
+
+        selected_groups = []
+        for component_key in component_keys:
+            group = pattern.group_for_component(component_key)
+            if group is None:
+                raise ValueError(
+                    f"No compiled function group for component {component_key!r}."
+                )
+            edges = plan.stored_primary_input_edges_for_group(group, component_key)
+            if edges is None:
+                return None
+            selected_groups.append((component_key, group, edges))
+
+        requests = []
+        for component_index, (component_key, group, edges) in enumerate(selected_groups):
+            cohorts = None
+            for edge in edges:
+                edge_cohorts = candidate_scopes(
+                    edge,
+                    ComponentGroupScope.from_raw((component_key,), component=scope.component),
+                )
+                if not edge_cohorts:
+                    raise ValueError(
+                        f"Step {plan.step_index} ({plan.step_name}) has no exact "
+                        f"producer cohort for {edge.spec.ref()!r} on axis {plan.axis_id}."
+                    )
+                cohorts = (
+                    edge_cohorts
+                    if cohorts is None
+                    else {
+                        joined: anchor
+                        for coordinates, anchor in cohorts.items()
+                        for candidate in edge_cohorts
+                        if (joined := coordinates.join_execution_cohort(candidate))
+                        is not None
+                    }
+                )
+            if not cohorts:
+                raise ValueError(
+                    f"Step {plan.step_index} ({plan.step_name}) producer inputs "
+                    "do not share a complete execution cohort."
+                )
+            requests.extend(
+                ArtifactPatternGroupExecutionRequest(
+                    context=context,
+                    execution_plan=plan,
+                    pattern_group_info=anchor,
+                    compiled_group=group,
+                    component_value=component_key,
+                    fixed_component_values=coordinates.fixed_component_values,
+                    component_index=component_index,
+                    component_count=len(selected_groups),
+                )
+                for coordinates, anchor in cohorts.items()
+            )
+        return tuple(requests)
 
 
 def _single_execution_group_patterns(
@@ -725,37 +865,49 @@ class FunctionStepExecutor:
         )
 
         phase_started_at = time.perf_counter()
-        patterns_by_axis = self._detect_patterns()
+        execution_requests = PatternGroups.artifact_execution_requests(
+            self.context, plan,
+        )
+        patterns_by_axis = (
+            self._detect_patterns() if execution_requests is None else None
+        )
         self.record_runtime_profile(
             "step_detect_patterns",
             time.perf_counter() - phase_started_at,
         )
-        self._log_discovered_patterns(patterns_by_axis)
+        if patterns_by_axis is not None:
+            self._log_discovered_patterns(patterns_by_axis)
         phase_started_at = time.perf_counter()
         self._convert_input_if_needed()
         self.record_runtime_profile(
             "step_convert_input",
             time.perf_counter() - phase_started_at,
         )
-        self._require_patterns(patterns_by_axis)
-        self._apply_sequential_filter(patterns_by_axis)
-
-        phase_started_at = time.perf_counter()
-        grouped_patterns = self._prepare_groups(patterns_by_axis)
-        self.record_runtime_profile(
-            "step_prepare_groups",
-            time.perf_counter() - phase_started_at,
-        )
-        phase_started_at = time.perf_counter()
-        self._preload_inputs_if_needed(grouped_patterns)
-        self.record_runtime_profile(
-            "step_preload_inputs",
-            time.perf_counter() - phase_started_at,
-        )
-        total_groups = grouped_patterns.total_count()
+        if patterns_by_axis is not None:
+            self._require_patterns(patterns_by_axis)
+            self._apply_sequential_filter(patterns_by_axis)
+            phase_started_at = time.perf_counter()
+            grouped_patterns = self._prepare_groups(patterns_by_axis)
+            execution_requests = grouped_patterns.execution_requests(self.context, plan)
+            self.record_runtime_profile(
+                "step_prepare_groups",
+                time.perf_counter() - phase_started_at,
+            )
+            phase_started_at = time.perf_counter()
+            self._preload_inputs_if_needed(grouped_patterns)
+            self.record_runtime_profile(
+                "step_preload_inputs",
+                time.perf_counter() - phase_started_at,
+            )
+        if not execution_requests:
+            raise ValueError(
+                f"No execution cohorts found for step {plan.step_index} "
+                f"({plan.step_name}) on axis {plan.axis_id}."
+            )
+        total_groups = len(execution_requests)
         execution_started_at = time.perf_counter()
         self._execute_pattern_groups(
-            grouped_patterns,
+            execution_requests,
             total_groups,
         )
         execution_elapsed = time.perf_counter() - execution_started_at
@@ -1084,40 +1236,17 @@ class FunctionStepExecutor:
 
     def _execute_pattern_groups(
         self,
-        grouped_patterns: PatternGroups,
+        execution_requests: Sequence[PatternGroupExecutionRequest],
         total_groups: int,
     ) -> None:
-        completed_groups = 0
-        for component_index, (component_value, current_pattern_list) in enumerate(
-            grouped_patterns.items()
-        ):
-            compiled_group = self.plan.compiled_function_pattern.group_for_component(
-                component_value
+        for completed_groups, request in enumerate(execution_requests, start=1):
+            _process_single_pattern_group(request)
+            self._emit_pattern_progress(
+                completed_groups,
+                total_groups,
+                request.component_value,
+                request.pattern_group_info,
             )
-            if compiled_group is None:
-                raise ValueError(
-                    f"No compiled function group for component {component_value!r}."
-                )
-
-            for pattern_item in current_pattern_list:
-                _process_single_pattern_group(
-                    PatternGroupExecutionRequest(
-                        context=self.context,
-                        execution_plan=self.plan,
-                        pattern_group_info=pattern_item,
-                        compiled_group=compiled_group,
-                        component_value=component_value,
-                        component_index=component_index,
-                        component_count=len(grouped_patterns),
-                    )
-                )
-                completed_groups += 1
-                self._emit_pattern_progress(
-                    completed_groups,
-                    total_groups,
-                    component_value,
-                    pattern_item,
-                )
 
     def _emit_pattern_progress(
         self,

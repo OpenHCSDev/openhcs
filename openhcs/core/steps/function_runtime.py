@@ -41,6 +41,7 @@ from openhcs.core.artifacts import (
 )
 from openhcs.core.callable_contract import (
     CallableRuntimeCacheKey,
+    ImagePayloadConsumption,
 )
 from openhcs.core.component_group_scope import (
     ComponentGroupScope,
@@ -104,6 +105,7 @@ from openhcs.core.runtime_slice_alignment import (
     RuntimeSliceAlignedValues,
 )
 from openhcs.core.runtime_slice_projection import (
+    RuntimeSliceProjection,
     RuntimeSliceProjectionDeclarationError,
 )
 from openhcs.core.source_image_semantics import apply_source_binding_payload
@@ -168,7 +170,6 @@ from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
     RuntimePlaneProjection,
 )
-from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.step_dependencies import StepInputDependencyKind
 from openhcs.core.steps.function_output_manifest import (
     NoStepOutputManifestMatch,
@@ -1238,7 +1239,7 @@ class ComponentArtifactPlans(Generic[ArtifactInputPlanKeyT, ArtifactInputPlanT])
                 edge_key: edge
                 for edge_key, edge in self.inputs.items()
                 if not (
-                    edge.consumes_main_flow
+                    edge.main_flow_projection is not None
                     and declared_source_bindings.declares_artifact_ref(edge.spec.ref())
                     and not active_source_bindings.declares_artifact_ref(
                         edge.spec.ref()
@@ -1387,6 +1388,134 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
     component_index: int
     component_count: int
 
+    def load_input_stack(
+        self, runtime: "PatternGroupRuntime",
+    ) -> tuple[list[str], RuntimeArrayData, SourceBindingRuntimeContext]:
+        """Admit the filename-selected source cohort."""
+        return runtime._load_input_stack()
+
+    def loaded_plane_count(
+        self, matching_files: Sequence[str], payload: RuntimeArrayData,
+    ) -> int:
+        """The source path roster declares the initial runtime plane count."""
+        return len(matching_files)
+
+    def loaded_fixed_component_values(
+        self, payload: RuntimeArrayData,
+    ) -> RuntimeFixedComponentValues:
+        """Capture the source-selected cohort's common fixed coordinates."""
+        source_provenance = image_payload_metadata(
+            payload
+        ).source_provenance.with_common_scalar_identity_from_planes()
+        common_source_metadata = source_provenance.source_component_metadata or {}
+        variable_components = ComponentSet.coerce(
+            self.execution_plan.variable_components or ()
+        )
+        execution_group_component = (
+            self.execution_plan.execution_group_scope.component
+        )
+        fixed_components = tuple(
+            component
+            for component in AllComponents
+            if not component.is_multiprocessing_axis()
+            and component is not execution_group_component
+            and component not in variable_components
+            and source_component_metadata_value(
+                common_source_metadata,
+                component,
+            )
+            is not None
+        )
+        return source_provenance.require_common_component_values(fixed_components)
+
+    def passthrough_producer_records(
+        self, matching_files: Sequence[str],
+    ) -> tuple[ProducedOutputSemantics, ...] | None:
+        """Resolve the physical source paths selected by this request."""
+        return step_output_manifest(self.context).producer_output_records_for_paths(
+            self.execution_plan,
+            matching_files,
+            self.context.microscope_handler.parser,
+        )
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ArtifactPatternGroupExecutionRequest(PatternGroupExecutionRequest):
+    """Admit exact canonical producer values into an independent cohort."""
+
+    def load_input_stack(
+        self, runtime: "PatternGroupRuntime",
+    ) -> tuple[list[str], RuntimeArrayData, SourceBindingRuntimeContext]:
+        edges = self.execution_plan.stored_primary_input_edges_for_group(
+            self.compiled_group, self.component_key,
+        )
+        if not edges:
+            raise ValueError("Artifact cohort requires complete stored primary inputs.")
+        payloads = []
+        matching_files = []
+        for edge in edges:
+            artifact_input = RuntimeArtifactInput(
+                edge_plan=edge,
+                axis_scope=self.axis_scope,
+                backend=Backend.MEMORY.value,
+                source_binding_plan=self.source_binding_plan,
+            )
+            records = artifact_input.records(self.context.runtime_value_store)
+            source_payload = edge.spec.artifact_type.source_image_payload_from_runtime_value(
+                artifact_input.composed_value(records),
+            )
+            if source_payload is None:
+                raise ValueError(
+                    f"Artifact cohort source {edge.spec.ref()!r} has no image context."
+                )
+            payloads.append(
+                ImagePayloadStackComposition.copy_whole_image(
+                    source_payload,
+                    memory_type=self.execution_plan.input_memory_type,
+                    device_id=self.execution_plan.device_id_for(
+                        self.execution_plan.input_memory_type,
+                    ),
+                )
+            )
+            matching_files.extend(record.location.path for record in records)
+        main_data_stack = ImagePayloadConsumption.NATURAL.compose_image_payload(
+            self.execution_plan.step_name, tuple(payloads),
+        ).payload
+        source_projection = (
+            runtime.source_workspace_projection_authority().projection_if_available()
+        )
+        source_binding_context = SourceBindingRuntimeContextRequest.from_context(
+            context=self.context,
+            plan=self.execution_plan,
+            matching_files=matching_files,
+            source_projection=source_projection,
+        ).runtime_context()
+        return matching_files, main_data_stack, source_binding_context
+
+    def loaded_plane_count(
+        self, matching_files: Sequence[str], payload: RuntimeArrayData,
+    ) -> int:
+        """Canonical payloads declare their runtime axis independently of paths."""
+        count = RuntimeSliceProjection.slice_count_from_values((payload,))
+        return 1 if count is None else count
+
+    def loaded_fixed_component_values(
+        self, payload: RuntimeArrayData,
+    ) -> RuntimeFixedComponentValues:
+        """Retain exact producer coordinates admitted by typed discovery."""
+        return self.fixed_component_values
+
+    def passthrough_producer_records(
+        self, matching_files: Sequence[str],
+    ) -> tuple[ProducedOutputSemantics, ...]:
+        """Preserve input transport independently of artifact context admission."""
+        records = step_output_manifest(self.context).producer_records_for(
+            self.execution_plan,
+        )
+        if records is None:
+            raise ValueError("Artifact input passthrough requires producer lineage.")
+        return records
+
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class PatternGroupData(PatternGroupExecutionScope):
@@ -1416,28 +1545,6 @@ class PatternGroupData(PatternGroupExecutionScope):
             request.component_key,
             artifacts.outputs,
         )
-        source_provenance = image_payload_metadata(
-            main_data_stack
-        ).source_provenance.with_common_scalar_identity_from_planes()
-        common_source_metadata = source_provenance.source_component_metadata or {}
-        variable_components = ComponentSet.coerce(
-            request.execution_plan.variable_components or ()
-        )
-        execution_group_component = (
-            request.execution_plan.execution_group_scope.component
-        )
-        fixed_components = tuple(
-            component
-            for component in AllComponents
-            if not component.is_multiprocessing_axis()
-            and component is not execution_group_component
-            and component not in variable_components
-            and source_component_metadata_value(
-                common_source_metadata,
-                component,
-            )
-            is not None
-        )
         return cls(
             matching_files=matching_files,
             main_data_stack=main_data_stack,
@@ -1447,11 +1554,11 @@ class PatternGroupData(PatternGroupExecutionScope):
             artifacts=artifacts,
             source_binding_context=source_binding_context,
             runtime_plane_index=request.component_index,
-            runtime_plane_count=len(matching_files),
-            component_value=request.component_value,
-            fixed_component_values=source_provenance.require_common_component_values(
-                fixed_components
+            runtime_plane_count=request.loaded_plane_count(
+                matching_files, main_data_stack,
             ),
+            component_value=request.component_value,
+            fixed_component_values=request.loaded_fixed_component_values(main_data_stack),
         )
 
     def require_invocations(self) -> None:
@@ -1681,7 +1788,7 @@ class FunctionCoreExecutor:
         main_flow_edges = tuple(
             edge
             for edge in self.selected_artifact_input_edges
-            if edge.spec.ref() == source_ref and edge.consumes_main_flow
+            if edge.spec.ref() == source_ref and edge.main_flow_projection is not None
         )
         uses_main_flow = bool(
             stored_payload is None and source_binding is None and main_flow_edges
@@ -1749,6 +1856,7 @@ class FunctionCoreExecutor:
             projected_values = (
                 self.load_artifact_input(input_plan.spec.name, input_plan)
                 if input_plan.uses_runtime_storage()
+                and input_plan.main_flow_projection is None
                 else (
                     RuntimeValue.from_spec(
                         input_plan.spec,
@@ -2337,7 +2445,7 @@ class PatternGroupRuntime:
         try:
             load_started_at = time.perf_counter()
             matching_files, main_data_stack, source_binding_context = (
-                self._load_input_stack()
+                self.request.load_input_stack(self)
             )
         except NoStepOutputManifestMatch:
             logger.debug(
@@ -2384,6 +2492,8 @@ class PatternGroupRuntime:
                     plan.step_name,
                 )
                 return
+            if not plan.requires_main_flow_checkpoint(self.request.context.step_plans):
+                return
             output_records = self._save_outputs(processed_stack, loaded.matching_files)
             output_paths = [record.output_path for record in output_records]
             cleanup_started_at = time.perf_counter()
@@ -2429,7 +2539,7 @@ class PatternGroupRuntime:
         plan = self.request.execution_plan
         parser = self.request.context.microscope_handler.parser
         manifest = step_output_manifest(self.request.context)
-        producer_records = manifest.producer_output_records_for_paths(plan, matching_files, parser)
+        producer_records = self.request.passthrough_producer_records(matching_files)
         if producer_records is None:
             records = tuple(
                 ProducedOutputSemantics.from_existing_main_flow_path(

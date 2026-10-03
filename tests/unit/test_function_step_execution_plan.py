@@ -276,7 +276,7 @@ def test_function_step_execution_does_not_prepare_callables_in_hot_path(monkeypa
     class ExecutionStub(function_execution.FunctionStepExecutor):
         def __init__(self):
             self.context = SimpleNamespace()
-            self.plan = SimpleNamespace(
+            self.plan = _compiled_plan(
                 step_index=3,
                 step_name="prepared-at-compile",
                 axis_id="A01",
@@ -303,7 +303,7 @@ def test_function_step_execution_does_not_prepare_callables_in_hot_path(monkeypa
         def _prepare_groups(self, patterns_by_axis):
             events.append(("groups", tuple(patterns_by_axis)))
             return function_execution.PatternGroups.from_prepared(
-                {"default": ["image.tif"]}
+                {None: ["image.tif"]}
             )
 
         def _preload_inputs_if_needed(self, grouped_patterns):

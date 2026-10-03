@@ -1141,7 +1141,7 @@ def test_compiled_source_edges_only_consume_relation_owned_main_flow(
 
     edges = next(compiled.iter_invocations()).artifact_input_edges
     assert tuple(edge.spec for edge in edges) == source_specs
-    assert tuple(edge.consumes_main_flow for edge in edges) == (True, False, False)
+    assert tuple((edge.main_flow_projection is not None) for edge in edges) == (True, False, False)
     assert edges[0].storage_plan is None
     assert edges[0].projection is None
     assert edges[1].storage_plan is stored_inputs.get(source_specs[1].ref())
@@ -1311,7 +1311,7 @@ def test_implicit_native_main_flow_provenance_drives_artifact_owned_scope():
     edge = next(compiled_consumer.iter_invocations()).artifact_input_edges[0]
     assert edge.spec == cursor
     assert edge.storage_plan is None
-    assert edge.consumes_main_flow
+    assert (edge.main_flow_projection is not None)
 
 
 def test_artifact_output_source_uses_compiled_plan_across_parameter_occurrences():

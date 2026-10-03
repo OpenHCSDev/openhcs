@@ -818,7 +818,13 @@ def test_runtime_artifact_input_projection_transposes_producer_stack_axis() -> N
             None,
         )
         store.record(
-            RuntimeValue.normalize(group_plan, payload, axis_id="A01"),
+            RuntimeValue.normalize_for_execution_scope(
+                group_plan,
+                payload,
+                execution_scope=RuntimeExecutionAxisScope.from_raw(
+                    "A01", component=AllComponents.CHANNEL, value=channel,
+                ),
+            ),
             path=group_plan.path,
             backend="memory",
         )
@@ -848,6 +854,14 @@ def test_runtime_artifact_input_projection_transposes_producer_stack_axis() -> N
         backend="memory",
     )
 
+    candidates = runtime_input.candidate_execution_scopes(
+        store,
+        ComponentGroupScope.dynamic(AllComponents.SITE),
+        variable_components=ComponentSet((AllComponents.CHANNEL,)),
+    )
+    assert tuple(scope.value_text for scope in candidates) == ("1", "2", "3")
+    assert all(scope.fixed_component_values == () for scope in candidates)
+
     payload = runtime_input.composed_value(runtime_input.records(store))
 
     np.testing.assert_array_equal(
@@ -859,6 +873,135 @@ def test_runtime_artifact_input_projection_transposes_producer_stack_axis() -> N
             )
         ),
     )
+
+
+def test_artifact_candidate_scopes_preserve_projected_site_time_correlation() -> None:
+    path = "/memory/processed_pixels.pkl"
+    variables = (AllComponents.SITE, AllComponents.TIMEPOINT)
+    output_plan = ArtifactOutputPlan(
+        name="image", path=path, artifact_type=ImageArtifactType,
+        variable_components=variables,
+    )
+    storage_plan = ArtifactInputPlan(
+        name="image", path=path, artifact_type=ImageArtifactType,
+        variable_components=variables,
+    )
+    payload = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=("/source/original_first.tif", "/source/original_second.tif"),
+            component_metadata=(
+                {"site": "1", "timepoint": "3"},
+                {"site": "2", "timepoint": "4"},
+            ),
+        ),
+    ).payload_with(
+        np.stack((np.full((2, 2), 17.0), np.full((2, 2), 29.0))),
+        np.asarray([[[True, False], [False, True]], [[False, True], [True, False]]]),
+    )
+    store = RuntimeValueStore()
+    store.record(RuntimeValue.normalize(output_plan, payload, axis_id="A01"),
+                 path=path, backend="memory")
+    edge = _runtime_input_edge(
+        storage_plan,
+        invocation_scope=ComponentGroupScope.dynamic(AllComponents.SITE),
+        producer_selection_scope=ComponentGroupScope.ungrouped(),
+        component_scopes=(
+            ComponentGroupScope.dynamic(AllComponents.SITE),
+            ComponentGroupScope.from_raw(("3",), component=AllComponents.TIMEPOINT),
+        ),
+        consumer_variable_components=(),
+    )
+    runtime_input = RuntimeArtifactInput(
+        edge_plan=edge, backend="memory",
+        axis_scope=RuntimeExecutionAxisScope.from_raw("A01", component=None, value=None),
+    )
+    candidates = runtime_input.candidate_execution_scopes(
+        store, ComponentGroupScope.dynamic(AllComponents.SITE),
+        variable_components=ComponentSet(),
+    )
+    (coordinates,) = tuple(candidates)
+    assert coordinates.value_text == "1"
+    assert coordinates.fixed_component_values == ((AllComponents.TIMEPOINT, "3"),)
+    assert candidates[coordinates] == path
+    selected = replace(runtime_input, axis_scope=coordinates).resolve_value(store)
+    np.testing.assert_array_equal(image_payload_data(selected), np.full((2, 2), 17.0))
+    np.testing.assert_array_equal(selected.mask, payload.mask[0])
+
+
+def test_artifact_candidate_scopes_keep_actual_producer_group_as_fixed_context() -> None:
+    path = "/memory/produced_pixels.pkl"
+    output_plan = ArtifactOutputPlan(
+        name="image", path=path, artifact_type=ImageArtifactType,
+        group_component=AllComponents.CHANNEL, group_keys=("1",),
+    )
+    storage_plan = ArtifactInputPlan(
+        name="image", path=path, artifact_type=ImageArtifactType,
+        group_component=AllComponents.CHANNEL, group_keys=("1",),
+    )
+    payload = ImagePayloadMetadata(
+        source_path="/source/old_filename_w9.tif",
+        source_component_metadata={"site": "2", "timepoint": "3", "channel": "1", "z_index": "1"},
+    ).payload_with(np.full((2, 2), 17.0), None)
+    store = RuntimeValueStore()
+    record = store.record(
+        RuntimeValue.normalize_for_execution_scope(
+            output_plan, payload,
+            execution_scope=RuntimeExecutionAxisScope.from_raw(
+                "A01", component=AllComponents.CHANNEL, value="1",
+                fixed_component_values=((AllComponents.SITE, "2"), (AllComponents.TIMEPOINT, "3"), (AllComponents.Z_INDEX, "1")),
+            ),
+        ),
+        path=path, backend="memory",
+    )
+    runtime_input = RuntimeArtifactInput(
+        edge_plan=_runtime_input_edge(
+            storage_plan,
+            invocation_scope=ComponentGroupScope.dynamic(AllComponents.SITE),
+            producer_selection_scope=storage_plan.producer_group_scope(),
+            component_scopes=(ComponentGroupScope.dynamic(AllComponents.SITE),),
+            consumer_variable_components=(),
+        ),
+        axis_scope=RuntimeExecutionAxisScope.from_raw("A01", component=None, value=None),
+        backend="memory",
+    )
+    candidates = runtime_input.candidate_execution_scopes(
+        store, ComponentGroupScope.dynamic(AllComponents.SITE),
+        variable_components=ComponentSet(),
+    )
+    (coordinates,) = tuple(candidates)
+    assert coordinates.value_text == "2"
+    assert dict(coordinates.fixed_component_values) == {
+        AllComponents.CHANNEL: "1", AllComponents.TIMEPOINT: "3", AllComponents.Z_INDEX: "1",
+    }
+    selected = replace(runtime_input, axis_scope=coordinates).records(store)
+    assert len(selected) == 1
+    assert selected[0] is record
+
+    second_payload = ImagePayloadMetadata(
+        source_path="/source/another_original.tif",
+        source_component_metadata={"site": "2", "timepoint": "3", "channel": "1", "z_index": "2"},
+    ).payload_with(np.full((2, 2), 29.0), None)
+    second_record = store.record(
+        RuntimeValue.normalize_for_execution_scope(
+            output_plan, second_payload,
+            execution_scope=RuntimeExecutionAxisScope.from_raw(
+                "A01", component=AllComponents.CHANNEL, value="1",
+                fixed_component_values=((AllComponents.SITE, "2"), (AllComponents.TIMEPOINT, "3"), (AllComponents.Z_INDEX, "2")),
+            ),
+        ),
+        path=path, backend="memory",
+    )
+    candidates = runtime_input.candidate_execution_scopes(
+        store, ComponentGroupScope.dynamic(AllComponents.SITE),
+        variable_components=ComponentSet(),
+    )
+    assert len(candidates) == 2
+    selected_records = tuple(
+        replace(runtime_input, axis_scope=scope).records(store)
+        for scope in candidates
+    )
+    assert selected_records == ((record,), (second_record,))
 
 
 def test_runtime_artifact_input_projection_ignores_scalar_pixel_contributors() -> None:

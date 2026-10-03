@@ -27,6 +27,7 @@ from openhcs.core.config import DtypeConfig
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.function_patterns import (
+    MainFlowInputProjection,
     FunctionInvocationKey,
     InvocationArtifactInputEdgePlan,
     InvocationArtifactInputProjectionKey,
@@ -632,7 +633,7 @@ def test_source_bound_input_edge_keeps_source_anchored_runtime_domain():
         spec=source_spec,
         storage_plan=None,
         projection=None,
-        consumes_main_flow=True,
+        main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
     )
     invocation = invocation.with_artifact_input_edges((edge,))
     group = replace(compiled.default_group, invocations=(invocation,))
@@ -669,7 +670,7 @@ def test_unstored_positional_artifact_does_not_override_compiled_main_flow() -> 
         spec=source,
         storage_plan=None,
         projection=None,
-        consumes_main_flow=False,
+
     )
     group = replace(
         compiled.default_group,
@@ -727,7 +728,7 @@ def test_component_projection_uses_compiled_per_group_source_lineage() -> None:
                 spec=source,
                 storage_plan=None,
                 projection=None,
-                consumes_main_flow=True,
+                main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
             )
             for edge_key, source in zip(
                 InvocationArtifactInputProjectionKey.for_input_count(
@@ -812,7 +813,7 @@ def test_unscoped_active_output_retains_complete_compiled_invocation_inputs() ->
         spec=source,
         storage_plan=None,
         projection=None,
-        consumes_main_flow=True,
+        main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
     )
     invocation = invocation.with_artifact_input_edges((edge,))
 
@@ -1715,3 +1716,47 @@ def test_inject_artifact_input_values_replaces_serialized_placeholders():
         pattern,
         {"grid_dimensions": (3, 4)},
     ) == (needs_grid, {"grid_dimensions": (3, 4), "sigma": 2})
+
+
+def test_artifact_binding_owner_does_not_erase_undeclared_raw_image_demand():
+    source = ArtifactSpec.input("Source", ImageArtifactType)
+
+    @artifact_inputs(source)
+    @runtime_adapter("runtime", lambda _request: object(), manages_artifact_inputs=True)
+    def consume(image, *, runtime):
+        return image
+
+    compiled = compile_function_pattern(consume, {}, {})
+    invocation = compiled.default_group.invocations[0]
+    edge = exact_input_edge(
+        invocation, input_index=0, spec=source,
+        storage_plan=ArtifactInputPlan(source.name, "/memory/source", artifact_type=ImageArtifactType),
+        parameter_name=None,
+    )
+    invocation = invocation.with_artifact_input_edges((edge,))
+    group = replace(compiled.default_group, invocations=(invocation,))
+    assert invocation.adapter_manages_artifact_inputs
+    assert invocation.contract.accepts_implicit_main_flow_input
+    assert group.stored_primary_input_edges_for_component(ComponentGroupScope.ungrouped(), None) is None
+    primary = replace(edge, main_flow_projection=MainFlowInputProjection.COMPLETE_PAYLOAD)
+    group = replace(group, invocations=(invocation.with_artifact_input_edges((primary,)),))
+    assert group.stored_primary_input_edges_for_component(ComponentGroupScope.ungrouped(), None) == (primary,)
+
+
+def test_table_context_cannot_stand_in_for_an_image_cohort():
+    table = ArtifactSpec.input("Measurements", MeasurementsArtifactType)
+
+    @artifact_inputs(table)
+    @runtime_adapter("runtime", lambda _request: object(), manages_artifact_inputs=True)
+    def consume(*, runtime):
+        return None
+
+    compiled = compile_function_pattern(consume, {}, {})
+    invocation = compiled.default_group.invocations[0]
+    edge = exact_input_edge(
+        invocation, input_index=0, spec=table,
+        storage_plan=ArtifactInputPlan(table.name, "/memory/table", artifact_type=MeasurementsArtifactType),
+        parameter_name=None,
+    )
+    group = replace(compiled.default_group, invocations=(invocation.with_artifact_input_edges((edge,)),))
+    assert group.stored_primary_input_edges_for_component(ComponentGroupScope.ungrouped(), None) is None

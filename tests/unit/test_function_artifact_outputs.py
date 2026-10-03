@@ -2891,7 +2891,7 @@ def _declared_source_executor(
         spec=spec,
         storage_plan=None,
         projection=None,
-        consumes_main_flow=True,
+
         main_flow_projection=main_flow_projection,
     )
     invocation = invocation.with_artifact_input_edges((edge,))
@@ -3090,7 +3090,7 @@ def test_missing_source_origin_is_not_satisfied_by_an_authored_kwarg():
     spec = ArtifactSpec.input("MissingImage", ImageArtifactType, parameter_name="image_to_save")
     executor = _declared_source_executor(spec)
     (original_edge,) = executor.invocation.artifact_input_edges
-    edge = replace(original_edge, consumes_main_flow=False, main_flow_projection=None)
+    edge = replace(original_edge,  main_flow_projection=None)
     primary = ImagePayloadMetadata().payload_with(np.zeros((1, 2, 3), dtype=np.uint16))
     invocation = replace(executor.invocation, kwargs=(("image_to_save", primary),))
     executor = replace(executor, invocation=invocation,

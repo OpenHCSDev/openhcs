@@ -178,7 +178,7 @@ class RuntimeArtifactTypeStrategy(
         ``RuntimeInputBindingRequest.runtime_value``. A source-context query
         must consume that result without binding the input a second time.
         """
-        return None
+        return spec.artifact_type.source_image_payload_from_runtime_value(value)
 
     def published_main_flow_output(
         self,
@@ -256,13 +256,6 @@ class ImageArtifactTypeStrategy(RuntimeArtifactTypeStrategy):
         return single_source_name(
             image_payload_metadata(value).source_provenance.represented_source_image_names
         )
-
-    def source_image_payload_from_runtime_value(
-        self,
-        spec: ArtifactSpec,
-        value: RuntimeCallableArgument,
-    ) -> RuntimeCallableArgument | None:
-        return value
 
     def published_main_flow_output(
         self,
@@ -342,13 +335,6 @@ class ObjectLabelsArtifactTypeStrategy(RuntimeArtifactTypeStrategy):
         value: RuntimeCallableArgument,
     ) -> str | None:
         return cast(ObjectLabelSet, value).source_image_name
-
-    def source_image_payload_from_runtime_value(
-        self,
-        spec: ArtifactSpec,
-        value: RuntimeCallableArgument,
-    ) -> RuntimeCallableArgument | None:
-        return value
 
 
 class MeasurementsArtifactTypeStrategy(RuntimeArtifactTypeStrategy):
@@ -635,20 +621,20 @@ class RuntimeInputBindingRequest:
             )
         source_plan = self.adapter.request.source_binding_plan
         source_binding = source_plan.binding_for_artifact_ref(spec.ref())
-        consumes_main_flow = edge.consumes_main_flow
+        primary_projection = edge.main_flow_projection
         source_artifact_binding = (
             source_binding
-            if edge.storage_plan is None and not consumes_main_flow
+            if edge.storage_plan is None and primary_projection is None
             else None
         )
         runtime_edge = (
-            edge if edge.storage_plan is not None and not consumes_main_flow else None
+            edge if edge.storage_plan is not None and primary_projection is None else None
         )
         authority_count = sum(
             (
                 source_artifact_binding is not None,
                 runtime_edge is not None,
-                consumes_main_flow,
+                primary_projection is not None,
             )
         )
         if authority_count != 1:

@@ -63,7 +63,7 @@ def _output_record_request(
             spec=spec,
             storage_plan=None,
             projection=None,
-            consumes_main_flow=True,
+            main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
         )
         for input_index, spec in active_occurrences
     )
@@ -133,7 +133,7 @@ def test_output_source_uses_compiled_runtime_occurrence_for_repeated_roles(
             spec=spec,
             storage_plan=None,
             projection=None,
-            consumes_main_flow=True,
+            main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
         )
         for input_index, spec in enumerate(contract.artifact_inputs)
     )

@@ -21,6 +21,7 @@ from openhcs.core.source_metadata import (
     SourceVoxelSpacing,
 )
 from openhcs.core.function_patterns import (
+    MainFlowInputProjection,
     InvocationArtifactInputEdgePlan,
     InvocationArtifactInputProjectionKey,
     compile_function_pattern,
@@ -295,7 +296,7 @@ def test_compiled_main_flow_edge_selects_exact_producer_identity(
                 spec=input_spec,
                 storage_plan=None,
                 projection=None,
-                consumes_main_flow=True,
+                main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
             ),
         )
     )

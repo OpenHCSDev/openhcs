@@ -129,6 +129,65 @@ def test_runtime_axis_scope_returns_none_only_without_declared_component_axis() 
     )
 
 
+def test_runtime_axis_scope_joins_correlated_rows_without_inventing_states() -> None:
+    rows = tuple(
+        RuntimeExecutionAxisScope.from_raw(
+            "A01", component=None, value=None,
+            fixed_component_values=((AllComponents.SITE, site), (AllComponents.TIMEPOINT, timepoint)),
+        )
+        for site, timepoint in (("1", "3"), ("2", "4"))
+    )
+    time_three = RuntimeExecutionAxisScope.from_raw(
+        "A01", component=None, value=None,
+        fixed_component_values=((AllComponents.TIMEPOINT, "3"),),
+    )
+    joined = tuple(
+        result for row in rows
+        if (result := row.join_execution_cohort(time_three)) is not None
+    )
+    assert joined == (rows[0],)
+    assert rows[0].join_execution_cohort(rows[1]) is None
+
+
+def test_runtime_axis_scope_empty_context_broadcasts_to_actual_correlated_row() -> None:
+    empty = RuntimeExecutionAxisScope.from_raw("A01", component=None, value=None)
+    source = RuntimeExecutionAxisScope.from_raw(
+        "A01", component=None, value=None,
+        fixed_component_values=((AllComponents.SITE, "1"), (AllComponents.TIMEPOINT, "3")),
+    )
+    assert empty.join_execution_cohort(source) == source
+    assert source.join_execution_cohort(empty) == source
+    assert empty.join_execution_cohort(empty) == empty
+
+
+@pytest.mark.parametrize("axis,component,value", [
+    ("B01", AllComponents.CHANNEL, "1"),
+    ("A01", AllComponents.SITE, "1"),
+    ("A01", AllComponents.CHANNEL, "2"),
+])
+def test_runtime_axis_scope_cannot_join_other_execution_group(axis, component, value) -> None:
+    own = RuntimeExecutionAxisScope.from_raw("A01", component=AllComponents.CHANNEL, value="1")
+    other = RuntimeExecutionAxisScope.from_raw(axis, component=component, value=value)
+    assert own.join_execution_cohort(other) is None
+
+
+def test_runtime_axis_scope_join_derives_partial_fixed_context_union() -> None:
+    left = RuntimeExecutionAxisScope.from_raw(
+        "A01", component=None, value=None,
+        fixed_component_values=((AllComponents.SITE, "1"), (AllComponents.TIMEPOINT, "3")),
+    )
+    right = RuntimeExecutionAxisScope.from_raw(
+        "A01", component=None, value=None,
+        fixed_component_values=((AllComponents.TIMEPOINT, "3"), (AllComponents.Z_INDEX, "2")),
+    )
+    expected = RuntimeExecutionAxisScope.from_raw(
+        "A01", component=None, value=None,
+        fixed_component_values=((AllComponents.SITE, "1"), (AllComponents.TIMEPOINT, "3"), (AllComponents.Z_INDEX, "2")),
+    )
+    assert left.join_execution_cohort(right) == expected
+    assert right.join_execution_cohort(left) == expected
+
+
 def test_function_step_execution_scope_is_exact_closed_enum() -> None:
     assert [(member.name, member.value) for member in FunctionStepExecutionScope] == [
         ("AXIS", "axis"),

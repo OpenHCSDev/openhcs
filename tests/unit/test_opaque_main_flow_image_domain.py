@@ -9,7 +9,7 @@ import pytest
 from openhcs.constants.constants import MEMORY_TYPE_NUMPY
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.component_group_scope import ComponentGroupScope
-from openhcs.core.function_patterns import compile_function_pattern
+from openhcs.core.function_patterns import MainFlowInputProjection, compile_function_pattern
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     image_payload_data,
@@ -19,7 +19,7 @@ from openhcs.core.runtime_image_values import (
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.steps.function_runtime import PatternGroupRuntime
+from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest, PatternGroupRuntime
 from openhcs.core.aligned_image_payload import AlignedImageStack, ImageOutputBundle, AlignedImageSliceContext, ImagePayloadStackComposition
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.steps.function_output_manifest import step_output_manifest, StepOutputManifestStore
@@ -214,9 +214,9 @@ def test_save_and_next_load_preserve_domain_and_independent_cache(tmp_path, monk
         plan, step_index=1, step_scope_id="whole-consumer", input_dir=tmp_path,
         main_input_dependency=StepInputDependency.step_output(source_step_index=0, source_step_scope_id=plan.step_scope_id),
     )
-    consumer = PatternGroupRuntime(SimpleNamespace(
+    consumer = PatternGroupRuntime(PatternGroupExecutionRequest(
         context=context, execution_plan=consumer_plan, compiled_group=pattern.default_group,
-        source_binding_plan=CompiledSourceBindingPlan.empty(), component_key=None,
+        component_index=0, component_count=1,
         pattern_group_info="A01_s001_w1_z{iii}_t001.tif",
     ))
     monkeypatch.setattr(consumer, "source_workspace_projection_authority", lambda: SimpleNamespace(projection_if_available=lambda: None))
@@ -323,7 +323,7 @@ def _selected_pattern(name):
     invocation = pattern.default_group.invocations[0]
     invocation = invocation.with_artifact_input_edges((InvocationArtifactInputEdgePlan(
         key=InvocationArtifactInputProjectionKey(invocation_key=invocation.key, input_index=0),
-        spec=spec, storage_plan=None, projection=None, consumes_main_flow=True,
+        spec=spec, storage_plan=None, projection=None, main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
     ),))
     return replace(pattern, groups=(replace(pattern.default_group, invocations=(invocation,)),))
 

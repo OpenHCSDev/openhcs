@@ -101,7 +101,7 @@ def _compiled_edge(*, dynamic=False, declared=True):
         consumer_variable_components=ComponentSet((AllComponents.SITE,)),
         source_bindings=EMPTY_SOURCE_BINDINGS,
         available_artifacts=ArtifactSpecCollection(()),
-        consumes_main_flow=False,
+        main_flow_projection=None,
     )
     return edge, child
 

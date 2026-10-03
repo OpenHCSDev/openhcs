@@ -202,6 +202,31 @@ also rejected: eliminating source snapshots changes in-place callable isolation,
 while preserving them retains the copying cost. Neither route is promoted as
 an unconsumed capability or a dominant performance fix.
 
+Canonical producer transport and measurement rosters
+---------------------------------------------------
+
+An input edge now retains its exact producer storage independently of its
+semantic primary-image projection. The redundant ``consumes_main_flow`` flag
+is removed. Artifact-owned execution admits an independent pixel/mask buffer
+directly from those producers instead of unstacking, saving, discovering and
+reloading an unnamed checkpoint. ``CompiledStepPlan`` derives checkpoint demand
+from actual consumers and propagates that demand through preserved main flow.
+Path-based conversion, sequential filters, implicit raw inputs and unavailable
+same-step producers retain their required transport.
+
+``RuntimeArtifactInput`` owns producer selection and candidate coordinates;
+runtime scope joins retain whole correlated rows and permit compatible partial
+contexts. Original filename metadata does not replace producer coordinates.
+The existing artifact type owns image-context extraction, and the existing
+stack composition owns independent buffer admission. No address or data cache
+is introduced.
+
+The importer preserves a native measurement module's full image/object roster.
+The existing measurement executor owns its Cartesian measurement traversal and
+batch kernels. NATURAL object measurements resolve that roster once, without
+building an unused composed image request; COMPOSED and selected-plane source
+identity retain their declared behavior.
+
 Evidence scope
 --------------
 

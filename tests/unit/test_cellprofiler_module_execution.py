@@ -65,7 +65,10 @@ from openhcs.core.component_group_scope import (
 from openhcs.core.config import DtypeConfig
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.equivalence.keys import RuntimeMeasurementSourcePair
-from openhcs.core.function_patterns import InvocationArtifactInputEdgePlan
+from openhcs.core.function_patterns import (
+    InvocationArtifactInputEdgePlan,
+    MainFlowInputProjection,
+)
 from openhcs.core.measurement_image_alignment import (
     MeasurementImageLabelAlignmentStrategy,
     MeasurementLabelSourceAlignmentStrategy,
@@ -1427,7 +1430,7 @@ def test_main_flow_image_artifact_selects_declared_alias_plane() -> None:
         artifact_input_edges=(
             replace(
                 _artifact_input_edge_for_test(first_spec, stored=False),
-                consumes_main_flow=True,
+                main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
             ),
         ),
     )
@@ -1482,7 +1485,7 @@ def test_single_main_flow_image_artifact_selects_declared_source_binding_plane()
                 artifact_input_edges=(
                     replace(
                         _artifact_input_edge_for_test(spec, stored=False),
-                        consumes_main_flow=True,
+                        main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
                     ),
                 ),
             ),
@@ -1533,7 +1536,7 @@ def test_main_flow_image_artifact_projects_named_provenance_plane() -> None:
                 artifact_input_edges=(
                     replace(
                         _artifact_input_edge_for_test(first_spec, stored=False),
-                        consumes_main_flow=True,
+                        main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
                     ),
                 ),
             ),
@@ -1578,7 +1581,7 @@ def test_main_flow_image_artifact_preserves_declared_runtime_slice_stack() -> No
                 artifact_input_edges=(
                     replace(
                         _artifact_input_edge_for_test(first_spec, stored=False),
-                        consumes_main_flow=True,
+                        main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
                     ),
                 ),
             ),
@@ -1638,7 +1641,7 @@ def test_main_flow_projection_binds_singleton_broadcast_artifact_as_2d(
         artifact_input_edges=(
             replace(
                 _artifact_input_edge_for_test(original_spec, stored=False),
-                consumes_main_flow=True,
+                main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
             ),
             _artifact_input_edge_for_test(
                 illumination_spec,
@@ -1711,6 +1714,7 @@ def test_composed_measurement_images_keep_declared_aliases_and_resolved_payload(
         runtime,
         image,
         image_request,
+        image_inputs=(image_spec,),
         module_type=MeasureObjectIntensityModule,
     )
 
@@ -1724,6 +1728,7 @@ def test_composed_measurement_images_keep_declared_aliases_and_resolved_payload(
             runtime,
             image,
             None,
+            image_inputs=(image_spec,),
             module_type=MeasureObjectIntensityModule,
         )
 
@@ -1781,7 +1786,7 @@ def test_repeated_broadcast_inputs_consume_their_declared_source_group_axes() ->
             *(
                 replace(
                     _artifact_input_edge_for_test(spec, stored=False),
-                    consumes_main_flow=True,
+                    main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
                 )
                 for spec in original_specs
             ),
@@ -1846,7 +1851,7 @@ def test_single_main_flow_image_preserves_runtime_slice_axis() -> None:
                 artifact_input_edges=(
                     replace(
                         _artifact_input_edge_for_test(spec, stored=False),
-                        consumes_main_flow=True,
+                        main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
                     ),
                 ),
             ),
@@ -3160,7 +3165,7 @@ def test_object_output_measurements_derive_count_and_locations_from_output_label
                     ArtifactSpec.input("Mask", ImageArtifactType),
                     stored=False,
                 ),
-                consumes_main_flow=True,
+                main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
             ),
         ),
         output_plans=tuple(
@@ -3323,7 +3328,7 @@ def test_compiled_measurement_output_preserves_image_and_object_row_ownership() 
         artifact_input_edges=(
             replace(
                 _artifact_input_edge_for_test(source_spec, stored=False),
-                consumes_main_flow=True,
+                main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
             ),
         ),
         output_plans=tuple(
@@ -4376,7 +4381,7 @@ def test_object_label_output_domain_scope_preserves_declared_source_stack() -> N
         artifact_input_edges=(
             replace(
                 _artifact_input_edge_for_test(source_spec, stored=False),
-                consumes_main_flow=True,
+                main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
             ),
         ),
         output_plans=tuple(_artifact_output_plan(item) for item in ((output_spec,))),
@@ -4414,7 +4419,7 @@ def test_object_label_output_domain_scope_uses_declared_group_lineage() -> None:
         artifact_input_edges=(
             replace(
                 _artifact_input_edge_for_test(source_spec, stored=False),
-                consumes_main_flow=True,
+                main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
             ),
         ),
         output_plans=tuple(_artifact_output_plan(item) for item in ((output_spec,))),
@@ -18100,3 +18105,147 @@ def test_object_measurement_execution_policy_keeps_declared_full_stack_for_2d_la
     )
 
     assert mode is ImagePayloadExecutionMode.FULL_STACK
+
+
+@pytest.mark.parametrize("image_count", (1, 2))
+def test_natural_object_measurement_resolves_one_roster_without_eager_composition(
+    monkeypatch, image_count
+) -> None:
+    image_specs = tuple(
+        ArtifactSpec.input(name, ImageArtifactType)
+        for name in ("DNA", "ER")[:image_count]
+    )
+    object_spec = ArtifactSpec.input("Cells", ObjectLabelsArtifactType)
+    measurement_spec = ArtifactSpec.output(
+        "MeasureObjectIntensity_roster", MeasurementsArtifactType
+    )
+    labels = ObjectLabelSet(
+        name="Cells",
+        variant_data=ObjectLabelVariantData(labels=np.ones((3, 4), dtype=np.int32)),
+        domain=ObjectLabelDomain(declared_object_ids=(1,)),
+    )
+    images = {
+        spec.name: ImagePayloadMetadata(
+            source_image_names=(f"Original{spec.name}",)
+        ).payload_with(np.full((3, 4), value, dtype=np.float32))
+        for spec, value in zip(image_specs, (1, 2)[:image_count], strict=True)
+    }
+    runtime = _FakeCellProfilerRuntime(
+        images,
+        {"Cells": labels},
+        artifact_input_edges=tuple(
+            _artifact_input_edge_for_test(spec)
+            for spec in (*image_specs, object_spec)
+        ),
+        artifact_output_bindings=(
+            (measurement_spec, _artifact_output_plan(measurement_spec)),
+        ),
+    )
+    contract = _compiled_callable_contract(
+        MeasureObjectIntensityModule.require_callable(),
+        artifact_inputs=(*image_specs, object_spec),
+        artifact_outputs=(measurement_spec,),
+    )
+    executor = _module_executor(contract)
+    monkeypatch.setattr(
+        CellProfilerModuleExecutor,
+        "_image_request",
+        lambda *_args, **_kwargs: pytest.fail(
+            "NATURAL measurements do not compose the image roster"
+        ),
+    )
+    strategy_type = type(
+        RuntimeArtifactTypeStrategy.for_artifact_type(ImageArtifactType)
+    )
+    original_resolution = strategy_type.raw_runtime_input_value
+    resolutions = []
+
+    def resolve(self, spec, value):
+        resolutions.append(spec.name)
+        return original_resolution(self, spec, value)
+
+    monkeypatch.setattr(strategy_type, "raw_runtime_input_value", resolve)
+    policy_type = type(
+        MeasureObjectIntensityModule.runtime_object_measurement_row_policy()
+    )
+    original_table_name = policy_type.table_source_image_name
+    fallbacks = []
+
+    def table_name(self, measurement_images, source_image_name):
+        fallbacks.append(source_image_name)
+        return original_table_name(self, measurement_images, source_image_name)
+
+    monkeypatch.setattr(policy_type, "table_source_image_name", table_name)
+    current = np.zeros((3, 4), dtype=np.float32)
+    assert _run_module(executor, current, cellprofiler_runtime=runtime) is current
+    assert resolutions == ["DNA", "ER"][:image_count]
+    assert fallbacks == [None if image_count == 1 else "dna__er"]
+    table = next(
+        table for table in runtime.measurements
+        if table.subject == MeasurementSubject(MeasurementScope.OBJECT, "Cells")
+    )
+    rows = table.rows.row_mappings()
+    assert [
+        row[f"Intensity_IntegratedIntensity_{spec.name}"]
+        for row, spec in zip(rows, image_specs, strict=True)
+    ] == [12.0, 24.0][:image_count]
+
+
+def test_natural_measurement_fallback_preserves_selected_main_flow_plane(monkeypatch):
+    from openhcs.core.runtime_image_values import ImagePayloadMetadataCompositionMode
+
+    image_spec = ArtifactSpec.input("DNA", ImageArtifactType)
+    object_spec = ArtifactSpec.input("Cells", ObjectLabelsArtifactType)
+    output_spec = ArtifactSpec.output("SelectedPlaneIntensity", MeasurementsArtifactType)
+    planes = tuple(
+        ImagePayloadMetadata(source_image_names=(name,)).payload_with(
+            np.ones((3, 4), dtype=np.float32)
+        ) for name in ("DNA", "ER")
+    )
+    image = ImagePayloadMetadata.compose(
+        planes, mode=ImagePayloadMetadataCompositionMode.STACK
+    ).payload_with(np.ones((2, 3, 4), dtype=np.float32))
+    labels = ObjectLabelSet(
+        name="Cells",
+        variant_data=ObjectLabelVariantData(labels=np.ones((2, 3, 4), dtype=np.int32)),
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        domain=ObjectLabelDomain(
+            scope=ObjectLabelDomainScope.PLANE,
+            declared_object_id_domains=((1,), (1,)),
+        ),
+    )
+    runtime = _FakeCellProfilerRuntime(
+        {}, {"Cells": labels},
+        artifact_input_edges=(
+            replace(
+                _artifact_input_edge_for_test(image_spec, stored=False),
+                main_flow_projection=MainFlowInputProjection.COMPLETE_PAYLOAD,
+            ),
+            _artifact_input_edge_for_test(object_spec),
+        ),
+        artifact_output_bindings=((output_spec, _artifact_output_plan(output_spec)),),
+        plane_projection=RuntimePlaneProjection(plane_index=0, plane_count=2),
+    )
+    executor = _module_executor(_compiled_callable_contract(
+        MeasureObjectIntensityModule.require_callable(),
+        artifact_inputs=(image_spec, object_spec), artifact_outputs=(output_spec,),
+    ))
+    _activate_runtime_contract(executor.callable_contract, runtime)
+    original_fallback = executor._image_request(
+        image, runtime, module_type=MeasureObjectIntensityModule,
+        active_input_specs=(image_spec, object_spec),
+    ).source_image_name
+    assert original_fallback == "DNA"
+    monkeypatch.setattr(
+        CellProfilerModuleExecutor, "_image_request",
+        lambda *_args, **_kwargs: pytest.fail("unused composed request"),
+    )
+    policy_type = type(MeasureObjectIntensityModule.runtime_object_measurement_row_policy())
+    original_table_name = policy_type.table_source_image_name
+    fallbacks = []
+    def table_name(self, measurement_images, source_image_name):
+        fallbacks.append(source_image_name)
+        return original_table_name(self, measurement_images, source_image_name)
+    monkeypatch.setattr(policy_type, "table_source_image_name", table_name)
+    assert _run_module(executor, image, cellprofiler_runtime=runtime) is image
+    assert fallbacks == [original_fallback]

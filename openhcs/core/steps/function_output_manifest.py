@@ -561,7 +561,7 @@ class StepOutputManifestStore:
             for invocation in plan.compiled_function_pattern.iter_invocations()
             for edge in invocation.artifact_input_edges
             if (
-                edge.consumes_main_flow
+                edge.main_flow_projection is not None
                 or (
                     edge.spec.parameter_name is None
                     and edge.spec.ref()

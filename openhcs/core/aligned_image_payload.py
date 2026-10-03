@@ -496,6 +496,10 @@ class ImagePayloadStackComposition(ABC):
         device_id: int | None,
     ) -> RuntimeArrayData:
         """Copy pixels, mask and metadata without adding a composition axis."""
+        if isinstance(value, ImagePayloadStackComposition):
+            return value.copy_input_cohort(
+                memory_type=memory_type, device_id=device_id,
+            )
         copied_data = stack_runtime_slices(
             (image_payload_data(value),), memory_type, device_id,
         )[0]
@@ -506,6 +510,14 @@ class ImagePayloadStackComposition(ABC):
         )
         return image_payload_metadata(value).replace_fields().payload_with(
             copied_data, copied_mask,
+        )
+
+    def copy_input_cohort(
+        self, *, memory_type: str, device_id: int | None,
+    ) -> RuntimeArrayData:
+        """Copy the dense image domain owned by this composition."""
+        return self.copy_whole_image(
+            self.compose(), memory_type=memory_type, device_id=device_id,
         )
 
     @staticmethod
@@ -1162,6 +1174,19 @@ class AlignedImageStack(ImagePayloadStackComposition):
         """Replace payload slices while preserving the concrete alignment owner."""
 
         return type(self)(tuple(slices), self.slice_contexts)
+
+    def copy_input_cohort(
+        self, *, memory_type: str, device_id: int | None,
+    ) -> "AlignedImageStack":
+        """Retain aligned member domains while admitting independent buffers."""
+        return self.with_slices(
+            tuple(
+                self.copy_whole_image(
+                    payload, memory_type=memory_type, device_id=device_id,
+                )
+                for payload in self.slices
+            )
+        )
 
     def projected_output_slices(
         self,

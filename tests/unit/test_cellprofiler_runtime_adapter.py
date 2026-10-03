@@ -34,6 +34,7 @@ from openhcs.core.component_group_scope import (
 )
 from openhcs.core.config import DtypeConfig
 from openhcs.core.function_patterns import (
+    MainFlowInputProjection,
     DEFAULT_GROUP_KEY,
     FunctionInvocationKey,
     InvocationArtifactInputEdgePlan,
@@ -829,7 +830,7 @@ def _executor_for_contract(
                     spec=spec,
                     storage_plan=None,
                     projection=None,
-                    consumes_main_flow=spec.ref() in main_flow_input_refs,
+                    main_flow_projection=(MainFlowInputProjection.DECLARED_SOURCE_IMAGE if spec.ref() in main_flow_input_refs else None),
                 )
             )
             continue

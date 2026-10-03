@@ -33,6 +33,7 @@ from openhcs.core.component_group_scope import (
 )
 from openhcs.core.component_set import ComponentSet
 from openhcs.core.function_patterns import (
+    MainFlowInputProjection,
     InvocationArtifactInputEdgePlan,
     InvocationArtifactInputProjectionKey,
     RuntimeInvocationDomain,
@@ -2376,7 +2377,7 @@ def test_runtime_invocation_uses_only_active_source_bound_main_flow_edges(
                 spec=spec,
                 storage_plan=None,
                 projection=None,
-                consumes_main_flow=True,
+                main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
             )
             for edge_key, spec in zip(
                 InvocationArtifactInputProjectionKey.for_input_count(
@@ -2662,7 +2663,7 @@ def test_main_flow_input_owns_runtime_binding_scope_with_auxiliary_source() -> N
                 spec=spec,
                 storage_plan=None,
                 projection=None,
-                consumes_main_flow=input_index == 0,
+                main_flow_projection=(MainFlowInputProjection.DECLARED_SOURCE_IMAGE if input_index == 0 else None),
             )
             for input_index, (edge_key, spec) in enumerate(
                 zip(
@@ -2821,7 +2822,7 @@ def test_payload_provenance_preserves_bindings_across_a_variable_stack_axis() ->
                 spec=spec,
                 storage_plan=None,
                 projection=None,
-                consumes_main_flow=True,
+                main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
             )
             for edge_key, spec in zip(
                 InvocationArtifactInputProjectionKey.for_input_count(
@@ -2893,7 +2894,7 @@ def test_main_flow_source_scope_intersects_cross_component_invocation_inputs() -
                 spec=spec,
                 storage_plan=None,
                 projection=None,
-                consumes_main_flow=True,
+                main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
             )
             for edge_key, spec in zip(
                 InvocationArtifactInputProjectionKey.for_input_count(
@@ -2966,7 +2967,7 @@ def test_special_input_preserves_ordered_declared_main_flow_sources() -> None:
                 spec=pixel_size_spec,
                 storage_plan=None,
                 projection=None,
-                consumes_main_flow=False,
+
             ),
         )
     )
@@ -3103,7 +3104,7 @@ def test_pipeline_start_main_flow_survives_prior_producer_image_input(
     ) == ("Primary",)
     assert mask_edge.spec == _MAIN_FLOW_MASK_INPUT
     assert mask_edge.storage_plan is not None
-    assert mask_edge.consumes_main_flow is False
+    assert (mask_edge.main_flow_projection is not None) is False
     assert invocation.contract.accepts_implicit_main_flow_input is True
     assert compiled_pattern.default_group.main_flow_input_refs is None
     assert tuple(
@@ -4223,7 +4224,7 @@ def test_step_output_manifest_filters_declared_main_flow_contract_identity(
                 spec=input_spec,
                 storage_plan=None,
                 projection=None,
-                consumes_main_flow=True,
+                main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
             ),
         )
     )

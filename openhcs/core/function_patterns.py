@@ -229,8 +229,23 @@ class InvocationArtifactInputEdgePlan:
     spec: ArtifactSpec
     storage_plan: ArtifactInputPlan | None = field(compare=False)
     projection: ArtifactInputProjectionPlan | None
-    consumes_main_flow: bool = False
     main_flow_projection: MainFlowInputProjection | None = None
+
+    @staticmethod
+    def source_projection(
+        spec: ArtifactSpec,
+        main_flow_artifacts: ArtifactSpecCollection,
+        invocation_sources: ArtifactSpecCollection,
+    ) -> MainFlowInputProjection | None:
+        """Derive the primary source role independently of its pixel producer."""
+        main_flow_refs = main_flow_artifacts.ref_set()
+        if spec.ref() not in main_flow_refs or spec.ref() not in invocation_sources.ref_set():
+            return None
+        return (
+            MainFlowInputProjection.COMPLETE_PAYLOAD
+            if len(main_flow_refs) == 1
+            else MainFlowInputProjection.DECLARED_SOURCE_IMAGE
+        )
 
     @classmethod
     def from_source_declarations(
@@ -245,13 +260,12 @@ class InvocationArtifactInputEdgePlan:
     ) -> "InvocationArtifactInputEdgePlan":
         """Project one unstored source occurrence from its exact declarations."""
 
-        main_flow_refs = main_flow_artifacts.ref_set()
-        consumes_main_flow = (
-            spec.ref() in main_flow_refs and spec.ref() in invocation_sources.ref_set()
+        main_flow_projection = cls.source_projection(
+            spec, main_flow_artifacts, invocation_sources,
         )
         edge_type = (
             CompiledMetadataArtifactInputEdgePlan
-            if metadata_available and not (consumes_main_flow or source_binding_available)
+            if metadata_available and main_flow_projection is None and not source_binding_available
             else cls
         )
         return edge_type(
@@ -259,16 +273,7 @@ class InvocationArtifactInputEdgePlan:
             spec=spec,
             storage_plan=None,
             projection=None,
-            consumes_main_flow=consumes_main_flow,
-            main_flow_projection=(
-                MainFlowInputProjection.COMPLETE_PAYLOAD
-                if consumes_main_flow and len(main_flow_refs) == 1
-                else (
-                    MainFlowInputProjection.DECLARED_SOURCE_IMAGE
-                    if consumes_main_flow
-                    else None
-                )
-            ),
+            main_flow_projection=main_flow_projection,
         )
 
     def uses_runtime_storage(self) -> bool:
@@ -277,7 +282,9 @@ class InvocationArtifactInputEdgePlan:
 
     def requires_callable_binding(self) -> bool:
         """Admit parameter-bearing sources and validate every stored argument."""
-        return self.uses_runtime_storage() or self.spec.binds_callable_parameter()
+        return self.spec.binds_callable_parameter() or (
+            self.uses_runtime_storage() and self.main_flow_projection is None
+        )
 
     def resolve_unstored_payload(
         self,
@@ -290,22 +297,6 @@ class InvocationArtifactInputEdgePlan:
         )
 
     def __post_init__(self) -> None:
-        if type(self.consumes_main_flow) is not bool:
-            raise TypeError(
-                "Invocation artifact input edge consumes_main_flow must be bool, "
-                f"got {type(self.consumes_main_flow).__name__}."
-            )
-        if self.consumes_main_flow and self.main_flow_projection is None:
-            object.__setattr__(
-                self,
-                "main_flow_projection",
-                MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
-            )
-        elif not self.consumes_main_flow and self.main_flow_projection is not None:
-            raise ValueError(
-                "Invocation artifact input edge cannot declare a main-flow "
-                "projection when it does not consume main flow."
-            )
         if self.main_flow_projection is not None and not isinstance(
             self.main_flow_projection,
             MainFlowInputProjection,
@@ -314,11 +305,6 @@ class InvocationArtifactInputEdgePlan:
                 "Invocation artifact input edge main_flow_projection must be a "
                 "MainFlowInputProjection or None, got "
                 f"{type(self.main_flow_projection).__name__}."
-            )
-        if self.consumes_main_flow and self.storage_plan is not None:
-            raise ValueError(
-                "Invocation artifact input edge cannot consume main flow when an "
-                "exact storage plan owns the input."
             )
         if (self.storage_plan is None) != (self.projection is None):
             raise ValueError(
@@ -745,7 +731,7 @@ class CompiledFunctionGroup:
                 edge.spec.ref()
                 for _invocation, edges in invocations_and_edges
                 for edge in edges
-                if edge.consumes_main_flow
+                if edge.main_flow_projection is not None
             )
         )
         if main_flow_refs:
@@ -755,6 +741,73 @@ class CompiledFunctionGroup:
             for invocation, _edges in invocations_and_edges
         )
         return None if has_implicit_image_argument else ()
+
+    def stored_primary_input_edges_for_component(
+        self,
+        execution_scope: ComponentGroupScope,
+        component_key: str | None,
+    ) -> tuple[InvocationArtifactInputEdgePlan, ...] | None:
+        """Select exact producer edges supplying an artifact-owned cohort.
+
+        Artifact-owning invocations admit declared semantic primary sources.
+        Context-only inputs can supply a cohort when no raw primary image is
+        consumed. Unknown raw adapters retain source-path transport.
+        """
+        active = tuple(
+            projected
+            for invocation in self.invocations
+            if (
+                projected := invocation.for_component_execution(
+                    execution_scope, component_key,
+                )
+            ) is not None
+        )
+        if not active or any(
+            projected.invocation.contract.accepts_implicit_main_flow_input
+            and not projected.invocation.adapter_manages_artifact_inputs
+            for projected in active
+        ):
+            return None
+        primary_edges = tuple(
+            edge
+            for projected in active
+            for edge in projected.artifact_input_edges
+            if edge.main_flow_projection is not None
+            and edge.spec.artifact_type.carries_source_image_context
+        )
+        if not primary_edges:
+            if any(
+                projected.invocation.contract.accepts_implicit_main_flow_input
+                for projected in active
+            ):
+                return None
+            primary_edges = tuple(
+                edge
+                for projected in active
+                for edge in projected.artifact_input_edges
+                if edge.spec.ref()
+                in projected.invocation.contract.group_scope_inputs.ref_set()
+                and edge.spec.artifact_type.carries_source_image_context
+            )
+        if not primary_edges or any(
+            edge.storage_plan is None for edge in primary_edges
+        ):
+            return None
+        selected: dict[ArtifactSpecRef, InvocationArtifactInputEdgePlan] = {}
+        for edge in primary_edges:
+            previous = selected.get(edge.spec.ref())
+            if previous is not None and (
+                edge.spec != previous.spec
+                or edge.storage_plan != previous.storage_plan
+                or edge.projection != previous.projection
+                or edge.main_flow_projection != previous.main_flow_projection
+            ):
+                raise ValueError(
+                    f"Artifact-owned cohort source {edge.spec.ref()!r} has "
+                    "conflicting compiled producer authorities."
+                )
+            selected.setdefault(edge.spec.ref(), edge)
+        return tuple(selected.values())
 
     def resulting_main_flow_output_plans(self) -> tuple[ArtifactOutputPlan, ...]:
         """Return exact named output plans carried after this callable chain."""
