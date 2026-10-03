@@ -132,3 +132,79 @@ PR #394 remains draft. Whole-branch original R0 and the #479 per-file R1
 failures remain explicit and unwaived; installed consumer acceptance,
 full-catalog/scaling measurements and fresh figures remain unfinished.
 The performance goal remains active.
+
+Deeper current 3D attribution and producer ownership
+---------------------------------------------------
+
+Two further diagnostics use clean source ``396379b06769a3f5afe92413b7d9d6a21dd3f66f``.
+Its production, test and benchmark driver bytes are unchanged from the preceding
+``093c2f42`` source. Both preserve mandatory READY warmup, inline 1w_1t execution,
+OUTCOMES export, the normal memory observer and both disabled profilers. Neither
+is a new ordinary performance comparison.
+
+The 36-hook run separates metadata normalization and provenance operations from
+their actual nested callers. It observes 29,701 normalization calls outside raw
+callable boundaries, totaling 0.317682s exclusive. Ordinary normalization creates
+a fresh scalar identity and reuses the cached plane collection; it does not copy
+the complete 60-plane lineage. Whole-plane merges and derived naming do rebuild
+plane/contributor snapshots. Those operations retain live-mutation and fresh
+snapshot obligations. Their observed costs do not admit a standalone fix large
+enough to close the 1.338s qualified execution gap.
+
+Several large isolated stalls prompted a separate 25-hook run with passive GC
+callbacks. It does not disable GC, freeze objects, change thresholds, force a
+collection or replace existing callbacks. Startup has no active pipeline root.
+Its execution root is 8.462928s: 3.803686s within the 211 declared callable
+boundaries and 4.659242s outside them. The public diagnostic clocks are execution
+8.490154s, compilation 1.824986s and total 11.210223s. GC consumes 0.285505s,
+including one 0.196025s generation-two collection during saving. Collection
+durations overlap the owner clocks; adding them to plumbing would double count.
+GC alone cannot explain or close the remaining gap, so a GC-policy optimization
+is rejected. Different diagnostic clocks on identical production bytes are not
+evidence of a production gain or regression.
+
+Both diagnostics match all six CSVs and 120 TIFFs byte for byte against the same
+native-qualified baseline, with complete 128-file inventories and physical
+input joins. No fresh native repetition is claimed. The 36-hook scientific
+output is retained in a lossless, individually hash-verified archive at
+``/var/tmp/openhcs-current-3d-owner-ledger-v2-20261003/scientific-output.tar.gz``;
+its custody receipt records every original path, mode, size and hash. Later
+readers must use or restore that archive rather than assume those extracted
+files remain present. Previous baselines and frozen failures are unchanged.
+
+Source and consumer audits reject two tempting shortcuts. Artifact-only groups
+already return ``NoMainFlowOutput`` and skip unstacking and saving. Canonical CP
+publication already reuses the stored runtime artifact payload. Downstream CP
+inputs deliberately distinguish stored secondary artifacts from relation-owned
+current main flow. The latter has an independent mutable whole buffer and final
+filename/source-component context. Repeated cache hits share that buffer. A
+direct stored-artifact substitution would change these relationships and, in a
+saved determining case, 62 metadata facts. The final named output bundle can
+also retain earlier sibling outputs, so the last canonical return roster cannot
+stand in for the complete main-flow cohort.
+
+The remaining structural route belongs to existing ``PatternGroupOutputData``,
+``AlignedImageStack``, manifest and runtime-input owners: derive physical plane
+views and final context from the exact correlated producer occurrence, preserving
+the independent main-flow buffer, rather than repeatedly project and recompose
+the whole cohort. The seven marked load/request/record/unstack/save/publication/
+reconciliation spans total 3.432617s in the GC diagnostic. This is an upper
+envelope containing mandatory work, not a claimed removable cost. Before a
+candidate, representative replay must retain the stored occurrence, actual
+merged bundle, projected leaves, final records and cache, filename/path prestates,
+and next consumer edge in one graph. No fake processing context, new cache,
+canonical-roster shortcut or zero-copy assumption is admitted.
+
+Additional retained receipts:
+
+* ``/var/tmp/openhcs-current-3d-owner-ledger-v2-scientific-byte-gate-20261003.json``:
+  SHA-256 ``df4f6548f4459c6a55ea5dc182ac52a5472eaacace572ae60740a9409377ca89``.
+* ``/var/tmp/openhcs-current-3d-gc-ledger-v1-scientific-byte-gate-20261003.json``:
+  SHA-256 ``d0b8d6af1b8a1777b03624cf6435d67b04746e9477a5cefbc7a962feaa2d667d``.
+* ``/var/tmp/openhcs-current3d-canonical-mainflow-CP-owner-review-v1-20261003.json``:
+  SHA-256 ``9c264eaa2a735388f5694a305dcbf8ff61258ed959adb4819ffacfcb39235bbf``.
+* ``/var/tmp/openhcs-current3d-canonical-mainflow-macro-owner-audit-v4-20261003.json``:
+  SHA-256 ``c589df6f3c28d6d3a3dc668adc696089bc4aeb68aa2d762a0128592e8d67b891``.
+
+This checkpoint changes documentation only. No optimization, merge, original
+R0/R1 waiver, installed acceptance or full-catalog/scaling completion is claimed.
