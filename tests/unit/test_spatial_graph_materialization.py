@@ -17,6 +17,7 @@ from openhcs.core.artifacts import (
     ObjectLabelsArtifactType,
     SpatialGraphArtifactType,
 )
+from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_spatial_graph import (
@@ -340,7 +341,7 @@ def test_graph_roi_projection_preserves_paths_and_graph_features() -> None:
 
     assert roi_output.path == "/tmp/A01_neurite_graph_step3.graph.roi.zip"
     assert len(roi_output.content) == 3
-    first_roi = roi_output.content[0]
+    first_roi = ROIArchiveSourceMetadata.geometry(roi_output.content)[0]
     assert isinstance(first_roi.shapes[0], PolylineShape)
     np.testing.assert_array_equal(
         first_roi.shapes[0].coordinates,
