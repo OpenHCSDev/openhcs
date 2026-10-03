@@ -73,6 +73,45 @@ writer retirement is independent. No helper/provider/native operation is part
 of the source controls. Future installed entrypoint and operational release are
 parent-owned acceptance after this source checkpoint.
 
+Operation-scoped pressure and disabled endpoints
+------------------------------------------------
+
+The original resource-check.sh owns operation admission. ``ongoing`` is a
+bounded continuation inside existing process/slice caps, not future fleet
+admission. Its RAM floor is desktop reserve plus the selected immutable run's
+remaining SCI and CLI scope capacity, bounded by actual common-slice headroom.
+The original slot owner derives unit names from each member's immutable run.
+Active scopes must match declared cap, current invocation, common slice and
+Swap0; their resident charge is subtracted once. Absent/inactive named scopes
+contribute a conservative declared ceiling, explicitly reported as a bound
+rather than measured residual. CLI0 is disabled; its performer cannot launch.
+The same declaration projection supplies SCI/author launch ceilings, instead
+of an admission-local copy. Budgets must be nonnegative and within aggregate cap;
+the common slice must be active, match its cap and Swap0, and not be overcharged.
+
+For that bounded action, full-stall PSI is retained as warning telemetry rather
+than a universal stop. ``full``, ``replacement`` and ``bootstrap`` admit future
+growth and reject ``avg10``, ``avg60`` or ``avg300`` above the SAME existing
+``full_memory_psi_max_percent``. No threshold is raised or clipped; no pressure
+sample is rewritten. The field describes a growth qualifier in the kernel's
+full-stall pressure category, not a second numeric limit for ongoing work.
+
+Every observation preserves all kernel pressure windows plus a separate
+operation-policy receipt. Missing, repeated or malformed pressure
+measurements reject. Low available RAM, exhausted disk reservations, inactive
+or mismatched aggregate caps, expired clocks and missing custody still reject
+through their original owners. High pressure alone is not declared safe:
+insufficient actual RAM for the bounded budget still stops ongoing work.
+``ledger`` remains ledger-only, never
+scientific admission. New clients still require replacement admission; do not
+use an ongoing observation as permission to launch unreserved growth.
+
+The original successor projector treats endpoint ``0`` as declared disabled,
+not as a port claim. A headless administrative row may disable all five ports.
+All positive ports remain unique across members AND endpoint roles. Missing,
+negative, fractional, out-of-range or nonnumeric ports reject. This changes
+neither live endpoint custody nor the allocation of scientific ports.
+
 Historical borrowers
 --------------------
 
