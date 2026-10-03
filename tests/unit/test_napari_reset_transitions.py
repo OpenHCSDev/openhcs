@@ -1,6 +1,7 @@
 """Real Qt scheduling and native Napari model transitions, no server or GL canvas."""
 
 import threading
+import asyncio
 import pickle
 import queue
 import weakref
@@ -47,6 +48,8 @@ from openhcs.agent.dto.viewer import ViewerWindowLayerRetirementRequest
 from openhcs.agent.services.viewer_window_service import (
     ViewerWindowService, ZMQViewerWindowGateway,
 )
+from openhcs.mcp.context import OpenHCSAgentContext
+from openhcs.mcp.server import build_server
 from openhcs.runtime.viewer_controls import ViewerLayerRetirementControlOptions
 from openhcs.runtime.viewer_protocol import (
     OpenHCSViewerControlMessageType, ViewerSettlePhase,
@@ -446,6 +449,36 @@ def test_selected_retirement_uses_registered_queue_and_releases_payloads(receive
     assert payload_ref() is None and native_ref() is None
     app.processEvents()
     assert route not in receiver.layer_route_state.layers  # No late resurrection.
+
+
+def test_real_fastmcp_retirement_decodes_identity_and_reaches_native_queue(receiver):
+    from mcp.server.fastmcp.exceptions import ToolError
+
+    raw = np.ones((2, 2), dtype=np.uint16)
+    keep, update = enqueue(receiver, raw, producer='raw')
+    advance_in_qt(receiver, keep, update)
+    route, update = enqueue(receiver, np.full((2, 2), 9), producer='retired')
+    advance_in_qt(receiver, route, update)
+    keep_native = receiver.layer_route_state.layer(keep)
+    context = OpenHCSAgentContext(
+        viewer_window_service=ViewerWindowService(QueuedRetirementGateway(receiver)),
+    )
+    mcp = build_server(context=context)
+    tool = mcp._tool_manager.get_tool('openhcs_retire_viewer_window_layers')
+    arguments = retirement_request(receiver, route).as_tool_arguments()
+    # Invalid schema never enters the native queue or mutates either layer.
+    with pytest.raises(ToolError):
+        asyncio.run(tool.run({**arguments, 'expected_producers': {route: [{}]}}))
+    assert receiver.accepted_control_requests.empty()
+    assert receiver.layer_route_state.layer(route) is not None
+    assert receiver.layer_route_state.layer(keep) is keep_native
+    result = asyncio.run(tool.run(arguments))
+    assert result['applied'] and result['observed'] and not result['errors']
+    assert result['retired_route_keys'] == [route]
+    assert result['remaining_route_keys'] == [keep]
+    assert receiver.layer_route_state.layer(keep) is keep_native
+    assert receiver.component_groups.existing_items_for(keep)[0].data is raw
+    assert route not in receiver.layer_route_state.layers
 
 
 @pytest.mark.parametrize("data_type,payload", [
