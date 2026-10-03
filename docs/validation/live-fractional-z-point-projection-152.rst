@@ -296,3 +296,30 @@ continuous live/reopened native journey. Root retains134 broader persisted
 publication. Scientific498 remains immutable. A later engineering journey must
 exercise actual live point settlement and persisted reopening separately; these
 are not inferred from source controls or an author's manual reopening.
+
+Ordinary installed packaging checkpoint
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Reviewed main e9e79ac41 was normally merged at39244bab1d47d5af3c87ff96f70014ff091c67ee;
+the three reviewed point repair files and original guard remain unchanged.
+The ordinary wheel and new private target are retained under
+``/home/ts/wt/openhcs-issue-batch-20260929/engineering494`` (wheels01/target01).
+Wheel SHA256524cb5262f7fa2f396c5018e4cce22bf0e13847d58ea212200cf43ea1b78bdf9.
+The original setup hooks, existing paired interpreter and no-dependency pip
+route were used, without a new environment, checkout or download.
+
+The original wheel verifier and current declaration-owned knowledge projection
+confirm815 tracked OpenHCS/benchmark source/wheel/target byte matches,90 declared
+knowledge/skill assets, all13 skill files and both native C++/ABI3 extensions.
+Actual installed-owner origin assertions preceded seven passing original tiny
+writer/projection controls; two pre-existing pytest configuration warnings
+remain. These exercise real disk ZIP save/readback and unchanged geometric
+guards, not an MCP/native viewer. Build/install/installed-control cgroup peaks
+were283799552/106414080/378204160B respectively, under512MiB/noSwap/CPU1/60s;
+all terminal0, swap/OOM0, scopes inactive. Five foreign gitlinks remain dirty
+and untouched. Full hashes, commands, ownership and release boundaries are in
+``engineering494/QUALIFICATION01.rst`` and original logs.
+
+Source and installed writer/projection behavior are ready. Actual public MCP
+live settlement and persisted reopening/alignment remain unverified until
+parent releases one exact engineering slot; no runtime/viewer was launched.
