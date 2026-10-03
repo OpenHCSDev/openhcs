@@ -1598,7 +1598,7 @@ def test_paired_channel_declaration_reaches_both_adapter_input_consumers():
     request = RuntimeInputBindingRequest(
         adapter=adapter, kwargs={}, current_image=np.zeros((2, 2))
     )
-    assert request.artifact_request(edge).value is record.value.data
+    assert request.artifact_value(edge) is record.value.data
 
 
 @pytest.mark.parametrize("component", [AllComponents.SITE, AllComponents.Z_INDEX, AllComponents.TIMEPOINT])

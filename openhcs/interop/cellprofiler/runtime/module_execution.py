@@ -712,15 +712,15 @@ class CellProfilerModuleExecutor:
         *,
         reference_domain: CellProfilerMeasurementImageDomain,
     ) -> CellProfilerMeasurementImage:
-        request = RuntimeInputBindingRequest(
+        value = RuntimeInputBindingRequest(
             adapter=adapter,
             kwargs={},
             current_image=current_image,
-        ).artifact_request_for_spec(spec)
+        ).artifact_value_for_spec(spec)
         payload = normalize_cellprofiler_image_payload(
             RuntimeArtifactTypeStrategy.for_artifact_type(
                 ImageArtifactType,
-            ).raw_runtime_input_value(request)
+            ).raw_runtime_input_value(spec, value)
         )
         metadata = image_payload_metadata(payload)
         plane_axis = metadata.plane_axis
@@ -1331,8 +1331,8 @@ class CellProfilerModuleExecutor:
         )
         input_binding = replace(input_binding, current_image=current_runtime_payload)
         for spec in image_inputs:
-            request = input_binding.artifact_request_for_spec(spec)
-            payload = image_strategy.runtime_input_value(request)
+            value = input_binding.artifact_value_for_spec(spec)
+            payload = image_strategy.runtime_input_value(spec, value)
             payloads.append(payload)
             source_names.append(
                 image_strategy.source_image_name_from_value(payload)
@@ -1398,7 +1398,7 @@ class CellProfilerModuleExecutor:
                 continue
             source_name = RuntimeArtifactTypeStrategy.for_artifact_type(
                 spec.artifact_type
-            ).source_image_name(input_binding.artifact_request_for_spec(spec))
+            ).source_image_name(spec, input_binding.artifact_value_for_spec(spec))
             if source_name is not None:
                 source_names.append(source_name)
         return single_source_name(tuple(source_names))

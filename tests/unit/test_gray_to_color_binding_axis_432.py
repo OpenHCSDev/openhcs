@@ -29,7 +29,7 @@ from openhcs.interop.cellprofiler.runtime.function_contract_execution import (
     CellProfilerFunctionContractExecutor,
 )
 from openhcs.interop.cellprofiler.runtime.module_execution import CellProfilerModuleExecutor
-from openhcs.interop.cellprofiler.runtime.artifact_binding import RuntimeArtifactInputRequest, RuntimeArtifactTypeStrategy
+from openhcs.interop.cellprofiler.runtime.artifact_binding import RuntimeArtifactTypeStrategy
 from openhcs.processing.backends.cellprofiler.color import GrayToColorModule, gray_to_color
 from test_cellprofiler_generic_special_input_binding import _compile_public_step
 from tests.unit.cellprofiler_runtime_test_support import cellprofiler_runtime_adapter_for_test
@@ -192,11 +192,9 @@ def test_stack_color_output_is_not_a_second_scalar_gray_binding():
 def test_integer_primary_binding_units_are_owned_before_stack_rescale_flag():
     pixels = np.arange(20, dtype=np.uint16).reshape(4, 5) * 1000
     source = _source_plane(pixels, "FITC")
-    request = RuntimeArtifactInputRequest(
-        spec=ArtifactSpec.input("FITC", ImageArtifactType), value=source,
-    )
+    spec = ArtifactSpec.input("FITC", ImageArtifactType)
     binding_owner = RuntimeArtifactTypeStrategy.for_artifact_type(ImageArtifactType)
-    bound = binding_owner.runtime_input_value(request)
+    bound = binding_owner.runtime_input_value(spec, source)
     # This conversion happens in the original input owner, before GrayToColor's
     # rescale_intensity argument. Do not claim a raw-unit-preserving four-step fix
     # from a passing floating-point Stack kernel test.

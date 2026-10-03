@@ -32,7 +32,6 @@ from openhcs.interop.cellprofiler.runtime.invocation import (
     CellProfilerMeasurementImage,
 )
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
-    RuntimeArtifactInputRequest,
     RuntimeArtifactTypeStrategy,
     RuntimeInputBindingRequest,
 )
@@ -237,16 +236,11 @@ class CellProfilerOutputRecordRequest:
         payload = RuntimeArtifactTypeStrategy.for_artifact_type(
             spec.artifact_type
         ).source_image_payload(
-            RuntimeArtifactInputRequest(
-                spec=spec,
-                value=binding_request.runtime_value(
-                    edge,
-                    parameter_name=spec.parameter_name,
-                ),
-                image_payload_consumption=(
-                    self.callable_contract.image_payload_consumption
-                ),
-            )
+            spec,
+            binding_request.runtime_value(
+                edge,
+                parameter_name=spec.parameter_name,
+            ),
         )
         if payload is None:
             raise TypeError(

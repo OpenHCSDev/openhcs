@@ -203,7 +203,6 @@ from openhcs.interop.cellprofiler.runtime.adapter import (
 )
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
-    RuntimeArtifactInputRequest,
     RuntimeArtifactTypeStrategy,
 )
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import (
@@ -1384,10 +1383,7 @@ def test_image_artifact_resolution_uses_declared_artifact_alias(
     payload = RuntimeArtifactTypeStrategy.for_artifact_type(
         ImageArtifactType
     ).raw_runtime_input_value(
-        RuntimeArtifactInputRequest(
-            spec=spec,
-            value=source,
-        )
+        spec=spec, value=source
     )
 
     metadata = image_payload_metadata(payload)
@@ -1396,7 +1392,7 @@ def test_image_artifact_resolution_uses_declared_artifact_alias(
     assert (
         RuntimeArtifactTypeStrategy.for_artifact_type(
             ImageArtifactType
-        ).source_image_name(RuntimeArtifactInputRequest(spec=spec, value=source))
+        ).source_image_name(spec=spec, value=source)
         is None
     )
     strategy = RuntimeArtifactTypeStrategy.for_artifact_type(ImageArtifactType)
@@ -1448,11 +1444,11 @@ def test_main_flow_image_artifact_selects_declared_alias_plane() -> None:
     payload = RuntimeArtifactTypeStrategy.for_artifact_type(
         ImageArtifactType
     ).raw_runtime_input_value(
-        RuntimeInputBindingRequest(
+        first_spec, RuntimeInputBindingRequest(
             adapter=adapter,
             kwargs={},
             current_image=current_image,
-        ).artifact_request_for_spec(first_spec)
+        ).artifact_value_for_spec(first_spec)
     )
 
     np.testing.assert_array_equal(image_payload_data(payload), np.zeros((4, 5)))
@@ -1488,7 +1484,7 @@ def test_single_main_flow_image_artifact_selects_declared_source_binding_plane()
     payload = RuntimeArtifactTypeStrategy.for_artifact_type(
         ImageArtifactType
     ).raw_runtime_input_value(
-        RuntimeInputBindingRequest(
+        spec, RuntimeInputBindingRequest(
             adapter=_FakeCellProfilerRuntime(
                 {},
                 callable_contract=contract,
@@ -1501,7 +1497,7 @@ def test_single_main_flow_image_artifact_selects_declared_source_binding_plane()
             ),
             kwargs={},
             current_image=current_image,
-        ).artifact_request_for_spec(spec)
+        ).artifact_value_for_spec(spec)
     )
 
     np.testing.assert_array_equal(image_payload_data(payload), np.zeros((4, 5)))
@@ -1539,7 +1535,7 @@ def test_main_flow_image_artifact_projects_named_provenance_plane() -> None:
     payload = RuntimeArtifactTypeStrategy.for_artifact_type(
         ImageArtifactType
     ).raw_runtime_input_value(
-        RuntimeInputBindingRequest(
+        first_spec, RuntimeInputBindingRequest(
             adapter=_FakeCellProfilerRuntime(
                 {},
                 callable_contract=contract,
@@ -1552,7 +1548,7 @@ def test_main_flow_image_artifact_projects_named_provenance_plane() -> None:
             ),
             kwargs={},
             current_image=current_image,
-        ).artifact_request_for_spec(first_spec)
+        ).artifact_value_for_spec(first_spec)
     )
 
     np.testing.assert_array_equal(image_payload_data(payload), np.zeros((4, 5)))
@@ -1584,7 +1580,7 @@ def test_main_flow_image_artifact_preserves_declared_runtime_slice_stack() -> No
     payload = RuntimeArtifactTypeStrategy.for_artifact_type(
         ImageArtifactType
     ).raw_runtime_input_value(
-        RuntimeInputBindingRequest(
+        first_spec, RuntimeInputBindingRequest(
             adapter=_FakeCellProfilerRuntime(
                 {},
                 callable_contract=contract,
@@ -1597,7 +1593,7 @@ def test_main_flow_image_artifact_preserves_declared_runtime_slice_stack() -> No
             ),
             kwargs={},
             current_image=current_image,
-        ).artifact_request_for_spec(first_spec)
+        ).artifact_value_for_spec(first_spec)
     )
 
     np.testing.assert_array_equal(
@@ -1667,9 +1663,9 @@ def test_main_flow_projection_binds_singleton_broadcast_artifact_as_2d(
     resolve_image = strategy_type.raw_runtime_input_value
     resolved_specs: list[ArtifactSpec] = []
 
-    def record_resolution(self, request: RuntimeArtifactInputRequest):
-        resolved_specs.append(request.spec)
-        return resolve_image(self, request)
+    def record_resolution(self, spec: ArtifactSpec, value):
+        resolved_specs.append(spec)
+        return resolve_image(self, spec, value)
 
     monkeypatch.setattr(strategy_type, "raw_runtime_input_value", record_resolution)
 
@@ -1852,7 +1848,7 @@ def test_single_main_flow_image_preserves_runtime_slice_axis() -> None:
     payload = RuntimeArtifactTypeStrategy.for_artifact_type(
         ImageArtifactType
     ).raw_runtime_input_value(
-        RuntimeInputBindingRequest(
+        spec, RuntimeInputBindingRequest(
             adapter=_FakeCellProfilerRuntime(
                 {},
                 callable_contract=contract,
@@ -1865,7 +1861,7 @@ def test_single_main_flow_image_preserves_runtime_slice_axis() -> None:
             ),
             kwargs={},
             current_image=current_image,
-        ).artifact_request_for_spec(spec)
+        ).artifact_value_for_spec(spec)
     )
 
     assert image_payload_data(payload).shape == (1, 4, 5)
@@ -1885,14 +1881,9 @@ def test_object_artifact_source_payload_uses_native_object_provenance() -> None:
             paths=("/input/A01_s001_w1.tif",),
         ),
     )
-    request = RuntimeArtifactInputRequest(
-        spec=object_spec,
-        value=objects,
-    )
-
     payload = RuntimeArtifactTypeStrategy.for_artifact_type(
         ObjectLabelsArtifactType
-    ).source_image_payload(request)
+    ).source_image_payload(object_spec, objects)
 
     assert payload is objects
     assert image_payload_metadata(payload).source_image_provenance_planes.paths == (
@@ -12520,7 +12511,7 @@ def test_relationship_rows_use_exact_compiled_endpoint_plane(
 
     monkeypatch.setattr(
         RuntimeInputBindingRequest,
-        "artifact_request_for_spec",
+        "artifact_value_for_spec",
         reject_ref_reconstruction,
     )
     parent_labels = np.zeros((2, 5, 5), dtype=np.int32)
@@ -16366,11 +16357,11 @@ def test_object_label_payload_preserves_source_metadata_for_measurements() -> No
     payload = RuntimeArtifactTypeStrategy.for_artifact_type(
         spec.artifact_type
     ).raw_runtime_input_value(
-        RuntimeInputBindingRequest(
+        spec, RuntimeInputBindingRequest(
             adapter=runtime,
             kwargs={},
             current_image=image,
-        ).artifact_request_for_spec(spec)
+        ).artifact_value_for_spec(spec)
     )
 
     np.testing.assert_array_equal(payload.labels, labels.labels)
@@ -16424,11 +16415,11 @@ def test_runtime_object_label_payload_ignores_measurement_image_as_selector() ->
     payload = RuntimeArtifactTypeStrategy.for_artifact_type(
         spec.artifact_type
     ).raw_runtime_input_value(
-        RuntimeInputBindingRequest(
+        spec, RuntimeInputBindingRequest(
             adapter=runtime,
             kwargs={},
             current_image=measurement_image,
-        ).artifact_request_for_spec(spec)
+        ).artifact_value_for_spec(spec)
     )
 
     np.testing.assert_array_equal(payload.labels, labels.labels)
@@ -16475,11 +16466,11 @@ def test_full_stack_object_measurement_resolves_complete_label_artifact() -> Non
     label_payload = RuntimeArtifactTypeStrategy.for_artifact_type(
         object_spec.artifact_type
     ).raw_runtime_input_value(
-        RuntimeInputBindingRequest(
+        object_spec, RuntimeInputBindingRequest(
             adapter=runtime,
             kwargs={},
             current_image=image,
-        ).artifact_request_for_spec(object_spec)
+        ).artifact_value_for_spec(object_spec)
     )
     _, executable_labels, _, _, _, _, _ = object_measurement_runtime_inputs(
         object_label_execution=object_label_input_execution_mode_from_callable(
@@ -16555,11 +16546,11 @@ def test_object_label_payload_for_measurement_image_projects_source_spatial_crop
     label_payload = RuntimeArtifactTypeStrategy.for_artifact_type(
         spec.artifact_type
     ).raw_runtime_input_value(
-        RuntimeInputBindingRequest(
+        spec, RuntimeInputBindingRequest(
             adapter=runtime,
             kwargs={},
             current_image=image,
-        ).artifact_request_for_spec(spec)
+        ).artifact_value_for_spec(spec)
     )
     payload = (
         CellProfilerMeasurementImage(
