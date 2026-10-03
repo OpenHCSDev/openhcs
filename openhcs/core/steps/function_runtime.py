@@ -3166,7 +3166,8 @@ class PatternGroupRuntime:
         unstack_started_at = time.perf_counter()
         projected_outputs = self._project_output_slices(processed_stack, matching_files)
         plan = self.request.execution_plan
-        if isinstance(processed_stack, AlignedImageStack):
+        explicit_output_surfaces = isinstance(processed_stack, AlignedImageStack)
+        if explicit_output_surfaces:
             stack_payload = processed_stack.copy_projected_output_stack(
                 projected_outputs,
                 memory_type=plan.output_memory_type,
@@ -3261,7 +3262,14 @@ class PatternGroupRuntime:
                     ) from exc
                 raise
             output_context = output_contexts[i]
-            if not output_context.is_anonymous_main_flow:
+            # Only explicit aligned output surfaces own filename qualifiers.
+            # An unwrapped canonical artifact still owns its typed source
+            # context, while its ordinary main-flow checkpoint keeps the
+            # source filename independently of named artifact materialization.
+            if (
+                explicit_output_surfaces
+                and not output_context.is_anonymous_main_flow
+            ):
                 output_identity = output_identity.with_filename_qualifier(
                     output_context.output_key
                 )
