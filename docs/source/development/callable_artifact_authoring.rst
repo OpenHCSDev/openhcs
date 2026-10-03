@@ -353,7 +353,7 @@ runtime axis, not biological object counts or an inferred well identity:
    from dataclasses import dataclass
 
    from openhcs.core.artifacts import (
-       ArtifactMeasurementSubjectRelation, ArtifactSpec, MeasurementsArtifactType,
+       ArtifactSpec, MeasurementsArtifactType, SpecialArtifactType,
    )
    from openhcs.core.callable_contract import FunctionStepExecutionScope
    from openhcs.core.measurement_row_materialization import (
@@ -362,25 +362,8 @@ runtime axis, not biological object counts or an inferred well identity:
    from openhcs.core.pipeline.function_contracts import (
        artifact_inputs, artifact_outputs, execution_scope, runtime_bound_parameters,
    )
-   from openhcs.core.runtime_measurements import (
-       RuntimeMeasurementFeature, RuntimeMeasurementFeatureOwner,
-   )
    from openhcs.core.runtime_stores import RuntimeArtifactBatch
    from openhcs.processing.materialization import CsvOptions, MaterializationSpec
-
-   class PlateSummaryFeature(RuntimeMeasurementFeature):
-       RECORD_COUNT = "record_count"
-       MEASUREMENT_ROW_COUNT = "measurement_row_count"
-
-   class PlateSummaryFeatureOwner(RuntimeMeasurementFeatureOwner):
-       @classmethod
-       def owns_measurement_feature_name(cls, feature_name: str) -> bool:
-           return any(feature.feature_name == feature_name
-                      for feature in PlateSummaryFeature)
-
-       @classmethod
-       def owns_primary_measurement_feature_name(cls, feature_name: str) -> bool:
-           return cls.owns_measurement_feature_name(feature_name)
 
    @dataclass(frozen=True)
    class PlateSummaryRow:
@@ -390,9 +373,7 @@ runtime axis, not biological object counts or an inferred well identity:
 
    PLATE_ROWS = ArtifactSpec.input("fixture_object_rows", MeasurementsArtifactType)
    PLATE_SUMMARY = ArtifactSpec.output(
-       "fixture_plate_summary", MeasurementsArtifactType,
-       measurement_feature_owner=PlateSummaryFeatureOwner,
-       relations=(ArtifactMeasurementSubjectRelation(),),
+       "fixture_plate_summary", SpecialArtifactType,
        materialization=MaterializationSpec(CsvOptions()),
    )
 
@@ -424,9 +405,12 @@ it in authored kwargs. Its ``records(spec.ref())`` exposes typed
 ``MeasurementTable`` whose rows retain their schema. No file loading, guessed
 paths, bare dictionary return or ``Any`` annotation is needed.
 
-The artifact-scoped subject belongs to this summary itself, not to an invented
-object-label domain. The declared CSV materializer writes the schema-bearing
-result. An empty table contributes zero rows without losing its schema;
+The current plate executor requires exactly one ``SpecialArtifactType`` output;
+it does not support a plate-scoped ``MeasurementsArtifactType`` output.
+Here that side-channel payload is schema-bearing ``ColumnarRows``, which the
+existing CSV materializer renders without a custom writer. It is not a new
+object-measurement table or object-label domain. An empty table contributes
+zero rows without losing its schema;
 unavailable required inputs are a binding error, not a reason to scan files.
 Repair the earliest validation/compile error against these exact decorators,
 batch annotation and producer reference. A successful summary covers the
