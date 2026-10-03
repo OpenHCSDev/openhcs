@@ -1445,14 +1445,10 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
                 raise ValueError(
                     f"New native slot {name!r} requires an unambiguous original route value."
                 )
-            local_index = (
-                replacement.projection.component_values[name].index(routed_values[0])
-                if name in replacement.projection.component_values else 0
-            )
             axis = replacement.axis_labels.index(name)
-            point[target_axes[name]] = (
-                transform["translate"][axis] + local_index * transform["scale"][axis]
-            )
+            # This newly inserted singleton's source-local index is zero.
+            # The original transform already contains its shared-domain offset.
+            point[target_axes[name]] = transform["translate"][axis]
         dims.point = tuple(point)
         retained_order = tuple(target_axes[name] for name in order)
         dims.order = tuple(

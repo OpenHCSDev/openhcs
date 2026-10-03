@@ -242,6 +242,9 @@ def test_shared_slot_batch_aligns_two_manual_channels_and_wells(
         raw()
         assert {receiver.layer_route_state.layer(route).ndim for route in raw_routes.values()} == {5}
         result_route = result()
+        # The previously active D06/channel2 source remains the native frame.
+        assert receiver.viewer.dims.current_step[1] == 1
+        assert receiver.viewer.dims.current_step[4] == 41
 
     assert receiver.viewer.dims.ndim == 7
     result_layer = receiver.layer_route_state.layer(result_route)
