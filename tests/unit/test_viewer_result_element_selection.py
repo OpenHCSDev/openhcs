@@ -348,7 +348,7 @@ def test_napari_navigation_selects_native_feature_row_and_projects_evidence(qtbo
             np.array([[4, 4], [4, 6], [6, 6]], dtype=float),
         ],
         shape_type=["polygon", "polygon"],
-        features={"label": [11, 12], "area": [3.0, 4.0], "owner": [8, 8]},
+        features={"label": [11, 12], "area": [3.0, 4.0]},
         name="Result ROIs",
     )
     roi_manager = QRoiManager(viewer)
@@ -535,7 +535,7 @@ def test_napari_navigation_moves_to_selected_roi_component_slice(qtbot) -> None:
             ),
         ],
         shape_type=["polygon", "polygon"],
-        features={"label": [11, 12], "area": [3.0, 4.0]},
+        features={"label": [11, 12], "area": [3.0, 4.0], "owner": [8, 8]},
         ndim=4,
         name="Result ROIs",
     )

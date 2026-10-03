@@ -714,6 +714,14 @@ def test_new_selectable_capability_executes_cooperative_retention_hooks(receiver
                                 data_type=StreamingDataType.POINTS, domain=["A01", "A03"])
     advance_in_qt(receiver, route, update)
     old = receiver.layer_route_state.layer(route)
+    # Select the declared A03 source frame before retaining its member. Native
+    # selected_data alone can contain an off-slice Points row.
+    prepared = NapariNavigationControlMessageAction().prepare(
+        receiver, ViewerNavigationControlOptions(route_key=route, data_index=1,
+                                               visible=True, selected=True),
+    )
+    assert prepared.viewer_step is not None
+    receiver.viewer.dims.current_step = prepared.viewer_step
     old.selected_data = {1}
     old.opacity = 0.2
     result = ViewerWindowService(QueuedRetirementGateway(receiver)).presentation(
