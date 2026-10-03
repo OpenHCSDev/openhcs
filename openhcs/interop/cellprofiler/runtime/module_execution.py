@@ -1155,7 +1155,7 @@ class CellProfilerModuleExecutor:
                 output_plan=matched_plan,
                 output_value=matched_value,
                 source=measurement_image,
-                call_kwargs=invocation_kwargs,
+                kwargs=invocation_kwargs,
                 current_image=measurement_image.payload,
                 declared_only_outputs=CellProfilerOutputRecorder.transient_output_values(
                     callable_contract=self.callable_contract,

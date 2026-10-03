@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import TYPE_CHECKING
 
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
@@ -20,7 +19,6 @@ from openhcs.core.source_plane_alignment import (
     SourcePayloadPlaneIdentitySequence,
     SourcePlaneIdentitySequenceAlignment,
 )
-from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     image_payload_metadata,
@@ -37,26 +35,19 @@ from openhcs.interop.cellprofiler.runtime.artifact_binding import (
 )
 from openhcs.core.steps.function_runtime import (
     RuntimeCallableArgument,
-    RuntimeCallableKwargs,
 )
 
-if TYPE_CHECKING:
-    from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
 
-
-@dataclass(frozen=True, slots=True)
-class CellProfilerOutputRecordRequest:
+@dataclass(frozen=True, slots=True, kw_only=True)
+class CellProfilerOutputRecordRequest(RuntimeInputBindingRequest):
     """Inputs and semantic authorities for recording one CellProfiler output."""
 
     callable_contract: CallableContract
     active_input_edges: tuple[InvocationArtifactInputEdgePlan, ...]
-    adapter: CellProfilerRuntimeAdapter
     spec: ArtifactSpec
     output_plan: ArtifactOutputPlan
     output_value: RuntimeCallableArgument
     source: CellProfilerImageRequest | CellProfilerMeasurementImage
-    call_kwargs: RuntimeCallableKwargs
-    current_image: RuntimeArrayData
     declared_only_outputs: Mapping[
         ArtifactSpecRef,
         RuntimeCallableArgument,
@@ -95,6 +86,8 @@ class CellProfilerOutputRecordRequest:
                     f"{declared.ref()!r}."
                 )
             previous_input_index = input_index
+        if self.selected_object_inputs is not None:
+            RuntimeInputBindingRequest.__post_init__(self)
 
     def artifact_output_value(
         self,
@@ -127,7 +120,7 @@ class CellProfilerOutputRecordRequest:
                     "nor present in the current declared-only return."
                 )
 
-    def artifact_value(
+    def declared_artifact_value(
         self,
         spec: ArtifactSpec,
     ) -> RuntimeCallableArgument:
@@ -176,11 +169,10 @@ class CellProfilerOutputRecordRequest:
     ) -> RuntimeCallableArgument:
         """Return one exact compiled input occurrence in invocation scope."""
 
-        return RuntimeInputBindingRequest(
-            adapter=self.adapter,
-            kwargs=self.call_kwargs,
-            current_image=self.current_image,
-        ).runtime_value(
+        # Recording admits output declarations at construction. Input selection
+        # remains live and is admitted only when that input is actually read.
+        RuntimeInputBindingRequest.__post_init__(self)
+        return self.runtime_value(
             edge,
             parameter_name=edge.spec.parameter_name,
         )
@@ -193,7 +185,7 @@ class CellProfilerOutputRecordRequest:
 
         if not specs:
             raise ValueError("Measurement source context requires declared artifacts.")
-        artifact_values = tuple(self.artifact_value(spec) for spec in specs)
+        artifact_values = tuple(self.declared_artifact_value(spec) for spec in specs)
         metadata = tuple(image_payload_metadata(value) for value in artifact_values)
         source_group_component = self.output_plan.group_component
         identity_policy = SourceImageSetIdentityPolicy(
@@ -228,16 +220,12 @@ class CellProfilerOutputRecordRequest:
         """Resolve one declared input in the callable invocation's exact scope."""
 
         spec = edge.spec
-        binding_request = RuntimeInputBindingRequest(
-            adapter=self.adapter,
-            kwargs=self.call_kwargs,
-            current_image=self.current_image,
-        )
+        RuntimeInputBindingRequest.__post_init__(self)
         payload = RuntimeArtifactTypeStrategy.for_artifact_type(
             spec.artifact_type
         ).source_image_payload(
             spec,
-            binding_request.runtime_value(
+            self.runtime_value(
                 edge,
                 parameter_name=spec.parameter_name,
             ),

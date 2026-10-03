@@ -603,4 +603,4 @@ class RelationshipMeasurementRows:
         self,
         spec: ArtifactSpec,
     ) -> RuntimeCallableArgument:
-        return self.request.artifact_value(spec)
+        return self.request.declared_artifact_value(spec)
