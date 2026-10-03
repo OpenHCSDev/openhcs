@@ -103,18 +103,15 @@ test "$current" -le "$maximum"
 growth=$((maximum-current))
 printf 'Joint slice %s charge=%s cap=%s remaining=%s\n' "$FLEET_SLICE" "$current" "$maximum" "$growth" | tee "$receipt.ram-scopes"
 if [[ "$mode" == ongoing ]]; then
-  # One selected member's original declared process budgets bound this action.
-  # This is conservative even when its processes are already charged. The
-  # common slice can grow by no more than its remaining enforced capacity.
-  budget=$(fleet_limits_for "$FLEET_SLOT" | jq -er '
-    [.per_author_science_mib, .per_author_cli_mib] |
-    if all(.[]; type=="number" and .>0 and .==floor) then add
-    else error("missing or invalid bounded operation process budget") end')
-  test "$budget" -le "$FLEET_COMBINED_MIB"
-  budget_bytes=$((budget*1048576))
+  # Resident charges are already in the common slice. Reserve only the
+  # selected member's remaining process capacity, not full ceilings again.
+  science_growth=$(fleet_process_growth_bound_bytes mcp 2>> "$receipt.operation-budget")
+  author_growth=$(fleet_process_growth_bound_bytes author 2>> "$receipt.operation-budget")
+  budget_bytes=$((science_growth+author_growth))
+  test "$budget_bytes" -le "$maximum"
   if [[ "$growth" -lt "$budget_bytes" ]]; then budget_bytes=$growth; fi
   floor=$((floor+(budget_bytes+1048575)/1048576))
-  printf 'Bounded ongoing member=%s declared=%s MiB furtherGrowthBound=%s bytes\n' "$FLEET_SLOT" "$budget" "$budget_bytes" | tee "$receipt.operation-budget"
+  printf 'Bounded ongoing member=%s incrementalGrowthBound=%s bytes\n' "$FLEET_SLOT" "$budget_bytes" | tee -a "$receipt.operation-budget"
 fi
 if [[ "$mode" == replacement || "$mode" == bootstrap ]]; then
   if [[ "$mode" == bootstrap ]]; then fleet_require_bootstrap_custody; else fleet_require_helpers; fi

@@ -79,9 +79,14 @@ Operation-scoped pressure and disabled endpoints
 The original resource-check.sh owns operation admission. ``ongoing`` is a
 bounded continuation inside existing process/slice caps, not future fleet
 admission. Its RAM floor is desktop reserve plus the selected immutable run's
-declared SCI and CLI budgets, bounded by the actual remaining common-slice
-capacity. Existing charged processes are not counted as three future fleets.
-The declaration must contain valid positive budgets within the aggregate cap;
+remaining SCI and CLI scope capacity, bounded by actual common-slice headroom.
+The original slot owner derives unit names from each member's immutable run.
+Active scopes must match declared cap, current invocation, common slice and
+Swap0; their resident charge is subtracted once. Absent/inactive named scopes
+contribute a conservative declared ceiling, explicitly reported as a bound
+rather than measured residual. CLI0 is disabled; its performer cannot launch.
+The same declaration projection supplies SCI/author launch ceilings, instead
+of an admission-local copy. Budgets must be nonnegative and within aggregate cap;
 the common slice must be active, match its cap and Swap0, and not be overcharged.
 
 For that bounded action, full-stall PSI is retained as warning telemetry rather

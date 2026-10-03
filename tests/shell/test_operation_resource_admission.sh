@@ -24,13 +24,15 @@ printf 'Controlled initialization only; no scientific release.\n' > "$scratch/ru
 FLEET_PARENT_RELEASED=1 bash "$operations/project-program.sh" initialize "$scratch/funding" "$scratch/run" absent
 export CONTROLLED_HOST="$scratch/host" CONTROLLED_HOME_BYTES=8353711390
 export CONTROLLED_COMMON_MAX=8589934592 CONTROLLED_COMMON_CURRENT=1610612736 CONTROLLED_COMMON_SWAP=0
+export CONTROLLED_SCI_MAX=4294967296 CONTROLLED_SCI_CURRENT=1342177280
+export CONTROLLED_CLI_MAX=536870912 CONTROLLED_CLI_CURRENT=268435456
 export BASH_ENV="$repo/tests/shell/fixtures/resource_admission/bash-env.sh"
 printf 'MemAvailable: 16454287 kB\n' > "$scratch/host/meminfo"
 printf 'full avg10=4.82 avg60=1.09 avg300=0.23 total=324417078\n' > "$scratch/host/pressure"
 run() {
-  local expected=$1 mode=$2 phase=$3 status
+  local expected=$1 mode=$2 phase=$3 status member=${4:-A}
   set +e
-  bash "$operations/resource-check.sh" "$scratch/funding" A "$phase" "$mode" > "$scratch/$phase.log" 2>&1
+  bash "$operations/resource-check.sh" "$scratch/funding" "$member" "$phase" "$mode" > "$scratch/$phase.log" 2>&1
   status=$?
   set -e
   test "$status" = "$expected"
@@ -40,11 +42,13 @@ run 0 ongoing original_review
 runtime="$scratch/run/A/author-workspace/output/runtime"
 rg -q 'avg10=4.82 avg60=1.09 avg300=0.23' "$runtime/resources-original_review.psi"
 rg -q 'Pressure warning:' "$runtime/resources-original_review.psi"
-rg -q 'declared=4608 MiB' "$runtime/resources-original_review.operation-budget"
+rg -q 'incrementalGrowthBound=3221225472 bytes' "$runtime/resources-original_review.operation-budget"
 run 77 full growth_rejected
 run 77 replacement replacement_rejected
-printf 'MemAvailable: 6291456 kB\n' > "$scratch/host/meminfo"
+printf 'MemAvailable: 4718592 kB\n' > "$scratch/host/meminfo"
 run 76 ongoing insufficient_operation_ram
+printf 'MemAvailable: 5767168 kB\n' > "$scratch/host/meminfo"
+run 0 ongoing resident_charge_not_reserved_twice
 printf 'MemAvailable: 16454287 kB\n' > "$scratch/host/meminfo"
 export CONTROLLED_HOME_BYTES=2147483648
 run 78 ongoing insufficient_ledger_disk
@@ -60,6 +64,47 @@ run 77 ongoing missing_telemetry
 printf 'full avg10=0.00 avg60=0.00 avg300=0.00 total=324417078\n' > "$scratch/host/pressure"
 run 0 full low_pressure_growth
 run 0 replacement low_pressure_replacement
+export CONTROLLED_SCI_MAX=4294967297
+run 1 ongoing wrong_selected_scope_cap
+export CONTROLLED_SCI_MAX=4294967296 CONTROLLED_PROCESS_STATE=not-found
+run 0 ongoing absent_scope_conservative_bound
+rg -q 'not measured residual' "$runtime/resources-absent_scope_conservative_bound.operation-budget"
+unset CONTROLLED_PROCESS_STATE
+export CONTROLLED_COMMON_CURRENT=8455716864
+printf 'MemAvailable: 2232320 kB\n' > "$scratch/host/meminfo"
+printf 'full avg10=4.82 avg60=1.09 avg300=0.23 total=324417078\n' > "$scratch/host/pressure"
+run 0 ongoing common_residual_clamp
+rg -q 'incrementalGrowthBound=134217728 bytes' "$runtime/resources-common_residual_clamp.operation-budget"
+export CONTROLLED_COMMON_CURRENT=1610612736
+printf 'MemAvailable: 16454287 kB\n' > "$scratch/host/meminfo"
+
+# Same original publication owner: a new headless256Mi/CLI0 member joins A,
+# while A's original run budgets and unit namespace remain unchanged.
+mkdir "$scratch/admin-run"
+jq -n --arg root "$scratch" '{phase:"headless-control",
+  predecessor_program_root:($root+"/funding"),run_template_root:($root+"/run"),
+  resource_policy:{per_author_science_mib:256,per_author_cli_mib:0},members:[],retired_members:[],
+  additional_authors:[{slot:"ADMIN",run_owner_root:($root+"/admin-run"),display:0,cpu:0,
+    input_root:"/controlled/not-science",native_port:0,native_ack_port:0,viewer_port:0,
+    viewer_ack_port:0,vnc_port:0,helper_custody:{program_root:($root+"/admin-run"),slot:"ADMIN"}}]
+}' > "$scratch/admin-run/successor-declaration.json"
+printf '{"target":"/controlled/no-install","source_head":"controlled"}\n' > "$scratch/qualification.json"
+bash "$operations/project-program.sh" prepare "$scratch/funding" "$scratch/admin-run" "$scratch/qualification.json"
+printf 'Controlled admin publication only; no SCI launch.\n' > "$scratch/admin-run/PARENT-RELEASE.rst"
+(cd "$scratch/admin-run"; sha256sum program.json successor-declaration.json PARENT-RELEASE.rst > READY-FREEZE.sha256)
+FLEET_PARENT_RELEASED=1 bash "$operations/project-program.sh" publish "$scratch/funding" "$scratch/admin-run" \
+  "$(sha256sum "$scratch/funding/program.json" | cut -d' ' -f1)"
+run 0 ongoing continuing_original_scope_owner
+rg -q 'bounded-control-a-mcp.scope.*cap=4294967296' "$runtime/resources-continuing_original_scope_owner.operation-budget"
+export CONTROLLED_SCI_MAX=268435456 CONTROLLED_SCI_CURRENT=134217728
+export CONTROLLED_CLI_MAX=0 CONTROLLED_CLI_CURRENT=0
+printf 'MemAvailable: 2232320 kB\n' > "$scratch/host/meminfo"
+run 0 ongoing headless_disabled_cli ADMIN
+admin_runtime="$scratch/admin-run/ADMIN/author-workspace/output/runtime"
+rg -q 'incrementalGrowthBound=134217728 bytes' "$admin_runtime/resources-headless_disabled_cli.operation-budget"
+export CONTROLLED_SCI_MAX=4294967296 CONTROLLED_SCI_CURRENT=1342177280
+export CONTROLLED_CLI_MAX=536870912 CONTROLLED_CLI_CURRENT=268435456
+printf 'MemAvailable: 16454287 kB\n' > "$scratch/host/meminfo"
 sha256sum "$runtime/resources-original_review".* > "$scratch/original-receipt.sha256"
 run 1 ongoing original_review
 sha256sum --check --quiet "$scratch/original-receipt.sha256"

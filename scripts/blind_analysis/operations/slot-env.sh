@@ -41,6 +41,52 @@ fleet_unit_for() {
   printf '%s-%s\n' "$phase" "${1,,}"
 }
 
+# Admission and launch share these original process-performer declarations.
+fleet_process_limit_mib() {
+  local field
+  case "${1:?process performer}" in
+    mcp) field=per_author_science_mib ;;
+    author) field=per_author_cli_mib ;;
+    *) return 64 ;;
+  esac
+  fleet_limits_for "$FLEET_SLOT" | jq -er --arg field "$field" '
+    .[$field] | select(type=="number" and .>=0 and .==floor)'
+}
+
+# Exact residual for a live declared scope; conservative ceiling for an absent
+# scope. The unit namespace comes from fleet_unit_for, not caller PIDs/ports.
+fleet_process_growth_bound_bytes() {
+  local role=${1:?process performer} limit unit state current observed invocation
+  limit=$(fleet_process_limit_mib "$role")
+  limit=$((limit*1048576))
+  unit="$FLEET_UNIT-$role.scope"
+  state=$(systemctl --user show "$unit" -p LoadState --value)
+  if [[ "$state" == not-found ]]; then
+    printf 'Process %s absent; declared ceiling bound=%s bytes (not measured residual)\n' "$unit" "$limit" >&2
+    printf '%s\n' "$limit"
+    return
+  fi
+  test "$state" = loaded
+  state=$(systemctl --user show "$unit" -p ActiveState --value)
+  if [[ "$state" == inactive || "$state" == failed ]]; then
+    printf 'Process %s %s; declared ceiling bound=%s bytes (not measured residual)\n' "$unit" "$state" "$limit" >&2
+    printf '%s\n' "$limit"
+    return
+  fi
+  test "$state" = active
+  invocation=$(systemctl --user show "$unit" -p InvocationID --value)
+  [[ "$invocation" =~ ^[a-f0-9]{32}$ ]]
+  test "$(systemctl --user show "$unit" -p Slice --value)" = "$FLEET_SLICE"
+  observed=$(systemctl --user show "$unit" -p MemoryMax --value)
+  test "$observed" = "$limit"
+  test "$(systemctl --user show "$unit" -p MemorySwapMax --value)" = 0
+  current=$(systemctl --user show "$unit" -p MemoryCurrent --value)
+  [[ "$current" =~ ^[0-9]+$ ]]
+  test "$current" -le "$limit"
+  printf 'Process %s invocation=%s cap=%s charge=%s residual=%s bytes\n' "$unit" "$invocation" "$limit" "$current" "$((limit-current))" >&2
+  printf '%s\n' "$((limit-current))"
+}
+
 # The original declaration projector asks this owner for the complete family.
 # This is a projection command, not another catalog or a persisted roster.
 if [[ "${2:-}" == --project-members ]]; then
