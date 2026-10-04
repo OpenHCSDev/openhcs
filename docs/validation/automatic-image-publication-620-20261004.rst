@@ -6,8 +6,8 @@ integration. Base b7a9cd29ea96 includes merged600/614 and Planck's independently
 qualified621 repair. Closed394/435 are historical source owners, not an active
 repair queue. Planck's623 scope/descriptor change has no writer hunk and does
 not repair this defect. The owner correction below is implemented and its
-registered source path is qualified. Whole installed/public qualification is
-in progress.
+registered source and whole installed paths are qualified. Public/native
+qualification is in progress.
 
 Original public failure
 -----------------------
@@ -147,12 +147,49 @@ wrapper's16844KiB RSS does not measure compiler descendants and is not claimed
 as the combined build memory. This unrelated compile cost is with the existing
 builder owner, not a630/CI hold or a reason to relax the writer guard.
 
-Installed/public acceptance remaining
+Whole-package installed qualification
 ------------------------------------
 
-Establish the earliest wrong fact through the original small source/runtime
-owners. Repair its existing owner, delete replaced authority, and retain exact
-rejection of contradictory address, metadata and whole-image scope. A distinct
+Distinct receiving02 uses that SAME unchanged original build driver to natural
+termination, not the incidental60s shell wrapper. Planck's original matched619
+whole build independently took68.79s/441836KiB. This candidate builds and installs
+normally in69.78s/441996KiB/Swap0, terminal0; no socket timeout, native operation
+deadline, compiler flag, source, dependency environment or cache is changed.
+The prior124 remains original evidence. No source tree or installed package is
+selectively patched; this is one complete ordinary wheel and unused private target.
+
+Candidate source1496b071902841855a521ea3280ade8b2433d47b, wheel SHA256
+fcb8e2c8911211f3b1f090b8d9d38367269173274169680bb785ffb26073ce33.
+engineering620/receiving02/BYTE-QUALIFICATION.json reports PASS:912 original
+wheel payload/RECORD members,812 tracked source members including789 Python,
+all manifest-derived knowledge resources and13 packaged skill files match
+source/wheel/target. The existing original587 complete verifier is parameterized,
+not copied or weakened. All installed dependency RECORDs and files are verified:
+ObjectState1.1.9, python-introspect.16, PolyStore.3.2 and pyqt-reactive.3.26.
+Three declared native extensions are supplied by the normal build.
+
+The original scripts/run_installed_tests.py seals imports to the asserted private
+installed prefix before loading the source test declarations. Installed controls
+terminal0:15PASS/2 same explicit baseline deselections,10.60s/386388KiB/Swap0.
+Actual registered compiler/executor default publication again creates exactly
+four TIFFs for both scalar/scalar and scalar/RGB cases;720+720 exact element
+comparisons, source hashes, channel/domain/name and .5/.5 calibration pass.
+Genuine metadata/address contradictions still reject. No native process, viewer
+or MCP server was launched by this installed tier.
+
+Public acceptance remaining
+---------------------------
+
+The ordinary public receiving packet is engineering620/public01/pipeline.py,
+intensity620.cppipe, acquisition/ and RECEIVING.rst. It reuses the original600
+typed source/importer and public CLI commands with distinct result/export roots,
+default automatic publication enabled and unchanged synthetic TIFF hashes.
+The sole remaining acceptance is the released original public MCP/native lease:
+compile/execute, inventory, all four full12x15 samples, canonical VALUES and typed
+close. Dewey owns the existing lane/recorded-client handoff; no scientist endpoint,
+new viewer, UNKNOWN input or original failed execution may be borrowed/replayed.
+
+A distinct
 synthetic public execution with both automatic and named publication must
 complete, expose each occurrence once, preserve all pixels/calibration/source
 domain and support ordinary inventory/sample reopening. Both operand orders,
