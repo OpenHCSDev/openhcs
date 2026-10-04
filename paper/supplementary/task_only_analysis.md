@@ -32,8 +32,8 @@ biological annotation. The source is the
 at commit `68845a1afaf53bf601958a3fa7d86f3cf8a43219`. The neutral input is the
 original `blobs.tif`, SHA-256
 `26403a7c2a11921535499ff86798b73e09b8ac5786329bce8fa4a57fd9933fee`;
-the original acquisition and notebook outputs were not distributed to authors
-as an analysis recipe. The original task-only author `H001_FRESH586_96`
+only the neutral input was disclosed to the author, while the notebook and
+reference outputs were withheld. The original task-only author `H001_FRESH586_96`
 retained four attempts and froze its scientific bundle at
 2026-10-04T05:51:25.756471 UTC. The unchanged
 `benchmark/score_instance_labels.py`
