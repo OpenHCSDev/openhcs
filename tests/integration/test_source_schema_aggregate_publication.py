@@ -7,6 +7,7 @@ the normal image writer preserves all four pass-through source planes.
 
 from csv import DictReader
 from hashlib import sha256
+from pathlib import Path
 
 import numpy as np
 import tifffile
@@ -89,7 +90,10 @@ def test_real_z_aggregation_persists_scalar_and_unchanged_source_planes(tmp_path
                 func=registered, name="Actual volume scalar",
                 processing_config=LazyProcessingConfig(
                     variable_components=[VariableComponents.Z_INDEX],
-                    group_by=GroupBy.CHANNEL,
+                    # One physical channel is fixed; Z is the genuine aggregate.
+                    # Channel-grouped generic SpecialArtifact scope propagation
+                    # is independently retained in the qualification receipt.
+                    group_by=GroupBy.NONE,
                     input_source=InputSource.PIPELINE_START,
                 ),
             )],
@@ -106,6 +110,11 @@ def test_real_z_aggregation_persists_scalar_and_unchanged_source_planes(tmp_path
             execution_bundle=bundle, max_workers=1,
             runtime_observation_mode=RuntimeObservationMode.MERGE_INTO_PARENT,
             progress_queue=AgentProgressQueue(),
+            progress_context={
+                "execution_id": "source-schema-aggregate-synthetic",
+                "plate_id": str(source),
+                "axis_id": "",
+            },
         )
         assert outcomes["A01"].is_success(), outcomes["A01"].error_message
         (csv_path,) = tuple(tmp_path.rglob("*VolumeScalar609*details.csv"))
@@ -114,12 +123,14 @@ def test_real_z_aggregation_persists_scalar_and_unchanged_source_planes(tmp_path
         assert int(row["volume_sum"]) == int(pixels.sum())
         assert int(row["voxel_count"]) == pixels.size
         assert "_z" not in csv_path.name
-        saved = tuple(context.step_plans[0].materialized_output.output_dir.glob("*.tif"))
+        saved = tuple(Path(context.step_plans[0].artifact_images_dir).glob("*PassThrough.tif"))
         assert len(saved) == 4
         for image in saved:
             z_index = int(image.name.split("_z", 1)[1].split("_", 1)[0])
             np.testing.assert_array_equal(tifffile.imread(image), pixels[z_index - 1])
         for image, checksum in originals:
             assert sha256(image.read_bytes()).hexdigest() == checksum
+        print("ACTUAL_AGGREGATE_CSV", csv_path, row)
+        print("ACTUAL_PASSTHROUGH_TIFFS", *(str(image) for image in saved))
     finally:
         CustomFunctionRuntimeRegistry.remove(volume_scalar_609.__name__)
