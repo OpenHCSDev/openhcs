@@ -842,6 +842,18 @@ algorithmic counts, not an accepted biological census. The
 [fresh paired-field outcome record](task_only_analysis/h003-fresh96-outcome.json)
 binds the independently verified 244-payload freeze, final source and review.
 
+A fresh public neurite-field repeat corrected nuclear false splits, retaining
+eight compact nuclear objects and a supported 51.56-pixel neurite segment censored
+at the field boundary. Faint-path discontinuities, near-process fragments and
+uncertain crossing ownership prevented acceptance of whole-field outgrowth.
+The final 143 branches and 6,795.71-pixel outgrowth sum remain model outputs,
+not accepted biological measurements; relative spacing does not establish
+micrometre calibration. The
+[fresh neurite outcome record](task_only_analysis/h004-fresh95-outcome.json)
+binds the frozen source and independently checked 283 scientific files, 112
+control files, three completed MCP journals and two retained journal prefixes.
+No reference answers were opened for this review.
+
 A retained personal-neurite development continuation also analysed a reused
 nine-field mosaic with pooled channel fits. A fixed-DN clipping repair corrected
 unexpected rescaling, but dense nuclear misses and soma underfill prevented
