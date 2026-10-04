@@ -47,10 +47,15 @@ details. Raw morphology informs support, but admission consumes a particular
 alias/response and markers consume a particular landscape. Use the measurement
 guide's compound-detector reasoning to map each proposed parameter to ALL its
 coupled mechanisms in the reflected callable, not just its apparent size role.
-State the predicted
-effect on distributed positive/nuisance and continuous-body/genuine-pair controls;
+State the predicted effect on distributed positive/nuisance and
+continuous-body/genuine-pair controls;
 keep marker extraction distinct from the subsequent division boundary. If no
 marker stage is proposed, do not invent one merely to follow this route.
+Use raw or processed evidence already available; an unproduced enhanced response
+or marker landscape remains a provisional hypothesis to inspect in the first
+bounded candidate, not a reason to withhold an exploratory proposal. Record an
+unavailable control, such as a genuine pair, rather than inventing one or making
+its absence an approval gate.
 
 When the task is unfamiliar or raw morphology contradicts an example's method,
 follow [pre-authorship learning retrieval](analysis-learning.md#retrieve-before-first-authorship-and-retries)
