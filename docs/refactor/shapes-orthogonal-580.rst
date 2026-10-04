@@ -177,3 +177,42 @@ tiny public raw/Shapes orthogonal-before-streaming case. Dewey owns one
 positively closed existing slot; science viewers and fourth-retina placement
 remain protected. Qt/public MCP settlement, actual captures and typed closure
 are still pending. No new native runtime, viewer or public client was started.
+
+Public receiving29 and runtime delivery
+--------------------------------------
+
+The distinct public94 continuation02 completed health, four original synthetic
+raw planes, true YZ before Shapes streaming, two persisted Shapes routes and six
+personally opened native PNGs. Public settlement reported no error and the
+native log had no triangulation traceback. Exact owned viewer close succeeded;
+viewer/MCP/client PIDs and endpoints disappeared, original scope became inactive.
+All journals, the PRECHILD recorder failure and an invalid driver field remain
+under ``engineering580/public94-supported-attempt01``; ``DISPOSITION29.rst``
+names their outcomes. Peak1272946688 bytes; no memory/swap ceilings.
+
+This is NOT supported0.7.1 public acceptance. The development client's original
+environment projection omits PYTHONPATH; its runtime import authority inserts
+only the loaded OpenHCS root. The detached viewer consequently loaded shared
+Vispy code, confirmed through its actual process memory map, rather than the
+separate qualified package19 dependency prefix. No environment exception or
+viewer geometry workaround was introduced. Ordinary co-materialization of the
+original qualified OpenHCS and dependency wheels into one private site-packages
+root is the next receiving correction; old packages and this failure stay
+immutable. A subsequent live child must demonstrably select that family.
+
+This OpenHCS PR changes documentation ONLY. Merging it does not ship the Napari
+runtime repair. The upstream source owner is ``napari/napari#9622`` (still OPEN
+at this checkpoint), with stable-source fork ``trissim/napari`` commit99c0f908.
+OpenHCS's existing distribution owner is ``pyproject.toml``: extras ``napari``,
+``viz`` and ``all`` currently declare ``napari>=0.7.1``. The MCP bundle derives
+its visualization dependency through ``openhcs[gui,mcp,viz]``. None of those
+declarations selects our unpublished patched wheel.
+
+Normal shipping therefore requires either an upstream release containing this
+repair and a reviewed minimum-version update at that existing dependency owner,
+or an explicitly approved fork/artifact distribution route for the SAME Napari
+distribution. Publishing or choosing a maintained fork is a product/release
+decision still outstanding; no competing distribution name, compatibility
+alias, manual live-prefix patch or unsupported0.6 substitute is authorized or
+claimed. Source tests, private package qualification, future public acceptance
+and dependency publication remain separate strengths.
