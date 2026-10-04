@@ -7,7 +7,7 @@ qualified621 repair. Closed394/435 are historical source owners, not an active
 repair queue. Planck's623 scope/descriptor change has no writer hunk and does
 not repair this defect. The owner correction below is implemented and its
 registered source and whole installed paths are qualified. Public/native
-qualification is in progress.
+qualification also passed through the original recorded public client and native.
 
 Original public failure
 -----------------------
@@ -177,22 +177,68 @@ comparisons, source hashes, channel/domain/name and .5/.5 calibration pass.
 Genuine metadata/address contradictions still reject. No native process, viewer
 or MCP server was launched by this installed tier.
 
-Public acceptance remaining
----------------------------
+Public/native acceptance and terminal custody
+--------------------------------------------
 
-The ordinary public receiving packet is engineering620/public01/pipeline.py,
-intensity620.cppipe, acquisition/ and RECEIVING.rst. It reuses the original600
-typed source/importer and public CLI commands with distinct result/export roots,
-default automatic publication enabled and unchanged synthetic TIFF hashes.
-The sole remaining acceptance is the released original public MCP/native lease:
-compile/execute, inventory, all four full12x15 samples, canonical VALUES and typed
-close. Dewey owns the existing lane/recorded-client handoff; no scientist endpoint,
-new viewer, UNKNOWN input or original failed execution may be borrowed/replayed.
+The ordinary engineering620/public88 packet uses the original600 registered
+CPPipe and the same byte-exact two synthetic acquisition TIFFs. The complete
+pipeline keeps default automatic publication enabled AND all four named image
+artifacts. No source-only overlay or installed mutation was used: both public
+client and native import the qualified receiving02 whole target/source1496b0719.
+Dewey released original lane88 and its unchanged recorded-client/admission owner.
+Known startup01 terminal77 refused PRECLIENT, before journals or public dispatch;
+distinct startup02 passed the same original rule with observed sustained pressure
+low. Neither a cap nor a pressure threshold nor an operation timeout was changed.
 
-A distinct
-synthetic public execution with both automatic and named publication must
-complete, expose each occurrence once, preserve all pixels/calibration/source
-domain and support ordinary inventory/sample reopening. Both operand orders,
-scalar control and genuine contradictions are required. Source, installed and
-public/native qualification remain separate. No new store, codec, filename
-guess, metadata overwrite, timeout increase or guard relaxation is permitted.
+One original client PTY93391/MCP1370964 started native1377287/create1791125937.95
+on TCP6020/ACK7020; no viewer was enabled or launched. The first acquisition root
+was read-only and correctly refused its required workspace writes before native
+inspection. A distinct byte-exact working plate under the already authorized HDD
+root then passed. An obsolete get_job_status command was rejected as undeclared
+before dispatch; the existing get_execution_status capability was used instead.
+Both original known errors remain in the complete original journal. No UNKNOWN
+or scientific execution was replayed and no policy or guard was bypassed.
+
+Compile job1 and execution job2 COMPLETE, execution
+ac9e7641-b7f4-44ca-bae2-cb4b0e25af9d. Ordinary public inventory returns exactly
+four unique image records: GrayIndependent, ColorIndependent, Forward, Reverse.
+All four full12x15 resolution0 public samples match all180 elements exactly,
+720 total; channel1/2, source image names and .5/.5micrometer calibration remain.
+The ORIGINAL ZMQRuntimeExecutionObservationExport.read(...).require_valid_observation()
+accepts values01, and the four corresponding native arrays also match exactly.
+Acquisition hashes are unchanged. Unlike the earlier600 named-only acceptance,
+this actually exercises simultaneous default automatic and named publication.
+
+Original verify-public01 terminal0,4.20s/282668KiB/Swap0. It reuses the existing600
+public reply reader and original canonical VALUES loader, not a JSON mirror or
+alternate codec. Its recorded transcript hash is explicitly PRE-CLOSE; final
+journal hashes are separately sealed after native close and client EOF.
+Original public requests/replies and native logs are retained byte-exact in
+automatic-image-publication-620-public88.tar.gz. The archive also carries the
+complete fixture, admission observations, canonical VALUES and result metadata.
+Archive SHA25644ba6e14c1710f11727cc1e90a07b3bd9a599a5da02e0395ef2989b2399439b8,
+125KiB. Original loose journals, failed inputs and scientific records stay intact.
+
+One close using the original incarnation-bound handle returned errors[], ACK,
+endpoint_terminated=true, process_exited=true and succeeded=true. One subsequent
+client exit returned actual terminal2, also in the original script footer; this
+nonzero terminal retains the two known harness errors above and is not hidden or
+misrepresented as publication failure. Native numeric exit is not claimed.
+Post-close exact PIDs are absent,6020/7020 listeners absent, original MCP scope
+inactive/dead. Helpers were untouched. The durable handoff is
+engineering620/public88/OWNER-626-TERMINAL.rst; Dewey owns normal lease retirement
+and reuse. No owned request remains in flight or UNKNOWN.
+
+Full original journal locations:
+engineering620/public88/ENGINEERING626_88/author-workspace/output/runtime/mcp.{stdin,stdout,timing}.
+Closed stdout SHA256ae3d3730b8907248496fb2197f4fcdb393a067cd0252c9f6c3718824eb233684.
+Canonical VALUES:
+/run/media/ts/hdd/openhcs-engineering/engineering620-public88-20261004/values01,
+SHA2562776292906ed9f2166c2c605e16530226b5ac312ffb42afee85caa2024c91ec3.
+Saved image plate is under that same HDD root/results/acquisition_openhcs.
+The receipt/archival commit changes no production or tests after the qualified
+1496b0719 candidate. Source scalar/scalar and scalar/RGB, installed registered
+controls, and this public scalar/RGB default publication are distinct proven
+tiers. No global NRA/R1, whole630 family closure, viewer or biological accuracy
+claim follows. The two unchanged collapsed435 expectation failures remain with
+the separate630 family owner, not a hold on the accepted626 usage fix.
