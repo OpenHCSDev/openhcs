@@ -51,7 +51,6 @@ from openhcs.core.measurement_feature_queries import (
 from openhcs.core.runtime_tabular_values import (
     FieldSpec,
     MeasurementObjectRowIdentity,
-    MeasurementRowMappingCache,
 )
 from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
@@ -214,7 +213,6 @@ def test_runtime_measurement_query_matches_schema_and_row_object_subjects() -> N
 
 
 def test_measurement_row_mapping_accepts_slotted_dataclasses() -> None:
-    MeasurementRowMappingCache.process_cache().entries.clear()
     row = MeasurementRow(object_name="Nuclei", object_label=1)
     mapping = measurement_row_mapping(row)
 
@@ -233,15 +231,22 @@ def test_measurement_row_mapping_accepts_slotted_dataclasses() -> None:
     }
 
 
-def test_measurement_row_mapping_cache_reuses_dataclass_rows() -> None:
-    cache = MeasurementRowMappingCache.process_cache()
-    cache.entries.clear()
-    row = MeasurementRow(object_name="Nuclei", object_label=1)
+def test_measurement_row_mapping_observes_current_dataclass_with_independent_values() -> None:
+    @dataclass(slots=True)
+    class MutableMeasurementRow:
+        object_name: str
+        values: list[float]
 
+    row = MutableMeasurementRow(object_name="Nuclei", values=[0.5])
     first = measurement_row_mapping(row)
+    row.object_name = "Cells"
+    row.values[0] = 7.5
     second = measurement_row_mapping(row)
 
-    assert first is second
+    assert first == {"object_name": "Nuclei", "values": [0.5]}
+    assert second == {"object_name": "Cells", "values": [7.5]}
+    second["values"][0] = 9.5
+    assert row.values == [7.5]
 
 
 def test_projected_columnar_rows_preserve_none_values() -> None:
