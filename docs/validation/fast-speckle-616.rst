@@ -54,9 +54,11 @@ and status timeout remain unreplayed; Dewey retains interrupted custody.
 Verification scope
 ------------------
 
-Pending proportionate finite float32/float64 synthetic equivalence, radius
-rounding, masks/background, borders and non-square/singleton planes through the
-original declared callable, plus modest separated-process peak/time comparison.
+Installed declared-callable receiving passed45 controls: finite float32/float64
+planes, radius rounding, masks/background, original metadata projection,
+independent PURE_2D planes and declaration-owned feature-size binding. Explicit
+reflected-index opening checks cover ordinary, unequal and singleton shapes,
+including radius150 on1x9; constant negative input produces zero top-hat.
 No full retinal array, biology acceptance or whole-pipeline speed claim.
 Existing agent-resource check showed14.9GiB available with disk/swap warnings;
 checks must be small and serial, preserve failures, and use no arbitrary caps.
@@ -81,7 +83,47 @@ observed original peak increase at this scale.
 Separate radius150/1x9 finite plane: original .016052s, peak90884->93296KiB;
 OpenCV comparison FAILED all9pixels. Original opened0 vs OpenCV opened-5 on this
 fixture; no assertion was weakened. Followup constant1x9/radius4 control agreed
-(-5 opening) on both natives. Thus ordinary-sized parity does not establish
-equivalence for a footprint much larger than its input. This unresolved case
-remains a merge blocker under616's exact-preservation acceptance, not a reason
-to replay retinal science, add an approximation, or invent a runtime guard.
+(-5 opening) on both natives. Followup constant1x9/radius150: SciPy erosion=-5
+but its dilation=0. This violates constant preservation of reflected grayscale
+opening. No claim of its C-level root cause or binary/source equality is made.
+
+External contract decision
+--------------------------
+
+CellProfiler4.2.8 enhance_speckles explicitly defines white top-hat as original
+minus erosion-then-dilation opening; its implementation calls SciPy's generic
+footprint filters. The existing OpenCV owner's MORPH_OPEN executes erosion then
+dilation, applying BORDER_REFLECT to each pass. The exact same rounded disk is
+used. An explicit numpy symmetric-extension/window oracle independently proves
+this mathematical contract for finite small inputs, including the oversized
+singleton case. We intentionally do not emulate SciPy's constant-negative bug.
+Thus ordinary-size SciPy parity and mathematical oversized-border correctness
+are distinct claims; full bitwise parity with that defective SciPy case is NOT
+claimed. No shape-specific production dispatch, clipping or approximation exists.
+
+https://raw.githubusercontent.com/CellProfiler/CellProfiler/v4.2.8/cellprofiler/modules/enhanceorsuppressfeatures.py
+https://raw.githubusercontent.com/opencv/opencv/5.x/modules/imgproc/src/morph.dispatch.cpp
+
+Ordinary private receiving
+--------------------------
+
+Persistent engineering root:
+/home/ts/wt/openhcs-issue-batch-20260929/engineering616
+
+Original build-receive01.sh reused the existing ordinary builder and offline
+ObjectState1.1.9, python-introspect0.1.16, PolyStore0.3.2 dependency wheels.
+Build PTY82113 terminal0. Ordinary wheel SHA256:
+f5677be10e8a8d25f74dd6e1ab9bf56f65e4178dab740e4d7d4d72ac96c8ca66.
+Both feature_enhancement and polystore.config import from this private target;
+feature bytes equal production source (SHA337841079eb8bae59b446f1266c27585c38fd0830db92f62d2db43c8c875288f).
+No old target, foreign dependency source, shared environment or live SCI changes.
+
+callable-receive01.log terminal1 retains an unrelated repository pytest-plugin
+import failure. callable-receive02.log/PTy88533 terminal1 retains31PASS/6FAIL:
+all pixels/masks passed, but the new metadata fixture incorrectly assertedNone
+instead of the existing empty ImageUnitIntervalIntensityMetadata. The corrected
+fixture compares the original owner's complete without-unit-interval projection.
+callable-receive03.log/PTy29521 terminal0 records45PASS/.68s. Pytest cache warnings
+and imported-plugin warning are retained; no repeated run solely for warnings.
+These checks are ordinary installed registered-callable acceptance, not MCP
+catalog/server, science pipeline or autonomous retinal acceptance.
