@@ -99,7 +99,7 @@ dependencies = [
     "psutil>=5.9.0",
 
     # External dependencies (PyPI versions for production builds)
-    "zmqruntime>=0.3.0,<0.4",
+    "zmqruntime>=0.4.0,<0.5",
     "pycodify>=0.1.3,<0.2",
     "objectstate>=1.2.0,<2",
     "python-introspect>=0.1.16,<0.2",
