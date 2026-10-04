@@ -69,3 +69,32 @@ owners.600 public mixed-intensity receiving has priority and is not expanded int
 this repair. No installed/native success is claimed for614 at this checkpoint.
 Byte-exact raw controls/AST/R0 archive:
 docs/validation/acquisition-position-projection-source01-20261004.tar.gz.
+
+Final ordinary installed/public acceptance
+-----------------------------------------
+
+The historical pending boundary above is now complete. One ordinary combined
+source422/whole target02 carries600 and614: complete811source payload/789Python/
+910RECORD/resource proof and3 asserted-installed registered position controls PASS.
+One original recorded public CLI/native lease prepared18 exact tiny TIFF planes
+through SourceBindings, compiled and executed the actual registered positions
+producer and CPU assembler. Both full14x20 native public saved mosaics match all
+560 expected pixels exactly, including empty gaps, distinct channel1/2 values
+and .25Y/.5X micrometer calibration. Canonical native VALUES validate all artifact
+and axis expectations; scoped positions are all nine exact XY coordinates in
+resolvedsite order. The original saved image projection preserves nine source
+contributors/channel, site order1..9, original paths and signed tile positions.
+
+Full receipt mixed-carrier-position-public-receiving06-20261004.rst and archive
+SHA25612638e8d8b7b5dcd126f0999d070eb45a395999c5b43d7923c5b3ed440c5f264 retain
+every original negative and the exact PASS proof. A verifier's incorrect demand
+for image metadata on a positions list is retained; final checks use the original
+saved-image projection owner, not a new metadata mirror or relaxed assertions.
+Native exact close ACK/exited/succeeded; native/MCP gone, ports empty, no viewer.
+Original CLI terminal2 retains earlier explicit negatives from the same lease.
+600's separate automatic Reverse-publication failure is not fixed by614.
+
+Normal main including merged600 does not alter this production caller or its
+metadata/source-projection family compared with received422. No suite/build redo,
+new environment or SCI hot update. Biological usefulness/global NRA R1/physical
+GPU are not claimed by this synthetic registered/native/public qualification.
