@@ -348,7 +348,7 @@ from openhcs.processing.backends.cellprofiler.shape import (
     ShapeMeasurementBackendStrategy,
 )
 from openhcs.processing.backends.cellprofiler.label_geometry import (
-    _numpy124_aquicksort_indices,
+    _numpy124_ordered_label_maximum_indices,
 )
 from openhcs.interop.cellprofiler.settings_binder import coerce_cellprofiler_enum
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
@@ -1119,9 +1119,15 @@ class NumbaNumpyObjectIntensityBackendStrategy(ObjectIntensityBackendStrategy):
             + x_indices
         )
         flat_images = image_batch.reshape((image_batch.shape[0], -1))
+        requested_indexes = np.arange(labels.object_count, dtype=np.int64)
         positions: list[tuple[np.ndarray, ...]] = []
         for flat_image in flat_images:
-            order = _numpy124_aquicksort_indices(flat_image[source_positions])
+            order = _numpy124_ordered_label_maximum_indices(
+                flat_image[source_positions],
+                foreground_index.object_indexes,
+                requested_indexes,
+                labels.object_count - 1,
+            )
             maximum_positions = np.zeros(labels.object_count, dtype=np.int64)
             maximum_positions[foreground_index.object_indexes[order]] = (
                 source_positions[order]
