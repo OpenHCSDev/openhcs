@@ -275,6 +275,22 @@ did not recover that cluster. The author rejected population-level use rather
 than treating consistent tables as accurate detection; independent post-freeze
 image review confirmed the missing cluster (Supplementary Data 8).
 
+A subsequent fresh paired-field author separated a crowded cluster and a
+genuine close pair after inspecting its marker and partition stages. Reducing
+marker smoothing in the last repair still failed to separate a dim neighbour
+and introduced an apparent split within an isolated mottled nucleus. The author
+identified both problems through raw/result review and retained the unsuccessful
+final attempt rather than substituting an earlier result. This demonstrates
+stage-specific autonomous diagnosis and local gains, but not consistent repair
+or a validated cell count (Supplementary Data 8).
+
+A retained personal-neurite development continuation analysed a nine-field
+stitched mosaic with shared channel fits. It corrected an unintended intensity
+rescaling and retained source-linked paths across sampled tile joins, but dense
+nuclear misses and incomplete soma boundaries prevented complete counting or
+morphology claims. This same-author continuation is not a fresh autonomous
+success (Supplementary Data 8).
+
 ### Figure 7. Task-only analysis: within-run revision and final coverage
 
 ![Task-only within-run revision and final coverage.](figures/slas/task_only_analysis.png){width=6in}

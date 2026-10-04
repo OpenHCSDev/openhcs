@@ -1459,7 +1459,7 @@ def test_metadata_target_family_discovers_new_declaration_without_consumer_edits
         assert OpenHCSMetadataTarget.for_execution(context, plan) == (
             target,
         )
-        assert target.produced_projection_entries(context, plan) is None
+        assert target.produced_projection_entries(context, plan).entries == {}
     finally:
         for key in set(registry) - original_keys:
             del registry[key]
