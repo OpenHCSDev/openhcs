@@ -10,6 +10,7 @@ from hashlib import sha256
 from pathlib import Path
 
 import numpy as np
+import pytest
 import tifffile
 
 from openhcs.agent.services.execution_session_service import (
@@ -60,7 +61,8 @@ def volume_scalar_609(image: np.ndarray):
     return image, ({"volume_sum": int(image.sum()), "voxel_count": int(image.size)},)
 
 
-def test_real_z_aggregation_persists_scalar_and_unchanged_source_planes(tmp_path):
+@pytest.mark.parametrize("group_by", [GroupBy.NONE, GroupBy.CHANNEL])
+def test_real_z_aggregation_persists_scalar_and_unchanged_source_planes(tmp_path, group_by):
     source = tmp_path / "input"
     source.mkdir()
     pixels = np.arange(140, dtype=np.uint16).reshape(4, 5, 7)
@@ -90,10 +92,7 @@ def test_real_z_aggregation_persists_scalar_and_unchanged_source_planes(tmp_path
                 func=registered, name="Actual volume scalar",
                 processing_config=LazyProcessingConfig(
                     variable_components=[VariableComponents.Z_INDEX],
-                    # One physical channel is fixed; Z is the genuine aggregate.
-                    # Channel-grouped generic SpecialArtifact scope propagation
-                    # is independently retained in the qualification receipt.
-                    group_by=GroupBy.NONE,
+                    group_by=group_by,
                     input_source=InputSource.PIPELINE_START,
                 ),
             )],
