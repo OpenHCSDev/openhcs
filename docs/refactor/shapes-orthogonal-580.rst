@@ -101,7 +101,37 @@ last fixture now drives the original native slice consumer explicitly; no
 production guard or assertion was weakened. System setuptools-scm generated
 source version metadata through its ordinary owner; no dependency was installed.
 
-Remaining: parent-reviewed dependency packaging and separately released real
-Qt/installed public MCP orthogonal-before-streaming settlement, same-source
-reopen/navigation and exact closure. No live viewer, catalog, native or science
-process was launched for this source checkpoint.
+Ordinary dependency package
+---------------------------
+
+Parent accepted the exact backport source. Original setuptools/SCM built
+``napari-0.6.2.dev3+g0fa3daabd-py3-none-any.whl`` from the published 0.6.1 branch,
+SHA256 ``29608b0b4cb31338bbc63c0a3a7df70c40189c1b8a6198dda7ca9e9c111b406b``.
+An ordinary no-index/no-deps materialization created a NEW private target at
+``engineering580/package13/target``; no shared sitepackage, scientific prefix
+or source was changed. All 808 wheel RECORD members match installation, 803
+package assets match source, and the imported compiled function's ``py_func``
+is the original Python owner. Original build/materialization/proof logs and
+``READY15.json`` are under ``engineering580``. Build peak127844352 bytes;
+materialization peak76378112 bytes, no OOM. These commands imposed no
+MemoryMax/MemorySwapMax; future receiving likewise imposes no agent-defined
+memory/swap ceiling. Prior completed capped controls remain unchanged evidence.
+
+This package qualifies the incident's existing dependency family, NOT the
+declared OpenHCS ``napari>=0.7.1`` supported release. The same owner repair is
+published from v0.7.1 at ``99c0f9081e2b3e6dde4601668ba32566a739f2e7``; that
+release needs matching app-model, napari-console, napari-plugin-engine, npe2,
+PyOpenGL, vispy and pydantic-extra-types not present in the paired environment.
+No supported-version dependency installation or distribution release is claimed.
+
+The receiving case reuses the original tiny engineering494 four-plane raw input
+and engineering548 source-bearing Shapes archives. True YZ raw precedes
+archive streaming, then supported XY review checks unaltered geometry and
+matched native captures, followed by exact typed closure. The proposed lane96
+was positively released but reassigned by the integration owner to fresh
+science BEFORE any case launch. Historical proposed client source is preserved
+unlaunched; Dewey owns transfer/admission of the next cleanly released lane.
+
+Remaining: real Qt/installed public MCP orthogonal-before-streaming settlement,
+same-source reopen/navigation and exact closure. No live viewer, catalog,
+native or science process was launched for this checkpoint.
