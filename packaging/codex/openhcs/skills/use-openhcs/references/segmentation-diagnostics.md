@@ -24,6 +24,38 @@ raising a final bound need not undo an earlier clamp. Establish the units and
 earliest failed operation first, preserving raw and any explicitly converted
 alias rather than retuning downstream stages to compensate.
 
+### Compare body-admission models
+
+For broad textured or ring-shaped bodies in uneven granular background, inspect
+outer-body support, dim interiors, adjacent background and nuisance-only patches
+across bright/dim separated regions BEFORE choosing foreground admission. Use
+values from the consumed alias alongside raw contours; a global histogram or
+one central body cannot establish specificity elsewhere. A nuclear anchor may
+support eligibility/association, but neither it nor a neuronal callable name
+establishes body-channel boundaries.
+
+- **Local body-minus-background admission** is a candidate when a meaningful
+  outside-body reference separates positives from local nuisance. A neighbourhood
+  contaminated by the body can subtract it; a permissive difference can instead
+  admit diffuse/granular regions. Check complete extent and negative patches,
+  not just whether a seed survives.
+- **Intensity-class separation**, global where classes/background are comparable
+  or local where variation justifies it, is a different hypothesis. Inspect which
+  classes represent nuisance, weak body and bright rim, and how the declared
+  method assigns them. Excluding an intermediate class can remove faint body;
+  retaining it can leak into background. Adaptive/multiclass thresholding is not
+  automatically superior: neighbourhood scale and class overlap still matter.
+
+Choose from measured local positives/backgrounds and regional negatives, using
+[preprocessing model selection](image-preprocessing.md#local-contrast-and-local-thresholds)
+when nuisance or overlapping classes need correction. If lowering a scalar
+restores dim positives but floods large regions, while raising it removes bodies,
+another toggle is not an admission-model repair. A dramatic count/foreground-area
+change is only a warning; matched support and negative controls identify the
+failure. Revisit the model or preprocessing and predict its effect on both,
+rather than selecting the count that looks plausible. If support is adequate but
+partitions fail, move to marker/division diagnostics instead.
+
 ### A threshold fixes one region but damages another
 
 Keep a bright touching pair and a genuine faint positive in different regions
@@ -48,7 +80,21 @@ views; judge new faint misses by the
 [distributed, claim-scoped quality criteria](analysis-strategy.md#scope-conclusions-to-the-evidence),
 not by count agreement or a requirement of zero errors.
 
+A below-minimum label can be the tiny bright island left by threshold shrinkage
+inside a much broader dim raw body, not genuine small debris. Compare independently
+measured raw chords/extent with admitted support and unfiltered geometry before
+lowering the minimum-size filter. If admission caused the shrinkage, test that
+stage while retaining the size rule and a bright crowded-pair control; relaxing
+size alone can retain the island without recovering the body. Actual small raw
+objects remain a separate inclusion-policy question.
+
 ## Touching round objects and watershed
+
+Before the first candidate, use the measurement guide's
+[marker-landscape selection](measurement-interpretation.md#choose-the-marker-landscape-before-the-first-candidate)
+to connect body/background, within-body texture and genuine-pair geometry to
+the method and its smoothing/separation settings. Measuring size alone does
+not justify inheriting an example's intensity declumping or automatic defaults.
 
 A distance-map/marker-controlled watershed is a candidate for separating
 touching compact objects, not a universal definition of a cell. Inspect the
@@ -103,6 +149,15 @@ Change the failed support/growth parameter rather than compensating with more
 primary seeds. If the stain shows only a subcellular structure, record that a
 whole-cell boundary is unsupported instead of manufacturing cytoplasm masks.
 
+When only a subset remains seed-sized, compare its body-channel signal with
+supported secondary objects and local background under a faint-preserving window.
+An independently visible body lost at a growth stage supports a model repair;
+weak or absent boundary signal does not justify enlarging every secondary object
+to match the nuclear count. Retain independently supported nuclear measurements,
+and qualify or exclude affected body-dependent quantities with explicit identities
+and denominators, following [claim-scoped conclusions](analysis-strategy.md#scope-conclusions-to-the-evidence).
+Zero growth diagnoses the output, not by itself the biological cause.
+
 ## Puncta, neurites and topology
 
 Scale-selective spot enhancement can help puncta detection; compact-object
@@ -117,6 +172,25 @@ bright focus as a missed neuron. Ambiguous debris or dying cells should be
 logged separately while clear supported misses are diagnosed. Adding a closing
 operation or pruning short branches can repair one crop and remove genuine
 biology elsewhere; retain a faint-path regression control.
+
+### Separate support recovery from rooted graph validity
+
+A faint-path admission repair can improve the mask and skeleton without
+establishing a soma-rooted, per-cell graph. Inspect recovered weak paths together
+with an empty-background witness, newly admitted disconnected fragments and a
+clear thin positive. Then review soma interiors and exits, crossings and the
+actual root/edge associations separately. Skeletonization of bright soma texture
+can introduce medial-axis loops and apparent junctions that are not anatomical
+branches. Do not count them as neurite branchpoints or length merely because a
+backend returns those column names; inspect its soma-interior and ownership rules.
+
+Neither blanket loop pruning nor a 2-D crossing establishes neuronal ownership.
+Keep supported path geometry and the local sensitivity improvement at their
+actual scope, withhold only unsupported ownership/topology-dependent claims,
+and diagnose the earliest remaining graph stage rather than repeatedly changing
+the foreground threshold. A binary skeleton is a candidate representation, not
+proof of complete reconstruction; an unresolved crossing need not invalidate
+independently supported paths elsewhere.
 
 ## Learned-model choice and operational limits
 
