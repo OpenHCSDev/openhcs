@@ -722,6 +722,15 @@ partitions unchanged. Matched multi-plane review therefore did not accept an
 unqualified biological count. This case has no reference-agreement score and
 does not contribute to the two scored task-only comparisons.
 
+A separate public translocation trial, `BBBC013_REPEAT94`, compiled the full
+plate but was terminated at its configured 4.5 GiB scope limit. Complete masks
+survived for 42 of 96 wells; final plate tables and distributed biological review
+were not completed. This operationally interrupted trial supplies neither an
+accuracy score nor evidence of host-wide RAM exhaustion. Its
+[outcome record](task_only_analysis/bbbc013-repeat94-outcome.json) identifies
+the unchanged freeze, partial inventory and termination receipts. It is distinct
+from the prospective BBBC013 result in Supplementary Data 7.
+
 ## Software snapshots and evidence
 
 | Evidence | Software identity | What the record establishes |
