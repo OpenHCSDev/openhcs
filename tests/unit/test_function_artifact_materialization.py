@@ -139,6 +139,7 @@ from openhcs.core.streaming_config_factory import (
     StreamingViewerSurface,
 )
 from openhcs.microscopes.imagexpress import ImageXpressFilenameParser
+from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.processing.backends.pos_gen.tile_position_artifacts import (
     TILE_POSITIONS_OUTPUT,
 )
@@ -1273,7 +1274,8 @@ def test_multi_plane_measurement_materialization_uses_aggregate_artifact_name():
     )
 
 
-def test_multi_plane_special_output_uses_aggregate_artifact_name():
+@pytest.mark.parametrize("parser_type", [ImageXpressFilenameParser, SourceSchemaFilenameParser])
+def test_multi_plane_special_output_uses_aggregate_artifact_name(parser_type):
     output_plan = ArtifactOutputPlan(
         name="cell_counts",
         path="/memory/cell_counts.pkl",
@@ -1282,7 +1284,7 @@ def test_multi_plane_special_output_uses_aggregate_artifact_name():
     )
     context = _context(FileManagerStub())
     context.microscope_handler = MicroscopeHandlerStub(
-        parser=ImageXpressFilenameParser(),
+        parser=parser_type(),
         metadata_handler=MetadataHandlerStub(),
     )
     context.runtime_value_store.record(
@@ -1323,7 +1325,8 @@ def test_multi_plane_special_output_uses_aggregate_artifact_name():
     )
 
 
-def test_scalar_special_output_preserves_complete_source_identity():
+@pytest.mark.parametrize("parser_type", [ImageXpressFilenameParser, SourceSchemaFilenameParser])
+def test_scalar_special_output_preserves_complete_source_identity(parser_type):
     output_plan = ArtifactOutputPlan(
         name="cell_counts",
         path="/memory/cell_counts.pkl",
@@ -1332,7 +1335,7 @@ def test_scalar_special_output_preserves_complete_source_identity():
     )
     context = _context(FileManagerStub())
     context.microscope_handler = MicroscopeHandlerStub(
-        parser=ImageXpressFilenameParser(),
+        parser=parser_type(),
         metadata_handler=MetadataHandlerStub(),
     )
     context.runtime_value_store.record(
@@ -1366,7 +1369,8 @@ def test_scalar_special_output_preserves_complete_source_identity():
     )
 
 
-def test_incomplete_scalar_special_output_keeps_strict_filename_failure():
+@pytest.mark.parametrize("parser_type", [ImageXpressFilenameParser, SourceSchemaFilenameParser])
+def test_incomplete_scalar_special_output_keeps_strict_filename_failure(parser_type):
     output_plan = ArtifactOutputPlan(
         name="cell_counts",
         path="/memory/cell_counts.pkl",
@@ -1375,7 +1379,7 @@ def test_incomplete_scalar_special_output_keeps_strict_filename_failure():
     )
     context = _context(FileManagerStub())
     context.microscope_handler = MicroscopeHandlerStub(
-        parser=ImageXpressFilenameParser(),
+        parser=parser_type(),
         metadata_handler=MetadataHandlerStub(),
     )
     context.runtime_value_store.record(
@@ -1403,7 +1407,8 @@ def test_incomplete_scalar_special_output_keeps_strict_filename_failure():
         runtime_artifact_materializations(_plan(output_plan), context)
 
 
-def test_grouped_special_output_retains_group_coordinate_in_aggregate_name():
+@pytest.mark.parametrize("parser_type", [ImageXpressFilenameParser, SourceSchemaFilenameParser])
+def test_grouped_special_output_retains_group_coordinate_in_aggregate_name(parser_type):
     output_plan = ArtifactOutputPlan(
         name="cell_counts",
         path="/memory/cell_counts.pkl",
@@ -1414,7 +1419,7 @@ def test_grouped_special_output_retains_group_coordinate_in_aggregate_name():
     )
     context = _context(FileManagerStub())
     context.microscope_handler = MicroscopeHandlerStub(
-        parser=ImageXpressFilenameParser(),
+        parser=parser_type(),
         metadata_handler=MetadataHandlerStub(),
     )
     context.runtime_value_store.record(
