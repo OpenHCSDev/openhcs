@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Annotated
 
+import pytest
+
 from pyqt_reactive.services.help_document import HelpDocument
 from pyqt_reactive.services.parameter_help_service import docstring_info_for_target
 
@@ -17,6 +19,7 @@ from openhcs.processing.backends.analysis.neurite_outgrowth import (
     MetaXpressCellBodySettings,
     MetaXpressNuclearSettings,
     MetaXpressOutgrowthSettings,
+    count_neuronal_cell_bodies_metaxpress,
     neurite_outgrowth_metaxpress,
 )
 from openhcs.serialization.json import to_jsonable
@@ -81,7 +84,7 @@ def test_actual_neurite_parameters_include_original_field_units_and_inherited_he
     )
     assert "micrometers" in specs["nuclear_stain"].description
     assert (
-        "Minimum absolute intensity difference from local background"
+        "Per-pixel local-background response cutoff in consumed-image units"
         in specs["outgrowth"].description
     )
 
@@ -193,8 +196,11 @@ def test_policy_consumer_executes_cooperative_hooks_once_in_declared_mro():
     assert "Search radius in millimeters" in specs[controls_index].description
 
 
+@pytest.mark.parametrize(
+    "func", (count_neuronal_cell_bodies_metaxpress, neurite_outgrowth_metaxpress)
+)
 def test_registered_neurite_metadata_preserves_declared_field_help(
-    monkeypatch, tmp_path
+    monkeypatch, tmp_path, func
 ):
     import inspect
     import subprocess
@@ -234,16 +240,16 @@ def test_registered_neurite_metadata_preserves_declared_field_help(
 
     registry = OpenHCSRegistry()
     metadata = registry._catalog_metadata_for_function(
-        neurite_outgrowth_metaxpress.__name__,
-        neurite_outgrowth_metaxpress,
-        neurite_outgrowth_metaxpress.__module__,
+        func.__name__,
+        func,
+        func.__module__,
     )
     assert isinstance(metadata, FunctionMetadata)
     assert (
         metadata.composite_key
-        == "openhcs:analysis_neurite_outgrowth_neurite_outgrowth_metaxpress"
+        == f"openhcs:analysis_neurite_outgrowth_{func.__name__}"
     )
-    assert metadata.func is not neurite_outgrowth_metaxpress
+    assert metadata.func is not func
     monkeypatch.setattr(
         RegistryService, "_metadata_cache", {metadata.composite_key: metadata}
     )
@@ -261,8 +267,19 @@ def test_registered_neurite_metadata_preserves_declared_field_help(
         {name: info.param_type for name, info in analyzed.items()},
     )
     assert "square micrometers" in projected["cell_body"].description
-    assert (
-        "Scoring-only total outgrowth threshold in micrometers"
-        in projected["outgrowth"].description
-    )
+    for parameter in detail.parameters:
+        if parameter.name in ("cell_body", "outgrowth", "nuclear_stain"):
+            document = HelpDocument.from_docstring_info(
+                docstring_info_for_target(analyzed[parameter.name].param_type)
+            )
+            assert document.content in parameter.description
+            assert next(
+                value["description"]
+                for value in to_jsonable(detail)["parameters"]
+                if value["name"] == parameter.name
+            ) == parameter.description
+    assert not detail.doc_truncated
+    import json
+
+    print("Full registered descriptor:", json.dumps(to_jsonable(detail)))
     assert "micrometers" in projected["nuclear_stain"].description
