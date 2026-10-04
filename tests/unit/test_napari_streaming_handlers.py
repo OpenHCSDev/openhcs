@@ -5871,6 +5871,23 @@ def test_napari_aggregate_axis_binding_uses_declared_component_not_equal_extent(
     )
 
 
+def test_napari_scalar_payload_needs_no_aggregate_component_declaration():
+    semantics = ViewerComponentAxisSemanticsAuthority.from_display_config(
+        ViewerMappingDisplayConfigInput(
+            {
+                "component_modes": {"site": "stack", "channel": "stack"},
+                "component_order": ["site", "channel"],
+            }
+        ),
+        _component_value_domain({}),
+    )
+    items = [_layer_item({"site": 1, "channel": 2}, np.zeros((3, 3)))]
+
+    assert NapariAggregateAxisBindingAuthority.bindings(
+        items, semantics
+    ) == NapariAggregateAxisBindingSet()
+
+
 def test_napari_aggregate_axis_binding_preserves_singleton_scalar_identity():
     item = _layer_item(
         {"channel": 2},
