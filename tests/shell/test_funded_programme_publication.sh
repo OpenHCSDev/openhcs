@@ -297,3 +297,72 @@ jq -e '(.authors|length)==0 and (.retained_output_roots|length)==3' "$scratch/fu
 (cd "$scratch/old-a"; sha256sum --check --quiet READY-FREEZE.sha256)
 sha256sum --check --quiet "$scratch/retained-startup.sha256"
 printf 'PASS last terminal writer releases all future growth; complete output and original run/journals remain\n'
+
+# Optional real mounted-destination control. This is a declaration consumed by
+# the unchanged original prepare/publish/launcher/ledger route, not a client.
+if [[ -n "${2:-}" ]]; then
+  payload_mount=$(realpath -e "$2")
+  mountpoint --quiet "$payload_mount"
+  payload=$(mktemp -d "$payload_mount/openhcs-destination-control.XXXXXXXX")
+  mkdir "$scratch/hdd-run"
+  jq -n --arg root "$scratch" --arg payload "$payload" --arg mount "$payload_mount" \
+    --slurpfile original "$scratch/old-a/program.json" '{
+    phase:"controlled-hdd",predecessor_program_root:($root+"/funding"),
+    run_template_root:($root+"/old-a"),resource_policy:{},members:[],retired_members:[],
+    additional_authors:[$original[0].authors[0] | .slot="HDD" |
+      .run_owner_root=($root+"/hdd-run") |
+      .artifact_destination={path:$payload,mount:$mount}]
+  }' > "$scratch/hdd-run/successor-declaration.json"
+  jq --arg install "$scratch/controlled-install" '.target=$install' \
+    "$scratch/qualification.json" > "$scratch/hdd-qualification.json"
+  bash "$owner" prepare "$scratch/funding" "$scratch/hdd-run" "$scratch/hdd-qualification.json"
+  (cd "$scratch/hdd-run"; sha256sum program.json successor-declaration.json > READY-FREEZE.sha256)
+  FLEET_PARENT_RELEASED=1 bash "$owner" publish "$scratch/funding" "$scratch/hdd-run" \
+    "$(sha256sum "$scratch/funding/program.json" | cut -d' ' -f1)"
+  mkdir -p "$scratch/hdd-run/HDD/author-workspace/output"
+  bash -c 'source "$1" "$2" HDD; fleet_require_artifact_destination HDD;
+    test "$FLEET_ARTIFACT_ROOT" = "$3"; test "$FLEET_SCRATCH" = "$3/runtime/scratch";
+    test "$(fleet_output_roots_for HDD | wc -l)" = 2' \
+    _ "$operations/slot-env.sh" "$scratch/funding" "$payload"
+  bash "$operations/launch-author.sh" "$scratch/funding" HDD --preflight > "$scratch/hdd-preflight.log"
+  rg -Fq "write=$scratch/hdd-run/HDD/author-workspace/output:$payload" "$scratch/hdd-preflight.log"
+  bash "$operations/resource-check.sh" "$scratch/funding" HDD destination01 ledger > "$scratch/hdd-ledger.log" 2>&1
+  rg -Fq "PayloadDestination=$payload" "$scratch/hdd-ledger.log"
+  printf 'Controlled original HDD destination: %s\n' "$payload" > "$scratch/hdd-control-path.rst"
+  set +e
+  bash "$operations/recorded-mcp.sh" "$scratch/funding" HDD hdd_startup01 > "$scratch/hdd-startup.log" 2>&1
+  status=$?
+  set -e
+  test "$status" = 42
+  hdd_runtime="$scratch/hdd-run/HDD/author-workspace/output/runtime"
+  rg -Fq "write=$scratch/hdd-run/HDD/author-workspace/output:$payload" "$hdd_runtime/mcp.stdout"
+  rg -Fq "temp=$payload/runtime/scratch data=$hdd_runtime/data runtime=$hdd_runtime/xdg-runtime" "$hdd_runtime/mcp.stdout"
+  test -f "$hdd_runtime/mcp.stdin"
+  test ! -e "$payload/native-sessions"
+  # The actual owner refuses an unmounted destination; no HOME fallback.
+  bash -c 'source "$1" "$2" HDD;
+    negative_mount="$3/not-mounted";
+    fleet_member() { jq --arg mount "$negative_mount" ".authors[0] | .artifact_destination.mount=\$mount" "$FLEET_RUN_ROOT/program.json"; }
+    ! fleet_require_artifact_destination HDD' \
+    _ "$operations/slot-env.sh" "$scratch/funding" "$payload"
+  mkdir "$payload/ordinary-target"
+  ln -s "$payload/ordinary-target" "$payload/alias"
+  bash -c 'source "$1" "$2" HDD;
+    negative_path="$3/alias";
+    fleet_member() { jq --arg path "$negative_path" ".authors[0] | .artifact_destination.path=\$path" "$FLEET_RUN_ROOT/program.json"; }
+    ! fleet_require_artifact_destination HDD' \
+    _ "$operations/slot-env.sh" "$scratch/funding" "$payload"
+  mkdir "$scratch/hdd-retirement"
+  printf 'Controlled retained client42 terminal, no SCI/provider.\n' > "$scratch/hdd-terminal.rst"
+  jq --arg root "$scratch" '.phase="controlled-hdd-retirement" |
+    .additional_authors=[] | .members=[] | .resource_policy={} |
+    .retired_members=[{slot:"HDD",terminal_custody_receipt:($root+"/hdd-terminal.rst")}]' \
+    "$scratch/hdd-run/successor-declaration.json" > "$scratch/hdd-retirement/successor-declaration.json"
+  bash "$owner" prepare "$scratch/funding" "$scratch/hdd-retirement" "$scratch/hdd-qualification.json"
+  jq -e --arg payload "$payload" --arg control "$scratch/hdd-run/HDD/author-workspace/output" \
+    '(.retained_output_roots | map(select(.==$payload)) | length)==1 and
+     (.retained_output_roots | map(select(.==$control)) | length)==1' \
+    "$scratch/hdd-retirement/program.json" >/dev/null
+  printf 'PASS ordinary mounted HDD declaration: HOME history/control retained, explicit payload/scratch roots and actual destination telemetry\n'
+  printf 'PASS missing mount/symlink refused, original retirement retains HOME and payload roots once\n'
+fi

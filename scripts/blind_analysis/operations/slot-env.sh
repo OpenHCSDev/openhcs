@@ -38,6 +38,40 @@ fleet_workspace_for() {
   jq -er '.run_owner_root + "/" + .slot + "/author-workspace"' <<< "$member"
 }
 
+# The immutable member owns payload placement. Control/source/history remain
+# in its existing workspace; absent declarations retain the original location.
+fleet_artifact_root_for() {
+  local member
+  member=$(fleet_member "$1") || return
+  jq -er '.artifact_destination.path //
+    (.run_owner_root + "/" + .slot + "/author-workspace/output")' <<< "$member"
+}
+
+fleet_output_roots_for() {
+  local workspace artifact
+  workspace=$(fleet_workspace_for "$1") || return
+  artifact=$(fleet_artifact_root_for "$1") || return
+  printf '%s\n' "$workspace/output"
+  if [[ "$artifact" != "$workspace/output" ]]; then printf '%s\n' "$artifact"; fi
+}
+
+fleet_require_artifact_destination() {
+  local member mount
+  member=$(fleet_member "$1") || return
+  if jq -e '.artifact_destination != null' <<< "$member" >/dev/null; then
+    mount=$(jq -er '.artifact_destination.mount' <<< "$member") || return
+    mountpoint --quiet "$mount" || return
+    local path
+    path=$(fleet_artifact_root_for "$1") || return
+    [[ "$path" == "$mount/"* ]] || return
+    # Never admit a missing mount through a symlink or silently create payloads
+    # on its backing HOME/root filesystem. Provision the ordinary directory first.
+    test -d "$path" && test -w "$path" || return
+    test "$(realpath -e "$path")" = "$path" || return
+    test "$(findmnt -n -T "$path" -o TARGET)" = "$mount" || return
+  fi
+}
+
 fleet_unit_for() {
   local member owner phase
   member=$(fleet_member "$1") || return
@@ -64,6 +98,8 @@ slot=$(fleet_member "$FLEET_SLOT") || exit
 FLEET_RUN_ROOT=$(jq -er '.run_owner_root' <<< "$slot")
 FLEET_RUN_PROGRAM=$(<"$FLEET_RUN_ROOT/program.json")
 FLEET_WORKSPACE=$(fleet_workspace_for "$FLEET_SLOT")
+FLEET_ARTIFACT_ROOT=$(fleet_artifact_root_for "$FLEET_SLOT")
+FLEET_SCRATCH="$FLEET_ARTIFACT_ROOT/runtime/scratch"
 FLEET_SLICE=$(jq -er '.scope_slice' <<< "$FLEET_PROGRAM")
 FLEET_INSTALL=$(jq -er '.source_install' "$FLEET_RUN_ROOT/program.json")
 FLEET_PYTHON=$(jq -er '.python' "$FLEET_RUN_ROOT/program.json")
@@ -79,6 +115,7 @@ FLEET_VIEWER_ACK=$(jq -er '.viewer_ack_port' <<< "$slot")
 FLEET_VNC=$(jq -er '.vnc_port' <<< "$slot")
 FLEET_UNIT=$(fleet_unit_for "$FLEET_SLOT")
 export FLEET_ROOT FLEET_SLOT FLEET_RUN_ROOT FLEET_RUN_PROGRAM FLEET_WORKSPACE FLEET_SLICE FLEET_INSTALL FLEET_PYTHON FLEET_OPERATIONS FLEET_PHASE
+export FLEET_ARTIFACT_ROOT FLEET_SCRATCH
 export FLEET_DISPLAY FLEET_CPU FLEET_INPUT FLEET_NATIVE FLEET_NATIVE_ACK FLEET_VIEWER FLEET_VIEWER_ACK FLEET_VNC FLEET_UNIT
 helper_root=$(jq -er '.helper_custody.program_root' <<< "$slot")
 helper_slot=$(jq -er '.helper_custody.slot' <<< "$slot")

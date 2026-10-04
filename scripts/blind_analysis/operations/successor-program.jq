@@ -48,6 +48,7 @@ $funding[0] as $original
         | .input_root = $leaves[0].input_root
         | .brief = $leaves[0].brief
         | .scientific_files = $leaves[0].scientific_files
+        | .artifact_destination = $leaves[0].artifact_destination
         | .helper_custody.parent_handoff_receipt = $leaves[0].helper_handoff_receipt
         | .writer_handoff = [{program_root:$member.run_owner_root,slot:$member.slot,terminal_custody_receipt:$leaves[0].terminal_custody_receipt}]
         | .run_owner_root = $successor_root
@@ -57,6 +58,12 @@ $funding[0] as $original
     | .slot as $slot | select(all($retired[]; .slot!=$slot))
   )
 | .authors += $new.additional_authors
+| if any(.authors[]; .artifact_destination != null and
+    (.artifact_destination | if type!="object" then true else
+      ([.path,.mount] | any(.[]; if type!="string" then true
+        else (startswith("/")|not) or contains(":") or contains("\n") end))
+      end))
+  then error("artifact destination requires absolute path and mount") else . end
 | if (.authors|map(.slot)|unique|length)!=(.authors|length)
   then error("ambiguous scientific member") else . end
 | if (.authors|map(.display)|unique|length)!=(.authors|length)
@@ -71,7 +78,8 @@ $funding[0] as $original
     [($new.members[]|.predecessor_slot),($retired[]|.slot)] as $terminal |
       $original.retained_output_roots +
       [$terminal[] as $member | $original.authors[] | select(.slot==$member) |
-       .run_owner_root+"/"+.slot+"/author-workspace/output"]
+       (.run_owner_root+"/"+.slot+"/author-workspace/output"),
+       (.artifact_destination.path // (.run_owner_root+"/"+.slot+"/author-workspace/output"))]
     | unique
   )
 | .funded_members = [.authors[] | {slot,run_owner_root}]
