@@ -40,11 +40,19 @@ or reporting counts. Use the live contexts' typed evidence contracts and the
 procedure's capture details, not a previous conversation or separate assay
 skill. Follow the earliest failed stage through one bounded diagnostic and
 recheck a regression control.
-Before choosing size, separation, smoothing, background or shape parameters,
-read [the empirical feature-measurement procedure](references/measurement-interpretation.md)
-(`openhcs_measurement_interpretation`). Measure representative raw features at
-native coordinates through exposed MCP contracts, retain uncertainty and units,
-and record how each observation supports the chosen callable parameter.
+Before the FIRST segmentation method/parameter proposal, follow
+[the task router](references/analysis-strategy.md#match-the-strategy-to-the-failure)
+(`openhcs_autonomous_analysis_strategy`): connect
+[foreground/nuisance admission](references/segmentation-diagnostics.md#compare-body-admission-models)
+(`openhcs_segmentation_diagnostics`) AND
+[the chosen marker landscape](references/measurement-interpretation.md#choose-the-marker-landscape-before-the-first-candidate)
+(`openhcs_measurement_interpretation`), where those stages apply. Do not stop at
+body admission or wait for a split to retrieve marker reasoning. Use the
+[empirical measurement procedure](references/measurement-interpretation.md#measure-feature-scales-before-choosing-parameters)
+to relate distributed positives and nuisance-only controls to the actual consumed
+alias/response and its units, and within-body maxima versus a genuine pair to
+the proposed landscape. Keep method/parameter rationale in the trial, not a
+borrowed default justified only by raw diameter.
 When an image defect motivates analytical preprocessing, read
 [the preprocessing decision guide](references/image-preprocessing.md), also
 retrievable as `openhcs_image_preprocessing`, before changing the pipeline.
