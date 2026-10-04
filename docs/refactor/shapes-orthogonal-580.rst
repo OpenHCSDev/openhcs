@@ -227,3 +227,28 @@ environment, shared install or runtime wrapper. The prior live attempt remains
 negative for supported-stack provenance; corrected-prefix public acceptance
 is pending the next actually free engineering loan, not claimed from these
 package checks.
+
+Actual supported-family receiving34
+----------------------------------
+
+Distinct ``public94-supported-attempt02/RECEIVING34.rst`` records original
+package30 selection in the actual detached child: its bootstrap/log root and
+loaded Vispy native library point to that ordinary private prefix. True YZ
+preceded Shapes streaming; both original archives settled with errors[] and no
+native triangulation traceback. Original geometry/subject IDs/source metadata
+remain exactly equal across the two receiving journals. Three personally opened
+XY raw/result/combined PNGs retain one native camera, point, order and window.
+
+All six original PNGs were opened. Post-hide YZ and later XZ captures are blank;
+YZ point/order readback remains unchanged, so slice movement is NOT an
+established cause. These frames are retained, not counted as positive orthogonal
+image QA. Settlement+XY rendering is verified; complete orthogonal presentation
+acceptance remains separate. No geometry/renderer workaround or scientific
+replay was introduced.
+
+Original viewer3186430/create1791096467.24 publicly closed with ACK,
+process_exited and endpoint_terminated true; MCP/client PIDs and all four94
+endpoints absent, scope inactive, recorder terminal0. Observed peak1224110080
+bytes with no memory/swap caps. Dewey received terminal handoff and the94slot
+returned for science. Upstream publication and ordinary future dependency
+selection remain outstanding; merging this document is not a runtime release.
