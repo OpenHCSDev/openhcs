@@ -407,10 +407,9 @@ class McpDevPayloadFailure:
     receipt: JsonValue
     errors: tuple[AgentError, ...]
 
-
-@to_jsonable.register(McpDevPayloadFailure)
-def _jsonable_payload_failure(value: McpDevPayloadFailure) -> JsonValue:
-    return value.receipt
+    def __post_init__(self) -> None:
+        if not self.errors:
+            raise ValueError("A rejected MCP payload requires its diagnostic cause.")
 
 
 @dataclass(frozen=True, slots=True)
@@ -451,7 +450,13 @@ class McpDevToolResult:
                 rejections.append(
                     AgentError.from_exception("mcp_payload_invalid", error)
                 )
-        return McpDevPayloadFailure(payload, (*_agent_errors(payload), *rejections))
+        # The local rejection is a declared transport record too. Its canonical
+        # dataclass projection retains both cause and original native receipt.
+        # Recover that record through the same codec, not another error parser.
+        try:
+            return dataclass_from_mapping(McpDevPayloadFailure, payload)
+        except (TypeError, ValueError):
+            return McpDevPayloadFailure(payload, (*_agent_errors(payload), *rejections))
 
     def first_decoded_payload(self):
         """A missing or rejected payload is not a successful empty record."""

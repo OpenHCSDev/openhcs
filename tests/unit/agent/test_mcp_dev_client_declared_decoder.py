@@ -2,6 +2,7 @@
 from dataclasses import dataclass
 import json
 from pathlib import Path
+import sys
 
 import pytest
 
@@ -9,7 +10,7 @@ from openhcs.agent.capabilities import AgentResultFamilyContract, StartOwnedRunt
 from openhcs.agent.dto.common import AgentError, AgentResultEnvelope, SCHEMA_VERSION
 from openhcs.agent.dto.execution import RuntimeBootstrapState, RuntimeBootstrapHandle
 from openhcs.mcp.dev_client_core import (
-    McpDevToolBatchResponse, McpDevToolResult, McpDevPayloadFailure,
+    McpDevToolBatchResponse, McpDevToolResult, McpDevPayloadFailure, McpDevServerSpec,
     state_surface_document, state_surface_payload, ui_bridge_operation_result,
     workflow_result_payload,
 )
@@ -77,6 +78,28 @@ def test_renderless_malformed_record_is_rejected_with_original_receipt():
     assert isinstance(result.payloads[0], McpDevPayloadFailure)
     assert result.payloads[0].receipt is raw and result.has_errors()
     assert result.decoded_for_rendering().payloads[0] is result.payloads[0]
+
+
+def test_json_rejection_preserves_cause_receipt_and_original_batch_roundtrip():
+    raw = {"schema_version": SCHEMA_VERSION, "fact": {}}
+    result = McpDevToolResult(RenderlessCapability.name, False, (raw,)).decoded_for_rendering()
+    batch = McpDevToolBatchResponse.from_results(McpDevServerSpec(sys.executable), (result,))
+    wire = to_jsonable(batch)
+    rejection = wire["results"][0]["payloads"][0]
+    assert rejection["receipt"] == raw
+    assert rejection["errors"] == to_jsonable(result.diagnostic_errors())
+    assert rejection["errors"][0]["code"] == "mcp_payload_invalid"
+    restored = McpDevToolBatchResponse.for_rendering(wire)
+    assert restored.has_errors()
+    assert restored.diagnostic_errors() == batch.diagnostic_errors()
+    assert len(restored.diagnostic_errors()) == 1
+    assert restored.results[0].payloads[0].receipt == raw
+    assert isinstance(restored.results[0].payloads[0], McpDevPayloadFailure)
+
+
+def test_rejection_declaration_cannot_claim_failure_without_a_cause():
+    with pytest.raises(ValueError, match="diagnostic cause"):
+        McpDevPayloadFailure(receipt={}, errors=())
 
 
 @pytest.mark.parametrize("raw", (

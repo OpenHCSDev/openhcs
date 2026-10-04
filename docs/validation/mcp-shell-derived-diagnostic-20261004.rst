@@ -58,3 +58,42 @@ unchanged successful receipts; genuinely malformed/mismatched/new declaration
 cases retain original receipt and visible typed diagnostics with nonzero exit.
 Use complete relevant AST/dependency/consumer evidence before production edits;
 focused original user entrypoint verification last, no mutation replay/new client.
+
+Working diagnostic checkpoint
+-----------------------------
+
+Deleted the five-line McpDevPayloadFailure serializer that returned only the
+native receipt. The original canonical dataclass serializer now exposes the
+same declared receipt/errors record used by returncode and formatted output.
+The existing failure declaration rejects an empty diagnostic cause. The original
+McpDevToolResult decoder restores this common rejection record through the same
+dataclass_from_mapping codec, so a JSON batch roundtrip keeps the original cause
+once rather than hiding it or wrapping a second rejection. No raw-shape parser,
+business-leaf switch, codec, status flag or registry was added.
+
+Source qualification used the existing viewer-retirement-519/run_source_controls.py
+bootstrap: OpenHCS source activation first, then read-only paired startup and Qt
+backing before their consumers. SHELL-DIAGNOSTIC-CONTROLS02 passed20, terminal0,
+6.91s wall,270032KiB peakRSS,Swap0. It exercised strict producer decode, independent
+capability/MRO behavior, visible JSON cause plus unchanged receipt, batch roundtrip,
+and original transport failure ownership. No server/native operation was launched.
+The previous CONTROLS01 collection failure from unmatched foreign Qt backing is
+preserved, not rewritten. The two plugin-free pytest configuration warnings are
+retained in the original output.
+
+Complete source evidence reused the original audit.Package/Repository tooling:
+704 OpenHCS modules parsed with zero omissions;40 relevant full module ASTs,
+plus12 original qualified python-introspect module ASTs with zero omissions.
+SHELL-FAMILY01.jsonl/.stderr retain declarations, imports, writes and consumers.
+Actual census terminal0,13.06s,538200KiB peakRSS,Swap0; this is source evidence,
+not a complete NRA R1 ownership proof and not a <=512MiB claim. The transport
+derived-field census finds Observation.outcome as the sole init=False field in
+agent/MCP DTOs; internal cache/lock/thread init=False fields are not alternate
+registration status authorities.
+
+Remaining: the shared python-introspect declaration decoder still rejects the
+original successful derived outcome. Dewey was asked for the existing dependency
+owner implementation/release; no foreign dependency checkout or gitlink was
+edited. This diagnostic checkpoint makes that original cause visible, but does
+not yet claim successful observation CLI roundtrip or corrected shell terminal0.
+The original native positive and original shell terminal1 remain separate facts.
