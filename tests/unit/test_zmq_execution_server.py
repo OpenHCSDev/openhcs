@@ -1,3 +1,4 @@
+import json
 import sys
 from pathlib import Path
 from dataclasses import replace
@@ -7,7 +8,7 @@ from types import ModuleType, SimpleNamespace
 import pytest
 from objectstate import get_current_global_config
 from zmqruntime.execution import ExecutionServer
-from zmqruntime.messages import ExecutionRecord, ExecutionStatus
+from zmqruntime.messages import ExecutionRecord, ExecutionStatus, MessageFields
 
 import openhcs.runtime.zmq_execution_server as zmq_execution_server_module
 from openhcs.constants.constants import GroupBy
@@ -389,42 +390,65 @@ def test_zmq_server_prepares_virtual_import_before_evaluating_pipeline(
     assert context.pipeline_steps == []
 
 
-def test_zmq_server_forwards_parent_execution_progress_without_worker_claim() -> None:
-    server = object.__new__(ZMQExecutionServer)
+def test_zmq_server_admits_all_progress_through_generic_terminal_watermark() -> None:
+    from zmqruntime.execution.progress_stream import ProgressStreamSubscriber
+    from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
+
+    server = ZMQExecutionServer()
+    record = ExecutionRecord("execution-1", "plate-1", None, ExecutionStatus.RUNNING.value)
+    server.active_executions[record.execution_id] = record
     server._worker_assignments_by_execution = {
         "execution-1": {"worker_0": ["A01", "B01"]}
     }
-    server.progress_queue = SimpleQueue()
     worker_queue = SimpleQueue()
     progress_context = ProgressExecutionContext(
-        execution_id="execution-1",
-        plate_id="plate-1",
+        execution_id=record.execution_id,
+        plate_id=record.plate_id,
     )
-    worker_queue.put(
-        create_event(
-            ProgressEventPayload(
-                identity=progress_context.identity_for_event(
-                    axis_id="",
-                    step_name="ExportToDatabase",
-                ),
-                phase=ProgressPhase.RUNNING,
-                status=ProgressStatus.RUNNING,
-                completed=32,
-                total=33,
-                percent=(32 / 33) * 100.0,
-            )
-        ).to_dict()
+    parent = create_event(
+        ProgressEventPayload(
+            identity=progress_context.identity_for_event(
+                axis_id="", step_name="ExportToDatabase",
+            ),
+            phase=ProgressPhase.RUNNING,
+            status=ProgressStatus.RUNNING,
+            completed=32, total=33, percent=(32 / 33) * 100.0,
+        )
     )
+    server._enqueue_progress(parent.to_dict())
+    worker_queue.put(parent.to_dict())
+    worker = replace(
+        parent,
+        identity=progress_context.identity_for_event(
+            axis_id="A01", step_name="ExportToDatabase",
+        ),
+        worker_slot="worker_0",
+        owned_wells=["A01", "B01"],
+    )
+    worker_queue.put(worker.to_dict())
     worker_queue.put(None)
-
     server._forward_worker_progress(worker_queue)
 
-    event = ProgressEvent.from_dict(server.progress_queue.get())
+    published = [server.progress_queue.get_nowait() for _ in range(3)]
+    received = []
+    client = ZMQExecutionClient(progress_callback=received.append)
+    subscriber = ProgressStreamSubscriber(lambda: None, client._record_progress)
+    for payload in published:
+        assert subscriber._dispatch_message(json.dumps(payload))
+    assert [payload[MessageFields.PROGRESS_SEQUENCE] for payload in received] == [1, 2, 3]
+    assert client.progress_observation(record.execution_id).sequence == 3
+    assert record.to_dict()[MessageFields.PROGRESS_SEQUENCE] == 3
+    assert record.progress_event == published[-1]
+    event = ProgressEvent.from_dict(published[1])
     assert event.axis_id == ""
     assert event.worker_slot is None
     assert event.owned_wells is None
     assert event.worker_assignments == {"worker_0": ["A01", "B01"]}
     assert event.total_wells == ["A01", "B01"]
+    worker_event = ProgressEvent.from_dict(published[2])
+    assert worker_event.axis_id == "A01"
+    assert worker_event.worker_slot == "worker_0"
+    assert worker_event.owned_wells == ["A01", "B01"]
 
 
 def test_zmq_server_records_the_compilation_output_plate_value_without_rebuilding_it() -> (

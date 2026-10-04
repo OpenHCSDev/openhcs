@@ -272,7 +272,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
                 list(progress_update.keys()),
                 event.step_name,
             )
-        self.progress_queue.put(event.to_dict())
+        self.send_progress_update(event.to_dict())
 
     def _forward_worker_progress(self, worker_queue) -> None:
         import logging
@@ -294,7 +294,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
                         "Execution-level progress cannot carry a worker claim: "
                         f"{progress_update}"
                     )
-                self.progress_queue.put(
+                self.send_progress_update(
                     event.with_worker_topology(
                         worker_assignments=assignments,
                         total_wells=sorted(
@@ -339,7 +339,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
                 enriched_event.step_name,
                 enriched_event.worker_slot,
             )
-            self.progress_queue.put(enriched_event.to_dict())
+            self.send_progress_update(enriched_event.to_dict())
 
     def _worker_assignments_for_execution(
         self,
