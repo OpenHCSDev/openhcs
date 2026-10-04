@@ -219,10 +219,14 @@ For files such as ``A01_s1_DNA.tif`` and ``A01_s1_GFP.tif``:
 .. code-block:: python
 
    from openhcs.constants import AllComponents
-   from openhcs.core.config import PipelineConfig
+   from openhcs.core.config import (
+       LazyProcessingConfig,
+       LazySourceBindingsConfig,
+       LazyStepSourceBindingsConfig,
+       PipelineConfig,
+   )
    from openhcs.core.source_bindings import (
        ComponentSelector,
-       LazySourceBindingsConfig,
        MetadataExtractionRule,
        MetadataSource,
        NamedSourceBinding,
@@ -231,6 +235,7 @@ For files such as ``A01_s1_DNA.tif`` and ``A01_s1_GFP.tif``:
        SourceFilterSubject,
        SourceSelector,
    )
+   from openhcs.core.steps.function_step import FunctionStep
    from openhcs.processing.backends.processors.numpy_processor import (
        stack_percentile_normalize,
    )
