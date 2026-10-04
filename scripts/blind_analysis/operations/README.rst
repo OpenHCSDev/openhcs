@@ -123,7 +123,10 @@ limit equality is not health. Helper roles derive from the original performer
 files, not another cap map; headless VNC0 needs no GUI helper family.
 
 For that bounded action, full-stall PSI is retained as warning telemetry rather
-than a universal stop. ``full``, ``replacement`` and ``bootstrap`` admit future
+than a universal stop. MemAvailable below the declared desktop reserve also
+warns for ongoing work: observing a running job and releasing owned buffers must
+remain possible under real pressure. This is not an allocation guarantee; stage
+actual buffers and coordinate cleanup. ``full``, ``replacement`` and ``bootstrap`` admit future
 growth and reject ``avg10``, ``avg60`` or ``avg300`` above the SAME existing
 ``full_memory_psi_max_percent``. No threshold is raised or clipped; no pressure
 sample is rewritten. The field describes a growth qualifier in the kernel's
@@ -131,14 +134,17 @@ full-stall pressure category, not a second numeric limit for ongoing work.
 
 Every observation preserves all kernel pressure windows plus a separate
 operation-policy receipt. Missing, repeated or malformed pressure
-measurements reject. Low available RAM, startup free HOME below its reserve, inactive
-expired clocks and missing custody still reject through their original owners.
+measurements reject. Missing, repeated or malformed MemAvailable also rejects.
+For startup/large allocations, available RAM or free HOME below its reserve
+still rejects. Inactive owners, expired clocks and missing custody reject in
+every mode through their original owners.
 High pressure alone is not declared safe: insufficient actual host desktop
 headroom stops allocating work, irrespective of whether a former cap matched.
 ``ledger`` remains ledger-only, never
 scientific admission. New clients still require replacement admission; do not
 use an ongoing observation as permission to launch unreserved growth.
 
+Every call must supply its operation mode; there is no implicit ongoing mode.
 ``ongoing`` is an existing-client operation capability, not a tool-name bypass.
 The original slot owner verifies the first-start marker, retained three client
 journals, active MCP InvocationID and common-slice identity. The recorder still
