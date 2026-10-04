@@ -412,7 +412,6 @@ class CellProfilerModuleExecutor:
         phase_profile = RuntimeProfileTimer.start()
         declared_only_outputs = CellProfilerOutputRecorder.record_module_outputs(
             callable_contract=self.callable_contract,
-            active_input_edges=tuple(adapter.request.artifact_inputs.values()),
             adapter=adapter,
             returned_values=returned_values,
             matched_outputs=matched_outputs,
@@ -1265,6 +1264,8 @@ class CellProfilerModuleExecutor:
         module_type: type[CellProfilerModule],
         active_input_specs: tuple[ArtifactSpec, ...],
     ) -> "CellProfilerImageRequest":
+        binding_request = adapter.request
+        input_edges = tuple(binding_request.artifact_inputs.values())
         input_binding = RuntimeInputBindingRequest(
             adapter=adapter,
             kwargs={},
@@ -1310,6 +1311,8 @@ class CellProfilerModuleExecutor:
                     ),
                 )
             return CellProfilerImageRequest(
+                input_binding_request=binding_request,
+                input_edges=input_edges,
                 payload=current_image_payload,
                 source_image_name=self._input_source_image_name(
                     adapter,
@@ -1331,8 +1334,11 @@ class CellProfilerModuleExecutor:
             ImageArtifactType
         )
         input_binding = replace(input_binding, current_image=current_runtime_payload)
+        primary_input_edges = []
         for spec in image_inputs:
-            value = input_binding.artifact_value_for_spec(spec)
+            edge = input_binding.input_edge_for_spec(spec)
+            value = input_binding.artifact_value(edge)
+            primary_input_edges.append(edge)
             payload = image_strategy.runtime_input_value(spec, value)
             payloads.append(payload)
             source_names.append(
@@ -1368,6 +1374,19 @@ class CellProfilerModuleExecutor:
             ),
         )
         return CellProfilerImageRequest(
+            input_binding_request=binding_request,
+            input_edges=input_edges,
+            primary_input_edges=tuple(primary_input_edges),
+            # Dense composition discards per-input masks and calibration. Retain
+            # only those contexts; natural/named payloads already own their inputs.
+            primary_input_payloads=(
+                ()
+                if (
+                    isinstance(composition.payload, ImageOutputBundle)
+                    or (len(payloads) == 1 and composition.payload is payloads[0])
+                )
+                else tuple(payloads)
+            ),
             payload=composition.payload,
             source_image_name=self._primary_image_source_name_from_sources(
                 image_inputs, tuple(source_names)

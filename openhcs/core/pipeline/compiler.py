@@ -62,6 +62,7 @@ from openhcs.core.pipeline.compilation_session import (
     ResolvedPipelineDefinition,
     resolve_declared_dataclass_paths,
 )
+from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.pipeline.materialization_flag_planner import (
     MaterializationFlagPlanner,
 )
@@ -78,9 +79,6 @@ from openhcs.core.pipeline.path_planner import (
 )
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.source_load_plan import SourceLoadPlan
-from openhcs.core.invocation_artifacts import (
-    PipelineInvocationContractProviderAuthority,
-)
 from openhcs.core.pipeline.framework_device_assignment import (
     assign_framework_devices,
 )
@@ -155,6 +153,7 @@ class AxisCompilationRequest:
     pipeline: ResolvedPipelineDefinition
     path_resolver: CompilationPathResolver
     global_step_axis_filters: StepAxisFilterMap
+    source_projections_by_axis: Mapping[str, VirtualWorkspaceSourceProjection]
     enable_visualizer_override: bool
     is_zmq_execution: bool
 
@@ -195,6 +194,7 @@ class PipelineCompiler:
         pipeline: ResolvedPipelineDefinition,
         orchestrator,
         global_config: "GlobalPipelineConfig",
+        source_workspace_projection: VirtualWorkspaceSourceProjection,
         metadata_writer: bool = False,
         plate_path: Optional[Path] = None,
         path_resolver: CompilationPathResolver | None = None,
@@ -225,11 +225,7 @@ class PipelineCompiler:
             pipeline=pipeline,
             orchestrator=orchestrator,
             global_config=global_config,
-            source_workspace_projection=(
-                orchestrator.source_workspace_projection().filtered_by_axis(
-                    axis_id=context.axis_id,
-                )
-            ),
+            source_workspace_projection=source_workspace_projection,
             metadata_writer=metadata_writer,
             plate_path=plate_path,
             path_resolver=path_resolver,
@@ -324,14 +320,7 @@ class PipelineCompiler:
     def _plan_context_paths(
         session: CompilationSession,
     ) -> None:
-        PipelinePathPlanner.prepare_pipeline_paths(
-            session,
-            invocation_contract_provider=(
-                PipelineInvocationContractProviderAuthority.provider_for_session(
-                    session
-                )
-            ),
-        )
+        PipelinePathPlanner.prepare_pipeline_paths(session)
 
     @staticmethod
     def _supplement_step_plans(session: CompilationSession) -> None:
@@ -1019,6 +1008,8 @@ class PipelineCompiler:
         request: AxisCompilationRequest,
         axis_values: Sequence[str],
     ) -> Dict[str, ProcessingContext]:
+        # The final declaration admits providers before any axis-specific work.
+        request.pipeline.invocation_contract_provider
         compiled_contexts: Dict[str, ProcessingContext] = {}
         responsible_axis_value = sorted(axis_values)[0]
         total_axis_values = len(axis_values)
@@ -1084,6 +1075,7 @@ class PipelineCompiler:
             request.pipeline,
             request.orchestrator,
             request.global_config,
+            request.source_projections_by_axis[context.axis_id],
             metadata_writer=metadata_writer,
             plate_path=request.orchestrator.plate_path,
             path_resolver=request.path_resolver,
@@ -1156,11 +1148,9 @@ class PipelineCompiler:
 
     @staticmethod
     def validate_source_workspace_projection(session: CompilationSession) -> None:
-        """Validate source-workspace metadata before runtime image loading."""
+        """Validate the exact admitted source epoch used by this axis's plans."""
 
-        projection = session.context.runtime_source_workspace_projection_authority.projection_if_available()
-        if projection is None:
-            return
+        projection = session.source_workspace_projection
         projection.validate_runtime_metadata_projection(axis_id=session.axis_id)
 
     @staticmethod
@@ -1662,6 +1652,11 @@ class PipelineCompiler:
                 pipeline=pipeline_inputs,
                 path_resolver=path_resolver,
                 global_step_axis_filters=global_step_axis_filters,
+                source_projections_by_axis=(
+                    orchestrator.source_workspace_projection().partition_by_axes(
+                        axis_values_to_process
+                    )
+                ),
                 enable_visualizer_override=enable_visualizer_override,
                 is_zmq_execution=is_zmq_execution,
             )

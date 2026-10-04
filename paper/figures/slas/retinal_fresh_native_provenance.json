@@ -1,0 +1,16 @@
+{
+  "scope": "Fresh task-only retinal author R0010_STAGED_96; native matched final raw/combined evidence, not a manual-reference accuracy score.",
+  "output_sha256": {
+    "retinal_fresh_native.png": "92e8f896402ab2fd0588864f41b8721f89a8f30d80357fe9cbce38210d1ec755",
+    "retinal_fresh_native.svg": "fe5f15d5b6a83d6835d556cbd33bc5cb9e4d5cde61aaf452a2fc3a6fe75c0983"
+  },
+  "source_sha256": {
+    "paper/supplementary/task_only_analysis/retinal-fresh-native-source-proof.json": "79cd87691b583d7997b868fd6696ef4a986a969f211a89c003bf57d3a331b619",
+    "paper/figures/slas/retinal_fresh_sources/final-corrected-sw-raw70.png": "ba28bf4907f66c111f72e6f6bcd601dddd12d99336f78c04a1a832dc9cc8cfea",
+    "paper/figures/slas/retinal_fresh_sources/final-corrected-sw-combined70.png": "5d9372a6d94459df1d67a449417bca8a12b66513f9416a982921fc936d5bccc1",
+    "paper/figures/slas/retinal_fresh_sources/final-corrected-overview-raw70.png": "beaed0234b930bb77375ae2f76d7c55a8b20ca86fee903c7cd6bea6cc33513a1",
+    "paper/figures/slas/retinal_fresh_sources/final-corrected-overview-combined70.png": "c64711a914cb6b98b921a615f6f9e548e7ad2881c84f2d1666500a90d6c5dcd1"
+  },
+  "rendering": "Original screenshots retained byte-for-byte and linked by native SVG; crop/scale only. Existing rsvg-convert renders PNG. No scientific execution or intensity transformation.",
+  "limits": "109 detector instances, not a manual cell count or estimate of reference agreement. Faint-body support and crowded partitions remain ambiguous; agreement need not be perfect to produce useful analysis."
+}

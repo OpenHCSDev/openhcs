@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
@@ -472,33 +472,61 @@ class VirtualWorkspaceSourceProjection:
         if axis_id is None:
             return self
 
-        source_refs_by_virtual_path: dict[str, SourcePixelRef] = {}
-        source_metadata_by_path: dict[str, SourceMetadataMapping] = {}
-        source_projections_by_virtual_path: dict[str, SourceProjection] = {}
-        for virtual_path, source_ref in self.source_refs_by_virtual_path.items():
-            if not self._path_belongs_to_axis(virtual_path, axis_id):
-                continue
-            source_refs_by_virtual_path[virtual_path] = source_ref
-            projection = self.source_projections_by_virtual_path.get(virtual_path)
-            if projection is not None:
-                source_projections_by_virtual_path[virtual_path] = projection
-            for metadata_path in (
-                virtual_path,
-                self._loadable_virtual_path(virtual_path),
-                source_ref.backend_address,
-            ):
-                metadata = self.source_metadata_by_path.get(metadata_path)
-                if metadata is not None:
-                    source_metadata_by_path[metadata_path] = metadata
+        return self.partition_by_axes((axis_id,))[axis_id]
 
-        return VirtualWorkspaceSourceProjection(
-            source_refs_by_virtual_path=MappingProxyType(source_refs_by_virtual_path),
-            source_metadata_by_path=MappingProxyType(source_metadata_by_path),
-            source_projections_by_virtual_path=MappingProxyType(
-                source_projections_by_virtual_path
-            ),
-            workspace_root=self.workspace_root,
-        )
+    def partition_by_axes(
+        self,
+        axis_ids: Sequence[str],
+    ) -> Mapping[str, "VirtualWorkspaceSourceProjection"]:
+        """Admit all requested axis views in one traversal of this source epoch."""
+        from openhcs.constants import MULTIPROCESSING_AXIS
+
+        source_refs = {axis_id: {} for axis_id in axis_ids}
+        source_metadata = {axis_id: {} for axis_id in source_refs}
+        source_projections = {axis_id: {} for axis_id in source_refs}
+        for virtual_path, source_ref in self.source_refs_by_virtual_path.items():
+            metadata = self.source_metadata_for(
+                VirtualWorkspacePathLookup.from_paths(
+                    virtual_path, self._loadable_virtual_path(virtual_path)
+                )
+            )
+            values = (
+                () if metadata is None
+                else source_component_metadata_values(metadata, MULTIPROCESSING_AXIS)
+            )
+            selected_axes = (
+                tuple(dict.fromkeys(value for value in values if value in source_refs))
+                if values else tuple(source_refs)
+            )
+            if not selected_axes:
+                continue
+            projection = self.source_projections_by_virtual_path.get(virtual_path)
+            metadata_records = tuple(
+                (path, self.source_metadata_by_path[path])
+                for path in (
+                    virtual_path,
+                    self._loadable_virtual_path(virtual_path),
+                    source_ref.backend_address,
+                )
+                if path in self.source_metadata_by_path
+            )
+            for axis_id in selected_axes:
+                source_refs[axis_id][virtual_path] = source_ref
+                if projection is not None:
+                    source_projections[axis_id][virtual_path] = projection
+                source_metadata[axis_id].update(metadata_records)
+
+        return MappingProxyType({
+            axis_id: VirtualWorkspaceSourceProjection(
+                source_refs_by_virtual_path=MappingProxyType(refs),
+                source_metadata_by_path=MappingProxyType(source_metadata[axis_id]),
+                source_projections_by_virtual_path=MappingProxyType(
+                    source_projections[axis_id]
+                ),
+                workspace_root=self.workspace_root,
+            )
+            for axis_id, refs in source_refs.items()
+        })
 
     def _path_belongs_to_axis(
         self,
