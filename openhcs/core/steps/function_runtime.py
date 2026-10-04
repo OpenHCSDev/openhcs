@@ -6,7 +6,6 @@ execution. FunctionStep remains responsible for step-level orchestration.
 
 from functools import singledispatch
 import logging
-import os
 import time
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -40,6 +39,7 @@ from openhcs.core.component_group_scope import (
 )
 from openhcs.core.component_set import ComponentSet
 from openhcs.core.context.processing_context import ProcessingContext
+from openhcs.core.runtime_profile import RuntimeProfileLogger
 from openhcs.core.debug import (
     DebugCursor,
     DebugEvent,
@@ -151,8 +151,6 @@ from openhcs.core.compiled_step_plan import CompiledStepPlan
 
 logger = logging.getLogger(__name__)
 
-_PROFILE_RUNTIME_ENV = "OPENHCS_PROFILE_FUNCTION_RUNTIME"
-_PROFILE_RUNTIME_PATH_ENV = "OPENHCS_PROFILE_FUNCTION_RUNTIME_PATH"
 ArtifactInputPlanKeyT = TypeVar(
     "ArtifactInputPlanKeyT",
     ArtifactSpecRef,
@@ -181,41 +179,7 @@ RuntimePayload = FunctionOutputContextualizedValue
 RuntimeFunctionOutput = RuntimePayload | NoMainFlowOutput | tuple[RuntimePayload, ...]
 RuntimeCallableArgument = JsonValue | RuntimePayload | ProcessingContext
 RuntimeCallableKwargs = Mapping[str, RuntimeCallableArgument]
-RuntimeProfileFieldValue = str | int | float | bool | None
 EMPTY_ARTIFACT_PLANS: ArtifactOutputPlans = MappingProxyType({})
-
-
-class RuntimeProfileSink:
-    """Runtime-profile output authority backed by explicit environment settings."""
-
-    @classmethod
-    def enabled(cls) -> bool:
-        raw_value = cls.environment_value(_PROFILE_RUNTIME_ENV)
-        if raw_value is None:
-            return False
-        return raw_value.lower() in {"1", "true", "yes"}
-
-    @staticmethod
-    def environment_value(name: str) -> str | None:
-        if name not in os.environ:
-            return None
-        return os.environ[name]
-
-    @classmethod
-    def record(
-        cls,
-        label: str,
-        seconds: float,
-        **fields: RuntimeProfileFieldValue,
-    ) -> None:
-        if not cls.enabled():
-            return
-        field_text = " ".join(f"{key}={value}" for key, value in fields.items())
-        logger.info("RUNTIME_PROFILE %s %.6fs %s", label, seconds, field_text)
-        profile_path = cls.environment_value(_PROFILE_RUNTIME_PATH_ENV)
-        if profile_path is not None:
-            with open(profile_path, "a", encoding="utf-8") as handle:
-                handle.write(f"RUNTIME_PROFILE {label} {seconds:.6f}s {field_text}\n")
 
 
 @singledispatch
@@ -740,57 +704,6 @@ def _save_artifact_value(
     return runtime_value.data
 
 
-def prepare_compiled_function_group(group: CompiledFunctionGroup) -> None:
-    """Run optional preparation hooks for each callable in a compiled group."""
-    for invocation in group.invocations:
-        invocation.contract.resolve_runtime_callable()
-
-
-def prepare_compiled_context_callables(
-    compiled_contexts: Mapping[str, ProcessingContext],
-    *, max_workers: int = 1,
-) -> None:
-    """Prepare every compiled callable visible in the compiled contexts."""
-    prepared_group_keys: set[tuple[str, int, str]] = set()
-    prepared_invocation_count = 0
-    groups: list[CompiledFunctionGroup] = []
-    for context_key, context in compiled_contexts.items():
-        step_plans = context.step_plans
-        if not step_plans:
-            continue
-        for step_plan in step_plans.values():
-            compiled_pattern = step_plan.compiled_function_pattern
-            if compiled_pattern is None:
-                continue
-            for group in compiled_pattern.groups:
-                prepare_key = (
-                    str(context_key),
-                    int(step_plan.step_index),
-                    group.group_key,
-                )
-                if prepare_key in prepared_group_keys:
-                    continue
-                groups.append(group)
-                prepared_invocation_count += len(group.invocations)
-                prepared_group_keys.add(prepare_key)
-    from openhcs.core.processing_preparation import PreparationCacheBatch
-
-    PreparationCacheBatch.from_callables(
-        invocation.contract.resolve_canonical_raw_callable()
-        for group in groups
-        for invocation in group.invocations
-    ).populate_child_caches(max_workers=max_workers)
-    for group in groups:
-        # Parent preparation loads child-produced machine code and owns every
-        # process-local hook/cache that execution workers inherit.
-        prepare_compiled_function_group(group)
-    logger.info(
-        "Prepared %d compiled callable invocations across %d groups.",
-        prepared_invocation_count,
-        len(prepared_group_keys),
-    )
-
-
 @dataclass(frozen=True, slots=True)
 class FunctionCoreExecutor:
     """Execute one scoped callable invocation and route declared artifact I/O."""
@@ -980,7 +893,8 @@ class FunctionCoreExecutor:
                 exc_info=True,
             )
             raise
-        RuntimeProfileSink.record(
+        RuntimeProfileLogger.log(
+            logger,
             "artifact_input_load",
             time.perf_counter() - load_started_at,
             function=self.function_name,
@@ -1149,7 +1063,8 @@ class FunctionCoreExecutor:
         final_kwargs[adapter_parameter] = runtime_adapter.factory(
             self.runtime_adapter_request(source_payload)
         )
-        RuntimeProfileSink.record(
+        RuntimeProfileLogger.log(
+            logger,
             "runtime_adapter_factory",
             time.perf_counter() - adapter_started_at,
             function=self.function_name,
@@ -1233,7 +1148,8 @@ class FunctionCoreExecutor:
                 f"{contract.runtime_image_execution_mode}; "
                 f"processing_contract={contract.processing_contract}."
             ) from exc
-        RuntimeProfileSink.record(
+        RuntimeProfileLogger.log(
+            logger,
             "function_call",
             time.perf_counter() - call_started_at,
             function=self.function_name,
@@ -1378,7 +1294,8 @@ class FunctionCoreExecutor:
             materialization_source_metadata=materialization_source_metadata,
             plane_projector=self.plane_projection,
         )
-        RuntimeProfileSink.record(
+        RuntimeProfileLogger.log(
+            logger,
             "artifact_output_save",
             time.perf_counter() - save_started_at,
             function=self.function_name,
@@ -1471,7 +1388,8 @@ class PatternGroupRuntime:
             )
             return
         try:
-            RuntimeProfileSink.record(
+            RuntimeProfileLogger.log(
+                logger,
                 "pattern_load_stack",
                 time.perf_counter() - load_started_at,
                 step=plan.step_index,
@@ -1483,7 +1401,8 @@ class PatternGroupRuntime:
                 self.request, matching_files, main_data_stack,
             )
             processed_stack = self.execute_chain(loaded)
-            RuntimeProfileSink.record(
+            RuntimeProfileLogger.log(
+                logger,
                 "pattern_execute_chain",
                 time.perf_counter() - execute_started_at,
                 step=plan.step_index,
@@ -1492,7 +1411,8 @@ class PatternGroupRuntime:
             )
             if isinstance(processed_stack, NoMainFlowOutput):
                 self._record_main_flow_passthrough(loaded.matching_files)
-                RuntimeProfileSink.record(
+                RuntimeProfileLogger.log(
+                    logger,
                     "pattern_no_main_flow_output",
                     0.0,
                     step=plan.step_index,
@@ -1521,7 +1441,8 @@ class PatternGroupRuntime:
                 output_records,
                 collapsed_input_domain=(len(output_records) < len(loaded.matching_files)),
             )
-            RuntimeProfileSink.record(
+            RuntimeProfileLogger.log(
+                logger,
                 "pattern_cleanup",
                 time.perf_counter() - cleanup_started_at,
                 step=plan.step_index,
@@ -1688,7 +1609,8 @@ class PatternGroupRuntime:
             tuple(full_file_paths),
             memory_type=plan.input_memory_type,
         )
-        RuntimeProfileSink.record(
+        RuntimeProfileLogger.log(
+            logger,
             "runtime_stack_cache_get",
             0.0,
             step=plan.step_index,
@@ -2088,7 +2010,8 @@ class PatternGroupRuntime:
                 debug_sink.record(after_event)
                 if debug_sink.should_stop_after_invocation(after_event):
                     break
-            RuntimeProfileSink.record(
+            RuntimeProfileLogger.log(
+                logger,
                 "invocation_total",
                 invocation_seconds,
                 function=invocation.key.function_name,
@@ -2145,7 +2068,8 @@ class PatternGroupRuntime:
                 )
                 for slice_index in range(output_projection.axis_size)
             )
-            RuntimeProfileSink.record(
+            RuntimeProfileLogger.log(
+                logger,
                 "pattern_source_unstack",
                 time.perf_counter() - unstack_started_at,
                 step=self.request.execution_plan.step_index,
@@ -2167,7 +2091,8 @@ class PatternGroupRuntime:
                         expected_count=len(matching_files),
                     )
                 )
-                RuntimeProfileSink.record(
+                RuntimeProfileLogger.log(
+                    logger,
                     "pattern_source_unstack",
                     time.perf_counter() - unstack_started_at,
                     step=self.request.execution_plan.step_index,
@@ -2193,7 +2118,8 @@ class PatternGroupRuntime:
                 output_slices,
                 default_plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
             )
-            RuntimeProfileSink.record(
+            RuntimeProfileLogger.log(
+                logger,
                 "pattern_payload_context_unstack",
                 time.perf_counter() - context_started_at,
                 step=self.request.execution_plan.step_index,
@@ -2251,7 +2177,8 @@ class PatternGroupRuntime:
             )
         else:
             stack_payload = processed_stack
-        RuntimeProfileSink.record(
+        RuntimeProfileLogger.log(
+            logger,
             "pattern_validate_unstack",
             time.perf_counter() - unstack_started_at,
             step=plan.step_index,
@@ -2419,7 +2346,8 @@ class PatternGroupRuntime:
                 memory_type=self.request.execution_plan.output_memory_type,
                 stack=stack_payload,
             )
-            RuntimeProfileSink.record(
+            RuntimeProfileLogger.log(
+                logger,
                 "runtime_stack_cache_store",
                 0.0,
                 step=self.request.execution_plan.step_index,
@@ -2427,7 +2355,8 @@ class PatternGroupRuntime:
                 paths=len(output_paths_batch),
                 memory_type=self.request.execution_plan.output_memory_type,
             )
-        RuntimeProfileSink.record(
+        RuntimeProfileLogger.log(
+            logger,
             "pattern_save_outputs",
             time.perf_counter() - save_started_at,
             step=plan.step_index,

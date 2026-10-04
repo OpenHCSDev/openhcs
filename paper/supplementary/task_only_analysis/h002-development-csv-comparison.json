@@ -1,0 +1,282 @@
+{
+  "comparison_fields": [
+    "z",
+    "y",
+    "x",
+    "voxel_count",
+    "touches_border",
+    "object_name",
+    "site",
+    "channel",
+    "timepoint",
+    "well"
+  ],
+  "label_ids_excluded_from_geometry_identity": true,
+  "csv_sources": {
+    "first": {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/attempt01/source-workspace_candidate01/checkpoints/smoothed_results/image.ome.tif_site-1_channel-1_timepoint-1_nuclear_centres_zyx_step0_details.csv",
+      "size_bytes": 3016,
+      "sha256": "c1315229eb501d40a758b05aeeb9f1c443bf72e98348efe6ca03f74f765cb7dd"
+    },
+    "candidate04": {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/attempt04/source-workspace_candidate04/checkpoints/smoothed_results/image.ome.tif_site-1_channel-1_timepoint-1_nuclear_centres_zyx_step0_details.csv",
+      "size_bytes": 2916,
+      "sha256": "7f1b42d1bd05599aa8ceefc19d3e6b0d388e4affe3e2bba128ac0eacffd75b3c"
+    },
+    "candidate05": {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/attempt05/source-workspace_candidate05/checkpoints/smoothed_results/image.ome.tif_site-1_channel-1_timepoint-1_nuclear_centres_zyx_step0_details.csv",
+      "size_bytes": 2728,
+      "sha256": "716c40ef6d7b1e20b3333554754502d42fa916ad75eb5ed3aea1957459372edb"
+    }
+  },
+  "transitions": [
+    {
+      "earlier": "first",
+      "later": "candidate04",
+      "earlier_rows": 29,
+      "later_rows": 28,
+      "exact_shared_geometry_volume_metadata_rows": 28,
+      "removed_rows": [
+        {
+          "object_label": "1",
+          "z": "30.01985111662531",
+          "y": "254.21836228287842",
+          "x": "51.12406947890819",
+          "voxel_count": "403",
+          "touches_border": "1",
+          "object_name": "nuclear_bodies",
+          "site": "1",
+          "channel": "1",
+          "timepoint": "1",
+          "well": "image.ome.tif"
+        }
+      ],
+      "added_or_changed_rows": []
+    },
+    {
+      "earlier": "candidate04",
+      "later": "candidate05",
+      "earlier_rows": 28,
+      "later_rows": 26,
+      "exact_shared_geometry_volume_metadata_rows": 26,
+      "removed_rows": [
+        {
+          "object_label": "3",
+          "z": "33.69090909090909",
+          "y": "1.2",
+          "x": "252.42727272727274",
+          "voxel_count": "330",
+          "touches_border": "1",
+          "object_name": "nuclear_bodies",
+          "site": "1",
+          "channel": "1",
+          "timepoint": "1",
+          "well": "image.ome.tif"
+        },
+        {
+          "object_label": "8",
+          "z": "35.407914764079145",
+          "y": "23.939117199391173",
+          "x": "253.90715372907152",
+          "voxel_count": "657",
+          "touches_border": "1",
+          "object_name": "nuclear_bodies",
+          "site": "1",
+          "channel": "1",
+          "timepoint": "1",
+          "well": "image.ome.tif"
+        }
+      ],
+      "added_or_changed_rows": []
+    }
+  ],
+  "upper_rows": [
+    {
+      "final_row": {
+        "object_label": "12",
+        "z": "33.092890744053534",
+        "y": "40.96296296296296",
+        "x": "175.15225601272112",
+        "voxel_count": "15093",
+        "touches_border": "0",
+        "object_name": "nuclear_bodies",
+        "site": "1",
+        "channel": "1",
+        "timepoint": "1",
+        "well": "image.ome.tif"
+      },
+      "identical_rows_by_candidate": {
+        "first": [
+          {
+            "object_label": "15",
+            "z": "33.092890744053534",
+            "y": "40.96296296296296",
+            "x": "175.15225601272112",
+            "voxel_count": "15093",
+            "touches_border": "0",
+            "object_name": "nuclear_bodies",
+            "site": "1",
+            "channel": "1",
+            "timepoint": "1",
+            "well": "image.ome.tif"
+          }
+        ],
+        "candidate04": [
+          {
+            "object_label": "14",
+            "z": "33.092890744053534",
+            "y": "40.96296296296296",
+            "x": "175.15225601272112",
+            "voxel_count": "15093",
+            "touches_border": "0",
+            "object_name": "nuclear_bodies",
+            "site": "1",
+            "channel": "1",
+            "timepoint": "1",
+            "well": "image.ome.tif"
+          }
+        ],
+        "candidate05": [
+          {
+            "object_label": "12",
+            "z": "33.092890744053534",
+            "y": "40.96296296296296",
+            "x": "175.15225601272112",
+            "voxel_count": "15093",
+            "touches_border": "0",
+            "object_name": "nuclear_bodies",
+            "site": "1",
+            "channel": "1",
+            "timepoint": "1",
+            "well": "image.ome.tif"
+          }
+        ]
+      }
+    },
+    {
+      "final_row": {
+        "object_label": "19",
+        "z": "35.67917917917918",
+        "y": "42.052552552552555",
+        "x": "191.33683683683682",
+        "voxel_count": "1998",
+        "touches_border": "0",
+        "object_name": "nuclear_bodies",
+        "site": "1",
+        "channel": "1",
+        "timepoint": "1",
+        "well": "image.ome.tif"
+      },
+      "identical_rows_by_candidate": {
+        "first": [
+          {
+            "object_label": "22",
+            "z": "35.67917917917918",
+            "y": "42.052552552552555",
+            "x": "191.33683683683682",
+            "voxel_count": "1998",
+            "touches_border": "0",
+            "object_name": "nuclear_bodies",
+            "site": "1",
+            "channel": "1",
+            "timepoint": "1",
+            "well": "image.ome.tif"
+          }
+        ],
+        "candidate04": [
+          {
+            "object_label": "21",
+            "z": "35.67917917917918",
+            "y": "42.052552552552555",
+            "x": "191.33683683683682",
+            "voxel_count": "1998",
+            "touches_border": "0",
+            "object_name": "nuclear_bodies",
+            "site": "1",
+            "channel": "1",
+            "timepoint": "1",
+            "well": "image.ome.tif"
+          }
+        ],
+        "candidate05": [
+          {
+            "object_label": "19",
+            "z": "35.67917917917918",
+            "y": "42.052552552552555",
+            "x": "191.33683683683682",
+            "voxel_count": "1998",
+            "touches_border": "0",
+            "object_name": "nuclear_bodies",
+            "site": "1",
+            "channel": "1",
+            "timepoint": "1",
+            "well": "image.ome.tif"
+          }
+        ]
+      }
+    },
+    {
+      "final_row": {
+        "object_label": "20",
+        "z": "39.0850341785039",
+        "y": "55.16759586949144",
+        "x": "185.33703398458331",
+        "voxel_count": "20627",
+        "touches_border": "0",
+        "object_name": "nuclear_bodies",
+        "site": "1",
+        "channel": "1",
+        "timepoint": "1",
+        "well": "image.ome.tif"
+      },
+      "identical_rows_by_candidate": {
+        "first": [
+          {
+            "object_label": "23",
+            "z": "39.0850341785039",
+            "y": "55.16759586949144",
+            "x": "185.33703398458331",
+            "voxel_count": "20627",
+            "touches_border": "0",
+            "object_name": "nuclear_bodies",
+            "site": "1",
+            "channel": "1",
+            "timepoint": "1",
+            "well": "image.ome.tif"
+          }
+        ],
+        "candidate04": [
+          {
+            "object_label": "22",
+            "z": "39.0850341785039",
+            "y": "55.16759586949144",
+            "x": "185.33703398458331",
+            "voxel_count": "20627",
+            "touches_border": "0",
+            "object_name": "nuclear_bodies",
+            "site": "1",
+            "channel": "1",
+            "timepoint": "1",
+            "well": "image.ome.tif"
+          }
+        ],
+        "candidate05": [
+          {
+            "object_label": "20",
+            "z": "39.0850341785039",
+            "y": "55.16759586949144",
+            "x": "185.33703398458331",
+            "voxel_count": "20627",
+            "touches_border": "0",
+            "object_name": "nuclear_bodies",
+            "site": "1",
+            "channel": "1",
+            "timepoint": "1",
+            "well": "image.ome.tif"
+          }
+        ]
+      }
+    }
+  ],
+  "scope": "Exact retained CSV centroid/voxel-count equality, not voxelwise mask equality or biological identity."
+}
