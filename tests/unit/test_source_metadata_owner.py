@@ -415,7 +415,7 @@ def test_ordered_component_batch_matches_sequential_raw_updates():
 
 
 @pytest.mark.parametrize("existing_extension", (False, True))
-def test_output_identity_batch_keeps_original_field_order_and_extension_precedence(
+def test_output_identity_batch_keeps_source_field_order_and_separate_storage_extension(
     existing_extension,
 ):
     fields = {"literal": "kept", "Well": "old"}
@@ -430,10 +430,10 @@ def test_output_identity_batch_keeps_original_field_order_and_extension_preceden
     expected.update(identity.component_values)
     for component, value in source_component_metadata_items(identity.component_values):
         expected = with_source_component_metadata(expected, component, value)
-    expected["extension"] = ".tif"
     actual = identity.component_metadata(DurableSourceMetadata.from_mapping(fields))
     assert tuple(actual.items()) == tuple(expected.items())
     assert to_jsonable(actual) == expected
+    assert identity.filename_component_metadata()["extension"] == ".tif"
 
 
 def test_duplicate_record_keys_collapse_at_source_identity_mapping_boundary():
