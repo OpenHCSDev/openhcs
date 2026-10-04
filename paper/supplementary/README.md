@@ -823,6 +823,20 @@ identifies the independently verified 21 source and 119 payload entries;
 corrected regional captures, exact process closure and client exit 2 remain
 distinct from scientific completion.
 
+A later independent retinal repeat retained 118 detector instances and 119
+exported contours. It preserved a conspicuous bright pair and repaired an
+additional body split through increased marker smoothing. Distributed review
+still found questionable partitions, irregular body extents and uncertain
+weak-body admission. These local gains are useful partial autonomous results,
+not evidence of a complete cell census or a manual-reference accuracy score.
+The [retinal repeat outcome record](task_only_analysis/retinal-fresh656-outcome.json)
+binds the final pipeline and independently checked 215 manifest entries and
+82 saved PNGs. Three recorded journal prefixes were checked; this does not
+claim a sealed outer author journal. Exact owned-process closure and client
+exit 2 are recorded separately. Figure 9 depicts the earlier 109-object run,
+not this repeat; the [detailed account](task_only_analysis.md) retains its
+parameter changes and limits of interpretation.
+
 A fresh whole-volume centre author matched all 15 manual reference annotations
 at the predeclared 30-voxel distance, with 10 unmatched predictions; at 10
 voxels it matched 14 of 15. First/final centres and scores were identical,
