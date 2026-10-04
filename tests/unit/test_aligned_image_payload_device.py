@@ -14,6 +14,7 @@ from openhcs.core.runtime_image_values import (
     ImageUnitIntervalIntensityMetadata, image_payload_data, image_payload_mask,
     image_payload_metadata,
 )
+from openhcs.core.source_spatial_domain import SourceSpatialDomain
 
 
 @pytest.fixture
@@ -86,17 +87,24 @@ def declared_cupy_leaf(monkeypatch):
 ))
 @pytest.mark.parametrize('raw_first', (False, True))
 @pytest.mark.parametrize('destination', ('implicit', 'numpy', 'cupy'))
+@pytest.mark.parametrize('declared_spatial_extent', (False, True))
 def test_mixed_intensity_composition_uses_declared_memory_conversion(
-    declared_cupy_leaf, composition, mode, raw_first, destination,
+    declared_cupy_leaf, composition, mode, raw_first, destination, declared_spatial_extent,
 ):
     DeviceArray, state = declared_cupy_leaf
-    raw = ImagePayloadMetadata(intensity_scale=64, source_dtype='uint8').payload_with(
+    spatial_domain = SourceSpatialDomain(
+        source_shape_yx=(2, 3) if declared_spatial_extent else None,
+    )
+    raw = ImagePayloadMetadata(
+        intensity_scale=64, source_dtype='uint8', source_spatial_domain=spatial_domain,
+    ).payload_with(
         DeviceArray(np.full((2, 3), 32, dtype=np.uint8)),
         DeviceArray(np.array([[True, False, True], [False, True, True]])),
     )
     normalized = ImagePayloadMetadata(
         intensity_scale=64, source_dtype='uint8',
         unit_interval_intensity=ImageUnitIntervalIntensityMetadata(scale=64),
+        source_spatial_domain=spatial_domain,
     ).payload_with(DeviceArray(np.full((2, 3), 0.5, dtype=np.float32)),
                    DeviceArray(np.ones((2, 3), dtype=bool)))
     inputs = (raw, normalized) if raw_first else (normalized, raw)
@@ -115,9 +123,12 @@ def test_mixed_intensity_composition_uses_declared_memory_conversion(
     mask_owner = MemoryType(aligned_image_payload.detect_memory_type(mask))
     masks = mask_owner.to_numpy(mask)
     expected = raw.mask.values
-    if composition is ImagePayloadStackContext:
+    if composition is ImagePayloadStackContext or not declared_spatial_extent:
         expected = np.stack(tuple(value.mask.values for value in inputs))
-        assert mask_owner.device_id_of(mask) == owner.device_id_of(output)
+        # Bundle's non-shared mask preserves its mask owner's device; dense stack
+        # masks are returned on the declared output device through the ancestor.
+        if composition is ImagePayloadStackContext:
+            assert mask_owner.device_id_of(mask) == owner.device_id_of(output)
     np.testing.assert_array_equal(masks, expected)
     assert state['downloads']
     assert all(device == 1 for device in state['downloads'])

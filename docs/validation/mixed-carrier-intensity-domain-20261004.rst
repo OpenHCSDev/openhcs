@@ -240,3 +240,11 @@ contract. Pixel values, destination/device and conversion guards all passed.
 The fixture now declares the actual stack/bundle axis with each original
 composition owner; mask values and device assertions remain intact. Only this
 corrected affected slice is rerun, not the 116 unchanged passing controls.
+
+Controls08 retained 10 PASS/6 FAIL, 205 deselected, 6.48s/342020KiB/Swap0.
+The first fixture diagnosis was incomplete: BUNDLE shared masks also require
+the original SourceSpatialDomain's declared spatial extent. Without it, the
+existing mask owner correctly returns one mask per member, even with BUNDLE
+axis metadata. The corrected fixture covers both declared and absent extents,
+requiring exact shared versus stacked masks accordingly. No production mask
+rule or assertion is relaxed, and both original failed logs are preserved.
