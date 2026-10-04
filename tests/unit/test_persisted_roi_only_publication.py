@@ -1,6 +1,7 @@
 """Saved-output publication only: synthetic bytes, no ROI or pixel decoding."""
 
 from dataclasses import replace
+from pathlib import Path
 from types import SimpleNamespace
 
 from polystore.disk import DiskStorageBackend
@@ -82,12 +83,13 @@ def plan_for(plate):
     )
 
 
-def save_archive_outcome(context, plate, destination, monkeypatch):
+def save_archive_outcome(
+    context, plate, destination, monkeypatch,
+    *, filename="independent-outline.roi.zip", content=b"synthetic admission only",
+):
     """Use the original declared bundle writer, batch and disk save boundary."""
     spec = MaterializationSpec(FileBundleOptions())
-    payload = {
-        f"{destination}/independent-outline.roi.zip": b"synthetic admission only"
-    }
+    payload = {f"{destination}/{filename}": content}
     base_path = plate / "bundle"
     batch = prepare_materialization(
         spec,
@@ -247,6 +249,65 @@ def test_shared_writer_accepts_result_only_but_not_unaddressed_images(
     assert metadata_path.read_bytes() == before
 
 
+def test_measurement_only_step_does_not_reconcile_pending_image_producer(
+    tmp_path, publication_context, monkeypatch,
+):
+    from polystore.virtual_workspace import SourcePixelRef
+
+    from openhcs.core.artifacts import ImageArtifactType
+    from openhcs.core.source_projection import OpenHCSPlaneAddress, SourceArtifactProjection
+    from openhcs.core.virtual_workspace_metadata import (
+        AtomicMetadataWriter, FIELDS, VirtualWorkspaceSourceProjectionEntries,
+    )
+
+    plate = tmp_path / "plate"
+    destination = "shared_results"
+    outcome, table_output = save_archive_outcome(
+        publication_context, plate, destination, monkeypatch,
+        filename="measurements.csv", content=b"ObjectNumber,Area\n1,6\n",
+    )
+    pending = plate / destination / "independent-image.tif"
+    # This lifecycle fixture never reads or derives addresses from the bytes.
+    pending.write_bytes(b"producer pixel save precedes its typed publication")
+    plan = plan_for(plate)
+    (target,) = OpenHCSMetadataTarget.for_execution(
+        publication_context, plan, artifact_materializations=(outcome,),
+    )
+    assert target.produced_projection_entries(publication_context, plan).entries == {}
+    OpenHCSMetadataTarget.write_for_step(
+        publication_context, plan, artifact_materializations=(outcome,),
+    )
+    metadata_path = METADATA_CONFIG.metadata_path(plate)
+    snapshot = json.loads(metadata_path.read_text())[FIELDS.SUBDIRECTORIES][destination]
+    assert snapshot[FIELDS.IMAGE_FILES] == []
+    assert snapshot[FIELDS.SOURCE_PROJECTION] == []
+    assert table_output.path == str(plate / destination / "measurements.csv")
+    assert (plate / destination / "measurements.csv").read_bytes() == b"ObjectNumber,Area\n1,6\n"
+    before = metadata_path.read_bytes()
+    with pytest.raises(MetadataWriteError, match="lack typed produced addresses"):
+        target.write(publication_context)  # Actual final reconciliation remains strict.
+    assert metadata_path.read_bytes() == before
+
+    virtual_path = str(pending.relative_to(plate))
+    projection = SourceArtifactProjection(
+        address=OpenHCSPlaneAddress.from_values("A04", 1, 2, 1, 1),
+        ref=SourcePixelRef(Backend.DISK.value, virtual_path),
+        source_alias="declared_image", artifact_kind=ImageArtifactType,
+    )
+    AtomicMetadataWriter().merge_source_projection_metadata(
+        metadata_path, destination,
+        VirtualWorkspaceSourceProjectionEntries.from_projection_paths(((projection, virtual_path),)),
+    )
+    publication_context.step_plans = {0: plan}
+    OpenHCSMetadataTarget.finalize_completed_plate({"A01": publication_context})
+    reconciled = json.loads(metadata_path.read_text())[FIELDS.SUBDIRECTORIES][destination]
+    assert reconciled[FIELDS.IMAGE_FILES] == [virtual_path]
+    assert len(reconciled[FIELDS.SOURCE_PROJECTION]) == 1
+    restored = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(reconciled)
+    assert restored.entries[virtual_path].address == projection.address
+    assert pending.read_bytes() == b"producer pixel save precedes its typed publication"
+
+
 def test_reconciliation_keeps_artifact_destination_without_results_field(
     tmp_path, publication_context
 ):
@@ -369,6 +430,21 @@ def test_new_result_declaration_composes_cooperative_hooks_without_consumer_edit
             ("after", destination),
         ]
         assert result_paths(plate, publication_context) == (output.path,)
+        pending = plate / destination / "pending-image.tif"
+        pending.write_bytes(b"never decoded")
+        target.write(publication_context, produced_plan=plan)
+        assert publication_context.publication_audit == [
+            ("before", destination), ("after", destination),
+            ("before", destination), ("after", destination),
+        ]
+        # Independent MI hooks reach the inherited empty-step behavior even
+        # while another image producer has not published its typed address.
+        assert target.produced_projection_entries(publication_context, plan).entries == {}
+        before = METADATA_CONFIG.metadata_path(plate).read_bytes()
+        with pytest.raises(MetadataWriteError, match="lack typed produced addresses"):
+            target.write(publication_context)
+        assert METADATA_CONFIG.metadata_path(plate).read_bytes() == before
+        assert Path(output.path).read_bytes() == b"synthetic admission only"
     finally:
         registry.clear()
         registry.update(original_declarations)
