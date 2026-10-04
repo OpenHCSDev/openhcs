@@ -257,6 +257,41 @@ BBBC013 assay in Supplementary Data 7. The packaged
 retain all twelve supporting capture identities and the nine displayed original
 PNG embeddings; no new scientific execution or scoring was performed.
 
+## Paired-channel authoring: local repair and qualified territories
+
+A fresh-context author analysed the released paired DNA/actin field in
+`H003_POSTPAUSE_88`, without reference-score feedback. Both source planes are
+400 x 400 pixels with explicit shared sample identities. The first completed
+paired prediction contained 54 nuclei and 54 associated actin territories.
+Matched raw review identified a nuclear label spanning two broad interiors.
+Subsequent marker and watershed trials improved this local separation, although
+a faint neighbour elsewhere remained merged. The author ultimately registered
+a custom detector through the ordinary OpenHCS function/artifact route, retaining
+its consumed response, markers and support as diagnostics.
+
+The final completed pipeline exported 55 nuclear instances and 55 associated
+actin territories. Unique object IDs and parent relationships reconcile across
+the tables. Median nuclear area was 370 pixels²; median territory area was
+907 pixels². One territory had exactly the same area as its corresponding
+nucleus, while 12 nuclear and 17 territory bounding boxes met the image edge.
+The retained negative patch contained no labelled pixels in either output.
+These are local and table-level checks, not exhaustive accuracy or pixelwise
+containment tests. Several actin interfaces remained poorly resolved in the raw
+image, so the territories support exploratory occupancy and source-linked
+measurements rather than validated physical cell boundaries.
+
+The final review retained 54 matched native captures spanning whole-field and
+object-scale positions, both channels and two display windows. Supported local
+detections and the repaired pair remain useful; the faint merge, clipped objects
+and no-growth territory qualify their interpretation. No exact biological census
+or reference accuracy score was reported. All 148 declared frozen artifact hashes
+were independently verified, and the owned viewer/native processes were closed.
+The recorded client teardown exit code was 2 and remains distinct from scientific
+execution completion and successful process closure. The
+[paired-channel outcome record](task_only_analysis/h003-postpause-outcome.json)
+binds the original freeze, consumed pipeline, registered detector and final
+evidence. No detector execution or scoring was repeated for this account.
+
 ## Scope and retained evidence
 
 [Figure 7 plot data](../figures/slas/task_only_analysis_plot_data.csv) retains
