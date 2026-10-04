@@ -21,7 +21,7 @@ from polystore.streaming.identity import StreamProducerIdentity
 from polystore.streaming.viewer_transport import ViewerStreamProducer
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.constants.constants import Backend
+from openhcs.constants.constants import AllComponents, Backend
 from openhcs.core.artifacts import ImageArtifactType
 from openhcs.core.axis_filter import step_axis_allows_config
 from openhcs.core.compiled_step_plan import (
@@ -821,6 +821,14 @@ class OpenHCSMetadataWriter:
                 )
                 address = record.filename_address
                 if metadata.persists_whole_image():
+                    address = None
+                elif metadata.source_provenance.varying_plane_component_values(
+                    tuple(AllComponents)
+                ):
+                    address = OpenHCSPlaneAddress.from_complete_source_metadata(
+                        source_metadata
+                    )
+                if address is None:
                     projection_paths.append(
                         (
                             SourceArtifactProjection(
@@ -927,20 +935,13 @@ class OpenHCSMetadataWriter:
                         if record.owns_persisted_artifact(
                             materialization.output_plan, destination, self.output_dir
                         ):
-                            # A collapsed image retains filename coordinates while
-                            # its semantic source address can be absent. Validate
-                            # the occurrence against its producer's filename view.
-                            whole_image = metadata.persists_whole_image()
-                            expected_address = (
-                                None if whole_image else record.filename_address
-                            )
                             if (
-                                projection.address != expected_address
+                                projection.address != address
                                 or projection.image_metadata != metadata
                                 or (
-                                    whole_image
+                                    address is None
                                     and projection.execution_scope
-                                    != record.execution_scope(plan)
+                                    != materialization.record.key.scope
                                 )
                             ):
                                 raise ValueError(

@@ -985,12 +985,12 @@ class ImagePayloadMetadata(
     ) -> "ImagePayloadMetadata":
         """Fill missing source-image identity and spatial context from a source."""
         fallback_provenance = source.source_provenance
-        if self.persists_whole_image():
-            # Physical filename coordinates must not collapse the correlated
-            # source coordinates represented by an intrinsic image.
-            varying = self.source_provenance.varying_plane_component_values(
-                tuple(AllComponents)
-            )
+        # Scalar context cannot collapse coordinates that vary across this
+        # payload's represented source planes, including runtime stacks.
+        varying = self.source_provenance.varying_plane_component_values(
+            tuple(AllComponents)
+        )
+        if varying:
             fallback_provenance = fallback_provenance.with_source_component_metadata(
                 {
                     key: value
