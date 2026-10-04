@@ -121,8 +121,11 @@ clear misses, nuisance admission, splits/merges, boundary quality and downstream
 measurement suitability separately across the distributed sample. Link each
 judgement to witnesses, spatial extent and uncertainty rather than collapsing
 them into a single validated/rejected label. Useful detection can coexist with
-boundaries unsuitable for area or fluorescence measurements; supported geometry
-does not resolve every object's identity or association. Quantify frequency only
+uncertain outlines: for detection/counting, assess whether distinct supported
+bodies are represented once and localised appropriately, with splits, merges,
+material misses and nuisance still affecting that claim. Area, shape and
+fluorescence measurements need their own boundary evidence. Do not force outputs
+to an expected count or prior candidate's positions. Quantify frequency only
 when the reviewed sample supplies a defensible denominator.
 Human annotations and algorithms can both be incomplete or mistaken: retain
 reference disagreement rather than treating either as exhaustive biological truth.
