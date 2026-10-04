@@ -53,11 +53,21 @@ Bash/JQ ownership and lifecycle tracing is the determining source evidence. Pyth
 AST is not a parser or behavior proof for these shell scripts; no Python production
 declaration, decoder, dependency or runtime file changed. This is not a new global
 Python architecture acceptance claim. No active/frozen operation bytes changed.
-Full corrected recorded-client bootstrap remains NEXT receiving acceptance;
-source syntax and control-bus projection do not claim a native/MCP health PASS.
+Corrected recorded-client receiving now passed on the actual installed whole03:
+engineering646/recorded01, original TTY73207, epoch1791136274,
+MCP InvocationID8d2a3b78141a466aa28e238c5b9baf17. Health statusok/errors[];
+ordinary first_use context succeeded. Actual server environment contains original
+P001 HOME/HDD ancestry in READ roots and excludes it from WRITE roots.
+No provider/author/native/viewer or scientific request. One malformed CLI command
+returned known usage error before dispatch; corrected ordinary command succeeded.
+Explicit exit yielded terminal2 (preserved usage negative), server absent and
+scope inactive/Resultsuccess. Positive startup/roots are distinct from CLI status.
+Full journals and owner closure: engineering646/recorded01/OWNER-TERMINAL.rst.
 
 Independent original native metadata read connection initialized/closed0, issuing
 only thread/read and thread/turns/list with original rollouts read-only. All three
 interrupted author turns are positively stored interrupted/errornull. Retained
-MCP/native/viewer family closure is distinct and still needs exact typed owner
-reconciliation; no scientific input was replayed and no original clock edited.
+MCP/native/viewer family closure is now separately positive: original owned
+shutdown outcomes acknowledged/process_exited allTRUE for six processes,
+OWNER-INTERRUPTED636-TERMINAL.rst and18 closed journal hashes preserved. No
+scientific input was replayed and no original clock edited.
