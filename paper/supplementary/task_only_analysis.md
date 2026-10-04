@@ -163,6 +163,12 @@ the registered source SHA-256 is
 Original source, execution records and matched captures remain in the named
 development archive, separate from the two scored task-only trials.
 
+The input is the nuclear volume derived from the Allen Institute for Cell
+Science `cells3d` image through the pinned Haase notebook collection.
+Scikit-image records the [Allen Institute's CC0 redistribution confirmation](https://github.com/scikit-image/scikit-image/issues/6181#issuecomment-1012370105).
+The earlier curation warning about an unresolved licence is superseded by that
+confirmation; it is not a restriction on presenting selected views.
+
 ## Scope and retained evidence
 
 [Figure 7 plot data](../figures/slas/task_only_analysis_plot_data.csv) retains
