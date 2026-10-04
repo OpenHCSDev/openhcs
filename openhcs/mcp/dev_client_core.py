@@ -427,7 +427,9 @@ class McpDevToolResult:
             capability = get_agent_capability(self.tool)
         except KeyError:
             return self
-        contracts = (*capability.output_contract_types, *get_args(McpBoundaryFailure))
+        contracts = capability.output_contract_types
+        if not contracts:
+            return self
         return replace(
             self,
             payloads=tuple(
@@ -439,6 +441,16 @@ class McpDevToolResult:
     def _decode_payload(payload, contracts):
         if isinstance(payload, McpDevPayloadFailure):
             return payload
+        # Transport failures are not malformed successes. Admit their nominal
+        # declaration first, without attaching unrelated error-shape rejections
+        # to an actual capability result or its original diagnostic cause.
+        for boundary_contract in get_args(McpBoundaryFailure):
+            try:
+                if isinstance(payload, boundary_contract):
+                    return payload
+                return dataclass_from_mapping(boundary_contract, payload)
+            except (TypeError, ValueError):
+                pass
         rejections: list[AgentError] = []
         for contract in contracts:
             try:
