@@ -101,3 +101,99 @@ This is the first production checkpoint, not a completed qualification. Tiny
 conformable numerical, projection, native persistence, whole-context R1 and
 installed/public receiving evidence are still required. Logs reside under
 /home/ts/wt/openhcs-issue-batch-20260929/engineering599.
+
+Working source qualification and required receiving
+--------------------------------------------------
+
+Production05bcc19ecce31d7c1944f0f8cfe7e819534df33b is qualified below. Normal
+integration of maina35d58163018785631f43ad7968e68b9569dc367 produced d6070360c:
+its three incoming files are the published PolyStore floor, original spatial
+field docstrings and their configuration-help control. All six #599 production
+files are byte-identical to qualified05bcc. No foreign gitlink was changed.
+
+The original source9f75 numerical diagnostic completed in 1.02s/147908KiB,
+terminal0 and Swap0. It demonstrates independent scalar128/255 = 0.5019608,
+but mixed-stack selection = 128.0. Its original metadata module SHA is
+278383795c5db8631f109a75833aad509f0f2070ac56fd585787793ed7b64220.
+It is a real original-source numerical counterexample, not scientific input,
+a mock product or replay of a retained scientific mutation.
+
+R0 initially found actual metadata-class growth +62 and a new foreign absence
+probe +1. The correction acts on that owner, not the detector: the original five
+intensity fields, quantization/projected-scale methods and numerical algorithm
+now belong to ImagePayloadIntensityFields, an ABC composed into the existing
+ImagePayloadMetadata. Existing SourceImageProvenanceFields owns replacement;
+the declared MRO admits that concrete method ahead of the intensity contract.
+The metadata leaf supplies the existing payload/leading-plane projection and
+one axis-presence hook. Provenance, spatial placement and voxel spacing remain
+their independent existing capabilities; no fields, stores or registries are
+mirrored. The replaced methods and context-only composition procedure are gone.
+
+The source-binding monochrome hook retains declared source scale; normalized
+state, not float dtype, prevents repeat scaling. The saved-buffer context owner
+retargets acquisition facts onto the actual independent buffer's intensity
+state, without replacing its pixels. Changing native file pixels returns the
+metadata to that native raw domain; value-preserving storage retains current
+units. A common exact quantization scale now requires every represented plane
+to prove it, not merely the subset with known proofs.
+
+Source controls are terminal and original raw logs are retained:
+
+* Initial numeric controls01: 11 PASS/9 FAIL. Eight incorrect fixture assertions
+  required a composed diagnostic value_name to equal an original source label;
+  spatial origin, shape and fill remain the actual checked contract. One real
+  slotted-dataclass zero-argument super() failure was fixed through the original
+  cooperative super(ImagePayloadBundleContext, self) hook.
+* Numeric/projection02: 98 PASS, 5.82s/310312KiB/Swap0.
+* Consumer03: 74 PASS/3 FAIL, 156 deselected. These were remaining assertions of
+  the replaced normalized-domain marker after native pixel conversion; the
+  assertions now require raw-domain absence, not a weakened quantization test.
+* Complete affected family04: 265 PASS, 66 deselected, 13.51s/439904KiB/Swap0.
+* Family05 at fe3cc: 267 PASS, 67 deselected, 14.63s/438180KiB/Swap0. Real source
+  bindings, replicated/distinct RGB, reorderings, declared non-default scales,
+  raw integer/float carriers, analytical remapping, masks/calibration/provenance,
+  buffer identity and original image formats/readers are covered.
+* Final changed quantization family06 at05bcc: 85 PASS, 5.31s/307920KiB/Swap0.
+  No unchanged broad suite was repeated for the narrow final proof correction.
+
+Two independent PixelAudit/MaskAudit capabilities cooperate in both C3 orders,
+and a metadata normalization hook runs through normal generic composition.
+The observed hook sequence is normalization, pixels, mask, with correct values.
+The new cases add only their declarations/hooks, not generic consumer edits.
+
+Original R0 Git3b03785f45df2ef5dc62ba6aed99294192ecbb01, unchanged existing
+run_pinned_r0_419.py and all six changed production paths: final04 PASS,
+26.29s/87052KiB/Swap0, positive deltas empty; ImagePayloadMetadata god-class
+excess decreases by77. The first Python3.12 invocation's unrelated original
+package forward-annotation NameError is retained; existing Python3.14.7 executes
+the same original detector/caller successfully, without source adaptation.
+
+Full audit Package AST at fe3cc parses 700 OpenHCS, 88 scripts, 156 benchmark,
+697 test and 608 recorded dependency Python files with zero omissions. It emits
+67/1/6/130 relevant full AST modules plus the original NumPy/skimage API ASTs.
+Final05bcc's changed owner is parsed again through the original Package parser;
+the remaining authenticated context and exact Git delta are unchanged. This
+is source-family evidence, not behavioral or global-detector certification.
+
+Original full-context R1/NRA0844525 remains incomplete: its unchanged55s deadline
+expired during parse_python_module, 58.25s total/139444KiB/Swap0. Prior reference
+clone and incorrect NRA API bootstrap failures remain in distinct original
+logs. Exact dependency source availability is resolved; no donor, detector copy,
+raised deadline or omitted dependency is used to obtain a false global PASS.
+
+Next receiving boundary: one ordinary whole candidate package must exercise
+declared tiny conformable scalar/RGB carriers through public source selection,
+processing and persisted matched raw/result sampling with the same declared
+scales, including swapped source order. Independent versus composed normalized
+pixels must agree; analytical remapping must not be divided twice. This is
+engineering-only, never the original scientific source/settings/job. Singer
+owns receiving until normal package/lane custody is coordinated with the parent
+and builder. No installed/native/MCP or biological acceptance is claimed here.
+
+The byte-exact source02 archive includes changed production/fixture sources,
+original parser/bootstrap callers, original numerical failure, all failed and
+passing controls/R0/R1 logs, and full source-family evidence. Original source01
+archive and all frozen scientific journals/UNKNOWN dispositions remain intact.
+
+Archive: docs/validation/mixed-carrier-intensity-source02-20261004.tar.gz,
+SHA256 f060dbbbec0ace28daeedf24dee83d00cb3af717b10887d973b39daa24411031.
