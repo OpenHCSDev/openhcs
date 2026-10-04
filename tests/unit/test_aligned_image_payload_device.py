@@ -80,11 +80,14 @@ def declared_cupy_leaf(monkeypatch):
     return DeviceArray, state
 
 
-@pytest.mark.parametrize('composition', (ImagePayloadStackContext, ImagePayloadBundleContext))
+@pytest.mark.parametrize('composition,mode', (
+    (ImagePayloadStackContext, ImagePayloadMetadataCompositionMode.STACK),
+    (ImagePayloadBundleContext, ImagePayloadMetadataCompositionMode.BUNDLE),
+))
 @pytest.mark.parametrize('raw_first', (False, True))
 @pytest.mark.parametrize('destination', ('implicit', 'numpy', 'cupy'))
 def test_mixed_intensity_composition_uses_declared_memory_conversion(
-    declared_cupy_leaf, composition, raw_first, destination,
+    declared_cupy_leaf, composition, mode, raw_first, destination,
 ):
     DeviceArray, state = declared_cupy_leaf
     raw = ImagePayloadMetadata(intensity_scale=64, source_dtype='uint8').payload_with(
@@ -97,7 +100,6 @@ def test_mixed_intensity_composition_uses_declared_memory_conversion(
     ).payload_with(DeviceArray(np.full((2, 3), 0.5, dtype=np.float32)),
                    DeviceArray(np.ones((2, 3), dtype=bool)))
     inputs = (raw, normalized) if raw_first else (normalized, raw)
-    mode = ImagePayloadMetadataCompositionMode.STACK
     context = composition(inputs, metadata_mode=mode)
     kwargs = {} if destination == 'implicit' else {
         'memory_type': destination, 'device_id': 1 if destination == 'cupy' else None,

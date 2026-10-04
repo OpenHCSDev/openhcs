@@ -232,3 +232,11 @@ forbids implicit __array__, in both source orders, stack/bundle compositions,
 implicit and explicit destinations, and nonzero device/mask preservation.
 This source fixture cannot claim physical GPU or installed/public acceptance.
 The previous 267/85 controls and original failure archives remain unchanged.
+
+Memory/domain controls07 retained 116 PASS/6 FAIL, 162 deselected, in
+8.39s/339924KiB/Swap0. The six bundle failures were an incorrect fixture
+declaration: it supplied STACK metadata while asserting BUNDLE's shared-mask
+contract. Pixel values, destination/device and conversion guards all passed.
+The fixture now declares the actual stack/bundle axis with each original
+composition owner; mask values and device assertions remain intact. Only this
+corrected affected slice is rerun, not the 116 unchanged passing controls.
