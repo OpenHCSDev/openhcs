@@ -207,3 +207,29 @@ path with a controlled closed-reply peer. It does not claim a fresh installed
 dependency0.1.16 publication and future bundle projection remain Dewey's release
 ownership. Existing OpenHCS dependency floor is still >=0.1.14; original metadata
 owner must carry the corrected minimum for ordinary future installation.
+
+Ordinary installation requirement
+--------------------------------
+
+Parent explicitly released the narrow pyproject.toml metadata hunk into579
+after python-introspect0.1.16 publication. The canonical production requirement
+is now python-introspect>=0.1.16,<0.2, excluding earlier decoders that reject
+derived fields and preserving the breaking-series bound. This supersedes the
+historical floor dependency above. Dewey/518 received the exact requirement
+coordination so later metadata integration must retain0.1.16 rather than0.1.15.
+No gitlink, ObjectState requirement, vendoring or installed package changed.
+
+Dewey's existing PUBLISHED-PYPI-PROOF.rst records workflow37174368240SUCCESS at
+merge430fbbeeb6c7e0a9274d3bf9b0998a10cae5a505 and exact public wheel/sdist source
+identity. Publication is not installed receiving. The four-case CLI acceptance
+and production R0 evidence above are unchanged; no full tests/build/import or
+scientific target mutation was repeated for this one-line metadata correction.
+
+SHELL-METADATA-FLOOR07 uses the original read_project/read_release_candidate and
+CandidateRequirementCompatibility owner, not another requirements parser:
+0.1.14/0.1.15 excluded,0.1.16/0.1.17 admitted,0.2.0 excluded; actual candidate
+floor/compatibility proofs true. Terminal0,0.19s wall,26444KiB peakRSS,Swap0.
+Original raw command/output remains in engineering567/public94-attempt01.
+Root's sole518 metadata ownership was rechecked via the current PR/comments;
+the precise one-line hunk and future430 source-pin boundary were addressed
+directly on518. His broader branch and release family remain unedited.
