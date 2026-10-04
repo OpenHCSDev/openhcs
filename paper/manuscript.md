@@ -274,6 +274,15 @@ condensed structure. Useful annotated-centre coverage was therefore distinct
 from successful repair, a complete cell census and native point interaction
 (Supplementary Data 8).
 
+A later fresh volumetric author repaired two centres within one continuous
+body after rejecting an ineffective marker adjustment. Measured basin-contact
+separation motivated the repair; native XY and orthogonal views supported one
+representative, while a positive control's centre remained unchanged. The
+frozen result retained 26 provisional centres, but a second association,
+border supports and obscured final field views remained unresolved. This is
+a successful local autonomous repair, not a validated whole-volume count
+(Supplementary Data 8).
+
 Not every completed trial improved its biological result. A separate fresh
 BBBC007 author processed all 16 paired DNA/actin fields and conserved 1,335
 nuclear-to-secondary label identities, but its final review identified many
