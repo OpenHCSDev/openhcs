@@ -60,3 +60,28 @@ original declared callable, plus modest separated-process peak/time comparison.
 No full retinal array, biology acceptance or whole-pipeline speed claim.
 Existing agent-resource check showed14.9GiB available with disk/swap warnings;
 checks must be small and serial, preserve failures, and use no arbitrary caps.
+
+Original observations (not full callable acceptance)
+--------------------------------------------------
+
+First declared-callable check, PTY66758 terminal2: collection stopped because
+the foreign old PolyStore source lacks TiffPhotometric required by currentmain.
+No test body ran; no dependency changed. Parent subsequently supplied the
+qualified main634875 whole610 target/dependency wheels for ordinary private
+receiving, not permission to mutate that borrowed target.
+
+Native process pair PTY22067 terminal0,96x128 float32 plane, SciPy1.18.1/OpenCV5:
+radius8 original peak87048->87560KiB, .004337s; OpenCV87356->88396KiB,.017634s.
+Radius24 original87580->121348KiB,.131366s; OpenCV87532->88644KiB,.001914s.
+Both finite outputs were pixel-exact. OpenCV peaks were read before the original
+comparison allocation. Single first-call clocks are not a stable timing campaign
+or whole-pipeline speed claim. Radius24 offset formula34439944B agrees with the
+observed original peak increase at this scale.
+
+Separate radius150/1x9 finite plane: original .016052s, peak90884->93296KiB;
+OpenCV comparison FAILED all9pixels. Original opened0 vs OpenCV opened-5 on this
+fixture; no assertion was weakened. Followup constant1x9/radius4 control agreed
+(-5 opening) on both natives. Thus ordinary-sized parity does not establish
+equivalence for a footprint much larger than its input. This unresolved case
+remains a merge blocker under616's exact-preservation acceptance, not a reason
+to replay retinal science, add an approximation, or invent a runtime guard.
