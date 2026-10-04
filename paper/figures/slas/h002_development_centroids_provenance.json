@@ -1,0 +1,15 @@
+{
+  "scope": "Selected matched native views from H002_CAPACITY_DEV94 same-context development; not a fresh autonomous success or reference-agreement evaluation.",
+  "output_sha256": {
+    "h002_development_centroids.png": "52ae85061a4c10044da01ed70738775f1b46a0a5ed2bfc1872af39827cf63075",
+    "h002_development_centroids.svg": "d8bfc82ca47a82b043d9ef842acdd665df1a99564d89205a2bfc1df6b8f911bc"
+  },
+  "source_sha256": {
+    "paper/supplementary/task_only_analysis/h002-development-source-receipt.json": "e260b0865ab7b24c3e7c5131305ea2a10ecfbf46dab6a85e23f88ed4ecabfacd",
+    "paper/supplementary/task_only_analysis/h002-development-render-receipt.json": "4a54f8e68ffbcf2e451faf211ff197ca7d6288240fd0660dd9342008c54f455c",
+    "paper/supplementary/task_only_analysis/h002-development-csv-comparison.json": "2dbc45432f9f16e8ff664d9b2976c33977698ce6e7c34ab897d29d1ab3d914a8"
+  },
+  "rendering": "Original six PNG byte sequences embedded unchanged in SVG. Identical screenshot clip [297,28,953,448] retains the full native canvas and footer; installed rsvg-convert produces the PNG. No scientific rerun or new intensity mapping.",
+  "attribution": "Allen Institute for Cell Science cells3d nuclear channel via the pinned Haase notebook collection; CC0 confirmation is retained in the source receipt and caption.",
+  "limits": "One upper centre is visible in this XY slice. Across-Z body association remains unresolved; the panel does not prove a false split. Contrast differs between rows, not within each triplet. No verified physical calibration, physical scale bar or accuracy score. Stored centroid/volume equality is not voxelwise mask equality."
+}
