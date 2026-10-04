@@ -10,7 +10,6 @@ import logging
 import os
 import time
 from dataclasses import dataclass, replace
-from threading import Lock
 from pathlib import Path
 from types import MappingProxyType
 from typing import (
@@ -40,7 +39,6 @@ from openhcs.core.artifacts import (
     ArtifactSpecRef,
 )
 from openhcs.core.callable_contract import (
-    CallableRuntimeCacheKey,
     ImagePayloadConsumption,
 )
 from openhcs.core.component_group_scope import (
@@ -87,7 +85,6 @@ from openhcs.core.measurement_row_materialization import (
     MeasurementRowOwnership,
     measurement_rows_with_source_provenance,
 )
-from openhcs.core.process_local_cache import IdentityBoundProcessCache
 from openhcs.core.runtime_stores import (
     RuntimeArtifactInput,
     RuntimeArtifactLocation,
@@ -215,52 +212,6 @@ RuntimeCallableArgument = JsonValue | RuntimePayload | ProcessingContext
 RuntimeCallableKwargs = Mapping[str, RuntimeCallableArgument]
 RuntimeProfileFieldValue = str | int | float | bool | None
 EMPTY_ARTIFACT_PLANS: ArtifactOutputPlans = MappingProxyType({})
-
-
-class FunctionInvocationCallableCache(IdentityBoundProcessCache):
-    """Bound resolved callables to their exact compiled contract owners."""
-
-    registry_key = "function_invocation_callable"
-
-
-class FunctionInvocationCallableResolver:
-    """Process-local resolver for compiled invocation callables.
-
-    The compiler stores picklable ``FunctionReference`` objects in compiled
-    invocations. Runtime execution needs actual callables. Resolving them during
-    compiler preparation lets fork workers inherit the resolved callable cache,
-    while spawn workers still resolve lazily in their own process.
-    """
-
-    _lock = Lock()
-
-    @classmethod
-    def prepare(cls, invocation: CompiledFunctionInvocation) -> None:
-        """Resolve and cache one invocation callable before timed execution."""
-        cls.resolve(invocation)
-
-    @classmethod
-    def resolve(cls, invocation: CompiledFunctionInvocation) -> Callable:
-        """Return the callable for a compiled invocation."""
-        cache = FunctionInvocationCallableCache.process_cache()
-        with cls._lock:
-            cached = cache.get_bound(invocation.contract)
-        if cached is not None:
-            return cached
-
-        resolved = invocation.contract.resolve_runtime_callable()
-
-        with cls._lock:
-            cache.put_bound(invocation.contract, resolved)
-        return resolved
-
-    @classmethod
-    def cache_key(
-        cls,
-        invocation: CompiledFunctionInvocation,
-    ) -> CallableRuntimeCacheKey:
-        """Return process-local callable cache key for one compiled invocation."""
-        return invocation.contract.runtime_callable_cache_identity()
 
 
 class RuntimeProfileSink:
@@ -1663,7 +1614,7 @@ def _save_artifact_value(
 def prepare_compiled_function_group(group: CompiledFunctionGroup) -> None:
     """Run optional preparation hooks for each callable in a compiled group."""
     for invocation in group.invocations:
-        FunctionInvocationCallableResolver.prepare(invocation)
+        invocation.contract.resolve_runtime_callable()
 
 
 def prepare_compiled_context_callables(
@@ -1909,7 +1860,6 @@ class FunctionCoreExecutor:
         )
         return loaded_values
 
-
     def debug_cursor(self) -> DebugCursor:
         return DebugCursor.from_invocation(
             step_index=self.group_data.execution_plan.step_index,
@@ -1960,7 +1910,7 @@ class FunctionCoreExecutor:
 
     @property
     def func_callable(self) -> Callable:
-        return FunctionInvocationCallableResolver.resolve(self.invocation)
+        return self.invocation.contract.resolve_runtime_callable()
 
     @property
     def base_kwargs(self) -> RuntimeCallableKwargs:
@@ -1981,14 +1931,14 @@ class FunctionCoreExecutor:
         *,
         debug_sink: DebugEventSink | None = None,
     ) -> RuntimePayload | NoMainFlowOutput:
-        memory_types = self.memory_types()
+        input_memory_type, _ = self.invocation.contract.require_memory_types()
         target_device_id = self.group_data.execution_plan.device_id_for(
-            memory_types.input_type
+            input_memory_type
         )
         converted_data = convert_memory(
             data=image_payload_data(self.main_data_arg),
             source_type=self.source_memory_type,
-            target_type=memory_types.input_type,
+            target_type=input_memory_type,
             gpu_id=target_device_id,
         )
         source_payload = with_image_payload_data(self.main_data_arg, converted_data)
@@ -2037,9 +1987,6 @@ class FunctionCoreExecutor:
         """Project through the callable's declared processing and raw ABI owners."""
 
         return self.invocation.contract.main_flow_call_argument(source_payload)
-
-    def memory_types(self) -> "FunctionChainInvocationMemoryTypes":
-        return FunctionChainInvocationMemoryTypes.from_invocation(self.invocation)
 
     def execution_group_source_payload(
         self,
@@ -2327,28 +2274,6 @@ class FunctionCoreExecutor:
             primary_source_payload,
             loaded_artifact_payloads=loaded_artifact_payloads,
         )
-
-
-@dataclass(frozen=True, slots=True)
-class FunctionChainInvocationMemoryTypes:
-    """Validated memory types for one compiled invocation."""
-
-    input_type: str
-    output_type: str
-
-    @classmethod
-    def from_invocation(
-        cls,
-        invocation: CompiledFunctionInvocation,
-    ) -> "FunctionChainInvocationMemoryTypes":
-        if (
-            invocation.input_memory_type is None
-            or invocation.output_memory_type is None
-        ):
-            raise ValueError(
-                f"Compiled invocation {invocation.key} is missing memory types."
-            )
-        return cls(invocation.input_memory_type, invocation.output_memory_type)
 
 
 class PatternGroupRuntime:
@@ -3042,7 +2967,7 @@ class PatternGroupRuntime:
             )
             if isinstance(current_stack, NoMainFlowOutput):
                 return current_stack
-            current_memory_type = executor.memory_types().output_type
+            current_memory_type = executor.invocation.contract.output_memory_type
         if group_data.compiled_group.preserves_input_main_flow() and all(
             invocation.contract.artifact_output_policy.records_outputs
             for invocation in group_data.compiled_group.invocations

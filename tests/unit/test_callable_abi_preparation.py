@@ -19,7 +19,7 @@ from openhcs.core.callable_contract import (
     attach_callable_contract_metadata, attach_processing_prepare,
 )
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
-from openhcs.core.function_patterns import NormalizeFunctionGroupAuthority
+from openhcs.core.function_patterns import NormalizedFunctionGroup
 from openhcs.core.function_reference import ImportableFunctionReference
 from openhcs.core.processing_preparation import CallablePreparation, PreparationCacheBatch
 from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payload_data
@@ -175,8 +175,8 @@ def test_authored_compilation_prepares_before_signature_and_refreshes_each_compi
         raw.__annotations__["image"] = desired_annotations.pop(0)
 
     monkeypatch.setattr(CallablePreparation, "prepare", prepare)
-    first = NormalizeFunctionGroupAuthority().normalize("group", raw).items[0].contract
-    second = NormalizeFunctionGroupAuthority().normalize("group", raw).items[0].contract
+    first = NormalizedFunctionGroup.from_pattern("group", raw).items[0].contract
+    second = NormalizedFunctionGroup.from_pattern("group", raw).items[0].contract
     assert first.canonical_parameter_annotations["image"] is ArrayPayload
     assert second.canonical_parameter_annotations["image"] is np.ndarray
     assert FunctionContractAttribute.canonical_signature not in vars(raw)
@@ -203,7 +203,7 @@ def test_unprepared_function_reference_compilation_reads_prepared_live_declarati
         import_identity=CallableImportIdentity.from_callable(raw_numeric),
         composite_key="test:raw_numeric",
     )
-    contract = NormalizeFunctionGroupAuthority().normalize("group", reference).items[0].contract
+    contract = NormalizedFunctionGroup.from_pattern("group", reference).items[0].contract
     assert contract.func is reference
     assert contract.canonical_parameter_annotations["image"] is np.ndarray
     assert fake_preparation.call_count == 1

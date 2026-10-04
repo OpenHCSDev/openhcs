@@ -6,7 +6,7 @@ import numpy as np
 from scipy import ndimage
 
 from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
-from openhcs.core.function_patterns import NormalizeFunctionGroupAuthority
+from openhcs.core.function_patterns import NormalizedFunctionGroup
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     image_payload_data,
@@ -30,7 +30,7 @@ from openhcs.processing.backends.cellprofiler.secondary import (
 
 
 def _execute_prepared(func, source, kwargs, mode=ImagePayloadExecutionMode.NATURAL):
-    contract = NormalizeFunctionGroupAuthority().normalize("image", func).items[0].contract
+    contract = NormalizedFunctionGroup.from_pattern("image", func).items[0].contract
     contract = replace(
         contract,
         metadata=replace(

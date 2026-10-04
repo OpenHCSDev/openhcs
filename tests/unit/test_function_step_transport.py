@@ -405,10 +405,7 @@ def test_bundle_transport_preserves_prepared_runtime_contract_identity() -> None
     from openhcs.core.orchestrator.execution_result import (
         RuntimeExecutionTransportSerialization,
     )
-    from openhcs.core.steps.function_runtime import (
-        FunctionInvocationCallableCache,
-        FunctionInvocationCallableResolver,
-    )
+    from openhcs.core.callable_contract import CallableContractRuntimeCache
 
     reference = FunctionReferenceTransportAuthority.function_reference(
         cellprofiler_backend.crop
@@ -428,7 +425,7 @@ def test_bundle_transport_preserves_prepared_runtime_contract_identity() -> None
     pattern = replace(
         pattern, groups=(replace(pattern.groups[0], invocations=(invocation,)),)
     )
-    prepared_callable = FunctionInvocationCallableResolver.resolve(invocation)
+    prepared_callable = invocation.contract.resolve_runtime_callable()
     plan = CompiledStepPlan(
         step_index=0, step_name="Crop", step_type="FunctionStep", axis_id="A01",
         func=reference, compiled_function_pattern=pattern,
@@ -455,7 +452,7 @@ def test_bundle_transport_preserves_prepared_runtime_contract_identity() -> None
     assert invocation.contract.metadata.prepare is not None
     assert plan.func is reference and reference.metadata.prepare is not None
     assert plan.compiled_function_pattern is pattern
-    assert FunctionInvocationCallableResolver.resolve(invocation) is prepared_callable
+    assert invocation.contract.resolve_runtime_callable() is prepared_callable
     assert transport_context.runtime_value_store is context.runtime_value_store
     assert transport_context.runtime_image_stack_cache is context.runtime_image_stack_cache
     assert transport_context.filemanager is context.filemanager
@@ -467,10 +464,10 @@ def test_bundle_transport_preserves_prepared_runtime_contract_identity() -> None
     assert serialized_bundle.runtime_contexts is bundle.transport_contexts
     assert context.step_plans[0] is plan
     assert (
-        FunctionInvocationCallableCache.process_cache().get_bound(invocation.contract)
+        CallableContractRuntimeCache.process_cache().get_bound(invocation.contract)
         is prepared_callable
     )
-    assert FunctionInvocationCallableResolver.resolve(invocation) is prepared_callable
+    assert invocation.contract.resolve_runtime_callable() is prepared_callable
     RuntimeExecutionTransportSerialization.register()
     restored = pickle.loads(pickle.dumps(serialized_bundle))
     restored_plan = restored.runtime_contexts["A01"].step_plans[0]

@@ -14,6 +14,7 @@ from dataclasses import MISSING, asdict, dataclass, fields, is_dataclass
 from enum import Enum
 from functools import wraps
 from pathlib import Path
+from threading import Lock
 from types import MappingProxyType
 from typing import (
     TYPE_CHECKING,
@@ -58,6 +59,7 @@ from openhcs.core.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.variable_component_stack_requirement import (
     VariableComponentStackRequirement,
 )
+from openhcs.core.process_local_cache import IdentityBoundProcessCache
 
 if TYPE_CHECKING:
     from openhcs.core.aligned_image_payload import (
@@ -79,7 +81,12 @@ if TYPE_CHECKING:
 CallableNamespace = Mapping[str, Any]
 _EnumT = TypeVar("_EnumT", bound=Enum)
 
-CallableRuntimeCacheKey = int
+
+class CallableContractRuntimeCache(IdentityBoundProcessCache):
+    """Retain executable callables for their exact compiled declaration owners."""
+
+    registry_key = "function_invocation_callable"
+    resolution_lock = Lock()
 
 
 @dataclass(frozen=True, slots=True)
@@ -1218,21 +1225,28 @@ class CallableContract(ArtifactPlanKeySelector):
             return None
         return self.runtime_batch_executors.get(domain)
 
-    def runtime_callable_cache_identity(
-        self,
-    ) -> CallableRuntimeCacheKey:
-        """Return the process-local cache identity for this callable contract."""
-        if not _is_function_reference(self.func) and not callable(self.func):
-            raise TypeError(f"Invalid callable contract function: {self.func}")
-        return id(self)
+    def require_memory_types(self) -> tuple[str, str]:
+        """Admit both declared memory domains before runtime conversion."""
+        if self.input_memory_type is None or self.output_memory_type is None:
+            raise ValueError(
+                f"Callable {self.function_name!r} is missing memory types."
+            )
+        return self.input_memory_type, self.output_memory_type
 
     def resolve_runtime_callable(self) -> Callable[..., object]:
         """Return the executable callable for this contract."""
+        cache = CallableContractRuntimeCache.process_cache()
+        with CallableContractRuntimeCache.resolution_lock:
+            cached = cache.get_bound(self)
+        if cached is not None:
+            return cached
         resolved = _resolve_declared_callable(self.func)
         runtime_adapter = self.runtime_adapter
-        if runtime_adapter is None:
-            return resolved
-        return runtime_adapter.executable_callable(resolved, self)
+        if runtime_adapter is not None:
+            resolved = runtime_adapter.executable_callable(resolved, self)
+        with CallableContractRuntimeCache.resolution_lock:
+            cache.put_bound(self, resolved)
+        return resolved
 
     def resolve_canonical_raw_callable(self) -> Callable[..., object]:
         """Return the declaration-owned semantic target."""
