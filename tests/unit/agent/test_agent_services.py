@@ -4018,8 +4018,9 @@ def test_execution_session_service_reports_nested_runtime_status(
 ):
     fake_client = _EnvelopeStatusExecutionClient()
     fake_client.progress_by_execution_id[_ExecutionTestId.COMPILE] = (
-        ExecutionProgressObservation.first(
-            {
+        ExecutionProgressObservation(
+            sequence=1,
+            event={
                 "execution_id": _ExecutionTestId.COMPILE,
                 "phase": "compile",
                 "status": "running",
