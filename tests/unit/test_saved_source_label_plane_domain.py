@@ -293,7 +293,9 @@ def test_explicit_plane_domain_still_requires_projection_and_rejects_global_coun
 
 @pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
 def test_generic_output_context_uses_execution_projection_not_image_storage_axis(axis):
-    from openhcs.core.steps.function_runtime import NumpyArrayObjectLabelOutputValueContextStrategy
+    from openhcs.core.projected_image_output import (
+    NumpyArrayObjectLabelOutputValueContextStrategy,
+)
 
     labels = np.zeros((2, 6, 7), dtype=np.int32)
     labels[0, 1:3, 2:4] = 29

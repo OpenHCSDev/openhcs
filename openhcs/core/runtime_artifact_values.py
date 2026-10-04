@@ -14,6 +14,9 @@ from openhcs.core.component_group_scope import (
 
 if TYPE_CHECKING:
     from openhcs.core.runtime_image_values import ImagePayloadMetadata
+    from openhcs.core.runtime_plane_projection import (
+        RuntimePlaneAxisProjector,
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -163,6 +166,30 @@ class RuntimeValue:
             output_plan,
             value,
             execution_scope=RuntimeExecutionAxisScope(axis_id=str(axis_id)),
+            materialization_source_metadata=materialization_source_metadata,
+        )
+
+    @staticmethod
+    def normalize_output_from_projector(
+        output_plan: ArtifactOutputPlan,
+        value: Any,
+        *,
+        source_payload: object,
+        plane_projector: "RuntimePlaneAxisProjector | None",
+        execution_scope: RuntimeExecutionAxisScope,
+        materialization_source_metadata: "ImagePayloadMetadata | None" = None,
+    ) -> "RuntimeValue":
+        """Admit current source context and raw output at one generic boundary."""
+        contextualized = output_plan.artifact_type.contextualize_output_from_projector(
+            source_payload,
+            value,
+            output_plan,
+            plane_projector,
+        )
+        return RuntimeValue.normalize_for_execution_scope(
+            output_plan,
+            contextualized,
+            execution_scope=execution_scope,
             materialization_source_metadata=materialization_source_metadata,
         )
 

@@ -47,7 +47,7 @@ from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.steps.function_runtime import FunctionOutputContextStrategy
+
 from openhcs.processing.custom_functions import manager as custom_manager
 from openhcs.processing.materialization import materialize
 from polystore.disk import DiskStorageBackend
@@ -373,9 +373,7 @@ def test_reference_retains_plane_domain_until_raw_numpy_invocation(
             plane_index=None, axis_size=plane_count,
         )
     )
-    label_payload = FunctionOutputContextStrategy.for_context(
-        ObjectLabelsArtifactType,
-    ).contextualize(stack, labels, None, projection)
+    label_payload = ObjectLabelsArtifactType.contextualize_output(stack, labels, None, projection)
     assert isinstance(label_payload, ObjectLabelPayload)
     np.testing.assert_array_equal(label_payload.labels, stack.data)
     assert label_payload.plane_axis is (
@@ -393,9 +391,7 @@ def test_reference_retains_plane_domain_until_raw_numpy_invocation(
             plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
         ).payload_with(stack.data[:, :-1, :])
         with pytest.raises(ValueError, match="Object-label spatial shape"):
-            FunctionOutputContextStrategy.for_context(
-                ObjectLabelsArtifactType,
-            ).contextualize(stack, wrong_spatial_shape, None, projection)
+            ObjectLabelsArtifactType.contextualize_output(stack, wrong_spatial_shape, None, projection)
     assert not manager.storage_dir.exists()
 
 

@@ -37,7 +37,7 @@ from openhcs.core.steps.function_outputs import (
     PrimaryImageMetadataTarget, RuntimeArtifactMaterializationAuthority,
 )
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
-from openhcs.core.steps.function_runtime import ImageFunctionOutputContextStrategy
+
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneAxisValueProjection
 from openhcs.serialization.json import to_jsonable
 from openhcs.processing.materialization import (
@@ -177,7 +177,7 @@ def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario, a
                 for path in contributor_paths
             ]))
         if aggregate:
-            payload = ImageFunctionOutputContextStrategy().contextualize(
+            payload = ImageArtifactType.contextualize_output(
                 source_stack, pixels.copy(), output_plan,
                 RuntimePlaneAxisValueProjection(RuntimePlaneAxis.RUNTIME_SLICE, (), None, 4),
             )

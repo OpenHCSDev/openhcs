@@ -145,7 +145,7 @@ def test_diagnostic_contract_has_source_producer_stage_identity_not_new_objects(
 
 def test_ordinary_image_contextualization_preserves_unexecuted_masks():
     from openhcs.core.artifacts import ArtifactOutputPlan
-    from openhcs.core.steps.function_runtime import FunctionOutputContextStrategy
+
 
     source = _source()
     objects = _objects(source)
@@ -164,7 +164,7 @@ def test_ordinary_image_contextualization_preserves_unexecuted_masks():
             artifact_type=spec.artifact_type, sidecar_role=spec.sidecar_role,
             relations=spec.relations,
         )
-        value = FunctionOutputContextStrategy.for_output_plan(plan).contextualize(
+        value = (ImageArtifactType if plan is None else plan.artifact_type).contextualize_output(
             source, plane, plan, None
         )
         np.testing.assert_array_equal(value.mask, plane.mask)

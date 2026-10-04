@@ -132,7 +132,7 @@ from openhcs.core.steps.function_artifact_materialization import (
 from openhcs.core.steps.function_output_identity import (
     IncompleteFunctionOutputFilenameIdentityError,
 )
-from openhcs.core.steps.function_runtime import FunctionOutputContextStrategy
+
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.core.streaming_config_factory import (
     StreamingViewerRuntimeConfig,
@@ -593,9 +593,7 @@ def test_slice_aligned_object_label_arrays_preserve_source_slice_metadata():
     )
     label_slices = RuntimeSliceAlignedValues(tuple(expected_labels))
 
-    contextualized = FunctionOutputContextStrategy.for_output_plan(
-        output_plan
-    ).contextualize(
+    contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
         source,
         label_slices,
         output_plan,
@@ -675,9 +673,7 @@ def test_image_outputs_merge_source_provenance_when_output_already_has_metadata(
         metadata=ImagePayloadMetadata(source_dtype="float32"),
     )
 
-    contextualized = FunctionOutputContextStrategy.for_output_plan(
-        output_plan
-    ).contextualize(
+    contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
         source,
         output,
         output_plan,
@@ -733,9 +729,7 @@ def test_object_label_payload_stack_preserves_source_slice_metadata():
         ),
     )
 
-    contextualized = FunctionOutputContextStrategy.for_output_plan(
-        output_plan
-    ).contextualize(
+    contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
         source,
         labels,
         output_plan,
@@ -4174,9 +4168,7 @@ def test_compiled_z_axis_reaches_source_named_image_materialization() -> None:
     selected_payload = ImagePayloadMetadata(
         source_image_names=(selected_image.name,),
     ).payload_with(np.ones((2, 5, 7), dtype=np.uint16), None)
-    saved_payload = FunctionOutputContextStrategy.for_output_plan(
-        output_plan,
-    ).contextualize_from_projector(
+    saved_payload = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         selected_payload,
         ImagePayloadMetadata(
             plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,

@@ -56,7 +56,6 @@ from openhcs.core.runtime_relationships import (
     ObjectRelationship,
     ObjectRelationshipDeclaration,
 )
-from openhcs.core.steps.function_runtime import FunctionOutputContextStrategy
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
 from openhcs.interop.cellprofiler.runtime.invocation import (
@@ -364,9 +363,7 @@ class ImageOutputRecorder(CellProfilerOutputRecorder):
         )
         output_value = module_type.output_value(request)
         source_payload = module_type.source_payload(request)
-        value = FunctionOutputContextStrategy.for_output_plan(
-            request.output_plan,
-        ).contextualize(
+        value = request.output_plan.artifact_type.contextualize_output(
             source_payload,
             output_value,
             request.output_plan,

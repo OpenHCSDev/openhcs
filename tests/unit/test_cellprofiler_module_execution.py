@@ -180,7 +180,6 @@ from openhcs.core.source_matching import (
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.steps.function_runtime import (
-    FunctionOutputContextStrategy,
     PatternGroupRuntime,
 )
 from openhcs.core.steps.stream_component_semantics import (
@@ -9527,7 +9526,7 @@ def test_image_output_context_preserves_aligned_image_stack_payload():
     )
     aligned = AlignedImageStack(slices=(dna_payload, rna_payload))
 
-    result = FunctionOutputContextStrategy.for_output_plan(None).contextualize(
+    result = ImageArtifactType.contextualize_output(
         dna_payload,
         aligned,
         None,
@@ -17859,9 +17858,7 @@ def test_convert_objects_to_image_uses_declared_label_source_for_runtime_plane_d
         variable_components=(AllComponents.Z_INDEX,),
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
-    result = FunctionOutputContextStrategy.for_output_plan(
-        output_plan,
-    ).contextualize_from_projector(
+    result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         label_payload,
         raw_result,
         output_plan,
@@ -17897,9 +17894,7 @@ def test_object_label_image_output_rejects_source_plane_count_drift() -> None:
         ValueError,
         match="source-plane provenance must match the declared runtime plane axis",
     ):
-        FunctionOutputContextStrategy.for_output_plan(
-            output_plan,
-        ).contextualize_from_projector(
+        (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
             label_payload,
             ImagePayloadMetadata().payload_with(
                 np.zeros(labels.shape, dtype=np.uint16)
@@ -17930,9 +17925,7 @@ def test_object_label_singleton_volume_output_declares_runtime_plane_axis() -> N
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
 
-    result = FunctionOutputContextStrategy.for_output_plan(
-        output_plan,
-    ).contextualize_from_projector(
+    result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         label_payload,
         raw_result,
         output_plan,
@@ -17964,9 +17957,7 @@ def test_object_label_scalar_image_output_does_not_invent_runtime_plane_axis() -
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
 
-    result = FunctionOutputContextStrategy.for_output_plan(
-        output_plan,
-    ).contextualize_from_projector(
+    result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         label_payload,
         raw_result,
         output_plan,

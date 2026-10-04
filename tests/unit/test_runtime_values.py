@@ -119,7 +119,7 @@ from openhcs.core.source_metadata import (
     SourceVoxelSpacing,
 )
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.steps.function_runtime import (
+from openhcs.core.projected_image_output import (
     DefaultImageOutputSourceContextStrategy,
 )
 from openhcs.processing.backends.analysis.region_properties import (

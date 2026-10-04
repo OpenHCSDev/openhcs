@@ -77,11 +77,8 @@ from openhcs.core.progress.live_measurements import LiveMeasurementProgressPaylo
 from openhcs.core.steps.function_runtime import (
     ComponentArtifactPlans,
     FunctionCoreExecutor,
-    FunctionOutputContextStrategy,
     PatternGroupData,
-    ImageFunctionOutputContextStrategy,
     PatternGroupRuntime,
-    UnchangedFunctionOutputContextStrategy,
 )
 from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
@@ -123,22 +120,6 @@ from openhcs.processing.backends.analysis.multi_template_matching import (
 
 def passthrough(image):
     return image
-
-
-def test_every_registered_artifact_type_has_one_context_strategy_owner() -> None:
-    for artifact_type in ArtifactType.__registry__.values():
-        owners = FunctionOutputContextStrategy.owning_strategy_types(artifact_type)
-        assert len(owners) == 1, artifact_type
-
-
-@pytest.mark.parametrize(
-    "artifact_type",
-    [SpecialArtifactType, MetadataArtifactType],
-)
-def test_context_free_artifacts_use_the_declared_root_strategy(artifact_type) -> None:
-    strategy = FunctionOutputContextStrategy.for_context(artifact_type)
-
-    assert type(strategy) is UnchangedFunctionOutputContextStrategy
 
 
 def test_special_outputs_is_the_artifact_outputs_public_spelling() -> None:
@@ -373,9 +354,7 @@ def test_image_output_context_preserves_stack_after_exact_source_projection():
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
 
-    result = FunctionOutputContextStrategy.for_output_plan(
-        output_plan,
-    ).contextualize(
+    result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
         source,
         output,
         output_plan,
@@ -425,9 +404,7 @@ def test_image_output_context_does_not_infer_axis_for_unmarked_payload():
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
 
-    result = FunctionOutputContextStrategy.for_output_plan(
-        output_plan,
-    ).contextualize_from_projector(
+    result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         source,
         np.ones((2, 4, 5), dtype=np.uint16),
         output_plan,
@@ -459,9 +436,7 @@ def test_image_output_context_rejects_declared_output_axis_shape_drift():
         ValueError,
         match="declared 'runtime_slice' axis of size 2",
     ):
-        FunctionOutputContextStrategy.for_output_plan(
-            output_plan,
-        ).contextualize(
+        (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
             np.ones((1, 4, 5), dtype=np.float32),
             output,
             output_plan,
@@ -498,9 +473,7 @@ def test_image_output_context_preserves_complete_scalar_rgb_identity() -> None:
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
 
-    result = FunctionOutputContextStrategy.for_output_plan(
-        output_plan,
-    ).contextualize_from_projector(
+    result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         source,
         output,
         output_plan,
@@ -527,7 +500,7 @@ def test_image_output_context_preserves_target_axis_across_source_rank_change() 
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
     ).payload_with(np.ones((1, 2, 4, 5, 3), dtype=np.float32), None)
 
-    result = FunctionOutputContextStrategy.for_output_plan(None).contextualize(
+    result = ImageArtifactType.contextualize_output(
         source,
         output,
         None,
@@ -586,9 +559,7 @@ def test_image_output_context_projects_complete_multi_plane_identity() -> None:
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
 
-    result = FunctionOutputContextStrategy.for_output_plan(
-        output_plan,
-    ).contextualize_from_projector(
+    result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         source,
         output,
         output_plan,
@@ -629,9 +600,7 @@ def test_named_image_outputs_bypass_unrelated_source_axis_projection():
         ),
     )
 
-    result = FunctionOutputContextStrategy.for_output_plan(
-        None
-    ).contextualize_from_projector(
+    result = ImageArtifactType.contextualize_output_from_projector(
         source,
         bundle,
         None,
@@ -659,21 +628,19 @@ def test_image_output_context_projector_proves_source_ownership_once(
     ).payload_with(np.zeros((2, 4, 5), dtype=np.uint16), None)
     output = np.ones((2, 4, 5), dtype=np.uint8)
     ownership_proofs = []
-    original = ImageFunctionOutputContextStrategy.output_owns_source_context
+    original = ImageArtifactType.output_owns_source_context
 
     def track_ownership_proof(*args):
         ownership_proofs.append(args)
         return original(*args)
 
     monkeypatch.setattr(
-        ImageFunctionOutputContextStrategy,
+        ImageArtifactType,
         "output_owns_source_context",
         staticmethod(track_ownership_proof),
     )
 
-    result = FunctionOutputContextStrategy.for_output_plan(
-        None
-    ).contextualize_from_projector(
+    result = ImageArtifactType.contextualize_output_from_projector(
         source,
         output,
         None,
@@ -684,13 +651,6 @@ def test_image_output_context_projector_proves_source_ownership_once(
     np.testing.assert_array_equal(image_payload_data(result), output)
     assert image_payload_metadata(result).source_image_provenance_planes == (
         image_payload_metadata(source).source_image_provenance_planes
-    )
-
-
-def test_image_output_context_uses_base_projector_resolution() -> None:
-    assert (
-        "contextualize_from_projector"
-        not in ImageFunctionOutputContextStrategy.__dict__
     )
 
 
@@ -1242,7 +1202,7 @@ def test_execute_function_core_attaches_dynamic_execution_group_to_artifact():
         match_group=True,
     )
     assert len(stored) == 1
-    assert stored[0].path == "/memory/A01_w2_segmentation_masks.pkl"
+    assert stored[0].location.path == "/memory/A01_w2_segmentation_masks.pkl"
     metadata = image_payload_metadata(stored[0].data)
     assert dict(metadata.source_component_metadata) == {
         "well": "A01",
@@ -1595,7 +1555,7 @@ def test_execute_function_core_saves_artifact_to_runtime_group_path():
         match_group=True,
     )
     assert len(stored) == 1
-    assert stored[0].path == "/memory/A01_s2_measurements.pkl"
+    assert stored[0].location.path == "/memory/A01_s2_measurements.pkl"
 
 
 def test_execute_function_core_preserves_main_output_source_metadata():
@@ -1887,16 +1847,16 @@ def test_module_runtime_adapter_records_declared_outputs_and_returns_main_flow(
         return main_output
 
     contextualization_plans = []
-    original_for_output_plan = FunctionOutputContextStrategy.for_output_plan
+    original_contextualize = ImageArtifactType.contextualize_output_from_projector
 
-    def track_contextualization(cls, output_plan):
+    def track_contextualization(cls, source, output, output_plan, projector):
         del cls
         contextualization_plans.append(output_plan)
-        return original_for_output_plan(output_plan)
+        return original_contextualize(source, output, output_plan, projector)
 
     monkeypatch.setattr(
-        FunctionOutputContextStrategy,
-        "for_output_plan",
+        ImageArtifactType,
+        "contextualize_output_from_projector",
         classmethod(track_contextualization),
     )
 

@@ -1,5 +1,7 @@
 """Receiving #134: actual graph context/writer/ZIP, without a native process."""
 
+from openhcs.core.artifacts import ImageArtifactType
+
 from pathlib import Path
 
 import numpy as np
@@ -27,7 +29,7 @@ from openhcs.core.runtime_spatial_graph import (
 )
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.steps.function_runtime import FunctionOutputContextStrategy
+
 from openhcs.core.viewer_streaming_service import RoiStreamingRequest, StreamingService
 from openhcs.processing.materialization import (
     MaterializationSpec,
@@ -130,7 +132,7 @@ def contextualize(graph, plan):
         source_voxel_spacing=SourceVoxelSpacing(graph.coordinate_spacing),
     )
     source = metadata.payload_with(np.zeros((2, 16, 16), dtype=np.uint8))
-    result = FunctionOutputContextStrategy.for_output_plan(plan).contextualize(
+    result = (ImageArtifactType if plan is None else plan.artifact_type).contextualize_output(
         source, graph, plan, None
     )
     assert result.source_provenance == metadata.source_provenance.for_source_plane(

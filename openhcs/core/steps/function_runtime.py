@@ -4,7 +4,6 @@ This module owns callable invocation, artifact routing, and pattern-group stack
 execution. FunctionStep remains responsible for step-level orchestration.
 """
 
-from abc import ABC, abstractmethod
 from functools import singledispatch
 import logging
 import os
@@ -14,7 +13,6 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import (
     Callable,
-    ClassVar,
     Generic,
     Mapping,
     Sequence,
@@ -22,20 +20,14 @@ from typing import (
     cast,
 )
 
-from metaclass_registry import AutoRegisterMeta
 import numpy as np
 
-from openhcs.constants.constants import AllComponents, Backend, VariableComponents
+from openhcs.constants.constants import AllComponents, Backend
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
     NoMainFlowOutput,
-    ArtifactType,
-    ArtifactTypeStrategyMatchMixin,
     ImageArtifactType,
-    MeasurementsArtifactType,
-    ObjectLabelsArtifactType,
-    SpatialGraphArtifactType,
     ArtifactSpecRef,
 )
 from openhcs.core.callable_contract import (
@@ -47,7 +39,6 @@ from openhcs.core.component_group_scope import (
     RuntimeFixedComponentValues,
 )
 from openhcs.core.component_set import ComponentSet
-from openhcs.core.projected_image_output import SourceProjectedImageOutput
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.debug import (
     DebugCursor,
@@ -72,18 +63,11 @@ from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
     ImagePayloadStackComposition,
     ImageOutputBundle,
-    flatten_aligned_image_payload_slices,
-    stack_image_payload_context,
     unstack_image_payload_context,
 )
 from openhcs.core.memory import (
-    MemoryType,
     convert_memory,
     unstack_runtime_slices,
-)
-from openhcs.core.measurement_row_materialization import (
-    MeasurementRowOwnership,
-    measurement_rows_with_source_provenance,
 )
 from openhcs.core.runtime_stores import (
     RuntimeArtifactInput,
@@ -107,7 +91,6 @@ from openhcs.core.runtime_slice_projection import (
 )
 from openhcs.core.source_image_provenance import (
     SourceImageIdentity,
-    SourceImageProvenance,
 )
 from openhcs.core.source_workspace_projection import (
     VirtualWorkspacePathLookup,
@@ -135,35 +118,23 @@ from openhcs.core.source_bindings import (
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     ImagePayloadMetadataCarrier,
-    ImagePayloadMetadataCompositionMode,
     image_payload_data,
     image_payload_mask,
     image_payload_metadata,
-    image_payload_slice_context,
-    preserve_declared_image_payload_axis,
     with_image_payload_data,
 )
 from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_measurements import MeasurementSubject, MeasurementTable
+from openhcs.core.runtime_measurements import MeasurementTable
 from openhcs.core.runtime_spatial_graph import SpatialGraph
 from openhcs.core.runtime_object_labels import (
     ObjectLabelSet,
     ObjectLabelValue,
-    object_label_dense_array,
-)
-from openhcs.core.runtime_object_label_building import (
-    SourceImageObjectLabelBuildRequest,
 )
 from openhcs.core.runtime_tabular_values import ColumnarRows
-from openhcs.core.registry_strategies import (
-    MostDerivedContextStrategyMixin,
-    NominalTypeKeyedStrategyMixin,
-)
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisProjector,
-    RuntimePlaneAxisValueProjection,
     RuntimePlaneProjection,
 )
 from openhcs.core.step_dependencies import StepInputDependencyKind
@@ -247,451 +218,6 @@ class RuntimeProfileSink:
                 handle.write(f"RUNTIME_PROFILE {label} {seconds:.6f}s {field_text}\n")
 
 
-class FunctionOutputContextStrategy(
-    ArtifactTypeStrategyMatchMixin,
-    MostDerivedContextStrategyMixin[type[ArtifactType]],
-    ABC,
-):
-    """Registered normalization for function outputs before chaining or storage."""
-
-    artifact_type: ClassVar[type[ArtifactType] | None] = None
-
-    @classmethod
-    def for_output_plan(
-        cls,
-        output_plan: ArtifactOutputPlan | None,
-    ) -> "FunctionOutputContextStrategy":
-        output_kind = (
-            ImageArtifactType if output_plan is None else output_plan.artifact_type
-        )
-        return cast(
-            FunctionOutputContextStrategy,
-            cls.for_context(output_kind),
-        )
-
-    @abstractmethod
-    def contextualize(
-        self,
-        source_payload: RuntimePayload,
-        output_value: RuntimePayload,
-        output_plan: ArtifactOutputPlan | None,
-        plane_projection: RuntimePlaneAxisValueProjection | None,
-    ) -> FunctionOutputContextualizedValue:
-        """Return output with source context preserved where semantics allow it."""
-
-    @abstractmethod
-    def contextualize_from_projector(
-        self,
-        source_payload: RuntimePayload,
-        output_value: RuntimePayload,
-        output_plan: ArtifactOutputPlan | None,
-        plane_projector: RuntimePlaneAxisProjector | None,
-    ) -> FunctionOutputContextualizedValue:
-        """Contextualize output using this artifact family's plane contract."""
-
-    @staticmethod
-    def output_owns_source_context(
-        source_payload: RuntimePayload,
-        output_value: RuntimePayload,
-        output_plan: ArtifactOutputPlan | None,
-        plane_projection: RuntimePlaneAxisValueProjection | None,
-    ) -> bool:
-        """Return whether this artifact value already owns complete context."""
-
-        del source_payload, output_value, output_plan, plane_projection
-        return False
-
-
-class UnchangedFunctionOutputContextStrategy(FunctionOutputContextStrategy):
-    """Leave context-free artifact families outside image-axis projection."""
-
-    artifact_type = ArtifactType
-
-    def contextualize_from_projector(
-        self,
-        source_payload: RuntimePayload,
-        output_value: RuntimePayload,
-        output_plan: ArtifactOutputPlan | None,
-        plane_projector: RuntimePlaneAxisProjector | None,
-    ) -> FunctionOutputContextualizedValue:
-        """Keep declared side-channel values outside image-axis projection."""
-
-        del source_payload, output_plan, plane_projector
-        return output_value
-
-    def contextualize(
-        self,
-        source_payload: RuntimePayload,
-        output_value: RuntimePayload,
-        output_plan: ArtifactOutputPlan | None,
-        plane_projection: RuntimePlaneAxisValueProjection | None,
-    ) -> FunctionOutputContextualizedValue:
-        del source_payload, output_plan, plane_projection
-        return output_value
-
-
-class ProjectedFunctionOutputContextStrategy(UnchangedFunctionOutputContextStrategy):
-    """Own contextual output projection while dominating the context-free fallback."""
-
-    @abstractmethod
-    def contextualize(
-        self,
-        source_payload: RuntimePayload,
-        output_value: RuntimePayload,
-        output_plan: ArtifactOutputPlan | None,
-        plane_projection: RuntimePlaneAxisValueProjection | None,
-    ) -> FunctionOutputContextualizedValue:
-        """Contextualize one projected artifact family."""
-
-    def contextualize_from_projector(
-        self,
-        source_payload: RuntimePayload,
-        output_value: RuntimePayload,
-        output_plan: ArtifactOutputPlan | None,
-        plane_projector: RuntimePlaneAxisProjector | None,
-    ) -> FunctionOutputContextualizedValue:
-        """Resolve plane projection only after the artifact strategy is selected."""
-
-        plane_projection = (
-            None
-            if plane_projector is None
-            else preserve_declared_image_payload_axis(
-                plane_projector,
-                output_value,
-                source_payload=source_payload,
-            )
-        )
-        if (
-            plane_projection is None
-            and output_plan is not None
-            and output_plan.variable_components
-        ):
-            if plane_projector is None:
-                if not self.output_owns_source_context(
-                    source_payload,
-                    output_value,
-                    output_plan,
-                    None,
-                ):
-                    raise ValueError(
-                        f"Artifact output {output_plan.ref()!r} preserves variable "
-                        f"components {output_plan.variable_components!r} but the "
-                        "runtime invocation supplies no plane projector."
-                    )
-                return output_value
-            plane_projection = RuntimePlaneAxisValueProjection.require_from_projector(
-                plane_projector,
-                RuntimePlaneAxis.RUNTIME_SLICE,
-            )
-        return self.contextualize(
-            source_payload,
-            output_value,
-            output_plan,
-            plane_projection,
-        )
-
-
-class ImageFunctionOutputContextStrategy(ProjectedFunctionOutputContextStrategy):
-    """Preserve source-image metadata for image outputs derived from the main input."""
-
-    artifact_type = ImageArtifactType
-
-    @staticmethod
-    def output_owns_source_context(
-        source_payload: RuntimePayload,
-        output_value: RuntimePayload,
-        output_plan: ArtifactOutputPlan | None,
-        plane_projection: RuntimePlaneAxisValueProjection | None,
-    ) -> bool:
-        """Return whether an image result already carries complete source identity."""
-
-        if not isinstance(output_value, AlignedImageStack) and not (
-            image_payload_metadata(output_value).has_complete_source_identity(
-                output_value,
-                plane_projection,
-            )
-        ):
-            return False
-        output_surfaces = flatten_aligned_image_payload_slices(output_value)
-        if not all(
-            image_payload_metadata(output_surface).has_complete_source_identity(
-                output_surface
-            )
-            for output_surface in output_surfaces
-        ):
-            return False
-        if output_plan is None:
-            return True
-        source_surfaces = flatten_aligned_image_payload_slices(source_payload)
-        return len(output_surfaces) == len(source_surfaces) and all(
-            image_payload_metadata(
-                output_surface
-            ).source_provenance.represented_source_identities
-            == image_payload_metadata(
-                source_surface
-            ).source_provenance.represented_source_identities
-            for source_surface, output_surface in zip(
-                source_surfaces,
-                output_surfaces,
-                strict=True,
-            )
-        )
-
-    def contextualize(
-        self,
-        source_payload: RuntimePayload,
-        output_value: RuntimePayload,
-        output_plan: ArtifactOutputPlan | None,
-        plane_projection: RuntimePlaneAxisValueProjection | None,
-    ) -> FunctionOutputContextualizedValue:
-        if isinstance(output_value, SourceProjectedImageOutput):
-            return output_value.resolve_source_context(source_payload, plane_projection)
-        if isinstance(output_value, RuntimeSliceAlignedValueSet):
-            if (
-                plane_projection is None
-                or plane_projection.axis is not RuntimePlaneAxis.RUNTIME_SLICE
-            ):
-                raise ValueError(
-                    "Runtime-slice-aligned image output requires an exact runtime "
-                    "slice projection."
-                )
-            if plane_projection.axis_size != output_value.slice_count:
-                raise ValueError(
-                    "Runtime-slice-aligned image output count must exactly match "
-                    "the declared runtime plane axis: "
-                    f"{output_value.slice_count} != {plane_projection.axis_size}."
-                )
-            contextualized_slices = []
-            for slice_index in range(output_value.slice_count):
-                item = output_value.value_for_slice(slice_index)
-                contextualized_slices.append(
-                    self.contextualize(
-                        RuntimeSliceProjection.value_for_slice(
-                            source_payload,
-                            RuntimePlaneAxisValueProjection.from_selected_plane(
-                                axis=plane_projection.axis,
-                                plane_index=slice_index,
-                                axis_size=plane_projection.axis_size,
-                            ),
-                        ),
-                        item.data if isinstance(item, RuntimeValue) else item,
-                        output_plan,
-                        None,
-                    )
-                )
-            return RuntimeSliceAlignedValues(tuple(contextualized_slices))
-        source_ref = (
-            None if output_plan is None else output_plan.source_context_source()
-        )
-        if (
-            output_plan is not None
-            and output_plan.variable_components
-            and plane_projection is not None
-            and plane_projection.plane_index is None
-        ):
-            output_metadata = image_payload_metadata(output_value)
-            if (
-                output_metadata.plane_axis is None
-                and output_metadata.source_provenance.source_plane_count
-                == plane_projection.axis_size
-                and plane_projection.dense_shape_carries_axis(
-                    np.shape(image_payload_data(output_value))
-                )
-            ):
-                output_value = output_metadata.replace_fields(
-                    plane_axis=plane_projection.axis,
-                ).attach_to(output_value)
-        if output_plan is not None and not output_plan.variable_components:
-            output_metadata = image_payload_metadata(output_value)
-            if output_metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE:
-                output_value = RuntimeSliceProjection.value_for_singleton_slice(
-                    output_value,
-                    source_description=f"Image output {output_plan.ref()!r}",
-                )
-            source_metadata = image_payload_metadata(source_payload)
-            if source_metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE:
-                if source_ref is None:
-                    raise ValueError(
-                        f"Image output {output_plan.ref()!r} consumes a runtime "
-                        "stack without a declared source-context relation."
-                    )
-                collapsed_metadata = source_metadata.collapse_leading_plane_axis()
-                source_payload = collapsed_metadata.with_source_provenance(
-                    collapsed_metadata.source_provenance.with_source_image_names(
-                        (source_ref.name,)
-                    )
-                ).attach_source_context_to(output_value)
-            plane_projection = None
-        source_context_strategy = ImageOutputSourceContextStrategy.for_source_payload(
-            source_payload,
-        )
-        if self.output_owns_source_context(
-            source_payload,
-            output_value,
-            output_plan,
-            plane_projection,
-        ) and not source_context_strategy.requires_plane_contextualization(
-            source_payload,
-            output_value,
-            plane_projection,
-        ):
-            if isinstance(output_value, AlignedImageStack):
-                return output_value
-            output_metadata = image_payload_metadata(output_value)
-            source_metadata = image_payload_metadata(source_payload)
-            contextualized_output = output_metadata.with_source_context_from(
-                source_metadata
-            ).attach_source_context_to(
-                output_value,
-            )
-            if image_payload_metadata(contextualized_output) == output_metadata:
-                return output_value
-            return contextualized_output
-        return source_context_strategy.contextualize(
-            source_payload,
-            output_value,
-            plane_projection,
-        )
-
-
-class MeasurementsFunctionOutputContextStrategy(ProjectedFunctionOutputContextStrategy):
-    """Own schema-bearing rows as one compiled measurement table."""
-
-    artifact_type = MeasurementsArtifactType
-
-    @staticmethod
-    def _declared_subject(output_plan: ArtifactOutputPlan | None) -> MeasurementSubject:
-        if output_plan is None:
-            raise ValueError("Measurement outputs require a compiled output plan.")
-        return MeasurementsArtifactType.require_output_subject(output_plan)
-
-    @staticmethod
-    def _validate_nominal_table(
-        output_value: MeasurementTable,
-        output_plan: ArtifactOutputPlan,
-        subject: MeasurementSubject,
-    ) -> None:
-        output_value.validate_artifact_name(output_plan.name)
-        if output_value.subject != subject:
-            raise ValueError(
-                f"Measurement output {output_plan.ref()!r} declares subject "
-                f"{subject!r}, but returned {output_value.subject!r}."
-            )
-
-    @staticmethod
-    def _contextualized_rows(
-        rows: ColumnarRows,
-        *,
-        subject: MeasurementSubject,
-        source_provenance: SourceImageProvenance,
-    ) -> ColumnarRows:
-        owned_rows = MeasurementRowOwnership(
-            object_name=subject.object_name,
-            source_image_name=subject.source_image_name,
-        ).annotate_rows(rows)
-        if not isinstance(owned_rows, ColumnarRows):
-            raise TypeError(
-                "Measurement row ownership must preserve the nominal ColumnarRows "
-                f"carrier, got {type(owned_rows).__name__}."
-            )
-        return measurement_rows_with_source_provenance(
-            owned_rows,
-            source_provenance,
-        )
-
-    def contextualize_from_projector(
-        self,
-        source_payload: RuntimePayload,
-        output_value: RuntimePayload,
-        output_plan: ArtifactOutputPlan | None,
-        plane_projector: RuntimePlaneAxisProjector | None,
-    ) -> FunctionOutputContextualizedValue:
-        """Validate nominal identity before generic plane projection inspects it."""
-
-        subject = self._declared_subject(output_plan)
-        if isinstance(output_value, MeasurementTable):
-            assert output_plan is not None
-            self._validate_nominal_table(output_value, output_plan, subject)
-        return super().contextualize_from_projector(
-            source_payload,
-            output_value,
-            output_plan,
-            plane_projector,
-        )
-
-    def contextualize(
-        self,
-        source_payload: RuntimePayload,
-        output_value: RuntimePayload,
-        output_plan: ArtifactOutputPlan | None,
-        plane_projection: RuntimePlaneAxisValueProjection | None,
-    ) -> FunctionOutputContextualizedValue:
-        del plane_projection
-        subject = self._declared_subject(output_plan)
-        assert output_plan is not None
-        source_provenance = image_payload_metadata(source_payload).source_provenance
-        if isinstance(output_value, MeasurementTable):
-            self._validate_nominal_table(output_value, output_plan, subject)
-            contextualized_provenance = (
-                output_value.source_provenance.with_missing_from(source_provenance)
-            )
-            return output_value.replace_fields(
-                rows=self._contextualized_rows(
-                    output_value.rows,
-                    subject=subject,
-                    source_provenance=contextualized_provenance,
-                ),
-                source_provenance=contextualized_provenance,
-            )
-        if not isinstance(output_value, ColumnarRows):
-            raise TypeError(
-                f"Measurement output {output_plan.ref()!r} requires ColumnarRows "
-                f"or MeasurementTable, got {type(output_value).__name__}."
-            )
-        return MeasurementTable(
-            name=output_plan.name,
-            rows=self._contextualized_rows(
-                output_value,
-                subject=subject,
-                source_provenance=source_provenance,
-            ),
-            source_image_name=subject.source_image_name,
-            subject=subject,
-            source_provenance=source_provenance,
-        )
-
-
-class SpatialGraphFunctionOutputContextStrategy(ProjectedFunctionOutputContextStrategy):
-    """Preserve invocation source identity on spatial graph outputs."""
-
-    artifact_type = SpatialGraphArtifactType
-
-    def contextualize(
-        self,
-        source_payload: RuntimePayload,
-        output_value: RuntimePayload,
-        output_plan: ArtifactOutputPlan | None,
-        plane_projection: RuntimePlaneAxisValueProjection | None,
-    ) -> FunctionOutputContextualizedValue:
-        del plane_projection
-        if not isinstance(output_value, SpatialGraph):
-            raise TypeError(
-                "Spatial graph output requires SpatialGraph, got "
-                f"{type(output_value).__name__}."
-            )
-        if output_plan is not None:
-            output_value.validate_artifact_name(output_plan.name)
-        source_provenance = output_value.contextualized_source_provenance(
-            image_payload_metadata(source_payload).source_provenance
-        )
-        contextualized_provenance = output_value.source_provenance.with_missing_from(
-            source_provenance
-        )
-        if contextualized_provenance == output_value.source_provenance:
-            return output_value
-        return replace(output_value, source_provenance=contextualized_provenance)
-
-
 @singledispatch
 def project_declared_source_identity(
     source_payload: RuntimePayload,
@@ -737,402 +263,6 @@ def project_object_label_declared_source_identity(
             f"source {source_ref!r}."
         )
     return source_payload
-
-
-class ImageOutputSourceContextStrategy(
-    NominalTypeKeyedStrategyMixin,
-    ABC,
-    metaclass=AutoRegisterMeta,
-):
-    """Registered image-output contextualization by semantic source payload type."""
-
-    __registry_key__ = "value_type_label"
-    __skip_if_no_key__ = True
-
-    @classmethod
-    def for_source_payload(
-        cls,
-        source_payload: RuntimePayload,
-    ) -> "ImageOutputSourceContextStrategy":
-        strategy = cls.for_nominal_value(source_payload)
-        if strategy is None:
-            return DefaultImageOutputSourceContextStrategy()
-        return strategy
-
-    def requires_plane_contextualization(
-        self,
-        source_payload: RuntimePayload,
-        output_value: RuntimePayload,
-        plane_projection: RuntimePlaneAxisValueProjection | None,
-    ) -> bool:
-        """Return whether this source type must bind an undeclared output axis."""
-
-        del source_payload, output_value, plane_projection
-        return False
-
-    @abstractmethod
-    def contextualize(
-        self,
-        source_payload: RuntimePayload,
-        output_value: RuntimePayload,
-        plane_projection: RuntimePlaneAxisValueProjection | None,
-    ) -> RuntimePayload:
-        """Return image output with source semantics attached."""
-
-
-class DefaultImageOutputSourceContextStrategy(ImageOutputSourceContextStrategy):
-    """Attach scalar source-image context to a derived image output."""
-
-    def contextualize(
-        self,
-        source_payload: RuntimePayload,
-        output_value: RuntimePayload,
-        plane_projection: RuntimePlaneAxisValueProjection | None,
-    ) -> RuntimePayload:
-        if isinstance(output_value, AlignedImageStack):
-            return output_value
-        return image_payload_metadata(source_payload).derive_payload(
-            source_payload,
-            output_value,
-            plane_projection=plane_projection,
-        )
-
-
-class AlignedImageStackOutputSourceContextStrategy(ImageOutputSourceContextStrategy):
-    """Preserve aligned multi-source image payloads as their own source context."""
-
-    value_type = AlignedImageStack
-
-    def contextualize(
-        self,
-        source_payload: RuntimePayload,
-        output_value: RuntimePayload,
-        plane_projection: RuntimePlaneAxisValueProjection | None,
-    ) -> RuntimePayload:
-        del source_payload, plane_projection
-        return output_value
-
-
-class RuntimeSliceAlignedImageOutputSourceContextStrategy(
-    ImageOutputSourceContextStrategy
-):
-    """Attach per-runtime-slice source context to derived image outputs."""
-
-    value_type = RuntimeSliceAlignedValueSet
-
-    def contextualize(
-        self,
-        source_payload: RuntimePayload,
-        output_value: RuntimePayload,
-        plane_projection: RuntimePlaneAxisValueProjection | None,
-    ) -> RuntimePayload:
-        source_values = source_payload
-        if not isinstance(source_values, RuntimeSliceAlignedValueSet):
-            raise TypeError(
-                "Runtime-slice-aligned image output strategy requires "
-                f"RuntimeSliceAlignedValueSet, got {type(source_values).__name__}."
-            )
-        output_data = image_payload_data(output_value)
-        if plane_projection is None:
-            if source_values.slice_count != 1:
-                raise ValueError(
-                    "Runtime-slice-aligned image output has multiple source values "
-                    "but no declared runtime plane projection."
-                )
-            source_value = source_values.value_for_aligned_slice(0, 1)
-            return image_payload_metadata(source_value).derive_payload(
-                source_value,
-                output_value,
-            )
-        output_slices = self.output_slices(
-            output_value, output_data, source_values, plane_projection,
-        )
-        contextualized_slices = []
-        for slice_index, output_slice in enumerate(output_slices):
-            source_value = source_values.value_for_aligned_slice(
-                slice_index,
-                len(output_slices),
-            )
-            contextualized_slices.append(
-                image_payload_metadata(source_value).derive_payload(
-                    source_value,
-                    output_slice,
-                )
-            )
-        return stack_image_payload_context(
-            tuple(contextualized_slices),
-            output_data,
-            metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
-        )
-
-    @staticmethod
-    def output_slices(
-        output_value: RuntimePayload,
-        output_data: RuntimeArrayData,
-        source_values: RuntimeSliceAlignedValueSet,
-        plane_projection: RuntimePlaneAxisValueProjection,
-    ) -> tuple[RuntimeArrayData, ...]:
-        output_array = np.asarray(output_data)
-        projection = plane_projection
-        if projection.axis_size != source_values.slice_count:
-            raise ValueError(
-                "Runtime-slice image output projection must exactly match its "
-                f"aligned source count: {projection.axis_size} != "
-                f"{source_values.slice_count}."
-            )
-        projection.validate_shape(
-            output_array.shape,
-            value_name="Runtime-slice-aligned image output",
-        )
-        return tuple(
-            image_payload_slice_context(
-                output_value,
-                output_array[slice_index],
-                slice_index,
-                plane_axis=projection.axis,
-            )
-            for slice_index in range(projection.axis_size)
-        )
-
-
-class ObjectLabelImageOutputSourceContextStrategy(ImageOutputSourceContextStrategy):
-    """Project an image rendered from labels onto the invocation plane axis."""
-
-    value_type = ObjectLabelValue
-
-    def requires_plane_contextualization(
-        self,
-        source_payload: RuntimePayload,
-        output_value: RuntimePayload,
-        plane_projection: RuntimePlaneAxisValueProjection | None,
-    ) -> bool:
-        """Require projection for a volume label payload, including depth one."""
-
-        del output_value
-        if not isinstance(source_payload, ObjectLabelValue):
-            raise TypeError(
-                "Object-label image output context requires ObjectLabelValue, got "
-                f"{type(source_payload).__name__}."
-            )
-        return (
-            plane_projection is not None
-            and plane_projection.plane_index is None
-            and image_payload_metadata(source_payload).plane_axis is None
-            and not image_payload_metadata(source_payload).persists_whole_image()
-            and np.ndim(object_label_dense_array(source_payload)) >= 3
-        )
-
-    def contextualize(
-        self,
-        source_payload: RuntimePayload,
-        output_value: RuntimePayload,
-        plane_projection: RuntimePlaneAxisValueProjection | None,
-    ) -> RuntimePayload:
-        if not isinstance(source_payload, ObjectLabelValue):
-            raise TypeError(
-                "Object-label image output context requires ObjectLabelValue, got "
-                f"{type(source_payload).__name__}."
-            )
-        source_metadata = image_payload_metadata(source_payload)
-        if source_metadata.persists_whole_image():
-            return source_metadata.derive_payload(
-                source_payload, output_value, plane_projection=None,
-            )
-        if plane_projection is None or plane_projection.plane_index is not None:
-            return source_metadata.derive_payload(
-                source_payload,
-                output_value,
-                plane_projection=plane_projection,
-            )
-        plane_count = source_metadata.source_provenance.source_plane_count
-        if plane_count != plane_projection.axis_size:
-            raise ValueError(
-                "Object-label image output source-plane provenance must match the "
-                "declared runtime plane axis: "
-                f"{plane_count} != {plane_projection.axis_size}."
-            )
-        plane_projection.validate_shape(
-            np.shape(image_payload_data(output_value)),
-            value_name="Object-label image output payload",
-        )
-        output_metadata = image_payload_metadata(output_value)
-        contextualized_output = output_metadata.replace_fields(
-            plane_axis=plane_projection.axis,
-        ).attach_to(output_value)
-        return source_metadata.derive_payload(
-            source_payload,
-            contextualized_output,
-            plane_projection=plane_projection,
-        )
-
-
-class ObjectLabelsFunctionOutputContextStrategy(ProjectedFunctionOutputContextStrategy):
-    """Preserve source-image metadata for object-label outputs."""
-
-    artifact_type = ObjectLabelsArtifactType
-
-    def contextualize(
-        self,
-        source_payload: RuntimePayload,
-        output_value: RuntimePayload,
-        output_plan: ArtifactOutputPlan | None,
-        plane_projection: RuntimePlaneAxisValueProjection | None,
-    ) -> FunctionOutputContextualizedValue:
-        return ObjectLabelOutputValueContextStrategy.for_output_value(
-            output_value,
-        ).contextualize(source_payload, output_value, plane_projection)
-
-
-class ObjectLabelOutputValueContextStrategy(
-    NominalTypeKeyedStrategyMixin,
-    ABC,
-    metaclass=AutoRegisterMeta,
-):
-    """Registered object-label output contextualization by nominal value type."""
-
-    __registry_key__ = "value_type_label"
-    __skip_if_no_key__ = True
-
-    @classmethod
-    def for_output_value(
-        cls,
-        output_value: ObjectLabelContextualizableOutput,
-    ) -> "ObjectLabelOutputValueContextStrategy":
-        return cls.require_nominal_value(
-            output_value,
-            context="Object-label function output",
-        )
-
-    @abstractmethod
-    def contextualize(
-        self,
-        source_payload: RuntimePayload,
-        output_value: ObjectLabelContextualizableOutput,
-        plane_projection: RuntimePlaneAxisValueProjection | None,
-    ) -> FunctionOutputContextualizedValue:
-        """Return the output with source-image context attached when possible."""
-
-
-class RuntimeSliceAlignedObjectLabelOutputValueContextStrategy(
-    ObjectLabelOutputValueContextStrategy
-):
-    """Contextualize each runtime-slice-aligned object-label output slice."""
-
-    value_type = RuntimeSliceAlignedValueSet
-
-    def contextualize(
-        self,
-        source_payload: RuntimePayload,
-        output_value: ObjectLabelContextualizableOutput,
-        plane_projection: RuntimePlaneAxisValueProjection | None,
-    ) -> FunctionOutputContextualizedValue:
-        aligned_values = output_value
-        if not isinstance(aligned_values, RuntimeSliceAlignedValueSet):
-            raise TypeError(
-                "Runtime-slice-aligned object-label output strategy requires "
-                f"RuntimeSliceAlignedValueSet, got {type(aligned_values).__name__}."
-            )
-        if plane_projection is None:
-            raise ValueError(
-                "Runtime-slice-aligned object-label output requires a declared "
-                "runtime plane projection."
-            )
-        if plane_projection.axis is not RuntimePlaneAxis.RUNTIME_SLICE:
-            raise ValueError(
-                "Runtime-slice-aligned object-label output requires the "
-                f"runtime-slice axis, got {plane_projection.axis.value!r}."
-            )
-        if plane_projection.axis_size != aligned_values.slice_count:
-            raise ValueError(
-                "Runtime-slice-aligned object-label output count must exactly "
-                "match the declared runtime plane axis: "
-                f"{aligned_values.slice_count} != {plane_projection.axis_size}."
-            )
-        return RuntimeSliceAlignedValues(
-            tuple(
-                ObjectLabelOutputValueContextStrategy.for_output_value(
-                    aligned_values.value_for_slice(slice_index)
-                ).contextualize(
-                    RuntimeSliceProjection.value_for_slice(
-                        source_payload,
-                        RuntimePlaneAxisValueProjection.from_selected_plane(
-                            axis=plane_projection.axis,
-                            plane_index=slice_index,
-                            axis_size=plane_projection.axis_size,
-                        ),
-                    ),
-                    aligned_values.value_for_slice(slice_index),
-                    None,
-                )
-                for slice_index in range(aligned_values.slice_count)
-            )
-        )
-
-
-class ContextualObjectLabelOutputValueContextStrategy(
-    ObjectLabelOutputValueContextStrategy
-):
-    """Preserve object-label domain while filling missing source-image context."""
-
-    value_type = ObjectLabelValue
-
-    def contextualize(
-        self,
-        source_payload: RuntimePayload,
-        output_value: ObjectLabelContextualizableOutput,
-        plane_projection: RuntimePlaneAxisValueProjection | None,
-    ) -> ObjectLabelValue:
-        del plane_projection
-        if not isinstance(output_value, ObjectLabelValue):
-            raise TypeError(
-                "Contextual object-label output strategy requires "
-                f"ObjectLabelValue, got {type(output_value).__name__}."
-            )
-        return output_value.with_source_image_context(source_payload)
-
-
-class DenseArrayObjectLabelOutputValueContextStrategy(
-    ObjectLabelOutputValueContextStrategy
-):
-    """Build declared object labels through the existing source-domain owner."""
-
-    def contextualize(
-        self,
-        source_payload: RuntimePayload,
-        output_value: ObjectLabelContextualizableOutput,
-        plane_projection: RuntimePlaneAxisValueProjection | None,
-    ) -> ObjectLabelValue:
-        return SourceImageObjectLabelBuildRequest(
-            image=source_payload,
-            labels=self.label_array(output_value),
-            plane_projection=plane_projection,
-        ).payload()
-
-    @abstractmethod
-    def label_array(self, output_value: ObjectLabelContextualizableOutput) -> object:
-        """Project the dense label data owned by this nominal value case."""
-
-
-class NumpyArrayObjectLabelOutputValueContextStrategy(
-    DenseArrayObjectLabelOutputValueContextStrategy
-):
-    """Build object-label context for declared NumPy array outputs."""
-
-    value_type = np.ndarray
-
-    def label_array(self, output_value: ObjectLabelContextualizableOutput) -> object:
-        return output_value
-
-
-class ImagePayloadObjectLabelOutputValueContextStrategy(
-    DenseArrayObjectLabelOutputValueContextStrategy
-):
-    """Consume a declared label array with its preserved runtime plane carrier."""
-
-    value_type = ImagePayloadMetadataCarrier
-
-    def label_array(self, output_value: ObjectLabelContextualizableOutput) -> object:
-        return image_payload_data(output_value)
 
 
 @dataclass(frozen=True)
@@ -1583,17 +713,11 @@ def _save_artifact_value(
     """Validate and save one planned artifact value to the memory VFS."""
     resolved_output_plan = output_plan.for_invocation_group(group_key)
     vfs_path = resolved_output_plan.path
-    contextualized_value = FunctionOutputContextStrategy.for_output_plan(
-        resolved_output_plan
-    ).contextualize_from_projector(
-        source_payload,
+    runtime_value = RuntimeValue.normalize_output_from_projector(
+        resolved_output_plan,
         value,
-        resolved_output_plan,
-        plane_projector,
-    )
-    runtime_value = RuntimeValue.normalize_for_execution_scope(
-        resolved_output_plan,
-        contextualized_value,
+        source_payload=source_payload,
+        plane_projector=plane_projector,
         execution_scope=execution_scope,
         materialization_source_metadata=materialization_source_metadata,
     )
@@ -1977,9 +1101,7 @@ class FunctionCoreExecutor:
         output_source_payload = self.main_flow_output_source_payload(
             self.execution_group_source_payload(source_payload)
         )
-        return FunctionOutputContextStrategy.for_output_plan(
-            None
-        ).contextualize_from_projector(
+        return ImageArtifactType.contextualize_output_from_projector(
             output_source_payload,
             main_output,
             None,
