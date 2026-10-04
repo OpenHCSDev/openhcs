@@ -502,7 +502,7 @@ class CustomFunctionRegistrationRenderer(McpDevTypedOutputRenderer):
                 lines.append(f"- {function.function_id}: {function.signature} tags={','.join(function.backend_tags)}")
                 if function.summary:
                     lines.append(f"  {function.summary}")
-            if not payload.persisted:
+            if payload.persisted is False:
                 lines.append(
                     "Lifetime: process-local only; follow-up dev_client commands "
                     "start a fresh MCP process. Omit --no-persist or reuse the "
