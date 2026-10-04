@@ -800,7 +800,7 @@ def test_component_identity_owns_realized_source_group_values() -> None:
     ) == ("DNA",)
 
 
-def test_realized_component_values_are_scoped_by_source_selector() -> None:
+def test_realized_component_values_are_scoped_by_source_selector(monkeypatch) -> None:
     binding = NamedSourceBinding(
         alias="DNA",
         selector=SourceSelector(
@@ -815,6 +815,33 @@ def test_realized_component_values_are_scoped_by_source_selector() -> None:
             {"channel": 2, "site": 7},
         ),
     ) == ("3",)
+    records = [
+        {"channel": 1, "site": 3, "Z": 5, "z_index": 4},
+        {"channel": 2, "site": 7, "z_index": 9},
+    ]
+    expected = {
+        component: binding.component_values(
+            component, realized_source_metadata=records
+        )
+        for component in AllComponents
+    }
+    matched = []
+    original_match = NamedSourceBinding.matches_realized_source_metadata
+
+    def record_match(owner, metadata):
+        matched.append(metadata)
+        return original_match(owner, metadata)
+
+    monkeypatch.setattr(NamedSourceBinding, "matches_realized_source_metadata", record_match)
+    domains = binding.component_domains(realized_source_metadata=iter(records))
+    assert {component: domains.get(component, ()) for component in AllComponents} == expected
+    assert matched == records
+    assert domains[AllComponents.SITE] == ("3",)
+    assert domains[AllComponents.Z_INDEX] == ("4", "5")
+    records[0]["channel"] = 2
+    assert AllComponents.SITE not in binding.component_domains(
+        realized_source_metadata=records
+    )
 
 
 def test_compiled_source_binding_plan_preserves_named_selectors():
