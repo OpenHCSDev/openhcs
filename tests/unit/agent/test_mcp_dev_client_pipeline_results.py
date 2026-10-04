@@ -439,7 +439,9 @@ def test_malformed_contract_is_explicit_and_keeps_entire_receipt(broken):
     failed = response.results[0].payloads[0]
     assert isinstance(failed, McpDevPayloadFailure)
     assert failed.receipt == broken
-    assert to_jsonable(failed) == broken
+    rejection = to_jsonable(failed)
+    assert rejection["receipt"] == broken
+    assert rejection["errors"] == to_jsonable(failed.errors)
     assert response.has_errors()
     rendered = PipelineArtifactPlanRenderer.render(response)
     assert "mcp_payload_invalid" in rendered and "unavailable" in rendered
@@ -793,7 +795,13 @@ def test_persistent_client_execute_uses_real_command_boundary_without_runtime(
     finally:
         client.close()
     assert execution.returncode == int(malformed)
-    assert execution.payload["results"][0]["payloads"][0] == receipt
+    payload = execution.payload["results"][0]["payloads"][0]
+    if malformed:
+        assert payload["receipt"] == receipt
+        assert len(payload["errors"]) == 1
+        assert payload["errors"][0]["code"] == "mcp_payload_invalid"
+    else:
+        assert payload == receipt
     assert (
         "mcp_payload_invalid" if malformed else "Owned step"
     ) in execution.rendered_output

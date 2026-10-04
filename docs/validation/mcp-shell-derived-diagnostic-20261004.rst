@@ -97,3 +97,46 @@ owner implementation/release; no foreign dependency checkout or gitlink was
 edited. This diagnostic checkpoint makes that original cause visible, but does
 not yet claim successful observation CLI roundtrip or corrected shell terminal0.
 The original native positive and original shell terminal1 remain separate facts.
+
+Consumer closure and shared-code disposition
+-------------------------------------------
+
+The related sampling, pipeline/artifact-plan and UI-action JSON assertions now
+retain the entire original rejected receipt AND assert its typed diagnostic
+projection, instead of asserting the removed diagnostic-erasing shape. No
+success assertion or nonzero exit assertion was weakened. The real
+McpDevClient.execute pipeline command check retains its original controlled
+wire peer and production command/framing/rendering/returncode path.
+
+CONSUMERS03 retained its original terminal1:62 passed/11 failed. Five failures
+identified additional old failure-shape assertions, now migrated. Four were the
+existing sibling test-module import under importlib mode; the original test
+directory is explicitly on PYTHONPATH for CONSUMERS04. Two were an existing
+UI-test global serializer monkeypatch captured by subsequently imported knowledge
+renderer aliases; the independent UI and pipeline/sampling qualifications are
+kept distinct rather than changing production serialization to tolerate it.
+CONSUMERS03's12 UI controls passed. CONSUMERS04's pipeline/sampling61 controls
+passed, terminal0, including the affected real execute boundary. Original raw
+failure and successful output/timing remain byte-exact in the archive.
+
+Original unmodified debt_census.py against main2df0918 and production8fbba870f,
+exact sole changed production file openhcs/mcp/dev_client_core.py: all measured
+debt deltas zero, code lines+3, zero parse omissions, terminal0,0.56s wall,
+25016KiB peakRSS,Swap0. R0 is a syntax ratchet, not live/whole NRA proof.
+
+Dewey explicitly confirmed no released dependency checkout: the foreign
+python-introspect source has active transitive borrowers even though its child
+tree is clean. He forwarded the exact original-decoder requirement to Parent
+integration. Singer has not edited that checkout or its gitlink. The remaining
+shared hunk is dataclass_from_mapping's declared-field algorithm: admit all
+declared names, construct only init fields, decode supplied derived values with
+the same annotation mechanism, compare with actual post-construction owner
+values, and reject contradictions. project_dataclass remains a constructor-field
+projection that intentionally recomputes target-derived facts; it is not a wire
+decoder and must not be turned into a second status authority.
+
+No installed CLI terminal0 claim yet: the original native reply needs that codec
+integration before its successful derived outcome can roundtrip. The diagnostic
+source checkpoint works independently and does not claim recovery/replay of any
+UNKNOWN operation. Planck's disjoint Shapes geometry ownership was confirmed;
+522 selection/lifecycle and541 Root units ownership remain untouched.
