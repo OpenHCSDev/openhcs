@@ -1148,11 +1148,9 @@ class PipelineCompiler:
 
     @staticmethod
     def validate_source_workspace_projection(session: CompilationSession) -> None:
-        """Validate source-workspace metadata before runtime image loading."""
+        """Validate the exact admitted source epoch used by this axis's plans."""
 
-        projection = session.context.runtime_source_workspace_projection_authority.projection_if_available()
-        if projection is None:
-            return
+        projection = session.source_workspace_projection
         projection.validate_runtime_metadata_projection(axis_id=session.axis_id)
 
     @staticmethod
