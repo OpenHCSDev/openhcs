@@ -209,6 +209,14 @@ centre regions, not just a single successful crop. Global Otsu is most plausible
 when classes separate; a dominant background with a sparse foreground tail
 requires checking that assumption rather than blindly choosing Otsu.
 
+For textured/ring-shaped bodies amid diffuse nuisance, compare
+[body-admission models](segmentation-diagnostics.md#compare-body-admission-models)
+before choosing a correction: local background differences and intensity-class
+separation fail differently. Judge corrected support against local body extent
+AND regional negatives, not background uniformity, nuclear eligibility or a
+preferred count. Opposite faint-loss/background-flooding outcomes motivate a
+model change, not repeated scalar toggles.
+
 ## Spots, edges and thin processes
 
 Difference/Laplacian of Gaussian can enhance objects at a selected scale; ridge
