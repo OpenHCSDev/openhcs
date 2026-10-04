@@ -860,7 +860,7 @@ class FunctionCoreExecutor:
         if not self.should_load_artifact_inputs():
             return {}
         logger.info(
-            f"Artifact inputs for {self.function_name}: {self.artifacts.inputs}"
+            "Artifact inputs for %s: %s", self.function_name, self.artifacts.inputs
         )
         loaded_artifact_payloads: dict[ArtifactSpecRef, RuntimePayload] = {}
         parameter_values: dict[str, list[RuntimeValue]] = {}
@@ -911,8 +911,9 @@ class FunctionCoreExecutor:
         if storage_plan is None:
             raise ValueError("Artifact input loading requires a storage-backed edge.")
         logger.info(
-            f"Loading artifact input '{arg_name}' from path '{storage_plan.path}' "
-            "(memory backend)"
+            "Loading artifact input '%s' from path '%s' (memory backend)",
+            arg_name,
+            storage_plan.path,
         )
         load_started_at = time.perf_counter()
         try:
@@ -924,8 +925,10 @@ class FunctionCoreExecutor:
             ).projected_values(self.group_data.context.runtime_value_store)
         except Exception as exc:
             logger.error(
-                f"Failed to load artifact input '{arg_name}' from "
-                f"'{storage_plan.path}': {exc}",
+                "Failed to load artifact input '%s' from '%s': %s",
+                arg_name,
+                storage_plan.path,
+                exc,
                 exc_info=True,
             )
             raise
@@ -1113,7 +1116,7 @@ class FunctionCoreExecutor:
         loaded_artifact_payloads: Mapping[ArtifactSpecRef, RuntimePayload],
         debug_sink: DebugEventSink | None,
     ) -> RuntimeFunctionOutput:
-        logger.info(f"Executing function: {self.function_name}")
+        logger.info("Executing function: %s", self.function_name)
         func_callable = self.func_callable
         contract = self.invocation.contract
         primary_parameter = contract.primary_input_parameter_name
@@ -1291,8 +1294,9 @@ class FunctionCoreExecutor:
         loaded_artifact_payloads: Mapping[ArtifactSpecRef, RuntimePayload],
     ) -> RuntimePayload:
         logger.info(
-            f"Saving artifact output '{output_key}' to VFS path '{output_plan.path}' "
-            "(memory backend)"
+            "Saving artifact output '%s' to VFS path '%s' (memory backend)",
+            output_key,
+            output_plan.path,
         )
         save_started_at = time.perf_counter()
         artifact_source_payload = self.artifact_output_source_payload(
@@ -1369,10 +1373,7 @@ class PatternGroupRuntime:
     def source_workspace_projection_authority(
         self,
     ) -> VirtualWorkspaceSourceProjectionAuthority:
-        return VirtualWorkspaceSourceProjectionAuthority.from_context(
-            self.request.context,
-            cache=self.source_workspace_projection_cache(),
-        )
+        return self.request.context.runtime_source_workspace_projection_authority
 
     @staticmethod
     def _is_relative_to(path: Path, root: Path) -> bool:
@@ -1401,9 +1402,9 @@ class PatternGroupRuntime:
         return path
 
     def run(self) -> None:
-        start_time = time.time()
+        start_time = time.time() if logger.isEnabledFor(logging.DEBUG) else None
         plan = self.request.execution_plan
-        logger.debug(f"Processing pattern {self.pattern_repr} for axis {plan.axis_id}")
+        logger.debug("Processing pattern %s for axis %s", self.pattern_repr, plan.axis_id)
 
         try:
             load_started_at = time.perf_counter()
@@ -1477,19 +1478,16 @@ class PatternGroupRuntime:
                 step_name=plan.step_name,
                 pattern=self.pattern_repr,
             )
-            logger.debug(
-                f"Finished pattern group {self.pattern_repr} in {(time.time() - start_time):.2f}s."
-            )
+            if start_time is not None and logger.isEnabledFor(logging.DEBUG):
+                logger.debug(
+                    "Finished pattern group %s in %.2fs.",
+                    self.pattern_repr,
+                    time.time() - start_time,
+                )
         except Exception as e:
-            import traceback
-
-            full_traceback = traceback.format_exc()
             logger.error(
-                f"Error processing pattern group {self.pattern_repr}: {e}",
+                "Error processing pattern group %s: %s", self.pattern_repr, e,
                 exc_info=True,
-            )
-            logger.error(
-                f"Full traceback for pattern group {self.pattern_repr}:\n{full_traceback}"
             )
             raise ValueError(
                 f"Failed to process pattern group {self.pattern_repr}: {e}"
@@ -1568,6 +1566,7 @@ class PatternGroupRuntime:
                     if plan.variable_components
                     else None
                 ),
+                pattern_cache=context.runtime_pattern_discovery_cache,
             )
         if producer_index is not None and not producer_matching_files:
             selected_paths = [
@@ -1588,17 +1587,22 @@ class PatternGroupRuntime:
 
         matching_files = self._filter_matching_files_for_group(matching_files)
 
-        logger.debug(
-            "Pattern %s matched %d files: %s",
-            self.pattern_repr,
-            len(matching_files),
-            [Path(f).name for f in matching_files],
-        )
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                "Pattern %s matched %d files: %s",
+                self.pattern_repr,
+                len(matching_files),
+                [Path(f).name for f in matching_files],
+            )
 
-        matching_files.sort()
-        logger.debug(
-            f"Pattern {self.pattern_repr} sorted files: {[Path(f).name for f in matching_files]}"
-        )
+        if not producer_matching_files:
+            matching_files.sort()
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                "Pattern %s sorted files: %s",
+                self.pattern_repr,
+                [Path(f).name for f in matching_files],
+            )
         matching_files = self._filter_matching_files_for_source_bindings(matching_files)
 
         full_file_paths = [
@@ -1625,13 +1629,10 @@ class PatternGroupRuntime:
             else ()
         )
         if producer_index is not None:
-            producer_records = tuple(sorted(
-                producer_records, key=lambda record: record.output_path,
-            ))
-            if matching_files != [record.output_path for record in producer_records]:
-                producer_records = producer_index.records_for_paths(matching_files)
-            else:
+            if producer_matching_files:
                 producer_index.validate_input_records(producer_records)
+            else:
+                producer_records = producer_index.records_for_paths(matching_files)
         ImagePayloadStackComposition.validate_main_flow_cohort(producer_records)
         cached_stack = context.runtime_image_stack_cache.get(
             tuple(full_file_paths),
@@ -1728,14 +1729,12 @@ class PatternGroupRuntime:
             return matching_files
 
         parser = self.request.context.microscope_handler.parser
-        group_component_declaration = parser.component_for_name(group_component)
-        filtered = [
-            filename
-            for filename in matching_files
-            if (metadata := parser.parse_filename(Path(filename).name))
-            and str(metadata.value_for(group_component_declaration))
-            == str(component_value)
-        ]
+        filtered = self.request.context.runtime_pattern_discovery_cache.files_for_component(
+            parser,
+            matching_files,
+            parser.component_for_name(group_component),
+            component_value,
+        )
         if not filtered:
             raise ValueError(
                 f"Pattern group {self.pattern_repr} for {group_component}="
@@ -2127,7 +2126,7 @@ class PatternGroupRuntime:
                 output_shape = np.shape(processed_data)
                 output_ndim = np.ndim(processed_data)
                 logger.error("Function output is not an OpenHCS image stack.")
-                logger.error(f"Output type: {type(processed_stack)}")
+                logger.error("Output type: %s", type(processed_stack))
                 logger.error("Output shape: %s", output_shape)
                 logger.error("Output ndim: %s", output_ndim)
                 raise ValueError(

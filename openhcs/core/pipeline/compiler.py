@@ -113,9 +113,6 @@ from openhcs.core.pipeline.path_planner import (
     PipelinePathPlanner,
 )
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
-from openhcs.core.source_workspace_projection import (
-    VirtualWorkspaceSourceProjectionAuthority,
-)
 from openhcs.core.source_load_plan import SourceLoadPlan
 from openhcs.core.invocation_artifacts import (
     PipelineInvocationContractProviderAuthority,
@@ -1338,10 +1335,7 @@ class PipelineCompiler:
     def validate_source_workspace_projection(session: CompilationSession) -> None:
         """Validate source-workspace metadata before runtime image loading."""
 
-        projection = VirtualWorkspaceSourceProjectionAuthority.from_context(
-            session.context,
-            cache=session.context.runtime_source_workspace_projection_cache,
-        ).projection_if_available()
+        projection = session.context.runtime_source_workspace_projection_authority.projection_if_available()
         if projection is None:
             return
         projection.validate_runtime_metadata_projection(axis_id=session.axis_id)
