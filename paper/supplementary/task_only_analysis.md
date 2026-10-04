@@ -27,10 +27,16 @@ the evaluated acquisitions do not constitute an unseen image partition.
 
 The H001 image is a single 254 x 256-pixel scalar field. Its predeclared primary
 reference is a pinned Haase notebook's scikit-image label array, not a manual
-biological annotation. The original task-only author `H001_FRESH586_96`
+biological annotation. The source is the
+[BioImageAnalysisNotebooks algorithm-validation collection](https://github.com/haesleinhuepf/BioImageAnalysisNotebooks/tree/68845a1afaf53bf601958a3fa7d86f3cf8a43219/docs/29_algorithm_validation),
+at commit `68845a1afaf53bf601958a3fa7d86f3cf8a43219`. The neutral input is the
+original `blobs.tif`, SHA-256
+`26403a7c2a11921535499ff86798b73e09b8ac5786329bce8fa4a57fd9933fee`;
+the original acquisition and notebook outputs were not distributed to authors
+as an analysis recipe. The original task-only author `H001_FRESH586_96`
 retained four attempts and froze its scientific bundle at
 2026-10-04T05:51:25.756471 UTC. The unchanged
-[`benchmark/score_instance_labels.py`](../../benchmark/score_instance_labels.py)
+`benchmark/score_instance_labels.py`
 uses maximum-total-IoU one-to-one assignment and accepts assignments with
 intersection over union at least 0.5; object label numbers are ignored.
 
@@ -122,6 +128,13 @@ MCP client exited with code 2. Six growing-journal snapshots retain the exact
 later post-writer-exit owner seal, without rewriting the scientific freeze.
 
 ## Scope and retained evidence
+
+[Figure 7 plot data](../figures/slas/task_only_analysis_plot_data.csv) retains
+the plotted first/final observations and all 200 field scores. Its
+[figure receipt](../figures/slas/task_only_analysis_provenance.json) records
+source, generator and output hashes. The
+[generator](../figures/build_slas_task_only.py) reads these evaluation receipts
+without opening their prediction or reference paths and does not run a scorer.
 
 These two completed cases show useful autonomous method choices and within-run
 repair. They are not an exhaustive inventory of programme attempts, a
