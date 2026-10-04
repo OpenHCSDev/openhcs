@@ -646,6 +646,25 @@ from the three score receipts. Its
 [provenance receipt](../figures/slas/independent_agent_validation_provenance.json)
 retain the plotted rows and source/output hashes.
 
+## Supplementary Data 8. Task-only authoring and independent repair
+
+The [task-only evaluation report](task_only_analysis.md) distinguishes first
+completed scientific predictions from final independent repairs on the same
+inputs. H001 compares notebook-derived computational partitions, whereas
+BBBC039 uses independent nuclear annotations. The report also retains the
+BBBC039 full-200-field distribution, operational qualifications and the limits
+of cross-author comparisons. Exact post-freeze evaluation receipts accompany
+the report; original acquisitions, prediction arrays and tool journals remain
+in their frozen study bundles. No reference-score feedback was supplied to
+the authors, and consulted development images are not described as unseen data.
+
+The report separately records a same-author three-dimensional development
+continuation, not a fresh autonomous trial. Seed-prominence increases reduced
+29 centres to 26 by removing boundary fragments while leaving suspect interior
+partitions unchanged. Matched multi-plane review therefore did not accept an
+unqualified biological count. This case has no reference-agreement score and
+does not contribute to the two scored task-only comparisons.
+
 ## Software snapshots and evidence
 
 | Evidence | Software identity | What the record establishes |
@@ -661,6 +680,7 @@ retain the plotted rows and source/output hashes.
 | Comet Assay translation; Figure 4 | Mapping retained from the 0.8.5 figure; regenerated with source hashes in the translation receipt | Unchanged module-to-step mapping, function parameters and generated-code round trip |
 | Custom-function registration; Supplementary Figure 5 | 0.8.5 development checkout with root patch `89ef46cb05` and generic patch `c5aeee2413` | Registration, selection, controls and MCP descriptions |
 | Prospective agent-authored assays; Supplementary Figure 7 | OpenHCS 0.8.5 current-source trials on 15-16 September 2026; frozen source and score receipts retained | Three single-attempt pipelines frozen before held-out scoring; BBBC039/007 annotations and BBBC013 treatment response |
+| Task-only authoring; Supplementary Data 8 | Separately qualified OpenHCS bundles; gpt-6.1-sol trials on 4 October 2026; original source, freeze and scorer identities in evaluation receipts | H001 first/final computational reference agreement; BBBC039 paired three-field repair and separate final full-200 reference agreement; no reference-score feedback |
 
 The full figure receipts retain source hashes and capture-specific changes.
 The custom-function example was registered and selected but not executed on
