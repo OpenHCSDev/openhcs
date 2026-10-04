@@ -174,6 +174,38 @@ controls and their supported dividing boundary in the first bounded candidate.
 This is a morphology-grounded prediction, not a dataset count target or approval
 gate; use [stage-specific diagnostics](segmentation-diagnostics.md) to test it.
 
+Worked unequal-neighbour contrast: in a retained development comparison, a
+distance landscape favoured an admitted bridge between raw-supported interiors.
+A measured intensity response instead had two peaks and emitted distinct
+markers, but the unfiltered basins differed while both witnesses mapped to one
+accepted label. Changing the dividing-line landscape alone recovered their
+local separation. This is a positive stage-linked boundary repair, not evidence
+that intensity markers or dividing lines suit every body. An independent faint
+neighbour remained merged: its raw peak was flattened in the consumed smoothed
+response, and reducing smoothing did not resolve the final merge.
+
+A later hypothesis multiplied distance by smoothed intensity raised to a power.
+Estimated distances and brightness values at body centres and a neck explained
+the proposal; they did **not** measure the consumed response. Neither a larger
+estimated product at a centre nor a changed exponent establishes a local
+maximum in the extractor's neighbourhood. Raw brightness is not its smoothed
+factor, and within-body texture or an admitted bridge can still compete with
+the faint neighbour. The retained final labels alone did not locate that loss.
+
+For such a hypothesis, use the declared diagnostic artifacts and existing
+`openhcs_measure_viewer_polyline` or bounded `openhcs_sample_viewer_window_image`
+operations to link same-coordinate faint interiors, within-body texture and a
+genuine pair to actual support, consumed response, emitted marker IDs,
+unfiltered basins and accepted labels. Keep alias/source/axes and units with
+the receipts. Inspect available factors as well as their combination; a line
+profile alone cannot establish all two-dimensional maxima. Distinguish missing
+admission or response peaks from competition that excludes a peak, then from
+a seeded basin lost during partition or acceptance. If factors or stages are
+not exposed, retain that attribution limit rather than treating formula
+estimates as measurements. An uncomputed response remains a provisional first
+candidate; its bounded diagnostic can guide the next stage-specific repair,
+with the continuous-body and genuine-pair controls where available.
+
 ### Native ruler, profile and independently specified region operations
 
 Availability is determined by the **live** capability registry, not this guide.
