@@ -235,6 +235,28 @@ identifies the frozen report, consumed pipeline and retained label bytes. No
 new detector execution, reference scoring or pixel transformation was used to
 prepare this account.
 
+## Translocation development: admission repair does not validate compartments
+
+The separate same-author recovery `BBBC013_DEV02_94` completed attempts 20 and
+21 on three development wells. Lowering the nuclear threshold-correction factor
+from 0.8 to 0.65 recovered a dim broad H12 profile while leaving the minimum
+diameter, smoothing and maxima-suppression settings unchanged. Retained native
+intermediate measurements identify threshold-shrunken support as the earlier
+loss mechanism. The after-only crowded A01 control retained separate supported
+regions at the inspected position, without establishing a field-wide regression
+rate. Corrected D06 GFP views still showed unresolved propagated-compartment
+extent and ownership (Supplementary Figure 12).
+
+This local nuclear improvement does not establish whole-cell boundaries,
+nuclear-to-cytoplasmic intensity-ratio accuracy or a treatment effect. The
+full-plate continuation remained interrupted. These views are distinct from
+the interrupted `BBBC013_REPEAT94` trial above and the prospective held-out
+BBBC013 assay in Supplementary Data 7. The packaged
+[source proof](task_only_analysis/bbbc013-development-source-proof.json) and
+[render receipt](task_only_analysis/bbbc013-development-render-receipt.json)
+retain all twelve supporting capture identities and the nine displayed original
+PNG embeddings; no new scientific execution or scoring was performed.
+
 ## Scope and retained evidence
 
 [Figure 7 plot data](../figures/slas/task_only_analysis_plot_data.csv) retains

@@ -251,7 +251,7 @@ The BBBC039 author improved object F1 from 0.908 to 0.934 on its original three 
 
 These completed trials demonstrate useful first scientific choices and subsequent repair without reference-score feedback. They do not establish perfect instance identity or a reliability estimate across new datasets. The matched images and retained attempts distinguish genuine recovery from excess partitions, missed objects and uncertain biological boundaries (Supplementary Data 8).
 
-Matched native views complement these numerical results. Supplementary Figure 9 shows the H001 elongated-object repair, a retained separated-pair control and a small-focus exclusion from the defined cohort. Supplementary Figure 10 separately illustrates the unresolved volumetric-centroid development case; it is not a fresh autonomous result or an accuracy comparison.
+Matched native views complement these numerical results. Supplementary Figure 9 shows the H001 elongated-object repair, a retained separated-pair control and a small-focus exclusion from the defined cohort. Supplementary Figure 10 separately illustrates the unresolved volumetric-centroid development case. Supplementary Figures 11 and 12 retain retinal soma development and a local BBBC013 nuclear repair alongside residual misses and compartment limitations. These same-author development cases are not fresh autonomous results or accuracy comparisons.
 
 ### Figure 7. Task-only analysis: within-run revision and final coverage
 

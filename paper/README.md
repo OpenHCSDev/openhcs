@@ -21,13 +21,15 @@ Working author-review draft for **SLAS Technology**:
 The seven main figures show the shared workflow, matching UI/code/MCP authoring,
 the recorded agent analysis, CellProfiler translation, benchmark results and
 viewer inspection, followed by task-only first/final analysis and full-corpus
-coverage. Ten supplementary figures explain runtime composition,
+coverage. Twelve supplementary figures explain runtime composition,
 process boundaries, compiler preparation, connected outputs and custom functions.
 They also report historical timing observations and three prospective
 agent-authored assays on held-out public data. The two newer native-view figures
 show a task-only local repair with regression and scope controls, and a separate
 same-context volumetric development example; neither substitutes for reference
-evaluation.
+evaluation. Two further native-view figures retain retinal soma development
+and a local BBBC013 nuclear repair with unresolved compartment ownership;
+these same-author development examples are separate from autonomous scores.
 
 [Supplementary Data 8](supplementary/task_only_analysis.md) retains the newer
 task-only authoring results separately from those prospective held-out assays.
