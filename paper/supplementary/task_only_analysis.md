@@ -269,6 +269,12 @@ a faint neighbour elsewhere remained merged. The author ultimately registered
 a custom detector through the ordinary OpenHCS function/artifact route, retaining
 its consumed response, markers and support as diagnostics.
 
+Supplementary Figure 13 shows matched raw and first/final native overlays of
+the repaired pair, alongside final raw, result-only and combined views of the
+remaining faint merge. The first completed prediction follows a technical
+submission repair; these panels compare scientific outputs within the same
+uncoached run, not separate authors or a skill-only intervention.
+
 The final completed pipeline exported 55 nuclear instances and 55 associated
 actin territories. Unique object IDs and parent relationships reconcile across
 the tables. Median nuclear area was 370 pixels²; median territory area was

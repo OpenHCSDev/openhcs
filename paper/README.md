@@ -21,7 +21,7 @@ Working author-review draft for **SLAS Technology**:
 The seven main figures show the shared workflow, matching UI/code/MCP authoring,
 the recorded agent analysis, CellProfiler translation, benchmark results and
 viewer inspection, followed by task-only first/final analysis and full-corpus
-coverage. Twelve supplementary figures explain runtime composition,
+coverage. Thirteen supplementary figures explain runtime composition,
 process boundaries, compiler preparation, connected outputs and custom functions.
 They also report historical timing observations and three prospective
 agent-authored assays on held-out public data. The two newer native-view figures

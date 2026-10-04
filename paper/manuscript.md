@@ -253,6 +253,8 @@ These completed trials demonstrate useful first scientific choices and subsequen
 
 Matched native views complement these numerical results. Supplementary Figure 9 shows the H001 elongated-object repair, a retained separated-pair control and a small-focus exclusion from the defined cohort. Supplementary Figure 10 separately illustrates the unresolved volumetric-centroid development case. Supplementary Figures 11 and 12 retain retinal soma development and a local BBBC013 nuclear repair alongside residual misses and compartment limitations. These same-author development cases are not fresh autonomous results or accuracy comparisons.
 
+A separate fresh-context author repaired a joined nuclear pair in a released DNA/actin field through its own review, without reference feedback (Supplementary Figure 13). The final pipeline exported 55 nuclear instances and 55 associated actin territories, with reconciled object identities. A faint neighbouring pair remained merged, and unresolved actin interfaces limited interpretation of the territories as physical cell boundaries. This run demonstrates local autonomous repair and useful linked outputs, not an exact cell census (Supplementary Data 8).
+
 ### Figure 7. Task-only analysis: within-run revision and final coverage
 
 ![Task-only within-run revision and final coverage.](figures/slas/task_only_analysis.png){width=6in}
