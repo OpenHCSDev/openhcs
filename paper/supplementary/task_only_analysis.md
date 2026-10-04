@@ -455,6 +455,53 @@ repair or a validated reusable parameter recipe. Its recorded client exit
 exceeded the 75-minute deadline by about eight seconds; that operational
 qualification remains separate from scientific completion and rejection.
 
+## Fresh paired-field repeat: local separation gains and a caught regression
+
+The fresh author `H003_FRESH656_96` analysed only the released paired 400 x 400
+DNA/actin field, without reference outlines, previous scientific solutions or
+reference-score feedback. It retrieved the official ExampleHuman recipe and
+marker/body guidance before choosing its first method, and measured distributed
+signal, background, internal peaks and genuine-neighbour separation. This is
+fresh independent development on released data, not held-out evaluation.
+
+The first pipeline used shape markers and shape partitioning and exported
+53 nuclei and 53 seeded cell regions. Changing to intensity markers with
+smoothing 8 retained shape partitioning and reduced those counts to 51/51
+without resolving the cluster. Changing partitioning to intensity separated
+the crowded cluster and genuine pair, yielding 54/54. The final attempt,
+REPAIR03, changed marker smoothing from 8 to 4 after the author measured an
+absent dim maximum in the actually consumed smoothed response; changing peak
+suppression alone could not restore that absent maximum.
+
+The final pipeline completed and exported 56 nuclear instances and 56 seeded
+cell regions. Distributed final review still found a dim/bright merge and an
+apparent new split inside an isolated mottled nucleus. The author rejected
+unqualified counting, preserving the last attempted source and its regression.
+Crowded-cluster separation, the genuine-pair control and clear sampled negative
+areas remain useful scoped findings. Uncertain actin interfaces and seed-sized
+territories do not establish physical cell boundaries. Counts are detector
+outputs, not biological truth or a reference agreement score.
+
+The coordinator independently verified all 244 canonical payload hashes and
+the final source after cleanup, and personally opened the original isolated-body
+raw, result-only and combined native captures. The raw body has no convincing
+separating outer boundary at the overlaid seam, supporting the apparent-split
+concern rather than an annotated error rate. Low-valued grayscale label IDs
+are dark; this is not evidence of missing instances. The combined capture has
+a shorter canvas than the raw/result captures, so the review compares the
+native region, not exact screen pixels. No reference outlines were opened or
+scored. The [outcome record](task_only_analysis/h003-fresh96-outcome.json)
+retains source, report, freeze and original capture identities.
+
+The final scientific freeze includes 90 native PNGs: distributed raw/result/
+combined views in both channels and additional isolated-split diagnostics.
+Physical calibration is unverified; geometric outputs use pixels and pixel².
+Typed closure confirms exit of the owned native/viewer processes. The original
+recorded client exited with code 2 within the 75-minute envelope; that technical
+qualification is retained separately from complete execution and scientific
+rejection. This trial improves diagnosis coverage but does not establish better
+task-wide accuracy, a causal skill benefit or a reusable parameter recipe.
+
 ## Personal neurite mosaic: technical recovery and retained biological losses
 
 The retained same-author continuation `P001_STITCH_DEV94` used a previously
