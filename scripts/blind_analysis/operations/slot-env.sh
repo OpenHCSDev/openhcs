@@ -195,18 +195,18 @@ fleet_require_helpers() {
 # The scientific writer's predecessor is independent of inherited helper identity.
 fleet_require_writer_release() {
   local retirements retirement predecessor_root predecessor_slot predecessor_phase predecessor_unit state
-  retirements=$(jq -ce '.writer_handoff | select(type=="array")' <<< "$slot")
+  retirements=$(jq -ce '.writer_handoff | select(type=="array")' <<< "$slot") || return
   while IFS= read -r retirement; do
-    predecessor_root=$(jq -er '.program_root' <<< "$retirement")
-    predecessor_slot=$(jq -er '.slot|ascii_downcase' <<< "$retirement")
-    test -f "$(jq -er '.terminal_custody_receipt' <<< "$retirement")"
-    predecessor_phase=$(jq -er '.phase' "$predecessor_root/program.json")
+    predecessor_root=$(jq -er '.program_root' <<< "$retirement") || return
+    predecessor_slot=$(jq -er '.slot|ascii_downcase' <<< "$retirement") || return
+    test -f "$(jq -er '.terminal_custody_receipt' <<< "$retirement")" || return
+    predecessor_phase=$(jq -er '.phase' "$predecessor_root/program.json") || return
     for predecessor_unit in "$predecessor_phase-$predecessor_slot-author.scope" "$predecessor_phase-$predecessor_slot-mcp.scope"; do
-      state=$(systemctl --user show "$predecessor_unit" -p LoadState --value)
+      state=$(systemctl --user show "$predecessor_unit" -p LoadState --value) || return
       if [[ "$state" != not-found ]]; then
-        test "$state" = loaded
-        state=$(systemctl --user show "$predecessor_unit" -p ActiveState --value)
-        [[ "$state" == inactive || "$state" == failed ]]
+        test "$state" = loaded || return
+        state=$(systemctl --user show "$predecessor_unit" -p ActiveState --value) || return
+        [[ "$state" == inactive || "$state" == failed ]] || return
       fi
       printf 'Retired scientific writer %s inactive\n' "$predecessor_unit"
     done
