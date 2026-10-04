@@ -53,8 +53,6 @@ from openhcs.core.source_image_provenance import SourceImageProvenance
 from openhcs.core.source_matching import source_component_metadata_value
 
 from enum import Enum
-from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
-from openhcs.core.runtime_measurements import ObjectMeasurementValueRow
 
 
 @lru_cache(maxsize=32768)
@@ -2427,75 +2425,8 @@ def measurement_rows_with_source_provenance(
 class MeasurementTableRowLayout(str, Enum):
     """Nominal row layout for measurement tables."""
 
-    EMPTY = "empty"
     LONG = "long"
     WIDE = "wide"
-
-    @classmethod
-    def for_row(cls, row: object) -> "MeasurementTableRowLayout":
-        """Classify one row from its declared measurement fields."""
-        field_names = frozenset(
-            str(field_name) for field_name in measurement_row_mapping(row)
-        )
-        has_feature_field = bool(
-            field_names & MeasurementRowAxisField.feature_name_field_names()
-        )
-        has_value_field = bool(field_names & MeasurementRowValueField.field_names())
-        if has_feature_field and not has_value_field:
-            raise ValueError(
-                "Long-form measurement rows must declare both a feature field "
-                f"and a value field, got fields {sorted(field_names)!r}."
-            )
-        return cls.LONG if has_feature_field else cls.WIDE
-
-
-class MeasurementRowLayoutProjectionStrategy(
-    EnumKeyedStrategyMixin[MeasurementTableRowLayout],
-    ABC,
-    metaclass=AutoRegisterMeta,
-):
-    """Project one nominal measurement row layout into canonical long form."""
-
-    __enum_member_attr__ = "layout"
-    layout: ClassVar[MeasurementTableRowLayout | None] = None
-
-    @abstractmethod
-    def long_rows(self, row: object) -> tuple[Mapping[str, object], ...]:
-        """Return canonical long-form rows for one source row."""
-
-
-class LongMeasurementRowProjectionStrategy(MeasurementRowLayoutProjectionStrategy):
-    """Preserve already-long rows."""
-
-    layout = MeasurementTableRowLayout.LONG
-
-    def long_rows(self, row: object) -> tuple[Mapping[str, object], ...]:
-        return (measurement_row_mapping(row),)
-
-
-class WideMeasurementRowProjectionStrategy(MeasurementRowLayoutProjectionStrategy):
-    """Explode wide feature columns into canonical long-form rows."""
-
-    layout = MeasurementTableRowLayout.WIDE
-
-    def long_rows(self, row: object) -> tuple[Mapping[str, object], ...]:
-        row_mapping = measurement_row_mapping(row)
-        axis_fields = MeasurementRowAxisField.field_names()
-        axis_values = {
-            str(field_name): value
-            for field_name, value in row_mapping.items()
-            if str(field_name) in axis_fields
-        }
-        long_rows: list[Mapping[str, object]] = []
-        for field_name, value in row_mapping.items():
-            field_text = str(field_name)
-            if field_text in axis_fields:
-                continue
-            long_row = dict(axis_values)
-            long_row[MeasurementRowAxisField.FEATURE_NAME.value] = field_text
-            long_row[MeasurementRowValueField.RESULT_VALUE.value] = value
-            long_rows.append(long_row)
-        return tuple(long_rows)
 
 
 def measurement_row_semantic_field_names() -> frozenset[str]:
@@ -2518,18 +2449,6 @@ def carries_measurement_row_semantics(row: object) -> bool:
     else:
         return False
     return bool(field_names & semantic_fields)
-
-
-def measurement_table_row_layout(rows: object) -> MeasurementTableRowLayout:
-    """Return the declared layout implied by a table row payload."""
-    observed_layouts = measurement_table_row_layouts(rows)
-    if not observed_layouts:
-        return MeasurementTableRowLayout.EMPTY
-    if len(observed_layouts) != 1:
-        raise ValueError(
-            f"MeasurementTable rows must not mix long-form and wide-form layouts; got {sorted((layout.value for layout in observed_layouts))!r}."
-        )
-    return next(iter(observed_layouts))
 
 
 def measurement_table_row_layout_from_fields(
@@ -2562,48 +2481,3 @@ def _measurement_table_row_layout_from_field_names(
         if has_feature_field
         else MeasurementTableRowLayout.WIDE
     )
-
-
-def measurement_table_row_layouts(rows: object) -> frozenset[MeasurementTableRowLayout]:
-    """Return every nominal row layout observed in a measurement payload."""
-    if rows is None:
-        return frozenset()
-    row_sequence = rows if isinstance(rows, list | tuple) else (rows,)
-    if not row_sequence:
-        return frozenset()
-    if isinstance(row_sequence[0], ObjectMeasurementValueRow) and all(
-        (isinstance(row, ObjectMeasurementValueRow) for row in row_sequence)
-    ):
-        return frozenset((MeasurementTableRowLayout.LONG,))
-    return frozenset((MeasurementTableRowLayout.for_row(row) for row in row_sequence))
-
-
-def normalize_measurement_table_rows(
-    rows: object, *, fields: Iterable[FieldSpec] = ()
-) -> object:
-    """Return homogeneous measurement rows, canonicalizing mixed tables to long form."""
-    declared_layout = measurement_table_row_layout_from_fields(fields)
-    if declared_layout is not None:
-        return rows
-    observed_layouts = measurement_table_row_layouts(rows)
-    if len(observed_layouts) <= 1:
-        return rows
-    return measurement_rows_as_layout(rows, MeasurementTableRowLayout.LONG)
-
-
-def measurement_rows_as_layout(
-    rows: object, layout: MeasurementTableRowLayout
-) -> object:
-    """Project measurement rows into a declared table layout."""
-    if layout is not MeasurementTableRowLayout.LONG:
-        raise ValueError(
-            f"Unsupported measurement row layout projection: {layout.value}."
-        )
-    row_sequence = rows if isinstance(rows, list | tuple) else (rows,)
-    return [
-        projected_row
-        for row in row_sequence
-        for projected_row in MeasurementRowLayoutProjectionStrategy.for_enum_member(
-            MeasurementTableRowLayout.for_row(row)
-        ).long_rows(row)
-    ]
