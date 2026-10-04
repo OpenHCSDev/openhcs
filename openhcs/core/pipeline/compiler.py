@@ -863,26 +863,6 @@ class PipelineCompiler:
                     f"Memory validation must set {missing_fields} for FunctionStep {step_plan.step_name} (index: {step_index})."
                 )
 
-        # Apply memory type override: Any step with disk output must use numpy for disk writing
-        for step_index, step in enumerate(session.pipeline.steps):
-            if isinstance(step, FunctionStep):
-                if step_index in context.step_plans:
-                    step_plan = context.step_plans[step_index]
-                    compiled_pattern = step_plan.compiled_function_pattern
-                    if (
-                        compiled_pattern is not None
-                        and compiled_pattern.execution_scope
-                        is FunctionStepExecutionScope.PLATE
-                    ):
-                        continue
-                    write_backend = step_plan.write_backend
-
-                    if write_backend == "disk":
-                        logger.debug(
-                            f"Step {session.pipeline.steps[step_index].name} has disk output, overriding output_memory_type to numpy"
-                        )
-                        step_plan.output_memory_type = "numpy"
-
     @staticmethod
     def assign_framework_device_resources(session: CompilationSession) -> None:
         """Resolve each step's declaration-derived framework device footprint."""

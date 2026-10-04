@@ -74,6 +74,9 @@ def declared_cupy_leaf(monkeypatch):
             runtime=SimpleNamespace(getDeviceCount=lambda: 2), Device=DeviceScope,
         ),
         array=upload,
+        stack=lambda values, axis=0: DeviceArray(
+            np.stack([value.values for value in values], axis=axis), state['device'],
+        ),
         logical_and=lambda left, right: DeviceArray(
             np.logical_and(left.values, right.values), state['device'],
         ),
