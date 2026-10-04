@@ -19,7 +19,7 @@ from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
     ImagePayloadBundleContext,
     payload_slices_for_alignment,
-    stack_image_payload_context,
+    stack_image_payloads,
 )
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
@@ -404,9 +404,8 @@ def test_workspace_source_projection_carries_exact_aliases_into_stack_provenance
         for payload in projected_payloads
     )
 
-    stack = stack_image_payload_context(
+    stack = stack_image_payloads(
         projected_payloads,
-        np.stack(tuple(image_payload_data(payload) for payload in projected_payloads)),
         metadata_mode=projection.payload_composition_mode(lookups),
     )
 
@@ -765,9 +764,8 @@ def test_stack_payload_context_promotes_single_channel_slice_metadata() -> None:
         )
     )
 
-    payload = stack_image_payload_context(
+    payload = stack_image_payloads(
         (first, second),
-        stack,
         metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
     )
     metadata = image_payload_metadata(payload)

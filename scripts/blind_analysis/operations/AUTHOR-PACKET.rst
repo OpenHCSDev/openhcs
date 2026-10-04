@@ -34,9 +34,22 @@ Never replay UNKNOWN/interrupted operations. No installation, download,
 environment/provider/model change, new agent or restart.
 Read current registered input contracts before supplying arguments.
 
-Before EACH scientific action choose a UNIQUE observation name::
+Before EACH action choose a UNIQUE observation name AND an explicit admission
+mode from its actual resource effects. Inspect the registered capability's
+read_only/mutating/side_effects declarations, request size, simultaneous buffers
+and destination space; read-only does not imply cheap. For bounded status,
+observation, small QA or owned cleanup on your recorded live client use::
 
-  bash "$FLEET_OPERATIONS/resource-check.sh" "$FLEET_ROOT" "$FLEET_SLOT" UNIQUE_PHASE
+  bash "$FLEET_OPERATIONS/resource-check.sh" "$FLEET_ROOT" "$FLEET_SLOT" UNIQUE_PHASE ongoing
+
+For new or large allocations, including full-frame scientific execution,
+materializing a large array or a full export, size the actual work and use::
+
+  bash "$FLEET_OPERATIONS/resource-check.sh" "$FLEET_ROOT" "$FLEET_SLOT" UNIQUE_PHASE full
+
+The original recorder owns replacement admission before a new client starts;
+ongoing cannot authorize a client, cold process or bulk allocation. There is no
+implicit mode or tool-name exception list.
 
 Read its actual result before dispatch. The current funding owner owns membership and reservations;
 your immutable run declaration owns source, paths, CPU, deadline and output permissions;
@@ -47,21 +60,14 @@ and failed receipt; at a later operational checkpoint make a new named check
 within the same deadline. Do not busy poll, bypass limits, create another
 poller or freeze automatically on a first transient pressure failure.
 
-The default ongoing admission is ONLY for bounded observations and small QA on
-your already recorded live client. The guard verifies that client incarnation;
-it cannot authorize a new client, cold process, full export or bulk execution.
-Use the registered capability's read_only/mutating/side_effects declarations,
-request size and current destination space to understand the action, not a tool
-name allowlist. A read-only method can still materialize a large array. For a
-large allocation use the SAME owner with mode ``full`` before dispatch::
-
-  bash "$FLEET_OPERATIONS/resource-check.sh" "$FLEET_ROOT" "$FLEET_SLOT" UNIQUE_PHASE full
-
-Below the startup disk reserve, ongoing observations warn rather than forbidding
-all QA. Preserve the warning; fit actual captures/writes into current free space
-and coordinate owned cleanup. Do not reinterpret it as permission for an
-unbounded batch, or replay any previously uncertain input. Startup and large
-allocation admission still protect desktop disk/RAM and measured pressure.
+The guard verifies the recorded client incarnation for ongoing work. Below the
+desktop RAM or startup disk reserve, bounded ongoing observations warn so you
+can resolve already-running jobs and release owned buffers. Preserve the actual
+RAM/pressure warning; reduce simultaneous buffers, fit small captures/writes
+into current free space and coordinate cleanup. A warning is not proof that a
+new allocation fits. Startup and large allocation admission still protect
+desktop disk/RAM and measured pressure. Never replay an uncertain input or
+automatically freeze/kill the run merely because ongoing telemetry warns.
 
 Iterate on your OWN measured/visible QA failures until acceptance, the actual
 time/resource bound or an irreducible blocker. There is no arbitrary candidate
