@@ -215,7 +215,7 @@ def test_store_transport_excludes_derived_caches_and_retains_records():
     assert restored.revision == store.revision
     assert len(restored) == len(store) == 1
     assert (
-        restored.observed_values[0].value.data.row_mappings()
+        restored.observed_values[0].data.row_mappings()
         == value.data.row_mappings()
     )
     assert (
@@ -572,9 +572,12 @@ def test_runtime_artifact_query_from_dynamic_input_plan_matches_discovered_group
     )
 
     assert isinstance(query.target, RuntimeArtifactDynamicComponentTarget)
+    value = _runtime_value(path="/memory/measurements_wDAPI.pkl")
     assert query.matches(
         StoredRuntimeValue(
-            value=_runtime_value(path="/memory/measurements_wDAPI.pkl"),
+            key=value.key,
+            data=value.data,
+            materialization_source_metadata=value.materialization_source_metadata,
             location=RuntimeArtifactLocation(
                 path="/memory/measurements_wDAPI.pkl",
                 backend="memory",
@@ -1150,6 +1153,10 @@ def test_runtime_artifact_input_projection_collapses_excluded_singleton_axis() -
         backend="memory",
     )
 
+    projected_values = runtime_input.projected_values(store)
+    assert all(type(value) is RuntimeValue for value in projected_values)
+    assert all(image_payload_data(value.data).shape == (2, 2) for value in projected_values)
+    assert all(image_payload_data(record.data).shape == (1, 2, 2) for record in store.values())
     payload = runtime_input.resolve_value(store)
 
     assert image_payload_data(payload).shape == (2, 2, 2)
@@ -1362,7 +1369,7 @@ def test_runtime_artifact_input_projection_keeps_equal_keys_component_typed():
 
     assert len(records) == 1
     assert records[0].key.scope.component is AllComponents.SITE
-    np.testing.assert_array_equal(records[0].value.data, np.full((2, 2), 1.0))
+    np.testing.assert_array_equal(records[0].data, np.full((2, 2), 1.0))
 
 
 def test_runtime_artifact_input_projection_uses_compiled_group_for_plane_scope():
@@ -1761,7 +1768,7 @@ def test_exact_producer_group_does_not_constrain_consumer_source_channel():
     store, record, runtime_input = _grouped_label_input_with_distinct_consumer_channel()
 
     assert runtime_input.records(store) == (record,)
-    assert runtime_input.resolve_value(store) is record.value.data
+    assert runtime_input.resolve_value(store) is record.data
     candidates = runtime_input.candidate_execution_scopes(
         store, ComponentGroupScope.ungrouped(),
         variable_components=ComponentSet((AllComponents.Z_INDEX,)),
@@ -1794,7 +1801,7 @@ def test_exact_producer_group_preserves_shared_fixed_context_constraints(compone
 def test_exact_producer_group_rejects_other_producer_or_fixed_plane(mismatch):
     _store, record, runtime_input = _grouped_label_input_with_distinct_consumer_channel()
     scope = record.key.scope
-    path = record.path
+    path = record.location.path
     if mismatch == "group":
         scope = replace(scope, value="1")
     elif mismatch == "well":
@@ -1820,8 +1827,8 @@ def test_exact_producer_group_rejects_other_producer_or_fixed_plane(mismatch):
         )
     store = RuntimeValueStore()
     store.record(
-        replace(record.value, key=replace(record.key, scope=scope)),
-        path=path, backend=record.backend,
+        replace(record, key=replace(record.key, scope=scope)),
+        path=path, backend=record.location.backend,
     )
     with pytest.raises(RuntimeError, match="Missing RuntimeValueStore record"):
         runtime_input.records(store)
@@ -1840,7 +1847,7 @@ def test_different_producer_group_axis_preserves_fixed_source_channel_constraint
     storage_plan = replace(
         runtime_input.edge_plan.storage_plan,
         group_component=AllComponents.SITE, group_keys=("1",),
-        paths_by_group={"1": record.path},
+        paths_by_group={"1": record.location.path},
     )
     runtime_input = replace(
         runtime_input,
@@ -1855,8 +1862,8 @@ def test_different_producer_group_axis_preserves_fixed_source_channel_constraint
     )
     store = RuntimeValueStore()
     store.record(
-        replace(record.value, key=replace(record.key, scope=scope)),
-        path=record.path, backend=record.backend,
+        replace(record, key=replace(record.key, scope=scope)),
+        path=record.location.path, backend=record.location.backend,
     )
     with pytest.raises(RuntimeError, match="Missing RuntimeValueStore record"):
         runtime_input.records(store)
@@ -1900,7 +1907,7 @@ def test_paired_channel_declaration_reaches_both_adapter_input_consumers():
     request = RuntimeInputBindingRequest(
         adapter=adapter, kwargs={}, current_image=np.zeros((2, 2))
     )
-    assert request.artifact_value(edge) is record.value.data
+    assert request.artifact_value(edge) is record.data
 
 
 @pytest.mark.parametrize("component", [AllComponents.SITE, AllComponents.Z_INDEX, AllComponents.TIMEPOINT])
@@ -1973,14 +1980,14 @@ def test_paired_channel_projection_rejects_a_different_producer_site_plane():
     store, record, runtime_input = _paired_channel_label_input()
     edge = runtime_input.edge_plan
     payload = replace(
-        record.value.data,
+        record.data,
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=("/source/site2_DNA.tif",),
             component_metadata=({"site": "2", "channel": "1"},),
         ),
     )
     store.replace(
-        replace(record.value, data=payload), path=record.path, backend=record.backend
+        replace(record, data=payload), path=record.location.path, backend=record.location.backend
     )
     projected_input = replace(
         runtime_input,
@@ -2003,7 +2010,7 @@ def test_paired_channel_input_rejects_ambiguous_address_matched_contexts():
     _other_store, other_record, _other_input = _paired_channel_label_input(
         producer_values=((AllComponents.CHANNEL, "3"),),
     )
-    store.record(other_record.value, path=other_record.path, backend=other_record.backend)
+    store.record(other_record, path=other_record.location.path, backend=other_record.location.backend)
 
     with pytest.raises(RuntimeError, match="Ambiguous RuntimeValueStore records"):
         runtime_input.records(store)
@@ -2097,8 +2104,12 @@ def test_exact_input_admits_no_shared_projected_context_constraints(
     )
     store = RuntimeValueStore()
     record = store.record(
-        replace(original.value, key=replace(original.key, scope=producer_scope)),
-        path=original.path, backend=original.backend,
+        RuntimeValue(
+            key=replace(original.key, scope=producer_scope),
+            data=original.data,
+            materialization_source_metadata=original.materialization_source_metadata,
+        ),
+        path=original.location.path, backend=original.location.backend,
     )
     source = NamedSourceBinding(
         alias="Reference",
@@ -2253,12 +2264,14 @@ def test_runtime_value_store_merges_observed_records_from_worker_boundary():
 def test_runtime_measurement_observation_axis_accepts_table_record_once():
     value = _runtime_value()
     record = StoredRuntimeValue(
-        value=value,
-        location=RuntimeArtifactLocation(
+                 key=value.key,
+                 data=value.data,
+                 materialization_source_metadata=value.materialization_source_metadata,
+                 location=RuntimeArtifactLocation(
             path="/memory/measurements.pkl",
             backend="memory",
         ),
-    )
+             )
     axis = RuntimeMeasurementObservationAxis("A01")
 
     axis.accept_measurement_table(record)
@@ -2266,7 +2279,7 @@ def test_runtime_measurement_observation_axis_accepts_table_record_once():
     assert len(axis.measurement_tables) == 1
     scoped_table = axis.measurement_tables[0]
     assert scoped_table.table is value.data
-    assert scoped_table.record_identity == record.path
+    assert scoped_table.record_identity == record.location.path
     assert scoped_table.execution_scope == record.key.scope
 
 
@@ -2292,10 +2305,10 @@ def test_dynamic_input_query_distinguishes_compiled_paths_with_same_backend():
         RuntimeArtifactQuery.from_input_plan(
             ArtifactInputPlan(
                 name="measurements",
-                path=record.path,
+                path=record.location.path,
                 artifact_type=MeasurementsArtifactType,
                 group_component=AllComponents.CHANNEL,
-                paths_by_group={None: record.path, "DAPI": record.path},
+                paths_by_group={None: record.location.path, "DAPI": record.location.path},
             ),
             axis_id="A01",
             backend="memory",
@@ -2360,7 +2373,7 @@ def test_dynamic_query_snapshots_address_mapping_without_mutating_source_plan():
     assert store.find_matching(old_query) == (first,)
     paths["DAPI"] = "/second/measurements.pkl"
     assert plan.paths_by_group is paths
-    assert old_query.target.input_plan.paths_by_group["DAPI"] == first.path
+    assert old_query.target.input_plan.paths_by_group["DAPI"] == first.location.path
     assert hash(old_query) == old_hash
     assert old_query == same_query
     assert store.find_matching(old_query) == (first,)
@@ -2430,10 +2443,10 @@ def test_store_transport_excludes_all_derived_lookup_caches():
     query = RuntimeArtifactQuery.from_input_plan(
         ArtifactInputPlan(
             name="measurements",
-            path=record.path,
+            path=record.location.path,
             artifact_type=MeasurementsArtifactType,
             group_component=AllComponents.CHANNEL,
-            paths_by_group={"DAPI": record.path},
+            paths_by_group={"DAPI": record.location.path},
         ),
         axis_id="A01",
         backend="memory",
@@ -2453,13 +2466,14 @@ def test_store_transport_excludes_all_derived_lookup_caches():
     assert restored._query_caches == {}
     assert restored.values()[0].key == record.key
     assert restored.values()[0].location == record.location
-    assert restored.values()[0].value.data.row_mappings() == value.data.row_mappings()
+    assert restored.values()[0].data.row_mappings() == value.data.row_mappings()
     assert restored.find_matching(query) == (restored.values()[0],)
     assert restored.get(record.key) is restored.values()[1]
     assert restored.get(record.key).location == latest.location
     assert restored.observed_values == restored.values()
     assert restored.values()[0] is restored.observed_values[0]
-    assert restored.values()[0].value is restored.values()[1].value
+    assert restored.values()[0].data is restored.values()[1].data
+    assert restored.values()[0].key is restored.values()[1].key
 
 
 def test_unified_store_cache_keeps_both_query_domains_and_empty_results():
@@ -2470,7 +2484,7 @@ def test_unified_store_cache_keeps_both_query_domains_and_empty_results():
     query = RuntimeArtifactQuery.from_input_plan(
         ArtifactInputPlan(
             name="measurements",
-            path=record.path,
+            path=record.location.path,
             artifact_type=MeasurementsArtifactType,
             group_component=AllComponents.CHANNEL,
         ),
@@ -2506,7 +2520,7 @@ def test_unified_store_cache_eviction_recomputes_order_without_changing_record_a
     query = RuntimeArtifactQuery.from_output_plan(
         ArtifactOutputPlan(
             name="first",
-            path=first.path,
+            path=first.location.path,
             artifact_type=MeasurementsArtifactType,
             group_component=AllComponents.CHANNEL,
             group_keys=("DAPI",),
@@ -2522,8 +2536,31 @@ def test_unified_store_cache_eviction_recomputes_order_without_changing_record_a
     assert recomputed == all_records
     assert recomputed is not all_records
     assert recomputed[0] is first and recomputed[1] is second
-    replacement = store.replace(first_value, path=first.path, backend="memory")
+    replacement = store.replace(first_value, path=first.location.path, backend="memory")
     assert cache.entries == {}
     assert store.find_matching(query)[0] is replacement
     assert store.find() == (replacement, second)
     assert store.find()[1] is second
+
+
+def test_changed_stored_measurement_subject_requires_a_transient_value():
+    value = _runtime_value()
+    store = RuntimeValueStore()
+    record = store.record(value, path="/memory/measurements.pkl", backend="memory")
+    plan = ArtifactOutputPlan(
+        name=value.name, artifact_type=value.artifact_type,
+        path="/memory/measurements.pkl",
+    )
+    record.data.subject = MeasurementSubject(MeasurementScope.IMAGE, "NextImage")
+
+    admitted = record.validated_for_output_plan(plan, axis_id="A01")
+
+    assert type(admitted) is RuntimeValue
+    assert admitted.key.semantic_id == record.data.runtime_semantic_id
+    assert admitted.key != record.key
+    assert store.get(record.key) is record
+    assert record.location.path == "/memory/measurements.pkl"
+    assert admitted.data is record.data
+    assert type(StoredRuntimeValue.from_output_plan(
+        plan, admitted.data, execution_scope=record.key.scope,
+    )) is RuntimeValue

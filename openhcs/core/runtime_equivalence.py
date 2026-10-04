@@ -639,8 +639,8 @@ class RuntimeMeasurementObservationAxis:
     ) -> None:
         self.measurement_tables.append(
             RuntimeScopedMeasurementTable(
-                cast(MeasurementTable, record.value.data),
-                record_identity=record.path,
+                cast(MeasurementTable, record.data),
+                record_identity=record.location.path,
                 execution_scope=record.key.scope,
             )
         )
@@ -654,7 +654,7 @@ class RuntimeMeasurementObservationAxis:
         record: StoredRuntimeValue,
     ) -> None:
         """Record a relationship artifact observed on this axis."""
-        relationship = cast(ObjectRelationship, record.value.data)
+        relationship = cast(ObjectRelationship, record.data)
         relationship_identity = RuntimeObjectRelationshipIdentity.from_relationship(
             relationship
         )
@@ -879,7 +879,7 @@ class RuntimeMeasurementProjectionState(RuntimeObjectMeasurementFactRowDomain):
     def record_spatial_grid(self, record: StoredRuntimeValue) -> None:
         record_measurement_facts(
             self.measurement_fact_counts,
-            spatial_grid_measurement_facts(record.value, self.policy),
+            spatial_grid_measurement_facts(record, self.policy),
             required_keys=self.required_measurement_keys,
         )
 
@@ -3220,7 +3220,7 @@ def _measurement_source_names_from_artifact_execution(
         for record in records:
             if record.key.artifact_type is not MeasurementsArtifactType:
                 continue
-            table = cast(MeasurementTable, record.value.data)
+            table = cast(MeasurementTable, record.data)
             if table.source_image_name is not None:
                 source_names.update(_source_name_aliases(table.source_image_name))
             for row in iter_measurement_rows((table,)):

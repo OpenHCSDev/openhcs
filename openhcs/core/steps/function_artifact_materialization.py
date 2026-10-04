@@ -140,7 +140,7 @@ class ArtifactMaterializationRecordReducer(
         record_locations = tuple(
             (
                 record.key.semantic_id,
-                record.path,
+                record.location.path,
             )
             for record in records
         )
@@ -175,7 +175,7 @@ class ImageArtifactMaterializationRecordReducer(ArtifactMaterializationRecordRed
             list[StoredRuntimeValue],
         ] = {}
         for record in records:
-            payload = output_plan.materialization_payload(record.value)
+            payload = output_plan.materialization_payload(record)
             metadata = image_payload_metadata(payload)
             address = OpenHCSPlaneAddress.from_complete_source_metadata(
                 metadata.source_component_metadata
@@ -229,9 +229,9 @@ class ImageArtifactMaterializationRecordReducer(ArtifactMaterializationRecordRed
             )
 
         owner_record = owner_records[0]
-        owner_payload = output_plan.materialization_payload(owner_record.value)
+        owner_payload = output_plan.materialization_payload(owner_record)
         for record in records:
-            payload = output_plan.materialization_payload(record.value)
+            payload = output_plan.materialization_payload(record)
             if not cls._payloads_are_equivalent(owner_payload, payload):
                 raise ValueError(
                     "Conflicting scalar image materialization payloads for source "
@@ -271,7 +271,7 @@ class MeasurementArtifactMaterializationRecordReducer(
         if len(records) <= 1:
             return records
         group_plan = output_plan.for_group(group_key)
-        tables = tuple(cast(MeasurementTable, record.value.data) for record in records)
+        tables = tuple(cast(MeasurementTable, record.data) for record in records)
         table = MeasurementTableUnion(output_plan.name, tables).as_artifact_table()
         value = RuntimeValue.normalize_for_execution_scope(
             group_plan,
@@ -280,7 +280,9 @@ class MeasurementArtifactMaterializationRecordReducer(
         )
         return (
             StoredRuntimeValue(
-                value=value,
+                key=value.key,
+                data=value.data,
+                materialization_source_metadata=value.materialization_source_metadata,
                 location=RuntimeArtifactLocation(
                     path=group_plan.path,
                     backend=Backend.MEMORY.value,
@@ -637,7 +639,7 @@ class AnalysisOutputDescriptorAuthority:
                     "Artifact record descriptor requires a materialization spec."
                 )
             if record.key.artifact_type.uses_aggregate_materialization_identity(
-                record.value.data
+                record.data
             ):
                 metadata = cls.record_payload_metadata(record)
                 aggregate_provenance = (
@@ -731,11 +733,11 @@ class AnalysisOutputDescriptorAuthority:
     ) -> ImagePayloadMetadata | None:
         if record is None:
             return None
-        if isinstance(record.value.data, SourceImageProvenanceFields):
+        if isinstance(record.data, SourceImageProvenanceFields):
             return ImagePayloadMetadata(
-                source_provenance=record.value.data.source_provenance,
+                source_provenance=record.data.source_provenance,
             )
-        return image_payload_metadata(record.value.data)
+        return image_payload_metadata(record.data)
 
     @classmethod
     def record_metadata_with_runtime_scope(
@@ -787,14 +789,14 @@ class AnalysisOutputDescriptorAuthority:
             and output_plan.materialization_source()
             != output_plan.source_context_source()
         ):
-            metadata = output_plan.materialization_metadata(record.value)
+            metadata = output_plan.materialization_metadata(record)
         metadata = cls.record_metadata_with_runtime_scope(
             record,
             metadata,
         )
         parser_context = FunctionOutputParserContext.from_processing_context(context)
         use_filename_identity = materialization_spec.uses_filename_source_identity(
-            record.value.data
+            record.data
         )
         if use_filename_identity or exact_fixed_scope:
             identity = FunctionOutputIdentity.from_filename_metadata(
@@ -811,7 +813,7 @@ class AnalysisOutputDescriptorAuthority:
             identity = FunctionOutputIdentity.from_metadata(
                 parser_context.parser,
                 metadata,
-                fallback_identity_path=record.path,
+                fallback_identity_path=record.location.path,
                 variable_components=plan.variable_components,
             )
         if identity is not None:
@@ -950,7 +952,7 @@ def actual_materialization_records(
                 axis_id=plan.axis_id,
             )
             if record.key.scope.value_text is not None
-            and record.backend == Backend.MEMORY.value
+            and record.location.backend == Backend.MEMORY.value
             and store.get(record.key).location == record.location
         )
         if dynamic_records:
@@ -1003,7 +1005,7 @@ def actual_materialization_records(
                 group_key=group_key,
                 match_group=True,
             )
-            if record.backend == Backend.MEMORY.value
+            if record.location.backend == Backend.MEMORY.value
             and store.get(record.key).location == record.location
         )
         if not records:
@@ -1028,8 +1030,8 @@ def actual_materialization_records(
         candidate_locations = tuple(
             (
                 candidate.key.scope.value_text,
-                candidate.backend,
-                candidate.path,
+                candidate.location.backend,
+                candidate.location.path,
             )
             for candidate in candidates
         )
@@ -1037,7 +1039,7 @@ def actual_materialization_records(
             candidate
             for candidate in candidates
             if candidate.key.scope.value_text is None
-            and candidate.backend == Backend.MEMORY.value
+            and candidate.location.backend == Backend.MEMORY.value
             and store.get(candidate.key).location == candidate.location
         )
         if identity_records:
@@ -1088,7 +1090,7 @@ class RuntimeArtifactMaterialization:
                 f"Artifact output {output_plan.name!r} declares unsupported "
                 f"materialization {type(spec).__name__}."
             )
-        data = output_plan.materialization_payload(record.value)
+        data = output_plan.materialization_payload(record)
         emits_projected_planes = spec.emits_variable_component_planes(data)
         if (
             output_plan.materialization_uses_source_identity_filename()
@@ -1127,7 +1129,7 @@ class RuntimeArtifactMaterialization:
                 plan,
                 context,
                 record.key.scope.value_text,
-                artifact_path=record.path,
+                artifact_path=record.location.path,
                 record=record,
                 materialization_spec=spec,
                 output_plan=output_plan,
@@ -1409,7 +1411,7 @@ def materialize_artifact_outputs(
         backend_plan = target_plan.backend_plan(plan, context, materialization)
         record = materialization.record
         data = materialization.data
-        filemanager.ensure_directory(Path(record.path).parent, record.backend)
+        filemanager.ensure_directory(Path(record.location.path).parent, record.location.backend)
         stream_output_paths = materialization.spec.candidate_paths(
             str(materialization.base_path)
         )

@@ -116,12 +116,15 @@ def save_archive_outcome(context, plate, destination, monkeypatch):
         artifact_type=MetadataArtifactType,
         materialization=spec,
     )
+    value = RuntimeValue.from_output_plan(
+        artifact_plan,
+        {},
+        execution_scope=RuntimeExecutionAxisScope(axis_id="A01"),
+    )
     record = StoredRuntimeValue(
-        value=RuntimeValue.from_output_plan(
-            artifact_plan,
-            {},
-            execution_scope=RuntimeExecutionAxisScope(axis_id="A01"),
-        ),
+        key=value.key,
+        data=value.data,
+        materialization_source_metadata=value.materialization_source_metadata,
         location=RuntimeArtifactLocation(
             path=artifact_plan.path, backend=Backend.MEMORY.value
         ),

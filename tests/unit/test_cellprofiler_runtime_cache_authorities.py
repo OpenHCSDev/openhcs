@@ -329,7 +329,7 @@ def test_relationship_replacement_invalidates_cached_child_counts() -> None:
                 axis_id=AXIS_ID,
             )
             assert len(records) == 1
-            relationship = records[0].value.data
+            relationship = records[0].data
             assert isinstance(relationship, ObjectRelationship)
             return relationship
 

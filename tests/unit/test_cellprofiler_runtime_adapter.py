@@ -283,7 +283,7 @@ def _output_objects(adapter: CellProfilerRuntimeAdapter, name: str) -> ObjectLab
         _selected_output_plan(adapter, name, ObjectLabelsArtifactType)
     )
     assert len(records) == 1
-    value = records[0].value.data
+    value = records[0].data
     assert isinstance(value, ObjectLabelSet)
     return value
 
@@ -295,7 +295,7 @@ def _output_measurements(
     records = adapter.artifact_output_records(
         _selected_output_plan(adapter, name, MeasurementsArtifactType)
     )
-    tables = tuple(record.value.data for record in records)
+    tables = tuple(record.data for record in records)
     assert all(isinstance(table, MeasurementTable) for table in tables)
     return MeasurementTableUnion(name, tables).as_table()
 
@@ -307,7 +307,7 @@ def _output_relationship(
     records = adapter.artifact_output_records(
         _selected_output_plan(adapter, name, RelationshipsArtifactType)
     )
-    relationships = tuple(record.value.data for record in records)
+    relationships = tuple(record.data for record in records)
     assert all(isinstance(value, ObjectRelationship) for value in relationships)
     if len(relationships) == 1:
         return relationships[0]
@@ -321,7 +321,7 @@ def _output_spatial_grid(
     records = adapter.artifact_output_records(
         _selected_output_plan(adapter, name, SpatialGridArtifactType)
     )
-    value = RuntimeValue.compose(tuple(record.value for record in records))
+    value = RuntimeValue.compose(tuple(record for record in records))
     assert isinstance(value, (SpatialGrid, RuntimeSliceAlignedValues))
     return value
 
@@ -1010,8 +1010,8 @@ def test_cellprofiler_adapter_adds_and_reads_objects_through_runtime_store():
     )
     objects = _output_objects(adapter, NUCLEI)
 
-    assert isinstance(record.value.data, ObjectLabelSet)
-    assert record.value.data.name == NUCLEI
+    assert isinstance(record.data, ObjectLabelSet)
+    assert record.data.name == NUCLEI
     assert objects.labels is labels
     assert objects.source_image_name == DNA_IMAGE
     assert objects.dimensions == ("y", "x")
@@ -1053,14 +1053,14 @@ def test_cellprofiler_adapter_contextualizes_source_aligned_object_label_stack()
         source_image_payload=source_image,
     )
 
-    assert isinstance(record.value.data, ObjectLabelSet)
-    assert record.value.data.source_image_provenance_planes.paths == (
+    assert isinstance(record.data, ObjectLabelSet)
+    assert record.data.source_image_provenance_planes.paths == (
         "/src/A01_s001_w1_z001_t001.tif",
         "/src/A01_s002_w1_z001_t001.tif",
     )
     assert tuple(
         dict(metadata)
-        for metadata in record.value.data.source_image_provenance_planes.component_metadata
+        for metadata in record.data.source_image_provenance_planes.component_metadata
         if metadata is not None
     ) == (
         {"well": "A01", "site": "1", "channel": "1"},
@@ -1070,7 +1070,7 @@ def test_cellprofiler_adapter_contextualizes_source_aligned_object_label_stack()
     assert isinstance(saved_payload, ObjectLabelSet)
     assert (
         saved_payload.source_image_provenance_planes.paths
-        == record.value.data.source_image_provenance_planes.paths
+        == record.data.source_image_provenance_planes.paths
     )
 
 
@@ -1110,7 +1110,7 @@ def test_cellprofiler_adapter_contextualizes_single_source_aligned_label_plane()
         source_image_payload=source_image,
     )
 
-    object_labels = record.value.data
+    object_labels = record.data
     assert isinstance(object_labels, ObjectLabelSet)
     object_labels.validate_source_alignment(NUCLEI)
     assert object_labels.source_image_provenance_planes.paths == (source_path,)
@@ -1142,9 +1142,9 @@ def test_cellprofiler_adapter_preserves_sparse_ijv_object_value_representation()
 
     record = adapter.add_objects(NUCLEI, labels)
 
-    assert isinstance(record.value.data, ObjectLabelSet)
-    assert record.value.data.representation is ObjectLabelRepresentation.SPARSE_IJV
-    assert record.value.data.labels is sparse_rows
+    assert isinstance(record.data, ObjectLabelSet)
+    assert record.data.representation is ObjectLabelRepresentation.SPARSE_IJV
+    assert record.data.labels is sparse_rows
     objects = _output_objects(adapter, NUCLEI)
     assert objects.representation is ObjectLabelRepresentation.SPARSE_IJV
     assert objects.labels is sparse_rows
@@ -3706,8 +3706,8 @@ def test_cellprofiler_adapter_declared_relationship_allows_pruned_child_endpoint
     )
 
     assert relationship.value.artifact_type is RelationshipsArtifactType
-    assert isinstance(relationship.value.data, ObjectRelationship)
-    assert relationship.value.data.declaration.target.name == "FilteredCells"
+    assert isinstance(relationship.data, ObjectRelationship)
+    assert relationship.data.declaration.target.name == "FilteredCells"
 
 
 def test_cellprofiler_adapter_relationships_accept_grouped_parent_inputs():
@@ -3989,8 +3989,8 @@ def test_cellprofiler_adapter_replaces_existing_payload_with_latest_binding():
         NUCLEI, ObjectLabelPayload(variant_data=ObjectLabelVariantData(labels=second))
     )
 
-    assert isinstance(record.value.data, ObjectLabelSet)
-    assert record.value.data.labels is second
+    assert isinstance(record.data, ObjectLabelSet)
+    assert record.data.labels is second
     assert filemanager.deleted == [("memory", "/memory/Nuclei.pkl")]
     saved_objects = filemanager.saved[("memory", "/memory/Nuclei.pkl")]
     assert isinstance(saved_objects, ObjectLabelSet)
@@ -4214,7 +4214,7 @@ def test_cellprofiler_adapter_preserves_same_artifact_measurement_subjects():
     )
 
     tables = tuple(
-        record.value.data
+        record.data
         for record in adapter.artifact_output_records(measurement_output_plan)
     )
 
@@ -4559,7 +4559,7 @@ def test_cellprofiler_adapter_hides_undeclared_same_name_object_table_occurrence
                         NUCLEI_MEASUREMENTS,
                     ),
                 )
-            ).value.data
+            ).data
         )
     _compiled_artifact_inputs = {
         edge.key: edge

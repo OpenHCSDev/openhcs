@@ -325,15 +325,15 @@ def test_exact_secondary_selector_survives_authoring_compile_and_execution(tmp_p
     assert secondary.key.scope.value_text_for_component(AllComponents.CHANNEL) == (
         "1" if same_source else "2"
     )
-    primary_area = np.count_nonzero(object_label_dense_array(primary.value.data))
-    secondary_area = np.count_nonzero(object_label_dense_array(secondary.value.data))
+    primary_area = np.count_nonzero(object_label_dense_array(primary.data))
+    secondary_area = np.count_nonzero(object_label_dense_array(secondary.data))
     assert secondary_area > primary_area > 0
     [output] = invocation.artifact_output_plans
     [measurement] = store.find(name=output.name, artifact_type=MeasurementsArtifactType, axis_id="A01")
-    assert measurement.value.data.subject.object_name == "Cells"
+    assert measurement.data.subject.object_name == "Cells"
     image_name = "DNA" if same_source else "Actin"
     values = measurement_values_for_feature(
-        (measurement.value.data,),
+        (measurement.data,),
         f"Intensity_IntegratedIntensity_{image_name}",
         object_count=1,
         object_name="Cells",
@@ -403,7 +403,7 @@ def test_explicit_measurement_rosters_survive_one_matched_source_anchor(
     )
     for object_name in ("Nuclei", "Cells"):
         (labels,) = context.runtime_value_store.find(name=object_name, axis_id="A01")
-        area = np.count_nonzero(object_label_dense_array(labels.value.data))
+        area = np.count_nonzero(object_label_dense_array(labels.data))
         for image_name, integrated in (("DNA", 4.0), ("Actin", float(area))):
             expected_features = {
                 "IntegratedIntensity": integrated,
@@ -413,7 +413,7 @@ def test_explicit_measurement_rosters_survive_one_matched_source_anchor(
             }
             for feature, expected in expected_features.items():
                 values = measurement_values_for_feature(
-                    (measurement.value.data,),
+                    (measurement.data,),
                     f"Intensity_{feature}_{image_name}",
                     object_count=1,
                     object_name=object_name,
@@ -496,8 +496,8 @@ def test_headless_entrypoint_requires_subject_and_executes_corrected_rows(
     [counts] = store.find(name="PixelCounts", axis_id="A01")
     [image] = store.find(name="CountedImage", axis_id="A01")
     assert image.key.artifact_type is ImageArtifactType
-    assert counts.value.data.subject.source_image_name == "CountedImage"
-    assert tuple(counts.value.data.rows.column_values("pixel_count")) == (4,)
+    assert counts.data.subject.source_image_name == "CountedImage"
+    assert tuple(counts.data.rows.column_values("pixel_count")) == (4,)
     step_plan = bundle.runtime_contexts["A01"].step_plans[0]
     [csv_path] = step_plan.artifact_analysis_output_dir.glob(
         f"*_{counts.key.name}_step{step_plan.step_index}_details.csv"
@@ -505,4 +505,4 @@ def test_headless_entrypoint_requires_subject_and_executes_corrected_rows(
     with csv_path.open(newline="") as stream:
         [persisted] = DictReader(stream)
     assert persisted["pixel_count"] == "4"
-    assert persisted["source_image_name"] == counts.value.data.subject.source_image_name
+    assert persisted["source_image_name"] == counts.data.subject.source_image_name

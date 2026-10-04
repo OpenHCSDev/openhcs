@@ -1576,7 +1576,7 @@ class RelateObjectsRelationshipMeasurementRows(RelationshipMeasurementRows):
                 spec.name,
                 MeasurementsArtifactType,
             ):
-                table = record.value.data
+                table = record.data
                 if not isinstance(table, MeasurementTable):
                     raise TypeError(
                         f"Declared measurement input {spec.name!r} carries "

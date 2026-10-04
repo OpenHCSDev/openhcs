@@ -306,8 +306,8 @@ def test_plate_reference_prepares_compiles_and_runs_in_original_parent(
         context = plate["_plate_context"](axis_id, (plan,))
         plate["_record_measurements"](context, name=source.name, path=path, count=0)
         record = context.runtime_value_store.values()[0]
-        assert isinstance(record.value.data, MeasurementTable)
-        record.value.data.rows = reference_namespace["inspect_label_fixture"](fixture)[2]
+        assert isinstance(record.data, MeasurementTable)
+        record.data.rows = reference_namespace["inspect_label_fixture"](fixture)[2]
         plate["_record_measurements"](
             context, name="unrelated_rows", path=f"/memory/{axis_id}/unrelated", count=99,
         )
@@ -319,7 +319,7 @@ def test_plate_reference_prepares_compiles_and_runs_in_original_parent(
         if record.key.name == output.name
     )
     assert len(summaries) == 1  # one parent result, not one execution per axis
-    table = summaries[0].value.data
+    table = summaries[0].data
     assert summaries[0].key.artifact_type is SpecialArtifactType
     assert isinstance(table, DataclassMeasurementColumnarRows)
     assert table.row_mappings() == (

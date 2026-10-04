@@ -75,7 +75,7 @@ class LiveMeasurementTablePreview:
         if record.key.artifact_type is not MeasurementsArtifactType:
             return None
 
-        table = cast(MeasurementTable, record.value.data)
+        table = cast(MeasurementTable, record.data)
         row_preview = _measurement_row_preview(
             table.rows,
             row_limit,

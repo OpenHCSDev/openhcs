@@ -1045,7 +1045,7 @@ def test_execute_function_core_saves_named_artifacts():
         axis_id="A01",
     )
     assert len(stored) == 1
-    assert tuple(stored[0].value.data.rows) == ({"count": 2},)
+    assert tuple(stored[0].data.rows) == ({"count": 2},)
 
 
 def test_trailing_object_labels_do_not_replace_canonical_image_output():
@@ -1114,7 +1114,7 @@ def test_trailing_object_labels_do_not_replace_canonical_image_output():
         name=labels_spec.name,
         axis_id=context.axis_id,
     )
-    assert isinstance(stored_labels.value.data, ObjectLabelSet)
+    assert isinstance(stored_labels.data, ObjectLabelSet)
 
 
 def test_execute_function_core_attaches_execution_group_identity_to_artifact():
@@ -1173,7 +1173,7 @@ def test_execute_function_core_attaches_execution_group_identity_to_artifact():
         match_group=True,
     )
     assert len(stored) == 1
-    metadata = image_payload_metadata(stored[0].value.data)
+    metadata = image_payload_metadata(stored[0].data)
     assert dict(metadata.source_component_metadata) == {
         "well": "A01",
         "site": "1",
@@ -1243,7 +1243,7 @@ def test_execute_function_core_attaches_dynamic_execution_group_to_artifact():
     )
     assert len(stored) == 1
     assert stored[0].path == "/memory/A01_w2_segmentation_masks.pkl"
-    metadata = image_payload_metadata(stored[0].value.data)
+    metadata = image_payload_metadata(stored[0].data)
     assert dict(metadata.source_component_metadata) == {
         "well": "A01",
         "site": "1",
@@ -1340,8 +1340,8 @@ def test_execute_function_core_routes_exact_image_artifact_tuple_to_main_flow():
     green_records = context.runtime_value_store.find(name="Green", axis_id="A01")
     assert len(red_records) == 1
     assert len(green_records) == 1
-    assert image_payload_data(red_records[0].value.data)[0, 0] == 1
-    assert image_payload_data(green_records[0].value.data)[0, 0] == 2
+    assert image_payload_data(red_records[0].data)[0, 0] == 1
+    assert image_payload_data(green_records[0].data)[0, 0] == 2
 
 
 def test_execute_function_core_keeps_image_sidecar_out_of_main_flow():
@@ -1394,7 +1394,7 @@ def test_execute_function_core_keeps_image_sidecar_out_of_main_flow():
     )
     assert len(mask_records) == 1
     np.testing.assert_array_equal(
-        image_payload_data(mask_records[0].value.data),
+        image_payload_data(mask_records[0].data),
         mask,
     )
 
@@ -1445,8 +1445,8 @@ def test_execute_function_core_saves_single_image_artifact_output_to_main_flow()
     )
     stored = context.runtime_value_store.find(name="CorrectedImage", axis_id="A01")
     assert len(stored) == 1
-    np.testing.assert_array_equal(image_payload_data(stored[0].value.data), output)
-    assert image_payload_metadata(stored[0].value.data).source_image_names == (
+    np.testing.assert_array_equal(image_payload_data(stored[0].data), output)
+    assert image_payload_metadata(stored[0].data).source_image_names == (
         "CorrectedImage",
     )
 
@@ -1502,7 +1502,7 @@ def test_execute_function_core_names_slice_aligned_image_outputs() -> None:
         name=output_spec.name,
         axis_id=context.axis_id,
     )
-    stored_data = stored.value.data
+    stored_data = stored.data
     assert isinstance(stored_data, RuntimeSliceAlignedValues)
     for index, source_payload in enumerate(source_slices):
         output_payload = stored_data.value_for_slice(index)
@@ -1956,10 +1956,10 @@ def test_execute_function_core_records_image_artifact_as_main_flow():
     )
     assert len(stored) == 1
     np.testing.assert_array_equal(
-        image_payload_data(stored[0].value.data),
+        image_payload_data(stored[0].data),
         source_data + 1,
     )
-    stored_metadata = image_payload_metadata(stored[0].value.data)
+    stored_metadata = image_payload_metadata(stored[0].data)
     assert stored_metadata.source_image_names == (illumination_spec.name,)
     assert stored_metadata.source_provenance.represented_source_image_names == (
         illumination_spec.name,
@@ -2161,7 +2161,7 @@ def test_execute_function_core_uses_object_input_source_for_image_artifact_outpu
 
     stored = context.runtime_value_store.find(name="label_image", axis_id="A01")
     assert len(stored) == 1
-    metadata = image_payload_metadata(stored[0].value.data)
+    metadata = image_payload_metadata(stored[0].data)
     assert (
         tuple(
             dict(item)
@@ -2215,10 +2215,10 @@ def test_execute_function_core_contextualizes_object_label_artifact():
 
     stored = context.runtime_value_store.find(name="nuclei", axis_id="A01")
     assert len(stored) == 1
-    assert isinstance(stored[0].value.data, ObjectLabelSet)
-    assert stored[0].value.data.name == "nuclei"
-    assert stored[0].value.data.source_path == "/input/01_POS002_D.TIF"
-    assert dict(stored[0].value.data.source_component_metadata) == {
+    assert isinstance(stored[0].data, ObjectLabelSet)
+    assert stored[0].data.name == "nuclei"
+    assert stored[0].data.source_path == "/input/01_POS002_D.TIF"
+    assert dict(stored[0].data.source_component_metadata) == {
         "well": "01",
         "site": "POS002",
         "channel": "D",
@@ -2281,7 +2281,7 @@ def test_execute_function_core_aggregates_and_names_slice_aligned_object_labels(
         name=output_spec.name,
         axis_id=context.axis_id,
     )
-    label_set = stored.value.data
+    label_set = stored.data
     assert isinstance(label_set, ObjectLabelSet)
     assert label_set.name == output_spec.name
     assert label_set.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
@@ -2363,11 +2363,11 @@ def test_corrected_image_measurement_subject_compiles_and_executes_columnar_rows
         )
     )
     [stored] = context.runtime_value_store.find(name=rows.name, axis_id=context.axis_id)
-    assert isinstance(stored.value.data, MeasurementTable)
-    assert stored.value.data.subject == MeasurementSubject(
+    assert isinstance(stored.data, MeasurementTable)
+    assert stored.data.subject == MeasurementSubject(
         MeasurementScope.IMAGE, image.name
     )
-    assert tuple(stored.value.data.rows.column_values("cell_count")) == (2,)
+    assert tuple(stored.data.rows.column_values("cell_count")) == (2,)
 
 
 def test_compile_rejects_conflicting_measurement_subject_relations():
@@ -2428,7 +2428,7 @@ def test_execute_function_core_wraps_columnar_rows_with_compiled_measurement_ide
         name=measurement_spec.name,
         axis_id=context.axis_id,
     )
-    table = stored.value.data
+    table = stored.data
     assert isinstance(table, MeasurementTable)
     assert table.name == measurement_spec.name
     assert table.subject == MeasurementSubject(MeasurementScope.ARTIFACT)
@@ -2498,7 +2498,7 @@ def test_native_measurement_rows_retain_two_site_two_channel_source_coordinates(
         name=measurement_spec.name,
         axis_id=context.axis_id,
     )
-    table = stored.value.data
+    table = stored.data
     assert isinstance(table, MeasurementTable)
     expected_rows = (
         {
@@ -2703,7 +2703,7 @@ def test_execute_function_core_preserves_declared_special_result_objects() -> No
         name="match_results",
         axis_id=context.axis_id,
     )
-    assert stored.value.data is match_results
+    assert stored.data is match_results
 
 
 def test_execute_function_core_requires_store_record_even_when_vfs_payload_exists():

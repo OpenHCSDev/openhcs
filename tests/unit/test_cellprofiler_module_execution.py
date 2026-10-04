@@ -3363,7 +3363,7 @@ def test_compiled_measurement_output_preserves_image_and_object_row_ownership() 
         artifact_type=MeasurementsArtifactType,
         axis_id="A01_s001",
     )
-    tables = tuple(cast(MeasurementTable, record.value.data) for record in records)
+    tables = tuple(cast(MeasurementTable, record.data) for record in records)
     assert len(tables) == 1
     table = tables[0]
     assert table.subject is not None
@@ -3743,24 +3743,24 @@ def test_cellprofiler_adapter_preserves_object_label_source_component_metadata()
 
     record = adapter.add_objects("Nuclei", labels)
 
-    assert isinstance(record.value.data, ObjectLabelSet)
-    assert record.value.data.source_path == "/input/01_POS002_D.TIF"
-    assert dict(record.value.data.source_component_metadata) == {
+    assert isinstance(record.data, ObjectLabelSet)
+    assert record.data.source_path == "/input/01_POS002_D.TIF"
+    assert dict(record.data.source_component_metadata) == {
         "well": "01",
         "site": "POS002",
         "channel": "D",
     }
-    assert record.value.data.source_image_provenance_planes.paths == (
+    assert record.data.source_image_provenance_planes.paths == (
         "/input/01_POS002_D.TIF",
     )
     assert tuple(
         dict(metadata)
-        for metadata in record.value.data.source_image_provenance_planes.component_metadata
+        for metadata in record.data.source_image_provenance_planes.component_metadata
         if metadata is not None
     ) == (
         {"well": "01", "site": "POS002", "channel": "D"},
     )
-    assert filemanager.saved[0][0] is record.value.data
+    assert filemanager.saved[0][0] is record.data
 
 
 def test_default_row_policy_accepts_multi_source_image_row_ownership() -> None:
@@ -4201,7 +4201,7 @@ class _FakeCellProfilerRuntime(CellProfilerRuntimeAdapter):
             artifact_type=ObjectLabelsArtifactType,
             purpose="test object-label artifact",
         )
-        return cast(ObjectLabelSet, record.value.data)
+        return cast(ObjectLabelSet, record.data)
 
     def get_objects_across_groups(self, name: str) -> ObjectLabelSet:
         return self.runtime_objects[name]
@@ -4333,7 +4333,7 @@ class _FakeCellProfilerRuntime(CellProfilerRuntimeAdapter):
         record = super().add_spatial_grid(name, grid)
         self.spatial_grids[name] = cast(
             SpatialGrid | RuntimeSliceAlignedValues,
-            record.value.data,
+            record.data,
         )
         return record
 

@@ -159,7 +159,7 @@ def test_chained_public_callable_uses_declared_main_flow_not_storage_argument(
                 )
             )
             records.append(record)
-        image, labels, rows = (record.value.data for record in records)
+        image, labels, rows = (record.data for record in records)
         np.testing.assert_array_equal(np.squeeze(image_payload_data(image)), fixture)
         np.testing.assert_array_equal(np.squeeze(object_label_dense_array(labels)), fixture)
         assert rows.subject.object_name == labels_plan.name

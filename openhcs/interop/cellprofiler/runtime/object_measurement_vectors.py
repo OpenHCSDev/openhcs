@@ -252,7 +252,7 @@ class MeasurementImageOperandVectorResolution:
             )
         table_records = []
         for record in source_records:
-            table = cast(MeasurementTable, record.value.data)
+            table = cast(MeasurementTable, record.data)
             if (
                 query.table_may_carry_feature(table)
                 or query.optional_value_index((table,)) is not None

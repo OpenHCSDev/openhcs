@@ -383,7 +383,7 @@ class RuntimeArtifactQueryContext:
 def runtime_record_locations(records: Sequence[StoredRuntimeValue]) -> tuple[str, ...]:
     """Return compact runtime-record identities without formatting payload data."""
     return tuple(
-        f"{record.key.scope.value_text or '<none>'}@{record.backend}:{record.path}"
+        f"{record.key.scope.value_text or '<none>'}@{record.location.backend}:{record.location.path}"
         for record in records
     )
 
@@ -443,7 +443,7 @@ def runtime_measurement_tables(
     if cached is not None:
         return cached
     tables = tuple(
-        cast(MeasurementTable, record.value.data)
+        cast(MeasurementTable, record.data)
         for record in context.find(artifact_type=MeasurementsArtifactType)
     )
     return store_cache.store_value(cache_key, tables)
@@ -482,7 +482,7 @@ def runtime_relationship(
         artifact_type=RelationshipsArtifactType,
         purpose="relationship artifact",
     )
-    return cast(ObjectRelationship, record.value.data)
+    return cast(ObjectRelationship, record.data)
 
 
 def runtime_spatial_grid(
@@ -495,7 +495,7 @@ def runtime_spatial_grid(
         artifact_type=SpatialGridArtifactType,
         purpose="spatial grid artifact",
     )
-    return cast(SpatialGrid, record.value.data)
+    return cast(SpatialGrid, record.data)
 
 
 def _measurement_table_may_declare_object_name(table: MeasurementTable) -> bool:

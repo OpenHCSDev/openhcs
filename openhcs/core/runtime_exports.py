@@ -389,7 +389,7 @@ def _file_bundle_failures(
 ) -> tuple[str, ...]:
     failures: list[str] = []
     for record in _runtime_records_for_specs(output_specs, runtime_records_by_axis):
-        payload = record.value.materialization_payload()
+        payload = record.materialization_payload()
         if type(payload) is not dict:
             failures.append(
                 f"materialized file-bundle artifact {record.key.name!r} has "
@@ -441,7 +441,7 @@ def _table_schema_field_failures(
     if record.key.artifact_type is not MeasurementsArtifactType:
         return ()
     expected_fields = tuple(
-        field.name for field in cast(MeasurementTable, record.value.data).rows.fields
+        field.name for field in cast(MeasurementTable, record.data).rows.fields
     )
     if not expected_fields:
         return ()
@@ -467,7 +467,7 @@ def _table_row_count_failures(
     table_outputs: tuple[Path, ...],
     row_counts_by_path: Mapping[Path, int],
 ) -> tuple[str, ...]:
-    if materialization_is_empty(record.value.materialization_payload()):
+    if materialization_is_empty(record.materialization_payload()):
         return ()
     return tuple(
         f"table output {path} has no data rows"

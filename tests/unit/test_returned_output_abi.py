@@ -279,6 +279,6 @@ def test_generic_function_save_records_canonical_and_trailing_outputs() -> None:
         records = context.runtime_value_store.find(name=spec.name, axis_id="A01")
         assert len(records) == 1
         np.testing.assert_array_equal(
-            image_payload_data(records[0].value.data),
+            image_payload_data(records[0].data),
             expected,
         )

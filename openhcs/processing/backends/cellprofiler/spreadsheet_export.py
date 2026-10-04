@@ -468,7 +468,7 @@ def _measurement_tables(
             for axis_records in records_by_axis.values()
             for record in axis_records
         )
-        tables = tuple(cast(MeasurementTable, record.value.data) for record in records)
+        tables = tuple(cast(MeasurementTable, record.data) for record in records)
         all_tables.extend(tables)
         slice_axis = MeasurementRowAxisField.SLICE_INDEX
         row_domains = tuple(
@@ -598,7 +598,7 @@ def _relationship_rows(
         artifact_batch,
         RelationshipsArtifactType,
     ):
-        relationship = cast(ObjectRelationship, record.value.data)
+        relationship = cast(ObjectRelationship, record.data)
         image_numbers_by_slice = image_numbers.for_source_slices(
             scope=record.key.scope,
             provenance=relationship.source_provenance,

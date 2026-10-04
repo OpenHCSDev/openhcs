@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, field as dataclass_field, replace
+from dataclasses import dataclass, field as dataclass_field
 import inspect
 from pathlib import Path
 from types import MappingProxyType
@@ -242,24 +242,11 @@ class RuntimeArtifactQuery:
         return True
 
 
-@dataclass(frozen=True, slots=True)
-class StoredRuntimeValue:
+@dataclass(frozen=True, slots=True, kw_only=True)
+class StoredRuntimeValue(RuntimeValue):
     """A validated runtime value with its persistence boundary."""
 
-    value: RuntimeValue
     location: RuntimeArtifactLocation
-
-    @property
-    def key(self) -> ArtifactKey:
-        return self.value.key
-
-    @property
-    def path(self) -> str:
-        return self.location.path
-
-    @property
-    def backend(self) -> str:
-        return self.location.backend
 
 
 @dataclass(frozen=True, slots=True)
@@ -380,7 +367,7 @@ class RuntimeArtifactInput:
             if selects_complete_producer:
                 record_coordinates.pop(producer_scope.component, None)
             if projected_components:
-                provenance = image_payload_metadata(record.value.data).source_provenance
+                provenance = image_payload_metadata(record.data).source_provenance
                 plane_metadata = provenance.source_image_provenance_planes.runtime_component_metadata
                 metadata_rows = plane_metadata or (
                     (provenance.source_component_metadata,)
@@ -443,7 +430,7 @@ class RuntimeArtifactInput:
                             value=component_key,
                             fixed_component_values=fixed_values,
                         )
-                        scopes.setdefault(scope, record.path)
+                        scopes.setdefault(scope, record.location.path)
         return scopes
 
     def all_records(
@@ -504,7 +491,7 @@ class RuntimeArtifactInput:
         """Compose exact records after projecting the runtime-axis coordinate."""
 
         return RuntimeValue.compose(
-            tuple(self._axis_value(record.value) for record in records),
+            tuple(self._axis_value(record) for record in records),
             self._producer_group_composition_scope(),
         )
 
@@ -514,7 +501,7 @@ class RuntimeArtifactInput:
     ) -> tuple[RuntimeValue, ...]:
         """Return exact producer values projected into this consumer scope."""
 
-        return tuple(self._axis_value(record.value) for record in self.records(store))
+        return tuple(self._axis_value(record) for record in self.records(store))
 
     def resolve_value(self, store: "RuntimeValueStore") -> Any:
         """Resolve this compiled input to its invocation value."""
@@ -607,8 +594,8 @@ class RuntimeArtifactInput:
                 f"{metadata_scope.component_values!r} selects multiple producer "
                 f"runtime slices {matching_indices!r}."
             )
-        return replace(
-            value,
+        return RuntimeValue(
+            key=value.key,
             data=RuntimeSliceProjection.value_for_slice(
                 payload,
                 RuntimePlaneAxisValueProjection.from_selected_plane(
@@ -617,6 +604,7 @@ class RuntimeArtifactInput:
                     axis_size=slice_count,
                 ),
             ),
+            materialization_source_metadata=value.materialization_source_metadata,
         )
 
     def _consumer_component_value(self, component: AllComponents) -> str:
@@ -885,7 +873,7 @@ class RuntimeArtifactAddress:
         return cls(
             key=record.key,
             location=record.location,
-            value_type=type(record.value.data).__qualname__,
+            value_type=type(record.data).__qualname__,
         )
 
     @classmethod
@@ -1026,7 +1014,9 @@ class RuntimeValueStore:
     ) -> StoredRuntimeValue:
         """Record a validated value and its persistence location."""
         record = StoredRuntimeValue(
-            value=value,
+            key=value.key,
+            data=value.data,
+            materialization_source_metadata=value.materialization_source_metadata,
             location=RuntimeArtifactLocation(path=path, backend=backend),
         )
         existing = self._current_record(value.key)
@@ -1052,7 +1042,9 @@ class RuntimeValueStore:
         keeping record() strict for accidental duplicate writes.
         """
         record = StoredRuntimeValue(
-            value=value,
+            key=value.key,
+            data=value.data,
+            materialization_source_metadata=value.materialization_source_metadata,
             location=RuntimeArtifactLocation(path=path, backend=backend),
         )
         self._records_by_location[(value.key, record.location)] = record

@@ -2327,8 +2327,8 @@ def test_runtime_image_metadata_target_requires_persisted_images(tmp_path, conte
                     Backend.DISK.value: (
                         Output.from_metadata(
                             path=str(directory / "A01_s001_w2_z001_t001.tif"),
-                            content=record.value.data,
-                            metadata=image_payload_metadata(record.value.data),
+                            content=record.data,
+                            metadata=image_payload_metadata(record.data),
                         ),
                     )
                 },

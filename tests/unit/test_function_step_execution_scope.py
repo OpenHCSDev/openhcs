@@ -942,7 +942,7 @@ def test_plate_scope_batch_preserves_semantic_variants_for_one_input() -> None:
     assert len(batches) == 1
     selected = batches[0].records(measurement_spec.ref())["A01"]
     assert len(selected) == 2
-    tables = tuple(record.value.data for record in selected)
+    tables = tuple(record.data for record in selected)
     assert all(isinstance(table, MeasurementTable) for table in tables)
     assert {table.subject.object_name for table in tables} == {
         "Nuclei",

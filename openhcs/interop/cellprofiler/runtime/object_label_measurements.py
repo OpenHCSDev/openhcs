@@ -81,7 +81,7 @@ class ObjectFeatureMeasurementContext(RuntimeObjectSliceMeasurementQuery):
         if not records:
             return ()
         object_table_index = ObjectMeasurementTableIndex.from_tables(
-            tuple(cast(MeasurementTable, record.value.data) for record in records)
+            tuple(cast(MeasurementTable, record.data) for record in records)
         )
         tables = object_table_index.for_object_feature(
             self.object_name,

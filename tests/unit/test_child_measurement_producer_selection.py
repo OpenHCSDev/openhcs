@@ -217,7 +217,7 @@ def test_declared_child_measurements_gather_all_exact_producer_channels(dynamic)
     )
 
     children = ObjectMeasurementTableIndex.from_tables(
-        tuple(record.value.data for record in records)
+        tuple(record.data for record in records)
     ).for_object("Children")
     assert [table.source_image_name for table in children] == [
         "Orig1",
@@ -571,9 +571,9 @@ def test_actual_parent_means_include_each_channel_without_merging_site_ids():
 def test_upstream_tables_without_source_coordinates_are_rejected():
     rows, child, _ = _upstream_rows()
     table = next(
-        record.value.data
+        record.data
         for record in rows.request.adapter.request.context.runtime_value_store.values()
-        if isinstance(record.value.data, MeasurementTable)
+        if isinstance(record.data, MeasurementTable)
     )
     table.source_image_provenance_planes = SourceImageProvenancePlanes()
     with pytest.raises(ValueError, match="complete source image-set identity"):
@@ -732,9 +732,9 @@ def test_complete_dynamic_input_rejects_foreign_producer_location():
     foreign = RuntimeValueStore()
     for record in _measurement_store(edge).values():
         foreign.record(
-            record.value,
-            path=record.path.replace("/memory/", "/another-producer/"),
-            backend=record.backend,
+            record,
+            path=record.location.path.replace("/memory/", "/another-producer/"),
+            backend=record.location.backend,
         )
     with pytest.raises(RuntimeError, match="Missing dynamic grouped artifact input"):
         _runtime_input(edge).records(foreign)
@@ -744,7 +744,7 @@ def test_complete_dynamic_input_rejects_foreign_producer_backend():
     edge, _ = _compiled_edge(dynamic=True)
     foreign = RuntimeValueStore()
     for record in _measurement_store(edge).values():
-        foreign.record(record.value, path=record.path, backend="disk")
+        foreign.record(record, path=record.location.path, backend="disk")
     with pytest.raises(RuntimeError, match="Missing dynamic grouped artifact input"):
         _runtime_input(edge).records(foreign)
 
@@ -755,8 +755,8 @@ def test_complete_dynamic_input_selects_compiled_producer_after_workspace_rebind
     original = store.values()
     for record in original:
         store.replace(
-            record.value,
-            path=record.path.replace("/memory/", "/later-producer/"),
-            backend=record.backend,
+            record,
+            path=record.location.path.replace("/memory/", "/later-producer/"),
+            backend=record.location.backend,
         )
     assert _runtime_input(edge).records(store) == original

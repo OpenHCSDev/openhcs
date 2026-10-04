@@ -218,7 +218,7 @@ class CellProfilerRuntimeAdapter(RuntimePlaneAxisProjector):
                 f"CellProfiler output {output_plan.ref()!r} requires exactly one "
                 f"invocation record, got {len(records)}."
             )
-        return RuntimeValue.compose((records[0].value,))
+        return RuntimeValue.compose((records[0],))
 
     def require_artifact_available(
         self,
@@ -438,7 +438,7 @@ class CellProfilerRuntimeAdapter(RuntimePlaneAxisProjector):
         )
         return MeasurementTableUnion(
             name,
-            tuple(cast(MeasurementTable, record.value.data) for record in records),
+            tuple(cast(MeasurementTable, record.data) for record in records),
         ).as_table()
 
     def measurement_tables(
@@ -452,7 +452,7 @@ class CellProfilerRuntimeAdapter(RuntimePlaneAxisProjector):
             group_key=group_key,
             match_group=match_group,
         )
-        return tuple(cast(MeasurementTable, record.value.data) for record in records)
+        return tuple(cast(MeasurementTable, record.data) for record in records)
 
     def declared_measurement_input_records(
         self,

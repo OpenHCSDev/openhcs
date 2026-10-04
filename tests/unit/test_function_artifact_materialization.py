@@ -2031,7 +2031,7 @@ def test_fixed_component_scopes_materialize_distinct_measurement_paths() -> None
     materializations = runtime_artifact_materializations(plan, context)
 
     assert len(records) == 2
-    assert tuple(record.value.data.rows.row_count() for record in records) == (2, 1)
+    assert tuple(record.data.rows.row_count() for record in records) == (2, 1)
     assert tuple(
         record.key.scope.value_text_for_component(AllComponents.Z_INDEX)
         for record in records
@@ -2503,7 +2503,7 @@ def test_actual_materialization_records_uses_dynamic_runtime_groups():
     )
 
     assert tuple(record.key.scope.value_text for record in records) == ("1", "2")
-    assert tuple(record.path for record in records) == (
+    assert tuple(record.location.path for record in records) == (
         "/memory/A01_w1_segmentation_masks_step7.pkl",
         "/memory/A01_w2_segmentation_masks_step7.pkl",
     )
@@ -3046,7 +3046,9 @@ def test_tile_positions_runtime_materializes_native_json_without_changing_payloa
     (retained,) = tuple((tmp_path / "results").rglob("*.json"))
     assert json.loads(retained.read_text()) == [list(pair) for pair in positions]
     assert positions == [(-1.25, 0.000000001), (921.600000001, -3.5), (1.0, 1843.2)]
-    assert record.value is value
+    assert record.key is value.key
+    assert record.data is value.data
+    assert record.materialization_source_metadata is value.materialization_source_metadata
 
 
 def test_materialize_artifact_outputs_skips_explicitly_disabled_artifact_without_record(

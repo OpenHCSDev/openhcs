@@ -528,7 +528,7 @@ class RuntimeInputBindingRequest:
         slice_axis = MeasurementRowAxisField.SLICE_INDEX
         for spec in measurement_specs:
             spec_tables = tuple(
-                cast(MeasurementTable, record.value.data)
+                cast(MeasurementTable, record.data)
                 for record in self.adapter.artifact_input_records(
                     spec.name,
                     MeasurementsArtifactType,

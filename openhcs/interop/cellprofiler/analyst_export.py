@@ -991,7 +991,7 @@ class CPATableRowProjection:
                 record for record in records if record.key.name == channel.alias
             )
             for record in channel_records:
-                provenance = image_payload_metadata(record.value.data).source_provenance
+                provenance = image_payload_metadata(record.data).source_provenance
                 self.collect_image_provenance(
                     provenance,
                     scope=record.key.scope,
@@ -1285,7 +1285,7 @@ class CellProfilerAnalystProjectionBuilder:
                     ),
                 )
         all_measurement_tables = tuple(
-            cast(MeasurementTable, record.value.data)
+            cast(MeasurementTable, record.data)
             for records in measurement_records.values()
             for record in records
         )
@@ -1398,7 +1398,7 @@ class CellProfilerAnalystProjectionBuilder:
         ],
     ) -> tuple[tuple[FieldSpec, ...], tuple[FieldSpec, ...]]:
         for record in records:
-            table = cast(MeasurementTable, record.value.data)
+            table = cast(MeasurementTable, record.data)
             image_columns, experiment_columns = self._collect_measurement_table(
                 table=table,
                 scope=record.key.scope,
@@ -1558,7 +1558,7 @@ class CellProfilerAnalystProjectionBuilder:
         ],
     ) -> None:
         for record in records:
-            relationship = cast(ObjectRelationship, record.value.data)
+            relationship = cast(ObjectRelationship, record.data)
             relationship_declaration = relationship.declaration
             declaration = (
                 relationship_declaration.relationship_type,
@@ -1591,7 +1591,7 @@ class CellProfilerAnalystProjectionBuilder:
     ) -> None:
         channel_aliases = frozenset(channel.alias for channel in image_channels)
         for record in records:
-            table = cast(MeasurementTable, record.value.data)
+            table = cast(MeasurementTable, record.data)
             provenance = table.source_provenance
             for source_image_name in provenance.represented_source_image_names:
                 if source_image_name not in channel_aliases:
@@ -1646,7 +1646,7 @@ class CellProfilerAnalystProjectionBuilder:
             for record in records:
                 if record.key.name != image_name:
                     continue
-                payload = record.value.data
+                payload = record.data
                 provenance = image_payload_metadata(payload).source_provenance
                 image_numbers = row_projection.image_numbers_for_provenance(
                     provenance,
