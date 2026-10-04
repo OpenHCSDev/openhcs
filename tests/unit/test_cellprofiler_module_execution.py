@@ -1898,7 +1898,6 @@ def test_single_main_flow_image_preserves_runtime_slice_axis() -> None:
 
 
 def test_object_artifact_source_payload_uses_native_object_provenance() -> None:
-    object_spec = ArtifactSpec.input("Nuclei", ObjectLabelsArtifactType)
     objects = ObjectLabelSet(
         name="Nuclei",
         variant_data=ObjectLabelVariantData(
@@ -1909,9 +1908,7 @@ def test_object_artifact_source_payload_uses_native_object_provenance() -> None:
             paths=("/input/A01_s001_w1.tif",),
         ),
     )
-    payload = CellProfilerOutputRecorder.for_artifact_type(
-        ObjectLabelsArtifactType
-    ).source_image_payload_from_runtime_value(object_spec, objects)
+    payload = ObjectLabelsArtifactType.source_image_payload_from_runtime_value(objects)
 
     assert payload is objects
     assert image_payload_metadata(payload).source_image_provenance_planes.paths == (
