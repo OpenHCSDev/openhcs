@@ -1934,6 +1934,7 @@ def test_materialize_artifact_outputs_unions_measurement_subject_records(
     materialized = []
 
     def fake_materialize(_spec, data, path, *_args, **_kwargs):
+        assert not data.source_provenance.has_values
         materialized.append((tuple(data.iter_row_mappings()), path))
         return SimpleNamespace(save=lambda: SavedMaterializationOutputs({}))
 

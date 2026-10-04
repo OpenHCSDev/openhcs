@@ -35,7 +35,6 @@ from openhcs.core.pipeline.function_contracts import (
     execution_scope,
     runtime_bound_parameters,
 )
-from openhcs.core.runtime_artifact_queries import MeasurementTableUnion
 from openhcs.core.runtime_tabular_values import (
     FieldSpec,
 )
@@ -474,7 +473,7 @@ def _measurement_tables(
         row_domains = tuple(
             MeasurementRowsAxisProjection.from_rows(table.rows) for table in tables
         )
-        MeasurementTableUnion(spec.name, tables).row_axis_domain(slice_axis)
+        MeasurementTable.shared_row_axis_domain(spec.name, tables, slice_axis)
         for record, table, row_domain in zip(
             records,
             tables,

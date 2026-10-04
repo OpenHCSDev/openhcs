@@ -41,9 +41,9 @@ from openhcs.core.pipeline.function_contracts import (
 from openhcs.core.runtime_adapters import (
     RuntimeAdapterRequest,
 )
-from openhcs.core.runtime_artifact_queries import MeasurementTableUnion
 from openhcs.core.runtime_batch_contracts import RuntimeBatchExecutionDomain
 from openhcs.core.runtime_image_values import (
+    ImagePayloadMetadata,
     image_payload_metadata,
     preserved_image_plane_projection,
 )
@@ -1247,10 +1247,11 @@ class CellProfilerModuleExecutor:
             )
         if rows_only_declare_object_name:
             image_measurement_source_name = None
-        source_metadata = MeasurementTableUnion(
-            measurement_output_plan.name,
-            tuple(combined_tables),
-        ).source_metadata()
+        source_metadata = ImagePayloadMetadata(
+            source_provenance=MeasurementTable.joined_source_provenance(
+                measurement_output_plan.name, tuple(combined_tables)
+            )
+        )
         record_started_at = time.perf_counter()
         cellprofiler_runtime.add_measurements(
             module_type.build_measurement_table(

@@ -28,7 +28,6 @@ from openhcs.core.registry_strategies import (
 from openhcs.core.runtime_array_values import RuntimeArrayData, is_array_payload
 from openhcs.core.runtime_artifact_queries import (
     MeasurementTableAxisProjection,
-    MeasurementTableUnion,
 )
 from openhcs.core.runtime_image_values import (
     ImageMetadataPayload,
@@ -801,8 +800,8 @@ class MeasurementTableRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStrat
 
     @staticmethod
     def row_axis_domain(table: MeasurementTable) -> tuple[int, ...] | None:
-        return MeasurementTableUnion(table.name, (table,)).row_axis_domain(
-            MeasurementRowAxisField.SLICE_INDEX
+        return MeasurementTable.shared_row_axis_domain(
+            table.name, (table,), MeasurementRowAxisField.SLICE_INDEX
         )
 
 

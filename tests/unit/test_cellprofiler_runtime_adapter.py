@@ -60,7 +60,6 @@ from openhcs.core.pipeline.function_contracts import (
 from openhcs.core.runtime_artifact_queries import (
     MeasurementLabelSliceFeatureQuery,
     MeasurementTableAxisProjection,
-    MeasurementTableUnion,
 )
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_batch_contracts import SliceIndexRuntimeParameter
@@ -297,7 +296,7 @@ def _output_measurements(
     )
     tables = tuple(record.data for record in records)
     assert all(isinstance(table, MeasurementTable) for table in tables)
-    return MeasurementTableUnion(name, tables).as_table()
+    return MeasurementTable.join(name, tables)
 
 
 def _output_relationship(

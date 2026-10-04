@@ -88,7 +88,6 @@ from openhcs.core.pipeline.function_contracts import (
 )
 from openhcs.core.runtime_artifact_queries import (
     MeasurementTableAxisProjection,
-    MeasurementTableUnion,
     RuntimeArtifactQueryContext,
 )
 from openhcs.core.runtime_artifact_values import RuntimeValue
@@ -9477,7 +9476,7 @@ def test_measurement_tables_compose_provenance_after_object_rows_clear_source() 
         ),
     )
 
-    combined = MeasurementTableUnion("Locations", tables).as_table()
+    combined = MeasurementTable.join("Locations", tables)
 
     assert all(table.source_image_name is None for table in tables)
     assert tuple(

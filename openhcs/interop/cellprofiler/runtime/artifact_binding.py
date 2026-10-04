@@ -34,7 +34,6 @@ from openhcs.core.function_patterns import (
 from openhcs.core.pipeline.function_contracts import (
     object_label_input_execution_mode_from_callable,
 )
-from openhcs.core.runtime_artifact_queries import MeasurementTableUnion
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     image_payload_data,
@@ -534,7 +533,7 @@ class RuntimeInputBindingRequest:
                     MeasurementsArtifactType,
                 )
             )
-            MeasurementTableUnion(spec.name, spec_tables).row_axis_domain(slice_axis)
+            MeasurementTable.shared_row_axis_domain(spec.name, spec_tables, slice_axis)
             tables.extend(spec_tables)
         return tuple(tables)
 

@@ -787,12 +787,11 @@ class MeasurementsArtifactType(ArtifactType):
         """Concatenate exact producer-group measurement tables."""
 
         del producer_group_scope
-        from openhcs.core.runtime_artifact_queries import MeasurementTableUnion
+        from openhcs.core.runtime_measurements import MeasurementTable
 
-        return MeasurementTableUnion(
-            values[0].name,
-            tuple(value.data for value in values),
-        ).as_table()
+        return MeasurementTable.join(
+            values[0].name, tuple(value.data for value in values)
+        )
 
     @classmethod
     def materialization_payload(cls, value: "RuntimeValue") -> object:

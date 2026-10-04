@@ -27,7 +27,6 @@ from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.component_set import ComponentSet
 from openhcs.core.registry_strategies import MostDerivedContextStrategyMixin
-from openhcs.core.runtime_artifact_queries import MeasurementTableUnion
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
@@ -272,7 +271,7 @@ class MeasurementArtifactMaterializationRecordReducer(
             return records
         group_plan = output_plan.for_group(group_key)
         tables = tuple(cast(MeasurementTable, record.data) for record in records)
-        table = MeasurementTableUnion(output_plan.name, tables).as_artifact_table()
+        table = MeasurementTable.join_artifact(output_plan.name, tables)
         value = RuntimeValue.normalize_for_execution_scope(
             group_plan,
             table,

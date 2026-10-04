@@ -29,7 +29,6 @@ from openhcs.core.runtime_artifact_queries import (
     MeasurementLabelSliceFeatureBatchQuery,
     MeasurementLabelSliceFeatureQuery,
     MeasurementTableAxisProjection,
-    MeasurementTableUnion,
     measurement_table_axis_values,
     measurement_row_mapping,
     runtime_measurement_tables_for_object,
@@ -1416,7 +1415,7 @@ def test_measurement_table_union_preserves_compatible_schema() -> None:
         subject=subject,
     )
 
-    union = MeasurementTableUnion("CellMeasurements", (first, second)).as_table()
+    union = MeasurementTable.join("CellMeasurements", (first, second))
 
     assert union.rows.fields == (FieldSpec("cell_id", int), FieldSpec("area", float))
     assert union.subject.object_name == "Cells"
@@ -1446,7 +1445,7 @@ def test_measurement_table_union_composes_ordered_source_provenance() -> None:
         for index, path in enumerate(paths, start=1)
     )
 
-    union = MeasurementTableUnion("CellMeasurements", tables).as_table()
+    union = MeasurementTable.join("CellMeasurements", tables)
 
     assert union.rows.row_mappings() == (
         {"cell_id": 1, "area": 10.0},
@@ -1504,19 +1503,17 @@ def test_measurement_table_union_bundles_sources_per_declared_runtime_slice() ->
         for channel in (1, 2)
     )
 
-    metadata = MeasurementTableUnion("quality_metrics", tables).source_metadata()
+    provenance = MeasurementTable.joined_source_provenance("quality_metrics", tables)
 
-    assert metadata.source_provenance.source_plane_count == 2
+    assert provenance.source_plane_count == 2
     assert tuple(
-        metadata.source_provenance.for_source_plane(index).source_component_metadata[
-            "site"
-        ]
+        provenance.for_source_plane(index).source_component_metadata["site"]
         for index in range(2)
     ) == ("1", "2")
     assert tuple(
         tuple(
             contributor.path
-            for contributor in metadata.source_provenance.for_source_plane(
+            for contributor in provenance.for_source_plane(
                 index
             ).source_image_provenance_planes.contributors
         )
@@ -1524,6 +1521,29 @@ def test_measurement_table_union_bundles_sources_per_declared_runtime_slice() ->
     ) == (
         ("/plate/A01_s001_w1.tif", "/plate/A01_s001_w2.tif"),
         ("/plate/A01_s002_w1.tif", "/plate/A01_s002_w2.tif"),
+    )
+
+    # A later export reads the tables' current provenance, not the prior join epoch.
+    first = tables[0]
+    first.source_provenance = first.source_provenance.with_source_image_provenance_planes(
+        SourceImageProvenancePlanes.from_components(
+            paths=("/changed/site-1.tif", "/changed/site-2.tif"),
+            component_metadata=(
+                {"well": "A01", "site": "1"},
+                {"well": "A01", "site": "2"},
+            ),
+        )
+    )
+    current = MeasurementTable.joined_source_provenance("quality_metrics", tables)
+    assert (
+        current.for_source_plane(0).source_image_provenance_planes.contributors[0].path
+        == "/changed/site-1.tif"
+    )
+    assert (
+        provenance.for_source_plane(0)
+        .source_image_provenance_planes.contributors[0]
+        .path
+        == "/plate/A01_s001_w1.tif"
     )
 
 
@@ -1541,8 +1561,8 @@ def test_measurement_table_union_accepts_axisless_payload_domain() -> None:
     )
 
     assert (
-        MeasurementTableUnion("CellMeasurements", (table,)).row_axis_domain(
-            MeasurementRowAxisField.SLICE_INDEX
+        MeasurementTable.shared_row_axis_domain(
+            "CellMeasurements", (table,), MeasurementRowAxisField.SLICE_INDEX
         )
         is None
     )
@@ -1568,11 +1588,8 @@ def test_measurement_table_union_preserves_payload_rows_in_axis_declaring_table(
         subject=MeasurementSubject(MeasurementScope.OBJECT, "Cells", "cell_id"),
     )
 
-    assert MeasurementTableUnion(
-        "CellMeasurements",
-        (table,),
-    ).row_axis_domain(
-        MeasurementRowAxisField.SLICE_INDEX
+    assert MeasurementTable.shared_row_axis_domain(
+        "CellMeasurements", (table,), MeasurementRowAxisField.SLICE_INDEX
     ) == (0,)
 
 
@@ -1607,8 +1624,8 @@ def test_measurement_table_union_rejects_mixed_slice_domains() -> None:
         ValueError,
         match="mixes declared and axisless 'slice_index' row domains",
     ):
-        MeasurementTableUnion("CellMeasurements", tables).row_axis_domain(
-            MeasurementRowAxisField.SLICE_INDEX
+        MeasurementTable.shared_row_axis_domain(
+            "CellMeasurements", tables, MeasurementRowAxisField.SLICE_INDEX
         )
 
 
@@ -1640,7 +1657,7 @@ def test_measurement_table_union_drops_incompatible_schema_facts() -> None:
         ValueError,
         match="require one exact nominal subject",
     ):
-        MeasurementTableUnion("MixedMeasurements", (first, second)).as_table()
+        MeasurementTable.join("MixedMeasurements", (first, second))
 
 
 def test_measurement_table_axis_query_projects_table_sequences() -> None:

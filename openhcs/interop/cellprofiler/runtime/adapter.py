@@ -23,9 +23,6 @@ from openhcs.core.artifacts import (
     SpatialGridArtifactType,
 )
 from openhcs.core.runtime_adapters import RuntimeAdapterRequest
-from openhcs.core.runtime_artifact_queries import (
-    MeasurementTableUnion,
-)
 from openhcs.core.runtime_artifact_values import (
     RuntimeValue,
 )
@@ -436,10 +433,9 @@ class CellProfilerRuntimeAdapter(RuntimePlaneAxisProjector):
             MeasurementsArtifactType,
             group_key=group_key,
         )
-        return MeasurementTableUnion(
-            name,
-            tuple(cast(MeasurementTable, record.data) for record in records),
-        ).as_table()
+        return MeasurementTable.join(
+            name, tuple(cast(MeasurementTable, record.data) for record in records)
+        )
 
     def measurement_tables(
         self,
