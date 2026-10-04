@@ -199,3 +199,30 @@ raw stack through the main-flow branch. The fixture now supplies those existing
 nominal services and builds its workspace metadata through SourceProjectionSet,
 leaving all intensity/object assertions unchanged. Production does not silently
 substitute current processed pixels when original raw pixels were requested.
+
+Consumer-complete installed validation
+--------------------------------------
+
+Whole-wheel source ee9d9e37ed123a0d1382bcdc6ec6b9705d6c16c8 passed the original
+byte/RECORD verifier, including789 Python source matches and13 managed skill
+files. With the completed workspace fixture, all411 installed controls passed
+in32.26s across source bindings, function IO/projection/artifacts and CP runtime.
+The installed package location was printed before collection, avoiding the
+preserved dirty checkout's dependency bootstrap. Actual log:
+engineering-step-input-origin-633-20261004/receiving02/installed-controls.log.
+Later branch changes contain documentation/test fixtures only; packaged
+production and knowledge bytes remain unchanged from that qualified source.
+
+The public88 packet contains three complete synthetic PipelineDocuments:
+new STEP_INPUT alias, reused STEP_INPUT alias, and original PIPELINE_START raw
+admission, all retaining a separate raw-intensity measurement. A32x32 synthetic
+TIFF is on the declared HDD artifact root, not copied from any scientific run.
+Its acquisition SHA and expected distinct raw/response intensity domains are
+recorded in public88/SYNTHETIC-INPUT.json. No public result is claimed yet.
+
+Dewey retired the positively closed626 route and published the633 successor
+without changing the active SCI members. The first633 startup admission exited77
+before client creation because actual memory full PSI was elevated; there was
+no633 client/native launch or UNKNOWN execution. That refusal is preserved.
+After installed checks completed, memory pressure was observed to have fallen;
+any startup needs a distinct passing admission, not a replay of the refused one.
