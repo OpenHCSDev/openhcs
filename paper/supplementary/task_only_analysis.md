@@ -235,6 +235,55 @@ identifies the frozen report, consumed pipeline and retained label bytes. No
 new detector execution, reference scoring or pixel transformation was used to
 prepare this account.
 
+## Fresh retinal author: measured preprocessing and retained admission loss
+
+The separate fresh-context trial `R0010_STAGED_96` used only the released
+2586 x 2586-pixel field, its task brief, MCP and the frozen packaged skill.
+It did not read the earlier retinal authors' outputs or receive reference
+feedback. Acquisition inspection identified RBPMS, auxiliary fluorescence and
+Hoechst; only RBPMS drove soma detection. Nuclear presence was not treated as
+proof of an RBPMS-positive soma boundary.
+
+The first two-class adaptive threshold produced 243 measured objects but failed
+while settling viewer updates after writing the scientific steps. It remains a
+failed execution, not a completed first prediction. A completed three-class
+revision produced 105 objects but lost weak-body support and retained granular
+nuisance. The author rejected it and measured an analytical response made by
+subtracting a broad Gaussian background estimate from a mildly smoothed image.
+The two Smooth object-size parameters were 12 and 240 pixels, not Gaussian
+sigmas. A manual cutoff of 0.02 applies to the actual signed, normalized float
+response; original size and shape-marker settings were retained.
+
+At that cutoff, the independently sampled clear-positive and background
+rectangles had 96.84% and 0.1344% support, respectively. The earlier two-class
+background admission was 54.8%; a weak-body rectangle retained only 61.61%
+support in the contrast response. These are rectangle-level diagnostics, not
+complete soma masks, sensitivity or specificity estimates. The final compile
+and all six processing steps completed. Primary IDs and geometry reconcile at
+109 objects, including 8 border objects; 110 ROI contour members are not a
+second object count.
+
+Distributed matched review retained supported bright bodies, partial faint
+footprints and unresolved northwest/northeast splits. In a plausible southwest
+miss, the actual contrast maximum was 0.0195047, below the 0.02 cutoff, with
+zero threshold support and labels throughout the diagnostic rectangle. This
+localizes that loss before watershed without establishing the structure's
+biological class or proving that a lower cutoff is a successful repair.
+Some initially named regional captures repeated the southeast viewport after
+rejected navigation commands. Their evidentiary use was withdrawn; corrected
+captures and their actual camera coordinates remain separately recorded.
+
+The author personally opened 62 captures and froze its qualified detector result
+without claiming a validated RGC total. All 21 source and 119 payload manifest
+entries were independently hash-verified. Exact owned viewer/native closure
+was acknowledged, with both processes independently absent. Client exit 2
+retains accumulated command errors separately from the successful final
+scientific execution. The [fresh retinal outcome record](task_only_analysis/retinal-staged96-outcome.json)
+binds original source, freeze, report and diagnostic identities. This trial is
+distinct from the assisted retinal continuation in Supplementary Figure 11;
+no new scientific execution, reference scoring or image transformation was
+used to prepare this account.
+
 ## Translocation development: admission repair does not validate compartments
 
 The separate same-author recovery `BBBC013_DEV02_94` completed attempts 20 and
