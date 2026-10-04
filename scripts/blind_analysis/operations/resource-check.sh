@@ -9,8 +9,8 @@ phase=${3:?unique observation}
 case "$phase" in ''|*[!a-zA-Z0-9_-]*) exit 64;; esac
 mode=${4:-ongoing}
 # Growth qualification is not a universal stop for a bounded continuation.
-# The same owner requires actual host headroom below; PSI is
-# telemetry for ongoing work, and fatal when admitting future fleet growth.
+# Desktop reserve and PSI describe future growth admission. Below-reserve
+# ongoing observations must still be able to resolve jobs and release buffers.
 case "$mode" in
   ongoing) pressure_policy=warning ;;
   full|replacement|bootstrap) pressure_policy=reject ;;
@@ -122,7 +122,25 @@ if [[ "$mode" == replacement || "$mode" == bootstrap ]]; then
   if [[ "$mode" == bootstrap ]]; then fleet_require_bootstrap_custody; else fleet_require_helpers; fi
 fi
 psi_max=$(jq -er '.proposed_resource_envelope.full_memory_psi_max_percent | select(type=="number" and .>=0 and .<=100)' <<< "$FLEET_PROGRAM")
-awk -v floor="$floor" '/MemAvailable:/ {printf "MemAvailable %.3f GiB; required %d MiB\n",$2/1048576,floor; if($2<floor*1024) exit 76}' /proc/meminfo | tee "$receipt.ram"
+awk -v floor="$floor" -v policy="$pressure_policy" '
+  /^MemAvailable:/ {
+    if(seen++ || NF!=3 || $2 !~ /^[0-9]+$/ || $3!="kB") invalid=1
+    else {
+      printf "MemAvailable %.3f GiB; desktopReserve %d MiB; policy=%s\n",$2/1048576,floor,policy
+      if($2<floor*1024) {
+        below=1
+        printf "Memory %s: below desktop reserve. Resolve existing jobs and release owned buffers with bounded observations/cleanup; no cold launch or bulk allocation permission. Stage real buffers against current availability.\n",policy
+      }
+    }
+  }
+  END {
+    if(seen!=1 || invalid) {
+      print "Invalid MemAvailable observation" > "/dev/stderr"
+      exit 76
+    }
+    if(below && policy=="reject") exit 76
+  }
+' /proc/meminfo | tee "$receipt.ram"
 printf 'Pressure admission mode=%s policy=%s limit=%s%%; measured desktop headroom and all windows retained\n' "$mode" "$pressure_policy" "$psi_max" | tee "$receipt.psi-policy"
 awk -v limit="$psi_max" -v policy="$pressure_policy" '
   BEGIN {count=split("avg10 avg60 avg300", required, " ")}
