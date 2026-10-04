@@ -219,7 +219,6 @@ from openhcs.interop.cellprofiler.runtime.main_flow import (
 )
 from openhcs.interop.cellprofiler.runtime.measurement_execution_support import (
     ObjectMeasurementOutputRecorder,
-    ObjectMeasurementOutputTimings,
     object_measurement_runtime_inputs,
 )
 from openhcs.interop.cellprofiler.runtime.measurement_recording import (
@@ -3968,13 +3967,10 @@ def test_object_measurement_output_recorder_completes_exact_columnar_rows() -> N
         ),
         row_policy=row_policy,
         module_type=MeasureObjectIntensityModule,
-        func=_synthetic_object_measurement_function,
-        adapter=cast(CellProfilerRuntimeAdapter, object()),
         measurement_images=(),
         object_inputs=(),
         image_measurement_rows=[],
         columnar_rows=[],
-        timings=ObjectMeasurementOutputTimings(),
     )
 
     completed = recorder.completed_measurement_rows(source_rows, payload)
@@ -18395,3 +18391,114 @@ def test_natural_measurement_fallback_preserves_selected_main_flow_plane(monkeyp
     monkeypatch.setattr(policy_type, "table_source_image_name", table_name)
     assert _run_module(executor, image, cellprofiler_runtime=runtime) is image
     assert fallbacks == [original_fallback]
+
+
+@pytest.mark.parametrize("batched", (False, True))
+def test_composed_measurement_roster_keeps_all_object_source_pairs(
+    monkeypatch, batched
+):
+    from openhcs.core.runtime_batch_contracts import RuntimeBatchExecutionDomain
+
+    image_specs = tuple(
+        ArtifactSpec.input(name, ImageArtifactType) for name in ("DNA", "ER", "RNA")
+    )
+    object_specs = tuple(
+        ArtifactSpec.input(name, ObjectLabelsArtifactType)
+        for name in ("Cells", "Nuclei")
+    )
+    output = ArtifactSpec.output("PairMeasurements", MeasurementsArtifactType)
+    pixels = np.arange(1, 13, dtype=np.float32).reshape(3, 4) / 12
+    images = {
+        spec.name: ImagePayloadMetadata(source_image_names=(spec.name,)).payload_with(
+            pixels * scale
+        )
+        for spec, scale in zip(image_specs, (1.0, 0.5, 0.25), strict=True)
+    }
+    objects = {
+        spec.name: ObjectLabelSet(
+            name=spec.name,
+            variant_data=ObjectLabelVariantData(labels=np.ones((3, 4), dtype=np.int32)),
+            domain=ObjectLabelDomain(declared_object_ids=(1,)),
+        )
+        for spec in object_specs
+    }
+    contract = _compiled_callable_contract(
+        MeasureColocalizationModule.require_callable("measure_colocalization_objects"),
+        artifact_inputs=(*image_specs, *object_specs),
+        artifact_outputs=(output,),
+    )
+    batch_executor = contract.runtime_batch_executor(
+        RuntimeBatchExecutionDomain.MEASUREMENT_IMAGES
+    )
+    assert batch_executor is not None
+    batches = []
+
+    def execute_batch(func, requests, execute_one):
+        batches.append(
+            tuple(
+                (request.object_spec.name, request.batch_index, request.batch_count)
+                for request in requests
+            )
+        )
+        return batch_executor(func, requests, execute_one)
+
+    contract = replace(
+        contract,
+        runtime_batch_executors={
+            RuntimeBatchExecutionDomain.MEASUREMENT_IMAGES: execute_batch
+        }
+        if batched
+        else {},
+    )
+    runtime = _FakeCellProfilerRuntime(
+        images,
+        objects,
+        artifact_input_edges=tuple(
+            _artifact_input_edge_for_test(spec)
+            for spec in (*image_specs, *object_specs)
+        ),
+        artifact_output_bindings=((output, _artifact_output_plan(output)),),
+    )
+    policy_type = type(
+        MeasureColocalizationModule.runtime_object_measurement_row_policy()
+    )
+    original_invocations = policy_type.invocations
+    source_rosters = []
+
+    def invocations(policy, measurement_image, kwargs):
+        source_rosters.append(measurement_image.source_aliases)
+        return original_invocations(policy, measurement_image, kwargs)
+
+    monkeypatch.setattr(policy_type, "invocations", invocations)
+    current = np.zeros((3, 4), dtype=np.float32)
+    assert (
+        _run_module(
+            _module_executor(contract),
+            current,
+            cellprofiler_runtime=runtime,
+            do_costes=False,
+            do_manders=False,
+            do_rwc=False,
+            do_overlap=False,
+        )
+        is current
+    )
+    assert source_rosters == [("DNA", "ER", "RNA")]
+    assert batches == (
+        [
+            tuple(
+                (name, index, 6)
+                for index, name in enumerate(("Cells",) * 3 + ("Nuclei",) * 3)
+            )
+        ]
+        if batched
+        else []
+    )
+    rows = tuple(
+        row for table in runtime.measurements for row in table.rows.iter_row_mappings()
+    )
+    for name in ("Cells", "Nuclei"):
+        owned = tuple(row for row in rows if row.get("object_name") == name)
+        assert len(owned) == 3
+        for row, pair in zip(owned, ("DNA_ER", "DNA_RNA", "ER_RNA"), strict=True):
+            assert row[f"Correlation_Correlation_{pair}"] == pytest.approx(1.0)

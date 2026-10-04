@@ -41,7 +41,6 @@ from openhcs.core.pipeline.function_contracts import (
 from openhcs.core.runtime_adapters import (
     RuntimeAdapterRequest,
 )
-from openhcs.core.runtime_batch_contracts import RuntimeBatchExecutionDomain
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     image_payload_metadata,
@@ -86,9 +85,7 @@ from openhcs.interop.cellprofiler.runtime.invocation import (
 from openhcs.interop.cellprofiler.runtime.measurement_execution_support import (
     CellProfilerRuntimeProfiler,
     ObjectMeasurementOutputRecorder,
-    ObjectMeasurementOutputTimings,
     PreparedObjectMeasurementInvocation,
-    PreparedObjectMeasurementInvocationBatch,
     object_measurement_batch_group_key,
     object_measurement_runtime_inputs,
 )
@@ -798,31 +795,42 @@ class CellProfilerModuleExecutor:
         elif not image_inputs:
             source_image_name = None
         else:
-            image_strategy = CellProfilerOutputRecorder.for_artifact_type(ImageArtifactType)
+            image_strategy = CellProfilerOutputRecorder.for_artifact_type(
+                ImageArtifactType
+            )
             runtime_projection = RuntimePlaneAxisValueProjection.from_projector(
-                adapter, RuntimePlaneAxis.RUNTIME_SLICE, (),
+                adapter,
+                RuntimePlaneAxis.RUNTIME_SLICE,
+                (),
             )
             projected_binding = (
                 RuntimeInputBindingRequest(
-                    adapter=adapter, kwargs={},
+                    adapter=adapter,
+                    kwargs={},
                     current_image=RuntimeSliceProjection.value_for_slice(
-                        current_image, runtime_projection,
+                        current_image,
+                        runtime_projection,
                     ),
                 )
-                if runtime_projection is not None and runtime_projection.plane_index is not None
+                if runtime_projection is not None
+                and runtime_projection.plane_index is not None
                 else None
             )
             source_names = []
-            for spec, measurement_image in zip(image_inputs, measurement_images, strict=True):
+            for spec, measurement_image in zip(
+                image_inputs, measurement_images, strict=True
+            ):
                 edge = (
                     adapter.request.require_artifact_input_edge(spec.ref())
-                    if projected_binding is not None else None
+                    if projected_binding is not None
+                    else None
                 )
                 if edge is not None and edge.main_flow_projection is not None:
                     source_name = image_strategy.source_image_name(
                         spec,
                         projected_binding.main_flow_value(
-                            spec, projection=edge.main_flow_projection,
+                            spec,
+                            projection=edge.main_flow_projection,
                         ),
                     )
                 else:
@@ -831,7 +839,8 @@ class CellProfilerModuleExecutor:
                     )
                 source_names.append(source_name)
             source_image_name = self._primary_image_source_name_from_sources(
-                image_inputs, tuple(source_names),
+                image_inputs,
+                tuple(source_names),
             )
         if not measurement_images:
             measurement_images = tuple(
@@ -841,28 +850,6 @@ class CellProfilerModuleExecutor:
                     current_image,
                 )
                 for object_spec in object_inputs
-            )
-            measurement_object_pairs = tuple(
-                (
-                    measurement_image,
-                    object_spec,
-                    True,
-                )
-                for measurement_image, object_spec in zip(
-                    measurement_images,
-                    object_inputs,
-                    strict=True,
-                )
-            )
-        else:
-            measurement_object_pairs = tuple(
-                (
-                    measurement_image,
-                    object_spec,
-                    object_index == 0,
-                )
-                for measurement_image in measurement_images
-                for object_index, object_spec in enumerate(object_inputs)
             )
         profile_events: list[CellProfilerRuntimeProfileEvent] = []
         if profile_enabled:
@@ -883,108 +870,98 @@ class CellProfilerModuleExecutor:
         label_payload_seconds = 0.0
         label_align_seconds = 0.0
         contract_execute_seconds = 0.0
-        output_timings = ObjectMeasurementOutputTimings()
         columnar_rows: list[ColumnarRows] = []
-        batch_executor = self.callable_contract.runtime_batch_executor(
-            RuntimeBatchExecutionDomain.MEASUREMENT_IMAGES
-        )
         processing_contract = self.callable_contract.require_processing_contract()
         output_recorder = ObjectMeasurementOutputRecorder(
             callable_contract=self.callable_contract,
             measurement_output_plan=measurement_output_plan,
             row_policy=measurement_row_policy,
             module_type=module_type,
-            func=func,
-            adapter=cellprofiler_runtime,
             measurement_images=measurement_images,
             object_inputs=object_inputs,
             image_measurement_rows=image_measurement_rows,
             columnar_rows=columnar_rows,
-            timings=output_timings,
         )
         measurement_invocations = tuple(
             measurement_row_policy.invocations(measurement_image, kwargs)
-            for (
-                measurement_image,
-                _object_spec,
-                _include_image_measurements,
-            ) in measurement_object_pairs
+            for measurement_image in measurement_images
         )
         total_measurement_batch_count = sum(
-            (len(invocations) for invocations in measurement_invocations)
-        )
+            len(invocations) for invocations in measurement_invocations
+        ) * (len(object_inputs) if image_inputs else 1)
         prepared_invocations: list[PreparedObjectMeasurementInvocation] = []
-        for (
-            measurement_image,
-            object_spec,
-            include_image_measurements,
-        ), invocations in zip(
-            measurement_object_pairs, measurement_invocations, strict=True
-        ):
-            label_payload = RuntimeInputBindingRequest(
-                adapter=cellprofiler_runtime,
-                kwargs=kwargs,
-                current_image=measurement_image.payload,
-            ).label_payload_for(object_spec)
-            (
-                aligned_measurement_image,
-                executable_labels,
-                completion_label_payload,
-                execution_mode,
-                preparation_profile_events,
-                label_payload_elapsed,
-                label_align_elapsed,
-            ) = object_measurement_runtime_inputs(
-                object_label_execution=object_label_input_execution_mode_from_callable(
-                    self.raw_func
-                ),
-                measurement_image=measurement_image,
-                object_spec=object_spec,
-                label_payload=label_payload,
-                adapter=cellprofiler_runtime,
+        for image_index, (measurement_image, invocations) in enumerate(
+            zip(
+                measurement_images,
+                measurement_invocations,
+                strict=True,
             )
-            profile_events.extend(preparation_profile_events)
-            label_payload_seconds += label_payload_elapsed
-            label_align_seconds += label_align_elapsed
-            for invocation in invocations:
-                invocation_kwargs = module_type.object_measurement_invocation_kwargs(
-                    invocation.lowered_kwargs(),
-                    include_image_measurements=include_image_measurements,
+        ):
+            measured_objects = (
+                object_inputs if image_inputs else (object_inputs[image_index],)
+            )
+            for object_index, object_spec in enumerate(measured_objects):
+                include_image_measurements = object_index == 0
+                label_payload = RuntimeInputBindingRequest(
+                    adapter=cellprofiler_runtime,
+                    kwargs=kwargs,
+                    current_image=measurement_image.payload,
+                ).label_payload_for(object_spec)
+                (
+                    aligned_measurement_image,
+                    executable_labels,
+                    completion_label_payload,
+                    execution_mode,
+                    preparation_profile_events,
+                    label_payload_elapsed,
+                    label_align_elapsed,
+                ) = object_measurement_runtime_inputs(
+                    object_label_execution=object_label_input_execution_mode_from_callable(
+                        self.raw_func
+                    ),
+                    measurement_image=measurement_image,
+                    object_spec=object_spec,
+                    label_payload=label_payload,
+                    adapter=cellprofiler_runtime,
                 )
-                prepared_invocations.append(
-                    PreparedObjectMeasurementInvocation(
-                        source_image_name=aligned_measurement_image.source_image_name,
-                        execution_mode=execution_mode,
-                        plane_projection=aligned_measurement_image.plane_projection,
-                        func=func,
-                        image=aligned_measurement_image.payload,
-                        kwargs={
-                            **invocation_kwargs,
-                            **shared_runtime_kwargs,
-                            **_execution_mode_semantic_control_kwargs(
-                                processing_contract,
-                                execution_mode,
-                            ),
-                            "labels": executable_labels,
-                        },
-                        batch_index=len(prepared_invocations),
-                        batch_count=total_measurement_batch_count,
-                        semantic_group_key=object_measurement_batch_group_key(
-                            object_spec=object_spec, labels=completion_label_payload
-                        ),
-                        measurement_image=aligned_measurement_image,
-                        object_spec=object_spec,
-                        invocation=invocation,
-                        completion_label_payload=completion_label_payload,
+                profile_events.extend(preparation_profile_events)
+                label_payload_seconds += label_payload_elapsed
+                label_align_seconds += label_align_elapsed
+                for invocation in invocations:
+                    invocation_kwargs = (
+                        module_type.object_measurement_invocation_kwargs(
+                            invocation.lowered_kwargs(),
+                            include_image_measurements=include_image_measurements,
+                        )
                     )
-                )
-        contract_execute_seconds = PreparedObjectMeasurementInvocationBatch(
-            callable_contract=self.callable_contract,
-            func=func,
-            function_name=function_name,
-            invocations=tuple(prepared_invocations),
-            batch_executor=batch_executor,
-        ).execute(output_recorder)
+                    prepared_invocations.append(
+                        PreparedObjectMeasurementInvocation(
+                            source_image_name=aligned_measurement_image.source_image_name,
+                            execution_mode=execution_mode,
+                            plane_projection=aligned_measurement_image.plane_projection,
+                            func=func,
+                            image=aligned_measurement_image.payload,
+                            kwargs={
+                                **invocation_kwargs,
+                                **shared_runtime_kwargs,
+                                **_execution_mode_semantic_control_kwargs(
+                                    processing_contract,
+                                    execution_mode,
+                                ),
+                                "labels": executable_labels,
+                            },
+                            batch_index=len(prepared_invocations),
+                            batch_count=total_measurement_batch_count,
+                            semantic_group_key=object_measurement_batch_group_key(
+                                object_spec=object_spec, labels=completion_label_payload
+                            ),
+                            measurement_image=aligned_measurement_image,
+                            object_spec=object_spec,
+                            invocation=invocation,
+                            completion_label_payload=completion_label_payload,
+                        )
+                    )
+        contract_execute_seconds = output_recorder.execute(tuple(prepared_invocations))
         if profile_enabled:
             profile_events.extend(
                 (
@@ -998,15 +975,15 @@ class CellProfilerModuleExecutor:
                         "cp_per_object_contract_execute", contract_execute_seconds
                     ),
                     CellProfilerRuntimeProfileEvent(
-                        "cp_per_object_split_output", output_timings.split_seconds
+                        "cp_per_object_split_output", output_recorder.split_seconds
                     ),
                     CellProfilerRuntimeProfileEvent(
                         "cp_per_object_complete_rows",
-                        output_timings.complete_rows_seconds,
+                        output_recorder.complete_rows_seconds,
                     ),
                     CellProfilerRuntimeProfileEvent(
                         "cp_per_object_annotate_rows",
-                        output_timings.annotate_seconds,
+                        output_recorder.annotate_seconds,
                         (
                             (
                                 "rows",
