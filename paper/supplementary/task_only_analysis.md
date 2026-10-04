@@ -257,6 +257,60 @@ BBBC013 assay in Supplementary Data 7. The packaged
 retain all twelve supporting capture identities and the nine displayed original
 PNG embeddings; no new scientific execution or scoring was performed.
 
+## Paired-channel authoring: local repair and qualified territories
+
+A fresh-context author analysed the released paired DNA/actin field in
+`H003_POSTPAUSE_88`, without reference-score feedback. Both source planes are
+400 x 400 pixels with explicit shared sample identities. The first completed
+paired prediction contained 54 nuclei and 54 associated actin territories.
+Matched raw review identified a nuclear label spanning two broad interiors.
+Subsequent marker and watershed trials improved this local separation, although
+a faint neighbour elsewhere remained merged. The author ultimately registered
+a custom detector through the ordinary OpenHCS function/artifact route, retaining
+its consumed response, markers and support as diagnostics.
+
+Figure 8 shows matched raw and first/final native overlays of
+the repaired pair, alongside final raw, result-only and combined views of the
+remaining faint merge. The first completed prediction follows a technical
+submission repair; these panels compare scientific outputs within the same
+uncoached run, not separate authors or a skill-only intervention.
+
+DNA windows are 0–255 for the repaired-pair row and 0–151 for the retained
+merge, gamma 1 and final ROI opacity 0.7. The final repaired-pair crop accounts
+for an 11-screen-pixel canvas shift at unchanged camera and zoom. Aligned raw
+RGB equality establishes presentation only, not segmentation accuracy. The
+[source proof](task_only_analysis/h003-native-source-proof.json) and
+[render receipt](task_only_analysis/h003-native-render-receipt.json) retain the
+unchanged original screenshots and exact crops. Source:
+[BBBC007v1](https://bbbc.broadinstitute.org/BBBC007), field A02, Drosophila
+Kc167 DNA/actin; Sabatini laboratory, Whitehead Institute; Jones et al. (2005)
+and Ljosa et al. (2012), [CC0](https://creativecommons.org/publicdomain/zero/1.0/).
+Adaptations are OpenHCS overlays, native display windows and screenshot
+clipping/scaling; no scientific pixels were retouched.
+
+The final completed pipeline exported 55 nuclear instances and 55 associated
+actin territories. Unique object IDs and parent relationships reconcile across
+the tables. Median nuclear area was 370 pixels²; median territory area was
+907 pixels². One territory had exactly the same area as its corresponding
+nucleus, while 12 nuclear and 17 territory bounding boxes met the image edge.
+The retained negative patch contained no labelled pixels in either output.
+These are local and table-level checks, not exhaustive accuracy or pixelwise
+containment tests. Several actin interfaces remained poorly resolved in the raw
+image, so the territories support exploratory occupancy and source-linked
+measurements rather than validated physical cell boundaries.
+
+The final review retained 54 matched native captures spanning whole-field and
+object-scale positions, both channels and two display windows. Supported local
+detections and the repaired pair remain useful; the faint merge, clipped objects
+and no-growth territory qualify their interpretation. No exact biological census
+or reference accuracy score was reported. All 148 declared frozen artifact hashes
+were independently verified, and the owned viewer/native processes were closed.
+The recorded client teardown exit code was 2 and remains distinct from scientific
+execution completion and successful process closure. The
+[paired-channel outcome record](task_only_analysis/h003-postpause-outcome.json)
+binds the original freeze, consumed pipeline, registered detector and final
+evidence. No detector execution or scoring was repeated for this account.
+
 ## Scope and retained evidence
 
 [Figure 7 plot data](../figures/slas/task_only_analysis_plot_data.csv) retains

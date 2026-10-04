@@ -787,6 +787,14 @@ restored original-channel tables without changing the soma masks. This case is
 assisted development, not a fresh autonomous success; its packaging overrun and
 nonzero client teardown status remain recorded.
 
+A fresh-context paired DNA/actin author also retained 55 nuclei and 55
+source-linked actin territories after repairing a local nuclear merge. A
+faint-neighbour merge, clipped objects and one no-growth territory remained
+explicitly identified. These outputs support qualified exploratory measurements,
+not an exact census or validated cell boundaries. The
+[paired-channel outcome record](task_only_analysis/h003-postpause-outcome.json)
+identifies the independently verified 148-artifact freeze and consumed sources.
+
 ## Software snapshots and evidence
 
 | Evidence | Software identity | What the record establishes |
