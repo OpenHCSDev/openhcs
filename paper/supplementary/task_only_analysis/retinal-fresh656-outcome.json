@@ -1,0 +1,33 @@
+{
+  "trial": "R0010_FRESH656_95",
+  "scope": "Fresh uncoached development repeat; useful local separation and split repair, unresolved whole-field retinal count; no manual-reference accuracy or held-out evaluation",
+  "source_root": "/home/ts/wt/openhcs-issue-batch-20260929/next-r0010-fresh95-after656-20261004/R0010_FRESH656_95/author-workspace/output",
+  "science_root": "/run/media/ts/hdd/openhcs-science/next-r0010-fresh95-after656-20261004/R0010_FRESH656_95",
+  "original_report": "REPORT.md",
+  "manifest": "FINAL-manifest.json",
+  "manifest_sha256": "af6c178f2cbf9f3630540fc87366db33292bdd24987eeb46e3bedb4c2bc20757",
+  "final_pipeline": "pipelines/FINAL-scientific.py",
+  "final_pipeline_sha256": "9609a02ff4c6e1fa5a43c515c7fc50a3782a3abcd89ac7bca7fbd78975273229",
+  "original_source_sha256": "3609adc418bb772307804aac1fbecc40d7da54b16cd2a5e3ab8aedbb4d83a851",
+  "algorithmic_parent_count": 118,
+  "roi_contour_count": 119,
+  "manual_reference_accuracy": null,
+  "independent_integrity_check": {
+    "manifest_entries": 215,
+    "verified_bytes": 1465782627,
+    "journal_prefix_entries": 3,
+    "native_png_entries": 82,
+    "native_png_bytes": 46730113,
+    "mismatches": 0,
+    "outer_author_journal_sealed": false
+  },
+  "independently_opened_final_witnesses": [
+    "qa/final_se_raw/20261004T231623179758Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "qa/final_se_result/20261004T231631111431Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "qa/final_se_combined/20261004T231637125328Z_napari_6015_OpenHCS_Napari_Visualization.png"
+  ],
+  "owned_native_and_viewer_closed": true,
+  "original_mcp_client_exit_code": 2,
+  "figure9_is_this_run": false,
+  "new_scientific_execution_or_reference_scoring": false
+}

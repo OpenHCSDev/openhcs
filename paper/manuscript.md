@@ -264,6 +264,8 @@ A separate fresh-context author repaired a joined nuclear pair in a released DNA
 
 A fresh retinal author independently revised its foreground model after measuring background admission and weak-body support. Smoothing followed by broad-background subtraction improved local signal discrimination, and the completed final pipeline exported 109 detector instances (Figure 9). Distributed review still found partial faint-body recovery and uncertain ring-shaped partitions; a saved response below the cutoff localized one plausible miss to foreground admission rather than watershed. This is evidence of autonomous diagnosis and useful candidate output, not a validated retinal ganglion-cell count (Supplementary Data 8).
 
+A subsequent independent retinal author retained separation of a conspicuous bright pair and repaired an additional body split by increasing marker smoothing. Its final pipeline produced 118 detector instances. Distributed review still showed excess partitions and uncertain weak-body admission, so the useful local segmentation gains were reported separately from the unresolved whole-field count. No manual-reference accuracy was measured; this repeat illustrates partial autonomous success rather than either a complete cell census or a wholly unusable analysis (Supplementary Data 8).
+
 A fresh whole-volume nucleus-centre trial matched all 15 manual reference
 centres at the predeclared 30-voxel tolerance, with 10 unmatched predictions;
 at 10 voxels it matched 14 of 15. The reference was not established as
