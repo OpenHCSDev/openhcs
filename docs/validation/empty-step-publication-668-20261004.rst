@@ -148,14 +148,64 @@ declarations, then registered UINT16 image publication and size/shape measuremen
 on wellsA01/A04 with two declared worker lanes. Default automatic publication
 stays enabled. It has no invented source receipts, callable, alias or algorithm.
 The source-only packet uses literal declared paths valid for normal public source
-decoding, not a guessed __file__ namespace. Source data generation has not run.
+decoding, not a guessed __file__ namespace. The receiving owner subsequently
+generated distinct synthetic inputs and exercised this packet as recorded below.
 
-Planck explicitly receives the NEXT complete candidate bundle before669 merge,
-with now-published official ObjectState1.2. Target05/main9b6 lacks669 and is not
-its installed acceptance; it remains the separate663 recipe receiving. Actual
-installed registered and public parallel multiwell image/table/typed-address
-acceptance remains pending through the existing sole builder/native lane owner.
-No second client, overlay or scientific hotpatch has been started here.
+Planck received the complete candidate before669 merge with published official
+ObjectState1.2. Target05/main9b6 lacks669 and is not its installed acceptance;
+it remains the separate663 recipe receiving. No second client, overlay or
+scientific hotpatch was started here.
+
+Whole installed and public receiving: PASS
+----------------------------------------
+
+Original ordinary receiving06 wheel/target source is exactly
+cf10bb670a3c0e0e264e3d0641872669e38beaa8. Wheel SHA256
+d6a28b462348ad685db128dfa42cfca8e72a3979952d5e96d520df0eee980ff3;
+original byte qualification admits912 RECORD members,812 tracked source members,
+789 Python files and13 skill files. Official ObjectState1.2.0 and existing
+qualified dependencies were reused; no selective installed overlay.
+
+Original public client73939/MCP575160 and native600635/create1791148433.08 at
+TCP6012/ACK7012 used normal preparation, original CPPipe import and two worker
+threads. Compilation job1 and execution job2
+498531a7-5b1b-4e2c-8d88-b8203ee5a34a completed/errors[]; native execution elapsed
+.5599097s. Default automatic publication remained ON, viewer streaming OFF.
+
+Both public saved12x15 uint16 label images match every original input pixel
+(360 total). Both canonical measurement tables and public CSV previews join
+object_label2 to Area6 and7 to Area20. Each well's public site/channel/Z/time,
+source provenance and .5/.5micrometer calibration are preserved. Original
+values01.json require_valid_observation passes. The exact installed-origin
+verifier completed terminal0,3.91s/298120KiB/Swap0. This proves the registered
+parallel multiwell saved-result path, not biological accuracy or exact race
+overlap; the source lifecycle control separately exercises pending publication.
+
+Typed close of the original native handle returned request_attempted,
+acknowledged, endpoint_terminated, process_exited and succeeded TRUE/errors[].
+Native/MCP independently absent; ports6012/7012/6013/7013 down and original scope
+inactive/dead. Client EOF terminal2 retains two known pre-dispatch CLI
+argument/discovery negatives, not shutdown failure or UNKNOWN recovery. Original
+journals remain unchanged;94 was returned to Dewey with helpers untouched.
+
+Durable original receiving root:
+engineering-pre-first-routing-20261004/receiving06/public94-attempt01 under the
+issue-batch root. ACTUAL-RECEIVING.rst, verify-public01.py/log,
+RECEIVING-FREEZE.sha256 and original ENGINEERING669_94/author-workspace/output/
+runtime/mcp.stdin/stdout/timing retain the entire public journey. Canonical
+VALUES remains output/values01.json, not a fabricated JSON mirror. A separate
+public receiving archive empty-step-publication-668-public01.tar.gz preserves
+original reply/verifier/closure and whole qualification bytes alongside the
+unchanged source archive. SHA256
+c8a1b0e08b49fd605f6d1cf477e4f679980e1e6c50c34faf26bac46b08f9866e.
+
+Fresh main18886f2000a0b47a30dadc7446267a50786fab2f has no changes in either
+writer owner or either affected test relative to integrated maina3d. Its
+separately qualified compiler/source-domain changes are not claimed as receiving06
+bytes.669 production remains byte-identical to source-qualified9327 and actual
+receivingcf10bb.676's aggregate-plane fix is separate and was NOT installed here;
+663's representative3D compile remains separate and unverified. No scientist
+bundle, report or biological claim is changed by this receiving.
 
 Original detailed receiving triage is retained at engineering620/
 BBBC007-EMPTY-STEP-PUBLICATION-TRIAGE-20261004.rst under the issue-batch root.
