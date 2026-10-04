@@ -282,7 +282,12 @@ scientific execution. The [fresh retinal outcome record](task_only_analysis/reti
 binds original source, freeze, report and diagnostic identities. This trial is
 distinct from the assisted retinal continuation in Supplementary Figure 11;
 no new scientific execution, reference scoring or image transformation was
-used to prepare this account.
+used to prepare this account. Main Figure 9 uses the corrected whole-field and
+southwest raw/combined captures, not the earlier misnamed overview captures.
+Its [native source proof](task_only_analysis/retinal-fresh-native-source-proof.json)
+retains original PNG hashes, camera coordinates and exact geometric crops.
+Whole-field crops are [566,41,415,415] and southwest crops [413,28,837,442]
+in the original 1440 × 944 widgets; no intensity transformation is applied.
 
 ## Translocation development: admission repair does not validate compartments
 
