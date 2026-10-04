@@ -83,8 +83,8 @@ printf 'PASS original expected revision prohibits a second publication/replay\n'
 # helper, scope, import, client or scientist is started by ledger mode.
 mkdir -p "$scratch/old-a/A/author-workspace/output" "$scratch/old-b/B/author-workspace/output" "$scratch/next/INDEPENDENT_C/author-workspace/output"
 bash "$operations/resource-check.sh" "$scratch/funding" A current_funding01 ledger > "$scratch/ledger01.log" 2>&1
-rg -q 'reservedCurrent=6291456$' "$scratch/ledger01.log"
-test "$(rg -c '^Retained ' "$scratch/ledger01.log")" = 1
+rg -q 'growthEstimate=6291456 ' "$scratch/ledger01.log"
+rg -q 'Programme retainedRoots=1 ' "$scratch/ledger01.log"
 bash -c 'source "$1" "$2" A; test "$FLEET_INSTALL" = /controlled/old-install; test "$FLEET_OPERATIONS" = "$3"; test "$(fleet_limits_for A | jq -er .output_per_author_mib)" = 1' \
   _ "$operations/slot-env.sh" "$scratch/funding" "$operations"
 bash "$operations/launch-author.sh" "$scratch/funding" A --preflight > "$scratch/preflight-a.log"
@@ -94,7 +94,7 @@ printf 'PASS original launcher uses immutable run config/model/CLI with no provi
 printf 'PASS current reservations sum immutable own caps (2+4MiB), full retired bytes once; continuing source/operations/cap unchanged\n'
 
 # Actual sibling retained/scratch overage must not veto A's own permission or
-# erase A's unused growth. The same member C still enforces its own limits.
+# erase A's unused growth. Neither member has an agent-created output quota.
 mkdir -p "$scratch/next/INDEPENDENT_C/author-workspace/output/runtime/scratch"
 dd if=/dev/zero of="$scratch/next/INDEPENDENT_C/author-workspace/output/sibling-overage.bin" bs=1M count=7 status=none
 dd if=/dev/zero of="$scratch/next/INDEPENDENT_C/author-workspace/output/runtime/scratch/overage.bin" bs=1M count=2 status=none
@@ -103,13 +103,16 @@ set +e
 bash "$operations/resource-check.sh" "$scratch/funding" INDEPENDENT_C own_overage01 ledger > "$scratch/own-overage.log" 2>&1
 status=$?
 set -e
-test "$status" = 1
+test "$status" = 0
 remaining=$(awk '/HomeAvailable/ {print $NF}' "$scratch/sibling-overage.log")
 test "$remaining" = GiB
-rg -q 'required 0.002 GiB' "$scratch/sibling-overage.log"
+rg -q 'required 0.000 GiB' "$scratch/sibling-overage.log"
+measured_a=$(awk '/^Current / && /\/old-a\// {for(i=1;i<=NF;i++) if($i ~ /^total=/) {split($i,value,"="); print value[2]}}' "$scratch/sibling-overage.log")
+remaining_growth=$(sed -n 's/.*remainingGrowthEstimate=\([0-9]*\).*/\1/p' "$scratch/sibling-overage.log")
+test "$remaining_growth" = "$((2097152-measured_a))"
 unlink "$scratch/next/INDEPENDENT_C/author-workspace/output/sibling-overage.bin"
 unlink "$scratch/next/INDEPENDENT_C/author-workspace/output/runtime/scratch/overage.bin"
-printf 'PASS sibling overages remain physical usage; own quota enforces; no negative growth or sibling veto\n'
+printf 'PASS own/sibling overages remain physical usage; forecast clamped, no quota or sibling veto\n'
 
 cp "$scratch/funding/program.json" "$scratch/funding-before-overlap.json"
 jq --arg output "$scratch/old-a/A/author-workspace/output" '.retained_output_roots += [$output]' "$scratch/funding-before-overlap.json" > "$scratch/funding/program.json"
@@ -203,14 +206,14 @@ for retirement_case in policy_change tampered_grant tampered_policy; do
   jq --arg phase "controlled-$retirement_case" '.phase=$phase' \
     "$scratch/retirement/successor-declaration.json" > "$scratch/retirement-$retirement_case/successor-declaration.json"
   if [[ "$retirement_case" == policy_change ]]; then
-    jq '.resource_policy={aggregate_memory_max_bytes:2097152}' \
+    jq '.resource_policy={desktop_growth_reserve_mib:1}' \
       "$scratch/retirement-$retirement_case/successor-declaration.json" > "$scratch/changed-policy.json"
     mv "$scratch/changed-policy.json" "$scratch/retirement-$retirement_case/successor-declaration.json"
   fi
   bash "$owner" prepare "$scratch/funding" "$scratch/retirement-$retirement_case" "$scratch/qualification.json"
   case "$retirement_case" in
     tampered_grant) change='.funded_members += [{slot:"INDEPENDENT_C",run_owner_root:(.retained_output_roots[0] | sub("/old-b/B/author-workspace/output$";"/next"))}]' ;;
-    tampered_policy) change='.proposed_resource_envelope.aggregate_memory_max_bytes=2097152' ;;
+    tampered_policy) change='.proposed_resource_envelope.desktop_growth_reserve_mib=1' ;;
     policy_change) change='.' ;;
   esac
   jq "$change" "$scratch/retirement-$retirement_case/program.json" > "$scratch/changed-proposal.json"
@@ -222,8 +225,8 @@ env -u FLEET_PARENT_RELEASED bash "$owner" publish "$scratch/funding" "$scratch/
 test ! -e "$scratch/retirement/PARENT-RELEASE.rst"
 printf 'PASS standing terminal retirement: no repeated release file/flag; missing proof and policy/grant changes reject\n'
 bash "$operations/resource-check.sh" "$scratch/funding" A after_retirement02 ledger > "$scratch/ledger02.log" 2>&1
-rg -q 'reservedCurrent=2097152$' "$scratch/ledger02.log"
-test "$(rg -c '^Retained ' "$scratch/ledger02.log")" = 2
+rg -q 'growthEstimate=2097152 ' "$scratch/ledger02.log"
+rg -q 'Programme retainedRoots=2 ' "$scratch/ledger02.log"
 set +e
 bash "$operations/slot-env.sh" "$scratch/funding" INDEPENDENT_C > "$scratch/retired-c.log" 2>&1
 status=$?
@@ -250,7 +253,7 @@ status=$?
 set -e
 test "$status" = 42
 runtime="$scratch/old-a/A/author-workspace/output/runtime"
-rg -q 'CONTROLLED_EXEC cap=7 cpu=25' "$runtime/mcp.stdout"
+rg -q 'CONTROLLED_EXEC cpu=25' "$runtime/mcp.stdout"
 test -f "$runtime/first-mcp-started.epoch"
 test ! -e "$scratch/funding/A"
 (cd "$scratch/old-a"; sha256sum --check --quiet READY-FREEZE.sha256)
@@ -262,7 +265,7 @@ set -e
 test "$status" = 1
 test ! -e "$runtime/resources-forbidden02.output"
 sha256sum --check --quiet "$scratch/retained-startup.sha256"
-printf 'PASS original recorded path: own cap7/CPU25, exact child42, run-local clock/journals, no replay\n'
+printf 'PASS original uncapped recorded path: CPU25, exact child42, run-local clock/journals, no replay\n'
 
 # Initial publication uses the SAME writer, not a manually copied head/store.
 mkdir "$scratch/initial-run"

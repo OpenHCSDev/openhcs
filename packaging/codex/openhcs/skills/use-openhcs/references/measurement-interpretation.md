@@ -2,8 +2,9 @@
 
 ## Measure feature scales before choosing parameters
 
-Use this procedure before setting object diameter, seed separation, smoothing,
-background-removal scale, spot/ridge width or a shape prior. Base a starting
+Use this procedure before selecting the detection/declumping method as well as
+setting object diameter, seed separation, smoothing, background-removal scale,
+spot/ridge width or a shape prior. Base a starting
 range on representative raw features in the managed Napari viewer, not a
 remembered cell size or a convenient detector default. These are development
 measurements, not ground truth or an automatically validated parameter choice.
@@ -57,7 +58,7 @@ measurements, not ground truth or an automatically validated parameter choice.
    neither a major-axis length nor evidence of roundness. ROI contour-member
    count is not necessarily instance count.
 5. Record source/route/axes, witness coordinates, receipt/capture, raw measurement
-   and uncertainty, chosen callable/parameter, unit conversion and rationale in
+   and uncertainty, chosen callable/method/parameter, unit conversion and rationale in
    the trial log. Summarise the observed range and regional variation. Reflect
    the exact registered callable before applying a number: radius versus
    diameter, sigma versus kernel width, anisotropic spacing and intensity units
@@ -70,6 +71,18 @@ measurements, not ground truth or an automatically validated parameter choice.
    its actual scale units, supported arguments and response-combination contract;
    do not invent a scale-list parameter or assume a single-scale argument accepts
    one. Estimate intermediate/response memory before a bounded comparison.
+   For a compound detector, relate each measurement to the stage it supports:
+   raw width or local signal/background difference does not by itself justify
+   admission on an enhanced response, seed extraction or final object acceptance.
+   Reflect the effective contract: one width may also control smoothing or
+   background scale, while a size-acceptance bound need not change markers.
+   Before the first proposal, predict both faint-signal recovery and rejection
+   of regional negatives, preserving ordinary/narrow/broad and genuine-pair
+   controls. Inspect the earliest available response/support in the first
+   bounded candidate before interpreting downstream losses; do not automatically
+   lower admission or enlarge width because a plausible raw scalar missed a
+   structure. Use [stage-specific diagnostics](segmentation-diagnostics.md)
+   to distinguish response generation, admission and later acceptance.
 6. Compile one bounded candidate, inspect its earliest changed intermediate,
    then compare matched raw/result/combined at the measured failures and
    regression controls. Revisit distributed regions after every change; a
@@ -79,6 +92,58 @@ measurements, not ground truth or an automatically validated parameter choice.
    Link the measured envelope and remaining exclusions to the affected phenotype
    claims through [the analysis strategy](analysis-strategy.md), which owns
    claim-scoped conclusions rather than blanket abstention.
+
+### Choose the marker landscape before the first candidate
+
+Measuring a body's diameter does not justify a declumping method. Before the
+initial run, connect the bright/dim regional samples above to three decisions:
+whether local body-versus-background contrast supports foreground admission,
+whether intensity peaks represent bodies or texture within them, and whether
+the proposed marker landscape distinguishes a genuine close pair. Use native
+profiles or bounded samples to compare within-body peak distances and valleys
+with the pair's centre spacing, boundary gap/neck and supported widths. Check
+ordinary broad/oval bodies as well as small ones; diameter and seed separation
+answer different questions.
+
+Observed multiple peaks inside one continuous raw body invalidate **unexamined
+intensity-maxima defaults** as a justified starting choice. They do not forbid
+intensity-based markers: those need evidence that smoothing/prominence separates
+within-body texture from genuine neighbours on the consumed image. Where the
+supported foreground's shape better distinguishes compact touching bodies,
+consider a declared distance/shape-based marker method; elongated or lobed
+single bodies can also have multiple distance peaks. Neither landscape is a
+universal watershed mandate. Foreground missing dim bodies needs an admission
+or preprocessing decision, not stronger downstream suppression.
+
+Reflect the callable's effective method and basic/advanced/automatic settings,
+not just the arguments copied from a validated example. In the CellProfiler
+primary-object contract, `use_advanced_settings=False` selects basic threshold
+behavior; it does not justify the inherited declumping choices. Marker extraction
+and watershed dividing-line landscapes are separate controls, and automatic
+smoothing/suppression can override entered sizes. Inspect those effective
+choices before assuming your measured settings are active. Before proposing
+the first method, also justify the boundary landscape on the same isolated
+body and genuine pair: plausible seed positions do not prove that intensity
+or shape-based dividing lines will follow the supported inter-body boundary.
+An internally textured intensity surface can cut one body unevenly even when
+its markers are appropriate; inspect the expected seam as well as peak placement.
+A validated example
+supplies a working contract, not evidence that its intensity landscape matches
+this raw morphology. Choose the method first, then justify smoothing, prominence
+and minimum separation in that method's units, keeping the genuine pair and
+faint body as simultaneous controls. When the callable retains marker or
+landscape artifacts, inspect those alongside support in the first bounded run.
+
+Two transferable development failures illustrate why this belongs before the
+first candidate: a correctly measured textured body can still split into many
+intensity-seeded fragments; smoothing or increasing suppression may reduce those
+fragments while merging a real close pair. If intra-body and inter-body peak
+distances overlap, one global exclusion distance may not solve both. Reconsider
+the landscape or a supported body-association rule rather than automatically
+increasing separation. Record a brief prediction for both the textured body and
+pair, then check it through [stage-specific diagnostics](segmentation-diagnostics.md).
+This is an empirical starting rationale, not another approval gate or an
+expected-count target.
 
 ### Native ruler, profile and independently specified region operations
 
@@ -289,6 +354,21 @@ retain the hierarchy; pooling thousands of pixels or cells does not create
 thousands of independently treated samples. Keep controls and exclusions
 visible. A statistical report must separate effect, variability and independent
 sample size from image-level counts.
+
+When measurements request several sources or slices, reconcile their intended
+coverage with the compiled source bindings, invocation/grouping and typed
+artifact inputs through `openhcs_inspect_pipeline_source_artifact_plan`, then
+discover the exposed export-read or quantitative-results capability and check
+actual source, object and slice identities and own-source values. Successful
+execution can still deliver only one requested source; an unchanged label
+artifact does not establish measurement coverage. Derive expected coverage from
+the callable and export's declared long/wide layout, plane-local versus
+volumetric identity, aggregation and exclusions—not a universal Cartesian grid
+or grouping setting. In a long-format table, blank columns belonging to another
+source can be legitimate when each row's own-source measurement is present.
+Distinguish those blanks from an absent requested source, omitted eligible
+object/slice or genuinely missing value; retain justified exclusions and any
+preview truncation rather than treating a partial table as a complete export.
 
 ## Figures and reporting
 

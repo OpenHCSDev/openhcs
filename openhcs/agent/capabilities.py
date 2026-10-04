@@ -78,6 +78,8 @@ from openhcs.agent.dto.execution import (
 from openhcs.agent.dto.functions import (
     CustomFunctionRegistrationRequest,
     CustomFunctionRegistrationResult,
+    CustomFunctionRegistrationHandle,
+    CustomFunctionRegistrationObservation,
     FunctionCatalogPage,
     FunctionCatalogPreparationHandle,
     FunctionCatalogPreparationState,
@@ -2032,6 +2034,24 @@ class RegisterCustomFunctionCapability(FunctionCatalogCapability):
     request_invocation = AgentFromFieldsServiceInvocation(
         service=lambda context: context.function_catalog,
         method=lambda service, request: service.register_custom_function(request),
+    )
+
+
+class ObserveCustomFunctionRegistrationCapability(FunctionCatalogCapability):
+    name = "openhcs_get_custom_function_registration_status"
+    cli_command = "get-custom-function-registration-status"
+    kind = CapabilityKind.TOOL
+    title = "Observe custom registration source"
+    description = "Read exact publication/persistence proofs through the original native owners using observation_handle. Does not evaluate/load source or prepare a catalog. Missing evidence stays not_observed; it never authorizes registration replay or proves original mutation did not occur."
+    service = "function_catalog"
+    exposition = FunctionCatalogCapability.exposition.refine(
+        visibility=CapabilityVisibility.STANDARD,
+    )
+    input_contract = CustomFunctionRegistrationHandle
+    output_contract = CustomFunctionRegistrationObservation
+    request_invocation = AgentDataclassRequestServiceInvocation(
+        service=lambda context: context.function_catalog,
+        method=lambda service, request: service.observe_custom_function_registration(request),
     )
 
 

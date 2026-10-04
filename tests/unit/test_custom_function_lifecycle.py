@@ -410,6 +410,48 @@ def isolated_custom_runtime(monkeypatch, tmp_path):
     CustomFunctionRuntimeRegistry.clear()
 
 
+@pytest.mark.parametrize("persist", (False, True))
+def test_registration_observation_uses_current_owners_without_loading(
+    isolated_custom_runtime, monkeypatch, persist,
+):
+    from dataclasses import replace
+    from openhcs.agent.dto.functions import (
+        CustomFunctionRegistrationHandle, CustomFunctionRegistrationRequest,
+        CustomFunctionRegistrationObservationOutcome,
+    )
+    from openhcs.agent.path_policy import AgentPathPolicy
+    from openhcs.agent.services.function_catalog_service import FunctionCatalogService
+    from zmqruntime.messages import ProcessIdentity
+
+    root = isolated_custom_runtime
+    policy = AgentPathPolicy.with_roots(readable_roots=(root,), writable_roots=(root,))
+    manager = CustomFunctionManager(create_storage=False)
+    request = CustomFunctionRegistrationRequest.from_fields(
+        source_code=_source("observation_probe"), function_name="observation_probe",
+        persist=persist, storage_dir=str(root), port=22319,
+    )
+    handle = CustomFunctionRegistrationHandle.from_request(replace(request, server_identity=ProcessIdentity.current()))
+    service = FunctionCatalogService(path_policy=policy)
+    before = service.observe_custom_function_registration(handle)
+    assert before.outcome is CustomFunctionRegistrationObservationOutcome.NOT_OBSERVED
+    [function] = manager.register_from_code(request.source_code, persist=persist, clear_caches=False, emit_signal=False)
+    monkeypatch.setattr(CustomFunctionManager, "_prepare_source", lambda *_: pytest.fail("Read-only observation cannot evaluate source"))
+    monkeypatch.setattr(CustomFunctionManager, "load_custom_function", lambda *_a, **_k: pytest.fail("Read-only observation cannot lazy load"))
+    observed = service.observe_custom_function_registration(handle)
+    assert observed.outcome is CustomFunctionRegistrationObservationOutcome.REGISTERED
+    assert observed.published_sources == (handle.require_named_source(),)
+    assert CustomFunctionRuntimeRegistry.metadata_by_name()["observation_probe"].func is function
+    assert observed.persisted_source == (handle.require_named_source() if persist else None)
+    changed = service.observe_custom_function_registration(replace(handle, content_sha256="0" * 64))
+    assert changed.outcome is CustomFunctionRegistrationObservationOutcome.NOT_OBSERVED
+    assert not changed.published_sources
+    with pytest.raises(RuntimeError, match="stale"):
+        service.observe_custom_function_registration(replace(handle, server_identity=replace(ProcessIdentity.current(), create_time=0)))
+    CustomFunctionRuntimeRegistry.remove("observation_probe")
+    after = service.observe_custom_function_registration(handle)
+    assert after.outcome is (CustomFunctionRegistrationObservationOutcome.PERSISTED_ONLY if persist else CustomFunctionRegistrationObservationOutcome.NOT_OBSERVED)
+
+
 def test_register_rejects_multi_declaration_source_without_partial_publication(
     isolated_custom_runtime,
 ) -> None:

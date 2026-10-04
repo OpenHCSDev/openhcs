@@ -150,24 +150,8 @@ class CompiledExecutionBundle:
     def requires_parent_runtime_observation(self) -> bool:
         """Return whether compiled scopes require worker records in the parent."""
 
-        return self.requires_full_parent_runtime_observation or any(
-            plan.execution_scope.requires_parent_runtime_observation
-            for context in self.runtime_contexts.values()
-            for plan in context.step_plans.values()
-        )
-
-    @property
-    def requires_full_parent_runtime_observation(self) -> bool:
-        """Return whether consolidation needs records beyond plate inputs."""
-
         return any(
-            context.analysis_consolidation_config.enabled
-            and plan.runtime_artifact_materialization.has_persistent_target
-            and any(
-                output.materialization is not None
-                and output.materialization.participates_in_runtime_export_observation()
-                for output in plan.artifact_outputs.values()
-            )
+            plan.execution_scope.requires_parent_runtime_observation
             for context in self.runtime_contexts.values()
             for plan in context.step_plans.values()
         )
