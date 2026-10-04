@@ -75,7 +75,19 @@ count limit. Rejecting a candidate does not by itself end the task. Technical
 completion or counts alone do not establish biological acceptance.
 
 The75min bound begins at YOUR recorded first MCP startup and includes cleanup.
-All writes stay within YOUR output. There are no agent-created retained-output
+Source, pipelines, saved author history, journals and handoff records stay in
+YOUR HOME workspace/output. Put large generated images, tables, intermediate
+arrays and QA payloads directly under the exported FLEET_ARTIFACT_ROOT; MCP
+scratch is FLEET_SCRATCH on that same declared filesystem. If those paths equal
+the original output, the run has no separate destination declaration.
+Use ordinary registered output declarations: PathPlanningConfig.global_output_folder
+chooses the output-plate parent, and artifact/checkpoint destinations must remain
+within that compiled output plate's normal contract. Do not create symlinks to
+bypass path policy, change source/input paths, or put author history on HDD.
+Freeze canonical payload paths and hashes in the HOME handoff rather than copying
+all payloads back into a second final tree. The guard reports actual free space
+on the declared destination; size writes against that filesystem.
+There are no agent-created retained-output
 or scratch byte quotas. Preserve useful QA and all attempts rather than ending
 work because an estimated output amount is exceeded. Scratch is inside total
 output, not charged twice. The original programme amounts are planning estimates
@@ -87,7 +99,8 @@ Ongoing checks measure YOUR actual output, not sibling or closed trees. Startup
 and ledger checks report funded growth forecasts for staging and cleanup. No
 forecast is added to the actual free-HOME admission floor; a planning warning is
 not a scientific-dispatch refusal.
-The guard measures actual retained usage as total output minus contained scratch.
+The guard measures HOME control output plus the declared payload root once,
+minus contained scratch.
 Exceeding an estimate does not refuse an operation. Actual free HOME, measured
 host RAM/pressure, safe path ownership and cleanup still apply. Budget simultaneous
 buffers. Preserve every failure/UNKNOWN, complete tool journal, attempted
