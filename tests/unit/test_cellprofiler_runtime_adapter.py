@@ -3673,7 +3673,7 @@ def test_cellprofiler_adapter_relationships_validate_declared_inputs_by_location
         )
     )
 
-    assert relationship.value.artifact_type is RelationshipsArtifactType
+    assert relationship.artifact_type is RelationshipsArtifactType
 
 
 def test_cellprofiler_adapter_declared_relationship_allows_pruned_child_endpoint():
@@ -3704,7 +3704,7 @@ def test_cellprofiler_adapter_declared_relationship_allows_pruned_child_endpoint
         )
     )
 
-    assert relationship.value.artifact_type is RelationshipsArtifactType
+    assert relationship.artifact_type is RelationshipsArtifactType
     assert isinstance(relationship.data, ObjectRelationship)
     assert relationship.data.declaration.target.name == "FilteredCells"
 
@@ -3803,7 +3803,7 @@ def test_cellprofiler_adapter_relationships_accept_grouped_parent_inputs():
         )
     )
 
-    assert relationship.value.artifact_type is RelationshipsArtifactType
+    assert relationship.artifact_type is RelationshipsArtifactType
 
 
 def test_cellprofiler_adapter_relationships_allow_same_invocation_child_output():
@@ -3880,7 +3880,7 @@ def test_cellprofiler_adapter_relationships_allow_same_invocation_child_output()
         )
     )
 
-    assert relationship.value.artifact_type is RelationshipsArtifactType
+    assert relationship.artifact_type is RelationshipsArtifactType
 
 
 def test_cellprofiler_adapter_adds_and_reads_spatial_grid_artifacts():
@@ -4084,7 +4084,7 @@ def test_cellprofiler_adapter_records_ungrouped_measurements_once():
     )
 
     assert len(records) == 1
-    assert records[0].path == "/memory/A01_Measurements.pkl"
+    assert records[0].location.path == "/memory/A01_Measurements.pkl"
 
 
 def test_cellprofiler_adapter_uses_static_output_scope():

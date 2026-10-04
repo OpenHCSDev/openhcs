@@ -116,6 +116,11 @@ def test_initial_coordinates_stay_captured_while_plan_selectors_follow_mutation(
 def test_chain_shares_cohort_but_advances_only_current_image_and_memory(monkeypatch):
     request, paths, payload = _fixture()
     invocation = request.compiled_group.invocations[0]
+    invocation = replace(invocation, contract=replace(
+        invocation.contract, metadata=replace(
+            invocation.contract.metadata, output_memory_type="next-memory",
+        ),
+    ))
     group = replace(request.compiled_group, invocations=(invocation, invocation))
     request = replace(request, compiled_group=group)
     loaded = PatternGroupData.from_loaded_group(request, paths, payload)
@@ -133,7 +138,6 @@ def test_chain_shares_cohort_but_advances_only_current_image_and_memory(monkeypa
         return second_output
 
     monkeypatch.setattr(FunctionCoreExecutor, "execute", execute)
-    monkeypatch.setattr(FunctionCoreExecutor, "memory_types", lambda _executor: SimpleNamespace(output_type="next-memory"))
     monkeypatch.setattr(function_runtime, "debug_event_sink_from_context", lambda _context: SimpleNamespace(captures_invocation_events=lambda: False))
     assert PatternGroupRuntime.execute_chain(loaded) is second_output
     assert seen[0][0] is loaded and seen[1][0] is loaded
