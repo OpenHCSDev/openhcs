@@ -948,6 +948,27 @@ def test_artifact_only_group_preserves_empty_explicit_main_flow_refs() -> None:
     compiled = compile_function_pattern(consume, {}, {})
 
     assert compiled.default_group.main_flow_input_refs == ()
+    from openhcs.core.compiled_step_plan import CompiledStepPlan
+    from openhcs.core.pipeline.framework_device_assignment import (
+        assign_framework_devices,
+    )
+
+    plan = CompiledStepPlan(
+        step_index=0,
+        step_name="consume",
+        step_type="FunctionStep",
+        axis_id="A01",
+        compiled_function_pattern=compiled,
+    )
+    assign_framework_devices({0: plan})
+    (placed,) = tuple(plan.compiled_function_pattern.iter_invocations())
+    assert placed.input_memory_type is None
+    assert placed.output_memory_type is None
+    assert placed.input_device_id is None
+    assert (
+        placed.artifact_input_edges
+        == compiled.default_group.invocations[0].artifact_input_edges
+    )
 
 
 def test_special_input_edges_use_nominal_artifact_payload_types() -> None:
@@ -1678,6 +1699,14 @@ def test_compile_function_pattern_moves_runtime_config_kwargs_to_bindings():
     binding = invocation.runtime_parameter_bindings[0]
     assert binding.parameter_name == DtypeConversionConfig.require_parameter_name()
     assert binding.value is explicit_config
+    assert dict(invocation.runtime_kwargs) == {
+        "sigma": 2,
+        "dtype_config": explicit_config,
+    }
+    first_call_kwargs = dict(invocation.runtime_kwargs)
+    first_call_kwargs["sigma"] = 3
+    assert dict(invocation.runtime_kwargs)["sigma"] == 2
+    assert invocation.kwargs_dict == {"sigma": 2}
 
 
 def test_compile_function_pattern_keeps_undeclared_runtime_config_kwargs_user_owned():

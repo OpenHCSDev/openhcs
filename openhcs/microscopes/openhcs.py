@@ -109,14 +109,13 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
     METADATA_FILENAME = METADATA_CONFIG.METADATA_FILENAME
 
     def __init__(self, filemanager: FileManager):
-        """
-        Initialize the metadata handler.
-
-        Args:
-            filemanager: FileManager instance for file operations.
-        """
+        """Bind the file owner and initialize derived metadata views."""
         MetadataHandler.__init__(self)
         OpenHCSMetadataBase.__init__(self, filemanager)
+        self.invalidate_metadata_cache()
+
+    def invalidate_metadata_cache(self) -> None:
+        """Release derived metadata views before a new source observation."""
         self._metadata_cache: Optional[Dict[str, Any]] = None
         self._plate_path_cache: Optional[Path] = None
         self._metadata_dict_cache: Optional[Dict[str, Any]] = None
@@ -814,11 +813,7 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
             self.atomic_writer.update_available_backends(
                 metadata_file_path, available_backends
             )
-            # Clear cache to force reload on next access
-            self._metadata_cache = None
-            self._plate_path_cache = None
-            self._metadata_dict_cache = None
-            self._metadata_dict_plate_path_cache = None
+            self.invalidate_metadata_cache()
             logger.info(
                 f"Updated available backends to {available_backends} in {metadata_file_path}"
             )

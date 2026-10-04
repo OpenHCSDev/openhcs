@@ -20,7 +20,7 @@ from openhcs.core.component_group_scope import (
     RuntimeExecutionAxisScope,
 )
 from openhcs.core.runtime_stores import RuntimeArtifactInput
-from openhcs.core.runtime_profile import RuntimeProfileLogger
+from openhcs.core.runtime_profile import RuntimeProfileLogger, RuntimeProfileFieldValue
 from openhcs.core.callable_contract import ImagePayloadConsumption
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.context.processing_context import ProcessingContext
@@ -39,9 +39,6 @@ from openhcs.core.source_binding_selection import (
     SourcePatternResolutionContext,
 )
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
-from openhcs.core.source_workspace_projection import (
-    VirtualWorkspaceSourceProjectionAuthority,
-)
 from openhcs.core.step_dependencies import StepInputDependencyKind
 from openhcs.core.steps.function_io import (
     generate_materialized_paths,
@@ -67,7 +64,6 @@ if TYPE_CHECKING:
 
 
 logger = logging.getLogger(__name__)
-RuntimeProfileFieldValue = str | int | float | bool | None
 RuntimeProfileExtraFields = Mapping[str, RuntimeProfileFieldValue] | None
 DiscoveredPatternCollection = (
     Sequence[SourceCandidatePath]
@@ -537,10 +533,7 @@ class FunctionStepExecutor:
     def source_pattern_context(self) -> SourcePatternResolutionContext:
         """Return source-path context used to filter source-bound anchors."""
 
-        projection = VirtualWorkspaceSourceProjectionAuthority.from_context(
-            self.context,
-            cache=self.context.runtime_source_workspace_projection_cache,
-        ).projection_or_empty()
+        projection = self.context.runtime_source_workspace_projection_authority.projection_or_empty()
         return self.context.runtime_source_binding_context_cache.source_pattern_context(
             parser=self.context.microscope_handler.parser,
             projection=self.context.runtime_source_workspace_projection_cache.filtered_by_axis(
@@ -824,10 +817,7 @@ class FunctionStepExecutor:
         axis_filter = {f"{axis_name}_filter": [plan.axis_id]}
         source_files = step_output_manifest(self.context).producer_paths_for(plan)
         if source_files is None:
-            source_projection = VirtualWorkspaceSourceProjectionAuthority.from_context(
-                self.context,
-                cache=self.context.runtime_source_workspace_projection_cache,
-            ).projection_if_available()
+            source_projection = self.context.runtime_source_workspace_projection_authority.projection_if_available()
             if (
                 plan.main_input_dependency.kind
                 is StepInputDependencyKind.PIPELINE_START
@@ -853,6 +843,7 @@ class FunctionStepExecutor:
             patterns_by_axis = PatternDiscoveryEngine(
                 self.context.microscope_handler.parser,
                 self.context.filemanager,
+                self.context.runtime_pattern_discovery_cache,
             ).auto_detect_patterns_from_axis_files(
                 list(source_files),
                 axis_id=plan.axis_id,
@@ -870,6 +861,7 @@ class FunctionStepExecutor:
             extensions=LOADABLE_IMAGE_EXTENSIONS,
             group_by=plan.group_by,
             variable_components=plan.variable_component_values,
+            pattern_cache=self.context.runtime_pattern_discovery_cache,
             **axis_filter,
         )
 

@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Callable, ClassVar, Sequence
 
 import numpy as np
+from arraybridge import MemoryType, detect_memory_type
 from metaclass_registry import AutoRegisterMeta
 from polystore.config import TiffConfig, TiffPhotometric, TiffPlanarConfig
 
@@ -249,9 +250,16 @@ class ImageFileFormat(ABC, metaclass=AutoRegisterMeta):
             f"No image serialization format is registered for suffix {suffix!r}."
         )
 
-    @abstractmethod
     def prepare(self, payload: Any) -> Any:
-        """Return a payload suitable for this file format."""
+        """Project runtime pixels onto the host before format-specific encoding."""
+        pixels = image_payload_data(payload)
+        host_pixels = MemoryType(detect_memory_type(pixels)).to_numpy(pixels)
+        host_payload = image_payload_metadata(payload).payload_with(host_pixels)
+        return self.prepare_host_payload(host_payload)
+
+    @abstractmethod
+    def prepare_host_payload(self, payload: Any) -> Any:
+        """Encode host pixels while respecting this format's image semantics."""
 
     def storage_config(
         self, payload: Any, configured: TiffConfig | None
@@ -413,7 +421,7 @@ class NumpyImageFileFormat(ImageFileFormat):
         del source_dtype
         return True
 
-    def prepare(self, payload: Any) -> Any:
+    def prepare_host_payload(self, payload: Any) -> Any:
         return image_payload_data(payload)
 
     def read(self, path: str | Path) -> np.ndarray:
@@ -448,7 +456,7 @@ class TiffImageFileFormat(ImageFileFormat):
         del source_dtype
         return True
 
-    def prepare(self, payload: Any) -> Any:
+    def prepare_host_payload(self, payload: Any) -> Any:
         return image_payload_data(payload)
 
     def storage_config(
@@ -568,7 +576,7 @@ class EightBitRasterImageFileFormat(ImageFileFormat):
     format_key = None
     suffixes = ()
 
-    def prepare(self, payload: Any) -> Any:
+    def prepare_host_payload(self, payload: Any) -> Any:
         return image_payload_as_uint8(require_single_image_payload(payload))
 
     def preserves_pixel_values(self, source_dtype: Any) -> bool:
@@ -604,7 +612,7 @@ class PngImageFileFormat(ImageFileFormat):
     format_key = "png"
     suffixes = (".png",)
 
-    def prepare(self, payload: Any) -> Any:
+    def prepare_host_payload(self, payload: Any) -> Any:
         array = require_single_image_payload(payload)
         if array.dtype == np.uint8 or array.dtype == np.uint16:
             return array

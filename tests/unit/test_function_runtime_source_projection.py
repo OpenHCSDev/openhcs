@@ -71,6 +71,7 @@ from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_stack_cache import RuntimeImageStackCache
 from openhcs.core.source_binding_selection import SourcePatternResolutionContext
 from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
+from openhcs.core.runtime_pattern_cache import RuntimePatternDiscoveryCache
 from openhcs.core.steps.function_output_manifest import _STEP_OUTPUT_MANIFESTS
 from openhcs.core.source_bindings import (
     SOURCE_BINDING_ALIAS_METADATA_FIELD,
@@ -98,6 +99,7 @@ from openhcs.core.source_projection import (
     SourceProjectionSet,
 )
 from openhcs.core.source_workspace_projection import (
+    VirtualWorkspaceSourceProjectionAuthority,
     VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjection,
     VirtualWorkspaceSourceProjectionCache,
@@ -137,6 +139,11 @@ def _anchor_executor(
         filemanager=SimpleNamespace(exists=lambda *_args: False),
         runtime_source_workspace_projection_cache=source_workspace_projection_cache,
         runtime_source_binding_context_cache=RuntimeSourceBindingContextCache(),
+    )
+    executor.context.runtime_source_workspace_projection_authority = (
+        VirtualWorkspaceSourceProjectionAuthority.from_context(
+            executor.context, cache=source_workspace_projection_cache,
+        )
     )
     if output_manifest is not None:
         _STEP_OUTPUT_MANIFESTS[executor.context] = output_manifest
@@ -4067,10 +4074,11 @@ def test_producer_anchored_pipeline_start_paths_use_exact_source_projection_bund
     context = SimpleNamespace(
         microscope_handler=SimpleNamespace(
             parser=SourceSchemaFilenameParser(),
-            path_list_from_pattern=lambda *_args: list(virtual_paths),
+            path_list_from_pattern=lambda *_args, **_kwargs: list(virtual_paths),
         ),
         filemanager=SourceFileManager(),
         runtime_image_stack_cache=RuntimeImageStackCache(),
+        runtime_pattern_discovery_cache=RuntimePatternDiscoveryCache(),
         runtime_source_binding_context_cache=RuntimeSourceBindingContextCache(),
         runtime_source_workspace_projection_cache=(
             VirtualWorkspaceSourceProjectionCache()
@@ -5778,7 +5786,7 @@ def test_producer_admission_rederives_live_storage_aliases_each_epoch(
 ):
     store, producer, consumer, records, parser = qualified_producer_manifest
     storage_components = dict(records[0].filename_values)
-    record = replace(records[0], filename_component_values=storage_components)
+    record = replace(records[0], filename_component_values=storage_components).published()
     store.record_outputs(producer, (record,))
     old_index = store.producer_record_index_for(consumer, parser)
     old_alias = record.without_filename_qualifier().filename(parser)

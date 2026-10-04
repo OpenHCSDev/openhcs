@@ -23,6 +23,7 @@ from openhcs.core.callable_contract import FunctionStepExecutionScope
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.native_threading import configure_native_thread_count
+from openhcs.core.runtime_profile import RuntimeProfileLogger
 from openhcs.core.orchestrator.analysis_consolidation import (
     RuntimeAnalysisConsolidationInputs,
 )
@@ -1084,19 +1085,24 @@ def execute_worker_lane(
 ) -> Dict[str, ExecutionResult]:
     """Execute a deterministic worker lane: wells sequentially within one slot."""
 
-    lane_results: Dict[str, ExecutionResult] = {}
-    for axis_id, axis_contexts in lane_axis_contexts:
-        if cancellation is not None:
-            cancellation.raise_if_requested(f"before axis {axis_id}")
-        lane_results[axis_id] = _execute_axis_with_sequential_combinations(
-            pipeline_definition=pipeline_definition,
-            axis_contexts=axis_contexts,
-            lane_context=lane_context,
-            runtime_observation_mode=runtime_observation_mode,
-            cancellation=cancellation,
-            release_axis_resources=release_axis_resources,
-        )
-    return lane_results
+    with RuntimeProfileLogger.run(
+        execution_id=lane_context.execution_id,
+        worker_slot=lane_context.worker_slot,
+        owned_wells=tuple(lane_context.owned_wells),
+    ):
+        lane_results: Dict[str, ExecutionResult] = {}
+        for axis_id, axis_contexts in lane_axis_contexts:
+            if cancellation is not None:
+                cancellation.raise_if_requested(f"before axis {axis_id}")
+            lane_results[axis_id] = _execute_axis_with_sequential_combinations(
+                pipeline_definition=pipeline_definition,
+                axis_contexts=axis_contexts,
+                lane_context=lane_context,
+                runtime_observation_mode=runtime_observation_mode,
+                cancellation=cancellation,
+                release_axis_resources=release_axis_resources,
+            )
+        return lane_results
 
 
 def _execute_fork_inherited_worker_lane_static(

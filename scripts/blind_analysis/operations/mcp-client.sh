@@ -13,11 +13,15 @@ export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMBA_NUM_THRE
 export POLYSTORE_IMAGEJ_CACHE_ROOT=/home/ts/.cache/polystore/imagej POLYSTORE_IMAGEJ_ALLOW_DOWNLOAD=false
 fleet_require_artifact_destination "$FLEET_SLOT"
 scratch="$FLEET_SCRATCH"
+# The existing ancestry owner checks predecessor units on the user bus. Resolve
+# custody before replacing the user runtime directory with private OpenHCS IPC.
+context=$(fleet_author_context)
+ancestry=$(jq -r '.read_roots|join(":")' <<< "$context")
 # NTFS carries scientific payloads, not private config or POSIX0700 IPC runtime.
 control="$FLEET_WORKSPACE/output/runtime"
 export XDG_CACHE_HOME="$scratch/cache" XDG_CONFIG_HOME="$control/config" XDG_DATA_HOME="$control/data" XDG_STATE_HOME="$control/state" XDG_RUNTIME_DIR="$control/xdg-runtime" TMPDIR="$scratch" NUMBA_CACHE_DIR="$scratch/numba" MPLCONFIGDIR="$scratch/matplotlib" OPENHCS_UI_CONFIG_CACHE_FILE="$control/config/ui-config-cache.json"
 reservations="/home/ts/.openhcs/tcp/$FLEET_NATIVE.startup.lock:/home/ts/.openhcs/tcp/$FLEET_NATIVE_ACK.startup.lock:/home/ts/.openhcs/tcp/$FLEET_VIEWER.startup.lock:/home/ts/.openhcs/tcp/$FLEET_VIEWER_ACK.startup.lock"
-export OPENHCS_AGENT_READ_ROOTS="$FLEET_WORKSPACE/output:$FLEET_ARTIFACT_ROOT:$scratch:$FLEET_INPUT:$FLEET_INSTALL/openhcs/agent/resources/knowledge:$reservations"
+export OPENHCS_AGENT_READ_ROOTS="$FLEET_WORKSPACE/output:$FLEET_ARTIFACT_ROOT:$scratch:$FLEET_INPUT:$FLEET_INSTALL/openhcs/agent/resources/knowledge:$reservations${ancestry:+:$ancestry}"
 export OPENHCS_AGENT_WRITE_ROOTS="$FLEET_WORKSPACE/output:$FLEET_ARTIFACT_ROOT:$scratch:$reservations"
 mkdir -p "$XDG_CACHE_HOME" "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_STATE_HOME" "$XDG_RUNTIME_DIR" "$NUMBA_CACHE_DIR" "$MPLCONFIGDIR"
 chmod 700 "$XDG_RUNTIME_DIR"
