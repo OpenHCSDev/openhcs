@@ -24,6 +24,38 @@ raising a final bound need not undo an earlier clamp. Establish the units and
 earliest failed operation first, preserving raw and any explicitly converted
 alias rather than retuning downstream stages to compensate.
 
+### Compare body-admission models
+
+For broad textured or ring-shaped bodies in uneven granular background, inspect
+outer-body support, dim interiors, adjacent background and nuisance-only patches
+across bright/dim separated regions BEFORE choosing foreground admission. Use
+values from the consumed alias alongside raw contours; a global histogram or
+one central body cannot establish specificity elsewhere. A nuclear anchor may
+support eligibility/association, but neither it nor a neuronal callable name
+establishes body-channel boundaries.
+
+- **Local body-minus-background admission** is a candidate when a meaningful
+  outside-body reference separates positives from local nuisance. A neighbourhood
+  contaminated by the body can subtract it; a permissive difference can instead
+  admit diffuse/granular regions. Check complete extent and negative patches,
+  not just whether a seed survives.
+- **Intensity-class separation**, global where classes/background are comparable
+  or local where variation justifies it, is a different hypothesis. Inspect which
+  classes represent nuisance, weak body and bright rim, and how the declared
+  method assigns them. Excluding an intermediate class can remove faint body;
+  retaining it can leak into background. Adaptive/multiclass thresholding is not
+  automatically superior: neighbourhood scale and class overlap still matter.
+
+Choose from measured local positives/backgrounds and regional negatives, using
+[preprocessing model selection](image-preprocessing.md#local-contrast-and-local-thresholds)
+when nuisance or overlapping classes need correction. If lowering a scalar
+restores dim positives but floods large regions, while raising it removes bodies,
+another toggle is not an admission-model repair. A dramatic count/foreground-area
+change is only a warning; matched support and negative controls identify the
+failure. Revisit the model or preprocessing and predict its effect on both,
+rather than selecting the count that looks plausible. If support is adequate but
+partitions fail, move to marker/division diagnostics instead.
+
 ### A threshold fixes one region but damages another
 
 Keep a bright touching pair and a genuine faint positive in different regions

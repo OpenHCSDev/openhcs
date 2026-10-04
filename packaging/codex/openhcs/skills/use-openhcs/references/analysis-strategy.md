@@ -29,7 +29,7 @@ It distinguishes missing information from an unhelpful display.
 | Thin neurites, disconnected traces, puncta or irregular cells | [openhcs_segmentation_diagnostics](segmentation-diagnostics.md) | Does the object model match the target and its topology? |
 | Intensity, volume, colocalisation, comparisons or final figures | [openhcs_measurement_interpretation](measurement-interpretation.md) | Which pixels, geometry, units and experimental units support the claim? |
 | Choosing size, seed separation, smoothing, background scale or shape priors | [openhcs_measurement_interpretation](measurement-interpretation.md#measure-feature-scales-before-choosing-parameters) | Which representative native raw measurements justify the parameter range? |
-| Repeated errors or transferring a successful recipe | [openhcs_analysis_learning](analysis-learning.md) | Is this a source-backed recipe, an observed repair or an untested hypothesis? |
+| Unfamiliar task, raw morphology conflicting with an example, repeated errors or recipe transfer | [openhcs_analysis_learning](analysis-learning.md#retrieve-before-first-authorship-and-retries) | Which conditional lesson informs the FIRST method, and what raw evidence could disconfirm it? |
 | No registered operation has the required input/output contract | [openhcs_custom_function_workflow](custom-function-authoring.md) | Can the missing operation become a typed, reproducible registry function? |
 | Raw/overlay review or a changed viewer canvas | [openhcs_viewer_qa](viewer-qa.md) | Are the three views matched, interpretable and personally inspected? |
 
@@ -37,6 +37,13 @@ Search the first-class Official30 examples for the closest task, retrieve the
 exact OpenHCS Python section and inspect the reference case's inputs and parity
 scope. Use it as a working starting point, not as proof for the new assay. The
 ExampleHuman nuclei card is one example, not the only eligible pipeline.
+
+When the task is unfamiliar or raw morphology contradicts an example's method,
+follow [pre-authorship learning retrieval](analysis-learning.md#retrieve-before-first-authorship-and-retries)
+before adapting it. Retrieve general foreground/marker/division reasoning through
+the existing knowledge service, not a sibling task's worked solution. Include the
+lesson query/source/applicability in the same example-selection record below;
+if none fits, proceed from measured raw evidence rather than waiting for a recipe.
 
 Before authoring, retain an example-selection record in the authorised trial:
 the search query, returned document/section ID, retrieved source identity and

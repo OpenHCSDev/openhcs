@@ -7,18 +7,44 @@ source-backed knowledge service, not create a second recipe database or silently
 write to an agent's personal memory. This is a repository-knowledge workflow;
 memory writes, external publication and held-out access need their own authority.
 
-## Retrieve before retrying
+## Retrieve before first authorship and retries
 
-Search by biological target plus observed failure: for example, nucleus split
-inside one bright body, cytoplasm zero-growth, faint neurite lost after background
-subtraction, or labels misaligned after resampling. Search exact technical error
-text and callable/artifact owner when it is a compile or runtime failure.
-Retrieve the relevant section, not every recipe sharing the word segmentation.
+When the task is unfamiliar or raw morphology conflicts with a retrieved
+example's assumptions, search for a conditional lesson BEFORE choosing the
+first method, not only after an execution fails. Combine the target with the
+observed raw pattern and a plausible failure mechanism: textured bodies with
+internal peaks and false splits, unequal neighbours with misleading intensity
+divisions, or ring-shaped bodies against diffuse noisy background. A predicted
+risk is not an observed failure of your new candidate. Retrieve the relevant
+canonical section, not every recipe sharing the word segmentation. Official30
+supplies validated reference contracts; it is not the only source of reasoning.
+
+Use existing knowledge search/section retrieval and packaged references, not
+sibling trial transcripts, masks or worked answers. Add the query, retrieved
+source/section and applicability to the existing example-selection record.
+State which foreground, marker or boundary assumption changes and what
+positive/pair/background witness could disconfirm it. If no lesson fits,
+record that limit and proceed from empirical raw evidence; no new approval
+or recipe database is needed.
+
+On a retry, refine the query with the actual earliest failed stage: a split
+inside one continuous body, cytoplasm zero-growth, a faint neurite lost after
+background subtraction, or labels misaligned after resampling. Search exact
+technical error text and callable/artifact owner for compile/runtime failures.
 
 Compare input contract, versions, units, dimensions, channel identities and
 validation scope before applying a repair. Official30 selected-value parity is
 meaningful reference evidence, but not proof of new-assay raw biological support.
 Do not turn a plausible explanation from an earlier run into an observed fact.
+
+Keep opposing lessons conditional. A shape-based partition can repair a textured
+body or unequal pair, yet merge a crowded cluster whose supported intensity
+valleys make intensity-based division more useful. A suppression change can
+remove one texture fragment while merging a real neighbour. Compare both
+landscapes through [marker and boundary selection](measurement-interpretation.md#choose-the-marker-landscape-before-the-first-candidate),
+not a universal shape/intensity preference. For noisy ring/textured bodies, use
+[the body-admission contrast](segmentation-diagnostics.md#compare-body-admission-models)
+before assuming a neuronal function name or nuclear anchor supplies boundaries.
 
 Continue development in the retained analysis context after an authorised
 correction; archiving a failed candidate is not a requirement to restart with a
