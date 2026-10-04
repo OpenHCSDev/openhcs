@@ -9,9 +9,12 @@ FLEET_PROGRAM=$(<"$FLEET_ROOT/program.json")
 fleet_member() {
   local reference owner
   reference=$(jq -ce --arg member "$1" '[.authors[] | select(.slot == $member)] |
-    if length == 1 then .[0] else error("missing or ambiguous funded member") end' <<< "$FLEET_PROGRAM")
-  owner=$(jq -er '.run_owner_root' <<< "$reference")
-  test "$(jq -er '.funding_root' "$owner/program.json")" = "$FLEET_ROOT"
+    if length == 1 then .[0] else error("missing or ambiguous funded member") end' <<< "$FLEET_PROGRAM") || return
+  owner=$(jq -er '.run_owner_root' <<< "$reference") || return
+  test "$(jq -er '.funding_root' "$owner/program.json")" = "$FLEET_ROOT" || {
+    printf 'Canonical funding root required; refused run snapshot %s\n' "$FLEET_ROOT" >&2
+    return 64
+  }
   # Funding owns membership; the immutable run owns its actual declaration.
   jq -ce --arg member "$1" --arg owner "$owner" '[.authors[] |
     select(.slot==$member and .run_owner_root==$owner)] |
@@ -20,8 +23,8 @@ fleet_member() {
 
 fleet_limits_for() {
   local member owner
-  member=$(fleet_member "$1")
-  owner=$(jq -er '.run_owner_root' <<< "$member")
+  member=$(fleet_member "$1") || return
+  owner=$(jq -er '.run_owner_root' <<< "$member") || return
   jq -ce '.proposed_resource_envelope' "$owner/program.json"
 }
 
@@ -30,15 +33,63 @@ fleet_funded_slots() {
 }
 
 fleet_workspace_for() {
-  fleet_member "$1" | jq -er '.run_owner_root + "/" + .slot + "/author-workspace"'
+  local member
+  member=$(fleet_member "$1") || return
+  jq -er '.run_owner_root + "/" + .slot + "/author-workspace"' <<< "$member"
 }
 
 fleet_unit_for() {
   local member owner phase
-  member=$(fleet_member "$1")
-  owner=$(jq -er '.run_owner_root' <<< "$member")
-  phase=$(jq -er '.phase' "$owner/program.json")
+  member=$(fleet_member "$1") || return
+  owner=$(jq -er '.run_owner_root' <<< "$member") || return
+  phase=$(jq -er '.phase' "$owner/program.json") || return
   printf '%s-%s\n' "$phase" "${1,,}"
+}
+
+# Admission and launch share these original process-performer declarations.
+fleet_process_limit_mib() {
+  local field
+  case "${1:?process performer}" in
+    mcp) field=per_author_science_mib ;;
+    author) field=per_author_cli_mib ;;
+    *) return 64 ;;
+  esac
+  fleet_limits_for "$FLEET_SLOT" | jq -er --arg field "$field" '
+    .[$field] | select(type=="number" and .>=0 and .==floor)'
+}
+
+# Exact residual for a live declared scope; conservative ceiling for an absent
+# scope. The unit namespace comes from fleet_unit_for, not caller PIDs/ports.
+fleet_process_growth_bound_bytes() {
+  local role=${1:?process performer} limit unit state current observed invocation
+  limit=$(fleet_process_limit_mib "$role") || return
+  limit=$((limit*1048576))
+  unit="$FLEET_UNIT-$role.scope"
+  state=$(systemctl --user show "$unit" -p LoadState --value) || return
+  if [[ "$state" == not-found ]]; then
+    printf 'Process %s absent; declared ceiling bound=%s bytes (not measured residual)\n' "$unit" "$limit" >&2
+    printf '%s\n' "$limit"
+    return
+  fi
+  test "$state" = loaded || return
+  state=$(systemctl --user show "$unit" -p ActiveState --value) || return
+  if [[ "$state" == inactive || "$state" == failed ]]; then
+    printf 'Process %s %s; declared ceiling bound=%s bytes (not measured residual)\n' "$unit" "$state" "$limit" >&2
+    printf '%s\n' "$limit"
+    return
+  fi
+  test "$state" = active || return
+  invocation=$(systemctl --user show "$unit" -p InvocationID --value) || return
+  [[ "$invocation" =~ ^[a-f0-9]{32}$ ]] || return 1
+  test "$(systemctl --user show "$unit" -p Slice --value)" = "$FLEET_SLICE" || return
+  observed=$(systemctl --user show "$unit" -p MemoryMax --value) || return
+  test "$observed" = "$limit" || return
+  test "$(systemctl --user show "$unit" -p MemorySwapMax --value)" = 0 || return
+  current=$(systemctl --user show "$unit" -p MemoryCurrent --value) || return
+  [[ "$current" =~ ^[0-9]+$ ]] || return 1
+  test "$current" -le "$limit" || return
+  printf 'Process %s invocation=%s cap=%s charge=%s residual=%s bytes\n' "$unit" "$invocation" "$limit" "$current" "$((limit-current))" >&2
+  printf '%s\n' "$((limit-current))"
 }
 
 # The original declaration projector asks this owner for the complete family.
@@ -47,7 +98,7 @@ if [[ "${2:-}" == --project-members ]]; then
   selected=$(jq -ce '.authors | map(.slot)' <<< "$FLEET_PROGRAM")
   projected='[]'
   while IFS= read -r member_name; do
-    declaration=$(fleet_member "$member_name")
+    declaration=$(fleet_member "$member_name") || exit
     projected=$(jq -ce --argjson member "$declaration" '. + [$member]' <<< "$projected")
   done < <(jq -r '.[]' <<< "$selected")
   printf '%s\n' "$projected"
@@ -55,7 +106,7 @@ if [[ "${2:-}" == --project-members ]]; then
 fi
 
 FLEET_SLOT=${2:?declared slot}
-slot=$(fleet_member "$FLEET_SLOT")
+slot=$(fleet_member "$FLEET_SLOT") || exit
 FLEET_RUN_ROOT=$(jq -er '.run_owner_root' <<< "$slot")
 FLEET_RUN_PROGRAM=$(<"$FLEET_RUN_ROOT/program.json")
 FLEET_WORKSPACE=$(fleet_workspace_for "$FLEET_SLOT")
@@ -72,12 +123,11 @@ FLEET_NATIVE_ACK=$(jq -er '.native_ack_port' <<< "$slot")
 FLEET_VIEWER=$(jq -er '.viewer_port' <<< "$slot")
 FLEET_VIEWER_ACK=$(jq -er '.viewer_ack_port' <<< "$slot")
 FLEET_VNC=$(jq -er '.vnc_port' <<< "$slot")
-FLEET_PARENT_RELEASED=${FLEET_PARENT_RELEASED:-0}
 FLEET_UNIT=$(fleet_unit_for "$FLEET_SLOT")
 FLEET_AGGREGATE_BYTES=$(jq -er '.proposed_resource_envelope.aggregate_memory_max_bytes | select(type=="number" and .>0 and .%1048576==0)' <<< "$FLEET_PROGRAM")
 FLEET_COMBINED_MIB=$((FLEET_AGGREGATE_BYTES/1048576))
 export FLEET_ROOT FLEET_SLOT FLEET_RUN_ROOT FLEET_RUN_PROGRAM FLEET_WORKSPACE FLEET_SLICE FLEET_INSTALL FLEET_PYTHON FLEET_OPERATIONS FLEET_PHASE
-export FLEET_DISPLAY FLEET_CPU FLEET_INPUT FLEET_NATIVE FLEET_NATIVE_ACK FLEET_VIEWER FLEET_VIEWER_ACK FLEET_VNC FLEET_PARENT_RELEASED FLEET_UNIT FLEET_COMBINED_MIB
+export FLEET_DISPLAY FLEET_CPU FLEET_INPUT FLEET_NATIVE FLEET_NATIVE_ACK FLEET_VIEWER FLEET_VIEWER_ACK FLEET_VNC FLEET_UNIT FLEET_COMBINED_MIB
 helper_root=$(jq -er '.helper_custody.program_root' <<< "$slot")
 helper_slot=$(jq -er '.helper_custody.slot' <<< "$slot")
 jq -e --arg member "$helper_slot" --argjson display "$FLEET_DISPLAY" \
@@ -85,10 +135,10 @@ jq -e --arg member "$helper_slot" --argjson display "$FLEET_DISPLAY" \
 
 fleet_helper_unit_for() {
   local member root predecessor phase
-  member=$(fleet_member "$1")
-  root=$(jq -er '.helper_custody.program_root' <<< "$member")
-  predecessor=$(jq -er '.helper_custody.slot' <<< "$member")
-  phase=$(jq -er '.phase' "$root/program.json")
+  member=$(fleet_member "$1") || return
+  root=$(jq -er '.helper_custody.program_root' <<< "$member") || return
+  predecessor=$(jq -er '.helper_custody.slot' <<< "$member") || return
+  phase=$(jq -er '.phase' "$root/program.json") || return
   printf '%s-%s\n' "$phase" "${predecessor,,}"
 }
 

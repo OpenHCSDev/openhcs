@@ -30,6 +30,7 @@ $funding[0] as $original
 | if ($new.resource_policy|type)!="object"
   then error("missing resource policy") else . end
 | .proposed_resource_envelope += $original.proposed_resource_envelope + $new.resource_policy
+| del(.proposed_resource_envelope.total_output_and_scratch_mib)
 | .authors = $original.authors
 | .authors |= map(
     . as $member
@@ -52,7 +53,11 @@ $funding[0] as $original
   then error("ambiguous scientific member") else . end
 | if (.authors|map(.display)|unique|length)!=(.authors|length)
   then error("ambiguous physical display") else . end
-| if ([.authors[]|.native_port,.native_ack_port,.viewer_port,.viewer_ack_port,.vnc_port]|unique|length)!=(.authors|length)*5
+| [.authors[]|.native_port,.native_ack_port,.viewer_port,.viewer_ack_port,.vnc_port] as $endpoints
+| if any($endpoints[]; if type=="number" then .<0 or .>65535 or .!=floor else true end)
+  then error("invalid endpoint: expected an integer port, or zero for disabled") else . end
+| [$endpoints[]|select(.>0)] as $claimed_endpoints
+| if ($claimed_endpoints|unique|length)!=($claimed_endpoints|length)
   then error("ambiguous endpoint") else . end
 | .retained_output_roots = (
     [($new.members[]|.predecessor_slot),($retired[]|.slot)] as $terminal |

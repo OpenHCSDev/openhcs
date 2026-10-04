@@ -267,6 +267,156 @@ import, so its dataclass schema is valid in the custom execution namespace as
 well as in an ordinary module. Persist the source when it must survive a new
 process; session-only registration does not make a spawned worker import it.
 
+Consume a nominal artifact input
+-------------------------------
+
+An artifact's input ABI is not necessarily its raw output representation.
+``ObjectLabelsArtifactType`` accepts integer labels from a producer, but supplies
+the consumer with ``ObjectLabelValue`` (including its named ``ObjectLabelSet``
+subclass). The value carries object IDs, plane/domain and source provenance;
+being array-compatible does not make ``np.ndarray`` a valid input annotation.
+Query the artifact type's ``runtime_parameter_types()`` or the reflected input
+contract rather than inferring it from dtype or a saved file extension.
+
+This complete consumer masks an aligned image with the already-declared
+``fixture_labels`` from the preceding example. It does not detect objects or
+choose analysis settings. Save it in an importable module or submit this block
+as its own custom-function source:
+
+.. code-block:: python
+   :name: callable-artifact-input-reference
+
+   import numpy as np
+
+   from openhcs.core.memory import numpy
+   from openhcs.core.artifacts import ArtifactSpec, ObjectLabelsArtifactType
+   from openhcs.core.pipeline.function_contracts import artifact_inputs
+   from openhcs.core.runtime_object_labels import ObjectLabelValue
+   from openhcs.processing.backends.lib_registry.unified_registry import (
+       ProcessingContract,
+   )
+
+   STORED_LABELS = ArtifactSpec.input(
+       "fixture_labels", ObjectLabelsArtifactType, parameter_name="objects",
+   )
+
+   @numpy(contract=ProcessingContract.PURE_2D)
+   @artifact_inputs(STORED_LABELS)
+   def mask_declared_objects(
+       image: np.ndarray, *, objects: ObjectLabelValue,
+   ) -> np.ndarray:
+       """Mask one aligned image plane using its nominal object-label input."""
+       label_pixels = np.asarray(objects)
+       return np.where(label_pixels > 0, image, 0)
+
+``objects`` is supplied by the compiled artifact edge, not a ``FunctionStep``
+keyword containing an array, file path or copied labels. The declaration's
+semantic name/type select the producer; ``parameter_name`` binds that input
+to the callable argument. Use ``FunctionStep(func=mask_declared_objects)`` after
+the compatible producer, retaining the complete pipeline configuration/source
+bindings. ``np.asarray(objects)`` is a local pixel view for this calculation,
+not a replacement for the nominal input or its provenance. If the task needs
+object/plane identity, use the value's domain and plane APIs rather than
+reconstructing them from dense pixels. ``PURE_2D`` here describes locality;
+it does not select the pipeline's variable axis.
+
+Repair the earliest failed declaration before trying execution. If compilation
+says a parameter ``does not accept object_labels artifact payloads``, inspect
+that input's annotation and declared runtime type: change an erroneous
+``objects: np.ndarray`` to ``objects: ObjectLabelValue`` and keep the exact
+artifact binding. A cast inside the function cannot repair admission that fails
+before the function runs. Removing the annotation, changing the artifact to an
+image, or hand-loading a file hides the mismatch rather than fixing it.
+For ``no exact artifact declaration binding`` or an unavailable producer,
+repair the declared name/type/parameter or producer edge instead; the annotation
+alone does not bind an artifact. Retain the failed source and validate/compile
+the corrected complete document through the ordinary route. This establishes
+technical input compatibility, not object identity or biological accuracy.
+
+Summarize declared measurements once per plate
+---------------------------------------------
+
+A terminal ``PLATE`` callable receives ``RuntimeArtifactBatch``, not an image
+or a directory of CSVs. The parent executes it once after the compiled axes
+complete, selecting records through its exact artifact input declarations.
+The existing ``ExportToSpreadsheet`` implementation uses this same ABI.
+Do not add ``@numpy`` or a ``ProcessingContract``: these declare axis-local
+image processing and are rejected for plate scope.
+
+This complete custom-function source summarizes the preceding example's
+``fixture_object_rows``. It reports record and measurement-row counts per
+runtime axis, not biological object counts or an inferred well identity:
+
+.. code-block:: python
+   :name: callable-artifact-plate-reference
+
+   from dataclasses import dataclass
+
+   from openhcs.core.artifacts import (
+       ArtifactSpec, MeasurementsArtifactType, SpecialArtifactType,
+   )
+   from openhcs.core.callable_contract import FunctionStepExecutionScope
+   from openhcs.core.measurement_row_materialization import (
+       DataclassMeasurementColumnarRows,
+   )
+   from openhcs.core.pipeline.function_contracts import (
+       artifact_inputs, artifact_outputs, execution_scope, runtime_bound_parameters,
+   )
+   from openhcs.core.runtime_stores import RuntimeArtifactBatch
+   from openhcs.processing.materialization import CsvOptions, MaterializationSpec
+
+   @dataclass(frozen=True)
+   class PlateSummaryRow:
+       axis_id: str
+       record_count: int
+       measurement_row_count: int
+
+   PLATE_ROWS = ArtifactSpec.input("fixture_object_rows", MeasurementsArtifactType)
+   PLATE_SUMMARY = ArtifactSpec.output(
+       "fixture_plate_summary", SpecialArtifactType,
+       materialization=MaterializationSpec(CsvOptions()),
+   )
+
+   @execution_scope(FunctionStepExecutionScope.PLATE)
+   @runtime_bound_parameters(RuntimeArtifactBatch)
+   @artifact_inputs(PLATE_ROWS)
+   @artifact_outputs(PLATE_SUMMARY)
+   def summarize_fixture_plate(
+       *, artifact_batch: RuntimeArtifactBatch,
+   ) -> DataclassMeasurementColumnarRows:
+       """Summarize only the declared measurement records from this execution."""
+       rows = tuple(
+           PlateSummaryRow(
+               axis_id, len(records),
+               sum(record.value.data.rows.row_count() for record in records),
+           )
+           for axis_id, records in artifact_batch.records(PLATE_ROWS.ref()).items()
+       )
+       return DataclassMeasurementColumnarRows(rows, row_type=PlateSummaryRow)
+
+Submit this block as its own source through the existing custom registration
+route, or import it from a module. Describe the returned registry ID to verify
+``PLATE`` scope, then append ``FunctionStep(func=summarize_fixture_plate)`` to
+the complete pipeline after the compatible measurement producer. Retain its
+configuration/source bindings; no axis-scoped step may follow a plate step.
+``artifact_batch`` is required, keyword-only and runtime-owned: do not supply
+it in authored kwargs. Its ``records(spec.ref())`` exposes typed
+``StoredRuntimeValue`` records by axis; each selected measurement payload is a
+``MeasurementTable`` whose rows retain their schema. No file loading, guessed
+paths, bare dictionary return or ``Any`` annotation is needed.
+
+The current plate executor requires exactly one ``SpecialArtifactType`` output;
+it does not support a plate-scoped ``MeasurementsArtifactType`` output.
+Here that side-channel payload is schema-bearing ``ColumnarRows``, which the
+existing CSV materializer renders without a custom writer. It is not a new
+object-measurement table or object-label domain. An empty table contributes
+zero rows without losing its schema;
+unavailable required inputs are a binding error, not a reason to scan files.
+Repair the earliest validation/compile error against these exact decorators,
+batch annotation and producer reference. A successful summary covers the
+compiled execution's records; it does not establish whole-task coverage from
+partially persisted files or prove biological validity.
+
 Verification
 ------------
 

@@ -8,6 +8,7 @@ from typing import ClassVar
 
 from openhcs.core.alias_property import AliasProperty
 import psutil
+from zmqruntime.messages import ProcessIdentity
 
 from benchmark.contracts.metric import MetricCollector
 
@@ -42,6 +43,9 @@ class MemoryMetric(MetricCollector):
         self._peak_rss = 0
         self._thread: threading.Thread | None = None
         self._process = psutil.Process()
+        self._process_identity = ProcessIdentity(
+            self._process.pid, self._process.create_time()
+        )
         self._started = False
         self._sampling_error: Exception | None = None
         self._limit_exceeded = False
@@ -101,7 +105,7 @@ class MemoryMetric(MetricCollector):
         if not self.include_children:
             return rss, ()
         try:
-            children = tuple(self._process.children(recursive=True))
+            children = self._process_identity.descendants()
         except psutil.NoSuchProcess as exc:
             self._sampling_error = exc
             self._running = False

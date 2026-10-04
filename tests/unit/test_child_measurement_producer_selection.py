@@ -504,7 +504,7 @@ def _upstream_rows(*, sites=("1", "2"), well="A01", time="1"):
             image_count=2,
             payload=image,
         ),
-        call_kwargs={},
+        kwargs={},
         current_image=image,
     )
     return RelateObjectsRelationshipMeasurementRows(request), child, contract

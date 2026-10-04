@@ -2,7 +2,6 @@
 # Internal recorded-client performer; admission belongs to recorded-mcp.sh.
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/slot-env.sh" "${1:?root}" "${2:?slot}"
-test "$FLEET_PARENT_RELEASED" = 1
 DISPLAY=:$FLEET_DISPLAY /usr/bin/xprop -root _NET_SUPPORTING_WM_CHECK _NET_SUPPORTED > "$FLEET_WORKSPACE/output/runtime/wm-before-mcp.txt"
 rg -q WINDOW "$FLEET_WORKSPACE/output/runtime/wm-before-mcp.txt"
 test -f "$FLEET_INSTALL/openhcs/mcp/server.py"
@@ -19,7 +18,8 @@ export OPENHCS_AGENT_READ_ROOTS="$FLEET_WORKSPACE/output:$scratch:$FLEET_INPUT:$
 export OPENHCS_AGENT_WRITE_ROOTS="$FLEET_WORKSPACE/output:$scratch:$reservations"
 mkdir -p "$XDG_CACHE_HOME" "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_STATE_HOME" "$XDG_RUNTIME_DIR" "$NUMBA_CACHE_DIR" "$MPLCONFIGDIR"
 chmod 700 "$XDG_RUNTIME_DIR"
-cap=$(jq -er '.proposed_resource_envelope.per_author_science_mib' <<< "$FLEET_RUN_PROGRAM")
+cap=$(fleet_process_limit_mib mcp)
+test "$cap" -gt 0
 cpu=$(jq -er '.proposed_resource_envelope.cpu_quota_per_author_percent' <<< "$FLEET_RUN_PROGRAM")
 test ! -e "$FLEET_WORKSPACE/output/runtime/first-mcp-started.epoch"
 date -u +%s | tee "$FLEET_WORKSPACE/output/runtime/first-mcp-started.epoch"

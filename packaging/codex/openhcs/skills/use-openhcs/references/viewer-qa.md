@@ -229,9 +229,9 @@ Compare foreground and markers before changing watershed. For secondary objects,
 inspect body-channel support and growth beyond each object's own primary seed;
 matching counts or retained seed IDs do not prove cell bodies. For neurites,
 inspect faint supported soma-to-process continuity, endpoints, crossings,
-branches and background bridges. Reject the candidate for clear supported
-misses, erased paths or induced background bridges/artifacts that violate the
-requested claim's acceptance criteria; saturation of
+branches and background bridges. Assess supported misses, erased paths and
+induced bridges/artifacts by their distributed extent and effect on the claim,
+using the linked claim-scoped criteria rather than a zero-error rule; saturation of
 bright somas alone is not a diagnostic or segmentation rejection gate. Triage
 ambiguous debris separately so it does not prevent review of clear supported
 misses. Apply [claim-scoped conclusions](analysis-strategy.md#scope-conclusions-to-the-evidence)
@@ -242,8 +242,23 @@ Use [segmentation diagnostics](segmentation-diagnostics.md) for the earliest
 failed stage and [preprocessing](image-preprocessing.md) for its nuisance model.
 Change one semantic operation or parameter group, then recheck failure and
 regression-control crops against raw. Also revisit the preselected distributed
-bright/dim and centre/edge witnesses: a local repair cannot pass if it adds
-misses, merges or background elsewhere. For uneven illumination or denoising,
+bright/dim and centre/edge witnesses: assess whether a local repair introduces
+material misses, merges or background elsewhere, not just whether it changes
+one object. Reuse the recorded native crop, Z/time, orientation, camera scale
+and raw window for both the predecessor and revised candidate. Restore and
+read back that state before capture; a repeated field name with a shifted
+viewport is not the same regression witness. If the canvas changed, compare
+the same native region rather than screen-pixel positions.
+
+At those coordinates compare recovered and lost structures, separation and
+mask footprints: a revision can find more objects while eroding supported
+boundaries, merging neighbours or truncating paths elsewhere. Record the
+benefit and regression separately, and choose the candidate against the
+task's measurement claims. More labels or longer graphs alone do not establish
+a task-wide improvement; useful supported findings do not require every
+ambiguous object to be resolved.
+
+For uneven illumination or denoising,
 inspect the correction field or residual and processed pixels before downstream
 labels; an independently auto-stretched display can conceal the regression.
 Reconcile persisted labels/ROIs,

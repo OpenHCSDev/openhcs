@@ -8,7 +8,15 @@ source "$(dirname "${BASH_SOURCE[0]}")/slot-env.sh" "$1" "${2:?slot}"
 phase=${3:?unique observation}
 case "$phase" in ''|*[!a-zA-Z0-9_-]*) exit 64;; esac
 mode=${4:-ongoing}
-case "$mode" in ongoing|full|replacement|bootstrap|ledger) ;; *) exit 64;; esac
+# Growth qualification is not a universal stop for a bounded continuation.
+# The same owner requires actual RAM for the operation budget below; PSI is
+# telemetry for ongoing work, and fatal when admitting future fleet growth.
+case "$mode" in
+  ongoing) pressure_policy=warning ;;
+  full|replacement|bootstrap) pressure_policy=reject ;;
+  ledger) pressure_policy=ledger ;;
+  *) exit 64 ;;
+esac
 runtime="$FLEET_WORKSPACE/output/runtime"
 mkdir -p "$runtime"
 if [[ -e "$runtime/first-mcp-started.epoch" ]]; then
@@ -20,7 +28,6 @@ if [[ -e "$runtime/first-mcp-started.epoch" ]]; then
 fi
 receipt="$runtime/resources-$phase"
 test ! -e "$receipt.output"
-total_cap=$(jq -er '.proposed_resource_envelope.total_output_and_scratch_mib*1048576' <<< "$FLEET_PROGRAM")
 
 # Canonicalize membership once and reject overlaps before counting any bytes.
 outputs=()
@@ -51,6 +58,7 @@ for ((i=0;i<old_count;i++)); do
 done
 total=0
 reserved=0
+remaining=0
 for ((i=old_count;i<${#outputs[@]};i++)); do
   limits=$(fleet_limits_for "${authors[i-old_count]}")
   scratch_cap=$(jq -er '.scratch_per_author_mib*1048576' <<< "$limits")
@@ -61,15 +69,23 @@ for ((i=old_count;i<${#outputs[@]};i++)); do
   if [[ -d "$output" ]]; then bytes=$(du -s -B1 "$output" | cut -f1); fi
   if [[ -d "$output/runtime/scratch" ]]; then scratch=$(du -s -B1 "$output/runtime/scratch" | cut -f1); fi
   printf 'Current %s total=%s scratch=%s retained=%s limits=%s/%s\n' "$output" "$bytes" "$scratch" "$((bytes-scratch))" "$output_cap" "$scratch_cap" | tee -a "$receipt.output"
-  test "$scratch" -le "$scratch_cap"
-  test "$((bytes-scratch))" -le "$output_cap"
+  if [[ "${authors[i-old_count]}" == "$FLEET_SLOT" ]]; then
+    test "$scratch" -le "$scratch_cap"
+    test "$((bytes-scratch))" -le "$output_cap"
+  fi
+  # A sibling's actual bytes consume HOME, not this member's permission.
+  # Exhausted components have no unused growth; never subtract their overage
+  # from another member's still-funded reservation.
+  retained_growth=$((output_cap-bytes+scratch))
+  scratch_growth=$((scratch_cap-scratch))
+  if [[ "$retained_growth" -lt 0 ]]; then retained_growth=0; fi
+  if [[ "$scratch_growth" -lt 0 ]]; then scratch_growth=0; fi
+  remaining=$((remaining+retained_growth+scratch_growth))
   total=$((total+bytes))
 done
-printf 'Programme old=%s current=%s reservedCurrent=%s totalLimit=%s\n' "$old" "$total" "$reserved" "$total_cap" | tee -a "$receipt.output"
-test "$((old+reserved))" -le "$total_cap"
-test "$((old+total))" -le "$total_cap"
-remaining=$((reserved-total))
-test "$remaining" -ge 0
+printf 'Programme old=%s current=%s reservedCurrent=%s\n' "$old" "$total" "$reserved" | tee -a "$receipt.output"
+# Historical allocations are observations, already reflected in df free space.
+# Only still-funded output/scratch growth is reserved against actual HOME.
 home_floor=$(jq -er '.proposed_resource_envelope.minimum_home_ongoing_gib*1073741824' <<< "$FLEET_PROGRAM")
 df --output=avail -B1 /home/ts | awk -v floor="$((home_floor+remaining))" 'NR==2 {printf "HomeAvailable %.3f GiB; required %.3f GiB\n",$1/1073741824,floor/1073741824; if($1<floor) exit 78}' | tee "$receipt.disk"
 if [[ "$mode" == ledger ]]; then printf 'Ledger-only PASS; not SCI admission\n'; exit; fi
@@ -88,17 +104,48 @@ if [[ "$mode" == full ]]; then floor=$((floor+FLEET_COMBINED_MIB)); fi
 
 # The existing common slice is the aggregate RAM owner. Its current charge
 # already includes continuing runs and inherited helpers, so do not sum them again.
+maximum=$(systemctl --user show "$FLEET_SLICE" -p MemoryMax --value)
+current=$(systemctl --user show "$FLEET_SLICE" -p MemoryCurrent --value)
+[[ "$current" =~ ^[0-9]+$ ]]
+test "$current" -le "$maximum"
+growth=$((maximum-current))
+printf 'Joint slice %s charge=%s cap=%s remaining=%s\n' "$FLEET_SLICE" "$current" "$maximum" "$growth" | tee "$receipt.ram-scopes"
+if [[ "$mode" == ongoing ]]; then
+  # Resident charges are already in the common slice. Reserve only the
+  # selected member's remaining process capacity, not full ceilings again.
+  science_growth=$(fleet_process_growth_bound_bytes mcp 2>> "$receipt.operation-budget")
+  author_growth=$(fleet_process_growth_bound_bytes author 2>> "$receipt.operation-budget")
+  budget_bytes=$((science_growth+author_growth))
+  test "$budget_bytes" -le "$maximum"
+  if [[ "$growth" -lt "$budget_bytes" ]]; then budget_bytes=$growth; fi
+  floor=$((floor+(budget_bytes+1048575)/1048576))
+  printf 'Bounded ongoing member=%s incrementalGrowthBound=%s bytes\n' "$FLEET_SLOT" "$budget_bytes" | tee -a "$receipt.operation-budget"
+fi
 if [[ "$mode" == replacement || "$mode" == bootstrap ]]; then
   if [[ "$mode" == bootstrap ]]; then fleet_require_bootstrap_custody; else fleet_require_helpers; fi
-  maximum=$(systemctl --user show "$FLEET_SLICE" -p MemoryMax --value)
-  current=$(systemctl --user show "$FLEET_SLICE" -p MemoryCurrent --value)
-  [[ "$current" =~ ^[0-9]+$ ]]
-  test "$current" -le "$maximum"
-  growth=$((maximum-current))
-  printf 'Joint slice %s charge=%s cap=%s remaining=%s\n' "$FLEET_SLICE" "$current" "$maximum" "$growth" | tee "$receipt.ram-scopes"
   floor=$((floor+(growth+1048575)/1048576))
 fi
-psi_max=$(jq -er '.proposed_resource_envelope.full_memory_psi_max_percent' <<< "$FLEET_PROGRAM")
+psi_max=$(jq -er '.proposed_resource_envelope.full_memory_psi_max_percent | select(type=="number" and .>=0 and .<=100)' <<< "$FLEET_PROGRAM")
 awk -v floor="$floor" '/MemAvailable:/ {printf "MemAvailable %.3f GiB; required %d MiB\n",$2/1048576,floor; if($2<floor*1024) exit 76}' /proc/meminfo | tee "$receipt.ram"
-awk -v limit="$psi_max" '/^full / {print; for(i=2;i<=NF;i++){split($i,a,"="); if((a[1]=="avg60" || a[1]=="avg300") && a[2]>limit) exit 77}}' /proc/pressure/memory | tee "$receipt.psi"
+printf 'Pressure admission mode=%s policy=%s limit=%s%%; enforced RAM budget and all windows retained\n' "$mode" "$pressure_policy" "$psi_max" | tee "$receipt.psi-policy"
+awk -v limit="$psi_max" -v policy="$pressure_policy" '
+  BEGIN {count=split("avg10 avg60 avg300", required, " ")}
+  /^full / {
+    print
+    for(i=2;i<=NF;i++) {
+      split($i, field, "=")
+      for(j=1;j<=count;j++) if(field[1]==required[j]) {
+        if(seen[field[1]]++ || field[2] !~ /^[0-9]+([.][0-9]+)?$/) invalid=1
+        else if(field[2]+0>limit) {
+          printf "Pressure %s: full %s=%s exceeds declared %s%%\n", policy, field[1], field[2], limit
+          exceeded=1
+        }
+      }
+    }
+  }
+  END {
+    for(j=1;j<=count;j++) if(seen[required[j]]!=1) invalid=1
+    if(invalid || (exceeded && policy=="reject")) exit 77
+  }
+' /proc/pressure/memory | tee "$receipt.psi"
 printf 'Admission PASS\n'

@@ -19,6 +19,7 @@ from openhcs.agent.knowledge_manifest import (
 )
 from openhcs.agent.services.knowledge_base_service import KnowledgeBaseService
 from openhcs.core.artifacts import (
+    ArtifactInputPlan,
     ArtifactOutputPlan,
     ArtifactSpec,
     ArtifactSpecCollection,
@@ -39,6 +40,7 @@ from openhcs.core.runtime_image_values import ImageMetadataPayload, ImagePayload
 from openhcs.core.runtime_object_label_domains import ObjectLabelDomainScope
 from openhcs.core.runtime_object_labels import (
     ObjectLabelPayload,
+    ObjectLabelValue,
     ObjectLabelVariantData,
 )
 from openhcs.core.runtime_plane_projection import (
@@ -55,6 +57,11 @@ from polystore.roi import load_rois_from_zip
 ROOT = Path(__file__).resolve().parents[3]
 DOCUMENT_PATH = "docs/source/development/callable_artifact_authoring.rst"
 DOCUMENT_ID = "openhcs_callable_artifact_authoring"
+REFERENCE_BLOCKS = (
+    "callable-artifact-reference",
+    "callable-artifact-input-reference",
+    "callable-artifact-plate-reference",
+)
 
 
 def _reference_block(name):
@@ -76,12 +83,8 @@ def reference_namespace():
     module = ModuleType("_openhcs_public_artifact_reference")
     sys.modules[module.__name__] = module
     try:
-        exec(
-            compile(
-                _reference_block("callable-artifact-reference"), DOCUMENT_PATH, "exec"
-            ),
-            module.__dict__,
-        )
+        for block in REFERENCE_BLOCKS:
+            exec(compile(_reference_block(block), DOCUMENT_PATH, "exec"), module.__dict__)
         yield module.__dict__
     finally:
         sys.modules.pop(module.__name__, None)
@@ -114,9 +117,10 @@ def test_canonical_reference_is_unique_searchable_and_fully_readable():
         )
     )
     assert not document.truncated
-    for line in _reference_block("callable-artifact-reference").splitlines():
-        if line.strip():
-            assert line in document.content
+    for block in REFERENCE_BLOCKS:
+        for line in _reference_block(block).splitlines():
+            if line.strip():
+                assert line in document.content
     assert "from openhcs.core.memory import numpy" in document.content
 
 
@@ -169,6 +173,45 @@ def test_reference_executes_and_compiles_actual_function_step(reference_namespac
     assert not namespace["FixtureFeatureOwner"].owns_measurement_feature_name("unknown")
 
 
+def test_input_reference_compiles_nominal_binding_and_repairs_wrong_annotation(
+    reference_namespace,
+):
+    namespace = reference_namespace
+    function = namespace["mask_declared_objects"]
+    declaration = namespace["STORED_LABELS"]
+    contract = CallableContract.from_callable(function)
+    assert declaration.artifact_type.runtime_parameter_types() == (ObjectLabelValue,)
+    assert contract.artifact_input_parameter_names == ("objects",)
+    contract.validate_artifact_input_parameter_bindings()
+    plan = ArtifactInputPlan(
+        declaration.name, "/synthetic/fixture-labels.pkl",
+        artifact_type=declaration.artifact_type,
+    )
+    compiled = compile_function_pattern(function, {plan.ref(): plan}, {})
+    assert compiled.groups[0].invocations[0].contract.artifact_inputs.specs == (
+        declaration,
+    )
+    pixels = np.asarray([[0, 2], [7, 0]], dtype=np.int32)
+    labels = ObjectLabelPayload(variant_data=ObjectLabelVariantData(labels=pixels))
+    image = np.asarray([[1, 3], [5, 9]], dtype=np.uint16)
+    np.testing.assert_array_equal(function(image, objects=labels), [[0, 3], [5, 0]])
+    np.testing.assert_array_equal(labels.labels, pixels)
+
+    # Exercise the original admission boundary, not a word-match assertion.
+    raw = contract.resolve_canonical_raw_callable()
+    original_annotation = raw.__annotations__["objects"]
+    try:
+        raw.__annotations__["objects"] = np.ndarray
+        from openhcs.core.pipeline.function_contracts import resolved_callable_type_hints
+        resolved_callable_type_hints.cache_clear()
+        with pytest.raises(TypeError, match="does not accept object_labels artifact payloads"):
+            compile_function_pattern(function, {plan.ref(): plan}, {})
+    finally:
+        raw.__annotations__["objects"] = original_annotation
+        resolved_callable_type_hints.cache_clear()
+    compile_function_pattern(function, {plan.ref(): plan}, {})
+
+
 def test_complete_reference_prepares_in_real_custom_namespace(tmp_path, monkeypatch):
     def fixture_storage(_name, *, create):
         assert create is False
@@ -197,6 +240,101 @@ def test_complete_reference_prepares_in_real_custom_namespace(tmp_path, monkeypa
         {"slice_index": 1, "object_label": 1, "pixel_count": 16},
     )
     assert list(manager.storage_dir.iterdir()) == []
+
+
+def test_input_reference_prepares_in_real_custom_namespace(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        custom_manager, "get_data_file_path",
+        lambda _name, *, create: tmp_path / "custom_functions",
+    )
+    manager = custom_manager.CustomFunctionManager(create_storage=False)
+    metadata = manager._prepare_source(_reference_block("callable-artifact-input-reference"))
+    contract = CallableContract.from_callable(metadata.func)
+    contract.validate_artifact_input_parameter_bindings()
+    assert contract.artifact_inputs.specs[0].parameter_name == "objects"
+    labels = ObjectLabelPayload(
+        variant_data=ObjectLabelVariantData(labels=np.asarray([[0, 7]], dtype=np.int32)),
+    )
+    image = np.asarray([[3, 5]], dtype=np.uint16)
+    np.testing.assert_array_equal(metadata.func(image, objects=labels), [[0, 5]])
+    assert not manager.storage_dir.exists()
+
+
+def test_plate_reference_prepares_compiles_and_runs_in_original_parent(
+    reference_namespace, tmp_path, monkeypatch,
+):
+    from openhcs.core.callable_contract import FunctionStepExecutionScope
+    from openhcs.core.pipeline.funcstep_contract_validator import FuncStepContractValidator
+    from openhcs.core.artifacts import SpecialArtifactType
+    from openhcs.core.measurement_row_materialization import DataclassMeasurementColumnarRows
+    from openhcs.core.runtime_measurements import MeasurementTable
+    from openhcs.core.runtime_stores import RuntimeArtifactBatch
+
+    monkeypatch.setattr(
+        custom_manager, "get_data_file_path",
+        lambda _name, *, create: tmp_path / "custom_functions",
+    )
+    manager = custom_manager.CustomFunctionManager(create_storage=False)
+    metadata = manager._prepare_source(_reference_block("callable-artifact-plate-reference"))
+    contract = CallableContract.from_callable(metadata.func)
+    FuncStepContractValidator.validate_plate_callable_contracts((contract,), metadata.name)
+    assert contract.execution_scope is FunctionStepExecutionScope.PLATE
+    assert contract.runtime_bound_parameter_types == (RuntimeArtifactBatch,)
+    assert contract.input_memory_type is contract.processing_contract is None
+    assert contract.artifact_input_parameter_names == ()
+    # Reuse the existing plate execution fixtures, not a replacement dispatcher.
+    plate = runpy.run_path(str(ROOT / "tests/unit/test_function_step_execution_scope.py"))
+    source = contract.artifact_inputs.specs[0]
+    output = contract.artifact_outputs.specs[0]
+    contexts = {}
+    for axis_id, fixture in (
+        ("axis-a", np.asarray([[0, 2], [7, 7]], dtype=np.uint16)),
+        ("axis-b", np.zeros((2, 2), dtype=np.uint16)),
+    ):
+        path = f"/memory/{axis_id}/rows"
+        plan = plate["_plate_step_plan"](
+            axis_id=axis_id, step_index=0, func=metadata.func,
+            artifact_inputs=(ArtifactInputPlan(
+                source.name, path, artifact_type=source.artifact_type,
+            ),),
+            artifact_output=ArtifactOutputPlan(
+                output.name, "/memory/plate/summary",
+                artifact_type=output.artifact_type, relations=output.relations,
+            ),
+            metadata_writer=axis_id == "axis-a",
+        )
+        context = plate["_plate_context"](axis_id, (plan,))
+        plate["_record_measurements"](context, name=source.name, path=path, count=0)
+        record = context.runtime_value_store.values()[0]
+        assert isinstance(record.value.data, MeasurementTable)
+        record.value.data.rows = reference_namespace["inspect_label_fixture"](fixture)[2]
+        plate["_record_measurements"](
+            context, name="unrelated_rows", path=f"/memory/{axis_id}/unrelated", count=99,
+        )
+        contexts[axis_id] = context
+    plate["_execute_plate_steps"](contexts)
+    summaries = tuple(
+        record for context in contexts.values()
+        for record in context.runtime_value_store.values()
+        if record.key.name == output.name
+    )
+    assert len(summaries) == 1  # one parent result, not one execution per axis
+    table = summaries[0].value.data
+    assert summaries[0].key.artifact_type is SpecialArtifactType
+    assert isinstance(table, DataclassMeasurementColumnarRows)
+    assert table.row_mappings() == (
+        {"axis_id": "axis-a", "record_count": 1, "measurement_row_count": 2},
+        {"axis_id": "axis-b", "record_count": 1, "measurement_row_count": 0},
+    )
+    csv_path = materialize(
+        output.materialization, data=table, path=str(tmp_path / "summary"),
+        filemanager=FileManager({"disk": DiskStorageBackend()}),
+        backends=["disk"], backend_kwargs={},
+    )
+    assert Path(csv_path).read_text().splitlines() == [
+        "axis_id,record_count,measurement_row_count", "axis-a,1,2", "axis-b,1,0",
+    ]
+    assert not manager.storage_dir.exists()
 
 
 @pytest.mark.parametrize("plane_count", (None, 1, 2))
@@ -356,3 +494,15 @@ def test_packaged_knowledge_projection_retains_executable_reference(tmp_path):
     )
     assert "def inspect_label_fixture(" in document.content
     assert "from openhcs.core.memory import numpy" in document.content
+    for block in REFERENCE_BLOCKS:
+        for line in _reference_block(block).splitlines():
+            if line.strip():
+                assert line in document.content
+    route = service.get_document(
+        KnowledgeBaseDocumentRequest.from_fields(
+            document_id="openhcs_custom_function_workflow", max_chars=30_000,
+        )
+    )
+    source_path = "packaging/codex/openhcs/skills/use-openhcs/references/custom-function-authoring.md"
+    assert (destination / source_path).read_bytes() == (ROOT / source_path).read_bytes()
+    assert "Summarize declared measurements once per" in route.content

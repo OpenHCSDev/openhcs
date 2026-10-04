@@ -5,6 +5,9 @@ from collections.abc import Callable
 from dataclasses import dataclass, replace
 from enum import Enum
 from typing import TYPE_CHECKING, Annotated
+from openhcs.core.runtime_relationships import (
+    DirectParentReferenceFeatureMarker,
+)
 from openhcs.core.alias_property import AliasProperty
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
@@ -72,7 +75,6 @@ from openhcs.interop.cellprofiler.runtime.measurement_rows import (
     ObjectLocationMeasurementRows,
 )
 from openhcs.interop.cellprofiler.runtime.relationship_measurement_rows import (
-    DirectParentReferenceFeatureMarker,
     RelationshipMeasurementRows,
 )
 
@@ -1235,7 +1237,7 @@ class RelateObjectsRelationshipMeasurementRows(RelationshipMeasurementRows):
         func = module_type.require_callable(callable_contract.function_name)
         call_kwargs = {
             **runtime_callable_defaults(func),
-            **self.request.call_kwargs,
+            **self.request.kwargs,
         }
         return call_kwargs["calculate_distances"]
 
@@ -1248,8 +1250,8 @@ class RelateObjectsRelationshipMeasurementRows(RelationshipMeasurementRows):
 
     def per_parent_means_enabled(self) -> bool:
         value = (
-            self.request.call_kwargs["calculate_per_parent_means"]
-            if "calculate_per_parent_means" in self.request.call_kwargs
+            self.request.kwargs["calculate_per_parent_means"]
+            if "calculate_per_parent_means" in self.request.kwargs
             else False
         )
         return bool(value)

@@ -9,6 +9,8 @@
         "architecture quick start",
         "first use",
         "MCP quick start",
+        "task authorization",
+        "routine authorized workflow",
         "execution flow",
         "FunctionStep",
         "function patterns",
@@ -705,10 +707,14 @@
       "document_id": "openhcs_callable_artifact_authoring",
       "section_count": 0,
       "source_path": "docs/source/development/callable_artifact_authoring.rst",
-      "summary": "Canonical callable and artifact authoring reference with executable imports and decorators for typed NumPy main flow, object labels, dataclass ColumnarRows, RuntimeMeasurementFeatureOwner, exact subject/source relations, CSV and ROI materialization, and custom registration namespace boundaries.",
+      "summary": "Canonical callable and artifact authoring reference with executable nominal input annotations and artifact bindings, earliest compile-error repair, typed NumPy main flow, object labels, dataclass ColumnarRows, RuntimeMeasurementFeatureOwner, exact subject/source relations, CSV and ROI materialization, custom registration namespace boundaries, and a terminal PLATE summary using RuntimeArtifactBatch.",
       "tags": [
         "custom function artifacts",
         "callable artifact authoring",
+        "artifact_inputs",
+        "ObjectLabelValue",
+        "nominal input annotation",
+        "PLATE summary RuntimeArtifactBatch",
         "artifact_outputs",
         "MainFlowStackOutputSpec",
         "ObjectLabelsArtifactType",
@@ -767,7 +773,7 @@
       "section_count": 0,
       "source_path": "packaging/codex/openhcs/skills/use-openhcs/references/analysis-strategy.md",
       "summary": "Task-specific domain decisions and failure diagnostics.",
-      "tags": ["autonomous analysis strategy", "AgenticJ", "Agentic-J", "unfamiliar assay", "biological target", "channel verification", "preprocessing", "segmentation diagnostics", "recipe error learning", "RAM budget"],
+      "tags": ["autonomous analysis strategy", "graded segmentation quality", "reference disagreement", "AgenticJ", "Agentic-J", "unfamiliar assay", "biological target", "channel verification", "preprocessing", "segmentation diagnostics", "recipe error learning", "RAM budget"],
       "title": "Analysis strategy"
     },
     {

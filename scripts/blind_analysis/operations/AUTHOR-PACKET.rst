@@ -1,11 +1,15 @@
-Fresh independent public analysis
-=================================
+Released analysis context
+=========================
 
 Read YOUR TASK, exact public brief and its named raw acquisitions. Read the
 complete canonical installed /home/ts/.codex/skills/use-openhcs/SKILL.md.
 Choose and review your analysis from your own raw evidence. No parent/sibling
 scientific history, method, parameters, pipeline, result or count is supplied.
-Do not inspect other studies, management receipts or previous workspaces.
+Your immutable TASK and context declaration identify either a fresh independent
+analysis or a retained same-author development continuation. Only the latter
+may read its OWN sealed predecessor outputs and native history, read-only;
+it is not another fresh benchmark. Do not inspect other studies, management
+receipts or sibling workspaces.
 
 Use ONLY exported FLEET_SLOT/DISPLAY/NATIVE/VIEWER/VNC resources. Helpers and
 Remmina are harness-owned; do not replace them or adopt another scene.
@@ -13,7 +17,7 @@ Start ONE retained recorded MCP shell through the existing owner. This is an
 INTERACTIVE process: invoke tools.exec_command with tty=true and retain its
 returned session_id for tools.write_stdin. Use the exact tool arguments::
 
-  {"cmd":"FLEET_PARENT_RELEASED=1 bash \"$FLEET_OPERATIONS/recorded-mcp.sh\" \"$FLEET_ROOT\" \"$FLEET_SLOT\" startup01","tty":true,"yield_time_ms":1000}
+  {"cmd":"bash \"$FLEET_OPERATIONS/recorded-mcp.sh\" \"$FLEET_ROOT\" \"$FLEET_SLOT\" startup01","tty":true,"yield_time_ms":1000}
 
 Inspect the returned handle and keep that SAME session for every command.
 startup01 is a caller-owned unique resource observation. Before any MCP journal
