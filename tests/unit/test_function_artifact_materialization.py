@@ -1876,7 +1876,9 @@ def test_completed_observation_projects_tables_before_worker_payload_release(
     context.runtime_value_store.record(
         RuntimeValue.normalize(
             image_plan,
-            ImageMetadataPayload(data=pixels, metadata=ImagePayloadMetadata()),
+            ImageMetadataPayload(
+                data=pixels, metadata=ImagePayloadMetadata(source_dtype="float32"),
+            ),
             axis_id="A01",
         ),
         path=image_plan.path, backend="memory",

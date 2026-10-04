@@ -37,6 +37,7 @@ from openhcs.core.orchestrator.execution_result import (
 )
 from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
 from openhcs.core.runtime_artifact_values import RuntimeValue
+from openhcs.core.runtime_image_values import ImageMetadataPayload, ImagePayloadMetadata
 from openhcs.core.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
@@ -251,7 +252,13 @@ def test_axis_only_worker_lane_releases_runtime_values_after_each_axis(
         pixels = np.ones((1024, 1024), dtype=np.float32)
         payload_references.append(weakref.ref(pixels))
         context.runtime_value_store.record(
-            RuntimeValue.normalize(output_plan, pixels, axis_id=context.axis_id),
+            RuntimeValue.normalize(
+                output_plan,
+                ImageMetadataPayload(
+                    data=pixels, metadata=ImagePayloadMetadata(source_dtype="float32"),
+                ),
+                axis_id=context.axis_id,
+            ),
             path=output_plan.path,
             backend="memory",
         )
@@ -542,7 +549,7 @@ def test_worker_lane_releases_unconsumed_image_records_before_next_axis(
 
     monkeypatch.setattr(worker_execution, "_execute_single_axis_static", execute_axis)
     monkeypatch.setattr(worker_execution, "emit", lambda **_kwargs: None)
-    results = worker_execution._execute_worker_lane_static(
+    results = worker_execution.execute_worker_lane(
         pipeline_definition=[object()],
         lane_axis_contexts=[
             (context.axis_id, [(context.axis_id, context)]) for context in contexts
