@@ -47,6 +47,22 @@ and failed receipt; at a later operational checkpoint make a new named check
 within the same deadline. Do not busy poll, bypass limits, create another
 poller or freeze automatically on a first transient pressure failure.
 
+The default ongoing admission is ONLY for bounded observations and small QA on
+your already recorded live client. The guard verifies that client incarnation;
+it cannot authorize a new client, cold process, full export or bulk execution.
+Use the registered capability's read_only/mutating/side_effects declarations,
+request size and current destination space to understand the action, not a tool
+name allowlist. A read-only method can still materialize a large array. For a
+large allocation use the SAME owner with mode ``full`` before dispatch::
+
+  bash "$FLEET_OPERATIONS/resource-check.sh" "$FLEET_ROOT" "$FLEET_SLOT" UNIQUE_PHASE full
+
+Below the startup disk reserve, ongoing observations warn rather than forbidding
+all QA. Preserve the warning; fit actual captures/writes into current free space
+and coordinate owned cleanup. Do not reinterpret it as permission for an
+unbounded batch, or replay any previously uncertain input. Startup and large
+allocation admission still protect desktop disk/RAM and measured pressure.
+
 Iterate on your OWN measured/visible QA failures until acceptance, the actual
 time/resource bound or an irreducible blocker. There is no arbitrary candidate
 count limit. Rejecting a candidate does not by itself end the task. Technical

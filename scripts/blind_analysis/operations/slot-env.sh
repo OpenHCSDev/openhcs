@@ -101,6 +101,21 @@ fleet_require_joint_slice() {
   systemctl --user is-active --quiet "$FLEET_SLICE"
 }
 
+fleet_require_live_client() {
+  local runtime="$FLEET_WORKSPACE/output/runtime" unit="$FLEET_UNIT-mcp.scope" invocation
+  # The recorder creates these only after its startup admission. Never infer
+  # an ongoing client from a port, a helper, or a requested tool name.
+  test -f "$runtime/first-mcp-started.epoch"
+  test -f "$runtime/mcp.stdin"
+  test -f "$runtime/mcp.stdout"
+  test -f "$runtime/mcp.timing"
+  systemctl --user is-active --quiet "$unit"
+  invocation=$(systemctl --user show "$unit" -p InvocationID --value)
+  [[ "$invocation" =~ ^[a-f0-9]{32}$ ]]
+  test "$(systemctl --user show "$unit" -p Slice --value)" = "$FLEET_SLICE"
+  printf 'Existing recorded client %s InvocationID=%s; no startup permission\n' "$unit" "$invocation"
+}
+
 fleet_require_helper() {
   local role=${1:?declared helper role} receipt expected observed unit
   receipt=$(jq -er '.helper_custody.parent_handoff_receipt' <<< "$slot")
