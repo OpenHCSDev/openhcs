@@ -302,15 +302,19 @@ class SpecklesFeatureEnhanceMethodStrategy(FeatureEnhanceMethodStrategy):
     method = EnhanceMethod.SPECKLES
 
     def apply(self, request: FeatureEnhancementRequest) -> np.ndarray:
-        from scipy import ndimage
         from skimage import morphology
 
         footprint = _structuring_element(request.radius)
         masked = request.mask_context.masked_original
         if request.speckle_accuracy is SpeckleAccuracy.FAST and request.radius > 3:
-            opened = ndimage.maximum_filter(
-                ndimage.minimum_filter(masked, footprint=footprint),
-                footprint=footprint,
+            from ._backend import CellProfilerBackendProvider
+            from .morphology import MorphologyBackendStrategy
+
+            opened = MorphologyBackendStrategy.for_callable(
+                enhance_or_suppress_features,
+                backend_provider=CellProfilerBackendProvider.OPENCV,
+            ).grayscale_opening(
+                masked, footprint,
             )
             result = masked - opened
         else:
