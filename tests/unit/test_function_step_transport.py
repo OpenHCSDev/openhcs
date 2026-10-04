@@ -499,6 +499,20 @@ def test_bundle_transport_preserves_prepared_runtime_contract_identity() -> None
     assert restored_item.contract.metadata.prepare is None
     assert restored_item.func.metadata.prepare is None
     assert restored_item.func.resolve() is reference.resolve()
+    (restored_invocation,) = tuple(
+        restored_plan.compiled_function_pattern.iter_invocations()
+    )
+    assert (
+        restored_invocation.runtime_callable
+        is restored_invocation.contract.resolve_runtime_callable()
+    )
+    assert restored_invocation.contract is not transport_invocation.contract
+    assert (
+        CallableContractRuntimeCache.process_cache().get_bound(
+            restored_invocation.contract
+        )
+        is restored_invocation.runtime_callable
+    )
 
 
 def test_generated_source_resolves_catalog_owned_cellprofiler_callable() -> None:

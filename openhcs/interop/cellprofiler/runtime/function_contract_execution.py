@@ -27,7 +27,6 @@ from openhcs.core.runtime_image_values import (
     image_payload_mask,
     image_payload_metadata,
 )
-from openhcs.core.runtime_output_matching import RuntimeReturnedOutputMatcher
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
@@ -183,10 +182,10 @@ class CellProfilerFunctionContractExecutor:
             function=function_name,
             mode=mode.value,
         )
-        return RuntimeReturnedOutputMatcher(
-            callable_contract,
+        return callable_contract.contextualize_returned_canonical_output(
             result,
-        ).contextualize_canonical_output(plane_projection=executor.plane_projection)
+            plane_projection=executor.plane_projection,
+        )
 
     def execute_pure_2d_slice_batch(
         self,

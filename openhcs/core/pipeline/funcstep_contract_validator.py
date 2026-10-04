@@ -1031,7 +1031,6 @@ class FuncStepContractValidator:
 
         input_type = contract.input_memory_type
         output_type = contract.output_memory_type
-        execution_type = contract.execution_memory_type
         if input_type is None or output_type is None:
             raise ValueError(
                 missing_memory_type_error(contract.function_name, step_name)
@@ -1048,12 +1047,7 @@ class FuncStepContractValidator:
                     ", ".join(sorted(VALID_MEMORY_TYPES)),
                 )
             )
-        if execution_type is not None and execution_type not in VALID_MEMORY_TYPES:
-            raise ValueError(
-                f"Callable {contract.function_name!r} in step {step_name!r} "
-                f"declares invalid execution memory type {execution_type!r}; "
-                f"valid memory types are {', '.join(sorted(VALID_MEMORY_TYPES))}."
-            )
+        contract.require_execution_memory_type(step_name=step_name)
         return input_type, output_type
 
     @staticmethod

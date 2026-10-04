@@ -10,16 +10,20 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Hashable, Iterator, Mapping, Sequence
+from contextlib import AbstractContextManager, nullcontext
 from dataclasses import dataclass, field, replace
+from functools import partial
 from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, TypeAlias
 
 if TYPE_CHECKING:
     from openhcs.core.aligned_image_payload import AlignedImageSliceContext
+    from openhcs.core.compiled_step_plan import FrameworkDeviceAssignment
     from openhcs.core.pipeline.compilation_session import CompilationPathResolver
     from openhcs.core.steps.function_runtime import FunctionCoreExecutor
 
+from arraybridge import MemoryType
 from pyqt_reactive.pattern_metadata import PatternScopeToken
 from python_introspect import Enableable
 
@@ -483,6 +487,43 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
     artifact_output_plans: tuple[ArtifactOutputPlan, ...] = ()
     artifact_input_edges: tuple[InvocationArtifactInputEdgePlan, ...] = ()
     runtime_parameter_bindings: tuple[RuntimeParameterBinding, ...] = ()
+    input_device_id: int | None = None
+    execution_device_id: int | None = None
+    runtime_callable: Callable = field(
+        init=False,
+        repr=False,
+        compare=False,
+    )
+    runtime_kwargs: RuntimeKwargItems = field(
+        init=False,
+        repr=False,
+        compare=False,
+    )
+    primary_input_parameter_name: str | None = field(
+        init=False,
+        repr=False,
+        compare=False,
+    )
+    adapter_parameter_name: str | None = field(
+        init=False,
+        repr=False,
+        compare=False,
+    )
+    _main_flow_argument: Callable | None = field(
+        init=False,
+        repr=False,
+        compare=False,
+    )
+    _main_flow_output_source: Callable | None = field(
+        init=False,
+        repr=False,
+        compare=False,
+    )
+    _execution_memory_type: MemoryType | None = field(
+        init=False,
+        repr=False,
+        compare=False,
+    )
 
     def __post_init__(self) -> None:
         expected_edge_keys = InvocationArtifactInputProjectionKey.for_input_count(
@@ -503,6 +544,119 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
             raise TypeError(
                 "Compiled artifact outputs must be ArtifactOutputPlan values."
             )
+
+        kwargs = dict(self.kwargs)
+        for binding in self.runtime_parameter_bindings:
+            kwargs[binding.parameter_name] = binding.value
+        adapter = self.contract.runtime_adapter
+        processing = self.contract.processing_contract
+        declaration = (
+            None
+            if processing is None
+            else self.contract.require_processing_contract().declaration
+        )
+        object.__setattr__(
+            self,
+            "runtime_kwargs",
+            tuple(kwargs.items()),
+        )
+        object.__setattr__(
+            self,
+            "runtime_callable",
+            self.contract.resolve_runtime_callable(),
+        )
+        object.__setattr__(
+            self,
+            "primary_input_parameter_name",
+            self.contract.primary_input_parameter_name,
+        )
+        object.__setattr__(
+            self,
+            "adapter_parameter_name",
+            None if adapter is None else adapter.parameter_name,
+        )
+        object.__setattr__(
+            self,
+            "_main_flow_argument",
+            (
+                None
+                if declaration is None
+                else partial(declaration.main_flow_call_argument, self.contract)
+            ),
+        )
+        object.__setattr__(
+            self,
+            "_main_flow_output_source",
+            (
+                None
+                if declaration is None
+                else declaration.main_flow_output_source_payload
+            ),
+        )
+        object.__setattr__(
+            self,
+            "_execution_memory_type",
+            self.contract.require_execution_memory_type(),
+        )
+
+    def __reduce__(self) -> tuple[Callable, tuple]:
+        """Rebind process-local executable state from declaration-only transport."""
+        return (
+            type(self),
+            (
+                self.key,
+                self.contract,
+                self.kwargs,
+                self.artifact_output_plans,
+                self.artifact_input_edges,
+                self.runtime_parameter_bindings,
+                self.input_device_id,
+                self.execution_device_id,
+            ),
+        )
+
+    def with_device_assignment(
+        self,
+        assignment: FrameworkDeviceAssignment,
+    ) -> "CompiledFunctionInvocation":
+        """Bind this immutable invocation at the compiler's placement boundary."""
+        if self.contract.execution_scope is FunctionStepExecutionScope.PLATE:
+            input_device_id = None
+        else:
+            input_memory_type, _ = self.contract.require_memory_types()
+            input_device_id = assignment.device_id_for(MemoryType(input_memory_type))
+        return replace(
+            self,
+            input_device_id=input_device_id,
+            execution_device_id=(
+                None
+                if self._execution_memory_type is None
+                else assignment.device_id_for(self._execution_memory_type)
+            ),
+        )
+
+    def main_flow_call_argument(self, source_payload: object) -> object:
+        """Apply the captured processing declaration to current request pixels."""
+        if self._main_flow_argument is None:
+            self.contract.require_processing_contract()
+        return self._main_flow_argument(source_payload)
+
+    def main_flow_output_source_payload(self, source_payload: object) -> object:
+        """Apply the captured output-domain operation at its live callback epoch."""
+        if self._main_flow_output_source is None:
+            self.contract.require_processing_contract()
+        return self._main_flow_output_source(source_payload)
+
+    def execution_device_scope(self) -> AbstractContextManager[None]:
+        """Enter the fixed device while retaining a fresh per-call scope lifetime."""
+        memory_type = self._execution_memory_type
+        if memory_type is None or not memory_type.is_gpu:
+            return nullcontext()
+        if self.execution_device_id is None:
+            raise ValueError(
+                f"No compiled device assignment exists for {memory_type.value!r}."
+            )
+        return memory_type.device_scope(self.execution_device_id)
 
     @property
     def input_memory_type(self) -> str | None:
