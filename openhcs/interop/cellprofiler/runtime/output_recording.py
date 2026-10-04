@@ -25,7 +25,6 @@ from openhcs.core.artifacts import (
     SpatialGridArtifactType,
 )
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.function_patterns import InvocationArtifactInputEdgePlan
 from openhcs.core.registry_strategies import MostDerivedContextStrategyMixin
 from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
@@ -211,7 +210,6 @@ class CellProfilerOutputRecorder(
         cls,
         *,
         callable_contract: CallableContract,
-        active_input_edges: tuple[InvocationArtifactInputEdgePlan, ...],
         adapter: CellProfilerRuntimeAdapter,
         returned_values: Mapping[ArtifactSpecRef, RuntimeCallableArgument],
         matched_outputs: tuple[RuntimeMatchedOutput, ...],
@@ -261,7 +259,7 @@ class CellProfilerOutputRecorder(
             CellProfilerOutputRecorder.for_artifact_type(spec.artifact_type).record(
                 CellProfilerOutputRecordRequest(
                     callable_contract=callable_contract,
-                    active_input_edges=active_input_edges,
+                    active_input_edges=invocation.input_edges,
                     adapter=adapter,
                     spec=spec,
                     output_plan=output_plan,

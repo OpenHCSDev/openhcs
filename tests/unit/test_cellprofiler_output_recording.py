@@ -102,7 +102,6 @@ def test_output_recording_uses_artifact_dependency_order() -> None:
 
     CellProfilerOutputRecorder.record_module_outputs(
         callable_contract=_contract(outputs=(dependent, source)),
-        active_input_edges=(),
         adapter=adapter,
         returned_values={dependent.ref(): "dependent", source.ref(): "source"},
         matched_outputs=(
@@ -278,7 +277,6 @@ def test_output_recording_carries_exact_invocation_plane_projection(
     )
     CellProfilerOutputRecorder.record_module_outputs(
         callable_contract=_contract(outputs=(output,)),
-        active_input_edges=(),
         adapter=adapter,
         returned_values={output.ref(): "grid"},
         matched_outputs=((output_plan, output, "grid"),),
