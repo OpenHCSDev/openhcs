@@ -10,6 +10,7 @@ from typing import Annotated, ClassVar
 from metaclass_registry import AutoRegisterMeta
 import numpy as np
 
+from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.memory import numpy as numpy_decorator
 from openhcs.core.measurement_row_materialization import (
@@ -181,7 +182,7 @@ def object_label_colormap(colormap_name: str, num_labels: int) -> np.ndarray:
 
 @numpy_decorator(contract=ProcessingContract.PURE_2D)
 def convert_image_to_objects(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     cast_to_bool: bool = False,
     preserve_label: bool = False,
     background: int = 0,

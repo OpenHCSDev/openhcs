@@ -24,7 +24,7 @@ from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from openhcs.core.orchestrator.execution_result import ExecutionResult
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
-from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission
+from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission, ZMQExecutionRequestBuilder
 from openhcs.runtime.zmq_execution_observation import ZMQRuntimeExecutionOutcomeExport
 from openhcs.runtime.zmq_execution_signature import (
     ZMQAuxiliaryExecutionParams,
@@ -71,13 +71,18 @@ def test_measured_run_validates_an_ordinary_pipeline_document(
         def disconnect(self):
             self.disconnect_count += 1
 
+        def submit_prepared_pipeline(self, request):
+            if request.compile_control.compile_only:
+                return self.submit_compile(request)
+            return self.submit_pipeline(request)
+
         def submit_compile(self, submitted):
-            assert submitted.pipeline_document is submission.pipeline_document
+            assert submitted.pipeline_code == submission.pipeline_code()
             return {"status": "accepted", "execution_id": "compile-1"}
 
         def submit_pipeline(self, submitted):
-            assert submitted.pipeline_document is submission.pipeline_document
-            assert submitted.compile_artifact_id == "compile-1"
+            assert submitted.pipeline_code == submission.pipeline_code()
+            assert submitted.compile_control.compile_artifact_id == "compile-1"
             assert (
                 ZMQAuxiliaryExecutionParams.from_transport(
                     submitted.config_params
@@ -90,6 +95,7 @@ def test_measured_run_validates_an_ordinary_pipeline_document(
             if execution_id == "execute-1":
                 observation_path.touch()
             return {
+                "execution": self.poll_status(execution_id)["execution"],
                 "status": "complete",
                 "execution_id": execution_id,
                 "results": {"output_plate_root": str(tmp_path)},
@@ -219,6 +225,11 @@ def test_measured_runs_reuse_one_connected_client_with_distinct_receipts(
         def owned_server_process_is_alive(self) -> bool:
             return True
 
+        def submit_prepared_pipeline(self, request):
+            if request.compile_control.compile_only:
+                return self.submit_compile(request)
+            return self.submit_pipeline(request)
+
         def submit_compile(self, submission):
             self.run_number += 1
             observer({"phase": "compile", "status": "started", "timestamp": 10.0})
@@ -228,7 +239,7 @@ def test_measured_runs_reuse_one_connected_client_with_distinct_receipts(
             }
 
         def submit_pipeline(self, submission):
-            assert submission.compile_artifact_id == f"compile-{self.run_number}"
+            assert submission.compile_control.compile_artifact_id == f"compile-{self.run_number}"
             observer({"phase": "axis_started", "timestamp": 11.0})
             return {
                 "status": "accepted",
@@ -242,6 +253,7 @@ def test_measured_runs_reuse_one_connected_client_with_distinct_receipts(
                 observer({"phase": "axis_completed", "timestamp": 12.0})
                 (tmp_path / f"run-{self.run_number - 1}" / "observation.pkl").touch()
             return {
+                "execution": self.poll_status(execution_id)["execution"],
                 "status": "complete",
                 "execution_id": execution_id,
                 "results": {"output_plate_root": str(tmp_path)},
@@ -384,7 +396,7 @@ def test_shared_evidence_writer_never_overwrites_existing_artifact(
 
     with pytest.raises(FileExistsError, match="Measured run evidence already exists"):
         measured_run.retain_measured_openhcs_completion(
-            submission=submission,
+            request=ZMQExecutionRequestBuilder.from_task(submission),
             execution_id="execution-1",
             results_summary={},
             endpoint_provenance=endpoint,
@@ -486,7 +498,7 @@ def test_outcome_only_run_uses_the_shared_receipt_finalizer(tmp_path: Path) -> N
 
     with pytest.raises(ToolExecutionError, match="execution identity does not match"):
         measured_run.retain_measured_openhcs_completion(
-            submission=submission,
+            request=ZMQExecutionRequestBuilder.from_task(submission),
             execution_id="stale-job",
             results_summary={"well_count": 1},
             endpoint_provenance=endpoint,
@@ -499,7 +511,7 @@ def test_outcome_only_run_uses_the_shared_receipt_finalizer(tmp_path: Path) -> N
 
     with pytest.raises(ToolExecutionError, match="Expected 2 execution axes"):
         measured_run.retain_measured_openhcs_completion(
-            submission=submission,
+            request=ZMQExecutionRequestBuilder.from_task(submission),
             execution_id="execution-1",
             results_summary={"well_count": 1},
             endpoint_provenance=endpoint,
@@ -520,7 +532,7 @@ def test_outcome_only_run_uses_the_shared_receipt_finalizer(tmp_path: Path) -> N
     ).write(observation_path)
     with pytest.raises(ToolExecutionError, match="no completed axes"):
         measured_run.retain_measured_openhcs_completion(
-            submission=submission,
+            request=ZMQExecutionRequestBuilder.from_task(submission),
             execution_id="execution-1",
             results_summary={"well_count": 0},
             endpoint_provenance=endpoint,
@@ -543,7 +555,7 @@ def test_outcome_only_run_uses_the_shared_receipt_finalizer(tmp_path: Path) -> N
     ).write(observation_path)
     with pytest.raises(ToolExecutionError, match="lacks compiled axis membership"):
         measured_run.retain_measured_openhcs_completion(
-            submission=submission,
+            request=ZMQExecutionRequestBuilder.from_task(submission),
             execution_id="execution-1",
             results_summary={"well_count": 1},
             endpoint_provenance=endpoint,
@@ -562,7 +574,7 @@ def test_outcome_only_run_uses_the_shared_receipt_finalizer(tmp_path: Path) -> N
     ).write(observation_path)
 
     completion = measured_run.retain_measured_openhcs_completion(
-        submission=submission,
+        request=ZMQExecutionRequestBuilder.from_task(submission),
         execution_id="execution-1",
         results_summary={"well_count": 1},
         endpoint_provenance=endpoint,
@@ -595,7 +607,7 @@ def test_outcome_only_run_uses_the_shared_receipt_finalizer(tmp_path: Path) -> N
     receipt_path.unlink()
     config_path.unlink()
     recovered = measured_run.retain_measured_openhcs_completion(
-        submission=submission,
+        request=ZMQExecutionRequestBuilder.from_task(submission),
         execution_id="execution-1",
         results_summary={"well_count": 1},
         endpoint_provenance=endpoint,
@@ -610,7 +622,7 @@ def test_outcome_only_run_uses_the_shared_receipt_finalizer(tmp_path: Path) -> N
     assert MeasuredPipelineRunReceipt.read(receipt_path) == recovered.receipt
     with pytest.raises(FileExistsError, match="Measured run evidence already exists"):
         measured_run.retain_measured_openhcs_completion(
-            submission=submission,
+            request=ZMQExecutionRequestBuilder.from_task(submission),
             execution_id="execution-1",
             results_summary={"well_count": 1},
             endpoint_provenance=endpoint,

@@ -210,17 +210,21 @@ Choose one as ``pipeline_config`` and keep the ``pipeline_steps`` assignment in
 the same document. Filenames are exact examples; replace them with names present
 directly under the selected plate directory.
 
+``PipelineConfig.source_bindings_config`` takes ``LazySourceBindingsConfig``
+from ``openhcs.core.config``. ``SourceBindingsConfig`` names the concrete
+source-binding semantics; do not pass that concrete class to this lazy field.
+
 .. code-block:: python
 
    from openhcs.constants.input_source import InputSource
    from openhcs.core.config import (
        LazyProcessingConfig,
+       LazySourceBindingsConfig,
        LazyStepSourceBindingsConfig,
        PipelineConfig,
    )
    from openhcs.core.source_bindings import (
        NamedSourceBinding,
-       SourceBindingsConfig,
        SourceFilterClause,
        SourceFilterMatchType,
        SourceFilterSubject,
@@ -248,7 +252,7 @@ directly under the selected plate directory.
 
 
    tiff_png_config = PipelineConfig(
-       source_bindings_config=SourceBindingsConfig(
+       source_bindings_config=LazySourceBindingsConfig(
            bindings=(
                bind_file("DNA", "nuclei.tif"),
                bind_file("Mask", "segmentation.png"),
@@ -257,25 +261,25 @@ directly under the selected plate directory.
    )
 
    czi_config = PipelineConfig(
-       source_bindings_config=SourceBindingsConfig(
+       source_bindings_config=LazySourceBindingsConfig(
            bindings=(bind_file("DNA", "experiment.czi"),),
        ),
    )
 
    ome_tiff_config = PipelineConfig(
-       source_bindings_config=SourceBindingsConfig(
+       source_bindings_config=LazySourceBindingsConfig(
            bindings=(bind_file("DNA", "plate.ome.tif"),),
        ),
    )
 
    ome_zarr_config = PipelineConfig(
-       source_bindings_config=SourceBindingsConfig(
+       source_bindings_config=LazySourceBindingsConfig(
            bindings=(bind_file("DNA", "plate.zarr"),),
        ),
    )
 
    mixed_store_config = PipelineConfig(
-       source_bindings_config=SourceBindingsConfig(
+       source_bindings_config=LazySourceBindingsConfig(
            bindings=(
                bind_file("DNA", "plate.zarr"),
                bind_file("Brightfield", "brightfield.tif"),
@@ -341,16 +345,15 @@ values equal merely to satisfy validation.
 .. code-block:: python
 
    from openhcs.constants.constants import AllComponents
-   from openhcs.core.config import PipelineConfig
+   from openhcs.core.config import LazySourceBindingsConfig, PipelineConfig
    from openhcs.core.source_bindings import (
        ComponentSelector,
        NamedSourceBinding,
-       SourceBindingsConfig,
        SourceSelector,
    )
 
    pipeline_config = PipelineConfig(
-       source_bindings_config=SourceBindingsConfig(
+       source_bindings_config=LazySourceBindingsConfig(
            bindings=(
                NamedSourceBinding(
                    alias="DNA",

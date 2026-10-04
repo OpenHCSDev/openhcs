@@ -30,7 +30,7 @@ def test_function_invocation_enters_declared_execution_memory_scope() -> None:
         events.append(("exit", declaration))
 
     executor = FunctionCoreExecutor(
-        runtime_scope=SimpleNamespace(
+        group_data=SimpleNamespace(
             execution_plan=SimpleNamespace(
                 memory_device_scope=memory_device_scope,
             )

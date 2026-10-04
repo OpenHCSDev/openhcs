@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, TypeAlias
 if TYPE_CHECKING:
     from openhcs.core.aligned_image_payload import AlignedImageSliceContext
     from openhcs.core.pipeline.compilation_session import CompilationPathResolver
-    from openhcs.core.steps.function_runtime import FunctionInvocationArtifactScope
+    from openhcs.core.steps.function_runtime import FunctionCoreExecutor
 
 from pyqt_reactive.pattern_metadata import PatternScopeToken
 from python_introspect import Enableable
@@ -229,8 +229,23 @@ class InvocationArtifactInputEdgePlan:
     spec: ArtifactSpec
     storage_plan: ArtifactInputPlan | None = field(compare=False)
     projection: ArtifactInputProjectionPlan | None
-    consumes_main_flow: bool = False
     main_flow_projection: MainFlowInputProjection | None = None
+
+    @staticmethod
+    def source_projection(
+        spec: ArtifactSpec,
+        main_flow_artifacts: ArtifactSpecCollection,
+        invocation_sources: ArtifactSpecCollection,
+    ) -> MainFlowInputProjection | None:
+        """Derive the primary source role independently of its pixel producer."""
+        main_flow_refs = main_flow_artifacts.ref_set()
+        if spec.ref() not in main_flow_refs or spec.ref() not in invocation_sources.ref_set():
+            return None
+        return (
+            MainFlowInputProjection.COMPLETE_PAYLOAD
+            if len(main_flow_refs) == 1
+            else MainFlowInputProjection.DECLARED_SOURCE_IMAGE
+        )
 
     @classmethod
     def from_source_declarations(
@@ -245,13 +260,12 @@ class InvocationArtifactInputEdgePlan:
     ) -> "InvocationArtifactInputEdgePlan":
         """Project one unstored source occurrence from its exact declarations."""
 
-        main_flow_refs = main_flow_artifacts.ref_set()
-        consumes_main_flow = (
-            spec.ref() in main_flow_refs and spec.ref() in invocation_sources.ref_set()
+        main_flow_projection = cls.source_projection(
+            spec, main_flow_artifacts, invocation_sources,
         )
         edge_type = (
             CompiledMetadataArtifactInputEdgePlan
-            if metadata_available and not (consumes_main_flow or source_binding_available)
+            if metadata_available and main_flow_projection is None and not source_binding_available
             else cls
         )
         return edge_type(
@@ -259,16 +273,7 @@ class InvocationArtifactInputEdgePlan:
             spec=spec,
             storage_plan=None,
             projection=None,
-            consumes_main_flow=consumes_main_flow,
-            main_flow_projection=(
-                MainFlowInputProjection.COMPLETE_PAYLOAD
-                if consumes_main_flow and len(main_flow_refs) == 1
-                else (
-                    MainFlowInputProjection.DECLARED_SOURCE_IMAGE
-                    if consumes_main_flow
-                    else None
-                )
-            ),
+            main_flow_projection=main_flow_projection,
         )
 
     def uses_runtime_storage(self) -> bool:
@@ -277,11 +282,13 @@ class InvocationArtifactInputEdgePlan:
 
     def requires_callable_binding(self) -> bool:
         """Admit parameter-bearing sources and validate every stored argument."""
-        return self.uses_runtime_storage() or self.spec.binds_callable_parameter()
+        return self.spec.binds_callable_parameter() or (
+            self.uses_runtime_storage() and self.main_flow_projection is None
+        )
 
     def resolve_unstored_payload(
         self,
-        scope: "FunctionInvocationArtifactScope",
+        scope: "FunctionCoreExecutor",
         primary_source_payload: object,
     ) -> object:
         """Resolve source input through the existing exact-origin authority."""
@@ -290,22 +297,6 @@ class InvocationArtifactInputEdgePlan:
         )
 
     def __post_init__(self) -> None:
-        if type(self.consumes_main_flow) is not bool:
-            raise TypeError(
-                "Invocation artifact input edge consumes_main_flow must be bool, "
-                f"got {type(self.consumes_main_flow).__name__}."
-            )
-        if self.consumes_main_flow and self.main_flow_projection is None:
-            object.__setattr__(
-                self,
-                "main_flow_projection",
-                MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
-            )
-        elif not self.consumes_main_flow and self.main_flow_projection is not None:
-            raise ValueError(
-                "Invocation artifact input edge cannot declare a main-flow "
-                "projection when it does not consume main flow."
-            )
         if self.main_flow_projection is not None and not isinstance(
             self.main_flow_projection,
             MainFlowInputProjection,
@@ -314,11 +305,6 @@ class InvocationArtifactInputEdgePlan:
                 "Invocation artifact input edge main_flow_projection must be a "
                 "MainFlowInputProjection or None, got "
                 f"{type(self.main_flow_projection).__name__}."
-            )
-        if self.consumes_main_flow and self.storage_plan is not None:
-            raise ValueError(
-                "Invocation artifact input edge cannot consume main flow when an "
-                "exact storage plan owns the input."
             )
         if (self.storage_plan is None) != (self.projection is None):
             raise ValueError(
@@ -342,23 +328,10 @@ class CompiledMetadataArtifactInputEdgePlan(InvocationArtifactInputEdgePlan):
 
     def resolve_unstored_payload(
         self,
-        scope: "FunctionInvocationArtifactScope",
+        scope: "FunctionCoreExecutor",
         primary_source_payload: object,
     ) -> object:
         return scope.invocation.artifact_parameter_value(self.spec)
-
-
-@dataclass(frozen=True)
-class FunctionInvocation:
-    """One enabled callable extracted from a FunctionStep pattern."""
-
-    contract: CallableContract
-    key: FunctionInvocationKey
-
-    @property
-    def func(self) -> FunctionPatternCallable:
-        """Callable reference used by the runtime invocation."""
-        return self.contract.func
 
 
 @dataclass(frozen=True, slots=True)
@@ -402,6 +375,38 @@ class NormalizedFunctionGroup:
 
         return str(self.source_group_key)
 
+    @classmethod
+    def from_pattern(
+        cls,
+        group_key: FunctionGroupKey,
+        pattern: FunctionPatternSyntax,
+    ) -> NormalizedFunctionGroup:
+        items = pattern if isinstance(pattern, list) else [pattern]
+        normalized_items: list[NormalizedFunctionItem] = []
+
+        for item in items:
+            func, kwargs = _split_function_item(item)
+            if RUNTIME_CALLABLE_KWARG_POLICY.item_is_disabled(kwargs):
+                continue
+            contract = CallableContract.from_prepared_callable(func)
+            position = len(normalized_items)
+            normalized_items.append(
+                NormalizedFunctionItem(
+                    key=FunctionInvocationKey.from_contract(
+                        contract,
+                        group_key,
+                        position,
+                    ),
+                    contract=contract,
+                    kwargs=_freeze_runtime_kwargs(kwargs),
+                )
+            )
+
+        return cls(
+            source_group_key=group_key,
+            items=tuple(normalized_items),
+        )
+
 
 @dataclass(frozen=True, slots=True)
 class NormalizedFunctionPattern:
@@ -425,6 +430,44 @@ class NormalizedFunctionPattern:
                         f"{item.key!r}."
                     )
                 source_key_by_invocation[item.key] = group.source_group_key
+
+    def __bool__(self) -> bool:
+        return any(group.items for group in self.groups)
+
+    @property
+    def source_group_keys(self) -> tuple[FunctionGroupKey, ...]:
+        return tuple(group.source_group_key for group in self.groups)
+
+    def with_artifact_input_values(
+        self, values_by_key: RuntimeKwargMap
+    ) -> "NormalizedFunctionPattern":
+        """Inject this axis's metadata without rebuilding captured declarations."""
+        return replace(
+            self,
+            groups=tuple(
+                replace(
+                    group,
+                    items=tuple(
+                        replace(
+                            item,
+                            kwargs=_freeze_runtime_kwargs(
+                                {
+                                    **item.kwargs_dict,
+                                    **{
+                                        spec.parameter_name: values_by_key[spec.name]
+                                        for spec in item.contract.artifact_inputs
+                                        if spec.binds_callable_parameter()
+                                        and spec.name in values_by_key
+                                    },
+                                }
+                            ),
+                        )
+                        for item in group.items
+                    ),
+                )
+                for group in self.groups
+            ),
+        )
 
     def iter_items(self) -> Iterator[NormalizedFunctionItem]:
         """Yield normalized callable items in runtime order."""
@@ -474,11 +517,6 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
     def execution_memory_type(self) -> str | None:
         """Declared execution memory type from the callable contract."""
         return self.contract.execution_memory_type
-
-    @property
-    def kwargs_dict(self) -> dict:
-        """Return user-authored callable kwargs as a runtime dict."""
-        return dict(self.kwargs)
 
     def output_plans_for_component(
         self,
@@ -662,6 +700,83 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
         transition = self.contract.primary_image_carrier_transition
         return transition is not None and transition.proves(requirement)
 
+    @classmethod
+    def from_normalized_item(
+        cls,
+        item: NormalizedFunctionItem,
+        input_plans: Mapping[ArtifactSpecRef, ArtifactInputPlan],
+        output_plans: Mapping[ArtifactSpecRef, ArtifactOutputPlan],
+        declaration_provider: InvocationArtifactDeclarationProviderLike,
+        invocation_contract_provider: InvocationContractProvider,
+        step_context: ArtifactDeclarationStepContext,
+        runtime_parameter_bindings: Sequence[RuntimeParameterBinding],
+        path_resolver: "CompilationPathResolver | None",
+    ) -> "CompiledFunctionInvocation":
+        contract_plan = invocation_contract_provider(item, step_context)
+        if contract_plan is None:
+            invocation_kwargs = item.kwargs
+        else:
+            invocation_kwargs = contract_plan.consume_authored_kwargs(
+                item,
+                step_context,
+            )
+            item = replace(item, contract=contract_plan.contract)
+        artifact_selector = declaration_provider(item, step_context)
+        item.contract.validate_artifact_input_parameter_bindings()
+        artifact_selector.validate_artifact_output_declarations()
+        artifact_input_plans = artifact_selector.select_plans(
+            ArtifactInputPlan,
+            input_plans,
+        )
+        user_kwargs, compiled_runtime_bindings = _compile_runtime_parameter_bindings(
+            invocation_kwargs,
+            runtime_parameter_bindings,
+            (
+                *item.contract.runtime_bound_parameters,
+                *item.contract.config_bound_parameter_names,
+            ),
+        )
+        public_kwargs = dict(user_kwargs)
+        if path_resolver is not None:
+            public_kwargs = item.contract.resolve_declared_paths(
+                public_kwargs,
+                path_resolver,
+            )
+        else:
+            relative_parameters = tuple(
+                parameter_name
+                for parameter_name, (_declaration, value) in (
+                    item.contract.declared_path_values(public_kwargs).items()
+                )
+                if isinstance(value, (str, Path)) and not Path(value).is_absolute()
+            )
+            if relative_parameters:
+                raise ValueError(
+                    f"Callable {item.contract.function_name!r} has relative declared "
+                    f"paths {relative_parameters!r} but compilation supplied no "
+                    "CompilationPathResolver."
+                )
+        runtime_loaded_input_refs = frozenset(plan.ref() for plan in artifact_input_plans)
+        validated_kwargs = item.contract.validate_public_kwargs(
+            public_kwargs,
+            runtime_loaded_artifact_parameter_names=(
+                spec.parameter_name
+                for spec in item.contract.artifact_inputs
+                if spec.parameter_name is not None
+                and spec.ref() in runtime_loaded_input_refs
+            ),
+        )
+        return cls(
+            key=item.key,
+            contract=item.contract,
+            kwargs=validated_kwargs,
+            artifact_output_plans=artifact_selector.select_plans(
+                ArtifactOutputPlan,
+                output_plans,
+            ),
+            runtime_parameter_bindings=compiled_runtime_bindings,
+        )
+
 
 @dataclass(frozen=True, slots=True)
 class CompiledFunctionGroup:
@@ -722,7 +837,7 @@ class CompiledFunctionGroup:
                 edge.spec.ref()
                 for _invocation, edges in invocations_and_edges
                 for edge in edges
-                if edge.consumes_main_flow
+                if edge.main_flow_projection is not None
             )
         )
         if main_flow_refs:
@@ -732,6 +847,69 @@ class CompiledFunctionGroup:
             for invocation, _edges in invocations_and_edges
         )
         return None if has_implicit_image_argument else ()
+
+    def stored_primary_input_edges_for_component(
+        self,
+        execution_scope: ComponentGroupScope,
+        component_key: str | None,
+    ) -> tuple[InvocationArtifactInputEdgePlan, ...] | None:
+        """Select exact producer edges supplying an artifact-owned cohort.
+
+        Artifact-owning invocations admit declared semantic primary sources.
+        Context-only inputs can supply a cohort when no raw primary image is
+        consumed. Unknown raw adapters retain source-path transport.
+        """
+        active = tuple(
+            (invocation, invocation.input_edges_for_outputs(active_outputs))
+            for invocation in self.invocations
+            if (
+                active_outputs := invocation.output_plans_for_component(
+                    execution_scope, component_key,
+                )
+            ) is not None
+        )
+        if not active or any(
+            invocation.contract.accepts_implicit_main_flow_input
+            and not invocation.adapter_manages_artifact_inputs
+            for invocation, edges in active
+        ):
+            return None
+        primary_edges = tuple(
+            edge
+            for invocation, edges in active
+            for edge in edges
+            if edge.main_flow_projection is not None
+            and edge.spec.artifact_type.carries_source_image_context
+        )
+        if not primary_edges:
+            primary_edges = tuple(
+                edge
+                for invocation, edges in active
+                for domain_refs in (invocation.contract.invocation_domain_inputs.ref_set(),)
+                for edge in edges
+                if edge.spec.ref()
+                in domain_refs
+                and edge.spec.artifact_type.carries_source_image_context
+            )
+        if not primary_edges or any(
+            edge.storage_plan is None for edge in primary_edges
+        ):
+            return None
+        selected: dict[ArtifactSpecRef, InvocationArtifactInputEdgePlan] = {}
+        for edge in primary_edges:
+            previous = selected.get(edge.spec.ref())
+            if previous is not None and (
+                edge.spec != previous.spec
+                or edge.storage_plan != previous.storage_plan
+                or edge.projection != previous.projection
+                or edge.main_flow_projection != previous.main_flow_projection
+            ):
+                raise ValueError(
+                    f"Artifact-owned cohort source {edge.spec.ref()!r} has "
+                    "conflicting compiled producer authorities."
+                )
+            selected.setdefault(edge.spec.ref(), edge)
+        return tuple(selected.values())
 
     def resulting_main_flow_output_plans(self) -> tuple[ArtifactOutputPlan, ...]:
         """Return exact named output plans carried after this callable chain."""
@@ -814,6 +992,37 @@ class CompiledFunctionGroup:
             if transition.creates(requirement):
                 return CreatedPrimaryImageCarrierProof()
         return InheritedPrimaryImageCarrierProof()
+
+    @classmethod
+    def from_normalized_group(
+        cls,
+        normalized_group: NormalizedFunctionGroup,
+        *,
+        input_plans: Mapping[ArtifactSpecRef, ArtifactInputPlan],
+        output_plans: Mapping[ArtifactSpecRef, ArtifactOutputPlan],
+        declaration_provider: InvocationArtifactDeclarationProviderLike,
+        invocation_contract_provider: InvocationContractProvider,
+        step_context: ArtifactDeclarationStepContext,
+        runtime_parameter_bindings: Sequence[RuntimeParameterBinding],
+        path_resolver: "CompilationPathResolver | None",
+    ) -> "CompiledFunctionGroup":
+        """Compile an authored group through its declaration-owned invocation values."""
+        return cls(
+            group_key=normalized_group.group_key,
+            invocations=tuple(
+                CompiledFunctionInvocation.from_normalized_item(
+                    item=item,
+                    input_plans=input_plans,
+                    output_plans=output_plans,
+                    declaration_provider=declaration_provider,
+                    invocation_contract_provider=invocation_contract_provider,
+                    step_context=step_context,
+                    runtime_parameter_bindings=runtime_parameter_bindings,
+                    path_resolver=path_resolver,
+                )
+                for item in normalized_group.items
+            ),
+        )
 
 
 class PrimaryImageCarrierProof(ABC):
@@ -1025,23 +1234,22 @@ class CompiledFunctionPattern:
 
 def iter_enabled_function_invocations(
     pattern: FunctionPatternSyntax,
-) -> Iterator[FunctionInvocation]:
+) -> Iterator[NormalizedFunctionItem]:
     """Yield enabled callable invocations from any supported function pattern.
 
     Positions are renumbered after disabled functions are filtered out, matching
     the current runtime behavior for list chains and dict-pattern branches.
     """
-    for item in normalize_function_pattern(pattern).iter_items():
-        yield FunctionInvocation(
-            contract=item.contract,
-            key=item.key,
-        )
+    yield from normalize_function_pattern(pattern).iter_items()
 
 
 def get_core_callable(
     func_pattern: FunctionPatternSyntax,
 ) -> FunctionPatternCallable | None:
     """Extract the first effective callable reference from a function pattern."""
+    if isinstance(func_pattern, NormalizedFunctionPattern):
+        return next((item.func for item in func_pattern.iter_items()), None)
+
     if isinstance(func_pattern, FunctionReference):
         return func_pattern
 
@@ -1075,10 +1283,9 @@ def normalize_function_pattern(
     """Lower raw FunctionStep.func syntax into typed grouped callable items."""
     if isinstance(pattern, NormalizedFunctionPattern):
         return pattern
-    normalizer = NormalizeFunctionGroupAuthority()
     if isinstance(pattern, dict):
         groups = tuple(
-            normalizer.normalize(group_key=group_key, pattern=value)
+            NormalizedFunctionGroup.from_pattern(group_key=group_key, pattern=value)
             for group_key, value in pattern.items()
         )
         return NormalizedFunctionPattern(
@@ -1088,7 +1295,7 @@ def normalize_function_pattern(
 
     return NormalizedFunctionPattern(
         groups=(
-            normalizer.normalize(
+            NormalizedFunctionGroup.from_pattern(
                 group_key=DEFAULT_GROUP_KEY,
                 pattern=pattern,
             ),
@@ -1145,17 +1352,21 @@ def compile_function_pattern(
 ) -> CompiledFunctionPattern:
     """Compile raw FunctionStep.func syntax into the runtime source of truth."""
     normalized = normalize_function_pattern(pattern)
-    compiler = CompileFunctionGroupAuthority(
-        input_plans=input_plans,
-        output_plans=output_plans,
-        declaration_provider=declaration_provider,
-        invocation_contract_provider=invocation_contract_provider,
-        step_context=step_context,
-        runtime_parameter_bindings=tuple(runtime_parameter_bindings),
-        path_resolver=path_resolver,
-    )
+    runtime_parameter_bindings = tuple(runtime_parameter_bindings)
     return CompiledFunctionPattern(
-        groups=tuple(compiler.compile(group) for group in normalized.groups),
+        groups=tuple(
+            CompiledFunctionGroup.from_normalized_group(
+                group,
+                input_plans=input_plans,
+                output_plans=output_plans,
+                declaration_provider=declaration_provider,
+                invocation_contract_provider=invocation_contract_provider,
+                step_context=step_context,
+                runtime_parameter_bindings=runtime_parameter_bindings,
+                path_resolver=path_resolver,
+            )
+            for group in normalized.groups
+        ),
         is_grouped=normalized.is_grouped,
     )
 
@@ -1164,6 +1375,8 @@ def strip_disabled_functions(
     pattern: FunctionPatternSyntax,
 ) -> FunctionPatternSyntax | None:
     """Remove disabled function items from any supported function-pattern shape."""
+    if isinstance(pattern, NormalizedFunctionPattern):
+        return pattern
     if isinstance(pattern, tuple):
         _func, kwargs = _split_function_item(pattern)
         if RUNTIME_CALLABLE_KWARG_POLICY.item_is_disabled(kwargs):
@@ -1215,6 +1428,9 @@ def inject_artifact_input_values(
     """Inject artifact input values only into callables that declare those inputs."""
     if not values_by_key:
         return pattern
+
+    if isinstance(pattern, NormalizedFunctionPattern):
+        return pattern.with_artifact_input_values(values_by_key)
 
     if _is_callable_pattern_item(pattern):
         core_callable = get_core_callable(pattern)
@@ -1272,152 +1488,6 @@ class PatternItemKwargMerge:
             return (func, {**existing_kwargs, **self.kwargs})
 
         return self.merge(pattern)
-
-
-@dataclass(frozen=True, slots=True)
-class NormalizeFunctionGroupAuthority:
-    """Normalize one function-pattern group into callable invocation items."""
-
-    def normalize(
-        self,
-        group_key: FunctionGroupKey,
-        pattern: FunctionPatternSyntax,
-    ) -> NormalizedFunctionGroup:
-        items = pattern if isinstance(pattern, list) else [pattern]
-        normalized_items: list[NormalizedFunctionItem] = []
-
-        for item in items:
-            func, kwargs = _split_function_item(item)
-            if RUNTIME_CALLABLE_KWARG_POLICY.item_is_disabled(kwargs):
-                continue
-            contract = CallableContract.from_callable(func)
-            position = len(normalized_items)
-            normalized_items.append(
-                NormalizedFunctionItem(
-                    key=FunctionInvocationKey.from_contract(
-                        contract,
-                        group_key,
-                        position,
-                    ),
-                    contract=contract,
-                    kwargs=_freeze_runtime_kwargs(kwargs),
-                )
-            )
-
-        return NormalizedFunctionGroup(
-            source_group_key=group_key,
-            items=tuple(normalized_items),
-        )
-
-
-@dataclass(frozen=True, slots=True, kw_only=True)
-class CompileFunctionGroupAuthority:
-    """Compile normalized function-pattern groups into invocation plans."""
-
-    input_plans: Mapping[ArtifactSpecRef, ArtifactInputPlan]
-    output_plans: Mapping[ArtifactSpecRef, ArtifactOutputPlan]
-    declaration_provider: InvocationArtifactDeclarationProviderLike
-    invocation_contract_provider: InvocationContractProvider
-    step_context: ArtifactDeclarationStepContext
-    runtime_parameter_bindings: tuple[RuntimeParameterBinding, ...] = ()
-    path_resolver: "CompilationPathResolver | None" = None
-
-    def compile(
-        self, normalized_group: NormalizedFunctionGroup
-    ) -> CompiledFunctionGroup:
-        invocations = tuple(
-            _compile_invocation(
-                item=item,
-                input_plans=self.input_plans,
-                output_plans=self.output_plans,
-                declaration_provider=self.declaration_provider,
-                invocation_contract_provider=self.invocation_contract_provider,
-                step_context=self.step_context,
-                runtime_parameter_bindings=self.runtime_parameter_bindings,
-                path_resolver=self.path_resolver,
-            )
-            for item in normalized_group.items
-        )
-        return CompiledFunctionGroup(
-            group_key=normalized_group.group_key,
-            invocations=invocations,
-        )
-
-
-def _compile_invocation(
-    item: NormalizedFunctionItem,
-    input_plans: Mapping[ArtifactSpecRef, ArtifactInputPlan],
-    output_plans: Mapping[ArtifactSpecRef, ArtifactOutputPlan],
-    declaration_provider: InvocationArtifactDeclarationProviderLike,
-    invocation_contract_provider: InvocationContractProvider,
-    step_context: ArtifactDeclarationStepContext,
-    runtime_parameter_bindings: Sequence[RuntimeParameterBinding],
-    path_resolver: "CompilationPathResolver | None",
-) -> CompiledFunctionInvocation:
-    contract_plan = invocation_contract_provider(item, step_context)
-    if contract_plan is None:
-        invocation_kwargs = item.kwargs
-    else:
-        invocation_kwargs = contract_plan.consume_authored_kwargs(
-            item,
-            step_context,
-        )
-        item = replace(item, contract=contract_plan.contract)
-    artifact_selector = declaration_provider(item, step_context)
-    item.contract.validate_artifact_input_parameter_bindings()
-    artifact_selector.validate_artifact_output_declarations()
-    artifact_input_plans = artifact_selector.select_plans(
-        ArtifactInputPlan,
-        input_plans,
-    )
-    user_kwargs, compiled_runtime_bindings = _compile_runtime_parameter_bindings(
-        invocation_kwargs,
-        runtime_parameter_bindings,
-        (
-            *item.contract.runtime_bound_parameters,
-            *item.contract.config_bound_parameter_names,
-        ),
-    )
-    public_kwargs = dict(user_kwargs)
-    if path_resolver is not None:
-        public_kwargs = item.contract.resolve_declared_paths(
-            public_kwargs,
-            path_resolver,
-        )
-    else:
-        relative_parameters = tuple(
-            parameter_name
-            for parameter_name, (_declaration, value) in (
-                item.contract.declared_path_values(public_kwargs).items()
-            )
-            if isinstance(value, (str, Path)) and not Path(value).is_absolute()
-        )
-        if relative_parameters:
-            raise ValueError(
-                f"Callable {item.contract.function_name!r} has relative declared "
-                f"paths {relative_parameters!r} but compilation supplied no "
-                "CompilationPathResolver."
-            )
-    runtime_loaded_input_refs = frozenset(plan.ref() for plan in artifact_input_plans)
-    validated_kwargs = item.contract.validate_public_kwargs(
-        public_kwargs,
-        runtime_loaded_artifact_parameter_names=(
-            spec.parameter_name
-            for spec in item.contract.artifact_inputs
-            if spec.parameter_name is not None
-            and spec.ref() in runtime_loaded_input_refs
-        ),
-    )
-    return CompiledFunctionInvocation(
-        key=item.key,
-        contract=item.contract,
-        kwargs=validated_kwargs,
-        artifact_output_plans=artifact_selector.select_plans(
-            ArtifactOutputPlan,
-            output_plans,
-        ),
-        runtime_parameter_bindings=compiled_runtime_bindings,
-    )
 
 
 def _compile_runtime_parameter_bindings(

@@ -1,3 +1,4 @@
+from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
 from inspect import signature
 from types import SimpleNamespace
 
@@ -22,6 +23,8 @@ from openhcs.core.config import (
 )
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import (
+    compile_function_pattern,
+    inject_artifact_input_values,
     normalize_function_pattern,
 )
 from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
@@ -33,7 +36,7 @@ from openhcs.core.pipeline.path_planner import (
     PathPlannerArtifactStage,
     PathPlannerExecutionGroups,
 )
-from openhcs.core.pipeline.step_snapshot import StepSnapshot
+from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.source_bindings import (
     EMPTY_SOURCE_BINDINGS,
     ComponentSelector,
@@ -70,7 +73,7 @@ def test_compiler_captures_scoped_worker_count(pipeline_workers, expected_worker
     try:
         ObjectStateRegistry.register(global_state, _skip_snapshot=True)
         ObjectStateRegistry.register(pipeline_state, _skip_snapshot=True)
-        captured = PipelineCompiler._capture_pipeline_config(pipeline_state)
+        captured = pipeline_state.to_saved_resolved_object()
         assert captured.num_workers == expected_workers
         assignments = PipelineCompiler._calculate_worker_assignments(
             ["A", "B", "C", "D"], captured.num_workers
@@ -92,8 +95,9 @@ def test_axis_session_initialization_requires_pipeline_resolved_state() -> None:
         PipelineCompiler.initialize_step_plans_for_context
     ).parameters
 
-    assert "step_state_map" in parameters
-    assert "step_snapshots" in parameters
+    assert "pipeline" in parameters
+    assert "step_state_map" not in parameters
+    assert "step_snapshots" not in parameters
     assert "steps_already_resolved" not in parameters
     assert "_resolve_steps_for_context" not in vars(PipelineCompiler)
 
@@ -180,13 +184,12 @@ def _previous_step_and_external_source(image, dna):
     return image, dna
 
 
-def _snapshot(
+def _resolved_step(
     step: FunctionStep,
-    index: int,
     variable_components=(VariableComponents.SITE,),
     source_bindings=EMPTY_SOURCE_BINDINGS,
     input_source: InputSource = InputSource.PREVIOUS_STEP,
-) -> StepSnapshot:
+) -> AbstractStep:
     step.source_bindings = source_bindings
     step.processing_config = ProcessingConfig(
         variable_components=list(variable_components),
@@ -194,11 +197,7 @@ def _snapshot(
         input_source=input_source,
     )
     step.step_materialization_config = StepMaterializationConfig(enabled=False)
-    return StepSnapshot(
-        index=index,
-        scope_id=f"plate::functionstep_{index}",
-        step=step,
-    )
+    return step
 
 
 def _context() -> SimpleNamespace:
@@ -223,14 +222,13 @@ def _orchestrator(pipeline_config: PipelineConfig | None = None) -> SimpleNamesp
 
 def _compile_source_plans_for_contract(
     session: CompilationSession,
-    snapshot: StepSnapshot,
+    snapshot: AbstractStep,
     func,
     main_input_dependency: StepInputDependency = StepInputDependency.pipeline_start(),
 ):
     planner = SimpleNamespace(
         session=session,
         artifact_context=ArtifactDeclarationStepContext.empty(),
-        source_bindings_for_snapshot=(lambda value: value.step.source_bindings),
     )
     stage = PathPlannerArtifactStage(planner)
     execution_bindings = stage.source_bindings_for_contracts(
@@ -245,10 +243,10 @@ def _compile_source_plans_for_contract(
 
 
 class _EffectiveConfigContextOrchestrator:
-    def create_context(self, axis_id: str) -> ProcessingContext:
+    def create_context(self, axis_id: str, *, resolved_config) -> ProcessingContext:
         return ProcessingContext(
             axis_id=axis_id,
-            auto_add_output_plate_to_plate_manager=True,
+            auto_add_output_plate_to_plate_manager=resolved_config.auto_add_output_plate_to_plate_manager,
         )
 
 
@@ -271,67 +269,99 @@ def test_axis_compilation_request_preserves_effective_auto_add_flag():
     )
 
 
-def test_compilation_session_owns_step_snapshot_plan_invariants():
+def test_compilation_session_shares_resolved_pipeline_and_owns_axis_plans():
     step = FunctionStep(func=_identity, name="step")
-    step_state = object()
+    step_state = SimpleNamespace(scope_id="plate::functionstep_0")
     session = CompilationSession.from_context(
         context=_context(),
-        steps=[step],
         orchestrator=_orchestrator(),
         global_config=GlobalPipelineConfig(),
-        step_state_map={0: step_state},
-        snapshots=(_snapshot(step, 0),),
+        pipeline=ResolvedPipelineDefinition(
+            steps=(_resolved_step(step),), step_state_map={0: step_state}
+        ),
     )
 
     assert session.axis_id == "A01"
-    assert session.step(0) is step
-    assert session.step_state(0) is step_state
-    assert session.snapshot(0).step.name == "step"
+    assert session.pipeline.steps[0] is not step
+    assert step.func is _identity
+    captured = session.pipeline.steps[0].func
+    assert normalize_function_pattern(captured) is captured
+    assert next(captured.iter_items()).func is _identity
+    assert session.pipeline.step_state_map[0] is step_state
+    assert session.pipeline.steps[0].name == "step"
     assert session.plan(0).step_name == "step"
 
 
-def test_compilation_session_rejects_missing_snapshot():
-    step = FunctionStep(func=_identity, name="step")
+def test_resolved_declarations_reuse_contracts_but_keep_axis_and_author_epochs(monkeypatch):
+    from openhcs.core.pipeline.artifact_planning import extract_artifact_declarations
+    from openhcs.core.invocation_artifacts import InvocationContractPlan
 
-    with pytest.raises(ValueError, match="one StepSnapshot per step"):
-        CompilationSession.from_context(
-            context=_context(),
-            steps=[step],
-            orchestrator=_orchestrator(),
-            global_config=GlobalPipelineConfig(),
-            step_state_map={0: object()},
-            snapshots=(),
-        )
+    @artifact_inputs("grid_dimensions")
+    def needs_grid(image, grid_dimensions, *, sigma=1):
+        return image
 
+    kwargs = {"grid_dimensions": None, "sigma": 2}
+    authored = FunctionStep(
+        func={1: [(needs_grid, kwargs), (_identity, {"enabled": False})]},
+        name="Grid",
+    )
+    definition = [authored]
+    state = SimpleNamespace(scope_id="plate::functionstep_0")
+    from_callable = CallableContract.from_callable.__func__
+    calls = []
 
-def test_compilation_session_rejects_non_contiguous_snapshot_index():
-    step = FunctionStep(func=_identity, name="step")
+    def count_contracts(cls, func):
+        calls.append(func)
+        return from_callable(cls, func)
 
-    with pytest.raises(ValueError, match="index mismatch"):
-        CompilationSession.from_context(
-            context=_context(),
-            steps=[step],
-            orchestrator=_orchestrator(),
-            global_config=GlobalPipelineConfig(),
-            step_state_map={0: object()},
-            snapshots=(_snapshot(step, 1),),
-        )
+    monkeypatch.setattr(CallableContract, "from_callable", classmethod(count_contracts))
+    pipeline = PipelineCompiler._filter_enabled_steps(definition, {0: state})
+    captured = pipeline.steps[0].func
+    (item,) = tuple(captured.iter_items())
+    assert definition == [authored] and definition[0].func[1][0][1] is kwargs
+    assert captured.source_group_keys == (1,)
+    assert calls == [needs_grid]
+    assert normalize_function_pattern(captured) is captured
+    extract_artifact_declarations(captured)
+    injected = inject_artifact_input_values(captured, {"grid_dimensions": (3, 4)})
+    other_axis = inject_artifact_input_values(captured, {"grid_dimensions": (8, 9)})
+    compiled = compile_function_pattern(injected, {}, {})
+    assert calls == [needs_grid]
+    assert next(injected.iter_items()).contract is item.contract
+    assert next(other_axis.iter_items()).contract is item.contract
+    assert next(compiled.iter_invocations()).contract is item.contract
+    assert next(injected.iter_items()).kwargs_dict["grid_dimensions"] == (3, 4)
+    assert next(other_axis.iter_items()).kwargs_dict["grid_dimensions"] == (8, 9)
+    assert item.kwargs_dict == {"grid_dimensions": None, "sigma": 2}
+
+    replacement = from_callable(CallableContract, needs_grid)
+    provider_compiled = compile_function_pattern(
+        injected,
+        {},
+        {},
+        invocation_contract_provider=lambda _item, _context: InvocationContractPlan(
+            replacement
+        ),
+    )
+    assert next(provider_compiled.iter_invocations()).contract is replacement
+    kwargs["sigma"] = 7
+    assert item.kwargs_dict["sigma"] == 2
+    recaptured = ResolvedPipelineDefinition(definition, {0: state})
+    assert next(recaptured.steps[0].func.iter_items()).kwargs_dict["sigma"] == 7
+    assert calls == [needs_grid, needs_grid]
 
 
 def test_compiler_keeps_variable_components_as_stack_source():
     step = FunctionStep(func=_identity, name="step")
     session = CompilationSession.from_context(
         context=_context(),
-        steps=[step],
         orchestrator=_orchestrator(),
         global_config=GlobalPipelineConfig(),
-        step_state_map={0: object()},
-        snapshots=(
-            _snapshot(
-                step,
-                0,
-                variable_components=(VariableComponents.CHANNEL,),
+        pipeline=ResolvedPipelineDefinition(
+            steps=(
+                _resolved_step(step, variable_components=(VariableComponents.CHANNEL,)),
             ),
+            step_state_map={0: SimpleNamespace(scope_id="plate::functionstep_0")},
         ),
     )
 
@@ -382,18 +412,14 @@ def test_path_planner_source_binding_plan_comes_from_objectstate_snapshot():
         )
         ObjectStateRegistry.register(step_state, _skip_snapshot=True)
         resolved_step = step_state.to_saved_resolved_object()
-        snapshot = StepSnapshot(
-            index=0,
-            scope_id=step_state.scope_id,
-            step=resolved_step,
-        )
+        snapshot = resolved_step
         session = CompilationSession.from_context(
             context=_context(),
-            steps=[resolved_step],
             orchestrator=_orchestrator(pipeline_state.to_object()),
             global_config=GlobalPipelineConfig(),
-            step_state_map={0: step_state},
-            snapshots=(snapshot,),
+            pipeline=ResolvedPipelineDefinition(
+                steps=(snapshot,), step_state_map={0: step_state}
+            ),
         )
 
         execution_bindings, (source_binding_plan, _source_universe_plan) = (
@@ -406,9 +432,9 @@ def test_path_planner_source_binding_plan_comes_from_objectstate_snapshot():
     finally:
         ObjectStateRegistry.clear()
 
-    assert snapshot.step.source_bindings.bindings == (binding,)
-    assert snapshot.step.source_bindings.metadata_rules == (metadata_rule,)
-    assert snapshot.step.source_bindings.match_plan == match_plan
+    assert snapshot.source_bindings.bindings == (binding,)
+    assert snapshot.source_bindings.metadata_rules == (metadata_rule,)
+    assert snapshot.source_bindings.match_plan == match_plan
     assert execution_bindings.bindings == (binding,)
     assert source_binding_plan.bindings == (binding,)
     assert source_binding_plan.metadata_rules == (metadata_rule,)
@@ -443,20 +469,16 @@ def test_compiler_streaming_config_snapshot_preserves_inherited_port():
         )
         ObjectStateRegistry.register(step_state, _skip_snapshot=True)
         resolved_step = step_state.to_saved_resolved_object()
-        snapshot = StepSnapshot(
-            index=0,
-            scope_id=step_state.scope_id,
-            step=resolved_step,
-        )
+        snapshot = resolved_step
         context = _context()
         context.required_visualizers = []
         session = CompilationSession.from_context(
             context=context,
-            steps=[resolved_step],
             orchestrator=_orchestrator(pipeline_state.to_object()),
             global_config=global_config,
-            step_state_map={0: step_state},
-            snapshots=(snapshot,),
+            pipeline=ResolvedPipelineDefinition(
+                steps=(snapshot,), step_state_map={0: step_state}
+            ),
         )
 
         PipelineCompiler._collect_streaming_configs(session)
@@ -474,18 +496,17 @@ def test_compiler_streaming_config_snapshot_preserves_inherited_port():
 def test_compiler_disabled_source_bindings_stay_inert_without_contract_requirement():
     binding = NamedSourceBinding(alias="DNA")
     step = FunctionStep(func=_identity, name="source-bound")
-    snapshot = _snapshot(
-        step,
-        0,
-        source_bindings=StepSourceBindingsConfig(bindings=(binding,)),
+    snapshot = _resolved_step(
+        step, source_bindings=StepSourceBindingsConfig(bindings=(binding,))
     )
     session = CompilationSession.from_context(
         context=_context(),
-        steps=[step],
         orchestrator=_orchestrator(),
         global_config=GlobalPipelineConfig(),
-        step_state_map={0: object()},
-        snapshots=(snapshot,),
+        pipeline=ResolvedPipelineDefinition(
+            steps=(snapshot,),
+            step_state_map={0: SimpleNamespace(scope_id="plate::functionstep_0")},
+        ),
     )
 
     PipelineCompiler._supplement_step_plans(session)
@@ -496,19 +517,19 @@ def test_compiler_disabled_source_bindings_stay_inert_without_contract_requireme
 def test_path_planner_activates_declared_source_binding_for_pipeline_start():
     binding = NamedSourceBinding(alias="DNA")
     step = FunctionStep(func=_external_source_consumer, name="source-bound")
-    snapshot = _snapshot(
+    snapshot = _resolved_step(
         step,
-        0,
         source_bindings=StepSourceBindingsConfig(bindings=(binding,)),
         input_source=InputSource.PIPELINE_START,
     )
     session = CompilationSession.from_context(
         context=_context(),
-        steps=[step],
         orchestrator=_orchestrator(),
         global_config=GlobalPipelineConfig(),
-        step_state_map={0: object()},
-        snapshots=(snapshot,),
+        pipeline=ResolvedPipelineDefinition(
+            steps=(snapshot,),
+            step_state_map={0: SimpleNamespace(scope_id="plate::functionstep_0")},
+        ),
     )
 
     _execution_bindings, (source_binding_plan, _source_universe_plan) = (
@@ -530,9 +551,8 @@ def test_plate_export_contract_construction_projects_inputs_to_runtime_batch():
 
     binding = NamedSourceBinding(alias="DNA")
     step = FunctionStep(func=export_to_database, name="ExportToDatabase")
-    snapshot = _snapshot(
+    snapshot = _resolved_step(
         step,
-        0,
         variable_components=(),
         source_bindings=StepSourceBindingsConfig(
             enabled=True,
@@ -542,11 +562,12 @@ def test_plate_export_contract_construction_projects_inputs_to_runtime_batch():
     )
     session = CompilationSession.from_context(
         context=_context(),
-        steps=[step],
         orchestrator=_orchestrator(),
         global_config=GlobalPipelineConfig(),
-        step_state_map={0: object()},
-        snapshots=(snapshot,),
+        pipeline=ResolvedPipelineDefinition(
+            steps=(snapshot,),
+            step_state_map={0: SimpleNamespace(scope_id="plate::functionstep_0")},
+        ),
     )
     dependency_before_provider = session.plan(0).main_input_dependency
 
@@ -575,19 +596,19 @@ def test_plate_export_contract_construction_projects_inputs_to_runtime_batch():
 def test_path_planner_preserves_pipeline_start_bindings_for_implicit_main_flow():
     binding = NamedSourceBinding(alias="DNA")
     step = FunctionStep(func=_identity, name="source-bound measurement")
-    snapshot = _snapshot(
+    snapshot = _resolved_step(
         step,
-        0,
         source_bindings=StepSourceBindingsConfig(bindings=(binding,)),
         input_source=InputSource.PIPELINE_START,
     )
     session = CompilationSession.from_context(
         context=_context(),
-        steps=[step],
         orchestrator=_orchestrator(),
         global_config=GlobalPipelineConfig(),
-        step_state_map={0: object()},
-        snapshots=(snapshot,),
+        pipeline=ResolvedPipelineDefinition(
+            steps=(snapshot,),
+            step_state_map={0: SimpleNamespace(scope_id="plate::functionstep_0")},
+        ),
     )
     execution_bindings, (source_binding_plan, source_universe_plan) = (
         _compile_source_plans_for_contract(session, snapshot, _identity)
@@ -605,18 +626,17 @@ def test_path_planner_step_output_projects_only_exact_source_artifacts() -> None
         func=_previous_step_and_external_source,
         name="previous-step plus exact source",
     )
-    snapshot = _snapshot(
-        step,
-        0,
-        source_bindings=StepSourceBindingsConfig(bindings=(dna, unrelated)),
+    snapshot = _resolved_step(
+        step, source_bindings=StepSourceBindingsConfig(bindings=(dna, unrelated))
     )
     session = CompilationSession.from_context(
         context=_context(),
-        steps=[step],
         orchestrator=_orchestrator(),
         global_config=GlobalPipelineConfig(),
-        step_state_map={0: object()},
-        snapshots=(snapshot,),
+        pipeline=ResolvedPipelineDefinition(
+            steps=(snapshot,),
+            step_state_map={0: SimpleNamespace(scope_id="plate::functionstep_0")},
+        ),
     )
 
     execution_bindings, (source_binding_plan, _source_universe_plan) = (
@@ -646,9 +666,8 @@ def test_path_planner_preserves_metaxpress_primary_source_order() -> None:
         NamedSourceBinding(alias="Hoechst"),
     )
     step = FunctionStep(func=neurite_outgrowth_metaxpress, name="neurite")
-    snapshot = _snapshot(
+    snapshot = _resolved_step(
         step,
-        0,
         variable_components=(VariableComponents.CHANNEL,),
         source_bindings=StepSourceBindingsConfig(
             enabled=True,
@@ -661,11 +680,12 @@ def test_path_planner_preserves_metaxpress_primary_source_order() -> None:
     )
     session = CompilationSession.from_context(
         context=_context(),
-        steps=[step],
         orchestrator=_orchestrator(pipeline_config),
         global_config=GlobalPipelineConfig(),
-        step_state_map={0: object()},
-        snapshots=(snapshot,),
+        pipeline=ResolvedPipelineDefinition(
+            steps=(snapshot,),
+            step_state_map={0: SimpleNamespace(scope_id="plate::functionstep_0")},
+        ),
     )
     contract = CallableContract.from_callable(neurite_outgrowth_metaxpress)
 
@@ -703,9 +723,8 @@ def test_path_planner_execution_groups_use_resolved_source_bindings():
             component_identity=(ComponentSelector(AllComponents.CHANNEL, "2"),),
         ),
     )
-    snapshot = _snapshot(
+    snapshot = _resolved_step(
         step,
-        0,
         source_bindings=StepSourceBindingsConfig(
             enabled=True,
             bindings=bindings,
@@ -717,7 +736,7 @@ def test_path_planner_execution_groups_use_resolved_source_bindings():
     scope = PathPlannerExecutionGroups(planner).source_binding_scope_for_group_by(
         snapshot,
         GroupBy.CHANNEL,
-        source_bindings=snapshot.step.source_bindings,
+        source_bindings=snapshot.source_bindings,
     )
 
     assert scope.keys == ("1", "2")
@@ -742,9 +761,8 @@ def test_path_planner_execution_groups_preserve_declared_component_identity() ->
             component_identity=(ComponentSelector(AllComponents.CHANNEL, "MCP_AGP"),),
         ),
     )
-    snapshot = _snapshot(
+    snapshot = _resolved_step(
         step,
-        0,
         source_bindings=StepSourceBindingsConfig(
             enabled=True,
             bindings=bindings,
@@ -761,7 +779,7 @@ def test_path_planner_execution_groups_preserve_declared_component_identity() ->
     scope = PathPlannerExecutionGroups(planner).source_binding_scope_for_group_by(
         snapshot,
         GroupBy.CHANNEL,
-        source_bindings=snapshot.step.source_bindings,
+        source_bindings=snapshot.source_bindings,
     )
 
     assert scope.keys == ("MCP_DNA", "MCP_AGP")
@@ -772,9 +790,8 @@ def test_path_planner_freezes_only_contract_selected_source_bindings():
     binding = NamedSourceBinding(alias="DNA")
     unused_binding = NamedSourceBinding(alias="Unused")
     step = FunctionStep(func=_external_source_consumer, name="source-bound")
-    snapshot = _snapshot(
+    snapshot = _resolved_step(
         step,
-        0,
         source_bindings=StepSourceBindingsConfig(
             bindings=(binding, unused_binding),
             enabled=True,
@@ -782,11 +799,12 @@ def test_path_planner_freezes_only_contract_selected_source_bindings():
     )
     session = CompilationSession.from_context(
         context=_context(),
-        steps=[step],
         orchestrator=_orchestrator(),
         global_config=GlobalPipelineConfig(),
-        step_state_map={0: object()},
-        snapshots=(snapshot,),
+        pipeline=ResolvedPipelineDefinition(
+            steps=(snapshot,),
+            step_state_map={0: SimpleNamespace(scope_id="plate::functionstep_0")},
+        ),
     )
     execution_bindings, (source_binding_plan, _source_universe_plan) = (
         _compile_source_plans_for_contract(
@@ -848,5 +866,5 @@ def test_compiler_pipeline_scope_prevents_cross_pipeline_source_binding_inherita
             )
 
     assert first_scope != second_scope
-    assert first_resolved.snapshots[0].step.source_bindings.bindings == (binding,)
-    assert second_resolved.snapshots[0].step.source_bindings.is_empty
+    assert first_resolved.steps[0].source_bindings.bindings == (binding,)
+    assert second_resolved.steps[0].source_bindings.is_empty

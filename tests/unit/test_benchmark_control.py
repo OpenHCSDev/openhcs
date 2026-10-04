@@ -64,7 +64,7 @@ from openhcs.runtime.environment_provenance import (
     InstalledDistributionVersion,
     RuntimeEnvironmentSnapshot,
 )
-from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission
+from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission, ZMQExecutionRequestBuilder
 from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryExecutionParams
 
 
@@ -635,7 +635,7 @@ def test_measured_finalization_refuses_missing_server_timing_without_receipt(
         def require_completed_pipeline_execution(self, job_id: str):
             assert job_id == "job-1"
             return CompletedPipelineExecution(
-                submission=submission,
+                request=ZMQExecutionRequestBuilder.from_task(submission),
                 record=ExecutionRecord(
                     execution_id="execution-1",
                     plate_id=str(tmp_path),

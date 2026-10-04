@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 from enum import Enum
 from openhcs.core.memory import numpy
 from openhcs.core.public_api import public_names_from_objects
+from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     image_payload_data,
@@ -89,6 +90,7 @@ from openhcs.processing.backends.cellprofiler._backend import (
 from openhcs.processing.backends.cellprofiler.enum_attributes import (
     CellProfilerEnumAttributeMixin,
 )
+from openhcs.core.callable_contract import CallableContract
 from openhcs.core.artifacts import (
     ArtifactSpecCollection,
     ImageArtifactType,
@@ -123,7 +125,7 @@ class ExcessObjectHandling(CellProfilerEnumAttributeMixin, Enum):
 
 @numpy(contract=ProcessingContract.PURE_2D)
 def identify_primary_objects(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     min_diameter: int = 10,
     max_diameter: int = 40,
     exclude_size: bool = True,
@@ -645,7 +647,10 @@ class IdentifyPrimaryObjectsModule(
             artifact_outputs=artifact_outputs,
         )
         source = cls.primary_image_inputs(
-            cls.require_callable(invocation_key.function_name), artifact_inputs.specs
+            CallableContract.from_prepared_callable(
+                cls.require_callable(invocation_key.function_name)
+            ),
+            artifact_inputs.specs,
         )
         if len(source) != 1:
             raise ValueError("IdentifyPrimaryObjects diagnostics require one source image.")

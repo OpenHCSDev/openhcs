@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 from csv import DictReader
+from inspect import unwrap
 
 import numpy as np
 import pytest
@@ -57,6 +58,8 @@ from openhcs.core.source_bindings import (
     SourceFilterMatchType,
     SourceFilterSubject,
     SourceSelector,
+    SourceBindingMatchMethod,
+    SourceBindingMatchPlan,
     StepSourceBindingsConfig,
 )
 from openhcs.core.steps.function_step import FunctionStep
@@ -82,6 +85,10 @@ from openhcs.processing.backends.cellprofiler.thresholding import (
     CellProfilerThresholdMethod,
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.processing.custom_functions.runtime_registry import (
+    CustomFunctionRuntimeRegistry,
+    register_custom_function,
+)
 from openhcs.processing.materialization import CsvOptions, MaterializationSpec
 
 
@@ -134,6 +141,17 @@ def count_with_image_subject(image):
     return image, DataclassMeasurementColumnarRows(
         (CountRow(0, int(np.count_nonzero(image))),), row_type=CountRow
     )
+
+
+@pytest.fixture
+def registered_count_callable(valid):
+    function = count_with_image_subject if valid else count_without_subject
+    registered = register_custom_function(function)
+    try:
+        assert unwrap(registered) is unwrap(function)
+        yield registered
+    finally:
+        CustomFunctionRuntimeRegistry.remove(function.__name__)
 
 
 def _binding_name(module, plan_type, artifact_type):
@@ -307,15 +325,15 @@ def test_exact_secondary_selector_survives_authoring_compile_and_execution(tmp_p
     assert secondary.key.scope.value_text_for_component(AllComponents.CHANNEL) == (
         "1" if same_source else "2"
     )
-    primary_area = np.count_nonzero(object_label_dense_array(primary.value.data))
-    secondary_area = np.count_nonzero(object_label_dense_array(secondary.value.data))
+    primary_area = np.count_nonzero(object_label_dense_array(primary.data))
+    secondary_area = np.count_nonzero(object_label_dense_array(secondary.data))
     assert secondary_area > primary_area > 0
     [output] = invocation.artifact_output_plans
     [measurement] = store.find(name=output.name, artifact_type=MeasurementsArtifactType, axis_id="A01")
-    assert measurement.value.data.subject.object_name == "Cells"
+    assert measurement.data.subject.object_name == "Cells"
     image_name = "DNA" if same_source else "Actin"
     values = measurement_values_for_feature(
-        (measurement.value.data,),
+        (measurement.data,),
         f"Intensity_IntegratedIntensity_{image_name}",
         object_count=1,
         object_name="Cells",
@@ -329,12 +347,79 @@ def test_exact_secondary_selector_survives_authoring_compile_and_execution(tmp_p
 
 def test_omitted_secondary_selector_still_fails_closed(tmp_path):
     _write_plate(tmp_path)
-    with pytest.raises(ValueError, match="labels.*multiple exact artifact occurrences"):
+    with pytest.raises(ValueError, match="cannot reconstruct an exact module block"):
         _compile(
             tmp_path,
             _document(selected=False),
             GlobalPipelineConfig(num_workers=1, use_threading=True),
         )
+
+
+@pytest.mark.parametrize("producer_group_by", [GroupBy.NONE, GroupBy.CHANNEL])
+def test_explicit_measurement_rosters_survive_one_matched_source_anchor(
+    tmp_path, producer_group_by,
+):
+    from openhcs.core.steps.function_execution import FunctionStepExecutor
+
+    _write_plate(tmp_path)
+    original = _document()
+    for producer in original.pipeline_steps[:-1]:
+        producer.processing_config = replace(
+            producer.processing_config, group_by=producer_group_by,
+        )
+    original.pipeline_steps[-1] = _step(
+        measure_object_intensity,
+        "Measure both source images and object sets",
+        {
+            MeasureObjectIntensityModule.image_measurement_binding.require_parameter_name(): ("DNA", "Actin"),
+            MeasureObjectIntensityModule.object_measurement_binding.require_parameter_name(): ("Nuclei", "Cells"),
+        },
+    )
+    document = PipelineDocumentAuthority.from_values(
+        pipeline_config=replace(
+            original.pipeline_config,
+            source_bindings_config=LazySourceBindingsConfig(
+                bindings=(_source("DNA", "1"), _source("Actin", "2")),
+                match_plan=SourceBindingMatchPlan(method=SourceBindingMatchMethod.ORDER),
+            ),
+        ),
+        pipeline_steps=original.pipeline_steps,
+    )
+    document = PipelineDocumentAuthority.from_source(PipelineDocumentAuthority.render(document))
+    bundle = _compile(tmp_path, document, GlobalPipelineConfig(num_workers=1, use_threading=True))
+    context = bundle.runtime_contexts["A01"]
+    executor = FunctionStepExecutor(context, 2)
+    prepared = executor._prepare_groups(executor._detect_patterns())
+    assert prepared.total_count() == 1
+    invocation = next(executor.plan.compiled_function_pattern.iter_invocations())
+    assert tuple(
+        spec.name for spec in invocation.contract.artifact_inputs.of_artifact_type(ImageArtifactType)
+    ) == ("DNA", "Actin")
+    results = _execute(tmp_path, document, bundle)
+    assert results["A01"].is_success(), results["A01"].error_message
+    (output,) = invocation.artifact_output_plans
+    (measurement,) = context.runtime_value_store.find(
+        name=output.name, artifact_type=MeasurementsArtifactType, axis_id="A01",
+    )
+    for object_name in ("Nuclei", "Cells"):
+        (labels,) = context.runtime_value_store.find(name=object_name, axis_id="A01")
+        area = np.count_nonzero(object_label_dense_array(labels.data))
+        for image_name, integrated in (("DNA", 4.0), ("Actin", float(area))):
+            expected_features = {
+                "IntegratedIntensity": integrated,
+                "MeanIntensity": integrated / area,
+                "MinIntensity": 1.0 if integrated == area else 0.0,
+                "MaxIntensity": 1.0,
+            }
+            for feature, expected in expected_features.items():
+                values = measurement_values_for_feature(
+                    (measurement.data,),
+                    f"Intensity_{feature}_{image_name}",
+                    object_count=1,
+                    object_name=object_name,
+                    dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+                )
+                assert tuple(values) == pytest.approx((expected,))
 
 
 def test_omitted_selector_remains_valid_for_one_label_producer(tmp_path):
@@ -355,7 +440,9 @@ def test_omitted_selector_remains_valid_for_one_label_producer(tmp_path):
 
 
 @pytest.mark.parametrize("valid", [False, True])
-def test_headless_entrypoint_requires_subject_and_executes_corrected_rows(tmp_path, valid):
+def test_headless_entrypoint_requires_subject_and_executes_corrected_rows(
+    tmp_path, valid, registered_count_callable,
+):
     _write_plate(tmp_path)
     document = PipelineDocumentAuthority.from_values(
         pipeline_config=PipelineConfig(
@@ -365,7 +452,7 @@ def test_headless_entrypoint_requires_subject_and_executes_corrected_rows(tmp_pa
             ),
         ),
         pipeline_steps=[_step(
-            count_with_image_subject if valid else count_without_subject,
+            registered_count_callable,
             "Count pixels", {},
         )],
     )
@@ -409,8 +496,8 @@ def test_headless_entrypoint_requires_subject_and_executes_corrected_rows(tmp_pa
     [counts] = store.find(name="PixelCounts", axis_id="A01")
     [image] = store.find(name="CountedImage", axis_id="A01")
     assert image.key.artifact_type is ImageArtifactType
-    assert counts.value.data.subject.source_image_name == "CountedImage"
-    assert tuple(counts.value.data.rows.column_values("pixel_count")) == (4,)
+    assert counts.data.subject.source_image_name == "CountedImage"
+    assert tuple(counts.data.rows.column_values("pixel_count")) == (4,)
     step_plan = bundle.runtime_contexts["A01"].step_plans[0]
     [csv_path] = step_plan.artifact_analysis_output_dir.glob(
         f"*_{counts.key.name}_step{step_plan.step_index}_details.csv"
@@ -418,4 +505,4 @@ def test_headless_entrypoint_requires_subject_and_executes_corrected_rows(tmp_pa
     with csv_path.open(newline="") as stream:
         [persisted] = DictReader(stream)
     assert persisted["pixel_count"] == "4"
-    assert persisted["source_image_name"] == counts.value.data.subject.source_image_name
+    assert persisted["source_image_name"] == counts.data.subject.source_image_name

@@ -1,0 +1,403 @@
+{
+  "status": "ONE_CURRENT_ILLUM3_DIAGNOSTIC_AND_STRICT_SCIENCE_PASS",
+  "source_head": "4c0d62e45c8afb85e34b69d7279cd00710f519b5",
+  "all_handles_terminal": true,
+  "pipeline_runs": 1,
+  "driver_session": 79456,
+  "science_v3_session": 72671,
+  "original_reader_red_session": 84897,
+  "public_diagnostic_seconds": {
+    "compile_seconds": 0.5973687171936035,
+    "execute_seconds": 0.42289090156555176,
+    "total_seconds": 1.419051312841475,
+    "other_seconds": 0.39879169408231974
+  },
+  "raw_callable_boundary_seconds": 0.11173972394317389,
+  "execution_outside_raw_seconds": 0.3033128920942545,
+  "raw_callables": [
+    {
+      "owner": "RuntimeCallableInvocation.call",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.primary_objects.identify_primary_objects;view=1",
+      "phase": "declared_callable_boundary",
+      "calls": 1,
+      "inclusive": 0.02976729581132531,
+      "exclusive": 0.02976729581132531
+    },
+    {
+      "owner": "RuntimeCallableInvocation.call",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.morphology.expand_or_shrink_objects;view=1",
+      "phase": "declared_callable_boundary",
+      "calls": 1,
+      "inclusive": 0.02096757711842656,
+      "exclusive": 0.02096757711842656
+    },
+    {
+      "owner": "RuntimeCallableInvocation.call",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.image_math.image_math;view=1",
+      "phase": "declared_callable_boundary",
+      "calls": 1,
+      "inclusive": 0.001754844095557928,
+      "exclusive": 0.001754844095557928
+    },
+    {
+      "owner": "RuntimeCallableInvocation.call",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.image_geometry.mask_image;view=1",
+      "phase": "declared_callable_boundary",
+      "calls": 2,
+      "inclusive": 0.0009737634100019932,
+      "exclusive": 0.0009737634100019932
+    },
+    {
+      "owner": "RuntimeCallableInvocation.call",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.illumination.correct_illumination_calculate;view=1",
+      "phase": "declared_callable_boundary",
+      "calls": 2,
+      "inclusive": 0.05728212045505643,
+      "exclusive": 0.05728212045505643
+    },
+    {
+      "owner": "RuntimeCallableInvocation.call",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.illumination.correct_illumination_apply;view=1",
+      "phase": "declared_callable_boundary",
+      "calls": 2,
+      "inclusive": 0.0008326279930770397,
+      "exclusive": 0.0008326279930770397
+    },
+    {
+      "owner": "RuntimeCallableInvocation.call",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.save_images.save_images;view=1",
+      "phase": "declared_callable_boundary",
+      "calls": 2,
+      "inclusive": 0.00016149505972862244,
+      "exclusive": 0.00016149505972862244
+    }
+  ],
+  "compile_and_execution_source_owner_partition": {
+    "compile_only": {
+      "seconds": 0.5882621230557561,
+      "sum_exclusive": 0.5882621230557561,
+      "ObjectState_disjoint_exclusive": 0.3834735373966396,
+      "owners": [
+        {
+          "owner": "ObjectState._compute_resolved_snapshot",
+          "dimensions": "",
+          "phase": "compiler_config:_compute_resolved_snapshot",
+          "calls": 46,
+          "inclusive": 0.2531436877325177,
+          "exclusive": 0.2531436877325177
+        },
+        {
+          "owner": "ObjectState.__init__",
+          "dimensions": "",
+          "phase": "compiler_config:__init__",
+          "calls": 23,
+          "inclusive": 0.35587291372939944,
+          "exclusive": 0.10272922599688172
+        },
+        {
+          "owner": "ObjectState._reconstruct_from_resolved",
+          "dimensions": "",
+          "phase": "compiler_config:_reconstruct_from_resolved",
+          "calls": 343,
+          "inclusive": 0.05295955156907439,
+          "exclusive": 0.027533238753676414
+        },
+        {
+          "owner": "ObjectState.to_saved_resolved_object",
+          "dimensions": "",
+          "phase": "compiler_config:to_saved_resolved_object",
+          "calls": 21,
+          "inclusive": 0.027600623667240143,
+          "exclusive": 6.738491356372833e-05
+        },
+        {
+          "owner": "PipelineOrchestrator.get_effective_config",
+          "dimensions": "",
+          "phase": "compiler_config:get_effective_config",
+          "calls": 10,
+          "inclusive": 0.19238800555467606,
+          "exclusive": 8.529284968972206e-05
+        },
+        {
+          "owner": "PipelineOrchestrator.create_context",
+          "dimensions": "",
+          "phase": "compiler_config:create_context",
+          "calls": 3,
+          "inclusive": 0.04923866596072912,
+          "exclusive": 0.0002901456318795681
+        },
+        {
+          "owner": "PipelineCompiler._axis_values_to_process",
+          "dimensions": "",
+          "phase": "compiler_config:_axis_values_to_process",
+          "calls": 1,
+          "inclusive": 0.014383771922439337,
+          "exclusive": 7.574260234832764e-05
+        },
+        {
+          "owner": "PipelineCompiler._register_and_resolve_pipeline_once",
+          "dimensions": "",
+          "phase": "compiler_config:_register_and_resolve_pipeline_once",
+          "calls": 1,
+          "inclusive": 0.19153947802260518,
+          "exclusive": 0.0021261521615087986
+        },
+        {
+          "owner": "PipelineCompiler._capture_pipeline_config",
+          "dimensions": "",
+          "phase": "compiler_config:_capture_pipeline_config",
+          "calls": 1,
+          "inclusive": 0.0017600241117179394,
+          "exclusive": 2.52528116106987e-06
+        },
+        {
+          "owner": "PipelineCompiler._resolve_global_step_axis_filters",
+          "dimensions": "",
+          "phase": "compiler_config:_resolve_global_step_axis_filters",
+          "calls": 1,
+          "inclusive": 0.013955585192888975,
+          "exclusive": 0.00047726836055517197
+        },
+        {
+          "owner": "PipelineCompiler._configure_input_conversion_if_needed",
+          "dimensions": "",
+          "phase": "compiler_config:_configure_input_conversion_if_needed",
+          "calls": 1,
+          "inclusive": 0.013350545894354582,
+          "exclusive": 4.2282044887542725e-06
+        },
+        {
+          "owner": "PipelineCompiler.initialize_step_plans_for_context",
+          "dimensions": "",
+          "phase": "compiler_config:initialize_step_plans_for_context",
+          "calls": 1,
+          "inclusive": 0.14918227866292,
+          "exclusive": 0.1358146509155631
+        },
+        {
+          "owner": "PipelineCompiler.declare_zarr_stores",
+          "dimensions": "",
+          "phase": "compiler_config:declare_zarr_stores",
+          "calls": 1,
+          "inclusive": 0.013443371281027794,
+          "exclusive": 4.089716821908951e-05
+        },
+        {
+          "owner": "PipelineCompiler._finalize_compilation",
+          "dimensions": "",
+          "phase": "compiler_config:_finalize_compilation",
+          "calls": 1,
+          "inclusive": 0.013896864838898182,
+          "exclusive": 0.00011343369260430336
+        },
+        {
+          "owner": "PipelineCompiler.compile_pipelines",
+          "dimensions": "",
+          "phase": "compiler_config:compile_pipelines",
+          "calls": 1,
+          "inclusive": 0.437725986354053,
+          "exclusive": 0.02060367353260517
+        }
+      ]
+    },
+    "execution": {
+      "seconds": 0.4150526160374284,
+      "sum_exclusive": 0.4150526160374284,
+      "ObjectState_disjoint_exclusive": 0.05523737985640764,
+      "owners": [
+        {
+          "owner": "ObjectState._compute_resolved_snapshot",
+          "dimensions": "",
+          "phase": "compiler_config:_compute_resolved_snapshot",
+          "calls": 8,
+          "inclusive": 0.038815660402178764,
+          "exclusive": 0.038815660402178764
+        },
+        {
+          "owner": "ObjectState.__init__",
+          "dimensions": "",
+          "phase": "compiler_config:__init__",
+          "calls": 4,
+          "inclusive": 0.0482184044085443,
+          "exclusive": 0.009402744006365538
+        },
+        {
+          "owner": "ObjectState._reconstruct_from_resolved",
+          "dimensions": "",
+          "phase": "compiler_config:_reconstruct_from_resolved",
+          "calls": 92,
+          "inclusive": 0.013413879089057446,
+          "exclusive": 0.0070056007243692875
+        },
+        {
+          "owner": "ObjectState.to_saved_resolved_object",
+          "dimensions": "",
+          "phase": "compiler_config:to_saved_resolved_object",
+          "calls": 4,
+          "inclusive": 0.00701897544786334,
+          "exclusive": 1.3374723494052887e-05
+        },
+        {
+          "owner": "PipelineOrchestrator.get_effective_config",
+          "dimensions": "",
+          "phase": "compiler_config:get_effective_config",
+          "calls": 4,
+          "inclusive": 0.055267936550080776,
+          "exclusive": 3.055669367313385e-05
+        },
+        {
+          "owner": "PipelineOrchestrator.create_context",
+          "dimensions": "",
+          "phase": "compiler_config:create_context",
+          "calls": 1,
+          "inclusive": 0.01351372292265296,
+          "exclusive": 6.313808262348175e-05
+        }
+      ]
+    }
+  },
+  "numba": {
+    "native_event_authority": {
+      "path": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/numba/core/event.py",
+      "version": "0.67.0",
+      "sha256": "ab878d495f8532794bfe36f39b9d6c4e256abb669c8fa7bbe2a88f06d0b4a278",
+      "dispatcher_path": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/numba/core/dispatcher.py",
+      "dispatcher_sha256": "9fd050b1095cd6a9fef90772aa065d51328583b167b52393f7be6b615b99953b"
+    },
+    "event_admission": true,
+    "root_flushes_complete": true,
+    "aggregate_bytes": 3107,
+    "native_compile_start_events": 0,
+    "actual_cumulative_counts_by_file": [
+      {
+        "path": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/regions/numba-events-2078555-0001.json",
+        "counts": {},
+        "complete": true
+      },
+      {
+        "path": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/regions/numba-events-2078682-0001.json",
+        "counts": {},
+        "complete": true
+      },
+      {
+        "path": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/regions/numba-events-2078682-0002.json",
+        "counts": {},
+        "complete": true
+      },
+      {
+        "path": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/regions/numba-events-2078682-0003.json",
+        "counts": {},
+        "complete": true
+      }
+    ],
+    "scope": "NO original numba:compile START/END events observed in either process/startup/timed roots/outside roots in THIS run. Cache loads emit no native compile event. Does not establish prior timing-variance cause or missing polynomial warmup."
+  },
+  "science": {
+    "comparisons": 2,
+    "image_nonvacuity": "All2authored ReferenceExportPlan artifacts compared with positive pixel counts to both retainednative reps",
+    "measurement_differences": 0,
+    "image_differences": 0,
+    "inventory": "ALLactualfiles accounted via unchanged nominal policy; no unknown exclusions",
+    "native_scope": "TRANSITIVE retainednative reps, not rerun/currentnativeclocks",
+    "reader_only_environment_effect_key_names": [
+      "KMP_DUPLICATE_LIB_OK",
+      "SPARSE_AUTO_DENSIFY",
+      "TF_FORCE_GPU_ALLOW_GROWTH",
+      "XLA_PYTHON_CLIENT_PREALLOCATE"
+    ],
+    "source_env_guard": "Exact original full controller --prepare guard before/after using original raw launch env isolated from reader-only imports; no key filters/rewrite or bypass. Original failed in-reader custody invocation retained."
+  },
+  "custody": {
+    "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/handoff.json": {
+      "sha256": "7f8f1e5d977bd4fabc5b785be7181be4bfe28b1000b8a9d00b7491673e506787",
+      "bytes": 5211
+    },
+    "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/controller.py": {
+      "sha256": "e00e1cb2e195842f780ed289e97700db9fd52d7046414079fb186f90a7f98df5",
+      "bytes": 19881
+    },
+    "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/controls.json": {
+      "sha256": "358cd70c391cdaae89d5f2ba8514de606ccabcf43be3507dadeba7ae2341f7d1",
+      "bytes": 1520
+    },
+    "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/controls-v2.log": {
+      "sha256": "d4c3a95ea114ad14b9f1d4759b8959f1bdf67ffb520bd391efe2758ca2d30072",
+      "bytes": 1390
+    },
+    "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/site/sitecustomize.py": {
+      "sha256": "1a30063decce3e67ef2e0f3c033fb4f4cb9e6acf7e4c2b43b114c433f62c1bbe",
+      "bytes": 14423
+    },
+    "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/site/openhcs_numba_compile_events_v1.py": {
+      "sha256": "2e6863e7d78709cabddf6b34cb5fba1a8e27daeb39f0ae3e9134c15a3c45f421",
+      "bytes": 4548
+    },
+    "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/source-freeze.json": {
+      "sha256": "86646806122c73d38de2e9d42efa0bffd471ad0a1db36d7d33ea83dfcbfeb0fc",
+      "bytes": 1185307
+    },
+    "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/observations.json": {
+      "sha256": "c8b1e3f0704682e2cad20b7a5e27b1651e38b677e74f31d6477eb163185106fd",
+      "bytes": 4831
+    },
+    "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/science_validator.py": {
+      "sha256": "710f87213f2ebff207aa9c0c629cdb59639479c96a32656f1f3ec4adfd57d669",
+      "bytes": 5552
+    },
+    "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/science_validator_v3.py": {
+      "sha256": "e71981fd54cc6a3f6e3d03c797badff250cc5c7e3fdddf1401fb3378e17b8aa4",
+      "bytes": 7616
+    },
+    "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/science-first-red.json": {
+      "sha256": "de6ae869a4f1fe6eabfa4fc5b5ee87ba052462f26302d0a7a334c7b2c4276c80",
+      "bytes": 872
+    },
+    "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/science-first-red-environment-audit.json": {
+      "sha256": "4fa0497da2158f883c3af73aaea0b906a63f0d3887d7f82ee89e9c8afc03db20",
+      "bytes": 1285
+    },
+    "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/science-v3.json": {
+      "sha256": "607c68f213baddf4c5dbec97b39efee87451ac16188eadf1ebdea578d5bee9e5",
+      "bytes": 15478
+    },
+    "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/science-v3-controller-checkpoint-1.log": {
+      "sha256": "04a54993c97b3c3f46659e451ec5e2f8cd944fae12ab9f35abf49ffef1707c00",
+      "bytes": 1145
+    },
+    "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/science-v3-controller-checkpoint-2.log": {
+      "sha256": "04a54993c97b3c3f46659e451ec5e2f8cd944fae12ab9f35abf49ffef1707c00",
+      "bytes": 1145
+    },
+    "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/regions/region-2078682-140361443509952-0001.json": {
+      "sha256": "cc69523fdae5fe92c4e96ec59609a19eb889fe744316b6ed8419ed0398313ab9",
+      "bytes": 15563
+    },
+    "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/regions/region-2078682-140361443509952-0002.json": {
+      "sha256": "f3c9e01926b069a0103ebb9c70d638a4944c1f429b809b3a7b2e9755efbf80e5",
+      "bytes": 25031
+    },
+    "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/regions/numba-events-2078555-0001.json": {
+      "sha256": "df39cc4538c692418c9590759ee2be67c03e712d31b38e59909a2acc414299da",
+      "bytes": 712
+    },
+    "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/regions/numba-events-2078682-0001.json": {
+      "sha256": "0cc87c64a35b572441cac162e7a953685af095892641222cef4b52a71d7ace03",
+      "bytes": 843
+    },
+    "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/regions/numba-events-2078682-0002.json": {
+      "sha256": "a80829256ff2e4f13f8cb14257b45138aacefb6e2726339b64be55d585c90fde",
+      "bytes": 840
+    },
+    "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/regions/numba-events-2078682-0003.json": {
+      "sha256": "c615a8d1c29b5da41bba3237cd1ee02e6f8eba72af2f73290f11ec684571661b",
+      "bytes": 712
+    }
+  },
+  "determining_limits": [
+    "One instrumented diagnostic, no causal code gain/speedup ratio or replacement of qualified two-repeat means.",
+    "Current compile .588262 root: state owners .383474s disjoint absolute envelope, includes mandatory distinct live/saved resolution and reconstruction. Late effective context reads .192388s inclusive subset; cannot claim both.",
+    "Execution outside RAW .303313s has actual init/config/record/publication/finalization/worker work; source-state .055237s separate. No single small lane closes existing qualified total gap.",
+    "Prior Illum execution .686775/.385197 spread .301578 remains UNATTRIBUTED; zero native compile events here cannot explain that historical difference.",
+    "No source changes, numerical algorithm patch, environment install, fresh native run, callback/validation/cache policy change, or benchmark clock exclusions."
+  ]
+}

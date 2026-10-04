@@ -1,0 +1,35 @@
+{
+  "status": "READER_IMPORT_ENVIRONMENT_EFFECT_IDENTIFIED",
+  "initial_full_environment_matches_driver_freeze": true,
+  "changes": [
+    {
+      "import": "benchmark.adapters.openhcs",
+      "changed_key_names": [
+        "KMP_DUPLICATE_LIB_OK",
+        "SPARSE_AUTO_DENSIFY",
+        "TF_FORCE_GPU_ALLOW_GROWTH",
+        "XLA_PYTHON_CLIENT_PREALLOCATE"
+      ]
+    }
+  ],
+  "source_environment_remains_driver_authoritative": "Actual driver pre/post full environment gate PASS; scientific reader changes cannot be treated as driver changes. No raw values disclosed.",
+  "per_key_hashes": {
+    "KMP_DUPLICATE_LIB_OK": {
+      "before": null,
+      "after": "3cbc87c7681f34db4617feaa2c8801931bc5e42d8d0f560e756dd4cd92885f18"
+    },
+    "SPARSE_AUTO_DENSIFY": {
+      "before": null,
+      "after": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b"
+    },
+    "TF_FORCE_GPU_ALLOW_GROWTH": {
+      "before": null,
+      "after": "b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b"
+    },
+    "XLA_PYTHON_CLIENT_PREALLOCATE": {
+      "before": null,
+      "after": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa"
+    }
+  },
+  "after_reader_import_environment_sha256": "4415a2780ee53da969d5dc39ef698b0e50675d444afc6629d8a68dca42b1b514"
+}

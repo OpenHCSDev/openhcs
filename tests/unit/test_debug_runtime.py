@@ -130,12 +130,12 @@ from openhcs.core.function_patterns import (
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
-    SourceBindingRuntimeContext,
 )
 from openhcs.core.source_load_plan import SourceLoadPlan
 from openhcs.core.steps.function_runtime import (
     ComponentArtifactPlans,
-    FunctionRuntimeScope,
+    PatternGroupData,
+    PatternGroupRuntime,
 )
 from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
@@ -338,11 +338,12 @@ class DebugRuntimeFixture:
         artifact_outputs=None,
         runtime_plane_index: int = 0,
         runtime_plane_count: int = 1,
-        source_binding_context: SourceBindingRuntimeContext | None = None,
     ):
         resolved_artifact_inputs = {} if artifact_inputs is None else artifact_inputs
         resolved_artifact_outputs = {} if artifact_outputs is None else artifact_outputs
-        runtime_scope = FunctionRuntimeScope(
+        runtime_scope = PatternGroupData(
+            matching_files=[f"input-{index}.tif" for index in range(runtime_plane_count)],
+            main_data_stack=initial_data_stack,
             context=context,
             execution_plan=cls.execution_plan(
                 artifact_inputs=resolved_artifact_inputs,
@@ -356,15 +357,10 @@ class DebugRuntimeFixture:
                 inputs=resolved_artifact_inputs,
                 outputs=resolved_artifact_outputs,
             ),
-            source_binding_context=(
-                SourceBindingRuntimeContext.empty()
-                if source_binding_context is None
-                else source_binding_context
-            ),
             runtime_plane_index=runtime_plane_index,
             runtime_plane_count=runtime_plane_count,
         )
-        return runtime_scope.execute_chain(initial_data_stack)
+        return PatternGroupRuntime.execute_chain(runtime_scope)
 
     @classmethod
     def cursor(cls) -> DebugCursor:

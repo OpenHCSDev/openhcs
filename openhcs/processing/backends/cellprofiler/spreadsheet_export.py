@@ -35,7 +35,6 @@ from openhcs.core.pipeline.function_contracts import (
     execution_scope,
     runtime_bound_parameters,
 )
-from openhcs.core.runtime_artifact_queries import MeasurementTableUnion
 from openhcs.core.runtime_tabular_values import (
     FieldSpec,
 )
@@ -58,7 +57,7 @@ from openhcs.core.source_image_provenance import (
     source_component_metadata_consensus,
 )
 from openhcs.core.source_metadata import (
-    SourceMetadataRoleView,
+    SourceMetadataFields,
 )
 from openhcs.interop.cellprofiler.image_set_numbering import (
     CellProfilerImageSetNumbering,
@@ -72,7 +71,6 @@ from openhcs.interop.cellprofiler.module_artifact_declarations import (
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,
-    cellprofiler_projected_measurement_feature_name,
 )
 from openhcs.interop.cellprofiler.parser import ModuleBlock
 from openhcs.interop.cellprofiler.setting_names import (
@@ -468,13 +466,13 @@ def _measurement_tables(
             for axis_records in records_by_axis.values()
             for record in axis_records
         )
-        tables = tuple(cast(MeasurementTable, record.value.data) for record in records)
+        tables = tuple(cast(MeasurementTable, record.data) for record in records)
         all_tables.extend(tables)
         slice_axis = MeasurementRowAxisField.SLICE_INDEX
         row_domains = tuple(
             MeasurementRowsAxisProjection.from_rows(table.rows) for table in tables
         )
-        MeasurementTableUnion(spec.name, tables).row_axis_domain(slice_axis)
+        MeasurementTable.shared_row_axis_domain(spec.name, tables, slice_axis)
         for record, table, row_domain in zip(
             records,
             tables,
@@ -487,12 +485,12 @@ def _measurement_tables(
                 slice_indices=row_domain.present_axis_values(slice_axis.value),
                 owner=table.name,
             )
-            accumulator.add(
+            accumulator.add_declared_rows(
                 image_numbers.project_measurement_rows(
                     scope=record.key.scope,
                     table=table,
                 ),
-                cellprofiler_projected_measurement_feature_name,
+                CELLPROFILER_MEASUREMENT_DIALECT,
                 default_subject=_measurement_subject_name(table),
                 default_scope=table.subject.scope,
                 source_image_name=table.source_image_name,
@@ -511,9 +509,9 @@ def _measurement_tables(
                     [],
                 ).append(metadata)
     for table in CellProfilerModule.derive_experiment_measurement_tables(all_tables):
-        accumulator.add(
+        accumulator.add_declared_rows(
             table.rows,
-            cellprofiler_projected_measurement_feature_name,
+            CELLPROFILER_MEASUREMENT_DIALECT,
             default_subject=_measurement_subject_name(table),
             default_scope=table.subject.scope,
             source_image_name=table.source_image_name,
@@ -543,7 +541,7 @@ def _measurement_tables(
                 if field_name != MeasurementRowAxisField.SLICE_INDEX.value
             )
         )
-        accumulator.add(
+        accumulator.add_declared_rows(
             MeasurementSparseColumnarRows.from_rows(
                 source_metadata_rows,
                 fields=(
@@ -554,7 +552,7 @@ def _measurement_tables(
                     ),
                 ),
             ),
-            cellprofiler_projected_measurement_feature_name,
+            CELLPROFILER_MEASUREMENT_DIALECT,
             default_subject="Image",
             default_scope=MeasurementScope.IMAGE,
         )
@@ -583,8 +581,7 @@ def _source_metadata_measurement_rows(
         ).source_component_metadata
         if metadata is None:
             continue
-        role_view = SourceMetadataRoleView(metadata)
-        original_metadata = dict(role_view.original_items())
+        original_metadata = dict(SourceMetadataFields.original_items(metadata))
         if original_metadata:
             rows.append((image_numbers_by_slice[slice_index], original_metadata))
     return tuple(rows)
@@ -599,7 +596,7 @@ def _relationship_rows(
         artifact_batch,
         RelationshipsArtifactType,
     ):
-        relationship = cast(ObjectRelationship, record.value.data)
+        relationship = cast(ObjectRelationship, record.data)
         image_numbers_by_slice = image_numbers.for_source_slices(
             scope=record.key.scope,
             provenance=relationship.source_provenance,

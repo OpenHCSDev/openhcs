@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
+
 from dataclasses import fields, replace
 import importlib
 from types import MappingProxyType, SimpleNamespace
@@ -642,7 +644,6 @@ def test_cellprofiler_provider_reconstructs_exact_contract_from_public_step() ->
     )
     from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.pipeline.compilation_session import CompilationSession
-    from openhcs.core.pipeline.step_snapshot import StepSnapshot
     from openhcs.core.source_bindings import (
         NamedSourceBinding,
         StepSourceBindingsConfig,
@@ -680,9 +681,7 @@ def test_cellprofiler_provider_reconstructs_exact_contract_from_public_step() ->
             ),
         ),
     )
-    snapshot = StepSnapshot(
-        index=0, scope_id="provider-test::functionstep_0", step=step
-    )
+    snapshot = step
     session = CompilationSession.from_context(
         context=ProcessingContext(
             step_plans={
@@ -695,11 +694,12 @@ def test_cellprofiler_provider_reconstructs_exact_contract_from_public_step() ->
             },
             axis_id="A01",
         ),
-        steps=(step,),
         orchestrator=SimpleNamespace(pipeline_config=PipelineConfig()),
         global_config=GlobalPipelineConfig(),
-        step_state_map={0: object()},
-        snapshots=(snapshot,),
+        pipeline=ResolvedPipelineDefinition(
+            steps=(snapshot,),
+            step_state_map={0: SimpleNamespace(scope_id="plate::functionstep_0")},
+        ),
     )
     callable_state = vars(color_to_gray).copy()
 
@@ -738,7 +738,6 @@ def test_cellprofiler_provider_advances_native_artifacts_through_generic_graph()
     from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
     from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.pipeline.compilation_session import CompilationSession
-    from openhcs.core.pipeline.step_snapshot import StepSnapshot
     from openhcs.core.steps.function_step import FunctionStep
     from openhcs.interop.cellprofiler.compile_time_contracts import (
         CellProfilerInvocationContractProvider,
@@ -759,13 +758,7 @@ def test_cellprofiler_provider_advances_native_artifacts_through_generic_graph()
         name="ColorToGray",
     )
 
-    def snapshot(index: int, step: FunctionStep) -> StepSnapshot:
-        return StepSnapshot(
-            index=index, scope_id=f"mixed-provider::functionstep_{index}", step=step
-        )
-
     steps = (native_step, cellprofiler_step)
-    snapshots = tuple(snapshot(index, step) for index, step in enumerate(steps))
     plans = {
         index: CompiledStepPlan(
             step_index=index,
@@ -777,11 +770,15 @@ def test_cellprofiler_provider_advances_native_artifacts_through_generic_graph()
     }
     session = CompilationSession.from_context(
         context=ProcessingContext(step_plans=plans, axis_id="A01"),
-        steps=steps,
         orchestrator=SimpleNamespace(pipeline_config=PipelineConfig()),
         global_config=GlobalPipelineConfig(),
-        step_state_map={0: object(), 1: object()},
-        snapshots=snapshots,
+        pipeline=ResolvedPipelineDefinition(
+            steps=steps,
+            step_state_map={
+                0: SimpleNamespace(scope_id="plate::functionstep_0"),
+                1: SimpleNamespace(scope_id="plate::functionstep_1"),
+            },
+        ),
     )
 
     provider = CellProfilerInvocationContractProviderFactory.provider_for_session(
@@ -812,7 +809,6 @@ def test_cellprofiler_provider_leaves_native_same_name_callable_unclaimed() -> N
     from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
     from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.pipeline.compilation_session import CompilationSession
-    from openhcs.core.pipeline.step_snapshot import StepSnapshot
     from openhcs.core.steps.function_step import FunctionStep
     from openhcs.interop.cellprofiler.compile_time_contracts import (
         CellProfilerInvocationContractProviderFactory,
@@ -820,11 +816,7 @@ def test_cellprofiler_provider_leaves_native_same_name_callable_unclaimed() -> N
     from openhcs.processing.backends.processors.numpy_processor import crop
 
     step = FunctionStep(func=crop, name="Native NumPy crop")
-    snapshot = StepSnapshot(
-        index=0,
-        scope_id="native-crop-provider::functionstep_0",
-        step=step,
-    )
+    snapshot = step
     session = CompilationSession.from_context(
         context=ProcessingContext(
             step_plans={
@@ -837,11 +829,12 @@ def test_cellprofiler_provider_leaves_native_same_name_callable_unclaimed() -> N
             },
             axis_id="A01",
         ),
-        steps=(step,),
         orchestrator=SimpleNamespace(pipeline_config=PipelineConfig()),
         global_config=GlobalPipelineConfig(),
-        step_state_map={0: object()},
-        snapshots=(snapshot,),
+        pipeline=ResolvedPipelineDefinition(
+            steps=(snapshot,),
+            step_state_map={0: SimpleNamespace(scope_id="plate::functionstep_0")},
+        ),
     )
 
     provider = CellProfilerInvocationContractProviderFactory.provider_for_session(
@@ -1125,7 +1118,6 @@ def test_cellprofiler_provider_rejects_under_specified_one_image_align() -> None
     )
     from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.pipeline.compilation_session import CompilationSession
-    from openhcs.core.pipeline.step_snapshot import StepSnapshot
     from openhcs.core.source_bindings import (
         NamedSourceBinding,
         StepSourceBindingsConfig,
@@ -1152,11 +1144,7 @@ def test_cellprofiler_provider_rejects_under_specified_one_image_align() -> None
             ),
         ),
     )
-    snapshot = StepSnapshot(
-        index=0,
-        scope_id="align-cardinality::functionstep_0",
-        step=step,
-    )
+    snapshot = step
     session = CompilationSession.from_context(
         context=ProcessingContext(
             step_plans={
@@ -1169,11 +1157,12 @@ def test_cellprofiler_provider_rejects_under_specified_one_image_align() -> None
             },
             axis_id="A01",
         ),
-        steps=(step,),
         orchestrator=SimpleNamespace(pipeline_config=PipelineConfig()),
         global_config=GlobalPipelineConfig(),
-        step_state_map={0: object()},
-        snapshots=(snapshot,),
+        pipeline=ResolvedPipelineDefinition(
+            steps=(snapshot,),
+            step_state_map={0: SimpleNamespace(scope_id="plate::functionstep_0")},
+        ),
     )
 
     with pytest.raises(
@@ -1255,7 +1244,6 @@ def test_calculate_math_provider_keeps_object_identity_and_output_name_public() 
     from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
     from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.pipeline.compilation_session import CompilationSession
-    from openhcs.core.pipeline.step_snapshot import StepSnapshot
     from openhcs.core.source_bindings import (
         NamedSourceBinding,
         SourceProjectionRole,
@@ -1303,14 +1291,7 @@ def test_calculate_math_provider_keeps_object_identity_and_output_name_public() 
         name="CalculateMath",
         source_bindings=measurement_step.source_bindings,
     )
-    snapshots = tuple(
-        StepSnapshot(
-            index=index,
-            scope_id=f"calculate-math-provider::functionstep_{index}",
-            step=current_step,
-        )
-        for index, current_step in enumerate((measurement_step, step))
-    )
+    steps = (measurement_step, step)
     session = CompilationSession.from_context(
         context=ProcessingContext(
             step_plans={
@@ -1324,11 +1305,15 @@ def test_calculate_math_provider_keeps_object_identity_and_output_name_public() 
             },
             axis_id="A01",
         ),
-        steps=(measurement_step, step),
         orchestrator=SimpleNamespace(pipeline_config=PipelineConfig()),
         global_config=GlobalPipelineConfig(),
-        step_state_map={0: object(), 1: object()},
-        snapshots=snapshots,
+        pipeline=ResolvedPipelineDefinition(
+            steps=steps,
+            step_state_map={
+                0: SimpleNamespace(scope_id="plate::functionstep_0"),
+                1: SimpleNamespace(scope_id="plate::functionstep_1"),
+            },
+        ),
     )
 
     provider = CellProfilerInvocationContractProviderFactory.provider_for_session(
@@ -1387,7 +1372,6 @@ def test_native_unnamed_main_flow_remains_a_canonical_contract_input() -> None:
     )
     from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.pipeline.compilation_session import CompilationSession
-    from openhcs.core.pipeline.step_snapshot import StepSnapshot
     from openhcs.core.steps.function_step import FunctionStep
     from openhcs.interop.cellprofiler.compile_time_contracts import (
         CellProfilerInvocationContractProviderFactory,
@@ -1401,12 +1385,6 @@ def test_native_unnamed_main_flow_remains_a_canonical_contract_input() -> None:
         steps = (
             FunctionStep(func=_native_image, name="NativeImage"),
             cellprofiler_step,
-        )
-        snapshots = tuple(
-            StepSnapshot(
-                index=index, scope_id=f"native-cursor::functionstep_{index}", step=step
-            )
-            for index, step in enumerate(steps)
         )
         return (
             CompilationSession.from_context(
@@ -1422,11 +1400,12 @@ def test_native_unnamed_main_flow_remains_a_canonical_contract_input() -> None:
                     },
                     axis_id="A01",
                 ),
-                steps=steps,
                 orchestrator=SimpleNamespace(pipeline_config=PipelineConfig()),
                 global_config=GlobalPipelineConfig(),
-                step_state_map={index: object() for index in range(len(steps))},
-                snapshots=snapshots,
+                pipeline=ResolvedPipelineDefinition(
+                    steps=steps,
+                    step_state_map={index: object() for index in range(len(steps))},
+                ),
             ),
             steps,
         )

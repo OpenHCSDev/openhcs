@@ -42,7 +42,7 @@ from openhcs.core.source_matching import (
     SourceImageSetIdentityPolicy,
     with_original_source_metadata,
 )
-from openhcs.core.steps.function_runtime import FunctionOutputContextStrategy
+
 from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
 from openhcs.interop.cellprofiler.setting_names import optional_setting_value
 from openhcs.processing.backends.cellprofiler.export_to_database import (
@@ -379,9 +379,7 @@ def test_save_images_file_measurement_output_and_rows_are_conditional() -> None:
         source_path="/input/DNA.png",
         source_image_names=("DNA",),
     ).payload_with(image, None)
-    contextualized = FunctionOutputContextStrategy.for_output_plan(
-        measurement_plan
-    ).contextualize(source, rows, measurement_plan, None)
+    contextualized = (ImageArtifactType if measurement_plan is None else measurement_plan.artifact_type).contextualize_output(source, rows, measurement_plan, None)
 
     assert isinstance(contextualized, MeasurementTable)
     assert contextualized.name == measurement.name

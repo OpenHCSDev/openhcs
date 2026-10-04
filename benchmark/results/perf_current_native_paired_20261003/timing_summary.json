@@ -1,0 +1,73 @@
+{
+  "source_head": "60b2ac9b4d4fd91558f68aac85ae39b55e575fc8",
+  "cases": {
+    "ExampleSpeckles": {
+      "native_invocation_seconds": [
+        1.9962371489964426,
+        1.9122227132320404
+      ],
+      "native_mean_seconds": 1.9542299311142415,
+      "ordinary_samples": {
+        "compile_seconds": [
+          0.7714827060699463,
+          0.5555016994476318
+        ],
+        "execute_seconds": [
+          1.0937919616699219,
+          1.3689088821411133
+        ],
+        "total_seconds": [
+          2.189194314647466,
+          2.302979093976319
+        ]
+      },
+      "ordinary_means": {
+        "compile_seconds": 0.6634922027587891,
+        "execute_seconds": 1.2313504219055176,
+        "total_seconds": 2.2460867043118924
+      },
+      "other_total_seconds_mean": 0.35124407964758575,
+      "execution_speedup_ratio_of_means": 1.5870623799276133,
+      "total_speedup_ratio_of_means": 0.870059881198102
+    },
+    "cp_tutorial_3d_monolayer": {
+      "native_invocation_seconds": [
+        14.286907745990902,
+        14.557445348240435
+      ],
+      "native_mean_seconds": 14.422176547115669,
+      "ordinary_samples": {
+        "compile_seconds": [
+          1.1917080879211426,
+          1.23331618309021
+        ],
+        "execute_seconds": [
+          8.670458555221558,
+          9.58397126197815
+        ],
+        "total_seconds": [
+          10.651790381409228,
+          11.655223582871258
+        ]
+      },
+      "ordinary_means": {
+        "compile_seconds": 1.2125121355056763,
+        "execute_seconds": 9.127214908599854,
+        "total_seconds": 11.153506982140243
+      },
+      "other_total_seconds_mean": 0.8137799380347133,
+      "execution_speedup_ratio_of_means": 1.580128954071936,
+      "total_speedup_ratio_of_means": 1.2930620449881318
+    }
+  },
+  "scope": "Two current cases only; means of both observations, not a causal before/after comparison, confidence interval, or full30/scaling result. Server READY startup/shutdown and native imports/JVM/load/full warmup are excluded. Ordinary total includes compilation and default OUTCOMES/RSS completion.",
+  "science_sha256": "77ab1a1e88d52502c633b646efe0d032ad87f117fc403298cb8b5742a0510190",
+  "plot_script_sha256": "a85cbed7174f3e9cd00577e7ec2031d4b11e014042d2246bf4ad4b6927826c40",
+  "artifacts": {
+    "/home/ts/.local/state/openhcs-maintenance/20261003/current-3d-speckles-paired-v2/figures-v2/metrics.csv": "906273de1e1fe146a7cf53a41892d203aa80fa96da9e7288ec619e6c828ad999",
+    "/home/ts/.local/state/openhcs-maintenance/20261003/current-3d-speckles-paired-v2/figures-v2/matched_runtime.png": "867a94f34c5cbe1b6d4fe86917a4e42ab335e486d8c321dd745a353c95dad72d",
+    "/home/ts/.local/state/openhcs-maintenance/20261003/current-3d-speckles-paired-v2/figures-v2/matched_runtime.svg": "9a5377c6ad8609f5a59ae2e9757ec5089d7d5dc77615839ac756fdbbb654e9f7",
+    "/home/ts/.local/state/openhcs-maintenance/20261003/current-3d-speckles-paired-v2/figures-v2/matched_speedup.png": "c8a789edb4dda3ae82fbb708a0d2c9a459f0ee0d7ea7732c266703622839e1ee",
+    "/home/ts/.local/state/openhcs-maintenance/20261003/current-3d-speckles-paired-v2/figures-v2/matched_speedup.svg": "d2e121af82f0a08e23f47cfa00b306ac60f8b580e72dad63cde72f6809ca8a2c"
+  }
+}

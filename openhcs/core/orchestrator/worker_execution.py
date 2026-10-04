@@ -23,6 +23,9 @@ from openhcs.core.callable_contract import FunctionStepExecutionScope
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.native_threading import configure_native_thread_count
+from openhcs.core.orchestrator.analysis_consolidation import (
+    RuntimeAnalysisConsolidationInputs,
+)
 from openhcs.core.orchestrator.execution_result import (
     ExecutionResult,
     RuntimeContextObservation,
@@ -48,10 +51,14 @@ from openhcs.core.progress.live_measurements import (
 from openhcs.core.progress.runtime_artifacts import (
     runtime_artifact_context_for_records,
 )
-from openhcs.core.runtime_stores import StoredRuntimeValue
+from openhcs.core.runtime_stores import (
+    StoredRuntimeValue,
+    RuntimeArtifactAddress,
+    RuntimeArtifactLocation,
+)
 from openhcs.core.steps.abstract import AbstractStep, StepExecutionObservation
 from openhcs.core.steps.function_artifact_materialization import (
-    observed_materialized_artifact_locations_by_address,
+    preview_reused_step_outputs,
 )
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 
@@ -62,21 +69,16 @@ PIPELINE_PROGRESS_STEP_NAME = "pipeline"
 def _runtime_observation_progress_context(
     records: tuple[StoredRuntimeValue, ...],
     *,
-    plan: CompiledStepPlan,
-    context: ProcessingContext,
+    materialized_locations_by_address: Mapping[
+        RuntimeArtifactAddress, tuple[RuntimeArtifactLocation, ...]
+    ],
 ) -> dict | None:
     """Project one RuntimeValueStore observation delta through owned payloads."""
 
     runtime_artifacts = runtime_artifact_context_for_records(records)
     live_measurements = live_measurement_context_for_records(
         records,
-        materialized_locations_by_address=(
-            observed_materialized_artifact_locations_by_address(
-                plan,
-                context,
-                records,
-            )
-        ),
+        materialized_locations_by_address=materialized_locations_by_address,
     )
     if runtime_artifacts is None:
         return live_measurements
@@ -801,16 +803,26 @@ def _execute_axis_with_sequential_combinations(
                 pipeline_definition,
                 frozen_context,
                 lane_context,
+                context_key=context_key,
                 cancellation=cancellation,
             )
             observed_records = runtime_store.observed_values_after(
                 execution_observation_cursor
+            )
+            runtime_export_paths = tuple(
+                path
+                for observation in result.runtime_observation.contexts
+                for path in observation.runtime_export_paths
             )
             observation = RuntimeContextObservation.from_context(
                 context_key=context_key,
                 context=frozen_context,
                 records=observed_records,
                 runtime_observation_mode=runtime_observation_mode,
+                runtime_export_paths=runtime_export_paths,
+                analysis_inputs=RuntimeAnalysisConsolidationInputs.combine(
+                    item.analysis_inputs for item in result.runtime_observation.contexts
+                ),
             )
         finally:
             # This cache is context-local even when lanes share a process.
@@ -926,6 +938,8 @@ def _execute_single_axis_static(
     pipeline_definition: List[AbstractStep],
     frozen_context: ProcessingContext,
     lane_context: WorkerLaneExecutionContext,
+    *,
+    context_key: str,
     cancellation: ExecutionCancellationSignal | None = None,
 ) -> ExecutionResult:
     """Execute one frozen axis context against the compiled pipeline."""
@@ -946,6 +960,8 @@ def _execute_single_axis_static(
     frozen_context.bind_execution_runtime(lane_context)
     lane_context.install_debug_sink(frozen_context)
     runtime_value_store = frozen_context.runtime_value_store
+    runtime_export_paths = []
+    analysis_inputs = []
 
     for step_index, step in enumerate(pipeline_definition):
         if cancellation is not None:
@@ -973,11 +989,15 @@ def _execute_single_axis_static(
                 observed_records = runtime_value_store.observed_values_after(
                     observation_cursor
                 )
+                reused_outputs = preview_reused_step_outputs(
+                    step_plan, frozen_context, observed_records,
+                )
                 runtime_progress_context = _runtime_observation_progress_context(
                     observed_records,
-                    plan=step_plan,
-                    context=frozen_context,
+                    materialized_locations_by_address=reused_outputs.materialized_locations_by_address,
                 )
+                runtime_export_paths.extend(reused_outputs.runtime_export_paths)
+                analysis_inputs.append(reused_outputs.analysis_inputs)
                 emit(
                     execution_id=lane_context.execution_id,
                     plate_id=lane_context.plate_id,
@@ -1010,12 +1030,13 @@ def _execute_single_axis_static(
         )
 
         observation_cursor = runtime_value_store.observation_cursor()
-        step.process(frozen_context, step_index)
+        step_observation = step.process(frozen_context, step_index)
+        runtime_export_paths.extend(step_observation.runtime_export_paths)
+        analysis_inputs.append(step_observation.analysis_inputs)
         observed_records = runtime_value_store.observed_values_after(observation_cursor)
         runtime_progress_context = _runtime_observation_progress_context(
             observed_records,
-            plan=step_plan,
-            context=frozen_context,
+            materialized_locations_by_address=step_observation.materialized_locations_by_address,
         )
 
         emit(
@@ -1038,7 +1059,19 @@ def _execute_single_axis_static(
         ):
             break
 
-    return ExecutionResult.success(axis_id=axis_id)
+    return ExecutionResult.success(
+        axis_id=axis_id,
+        runtime_observation=RuntimeExecutionObservation(
+            contexts=(
+                RuntimeContextObservation(
+                    context_key=context_key,
+                    records=(),
+                    runtime_export_paths=tuple(dict.fromkeys(runtime_export_paths)),
+                    analysis_inputs=RuntimeAnalysisConsolidationInputs.combine(analysis_inputs),
+                ),
+            )
+        ),
+    )
 
 
 def execute_worker_lane(

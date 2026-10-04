@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from collections.abc import (
     Callable,
     Hashable,
+    Iterable,
     MutableMapping,
     Sequence,
 )
@@ -14,6 +15,7 @@ from typing import Any, ClassVar, Self, cast
 
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
+from numba import njit
 
 from openhcs.core import (
     runtime_array_values,
@@ -28,6 +30,7 @@ from openhcs.core.registry_strategies import (
     NominalTypeStrategyFamilyMixin,
 )
 from openhcs.core.runtime_object_label_domains import (
+    DenseIntegerObjectLabelIdDomain,
     ObjectLabelDomain,
     ObjectLabelDomainDeclaration,
     ObjectLabelDomainMetadata,
@@ -928,9 +931,7 @@ class ObjectLabelPayload(ObjectLabelValue):
 
     def __post_init__(self, *source_provenance_values: object) -> None:
         self.validate_object_label_variants()
-        self.absorb_explicit_source_provenance(
-            SourceImageProvenance.from_init_values(source_provenance_values)
-        )
+        self.absorb_explicit_source_provenance(source_provenance_values)
         self.normalize_object_label_metadata("ObjectLabelPayload")
 
 
@@ -994,9 +995,7 @@ class ObjectLabelSet(ObjectLabelValue, NamedArtifactPayload):
 
     def __post_init__(self, *source_provenance_values: object) -> None:
         self.validate_object_label_variants()
-        self.absorb_explicit_source_provenance(
-            SourceImageProvenance.from_init_values(source_provenance_values)
-        )
+        self.absorb_explicit_source_provenance(source_provenance_values)
         self.validate_artifact_name()
         if self.source_image_name == "":
             raise ValueError("ObjectLabelSet.source_image_name cannot be empty.")
@@ -1115,14 +1114,30 @@ class ObjectLabelStorageStrategy(
             if sparse_labels.has_slice_index
             else (sparse_labels.y_column, sparse_labels.x_column)
         )
+        return self.coordinate_centers(
+            counts,
+            (
+                np.bincount(
+                    object_ids,
+                    weights=array[:, coordinate_column],
+                    minlength=max_label + 1,
+                )
+                for coordinate_column in coordinate_columns
+            ),
+            maximum_label=max_label,
+        )
+
+    @staticmethod
+    def coordinate_centers(
+        counts: np.ndarray,
+        coordinate_sums: Iterable[np.ndarray],
+        *,
+        maximum_label: int,
+    ) -> tuple[tuple[np.ndarray, ...], np.ndarray]:
+        """Allocate and divide each coordinate sum in its declared ID domain."""
         axis_centers: list[np.ndarray] = []
-        for coordinate_column in coordinate_columns:
-            sums = np.bincount(
-                object_ids,
-                weights=array[:, coordinate_column],
-                minlength=max_label + 1,
-            )
-            centers = np.full(max_label + 1, np.nan, dtype=np.float64)
+        for sums in coordinate_sums:
+            centers = np.full(maximum_label + 1, np.nan, dtype=np.float64)
             np.divide(sums, counts, out=centers, where=counts > 0)
             axis_centers.append(centers)
         return tuple(axis_centers), counts
@@ -1201,6 +1216,62 @@ class DenseArrayObjectLabelStorageStrategy(ObjectLabelStorageStrategy):
 
     def sparse_ijv_rows(self, labels: object) -> SparseIJVLabelRows:
         return SparseIJVLabelRows.from_dense_stack(cast(np.ndarray, labels))
+
+    @classmethod
+    def prepare_coordinates(cls) -> None:
+        """Prepare C/F/strided signatures with both input mutability policies."""
+        plane = np.array([[0, 1], [1, 0]], dtype=np.int32)
+        volume = np.stack((plane, plane))
+        for labels in (volume, np.asfortranarray(volume), volume.copy()[..., ::-1]):
+            for writeable in (True, False):
+                labels.flags.writeable = writeable
+                _dense_label_coordinate_moments_numba(labels, 1)
+        for labels in (plane, np.asfortranarray(plane), plane.copy()[:, ::-1]):
+            for writeable in (True, False):
+                labels.flags.writeable = writeable
+                dense_label_centers_2d_numba(labels, 1)
+
+    def axis_centers(
+        self, labels: object, *, domain: Sequence[int]
+    ) -> tuple[tuple[np.ndarray, ...], np.ndarray]:
+        array = np.asarray(labels)
+        if (
+            array.dtype != np.dtype(np.int32)
+            or array.ndim not in (2, 3)
+            or any(size > np.iinfo(np.int32).max for size in array.shape)
+        ):
+            return super().axis_centers(labels, domain=domain)
+        coordinate_planes = array[None, ...] if array.ndim == 2 else array
+        positive_parts = tuple(plane[plane > 0] for plane in coordinate_planes)
+        coordinate_domain = DenseIntegerObjectLabelIdDomain.from_array(
+            np.concatenate(positive_parts or (np.empty(0, dtype=np.int32),))
+        )
+        del positive_parts
+        if coordinate_domain is None:
+            return super().axis_centers(labels, domain=domain)
+        coordinate_columns = tuple(range(3 - array.ndim, 3))
+        sums, pixel_counts = _dense_label_coordinate_moments_numba(
+            coordinate_planes, coordinate_domain.max_label,
+        )
+        del coordinate_domain
+        # Like sparse conversion, the moments snapshot precedes domain callbacks.
+        object_ids = np.flatnonzero(pixel_counts)
+        max_domain_label = max(domain, default=0)
+        maximum_label = max(int(object_ids.max(initial=0)), max_domain_label)
+        counts = np.bincount(object_ids, minlength=maximum_label + 1)
+        counts[object_ids] = pixel_counts[object_ids]
+        return self.coordinate_centers(
+            counts,
+            (
+                np.bincount(
+                    object_ids,
+                    weights=sums[object_ids, coordinate_column],
+                    minlength=maximum_label + 1,
+                )
+                for coordinate_column in coordinate_columns
+            ),
+            maximum_label=maximum_label,
+        )
 
     def stack_planes(
         self,
@@ -1403,6 +1474,14 @@ class ObjectLabelValueStorageStrategy(ObjectLabelStorageStrategy):
             label_data
         )
 
+    def axis_centers(
+        self, labels: object, *, domain: Sequence[int]
+    ) -> tuple[tuple[np.ndarray, ...], np.ndarray]:
+        label_data = self.label_data(labels)
+        return ObjectLabelStorageStrategy.for_value(label_data).axis_centers(
+            label_data, domain=domain
+        )
+
     def stack_planes(
         self,
         labels: Sequence[object],
@@ -1553,6 +1632,46 @@ def object_label_axis_centers(
         payload,
         domain=domain,
     )
+
+
+@njit(cache=True)
+def _dense_label_coordinate_moments_numba(
+    labels: np.ndarray,
+    maximum_label: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Reduce dense positive labels once in their declared row-major geometry."""
+    sums = np.zeros((maximum_label + 1, 3), dtype=np.float64)
+    counts = np.zeros(maximum_label + 1, dtype=np.int64)
+    plane_count, height, width = labels.shape
+    for plane in range(plane_count):
+        for y in range(height):
+            for x in range(width):
+                label_id = int(labels[plane, y, x])
+                if label_id > 0 and label_id <= maximum_label:
+                    sums[label_id, 0] += plane
+                    sums[label_id, 1] += y
+                    sums[label_id, 2] += x
+                    counts[label_id] += 1
+    return sums, counts
+
+
+@njit(cache=True)
+def dense_label_centers_2d_numba(
+    labels: np.ndarray, label_count: int
+) -> np.ndarray:
+    """Validate compiled two-dimensional geometry and return its y/x centers."""
+    height, width = labels.shape
+    sums, counts = _dense_label_coordinate_moments_numba(
+        labels[None, :height, :width], label_count
+    )
+    centers = np.empty((label_count + 1, 2), dtype=np.float64)
+    for label_id in range(label_count + 1):
+        for axis in range(2):
+            centers[label_id, axis] = (
+                np.nan if counts[label_id] == 0
+                else sums[label_id, axis + 1] / counts[label_id]
+            )
+    return centers
 
 
 def object_label_storage_is_sparse_ijv(payload: object) -> bool:

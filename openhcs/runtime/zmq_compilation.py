@@ -19,6 +19,7 @@ from openhcs.runtime.zmq_progress import (
 from openhcs.runtime.zmq_execution_signature import OpenHCSExecutionConfigBundle
 
 if TYPE_CHECKING:
+    from openhcs.core.config import GlobalPipelineConfig
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 
 
@@ -74,6 +75,7 @@ class ZMQCompilationRequest:
     plate_id: str
     pipeline_steps: list[AbstractStep]
     orchestrator: "PipelineOrchestrator"
+    resolved_config: GlobalPipelineConfig
     wells: list[str]
     compile_artifact_id: str | None
     compilation_signature: str
@@ -153,6 +155,7 @@ class ZMQCompilationRequest:
                     well_filter=self.wells,
                     is_zmq_execution=True,
                     debug_execution_policy=self.debug_execution_policy,
+                    resolved_config=self.resolved_config,
                 )
         finally:
             set_progress_queue(None)

@@ -1,0 +1,674 @@
+{
+  "connection": {
+    "host": "127.0.0.1",
+    "port": 6609,
+    "transport_mode": "tcp",
+    "persistent": true
+  },
+  "schema_version": "openhcs.agent.v1",
+  "errors": [],
+  "warnings": [],
+  "observed": true,
+  "viewer": {
+    "viewer_type": "napari",
+    "title": "OpenHCS Napari Visualization"
+  },
+  "layer_count": 1,
+  "layers": [
+    {
+      "route_key": "origin_manual_kind_manual_projection_selected_images_8c7357d46ccc38823ca9e68096baf86f25c3004b61b63ba1eef9adea41d34fb8_scalar_stack",
+      "title": "selected_images image stack",
+      "mounted": true,
+      "item_count": 1,
+      "producer_identities": [
+        {
+          "origin": "manual",
+          "output_kind": "manual",
+          "output_key": "selected_images",
+          "projection_key": "selected_images_8c7357d46ccc38823ca9e68096baf86f25c3004b61b63ba1eef9adea41d34fb8",
+          "step_name": null,
+          "pipeline_position": null,
+          "step_scope_id": null,
+          "invocation_key": null,
+          "artifact_kind": null
+        }
+      ],
+      "axis_labels": [
+        "site",
+        "channel",
+        "z_index",
+        "timepoint",
+        "well",
+        "y",
+        "x"
+      ],
+      "stack_axes": [
+        "channel"
+      ],
+      "pending_update": false,
+      "data_types": [
+        "image"
+      ],
+      "component_values": [
+        {
+          "site": 1,
+          "z_index": 1,
+          "timepoint": 1,
+          "well": "A01"
+        }
+      ],
+      "component_value_count": 1,
+      "component_values_truncated": false,
+      "payload_summaries": [
+        {
+          "shape": [
+            2,
+            32,
+            32
+          ],
+          "dtype": "uint16",
+          "size": 2048,
+          "nonzero_count": 308,
+          "min": 0,
+          "max": 22,
+          "nonzero_min_coordinate": [
+            0,
+            3,
+            4
+          ],
+          "nonzero_max_coordinate": [
+            1,
+            24,
+            27
+          ],
+          "nonzero_example_coordinates": [
+            [
+              0,
+              3,
+              4
+            ],
+            [
+              0,
+              5,
+              4
+            ],
+            [
+              0,
+              7,
+              4
+            ],
+            [
+              0,
+              9,
+              5
+            ],
+            [
+              0,
+              11,
+              5
+            ],
+            [
+              0,
+              18,
+              24
+            ],
+            [
+              0,
+              21,
+              20
+            ],
+            [
+              0,
+              23,
+              25
+            ],
+            [
+              1,
+              3,
+              13
+            ],
+            [
+              1,
+              6,
+              4
+            ],
+            [
+              1,
+              8,
+              4
+            ],
+            [
+              1,
+              10,
+              5
+            ],
+            [
+              1,
+              17,
+              21
+            ],
+            [
+              1,
+              19,
+              26
+            ],
+            [
+              1,
+              22,
+              22
+            ],
+            [
+              1,
+              24,
+              27
+            ]
+          ],
+          "source_voxel_spacing": {
+            "values_zyx": [
+              1.3556,
+              1.3556
+            ],
+            "unit": "micrometers"
+          },
+          "spatial_origin_yx": [
+            0,
+            0
+          ],
+          "source_spatial_shape_yx": [
+            32,
+            32
+          ],
+          "aggregate_component_values": {
+            "channel": [
+              2,
+              1
+            ]
+          },
+          "data_type": "image",
+          "path": "/home/ts/.local/state/openhcs-maintenance/20261004/receiving-134-native/labels_plate/stacked_labels/A01_s001_w2_z001_t001_Labels.tif",
+          "components": {
+            "site": 1,
+            "z_index": 1,
+            "timepoint": 1,
+            "well": "A01"
+          },
+          "payload_type": "ndarray"
+        }
+      ],
+      "payload_summary_count": 1,
+      "payload_summaries_truncated": false,
+      "axis_offsets": [
+        0
+      ],
+      "scalar_labels": [
+        "Site 1",
+        "Z 1",
+        "T 1",
+        "Well A01"
+      ],
+      "labels": {
+        "channel": [
+          "Ch 1",
+          "Ch 2"
+        ]
+      },
+      "axis_component_values": {
+        "channel": [
+          1,
+          2
+        ]
+      },
+      "routed_component_values": {
+        "channel": [
+          1,
+          2
+        ]
+      },
+      "routed_component_coordinates": [
+        [
+          1
+        ],
+        [
+          2
+        ]
+      ],
+      "data_shape": [
+        1,
+        2,
+        1,
+        1,
+        1,
+        32,
+        32
+      ],
+      "native_transform": {
+        "scale": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.3556,
+          1.3556
+        ],
+        "translate": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "native_intensity": {
+        "contrast_limits": [
+          0.0,
+          22.0
+        ],
+        "gamma": 1.0
+      },
+      "visible": true,
+      "selected": true,
+      "feature_row_count": 0,
+      "selected_data_indices": []
+    }
+  ],
+  "active_dimension_label_route": "origin_manual_kind_manual_projection_selected_images_8c7357d46ccc38823ca9e68096baf86f25c3004b61b63ba1eef9adea41d34fb8_scalar_stack",
+  "viewer_ndim": 7,
+  "current_step": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    15,
+    15
+  ],
+  "axis_labels": [
+    "site",
+    "channel",
+    "z_index",
+    "timepoint",
+    "well",
+    "y",
+    "x"
+  ],
+  "component_group_count": 1,
+  "component_item_count": 1,
+  "native_viewport": {
+    "center": [
+      0.0,
+      21.011799999999997,
+      21.011799999999997
+    ],
+    "zoom": 6.635668707583358
+  },
+  "native_dimensions": {
+    "order": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "ndisplay": 2,
+    "displayed_axes": [
+      "y",
+      "x"
+    ],
+    "point": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      20.334,
+      20.334
+    ],
+    "camera_angles": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "canvas_size": [
+      643,
+      478
+    ]
+  },
+  "response": {
+    "type": "state_ack",
+    "status": "success",
+    "viewer": {
+      "type": "napari",
+      "title": "OpenHCS Napari Visualization"
+    },
+    "layer_count": 1,
+    "layers": [
+      {
+        "route_key": "origin_manual_kind_manual_projection_selected_images_8c7357d46ccc38823ca9e68096baf86f25c3004b61b63ba1eef9adea41d34fb8_scalar_stack",
+        "producer_identities": [
+          {
+            "origin": "manual",
+            "output_kind": "manual",
+            "output_key": "selected_images",
+            "projection_key": "selected_images_8c7357d46ccc38823ca9e68096baf86f25c3004b61b63ba1eef9adea41d34fb8",
+            "step_name": null,
+            "pipeline_position": null,
+            "step_scope_id": null,
+            "invocation_key": null,
+            "artifact_kind": null
+          }
+        ],
+        "title": "selected_images image stack",
+        "mounted": true,
+        "item_count": 1,
+        "data_types": [
+          "image"
+        ],
+        "component_values": [
+          {
+            "site": 1,
+            "z_index": 1,
+            "timepoint": 1,
+            "well": "A01"
+          }
+        ],
+        "component_value_count": 1,
+        "component_values_truncated": false,
+        "payload_summaries": [
+          {
+            "shape": [
+              2,
+              32,
+              32
+            ],
+            "dtype": "uint16",
+            "size": 2048,
+            "nonzero_count": 308,
+            "min": 0,
+            "max": 22,
+            "nonzero_min_coordinate": [
+              0,
+              3,
+              4
+            ],
+            "nonzero_max_coordinate": [
+              1,
+              24,
+              27
+            ],
+            "nonzero_example_coordinates": [
+              [
+                0,
+                3,
+                4
+              ],
+              [
+                0,
+                5,
+                4
+              ],
+              [
+                0,
+                7,
+                4
+              ],
+              [
+                0,
+                9,
+                5
+              ],
+              [
+                0,
+                11,
+                5
+              ],
+              [
+                0,
+                18,
+                24
+              ],
+              [
+                0,
+                21,
+                20
+              ],
+              [
+                0,
+                23,
+                25
+              ],
+              [
+                1,
+                3,
+                13
+              ],
+              [
+                1,
+                6,
+                4
+              ],
+              [
+                1,
+                8,
+                4
+              ],
+              [
+                1,
+                10,
+                5
+              ],
+              [
+                1,
+                17,
+                21
+              ],
+              [
+                1,
+                19,
+                26
+              ],
+              [
+                1,
+                22,
+                22
+              ],
+              [
+                1,
+                24,
+                27
+              ]
+            ],
+            "source_voxel_spacing": {
+              "values_zyx": [
+                1.3556,
+                1.3556
+              ],
+              "unit": "micrometers"
+            },
+            "spatial_origin_yx": [
+              0,
+              0
+            ],
+            "source_spatial_shape_yx": [
+              32,
+              32
+            ],
+            "aggregate_component_values": {
+              "channel": [
+                2,
+                1
+              ]
+            },
+            "data_type": "image",
+            "path": "/home/ts/.local/state/openhcs-maintenance/20261004/receiving-134-native/labels_plate/stacked_labels/A01_s001_w2_z001_t001_Labels.tif",
+            "components": {
+              "site": 1,
+              "z_index": 1,
+              "timepoint": 1,
+              "well": "A01"
+            },
+            "payload_type": "ndarray"
+          }
+        ],
+        "payload_summary_count": 1,
+        "payload_summaries_truncated": false,
+        "axis_labels": [
+          "site",
+          "channel",
+          "z_index",
+          "timepoint",
+          "well",
+          "y",
+          "x"
+        ],
+        "stack_axes": [
+          "channel"
+        ],
+        "axis_offsets": [
+          0
+        ],
+        "scalar_labels": [
+          "Site 1",
+          "Z 1",
+          "T 1",
+          "Well A01"
+        ],
+        "labels": {
+          "channel": [
+            "Ch 1",
+            "Ch 2"
+          ]
+        },
+        "axis_component_values": {
+          "channel": [
+            1,
+            2
+          ]
+        },
+        "routed_component_values": {
+          "channel": [
+            1,
+            2
+          ]
+        },
+        "routed_component_coordinates": [
+          [
+            1
+          ],
+          [
+            2
+          ]
+        ],
+        "data_shape": [
+          1,
+          2,
+          1,
+          1,
+          1,
+          32,
+          32
+        ],
+        "native_transform": {
+          "scale": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.3556,
+            1.3556
+          ],
+          "translate": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "native_intensity": {
+          "contrast_limits": [
+            0.0,
+            22.0
+          ],
+          "gamma": 1.0
+        },
+        "visible": true,
+        "selected": true,
+        "feature_row_count": 0,
+        "selected_data_indices": [],
+        "pending_update": false
+      }
+    ],
+    "native_viewport": {
+      "center": [
+        0.0,
+        21.011799999999997,
+        21.011799999999997
+      ],
+      "zoom": 6.635668707583358
+    },
+    "native_dimensions": {
+      "order": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "ndisplay": 2,
+      "displayed_axes": [
+        "y",
+        "x"
+      ],
+      "point": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        20.334,
+        20.334
+      ],
+      "camera_angles": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "canvas_size": [
+        643,
+        478
+      ]
+    },
+    "active_dimension_label_route": "origin_manual_kind_manual_projection_selected_images_8c7357d46ccc38823ca9e68096baf86f25c3004b61b63ba1eef9adea41d34fb8_scalar_stack",
+    "viewer_ndim": 7,
+    "current_step": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      15,
+      15
+    ],
+    "axis_labels": [
+      "site",
+      "channel",
+      "z_index",
+      "timepoint",
+      "well",
+      "y",
+      "x"
+    ],
+    "component_group_count": 1,
+    "component_item_count": 1
+  }
+}

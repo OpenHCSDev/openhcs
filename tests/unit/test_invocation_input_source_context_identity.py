@@ -98,7 +98,7 @@ def test_compiled_input_edges_own_exact_main_flow_membership() -> None:
 
     assert tuple(edge.spec for edge in edges) == (plate_template, combined_image)
     assert tuple(edge.storage_plan for edge in edges) == (None, None)
-    assert tuple(edge.consumes_main_flow for edge in edges) == (False, True)
+    assert tuple((edge.main_flow_projection is not None) for edge in edges) == (False, True)
     assert tuple(edge.main_flow_projection for edge in edges) == (
         None,
         MainFlowInputProjection.COMPLETE_PAYLOAD,
@@ -149,7 +149,7 @@ def test_implicit_native_main_flow_consumes_complete_payload_not_source_alias() 
         current_image=source_payload,
     ).artifact_value(edge)
 
-    assert edge.consumes_main_flow is True
+    assert (edge.main_flow_projection is not None) is True
     assert edge.main_flow_projection is MainFlowInputProjection.COMPLETE_PAYLOAD
     assert request is source_payload
     assert image_payload_metadata(request).source_image_names == ("Hoechst",)
@@ -235,7 +235,7 @@ def test_primary_workspace_role_does_not_override_compiled_input_ownership(
         request.artifact_value(
             replace(
                 edges_by_ref[plate_template.ref()],
-                consumes_main_flow=True,
+                main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
             )
         )
 
@@ -260,7 +260,7 @@ def test_storage_backed_input_keeps_exact_runtime_authority() -> None:
     edge = next(edge for edge in edges if edge.spec == combined_image)
 
     assert edge.storage_plan is not None
-    assert edge.consumes_main_flow is False
+    assert (edge.main_flow_projection is not None) is False
 
     stored_payload = ImagePayloadMetadata(
         source_image_names=(combined_image.name,),

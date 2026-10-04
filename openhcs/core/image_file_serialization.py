@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Callable, ClassVar, Sequence
 
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
+from polystore.config import TiffConfig, TiffPhotometric, TiffPlanarConfig
 
 from openhcs.constants.constants import FileFormat
 from openhcs.core.registry_strategies import NominalTypeStrategyFamilyMixin
@@ -251,6 +252,42 @@ class ImageFileFormat(ABC, metaclass=AutoRegisterMeta):
     def prepare(self, payload: Any) -> Any:
         """Return a payload suitable for this file format."""
 
+    def storage_config(
+        self, payload: Any, configured: TiffConfig | None
+    ) -> TiffConfig | None:
+        """Non-TIFF formats retain their existing backend writer configuration."""
+        return None
+
+    @classmethod
+    def storage_write_batches(
+        cls,
+        payloads: Sequence[Any],
+        paths: Sequence[str | Path],
+        configured: TiffConfig | None,
+    ) -> tuple[tuple[tuple[int, ...], TiffConfig | None], ...]:
+        """Batch compatible declared image codecs without changing output order."""
+        if len(payloads) != len(paths):
+            raise ValueError("Image storage payload/path cardinality mismatch.")
+        batches = []
+        for index, (payload, path) in enumerate(zip(payloads, paths, strict=True)):
+            config = (
+                cls.require_path(path).storage_config(
+                    payload,
+                    (
+                        configured
+                        if configured is not None and configured.applies_to_path(path)
+                        else None
+                    ),
+                )
+                if cls.is_image_path(path)
+                else None
+            )
+            if batches and batches[-1][1] == config:
+                batches[-1][0].append(index)
+            else:
+                batches.append(([index], config))
+        return tuple((tuple(indices), config) for indices, config in batches)
+
     def read(self, path: str | Path) -> np.ndarray:
         """Read pixels through this exact registered image-file format."""
         import imageio.v3 as iio
@@ -412,6 +449,50 @@ class TiffImageFileFormat(ImageFileFormat):
 
     def prepare(self, payload: Any) -> Any:
         return image_payload_data(payload)
+
+    def storage_config(
+        self, payload: Any, configured: TiffConfig | None
+    ) -> TiffConfig | None:
+        metadata = image_payload_metadata(payload)
+        if not metadata.persists_whole_image():
+            return configured
+        data = image_payload_data(payload)
+        channel_axis = metadata.normalized_source_channel_axis(data)
+        axes = list("ZYX")
+        planarconfig = None
+        photometric = TiffPhotometric.MINISBLACK
+        if channel_axis is not None:
+            if channel_axis < 0:
+                channel_axis += data.ndim
+            if channel_axis not in (data.ndim - 1, data.ndim - 3):
+                raise ValueError(
+                    "Intrinsic TIFF channels must be contiguous or planar before Y/X."
+                )
+            axes.insert(channel_axis, "S")
+            planarconfig = (
+                TiffPlanarConfig.CONTIG
+                if channel_axis == data.ndim - 1
+                else TiffPlanarConfig.SEPARATE
+            )
+            photometric = TiffPhotometric.RGB
+        if len(axes) != data.ndim:
+            raise ValueError(
+                "Intrinsic TIFF pixels must retain exactly their declared Z/Y/X and channel axes."
+            )
+        return replace(
+            configured if configured is not None else TiffConfig(),
+            photometric=photometric,
+            axes="".join(axes),
+            planarconfig=planarconfig,
+        )
+
+    def write(self, path: str | Path, payload: Any) -> None:
+        config = self.storage_config(payload, None)
+        if config is None:
+            return super().write(path, payload)
+        import tifffile
+
+        tifffile.imwrite(path, self.prepare(payload), **config.tifffile_write_kwargs())
 
     def requires_plane_store_decoder(self, path: Path) -> bool:
         import tifffile

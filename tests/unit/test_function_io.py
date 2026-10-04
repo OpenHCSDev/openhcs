@@ -31,7 +31,6 @@ from openhcs.core.source_bindings import (
 )
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.steps.function_io import (
-    bulk_preload_step_images,
     get_all_image_paths,
     zarr_batch_layout,
     zarr_output_batch_layout,
@@ -306,20 +305,16 @@ def test_bulk_preload_preserves_nested_virtual_workspace_paths(tmp_path: Path) -
     ]
     assert virtual_paths == expected_paths
 
-    bulk_preload_step_images(
-        workspace_root,
-        "A01",
-        Backend.VIRTUAL_WORKSPACE.value,
-        filemanager,
-        handler,
-    )
+    SourceFileUniverse(
+        tuple(expected_paths), Backend.VIRTUAL_WORKSPACE,
+    ).load_images(filemanager)
 
     loaded = filemanager.load_batch(expected_paths, Backend.MEMORY.value)
     for payload, labels in zip(loaded, sources.values(), strict=True):
         np.testing.assert_array_equal(payload.data, labels)
 
 
-def test_object_only_source_anchors_match_compiled_pattern_after_preload(
+def test_object_only_source_anchors_match_compiled_pattern_after_loading(
     tmp_path: Path,
 ) -> None:
     source_root = tmp_path / "source"
@@ -374,13 +369,10 @@ def test_object_only_source_anchors_match_compiled_pattern_after_preload(
         "A01_s001_w1_z001_t001.tif",
         "A01_s001_w2_z001_t001.tif",
     )
-    bulk_preload_step_images(
-        workspace_root,
-        "A01",
-        Backend.VIRTUAL_WORKSPACE.value,
-        filemanager,
-        handler,
-    )
+    SourceFileUniverse(
+        tuple(str(workspace_root / path) for path in materialization.artifact_mappings),
+        Backend.VIRTUAL_WORKSPACE,
+    ).load_images(filemanager)
 
     assert handler.path_list_from_pattern(
         workspace_root,
@@ -464,13 +456,14 @@ def test_virtual_pipeline_source_universe_does_not_mix_physical_paths(
         source_projection=projection,
     )
 
+    universe = request.source_universe()
     state = request.contribute_runtime_state(
         SourceUniverseRuntimeState(),
         universe,
     )
 
-    assert state.pipeline_source_candidate_files == universe.files
-    assert not set(state.pipeline_source_candidate_files).intersection(
+    assert state.require_load_universe().files == universe.files
+    assert not set(state.require_load_universe().files).intersection(
         str(source_path) for source_path in source_paths
     )
 
@@ -534,13 +527,7 @@ def test_bulk_preload_loads_matlab_pixels_through_declared_vfs_backend(
         str(workspace_root / virtual_path)
         for virtual_path in materialization.plane_mappings
     )
-    bulk_preload_step_images(
-        workspace_root,
-        "A01",
-        Backend.VIRTUAL_WORKSPACE.value,
-        filemanager,
-        SourceBindingsHandler(filemanager, source_bindings),
-    )
+    SourceFileUniverse(virtual_paths, Backend.VIRTUAL_WORKSPACE).load_images(filemanager)
 
     loaded = filemanager.load_batch(
         list(virtual_paths),

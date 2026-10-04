@@ -16,6 +16,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.artifacts import (
     ArtifactSpec,
     ImageArtifactType,
@@ -63,7 +64,7 @@ class ManualObjectStats:
 )
 @numpy(contract=ProcessingContract.PURE_2D)
 def identify_objects_manually(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     labels_input: np.ndarray | None = None,
 ) -> tuple[
     np.ndarray,

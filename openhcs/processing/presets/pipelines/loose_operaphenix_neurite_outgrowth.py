@@ -47,9 +47,7 @@ from openhcs.core.source_bindings import (
     SourceFilterSubject,
     SourceSelector,
 )
-from openhcs.core.steps.function_output_manifest import (
-    FunctionStepOutputProducerIdentityRequest,
-)
+from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
     CELLPROFILER_NEURITE_ENGINE_PROFILE,
@@ -433,7 +431,7 @@ def loose_operaphenix_neurite_demo_contribution(
         pipeline_steps=tuple(pipeline_steps),
         presentation_identity=StreamProducerIdentity.pipeline_output(
             output_kind=(
-                FunctionStepOutputProducerIdentityRequest.ARTIFACT_OUTPUT_KIND
+                CompiledStepPlan.ARTIFACT_OUTPUT_KIND
             ),
             output_key=secondary_output_name,
             projection_key=secondary_output_name,

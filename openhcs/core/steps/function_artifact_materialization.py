@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
+from types import MappingProxyType
 from typing import TYPE_CHECKING, ClassVar, cast
 
 import numpy as np
@@ -26,7 +27,6 @@ from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.component_set import ComponentSet
 from openhcs.core.registry_strategies import MostDerivedContextStrategyMixin
-from openhcs.core.runtime_artifact_queries import MeasurementTableUnion
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
@@ -47,19 +47,16 @@ from openhcs.core.source_image_provenance import (
     SourceImageProvenanceFields,
 )
 from openhcs.core.source_matching import (
+    source_component_metadata_items,
     with_source_component_metadata,
 )
+from openhcs.core.source_metadata import SourceMetadataFields
 from openhcs.core.source_projection import OpenHCSPlaneAddress
+from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.steps.function_output_identity import (
     FunctionOutputIdentity,
-    FunctionOutputIdentityAuthority,
     FunctionOutputParserContext,
-    FunctionOutputPathAuthority,
     IncompleteFunctionOutputFilenameIdentityError,
-)
-from openhcs.core.steps.function_output_manifest import (
-    FunctionStepOutputProducerIdentityAuthority,
-    FunctionStepOutputProducerIdentityRequest,
 )
 from openhcs.core.steps.stream_component_semantics import (
     StreamComponentMessageExtraAuthority,
@@ -71,9 +68,11 @@ from openhcs.processing.materialization.core import (
     MaterializationSpec,
     MaterializationValue,
     Output,
+    SavedMaterializationOutputs,
     RawBackendKwargs,
     ViewerStreamBackendCallKwargs,
     materialization_outputs,
+    prepare_materialization,
 )
 
 if TYPE_CHECKING:
@@ -142,7 +141,7 @@ class ArtifactMaterializationRecordReducer(
         record_locations = tuple(
             (
                 record.key.semantic_id,
-                record.path,
+                record.location.path,
             )
             for record in records
         )
@@ -177,7 +176,7 @@ class ImageArtifactMaterializationRecordReducer(ArtifactMaterializationRecordRed
             list[StoredRuntimeValue],
         ] = {}
         for record in records:
-            payload = output_plan.materialization_payload(record.value)
+            payload = output_plan.materialization_payload(record)
             metadata = image_payload_metadata(payload)
             address = OpenHCSPlaneAddress.from_complete_source_metadata(
                 metadata.source_component_metadata
@@ -231,9 +230,9 @@ class ImageArtifactMaterializationRecordReducer(ArtifactMaterializationRecordRed
             )
 
         owner_record = owner_records[0]
-        owner_payload = output_plan.materialization_payload(owner_record.value)
+        owner_payload = output_plan.materialization_payload(owner_record)
         for record in records:
-            payload = output_plan.materialization_payload(record.value)
+            payload = output_plan.materialization_payload(record)
             if not cls._payloads_are_equivalent(owner_payload, payload):
                 raise ValueError(
                     "Conflicting scalar image materialization payloads for source "
@@ -273,8 +272,8 @@ class MeasurementArtifactMaterializationRecordReducer(
         if len(records) <= 1:
             return records
         group_plan = output_plan.for_group(group_key)
-        tables = tuple(cast(MeasurementTable, record.value.data) for record in records)
-        table = MeasurementTableUnion(output_plan.name, tables).as_artifact_table()
+        tables = tuple(cast(MeasurementTable, record.data) for record in records)
+        table = MeasurementTable.join_artifact(output_plan.name, tables)
         value = RuntimeValue.normalize_for_execution_scope(
             group_plan,
             table,
@@ -282,7 +281,9 @@ class MeasurementArtifactMaterializationRecordReducer(
         )
         return (
             StoredRuntimeValue(
-                value=value,
+                key=value.key,
+                data=value.data,
+                materialization_source_metadata=value.materialization_source_metadata,
                 location=RuntimeArtifactLocation(
                     path=group_plan.path,
                     backend=Backend.MEMORY.value,
@@ -639,7 +640,7 @@ class AnalysisOutputDescriptorAuthority:
                     "Artifact record descriptor requires a materialization spec."
                 )
             if record.key.artifact_type.uses_aggregate_materialization_identity(
-                record.value.data
+                record.data
             ):
                 metadata = cls.record_payload_metadata(record)
                 aggregate_provenance = (
@@ -690,6 +691,33 @@ class AnalysisOutputDescriptorAuthority:
                 source_filename=record_source.filename,
             )
 
+        if record is not None:
+            metadata = (
+                output_plan.materialization_metadata(record)
+                if output_plan is not None
+                else cls.record_payload_metadata(record)
+            )
+            source_identity = (
+                None
+                if metadata is None
+                else metadata.source_provenance.scalar_source_identity
+            )
+            if source_identity is not None and not source_identity.addressable:
+                source_identity = None
+            if artifact_path is not None and (
+                dict_key is not None
+                or cls.source_identity_for_path(context, artifact_path) is not None
+            ):
+                return ArtifactAnalysisOutputDescriptor(
+                    filename=f"{Path(artifact_path).stem}.roi.zip",
+                    source_identity=source_identity,
+                )
+            return cls.aggregate_descriptor(
+                output_key,
+                plan,
+                scope=record.key.scope,
+                source_identity=source_identity,
+            )
         if artifact_path is not None:
             source_identity = cls.source_identity_for_path(
                 context,
@@ -733,20 +761,46 @@ class AnalysisOutputDescriptorAuthority:
     ) -> ImagePayloadMetadata | None:
         if record is None:
             return None
-        if isinstance(record.value.data, SourceImageProvenanceFields):
+        if isinstance(record.data, SourceImageProvenanceFields):
             return ImagePayloadMetadata(
-                source_provenance=record.value.data.source_provenance,
+                source_provenance=record.data.source_provenance,
             )
-        return image_payload_metadata(record.value.data)
+        return image_payload_metadata(record.data)
 
     @classmethod
     def record_metadata_with_runtime_scope(
         cls,
         record: StoredRuntimeValue,
         metadata: ImagePayloadMetadata,
+        parser_context: FunctionOutputParserContext,
     ) -> ImagePayloadMetadata:
-        """Attach the artifact key's complete typed execution identity."""
+        """Admit scalar source coordinates before attaching execution identity."""
 
+        provenance = metadata.source_provenance
+        if (
+            not provenance.source_image_provenance_planes.has_values
+            and not metadata.persists_whole_image()
+        ):
+            source_identity = provenance.scalar_source_identity.with_parsed_path_components(
+                parser_context.parser
+            )
+            if source_identity.component_metadata is not None:
+                component_metadata = SourceMetadataFields.with_fields(
+                    source_identity.component_metadata,
+                    {},
+                    components=(
+                        (
+                            component,
+                            SourceMetadataFields.canonical_component_value(component, value),
+                        )
+                        for component, value in source_component_metadata_items(
+                            source_identity.component_metadata
+                        )
+                    ),
+                )
+                metadata = metadata.with_source_provenance(
+                    provenance.with_source_component_metadata(component_metadata)
+                )
         scope = record.key.scope
         if scope.has_fixed_components:
             component_metadata = scope.fixed_component_metadata(
@@ -754,7 +808,7 @@ class AnalysisOutputDescriptorAuthority:
             )
         elif scope.component is not None:
             component_metadata = with_source_component_metadata(
-                dict(metadata.source_component_metadata or {}),
+                metadata.source_component_metadata or {},
                 scope.component,
                 scope.require_value_text(),
             )
@@ -789,17 +843,21 @@ class AnalysisOutputDescriptorAuthority:
             and output_plan.materialization_source()
             != output_plan.source_context_source()
         ):
-            metadata = output_plan.materialization_metadata(record.value)
+            metadata = output_plan.materialization_metadata(record)
+        parser_context = FunctionOutputParserContext.from_processing_context(context)
         metadata = cls.record_metadata_with_runtime_scope(
             record,
             metadata,
+            parser_context,
         )
-        parser_context = FunctionOutputParserContext.from_processing_context(context)
+        source_identity = metadata.source_provenance.scalar_source_identity
+        if not source_identity.addressable:
+            source_identity = None
         use_filename_identity = materialization_spec.uses_filename_source_identity(
-            record.value.data
+            record.data
         )
         if use_filename_identity or exact_fixed_scope:
-            identity = FunctionOutputIdentityAuthority.filename_identity_from_metadata(
+            identity = FunctionOutputIdentity.from_filename_metadata(
                 parser_context.parser,
                 metadata,
             )
@@ -810,19 +868,19 @@ class AnalysisOutputDescriptorAuthority:
                     "its declared source metadata has no addressable identity."
                 )
         else:
-            identity = FunctionOutputIdentityAuthority.identity_from_metadata(
+            identity = FunctionOutputIdentity.from_metadata(
                 parser_context.parser,
                 metadata,
-                fallback_identity_path=record.path,
+                fallback_identity_path=record.location.path,
                 variable_components=plan.variable_components,
             )
         if identity is not None:
+            identity = materialization_spec.filename_identity_for_output(
+                identity, output_plan,
+            )
             try:
                 filename = Path(
-                    FunctionOutputPathAuthority.filename_for_identity(
-                        parser_context.parser,
-                        identity,
-                    )
+                    identity.filename(parser_context.parser)
                 ).name
             except IncompleteFunctionOutputFilenameIdentityError as exc:
                 if cls.missing_component_is_aggregated(
@@ -845,53 +903,15 @@ class AnalysisOutputDescriptorAuthority:
             else:
                 return ArtifactRecordSourceDescriptor(
                     filename=filename,
-                    source_identity=cls.record_source_identity_from_metadata(
-                        metadata,
-                        identity,
-                    ),
+                    source_identity=source_identity,
                 )
         source_path = metadata.source_provenance.scalar_source_identity.path
         if source_path is None:
             return None
         return ArtifactRecordSourceDescriptor(
             filename=Path(source_path).name,
-            source_identity=cls.record_source_identity_from_metadata(
-                metadata,
-                identity,
-            ),
+            source_identity=source_identity,
         )
-
-    @classmethod
-    def record_source_identity_from_metadata(
-        cls,
-        metadata: ImagePayloadMetadata,
-        identity: FunctionOutputIdentity | None,
-    ) -> SourceImageIdentity | None:
-        """Return scalar source identity with parser-resolved component metadata."""
-        source_identity = metadata.source_provenance.scalar_source_identity
-        if identity is not None:
-            if metadata.source_component_metadata is None:
-                component_metadata = {}
-            else:
-                component_metadata = dict(metadata.source_component_metadata)
-            identity_metadata = identity.filename_component_metadata()
-            for key, value in identity_metadata.items():
-                component = AllComponents.from_value(str(key))
-                if component is None:
-                    component_metadata[str(key)] = value
-                    continue
-                component_metadata = with_source_component_metadata(
-                    component_metadata,
-                    component,
-                    value,
-                )
-            source_identity = SourceImageIdentity(
-                path=source_identity.path,
-                component_metadata=component_metadata,
-            )
-        if source_identity.addressable:
-            return source_identity
-        return None
 
     @classmethod
     def materialization_base_path(
@@ -918,12 +938,26 @@ class AnalysisOutputDescriptorAuthority:
         path: str | Path,
     ) -> SourceImageIdentity | None:
         """Return microscope source identity for a source path when available."""
-        component_metadata = FunctionOutputParserContext.from_processing_context(
-            context
-        ).parse_path_metadata(path)
-        if component_metadata is None:
+        parser = FunctionOutputParserContext.from_processing_context(context).parser
+        parsed = parser.parse_filename(Path(path).name)
+        if parsed is None:
             return None
-        return SourceImageIdentity(component_metadata=component_metadata)
+        component_metadata = parsed.wire_mapping()
+        return SourceImageIdentity(
+            component_metadata=SourceMetadataFields.with_fields(
+                component_metadata,
+                {},
+                components=(
+                    (
+                        component,
+                        SourceMetadataFields.canonical_component_value(component, value),
+                    )
+                    for component, value in source_component_metadata_items(
+                        component_metadata
+                    )
+                ),
+            )
+        )
 
 
 def actual_materialization_records(
@@ -952,7 +986,7 @@ def actual_materialization_records(
                 axis_id=plan.axis_id,
             )
             if record.key.scope.value_text is not None
-            and record.backend == Backend.MEMORY.value
+            and record.location.backend == Backend.MEMORY.value
             and store.get(record.key).location == record.location
         )
         if dynamic_records:
@@ -1005,7 +1039,7 @@ def actual_materialization_records(
                 group_key=group_key,
                 match_group=True,
             )
-            if record.backend == Backend.MEMORY.value
+            if record.location.backend == Backend.MEMORY.value
             and store.get(record.key).location == record.location
         )
         if not records:
@@ -1030,8 +1064,8 @@ def actual_materialization_records(
         candidate_locations = tuple(
             (
                 candidate.key.scope.value_text,
-                candidate.backend,
-                candidate.path,
+                candidate.location.backend,
+                candidate.location.path,
             )
             for candidate in candidates
         )
@@ -1039,7 +1073,7 @@ def actual_materialization_records(
             candidate
             for candidate in candidates
             if candidate.key.scope.value_text is None
-            and candidate.backend == Backend.MEMORY.value
+            and candidate.location.backend == Backend.MEMORY.value
             and store.get(candidate.key).location == candidate.location
         )
         if identity_records:
@@ -1090,7 +1124,7 @@ class RuntimeArtifactMaterialization:
                 f"Artifact output {output_plan.name!r} declares unsupported "
                 f"materialization {type(spec).__name__}."
             )
-        data = output_plan.materialization_payload(record.value)
+        data = output_plan.materialization_payload(record)
         emits_projected_planes = spec.emits_variable_component_planes(data)
         if (
             output_plan.materialization_uses_source_identity_filename()
@@ -1107,7 +1141,10 @@ class RuntimeArtifactMaterialization:
                 output_plan=output_plan,
             )
             filename_source_identity = (
-                None if record_source is None else record_source.source_identity
+                None if record_source is None
+                else AnalysisOutputDescriptorAuthority.source_identity_for_path(
+                    context, record_source.filename,
+                )
             )
             aggregate_descriptor = (
                 AnalysisOutputDescriptorAuthority.aggregate_descriptor(
@@ -1129,7 +1166,7 @@ class RuntimeArtifactMaterialization:
                 plan,
                 context,
                 record.key.scope.value_text,
-                artifact_path=record.path,
+                artifact_path=record.location.path,
                 record=record,
                 materialization_spec=spec,
                 output_plan=output_plan,
@@ -1140,7 +1177,13 @@ class RuntimeArtifactMaterialization:
                 output_plan=output_plan,
             )
             source_identity = output_descriptor.source_identity
-            filename_source_identity = output_descriptor.source_identity
+            filename_source_identity = (
+                output_descriptor.source_identity
+                if output_descriptor.source_filename is None
+                else AnalysisOutputDescriptorAuthority.source_identity_for_path(
+                    context, output_descriptor.source_filename,
+                )
+            )
         return cls(
             output_plan=output_plan,
             spec=spec,
@@ -1171,6 +1214,37 @@ class RuntimeArtifactMaterialization:
             pipeline_position=plan.pipeline_position,
             output_plan=self.output_plan,
             output_path_filter=output_path_filter,
+        )
+
+    def reused_observation(
+        self, plan: CompiledStepPlan, context: "ProcessingContext",
+    ) -> StepExecutionObservation:
+        """Report historical debug destinations and read their retained CSV text."""
+        from openhcs.core.orchestrator.analysis_consolidation import (
+            RuntimeAnalysisConsolidationInputs,
+        )
+
+        target = plan.runtime_artifact_materialization
+        if not target.has_persistent_target:
+            return StepExecutionObservation.empty()
+        backend = target.require_persistent_backend()
+        outputs = self.outputs(plan, context)
+        locations = (
+            {RuntimeArtifactAddress.from_record(self.record): tuple(
+                RuntimeArtifactLocation(path=output.path, backend=backend)
+                for output in outputs
+            )}
+            if self.spec.participates_in_persistent_materialization()
+            else {}
+        )
+        paths = (
+            tuple(Path(output.path) for output in outputs)
+            if self.spec.participates_in_runtime_export_observation()
+            else ()
+        )
+        return StepExecutionObservation(
+            MappingProxyType(locations), paths,
+            RuntimeAnalysisConsolidationInputs.from_reused_outputs(context, plan, self, outputs),
         )
 
     def viewer_outputs(
@@ -1221,18 +1295,6 @@ def runtime_artifact_materializations(
     return tuple(materializations)
 
 
-def observed_runtime_artifact_materializations(
-    plan: CompiledStepPlan,
-    context: "ProcessingContext",
-) -> tuple[RuntimeArtifactMaterialization, ...]:
-    """Derive historical materializations from the runtime observation ledger."""
-    return runtime_artifact_materializations_from_records(
-        plan,
-        context,
-        context.runtime_value_store.observed_values,
-    )
-
-
 def runtime_artifact_materializations_from_records(
     plan: CompiledStepPlan,
     context: "ProcessingContext",
@@ -1271,104 +1333,19 @@ def runtime_artifact_materializations_from_records(
     return tuple(materializations)
 
 
-def materialized_artifact_output_paths(
-    plan: CompiledStepPlan,
-    context: "ProcessingContext",
-) -> tuple[Path, ...]:
-    """Re-derive exact persistent output paths from runtime materializations."""
-
-    if not plan.runtime_artifact_materialization.has_persistent_target:
-        return ()
-    return tuple(
-        Path(output.path)
-        for materialization in runtime_artifact_materializations(plan, context)
-        if materialization.spec.participates_in_persistent_materialization()
-        for output in materialization.outputs(plan, context)
-    )
-
-
-def runtime_export_artifact_output_paths(
-    plan: CompiledStepPlan,
-    context: "ProcessingContext",
-) -> tuple[Path, ...]:
-    """Derive exact pipeline-declared export paths from runtime materializations."""
-
-    if not plan.runtime_artifact_materialization.has_persistent_target:
-        return ()
-    return tuple(
-        Path(output.path)
-        for materialization in runtime_artifact_materializations(plan, context)
-        if materialization.spec.participates_in_runtime_export_observation()
-        for output in materialization.outputs(plan, context)
-    )
-
-
-def observed_materialized_artifact_output_paths(
+def preview_reused_step_outputs(
     plan: CompiledStepPlan,
     context: "ProcessingContext",
     records: tuple[StoredRuntimeValue, ...],
-) -> tuple[Path, ...]:
-    """Derive exact persistent outputs from one execution-owned observation."""
-
-    return tuple(
-        Path(location.path)
-        for locations in observed_materialized_artifact_locations_by_address(
-            plan,
-            context,
-            records,
-        ).values()
-        for location in locations
-    )
-
-
-def observed_runtime_export_artifact_output_paths(
-    plan: CompiledStepPlan,
-    context: "ProcessingContext",
-    records: tuple[StoredRuntimeValue, ...],
-) -> tuple[Path, ...]:
-    """Derive exact pipeline-declared exports from worker-observed records."""
+) -> StepExecutionObservation:
+    """Project explicitly reused historical outputs once, independently of new saves."""
 
     if not plan.runtime_artifact_materialization.has_persistent_target:
-        return ()
-    return tuple(
-        Path(output.path)
-        for materialization in runtime_artifact_materializations_from_records(
-            plan,
-            context,
-            records,
-        )
-        if materialization.spec.participates_in_runtime_export_observation()
-        for output in materialization.outputs(plan, context)
+        return StepExecutionObservation.empty()
+    return StepExecutionObservation.combine(
+        item.reused_observation(plan, context)
+        for item in runtime_artifact_materializations_from_records(plan, context, records)
     )
-
-
-def observed_materialized_artifact_locations_by_address(
-    plan: CompiledStepPlan,
-    context: "ProcessingContext",
-    records: tuple[StoredRuntimeValue, ...],
-) -> Mapping[RuntimeArtifactAddress, tuple[RuntimeArtifactLocation, ...]]:
-    """Project exact persistent destinations for observed runtime artifacts."""
-
-    if not plan.runtime_artifact_materialization.has_persistent_target:
-        return {}
-    backend = plan.runtime_artifact_materialization.require_persistent_backend()
-    locations_by_address: dict[
-        RuntimeArtifactAddress,
-        tuple[RuntimeArtifactLocation, ...],
-    ] = {}
-    for materialization in runtime_artifact_materializations_from_records(
-        plan,
-        context,
-        records,
-    ):
-        if not materialization.spec.participates_in_persistent_materialization():
-            continue
-        address = RuntimeArtifactAddress.from_record(materialization.record)
-        locations_by_address[address] = tuple(
-            RuntimeArtifactLocation(path=output.path, backend=backend)
-            for output in materialization.outputs(plan, context)
-        )
-    return locations_by_address
 
 
 def planned_materialization_preview(
@@ -1432,22 +1409,57 @@ def _planned_materialization_path(
     )
 
 
+@dataclass(frozen=True, slots=True)
+class MaterializedRuntimeArtifact(SavedMaterializationOutputs):
+    """Actual writer outputs saved for one reduced runtime artifact."""
+
+    materialization: RuntimeArtifactMaterialization
+
+    def observation(
+        self, plan: CompiledStepPlan, context: "ProcessingContext",
+    ) -> StepExecutionObservation:
+        target = plan.runtime_artifact_materialization
+        if not target.has_persistent_target:
+            return StepExecutionObservation.empty()
+        backend = target.require_persistent_backend()
+        outputs = self.outputs_for_backend(backend)
+        if not outputs:
+            return StepExecutionObservation.empty()
+        address = RuntimeArtifactAddress.from_record(self.materialization.record)
+        locations = tuple(
+            RuntimeArtifactLocation(path=output.path, backend=backend)
+            for output in outputs
+        )
+        paths = (
+            tuple(Path(output.path) for output in outputs)
+            if self.materialization.spec.participates_in_runtime_export_observation()
+            else ()
+        )
+        from openhcs.core.orchestrator.analysis_consolidation import (
+            RuntimeAnalysisConsolidationInputs,
+        )
+
+        return StepExecutionObservation(
+            MappingProxyType({address: locations}), paths,
+            RuntimeAnalysisConsolidationInputs.from_saved_outputs(context, plan, self),
+        )
+
+
 def materialize_artifact_outputs(
     filemanager: "FileManager",
     plan: CompiledStepPlan,
     target_plan: ArtifactMaterializationTargetPlan,
     context: "ProcessingContext",
-) -> None:
-    """Materialize planned artifact outputs to persistent and streaming backends."""
-    from openhcs.processing.materialization import materialize
-
+) -> tuple[MaterializedRuntimeArtifact, ...]:
+    """Save each exact artifact batch once and return its successful outputs."""
+    saved_materializations = []
     images_dir = plan.artifact_images_dir
 
     for materialization in runtime_artifact_materializations(plan, context):
         backend_plan = target_plan.backend_plan(plan, context, materialization)
         record = materialization.record
         data = materialization.data
-        filemanager.ensure_directory(Path(record.path).parent, record.backend)
+        filemanager.ensure_directory(Path(record.location.path).parent, record.location.backend)
         stream_output_paths = materialization.spec.candidate_paths(
             str(materialization.base_path)
         )
@@ -1458,7 +1470,7 @@ def materialize_artifact_outputs(
         )
         if not backends:
             continue
-        materialize(
+        batch = prepare_materialization(
             materialization.spec,
             data,
             str(materialization.base_path),
@@ -1467,14 +1479,13 @@ def materialize_artifact_outputs(
             backend_plan.backend_kwargs(
                 materialization_spec=materialization.spec,
                 data=data,
-                fallback_source_identity=materialization.source_identity,
+                fallback_source_identity=(
+                    materialization.filename_source_identity
+                    if materialization.spec.uses_filename_source_identity(data)
+                    else materialization.source_identity
+                ),
                 producer_identity=(
-                    FunctionStepOutputProducerIdentityAuthority.build(
-                        FunctionStepOutputProducerIdentityRequest.from_artifact(
-                            plan,
-                            materialization.output_plan,
-                        )
-                    )
+                    plan.producer_identity_for_artifact(materialization.output_plan)
                 ),
                 context=context,
                 filemanager=filemanager,
@@ -1488,3 +1499,12 @@ def materialize_artifact_outputs(
             pipeline_position=plan.pipeline_position,
             output_plan=materialization.output_plan,
         )
+        saved_materializations.append(
+            MaterializedRuntimeArtifact(
+                outputs_by_backend=MappingProxyType(
+                    dict(batch.save().outputs_by_backend)
+                ),
+                materialization=materialization,
+            )
+        )
+    return tuple(saved_materializations)

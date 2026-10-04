@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass, replace
-from typing import TYPE_CHECKING, Any, Self
+from typing import TYPE_CHECKING, Any
 
 from openhcs.core.artifacts import ArtifactOutputPlan, ArtifactSpec, ArtifactType
 from openhcs.core.component_group_scope import (
@@ -14,6 +14,9 @@ from openhcs.core.component_group_scope import (
 
 if TYPE_CHECKING:
     from openhcs.core.runtime_image_values import ImagePayloadMetadata
+    from openhcs.core.runtime_plane_projection import (
+        RuntimePlaneAxisProjector,
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,16 +51,15 @@ class RuntimeValue:
     data: Any
     materialization_source_metadata: "ImagePayloadMetadata | None" = None
 
-    @classmethod
+    @staticmethod
     def from_output_plan(
-        cls,
         output_plan: ArtifactOutputPlan,
         data: Any,
         *,
         execution_scope: RuntimeExecutionAxisScope,
         materialization_source_metadata: "ImagePayloadMetadata | None" = None,
-    ) -> Self:
-        """Construct one exact runtime value from already-normalized data."""
+    ) -> "RuntimeValue":
+        """Construct a transient value from already-normalized data and identity."""
 
         if not isinstance(execution_scope, RuntimeExecutionAxisScope):
             raise TypeError(
@@ -68,24 +70,23 @@ class RuntimeValue:
             output_plan.group_component if group_key is not None else None,
             group_key,
         )
-        return cls.from_spec(
+        return RuntimeValue.from_spec(
             output_plan,
             data,
             execution_scope=artifact_scope,
             materialization_source_metadata=materialization_source_metadata,
         )
 
-    @classmethod
+    @staticmethod
     def from_spec(
-        cls,
         spec: ArtifactSpec,
         data: Any,
         *,
         execution_scope: RuntimeExecutionAxisScope,
         materialization_source_metadata: "ImagePayloadMetadata | None" = None,
-    ) -> Self:
-        """Derive transient or stored runtime identity from one declared artifact."""
-        return cls(
+    ) -> "RuntimeValue":
+        """Derive transient runtime identity without declaring a stored location."""
+        return RuntimeValue(
             key=ArtifactKey(
                 name=spec.name,
                 artifact_type=spec.artifact_type,
@@ -151,9 +152,8 @@ class RuntimeValue:
             producer_group_scope=producer_group_scope,
         )
 
-    @classmethod
+    @staticmethod
     def normalize(
-        cls,
         output_plan: ArtifactOutputPlan,
         value: Any,
         *,
@@ -162,16 +162,39 @@ class RuntimeValue:
     ) -> "RuntimeValue":
         """Normalize a raw artifact return exactly once through its compiled plan."""
 
-        return cls.normalize_for_execution_scope(
+        return RuntimeValue.normalize_for_execution_scope(
             output_plan,
             value,
             execution_scope=RuntimeExecutionAxisScope(axis_id=str(axis_id)),
             materialization_source_metadata=materialization_source_metadata,
         )
 
-    @classmethod
+    @staticmethod
+    def normalize_output_from_projector(
+        output_plan: ArtifactOutputPlan,
+        value: Any,
+        *,
+        source_payload: object,
+        plane_projector: "RuntimePlaneAxisProjector | None",
+        execution_scope: RuntimeExecutionAxisScope,
+        materialization_source_metadata: "ImagePayloadMetadata | None" = None,
+    ) -> "RuntimeValue":
+        """Admit current source context and raw output at one generic boundary."""
+        contextualized = output_plan.artifact_type.contextualize_output_from_projector(
+            source_payload,
+            value,
+            output_plan,
+            plane_projector,
+        )
+        return RuntimeValue.normalize_for_execution_scope(
+            output_plan,
+            contextualized,
+            execution_scope=execution_scope,
+            materialization_source_metadata=materialization_source_metadata,
+        )
+
+    @staticmethod
     def normalize_for_execution_scope(
-        cls,
         output_plan: ArtifactOutputPlan,
         value: Any,
         *,
@@ -209,7 +232,7 @@ class RuntimeValue:
             axis_id=execution_scope.axis_id,
         )
 
-        runtime_value = cls.from_output_plan(
+        runtime_value = RuntimeValue.from_output_plan(
             output_plan,
             normalized,
             execution_scope=execution_scope,
@@ -259,5 +282,9 @@ class RuntimeValue:
         self.artifact_type.validate_runtime_payload(output_plan.name, self.data)
         semantic_id = self.artifact_type.runtime_semantic_id(self.data)
         if semantic_id != self.key.semantic_id:
-            return replace(self, key=replace(self.key, semantic_id=semantic_id))
+            return RuntimeValue(
+                key=replace(self.key, semantic_id=semantic_id),
+                data=self.data,
+                materialization_source_metadata=self.materialization_source_metadata,
+            )
         return self

@@ -16,7 +16,6 @@ from openhcs.core.artifacts import (
 from openhcs.core.runtime_object_label_domains import ObjectLabelDomainScope
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.source_plane_alignment import (
-    SourcePayloadPlaneIdentitySequence,
     SourcePlaneIdentitySequenceAlignment,
 )
 from openhcs.core.runtime_image_values import (
@@ -30,7 +29,6 @@ from openhcs.interop.cellprofiler.runtime.invocation import (
     CellProfilerMeasurementImage,
 )
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
-    RuntimeArtifactTypeStrategy,
     RuntimeInputBindingRequest,
 )
 from openhcs.core.steps.function_runtime import (
@@ -194,10 +192,9 @@ class CellProfilerOutputRecordRequest(RuntimeInputBindingRequest):
             )
         )
         image_set_axes = tuple(
-            SourcePayloadPlaneIdentitySequence(
-                value,
-                identity_policy,
-            ).runtime_axis_identities()
+            image_payload_metadata(value).source_provenance.image_set_axis(
+                identity_policy
+            )
             for value in artifact_values
         )
         unaligned_indexes = SourcePlaneIdentitySequenceAlignment.unaligned_axis_indexes(
@@ -221,10 +218,7 @@ class CellProfilerOutputRecordRequest(RuntimeInputBindingRequest):
 
         spec = edge.spec
         RuntimeInputBindingRequest.__post_init__(self)
-        payload = RuntimeArtifactTypeStrategy.for_artifact_type(
-            spec.artifact_type
-        ).source_image_payload(
-            spec,
+        payload = spec.artifact_type.source_image_payload_from_runtime_value(
             self.runtime_value(
                 edge,
                 parameter_name=spec.parameter_name,

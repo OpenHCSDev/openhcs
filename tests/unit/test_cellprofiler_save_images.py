@@ -57,7 +57,6 @@ from openhcs.core.source_bindings import (
 )
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.steps.function_runtime import (
-    FunctionOutputContextStrategy,
     project_declared_source_identity,
 )
 from openhcs.interop.cellprofiler.module_declarations import (
@@ -961,9 +960,7 @@ def test_image_output_context_projects_declared_group_lineage_source() -> None:
         ),
     )
 
-    contextualized = FunctionOutputContextStrategy.for_output_plan(
-        output_plan
-    ).contextualize(
+    contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
         project_declared_source_identity(
             source_slices,
             output_plan.source_context_source(),
@@ -1043,9 +1040,7 @@ def test_declared_group_lineage_source_overrides_complete_output_identity() -> N
         ),
     )
 
-    contextualized = FunctionOutputContextStrategy.for_output_plan(
-        output_plan
-    ).contextualize(
+    contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
         project_declared_source_identity(
             source_slices,
             output_plan.source_context_source(),
@@ -1093,9 +1088,7 @@ def test_planned_image_output_restores_axis_without_duplicate_provenance() -> No
         ),
     )
 
-    contextualized = FunctionOutputContextStrategy.for_output_plan(
-        output_plan
-    ).contextualize(
+    contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
         source_payload,
         source_payload,
         output_plan,
@@ -1143,9 +1136,7 @@ def test_image_output_context_removes_selected_source_runtime_axis() -> None:
         ),
     )
 
-    contextualized = FunctionOutputContextStrategy.for_output_plan(
-        output_plan
-    ).contextualize(
+    contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
         project_declared_source_identity(
             source_payload,
             output_plan.source_context_source(),
@@ -1185,9 +1176,7 @@ def test_image_output_context_preserves_repeated_declared_source_planes() -> Non
         ),
     )
 
-    contextualized = FunctionOutputContextStrategy.for_output_plan(
-        output_plan
-    ).contextualize(
+    contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
         project_declared_source_identity(
             source_payload,
             output_plan.source_context_source(),
@@ -1227,9 +1216,7 @@ def test_image_output_context_accepts_exact_loaded_derived_artifact() -> None:
         relations=(SourceStackLineageSourceRelation(source=selected_artifact.ref()),),
     )
 
-    contextualized = FunctionOutputContextStrategy.for_output_plan(
-        output_plan
-    ).contextualize(
+    contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
         source_payload,
         np.ones((2, 2), dtype=np.uint8),
         output_plan,

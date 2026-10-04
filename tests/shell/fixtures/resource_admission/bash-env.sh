@@ -1,7 +1,13 @@
 #!/bin/bash
 # Only external host observations are controlled; original admission runs intact.
 systemctl() {
-  if [[ "$2" == is-active ]]; then return 0; fi
+  if [[ "$2" == is-active ]]; then
+    if [[ "$4" == *-mcp.scope ]]; then
+      test "${CONTROLLED_MCP_ACTIVE:-1}" = 1
+      test "${CONTROLLED_PROCESS_STATE:-loaded}" = loaded
+    fi
+    return
+  fi
   test "$2" = show
   if [[ "$3" != controlled.slice ]]; then
     local role

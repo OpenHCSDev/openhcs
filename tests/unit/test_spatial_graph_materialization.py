@@ -1,3 +1,5 @@
+
+from openhcs.core.artifacts import ImageArtifactType
 import numpy as np
 import pytest
 
@@ -25,10 +27,7 @@ from openhcs.core.runtime_spatial_graph import (
     SpatialGraphEdge,
     SpatialGraphNode,
 )
-from openhcs.core.steps.function_runtime import (
-    FunctionOutputContextStrategy,
-    SpatialGraphFunctionOutputContextStrategy,
-)
+
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.processing.materialization import (
     BackendSaver,
@@ -138,10 +137,9 @@ def test_spatial_graph_output_context_preserves_exact_source_identity() -> None:
         artifact_type=SpatialGraphArtifactType,
     )
 
-    strategy = FunctionOutputContextStrategy.for_output_plan(output_plan)
-    contextualized = strategy.contextualize(source, graph, output_plan, None)
+    strategy = (ImageArtifactType if output_plan is None else output_plan.artifact_type)
+    contextualized = strategy.contextualize_output(source, graph, output_plan, None)
 
-    assert isinstance(strategy, SpatialGraphFunctionOutputContextStrategy)
     assert isinstance(contextualized, SpatialGraph)
     assert contextualized is not graph
     assert contextualized.source_path == "/tmp/A01_s002_w1_z001_t001.tif"
@@ -172,9 +170,7 @@ def test_spatial_graph_output_context_projects_declared_source_plane() -> None:
         artifact_type=SpatialGraphArtifactType,
     )
 
-    contextualized = FunctionOutputContextStrategy.for_output_plan(
-        output_plan
-    ).contextualize(source, graph, output_plan, None)
+    contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(source, graph, output_plan, None)
 
     assert contextualized.source_path == "/tmp/smi312.tif"
     assert contextualized.source_component_metadata["channel"] == "4"

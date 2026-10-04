@@ -19,8 +19,19 @@ from openhcs.core.function_patterns import (
     MainFlowInputProjection,
 )
 from openhcs.core.runtime_adapters import RuntimeAdapterRequest
-from openhcs.core.runtime_image_values import image_payload_data, image_payload_metadata
-from openhcs.interop.cellprofiler.runtime.artifact_binding import RuntimeInputBindingRequest
+from openhcs.core.runtime_image_values import (
+    ImagePayloadMetadata,
+    image_payload_data,
+    image_payload_mask,
+    image_payload_metadata,
+)
+from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.interop.cellprofiler.runtime.artifact_binding import (
+    RuntimeInputBindingRequest,
+)
+from openhcs.interop.cellprofiler.runtime.output_recording import (
+    ImageOutputRecorder,
+)
 from openhcs.interop.cellprofiler.runtime.output_record_request import (
     CellProfilerOutputRecordRequest,
 )
@@ -54,7 +65,7 @@ def _output_record_request(
             spec=spec,
             storage_plan=None,
             projection=None,
-            consumes_main_flow=True,
+            main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
         )
         for input_index, spec in active_occurrences
     )
@@ -124,7 +135,7 @@ def test_output_source_uses_compiled_runtime_occurrence_for_repeated_roles(
             spec=spec,
             storage_plan=None,
             projection=None,
-            consumes_main_flow=True,
+            main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
         )
         for input_index, spec in enumerate(contract.artifact_inputs)
     )
@@ -317,6 +328,70 @@ def test_record_binding_reads_current_pixels_and_mutable_kwargs_without_holder_a
     assert image_payload_data(source) is request.current_image
     np.testing.assert_array_equal(image_payload_data(source), 0.75)
     assert image_payload_metadata(source).source_image_names == (spec.name,)
+
+
+def test_record_source_binds_current_image_once_and_preserves_intensity_mask_lineage(
+    monkeypatch,
+) -> None:
+    request, spec = _image_record_request()
+    pixels = np.full((3, 4), 65535, dtype=np.uint16)
+    mask = np.ones((3, 4), dtype=bool)
+    payload = ImagePayloadMetadata(
+        source_image_names=("Acquired",),
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=("/input/actual.tif",),
+        ),
+    ).payload_with(pixels, mask)
+    request = replace(request, current_image=payload)
+    original_bind = ImageOutputRecorder.raw_runtime_input_value
+    binding_inputs = []
+
+    def observe_bind(strategy, input_spec, value):
+        binding_inputs.append(value)
+        return original_bind(strategy, input_spec, value)
+
+    monkeypatch.setattr(
+        ImageOutputRecorder, "raw_runtime_input_value", observe_bind
+    )
+    for pixel_value in (65535, 32768):
+        pixels[:] = pixel_value
+        binding_inputs.clear()
+        source = request.artifact_source_payload(request.active_input_edges[0])
+        assert binding_inputs == [payload]
+        assert image_payload_data(source).dtype == np.float32
+        np.testing.assert_allclose(
+            image_payload_data(source), np.float32(pixel_value) / 65535,
+        )
+        assert image_payload_mask(source) is mask
+        metadata = image_payload_metadata(source)
+        assert metadata.source_image_names == (spec.name,)
+        assert metadata.source_image_provenance_planes.paths == ("/input/actual.tif",)
+        assert set(metadata.source_provenance.represented_source_image_names) == {
+            "Acquired", spec.name,
+        }
+
+
+def test_record_source_returns_the_actual_bound_value_without_rebinding(monkeypatch) -> None:
+    request, _spec = _image_record_request()
+    bound = ImagePayloadMetadata(
+        source_image_names=("Original",),
+    ).payload_with(np.ones((3, 4), dtype=np.float32))
+    reads = []
+
+    def runtime_value(binding, edge, parameter_name=None):
+        reads.append((edge, parameter_name))
+        return bound
+
+    def reject_rebinding(*_args, **_kwargs):
+        raise AssertionError("Source context rebound an already bound runtime image")
+
+    monkeypatch.setattr(RuntimeInputBindingRequest, "runtime_value", runtime_value)
+    monkeypatch.setattr(
+        ImageOutputRecorder, "raw_runtime_input_value", reject_rebinding
+    )
+    edge = request.active_input_edges[0]
+    assert request.artifact_source_payload(edge) is bound
+    assert reads == [(edge, edge.spec.parameter_name)]
 
 
 def test_record_endpoint_identity_does_not_change_reference_broadcast_selection() -> None:

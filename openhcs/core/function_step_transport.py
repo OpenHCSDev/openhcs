@@ -13,6 +13,8 @@ from openhcs.core.function_patterns import (
     CompiledFunctionGroup,
     CompiledFunctionInvocation,
     CompiledFunctionPattern,
+    NormalizedFunctionPattern,
+    NormalizedFunctionItem,
 )
 from openhcs.core.function_reference import (
     FunctionReference,
@@ -116,6 +118,20 @@ class FunctionStepTransportAuthority:
 
     @classmethod
     def normalize_function_spec(cls, func_spec: Any) -> Any:
+        if isinstance(func_spec, NormalizedFunctionPattern):
+            return replace(
+                func_spec,
+                groups=tuple(
+                    replace(
+                        group,
+                        items=tuple(
+                            cls.normalize_compiled_invocation(item)
+                            for item in group.items
+                        ),
+                    )
+                    for group in func_spec.groups
+                ),
+            )
         if isinstance(func_spec, FunctionReference):
             return cls.normalize_function_reference(func_spec)
         if isinstance(func_spec, list):
@@ -205,8 +221,8 @@ class FunctionStepTransportAuthority:
     @classmethod
     def normalize_compiled_invocation(
         cls,
-        invocation: CompiledFunctionInvocation,
-    ) -> CompiledFunctionInvocation:
+        invocation: NormalizedFunctionItem,
+    ) -> NormalizedFunctionItem:
         contract = cls.normalize_callable_contract(invocation.contract)
         if contract is invocation.contract:
             return invocation

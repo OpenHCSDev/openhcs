@@ -19,6 +19,7 @@ from openhcs.core.runtime_batch_contracts import (
     RuntimePure2DSliceBatchRequest,
     pure_2d_batch_executor,
 )
+from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     image_payload_data,
     with_image_payload_data,
@@ -371,7 +372,7 @@ def median_filter_backend(
 @runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
 @numpy(contract=ProcessingContract.FLEXIBLE)
 def medianfilter(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     window_size: int = 3,
     mode: ScipyBoundaryMode = ScipyBoundaryMode.CONSTANT,
 ) -> np.ndarray:

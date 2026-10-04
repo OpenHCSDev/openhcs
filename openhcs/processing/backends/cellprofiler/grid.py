@@ -18,6 +18,7 @@ from numba import njit
 
 from openhcs.constants.constants import VariableComponents
 from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
+from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.artifacts import (
     ArtifactSpecCollection,
     ArtifactSpecRelation,
@@ -1293,14 +1294,14 @@ class IdentifyObjectsInGridRequest(GridShapeContext):
     """Executable request for CellProfiler IdentifyObjectsInGrid semantics."""
 
     registry_key = "identify_objects"
-    image: np.ndarray
+    image: RuntimeArrayData
     shape_choice: ShapeChoice
 
     @classmethod
     def from_runtime(
         cls,
         *,
-        image: np.ndarray,
+        image: RuntimeArrayData,
         grid_definition: GridRuntimeDefinitionRequest,
         shape_choice: ShapeChoice,
         diameter_choice: DiameterChoice,
@@ -1485,7 +1486,7 @@ def draw_grid_overlay(
 @numpy(contract=ProcessingContract.PURE_2D)
 @special_inputs("topology_inputs")
 def identify_objects_in_grid(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     topology_inputs: tuple[SpatialGrid | ObjectLabelValue, ...],
     grid_rows: int = 8,
     grid_columns: int = 12,

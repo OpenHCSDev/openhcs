@@ -71,6 +71,18 @@ measurements, not ground truth or an automatically validated parameter choice.
    its actual scale units, supported arguments and response-combination contract;
    do not invent a scale-list parameter or assume a single-scale argument accepts
    one. Estimate intermediate/response memory before a bounded comparison.
+   For a compound detector, relate each measurement to the stage it supports:
+   raw width or local signal/background difference does not by itself justify
+   admission on an enhanced response, seed extraction or final object acceptance.
+   Reflect the effective contract: one width may also control smoothing or
+   background scale, while a size-acceptance bound need not change markers.
+   Before the first proposal, predict both faint-signal recovery and rejection
+   of regional negatives, preserving ordinary/narrow/broad and genuine-pair
+   controls. Inspect the earliest available response/support in the first
+   bounded candidate before interpreting downstream losses; do not automatically
+   lower admission or enlarge width because a plausible raw scalar missed a
+   structure. Use [stage-specific diagnostics](segmentation-diagnostics.md)
+   to distinguish response generation, admission and later acceptance.
 6. Compile one bounded candidate, inspect its earliest changed intermediate,
    then compare matched raw/result/combined at the measured failures and
    regression controls. Revisit distributed regions after every change; a
@@ -122,16 +134,33 @@ and minimum separation in that method's units, keeping the genuine pair and
 faint body as simultaneous controls. When the callable retains marker or
 landscape artifacts, inspect those alongside support in the first bounded run.
 
-Two transferable development failures illustrate why this belongs before the
-first candidate: a correctly measured textured body can still split into many
-intensity-seeded fragments; smoothing or increasing suppression may reduce those
-fragments while merging a real close pair. If intra-body and inter-body peak
-distances overlap, one global exclusion distance may not solve both. Reconsider
-the landscape or a supported body-association rule rather than automatically
-increasing separation. Record a brief prediction for both the textured body and
-pair, then check it through [stage-specific diagnostics](segmentation-diagnostics.md).
-This is an empirical starting rationale, not another approval gate or an
-expected-count target.
+Worked contrast: a broad continuous body has several internal intensity peaks,
+while a genuine close pair has separate supported interiors and an intervening
+valley. Local body/background evidence first supports admission that retains
+the broad body and pair, not just their bright islands. Choosing a distance
+landscape removes direct intensity texture from seed extraction, but lobes or
+waists in that support can still produce several shape maxima inside one body.
+
+Compare within-body and true-pair peaks on the actual smoothed intensity or
+distance alias consumed by the marker extractor. On a distance transform,
+an absolute peak-height cutoff measures distance to background (an inscribed
+radius), not prominence or peak separation; its units follow the transform's
+spacing. Exclusion distance uses the extractor's declared metric and coordinate
+units, not body diameter or screenshot spacing. Propose smoothing, prominence
+or exclusion from the measured nuisance-versus-neighbour landscape, rather than
+assuming a switch to shape seeds establishes one marker per body.
+
+Competition scope is another part of that proposal: where a peak finder
+competes per label, a binary support label groups all foreground together,
+whereas distinct connected-component labels can restrict competition locally.
+Changing that scope and spacing is not a spacing-only repair; a connected
+component can still contain a genuine touching pair. If within-body and real-pair
+peak scales overlap, reconsider a supported body-association/representative rule
+instead of enlarging global exclusion. Predict one representative in the sampled
+continuous body and two retained in the genuine pair, then inspect those local
+controls and their supported dividing boundary in the first bounded candidate.
+This is a morphology-grounded prediction, not a dataset count target or approval
+gate; use [stage-specific diagnostics](segmentation-diagnostics.md) to test it.
 
 ### Native ruler, profile and independently specified region operations
 
@@ -342,6 +371,21 @@ retain the hierarchy; pooling thousands of pixels or cells does not create
 thousands of independently treated samples. Keep controls and exclusions
 visible. A statistical report must separate effect, variability and independent
 sample size from image-level counts.
+
+When measurements request several sources or slices, reconcile their intended
+coverage with the compiled source bindings, invocation/grouping and typed
+artifact inputs through `openhcs_inspect_pipeline_source_artifact_plan`, then
+discover the exposed export-read or quantitative-results capability and check
+actual source, object and slice identities and own-source values. Successful
+execution can still deliver only one requested source; an unchanged label
+artifact does not establish measurement coverage. Derive expected coverage from
+the callable and export's declared long/wide layout, plane-local versus
+volumetric identity, aggregation and exclusions—not a universal Cartesian grid
+or grouping setting. In a long-format table, blank columns belonging to another
+source can be legitimate when each row's own-source measurement is present.
+Distinguish those blanks from an absent requested source, omitted eligible
+object/slice or genuinely missing value; retain justified exclusions and any
+preview truncation rather than treating a partial table as a complete export.
 
 ## Figures and reporting
 

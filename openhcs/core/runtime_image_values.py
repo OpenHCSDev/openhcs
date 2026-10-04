@@ -10,7 +10,6 @@ from collections.abc import (
 from dataclasses import dataclass, field, fields
 from enum import Enum
 from pathlib import Path
-from types import MappingProxyType
 from typing import Any, TypeVar
 
 import numpy as np
@@ -36,18 +35,13 @@ from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.core.source_image_provenance import (
-    RuntimeSourceImageProvenancePlane,
     SourceComponentMetadata,
-    SourceImageIdentity,
     SourceImageProvenance,
     SourceImageProvenanceFields,
-    SourceImageProvenancePlanes,
     SourcePlaneIndexedProvenanceExpansion,
-    common_source_component_metadata,
 )
 from openhcs.core.source_metadata import (
     SourceMetadataScalar,
-    SourceMetadataValue,
     SourceVoxelSpacing,
     SourceVoxelSpacingFields,
 )
@@ -193,6 +187,10 @@ class ImagePayloadMetadata(
             decoded["source_provenance"] = SourceImageProvenance.from_mapping(
                 decoded["source_provenance"]
             )
+        if "source_spatial_domain" in decoded:
+            decoded["source_spatial_domain"] = SourceSpatialDomain.from_mapping(
+                decoded["source_spatial_domain"]
+            )
         return dataclass_from_mapping(cls, decoded)
 
     def retained_plane_component_values(
@@ -251,25 +249,34 @@ class ImagePayloadMetadata(
         )
 
     def __post_init__(self, *source_provenance_values: object) -> None:
-        self.absorb_explicit_source_provenance(
-            SourceImageProvenance.from_init_values(source_provenance_values)
-        )
+        self.absorb_explicit_source_provenance(source_provenance_values)
+        self.normalize_metadata_fields()
+
+    def normalize_metadata_fields(self) -> None:
+        """Normalize this metadata's typed fields in their constructor effect order."""
         self.source_voxel_spacing = self.source_voxel_spacing.with_missing_from(
             SourceVoxelSpacing.from_source_metadata(self.source_component_metadata)
         )
         self.normalize_source_provenance_fields()
         self.normalize_source_spatial_domain_fields()
         self.normalize_source_voxel_spacing_fields()
+        self.validate_source_channel_axis()
+        if self.plane_axis is not None:
+            self.plane_axis = RuntimePlaneAxis(self.plane_axis)
+
+    def require_leading_plane_axis(self, message: str) -> None:
+        """Require axis presence before later ordered projection validation."""
+        if self.plane_axis is None:
+            raise ValueError(message)
+
+    def validate_source_channel_axis(self) -> None:
+        """Validate the authored channel declaration before transforming axes."""
         if self.source_channel_axis is not None and (
             not isinstance(self.source_channel_axis, int)
             or isinstance(self.source_channel_axis, bool)
         ):
             raise TypeError(
                 "ImagePayloadMetadata.source_channel_axis must be int or None."
-            )
-        if self.plane_axis is not None:
-            self.plane_axis = RuntimePlaneAxis(
-                self.plane_axis,
             )
 
     @property
@@ -429,19 +436,36 @@ class ImagePayloadMetadata(
                         f"{metadata.plane_axis.value!r} axis after the invocation "
                         "selected one plane."
                     )
+        # Admit current source fields before deriving the output. This private
+        # snapshot owns its stripped axes; no intermediate image is published.
         source_context = source_metadata.replace_fields(plane_axis=None)
         if isinstance(data, ImagePayloadMetadataCarrier):
-            source_context = source_context.replace_fields(source_channel_axis=None)
-        metadata = output_metadata.with_source_context_from(source_context)
+            source_context.source_channel_axis = None
+        # Admit current output calibration and geometry before replacing stale
+        # source identity. These fields belong to the returned pixel domain.
+        metadata = output_metadata.with_source_spatial_context_from(source_context)
         if source_metadata.source_provenance.has_values:
-            metadata = metadata.with_source_provenance(
+            # The source owns derived-image provenance. Do not merge every
+            # output plane into a value that this source identity supersedes.
+            source_provenance = (
                 source_metadata.source_provenance.with_derived_source_image_names(
                     output_metadata.source_image_names
                     or source_metadata.source_image_names
                 )
             )
-        return metadata.with_missing_intensity_from(source_metadata).replace_fields(
+        else:
+            source_provenance = metadata.source_provenance.with_missing_from(
+                source_context.source_provenance
+            )
+        return metadata.replace_fields(
+            source_provenance=source_provenance,
+            source_channel_axis=(
+                metadata.source_channel_axis
+                if metadata.source_channel_axis is not None
+                else source_context.source_channel_axis
+            ),
             plane_axis=declared_output_axis,
+            **metadata._missing_intensity_fields(source_metadata),
         )
 
     def project_channel_payload(
@@ -598,18 +622,24 @@ class ImagePayloadMetadata(
         """Return metadata after an operation collapses the source channel axis."""
         return self.replace_fields(source_channel_axis=None)
 
+    def persists_whole_image(self) -> bool:
+        """Keep intrinsic pixels whole, excluding a distinct image-binding axis."""
+        return (
+            self.source_spatial_domain.persists_whole_image()
+            and self.plane_axis is not RuntimePlaneAxis.SOURCE_BINDING
+        )
+
     def for_leading_source_plane(self, plane_index: int) -> "ImagePayloadMetadata":
         """Project metadata after explicitly removing its leading plane axis."""
-        if self.plane_axis is None:
-            raise ValueError(
-                "Leading source-plane projection requires a declared plane axis."
-            )
-        return self.for_source_plane(plane_index).without_leading_plane_axis()
+        return LeadingSourcePlaneMetadataProjection(self, plane_index).project()
 
-    def without_leading_plane_axis(self) -> "ImagePayloadMetadata":
-        """Return metadata after an explicitly declared leading axis is removed."""
-        if self.plane_axis is None:
-            raise ValueError("Image metadata has no leading plane axis to remove.")
+    def without_leading_plane_axis(
+        self, *, projection: "ImageMetadataProjection | None" = None
+    ) -> "ImagePayloadMetadata":
+        """Remove an axis through the projection's declared result ownership."""
+        self.require_leading_plane_axis(
+            "Image metadata has no leading plane axis to remove."
+        )
         source_channel_axis = self.source_channel_axis
         if source_channel_axis == 0:
             raise ValueError(
@@ -618,19 +648,22 @@ class ImagePayloadMetadata(
             )
         if source_channel_axis is not None and source_channel_axis > 0:
             source_channel_axis -= 1
-        return self.with_source_provenance(
-            self.source_provenance.with_runtime_planes_as_contributors()
-        ).replace_fields(
-            plane_axis=None,
-            source_channel_axis=source_channel_axis,
-            source_plane_intensity_scales=(),
-            source_plane_dtypes=(),
-            unit_interval_intensity=(
-                None
-                if self.unit_interval_intensity is None
-                else self.unit_interval_intensity.without_source_planes()
-            ),
+        if projection is None:
+            projection = LeadingPlaneAxisMetadataProjection(self)
+        projected = projection.project_source_provenance(
+            self, self.source_provenance.with_runtime_planes_as_contributors()
         )
+        if self.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE:
+            projected.source_spatial_domain = (
+                projected.source_spatial_domain.for_intrinsic_plane()
+            )
+        projected.plane_axis = None
+        projected.source_channel_axis = source_channel_axis
+        projected.source_plane_intensity_scales = ()
+        projected.source_plane_dtypes = ()
+        projected.unit_interval_intensity = self.project_intensity_proof(None)
+        projected.normalize_metadata_fields()
+        return projected
 
     def collapse_leading_plane_axis(self) -> "ImagePayloadMetadata":
         """Return scalar metadata after reducing every plane of the leading axis."""
@@ -666,22 +699,27 @@ class ImagePayloadMetadata(
 
     def intensity_scale_for_source_plane(self, plane_index: int) -> float | None:
         """Return the best available intensity scale for one source plane."""
-        if 0 <= plane_index < len(self.source_plane_intensity_scales):
-            plane_scale = self.source_plane_intensity_scales[plane_index]
-            if plane_scale is not None:
-                return plane_scale
-        return self.intensity_scale
+        plane_scale = _tuple_value(self.source_plane_intensity_scales, plane_index)
+        return self.intensity_scale if plane_scale is None else plane_scale
 
     def unit_interval_intensity_scale_for_source_plane(
         self,
         plane_index: int,
     ) -> int | None:
         """Return the scale proving current pixels are exact integer/scale values."""
-        if 0 <= plane_index < len(self.source_plane_unit_interval_intensity_scales):
-            plane_scale = self.source_plane_unit_interval_intensity_scales[plane_index]
-            if plane_scale is not None:
-                return int(plane_scale)
-        return self.unit_interval_intensity_scale
+        if self.unit_interval_intensity is None:
+            return None
+        return self.unit_interval_intensity.scale_for_source_plane(plane_index)
+
+    def project_intensity_proof(
+        self, plane_index: int | None
+    ) -> ImageUnitIntervalIntensityMetadata | None:
+        """Select a plane's proof, or retain only the proof for the whole image."""
+        if self.unit_interval_intensity is None:
+            return None
+        if plane_index is None:
+            return self.unit_interval_intensity.without_source_planes()
+        return self.unit_interval_intensity.for_source_plane(plane_index)
 
     @property
     def source_plane_metadata_count(self) -> int:
@@ -694,7 +732,7 @@ class ImagePayloadMetadata(
             len(self.source_plane_unit_interval_intensity_scales),
         )
 
-    def source_plane_metadata_records(self) -> tuple["ImagePayloadMetadata", ...]:
+    def source_metadata_by_payload(self) -> tuple["ImagePayloadMetadata", ...]:
         """Return one scalar metadata record per represented source plane."""
         if (
             self.source_plane_metadata_count == 1
@@ -737,20 +775,7 @@ class ImagePayloadMetadata(
 
     def for_source_plane(self, plane_index: int) -> "ImagePayloadMetadata":
         """Return metadata for one source plane sliced from a stacked payload."""
-        source_provenance = self.source_provenance.for_source_plane(plane_index)
-        return self.replace_fields(
-            intensity_scale=self.intensity_scale_for_source_plane(plane_index),
-            source_dtype=_tuple_value(self.source_plane_dtypes, plane_index)
-            or self.source_dtype,
-            source_provenance=source_provenance,
-            unit_interval_intensity=(
-                None
-                if self.unit_interval_intensity is None
-                else self.unit_interval_intensity.for_source_plane(plane_index)
-            ),
-            source_plane_intensity_scales=(),
-            source_plane_dtypes=(),
-        )
+        return SourcePlaneImageMetadataProjection(self, plane_index).project()
 
     def for_source_planes(
         self,
@@ -946,38 +971,60 @@ class ImagePayloadMetadata(
             OBJECT_LABEL_SOURCE_SPATIAL_VALUE_NAME,
         )
 
+    def _source_spatial_context_fields(
+        self,
+        source: "ImagePayloadMetadata",
+    ) -> dict[str, Any]:
+        spatial_domain = self.source_spatial_domain.with_missing_from(
+            source.source_spatial_domain
+        )
+        return {
+            "source_spatial_domain": spatial_domain,
+            "source_voxel_spacing": self.source_voxel_spacing.with_missing_from(
+                source.source_voxel_spacing
+            ),
+            "physical_border_edges_yx": (
+                self.physical_border_edges_yx
+                if self.physical_border_edges_yx is not None
+                else source.physical_border_edges_yx
+            ),
+            "mask_defines_border": (
+                self.mask_defines_border
+                if self.mask_defines_border is not None
+                else source.mask_defines_border
+            ),
+        }
+
     def with_source_spatial_context_from(
         self,
         source: "ImagePayloadMetadata",
     ) -> "ImagePayloadMetadata":
         """Fill missing source-image geometry without changing provenance."""
-        spatial_domain = self.source_spatial_domain.with_missing_from(
-            source.source_spatial_domain
-        )
-        return self.replace_fields(
-            source_spatial_domain=spatial_domain,
-            source_voxel_spacing=self.source_voxel_spacing.with_missing_from(
-                source.source_voxel_spacing
-            ),
-            physical_border_edges_yx=(
-                self.physical_border_edges_yx
-                if self.physical_border_edges_yx is not None
-                else source.physical_border_edges_yx
-            ),
-            mask_defines_border=(
-                self.mask_defines_border
-                if self.mask_defines_border is not None
-                else source.mask_defines_border
-            ),
-        )
+        return self.replace_fields(**self._source_spatial_context_fields(source))
 
     def with_source_context_from(
         self,
         source: "ImagePayloadMetadata",
     ) -> "ImagePayloadMetadata":
         """Fill missing source-image identity and spatial context from a source."""
+        fallback_provenance = source.source_provenance
+        # Scalar context cannot collapse coordinates that vary across this
+        # payload's represented source planes, including runtime stacks.
+        varying = self.source_provenance.varying_plane_component_values(
+            tuple(AllComponents)
+        )
+        if varying:
+            fallback_provenance = fallback_provenance.with_source_component_metadata(
+                {
+                    key: value
+                    for key, value in (
+                        fallback_provenance.source_component_metadata or {}
+                    ).items()
+                    if key not in varying
+                }
+            )
         source_provenance = self.source_provenance.with_missing_from(
-            source.source_provenance
+            fallback_provenance
         )
         source_channel_axis = self.source_channel_axis
         if source_channel_axis is None:
@@ -990,41 +1037,48 @@ class ImagePayloadMetadata(
                 "Cannot combine image metadata with conflicting plane axes: "
                 f"{plane_axis.value!r} != {source.plane_axis.value!r}."
             )
-        return self.with_source_spatial_context_from(source).replace_fields(
+        return self.replace_fields(
             source_provenance=source_provenance,
+            **self._source_spatial_context_fields(source),
             source_channel_axis=source_channel_axis,
             plane_axis=plane_axis,
         )
+
+    def _missing_intensity_fields(
+        self,
+        source: "ImagePayloadMetadata",
+    ) -> dict[str, Any]:
+        return {
+            "intensity_scale": (
+                self.intensity_scale
+                if self.intensity_scale is not None
+                else source.intensity_scale
+            ),
+            "source_dtype": (
+                self.source_dtype
+                if self.source_dtype is not None
+                else source.source_dtype
+            ),
+            "unit_interval_intensity": (
+                self.unit_interval_intensity
+                if self.unit_interval_intensity is not None
+                else source.unit_interval_intensity
+            ),
+            "source_plane_intensity_scales": (
+                self.source_plane_intensity_scales
+                or source.source_plane_intensity_scales
+            ),
+            "source_plane_dtypes": (
+                self.source_plane_dtypes or source.source_plane_dtypes
+            ),
+        }
 
     def with_missing_intensity_from(
         self,
         source: "ImagePayloadMetadata",
     ) -> "ImagePayloadMetadata":
         """Fill missing pixel-type and intensity metadata from a source payload."""
-        return self.replace_fields(
-            intensity_scale=(
-                self.intensity_scale
-                if self.intensity_scale is not None
-                else source.intensity_scale
-            ),
-            source_dtype=(
-                self.source_dtype
-                if self.source_dtype is not None
-                else source.source_dtype
-            ),
-            unit_interval_intensity=(
-                self.unit_interval_intensity
-                if self.unit_interval_intensity is not None
-                else source.unit_interval_intensity
-            ),
-            source_plane_intensity_scales=(
-                self.source_plane_intensity_scales
-                or source.source_plane_intensity_scales
-            ),
-            source_plane_dtypes=(
-                self.source_plane_dtypes or source.source_plane_dtypes
-            ),
-        )
+        return self.replace_fields(**self._missing_intensity_fields(source))
 
     def with_source_provenance(
         self,
@@ -1399,6 +1453,96 @@ def with_image_payload_data(
 
 
 @dataclass(frozen=True, slots=True)
+class ImageMetadataProjection(ABC):
+    """Construct one metadata result from nominal source and axis transformations."""
+
+    metadata: ImagePayloadMetadata
+
+    def project(self) -> ImagePayloadMetadata:
+        return self.project_axis_metadata(self.project_source_metadata())
+
+    @abstractmethod
+    def project_source_metadata(self) -> ImagePayloadMetadata:
+        """Select source metadata with this projection's declared ownership."""
+
+    def project_axis_metadata(
+        self, metadata: ImagePayloadMetadata
+    ) -> ImagePayloadMetadata:
+        """Retain declared axes unless a nominal axis capability transforms them."""
+        return metadata
+
+    @abstractmethod
+    def project_source_provenance(
+        self, metadata: ImagePayloadMetadata, provenance: SourceImageProvenance
+    ) -> ImagePayloadMetadata:
+        """Apply provenance using the result ownership established by source selection."""
+
+
+@dataclass(frozen=True, slots=True)
+class SourcePlaneImageMetadataProjection(ImageMetadataProjection):
+    """Select scalar source-image facts without removing an array axis."""
+
+    plane_index: int
+
+    def project_source_metadata(self) -> ImagePayloadMetadata:
+        provenance = self.metadata.source_provenance.for_source_plane(self.plane_index)
+        return self.metadata.replace_fields(
+            intensity_scale=self.metadata.intensity_scale_for_source_plane(
+                self.plane_index
+            ),
+            source_dtype=_tuple_value(
+                self.metadata.source_plane_dtypes, self.plane_index
+            )
+            or self.metadata.source_dtype,
+            source_provenance=provenance,
+            unit_interval_intensity=self.metadata.project_intensity_proof(
+                self.plane_index
+            ),
+            source_plane_intensity_scales=(),
+            source_plane_dtypes=(),
+        )
+
+    def project_source_provenance(
+        self, metadata: ImagePayloadMetadata, provenance: SourceImageProvenance
+    ) -> ImagePayloadMetadata:
+        """Normalize the independently owned result created by source selection."""
+        metadata.source_provenance = provenance
+        metadata.normalize_metadata_fields()
+        return metadata
+
+
+class LeadingPlaneAxisMetadataProjection(ImageMetadataProjection):
+    """Remove a declared leading axis while preserving its source contributors."""
+
+    def project_source_metadata(self) -> ImagePayloadMetadata:
+        return self.metadata
+
+    def project_axis_metadata(
+        self, metadata: ImagePayloadMetadata
+    ) -> ImagePayloadMetadata:
+        return metadata.without_leading_plane_axis(projection=self)
+
+    def project_source_provenance(
+        self, metadata: ImagePayloadMetadata, provenance: SourceImageProvenance
+    ) -> ImagePayloadMetadata:
+        """Create the standalone result after its axis guards and source derivation."""
+        return metadata.replace_fields(source_provenance=provenance)
+
+
+class LeadingSourcePlaneMetadataProjection(
+    SourcePlaneImageMetadataProjection,
+    LeadingPlaneAxisMetadataProjection,
+):
+    """Remove the leading axis of independently owned selected-source metadata."""
+
+    def project_source_metadata(self) -> ImagePayloadMetadata:
+        self.metadata.require_leading_plane_axis(
+            "Leading source-plane projection requires a declared plane axis."
+        )
+        return super().project_source_metadata()
+
+
+@dataclass(frozen=True, slots=True)
 class ImagePayloadSliceProjector:
     """Project payload context from a parent image into one child image slice."""
 
@@ -1632,9 +1776,24 @@ class _ImagePayloadMetadataComposer:
             self.source_plane_metadata_for_payload(metadata)
             for metadata in metadata_by_payload
         )
-        source_plane_metadata_records = source_metadata_by_payload
-        composed_source_provenance_planes = self.composed_source_provenance_planes(
-            source_plane_metadata_records
+        compose_provenance = (
+            SourceImageProvenance.stack
+            if self.mode is ImagePayloadMetadataCompositionMode.STACK
+            else SourceImageProvenance.bundle
+        )
+        source_provenance = compose_provenance(
+            tuple(
+                metadata.source_provenance for metadata in source_metadata_by_payload
+            ),
+            scalar_sources=tuple(
+                metadata.source_provenance for metadata in metadata_by_payload
+            ),
+            preserve_single_topology=(
+                len(source_metadata_by_payload) == 1
+                and self.mode.preserves_plane_topology(
+                    source_metadata_by_payload[0].plane_axis
+                )
+            ),
         )
         common_source_voxel_spacing = self.common_metadata_value(
             metadata.source_voxel_spacing
@@ -1643,42 +1802,19 @@ class _ImagePayloadMetadataComposer:
         )
         if common_source_voxel_spacing is None:
             common_source_voxel_spacing = SourceVoxelSpacing()
-        source_component_metadata_by_payload = tuple(
-            (
-                metadata
-                if metadata.source_component_metadata is not None
-                else source_metadata
-            )
-            for metadata, source_metadata in zip(
-                metadata_by_payload,
-                source_metadata_by_payload,
-                strict=True,
-            )
-        )
         return self.metadata_type(
-            source_path=self.common_metadata_value(
-                metadata.source_path for metadata in source_metadata_by_payload
-            ),
-            source_component_metadata=self.common_source_component_metadata(
-                source_component_metadata_by_payload
-            ),
+            source_provenance=source_provenance,
             source_plane_intensity_scales=tuple(
-                metadata.intensity_scale for metadata in source_plane_metadata_records
+                metadata.intensity_scale for metadata in source_metadata_by_payload
             ),
             source_plane_dtypes=tuple(
-                metadata.source_dtype for metadata in source_plane_metadata_records
+                metadata.source_dtype for metadata in source_metadata_by_payload
             ),
-            source_image_provenance_planes=composed_source_provenance_planes,
             unit_interval_intensity=self.composed_unit_interval_intensity(
-                source_plane_metadata_records
+                source_metadata_by_payload
             ),
-            source_spatial_domain=SourceSpatialDomain(
-                origin_yx=self.common_metadata_value(
-                    metadata.spatial_origin_yx for metadata in metadata_by_payload
-                ),
-                source_shape_yx=self.common_metadata_value(
-                    metadata.source_spatial_shape_yx for metadata in metadata_by_payload
-                ),
+            source_spatial_domain=SourceSpatialDomain.common_from_domains(
+                metadata.source_spatial_domain for metadata in metadata_by_payload
             ),
             source_voxel_spacing=common_source_voxel_spacing,
             physical_border_edges_yx=self.common_metadata_value(
@@ -1687,31 +1823,8 @@ class _ImagePayloadMetadataComposer:
             mask_defines_border=self.common_metadata_value(
                 metadata.mask_defines_border for metadata in metadata_by_payload
             ),
-            source_image_names=(
-                composed_source_provenance_planes.runtime_source_image_names
-            ),
             source_channel_axis=self.composed_source_channel_axis(metadata_by_payload),
             plane_axis=self.mode.plane_axis,
-        )
-
-    def composed_source_provenance_planes(
-        self,
-        metadata_records: tuple[ImagePayloadMetadata, ...],
-    ) -> SourceImageProvenancePlanes:
-        """Compose projectable planes without replacing compatible topology."""
-
-        if len(metadata_records) == 1:
-            metadata = metadata_records[0]
-            provenance_planes = metadata.source_image_provenance_planes
-            if provenance_planes.count > 1 and self.mode.preserves_plane_topology(
-                metadata.plane_axis
-            ):
-                return provenance_planes
-        return SourceImageProvenancePlanes(
-            tuple(
-                self.runtime_source_provenance_plane(metadata)
-                for metadata in metadata_records
-            )
         )
 
     @staticmethod
@@ -1730,70 +1843,6 @@ class _ImagePayloadMetadataComposer:
                 metadata.unit_interval_intensity_scale for metadata in metadata_records
             )
         )
-
-    @staticmethod
-    def runtime_source_provenance_plane(
-        metadata: ImagePayloadMetadata,
-    ) -> RuntimeSourceImageProvenancePlane:
-        """Return one projectable plane with nested non-projectable contributors."""
-        source_image_names = metadata.source_image_names
-        contributors = metadata.source_image_provenance_planes.as_contributors(
-            source_image_names
-        ).planes
-        if len(source_image_names) > 1:
-            raise ValueError(
-                "Composed image payload provenance permits at most one "
-                f"source alias per scalar plane, got {source_image_names!r}."
-            )
-        source_image_name = source_image_names[0] if source_image_names else None
-        return RuntimeSourceImageProvenancePlane(
-            SourceImageIdentity(
-                metadata.source_path,
-                metadata.source_component_metadata,
-            ),
-            contributors,
-            source_image_name,
-        )
-
-    def common_source_component_metadata(
-        self,
-        values: Iterable[ImagePayloadMetadata],
-    ) -> SourceComponentMetadata | None:
-        """Return source metadata shared by the composed payload."""
-        metadata_values = tuple(values)
-        metadata_by_plane = tuple(
-            dict(metadata.source_component_metadata)
-            for metadata in metadata_values
-            if metadata.source_component_metadata is not None
-        )
-        if self.mode is ImagePayloadMetadataCompositionMode.BUNDLE:
-            field_names = set().union(
-                *(metadata.keys() for metadata in metadata_by_plane)
-            )
-            common_metadata: dict[str, SourceMetadataValue] = {}
-            for field_name in field_names:
-                values_for_field = tuple(
-                    metadata[field_name]
-                    for metadata in metadata_by_plane
-                    if field_name in metadata
-                )
-                if values_for_field and all(
-                    value == values_for_field[0] for value in values_for_field
-                ):
-                    common_metadata[field_name] = values_for_field[0]
-        else:
-            common_metadata = dict(
-                common_source_component_metadata(
-                    tuple(
-                        metadata.source_component_metadata
-                        for metadata in metadata_values
-                    )
-                )
-                or {}
-            )
-        if not common_metadata:
-            return None
-        return MappingProxyType(common_metadata)
 
     @staticmethod
     def common_metadata_value(

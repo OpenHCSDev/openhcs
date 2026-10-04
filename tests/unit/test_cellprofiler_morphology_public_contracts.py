@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
+
 from dataclasses import dataclass
 from types import SimpleNamespace
 
@@ -32,7 +34,6 @@ from openhcs.core.pipeline.function_contracts import (
     artifact_outputs,
     special_input_names_from_callable,
 )
-from openhcs.core.pipeline.step_snapshot import StepSnapshot
 from openhcs.core.source_bindings import (
     NamedSourceBinding,
     SourceProjectionRole,
@@ -189,14 +190,7 @@ def _compiled_contract(case: MorphologyPublicContractCase):
 
     producer_step = FunctionStep(func=fixture_producer, name="FixtureProducer")
     steps = (producer_step, step)
-    snapshots = tuple(
-        StepSnapshot(
-            index=index,
-            scope_id=f"test::morphology::{index}",
-            step=current_step,
-        )
-        for index, current_step in enumerate(steps)
-    )
+    snapshots = tuple(current_step for index, current_step in enumerate(steps))
     session = CompilationSession.from_context(
         context=ProcessingContext(
             step_plans={
@@ -210,11 +204,12 @@ def _compiled_contract(case: MorphologyPublicContractCase):
             },
             axis_id="A01",
         ),
-        steps=steps,
         orchestrator=SimpleNamespace(pipeline_config=PipelineConfig()),
         global_config=GlobalPipelineConfig(),
-        step_state_map={index: object() for index in range(len(steps))},
-        snapshots=snapshots,
+        pipeline=ResolvedPipelineDefinition(
+            steps=snapshots,
+            step_state_map={index: object() for index in range(len(steps))},
+        ),
     )
     provider = CellProfilerInvocationContractProviderFactory.provider_for_session(
         session

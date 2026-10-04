@@ -40,6 +40,7 @@ from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     MaskedImagePayload,
@@ -1083,7 +1084,7 @@ def prepare_align() -> None:
 @required_variable_components(VariableComponents.CHANNEL)
 @numpy(contract=ProcessingContract.PURE_3D)
 def align(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     *,
     method: AlignModule.Method = AlignModule.Method.MUTUAL_INFORMATION,
     crop_mode: AlignModule.CropMode = AlignModule.CropMode.KEEP_SIZE,
