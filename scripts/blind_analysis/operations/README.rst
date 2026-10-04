@@ -84,13 +84,14 @@ brief cannot launch a paid analysis author. Original
 environment, path masks, first-start clock and10s request idle remain unchanged.
 
 Before scientific actions resource-check.sh FUNDING SLOT UNIQUE_PHASE consumes
-current membership and sums each run's own output/scratch limits. FULL closed
+current membership and sums each run's output/scratch growth estimates. FULL closed
 outputs remain once and are measured, not compared to a cumulative historical
 ceiling. They already consume actual HOME space. Admission requires physical
-free HOME for all remaining funded growth plus its reserve. Only the selected
-member's own output/scratch permission can reject its operation; sibling
-overages remain measured physical usage, not a veto on another member's
-status/read-only work. Remaining growth is derived independently for retained
+free HOME for remaining planned growth plus its reserve. Neither a selected
+member's nor a sibling's output/scratch usage above an estimate rejects an
+operation. Those bytes consume actual physical HOME, not a quota. The original
+programme amounts are estimates only; no replacement ceiling is introduced.
+Remaining growth is derived independently for retained
 and scratch components, clamped to zero once each is exhausted; an overage
 cannot subtract from a sibling's unused reservation. Contained scratch is not
 charged twice. Helpers use the
