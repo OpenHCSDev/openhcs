@@ -5,8 +5,9 @@ Singer owns this source investigation and any shared writer/source-projection
 integration. Base b7a9cd29ea96 includes merged600/614 and Planck's independently
 qualified621 repair. Closed394/435 are historical source owners, not an active
 repair queue. Planck's623 scope/descriptor change has no writer hunk and does
-not repair this defect. The owner correction below is implemented; current
-source/installed qualification is in progress.
+not repair this defect. The owner correction below is implemented and its
+registered source path is qualified. Whole installed/public qualification is
+in progress.
 
 Original public failure
 -----------------------
@@ -100,8 +101,54 @@ cover absent and declared .czi acquisition extension versus .tif storage, plus
 real registered default publication for scalar/scalar and scalar/RGB inputs in
 both operand orders. Original435 genuine contradiction tests remain unchanged.
 
-Required qualification
-----------------------
+Source qualification and preserved negatives
+--------------------------------------------
+
+Production87e190f6a changes only FunctionOutputIdentity.component_metadata.
+Normal main integration88024c51b includes main e1400cb9f; that production hunk
+is unchanged. The original audit debt_census.py measured that entire changed
+production file against main: parse omissions0, all positive deltas0,
+none_identity -1. The JSON and command receipt are engineering620/pinned-r0-01.*.
+This is the scoped original R0 measure, not a global R1 claim.
+
+The source bootstrap uses authenticated engineering599/source-runtime externals
+and the tabular extension produced by this ordinary source build, with its
+actual module origin asserted. source-controls01 is a known terminal1 origin
+assertion: the retained source-tree binary was found before the newly compiled
+binary. source-controls02 records the corrected import selection and the first
+complete batch:13PASS/4FAIL. Two new fixture assertions mistakenly counted the
+derived relative/absolute lookup aliases as eight physical occurrences. The
+fixture now counts the original typed persisted declarations, not lookup keys.
+No publication rule or numerical assertion was weakened.
+
+The other two failures are unchanged collapsed-image435 fixture expectations:
+the fixture requires a scalar site address on a whole-image artifact projection.
+An independent unchanged whole621 receiving02/target reproduces BOTH failures
+(baseline-controls03, terminal1). Its function_outputs.py and
+function_output_identity.py are byte-equal to pre-fix main b7a9cd29e. These tests
+and their original assertions remain unchanged in626;630 owns the broader family.
+
+Final source-controls04:15PASS/2 explicit deselections, terminal0,11.29s,
+385360KiB RSS, Swap0. Both original contradiction cases, scalar acceptance,
+producer ownership cases, absent/.czi source extension and separate .tif storage
+cases pass. Actual registered importer/compiler/runtime default automatic plus
+named publication completes for scalar/scalar AND scalar/RGB, in both operand
+orders. Each produces exactly four persisted declarations and four TIFFs;
+all720 elements per case compare exactly, .5/.5micrometer geometry/channel/name
+provenance is preserved, and the two acquisition file hashes are unchanged.
+No native process, viewer, provider or MCP server ran for this source tier.
+
+The first ordinary whole-wheel build uses the existing621 build-receive01.sh,
+offline/no-isolation/no dependencies/new environment. Its60s wrapper terminates
+with124 while compiling the newly merged619 median extension; tabular and
+granularity compilation had completed. No wheel or target install was produced.
+All compiler children are absent. Original build-receive01 logs remain; the
+wrapper's16844KiB RSS does not measure compiler descendants and is not claimed
+as the combined build memory. This unrelated compile cost is with the existing
+builder owner, not a630/CI hold or a reason to relax the writer guard.
+
+Installed/public acceptance remaining
+------------------------------------
 
 Establish the earliest wrong fact through the original small source/runtime
 owners. Repair its existing owner, delete replaced authority, and retain exact

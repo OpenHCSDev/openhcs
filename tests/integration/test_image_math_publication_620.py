@@ -23,6 +23,9 @@ from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.core.source_bindings import MetadataExtractionRule, MetadataSource
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
+from openhcs.core.virtual_workspace_metadata import (
+    OpenHCSMetadataSubdirectories, VirtualWorkspaceSourceProjectionEntries,
+)
 from openhcs.interop.cellprofiler.pipeline_import import import_cellprofiler_pipeline
 
 
@@ -73,9 +76,13 @@ def test_registered_mixed_image_math_publishes_once_in_both_operand_orders(tmp_p
     plate = tmp_path / 'results/input_openhcs'
     saved = tuple((plate / 'images').glob('*.tif'))
     assert len(saved) == 4
-    projection = VirtualWorkspaceSourceProjection.from_openhcs_metadata(
-        plate, json.loads((plate / 'openhcs_metadata.json').read_text()))
-    assert len(projection.source_projections_by_virtual_path) == 4
+    persisted = json.loads((plate / 'openhcs_metadata.json').read_text())
+    projection = VirtualWorkspaceSourceProjection.from_openhcs_metadata(plate, persisted)
+    # The lookup intentionally indexes relative and absolute aliases; count the
+    # original persisted declarations, not the derived lookup's keys.
+    declared = tuple(entry for directory in OpenHCSMetadataSubdirectories(persisted).values()
+                     for entry in VirtualWorkspaceSourceProjectionEntries.from_subdirectory(directory).entries.values())
+    assert len(declared) == 4
     for name, pixels in expected.items():
         image, = (image for image in saved if image.name.endswith('_' + name + '.tif'))
         np.testing.assert_array_equal(tifffile.imread(image), pixels)
