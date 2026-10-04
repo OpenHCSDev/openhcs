@@ -35,19 +35,18 @@ if [[ "${3:-}" == --preflight ]]; then
   exit
 fi
 fleet_require_writer_release
+# A scientific brief grants an author turn; engineering permissions have none.
+jq -e --arg slot "$FLEET_SLOT" '.authors[] | select(.slot==$slot) |
+  .brief | type=="string" and length>0' "$FLEET_RUN_ROOT/program.json" >/dev/null
 test -f "$FLEET_RUN_ROOT/READY-FREEZE.sha256"
 (cd "$FLEET_RUN_ROOT"; sha256sum --check --quiet READY-FREEZE.sha256)
 mkdir -p "$FLEET_WORKSPACE/output/runtime" "$FLEET_WORKSPACE/output/native-sessions"
 runtime="$FLEET_WORKSPACE/output/runtime"
 if [[ "${3:-}" != --inside-scope ]]; then
-  systemctl --user is-active --quiet "$FLEET_SLICE"
-  test "$(systemctl --user show "$FLEET_SLICE" -p MemoryMax --value)" = "$((FLEET_COMBINED_MIB*1048576))"
-  test "$(systemctl --user show "$FLEET_SLICE" -p MemorySwapMax --value)" = 0
+  fleet_require_joint_slice
   bash "$FLEET_OPERATIONS/resource-check.sh" "$FLEET_ROOT" "$FLEET_SLOT" author_launch ongoing
-  cap=$(fleet_process_limit_mib author)
-  test "$cap" -gt 0
   cpu=$(jq -er '.proposed_resource_envelope.cpu_quota_per_author_percent' "$FLEET_RUN_ROOT/program.json")
-  exec /usr/bin/systemd-run --user --scope --slice="$FLEET_SLICE" --unit="$FLEET_UNIT-author" -p MemoryMax="${cap}M" -p MemorySwapMax=0 -p CPUQuota="${cpu}%" /usr/bin/taskset -c "$FLEET_CPU" /bin/bash "$FLEET_OPERATIONS/launch-author.sh" "$FLEET_ROOT" "$FLEET_SLOT" --inside-scope
+  exec /usr/bin/systemd-run --user --scope --slice="$FLEET_SLICE" --unit="$FLEET_UNIT-author" -p CPUQuota="${cpu}%" /usr/bin/taskset -c "$FLEET_CPU" /bin/bash "$FLEET_OPERATIONS/launch-author.sh" "$FLEET_ROOT" "$FLEET_SLOT" --inside-scope
 fi
 test ! -e "$runtime/author-events.typescript"
 test ! -e "$runtime/author-events.timing"

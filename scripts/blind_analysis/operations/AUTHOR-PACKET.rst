@@ -31,7 +31,7 @@ inner PTY does not make an outer noninteractive tool stdin writable.
 Use that client and exact handles throughout. Ordinary request idle timeout
 remains10s; confirmed cold-readiness handles use the installed skill workflow.
 Never replay UNKNOWN/interrupted operations. No installation, download,
-environment/provider/model change, new agent, restart or cap increase.
+environment/provider/model change, new agent or restart.
 Read current registered input contracts before supplying arguments.
 
 Before EACH scientific action choose a UNIQUE observation name::
@@ -39,7 +39,9 @@ Before EACH scientific action choose a UNIQUE observation name::
   bash "$FLEET_OPERATIONS/resource-check.sh" "$FLEET_ROOT" "$FLEET_SLOT" UNIQUE_PHASE
 
 Read its actual result before dispatch. The current funding owner owns membership and reservations;
-your immutable run declaration owns your caps; use one numerical worker/thread. Host helper severity is diagnostic,
+your immutable run declaration owns source, paths, CPU, deadline and output permissions;
+use one numerical worker/thread. RAM is observed on the host and process family,
+not restricted by an invented per-author or fleet memory ceiling. Host helper severity is diagnostic,
 not a second admission gate. Failed admission means no SCI. Hold the proposal
 and failed receipt; at a later operational checkpoint make a new named check
 within the same deadline. Do not busy poll, bypass limits, create another

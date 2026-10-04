@@ -2,7 +2,7 @@ One funded programme, immutable run permissions
 ==============================================
 
 These NEXT versions complete the original Bash/JQ operations family. One fixed
-funding root owns current membership, retained history, aggregate hardware and
+funding root owns current membership, retained history, desktop protection and
 joint disk admission. Each immutable run owns its author declarations, source,
 configuration, operations, permissions, helpers, recording paths and75min clock.
 No Python runtime, client timeout, installed science or current packet changes.
@@ -78,7 +78,9 @@ rejection leaves a unique observation, not client custody. A later authorized
 checkpoint may use a new observation name within the original deadline. Once
 any MCP journal/first-start marker exists, retain the same handle: exact child
 failure or UNKNOWN is never converted into retryable admission. The client
-reads SCI/CPU limits from its own run, not the newest funding budget. Original
+reads CPU and source permissions from its own run. Neither author nor MCP scopes
+introduce MemoryMax or MemorySwapMax. An engineering row without a scientific
+brief cannot launch a paid analysis author. Original
 environment, path masks, first-start clock and10s request idle remain unchanged.
 
 Before scientific actions resource-check.sh FUNDING SLOT UNIQUE_PHASE consumes
@@ -100,18 +102,18 @@ parent-owned acceptance after this source checkpoint.
 Operation-scoped pressure and disabled endpoints
 ------------------------------------------------
 
-The original resource-check.sh owns operation admission. ``ongoing`` is a
-bounded continuation inside existing process/slice caps, not future fleet
-admission. Its RAM floor is desktop reserve plus the selected immutable run's
-remaining SCI and CLI scope capacity, bounded by actual common-slice headroom.
-The original slot owner derives unit names from each member's immutable run.
-Active scopes must match declared cap, current invocation, common slice and
-Swap0; their resident charge is subtracted once. Absent/inactive named scopes
-contribute a conservative declared ceiling, explicitly reported as a bound
-rather than measured residual. CLI0 is disabled; its performer cannot launch.
-The same declaration projection supplies SCI/author launch ceilings, instead
-of an admission-local copy. Budgets must be nonnegative and within aggregate cap;
-the common slice must be active, match its cap and Swap0, and not be overcharged.
+The original resource-check.sh owns operation admission. RAM decisions use
+actual host MemAvailable and the existing desktop reserve, not a child/fleet
+MemoryMax or an absent scope's invented future ceiling. The exact kernel-owned
+common family supplies measured charge, swap and one RSS/PSS snapshot; resident
+use is already reflected in MemAvailable and is never reserved a second time.
+RSS/PSS are observations, not a guarantee about an operation's future buffers.
+The operator watches real growth/pressure and stages work before the desktop
+reserve is exhausted. No background poller, PID roster or second budget owner.
+Missing/inactive common ownership still rejects. Helper InvocationID, active
+state and common-family membership stay required, but old helper memory/swap
+limit equality is not health. Helper roles derive from the original performer
+files, not another cap map; headless VNC0 needs no GUI helper family.
 
 For that bounded action, full-stall PSI is retained as warning telemetry rather
 than a universal stop. ``full``, ``replacement`` and ``bootstrap`` admit future
@@ -123,12 +125,19 @@ full-stall pressure category, not a second numeric limit for ongoing work.
 Every observation preserves all kernel pressure windows plus a separate
 operation-policy receipt. Missing, repeated or malformed pressure
 measurements reject. Low available RAM, exhausted disk reservations, inactive
-or mismatched aggregate caps, expired clocks and missing custody still reject
-through their original owners. High pressure alone is not declared safe:
-insufficient actual RAM for the bounded budget still stops ongoing work.
+expired clocks and missing custody still reject through their original owners.
+High pressure alone is not declared safe: insufficient actual host desktop
+headroom stops allocating work, irrespective of whether a former cap matched.
 ``ledger`` remains ledger-only, never
 scientific admission. New clients still require replacement admission; do not
 use an ongoing observation as permission to launch unreserved growth.
+
+The original successor projection and funding publisher no longer carry the
+removed per-author science/CLI/helper RAM ceilings or aggregate RAM/swap cap.
+Old frozen declarations and OOM/UNKNOWN evidence remain historical truth;
+applying the user's new policy to a current run is recorded as a policy change,
+never described as an unchanged-budget autonomous comparison. No cap increase,
+replacement arbitrary cap, replay or source/value overlay implements this policy.
 
 The original successor projector treats endpoint ``0`` as declared disabled,
 not as a port claim. A headless administrative row may disable all five ports.
