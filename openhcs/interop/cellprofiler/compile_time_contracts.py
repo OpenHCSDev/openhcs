@@ -31,13 +31,13 @@ from openhcs.core.invocation_artifacts import (
 from openhcs.core.pipeline.artifact_planning import (
     extract_artifact_declarations,
 )
-from openhcs.core.pipeline.compilation_session import CompilationSession
+from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
 from openhcs.core.steps.function_step import FunctionStep
 
 
 @dataclass(frozen=True, slots=True)
 class CellProfilerInvocationContractProvider(InvocationContractProvider):
-    """Session-scoped exact CellProfiler invocation-contract provider."""
+    """Saved-declaration-scoped exact CellProfiler invocation contracts."""
 
     plans: Mapping[
         tuple[int, FunctionInvocationKey],
@@ -130,9 +130,9 @@ class CellProfilerInvocationContractProviderFactory(InvocationContractProviderFa
         return None if owner is None else owner.normalize_authoring_kwargs(contract, kwargs)
 
     @classmethod
-    def provider_for_session(
+    def provider_for_pipeline(
         cls,
-        session: CompilationSession,
+        pipeline: ResolvedPipelineDefinition,
     ) -> InvocationContractProvider | None:
         from openhcs.interop.cellprofiler.module_declarations import (
             CellProfilerModule,
@@ -147,7 +147,7 @@ class CellProfilerInvocationContractProviderFactory(InvocationContractProviderFa
         ] = {}
         forward_context = ArtifactDeclarationStepContext.empty()
         next_module_num = 1
-        for step_index, step in enumerate(session.pipeline.steps):
+        for step_index, step in enumerate(pipeline.steps):
             if not step.enabled or not isinstance(step, FunctionStep) or step.func is None:
                 continue
             source_bindings = step.source_bindings

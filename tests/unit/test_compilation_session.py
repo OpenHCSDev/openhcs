@@ -1,4 +1,5 @@
 from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
+from dataclasses import replace
 from inspect import signature
 from types import SimpleNamespace
 
@@ -258,6 +259,7 @@ def test_axis_compilation_request_preserves_effective_auto_add_flag():
         pipeline=SimpleNamespace(),
         path_resolver=SimpleNamespace(),
         global_step_axis_filters={},
+        source_projections_by_axis={},
         enable_visualizer_override=False,
         is_zmq_execution=True,
     )
@@ -557,7 +559,7 @@ def test_path_planner_activates_declared_source_binding_for_pipeline_start():
     assert source_binding_plan.bindings == (binding,)
 
 
-def test_plate_export_contract_construction_projects_inputs_to_runtime_batch():
+def test_plate_export_contract_construction_projects_inputs_to_runtime_batch(monkeypatch):
     from openhcs.interop.cellprofiler.compile_time_contracts import (
         CellProfilerInvocationContractProviderFactory,
     )
@@ -585,10 +587,34 @@ def test_plate_export_contract_construction_projects_inputs_to_runtime_batch():
         ),
     )
     dependency_before_provider = session.plan(0).main_input_dependency
+    calls = []
+    build_provider = CellProfilerInvocationContractProviderFactory.provider_for_pipeline
 
-    provider = CellProfilerInvocationContractProviderFactory.provider_for_session(
-        session
+    def counted_provider(cls, pipeline):
+        calls.append(pipeline)
+        return build_provider(pipeline)
+
+    monkeypatch.setattr(
+        CellProfilerInvocationContractProviderFactory,
+        "provider_for_pipeline",
+        classmethod(counted_provider),
     )
+    final_pipeline = replace(session.pipeline)
+    assert calls == []  # Intermediate saved/path-resolved owners do not build providers.
+    session.pipeline = final_pipeline
+    other_context = _context()
+    other_context.axis_id = "B01"
+    other_session = CompilationSession.from_context(
+        context=other_context,
+        orchestrator=session.orchestrator,
+        global_config=session.global_config,
+        pipeline=final_pipeline,
+    )
+    provider = session.pipeline.invocation_contract_provider
+    assert other_session.pipeline.invocation_contract_provider is provider
+    assert calls == [final_pipeline]
+    assert session.plans is not other_session.plans
+    assert session.axis_id == "A01" and other_session.axis_id == "B01"
     invocation = next(normalize_function_pattern(step.func).iter_items())
     assert provider is not None
     plan = provider(

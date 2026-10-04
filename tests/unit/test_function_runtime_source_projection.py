@@ -59,6 +59,7 @@ from openhcs.core.pipeline.function_contracts import (
     special_inputs,
 )
 from openhcs.core.pipeline.path_planner import PathPlanner, PathPlannerArtifactStage
+from openhcs.core.pipeline.compiler import PipelineCompiler
 from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
 from openhcs.core.runtime_adapters import runtime_adapter
 from openhcs.core.runtime_image_values import (
@@ -766,10 +767,17 @@ def test_virtual_workspace_runtime_metadata_projection_validates_explicit_metada
     )
 
     projection.validate_runtime_metadata_projection()
+    # Compile validation uses the already-admitted view, without a runtime
+    # context/provider capable of reopening the source document.
+    PipelineCompiler.validate_source_workspace_projection(
+        SimpleNamespace(source_workspace_projection=projection, axis_id="A01")
+    )
 
 
+@pytest.mark.parametrize("field_name", ("OpenHCSSourceVoxelSpacingZYX", "well"))
 def test_virtual_workspace_runtime_metadata_projection_rejects_path_spelling_drift(
     tmp_path: Path,
+    field_name: str,
 ) -> None:
     plate_path = tmp_path / "plate"
     real_path = tmp_path / "source" / "image.tif"
@@ -779,13 +787,28 @@ def test_virtual_workspace_runtime_metadata_projection_rejects_path_spelling_dri
             virtual_path.name: SourcePixelRef("disk", str(real_path)),
         },
         source_metadata_by_path={
-            virtual_path.name: {"OpenHCSSourceVoxelSpacingZYX": "2,1,1"},
+            virtual_path.name: {field_name: "A01" if field_name == "well" else "2,1,1"},
+            **({str(virtual_path): {"well": "A02"}} if field_name == "well" else {}),
         },
         workspace_root=str(plate_path),
     )
 
-    with pytest.raises(ValueError, match="OpenHCSSourceVoxelSpacingZYX"):
+    with pytest.raises(ValueError, match=field_name):
         projection.validate_runtime_metadata_projection()
+    with pytest.raises(ValueError, match=field_name):
+        PipelineCompiler.validate_source_workspace_projection(
+            SimpleNamespace(source_workspace_projection=projection, axis_id="A01")
+        )
+    if field_name == "well":
+        PipelineCompiler.validate_source_workspace_projection(
+            SimpleNamespace(source_workspace_projection=projection, axis_id="A02")
+        )
+    else:
+        # Metadata without an axis remains shared by every admitted axis.
+        with pytest.raises(ValueError, match=field_name):
+            PipelineCompiler.validate_source_workspace_projection(
+                SimpleNamespace(source_workspace_projection=projection, axis_id="A02")
+            )
 
 
 def test_stack_payload_context_promotes_single_channel_slice_metadata() -> None:

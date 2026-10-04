@@ -704,8 +704,8 @@ def test_cellprofiler_provider_reconstructs_exact_contract_from_public_step() ->
     )
     callable_state = vars(color_to_gray).copy()
 
-    provider = CellProfilerInvocationContractProviderFactory.provider_for_session(
-        session
+    provider = CellProfilerInvocationContractProviderFactory.provider_for_pipeline(
+        session.pipeline
     )
     invocation = next(normalize_function_pattern(step.func).iter_items())
     assert provider is not None
@@ -780,8 +780,8 @@ def test_cellprofiler_provider_advances_native_artifacts_through_generic_graph()
         ),
     )
 
-    provider = CellProfilerInvocationContractProviderFactory.provider_for_session(
-        session
+    provider = CellProfilerInvocationContractProviderFactory.provider_for_pipeline(
+        session.pipeline
     )
 
     assert isinstance(provider, CellProfilerInvocationContractProvider)
@@ -837,8 +837,8 @@ def test_cellprofiler_provider_leaves_native_same_name_callable_unclaimed() -> N
         ),
     )
 
-    provider = CellProfilerInvocationContractProviderFactory.provider_for_session(
-        session
+    provider = CellProfilerInvocationContractProviderFactory.provider_for_pipeline(
+        session.pipeline
     )
 
     assert provider is None
@@ -1170,7 +1170,7 @@ def test_cellprofiler_provider_rejects_under_specified_one_image_align() -> None
         ValueError,
         match=r"Align.*cannot reconstruct an exact module block",
     ):
-        CellProfilerInvocationContractProviderFactory.provider_for_session(session)
+        CellProfilerInvocationContractProviderFactory.provider_for_pipeline(session.pipeline)
 
 
 def test_cellprofiler_invocation_contract_allows_source_binding_supersets() -> None:
@@ -1315,8 +1315,8 @@ def test_calculate_math_provider_keeps_object_identity_and_output_name_public() 
         ),
     )
 
-    provider = CellProfilerInvocationContractProviderFactory.provider_for_session(
-        session
+    provider = CellProfilerInvocationContractProviderFactory.provider_for_pipeline(
+        session.pipeline
     )
     invocation = next(normalize_function_pattern(step.func).iter_items())
     assert provider is not None
@@ -1419,8 +1419,8 @@ def test_native_unnamed_main_flow_remains_a_canonical_contract_input() -> None:
         )
     )
 
-    provider = CellProfilerInvocationContractProviderFactory.provider_for_session(
-        session
+    provider = CellProfilerInvocationContractProviderFactory.provider_for_pipeline(
+        session.pipeline
     )
     native_invocation = next(normalize_function_pattern(steps[0].func).iter_items())
     cp_invocation = next(normalize_function_pattern(steps[1].func).iter_items())
@@ -1441,8 +1441,8 @@ def test_native_unnamed_main_flow_remains_a_canonical_contract_input() -> None:
         )
     )
     pipeline_start_provider = (
-        CellProfilerInvocationContractProviderFactory.provider_for_session(
-            pipeline_start_session
+        CellProfilerInvocationContractProviderFactory.provider_for_pipeline(
+            pipeline_start_session.pipeline
         )
     )
     assert pipeline_start_provider is not None
