@@ -70,8 +70,7 @@ from openhcs.core.function_patterns import (
     MainFlowInputProjection,
 )
 from openhcs.core.measurement_image_alignment import (
-    MeasurementImageLabelAlignmentStrategy,
-    MeasurementLabelSourceAlignmentStrategy,
+    MeasurementImageLabelAlignmentRequest,
     PreparedMeasurementObjectLabels,
 )
 from openhcs.core.measurement_row_materialization import (
@@ -976,12 +975,15 @@ def _measurement_image_for_labels(
         payload=image,
         reference_domain=reference_domain,
     )
-    return MeasurementImageLabelAlignmentStrategy.align(
+    return (
         source.alignment_request(
             labels=labels,
             label_payload=label_payload,
             plane_projector=plane_projector,
-        ).with_source_projected_image()
+        )
+        .with_source_projected_image()
+        .aligned()
+        .image
     )
 
 
@@ -15314,27 +15316,23 @@ def test_measurement_domain_alignment_projects_declared_source_axis() -> None:
             ),
         ).payload_with(image, None),
     )
-    aligned_labels = (
-        MeasurementLabelSourceAlignmentStrategy.align_request_labels_to_image_source(
-            measurement_image.alignment_request(
-                labels=label_planes,
-                label_payload=labels,
-                plane_projector=projector,
-            )
-        )
-    )
+    aligned_labels = measurement_image.alignment_request(
+        labels=label_planes,
+        label_payload=labels,
+        plane_projector=projector,
+    ).labels_in_image_source()
 
     np.testing.assert_array_equal(
         object_label_dense_array(aligned_labels),
         label_planes[1],
     )
     np.testing.assert_array_equal(
-        MeasurementImageLabelAlignmentStrategy.align(
-            measurement_image.alignment_request(
-                labels=aligned_labels,
-                plane_projector=projector,
-            )
-        ),
+        measurement_image.alignment_request(
+            labels=aligned_labels,
+            plane_projector=projector,
+        )
+        .aligned()
+        .image,
         image[1],
     )
 
@@ -15390,11 +15388,13 @@ def test_measurement_domain_source_axis_projection_preserves_image_payload_conte
         payload=payload,
     )
 
-    aligned = MeasurementImageLabelAlignmentStrategy.align(
+    aligned = (
         measurement_image.alignment_request(
             labels=np.ones((4, 5), dtype=np.int32),
             plane_projector=Projector(),
         )
+        .aligned()
+        .image
     )
 
     assert isinstance(aligned, MaskedImagePayload)
@@ -15452,15 +15452,11 @@ def test_measurement_domain_alignment_projects_source_owned_object_labels() -> N
         source_aliases=("rawDNA", "rawGFP"),
         payload=image,
     )
-    aligned_labels = (
-        MeasurementLabelSourceAlignmentStrategy.align_request_labels_to_image_source(
-            measurement_image.alignment_request(
-                labels=labels,
-                label_payload=labels,
-                plane_projector=Projector(),
-            )
-        )
-    )
+    aligned_labels = measurement_image.alignment_request(
+        labels=labels,
+        label_payload=labels,
+        plane_projector=Projector(),
+    ).labels_in_image_source()
 
     assert isinstance(aligned_labels, ObjectLabelSet)
     np.testing.assert_array_equal(
@@ -15605,7 +15601,9 @@ def test_measurement_labels_preserve_stack_for_object_domain_alignment() -> None
     image = np.ones((1, 4, 5), dtype=np.float32)
     labels = np.arange(2 * 4 * 5, dtype=np.int32).reshape(2, 4, 5)
 
-    measurement_labels = MeasurementLabelSourceAlignmentStrategy.align(image, labels)
+    measurement_labels = MeasurementImageLabelAlignmentRequest.labels_for_image(
+        image, labels
+    )
 
     assert measurement_labels.shape == labels.shape
     np.testing.assert_array_equal(measurement_labels, labels)
@@ -15641,7 +15639,7 @@ def test_measurement_label_alignment_preserves_runtime_slice_payload_for_aligned
         ),
     )
 
-    measurement_labels = MeasurementLabelSourceAlignmentStrategy.align(
+    measurement_labels = MeasurementImageLabelAlignmentRequest.labels_for_image(
         AlignedImageStack((first_image, second_image)),
         labels,
         label_payload=label_payload,
@@ -15666,7 +15664,7 @@ def test_measurement_label_alignment_preserves_runtime_slice_payload_for_dense_s
         ),
     )
 
-    measurement_labels = MeasurementLabelSourceAlignmentStrategy.align(
+    measurement_labels = MeasurementImageLabelAlignmentRequest.labels_for_image(
         image,
         labels,
         label_payload=label_payload,
@@ -15760,7 +15758,9 @@ def test_measurement_labels_do_not_infer_broadcast_from_equal_planes() -> None:
     label_plane = np.arange(4 * 5, dtype=np.int32).reshape(4, 5)
     labels = np.stack((label_plane, label_plane))
 
-    measurement_labels = MeasurementLabelSourceAlignmentStrategy.align(image, labels)
+    measurement_labels = MeasurementImageLabelAlignmentRequest.labels_for_image(
+        image, labels
+    )
 
     assert measurement_labels.shape == labels.shape
     np.testing.assert_array_equal(measurement_labels, labels)
@@ -16017,7 +16017,9 @@ def test_measurement_labels_do_not_slice_site_stack_for_single_source_binding() 
     )
 
     del measurement_image
-    measurement_labels = MeasurementLabelSourceAlignmentStrategy.align(image, labels)
+    measurement_labels = MeasurementImageLabelAlignmentRequest.labels_for_image(
+        image, labels
+    )
 
     assert measurement_labels.shape == labels.shape
     np.testing.assert_array_equal(measurement_labels, labels)

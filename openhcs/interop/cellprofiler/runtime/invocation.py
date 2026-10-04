@@ -15,7 +15,6 @@ from openhcs.core.aligned_image_payload import (
 from openhcs.core.equivalence.keys import RuntimeMeasurementSourcePair
 from openhcs.core.measurement_image_alignment import (
     MeasurementImageAlignmentSource,
-    MeasurementImageLabelAlignmentStrategy,
     MeasurementImageReferenceDomain,
     PreparedMeasurementObjectLabels,
 )
@@ -465,12 +464,14 @@ class CellProfilerMeasurementImage(
         plane_projector: RuntimePlaneAxisProjector | None = None,
     ) -> RuntimeCallableArgument:
         """Project this measurement image payload into the supplied label domain."""
-        return MeasurementImageLabelAlignmentStrategy.align(
+        return (
             self.alignment_request(
                 labels=labels,
                 label_payload=label_payload,
                 plane_projector=plane_projector,
             )
+            .aligned()
+            .image
         )
 
 

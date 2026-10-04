@@ -1268,8 +1268,8 @@ def test_nominal_payloads_are_not_erased_before_semantic_projection() -> None:
     )
     semantic_calls = frozenset(
         {
-            "MeasurementLabelSourceAlignmentStrategy.align",
-            "MeasurementLabelSourceAlignmentStrategy.align_request_labels_to_image_source",
+            "MeasurementImageLabelAlignmentRequest.labels_for_image",
+            "MeasurementImageLabelAlignmentRequest.labels_in_image_source",
             "RuntimeSliceProjection.value_for_slice",
             "SourceSpatialDomainAdapter.aligned_values",
         }
