@@ -59,6 +59,6 @@ awk() {
   command awk "${args[@]}"
 }
 function /home/ts/bin/agent-resource-check() {
-  printf '{"level":"warning","controlled_host_observation":true}\n'
+  printf '{"level":"%s","controlled_host_observation":true}\n' "${CONTROLLED_HOST_LEVEL:-warning}"
   return 2
 }

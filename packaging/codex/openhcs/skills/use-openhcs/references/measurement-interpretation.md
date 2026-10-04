@@ -134,16 +134,33 @@ and minimum separation in that method's units, keeping the genuine pair and
 faint body as simultaneous controls. When the callable retains marker or
 landscape artifacts, inspect those alongside support in the first bounded run.
 
-Two transferable development failures illustrate why this belongs before the
-first candidate: a correctly measured textured body can still split into many
-intensity-seeded fragments; smoothing or increasing suppression may reduce those
-fragments while merging a real close pair. If intra-body and inter-body peak
-distances overlap, one global exclusion distance may not solve both. Reconsider
-the landscape or a supported body-association rule rather than automatically
-increasing separation. Record a brief prediction for both the textured body and
-pair, then check it through [stage-specific diagnostics](segmentation-diagnostics.md).
-This is an empirical starting rationale, not another approval gate or an
-expected-count target.
+Worked contrast: a broad continuous body has several internal intensity peaks,
+while a genuine close pair has separate supported interiors and an intervening
+valley. Local body/background evidence first supports admission that retains
+the broad body and pair, not just their bright islands. Choosing a distance
+landscape removes direct intensity texture from seed extraction, but lobes or
+waists in that support can still produce several shape maxima inside one body.
+
+Compare within-body and true-pair peaks on the actual smoothed intensity or
+distance alias consumed by the marker extractor. On a distance transform,
+an absolute peak-height cutoff measures distance to background (an inscribed
+radius), not prominence or peak separation; its units follow the transform's
+spacing. Exclusion distance uses the extractor's declared metric and coordinate
+units, not body diameter or screenshot spacing. Propose smoothing, prominence
+or exclusion from the measured nuisance-versus-neighbour landscape, rather than
+assuming a switch to shape seeds establishes one marker per body.
+
+Competition scope is another part of that proposal: where a peak finder
+competes per label, a binary support label groups all foreground together,
+whereas distinct connected-component labels can restrict competition locally.
+Changing that scope and spacing is not a spacing-only repair; a connected
+component can still contain a genuine touching pair. If within-body and real-pair
+peak scales overlap, reconsider a supported body-association/representative rule
+instead of enlarging global exclusion. Predict one representative in the sampled
+continuous body and two retained in the genuine pair, then inspect those local
+controls and their supported dividing boundary in the first bounded candidate.
+This is a morphology-grounded prediction, not a dataset count target or approval
+gate; use [stage-specific diagnostics](segmentation-diagnostics.md) to test it.
 
 ### Native ruler, profile and independently specified region operations
 
