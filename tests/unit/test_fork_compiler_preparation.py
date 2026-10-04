@@ -3,7 +3,6 @@
 import multiprocessing
 import os
 from pathlib import Path
-from types import SimpleNamespace
 from typing import ClassVar
 
 import pytest
@@ -18,13 +17,10 @@ from openhcs.core.callable_contract import (
 )
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.function_patterns import (
-    CompiledFunctionGroup,
     CompiledFunctionInvocation,
-    CompiledFunctionPattern,
     FunctionInvocationKey,
 )
 from openhcs.core.processing_preparation import PreparationCacheBatch
-from openhcs.core.steps.function_runtime import prepare_compiled_context_callables
 from openhcs.processing.backends.cellprofiler._backend import (
     CellProfilerBackendStrategyMixin,
 )
@@ -128,7 +124,7 @@ def test_platform_without_fork_keeps_parent_preparation_path(monkeypatch):
     ).populate_child_caches()
 
 
-def test_prepared_contract_hook_is_not_replayed_by_compiled_context_reload(
+def test_prepared_contract_hook_is_not_replayed_by_runtime_binding(
     monkeypatch, tmp_path
 ):
     events = []
@@ -152,24 +148,16 @@ def test_prepared_contract_hook_is_not_replayed_by_compiled_context_reload(
         contract=CallableContract.from_prepared_callable(process),
     )
     assert events == ["parent"]
-    pattern = CompiledFunctionPattern(
-        groups=(CompiledFunctionGroup("default", (invocation,)),), is_grouped=False
-    )
-    context = SimpleNamespace(
-        step_plans={0: SimpleNamespace(step_index=0, compiled_function_pattern=pattern)}
-    )
 
-    def prepare_children(batch, *, max_workers):
-        assert max_workers == 1
-        events.append(
-            tuple(preparation.module_name for preparation in batch.preparations)
-        )
+    def prepare_children(*args, **kwargs):
+        raise AssertionError("runtime binding must not prepare kernel caches")
 
     monkeypatch.setattr(
         PreparationCacheBatch,
         "populate_child_caches",
         prepare_children,
     )
-    prepare_compiled_context_callables({"A01": context})
-    assert events == ["parent", (__name__,)]
+    invocation.contract.resolve_runtime_callable()
+    invocation.contract.resolve_runtime_callable()
+    assert events == ["parent"]
     assert all(int(path.read_text()) == os.getpid() for path in tmp_path.iterdir())

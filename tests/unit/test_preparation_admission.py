@@ -11,9 +11,7 @@ from openhcs.core.autoregister_preparation import AutoRegisterRegistryPreparatio
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.function_patterns import (
-    CompiledFunctionGroup,
     CompiledFunctionInvocation,
-    CompiledFunctionPattern,
     FunctionInvocationKey,
 )
 from openhcs.core.processing_preparation import (
@@ -21,7 +19,6 @@ from openhcs.core.processing_preparation import (
     PreparationCacheWorker,
     PreparationOperation,
 )
-from openhcs.core.steps.function_runtime import prepare_compiled_context_callables
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 
 
@@ -239,13 +236,9 @@ def test_startup_prepares_entire_catalog_and_dynamic_compilation_remains_guarded
     )
     assert events == ["selected", "unselected", "dynamic"]
     assert dynamic_invocation.contract.metadata.canonical_signature is not None
-    group = CompiledFunctionGroup("default", (invocation, dynamic_invocation))
-    pattern = CompiledFunctionPattern(groups=(group,), is_grouped=False)
-    context = SimpleNamespace(
-        step_plans={0: SimpleNamespace(step_index=0, compiled_function_pattern=pattern)}
-    )
-    prepare_compiled_context_callables({"A01": context}, max_workers=1)
-    prepare_compiled_context_callables({"A01": context}, max_workers=1)
+    for _ in range(2):
+        invocation.contract.resolve_runtime_callable()
+        dynamic_invocation.contract.resolve_runtime_callable()
     assert events == ["selected", "unselected", "dynamic"]
 
 
