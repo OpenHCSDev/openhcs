@@ -211,3 +211,53 @@ unchanged underlying family; the determining two analysis modules differ from
 Changed-module AST and original pinned R0 will qualify this actual delta,
 followed by a bounded focused source batch. No global R1, installed/public
 pixel acceptance or autonomous scientific improvement is claimed.
+
+Projection qualification at5dad36f88
+-----------------------------------
+
+Source19 controls PASS, terminal0,24.658s/364.2MiB/Swap0/OOM0, under the
+unchanged common slice with CPU1/512MiB/60s. This includes the existing body
+gate family, all three new primary/nuclear-seeded/signal-body declaration cases,
+the shared wavelength detector's cooperative hooks, unchanged public signatures
+and the original compact physical callable. Equivalent declared projections
+produce identical body/outgrowth/nucleus masks, image/cell physical rows and
+the complete spatial graph. The raw input is unchanged. New declaration/audit
+capabilities compose through actual super calls; these are behavioral controls,
+not merely inheritance assertions or word matching. No new registry or generic
+consumer switch was required. The source bootstrap is the original runner from
+the immutable567 archive, with the reused541 checkout explicitly selected.
+This is source-runtime qualification, not installed-wheel/public pixel proof.
+
+Before controls, the original Package parser parsed the current23-module
+analysis family with zero omissions and retained complete changed-module ASTs.
+Its installed tool source SHA03167cc1 is preserved; it is not the authoritative
+ZIP's later parser blobdfdddeb7. Original debt_census.py SHA
+fbe4651372d4d79963075d7fb6ba6dedf90d5e88e14eee07f845c5d836974e35
+does match the authoritative ZIP. Its exact two-file R0 versus21e1ca313 has
+ALL measured counts zero, code lines+16;0.682s/20.2MiB/Swap0/terminal0.
+Prior full8513 consumer/dependency evidence remains separately retained.
+No global R1 or unchanged Root dependency claim is made.
+
+Original R0 invocation05 stopped before measurement because --json lacked its
+required output path. Original controls05 stopped before collection because
+the transient service lacked WorkingDirectory. Both terminal errors/raw logs
+are retained unchanged. Corrected distinct R0 invocation06 and controls06
+used the original tools/bounds; no assertion, test input or resource cap was
+weakened. No fixture runtime was UNKNOWN and no native operation was submitted.
+Two existing pytest config warnings remain in the complete original output.
+
+Byte-exact changed source/tests, original parser caller/AST, both known harness
+failures and final R0/control outputs are archived in
+neurite-detector-projections-20261003.tar.gz,222071bytes,SHA256
+ab3811ce8cfa42e672aa7fb6972f42182323a60dc89f9f99fd5718c9b817fd96.
+Loose originals remain under engineering-neurite-units-20261003. The owned
+terminal Numba fixture cache is2.1MiB there; no source, foreign ledger or prior
+scientific evidence was cleaned or rewritten.
+
+Remaining dependency is precise: Root394's analysis-unit-bearing graph/export
+contract before a pixel registered route can publish unit-correct rows/graphs.
+This independent settings checkpoint is working; it neither claims that shared
+integration exists nor changes physical calibration admission. #567 still uses
+Dewey's separate archived8513 candidate. Its public observation case awaits
+whole-package qualification and positively observed original131 client/native
+closure on6012; the newly retained uncertain revision is never replayed.
