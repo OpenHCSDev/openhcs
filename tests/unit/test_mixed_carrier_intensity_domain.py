@@ -213,3 +213,21 @@ def test_proof_invalidation_preserves_the_current_numerical_domain(normalized):
     expected = image_payload_data(payload) * (0.5 if normalized else 0.5 / 255)
     np.testing.assert_allclose(normalize_image_payload_intensity(transformed), expected)
     assert metadata.intensity_scale == 255
+
+
+@pytest.mark.parametrize('normalized', (False, True))
+def test_cellprofiler_registered_image_input_owner_enters_normalized_domain(normalized):
+    from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
+    from openhcs.interop.cellprofiler.runtime.output_recording import CellProfilerOutputRecorder
+
+    raw = source(np.full((2, 3), 128, dtype=np.uint8))
+    payload = normalize_image_payload_intensity(raw) if normalized else raw
+    owner = CellProfilerOutputRecorder.for_artifact_type(ImageArtifactType)
+    result = owner.runtime_input_value(ArtifactSpec.input('Input', ImageArtifactType), payload)
+    np.testing.assert_allclose(image_payload_data(result), 128 / 255)
+    np.testing.assert_array_equal(image_payload_mask(result), image_payload_mask(raw))
+    metadata = image_payload_metadata(result)
+    assert metadata.has_normalized_intensity
+    assert metadata.unit_interval_intensity_scale == 255
+    assert metadata.source_image_names == ('Input',)
+    assert metadata.without_unit_interval_intensity_scale().has_normalized_intensity
