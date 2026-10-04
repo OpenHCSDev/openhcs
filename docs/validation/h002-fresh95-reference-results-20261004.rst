@@ -18,6 +18,10 @@ failed local repair and missing native Points interaction. The underlying raw
 volume and manual point coordinates are not redistributed. Only unchanged
 score summaries and their input identities are retained in the repository.
 
-Pending: existing paired-book candidate build and rendered-page review, then
-ordinary merge/remote-main verification without a hostedCI hold. Reused isolated
-paper checkout; foreign gitlinks and six inherited untracked files preserved.
+Existing paired-book run-20261004T203832-b98180b5 completed terminalexit0.
+The original builder verified21 figures/63 retained outputs, embedded images,
+packaged links and post-conversion inputs/tools. MainPDFpage24 and supplement
+page29 were rendered and personally opened; new Results/index text fits the
+existing style. Historical sources stay qualified separately, not regenerated.
+Ordinary merge follows without a hostedCI hold. Reused isolated paper checkout;
+foreign gitlinks and six inherited untracked files preserved.
