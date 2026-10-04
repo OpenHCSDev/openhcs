@@ -91,3 +91,22 @@ provider, installed server or scientific job is launched by the controls.
 Remaining acceptance: parent-reviewed NEXT source release and one affected
 operational/installed harness journey. Neither controlled external owners nor
 current unrelated scientific runs establish that future live cutover.
+# Direct HDD destination owner/consumer qualification (2026-10-04)
+# ==============================================================
+# Original publication/retirement/recorded-MCP controls:
+# engineering-declared-hdd-destination-20261004/publication03, terminal0.
+# Original operation-admission controls: same root/admission01, terminal0.
+# Logs are retained beside that persistent engineering root. Actual mounted
+# NTFS path passes projection, ordinary launcher preflight, ledger and recorded
+# MCP body through its external-exec boundary (controlled child42, no provider,
+# native runtime or SCI). Config/state/registered-function source and0700 IPC,
+# author journals/history stay HOME; payload/temp/cache explicit HDD.
+# Missing mount and symlink destinations refuse; original retirement projects
+# HOME control and HDD payload roots exactly once. Installed unchanged
+# AgentPathPolicy accepts absolute HDD writes through its normal declaration.
+# Publication02's first negative control had an unbound test variable; it did
+# not qualify missing-mount behavior. Receipt preserved; corrected03 qualifies
+# both negatives. No failed science or UNKNOWN was replayed.
+# Python AST census agent/core-pipeline parses; shell/JQ manually traced,
+# explicitly outside Python AST. Ordinary cold MCP receiving remains separately
+# owned by Planck's consolidated622/623 bundle; controls are not SCI acceptance.

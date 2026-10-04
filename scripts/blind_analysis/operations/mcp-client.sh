@@ -15,7 +15,7 @@ fleet_require_artifact_destination "$FLEET_SLOT"
 scratch="$FLEET_SCRATCH"
 # NTFS carries scientific payloads, not private config or POSIX0700 IPC runtime.
 control="$FLEET_WORKSPACE/output/runtime"
-export XDG_CACHE_HOME="$scratch/cache" XDG_CONFIG_HOME="$control/config" XDG_DATA_HOME="$scratch/data" XDG_STATE_HOME="$control/state" XDG_RUNTIME_DIR="$control/xdg-runtime" TMPDIR="$scratch" NUMBA_CACHE_DIR="$scratch/numba" MPLCONFIGDIR="$scratch/matplotlib" OPENHCS_UI_CONFIG_CACHE_FILE="$control/config/ui-config-cache.json"
+export XDG_CACHE_HOME="$scratch/cache" XDG_CONFIG_HOME="$control/config" XDG_DATA_HOME="$control/data" XDG_STATE_HOME="$control/state" XDG_RUNTIME_DIR="$control/xdg-runtime" TMPDIR="$scratch" NUMBA_CACHE_DIR="$scratch/numba" MPLCONFIGDIR="$scratch/matplotlib" OPENHCS_UI_CONFIG_CACHE_FILE="$control/config/ui-config-cache.json"
 reservations="/home/ts/.openhcs/tcp/$FLEET_NATIVE.startup.lock:/home/ts/.openhcs/tcp/$FLEET_NATIVE_ACK.startup.lock:/home/ts/.openhcs/tcp/$FLEET_VIEWER.startup.lock:/home/ts/.openhcs/tcp/$FLEET_VIEWER_ACK.startup.lock"
 export OPENHCS_AGENT_READ_ROOTS="$FLEET_WORKSPACE/output:$FLEET_ARTIFACT_ROOT:$scratch:$FLEET_INPUT:$FLEET_INSTALL/openhcs/agent/resources/knowledge:$reservations"
 export OPENHCS_AGENT_WRITE_ROOTS="$FLEET_WORKSPACE/output:$FLEET_ARTIFACT_ROOT:$scratch:$reservations"

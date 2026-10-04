@@ -121,8 +121,9 @@ MCP read/write roots explicitly admit the payload directory. Existing
 PathPlanningConfig.global_output_folder and artifact/checkpoint declarations
 place scientific payloads there without a persistence/path-policy bypass.
 The author also directs large captures/arrays there. HOME retains source,
-pipeline text, native history, journals and handoff manifests. Large cache/data/
-temp scratch follows payloads; private config/state and POSIX0700 IPC runtime
+pipeline text, native history, journals and handoff manifests. Large cache/
+temp scratch follows payloads; runtime registered-function source/data,
+private config/state and POSIX0700 IPC runtime
 stay on HOME because the HDD is NTFS. Telemetry measures control plus payload
 once and reports actual destination free space. Retirement records both roots
 once through the same original retained-root projection. No shadow storage or
