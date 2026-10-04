@@ -255,6 +255,8 @@ Matched native views complement these numerical results. Supplementary Figure 9 
 
 A separate fresh-context author repaired a joined nuclear pair in a released DNA/actin field through its own review, without reference feedback (Figure 8). The final pipeline exported 55 nuclear instances and 55 associated actin territories, with reconciled object identities. A faint neighbouring pair remained merged, and unresolved actin interfaces limited interpretation of the territories as physical cell boundaries. This run demonstrates local autonomous repair and useful linked outputs, not an exact cell census (Supplementary Data 8).
 
+A fresh retinal author independently revised its foreground model after measuring background admission and weak-body support. Smoothing followed by broad-background subtraction improved local signal discrimination, and the completed final pipeline exported 109 detector instances. Distributed review still found partial faint-body recovery and uncertain ring-shaped partitions; a saved response below the cutoff localized one plausible miss to foreground admission rather than watershed. This is evidence of autonomous diagnosis and useful candidate output, not a validated retinal ganglion-cell count (Supplementary Data 8).
+
 ### Figure 7. Task-only analysis: within-run revision and final coverage
 
 ![Task-only within-run revision and final coverage.](figures/slas/task_only_analysis.png){width=6in}
