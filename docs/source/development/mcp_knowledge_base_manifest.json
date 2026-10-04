@@ -796,8 +796,8 @@
       "document_id": "openhcs_segmentation_diagnostics",
       "section_count": 0,
       "source_path": "packaging/codex/openhcs/skills/use-openhcs/references/segmentation-diagnostics.md",
-      "summary": "Diagnose foreground, seeds, watershed and secondary growth. Compare body-admission models for noisy ring/textured bodies using local positives/background and regional negatives; nuclear anchors are not boundary evidence. False splits, merged neighbours, zero-growth cytoplasm, neurite topology and label identity with regression controls.",
-      "tags": ["segmentation diagnostics", "body admission models noisy ring textured", "local background difference intensity class separation", "diffuse foreground threshold flooding faint loss", "nucleus split watershed", "touching nuclei", "merged neighbours", "seeding prominence H maxima", "zero growth cytoplasm", "primary secondary", "neurite outgrowth", "puncta", "Cellpose", "StarDist", "tile boundary", "label count", "MorphoLibJ"],
+      "summary": "Diagnose foreground, seeds, watershed and secondary growth. Compare body-admission models for noisy ring/textured bodies using local positives/background and regional negatives; nuclear anchors are not boundary evidence. Distinguish weak body-channel subsets from failed growth, and faint skeleton support recovery from rooted graph validity, soma loops and neuronal ownership.",
+      "tags": ["segmentation diagnostics", "body admission models noisy ring textured", "local background difference intensity class separation", "diffuse foreground threshold flooding faint loss", "nucleus split watershed", "touching nuclei", "merged neighbours", "seeding prominence H maxima", "zero growth cytoplasm", "weak absent body signal nuclear scope", "primary secondary", "neurite outgrowth", "faint skeleton support rooted graph", "soma medial axis loops branchpoints ownership", "puncta", "Cellpose", "StarDist", "tile boundary", "label count", "MorphoLibJ"],
       "title": "Diagnose microscopy segmentation by stage"
     },
     {
