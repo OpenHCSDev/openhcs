@@ -10,6 +10,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 
 from setuptools import Extension, setup
+from setuptools.command.build_ext import build_ext as _build_ext
 from setuptools.command.build_py import build_py as _build_py
 from setuptools.command.sdist import sdist as _sdist
 
@@ -72,6 +73,9 @@ class OpenHCSNativeExtension(Extension, ABC):
             extra_compile_args=["/O2"] if os.name == "nt" else ["-O3"],
         )
 
+    def prepare_build_sources(self, build_root: Path) -> None:
+        """Prepare any generated sources at the native package-build boundary."""
+
     @classmethod
     def declared_extensions(cls) -> list[Extension]:
         """Derive compilation targets from concrete declarations in this family."""
@@ -90,9 +94,38 @@ class TabularNativeExtension(OpenHCSNativeExtension):
         return "openhcs.core._tabular_native"
 
 
+class MedianNativeExtension(OpenHCSNativeExtension):
+    @property
+    def qualified_module_name(self) -> str:
+        return "openhcs.processing.backends.cellprofiler._median_native"
+
+    def prepare_build_sources(self, build_root: Path) -> None:
+        generator = runpy.run_path(
+            str(Path(__file__).resolve().parent / "scripts/build_median_network.py")
+        )
+        generated_root = build_root / "median-network"
+        generator["build_median_network_header"](
+            generated_root / "_median_network_generated.h"
+        )
+        self.include_dirs.append(str(generated_root.resolve()))
+        self.depends.extend([
+            str(Path(__file__).resolve().parent / "scripts/build_median_network.py"),
+            str(generated_root / "_median_network_generated.h"),
+        ])
+
+
+class BuildNativeExtensions(_build_ext):
+    """Prepare declared native sources without executing runtime compilation."""
+
+    def build_extension(self, extension):
+        extension.prepare_build_sources(Path(self.build_temp))
+        super().build_extension(extension)
+
+
 setup(
     ext_modules=OpenHCSNativeExtension.declared_extensions(),
     cmdclass={
+        "build_ext": BuildNativeExtensions,
         "build_py": BuildPyWithMcpKnowledge,
         "sdist": SdistWithMcpKnowledge,
     },
