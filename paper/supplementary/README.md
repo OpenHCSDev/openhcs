@@ -824,6 +824,23 @@ autonomous failure detection, not successful repair or an instance-accuracy
 estimate. The [independent review](../../docs/validation/bbbc007-fresh651-independent-review-20261004.rst)
 retains the original evidence identities and qualified verification scope.
 
+A subsequent fresh paired-field trial separated a crowded cluster and a genuine
+pair, but its last marker-smoothing change retained a dim-neighbour merge and
+introduced an apparent isolated-body split. The author caught the regression
+without reference feedback. Its final 56 nuclear and 56 seeded cell labels are
+algorithmic counts, not an accepted biological census. The
+[fresh paired-field outcome record](task_only_analysis/h003-fresh96-outcome.json)
+binds the independently verified 244-payload freeze, final source and review.
+
+A retained personal-neurite development continuation also analysed a reused
+nine-field mosaic with pooled channel fits. A fixed-DN clipping repair corrected
+unexpected rescaling, but dense nuclear misses and soma underfill prevented
+complete counting and morphology. Its 1,429 body IDs and native outgrowth sum
+remain descriptive algorithm outputs, not accepted biological totals. This is
+same-author development, not a fresh autonomous success. The
+[stitched-development outcome record](task_only_analysis/p001-stitched94-outcome.json)
+identifies the independently verified freeze and original report.
+
 ## Software snapshots and evidence
 
 | Evidence | Software identity | What the record establishes |

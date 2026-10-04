@@ -455,6 +455,97 @@ repair or a validated reusable parameter recipe. Its recorded client exit
 exceeded the 75-minute deadline by about eight seconds; that operational
 qualification remains separate from scientific completion and rejection.
 
+## Fresh paired-field repeat: local separation gains and a caught regression
+
+The fresh author `H003_FRESH656_96` analysed only the released paired 400 x 400
+DNA/actin field, without reference outlines, previous scientific solutions or
+reference-score feedback. It retrieved the official ExampleHuman recipe and
+marker/body guidance before choosing its first method, and measured distributed
+signal, background, internal peaks and genuine-neighbour separation. This is
+fresh independent development on released data, not held-out evaluation.
+
+The first pipeline used shape markers and shape partitioning and exported
+53 nuclei and 53 seeded cell regions. Changing to intensity markers with
+smoothing 8 retained shape partitioning and reduced those counts to 51/51
+without resolving the cluster. Changing partitioning to intensity separated
+the crowded cluster and genuine pair, yielding 54/54. The final attempt,
+REPAIR03, changed marker smoothing from 8 to 4 after the author measured an
+absent dim maximum in the actually consumed smoothed response; changing peak
+suppression alone could not restore that absent maximum.
+
+The final pipeline completed and exported 56 nuclear instances and 56 seeded
+cell regions. Distributed final review still found a dim/bright merge and an
+apparent new split inside an isolated mottled nucleus. The author rejected
+unqualified counting, preserving the last attempted source and its regression.
+Crowded-cluster separation, the genuine-pair control and clear sampled negative
+areas remain useful scoped findings. Uncertain actin interfaces and seed-sized
+territories do not establish physical cell boundaries. Counts are detector
+outputs, not biological truth or a reference agreement score.
+
+The coordinator independently verified all 244 canonical payload hashes and
+the final source after cleanup, and personally opened the original isolated-body
+raw, result-only and combined native captures. The raw body has no convincing
+separating outer boundary at the overlaid seam, supporting the apparent-split
+concern rather than an annotated error rate. Low-valued grayscale label IDs
+are dark; this is not evidence of missing instances. The combined capture has
+a shorter canvas than the raw/result captures, so the review compares the
+native region, not exact screen pixels. No reference outlines were opened or
+scored. The [outcome record](task_only_analysis/h003-fresh96-outcome.json)
+retains source, report, freeze and original capture identities.
+
+The final scientific freeze includes 90 native PNGs: distributed raw/result/
+combined views in both channels and additional isolated-split diagnostics.
+Physical calibration is unverified; geometric outputs use pixels and pixel².
+Typed closure confirms exit of the owned native/viewer processes. The original
+recorded client exited with code 2 within the 75-minute envelope; that technical
+qualification is retained separately from complete execution and scientific
+rejection. This trial improves diagnosis coverage but does not establish better
+task-wide accuracy, a causal skill benefit or a reusable parameter recipe.
+
+## Personal neurite mosaic: technical recovery and retained biological losses
+
+The retained same-author continuation `P001_STITCH_DEV94` used a previously
+assembled 2857 x 2858-pixel, two-channel mosaic from nine overlapping fields.
+All nine fields were development data; there was no remaining unseen reserve.
+Shared placements and blending were reused, not recomputed independently by
+channel. Inherited 1st/99th-percentile fits pooled all nine contributing images
+per channel: DAPI 616–3839 DN and FITC 143–20445 DN. The continuation applied
+those fixed limits without per-field or mosaic refitting. Clipping after
+blending does not reproduce clipping before blending exactly.
+
+The first candidate's rescaler unexpectedly mapped the selected interval to
+uint16 0–65535. Native raw/processed profiles exposed the mismatch. The second
+candidate replaced only that operation with a registered fixed-DN clip; its
+checked profile preserved in-range values. Compilation and execution completed,
+and the native viewer supplied distributed raw/result/combined comparisons.
+The corrected analytical mapping did not resolve the biological failures.
+
+The final output contained 1,429 admitted body IDs and 1,570 nuclear labels.
+Native tables reported 150,442.4259 micrometres of algorithm-defined outgrowth,
+with 228 zero-growth bodies and 1,201 nonzero graph owners. These are descriptive
+outputs, not accepted neuronal totals or complete morphology. The declared
+spacing was 1.3556 micrometres per XY pixel and was not independently calibrated.
+SWC-coordinate remeasurement exceeded the native path-feature sum by about
+0.8326%; the exported geometric and path-feature definitions are retained
+separately rather than presented as identical measurements.
+
+The author retained useful local paths, linked graph-feature selection and
+sampled seam/junction continuity. Dense-region DAPI review nevertheless showed
+clear anchors without admitted ROIs and a close pair sharing one label; several
+body masks underfilled connected FITC signal, with uncertain crossing ownership.
+The coordinator independently opened the frozen dense-region DAPI triplet and
+confirmed the missing anchors. These material counting failures, not a demand
+for perfect agreement on ambiguous cells, motivated rejection for complete
+counting and morphology. The original freeze remains immutable while further
+development is separately assigned.
+
+All 1,033 canonical payload entries and the final pipeline hash passed independent
+verification. The run sealed within its 75-minute clock, including cleanup;
+owned native/viewer processes were closed, while client exit code 2 remains
+recorded. The [stitched-development outcome record](task_only_analysis/p001-stitched94-outcome.json)
+binds the original report, manifest and pipeline identities. No new scientific
+execution or reference scoring was performed for this account.
+
 ## Scope and retained evidence
 
 [Figure 7 plot data](../figures/slas/task_only_analysis_plot_data.csv) retains
