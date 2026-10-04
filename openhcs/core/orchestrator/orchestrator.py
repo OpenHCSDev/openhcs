@@ -20,6 +20,7 @@ from openhcs.constants.constants import (
 from openhcs.constants import Microscope
 from openhcs.core.compiled_execution import CompiledExecutionBundle
 from openhcs.core.config import GlobalPipelineConfig
+from openhcs.core.execution_visualizer import ExecutionVisualizerABC
 from objectstate.object_state import ObjectState
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
 
@@ -62,16 +63,6 @@ from openhcs.microscopes.microscope_base import MicroscopeHandler
 from openhcs.core.alias_property import AliasProperty
 
 # Import generic component system - required for orchestrator functionality
-
-# Optional napari import for visualization
-try:
-    from openhcs.runtime.napari_stream_visualizer import NapariStreamVisualizer
-
-    NapariVisualizerType = NapariStreamVisualizer
-except ImportError:
-    # Create a placeholder type for type hints when napari is not available
-    NapariStreamVisualizer = None
-    NapariVisualizerType = Any  # Use Any for type hints when napari is not available
 
 logger = logging.getLogger(__name__)
 
@@ -733,7 +724,7 @@ class PipelineOrchestrator:
         self,
         execution_bundle: CompiledExecutionBundle,
         max_workers: Optional[int] = None,
-        visualizer: Optional[NapariVisualizerType] = None,
+        visualizer: ExecutionVisualizerABC | None = None,
         log_file_base: Optional[str] = None,
         progress_queue=None,
         progress_context=None,
@@ -748,8 +739,7 @@ class PipelineOrchestrator:
             compiled_contexts: Dict of axis_id to its compiled, frozen ProcessingContext.
                                Obtained from `compile_plate_for_processing`.
             max_workers: Maximum number of worker threads for parallel execution.
-            visualizer: Optional instance of NapariStreamVisualizer for real-time visualization
-                        (requires napari to be installed; must be initialized with orchestrator's filemanager by the caller).
+            visualizer: Viewer implementing the compiled execution lifecycle.
             log_file_base: Base path for worker process log files (without extension).
                           Each worker will create its own log file: {log_file_base}_worker_{pid}.log
 
