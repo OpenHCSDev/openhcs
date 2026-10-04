@@ -127,6 +127,42 @@ The author terminated successfully at 2026-10-04T13:33:23.914 UTC; the recorded
 MCP client exited with code 2. Six growing-journal snapshots retain the exact
 later post-writer-exit owner seal, without rewriting the scientific freeze.
 
+## Three-dimensional development: count reduction without split repair
+
+A separate same-author development continuation, `H002_CAPACITY_DEV94`, tested
+whole-volume nucleus-centre detection on one 60 x 256 x 256-voxel acquisition.
+It is not a fresh task-only trial and contributes no autonomous success or
+reference-agreement score to the comparisons above. The registered custom
+callable smooths the volume, thresholds foreground, and uses distance-map
+h-maxima as watershed markers. Each retained partition supplies one geometric
+centroid; truncated partitions remain included and boundary-flagged. Physical
+voxel spacing was not verified.
+
+Increasing seed prominence from 2.5 to 4 and then 6 voxel-distance units reduced
+the output from 29 to 28 and then 26 centres. Boundary-flagged centres fell from
+15 to 14 and then 12. The suspect upper-body partitions retained identical
+centroids and volumes across these trials; the reductions removed boundary
+fragments rather than repairing their unresolved interior multiplicity.
+Supported isolated nuclei and a separated neighbour pair remained useful local
+detections, but neither a smaller count nor successful whole-volume execution
+established one centre per biological nucleus.
+
+The author rejected an unqualified biological count after matched XY,
+orthogonal, image-only, point-only and combined review. Fractional centroids
+appear on different neighbouring slices, so a single-plane screenshot cannot
+establish either duplicate detection or an absent point. The callable retained
+smoothed intensity, partitions and centres, but not the consumed distance map
+or seed mask. Raw-intensity measurements therefore did not diagnose why its
+interior shape maxima survived. The lesson is to inspect the failed marker and
+body-association stage, not infer repair from aggregate count changes. No
+corrected count, accuracy estimate or complete-volume biological acceptance is
+claimed. The frozen pipeline SHA-256 is
+`abd709c61c70f7bb36d79374a029c332488dac6a757346fc5ac69988c8612b7e`;
+the registered source SHA-256 is
+`24606ee04ae0dfc8b1fa95f7f212ec55ab349e17751f6cefd2e3eaab1c272095`.
+Original source, execution records and matched captures remain in the named
+development archive, separate from the two scored task-only trials.
+
 ## Scope and retained evidence
 
 [Figure 7 plot data](../figures/slas/task_only_analysis_plot_data.csv) retains

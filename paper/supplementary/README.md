@@ -658,6 +658,13 @@ the report; original acquisitions, prediction arrays and tool journals remain
 in their frozen study bundles. No reference-score feedback was supplied to
 the authors, and consulted development images are not described as unseen data.
 
+The report separately records a same-author three-dimensional development
+continuation, not a fresh autonomous trial. Seed-prominence increases reduced
+29 centres to 26 by removing boundary fragments while leaving suspect interior
+partitions unchanged. Matched multi-plane review therefore did not accept an
+unqualified biological count. This case has no reference-agreement score and
+does not contribute to the two scored task-only comparisons.
+
 ## Software snapshots and evidence
 
 | Evidence | Software identity | What the record establishes |
