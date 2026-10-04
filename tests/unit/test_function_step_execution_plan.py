@@ -35,7 +35,6 @@ from openhcs.core.function_patterns import (
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
 from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
 from openhcs.core.runtime_adapters import RuntimeAdapterRequest, runtime_adapter
-from openhcs.core.runtime_output_matching import RuntimeReturnedOutputMatcher
 from openhcs.core.step_dependencies import (
     StepInputDependency,
     StepInputDependencyKind,
@@ -154,7 +153,7 @@ def test_compiled_step_plan_owns_gpu_memory_classification() -> None:
     assert compiled_plan.device_id_for("cupy") == 2
 
 
-def test_compiled_step_plan_includes_invocation_execution_memory() -> None:
+def test_compiled_step_plan_includes_invocation_execution_memory(monkeypatch) -> None:
     def numpy_boundary_with_torch_execution(image):
         return image
 
@@ -172,6 +171,31 @@ def test_compiled_step_plan_includes_invocation_execution_memory() -> None:
 
     assert compiled_plan.gpu_memory_types == frozenset({MemoryType.TORCH})
     assert compiled_plan.device_id_for("torch") == 4
+    from contextlib import contextmanager
+    from openhcs.core.pipeline.framework_device_assignment import (
+        assign_framework_devices,
+    )
+
+    monkeypatch.setattr(
+        "openhcs.core.pipeline.framework_device_assignment.resolve_framework_devices",
+        lambda _required: compiled_plan.device_assignment,
+    )
+    assign_framework_devices({0: compiled_plan})
+    (placed_invocation,) = tuple(
+        compiled_plan.compiled_function_pattern.iter_invocations()
+    )
+    assert placed_invocation.input_device_id is None
+    assert placed_invocation.execution_device_id == 4
+    entered = []
+
+    @contextmanager
+    def recorded_scope(memory_type, device_id):
+        entered.append((memory_type, device_id))
+        yield
+
+    monkeypatch.setattr(MemoryType, "device_scope", recorded_scope)
+    with placed_invocation.execution_device_scope():
+        assert entered == [(MemoryType.TORCH, 4)]
 
 
 def test_compiled_step_plan_includes_intermediate_invocation_memory() -> None:
@@ -549,10 +573,9 @@ def test_compiler_handoff_preserves_exact_same_name_output_types():
     )
     image_value = object()
     labels_value = object()
-    _returned, matched = RuntimeReturnedOutputMatcher(
-        callable_contract=invocation.contract,
-        returned_output=(image_value, labels_value),
-    ).resolve_plan_values(tuple(selected.values()))
+    _returned, matched = invocation.contract.resolve_returned_plan_values(
+        (image_value, labels_value), tuple(selected.values())
+    )
 
     assert selected == {
         image_spec.ref(): image_plan,

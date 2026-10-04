@@ -1,0 +1,331 @@
+{
+  "source_receipt": {
+    "path": "source-receipt.json",
+    "sha256": "e260b0865ab7b24c3e7c5131305ea2a10ecfbf46dab6a85e23f88ed4ecabfacd"
+  },
+  "original_pngs": [
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z32_south_positive/raw/20261004T162009764292Z_napari_6013_OpenHCS_Napari_Visualization.png",
+      "size_bytes": 148702,
+      "sha256": "e54612997192c5b32cd4740888d5aaa12c02dc72403b8abfcc441e935e2fc39e"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z32_south_positive/points/20261004T162014960994Z_napari_6013_OpenHCS_Napari_Visualization.png",
+      "size_bytes": 85605,
+      "sha256": "da90f9998370c7eb1a99a6b88afc868e4bee5d66c66dad5871942ab77b05d12c"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z32_south_positive/combined/20261004T162020062074Z_napari_6013_OpenHCS_Napari_Visualization.png",
+      "size_bytes": 152443,
+      "sha256": "702995db90f6599ef7c4e4ce73d6a2ff26fe1fb026a99f7c54194ccc9678701f"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z36_upper_full/raw/20261004T161752422649Z_napari_6013_OpenHCS_Napari_Visualization.png",
+      "size_bytes": 114345,
+      "sha256": "1a6420fd76b4c1d396acf524b7ec5c7da1092fd438ecf5fd5540a698bfe30c37"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z36_upper_full/points/20261004T161757655032Z_napari_6013_OpenHCS_Napari_Visualization.png",
+      "size_bytes": 85441,
+      "sha256": "6a5d269517c0931332c709b9e9b027044d12fe6becf461376988319f30d6dfe0"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z36_upper_full/combined/20261004T161802765533Z_napari_6013_OpenHCS_Napari_Visualization.png",
+      "size_bytes": 118545,
+      "sha256": "41d4871be6203a764bb2351f742a691b11116df550b246bae819a3ae73c9f313"
+    }
+  ],
+  "embedding": "Original compressed PNG bytes, unchanged; no standalone source image copies.",
+  "clip_rect_original_screenshot_pixels_xywh": [
+    297,
+    28,
+    953,
+    448
+  ],
+  "crop_scope": "Entire native scene canvas including its existing footer, excluding surrounding viewer chrome.",
+  "identical_clip_all_six": true,
+  "output_dimensions": [
+    1854,
+    1220
+  ],
+  "panel_scale": 0.6190975865687304,
+  "panel_height": 277.3557187827912,
+  "print_typography": {
+    "intended_width_inches": 6,
+    "minimum_label_svg_units": 35,
+    "minimum_label_points_at_intended_width": 8.155339805825243,
+    "title_svg_units": 42,
+    "title_points_at_intended_width": 9.78640776699029,
+    "native_screenshot_footer": "Unchanged embedded source detail, not the publication label.",
+    "print_scale_preview": "900px wide: six inches at 150 pixels/inch"
+  },
+  "renderer": [
+    "/usr/bin/rsvg-convert",
+    "--output",
+    "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/planck-h002-capacity-development-proposal/preview.png",
+    "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/planck-h002-capacity-development-proposal/candidate.svg"
+  ],
+  "print_scale_renderer": [
+    "/usr/bin/rsvg-convert",
+    "--width",
+    "900",
+    "--output",
+    "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/planck-h002-capacity-development-proposal/print-scale-preview.png",
+    "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/planck-h002-capacity-development-proposal/candidate.svg"
+  ],
+  "superseded_render": {
+    "outputs": [
+      {
+        "path": "candidate.svg",
+        "size_bytes": 944158,
+        "sha256": "04a6915cdc73a7a43c738d07a48d798b2150ada276bba6fdc250fb2c891723fa"
+      },
+      {
+        "path": "preview.png",
+        "size_bytes": 334711,
+        "sha256": "c1662fe66f51ec736ec91a77f653e3cde75f5b2f1b5ee8c4ab9223556c559ca5"
+      }
+    ],
+    "output_dimensions": [
+      1854,
+      896
+    ],
+    "source_receipt": {
+      "path": "source-receipt.json",
+      "sha256": "e260b0865ab7b24c3e7c5131305ea2a10ecfbf46dab6a85e23f88ed4ecabfacd",
+      "at_original_render_sha256": "7221f2383428ec3d3c3b61f2e444ae396aa6224fe70e4a9f7e9e317555b21e90",
+      "amendment": "2026-10-04 CC0 source attribution and superseded historical hold; no rerender or image changes."
+    },
+    "reason": "Publication labels undersized at six-inch placement."
+  },
+  "supporting_sets": [
+    {
+      "tag": "xy_z33_p1p99",
+      "receipt": "source-receipt.json",
+      "captures": [
+        {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z33_p1p99/raw/20261004T161229829187Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "47767ded32ffd07cba79d2a45ae2217c463b903c384edde1aef3c2b9abdbaada",
+          "size_bytes": 228109,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z33_p1p99/raw/20261004T161229829187Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        },
+        {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z33_p1p99/points/20261004T161234957447Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "6cefb8f4b2f2d21c475f5f6edaa154a9eee7173ccd73c74b91dc068984a6c132",
+          "size_bytes": 85783,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z33_p1p99/points/20261004T161234957447Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        },
+        {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z33_p1p99/combined/20261004T161240065651Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "a68d4392539ca010d1b101779147663e432ecd3988dee3f4236b6100c7571639",
+          "size_bytes": 231581,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z33_p1p99/combined/20261004T161240065651Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        }
+      ]
+    },
+    {
+      "tag": "xy_z36_p1p99",
+      "receipt": "source-receipt.json",
+      "captures": [
+        {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z36_p1p99/raw/20261004T161314913372Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "6f37c9009e9f50089970d257ce423f1c2187f30833e634a823d2cd3d17e8968d",
+          "size_bytes": 227370,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z36_p1p99/raw/20261004T161314913372Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        },
+        {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z36_p1p99/points/20261004T161319857205Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "7c827a3c5a5b759415ada34184bf3091fc2b3a39edc6d27d22e25ab73ee5be3a",
+          "size_bytes": 85351,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z36_p1p99/points/20261004T161319857205Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        },
+        {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z36_p1p99/combined/20261004T161325018309Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "f92159a91fa70cf6c05838bd144163f74bd9eee83e37d6375a65d73a068d1fe9",
+          "size_bytes": 230868,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z36_p1p99/combined/20261004T161325018309Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        }
+      ]
+    },
+    {
+      "tag": "xy_z39_p1p99",
+      "receipt": "source-receipt.json",
+      "captures": [
+        {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z39_p1p99/raw/20261004T161346013823Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "18d805caf8e303c75cb1e464e64dada02cbf617bc295e272d2cef62c28b4812b",
+          "size_bytes": 226004,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z39_p1p99/raw/20261004T161346013823Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        },
+        {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z39_p1p99/points/20261004T161351211437Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "bd17472861486de81b7e7d8041bd3e77762e08e05f8ebe4ad405a96acd74fbbd",
+          "size_bytes": 85197,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z39_p1p99/points/20261004T161351211437Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        },
+        {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z39_p1p99/combined/20261004T161356409343Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "d85320c35fc092cb98d379b5894f65270918afa6f3c63ac7e71e1b87bf7dd36d",
+          "size_bytes": 229391,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z39_p1p99/combined/20261004T161356409343Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        }
+      ]
+    },
+    {
+      "tag": "yz_x186_upper_p1p99",
+      "receipt": "source-receipt.json",
+      "captures": [
+        {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/yz_x186_upper_p1p99/raw/20261004T161630825782Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "6b58d328c9c47e6744e03e660220224652de1d7a80018c4fa443cac37ad87e71",
+          "size_bytes": 102202,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/yz_x186_upper_p1p99/raw/20261004T161630825782Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        },
+        {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/yz_x186_upper_p1p99/points/20261004T161636112223Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "6201b9ddcb708ac837ad90962c3581659a9c1bb17908bc9eb951a4f02cc6bafe",
+          "size_bytes": 85746,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/yz_x186_upper_p1p99/points/20261004T161636112223Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        },
+        {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/yz_x186_upper_p1p99/combined/20261004T161641409745Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "dcaa0b331022c2e96a94857a79c6ccb713a6f5af3e906e9e69f26a9f09bd6b19",
+          "size_bytes": 107365,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/yz_x186_upper_p1p99/combined/20261004T161641409745Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        }
+      ]
+    },
+    {
+      "tag": "xz_y43_upper_full",
+      "receipt": "source-receipt.json",
+      "captures": [
+        {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xz_y43_upper_full/raw/20261004T161847964140Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "0bd5c1ade53eb3558314a425c7b815c76e25b591cbc72a27318c05fae8bc9fca",
+          "size_bytes": 99874,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xz_y43_upper_full/raw/20261004T161847964140Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        },
+        {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xz_y43_upper_full/points/20261004T161853167809Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "e89ff59407df4d33012d6ea935880053ed4876298c0339d2bc565b6545ebf76a",
+          "size_bytes": 85694,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xz_y43_upper_full/points/20261004T161853167809Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        },
+        {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xz_y43_upper_full/combined/20261004T161858871917Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "5df3143d93396cdfe1371f3d22ef74c7267f916583442eb539afebb99fd59b96",
+          "size_bytes": 105525,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xz_y43_upper_full/combined/20261004T161858871917Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        }
+      ]
+    },
+    {
+      "tag": "xy_z34_true_pair",
+      "receipt": "source-receipt.json",
+      "captures": [
+        {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z34_true_pair/raw/20261004T162104016724Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "59e461f83624dc49a60280ef7adf03c0ff624ff2794b6536107a50f88ef5e737",
+          "size_bytes": 145921,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z34_true_pair/raw/20261004T162104016724Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        },
+        {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z34_true_pair/points/20261004T162110878490Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "f3293ad7ea40af0d8c503ca02ba879fe7077d6707851fa0000bc78914be11feb",
+          "size_bytes": 85571,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z34_true_pair/points/20261004T162110878490Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        },
+        {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z34_true_pair/combined/20261004T162116769489Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "5126c5fe4a844ede427bf5bfc2ae179cc1190a2a3b0702581ece2a85e3253b41",
+          "size_bytes": 149591,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z34_true_pair/combined/20261004T162116769489Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        }
+      ]
+    },
+    {
+      "tag": "xy_z35_true_pair",
+      "receipt": "source-receipt.json",
+      "captures": [
+        {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z35_true_pair/raw/20261004T162142830640Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "b846ebfeeb3903b0b5194fc00774dbcf07951ba2d32a67247f96938a74b33bc0",
+          "size_bytes": 145644,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z35_true_pair/raw/20261004T162142830640Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        },
+        {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z35_true_pair/points/20261004T162148316081Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "6a1acdf5fd5ec79a95ce1ae4dab962c01745a7d5867eab07153887596b1558b4",
+          "size_bytes": 85649,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z35_true_pair/points/20261004T162148316081Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        },
+        {
+          "mime_type": "image/png",
+          "path": "/run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z35_true_pair/combined/20261004T162153867176Z_napari_6013_OpenHCS_Napari_Visualization.png",
+          "sha256": "1cd0bfb0269841a576928e43d8a7aaf160dd6330e4397c05f07a27bf788314cc",
+          "size_bytes": 149308,
+          "title": "OpenHCS Napari Visualization",
+          "uri": "file:///run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/qa/final/xy_z35_true_pair/combined/20261004T162153867176Z_napari_6013_OpenHCS_Napari_Visualization.png"
+        }
+      ]
+    }
+  ],
+  "limits": "Qualitative same-context development; single upper dot is not a false-split proof; no physical scale bar or accuracy score.",
+  "outputs": [
+    {
+      "path": "candidate.svg",
+      "size_bytes": 944246,
+      "sha256": "d8bfc82ca47a82b043d9ef842acdd665df1a99564d89205a2bfc1df6b8f911bc"
+    },
+    {
+      "path": "preview.png",
+      "size_bytes": 395745,
+      "sha256": "52ae85061a4c10044da01ed70738775f1b46a0a5ed2bfc1872af39827cf63075"
+    },
+    {
+      "path": "print-scale-preview.png",
+      "size_bytes": 244732,
+      "sha256": "4c12fa37c1022322bef96e9ce6d22095b723788c36f64eb7762cf1ea9358aea3"
+    }
+  ]
+}

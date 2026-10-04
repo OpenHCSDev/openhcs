@@ -1,0 +1,913 @@
+{
+  "scope": "H001_FRESH586_96 original first a01 and final a04 only; proposal, no rendering/scoring/runtime calls",
+  "source_licensing": {
+    "collection": "BioImageAnalysisNotebooks",
+    "attribution": "Robert Haase and BioImageAnalysisNotebooks contributors",
+    "source_commit": "68845a1afaf53bf601958a3fa7d86f3cf8a43219",
+    "source_member": "docs/29_algorithm_validation/blobs.tif",
+    "curated_input_sha256": "26403a7c2a11921535499ff86798b73e09b8ac5786329bce8fa4a57fd9933fee",
+    "source_url": "https://github.com/haesleinhuepf/BioImageAnalysisNotebooks/blob/68845a1afaf53bf601958a3fa7d86f3cf8a43219/docs/29_algorithm_validation/blobs.tif",
+    "primary_licence_declaration": "https://github.com/haesleinhuepf/BioImageAnalysisNotebooks/blob/68845a1afaf53bf601958a3fa7d86f3cf8a43219/docs/intro.md#license",
+    "declared_terms": "CC BY 4.0 and BSD3 for book/repository contents unless otherwise noted",
+    "content_licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "original_audit": "/home/ts/code/projects/openhcs/paper/plans/haase_notebook_translation_candidates_20260915.md",
+    "qualification": "Original curation found no blobs-specific override; rely on explicit repository licence, do not invent an upstream acquisition creator. No H001 publication hold.",
+    "disclosed_changes": ["OpenHCS-derived ROI overlays", "native display windows", "proposed screenshot crops and separate figure annotations; not yet rendered"],
+    "h002_scope": "Separate primary CC0 evidence now parent-confirmed; Planck updates H002 packet. No rights inferred from H001."
+  },
+  "original_root": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output",
+  "captures": [
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/qa/a01_full_raw_8_152/20261004T052447264894Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "4d41be68f083683d2ab5c9ba08eaab4591b5a934a94fcfcfa3497081df0a1e61",
+      "size_bytes": 112581,
+      "capture_receipt": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/receipts/060.json",
+      "capture_receipt_sha256": "df673bc43e714e3f9b7323a1f2609b55d580287b414240e5120fd1c46b16c399",
+      "frozen_copy": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/final/qa/a01_full_raw_8_152/20261004T052447264894Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "frozen_manifest_member": "qa/a01_full_raw_8_152/20261004T052447264894Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          464
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          125.5,
+          127.5
+        ]
+      },
+      "personally_opened": true
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/qa/a01_full_result_8_152/20261004T052453475793Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "aaaf83d97f598f7bb2c38bf2b4a758d471ee2cff984d258721c385cc9c794c69",
+      "size_bytes": 140135,
+      "capture_receipt": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/receipts/062.json",
+      "capture_receipt_sha256": "171c8228f17d289cc14b9c9b942072a9dc0ba14c0dc959c771fdeb4767556c94",
+      "frozen_copy": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/final/qa/a01_full_result_8_152/20261004T052453475793Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "frozen_manifest_member": "qa/a01_full_result_8_152/20261004T052453475793Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          464
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          125.5,
+          127.5
+        ]
+      },
+      "personally_opened": true
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/qa/a01_full_combined_set_8_152/20261004T052514131106Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "884fbd3d84c6800c4916be0f2c2172fb5cc63028e3fb224752fcf6c87646001c",
+      "size_bytes": 197543,
+      "capture_receipt": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/receipts/064.json",
+      "capture_receipt_sha256": "2fb2f313bba632ca24b0aab76713128310fe2626712d401111d985b5f1e3e998",
+      "frozen_copy": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/final/qa/a01_full_combined_set_8_152/20261004T052514131106Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "frozen_manifest_member": "qa/a01_full_combined_set_8_152/20261004T052514131106Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          464
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          125.5,
+          127.5
+        ]
+      },
+      "personally_opened": true
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/qa/a01_ur_raw_8_248/20261004T052541576702Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "34958e4887af3e065de33bf2bf614b2a167c494fbcbe93e3028d7f4ad3185d3e",
+      "size_bytes": 96550,
+      "capture_receipt": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/receipts/069.json",
+      "capture_receipt_sha256": "abf6c89a414bb21050d45bac641de8df06080ebb79447265869d822f3d7ee707",
+      "frozen_copy": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/final/qa/a01_ur_raw_8_248/20261004T052541576702Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "frozen_manifest_member": "qa/a01_ur_raw_8_248/20261004T052541576702Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          464
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          125.5,
+          127.5
+        ]
+      },
+      "personally_opened": true
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/qa/a01_ur_result_8_248/20261004T052547775929Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "2233bf8b8e0955c58d2386e802427c459adefa2c2a8cc538cd1e20ca32b4b1f8",
+      "size_bytes": 135315,
+      "capture_receipt": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/receipts/071.json",
+      "capture_receipt_sha256": "6a1d8ab6309fd7791d457234ef5caae8f26f181ca936d67bb983059e2738c112",
+      "frozen_copy": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/final/qa/a01_ur_result_8_248/20261004T052547775929Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "frozen_manifest_member": "qa/a01_ur_result_8_248/20261004T052547775929Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          464
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          125.5,
+          127.5
+        ]
+      },
+      "personally_opened": true
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/qa/a01_ur_combined_8_248/20261004T052553788306Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "715f9fce1e6abfd1fbd2b96eb0b7485ce13f5efa1ae9538c5a56ad5296d63a93",
+      "size_bytes": 177450,
+      "capture_receipt": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/receipts/073.json",
+      "capture_receipt_sha256": "e837161170ef4c664734372981b24d1edc535d50be72f2350fd33397fdab4f8c",
+      "frozen_copy": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/final/qa/a01_ur_combined_8_248/20261004T052553788306Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "frozen_manifest_member": "qa/a01_ur_combined_8_248/20261004T052553788306Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          464
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          125.5,
+          127.5
+        ]
+      },
+      "personally_opened": true
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/qa/a04_ur_8_248_raw/20261004T053933491025Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "34958e4887af3e065de33bf2bf614b2a167c494fbcbe93e3028d7f4ad3185d3e",
+      "size_bytes": 96550,
+      "capture_receipt": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/receipts/152.json",
+      "capture_receipt_sha256": "a24f1a7f2ebff008d089962dae9b14dec8e255f93e8831199e3a69d9f2e80410",
+      "frozen_copy": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/final/qa/a04_ur_8_248_raw/20261004T053933491025Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "frozen_manifest_member": "qa/a04_ur_8_248_raw/20261004T053933491025Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          464
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          125.5,
+          127.5
+        ]
+      },
+      "personally_opened": true
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/qa/a04_ur_8_248_result/20261004T053939901608Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "1c0be1fbef614b0f5358ec021393a18351eb734968d5d0ed5d89860506403477",
+      "size_bytes": 136125,
+      "capture_receipt": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/receipts/154.json",
+      "capture_receipt_sha256": "0ae86014034ba717e53dfeb4d203e6d1dc6d50f0798d3c7a2cecbfa30619e18a",
+      "frozen_copy": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/final/qa/a04_ur_8_248_result/20261004T053939901608Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "frozen_manifest_member": "qa/a04_ur_8_248_result/20261004T053939901608Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          464
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          125.5,
+          127.5
+        ]
+      },
+      "personally_opened": true
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/qa/a04_ur_8_248_combined/20261004T053946550462Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "492c079aafd4c7d157e59b9eb276e61ddfaa0610aae88c09a4b1a87e35eecea6",
+      "size_bytes": 177891,
+      "capture_receipt": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/receipts/156.json",
+      "capture_receipt_sha256": "7a521bd2f5c4ee64d499fc75aa794d93334dc56781f7195fe303336d037d50af",
+      "frozen_copy": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/final/qa/a04_ur_8_248_combined/20261004T053946550462Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "frozen_manifest_member": "qa/a04_ur_8_248_combined/20261004T053946550462Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          464
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          125.5,
+          127.5
+        ]
+      },
+      "personally_opened": true
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/qa/a04_ul_8_152_raw/20261004T054034398148Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "cccea77f7b6b6ac97bb1e9a518c1f6d2b700a6813c6a74df5eaf2de1ad999020",
+      "size_bytes": 89765,
+      "capture_receipt": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/receipts/160.json",
+      "capture_receipt_sha256": "ca8cb78eabceb1357b0767e1c7123234b8a31f0c8fd48d15699fdae046781e59",
+      "frozen_copy": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/final/qa/a04_ul_8_152_raw/20261004T054034398148Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "frozen_manifest_member": "qa/a04_ul_8_152_raw/20261004T054034398148Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          464
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          125.5,
+          127.5
+        ]
+      },
+      "personally_opened": true
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/qa/a04_ul_8_152_result/20261004T054041519787Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "965cbc15ebcf54651b631d6e3b63d3666a2593d06212cf3d5d29f5b817e7ec2d",
+      "size_bytes": 135693,
+      "capture_receipt": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/receipts/162.json",
+      "capture_receipt_sha256": "c04b467808298004acf587dfc052793ec3876845e59e46584dbbbcc0d2b56754",
+      "frozen_copy": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/final/qa/a04_ul_8_152_result/20261004T054041519787Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "frozen_manifest_member": "qa/a04_ul_8_152_result/20261004T054041519787Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          464
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          125.5,
+          127.5
+        ]
+      },
+      "personally_opened": true
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/qa/a04_ul_8_152_combined/20261004T054048254048Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "fff16b8fbf8e5661089a539e9f4afafc348eb37d4f0e0b7918520e885e95acdf",
+      "size_bytes": 170420,
+      "capture_receipt": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/receipts/164.json",
+      "capture_receipt_sha256": "e3d0800a0471be8ba570a2f55651db5c6652144a92ec43ba91b28a8ae5671b64",
+      "frozen_copy": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/final/qa/a04_ul_8_152_combined/20261004T054048254048Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "frozen_manifest_member": "qa/a04_ul_8_152_combined/20261004T054048254048Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          464
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          125.5,
+          127.5
+        ]
+      },
+      "personally_opened": true
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/qa/a04_full_8_152_raw/20261004T054208605913Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "4d41be68f083683d2ab5c9ba08eaab4591b5a934a94fcfcfa3497081df0a1e61",
+      "size_bytes": 112581,
+      "capture_receipt": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/receipts/181.json",
+      "capture_receipt_sha256": "9dab944dfdfa288a2bb0614cdca4fc7fca81e0c603d0dcd249b86ce3e0fa48c2",
+      "frozen_copy": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/final/qa/a04_full_8_152_raw/20261004T054208605913Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "frozen_manifest_member": "qa/a04_full_8_152_raw/20261004T054208605913Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          464
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          125.5,
+          127.5
+        ]
+      },
+      "personally_opened": true
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/qa/a04_full_8_152_result/20261004T054215732046Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "352196ca53593e138a6dc7780cc1853caaad9bba8beac5e8271592232201bd05",
+      "size_bytes": 140834,
+      "capture_receipt": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/receipts/183.json",
+      "capture_receipt_sha256": "73583e79f5bb884266fadadd0874dfb7578bd260e518d18f0983f0d4f68f3c5e",
+      "frozen_copy": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/final/qa/a04_full_8_152_result/20261004T054215732046Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "frozen_manifest_member": "qa/a04_full_8_152_result/20261004T054215732046Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          464
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          125.5,
+          127.5
+        ]
+      },
+      "personally_opened": true
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/qa/a04_full_8_152_combined/20261004T054223172073Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "sha256": "41aa863b2aa932ff5bafa155f6669ec44b178b0dd50fdaa7f4c84dc6c7be6734",
+      "size_bytes": 198308,
+      "capture_receipt": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/receipts/185.json",
+      "capture_receipt_sha256": "5eecd827d9f582e218ca9c553cc3095cdd7288e9ab525bdec387892b2b48a343",
+      "frozen_copy": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/final/qa/a04_full_8_152_combined/20261004T054223172073Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "frozen_manifest_member": "qa/a04_full_8_152_combined/20261004T054223172073Z_napari_6017_OpenHCS_Napari_Visualization.png",
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          464
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          125.5,
+          127.5
+        ]
+      },
+      "personally_opened": true
+    }
+  ],
+  "selected_capture_count": 15,
+  "selected_capture_bytes": 2117741,
+  "keepers": [
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/final/freeze.json",
+      "sha256": "8ec9a8b617b2ad5a65eb29764d217a41e3a707ebdcdf3efab0dfcb2608bf6d37",
+      "size_bytes": 642
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/final/SHA256-MANIFEST.json",
+      "sha256": "f6d7be75a96265ef88b17ebaf23469f716b000577c21f5d3946577f3c3ae9689",
+      "size_bytes": 72301
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/final/REPORT.md",
+      "sha256": "caba4643b3b4a5ee3be0cfdae23bb1bb9e59a29714112ae9c7864f77539a787b",
+      "size_bytes": 5588
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/final/PipelineDocument.py",
+      "sha256": "dabebbec7e88d82dbd4904fa43252a787531335b5a59db70cd216917353492a7",
+      "size_bytes": 3728
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/analysis-ledger.md",
+      "sha256": "57e14d5f05b4cc27a05bd916e4beec9f02c216eebacd1e5779dd1779e197e59b",
+      "size_bytes": 11300
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/receipts/054.json",
+      "sha256": "32adf64d625d158d952fdb3110e62f28757dfc98304e00cbd3055c4950ca0085",
+      "size_bytes": 72094
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/receipts/065.json",
+      "sha256": "9c760e555ef12e8f497319fef5ddeff7f179ab630ad8b74f3a61ee5dac5a9bff",
+      "size_bytes": 792
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/receipts/066.json",
+      "sha256": "91f8b2340daaef3a05c233d9d259578ae2e1b4b64afa8afaa1f49644dcc69556",
+      "size_bytes": 1491
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/receipts/067.json",
+      "sha256": "68ea47f3f1783a2f80940ab036e9a21cb132ed56184b49957bcd1da42a01318f",
+      "size_bytes": 72071
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/receipts/150.json",
+      "sha256": "9c760e555ef12e8f497319fef5ddeff7f179ab630ad8b74f3a61ee5dac5a9bff",
+      "size_bytes": 792
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/receipts/157.json",
+      "sha256": "60916779cdc5b1f33870873de7687edae3f35d743825a6629f18b1df98f9d471",
+      "size_bytes": 791
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/receipts/158.json",
+      "sha256": "0887130325d98a5f3561eed2d924bab3bd499447aebf4e86343131648c2a11b7",
+      "size_bytes": 1490
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/receipts/179.json",
+      "sha256": "0d866a0fe09eec317f498aa9ee6a030b5801bc0fab272f200c7e80c43cf92741",
+      "size_bytes": 798
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/receipts/074.json",
+      "sha256": "00a315bb1e701f3d538202a24cba08a44cc69da6636dc8ece295707cad01c08f",
+      "size_bytes": 8757
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/receipts/192.json",
+      "sha256": "1ddddb0ba5651694ea72075863b91afc3ba752509f66ef3570703c3e9aabff58",
+      "size_bytes": 6101
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/h001-fresh586-postfreeze-evaluation.rst",
+      "sha256": "13e847b1b5ac1d9455ba609f24f7569958d75141ece31465a1c56a40c73aef85",
+      "size_bytes": 4519
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/h001-fresh586-postfreeze-evaluation.json",
+      "sha256": "b0f70a14a4fe97cd5b6c9da9fb6363006ae2471aab5c2bc507bf1bdb32fa8789",
+      "size_bytes": 5856
+    }
+  ],
+  "presentation": {
+    "wholefield": {
+      "window": [
+        8,
+        152
+      ],
+      "gamma": 1,
+      "camera_center": [
+        0,
+        126.5,
+        127.5
+      ],
+      "camera_zoom": 1.721875,
+      "camera_sources": [
+        "receipts/054.json",
+        "receipts/179.json"
+      ],
+      "raw_pngs_byte_identical": true
+    },
+    "upper_right": {
+      "window": [
+        8,
+        248
+      ],
+      "gamma": 1,
+      "camera_center": [
+        0,
+        65,
+        190
+      ],
+      "camera_zoom": 4,
+      "camera_sources": [
+        "receipts/065.json",
+        "receipts/067.json",
+        "receipts/150.json"
+      ],
+      "raw_pngs_byte_identical": true
+    },
+    "final_upper_left": {
+      "window": [
+        8,
+        152
+      ],
+      "gamma": 1,
+      "camera_center": [
+        0,
+        65,
+        65
+      ],
+      "camera_zoom": 4,
+      "camera_sources": [
+        "receipts/157.json",
+        "receipts/158.json"
+      ]
+    },
+    "common": {
+      "channel": 1,
+      "site": 1,
+      "z_index": 1,
+      "timepoint": 1,
+      "well": "image.tif",
+      "route_local_component_indices": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "source_yx": [
+        254,
+        256
+      ],
+      "native_xy_scale": [
+        1,
+        1
+      ],
+      "native_xy_translation": [
+        0,
+        0
+      ],
+      "physical_calibration_verified": false,
+      "widget_dimensions": [
+        1440,
+        944
+      ],
+      "canvas_dimensions": [
+        953,
+        464
+      ],
+      "capture_scope": "widget",
+      "frame_condition": "render_complete"
+    },
+    "note": "Native dimensions.point is not camera center; camera values above come from original state/viewport owners. ROI palette changes are not cross-candidate object-ID correspondence."
+  },
+  "proposed_screenshot_crops": {
+    "wholefield": [
+      552,
+      40,
+      996,
+      480
+    ],
+    "elongated_upper_right": [
+      730,
+      152,
+      851,
+      317
+    ],
+    "separated_pair_from_both_wholefields": [
+      580,
+      155,
+      710,
+      230
+    ],
+    "small_focus_from_final_upper_left": [
+      816,
+      428,
+      870,
+      479
+    ],
+    "convention": "Proposal only: half-open [left,top,right,bottom] screenshot pixels, not acquisition-array crops. No images rendered; retain native edge text in whole-field crop; identical boxes for matched sources; no extra contrast/recolouring."
+  },
+  "claim_boundaries": {
+    "personally_visible": [
+      "Elongated raw-supported region has two ROI partitions in a01 and one in a04.",
+      "Separated compact pair retains two ROI regions in the matched wholefield views.",
+      "Small bright focus remains visible without final ROI in final upper-left matched set."
+    ],
+    "report_and_native_receipts": [
+      "Size-filter attribution and 14 support pixels are original report/ledger statements, not inferred from the PNG.",
+      "Raw oblique profile is original receipt074; focus profile is receipt192.",
+      "Possible long-group merge and border limitations remain qualified in original report."
+    ],
+    "existing_whole_image_scoring": [
+      "92.91 to 94.40 percent object F1 against pinned notebook-derived computational labels, not manual biological truth.",
+      "59 accepted matches in each prediction; excess predictions4 to2; missed reference objects5 unchanged; foreground IoU98.19 percent unchanged."
+    ],
+    "no_claims": [
+      "No mask-array recomputation or pixelwise label parity proof.",
+      "No new scorer/reference access/runtime/GUI operation.",
+      "No cross-dataset gain, human equivalence, skill-only causality or exhaustive biological count."
+    ],
+    "phase": "Proposal and source/capture verification complete; rendering and manuscript integration not performed."
+  }
+}

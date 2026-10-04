@@ -62,6 +62,17 @@ custody, original admission and the immutable RUN freeze. The launcher preserves
 fresh masked history, readonly raw input, original configured model/provider,
 per-author lock, recording and CLI scope. It does not adopt an existing author.
 
+For an explicitly declared same-author continuation (``fresh_history=false``
+with an already forked ``native_thread_id``), the original slot owner projects
+the closed ``writer_handoff`` declarations into native history and scientific
+read roots. Each predecessor must belong to the same canonical funding owner
+and have its original terminal custody. The launcher read-only mounts its
+retained control/output and declared payload destination, alongside the existing
+canonical parent rollout mounts. MCP adds those exact roots only to its read
+policy, never its write policy. New results remain in the new run's destination.
+Fresh authors receive no predecessor history or artifact roots. No copied
+arrays, reconstructed history, broader HDD grant or second permission store.
+
 Use the canonical AUTHOR-PACKET.rst for every new declaration. Start the ONE
 recorded interactive client with tools.exec_command tty=true::
 

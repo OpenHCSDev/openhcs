@@ -24,6 +24,8 @@ It distinguishes missing information from an unhelpful display.
 
 | Observation or task | Retrieve | Decision to make |
 | --- | --- | --- |
+| FIRST foreground proposal, especially textured/ring bodies or regional nuisance | [openhcs_segmentation_diagnostics](segmentation-diagnostics.md#compare-body-admission-models), then [openhcs_image_preprocessing](image-preprocessing.md) when needed | Does admission on the consumed alias/response preserve distributed positives while excluding nuisance-only regions? |
+| FIRST marker/declumping proposal, including a shape-based method | [openhcs_measurement_interpretation](measurement-interpretation.md#choose-the-marker-landscape-before-the-first-candidate) | Does the actual chosen landscape distinguish within-body maxima from a genuine pair, with justified competition and spacing units? |
 | Uneven background, noisy seeds, dim objects, bright outliers | [openhcs_image_preprocessing](image-preprocessing.md) | Which nuisance model fits, and what biology must survive? |
 | Touching nuclei, one body split, merged cells, zero-growth secondary objects | [openhcs_segmentation_diagnostics](segmentation-diagnostics.md) | Is the failure in foreground, markers, separation or secondary growth? |
 | Thin neurites, disconnected traces, puncta or irregular cells | [openhcs_segmentation_diagnostics](segmentation-diagnostics.md) | Does the object model match the target and its topology? |
@@ -37,6 +39,23 @@ Search the first-class Official30 examples for the closest task, retrieve the
 exact OpenHCS Python section and inspect the reference case's inputs and parity
 scope. Use it as a working starting point, not as proof for the new assay. The
 ExampleHuman nuclei card is one example, not the only eligible pipeline.
+
+For a first segmentation proposal, use both applicable first-method routes above,
+not just the foreground route or a recipe's detector defaults. Retrieve the named
+sections before committing method and parameters; their worked examples own the
+details. Raw morphology informs support, but admission consumes a particular
+alias/response and markers consume a particular landscape. Use the measurement
+guide's compound-detector reasoning to map each proposed parameter to ALL its
+coupled mechanisms in the reflected callable, not just its apparent size role.
+State the predicted effect on distributed positive/nuisance and
+continuous-body/genuine-pair controls;
+keep marker extraction distinct from the subsequent division boundary. If no
+marker stage is proposed, do not invent one merely to follow this route.
+Use raw or processed evidence already available; an unproduced enhanced response
+or marker landscape remains a provisional hypothesis to inspect in the first
+bounded candidate, not a reason to withhold an exploratory proposal. Record an
+unavailable control, such as a genuine pair, rather than inventing one or making
+its absence an approval gate.
 
 When the task is unfamiliar or raw morphology contradicts an example's method,
 follow [pre-authorship learning retrieval](analysis-learning.md#retrieve-before-first-authorship-and-retries)

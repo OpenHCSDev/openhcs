@@ -109,7 +109,7 @@ def test_real_declarations_own_independent_registry_obligations():
         assert declaration().identity == declaration().identity
 
 
-def test_declared_cache_admission_requires_cpu_and_empty_explicit_cache(
+def test_declared_cache_admission_requires_cpu_and_explicit_cache(
     monkeypatch, tmp_path
 ):
     from openhcs.processing.backends.cellprofiler.grid import (
@@ -122,7 +122,7 @@ def test_declared_cache_admission_requires_cpu_and_empty_explicit_cache(
     index = tmp_path / "nested" / "compiled.nbi"
     index.parent.mkdir()
     index.touch()
-    assert not IdentifyObjectsInGridKernelPreparation.can_prepare_in_child()
+    assert IdentifyObjectsInGridKernelPreparation.can_prepare_in_child()
     index.unlink()
     monkeypatch.setattr(numba_config, "CACHE_DIR", "")
     assert not IdentifyObjectsInGridKernelPreparation.can_prepare_in_child()
@@ -206,7 +206,8 @@ def test_late_module_capture_effect_reaches_real_shape_callable_hook(
 
 
 @pytest.mark.skipif(
-    "fork" not in multiprocessing.get_all_start_methods() or len(os.sched_getaffinity(0)) < 2,
+    "fork" not in multiprocessing.get_all_start_methods()
+    or len(os.sched_getaffinity(0)) < 2,
     reason="two admitted fork slots required",
 )
 def test_new_declarations_populate_children_then_share_parent_hook_readiness(
@@ -276,7 +277,8 @@ def test_failure_keeps_kernel_and_enclosing_module_retryable(kernel_module):
 
 
 @pytest.mark.skipif(
-    "fork" not in multiprocessing.get_all_start_methods() or len(os.sched_getaffinity(0)) < 2,
+    "fork" not in multiprocessing.get_all_start_methods()
+    or len(os.sched_getaffinity(0)) < 2,
     reason="two admitted fork slots required",
 )
 def test_cache_children_do_not_acquire_inherited_parent_readiness_lock(tmp_path):

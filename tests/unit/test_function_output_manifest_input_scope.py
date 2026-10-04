@@ -124,6 +124,41 @@ def test_produced_occurrence_owns_memory_path_and_current_source_projection(
         record.source_metadata_for_projection(metadata, "/disk/output.tif")
 
 
+def test_published_slots_stay_fixed_with_live_source_metadata_and_filename_aliases():
+    plan = CompiledStepPlan(
+        step_index=1, step_type="FunctionStep", step_name="Producer", axis_id="A01",
+        step_scope_id="producer", pipeline_position=1, output_dir=Path("/memory"),
+    )
+    coordinates = [{"channel": 1}, {"channel": 2}]
+    metadata = ImagePayloadMetadata(source_component_metadata={"acquisition": "first"})
+    records = tuple(
+        ProducedOutputSemantics.from_output(
+            plan, plan.output_dir / f"channel{channel}.tif",
+            FunctionOutputIdentity(values, ".tif", "test"),
+            image_metadata=metadata,
+        )
+        for channel, values in enumerate(coordinates, 1)
+    )
+    manifest = StepOutputManifestStore()
+    manifest.begin_step(plan)
+    manifest.record_outputs(plan, records)
+    coordinates[0]["channel"] = 2
+    metadata.source_component_metadata = {"acquisition": "second"}
+    manifest.record_outputs(plan, ())
+    published = manifest.produced_records_for(plan)
+    assert tuple(record.component_values["channel"] for record in published) == (1, 2)
+    assert published[0].filename_values["channel"] == 2
+    assert records[0].component_values["channel"] == 2
+    projection = published[0].source_metadata_for_projection(metadata, "/saved/image.tif")
+    assert projection["channel"] == "1"
+    assert projection["acquisition"] == "second"
+    replacement = replace(records[0], component_values={"channel": 1}, output_path="new.tif")
+    manifest.record_outputs(plan, (replacement,))
+    assert tuple(record.output_path for record in manifest.produced_records_for(plan)) == (
+        "new.tif", "/memory/channel2.tif",
+    )
+
+
 def _compiled_pattern_with_input_edges(
     specs_with_scopes: tuple[tuple[ArtifactSpec, str], ...],
 ):

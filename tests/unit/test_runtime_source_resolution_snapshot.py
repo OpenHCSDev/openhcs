@@ -19,6 +19,7 @@ from openhcs.core.source_bindings import (
     MetadataSource,
 )
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.source_image_provenance import SourceImageIdentity
 from openhcs.core.source_metadata import (
     ORIGINAL_SOURCE_METADATA_FIELD,
     ResolvedSourceMetadataRecord,
@@ -104,10 +105,43 @@ def test_runtime_snapshot_owns_nested_metadata_and_unknown_fallback():
     unknown = "A02_s001_w1_z001_t001.tif"
     assert context.metadata_for_path(unknown)["well"] == "A02"
     assert parser.calls[-1] == unknown
-    assert snapshot(cache, source_projection, parser) is context
+    assert (
+        snapshot(cache, source_projection, parser).resolution_snapshot
+        is context.resolution_snapshot
+    )
     entry = next(iter(cache.source_resolution_snapshots.values()))
     assert entry.projection is source_projection
     assert entry.context.parser is parser
+
+
+def test_snapshot_identity_join_preserves_record_correlations_and_query_order():
+    second = "A01_s001_w1_z002_t001.tif"
+    source_projection = VirtualWorkspaceSourceProjection(
+        source_refs_by_virtual_path={
+            PATH: SourcePixelRef("disk", "/source/shared.tif"),
+            second: SourcePixelRef("disk", "/source/shared.tif"),
+        },
+        source_metadata_by_path={
+            PATH: {"channel": "1", "z_index": "1"},
+            second: {"channel": "1", "z_index": "2"},
+            "/source/shared.tif": {"channel": "2", "z_index": "2"},
+        },
+    )
+    context = snapshot(RuntimeSourceBindingContextCache(), source_projection, CountingParser())
+    identities = (
+        SourceImageIdentity("/source/shared.tif", {"channel": "1", "z_index": "2"}),
+        SourceImageIdentity("/source/shared.tif"),
+        SourceImageIdentity("/source/shared.tif", {"channel": "2", "z_index": "1"}),
+        SourceImageIdentity(None, {"channel": "2", "z_index": "2"}),
+        SourceImageIdentity(),
+    )
+    assert context.matching_candidates_for_source_identities(
+        identities, (second, PATH, second),
+    ) == ((second,), (second, PATH), (), (second, PATH), ())
+    unknown = "A02_s001_w1_z001_t001.tif"
+    assert context.matching_candidates_for_source_identities(
+        (SourceImageIdentity(unknown),), (unknown,),
+    ) == ((unknown,),)
 
 
 def test_direct_projection_context_remains_live():

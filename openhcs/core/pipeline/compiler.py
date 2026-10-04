@@ -113,9 +113,6 @@ from openhcs.core.pipeline.path_planner import (
     PipelinePathPlanner,
 )
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
-from openhcs.core.source_workspace_projection import (
-    VirtualWorkspaceSourceProjectionAuthority,
-)
 from openhcs.core.source_load_plan import SourceLoadPlan
 from openhcs.core.invocation_artifacts import (
     PipelineInvocationContractProviderAuthority,
@@ -866,26 +863,6 @@ class PipelineCompiler:
                     f"Memory validation must set {missing_fields} for FunctionStep {step_plan.step_name} (index: {step_index})."
                 )
 
-        # Apply memory type override: Any step with disk output must use numpy for disk writing
-        for step_index, step in enumerate(session.pipeline.steps):
-            if isinstance(step, FunctionStep):
-                if step_index in context.step_plans:
-                    step_plan = context.step_plans[step_index]
-                    compiled_pattern = step_plan.compiled_function_pattern
-                    if (
-                        compiled_pattern is not None
-                        and compiled_pattern.execution_scope
-                        is FunctionStepExecutionScope.PLATE
-                    ):
-                        continue
-                    write_backend = step_plan.write_backend
-
-                    if write_backend == "disk":
-                        logger.debug(
-                            f"Step {session.pipeline.steps[step_index].name} has disk output, overriding output_memory_type to numpy"
-                        )
-                        step_plan.output_memory_type = "numpy"
-
     @staticmethod
     def assign_framework_device_resources(session: CompilationSession) -> None:
         """Resolve each step's declaration-derived framework device footprint."""
@@ -1338,10 +1315,7 @@ class PipelineCompiler:
     def validate_source_workspace_projection(session: CompilationSession) -> None:
         """Validate source-workspace metadata before runtime image loading."""
 
-        projection = VirtualWorkspaceSourceProjectionAuthority.from_context(
-            session.context,
-            cache=session.context.runtime_source_workspace_projection_cache,
-        ).projection_if_available()
+        projection = session.context.runtime_source_workspace_projection_authority.projection_if_available()
         if projection is None:
             return
         projection.validate_runtime_metadata_projection(axis_id=session.axis_id)
@@ -1886,11 +1860,6 @@ class PipelineCompiler:
                 axis_request,
                 axis_values_to_process,
             )
-            from openhcs.core.steps.function_runtime import (
-                prepare_compiled_context_callables,
-            )
-
-            prepare_compiled_context_callables(compiled_contexts, max_workers=num_workers)
             worker_assignments = PipelineCompiler._calculate_worker_assignments(
                 list(compiled_contexts.keys()),
                 num_workers,
