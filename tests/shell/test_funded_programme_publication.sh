@@ -107,7 +107,9 @@ test "$status" = 0
 remaining=$(awk '/HomeAvailable/ {print $NF}' "$scratch/sibling-overage.log")
 test "$remaining" = GiB
 rg -q 'required 0.000 GiB' "$scratch/sibling-overage.log"
-rg -q 'remainingGrowthEstimate=2097152 ' "$scratch/sibling-overage.log"
+measured_a=$(awk '/^Current / && /\/old-a\// {for(i=1;i<=NF;i++) if($i ~ /^total=/) {split($i,value,"="); print value[2]}}' "$scratch/sibling-overage.log")
+remaining_growth=$(sed -n 's/.*remainingGrowthEstimate=\([0-9]*\).*/\1/p' "$scratch/sibling-overage.log")
+test "$remaining_growth" = "$((2097152-measured_a))"
 unlink "$scratch/next/INDEPENDENT_C/author-workspace/output/sibling-overage.bin"
 unlink "$scratch/next/INDEPENDENT_C/author-workspace/output/runtime/scratch/overage.bin"
 printf 'PASS own/sibling overages remain physical usage; forecast clamped, no quota or sibling veto\n'

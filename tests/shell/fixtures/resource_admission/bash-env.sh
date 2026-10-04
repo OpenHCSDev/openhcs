@@ -33,6 +33,14 @@ find() {
   else command find "$@"; fi
 }
 df() { printf 'Avail\n%s\n' "$CONTROLLED_HOME_BYTES"; }
+du() {
+  # No retired bytes may be recursively inventoried by operation admission.
+  local argument
+  for argument in "$@"; do
+    case "$argument" in */retired-output|*/closed-no-longer-local) return 99 ;; esac
+  done
+  command du "$@"
+}
 awk() {
   local args=() argument
   for argument in "$@"; do
