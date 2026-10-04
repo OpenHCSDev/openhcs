@@ -789,7 +789,7 @@
       "section_count": 0,
       "source_path": "packaging/codex/openhcs/skills/use-openhcs/references/image-preprocessing.md",
       "summary": "Preprocessing method selection validation: testable recipes for high-end compression, additive background subtraction, multiplicative illumination correction, denoising, CLAHE, adaptive thresholds, spot/ridge enhancement and hysteresis. Interpret nuisances, retain source provenance and validate faint biology with claim-appropriate measurement inputs.",
-      "tags": ["preprocessing method selection validation", "uneven background", "bright outliers", "high end clipping gamma", "additive background subtraction", "white top hat", "flat field illumination", "denoise Gaussian median", "CLAHE", "local adaptive threshold", "faint neurite", "hysteresis", "Bankhead"],
+      "tags": ["preprocessing method selection validation", "shared registration positions join ghosts original channels", "composite placement analytical channel separation", "uneven background", "bright outliers", "high end clipping gamma", "additive background subtraction", "white top hat", "flat field illumination", "denoise Gaussian median", "CLAHE", "local adaptive threshold", "faint neurite", "hysteresis", "Bankhead"],
       "title": "Choose and test microscopy preprocessing"
     },
     {
@@ -797,7 +797,7 @@
       "section_count": 0,
       "source_path": "packaging/codex/openhcs/skills/use-openhcs/references/segmentation-diagnostics.md",
       "summary": "Diagnose foreground, seeds, watershed and secondary growth. Compare body-admission models for noisy ring/textured bodies using local positives/background and regional negatives; nuclear anchors are not boundary evidence. Distinguish weak body-channel subsets from failed growth, and faint skeleton support recovery from rooted graph validity, soma loops and neuronal ownership.",
-      "tags": ["segmentation diagnostics", "body admission models noisy ring textured", "local background difference intensity class separation", "diffuse foreground threshold flooding faint loss", "nucleus split watershed", "touching nuclei", "merged neighbours", "seeding prominence H maxima", "zero growth cytoplasm", "weak absent body signal nuclear scope", "primary secondary", "neurite outgrowth", "faint skeleton support rooted graph", "soma medial axis loops branchpoints ownership", "puncta", "Cellpose", "StarDist", "tile boundary", "label count", "MorphoLibJ"],
+      "tags": ["segmentation diagnostics", "body admission models noisy ring textured", "local background difference intensity class separation", "diffuse foreground threshold flooding faint loss", "threshold shrinkage minimum size tiny island raw body", "nucleus split watershed", "touching nuclei", "merged neighbours", "seeding prominence H maxima", "zero growth cytoplasm", "weak absent body signal nuclear scope", "primary secondary", "neurite outgrowth", "faint skeleton support rooted graph", "soma medial axis loops branchpoints ownership", "puncta", "Cellpose", "StarDist", "tile boundary", "label count", "MorphoLibJ"],
       "title": "Diagnose microscopy segmentation by stage"
     },
     {

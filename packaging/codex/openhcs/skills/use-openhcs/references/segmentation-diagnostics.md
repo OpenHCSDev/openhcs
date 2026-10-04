@@ -80,6 +80,14 @@ views; judge new faint misses by the
 [distributed, claim-scoped quality criteria](analysis-strategy.md#scope-conclusions-to-the-evidence),
 not by count agreement or a requirement of zero errors.
 
+A below-minimum label can be the tiny bright island left by threshold shrinkage
+inside a much broader dim raw body, not genuine small debris. Compare independently
+measured raw chords/extent with admitted support and unfiltered geometry before
+lowering the minimum-size filter. If admission caused the shrinkage, test that
+stage while retaining the size rule and a bright crowded-pair control; relaxing
+size alone can retain the island without recovering the body. Actual small raw
+objects remain a separate inclusion-policy question.
+
 ## Touching round objects and watershed
 
 Before the first candidate, use the measurement guide's

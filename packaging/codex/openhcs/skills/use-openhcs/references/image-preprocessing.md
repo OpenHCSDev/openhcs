@@ -77,6 +77,15 @@ Pooling the tiles and fitting a stitched image express the same shared-scaling
 intent, but overlap duplication, blending and mosaic padding can change the
 exact histogram. Record the fit domain rather than assuming identical bounds.
 
+One shared position artifact keeps channel placement consistent, but does not
+prove that tiles are aligned. Inspect overlaps for repeated nuclei, parallel
+process ghosts and broken continuations in separate raw channels, not only a
+composite or a matching position list. A composite used to estimate placement
+is a registration input, not an analytical channel merge: follow the canonical
+assembly branch, reload original channel stacks and apply the shared positions
+to raw or explicitly justified normalised inputs. Judge registration separately
+from pooled scaling; a repaired local join does not validate every seam.
+
 ## Slowly varying additive background
 
 Test subtraction of a background estimate or a white top-hat. Its spatial scale
