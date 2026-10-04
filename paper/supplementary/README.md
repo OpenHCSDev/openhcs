@@ -244,36 +244,6 @@ OpenHCS-derived overlays, native display windows and screenshot cropping/scaling
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
-## Supplementary Figure 13. Autonomous local repair with a retained merge
-
-![Matched first/final nuclear overlays and a final-only faint-pair failure control.](../figures/slas/h003_native_repair.png){width=6in}
-
-\(A) Matched raw DNA and first/final overlays show separation of a joined pair;
-diffuse support remains in the lower region. A compact neighbour stays separate.
-(B) Final raw, result-only and combined views retain a faint merge. This
-fresh-context author revised its own pipeline without reference feedback.
-Candidate01_retry01 follows technical repair; candidate06 is final. These local
-witnesses do not establish exhaustive accuracy or validated actin boundaries.
-
-DNA windows are 0–255 (A) and 0–151 (B), gamma 1, final ROI opacity 0.7.
-Colours are not cross-candidate identities. The final A crop accounts for an
-11-pixel canvas shift at unchanged camera and zoom. Raw RGB alignment proves
-presentation only. Original screenshots are embedded unchanged and clipped/scaled;
-physical calibration is unverified. The
-[source proof](task_only_analysis/h003-native-source-proof.json) and
-[render receipt](task_only_analysis/h003-native-render-receipt.json) retain capture
-identities and crops.
-
-Source: [Broad Bioimage Benchmark Collection BBBC007v1](https://bbbc.broadinstitute.org/BBBC007),
-field A02, Drosophila Kc167 DNA/actin; David Sabatini laboratory, Whitehead
-Institute; Jones et al. (2005) and Ljosa et al. (2012).
-[CC0](https://creativecommons.org/publicdomain/zero/1.0/). Adaptations are
-OpenHCS-derived overlays, native display windows and screenshot cropping/scaling.
-
-```{=openxml}
-<w:p><w:r><w:br w:type="page"/></w:r></w:p>
-```
-
 ## Supplementary Data 1. CellProfiler workflow comparison
 
 This supplement indexes source tables and evaluation records. Figure scripts
