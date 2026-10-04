@@ -79,7 +79,11 @@ from openhcs.agent.dto.config import ConfigPatch
 from openhcs.agent.dto.execution import (
     ExecutionConnectionSpec,
 )
-from openhcs.agent.dto.mcp import McpServerHealthResult
+from openhcs.agent.dto.mcp import (
+    McpServerHealthResult,
+    McpServerStaleErrorResult,
+    McpToolErrorResult,
+)
 from openhcs.agent.dto.ui_bridge import (
     UiBridgeConnectionRequest,
     UiBridgeConnectionSpec,
@@ -2509,41 +2513,6 @@ def build_server(
         )
 
     return server
-
-
-@dataclass(frozen=True, slots=True)
-class McpToolErrorResult:
-    """Structured MCP boundary error returned instead of raising through transport."""
-
-    schema_version: str
-    ok: bool
-    tool: str
-    errors: tuple[AgentError, ...]
-
-
-@dataclass(frozen=True, slots=True)
-class McpServerStaleErrorResult:
-    """Structured stale-process error with agent-actionable restart metadata."""
-
-    schema_version: str
-    ok: bool
-    tool: str
-    errors: tuple[AgentError, ...]
-    server_process_id: int
-    server_started_at_unix: float
-    stale_source_paths: tuple[str, ...]
-    recovery_reason: str
-    installation_pointer_path: str | None
-    installation_pointer_changed_since_import: bool
-    installation_pointer_available: bool | None
-    restart_required: bool
-    restart_command: tuple[str, ...]
-    restart_command_is_stable: bool
-    reconnect_required: bool
-    reconnect_owner: str | None
-    retry_after_reconnect: bool
-    automatic_recovery_on_reconnect: bool
-    restart_hint: str
 
 
 def _mcp_tool_result_contract(capability: AgentCapabilitySpec):

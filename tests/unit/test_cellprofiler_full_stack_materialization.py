@@ -368,9 +368,9 @@ def test_independent_composition_capabilities_cooperate_in_both_mro_orders(rever
     calls = []
 
     class PixelCapability:
-        def compose_unmasked(self, payloads):
+        def compose_unmasked(self, payloads, **kwargs):
             calls.append("pixels")
-            return super().compose_unmasked(payloads) + 1
+            return super().compose_unmasked(payloads, **kwargs) + 1
 
     class MaskCapability:
         def compose_mask(self, composed, metadata):

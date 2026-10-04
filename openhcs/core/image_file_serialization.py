@@ -155,7 +155,8 @@ class ImageFileSourceMetadata:
             raise ValueError("Saved image metadata requires an actual native dtype.")
         native_scale_governs = self.intensity_scale is not None or not values_preserved
         if not values_preserved:
-            metadata = metadata.without_unit_interval_intensity_scale().replace_fields(
+            metadata = metadata.replace_fields(
+                unit_interval_intensity=None,
                 physical_border_edges_yx=None,
                 mask_defines_border=None,
             )

@@ -84,7 +84,6 @@ from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
     AlignedImageStack,
     pack_aligned_image_outputs,
-    stack_image_payload_context,
     stack_image_payloads,
     unstack_image_payload_context,
 )
@@ -798,9 +797,8 @@ def test_stack_payload_context_projects_single_payload_mask_to_stack_domain():
         data, mask
     )
 
-    stacked = stack_image_payload_context(
+    stacked = stack_image_payloads(
         (payload,),
-        stack,
         metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
     )
 
@@ -859,9 +857,8 @@ def test_stack_payload_context_preserves_single_volumetric_payload_identity():
         )
     ).payload_with(data, None)
 
-    stacked_payload = stack_image_payload_context(
+    stacked_payload = stack_image_payloads(
         (payload,),
-        data[np.newaxis, ...],
         metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
     )
     stacked_metadata = image_payload_metadata(stacked_payload)
@@ -892,9 +889,8 @@ def test_stack_payload_context_nests_incompatible_singleton_plane_topology():
         plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
     ).payload_with(data, None)
 
-    stacked_payload = stack_image_payload_context(
+    stacked_payload = stack_image_payloads(
         (payload,),
-        data[np.newaxis, ...],
         metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
     )
     provenance_planes = image_payload_metadata(
@@ -919,9 +915,8 @@ def test_stack_payload_context_preserves_singleton_stack_payload_mask_domain():
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
     ).payload_with(data, mask)
 
-    stacked_payload = stack_image_payload_context(
+    stacked_payload = stack_image_payloads(
         (payload,),
-        data[np.newaxis, ...],
         metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
     )
 
@@ -937,9 +932,8 @@ def test_stack_payload_context_composes_single_image_slice_mask_axis():
     mask = np.ones_like(data, dtype=bool)
     payload = ImagePayloadMetadata().payload_with(data, mask)
 
-    stacked_payload = stack_image_payload_context(
+    stacked_payload = stack_image_payloads(
         (payload,),
-        stack,
         metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
     )
 

@@ -3463,7 +3463,7 @@ def test_default_image_output_context_preserves_explicit_intensity_proof_invalid
     )
     output = (
         ImagePayloadMetadata(source_dtype="float32")
-        .without_unit_interval_intensity_scale()
+        .with_unit_interval_intensity_scale(None)
         .payload_with(np.ones((4, 5), dtype=np.float32))
     )
 

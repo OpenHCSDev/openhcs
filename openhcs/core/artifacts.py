@@ -797,8 +797,7 @@ class ImageArtifactType(ArtifactType):
             return values[0].data
 
         from openhcs.core.aligned_image_payload import stack_image_payloads
-        from openhcs.core.aligned_image_payload import stack_image_payload_context
-        from openhcs.core.memory import detect_memory_type, stack_runtime_slices
+        from openhcs.core.memory import detect_memory_type
         from openhcs.core.runtime_image_values import (
             ImagePayloadMetadataCompositionMode,
             image_payload_data,
@@ -814,9 +813,8 @@ class ImageArtifactType(ArtifactType):
         if producer_group_scope is not None:
             payloads = tuple(value.data for value in values)
             arrays = tuple(image_payload_data(payload) for payload in payloads)
-            return stack_image_payload_context(
-                payloads,
-                stack_runtime_slices(arrays, detect_memory_type(arrays[0]), 0),
+            return stack_image_payloads(
+                payloads, memory_type=detect_memory_type(arrays[0]), device_id=0,
                 metadata_mode=ImagePayloadMetadataCompositionMode.for_plane_axis(
                     RuntimePlaneAxis.RUNTIME_SLICE
                 ),
