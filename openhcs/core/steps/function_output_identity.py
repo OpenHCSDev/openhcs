@@ -143,15 +143,16 @@ class FunctionOutputIdentity:
         self,
         source_metadata: SourceComponentMetadata | None = None,
     ) -> SourceComponentMetadata:
-        """Return parser-compatible component metadata for this output identity."""
+        """Project semantic coordinates without rewriting acquisition file facts.
+
+        The output's storage extension belongs to filename_component_metadata;
+        it is not a new fact about the source carried by an image payload.
+        """
         metadata = source_metadata if source_metadata is not None else {}
         return SourceMetadataFields.with_fields(
             SourceMetadataFields.composition_snapshot(metadata),
             self.component_values,
             components=source_component_metadata_items(self.component_values),
-            after_components=(
-                {"extension": self.extension} if self.extension is not None else None
-            ),
         )
 
     def filename_component_metadata(self) -> SourceComponentMetadata:
