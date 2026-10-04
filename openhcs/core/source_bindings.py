@@ -1210,6 +1210,36 @@ class NamedSourceBinding(SourceAssignmentBase):
             values.extend(source_component_metadata_values(metadata, component))
         return tuple(dict.fromkeys(values))
 
+    def component_domains(
+        self,
+        *,
+        realized_source_metadata: Iterable[SourceMetadataMapping] | None = None,
+    ) -> Mapping[AllComponents, tuple[str, ...]]:
+        """Admit all component domains from the same matched source records."""
+        domains: dict[AllComponents, tuple[str, ...]] = {}
+        for declarations in (self.component_identity, self.selector.components):
+            declared: dict[AllComponents, list[str]] = {}
+            for selector in declarations:
+                declared.setdefault(selector.component, []).append(selector.value)
+            for component, values in declared.items():
+                domains.setdefault(component, tuple(values))
+        if realized_source_metadata is None or len(domains) == len(AllComponents):
+            return domains
+        realized: dict[AllComponents, list[str]] = {}
+        for metadata in realized_source_metadata:
+            if not self.matches_realized_source_metadata(metadata):
+                continue
+            for component, values in SourceMetadataFields.component_domains(
+                metadata
+            ).items():
+                if component not in domains:
+                    realized.setdefault(component, []).extend(values)
+        domains.update(
+            (component, tuple(dict.fromkeys(values)))
+            for component, values in realized.items()
+        )
+        return domains
+
     def matches_realized_source_metadata(
         self,
         metadata: SourceMetadataMapping,

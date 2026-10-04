@@ -269,6 +269,32 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
         )
         return tuple(dict.fromkeys(values))
 
+    @classmethod
+    def component_domains(
+        cls, metadata: SourceMetadataMapping
+    ) -> Mapping[AllComponents, tuple[str, ...]]:
+        """Expand one admitted record once, retaining canonical-before-alias order."""
+        scalars = cls.scalar_items(metadata)
+        cls.original_items(metadata)
+        canonical: dict[AllComponents, list[str]] = {}
+        aliases: dict[AllComponents, list[str]] = {}
+        for name, value in scalars:
+            if value is None:
+                continue
+            name = str(name)
+            component = source_metadata_component(name)
+            if component is None:
+                continue
+            target = canonical if name == component.value else aliases
+            target.setdefault(component, []).append(str(value))
+        return {
+            component: tuple(dict.fromkeys(
+                (*canonical.get(component, ()), *aliases.get(component, ()))
+            ))
+            for component in AllComponents
+            if component in canonical or component in aliases
+        }
+
     @staticmethod
     def readonly_snapshot(metadata: SourceMetadataMapping) -> SourceMetadataMapping:
         """Preserve the old mapping snapshot while retaining an owned record's lifetime."""
