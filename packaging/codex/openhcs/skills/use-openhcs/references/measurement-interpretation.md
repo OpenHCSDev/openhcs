@@ -101,8 +101,10 @@ hypothesis. Use the first bounded candidate to compare support along that path
 and a nuisance-only control. If only the intersected mask is exposed, missing
 support locates the loss before rooting but cannot identify which gate rejected
 each pixel. A controlled gate change tests recovery without changing supported
-width/body detection; newly admitted background bridges oppose it. If support
-is already present but reported paths are absent, investigate rooting/topology
+width/body detection; newly admitted background bridges oppose it. Check optional
+[seed/component retention](segmentation-diagnostics.md#separate-support-recovery-from-rooted-graph-validity)
+before attributing loss to rooting. If support survives the declared admission
+and retention gates but reported paths are absent, investigate rooting/topology
 rather than lowering admission.
 
 ### Choose the marker landscape before the first candidate

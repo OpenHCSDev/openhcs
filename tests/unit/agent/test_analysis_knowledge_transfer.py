@@ -15,7 +15,10 @@ from openhcs.agent.dto.knowledge import (
     KnowledgeBaseDocumentRequest,
     KnowledgeBaseSearchRequest,
 )
-from openhcs.agent.services.knowledge_base_service import KnowledgeBaseService
+from openhcs.agent.services.knowledge_base_service import (
+    MAX_DOCUMENT_CHARS,
+    KnowledgeBaseService,
+)
 from openhcs.agent.services.llm_context_service import AgentAuthoringContextService
 from openhcs.agent.skill_bundle import AGENT_PLUGIN_MANIFEST_PATH, AgentSkillBundle
 from openhcs.agent.skill_sync import SkillSyncReceipt, sync_skills
@@ -29,6 +32,8 @@ TASKS = (
     ("nucleus split watershed", "openhcs_segmentation_diagnostics"),
     ("zero growth cytoplasm", "openhcs_segmentation_diagnostics"),
     ("all foreground threshold units", "openhcs_segmentation_diagnostics"),
+    ("strong seed component retention", "openhcs_segmentation_diagnostics"),
+    ("near-track nuisance fragments", "openhcs_segmentation_diagnostics"),
     ("volume anisotropic Z spacing", "openhcs_measurement_interpretation"),
     ("Pearson Manders Costes", "openhcs_measurement_interpretation"),
     ("current processing intensity units", "openhcs_measurement_interpretation"),
@@ -53,7 +58,7 @@ def test_task_retrieval_reaches_a_bounded_canonical_source(query, document_id):
 
     document = service.get_document(
         KnowledgeBaseDocumentRequest.from_fields(
-            document_id=document_id, max_chars=24_000
+            document_id=document_id, max_chars=MAX_DOCUMENT_CHARS
         )
     )
     assert not document.errors
@@ -85,7 +90,7 @@ def test_packaged_transfer_guides_retain_content_sections_and_skill_links(tmp_pa
     for document_id in dict.fromkeys(document_id for _, document_id in TASKS):
         document = service.get_document(
             KnowledgeBaseDocumentRequest.from_fields(
-                document_id=document_id, max_chars=24_000
+                document_id=document_id, max_chars=MAX_DOCUMENT_CHARS
             )
         )
         assert not document.errors
@@ -148,9 +153,10 @@ def test_complete_projected_skill_sync_preserves_canonical_resource_bytes(tmp_pa
         ("openhcs_architecture_quick_start", "task-authorization"),
         ("openhcs_measurement_interpretation", "current-processing-intensity-units"),
         ("openhcs_segmentation_diagnostics", "foreground-before-unclumping"),
+        ("openhcs_segmentation_diagnostics", "separate-support-recovery-from-rooted-graph-validity"),
     ):
         request = KnowledgeBaseDocumentRequest.from_fields(
-            document_id=document_id, section_id=section_id, max_chars=4_000
+            document_id=document_id, section_id=section_id, max_chars=MAX_DOCUMENT_CHARS
         )
         original = KnowledgeBaseService(repo_root=ROOT).get_document(request)
         copied = KnowledgeBaseService(repo_root=projection).get_document(request)

@@ -176,6 +176,31 @@ biology elsewhere; retain a faint-path regression control.
 
 ### Separate support recovery from rooted graph validity
 
+Where the declared detector uses optional strong-seed/component retention,
+permissive admission is not the last support gate. A connected candidate can
+be discarded in full if it contains no qualifying seed, even when raw evidence
+supports that faint structure. Reflect the actual retention and connectivity
+contract: lowering candidate admission alone does not guarantee retention.
+Conversely, retention cannot fill gaps already absent from candidate support.
+
+Compare permissive support, strong seeds and retained support at the same raw
+path, then inspect any subsequent local-response gate and rooted result in the
+declared order. Use exposed intermediates or one bounded diagnostic through
+the existing authoring route; a final intersected mask alone cannot identify
+which earlier gate removed a component. Distinguish missing candidate pixels,
+an admitted but seedless component, later pixelwise rejection and failed rooting
+before choosing the next change. A seed-gate comparison is a diagnostic, not a
+universal instruction to disable seeds or relax every threshold.
+
+Keep a faint positive, an ordinary supported path, far-empty background AND
+near-track nuisance controls across that comparison. Quiet distant background
+does not establish specificity beside bright tracks: local texture, halos or
+fragments may be admitted there. Inspect their raw support and any new bridges,
+not just additional mask area. Recovering disconnected pieces is not recovery
+of the missing continuous path, and an unrooted piece is not automatically
+debris. Retain the useful local recovery and its remaining support/ownership
+limits under the existing claim-scoped criteria.
+
 A faint-path admission repair can improve the mask and skeleton without
 establishing a soma-rooted, per-cell graph. Inspect recovered weak paths together
 with an empty-background witness, newly admitted disconnected fragments and a
