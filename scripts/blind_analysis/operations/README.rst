@@ -95,7 +95,7 @@ the same reserve is a warning, not a universal veto on reads or small QA. Exhaus
 or malformed free-space telemetry rejects. Growth estimates are
 reported as planning warnings, never added to that admission floor. Neither a selected
 member's nor a sibling's output/scratch usage above an estimate rejects an
-operation. Those bytes consume actual physical HOME, not a quota. The original
+operation. Those bytes consume their actual physical destination, not a quota. The original
 programme amounts are estimates only; no replacement ceiling is introduced.
 Remaining growth is derived independently for retained
 and scratch components, clamped to zero once each is exhausted; an overage
@@ -105,6 +105,29 @@ original lifecycle performers and declared InvocationID custody; scientific
 writer retirement is independent. No helper/provider/native operation is part
 of the source controls. Future installed entrypoint and operational release are
 parent-owned acceptance after this source checkpoint.
+
+Declared payload destination
+----------------------------
+
+An immutable member may declare ``artifact_destination`` with absolute ``path``
+and ``mount``. The existing HDD mount is ``/run/media/ts/hdd``; path is an
+exclusive, ordinarily provisioned run/slot directory beneath it. The original
+projector carries this declaration and slot-env derives FLEET_ARTIFACT_ROOT
+and FLEET_SCRATCH. Admission and performers require that mount, a writable
+canonical directory (not a symlink), and findmnt identifying the same mount.
+No fallback directory is created when the HDD is absent.
+
+MCP read/write roots explicitly admit the payload directory. Existing
+PathPlanningConfig.global_output_folder and artifact/checkpoint declarations
+place scientific payloads there without a persistence/path-policy bypass.
+The author also directs large captures/arrays there. HOME retains source,
+pipeline text, native history, journals and handoff manifests. Large cache/data/
+temp scratch follows payloads; private config/state and POSIX0700 IPC runtime
+stay on HOME because the HDD is NTFS. Telemetry measures control plus payload
+once and reports actual destination free space. Retirement records both roots
+once through the same original retained-root projection. No shadow storage or
+second ledger. Historical undeclared runs retain their original HOME semantics;
+active declarations/operation bytes are not rewritten.
 
 Operation-scoped pressure and disabled endpoints
 ------------------------------------------------

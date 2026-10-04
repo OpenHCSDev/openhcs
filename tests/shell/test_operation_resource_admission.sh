@@ -101,7 +101,7 @@ run 0 ongoing resident_charge_not_reserved_twice
 printf 'MemAvailable: 16454287 kB\n' > "$scratch/host/meminfo"
 export CONTROLLED_HOME_BYTES=2147483648
 run 0 ongoing forecast_not_ongoing_permission
-rg -q 'Planning warning:' "$runtime/resources-forecast_not_ongoing_permission.disk"
+rg -q 'remainingGrowthEstimate=' "$runtime/resources-forecast_not_ongoing_permission.output"
 printf 'full avg10=0.00 avg60=0.00 avg300=0.00 total=324417078\n' > "$scratch/host/pressure"
 run 0 replacement forecast_not_startup_permission
 export CONTROLLED_HOME_BYTES=2147483647

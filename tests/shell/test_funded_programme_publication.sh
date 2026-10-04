@@ -297,3 +297,35 @@ jq -e '(.authors|length)==0 and (.retained_output_roots|length)==3' "$scratch/fu
 (cd "$scratch/old-a"; sha256sum --check --quiet READY-FREEZE.sha256)
 sha256sum --check --quiet "$scratch/retained-startup.sha256"
 printf 'PASS last terminal writer releases all future growth; complete output and original run/journals remain\n'
+
+# Optional real mounted-destination control. This is a declaration consumed by
+# the unchanged original prepare/publish/launcher/ledger route, not a client.
+if [[ -n "${2:-}" ]]; then
+  payload_mount=$(realpath -e "$2")
+  mountpoint --quiet "$payload_mount"
+  payload=$(mktemp -d "$payload_mount/openhcs-destination-control.XXXXXXXX")
+  mkdir "$scratch/hdd-run"
+  jq -n --arg root "$scratch" --arg payload "$payload" --arg mount "$payload_mount" \
+    --slurpfile original "$scratch/old-a/program.json" '{
+    phase:"controlled-hdd",predecessor_program_root:($root+"/funding"),
+    run_template_root:($root+"/old-a"),resource_policy:{},members:[],retired_members:[],
+    additional_authors:[$original[0].authors[0] | .slot="HDD" |
+      .run_owner_root=($root+"/hdd-run") |
+      .artifact_destination={path:$payload,mount:$mount}]
+  }' > "$scratch/hdd-run/successor-declaration.json"
+  bash "$owner" prepare "$scratch/funding" "$scratch/hdd-run" "$scratch/qualification.json"
+  (cd "$scratch/hdd-run"; sha256sum program.json successor-declaration.json > READY-FREEZE.sha256)
+  FLEET_PARENT_RELEASED=1 bash "$owner" publish "$scratch/funding" "$scratch/hdd-run" \
+    "$(sha256sum "$scratch/funding/program.json" | cut -d' ' -f1)"
+  mkdir -p "$scratch/hdd-run/HDD/author-workspace/output"
+  bash -c 'source "$1" "$2" HDD; fleet_require_artifact_destination HDD;
+    test "$FLEET_ARTIFACT_ROOT" = "$3"; test "$FLEET_SCRATCH" = "$3/runtime/scratch";
+    test "$(fleet_output_roots_for HDD | wc -l)" = 2' \
+    _ "$operations/slot-env.sh" "$scratch/funding" "$payload"
+  bash "$operations/launch-author.sh" "$scratch/funding" HDD --preflight > "$scratch/hdd-preflight.log"
+  rg -Fq "write=$scratch/hdd-run/HDD/author-workspace/output:$payload" "$scratch/hdd-preflight.log"
+  bash "$operations/resource-check.sh" "$scratch/funding" HDD destination01 ledger > "$scratch/hdd-ledger.log" 2>&1
+  rg -Fq "PayloadDestination=$payload" "$scratch/hdd-ledger.log"
+  printf 'Controlled original HDD destination: %s\n' "$payload" > "$scratch/hdd-control-path.rst"
+  printf 'PASS ordinary mounted HDD declaration: HOME history/control retained, explicit payload/scratch roots and actual destination telemetry\n'
+fi
