@@ -673,6 +673,9 @@ from openhcs.core.pipeline.function_contracts import (
 )
 from openhcs.core.public_api import public_names_from_objects
 from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from openhcs.processing.backends.cellprofiler.morphology_connected_components_numba import (
+    equal_value_components_numba,
+)
 from openhcs.core.image_shapes import (
     apply_over_trailing_spatial_axes,
     trailing_spatial_factors,
@@ -1913,6 +1916,10 @@ class MorphologyBackendStrategy(
         """Label foreground components in a binary 2-D mask."""
 
     @abstractmethod
+    def label_equal_values(self, values: np.ndarray) -> np.ndarray:
+        """Label equal nonzero values with full trailing spatial connectivity."""
+
+    @abstractmethod
     def disk_footprint(self, radius: float) -> np.ndarray:
         """Return a 2-D disk footprint."""
 
@@ -2059,6 +2066,24 @@ class NumpyMorphologyBackendStrategy(MorphologyBackendStrategy):
     ) -> tuple[np.ndarray, int]:
         return _scipy_connected_components(mask, connectivity=connectivity)
 
+    def prepare_backend(self) -> None:
+        labels = np.array([[[0, 1], [2, 1]]], dtype=np.intp)
+        for writeable in (True, False):
+            labels.flags.writeable = writeable
+            self.label_equal_values(labels)
+
+    def label_equal_values(self, values: np.ndarray) -> np.ndarray:
+        array = np.asarray(values)
+        if array.ndim == 0:
+            raise NotImplementedError("Connected labeling requires a spatial axis.")
+        if array.ndim > 3:
+            return apply_over_trailing_spatial_axes(
+                array, 3, self.label_equal_values, dtype=np.int32
+            )
+        spatial_shape = (1,) * (3 - array.ndim) + array.shape
+        labels = np.ascontiguousarray(array, dtype=np.intp).reshape(spatial_shape)
+        return equal_value_components_numba(labels).reshape(array.shape)
+
     def disk_footprint(self, radius: float) -> np.ndarray:
         return _scipy_disk_footprint(radius)
 
@@ -2075,10 +2100,63 @@ class NumpyMorphologyBackendStrategy(MorphologyBackendStrategy):
         return _scipy_disk_footprint(radius)
 
     def grayscale_closing(self, image: np.ndarray, footprint: np.ndarray) -> np.ndarray:
-        return _skimage_grayscale_closing(image, footprint)
+        return self._grayscale_morphology(image, footprint, first_pass_is_dilation=True)
 
     def grayscale_opening(self, image: np.ndarray, footprint: np.ndarray) -> np.ndarray:
-        return _skimage_grayscale_opening(image, footprint)
+        return self._grayscale_morphology(image, footprint, first_pass_is_dilation=False)
+
+    def _grayscale_morphology(
+        self,
+        image: np.ndarray,
+        footprint: np.ndarray,
+        *,
+        first_pass_is_dilation: bool,
+    ) -> np.ndarray:
+        image_array = np.asarray(image)
+        footprint_array = np.asarray(footprint, dtype=bool)
+        native_operation = (
+            _skimage_grayscale_closing
+            if first_pass_is_dilation
+            else _skimage_grayscale_opening
+        )
+        # Native floating-point ordering is shared by the span filters on
+        # finite values. Keep the provider's original NaN and signed-zero
+        # behavior, unsupported dtypes, and genuinely volumetric footprints.
+        if (
+            image_array.dtype not in (np.dtype(np.float32), np.dtype(np.float64))
+            or image_array.ndim < 2
+            or footprint_array.ndim != image_array.ndim
+            or any(size != 1 for size in footprint_array.shape[:-2])
+            or image_array.size == 0
+            or not footprint_array.any()
+            or footprint_array.all()
+            or not np.isfinite(image_array).all()
+            or np.any((image_array == 0) & np.signbit(image_array))
+        ):
+            return native_operation(image_array, footprint_array)
+
+        from skimage.morphology.footprints import mirror_footprint, pad_footprint
+
+        footprint_2d = pad_footprint(
+            footprint_array.reshape(footprint_array.shape[-2:]), pad_end=False
+        )
+        first_offsets = FootprintOffsetTable.from_footprint(
+            footprint_2d, dimension_policy=FOOTPRINT_OFFSET_2D_POLICY
+        )
+        # Singleton spans eliminate no horizontal neighbor visits. Rectangular
+        # footprints above stay native as well; odd rectangles already use
+        # SciPy's separable filters, while even ones are excluded conservatively.
+        if all(first == last for _, first, last in first_offsets.horizontal_spans()):
+            return native_operation(image_array, footprint_array)
+        second_offsets = FootprintOffsetTable.from_footprint(
+            mirror_footprint(footprint_2d), dimension_policy=FOOTPRINT_OFFSET_2D_POLICY
+        )
+        intermediate = first_offsets.grayscale_extremum(
+            image_array, maximum=first_pass_is_dilation
+        )
+        return second_offsets.grayscale_extremum(
+            intermediate, maximum=not first_pass_is_dilation
+        )
 
     def erode_labeled_objects(
         self, labels: np.ndarray, footprint: np.ndarray
@@ -2237,6 +2315,7 @@ class NumbaNumpyMorphologyBackendStrategy(NumpyMorphologyBackendStrategy):
     is_default_backend = True
 
     def prepare_backend(self) -> None:
+        super().prepare_backend()
         mask = np.array(
             [[False, True, False], [True, True, False], [False, False, True]],
             dtype=np.bool_,
@@ -3544,7 +3623,7 @@ FOOTPRINT_OFFSET_2D_OR_3D_POLICY = FootprintOffsetDimensionPolicy(
 
 @dataclass(frozen=True, slots=True)
 class FootprintOffsetTable:
-    """Contiguous centered offsets for Numba morphology kernels."""
+    """Centered footprint geometry for native and Numba morphology kernels."""
 
     offsets: np.ndarray
 
@@ -3565,6 +3644,57 @@ class FootprintOffsetTable:
     @property
     def x_offsets(self) -> np.ndarray:
         return self.offsets[:, 1]
+
+    def horizontal_spans(self) -> tuple[tuple[int, int, int], ...]:
+        """Group adjacent offsets into exact inclusive horizontal intervals."""
+        spans: list[tuple[int, int, int]] = []
+        for y, x in self.offsets:
+            y, x = int(y), int(x)
+            if spans and spans[-1][0] == y and spans[-1][2] + 1 == x:
+                row, first, _ = spans[-1]
+                spans[-1] = (row, first, x)
+            else:
+                spans.append((y, x, x))
+        return tuple(spans)
+
+    def grayscale_extremum(
+        self, image: np.ndarray, *, maximum: bool
+    ) -> np.ndarray:
+        """Reduce the exact union of spans, sharing each horizontal window."""
+        from scipy.ndimage import maximum_filter1d, minimum_filter1d
+
+        spans = self.horizontal_spans()
+        left = max(0, -min(first for _, first, _ in spans))
+        right = max(0, max(last for _, _, last in spans))
+        padding = [(0, 0)] * image.ndim
+        padding[-1] = (left, right)
+        # All selected windows lie within this native half-sample reflected
+        # extension, including interval centers outside the original image.
+        padded = np.pad(image, padding, mode="symmetric")
+        filter_operation = maximum_filter1d if maximum else minimum_filter1d
+        lengths = sorted({last - first + 1 for _, first, last in spans})
+        horizontal = np.empty_like(padded)
+        height, width = image.shape[-2:]
+        combine = np.maximum if maximum else np.minimum
+        output = None
+        for length in lengths:
+            filter_operation(
+                padded, size=length, axis=-1, mode="reflect", output=horizontal
+            )
+            for row_offset, first, last in spans:
+                if last - first + 1 != length:
+                    continue
+                rows = (np.arange(height) + row_offset) % (2 * height)
+                rows = np.where(rows < height, rows, 2 * height - rows - 1)
+                center = left + first + length // 2
+                values = np.take(
+                    horizontal[..., center : center + width], rows, axis=-2
+                )
+                if output is None:
+                    output = values
+                else:
+                    combine(output, values, out=output)
+        return output
 
 
 def _border_component_ids(component_labels: np.ndarray) -> set[int]:

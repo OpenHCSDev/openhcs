@@ -12,6 +12,7 @@ from openhcs.core.artifacts import (
     ObjectLabelsArtifactType,
     SourceStackLineageSourceRelation,
 )
+from openhcs.processing.backends.cellprofiler.morphology import MorphologyBackendStrategy
 from openhcs.core.registry_strategies import (
     EnumKeyedStrategyMixin,
 )
@@ -455,23 +456,6 @@ def watershed_resize_labels(
     if not np.issubdtype(resized.dtype, np.integer):
         np.rint(resized, out=resized)
     return resized.astype(np.uint16, copy=False)
-
-
-def watershed_connected_components(labels_like: np.ndarray) -> np.ndarray:
-    """Label connected components over skimage-supported trailing spatial axes."""
-    import skimage.measure
-
-    labels_array = np.asarray(labels_like)
-    if not np.any(labels_array):
-        return np.zeros(labels_array.shape, dtype=np.int32)
-    spatial_rank = min(labels_array.ndim, 3)
-    if labels_array.ndim == spatial_rank:
-        return skimage.measure.label(labels_array).astype(np.int32, copy=False)
-    output = np.zeros(labels_array.shape, dtype=np.int32)
-    leading_shape = labels_array.shape[: labels_array.ndim - spatial_rank]
-    for leading_index in np.ndindex(leading_shape):
-        output[leading_index] = skimage.measure.label(labels_array[leading_index])
-    return output
 
 
 def watershed_regionprops_stats(labels: np.ndarray) -> tuple[int, float]:
@@ -1364,6 +1348,7 @@ class CellProfiler4WatershedRuntimeStrategy(WatershedRuntimeStrategy):
         import skimage.morphology
         import skimage.segmentation
 
+        morphology = MorphologyBackendStrategy.for_memory_type(MemoryType.NUMPY)
         profiler = WatershedProfiler()
         phase_started_at = time.perf_counter()
         y_data, x_data = CellProfiler4InitialWatershedStrategy.for_enum_member(
@@ -1420,7 +1405,7 @@ class CellProfiler4WatershedRuntimeStrategy(WatershedRuntimeStrategy):
             seeds = skimage.morphology.binary_dilation(
                 seeds, parameters.structuring_element
             )
-            number_objects = int(np.max(watershed_connected_components(y_data)))
+            number_objects = int(np.max(morphology.label_equal_values(y_data)))
             seeds_dtype = (
                 np.uint16 if number_objects < np.iinfo(np.uint16).max else np.uint32
             )
@@ -1452,7 +1437,7 @@ class CellProfiler4WatershedRuntimeStrategy(WatershedRuntimeStrategy):
                 "watershed_cp4_relabel_prepare", phase_started_at, parameters.method
             )
         phase_started_at = time.perf_counter()
-        labels = watershed_connected_components(y_data)
+        labels = morphology.label_equal_values(y_data)
         profiler.record_method(
             "watershed_cp4_final_label", phase_started_at, parameters.method
         )
