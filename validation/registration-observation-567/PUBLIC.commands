@@ -1,0 +1,29 @@
+# Templates for the single released retained CLI, not an automatic batch.
+# Exact package/native custody and original FUND release precede invocation.
+# Native94:6012 TCP. No viewer6013 request; no other scientific endpoint.
+
+call openhcs_health_check --arguments '{}' --json
+tools --contains register_custom_function --limit 1 --json
+tools --contains get_custom_function_registration_status --limit 1 --json
+
+# Only if the release includes one new native bootstrap; never adopt a foreign
+# runtime or repeat an interrupted/UNKNOWN startup. Save its complete handle.
+call openhcs_start_owned_runtime --arguments '{"host":"127.0.0.1","port":6012,"transport_mode":"tcp","persistent":true}' --json
+call openhcs_observe_owned_runtime --arguments '{"handle":<ACTUAL_BOOTSTRAP_HANDLE>}' --json
+
+# Original native preparation lifecycle, explicit native route. Save its handle.
+call openhcs_start_function_catalog_preparation --arguments '{"host":"127.0.0.1","port":6012,"transport_mode":"tcp","persistent":true}' --json
+call openhcs_get_function_catalog_preparation_status --arguments '<ACTUAL_PREPARATION_HANDLE_FIELDS>' --json
+
+# After READY and exact launch_plan.storage_dir readback, generate ONE source
+# command from the immutable fixture (generator command is in RECEIVING.rst).
+# Do not execute this placeholder or generate a second source-bearing call.
+call openhcs_register_custom_function --arguments '<GENERATED_ONCE_FROM_FIXTURE_AND_ACTUAL_STORE>' --json
+
+# Pass ONLY the original returned observation_handle fields, no nesting and no
+# manually invented server_identity/digest. Same exact native incarnation.
+call openhcs_get_custom_function_registration_status --arguments '<ACTUAL_REGISTRATION_OBSERVATION_HANDLE_FIELDS>' --json
+
+# Only after terminal public evidence; close the exact original bootstrap owner.
+call openhcs_close_owned_runtime --arguments '{"handle":<ACTUAL_BOOTSTRAP_HANDLE>,"mode":"force"}' --json
+exit
