@@ -327,6 +327,53 @@ def _validate_optional_enum(
         )
 
 
+class CallableSignature(inspect.Signature):
+    """Canonical ABI with path declarations derived from its own parameters."""
+
+    __slots__ = ("_declared_path_parameters",)
+
+    def __init__(
+        self,
+        parameters=None,
+        *,
+        return_annotation=inspect.Signature.empty,
+        __validate_parameters__=True
+    ):
+        from openhcs.core.vfs_protocol import PlatePathDeclaration
+
+        super().__init__(
+            parameters,
+            return_annotation=return_annotation,
+            __validate_parameters__=__validate_parameters__,
+        )
+        self._declared_path_parameters = MappingProxyType(
+            {
+                name: declaration
+                for name, parameter in self.parameters.items()
+                for declaration in (
+                    PlatePathDeclaration.from_annotation(parameter.annotation),
+                )
+                if declaration is not None
+            }
+        )
+
+    @classmethod
+    def from_signature(cls, signature: inspect.Signature) -> "CallableSignature":
+        """Reuse an admitted ABI or enrich a plain signature at its boundary."""
+        return (
+            signature
+            if isinstance(signature, cls)
+            else cls(
+                signature.parameters.values(),
+                return_annotation=signature.return_annotation,
+            )
+        )
+
+    @property
+    def declared_path_parameters(self) -> Mapping[str, "PlatePathDeclaration"]:
+        return self._declared_path_parameters
+
+
 @dataclass(frozen=True, slots=True)
 class CallableMetadata:
     """Compiler-visible metadata declared by one processing callable."""
@@ -471,6 +518,14 @@ class CallableMetadata:
             return self.canonical_signature
         return self.resolve_signature(self.resolve_canonical_raw_callable(func))
 
+    def declared_path_parameters_for(
+        self, func: Any
+    ) -> Mapping[str, "PlatePathDeclaration"]:
+        """Read the captured signature layout; unprepared authoring stays live."""
+        return CallableSignature.from_signature(
+            self.canonical_signature_for(func)
+        ).declared_path_parameters
+
     def raw_runtime_signature_for(self, func: Any) -> inspect.Signature:
         """Own the distinct raw ABI or the shared canonical target snapshot."""
         if self.raw_runtime_signature is not None:
@@ -509,6 +564,12 @@ class CallableMetadata:
 
     def __post_init__(self) -> None:
         """Normalize the generic artifact-fed callable parameter declaration."""
+
+        if self.canonical_signature is not None:
+            object.__setattr__(
+                self, "canonical_signature",
+                CallableSignature.from_signature(self.canonical_signature),
+            )
 
         runtime_bound_parameters = (
             RuntimeParameterDeclarationABC.require_declaration_types(
@@ -817,10 +878,6 @@ class CallableContract(ArtifactPlanKeySelector):
         compare=False,
     )
 
-    _declared_path_parameters: Mapping[str, "PlatePathDeclaration"] | None = (
-        dataclasses.field(default=None, init=False, repr=False, compare=False)
-    )
-
     def __post_init__(self) -> None:
         """Capture the declared positional ABI once, before any returned values."""
         outputs = ArtifactSpecCollection(self.metadata.artifact_outputs)
@@ -876,10 +933,6 @@ class CallableContract(ArtifactPlanKeySelector):
             "_trailing_return_output_refs",
             refs[canonical_count:],
         )
-        if self.metadata.canonical_signature is not None:
-            object.__setattr__(
-                self, "_declared_path_parameters", self._derive_path_parameters()
-            )
 
     def __reduce__(
         self,
@@ -1263,23 +1316,8 @@ class CallableContract(ArtifactPlanKeySelector):
 
     @property
     def declared_path_parameters(self) -> Mapping[str, "PlatePathDeclaration"]:
-        """Plate-relative path declarations keyed by public parameter name."""
-
-        if self._declared_path_parameters is not None:
-            return self._declared_path_parameters
-        return self._derive_path_parameters()
-
-    def _derive_path_parameters(self) -> Mapping[str, "PlatePathDeclaration"]:
-        """Read the same signature epoch as the owning callable declaration."""
-        from openhcs.core.vfs_protocol import PlatePathDeclaration
-
-        declarations = {
-            parameter_name: declaration
-            for parameter_name, annotation in self.canonical_parameter_annotations.items()
-            for declaration in (PlatePathDeclaration.from_annotation(annotation),)
-            if declaration is not None
-        }
-        return MappingProxyType(declarations)
+        """Plate-relative path declarations owned by the semantic ABI."""
+        return self.metadata.declared_path_parameters_for(self.func)
 
     def declared_path_values(
         self,
