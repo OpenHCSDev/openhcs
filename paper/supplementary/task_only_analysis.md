@@ -591,6 +591,48 @@ recorded. The [stitched-development outcome record](task_only_analysis/p001-stit
 binds the original report, manifest and pipeline identities. No new scientific
 execution or reference scoring was performed for this account.
 
+## Independent retinal repeat: local gains with unresolved field-wide counting
+
+The fresh-context trial `R0010_FRESH656_95` analysed the same released R0010
+acquisition using only its brief, MCP and packaged skill, without earlier
+scientific outputs or reference feedback. The final attempted pipeline completed
+and exported 118 algorithmic parents; 119 ROI contours are not a second count.
+The author preserved its first method, seven attempted methods including one
+technical dimensionality failure, processing checkpoints and distributed native
+raw/result/combined captures. This was a development repeat, not an unseen
+held-out evaluation or controlled comparison of skill versions.
+
+Useful local results were retained rather than discarded with the whole-field
+count claim. A conspicuous bright pair remained separated. Increasing intensity
+marker smoothing from 30 to 60 native pixels repaired a moderate-body split;
+the coordinator independently inspected the final southeast raw/result/combined
+set and confirmed one filled footprint in place of the preceding partition.
+Other regions still contained splits, diffuse admissions and weak unlabelled
+structures. These remaining errors limit cell counting and precise morphology,
+but do not erase the local recovery or the inspectable detector outputs.
+
+Admission thresholds 0.05 and 0.04 produced 84 and 124 parents respectively.
+That sensitivity is not an accuracy estimate, a biological confidence interval
+or proof that either count is wrong. The author selected a final118-parent
+candidate after separate marker changes; no manual-reference comparison or
+quantitative field-wide error rate was obtained. Acquisition XY spacing was
+declared 0.12353054911059548 micrometres/pixel, without independent calibration.
+The denominator was one 2586 × 2586 source field with size and border exclusions,
+not the entire retina. Hoechst was inspected but all nuclei were not assumed
+to be eligible RBPMS-positive cells.
+
+Independent verification covered 215 manifest-declared size/hash entries,
+1,465,782,627 bytes, including three exact journal prefixes, and all82 indexed
+native PNGs (46,730,113 bytes), with no mismatches. Exact owned native/viewer
+closure was acknowledged and independently confirmed; the original client
+exit2 remains recorded. Outer author journals require sealing after their writer
+exits and are not certified by this prefix check. The
+[retinal repeat outcome record](task_only_analysis/retinal-fresh656-outcome.json)
+identifies the preserved report, manifest, pipeline and inspected captures.
+No analysis, private scoring or source-image transformation was rerun for this
+account. Figure 9 continues to show the separate 109-instance predecessor and
+must not be interpreted as an image of this 118-instance repeat.
+
 ## Scope and retained evidence
 
 [Figure 7 plot data](../figures/slas/task_only_analysis_plot_data.csv) retains
