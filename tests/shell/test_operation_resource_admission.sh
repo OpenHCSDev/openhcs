@@ -43,8 +43,7 @@ run() {
   printf 'PASS %s mode=%s status=%s\n' "$phase" "$mode" "$status"
 }
 run 0 ongoing original_review
-# Old allocations are measured, but do not consume an invented historical
-# ceiling. Actual df capacity and remaining funded growth remain authoritative.
+# Old allocations are charged by df, not inventoried for every action.
 mkdir "$scratch/retired-output"
 dd if=/dev/zero of="$scratch/retired-output/preserved-evidence.bin" bs=4096 count=16 status=none
 jq --arg old "$scratch/retired-output" '.retained_output_roots=[$old] |
@@ -52,8 +51,13 @@ jq --arg old "$scratch/retired-output" '.retained_output_roots=[$old] |
   "$scratch/funding/program.json" > "$scratch/funding-with-old-history.json"
 mv "$scratch/funding-with-old-history.json" "$scratch/funding/program.json"
 run 0 ongoing measured_history_not_capped
-old_bytes=$(du -s -B1 "$scratch/retired-output" | cut -f1)
-rg -q "Programme old=$old_bytes " "$scratch/run/A/author-workspace/output/runtime/resources-measured_history_not_capped.output"
+rg -q 'Programme retainedRoots=1 ' "$scratch/run/A/author-workspace/output/runtime/resources-measured_history_not_capped.output"
+# A closed path can have been archived/removed by its cleanup owner. The guard
+# still validates custody overlap, but must not enumerate or require its bytes.
+jq --arg old "$scratch/closed-no-longer-local" '.retained_output_roots=[$old]' \
+  "$scratch/funding/program.json" > "$scratch/funding-with-closed-path.json"
+mv "$scratch/funding-with-closed-path.json" "$scratch/funding/program.json"
+run 0 ongoing closed_paths_not_inventoried
 runtime="$scratch/run/A/author-workspace/output/runtime"
 rg -q 'avg10=4.82 avg60=1.09 avg300=0.23' "$runtime/resources-original_review.psi"
 rg -q 'Pressure warning:' "$runtime/resources-original_review.psi"
@@ -69,7 +73,14 @@ printf 'MemAvailable: 5767168 kB\n' > "$scratch/host/meminfo"
 run 0 ongoing resident_charge_not_reserved_twice
 printf 'MemAvailable: 16454287 kB\n' > "$scratch/host/meminfo"
 export CONTROLLED_HOME_BYTES=2147483648
-run 78 ongoing insufficient_ledger_disk
+run 0 ongoing forecast_not_ongoing_permission
+rg -q 'Planning warning:' "$runtime/resources-forecast_not_ongoing_permission.disk"
+printf 'full avg10=0.00 avg60=0.00 avg300=0.00 total=324417078\n' > "$scratch/host/pressure"
+run 0 replacement forecast_not_startup_permission
+export CONTROLLED_HOME_BYTES=2147483647
+run 78 ongoing actual_disk_below_reserve
+export CONTROLLED_HOME_BYTES=8353711390
+printf 'full avg10=4.82 avg60=1.09 avg300=0.23 total=324417078\n' > "$scratch/host/pressure"
 export CONTROLLED_HOME_BYTES=8353711390 CONTROLLED_COMMON_SWAP=1
 run 0 ongoing measured_existing_swap
 rg -q 'measuredSwap=1' "$runtime/resources-measured_existing_swap.ram-scopes"
@@ -118,6 +129,11 @@ bash "$operations/project-program.sh" prepare "$scratch/funding" "$scratch/admin
 (cd "$scratch/admin-run"; sha256sum program.json successor-declaration.json > READY-FREEZE.sha256)
 FLEET_PARENT_RELEASED=1 bash "$operations/project-program.sh" publish "$scratch/funding" "$scratch/admin-run" \
   "$(sha256sum "$scratch/funding/program.json" | cut -d' ' -f1)"
+# Ongoing A does not enumerate sibling output. Ledger reports both funded rows.
+run 0 ongoing selected_output_only
+test "$(rg -c '^Current ' "$runtime/resources-selected_output_only.output")" = 1
+run 0 ledger complete_growth_forecast
+test "$(rg -c '^Current ' "$runtime/resources-complete_growth_forecast.output")" = 2
 run 0 ongoing continuing_original_scope_owner
 rg -q 'required 2048 MiB' "$runtime/resources-continuing_original_scope_owner.ram"
 export CONTROLLED_SCI_MAX=268435456 CONTROLLED_SCI_CURRENT=134217728
