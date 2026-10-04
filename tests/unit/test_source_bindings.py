@@ -1347,6 +1347,57 @@ def test_declared_positions_keep_store_planes_and_same_basename_sources_distinct
     ) == (positions[:2], (positions[1],), (positions[2],), ())
 
 
+
+def test_source_binding_members_collapse_lookup_aliases_of_same_projection():
+    relative = tuple(f"A01_s001_w1_z{z:03d}_t001.tif" for z in (0, 1))
+    full = tuple(f"/workspace/{path}" for path in relative)
+    source_path = "/physical/source.tif"
+    binding = NamedSourceBinding(alias="OriginalPhysical")
+    projections = tuple(
+        SourcePlaneProjection(
+            address=OpenHCSPlaneAddress.from_values("A01", "1", "1", z, "1"),
+            ref=SourcePixelRef("disk", source_path), source_alias=binding.alias,
+        )
+        for z in (0, 1)
+    )
+    typed = {
+        spelling: projection
+        for path, loadable, projection in zip(relative, full, projections, strict=True)
+        for spelling in (path, loadable)
+    }
+    workspace = VirtualWorkspaceSourceProjection(
+        source_refs_by_virtual_path={path: projection.ref for path, projection in typed.items()},
+        source_metadata_by_path={full[0]: {"channel": "9"}},
+        source_projections_by_virtual_path=typed,
+    )
+    context = SourcePatternResolutionContext.from_projection(
+        parser=SourceSchemaFilenameParser(), projection=workspace,
+    )
+    matched = SourceBindingMatchedImageSet.from_plan(
+        bindings=(binding,), match_plan=None, source_context=context,
+        identity_policy=SourceImageSetIdentityPolicy(),
+    )
+    candidates = (*typed, source_path)
+    assert matched.members_for_binding(
+        binding,
+        anchor_provenance=SourceImageProvenance(source_path, {"z_index": "0"}),
+        source_universe=candidates,
+    ) == (relative[0],)
+    assert matched.matching_candidates_for_source_identities(
+        (SourceImageIdentity(source_path), SourceImageIdentity(full[0]),
+         SourceImageIdentity(source_path, {"channel": "9"})), candidates,
+    ) == (relative, (relative[0],), (relative[0],))
+    # A later declaration replacement is a new position even with equal fields.
+    typed[full[0]] = SourcePlaneProjection(
+        address=projections[0].address, ref=projections[0].ref, source_alias=binding.alias,
+    )
+    with pytest.raises(ValueError, match="one exact declared source-set position"):
+        matched.members_for_binding(
+            binding,
+            anchor_provenance=SourceImageProvenance(source_path, {"z_index": "0"}),
+            source_universe=candidates,
+        )
+
 def test_source_binding_exact_position_projection_inherits_owning_context():
     """Surface policy guard: declaration resolution is not reimplemented in leaves."""
     assert (

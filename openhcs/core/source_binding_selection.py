@@ -265,17 +265,24 @@ class SourcePatternResolutionContext:
             (key for key in keys if key in self.source_paths_by_virtual_path),
             None,
         )
-        virtual_matches = (
-            (exact_virtual_path,)
-            if exact_virtual_path is not None
-            else tuple(
+        if exact_virtual_path is not None:
+            projection = self.source_projections_by_virtual_path.get(exact_virtual_path)
+            virtual_matches = (
+                tuple(
+                    path
+                    for path, declared in self.source_projections_by_virtual_path.items()
+                    if declared is projection
+                )
+                if projection is not None else (exact_virtual_path,)
+            )
+        else:
+            virtual_matches = tuple(
                 dict.fromkeys(
                     virtual_path
                     for key in keys
                     for virtual_path in self._matching_virtual_paths(key)
                 )
             )
-        )
         mapped = tuple(
             self.source_paths_by_virtual_path[key]
             for key in (*keys, *virtual_matches)
@@ -340,18 +347,29 @@ class SourcePatternResolutionContext:
         """Project exact physical spellings onto their declared workspace positions.
 
         Workspace positions are not physical-file identities: several positions
-        may address different planes in one store. Keep every declared position,
-        and replace only a physical address explicitly mapped to those positions.
-        No basename, filesystem resolution or metadata inference participates.
+        may address different planes in one store. Lookup spellings backed by
+        the same nominal projection are aliases of one position. Mapping-only
+        declarations and distinct projections retain their separate positions.
+        No basename, filesystem resolution or physical-ref equality participates.
         """
+        projection_positions: dict[int, SourceCandidatePath] = {}
+        for position, projection in self.source_projections_by_virtual_path.items():
+            projection_positions.setdefault(id(projection), position)
         positions: list[SourceCandidatePath] = []
         for candidate, virtual_paths in zip(
             candidates, self.virtual_paths_for_sources(candidates), strict=True
         ):
-            if candidate in self.source_paths_by_virtual_path:
-                positions.append(candidate)
-            else:
-                positions.extend(virtual_paths or (candidate,))
+            declared_positions = (
+                (candidate,)
+                if candidate in self.source_paths_by_virtual_path
+                else virtual_paths or (candidate,)
+            )
+            for position in declared_positions:
+                projection = self.source_projections_by_virtual_path.get(position)
+                positions.append(
+                    projection_positions[id(projection)]
+                    if projection is not None else position
+                )
         return tuple(dict.fromkeys(positions))
 
     def runtime_paths_for_candidate(
