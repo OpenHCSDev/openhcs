@@ -248,21 +248,18 @@ OpenHCS-derived overlays, native display windows and screenshot cropping/scaling
 
 ![Matched native DNA, actin, seeded territories and combined ROI views from the final paired-channel repeat.](../figures/slas/h003_fresh656_native.png){width=6in}
 
-Final-only matched views from the fresh, uncoached H003 repeat show DNA (A),
-actin (B), seeded actin territories (C), and DNA with nuclear and territory ROI
-outlines (D). The reviewed crop includes three nuclei recovered by separating
-core detection from boundary growth. It does not show their preceding failure;
-the retained trial and measurement records establish that comparison. Filled
-overlays obscure raw texture, so A and B remain separate. Territory interfaces
-are not independently established as physical cell boundaries. Native label
-colours, including background rendering in C, are not fluorescence or biological
-identity. Windows are 0–255 for DNA and 0–60 for actin, gamma 1. The shared
-editorial crop removes GUI chrome; the original captures and source spacing
-remain unchanged. This selected local witness supports useful nuclear recovery,
-not whole-field accuracy or an exact cell census. The
-[source proof](../figures/slas/h003_fresh656_sources/source-proof.json) identifies
-the original captures; [Supplementary Data 8](task_only_analysis/h003-fresh656-local-repair.json)
-identifies the frozen pipeline and remaining limits.
+Matched final views from the fresh, uncoached H003 repeat show DNA (A), actin
+(B), seeded territories (C), and DNA with nuclear and territory outlines (D).
+The crop includes three nuclei recovered by separating core detection from
+boundary growth; their preceding loss is recorded in Supplementary Data 8.
+Nuclear recovery is useful despite uncertain crowded territory interfaces.
+Raw panels remain separate because filled overlays obscure fluorescence.
+Windows are 0–255 for DNA and 0–60 for actin, gamma 1; label colours are not
+fluorescence. Original captures were cropped/scaled without pixel retouching,
+and physical calibration is unverified. The
+[source proof](../figures/slas/h003_fresh656_sources/source-proof.json) and
+[outcome record](task_only_analysis/h003-fresh656-local-repair.json) retain
+capture identities, the frozen pipeline and distributed review beyond this crop.
 
 Source: BBBC007v1 A02, Sabatini laboratory, Whitehead Institute; CC0.
 
