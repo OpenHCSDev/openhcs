@@ -86,6 +86,61 @@ def batch(capability, value):
     )
 
 
+@pytest.mark.parametrize("registered_count, code", (
+    (0, "custom_function_registration_uncertain"),
+    (1, "custom_function_local_projection_failed"),
+))
+def test_registration_renderer_retains_typed_error_receipt_and_handle(registered_count, code):
+    from openhcs.agent.dto.execution_connection import ExecutionConnectionSpec
+    from openhcs.agent.dto.functions import CustomFunctionRegistrationHandle, CustomFunctionRegistrationResult
+    from openhcs.mcp.dev_client_renderers.knowledge import CustomFunctionRegistrationRenderer
+    from zmqruntime.messages import ProcessIdentity
+
+    handle = CustomFunctionRegistrationHandle(
+        ExecutionConnectionSpec(port=15993), ProcessIdentity.current(),
+        "a" * 64, "engineering_registration", False, None,
+    )
+    original = CustomFunctionRegistrationResult(
+        schema_version=SCHEMA_VERSION, registered_count=registered_count,
+        connection=handle.connection, server_identity=handle.server_identity,
+        observation_handle=handle,
+        errors=(AgentError(code=code, message="original cause", hint="Do not replay.", exception_type="ValueError"),),
+    )
+    response = batch(agent_capabilities.register_custom_function, original)
+    decoded = McpDevToolBatchResponse.for_rendering(to_jsonable(response))
+    assert decoded.payload_for(agent_capabilities.register_custom_function) == original
+    text = CustomFunctionRegistrationRenderer.render(to_jsonable(response))
+    assert "incomplete observation or projection" in text
+    assert f"registered_count: {registered_count}" in text
+    assert "zero/absent does not prove no mutation" in text
+    assert text.count(f"{code}: original cause") == 1
+    assert "Do not replay." in text
+    marker = "Read-only observation handle: "
+    rendered_handle = next(line.removeprefix(marker) for line in text.splitlines() if line.startswith(marker))
+    assert json.loads(rendered_handle) == to_jsonable(handle)
+
+
+def test_registration_renderer_uses_declared_success_entries_without_mapping_reads():
+    from openhcs.agent.dto.functions import CustomFunctionRegistrationResult, FunctionCatalogEntry
+    from openhcs.mcp.dev_client_renderers.knowledge import CustomFunctionRegistrationRenderer
+
+    entry = FunctionCatalogEntry(
+        function_id="openhcs:engineering_registration", import_path="openhcs.processing.custom_functions.engineering_registration",
+        name="engineering_registration", module="openhcs.processing.custom_functions", library="openhcs",
+        signature="engineering_registration(image)", summary="Original declared summary", backend_tags=("numpy",),
+    )
+    original = CustomFunctionRegistrationResult(
+        schema_version=SCHEMA_VERSION, registered_count=1, persisted=False,
+        storage_dir="/engineering", source_file_paths=("/engineering/original.py",), functions=(entry,),
+    )
+    text = CustomFunctionRegistrationRenderer.render(to_jsonable(batch(agent_capabilities.register_custom_function, original)))
+    assert "registered=1 persisted=False storage=/engineering" in text
+    assert "Files: /engineering/original.py" in text
+    assert f"{entry.function_id}: {entry.signature} tags=numpy" in text
+    assert entry.summary in text and "Lifetime: process-local only" in text
+    assert f"draft-pipeline-step {entry.function_id}" in text
+
+
 def args_for(*argv):
     return dev_client._build_parser().parse_args(argv)
 

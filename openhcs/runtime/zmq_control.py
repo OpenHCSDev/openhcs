@@ -439,15 +439,41 @@ class CustomFunctionRegistrationMessageStrategy(ZMQControlMessageStrategy):
     def handle(self, message: dict, context: ZMQControlRequestContext) -> dict:
         from openhcs.agent.dto.functions import (
             CustomFunctionRegistrationControlResponse,
+            CustomFunctionRegistrationResult,
             FunctionCatalogPreparationHandle,
         )
         try:
             request = self.request_type.from_control_payload(message)
+        except Exception as error:
+            return self.error_response(error)
+        try:
             context.require_function_catalog_preparation().observe(
                 FunctionCatalogPreparationHandle(request.connection, request.require_server_identity())
             ).require_ready()
             return CustomFunctionRegistrationControlResponse(
                 value=context.require_function_catalog().register_custom_function(request),
+            ).to_control_response()
+        except Exception as error:
+            return CustomFunctionRegistrationControlResponse(
+                value=CustomFunctionRegistrationResult.uncertain(request, error),
+            ).to_control_response()
+
+
+class CustomFunctionRegistrationObservationMessageStrategy(ZMQControlMessageStrategy):
+    """Read canonical source proofs without catalog preparation or evaluation."""
+
+    from openhcs.agent.dto.functions import CustomFunctionRegistrationObservationRequest
+
+    request_type = CustomFunctionRegistrationObservationRequest
+    registry_key = request_type.message_type.value
+
+    def handle(self, message: dict, context: ZMQControlRequestContext) -> dict:
+        from openhcs.agent.dto.functions import CustomFunctionRegistrationObservationControlResponse
+
+        try:
+            request = self.request_type.from_control_payload(message)
+            return CustomFunctionRegistrationObservationControlResponse(
+                value=context.require_function_catalog().observe_custom_function_registration(request.handle),
             ).to_control_response()
         except Exception as error:
             return self.error_response(error)

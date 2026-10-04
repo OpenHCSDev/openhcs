@@ -8,6 +8,7 @@ helper registry or a copy of declaration metadata.
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from types import FunctionType
@@ -22,6 +23,11 @@ class CustomFunctionSource:
 
     function_name: str
     content_sha256: str
+
+    @staticmethod
+    def content_digest(source_bytes: bytes) -> str:
+        """The exact byte identity used by preparation, persistence and observers."""
+        return hashlib.sha256(source_bytes).hexdigest()
 
 
 @dataclass(frozen=True, slots=True)

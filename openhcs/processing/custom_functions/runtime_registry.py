@@ -140,6 +140,20 @@ class CustomFunctionRuntimeRegistry:
             return declaration
 
     @classmethod
+    def published_sources_for_content(
+        cls, content_sha256: str, *, function_name: str | None = None,
+    ) -> tuple[CustomFunctionSource, ...]:
+        """Observe existing exact declarations without loading or evaluating source."""
+        with cls._lock:
+            sources = tuple(
+                CustomFunctionSource(name, content_sha256)
+                for name, declaration in cls._declarations_by_name.items()
+                if (function_name is None or name == function_name)
+                and cls._declaration_revision(declaration.metadata) == content_sha256
+            )
+            return tuple(source for source in sources if cls.declaration_for_source(source) is not None)
+
+    @classmethod
     @contextmanager
     def lifecycle(cls):
         """Serialize one source mutation or lazy-load transaction."""

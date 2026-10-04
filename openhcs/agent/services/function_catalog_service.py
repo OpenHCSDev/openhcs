@@ -37,6 +37,8 @@ from openhcs.agent.dto.functions import (
     CustomFunctionRegistrationDestinationRequest,
     CustomFunctionRegistrationRequest,
     CustomFunctionRegistrationResult,
+    CustomFunctionRegistrationHandle,
+    CustomFunctionRegistrationObservation,
     FunctionArtifactSpec,
     FunctionCatalogEntry,
     FunctionCatalogPage,
@@ -600,6 +602,12 @@ class FunctionCatalogServiceABC(ABC):
         """Register one custom declaration through this catalog authority."""
 
     @abstractmethod
+    def observe_custom_function_registration(
+        self, handle: CustomFunctionRegistrationHandle,
+    ) -> CustomFunctionRegistrationObservation:
+        """Observe exact existing publication/persistence without evaluating source."""
+
+    @abstractmethod
     def search(
         self,
         *,
@@ -755,6 +763,37 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
             ),
             connection=request.connection,
             server_identity=server_identity,
+            observation_handle=CustomFunctionRegistrationHandle.from_request(request),
+        )
+
+    def observe_custom_function_registration(
+        self, handle: CustomFunctionRegistrationHandle,
+    ) -> CustomFunctionRegistrationObservation:
+        from openhcs.agent.dto.common import AgentWarning
+        from openhcs.processing.custom_functions.runtime_registry import CustomFunctionRuntimeRegistry
+
+        handle.require_current_owner()
+        published = CustomFunctionRuntimeRegistry.published_sources_for_content(
+            handle.content_sha256, function_name=handle.function_name,
+        )
+        persisted = None
+        warnings = ()
+        if handle.persist:
+            manager = custom_function_manager.CustomFunctionManager(create_storage=False)
+            if handle.require_storage_dir().resolve(strict=False) != manager.storage_dir.resolve(strict=False):
+                raise ValueError("Registration observation reached a different native source store.")
+            source = handle.require_named_source()
+            self._path_policy.assert_readable_location(manager.source_path_for_name(manager.storage_dir, source.function_name))
+            try:
+                manager.require_source(source)
+            except (OSError, RuntimeError) as error:
+                warnings = (AgentWarning("registration_source_not_observed", str(error),
+                    "Missing/changed current source is not proof of no original mutation; do not replay."),)
+            else:
+                persisted = source
+        return CustomFunctionRegistrationObservation(
+            schema_version=SCHEMA_VERSION, handle=handle, published_sources=published,
+            persisted_source=persisted, warnings=warnings,
         )
 
     def custom_function_registration_destination(

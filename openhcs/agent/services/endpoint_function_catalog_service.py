@@ -19,6 +19,8 @@ from openhcs.agent.dto.functions import (
     CustomFunctionRegistrationDestinationRequest,
     CustomFunctionRegistrationRequest,
     CustomFunctionRegistrationResult,
+    CustomFunctionRegistrationHandle,
+    CustomFunctionRegistrationObservation,
     FunctionCatalogControlRequest,
     FunctionCatalogEntry,
     FunctionCatalogPage,
@@ -32,7 +34,6 @@ from openhcs.agent.dto.functions import (
     FunctionReferenceControlRequest,
     FunctionSearchRequest,
 )
-from openhcs.agent.exceptions import AgentFacingErrorMixin
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.function_catalog_service import FunctionCatalogServiceABC
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig
@@ -45,19 +46,6 @@ if TYPE_CHECKING:
     )
 
 logger = logging.getLogger(__name__)
-
-
-class CustomFunctionRegistrationUncertainError(AgentFacingErrorMixin, RuntimeError):
-    agent_error_code = "custom_function_registration_uncertain"
-    agent_error_hint = "Preserve this request and endpoint receipt. Do not replay or fall back; persistence may have completed."
-
-    def __init__(self, request: CustomFunctionRegistrationRequest):
-        super().__init__(
-            f"Registration observation failed after invoking {request.connection.transport_endpoint()}; "
-            f"destination={request.storage_dir}, function={request.function_name!r}. "
-            f"Selected server={request.server_identity!r}. "
-            "Outcome is uncertain; source or registry mutation may have completed."
-        )
 
 
 FunctionCatalogClientFactory = Callable[
@@ -471,8 +459,18 @@ class ZMQFunctionCatalogService(EndpointFunctionCatalogServiceABC):
             result = client.register_custom_function(
                 request, operation_deadline=deadline
             )
+            if result.errors:
+                if result.observation_handle != CustomFunctionRegistrationHandle.from_request(request):
+                    raise ValueError("Registration error returned a different observation owner.")
+                return result
             destination.require_result(request, result)
-            if not request.persist:
+        except FunctionCatalogEndpointUnavailableError:
+            # Native admission failed before the source-bearing exchange.
+            raise
+        except Exception as error:
+            return CustomFunctionRegistrationResult.uncertain(request, error)
+        if not request.persist:
+            try:
                 from openhcs.processing.custom_functions.manager import (
                     CustomFunctionManager,
                 )
@@ -483,13 +481,29 @@ class ZMQFunctionCatalogService(EndpointFunctionCatalogServiceABC):
                     clear_caches=False,
                     emit_signal=False,
                 )
-            self.invalidate()
-        except FunctionCatalogEndpointUnavailableError:
-            # Native admission failed before the source-bearing exchange, so this
-            # is recoverable rejection, not an uncertain mutation receipt.
-            raise
-        except Exception as error:
-            raise CustomFunctionRegistrationUncertainError(request) from error
+            except Exception as error:
+                from openhcs.agent.dto.common import AgentError
+                # Native receipt is already confirmed; do not erase it on local failure.
+                return replace(result, errors=(AgentError.from_exception(
+                    "custom_function_local_projection_failed", error,
+                    hint="Native registration is confirmed. Preserve its receipt; do not register again to repair local projection.",
+                ),))
+        self.invalidate()
+        return result
+
+    def observe_custom_function_registration(
+        self, handle: CustomFunctionRegistrationHandle,
+    ) -> CustomFunctionRegistrationObservation:
+        if handle.persist:
+            from openhcs.processing.custom_functions.manager import CustomFunctionManager
+            source = handle.require_named_source()
+            self._path_policy.assert_readable_location(CustomFunctionManager.source_path_for_name(
+                handle.require_storage_dir(), source.function_name,
+            ))
+        endpoint = self._endpoint_for_connection(handle.connection)
+        result = self._client_for(endpoint).observe_custom_function_registration(handle)
+        if result.handle != handle:
+            raise ValueError("Registration observation returned a different owner/source handle.")
         return result
 
     def _endpoint_for_connection(
