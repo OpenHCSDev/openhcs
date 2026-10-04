@@ -53,7 +53,7 @@ def acquisition_tile_positions(
         raise ValueError(
             "Acquisition positions require a nonempty (site, Y, X) tile stack."
         )
-    records = source_metadata.source_plane_metadata_records()
+    records = source_metadata.source_metadata_by_payload()
     if len(records) != image_stack.shape[0]:
         raise ValueError(
             "Acquisition positions require exact ordered metadata for every source tile."

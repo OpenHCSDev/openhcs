@@ -48,7 +48,6 @@ from openhcs.core.source_image_provenance import (
 )
 from openhcs.core.source_matching import (
     source_component_metadata_items,
-    with_source_component_metadata,
 )
 from openhcs.core.source_metadata import SourceMetadataFields
 from openhcs.core.source_projection import OpenHCSPlaneAddress
@@ -801,19 +800,9 @@ class AnalysisOutputDescriptorAuthority:
                 metadata = metadata.with_source_provenance(
                     provenance.with_source_component_metadata(component_metadata)
                 )
-        scope = record.key.scope
-        if scope.has_fixed_components:
-            component_metadata = scope.fixed_component_metadata(
-                metadata.source_component_metadata
-            )
-        elif scope.component is not None:
-            component_metadata = with_source_component_metadata(
-                metadata.source_component_metadata or {},
-                scope.component,
-                scope.require_value_text(),
-            )
-        else:
-            return metadata
+        component_metadata = record.key.scope.source_component_metadata(
+            metadata.source_component_metadata
+        )
         return metadata.with_source_provenance(
             metadata.source_provenance.with_source_component_metadata(
                 component_metadata
