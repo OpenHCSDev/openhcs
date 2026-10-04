@@ -196,6 +196,54 @@ equality or one centre per biological nucleus (Supplementary Data 8).
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
+## Supplementary Figure 11. Retinal soma candidates during assisted development
+
+![Matched raw fluorescence, candidate regions and combined retinal views before and after a soma-model revision.](../figures/slas/retinal_development_repair.png){width=6in}
+
+A shared RBPMS raw view accompanies the released predecessor (top) and the later
+soma model (bottom), at the same southeastern native coordinates. Raw display
+limits are 0–55 with gamma 1. The later model reduces broad background admission
+while retaining useful body footprints. Faint profiles remain missed elsewhere
+and crowded boundaries remain uncertain. This comparison spans admission-model
+choices; it is not an isolated smoothing effect, autonomous accuracy assessment
+or validated biological cell count. Native ROI colours are not cross-candidate
+identities. The [source receipt](task_only_analysis/retinal-development-source-receipt.json)
+retains matched capture identities and distributed controls; the
+[render receipt](task_only_analysis/retinal-development-render-receipt.json)
+records unchanged PNG embedding and the shared full-canvas crop. The acquisition
+and analysis remain in the original frozen study bundle (Supplementary Data 8).
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
+## Supplementary Figure 12. Local nuclear repair and compartment limitations
+
+![Same-author BBBC013 development views of a dim-nucleus repair, a crowded after-only control and uncertain GFP compartments.](../figures/slas/bbbc013_development_repair.png){width=6in}
+
+\(A) Matched H12 views before and after a foreground-admission adjustment show
+recovery of a dim broad profile and retained separation of nearby regions. The
+minimum-size rule was unchanged; retained intermediate measurements support
+threshold-shrunken support as the earlier loss mechanism. (B) An after-only
+bright crowded A01 control shows separate supported regions at the reviewed
+position, with touching or lobed identities still uncertain. (C) Corrected D06
+GFP views show unresolved propagated-compartment extent and ownership. Numeric
+raw windows are 0–60, 0–123 and 0–111 in A, B and C, respectively; gamma is 1.
+Colours are not cross-candidate identities. Physical calibration is unverified.
+These same-author development witnesses support a local nuclear repair, not
+exhaustive accuracy, validated translocation measurements, complete plate
+execution or fresh autonomous success. The full-plate continuation remained
+interrupted. The [source proof](task_only_analysis/bbbc013-development-source-proof.json)
+and [render receipt](task_only_analysis/bbbc013-development-render-receipt.json)
+retain the original capture, source, presentation and unchanged embed identities.
+Source: Ilya Ravkin, [Broad Bioimage Benchmark Collection BBBC013v1](https://bbbc.broadinstitute.org/BBBC013),
+[CC BY 3.0](https://creativecommons.org/licenses/by/3.0/). Adaptations comprise
+OpenHCS-derived overlays, native display windows and screenshot cropping/scaling.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
 ## Supplementary Data 1. CellProfiler workflow comparison
 
 This supplement indexes source tables and evaluation records. Figure scripts
@@ -730,6 +778,14 @@ accuracy score nor evidence of host-wide RAM exhaustion. Its
 [outcome record](task_only_analysis/bbbc013-repeat94-outcome.json) identifies
 the unchanged freeze, partial inventory and termination receipts. It is distinct
 from the prospective BBBC013 result in Supplementary Data 7.
+
+The report also records a same-author retinal continuation with 100 inspectable
+RBPMS soma-detector instances. Matched views show useful local improvements,
+but residual dim-body misses and uncertain dense partitions prevent treating
+the detector count as a validated RGC total. A measurement-only grouping repair
+restored original-channel tables without changing the soma masks. This case is
+assisted development, not a fresh autonomous success; its packaging overrun and
+nonzero client teardown status remain recorded.
 
 ## Software snapshots and evidence
 
