@@ -1,8 +1,8 @@
 STEP_INPUT named-image artifact origin after ordinary preprocessing
 ==================================================================
 
-Owner repair installed in an isolated qualified wheel; public MCP acceptance
-is not yet verified. The initial281 focused installed controls passed; the
+Owner repair installed in an isolated qualified wheel; public synthetic MCP
+acceptance is verified below, together with411 installed controls. The initial281 focused installed controls passed; the
 wider CP family exposed the follow-up consumer and fixture boundaries recorded
 below. No frozen biological execution is replayed.
 Reviewed main e1400cb9f278149fea7056b8fc8319d1ebd6ca69 and the retained
@@ -226,3 +226,52 @@ before client creation because actual memory full PSI was elevated; there was
 no633 client/native launch or UNKNOWN execution. That refusal is preserved.
 After installed checks completed, memory pressure was observed to have fallen;
 any startup needs a distinct passing admission, not a replay of the refused one.
+
+Public installed acceptance and custody
+----------------------------------------
+
+The fresh ``popper633_public88_start01`` admission passed with10.146GiB RAM
+available and full memory PSI0.00/0.01/0.15. The earlier pre-client exit77 remains
+unchanged. One recorded client (invocation f629a3526ae543e9974ccdd1af8c3b68)
+imported the qualified receiving02 wheel at ee9d9e37. The normal owned runtime
+handle identified PID1560544/create_time1791127634.59 on6020; startup progress
+was retained through kernel/catalog preparation. A catalog-preparation request
+before the execution endpoint was ready was rejected without delivery; after
+the same handle became ready, all three public sessions compiled and executed.
+
+The normal MCP entrypoint executed the new-name and reused-name STEP_INPUT
+pipelines and the opposing explicit PIPELINE_START control. Existing canonical
+runtime observation exports validate all three executions. Exported full32x32
+labels and threshold-support arrays match exactly: both processed cases have
+zero support/objects; the raw control has the expected36-pixel single object.
+The separate PIPELINE_START measurement in every case retains raw mean
+0.5174019932746887, minimum128/255 and maximum240/255 within float32 tolerance.
+Two public32x32 image samples exactly reproduce the processed output (2048
+pixels checked), and acquisition identity/channel/spacing remain attached.
+The original synthetic input SHA remains unchanged.
+
+The reader initially assumed all identities used absolute paths. The third
+control correctly retained an acquisition-relative workspace identity, unlike
+the absolute current-carrier identities. The receipt resolves that original
+relative identity against the same acquisition and also verifies the original
+absolute filter path. The initial failed assertion is preserved; no production
+fallback or selector weakening was introduced. Final acceptance receipt is
+``engineering-step-input-origin-633-20261004/public88/verify-public02.stdout``;
+the verifier reuses the existing public reply reader and native export owner.
+This proves the synthetic public workflow, not full-array equality for any
+frozen scientific run or biological accuracy. Multi-plane/missing-selection
+and companion-source contracts remain covered by the411 installed controls,
+not claimed as three-channel public acceptance here.
+
+The exact owned runtime acknowledged close, terminated its endpoint and exited
+successfully. The client then ended with exit1 due to the retained earlier
+catalog request error; its three scientific execution jobs were complete and
+the error is not hidden as a zero-exit client. Original recorder journals are
+closed and the client scope is inactive/not-found. No633 runtime is retained.
+``public88/OWNER-633-TERMINAL.rst`` records the closed journal hashes.
+
+Main626 was integrated normally at branch2d9860e93. Its separate output-identity
+hunk does not modify these five source-selection files; the installed public
+target stays pinned to ee9d9e37 rather than being falsely described as a rebuilt
+post-merge wheel. Eight dirty dependency checkouts and four diagnostic
+directories remain unchanged. Frozen science was never replayed or coached.
