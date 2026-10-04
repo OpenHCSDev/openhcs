@@ -498,13 +498,17 @@ class RuntimeExecutionAxisScope:
             fixed_component_values=tuple(fixed_values.items()),
         )
 
-    def fixed_component_metadata(
+    def source_component_metadata(
         self,
         metadata: SourceMetadataMapping | None = None,
     ) -> SourceMetadataMapping:
-        """Merge fixed execution coordinates into source component metadata."""
+        """Project scope coordinates while retaining an explicit measured source.
 
-        from openhcs.constants.constants import get_multiprocessing_axis
+        A measurement's physical source can differ from its object's grouped
+        channel. Keep that declared source coordinate; only absent group
+        metadata is supplied by this scope. Axis and fixed coordinates must
+        agree, and unrepresented coordinates are never invented.
+        """
         from openhcs.core.source_matching import (
             source_component_metadata_value,
             with_source_component_metadata,
@@ -513,15 +517,13 @@ class RuntimeExecutionAxisScope:
         merged = SourceMetadataFields.composition_snapshot(
             metadata if metadata is not None else {}
         )
-        fixed_values = (
-            (get_multiprocessing_axis(), self.axis_id),
-            *self.fixed_component_values,
-        )
-        for component, value in fixed_values:
+        for component, value in self.source_component_values:
             existing = source_component_metadata_value(merged, component)
+            if component is self.component and existing is not None:
+                continue
             if existing is not None and str(existing) != value:
                 raise ValueError(
-                    "Fixed execution scope conflicts with source component metadata "
+                    "Runtime execution scope conflicts with source component metadata "
                     f"for {component.value!r}: {existing!r} != {value!r}."
                 )
             merged = with_source_component_metadata(merged, component, value)
