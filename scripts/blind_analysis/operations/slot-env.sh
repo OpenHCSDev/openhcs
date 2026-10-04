@@ -47,12 +47,15 @@ fleet_artifact_root_for() {
     (.run_owner_root + "/" + .slot + "/author-workspace/output")' <<< "$member"
 }
 
+fleet_member_output_roots() {
+  jq -er '(.run_owner_root+"/"+.slot+"/author-workspace/output") as $control |
+    [$control, (.artifact_destination.path // $control)] | unique[]' <<< "$1"
+}
+
 fleet_output_roots_for() {
-  local workspace artifact
-  workspace=$(fleet_workspace_for "$1") || return
-  artifact=$(fleet_artifact_root_for "$1") || return
-  printf '%s\n' "$workspace/output"
-  if [[ "$artifact" != "$workspace/output" ]]; then printf '%s\n' "$artifact"; fi
+  local member
+  member=$(fleet_member "$1") || return
+  fleet_member_output_roots "$member"
 }
 
 fleet_require_artifact_destination() {
@@ -208,6 +211,44 @@ fleet_require_writer_release() {
       printf 'Retired scientific writer %s inactive\n' "$predecessor_unit"
     done
   done < <(jq -c '.[]' <<< "$retirements")
+}
+
+# The immutable continuation declaration owns both native ancestry and access
+# to its closed predecessors' scientific material. Fresh authors inherit neither.
+# Launcher mounts and MCP path policy consume this same request-local projection.
+fleet_author_context() {
+  local context predecessor predecessor_root predecessor_slot predecessor_member
+  local history_roots='[]' read_roots='[]' predecessors output_roots output_root physical_root
+  context=$(jq -ce '
+    if .fresh_history==true and .native_thread_id==null then {argv:[]}
+    elif .fresh_history==false and (.native_thread_id|type)=="string"
+      and (.native_thread_id|length)>0 and (.writer_handoff|type)=="array"
+      and (.writer_handoff|length)>0 then {argv:["resume",.native_thread_id]}
+    else error("inconsistent author context declaration") end' <<< "$slot") || return
+  fleet_require_writer_release >&2 || return
+  if jq -e '.argv|length>0' <<< "$context" >/dev/null; then
+    predecessors=$(jq -c '.writer_handoff[]' <<< "$slot") || return
+    while IFS= read -r predecessor; do
+      predecessor_root=$(jq -er '.program_root' <<< "$predecessor") || return
+      predecessor_slot=$(jq -er '.slot' <<< "$predecessor") || return
+      test "$predecessor_root" != "$FLEET_RUN_ROOT" || return
+      test "$(jq -er '.funding_root' "$predecessor_root/program.json")" = "$FLEET_ROOT" || return
+      predecessor_member=$(jq -ce --arg owner "$predecessor_root" --arg member "$predecessor_slot" '
+        [.authors[]|select(.slot==$member and .run_owner_root==$owner)] |
+        if length==1 then .[0] else error("missing or ambiguous ancestry declaration") end' \
+        "$predecessor_root/program.json") || return
+      history_roots=$(jq -ce --arg root "$predecessor_root/$predecessor_slot/author-workspace/output/native-sessions" '. + [$root] | unique' <<< "$history_roots") || return
+      output_roots=$(fleet_member_output_roots "$predecessor_member") || return
+      while IFS= read -r output_root; do
+        physical_root=$(realpath -e "$output_root") || return
+        test -d "$physical_root" || return
+        [[ "$physical_root" != *:* && "$physical_root" != *$'\n'* ]] || return
+        read_roots=$(jq -ce --arg root "$physical_root" '. + [$root] | unique' <<< "$read_roots") || return
+      done <<< "$output_roots"
+    done <<< "$predecessors"
+  fi
+  jq -ce --argjson history "$history_roots" --argjson reads "$read_roots" \
+    '. + {history_roots:$history,read_roots:$reads}' <<< "$context"
 }
 
 # Cold helper admission is owned here; lifecycle performers remain original.
