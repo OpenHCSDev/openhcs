@@ -418,6 +418,43 @@ execution completion and successful process closure. The
 binds the original freeze, consumed pipeline, registered detector and final
 evidence. No detector execution or scoring was repeated for this account.
 
+## Full-field paired-channel repeat: diagnosis without successful repair
+
+A separate fresh author, `BBBC007_FRESH651_88`, completed all 16 paired
+DNA/actin fields without reference outlines, earlier scientific solutions or
+reference-score feedback. Its first completed scientific candidate contained
+1,417 nuclear objects. The final candidate retained 1,335 nuclear identities
+and the same number of seed-associated cell labels, with no absent secondary
+IDs, extra secondary IDs or lost nuclear seed pixels. These checks establish
+identity conservation, not biological recall or physical cell boundaries.
+
+The author identified a dense bright nuclear cluster in A02 site 1 without
+outlines and rejected full-field population use. A last change from shape to
+intensity markers, with suppression increased from 6 to 8 pixels, reduced
+this field's detected count from 46 to 38 without recovering the missing
+cluster. Dense actin interfaces, clipping and fragmented compartments also
+qualified cell-boundary interpretation. Useful isolated-object diagnostic
+findings were retained; they do not establish full-field coverage.
+
+The coordinator independently verified every original manifest entry in its
+`attempt_sources` and `payloads` arrays and opened the unchanged corrected
+A02 raw and final DNA overlay captures. The final overlay visibly retains
+the missing dense cluster. An earlier black raw capture was rejected, and
+the corrected raw and final captures have different screen footprints; they
+support a field-level finding, not a pixel-matched intensity comparison.
+The [independent review](../../docs/validation/bbbc007-fresh651-independent-review-20261004.rst)
+records the exact paths, final capture identity and verification scope.
+No reference outlines were scored for this repeat.
+
+The final-image finding did not establish the earliest failed stage. Absent
+foreground, missing markers and removal of merged components by filtering
+remain distinct hypotheses requiring retained intermediate evidence. The
+canonical skill already describes that diagnostic sequence. This trial
+therefore demonstrates autonomous failure detection but not successful
+repair or a validated reusable parameter recipe. Its recorded client exit
+exceeded the 75-minute deadline by about eight seconds; that operational
+qualification remains separate from scientific completion and rejection.
+
 ## Scope and retained evidence
 
 [Figure 7 plot data](../figures/slas/task_only_analysis_plot_data.csv) retains
