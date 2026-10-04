@@ -5,7 +5,8 @@ Singer owns this source investigation and any shared writer/source-projection
 integration. Base b7a9cd29ea96 includes merged600/614 and Planck's independently
 qualified621 repair. Closed394/435 are historical source owners, not an active
 repair queue. Planck's623 scope/descriptor change has no writer hunk and does
-not establish that this defect is fixed. No production repair is claimed here.
+not repair this defect. The owner correction below is implemented; current
+source/installed qualification is in progress.
 
 Original public failure
 -----------------------
@@ -38,8 +39,8 @@ from the saved artifact's typed metadata and content.
 
 For a same-path, same-declaration occurrence, ``project_runtime_artifacts``
 compares semantic address, complete image metadata, and whole-image execution
-scope. This strict guard is retained. The first differing operand field is not
-yet observed; an unchanged writer file does not rule out a600 interaction.
+scope. This strict guard is retained. An unchanged writer file alone would not
+rule out a600 interaction.
 Existing435 rejected-pair fixtures expose actual raising-frame operands without
 reimplementing the comparison and provide genuine contradiction controls.
 
@@ -60,6 +61,44 @@ writes and consumers before choosing a repair. Applicable catalog leads are
 BOUND-2 (reuse the typed owner), IDEN-1 (do not conflate persisted occurrence,
 physical source and execution scope), and IDEN-7 (verify the comparison's actual
 question). These are investigation leads, not claims that the guard is wrong.
+
+Observed fact and implemented owner correction
+---------------------------------------------
+
+engineering620/observe_original_reverse01.py uses the original qualified whole
+422 target, original CPPipe and byte-exact copies of its two engineering TIFFs.
+The existing registered importer/compiler/runtime reaches the unchanged writer.
+A read-only exception observer records actual raising-frame operands, without
+copying or replacing the admission algorithm. Original execution terminal1,
+9.78s/371184KiB/Swap0 preserves its complete traceback and operands. No native
+process, viewer or MCP server was launched. Both original input files remain
+in the immutable600 packet; this new execution writes a distinct620 result root.
+
+The addresses are equal. The sole differing metadata member is source_provenance:
+automatic scalar source metadata contains extension='.tif'; named metadata does
+not. All other source fields, contributor planes, image name, physical shape,
+calibration, native dtype and normalized-intensity facts are equal. The writer's
+whole-image scope comparison is not selected for this addressable scalar image.
+
+FunctionOutputIdentity.component_metadata was adding the output's storage
+extension into payload acquisition provenance. Its only three production
+consumers are FunctionRuntime's saved-payload qualification and the inherited
+ProducedOutputSemantics contextualization/source projection. All need semantic
+coordinates, not an invented acquisition extension. The ancestor now preserves
+any declared source extension and does not add or overwrite one. The existing
+filename_component_metadata remains the owner of storage extension and filename
+values; filename construction is unchanged. No writer comparison, metadata
+equality, source decoder, registry or downstream consumer branch is relaxed.
+The three consumers inherit the correction; no new procedure or facade exists.
+
+The complete AST coverage above is reused through byte-identical production at
+fba34f79e. Same-spelled methods on plane metadata and projection serializers were
+read as independent owners, not incorrectly migrated. Two old internal unit
+expectations that encoded storage-extension injection are corrected explicitly;
+the original negative and original test revisions remain retained. New cases
+cover absent and declared .czi acquisition extension versus .tif storage, plus
+real registered default publication for scalar/scalar and scalar/RGB inputs in
+both operand orders. Original435 genuine contradiction tests remain unchanged.
 
 Required qualification
 ----------------------
