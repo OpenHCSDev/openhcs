@@ -27,8 +27,10 @@ from openhcs.core.runtime_image_values import (
 )
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
-    ImageArtifactTypeStrategy,
     RuntimeInputBindingRequest,
+)
+from openhcs.interop.cellprofiler.runtime.output_recording import (
+    ImageOutputRecorder,
 )
 from openhcs.interop.cellprofiler.runtime.output_record_request import (
     CellProfilerOutputRecordRequest,
@@ -341,7 +343,7 @@ def test_record_source_binds_current_image_once_and_preserves_intensity_mask_lin
         ),
     ).payload_with(pixels, mask)
     request = replace(request, current_image=payload)
-    original_bind = ImageArtifactTypeStrategy.raw_runtime_input_value
+    original_bind = ImageOutputRecorder.raw_runtime_input_value
     binding_inputs = []
 
     def observe_bind(strategy, input_spec, value):
@@ -349,7 +351,7 @@ def test_record_source_binds_current_image_once_and_preserves_intensity_mask_lin
         return original_bind(strategy, input_spec, value)
 
     monkeypatch.setattr(
-        ImageArtifactTypeStrategy, "raw_runtime_input_value", observe_bind
+        ImageOutputRecorder, "raw_runtime_input_value", observe_bind
     )
     for pixel_value in (65535, 32768):
         pixels[:] = pixel_value
@@ -385,7 +387,7 @@ def test_record_source_returns_the_actual_bound_value_without_rebinding(monkeypa
 
     monkeypatch.setattr(RuntimeInputBindingRequest, "runtime_value", runtime_value)
     monkeypatch.setattr(
-        ImageArtifactTypeStrategy, "raw_runtime_input_value", reject_rebinding
+        ImageOutputRecorder, "raw_runtime_input_value", reject_rebinding
     )
     edge = request.active_input_edges[0]
     assert request.artifact_source_payload(edge) is bound

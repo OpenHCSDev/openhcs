@@ -30,7 +30,6 @@ from openhcs.interop.cellprofiler.runtime.invocation import (
     CellProfilerMeasurementImage,
 )
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
-    RuntimeArtifactTypeStrategy,
     RuntimeInputBindingRequest,
 )
 from openhcs.core.steps.function_runtime import (
@@ -221,10 +220,7 @@ class CellProfilerOutputRecordRequest(RuntimeInputBindingRequest):
 
         spec = edge.spec
         RuntimeInputBindingRequest.__post_init__(self)
-        payload = RuntimeArtifactTypeStrategy.for_artifact_type(
-            spec.artifact_type
-        ).source_image_payload_from_runtime_value(
-            spec,
+        payload = spec.artifact_type.source_image_payload_from_runtime_value(
             self.runtime_value(
                 edge,
                 parameter_name=spec.parameter_name,

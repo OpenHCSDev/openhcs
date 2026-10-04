@@ -204,7 +204,6 @@ from openhcs.interop.cellprofiler.runtime.adapter import (
 )
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
-    RuntimeArtifactTypeStrategy,
 )
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import (
     CellProfilerFunctionContractExecutor,
@@ -1374,7 +1373,7 @@ def test_image_artifact_resolution_uses_declared_artifact_alias(
         ),
         source_image_names=("OrigStain1",),
     ).payload_with(np.ones((4, 5), dtype=np.float32), None)
-    payload = RuntimeArtifactTypeStrategy.for_artifact_type(
+    payload = CellProfilerOutputRecorder.for_artifact_type(
         ImageArtifactType
     ).raw_runtime_input_value(
         spec=spec, value=source
@@ -1384,12 +1383,12 @@ def test_image_artifact_resolution_uses_declared_artifact_alias(
     assert metadata.source_image_names == ("IllumStain1",)
     assert metadata.source_image_provenance_planes.paths == ("/input/A01_s001_w1.tif",)
     assert (
-        RuntimeArtifactTypeStrategy.for_artifact_type(
+        CellProfilerOutputRecorder.for_artifact_type(
             ImageArtifactType
         ).source_image_name(spec=spec, value=source)
         is None
     )
-    strategy = RuntimeArtifactTypeStrategy.for_artifact_type(ImageArtifactType)
+    strategy = CellProfilerOutputRecorder.for_artifact_type(ImageArtifactType)
 
     def reject_second_resolution(*args, **kwargs):
         raise AssertionError("Source-name projection resolved the image again")
@@ -1435,7 +1434,7 @@ def test_main_flow_image_artifact_selects_declared_alias_plane() -> None:
         ),
     )
 
-    payload = RuntimeArtifactTypeStrategy.for_artifact_type(
+    payload = CellProfilerOutputRecorder.for_artifact_type(
         ImageArtifactType
     ).raw_runtime_input_value(
         first_spec, RuntimeInputBindingRequest(
@@ -1475,7 +1474,7 @@ def test_single_main_flow_image_artifact_selects_declared_source_binding_plane()
         None,
     )
 
-    payload = RuntimeArtifactTypeStrategy.for_artifact_type(
+    payload = CellProfilerOutputRecorder.for_artifact_type(
         ImageArtifactType
     ).raw_runtime_input_value(
         spec, RuntimeInputBindingRequest(
@@ -1526,7 +1525,7 @@ def test_main_flow_image_artifact_projects_named_provenance_plane() -> None:
         None,
     )
 
-    payload = RuntimeArtifactTypeStrategy.for_artifact_type(
+    payload = CellProfilerOutputRecorder.for_artifact_type(
         ImageArtifactType
     ).raw_runtime_input_value(
         first_spec, RuntimeInputBindingRequest(
@@ -1571,7 +1570,7 @@ def test_main_flow_image_artifact_preserves_declared_runtime_slice_stack() -> No
         None,
     )
 
-    payload = RuntimeArtifactTypeStrategy.for_artifact_type(
+    payload = CellProfilerOutputRecorder.for_artifact_type(
         ImageArtifactType
     ).raw_runtime_input_value(
         first_spec, RuntimeInputBindingRequest(
@@ -1652,7 +1651,7 @@ def test_main_flow_projection_binds_singleton_broadcast_artifact_as_2d(
     _activate_runtime_contract(executor.callable_contract, runtime)
 
     strategy_type = type(
-        RuntimeArtifactTypeStrategy.for_artifact_type(ImageArtifactType)
+        CellProfilerOutputRecorder.for_artifact_type(ImageArtifactType)
     )
     resolve_image = strategy_type.raw_runtime_input_value
     resolved_specs: list[ArtifactSpec] = []
@@ -1841,7 +1840,7 @@ def test_single_main_flow_image_preserves_runtime_slice_axis() -> None:
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
     ).payload_with(np.ones((1, 4, 5), dtype=np.float32), None)
 
-    payload = RuntimeArtifactTypeStrategy.for_artifact_type(
+    payload = CellProfilerOutputRecorder.for_artifact_type(
         ImageArtifactType
     ).raw_runtime_input_value(
         spec, RuntimeInputBindingRequest(
@@ -1877,7 +1876,7 @@ def test_object_artifact_source_payload_uses_native_object_provenance() -> None:
             paths=("/input/A01_s001_w1.tif",),
         ),
     )
-    payload = RuntimeArtifactTypeStrategy.for_artifact_type(
+    payload = CellProfilerOutputRecorder.for_artifact_type(
         ObjectLabelsArtifactType
     ).source_image_payload_from_runtime_value(object_spec, objects)
 
@@ -3700,7 +3699,7 @@ def test_main_flow_strategy_rejects_mixed_artifact_types_in_either_order() -> No
 
     for outputs in (values, tuple(reversed(values))):
         with pytest.raises(TypeError, match="require one exact artifact type"):
-            RuntimeArtifactTypeStrategy.for_main_flow_outputs(outputs)
+            CellProfilerOutputRecorder.for_main_flow_outputs(outputs)
 
 
 def test_cellprofiler_adapter_preserves_object_label_source_component_metadata() -> (
@@ -16521,7 +16520,7 @@ def test_object_label_payload_preserves_source_metadata_for_measurements() -> No
     )
     _activate_runtime_contract(executor.callable_contract, runtime)
 
-    payload = RuntimeArtifactTypeStrategy.for_artifact_type(
+    payload = CellProfilerOutputRecorder.for_artifact_type(
         spec.artifact_type
     ).raw_runtime_input_value(
         spec, RuntimeInputBindingRequest(
@@ -16579,7 +16578,7 @@ def test_runtime_object_label_payload_ignores_measurement_image_as_selector() ->
     measurement_image = ImagePayloadMetadata(
         source_component_metadata={"well": "A01"},
     ).payload_with(image, None)
-    payload = RuntimeArtifactTypeStrategy.for_artifact_type(
+    payload = CellProfilerOutputRecorder.for_artifact_type(
         spec.artifact_type
     ).raw_runtime_input_value(
         spec, RuntimeInputBindingRequest(
@@ -16630,7 +16629,7 @@ def test_full_stack_object_measurement_resolves_complete_label_artifact() -> Non
     )
     _activate_runtime_contract(executor.callable_contract, runtime)
 
-    label_payload = RuntimeArtifactTypeStrategy.for_artifact_type(
+    label_payload = CellProfilerOutputRecorder.for_artifact_type(
         object_spec.artifact_type
     ).raw_runtime_input_value(
         object_spec, RuntimeInputBindingRequest(
@@ -16710,7 +16709,7 @@ def test_object_label_payload_for_measurement_image_projects_source_spatial_crop
     )
     _activate_runtime_contract(executor.callable_contract, runtime)
 
-    label_payload = RuntimeArtifactTypeStrategy.for_artifact_type(
+    label_payload = CellProfilerOutputRecorder.for_artifact_type(
         spec.artifact_type
     ).raw_runtime_input_value(
         spec, RuntimeInputBindingRequest(
@@ -18270,7 +18269,7 @@ def test_natural_object_measurement_resolves_one_roster_without_eager_compositio
         ),
     )
     strategy_type = type(
-        RuntimeArtifactTypeStrategy.for_artifact_type(ImageArtifactType)
+        CellProfilerOutputRecorder.for_artifact_type(ImageArtifactType)
     )
     original_resolution = strategy_type.raw_runtime_input_value
     resolutions = []

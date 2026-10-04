@@ -39,8 +39,8 @@ from openhcs.core.source_workspace_projection import (
     VirtualWorkspaceSourceProjectionAuthority,
     VirtualWorkspaceSourceProjectionCache,
 )
-from openhcs.interop.cellprofiler.runtime.artifact_binding import (
-    RuntimeArtifactTypeStrategy,
+from openhcs.interop.cellprofiler.runtime.output_recording import (
+    CellProfilerOutputRecorder,
 )
 from openhcs.microscopes import create_microscope_handler
 from openhcs.microscopes.openhcs import OpenHCSMicroscopeHandler
@@ -227,7 +227,7 @@ def test_source_artifact_inputs_share_workspace_vfs_and_contract_resolution(
     labels_request = request()
     labels_spec = labels_binding.input_spec()
     labels_payload = labels_request.source_artifact_payload(labels_spec.ref())
-    label_set = RuntimeArtifactTypeStrategy.for_artifact_type(
+    label_set = CellProfilerOutputRecorder.for_artifact_type(
         ObjectLabelsArtifactType
     ).raw_runtime_input_value(
         spec=labels_spec, value=labels_payload

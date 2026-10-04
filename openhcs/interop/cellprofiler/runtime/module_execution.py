@@ -74,7 +74,6 @@ from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
-    RuntimeArtifactTypeStrategy,
 )
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import (
     _CELLPROFILER_FUNCTION_CONTRACT_EXECUTOR,
@@ -240,12 +239,8 @@ class CellProfilerModuleExecutor:
 
     def prepare(self) -> None:
         """Resolve nominal policies used by this executor before timed execution."""
-        for strategy_type in RuntimeArtifactTypeStrategy.registered_strategy_types():
-            RuntimeArtifactTypeStrategy.for_artifact_type(strategy_type.artifact_type)
-        for artifact_type in frozenset(
-            output.artifact_type for output in self.callable_contract.artifact_outputs
-        ):
-            CellProfilerOutputRecorder.for_artifact_type(artifact_type)
+        for strategy_type in CellProfilerOutputRecorder.registered_strategy_types():
+            CellProfilerOutputRecorder.for_artifact_type(strategy_type.artifact_type)
 
     def __call__(
         self,
@@ -533,7 +528,7 @@ class CellProfilerModuleExecutor:
             )
             for output_plan, spec in outputs
         )
-        replacement = RuntimeArtifactTypeStrategy.for_main_flow_outputs(
+        replacement = CellProfilerOutputRecorder.for_main_flow_outputs(
             output_values
         ).published_main_flow_output(
             invocation_image,
@@ -717,7 +712,7 @@ class CellProfilerModuleExecutor:
             current_image=current_image,
         ).artifact_value_for_spec(spec)
         payload = normalize_cellprofiler_image_payload(
-            RuntimeArtifactTypeStrategy.for_artifact_type(
+            CellProfilerOutputRecorder.for_artifact_type(
                 ImageArtifactType,
             ).raw_runtime_input_value(spec, value)
         )
@@ -811,7 +806,7 @@ class CellProfilerModuleExecutor:
         elif not image_inputs:
             source_image_name = None
         else:
-            image_strategy = RuntimeArtifactTypeStrategy.for_artifact_type(ImageArtifactType)
+            image_strategy = CellProfilerOutputRecorder.for_artifact_type(ImageArtifactType)
             runtime_projection = RuntimePlaneAxisValueProjection.from_projector(
                 adapter, RuntimePlaneAxis.RUNTIME_SLICE, (),
             )
@@ -1364,7 +1359,7 @@ class CellProfilerModuleExecutor:
         image_input_specs = ArtifactSpecCollection(image_inputs)
         payloads = []
         source_names: list[str | None] = []
-        image_strategy = RuntimeArtifactTypeStrategy.for_artifact_type(
+        image_strategy = CellProfilerOutputRecorder.for_artifact_type(
             ImageArtifactType
         )
         input_binding = replace(input_binding, current_image=current_runtime_payload)
@@ -1434,7 +1429,7 @@ class CellProfilerModuleExecutor:
         for spec in active_input_specs:
             if not spec.artifact_type.carries_source_image_context:
                 continue
-            source_name = RuntimeArtifactTypeStrategy.for_artifact_type(
+            source_name = CellProfilerOutputRecorder.for_artifact_type(
                 spec.artifact_type
             ).source_image_name(spec, input_binding.artifact_value_for_spec(spec))
             if source_name is not None:

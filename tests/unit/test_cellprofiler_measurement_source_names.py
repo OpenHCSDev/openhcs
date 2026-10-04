@@ -80,7 +80,7 @@ def test_input_source_name_resolves_only_declared_context_carriers(
     )
     monkeypatch.setattr(
         module_execution,
-        "RuntimeArtifactTypeStrategy",
+        "CellProfilerOutputRecorder",
         SimpleNamespace(for_artifact_type=lambda _artifact_type: ArtifactStrategy()),
     )
 
@@ -110,9 +110,6 @@ def test_composed_measurement_caller_preserves_ordered_source_aliases() -> None:
         callable_contract=SimpleNamespace(
             image_payload_consumption=ImagePayloadConsumption.COMPOSED
         ),
-        _primary_image_inputs=lambda current_image, adapter, *, module_type: (
-            image_inputs
-        ),
     )
 
     measurement_images = CellProfilerModuleExecutor._measurement_image_inputs(
@@ -120,6 +117,7 @@ def test_composed_measurement_caller_preserves_ordered_source_aliases() -> None:
         adapter=SimpleNamespace(),
         current_image=payload,
         image_request=image_request,
+        image_inputs=image_inputs,
         module_type=SimpleNamespace(),
     )
 
