@@ -97,6 +97,7 @@ from openhcs.core.runtime_image_values import (
     ImagePayloadSliceProjector,
     ImageMetadataPayload,
     ImagePayloadMetadata,
+    ImagePayloadMetadataCompositionMode,
     MaskedImagePayload,
     image_payload_data,
     image_payload_mask,
@@ -172,6 +173,7 @@ from openhcs.core.source_bindings import (
     NamedSourceBinding,
 )
 from openhcs.core.source_image_provenance import (
+    SourceImageProvenance,
     SourceImageProvenancePlanes,
 )
 from openhcs.core.source_matching import (
@@ -9268,6 +9270,13 @@ def test_measurement_images_flatten_aligned_runtime_slices_for_source_metadata()
         {"well": "A01", "site": "1"},
         {"well": "A01", "site": "2"},
     )
+    assert tuple(
+        tuple(contributor.path for contributor in plane.contributors)
+        for plane in metadata.source_image_provenance_planes.planes
+    ) == (
+        ("/plate/A01_s001_w1.tif", "/plate/A01_s001_w2.tif"),
+        ("/plate/A01_s002_w1.tif", "/plate/A01_s002_w2.tif"),
+    )
 
 
 def test_measurement_images_preserve_runtime_slice_axis_across_source_aliases() -> None:
@@ -9305,6 +9314,122 @@ def test_measurement_images_preserve_runtime_slice_axis_across_source_aliases() 
     assert metadata.source_image_provenance_planes.component_metadata[:2] == (
         {"well": "A01", "site": "1", "channel": "1"},
         {"well": "A01", "site": "2", "channel": "1"},
+    )
+
+
+@pytest.mark.parametrize(
+    ("incoming_axis", "mode", "expected_planes"),
+    (
+        (None, ImagePayloadMetadataCompositionMode.STACK, 2),
+        (None, ImagePayloadMetadataCompositionMode.BUNDLE, 1),
+        (RuntimePlaneAxis.RUNTIME_SLICE, ImagePayloadMetadataCompositionMode.STACK, 2),
+        (RuntimePlaneAxis.RUNTIME_SLICE, ImagePayloadMetadataCompositionMode.BUNDLE, 1),
+        (RuntimePlaneAxis.SOURCE_BINDING, ImagePayloadMetadataCompositionMode.STACK, 1),
+        (RuntimePlaneAxis.SOURCE_BINDING, ImagePayloadMetadataCompositionMode.BUNDLE, 2),
+    ),
+)
+def test_image_source_composition_preserves_only_compatible_incoming_topology(
+    incoming_axis, mode, expected_planes
+) -> None:
+    paths = ("/input/A01_s1_w1.tif", "/input/A01_s1_w2.tif")
+    metadata = ImagePayloadMetadata(
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=paths,
+            component_metadata=({"channel": "1"}, {"channel": "2"}),
+        ),
+        plane_axis=incoming_axis,
+    )
+    payload = metadata.payload_with(np.zeros((2, 4, 5), dtype=np.float32))
+
+    composed = ImagePayloadMetadata.compose((payload,), mode=mode)
+
+    planes = composed.source_image_provenance_planes
+    assert planes.count == expected_planes
+    if expected_planes == 2:
+        assert planes.paths == paths
+    else:
+        assert tuple(contributor.path for contributor in planes.plane(0).contributors) == paths
+
+
+def test_measurement_source_composition_reads_dense_plane_facts_without_pixel_projection(
+    monkeypatch,
+) -> None:
+    paths = tuple(f"/input/A01_s1_w2_z{index + 1}.tif" for index in range(60))
+
+    def provenance(channel, alias):
+        return SourceImageProvenance(
+            source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+                paths=paths,
+                component_metadata=tuple(
+                    {
+                        "well": "A01",
+                        "site": "1",
+                        "channel": str(channel),
+                        "z_index": str(index + 1),
+                    }
+                    for index in range(60)
+                ),
+            ),
+            source_image_names=(alias,),
+        )
+
+    metadata = ImagePayloadMetadata(
+        source_provenance=provenance(2, "OrigBlue"),
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+    )
+    source = CellProfilerMeasurementImage(
+        source_image_name="OrigBlue",
+        payload=metadata.payload_with(np.zeros((60, 4, 5), dtype=np.float32)),
+    )
+
+    def reject_image_projection(*args, **kwargs):
+        raise AssertionError(
+            "Source facts must not require image or metadata projection"
+        )
+
+    monkeypatch.setattr(
+        RuntimeSliceProjection, "value_for_slice", reject_image_projection
+    )
+    monkeypatch.setattr(ImagePayloadMetadata, "compose", reject_image_projection)
+    monkeypatch.setattr(
+        ImagePayloadMetadata, "for_leading_source_plane", reject_image_projection
+    )
+
+    first = CellProfilerMeasurementImage.composed_source_metadata((source,))
+    assert first.source_image_provenance_planes.paths == paths
+    assert first.source_image_names == ("OrigBlue",) * 60
+    assert tuple(
+        values["z_index"]
+        for values in first.source_image_provenance_planes.component_metadata
+    ) == tuple(str(index + 1) for index in range(60))
+
+    metadata.source_provenance = provenance(3, "OrigGreen")
+    second = CellProfilerMeasurementImage.composed_source_metadata((source,))
+    assert second.source_image_names == ("OrigGreen",) * 60
+    assert second.source_component_metadata["channel"] == "3"
+    assert first.source_component_metadata["channel"] == "2"
+
+
+def test_measurement_source_composition_retains_authored_scalar_coordinates() -> None:
+    metadata = ImagePayloadMetadata(
+        source_component_metadata={"well": "A01"},
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=("/input/A01_s1_w2.tif",),
+            component_metadata=({"well": "A01", "site": "1", "channel": "2"},),
+        ),
+        source_image_names=("OrigBlue",),
+    )
+    source = CellProfilerMeasurementImage(
+        source_image_name="OrigBlue",
+        payload=metadata.payload_with(np.zeros((4, 5), dtype=np.float32)),
+    )
+
+    composed = CellProfilerMeasurementImage.composed_source_metadata((source,))
+
+    assert dict(composed.source_component_metadata) == {"well": "A01"}
+    assert composed.source_image_provenance_planes.paths == ("/input/A01_s1_w2.tif",)
+    assert composed.source_image_provenance_planes.component_metadata == (
+        {"well": "A01", "site": "1", "channel": "2"},
     )
 
 

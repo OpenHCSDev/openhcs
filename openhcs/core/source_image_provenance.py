@@ -702,6 +702,142 @@ class SourceImageProvenance:
             self.source_image_names,
         )
 
+    def as_runtime_plane(self) -> RuntimeSourceImageProvenancePlane:
+        """Compose one scalar source, retaining its non-projectable contributors."""
+        names = self.source_image_names
+        contributors = self.source_image_provenance_planes.as_contributors(names).planes
+        if len(names) > 1:
+            raise ValueError(
+                "Composed image payload provenance permits at most one "
+                f"source alias per scalar plane, got {names!r}."
+            )
+        return RuntimeSourceImageProvenancePlane(
+            SourceImageIdentity(self.source_path, self.source_component_metadata),
+            contributors,
+            names[0] if names else None,
+        )
+
+    @classmethod
+    def stack(
+        cls,
+        sources: Sequence["SourceImageProvenance"],
+        *,
+        scalar_sources: Sequence["SourceImageProvenance"] | None = None,
+        preserve_single_topology: bool = True,
+    ) -> Self:
+        """Compose ordered runtime sources with their common scalar coordinates."""
+        return cls._compose(
+            tuple(sources),
+            scalar_sources,
+            preserve_single_topology=preserve_single_topology,
+            bundle=False,
+        )
+
+    @classmethod
+    def bundle(
+        cls,
+        sources: Sequence["SourceImageProvenance"],
+        *,
+        scalar_sources: Sequence["SourceImageProvenance"] | None = None,
+        preserve_single_topology: bool = False,
+    ) -> Self:
+        """Compose same-slice sources, retaining nonconflicting partial coordinates."""
+        return cls._compose(
+            tuple(sources),
+            scalar_sources,
+            preserve_single_topology=preserve_single_topology,
+            bundle=True,
+        )
+
+    @staticmethod
+    def bundle_component_metadata(
+        sources: Sequence["SourceImageProvenance"],
+        *,
+        scalar_sources: Sequence["SourceImageProvenance"] | None = None,
+    ) -> SourceComponentMetadata | None:
+        metadata = tuple(
+            SourceMetadataFields.composition_snapshot(fields)
+            for fields in SourceImageProvenance._composition_component_metadata(
+                sources, scalar_sources
+            )
+            if fields is not None
+        )
+        common: dict[str, SourceMetadataValue] = {}
+        for name in set().union(*(fields.keys() for fields in metadata)):
+            values = tuple(fields[name] for fields in metadata if name in fields)
+            if values and all(value == values[0] for value in values):
+                common[name] = values[0]
+        if not common:
+            return None
+        owner = (
+            metadata[0]
+            if metadata
+            and all(
+                isinstance(fields, OwnedSourceMetadataFields) for fields in metadata
+            )
+            else {}
+        )
+        derived = SourceMetadataFields.derived_mapping(owner, common)
+        return (
+            derived
+            if isinstance(derived, OwnedSourceMetadataFields)
+            else MappingProxyType(derived)
+        )
+
+    @staticmethod
+    def _composition_component_metadata(
+        sources: Sequence["SourceImageProvenance"],
+        scalar_sources: Sequence["SourceImageProvenance"] | None,
+    ) -> tuple[SourceComponentMetadata | None, ...]:
+        """Retain authored scalar coordinates before inheriting selected plane facts."""
+        if scalar_sources is None:
+            scalar_sources = sources
+        return tuple(
+            (
+                scalar.source_component_metadata
+                if scalar.source_component_metadata is not None
+                else selected.source_component_metadata
+            )
+            for scalar, selected in zip(scalar_sources, sources, strict=True)
+        )
+
+    @classmethod
+    def _compose(
+        cls,
+        sources: tuple["SourceImageProvenance", ...],
+        scalar_sources: Sequence["SourceImageProvenance"] | None,
+        *,
+        preserve_single_topology: bool,
+        bundle: bool,
+    ) -> Self:
+        if not sources:
+            raise ValueError("Source provenance composition cannot be empty.")
+        planes = (
+            sources[0].source_image_provenance_planes
+            if preserve_single_topology
+            and len(sources) == 1
+            and sources[0].source_plane_count > 1
+            else SourceImageProvenancePlanes(
+                tuple(source.as_runtime_plane() for source in sources)
+            )
+        )
+        component_metadata = (
+            cls.bundle_component_metadata(sources, scalar_sources=scalar_sources)
+            if bundle
+            else common_source_component_metadata(
+                cls._composition_component_metadata(sources, scalar_sources)
+            )
+        )
+        present_paths = tuple(
+            source.source_path for source in sources if source.source_path is not None
+        )
+        return cls(
+            source_path=common_source_path(present_paths),
+            source_component_metadata=component_metadata,
+            source_image_provenance_planes=planes,
+            source_image_names=planes.runtime_source_image_names,
+        )
+
     @classmethod
     def from_init_values(
         cls,

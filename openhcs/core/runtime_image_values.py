@@ -10,7 +10,6 @@ from collections.abc import (
 from dataclasses import dataclass, field, fields
 from enum import Enum
 from pathlib import Path
-from types import MappingProxyType
 from typing import Any, TypeVar
 
 import numpy as np
@@ -36,20 +35,13 @@ from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.core.source_image_provenance import (
-    RuntimeSourceImageProvenancePlane,
     SourceComponentMetadata,
-    SourceImageIdentity,
     SourceImageProvenance,
     SourceImageProvenanceFields,
-    SourceImageProvenancePlanes,
     SourcePlaneIndexedProvenanceExpansion,
-    common_source_component_metadata,
 )
 from openhcs.core.source_metadata import (
     SourceMetadataScalar,
-    OwnedSourceMetadataFields,
-    SourceMetadataFields,
-    SourceMetadataValue,
     SourceVoxelSpacing,
     SourceVoxelSpacingFields,
 )
@@ -723,7 +715,7 @@ class ImagePayloadMetadata(
             len(self.source_plane_unit_interval_intensity_scales),
         )
 
-    def source_plane_metadata_records(self) -> tuple["ImagePayloadMetadata", ...]:
+    def source_metadata_by_payload(self) -> tuple["ImagePayloadMetadata", ...]:
         """Return one scalar metadata record per represented source plane."""
         if (
             self.source_plane_metadata_count == 1
@@ -1754,9 +1746,24 @@ class _ImagePayloadMetadataComposer:
             self.source_plane_metadata_for_payload(metadata)
             for metadata in metadata_by_payload
         )
-        source_plane_metadata_records = source_metadata_by_payload
-        composed_source_provenance_planes = self.composed_source_provenance_planes(
-            source_plane_metadata_records
+        compose_provenance = (
+            SourceImageProvenance.stack
+            if self.mode is ImagePayloadMetadataCompositionMode.STACK
+            else SourceImageProvenance.bundle
+        )
+        source_provenance = compose_provenance(
+            tuple(
+                metadata.source_provenance for metadata in source_metadata_by_payload
+            ),
+            scalar_sources=tuple(
+                metadata.source_provenance for metadata in metadata_by_payload
+            ),
+            preserve_single_topology=(
+                len(source_metadata_by_payload) == 1
+                and self.mode.preserves_plane_topology(
+                    source_metadata_by_payload[0].plane_axis
+                )
+            ),
         )
         common_source_voxel_spacing = self.common_metadata_value(
             metadata.source_voxel_spacing
@@ -1765,34 +1772,16 @@ class _ImagePayloadMetadataComposer:
         )
         if common_source_voxel_spacing is None:
             common_source_voxel_spacing = SourceVoxelSpacing()
-        source_component_metadata_by_payload = tuple(
-            (
-                metadata
-                if metadata.source_component_metadata is not None
-                else source_metadata
-            )
-            for metadata, source_metadata in zip(
-                metadata_by_payload,
-                source_metadata_by_payload,
-                strict=True,
-            )
-        )
         return self.metadata_type(
-            source_path=self.common_metadata_value(
-                metadata.source_path for metadata in source_metadata_by_payload
-            ),
-            source_component_metadata=self.common_source_component_metadata(
-                source_component_metadata_by_payload
-            ),
+            source_provenance=source_provenance,
             source_plane_intensity_scales=tuple(
-                metadata.intensity_scale for metadata in source_plane_metadata_records
+                metadata.intensity_scale for metadata in source_metadata_by_payload
             ),
             source_plane_dtypes=tuple(
-                metadata.source_dtype for metadata in source_plane_metadata_records
+                metadata.source_dtype for metadata in source_metadata_by_payload
             ),
-            source_image_provenance_planes=composed_source_provenance_planes,
             unit_interval_intensity=self.composed_unit_interval_intensity(
-                source_plane_metadata_records
+                source_metadata_by_payload
             ),
             source_spatial_domain=SourceSpatialDomain.common_from_domains(
                 metadata.source_spatial_domain for metadata in metadata_by_payload
@@ -1804,31 +1793,8 @@ class _ImagePayloadMetadataComposer:
             mask_defines_border=self.common_metadata_value(
                 metadata.mask_defines_border for metadata in metadata_by_payload
             ),
-            source_image_names=(
-                composed_source_provenance_planes.runtime_source_image_names
-            ),
             source_channel_axis=self.composed_source_channel_axis(metadata_by_payload),
             plane_axis=self.mode.plane_axis,
-        )
-
-    def composed_source_provenance_planes(
-        self,
-        metadata_records: tuple[ImagePayloadMetadata, ...],
-    ) -> SourceImageProvenancePlanes:
-        """Compose projectable planes without replacing compatible topology."""
-
-        if len(metadata_records) == 1:
-            metadata = metadata_records[0]
-            provenance_planes = metadata.source_image_provenance_planes
-            if provenance_planes.count > 1 and self.mode.preserves_plane_topology(
-                metadata.plane_axis
-            ):
-                return provenance_planes
-        return SourceImageProvenancePlanes(
-            tuple(
-                self.runtime_source_provenance_plane(metadata)
-                for metadata in metadata_records
-            )
         )
 
     @staticmethod
@@ -1846,86 +1812,6 @@ class _ImagePayloadMetadataComposer:
             source_plane_scales=tuple(
                 metadata.unit_interval_intensity_scale for metadata in metadata_records
             )
-        )
-
-    @staticmethod
-    def runtime_source_provenance_plane(
-        metadata: ImagePayloadMetadata,
-    ) -> RuntimeSourceImageProvenancePlane:
-        """Return one projectable plane with nested non-projectable contributors."""
-        source_image_names = metadata.source_image_names
-        contributors = metadata.source_image_provenance_planes.as_contributors(
-            source_image_names
-        ).planes
-        if len(source_image_names) > 1:
-            raise ValueError(
-                "Composed image payload provenance permits at most one "
-                f"source alias per scalar plane, got {source_image_names!r}."
-            )
-        source_image_name = source_image_names[0] if source_image_names else None
-        return RuntimeSourceImageProvenancePlane(
-            SourceImageIdentity(
-                metadata.source_path,
-                metadata.source_component_metadata,
-            ),
-            contributors,
-            source_image_name,
-        )
-
-    def common_source_component_metadata(
-        self,
-        values: Iterable[ImagePayloadMetadata],
-    ) -> SourceComponentMetadata | None:
-        """Return source metadata shared by the composed payload."""
-        metadata_values = tuple(values)
-        metadata_by_plane = tuple(
-            SourceMetadataFields.composition_snapshot(
-                metadata.source_component_metadata
-            )
-            for metadata in metadata_values
-            if metadata.source_component_metadata is not None
-        )
-        if self.mode is ImagePayloadMetadataCompositionMode.BUNDLE:
-            field_names = set().union(
-                *(metadata.keys() for metadata in metadata_by_plane)
-            )
-            common_metadata: dict[str, SourceMetadataValue] = {}
-            for field_name in field_names:
-                values_for_field = tuple(
-                    metadata[field_name]
-                    for metadata in metadata_by_plane
-                    if field_name in metadata
-                )
-                if values_for_field and all(
-                    value == values_for_field[0] for value in values_for_field
-                ):
-                    common_metadata[field_name] = values_for_field[0]
-        else:
-            common_metadata = dict(
-                common_source_component_metadata(
-                    tuple(
-                        metadata.source_component_metadata
-                        for metadata in metadata_values
-                    )
-                )
-                or {}
-            )
-        if not common_metadata:
-            return None
-        owner = (
-            metadata_by_plane[0]
-            if metadata_by_plane
-            and all(
-                isinstance(metadata, OwnedSourceMetadataFields)
-                for metadata in metadata_by_plane
-            )
-            else {}
-        )
-        derived = SourceMetadataFields.derived_mapping(owner, common_metadata)
-        return (
-            derived
-            if isinstance(derived, OwnedSourceMetadataFields)
-            else MappingProxyType(derived)
         )
 
     @staticmethod
