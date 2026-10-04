@@ -71,6 +71,18 @@ measurements, not ground truth or an automatically validated parameter choice.
    its actual scale units, supported arguments and response-combination contract;
    do not invent a scale-list parameter or assume a single-scale argument accepts
    one. Estimate intermediate/response memory before a bounded comparison.
+   For a compound detector, relate each measurement to the stage it supports:
+   raw width or local signal/background difference does not by itself justify
+   admission on an enhanced response, seed extraction or final object acceptance.
+   Reflect the effective contract: one width may also control smoothing or
+   background scale, while a size-acceptance bound need not change markers.
+   Before the first proposal, predict both faint-signal recovery and rejection
+   of regional negatives, preserving ordinary/narrow/broad and genuine-pair
+   controls. Inspect the earliest available response/support in the first
+   bounded candidate before interpreting downstream losses; do not automatically
+   lower admission or enlarge width because a plausible raw scalar missed a
+   structure. Use [stage-specific diagnostics](segmentation-diagnostics.md)
+   to distinguish response generation, admission and later acceptance.
 6. Compile one bounded candidate, inspect its earliest changed intermediate,
    then compare matched raw/result/combined at the measured failures and
    regression controls. Revisit distributed regions after every change; a
