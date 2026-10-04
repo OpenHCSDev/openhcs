@@ -11,6 +11,7 @@ import numpy as np
 from openhcs.core.alias_property import AliasProperty
 from openhcs.core.aligned_image_payload import (
     AlignedImageStack,
+    ImageOutputBundle,
 )
 from openhcs.core.equivalence.keys import RuntimeMeasurementSourcePair
 from openhcs.core.measurement_image_alignment import (
@@ -18,7 +19,9 @@ from openhcs.core.measurement_image_alignment import (
     MeasurementImageReferenceDomain,
     PreparedMeasurementObjectLabels,
 )
+from openhcs.core.function_patterns import InvocationArtifactInputEdgePlan
 from openhcs.core.runtime_adapters import (
+    RuntimeAdapterRequest,
     RuntimeImageExecutionContext,
 )
 from openhcs.core.runtime_image_values import (
@@ -98,6 +101,15 @@ class CellProfilerSourceIdentityMixin:
                 f"{self.SOURCE_ALIASES_FIELD_NAME} must contain str values, "
                 f"got {invalid!r}."
             )
+
+    def consumed_input_value(
+        self,
+        edge: InvocationArtifactInputEdgePlan,
+        request: RuntimeAdapterRequest,
+    ) -> RuntimeCallableArgument | None:
+        """Return an actual callable input when this record owns its binding."""
+
+        return None
 
     @classmethod
     def shared_source_image_name(
@@ -251,8 +263,66 @@ class CellProfilerImageRequest(
     source_aliases: tuple[str, ...] = ()
     kwargs: Mapping[str, object] = field(default_factory=dict)
 
+    input_binding_request: RuntimeAdapterRequest | None = None
+    input_edges: tuple[InvocationArtifactInputEdgePlan, ...] = ()
+    primary_input_edges: tuple[InvocationArtifactInputEdgePlan, ...] = ()
+    primary_input_payloads: tuple[RuntimeCallableArgument, ...] = ()
+
     def __post_init__(self) -> None:
         self.validate_source_identity()
+        if self.primary_input_payloads and (
+            len(self.primary_input_payloads) != len(self.primary_input_edges)
+        ):
+            raise ValueError("Primary input contexts must preserve exact binding order.")
+
+    def consumed_input_value(
+        self,
+        edge: InvocationArtifactInputEdgePlan,
+        request: RuntimeAdapterRequest,
+    ) -> RuntimeCallableArgument | None:
+        """Project the exact carrier consumed through an unchanged input origin."""
+
+        binding_request = self.input_binding_request
+        if (
+            binding_request is None
+            or request.source_binding_plan is not binding_request.source_binding_plan
+            or not any(bound is edge for bound in self.input_edges)
+        ):
+            return None
+        parameter_name = edge.spec.parameter_name
+        if parameter_name is not None:
+            if parameter_name not in self.kwargs:
+                return None
+            parameter_edges = tuple(
+                bound
+                for bound in self.input_edges
+                if bound.spec.parameter_name == parameter_name
+            )
+            value = self.kwargs[parameter_name]
+            if isinstance(value, tuple):
+                values = value
+            elif len(parameter_edges) > 1 and isinstance(value, AlignedImageStack):
+                values = value.slices
+            elif len(parameter_edges) == 1:
+                return value
+            else:
+                return None
+            if len(values) != len(parameter_edges):
+                return None
+            input_index = next(
+                index for index, bound in enumerate(parameter_edges) if bound is edge
+            )
+            return values[input_index]
+        for index, bound in enumerate(self.primary_input_edges):
+            if bound is not edge:
+                continue
+            if self.primary_input_payloads:
+                return self.primary_input_payloads[index]
+            if isinstance(self.payload, ImageOutputBundle):
+                return self.payload.output_payload(edge.spec.ref())
+            if len(self.primary_input_edges) == 1:
+                return self.payload
+        return None
 
 
 @dataclass(frozen=True, slots=True)
