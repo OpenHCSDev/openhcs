@@ -6,6 +6,28 @@ has first94 custody for554, Dewey owns its resource/native/CLI launch authority.
 Parent reviews the source head and receives installed evidence before merge.
 No new checkout, environment, dependency download, build or installation here.
 
+Current receiving correction
+-----------------------------
+
+Parent has withdrawn invented RAM budgets. Do not impose the historical4GiB
+limit or memory/swap-cap equality when launching this case. Parent's existing
+common slice and helper hard limits are now infinity. Dewey owns the complete
+original operations-family removal in577, including both launchers, admission,
+projection and helper checks. Reuse that coherent owner for the new recorded
+client; do not copy a launcher or patch a frozen scientific installation.
+Actual host headroom/PSI and disk readback inform the operation. Warning alone
+is not a prohibition. CPU, ordinary deadlines, path/custody and journals remain.
+
+Corrected whole8513 is qualified by engineering567/READY567.json and
+QUALIFICATION01.rst:815 source/wheel/target payloads,90 resources,13 skill files,
+984 RECORD entries,9 affected installed controls,105 constructed MCP tools,
+fresh public health/normal client exit0. Both client and native use that exact
+private target; Singer's reused checkout has no runtime import authority.
+Original131 typed close/client terminal is proven; its new revision UNKNOWN
+is retained and will not be replayed. One distinct registration/status case
+uses the byte-exact source-packet fixture and actual native launch-plan store.
+Public TCP registration proof remains pending; installed controls are not it.
+
 Whole candidate identity
 ------------------------
 
