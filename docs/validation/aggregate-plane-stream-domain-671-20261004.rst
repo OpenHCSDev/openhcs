@@ -67,3 +67,16 @@ OpenHCSMetadataTarget publication hunk;676 owns StreamOutputBatch domain/route
 projection. Normal current-main integration after669 merge plus installed
 aggregate-plane acceptance are required before676 merge. P001's adjacent
 timeout later recovered; it is not proven this defect or a persistent deadviewer.
+
+Current-main integration
+------------------------
+
+669 merged1aba11c9db6598d42cbb9acbf53f29ee08b0280d. Normal merge16f57253b
+preserves its OpenHCSMetadataTarget step-update/final-reconciliation distinction
+without reapplying its hunk. StreamOutputBatch's retained-plane observations and
+one-per-image route addresses remain disjoint; no domain or index store added.
+Current main's compilation/materialization changes are also retained normally.
+The integrated four-file focused suite, including the complete function_outputs
+consumer controls, passes119 tests, terminal0:671-integrated-controls06.log,
+467632KiB peak, 12.45s wall. Installed native aggregate acceptance remains open.
+Foreign eight gitlinks and ten untracked historical runtime groups are untouched.
