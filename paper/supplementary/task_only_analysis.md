@@ -169,6 +169,34 @@ Scikit-image records the [Allen Institute's CC0 redistribution confirmation](htt
 The earlier curation warning about an unresolved licence is superseded by that
 confirmation; it is not a restriction on presenting selected views.
 
+## Operational attrition: an interrupted public translocation trial
+
+The separate fresh-context trial `BBBC013_REPEAT94` inventoried all 96 paired
+DNA/GFP source sets and compiled its final catalogue pipeline for the complete
+plate. A four-well development run exported measurements for 941 nuclei and
+showed the expected direction of nuclear translocation. These readouts were
+not accepted as full-plate results or segmentation ground truth.
+
+The full execution was terminated by its configured 4.5 GiB memory limit.
+The retained systemd receipt records `Result=oom-kill` and identical
+`MemoryPeak` and `MemoryMax` values of 4,831,838,208 bytes. This is evidence of
+termination within that limited scope, not evidence that the host exhausted
+all available RAM. Complete nuclear, cell-region and cytoplasmic mask sets
+survived for 42 of 96 wells; the next well retained only a nuclear plane.
+Plate-wide cell and well table export was not reached. Distributed matched
+visual review remained incomplete, and a separately submitted statistics
+extension had an unresolved registration receipt and did not execute.
+
+This trial is therefore an operationally interrupted analysis, not a completed
+assay result or a measured segmentation failure. Its partial masks and
+four-well readouts cannot substitute for the missing plate-wide outputs,
+replicate statistics or biological review. It is distinct from the earlier
+prospective BBBC013 experiment reported in Supplementary Data 7. The original
+pipeline, partial inventory, termination receipts and freeze remain unchanged;
+the [compact outcome record](task_only_analysis/bbbc013-repeat94-outcome.json)
+identifies their paths and verified hashes. No execution or uncertain
+registration was replayed for this manuscript update.
+
 ## Scope and retained evidence
 
 [Figure 7 plot data](../figures/slas/task_only_analysis_plot_data.csv) retains
