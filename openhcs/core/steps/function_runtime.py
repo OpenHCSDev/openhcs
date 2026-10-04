@@ -2645,7 +2645,9 @@ class PatternGroupRuntime:
         if cached_stack is None:
             raw_slices = SourceFileUniverse(
                 tuple(full_file_paths),
-                Backend.MEMORY if producer_matching_files else Backend(plan.read_backend),
+                Backend.MEMORY
+                if plan.main_input_dependency.kind is StepInputDependencyKind.STEP_OUTPUT
+                else Backend(plan.read_backend),
             ).load_images(context.filemanager, zarr_config=plan.zarr_config)
             if source_projection is not None or not producer_matching_files:
                 raw_slices = self._apply_source_image_loading_semantics(
