@@ -8,13 +8,9 @@ import logging
 
 from openhcs.core.artifacts import ArtifactType, ObjectLabelsArtifactType
 from openhcs.core.runtime_object_labels import ObjectLabelValue
-from openhcs.core.runtime_profile import RuntimeProfileLogger
+from openhcs.core.runtime_profile import RuntimeProfileLogger, RuntimeProfileFieldValue
 from openhcs.interop.cellprofiler.runtime.profile_fields import (
     object_label_artifact_profile_fields,
-)
-from openhcs.core.steps.function_runtime import (
-    RuntimeCallableArgument,
-    RuntimeProfileFieldValue,
 )
 
 logger = logging.getLogger(__name__)
@@ -41,7 +37,7 @@ class CellProfilerRuntimeProfileLogger:
     def log_module_profile(
         label: str,
         seconds: float,
-        **fields: RuntimeCallableArgument,
+        **fields: RuntimeProfileFieldValue,
     ) -> None:
         RuntimeProfileLogger.log(logger, label, seconds, **fields)
 
@@ -50,7 +46,7 @@ class CellProfilerRuntimeProfileLogger:
         cls,
         label: str,
         seconds: float,
-        fields: Callable[[], Mapping[str, RuntimeCallableArgument]],
+        fields: Callable[[], Mapping[str, RuntimeProfileFieldValue]],
     ) -> None:
         """Emit a profile event whose fields are only built when profiling is on."""
         if not cls.enabled():
@@ -66,7 +62,7 @@ class CellProfilerRuntimeProfileLogger:
         feature_name: str,
         count: int | None = None,
     ) -> None:
-        fields: dict[str, RuntimeCallableArgument] = {"feature": feature_name}
+        fields: dict[str, RuntimeProfileFieldValue] = {"feature": feature_name}
         if count is not None:
             fields["count"] = count
         cls.log_module_profile(label, seconds, **fields)
@@ -81,9 +77,9 @@ class CellProfilerRuntimeProfileLogger:
         kind: ArtifactType | str | None = None,
         payload_type: str | None = None,
         group_key: str | None = None,
-        extra_fields: Mapping[str, RuntimeCallableArgument] | None = None,
+        extra_fields: Mapping[str, RuntimeProfileFieldValue] | None = None,
     ) -> None:
-        fields: dict[str, RuntimeCallableArgument] = {"artifact": artifact_name}
+        fields: dict[str, RuntimeProfileFieldValue] = {"artifact": artifact_name}
         if kind is not None:
             fields["kind"] = ArtifactType.coerce(kind).value
         if payload_type is not None:
@@ -104,7 +100,7 @@ class CellProfilerRuntimeProfileLogger:
         object_name: str | None = None,
         fields_declared: bool | None = None,
     ) -> None:
-        fields: dict[str, RuntimeCallableArgument] = {"artifact": artifact_name}
+        fields: dict[str, RuntimeProfileFieldValue] = {"artifact": artifact_name}
         if object_name is not None:
             fields["object"] = object_name
         if fields_declared is not None:
