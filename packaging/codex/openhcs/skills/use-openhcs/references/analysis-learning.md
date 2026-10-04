@@ -120,8 +120,11 @@ timeout, arbitrary garbage collection or a copied foreign cleanup function.
 Test a proposed skill change independently on a realistic bounded development
 scenario without supplying the intended answer. First assess decisions and
 retrieval: channel verification, matched raw inspection, failed-stage diagnosis,
-parameter units, regression controls and blinding. Then, with separate approval,
-evaluate actual compiled/executed outputs and native biological witnesses on
-the isolated display. Compare a frozen baseline and candidate under the same
+parameter units, regression controls and blinding. Then evaluate actual
+compiled/executed outputs and native biological witnesses on the isolated
+display within the existing task authorisation. Bounded installed/MCP development
+verification does not require a second approval; follow ``Task authorization``
+in `openhcs_architecture_quick_start` when access, provider, spending or held-out
+evaluation genuinely extends that authority. Compare a frozen baseline and candidate under the same
 data/access/resource budget. Documentation and search tests prove availability,
 not an autonomous biological performance gain.
