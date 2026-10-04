@@ -34,6 +34,7 @@ from openhcs.runtime.viewer_component_system import (
     ViewerComponentAxisSemantics,
     ViewerComponentLayout,
     ViewerComponentValueDomainPayload,
+    ViewerRouteComponentValueTracker,
     ViewerLayerAxisProjection,
 )
 from openhcs.runtime.viewer_protocol import (
@@ -115,6 +116,8 @@ class VisualMetadataField(str, Enum):
 class NapariLayerHandle(ABC):
     """Nominal marker for concrete layer objects returned by a Napari viewer."""
 
+    visible: bool
+
 
 class NapariHighlightEmitterABC(ABC):
     """Native Napari highlight event used by selectable layers."""
@@ -147,7 +150,6 @@ class NapariShapesLayerHandle(NapariLayerHandle):
     face_color_mode: str
     edge_color_cycle: Sequence[tuple[float, float, float, float]]
     face_color_cycle: Sequence[tuple[float, float, float, float]]
-    visible: bool
     events: NapariSelectableLayerEventsABC
 
     @abstractmethod
@@ -491,6 +493,23 @@ class NapariStreamLayerItem:
     address: NapariStreamLayerAddress
     image_metadata: ImagePayloadMetadata
     plane_component_domain: ViewerComponentValueDomainPayload
+
+    ELEMENT_IDENTITY_FEATURE: ClassVar[str] = "openhcs_source_element"
+
+    def element_identity(self, member_index: int, coordinate_index: int = 0) -> str:
+        """Identify a source member independently of projected axes or table order.
+
+        Native features carry this derived, opaque key; the source item remains
+        its owner. Member positions refer to this unchanged streamed payload,
+        not to rows in a subsequently assembled native layer.
+        """
+        return repr((
+            self.producer,
+            tuple(sorted(self.address.components.items())),
+            self.address.path,
+            member_index,
+            coordinate_index,
+        ))
 
 
 class NapariImagePayloadAxisLabelPolicy:
@@ -1396,6 +1415,55 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
             raise ValueError("Route dimension rank exceeds native viewer rank.")
         return tuple(range(offset, viewer_ndim))
 
+    @contextmanager
+    def preserve_native_axes(
+        self, dims, replacement: "NapariAxisPresentation",
+        items: Sequence[NapariStreamLayerItem],
+    ):
+        """Carry actual native world positions/order through semantic slot insertion.
+
+        This is a transient presentation snapshot, not a second component domain.
+        Values come from native Dims and names from the original presentations.
+        Restore before selectable handlers check geometry on the current slice.
+        """
+        dimensions = self.viewer_dimension_indices(dims.ndim)
+        names = dict(zip(dimensions, self.axis_labels, strict=True))
+        points = {name: dims.point[axis] for axis, name in names.items()}
+        ranges = {name: dims.range[axis] for axis, name in names.items()}
+        order = tuple(names[axis] for axis in dims.order if axis in names)
+        yield
+        target_dimensions = replacement.viewer_dimension_indices(dims.ndim)
+        target_axes = dict(zip(replacement.axis_labels, target_dimensions, strict=True))
+        point = list(dims.point)
+        native_ranges = list(dims.range)
+        for name, value in points.items():
+            point[target_axes[name]] = value
+            native_ranges[target_axes[name]] = ranges[name]
+        transform = replacement.spatial_layer_kwargs(items, replacement.payload_axis_labels)
+        for name in replacement.display_axis_components:
+            if name in points:
+                continue
+            routed_values = replacement.projection.routed_component_values[name]
+            if len(routed_values) != 1:
+                raise ValueError(
+                    f"New native slot {name!r} requires an unambiguous original route value."
+                )
+            axis = replacement.axis_labels.index(name)
+            # This newly inserted singleton's source-local index is zero.
+            # The original transform already contains its shared-domain offset.
+            point[target_axes[name]] = transform["translate"][axis]
+            native_ranges[target_axes[name]] = (
+                point[target_axes[name]], point[target_axes[name]], transform["scale"][axis],
+            )
+        # Dims clips points to its ranges. Remap the detached snapshot's bounds
+        # first; the live viewer's bounds remain owned by its mounted layers.
+        dims.range = tuple(native_ranges)
+        dims.point = tuple(point)
+        retained_order = tuple(target_axes[name] for name in order)
+        dims.order = tuple(
+            axis for axis in dims.order if axis not in retained_order
+        ) + retained_order
+
     def display_order(
         self, display_axes: tuple[str, str], current_order: tuple[int, ...]
     ) -> tuple[int, ...]:
@@ -1620,6 +1688,48 @@ class NapariLayerRouteStateStore:
             (layer_key, state)
             for layer_key, state in self.layer_dimension_states.items()
             if layer_key in self.layers
+        )
+
+    def shared_display_layout(
+        self, layout: ViewerComponentLayout
+    ) -> ViewerComponentLayout:
+        """Derive native slots from declarations of actually mounted routes."""
+        return layout.with_shared_stack_axes(tuple(
+            mounted_layout
+            for _route, state in self.mounted_dimension_states()
+            for mounted_layout in state.display_layouts
+        ))
+
+    def shared_component_values(
+        self,
+        tracker: ViewerRouteComponentValueTracker,
+        layout: ViewerComponentLayout,
+        *,
+        replacement_route: str,
+        additional_component_values: ComponentValues,
+    ) -> ComponentValues:
+        """Project mounted declarations, including axes previously shown as layers.
+
+        The tracker owns observed stack coordinates. A newly shared stack slot
+        must also include the original source declarations of mounted peers;
+        those values were not stack coordinates in their former presentation.
+        No route domain is mutated during this preview.
+        """
+        declarations = (
+            additional_component_values,
+            *(state.presentation.component_values()
+              for route, state in self.mounted_dimension_states()
+              if route != replacement_route and state.presentation is not None),
+        )
+        axes = layout.components_for_mode(ViewerComponentMode.STACK)
+        return tracker.shared_values_for(
+            axes,
+            replacement_route=replacement_route,
+            additional_component_values={
+                component: [value for declaration in declarations
+                            for value in declaration.get(component, ())]
+                for component in axes
+            },
         )
 
     def axis_origins_for(self, axis_labels: tuple[str, ...]) -> tuple[int, ...]:
@@ -1964,6 +2074,7 @@ class NapariShapeFeatureColumns:
         *,
         label: int,
         path: str,
+        element_identity: str,
     ) -> None:
         """Append one metadata row while preserving first-seen column order."""
 
@@ -1978,6 +2089,7 @@ class NapariShapeFeatureColumns:
             self._set_last(str(name), NapariShapeLayerPayload._feature_value(value))
         self._set_last(VisualMetadataField.LABEL.value, label)
         self._set_last(ViewerWireField.PATH.value, path)
+        self._set_last(NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE, element_identity)
         self.row_count += 1
 
     def _set_last(self, name: str, value: object) -> None:
@@ -2130,7 +2242,7 @@ class NapariShapeLayerPayload:
                 raise TypeError(
                     "Napari SHAPES payload data must be a sequence of shape mappings."
                 )
-            for shape_dict in item.data:
+            for member_index, shape_dict in enumerate(item.data):
                 if not isinstance(shape_dict, Mapping):
                     raise TypeError(
                         "Napari SHAPES payload entries must be shape mappings."
@@ -2183,6 +2295,7 @@ class NapariShapeLayerPayload:
                     metadata,
                     label=label_allocator.label_for(shape_dict),
                     path=item.address.path,
+                    element_identity=item.element_identity(member_index),
                 )
 
                 shape_data.append(coordinates)
