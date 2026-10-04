@@ -13,10 +13,27 @@ from PyQt6.QtCore import QCoreApplication, QEventLoop, QThread
 from polystore import cleanup_backend_connections
 from pyqt_reactive.core.future_completion import FutureCompletion
 from pyqt_reactive.services.async_operation_executor import AsyncOperationExecutor
-from pyqt_reactive.services.ui_thread_dispatch import UiThreadDispatcher
+from pyqt_reactive.services.ui_thread_dispatch import (
+    UiThreadDispatcher,
+    UiThreadDispatchTimeoutError,
+)
+
+from openhcs.agent.exceptions import AgentFacingErrorMixin
 
 ParametersT = ParamSpec("ParametersT")
 ResultT = TypeVar("ResultT")
+
+
+class McpQueuedCallNotStartedError(AgentFacingErrorMixin, UiThreadDispatchTimeoutError):
+    """Original dispatch owner cancelled this callback before it began."""
+
+    agent_error_code = "mcp_call_not_started"
+    agent_error_hint = (
+        "The Qt dispatcher cancelled this queued callback before invocation. "
+        "This call did not execute; it created no runtime process or handle. "
+        "This is not an uncertain started operation. Preserve its failed receipt "
+        "and resolve the occupied main-thread work before a separate new attempt."
+    )
 
 
 class McpMainThreadDispatcher(UiThreadDispatcher):
@@ -40,6 +57,16 @@ class McpMainThreadDispatcher(UiThreadDispatcher):
         return super().call(
             lambda: request_context.run(callback), timeout_ms=timeout_ms
         )
+
+    @staticmethod
+    def _dispatch_timeout_error() -> UiThreadDispatchTimeoutError:
+        """Project only the original dispatch owner's successful cancellation.
+
+        The owner passes this error to its queued call's atomic cancel(). A
+        callback's own exception, including a dispatch timeout after a side
+        effect, remains the callback outcome and never passes through this hook.
+        """
+        return McpQueuedCallNotStartedError("Timed out waiting for UI thread dispatch.")
 
     async def invoke(self, callback: Callable[[], ResultT]) -> ResultT:
         """Await the original affine call without blocking SDK notifications."""

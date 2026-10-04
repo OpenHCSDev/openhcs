@@ -21,5 +21,6 @@ function /usr/bin/xprop() { printf 'WINDOW controlled external X owner\n'; }
 # Execute the actual client up to its external exec, then model terminal42.
 trap 'if [[ "$BASH_COMMAND" == "exec /usr/bin/env "* ]]; then
   printf "CONTROLLED_EXEC cpu=%s install=%s run=%s funding=%s\n" "$cpu" "$FLEET_INSTALL" "$FLEET_RUN_ROOT" "$FLEET_ROOT"
+  printf "CONTROLLED_PATHS read=%s write=%s temp=%s data=%s runtime=%s\n" "$OPENHCS_AGENT_READ_ROOTS" "$OPENHCS_AGENT_WRITE_ROOTS" "$TMPDIR" "$XDG_DATA_HOME" "$XDG_RUNTIME_DIR"
   exit 42
 fi' DEBUG

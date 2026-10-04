@@ -17,7 +17,7 @@ from dataclasses import dataclass, field, fields, is_dataclass, replace
 from enum import Enum
 from functools import singledispatch
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar, Self, TextIO, TypeVar, cast, get_type_hints
+from typing import TYPE_CHECKING, ClassVar, Self, TextIO, TypeVar, cast, get_args, get_type_hints
 
 from metaclass_registry import AutoRegisterMeta
 from python_introspect import (
@@ -43,6 +43,7 @@ from openhcs.agent.dto.common import (
     JsonValue,
 )
 from openhcs.agent.dto.execution import PipelineExecutionSubmissionRequest
+from openhcs.agent.dto.mcp import McpBoundaryFailure, McpToolErrorResult
 from openhcs.agent.dto.ui_bridge import (
     UiActionInvocationStatus,
     UiBridgeOperationRef,
@@ -440,6 +441,16 @@ class McpDevToolResult:
     def _decode_payload(payload, contracts):
         if isinstance(payload, McpDevPayloadFailure):
             return payload
+        # Transport failures are not malformed successes. Admit their nominal
+        # declaration first, without attaching unrelated error-shape rejections
+        # to an actual capability result or its original diagnostic cause.
+        for boundary_contract in get_args(McpBoundaryFailure):
+            try:
+                if isinstance(payload, boundary_contract):
+                    return payload
+                return dataclass_from_mapping(boundary_contract, payload)
+            except (TypeError, ValueError):
+                pass
         rejections: list[AgentError] = []
         for contract in contracts:
             try:
@@ -463,7 +474,11 @@ class McpDevToolResult:
         if not self.payloads:
             return None
         payload = self.payloads[0]
-        return None if isinstance(payload, McpDevPayloadFailure) else payload
+        return (
+            None
+            if isinstance(payload, (McpDevPayloadFailure, McpToolErrorResult))
+            else payload
+        )
 
     def decoded_payload_as(
         self, output_contract: type[DeclaredPayloadT]

@@ -31,7 +31,7 @@ if [[ "${3:-}" == --preflight ]]; then
   printf 'root=%s slot=%s cwd=%s config=%s skill=%s cli=%s unit=%s history_args=%s\n' "$FLEET_ROOT" "$FLEET_SLOT" "$FLEET_WORKSPACE" "$config" "$skill" "$cli" "$FLEET_UNIT-author" "$(jq -c '.argv' <<< "$history_projection_json")"
   printf 'model=%s provider=%s effort=%s cpu=%s display=%s native=%s viewer=%s session-bind=%s\n' "$(jq -er '.model' "$FLEET_RUN_ROOT/program.json")" "$(jq -er '.model_provider' "$FLEET_RUN_ROOT/program.json")" "$(jq -er '.reasoning_effort' "$FLEET_RUN_ROOT/program.json")" "$FLEET_CPU" "$FLEET_DISPLAY" "$FLEET_NATIVE" "$FLEET_VIEWER" "$FLEET_WORKSPACE/output/native-sessions"
   printf 'readonly_history_args='; printf '%q ' "${history_mount_argv[@]}"; printf '\n'
-  printf 'input=%s read=%s:%s:%s write=%s workers=%s\n' "$FLEET_INPUT" "$FLEET_INPUT" "$FLEET_WORKSPACE/output" "$FLEET_INSTALL/openhcs/agent/resources/knowledge" "$FLEET_WORKSPACE/output" "$(jq -er '.proposed_resource_envelope.science_workers_per_author' "$FLEET_RUN_ROOT/program.json")"
+  printf 'input=%s read=%s:%s:%s:%s write=%s:%s scratch=%s workers=%s\n' "$FLEET_INPUT" "$FLEET_INPUT" "$FLEET_WORKSPACE/output" "$FLEET_ARTIFACT_ROOT" "$FLEET_INSTALL/openhcs/agent/resources/knowledge" "$FLEET_WORKSPACE/output" "$FLEET_ARTIFACT_ROOT" "$FLEET_SCRATCH" "$(jq -er '.proposed_resource_envelope.science_workers_per_author' "$FLEET_RUN_ROOT/program.json")"
   exit
 fi
 fleet_require_writer_release
@@ -41,6 +41,7 @@ jq -e --arg slot "$FLEET_SLOT" '.authors[] | select(.slot==$slot) |
 test -f "$FLEET_RUN_ROOT/READY-FREEZE.sha256"
 (cd "$FLEET_RUN_ROOT"; sha256sum --check --quiet READY-FREEZE.sha256)
 mkdir -p "$FLEET_WORKSPACE/output/runtime" "$FLEET_WORKSPACE/output/native-sessions"
+fleet_require_artifact_destination "$FLEET_SLOT"
 runtime="$FLEET_WORKSPACE/output/runtime"
 if [[ "${3:-}" != --inside-scope ]]; then
   fleet_require_joint_slice
