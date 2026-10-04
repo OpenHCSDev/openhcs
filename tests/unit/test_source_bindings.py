@@ -745,6 +745,7 @@ def test_admitted_request_config_survives_next_live_global_context(
         global_config=admitted,
         pipeline=SimpleNamespace(), path_resolver=SimpleNamespace(),
         global_step_axis_filters={}, enable_visualizer_override=False,
+        source_projections_by_axis={},
         is_zmq_execution=True,
     )
     context = request.context_for("A01")

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, fields, is_dataclass, replace
+from dataclasses import dataclass, field, fields, is_dataclass, replace
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Mapping, MutableMapping, Sequence, get_type_hints
 
@@ -17,6 +17,10 @@ from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.function_patterns import (
     normalize_function_pattern,
     strip_disabled_functions,
+)
+from openhcs.core.invocation_artifacts import (
+    InvocationContractProvider,
+    PipelineInvocationContractProviderAuthority,
 )
 from openhcs.core.vfs_protocol import (
     FileManagerLike,
@@ -158,13 +162,28 @@ def resolve_declared_dataclass_paths(
 class ResolvedPipelineDefinition:
     """Capture enabled saved declarations and their scope/provenance facts.
 
-    Axis sessions derive metadata kwargs and provider contracts from this view;
+    Axis sessions derive metadata kwargs from this view and share its provider;
     authored FunctionSteps keep their public function-pattern syntax.
     """
 
     steps: Sequence[AbstractStep]
     step_scope_ids: Mapping[int, str]
     step_provenance: Mapping[int, Mapping[str, tuple[str | None, type | None]]]
+
+    _invocation_contract_provider: InvocationContractProvider | None = field(
+        default=None, init=False, repr=False, compare=False
+    )
+
+    @property
+    def invocation_contract_provider(self) -> InvocationContractProvider:
+        """Admit the final saved declaration's invocation contracts once."""
+        provider = self._invocation_contract_provider
+        if provider is None:
+            provider = PipelineInvocationContractProviderAuthority.provider_for_pipeline(
+                self
+            )
+            object.__setattr__(self, "_invocation_contract_provider", provider)
+        return provider
 
     def __post_init__(self) -> None:
         missing_scopes = [

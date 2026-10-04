@@ -1217,8 +1217,8 @@ def test_implicit_native_main_flow_provenance_drives_artifact_owned_scope():
             step_provenance={index: {} for index in range(len(steps))},
         ),
     )
-    provider = CellProfilerInvocationContractProviderFactory.provider_for_session(
-        session
+    provider = CellProfilerInvocationContractProviderFactory.provider_for_pipeline(
+        session.pipeline
     )
     assert provider is not None
 
