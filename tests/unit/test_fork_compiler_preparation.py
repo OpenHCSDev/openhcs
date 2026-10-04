@@ -3,7 +3,6 @@
 import multiprocessing
 import os
 from pathlib import Path
-from types import SimpleNamespace
 from typing import ClassVar
 
 import pytest
@@ -18,13 +17,10 @@ from openhcs.core.callable_contract import (
 )
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.function_patterns import (
-    CompiledFunctionGroup,
     CompiledFunctionInvocation,
-    CompiledFunctionPattern,
     FunctionInvocationKey,
 )
 from openhcs.core.processing_preparation import PreparationCacheBatch
-from openhcs.core.steps.function_runtime import prepare_compiled_context_callables
 from openhcs.processing.backends.cellprofiler._backend import (
     CellProfilerBackendStrategyMixin,
 )
@@ -61,11 +57,12 @@ def _processing_callable(image):
 
 
 @pytest.mark.skipif(
-    "fork" not in multiprocessing.get_all_start_methods() or len(os.sched_getaffinity(0)) < 2,
-    reason="two admitted fork slots required",
+    "fork" not in multiprocessing.get_all_start_methods(),
+    reason="fork required",
 )
+@pytest.mark.parametrize("budget", [1, 2])
 def test_child_preparation_deduplicates_registries_and_propagates_failure(
-    monkeypatch, tmp_path
+    monkeypatch, tmp_path, budget
 ):
     monkeypatch.setattr(_FirstCacheFamily, "output_directory", tmp_path, raising=False)
     monkeypatch.setattr(_SecondCacheFamily, "output_directory", tmp_path, raising=False)
@@ -77,21 +74,21 @@ def test_child_preparation_deduplicates_registries_and_propagates_failure(
         ),
     )
     batch = PreparationCacheBatch.from_callables((_processing_callable,))
-    batch.populate_child_caches(max_workers=2)
+    batch.populate_child_caches(max_workers=budget)
     assert {path.name for path in tmp_path.iterdir()} == {
         "_FirstCacheFamily",
         "_SecondCacheFamily",
     }
     assert all(int(path.read_text()) != os.getpid() for path in tmp_path.iterdir())
+    if budget == 1:
+        assert len({path.read_text() for path in tmp_path.iterdir()}) == 1
 
     monkeypatch.setattr(_SecondCacheFamily, "fail", True)
     with pytest.raises(RuntimeError, match="preparation failed"):
-        batch.populate_child_caches(max_workers=2)
+        batch.populate_child_caches(max_workers=budget)
 
 
-def test_backend_child_preparation_requires_empty_explicit_cpu_cache(
-    monkeypatch, tmp_path
-):
+def test_backend_child_preparation_requires_explicit_cpu_cache(monkeypatch, tmp_path):
     monkeypatch.setenv("OPENHCS_CPU_ONLY", "true")
     monkeypatch.setattr(numba_config, "CACHE_DIR", str(tmp_path))
     assert ObjectIntensityBackendStrategy.can_prepare_in_child()
@@ -100,7 +97,7 @@ def test_backend_child_preparation_requires_empty_explicit_cpu_cache(
     index = tmp_path / "nested" / "compiled.nbi"
     index.parent.mkdir()
     index.touch()
-    assert not ObjectIntensityBackendStrategy.can_prepare_in_child()
+    assert ObjectIntensityBackendStrategy.can_prepare_in_child()
     index.unlink()
     monkeypatch.setattr(numba_config, "CACHE_DIR", "")
     assert not ObjectIntensityBackendStrategy.can_prepare_in_child()
@@ -127,7 +124,7 @@ def test_platform_without_fork_keeps_parent_preparation_path(monkeypatch):
     ).populate_child_caches()
 
 
-def test_compiled_context_preparation_runs_parent_hook_after_children(
+def test_prepared_contract_hook_is_not_replayed_by_runtime_binding(
     monkeypatch, tmp_path
 ):
     events = []
@@ -145,29 +142,22 @@ def test_compiled_context_preparation_runs_parent_hook_after_children(
     process.__dict__[FunctionContractAttribute.processing_prepare] = (
         lambda: events.append("parent")
     )
+    reset_processing_callable_preparation_cache()
     invocation = CompiledFunctionInvocation(
         key=FunctionInvocationKey("process", "default", 0),
-        contract=CallableContract.from_callable(process),
+        contract=CallableContract.from_prepared_callable(process),
     )
-    pattern = CompiledFunctionPattern(
-        groups=(CompiledFunctionGroup("default", (invocation,)),), is_grouped=False
-    )
-    context = SimpleNamespace(
-        step_plans={0: SimpleNamespace(step_index=0, compiled_function_pattern=pattern)}
-    )
+    assert events == ["parent"]
 
-    def prepare_children(batch, *, max_workers):
-        assert max_workers == 1
-        events.append(
-            tuple(preparation.module_name for preparation in batch.preparations)
-        )
+    def prepare_children(*args, **kwargs):
+        raise AssertionError("runtime binding must not prepare kernel caches")
 
     monkeypatch.setattr(
         PreparationCacheBatch,
         "populate_child_caches",
         prepare_children,
     )
-    reset_processing_callable_preparation_cache()
-    prepare_compiled_context_callables({"A01": context})
-    assert events == [(__name__,), "parent"]
+    invocation.contract.resolve_runtime_callable()
+    invocation.contract.resolve_runtime_callable()
+    assert events == ["parent"]
     assert all(int(path.read_text()) == os.getpid() for path in tmp_path.iterdir())

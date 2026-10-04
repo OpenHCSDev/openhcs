@@ -14,7 +14,6 @@ from dataclasses import dataclass, field
 from itertools import islice
 from multiprocessing.connection import Connection, wait
 from multiprocessing.process import BaseProcess
-from pathlib import Path
 from threading import Lock
 from typing import ClassVar
 
@@ -29,7 +28,7 @@ from openhcs.utils.environment import OpenHCSProcessEnvironment
 
 
 class PersistentNumbaKernelPreparation(CompilerPreparedAutoRegisterFamily):
-    """Admit persistent Numba work only for an empty explicit CPU cache."""
+    """Isolate declared persistent CPU kernel cache preparation."""
 
     @classmethod
     def requires_persistent_kernel_cache(cls) -> bool:
@@ -44,11 +43,7 @@ class PersistentNumbaKernelPreparation(CompilerPreparedAutoRegisterFamily):
             return False
         from numba import config as numba_config
 
-        cache_directory = numba_config.CACHE_DIR
-        return (
-            bool(cache_directory)
-            and next(Path(cache_directory).rglob("*.nbi"), None) is None
-        )
+        return bool(numba_config.CACHE_DIR)
 
 
 class PreparationOperation(ABC):
@@ -234,12 +229,15 @@ class CallablePreparation:
         return (ModuleRegistryPreparation(module_name),)
 
 
-def _execute_cache_preparation(operation, result_connection) -> None:
+def _execute_cache_preparation(
+    operations: tuple[PreparationOperation, ...], result_connection: Connection
+) -> None:
     """Report completion while allowing the parent to terminate its exact worker."""
 
     signal.signal(signal.SIGTERM, signal.SIG_DFL)
     try:
-        operation.execute()
+        for operation in operations:
+            operation.execute()
     except BaseException:
         result_connection.send(traceback.format_exc()[-4000:])
         raise
@@ -258,10 +256,12 @@ class PreparationCacheWorker:
     closed: bool = field(default=False, init=False)
 
     @classmethod
-    def start(cls, context, operation: PreparationOperation) -> PreparationCacheWorker:
+    def start(
+        cls, context, operations: tuple[PreparationOperation, ...]
+    ) -> PreparationCacheWorker:
         receiver, sender = context.Pipe(duplex=False)
         process = context.Process(
-            target=_execute_cache_preparation, args=(operation, sender)
+            target=_execute_cache_preparation, args=(operations, sender)
         )
         try:
             process.start()
@@ -328,15 +328,15 @@ class PreparationCacheBatch:
         return cls(tuple(sources.values()))
 
     def populate_child_caches(
-        self, *, max_workers: int = 1,
-        status_callback: Callable[[str], None] | None = None
+        self,
+        *,
+        max_workers: int = 1,
+        status_callback: Callable[[str], None] | None = None,
     ) -> None:
-        """Admit optional cache parallelism, never parent process-local readiness."""
+        """Isolate admitted cache work, never parent process-local readiness."""
         if max_workers < 1:
             raise ValueError("Preparation worker budget must be positive.")
         if "fork" not in multiprocessing.get_all_start_methods():
-            return
-        if max_workers == 1:
             return
         try:
             worker_capacity = min(max_workers, len(os.sched_getaffinity(0)))
@@ -344,7 +344,7 @@ class PreparationCacheBatch:
             # Without an affinity witness there is no admitted parallel cache
             # work. The existing parent preparation still owns readiness.
             return
-        if worker_capacity < 2:
+        if worker_capacity < 1:
             return
         operations = {
             operation.identity: operation
@@ -356,15 +356,19 @@ class PreparationCacheBatch:
             for operation in operations.values()
             if operation.can_prepare_in_child()
         )
-        if len(children) < 2:
+        if not children:
             return
         context = multiprocessing.get_context("fork")
-        pending = iter(children)
+        pending = (
+            iter((children,))
+            if worker_capacity == 1
+            else iter((operation,) for operation in children)
+        )
         with ExitStack() as resources:
             workers: list[PreparationCacheWorker] = []
             while True:
-                for operation in islice(pending, worker_capacity - len(workers)):
-                    worker = PreparationCacheWorker.start(context, operation)
+                for operations in islice(pending, worker_capacity - len(workers)):
+                    worker = PreparationCacheWorker.start(context, operations)
                     resources.callback(worker.close)
                     workers.append(worker)
                 if not workers:
