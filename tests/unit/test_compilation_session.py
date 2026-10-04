@@ -318,7 +318,9 @@ def test_resolved_declarations_reuse_contracts_but_keep_axis_and_author_epochs(m
         return from_callable(cls, func)
 
     monkeypatch.setattr(CallableContract, "from_callable", classmethod(count_contracts))
-    pipeline = PipelineCompiler._filter_enabled_steps(definition, {0: state})
+    pipeline = ResolvedPipelineDefinition(
+        definition, {0: state.scope_id}, step_provenance={0: {}}
+    )
     captured = pipeline.steps[0].func
     (item,) = tuple(captured.iter_items())
     assert definition == [authored] and definition[0].func[1][0][1] is kwargs
