@@ -1,0 +1,412 @@
+{
+  "mode": "read-only original distribution metadata; no OpenHCS/scientific import",
+  "source_head": "45bb6fc908daec28a6c53148e8bdbbdb77d99915",
+  "dependencies": [
+    {
+      "declared": "numpy>=1.26.4",
+      "name": "numpy",
+      "version": "2.1.3",
+      "metadata_path": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/numpy-2.1.3.dist-info/METADATA",
+      "metadata_sha256": "7c07741da49dc3af378a7d22b554a7c3815a0784e6e4adccf6b715a2ece644de",
+      "satisfies": true,
+      "direct_url": null
+    },
+    {
+      "declared": "scikit-image>=0.25.2",
+      "name": "scikit-image",
+      "version": "0.25.2",
+      "metadata_path": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/scikit_image-0.25.2.dist-info/METADATA",
+      "metadata_sha256": "efc0b93767c3a5f239c5c8f835da9a13addcfab9533a6971173a36d0687db934",
+      "satisfies": true,
+      "direct_url": null
+    },
+    {
+      "declared": "scikit-learn>=1.7.1",
+      "name": "scikit-learn",
+      "version": "1.9.1",
+      "metadata_path": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/scikit_learn-1.9.1.dist-info/METADATA",
+      "metadata_sha256": "32e503c710a61e4e04be4edb450f9f8141233ac6af3f3db59a877667538fa4ec",
+      "satisfies": true,
+      "direct_url": null
+    },
+    {
+      "declared": "scipy>=1.12.0",
+      "name": "scipy",
+      "version": "1.18.1",
+      "metadata_path": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/scipy-1.18.1.dist-info/METADATA",
+      "metadata_sha256": "6d1ebfbce110009e25e8249fea05e21c0449735144e9bd8df1a52931f957c1ea",
+      "satisfies": true,
+      "direct_url": null
+    },
+    {
+      "declared": "PyWavelets>=1.6.0",
+      "name": "PyWavelets",
+      "version": "1.10.0",
+      "metadata_path": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/pywavelets-1.10.0.dist-info/METADATA",
+      "metadata_sha256": "fd52073794bccef48c17bfb2084f574ef1f9e45b934d6ab91d09ddc2b3b4d327",
+      "satisfies": true,
+      "direct_url": null
+    },
+    {
+      "declared": "openhcs-basicpy>=1.3.1,<1.4; platform_system != 'Darwin' or platform_machine != 'x86_64'",
+      "name": "openhcs-basicpy",
+      "version": "1.3.1",
+      "metadata_path": "/home/ts/wt/basicpy-live-candidate-20260930/.venv/lib/python3.12/site-packages/openhcs_basicpy-1.3.1.dist-info/METADATA",
+      "metadata_sha256": "05378047b9b0db0a30edfcfcd957ff0c56a7a7b4f22cd44d59ba94cb5d262207",
+      "satisfies": true,
+      "direct_url": {
+        "archive_info": {
+          "hash": "sha256=a82bcd9628650ea019a819959d18efdffa3d5a11efb24c59530a060e9a154cd2",
+          "hashes": {
+            "sha256": "a82bcd9628650ea019a819959d18efdffa3d5a11efb24c59530a060e9a154cd2"
+          }
+        },
+        "url": "file:///home/ts/wt/openhcs-issue-batch-20260929/basicpy-project-dependency-20260930/release131/openhcs_basicpy-1.3.1-py3-none-any.whl"
+      }
+    },
+    {
+      "declared": "pandas>=2.3.1",
+      "name": "pandas",
+      "version": "3.0.5",
+      "metadata_path": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/pandas-3.0.5.dist-info/METADATA",
+      "metadata_sha256": "119bd5541f4e2d413f440c82ad75b7b0457602f368b4b02efb467297c3c4a5b1",
+      "satisfies": true,
+      "direct_url": null
+    },
+    {
+      "declared": "openpyxl>=3.1.0",
+      "name": "openpyxl",
+      "version": "3.1.5",
+      "metadata_path": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/openpyxl-3.1.5.dist-info/METADATA",
+      "metadata_sha256": "23f80ca9830dd89435da1710f26deda8f81e5409287e74540210c72627a4ad96",
+      "satisfies": true,
+      "direct_url": null
+    },
+    {
+      "declared": "xlsxwriter>=3.2.0",
+      "name": "xlsxwriter",
+      "version": "3.2.9",
+      "metadata_path": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/xlsxwriter-3.2.9.dist-info/METADATA",
+      "metadata_sha256": "10d504f188e087f07a06b9038ed0535f37ac072c232e60c075ddb0aedb7b7d78",
+      "satisfies": true,
+      "direct_url": null
+    },
+    {
+      "declared": "numba>=0.61.0; platform_system != 'Darwin' or platform_machine != 'x86_64'",
+      "name": "numba",
+      "version": "0.62.1",
+      "metadata_path": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/numba-0.62.1.dist-info/METADATA",
+      "metadata_sha256": "230bccb44c012be2d4fd260beb7dde0dee69a8ed831202ec317baf2904cfdb43",
+      "satisfies": true,
+      "direct_url": null
+    },
+    {
+      "declared": "skan>=0.13.1",
+      "name": "skan",
+      "version": "0.13.1",
+      "metadata_path": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/skan-0.13.1.dist-info/METADATA",
+      "metadata_sha256": "20fa20f18dc7ebe61ed3e33c54ca3fc6ac9729b1b91c1fbf23e1c11c7890e382",
+      "satisfies": true,
+      "direct_url": null
+    },
+    {
+      "declared": "threadpoolctl>=3.6.0",
+      "name": "threadpoolctl",
+      "version": "3.7.0",
+      "metadata_path": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/threadpoolctl-3.7.0.dist-info/METADATA",
+      "metadata_sha256": "09b19e721560cd12246402d44e53c1ede5194b8398ef60822f02cab86ccf8d1f",
+      "satisfies": true,
+      "direct_url": null
+    },
+    {
+      "declared": "imageio>=2.37.0",
+      "name": "ImageIO",
+      "version": "2.37.4",
+      "metadata_path": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/imageio-2.37.4.dist-info/METADATA",
+      "metadata_sha256": "bdc8cb937fcc650149184c2b1bd58eb53cd62da5c8dca8e7bdde36dd4fce844b",
+      "satisfies": true,
+      "direct_url": null
+    },
+    {
+      "declared": "tifffile>=2025.6.11",
+      "name": "tifffile",
+      "version": "2026.9.15",
+      "metadata_path": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/tifffile-2026.9.15.dist-info/METADATA",
+      "metadata_sha256": "24f89e0953d6223dc1e6c900440ab1d0889ebcfc7a6fdf18fd0b2bfd17dd3a0e",
+      "satisfies": true,
+      "direct_url": null
+    },
+    {
+      "declared": "imagecodecs>=2025.3.30",
+      "name": "imagecodecs",
+      "version": "2026.8.16",
+      "metadata_path": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/imagecodecs-2026.8.16.dist-info/METADATA",
+      "metadata_sha256": "4f2c383e3d47c74b6923e7698e4a7e8c70cdc648517f9f7a052c2a46fea7d4b4",
+      "satisfies": true,
+      "direct_url": null
+    },
+    {
+      "declared": "opencv-python-headless>=4.11.0.86; platform_system != 'Darwin' or platform_machine != 'x86_64'",
+      "name": "opencv-python-headless",
+      "version": "5.0.0.93",
+      "metadata_path": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/opencv_python_headless-5.0.0.93.dist-info/METADATA",
+      "metadata_sha256": "f8e9104b4dce58f708d4cc7af95ebd8a5d65a3e36209d42386eb61065ae50e1a",
+      "satisfies": true,
+      "direct_url": null
+    },
+    {
+      "declared": "Multi-Template-Matching>=2.0.1",
+      "name": "Multi-Template-Matching",
+      "version": "2.0.1",
+      "metadata_path": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/Multi_Template_Matching-2.0.1.dist-info/METADATA",
+      "metadata_sha256": "4300a267f2844ffcba254daf8c49794f1743bb62dc2f9a8ae3e80126c5422675",
+      "satisfies": true,
+      "direct_url": null
+    },
+    {
+      "declared": "roifile>=2024.5.24",
+      "name": "roifile",
+      "version": "2026.7.30",
+      "metadata_path": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/roifile-2026.7.30.dist-info/METADATA",
+      "metadata_sha256": "d97777499927cd0cc55192ce2336bf55bf46f599d281589415585640872b7e0d",
+      "satisfies": true,
+      "direct_url": null
+    },
+    {
+      "declared": "PyYAML>=6.0.2",
+      "name": "PyYAML",
+      "version": "6.0.3",
+      "metadata_path": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/pyyaml-6.0.3.dist-info/METADATA",
+      "metadata_sha256": "03c3b415ed38d09faedc49360e930769b40c58f68585e6de00e2e4916a858d34",
+      "satisfies": true,
+      "direct_url": null
+    },
+    {
+      "declared": "zarr>=3.0.10",
+      "name": "zarr",
+      "version": "3.4.0",
+      "metadata_path": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/zarr-3.4.0.dist-info/METADATA",
+      "metadata_sha256": "771c1d0961d674af66f257d5634564813cb8b312f2db6534d82ccd4645a57fd3",
+      "satisfies": true,
+      "direct_url": null
+    },
+    {
+      "declared": "ome-zarr>=0.12.2",
+      "name": "ome-zarr",
+      "version": "0.19.2",
+      "metadata_path": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/ome_zarr-0.19.2.dist-info/METADATA",
+      "metadata_sha256": "14427033c8a9eb406332bba5e28b4c11dcc29486249661f4937a55ac7fe2ccc1",
+      "satisfies": true,
+      "direct_url": null
+    },
+    {
+      "declared": "dill>=0.4.0",
+      "name": "dill",
+      "version": "0.4.1",
+      "metadata_path": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/dill-0.4.1.dist-info/METADATA",
+      "metadata_sha256": "040d6c84eddf29c8c14dc2aef214962a919803f557243824dd4f8aa3b49e3868",
+      "satisfies": true,
+      "direct_url": null
+    },
+    {
+      "declared": "setuptools",
+      "name": "setuptools",
+      "version": "84.0.0",
+      "metadata_path": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/setuptools-84.0.0.dist-info/METADATA",
+      "metadata_sha256": "3ef2975718dd31cabdd5829455e9b868ca14dbf79ed8fed2de0af4e87347006e",
+      "satisfies": true,
+      "direct_url": null
+    },
+    {
+      "declared": "packaging>=21.0",
+      "name": "packaging",
+      "version": "26.3",
+      "metadata_path": "/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/packaging-26.3.dist-info/METADATA",
+      "metadata_sha256": "70fdb89fc4d4a9a043bf7372b8972bcc883fddff34ab55e9cf80d73875384763",
+      "satisfies": true,
+      "direct_url": null
+    },
+    {
+      "declared": "watchdog>=6.0.0",
+      "name": "watchdog",
+      "version": "6.0.0",
+      "metadata_path": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/watchdog-6.0.0.dist-info/METADATA",
+      "metadata_sha256": "ecfde023047e7761dce06d4488abcede89e398399961a052f2fccb39b001e279",
+      "satisfies": true,
+      "direct_url": null
+    },
+    {
+      "declared": "portalocker>=2.8.2",
+      "name": "portalocker",
+      "version": "4.3.2",
+      "metadata_path": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/portalocker-4.3.2.dist-info/METADATA",
+      "metadata_sha256": "9637e8e083433b42f8f695fc6206de830259552b8aa99c5430ddcfa35203f764",
+      "satisfies": true,
+      "direct_url": null
+    },
+    {
+      "declared": "tomlkit>=0.13.3",
+      "name": "tomlkit",
+      "version": "0.15.1",
+      "metadata_path": "/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/tomlkit-0.15.1.dist-info/METADATA",
+      "metadata_sha256": "752d0210341ae500e12ae384ebb8c287a76a00cbac2d41eb86aba2622dabaaad",
+      "satisfies": true,
+      "direct_url": null
+    },
+    {
+      "declared": "tqdm>=4.66.5",
+      "name": "tqdm",
+      "version": "4.70.1",
+      "metadata_path": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/tqdm-4.70.1.dist-info/METADATA",
+      "metadata_sha256": "a5da70b966afea3a759716041bad7187f2ece02c22348cf9e7c0a512bbf15f57",
+      "satisfies": true,
+      "direct_url": null
+    },
+    {
+      "declared": "psutil>=5.9.0",
+      "name": "psutil",
+      "version": "7.2.2",
+      "metadata_path": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/psutil-7.2.2.dist-info/METADATA",
+      "metadata_sha256": "525f8ba78523cf7bc3759d62a105e7c57fd679ea702402b9449fb0746aa0217f",
+      "satisfies": true,
+      "direct_url": null
+    },
+    {
+      "declared": "zmqruntime>=0.3.0,<0.4",
+      "name": "zmqruntime",
+      "version": "0.3.1",
+      "metadata_path": "/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/zmqruntime-0.3.1.dist-info/METADATA",
+      "metadata_sha256": "b8cb766f67ade113b834cdd150dbcca4c7b0c30cb7bab6c09a6fee17b5f4160c",
+      "satisfies": true,
+      "direct_url": {
+        "archive_info": {
+          "hash": "sha256=b431eac28214dad42df61b44be25b51d30b8ff11181383e614607214adcd735f",
+          "hashes": {
+            "sha256": "b431eac28214dad42df61b44be25b51d30b8ff11181383e614607214adcd735f"
+          }
+        },
+        "url": "file:///home/ts/wt/openhcs-knowledge-declaration-source-376-20261001/docs/validation/required-runtime-qt-publication-20261002/zmqruntime-031-public/zmqruntime-0.3.1-py3-none-any.whl"
+      }
+    },
+    {
+      "declared": "pycodify>=0.1.3,<0.2",
+      "name": "pycodify",
+      "version": "0.1.3",
+      "metadata_path": "/home/ts/wt/basicpy-live-candidate-20260930/.venv/lib/python3.12/site-packages/pycodify-0.1.3.dist-info/METADATA",
+      "metadata_sha256": "8ef965bfa6fbe90d32fe1af993c0e1f65cfdea760ea9a8b123d8d153e0bbba91",
+      "satisfies": true,
+      "direct_url": {
+        "archive_info": {
+          "hash": "sha256=7c4548043437767b5de6d8fc9ccf15a418072262ae6746cc1716cb16388139b1",
+          "hashes": {
+            "sha256": "7c4548043437767b5de6d8fc9ccf15a418072262ae6746cc1716cb16388139b1"
+          }
+        },
+        "url": "file:///home/ts/wt/openhcs-issue-batch-20260929/basicpy-live-wheel-20260930/wheels/pycodify-0.1.3-py3-none-any.whl"
+      }
+    },
+    {
+      "declared": "objectstate>=1.1.8,<2",
+      "name": "objectstate",
+      "version": "1.1.8",
+      "metadata_path": "/home/ts/wt/basicpy-live-candidate-20260930/.venv/lib/python3.12/site-packages/objectstate-1.1.8.dist-info/METADATA",
+      "metadata_sha256": "41f52d715d522eb7c58cdf94756204c4fbc4d17cb95ed6b54fd9739c08b9f754",
+      "satisfies": true,
+      "direct_url": {
+        "archive_info": {
+          "hash": "sha256=6aa2121e10cec25881b7b651cb69e251d3e232e239306df89b7ac66156a2e031",
+          "hashes": {
+            "sha256": "6aa2121e10cec25881b7b651cb69e251d3e232e239306df89b7ac66156a2e031"
+          }
+        },
+        "url": "file:///home/ts/wt/openhcs-issue-batch-20260929/basicpy-live-wheel-20260930/wheels/objectstate-1.1.8-py3-none-any.whl"
+      }
+    },
+    {
+      "declared": "python-introspect>=0.1.14,<0.2",
+      "name": "python-introspect",
+      "version": "0.1.14",
+      "metadata_path": "/home/ts/wt/basicpy-live-candidate-20260930/.venv/lib/python3.12/site-packages/python_introspect-0.1.14.dist-info/METADATA",
+      "metadata_sha256": "61b29867e49e89d07428e12957fb3af7233f017b6dc419e0e8c78abd434c985e",
+      "satisfies": true,
+      "direct_url": {
+        "archive_info": {
+          "hash": "sha256=1cefc9ca0f019775e332aa56ea5911093aa2234b7ed93a8b25a3ce045fe41e27",
+          "hashes": {
+            "sha256": "1cefc9ca0f019775e332aa56ea5911093aa2234b7ed93a8b25a3ce045fe41e27"
+          }
+        },
+        "url": "file:///home/ts/wt/openhcs-issue-batch-20260929/basicpy-live-wheel-20260930/wheels/python_introspect-0.1.14-py3-none-any.whl"
+      }
+    },
+    {
+      "declared": "metaclass-registry>=0.2.2,<0.3",
+      "name": "metaclass-registry",
+      "version": "0.2.2",
+      "metadata_path": "/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/metaclass_registry-0.2.2.dist-info/METADATA",
+      "metadata_sha256": "469bef0c941eb11c7d205ab72d438b2004c559f4157a420d4d755dd499f5cc1f",
+      "satisfies": true,
+      "direct_url": {
+        "archive_info": {
+          "hash": "sha256=67ae17c58d9d10cd58acf83ebe01833c1f1fe0a1a2e281924fab836958d592ed",
+          "hashes": {
+            "sha256": "67ae17c58d9d10cd58acf83ebe01833c1f1fe0a1a2e281924fab836958d592ed"
+          }
+        },
+        "url": "file:///home/ts/wt/openhcs-knowledge-declaration-source-376-20261001/docs/validation/metaclass-registry-022-publication-20261001/artifacts/metaclass_registry-0.2.2-py3-none-any.whl"
+      }
+    },
+    {
+      "declared": "arraybridge>=0.3.6,<0.4",
+      "name": "arraybridge",
+      "version": "0.3.6",
+      "metadata_path": "/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/arraybridge-0.3.6.dist-info/METADATA",
+      "metadata_sha256": "b8e48f00df1bd1fa3149e109b25085cafd1584947bb2e0b54d62fd4410ab2d3a",
+      "satisfies": true,
+      "direct_url": {
+        "archive_info": {
+          "hash": "sha256=f7fa23f5dcf1925742592109b396fe17662fb56f15e1755a304a45c90e79a249",
+          "hashes": {
+            "sha256": "f7fa23f5dcf1925742592109b396fe17662fb56f15e1755a304a45c90e79a249"
+          }
+        },
+        "url": "file:///home/ts/wt/openhcs-issue-batch-20260929/artifact-parent-20261001/arraybridge-036-public/arraybridge-0.3.6-py3-none-any.whl"
+      }
+    },
+    {
+      "declared": "polystore>=0.3.0,<0.4",
+      "name": "polystore",
+      "version": "0.3.1",
+      "metadata_path": "/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/polystore-0.3.1.dist-info/METADATA",
+      "metadata_sha256": "83f0489c548279806d82fc90c7dc2e2e3026ae23064b5a8dd8a7b53f0b8378de",
+      "satisfies": true,
+      "direct_url": null
+    },
+    {
+      "declared": "pyqt-reactive>=0.3.25,<0.4",
+      "name": "pyqt-reactive",
+      "version": "0.3.25",
+      "metadata_path": "/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/pyqt_reactive-0.3.25.dist-info/METADATA",
+      "metadata_sha256": "99b3336f135988c3b3d00f6a8655889741a53d5f7d8f0c0645a0df82381f1b19",
+      "satisfies": true,
+      "direct_url": {
+        "archive_info": {
+          "hash": "sha256=75d6df7d8d22ed7649b14b46b04ba3617070d20196c215beead7f602328f9083",
+          "hashes": {
+            "sha256": "75d6df7d8d22ed7649b14b46b04ba3617070d20196c215beead7f602328f9083"
+          }
+        },
+        "url": "file:///home/ts/wt/openhcs-knowledge-declaration-source-376-20261001/docs/validation/required-runtime-qt-publication-20261002/pyqt-reactive-0325-public/pyqt_reactive-0.3.25-py3-none-any.whl"
+      }
+    },
+    {
+      "declared": "mcp>=1.28,<2",
+      "name": "mcp",
+      "version": "1.29.0",
+      "metadata_path": "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/mcp-1.29.0.dist-info/METADATA",
+      "metadata_sha256": "bc4b33ed1eea597cacf79c959094a51f127407cd82f776cb3430a7e7a92a8333",
+      "satisfies": true,
+      "direct_url": null
+    }
+  ]
+}
