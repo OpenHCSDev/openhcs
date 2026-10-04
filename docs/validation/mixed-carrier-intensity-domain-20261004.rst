@@ -248,3 +248,50 @@ existing mask owner correctly returns one mask per member, even with BUNDLE
 axis metadata. The corrected fixture covers both declared and absent extents,
 requiring exact shared versus stacked masks accordingly. No production mask
 rule or assertion is relaxed, and both original failed logs are preserved.
+
+Memory/domain closure at c8d2e65df
+-------------------------------
+
+Production941f3c8e3 is unchanged by the subsequent fixture-only commits through
+c8d2e65df. Controls09: 28 PASS, 205 deselected, 6.48s/341972KiB/Swap0 on one
+CPU. These exercise the real ArrayBridge detector, MemoryType.to_numpy,
+convert_memory, device scope and stack_runtime_slices, with only the external
+CuPy module leaf controlled. Implicit __array__ is forbidden by the array
+fixture. The destination, nonzero device, masks, both source orders, declared
+and absent spatial extents, stack and bundle semantics all pass. Original raw
+pixels and the external device selection remain unchanged. This is not a
+physical GPU execution claim.
+
+Controls10: 2 PASS, 24 deselected, 4.86s/314148KiB/Swap0 on one CPU. The original
+registered ImageOutputRecorder.runtime_input_value receives raw and already
+normalized typed artifacts, returns the same normalized values and masks,
+preserves quantization proof, and enters the correct arithmetic-domain state.
+Together with the retained 116 passing controls07, this qualifies the narrow
+memory/domain correction without rerunning the unchanged 267/85 suites.
+
+Original R0 memory05, unchanged detector/caller and complete changed path set
+(six owned production files plus the integrated spatial-doc file), is terminal
+PASS at c8d2e65df: 28.06s/88300KiB/Swap0, no positive deltas; metadata god-class
+excess remains -77. The new shared composition memory recipe is below the
+original excess threshold. No bound or detector was altered.
+
+The supplemental before AST parses 2 memory, 50 CellProfiler interop and 17
+ArrayBridge production modules, zero omissions. After11 parses 176 core and
+640 unit modules and records complete AST/hash for both changed owners and
+three changed fixtures, zero omissions, 9.97s/580444KiB/Swap0 on one CPU.
+Its measured RSS is reported as measured, not rounded down to a 512MiB claim.
+The earlier complete source/dependency closure and unchanged global R1 deadline
+failure remain separate evidence; this supplemental parse is not global R1.
+
+The ordinary whole-package/public source-selection, processing and persisted
+receiving boundary remains open and owned by Singer with the original parent
+and builder. Existing fresh scientific families do not wait for this feature;
+their immutable targets are not changed. No installation, native/client launch
+or scientific mutation was performed in this correction. #541 pixel-unit
+analysis remains an independent active owner, not a superseded Root394 hold.
+
+Byte-exact memory03 archive:
+docs/validation/mixed-carrier-intensity-memory03-20261004.tar.gz,
+SHA256 dd2a41387ae495b1677d8ba1d3ca9d9a5dda185ab1fb4cf4093c71c98b5218c3.
+It retains both failed fixture receipts, final passing controls, unchanged
+original R0 evidence, source/bootstrap callers and the before/after ASTs.
