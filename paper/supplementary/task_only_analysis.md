@@ -364,6 +364,51 @@ BBBC013 assay in Supplementary Data 7. The packaged
 retain all twelve supporting capture identities and the nine displayed original
 PNG embeddings; no new scientific execution or scoring was performed.
 
+## Translocation recovery: complete coverage and explicit undefined measurements
+
+A separate retained-context continuation, `BBBC013_DEV89`, completed all 96
+source sets and retained 17,340 source-linked cell rows. This is same-author
+development, not a fresh autonomous pass or a replacement for the failed
+original phase. All 192 original DNA/GFP planes remained unchanged.
+
+Before expanding, the author compared three wells using the same typed
+measurement consumer. Lowering only the secondary-cell threshold-correction
+factor from 0.8 to 0.4 admitted additional raw-GFP-supported cytoplasm while
+preserving the nuclear instances. Zero-growth cases without supported recovery
+remained undefined; no imputed denominator or synthetic cytoplasm ring was used.
+
+| Development well | Unchanged nuclei | Zero-growth cases, before → after | Defined non-edge cohort, before → after |
+|------------------|------------------|----------------------------------|----------------------------------------|
+| A01 | 303 | 104 → 57 | 190 → 232 |
+| C06 | 177 | 63 → 32 | 109 → 136 |
+| E06 | 148 | 29 → 22 | 111 → 117 |
+
+The full-plate result retained 14,049 numerically defined nuclear/cytoplasmic
+GFP ratios: 13,359 were contained and non-edge, and 690 were edge-excluded.
+Another 3,291 rows had zero-growth cytoplasm and remained undefined. All 96
+per-well tables, the 96-row native Image table and 17,340 native nucleus rows
+reconciled without missing or extra source sets. Numerical definition and
+identity conservation do not establish biological compartment accuracy;
+signal-dependent exclusion and uncertain boundaries may bias aggregate ratios.
+
+The coordinator independently checked all 2,251 scientific artifact hashes and
+six frozen source hashes. Original G01 raw/combined views broadly coincided,
+while the isolated cytoplasm view retained thin or fragmented regions. That
+isolated capture uses a different scale and compartment, not a matched
+whole-cell three-view acceptance set. Polygon fill is not dense subtraction
+proof. Geometric quantities remain in pixels without verified calibration.
+
+The registered plate-statistics step failed because the supplied authoring
+example dereferenced a nonexistent `StoredRuntimeValue.value` wrapper; the
+downstream dose step was not executed. Native spreadsheet export completed,
+but Z-prime, V-factor and dose-response outputs remain absent, not zero or
+accepted. Issue #685 tracks the canonical example correction separately. No
+failed or UNKNOWN scientific registration was replayed. The
+[development coverage record](task_only_analysis/bbbc013-dev89-outcome.json)
+binds the original report, coverage, diagnostic comparison, source and freeze.
+The owned processes closed successfully; the original recorded client exit 2
+is retained separately from completed computation and qualified data.
+
 ## Paired-channel authoring: local repair and qualified territories
 
 A fresh-context author analysed the released paired DNA/actin field in
