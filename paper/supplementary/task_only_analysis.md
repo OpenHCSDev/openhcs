@@ -269,6 +269,25 @@ a faint neighbour elsewhere remained merged. The author ultimately registered
 a custom detector through the ordinary OpenHCS function/artifact route, retaining
 its consumed response, markers and support as diagnostics.
 
+Figure 8 shows matched raw and first/final native overlays of
+the repaired pair, alongside final raw, result-only and combined views of the
+remaining faint merge. The first completed prediction follows a technical
+submission repair; these panels compare scientific outputs within the same
+uncoached run, not separate authors or a skill-only intervention.
+
+DNA windows are 0–255 for the repaired-pair row and 0–151 for the retained
+merge, gamma 1 and final ROI opacity 0.7. The final repaired-pair crop accounts
+for an 11-screen-pixel canvas shift at unchanged camera and zoom. Aligned raw
+RGB equality establishes presentation only, not segmentation accuracy. The
+[source proof](task_only_analysis/h003-native-source-proof.json) and
+[render receipt](task_only_analysis/h003-native-render-receipt.json) retain the
+unchanged original screenshots and exact crops. Source:
+[BBBC007v1](https://bbbc.broadinstitute.org/BBBC007), field A02, Drosophila
+Kc167 DNA/actin; Sabatini laboratory, Whitehead Institute; Jones et al. (2005)
+and Ljosa et al. (2012), [CC0](https://creativecommons.org/publicdomain/zero/1.0/).
+Adaptations are OpenHCS overlays, native display windows and screenshot
+clipping/scaling; no scientific pixels were retouched.
+
 The final completed pipeline exported 55 nuclear instances and 55 associated
 actin territories. Unique object IDs and parent relationships reconcile across
 the tables. Median nuclear area was 370 pixels²; median territory area was

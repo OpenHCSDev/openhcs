@@ -253,11 +253,19 @@ These completed trials demonstrate useful first scientific choices and subsequen
 
 Matched native views complement these numerical results. Supplementary Figure 9 shows the H001 elongated-object repair, a retained separated-pair control and a small-focus exclusion from the defined cohort. Supplementary Figure 10 separately illustrates the unresolved volumetric-centroid development case. Supplementary Figures 11 and 12 retain retinal soma development and a local BBBC013 nuclear repair alongside residual misses and compartment limitations. These same-author development cases are not fresh autonomous results or accuracy comparisons.
 
+A separate fresh-context author repaired a joined nuclear pair in a released DNA/actin field through its own review, without reference feedback (Figure 8). The final pipeline exported 55 nuclear instances and 55 associated actin territories, with reconciled object identities. A faint neighbouring pair remained merged, and unresolved actin interfaces limited interpretation of the territories as physical cell boundaries. This run demonstrates local autonomous repair and useful linked outputs, not an exact cell census (Supplementary Data 8).
+
 ### Figure 7. Task-only analysis: within-run revision and final coverage
 
 ![Task-only within-run revision and final coverage.](figures/slas/task_only_analysis.png){width=6in}
 
 \(A) H001 first/final object F1 on the same whole image, using the notebook-derived computational primary reference. (B) BBBC039 pooled object F1 on the same three development fields, using independent annotations. (C) The final BBBC039 distribution includes all 200 fields, including three annotation-empty fields and the complete low-score tail. The dashed line shows pooled object F1, not the mean of field scores. One-to-one instance matching uses intersection over union at least 0.5. First denotes the initial completed scientific prediction; there is no first-200 comparison. Within-run revision does not isolate a causal skill effect or establish held-out generalization.
+
+### Figure 8. Autonomous local repair with a retained merge
+
+![Matched first/final nuclear overlays and a final-only faint-pair failure control.](figures/slas/h003_native_repair.png){width=6in}
+
+\(A) Matched raw DNA and first/final overlays show separation of a joined pair; diffuse support remains in the lower region. A compact neighbour stays separate. (B) Final raw, result-only and combined views retain a faint merge. This fresh-context author revised its own pipeline without reference feedback. The first complete prediction follows technical repair; these local witnesses do not establish exhaustive accuracy or validated actin boundaries. DNA windows are 0–255 (A) and 0–151 (B), gamma 1, final ROI opacity 0.7. Colours are not cross-candidate identities. Original screenshots are clipped/scaled without pixel retouching; physical calibration is unverified. Supplementary Data 8 retains exact capture and crop identities. Source: BBBC007v1 A02, Sabatini laboratory, Whitehead Institute; CC0.
 
 ## Discussion
 

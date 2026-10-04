@@ -1,0 +1,382 @@
+{
+  "source_proof": {
+    "path": "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/h003-postpause-native-panel-proof.json",
+    "size_bytes": 17797,
+    "sha256": "a923abe4a26034dc430925d988a18dcf68de8ee97d90f8e72d3755e7a67bf0a2"
+  },
+  "existing_workflow": {
+    "path": "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/render_bbbc013_dev02_native_panels.py",
+    "size_bytes": 8809,
+    "sha256": "ed12ebc93ccfe5d6a9a302210a7b16c77e935a20337ac37b7306f85aa44ac161"
+  },
+  "render_driver": {
+    "path": "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/render_h003_postpause_native_panels.py",
+    "size_bytes": 9004,
+    "sha256": "c0277b458532dfff0587bf511a84f0db8be0a0c65ca7581902ee4eacefc1582d"
+  },
+  "panels": [
+    {
+      "panel": "A0",
+      "label": "Raw DNA",
+      "view": "first_complete_C4_raw",
+      "original_png": {
+        "path": "/run/media/ts/hdd/openhcs-science/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/qa/first_complete_C4_raw/20261004T182638526749Z_napari_6021_OpenHCS_Napari_Visualization.png",
+        "bytes": 104591,
+        "sha256": "7eeb23d6967a726542030887db106531275dedeb97b0a8b57f18829bdf092e64"
+      },
+      "original_receipt": {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/receipts/0145-openhcs_viewer_snapshot_window.json",
+        "bytes": 5249,
+        "sha256": "2cb7cf5cc3b1c6a31bca3adf05aa5b9072d0cb1c4de93de6afbfbfd2dd9485c2"
+      },
+      "original_window_size": [
+        1440,
+        944
+      ],
+      "clip_ltrb": [
+        630,
+        90,
+        930,
+        380
+      ],
+      "scale": 1.6666666666666667,
+      "display_xywh": [
+        24,
+        108,
+        500,
+        483.33333333333337
+      ]
+    },
+    {
+      "panel": "A1",
+      "label": "First \u00b7 combined",
+      "view": "first_complete_C4_combined",
+      "original_png": {
+        "path": "/run/media/ts/hdd/openhcs-science/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/qa/first_complete_C4_combined/20261004T182654440923Z_napari_6021_OpenHCS_Napari_Visualization.png",
+        "bytes": 119438,
+        "sha256": "7e5e6e8862e51a25bf8359dbd736535be7e95c4678150c17c5615cd2f789c48f"
+      },
+      "original_receipt": {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/receipts/0151-openhcs_viewer_snapshot_window.json",
+        "bytes": 5272,
+        "sha256": "6843bc6422b07838c1d8f271fa19e7c16b881cbf09efca0b3139526c3ec303f6"
+      },
+      "original_window_size": [
+        1440,
+        944
+      ],
+      "clip_ltrb": [
+        630,
+        90,
+        930,
+        380
+      ],
+      "scale": 1.6666666666666667,
+      "display_xywh": [
+        540,
+        108,
+        500,
+        483.33333333333337
+      ]
+    },
+    {
+      "panel": "A2",
+      "label": "Final \u00b7 combined",
+      "view": "candidate06_final_C4_dna_w255_combined",
+      "original_png": {
+        "path": "/run/media/ts/hdd/openhcs-science/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/qa/candidate06_final_C4_dna_w255_combined/20261004T185809227897Z_napari_6021_OpenHCS_Napari_Visualization.png",
+        "bytes": 116005,
+        "sha256": "34e95798ae722a54d2af38a7f818f3ebb3af9bd09e471fa4f5194402a3ef1a9a"
+      },
+      "original_receipt": {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/receipts/0416-openhcs_viewer_snapshot_window.json",
+        "bytes": 5347,
+        "sha256": "86f3b6b3c233691e63113dde834a6a04e0c2692a6fc52e4bbf125bdf3543c20c"
+      },
+      "original_window_size": [
+        1440,
+        944
+      ],
+      "clip_ltrb": [
+        630,
+        101,
+        930,
+        391
+      ],
+      "scale": 1.6666666666666667,
+      "display_xywh": [
+        1056,
+        108,
+        500,
+        483.33333333333337
+      ]
+    },
+    {
+      "panel": "B0",
+      "label": "Final \u00b7 raw DNA",
+      "view": "candidate06_final_C2_dna_w151_raw",
+      "original_png": {
+        "path": "/run/media/ts/hdd/openhcs-science/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/qa/candidate06_final_C2_dna_w151_raw/20261004T184643895073Z_napari_6021_OpenHCS_Napari_Visualization.png",
+        "bytes": 105289,
+        "sha256": "b791c1e34f302541e409350db9b32012afff47747486e78076f72dbaf35bd42c"
+      },
+      "original_receipt": {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/receipts/0284-openhcs_viewer_snapshot_window.json",
+        "bytes": 5319,
+        "sha256": "9df971e25beef39c5e966b34e3cd6ef2ef95b654d9ad755f789da394c6aa29b5"
+      },
+      "original_window_size": [
+        1440,
+        944
+      ],
+      "clip_ltrb": [
+        560,
+        28,
+        860,
+        318
+      ],
+      "scale": 1.6666666666666667,
+      "display_xywh": [
+        24,
+        704,
+        500,
+        483.33333333333337
+      ]
+    },
+    {
+      "panel": "B1",
+      "label": "Final \u00b7 ROIs only",
+      "view": "candidate06_final_C2_dna_w151_result",
+      "original_png": {
+        "path": "/run/media/ts/hdd/openhcs-science/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/qa/candidate06_final_C2_dna_w151_result/20261004T184649372977Z_napari_6021_OpenHCS_Napari_Visualization.png",
+        "bytes": 125974,
+        "sha256": "a8b5fb2faa30c396dc672cad621f10cf60406b483f25acbfde779395a4b18c5a"
+      },
+      "original_receipt": {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/receipts/0286-openhcs_viewer_snapshot_window.json",
+        "bytes": 5337,
+        "sha256": "467e046e74cfb39ddee83cec7e7ba8f60f36b48f6e93656b176a9118464a8e86"
+      },
+      "original_window_size": [
+        1440,
+        944
+      ],
+      "clip_ltrb": [
+        560,
+        28,
+        860,
+        318
+      ],
+      "scale": 1.6666666666666667,
+      "display_xywh": [
+        540,
+        704,
+        500,
+        483.33333333333337
+      ]
+    },
+    {
+      "panel": "B2",
+      "label": "Final \u00b7 combined",
+      "view": "candidate06_final_C2_dna_w151_combined",
+      "original_png": {
+        "path": "/run/media/ts/hdd/openhcs-science/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/qa/candidate06_final_C2_dna_w151_combined/20261004T185023503015Z_napari_6021_OpenHCS_Napari_Visualization.png",
+        "bytes": 115002,
+        "sha256": "8938db8512a087102226f2cbd62b65018bc64fad4e001f77ad6fba54289c0139"
+      },
+      "original_receipt": {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/receipts/0288-openhcs_viewer_snapshot_window.json",
+        "bytes": 5349,
+        "sha256": "5159bd03c9684721c620e0186b6e934c438f536d27a2a8912f45d79fe325a912"
+      },
+      "original_window_size": [
+        1440,
+        944
+      ],
+      "clip_ltrb": [
+        560,
+        28,
+        860,
+        318
+      ],
+      "scale": 1.6666666666666667,
+      "display_xywh": [
+        1056,
+        704,
+        500,
+        483.33333333333337
+      ]
+    }
+  ],
+  "original_png_embedding_verified": 6,
+  "original_selected_pngs_unchanged": 14,
+  "source_identity": {
+    "scientific_freeze": {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/FREEZE.json",
+      "bytes": 48152,
+      "sha256": "85322769447c1bf254c8578ab93f9550ad4eff7f83121ff5ce8e1dc685ea1f7a"
+    },
+    "inputs": [
+      {
+        "path": "/home/ts/wt/openhcs-h003-uncoached-20260929/input/A02_s001_w1_z001_t001.tif",
+        "bytes": 160272,
+        "sha256": "cb97674830100b30b15c13677a8753d5bc6b0c5773ce9c125914207eb8766607"
+      },
+      {
+        "path": "/home/ts/wt/openhcs-h003-uncoached-20260929/input/A02_s001_w2_z001_t001.tif",
+        "bytes": 160272,
+        "sha256": "74753e8d820a6982f0871a91643ae1883552977ab5d341a24ab0f07abc7f00f1"
+      }
+    ],
+    "retained_source_files": [
+      {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/attempts/candidate01_retry01/pipeline.py",
+        "bytes": 5949,
+        "sha256": "597e35b0146fe165022aec964824a4b635dc5649dfcd68ddd438a891bf8bb6c1"
+      },
+      {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/final_pipeline.py",
+        "bytes": 5456,
+        "sha256": "d618e9a1a7270760cd048bab74371d0ba765fd2df63ed3e650f7cba394450cda"
+      },
+      {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/final_custom_detector.py",
+        "bytes": 4504,
+        "sha256": "572365d109179769443af8b5e50db7f8d49fdd2e2eb7fd0586d186081d255285"
+      },
+      {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/REPORT.md",
+        "bytes": 16402,
+        "sha256": "617d50281c43ba8c33efb2f949b14da8412ea750e72f6e8ecad2f102c8d2007b"
+      },
+      {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/final_evidence.json",
+        "bytes": 120527,
+        "sha256": "cff6471888a3aa77ee31f019d11a7a68b099f58d8e537c898bbefd42849c925d"
+      },
+      {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/source-workspace/input/openhcs_metadata.json",
+        "bytes": 4601,
+        "sha256": "aea34630b3ec15361f2f43b76d901c1fc122f86c418c1d090ef6eb7335c55d34"
+      }
+    ],
+    "scope": "First complete candidate01_retry01 versus final candidate06, same author/run; C2 final only.",
+    "licensing": {
+      "curation_owner": "/home/ts/code/projects/openhcs/benchmark/haase_blind_task_presets_20260927.md",
+      "primary_page": "https://bbbc.broadinstitute.org/BBBC007",
+      "primary_html_license_href": "http://creativecommons.org/publicdomain/zero/1.0/",
+      "primary_html_license_alt": "CC0",
+      "attribution": "BBBC007v1 Drosophila Kc167 DNA/actin; laboratory of David Sabatini, Whitehead Institute for Biomedical Research; BBBC recommended Jones et al 2005 and Ljosa et al 2012",
+      "qualification": "original input digests match curated A02 planes; no Haase tutorial or evaluator reference pixels used"
+    }
+  },
+  "presentation_evidence_only": {
+    "operation": "read-only Pillow RGB comparison of original screenshots; no saved crop or modified bitmap",
+    "first_rect_ltrb": [
+      300,
+      35,
+      1240,
+      390
+    ],
+    "final_rect_ltrb": [
+      300,
+      46,
+      1240,
+      401
+    ],
+    "difference_bbox": null,
+    "mean_absolute_rgb_difference": [
+      0,
+      0,
+      0
+    ],
+    "reason": "canvas grows by22pixels after well slider removed; same camera center and zoom; final geometry shifts11pixels down",
+    "not_a_claim": "whole PNG identity or segmentation-array identity"
+  },
+  "pixel_operations": "None on scientific or source PNG pixels. Complete original PNG byte streams embedded unchanged; SVG clipping/scaling only. No recolouring, painted ROIs, contrast changes or reference scoring.",
+  "output_dimensions": [
+    1584,
+    1410
+  ],
+  "render_runs": [
+    {
+      "command": [
+        "/usr/bin/rsvg-convert",
+        "--output",
+        "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/singer-h003-postpause-native-panels/preview.png",
+        "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/singer-h003-postpause-native-panels/candidate.svg"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/usr/bin/rsvg-convert",
+        "--width",
+        "576",
+        "--output",
+        "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/singer-h003-postpause-native-panels/six-inch-preview.png",
+        "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/singer-h003-postpause-native-panels/candidate.svg"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/usr/bin/rsvg-convert",
+        "--format",
+        "pdf",
+        "--dpi-x",
+        "72",
+        "--dpi-y",
+        "72",
+        "--width",
+        "432",
+        "--output",
+        "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/singer-h003-postpause-native-panels/six-inch.pdf",
+        "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/singer-h003-postpause-native-panels/candidate.svg"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "publication_scale": {
+    "width_inches": 6,
+    "width_points": 432,
+    "minimum_svg_font_units": 32.0,
+    "minimum_label_points": 8.727272727272727,
+    "preview_width_pixels_at_96dpi": 576
+  },
+  "omitted": "ID3: no unsupported enlarged footprint panel or quantitative mask equality claim.",
+  "parent_review": "Pending parent visual review/manuscript integration.",
+  "outputs": [
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/singer-h003-postpause-native-panels/candidate.svg",
+      "size_bytes": 919417,
+      "sha256": "40fa30d4eb8c8ddb68cccf1d2e8c6c8518dfe9b837486e77b8d6623875b83b2b"
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/singer-h003-postpause-native-panels/preview.png",
+      "size_bytes": 333011,
+      "sha256": "ed147bd88b98fb817e7dd67e96e6582e8a244cfcf02a8c449a604b527ce54e47"
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/singer-h003-postpause-native-panels/six-inch-preview.png",
+      "size_bytes": 134606,
+      "sha256": "bdd2442733a5dcf3300738fa017414838aec9b8ecfb752e64f4b925126048008"
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/singer-h003-postpause-native-panels/six-inch.pdf",
+      "size_bytes": 719352,
+      "sha256": "4fa22aa3863f0ab2e7539b3d8613b859ae1166e63bb28997974afc9a4f53a47b"
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/singer-h003-postpause-native-panels/caption.rst",
+      "size_bytes": 2275,
+      "sha256": "a5e0df6b0c6e733190b2095272181d1c70567efe6527c7d5ee28dca6d65cc9a3"
+    }
+  ]
+}
