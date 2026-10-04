@@ -84,10 +84,13 @@ brief cannot launch a paid analysis author. Original
 environment, path masks, first-start clock and10s request idle remain unchanged.
 
 Before scientific actions resource-check.sh FUNDING SLOT UNIQUE_PHASE consumes
-current membership and sums each run's output/scratch growth estimates. FULL closed
-outputs remain once and are measured, not compared to a cumulative historical
-ceiling. They already consume actual HOME space. Admission requires physical
-free HOME for remaining planned growth plus its reserve. Neither a selected
+current membership. Ongoing observations measure only the selected run's output;
+ledger/startup observations measure funded runs for cleanup/staging forecasts.
+Closed output paths remain once as custody declarations, without recursively
+inventorying their contents on every action: actual df already charges those
+bytes, and the cleanup owner inventories retained evidence. Admission requires
+actual free HOME above the declared physical reserve. Growth estimates are
+reported as planning warnings, never added to that admission floor. Neither a selected
 member's nor a sibling's output/scratch usage above an estimate rejects an
 operation. Those bytes consume actual physical HOME, not a quota. The original
 programme amounts are estimates only; no replacement ceiling is introduced.
@@ -125,7 +128,7 @@ full-stall pressure category, not a second numeric limit for ongoing work.
 
 Every observation preserves all kernel pressure windows plus a separate
 operation-policy receipt. Missing, repeated or malformed pressure
-measurements reject. Low available RAM, exhausted disk reservations, inactive
+measurements reject. Low available RAM, actual free HOME below its reserve, inactive
 expired clocks and missing custody still reject through their original owners.
 High pressure alone is not declared safe: insufficient actual host desktop
 headroom stops allocating work, irrespective of whether a former cap matched.

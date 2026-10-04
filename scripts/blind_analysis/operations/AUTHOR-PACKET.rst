@@ -61,11 +61,19 @@ for remaining physical disk growth, NOT per-run limits::
 
   jq -r '.proposed_resource_envelope | "RetainedGrowthEstimateBytes=\(.output_per_author_mib * 1048576) ScratchGrowthEstimateBytes=\(.scratch_per_author_mib * 1048576)"' "$FLEET_RUN_ROOT/program.json"
 
+Ongoing checks measure YOUR actual output, not sibling or closed trees. Startup
+and ledger checks report funded growth forecasts for staging and cleanup. No
+forecast is added to the actual free-HOME admission floor; a planning warning is
+not a scientific-dispatch refusal.
 The guard measures actual retained usage as total output minus contained scratch.
 Exceeding an estimate does not refuse an operation. Actual free HOME, measured
 host RAM/pressure, safe path ownership and cleanup still apply. Budget simultaneous
 buffers. Preserve every failure/UNKNOWN, complete tool journal, attempted
-pipeline/output and matched native QA. At terminal disposition close only exact
+pipeline/output and matched native QA. Prefer one canonical retained artifact
+path with a frozen manifest and source provenance; do not duplicate the entire
+output/QA/attempt tree into a final folder unless a self-contained export is
+actually needed. Preserve existing originals and UNKNOWN evidence.
+At terminal disposition close only exact
 owned viewer/native handles through MCP and end this client once, recording
 actual child and CLI exits. Never stop the inherited display/helper owners.
 
