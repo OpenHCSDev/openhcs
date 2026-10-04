@@ -63,7 +63,19 @@ class SpatialShapeYX:
 
 @dataclass(frozen=True, slots=True)
 class SourceSpatialDomain(metaclass=AutoRegisterMeta):
-    """Dense XY placement contract for a source-image coordinate domain."""
+    """Dense XY placement contract for a source-image coordinate domain.
+
+    Args:
+        origin_yx: Optional crop origin in source pixel row/column coordinates.
+            Together with source_shape_yx, places the current array inside the
+            full source domain; this is not a physical calibration or scale.
+        source_shape_yx: Optional full source height/width in pixels, independent
+            of the current crop dimensions. Complete placement must contain the
+            crop at origin_yx.
+        fill_value: Value used outside the crop when materializing the full
+            dense source domain. It does not change pixels inside the crop.
+        value_name: Descriptive payload name used in placement validation errors.
+    """
 
     origin_yx: tuple[int, int] | None = None
     source_shape_yx: tuple[int, int] | None = None
@@ -395,7 +407,14 @@ class SourceSpatialDomain(metaclass=AutoRegisterMeta):
 
 @dataclass(frozen=True, slots=True)
 class VolumeSourceSpatialDomain(SourceSpatialDomain):
-    """Intrinsic Z/Y/X image placement, independent of runtime slice transport."""
+    """Intrinsic Z/Y/X image placement, independent of runtime slice transport.
+
+    Args:
+        source_depth: Optional positive depth of the original intrinsic source
+            volume in Z planes; it is independent of current resampled pixels.
+        origin_z: Optional nonnegative source-plane offset of the volume. Zero
+            places its first plane at the start of the original Z domain.
+    """
 
     spatial_rank: ClassVar[int] = 3
     source_depth: int | None = None
