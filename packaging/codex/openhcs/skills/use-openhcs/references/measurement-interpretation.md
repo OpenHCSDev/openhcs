@@ -46,7 +46,7 @@ measurements, not ground truth or an automatically validated parameter choice.
    | Seed separation | Centre-to-centre distance of genuine neighbours and multiple maxima within one textured object | Using diameter as minimum separation and suppressing real close pairs |
    | Smoothing/spot/ridge scale | Supported narrow-to-broad width envelope, noise texture, positive/faint-path and close-pair controls | Equating diameter with Gaussian sigma or assuming one scale preserves every supported width |
    | Background-removal scale | Target width plus extent and variation of nearby background in multiple regions | A universal kernel radius or subtracting cell signal as background |
-   | Threshold/prominence | Raw object-versus-local-background values, weak positives, noise and saturation on the consumed channel | Deriving analytical thresholds from contrast limits, gamma or label colours |
+   | Threshold/prominence | Values on the actual consumed alias or response: object/background or peak/valley separation, weak positives, noise and saturation; matched raw views establish biological support | Substituting raw-channel SNR for enhanced-response thresholds, or deriving cutoffs from contrast, gamma or label colours |
    | Roundness/shape prior | Isolated raw contours, elongated/lobed examples and an unsupported-shape control | Forcing every cell to be round or treating a round-looking mask as validation |
 
    Retain native coordinates, measurement method, units and boundary uncertainty.
@@ -92,6 +92,18 @@ measurements, not ground truth or an automatically validated parameter choice.
    Link the measured envelope and remaining exclusions to the affected phenotype
    claims through [the analysis strategy](analysis-strategy.md), which owns
    claim-scoped conclusions rather than blanket abstention.
+
+Worked faint-path contrast: a continuous raw path stands above nearby background,
+but its detector requires enhanced candidate support AND a local-response gate.
+Raw width and contrast can support a scale and provisional local cutoff, not
+calibrate the enhanced admission factor. An unmeasured default remains a trial
+hypothesis. Use the first bounded candidate to compare support along that path
+and a nuisance-only control. If only the intersected mask is exposed, missing
+support locates the loss before rooting but cannot identify which gate rejected
+each pixel. A controlled gate change tests recovery without changing supported
+width/body detection; newly admitted background bridges oppose it. If support
+is already present but reported paths are absent, investigate rooting/topology
+rather than lowering admission.
 
 ### Choose the marker landscape before the first candidate
 
