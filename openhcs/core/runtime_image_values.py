@@ -992,8 +992,24 @@ class ImagePayloadMetadata(
         source: "ImagePayloadMetadata",
     ) -> "ImagePayloadMetadata":
         """Fill missing source-image identity and spatial context from a source."""
+        fallback_provenance = source.source_provenance
+        if self.persists_whole_image():
+            # Physical filename coordinates must not collapse the correlated
+            # source coordinates represented by an intrinsic image.
+            varying = self.source_provenance.varying_plane_component_values(
+                tuple(AllComponents)
+            )
+            fallback_provenance = fallback_provenance.with_source_component_metadata(
+                {
+                    key: value
+                    for key, value in (
+                        fallback_provenance.source_component_metadata or {}
+                    ).items()
+                    if key not in varying
+                }
+            )
         source_provenance = self.source_provenance.with_missing_from(
-            source.source_provenance
+            fallback_provenance
         )
         source_channel_axis = self.source_channel_axis
         if source_channel_axis is None:

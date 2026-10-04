@@ -212,11 +212,10 @@ class ImagePayloadSourceSpatialDomainAdapter(SourceSpatialDomainAdapter):
     ) -> RuntimeArrayData:
         """Project this image payload into another declared payload domain."""
         materialized = self.payload_in_source_domain(self.value, target.domain)
-        target_domain = SourceSpatialDomain(
+        target_domain = replace(
+            self.domain,
             origin_yx=target.payload_domain.origin_yx,
             source_shape_yx=target.payload_domain.source_shape_yx,
-            fill_value=self.domain.fill_value,
-            value_name=self.domain.value_name,
         )
         metadata = replace(
             image_payload_metadata(materialized),
@@ -346,11 +345,10 @@ class ObjectLabelPayloadSourceSpatialDomainAdapter(SourceSpatialDomainAdapter):
         target: SourceSpatialDomainAdapter,
     ) -> ObjectLabelValue:
         """Project every label variant into another declared payload domain."""
-        target_domain = SourceSpatialDomain(
+        target_domain = replace(
+            self.domain,
             origin_yx=target.payload_domain.origin_yx,
             source_shape_yx=target.payload_domain.source_shape_yx,
-            fill_value=self.domain.fill_value,
-            value_name=self.domain.value_name,
         )
         variants = self.value.variant_data.project(
             lambda labels: target.extract_source_array(

@@ -2672,7 +2672,10 @@ def test_stream_batch_validates_cardinality_and_routes_before_projecting(monkeyp
         )
 
 
-def test_whole_volume_checkpoint_publication_retains_exact_producer_scope(tmp_path):
+@pytest.mark.parametrize("with_artifact", (False, True))
+def test_whole_volume_checkpoint_publication_retains_exact_producer_scope(
+    tmp_path, with_artifact
+):
     from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
     from openhcs.core.source_projection import SourceArtifactProjection
 
@@ -2693,6 +2696,7 @@ def test_whole_volume_checkpoint_publication_retains_exact_producer_scope(tmp_pa
         for z in range(1, 6)
     )
     metadata = ImagePayloadMetadata(
+        source_image_names=("DNA",),
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
         source_spatial_domain=VolumeSourceSpatialDomain(
             source_depth=5,
@@ -2711,6 +2715,22 @@ def test_whole_volume_checkpoint_publication_retains_exact_producer_scope(tmp_pa
             component_metadata=components,
         ),
     )
+    metadata = metadata.with_source_provenance(
+        metadata.source_provenance.with_derived_source_image_names(("DNA",))
+    )
+    incomplete = metadata.replace_fields(
+        source_component_metadata={
+            key: value
+            for key, value in metadata.source_component_metadata.items()
+            if key != "timepoint"
+        }
+    )
+    contextualized = incomplete.with_source_context_from(
+        ImagePayloadMetadata(source_component_metadata=components[0])
+    )
+    assert str(contextualized.source_component_metadata["timepoint"]) == "1"
+    assert "z_index" not in contextualized.source_component_metadata
+    assert contextualized.source_image_provenance_planes == metadata.source_image_provenance_planes
     manager = FileManager(
         {"disk": DiskStorageBackend(), "memory": MemoryStorageBackend()}
     )
@@ -2744,6 +2764,51 @@ def test_whole_volume_checkpoint_publication_retains_exact_producer_scope(tmp_pa
     MemoryOutputWriter.write_if_needed(context, plan)
     np.testing.assert_array_equal(tifffile.imread(path), pixels)
     (target,) = OpenHCSMetadataWriter.OutputTarget.for_execution(context, plan)
+    materializations = ()
+    if with_artifact:
+        plan.streaming_configs = {}
+        context.runtime_value_store = RuntimeValueStore()
+        plan.runtime_artifact_materialization = RuntimeArtifactMaterializationPlan(
+            persistent_enabled=True,
+            persistent_backend=Backend.DISK.value,
+        )
+        output_plan = ArtifactOutputPlan(
+            name="DNA",
+            path="/memory/DNA.pkl",
+            artifact_type=ImageArtifactType,
+            producer_step_scope_id=plan.step_scope_id,
+            materialization=MaterializationSpec(
+                ImageFileOptions(relative_path_template=path.name)
+            ),
+        )
+        plan.artifact_outputs[output_plan.ref()] = output_plan
+        context.runtime_value_store.record(
+            RuntimeValue.normalize_for_execution_scope(
+                output_plan,
+                metadata.payload_with(pixels),
+                execution_scope=RuntimeExecutionAxisScope.from_raw(
+                    "A01",
+                    component=None,
+                    value=None,
+                    fixed_component_values=(
+                        (AllComponents.CHANNEL, "2"),
+                        (AllComponents.SITE, "1"),
+                        (AllComponents.TIMEPOINT, "1"),
+                    ),
+                ),
+            ),
+            path=output_plan.path,
+            backend=Backend.MEMORY.value,
+        )
+        materializations = RuntimeArtifactMaterializationAuthority.materialize(
+            context, plan
+        )
+        assert {
+            Path(output.path)
+            for artifact in materializations
+            for output in artifact.outputs_for_backend(Backend.DISK.value)
+        } == {path}
+    target = replace(target, artifact_materializations=materializations)
     entries = target.produced_projection_entries(context, plan)
     assert entries is not None
     (projection,) = entries.entries.values()

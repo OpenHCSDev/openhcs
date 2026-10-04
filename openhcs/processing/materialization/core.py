@@ -3725,8 +3725,8 @@ class RuntimePlaneStackAxisMetadataProjection:
             source_path=self.artifact_source_identity.path,
             source_component_metadata=self.artifact_source_identity.component_metadata,
         )
-        return metadata.with_source_provenance(
-            metadata.source_provenance.with_missing_from(artifact_provenance)
+        return metadata.with_source_context_from(
+            ImagePayloadMetadata(source_provenance=artifact_provenance)
         )
 
     def ordered_axes(self) -> tuple[str, ...]:

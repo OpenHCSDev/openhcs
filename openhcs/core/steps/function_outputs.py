@@ -940,9 +940,7 @@ class OpenHCSMetadataWriter:
                                 or (
                                     whole_image
                                     and projection.execution_scope
-                                    != record.execution_scope(
-                                        materialization.output_plan
-                                    )
+                                    != record.execution_scope(plan)
                                 )
                             ):
                                 raise ValueError(
