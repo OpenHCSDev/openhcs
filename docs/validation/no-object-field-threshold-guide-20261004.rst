@@ -21,7 +21,9 @@ sync remain the original build_mcp_knowledge_assets/AgentSkillBundle owners.
 
 Skill-creator and Diataxis apply a conditional how-to, not a universal floor or
 new admission gate. NRA/refactor-audit ownership guidance keeps one procedure
-owner; no production Python, declaration, codec, registry or runtime changes,
+owner. Applicable avoidance: IDEN-1 (a threshold does not answer object presence)
+and BOUND-2 (reflection/retrieval use existing typed owners, not a second schema).
+No production Python, declaration, codec, registry or runtime changes,
 and no structural/global AST or R1 claim is made for this documentation change.
 
 Determining source and missing decision
@@ -66,7 +68,35 @@ universal cutoff or new tool catalogue is introduced.
 Qualification
 -------------
 
-Pending one focused original knowledge retrieval/package/isolated-sync shard
-and the existing skill validator. This will prove source availability and exact
-managed projection, not an installed MCP process or better autonomous accuracy.
-Active authors' skills and frozen packages remain unchanged.
+Guide and tests qualified at ``502d2392d``; this final receipt/archive changes
+no guide, test or production bytes. Existing source bootstrap
+``engineering620/source-controls01.py`` and
+``validation/mixed-carrier-intensity-domain-599/run_source.py`` were reused
+unchanged with the existing paired interpreter. Tabular C++ source SHA256
+``15acc82b8ab64268bd1ea4f83fa7a68f527bf317f002e9f39e15be321e03b28e``
+matches the already-qualified native backing; no build/install or catalogue
+startup was performed.
+
+One focused source batch: 5 PASS, 24 unrelated tests explicitly deselected,
+terminal0, 7.55s whole command, 348432KiB peak RSS and zero swaps. It exercises
+both new task searches through KnowledgeBaseService, full canonical source-byte
+retrieval, the new subsection untruncated at ``max_chars=4000``, original package
+projection and isolated managed sync of the complete skill. The package/sync
+controls compare full resource bytes, available links and idempotence, not
+assertions that new wording proves better decisions. Two existing plugin-free
+asyncio configuration warnings remain in the original output.
+
+Original skill-creator quick_validate: PASS, terminal0, .06s, 14544KiB.
+Resource observation before the shard: 8.6GiB available RAM, /home7.8GiB and
+14.2GiB historical swap use; critical advisory was recorded proportionately for
+this small single-CPU shard, not converted into an invented hard cap.
+
+Original stdout/stderr and both reused bootstrap sources are archived byte-exact
+in the accompanying tar.gz, SHA256
+``c0e69759748fc1c5dc585657e1703ead6e3ca08cfe4112ed17e2070e046f5571``;
+all six members compare equal to their originals. Original logs remain in
+``validation/no-object-field689``. These controls prove source availability and
+exact managed projection, not an installed MCP process or better autonomous
+accuracy. No new runtime/dependency, broad suite, scientific pixel inspection,
+current-author feedback or active-skill sync. Future bundles may adopt the
+merged guide; active authors' skills and frozen packages remain unchanged.
