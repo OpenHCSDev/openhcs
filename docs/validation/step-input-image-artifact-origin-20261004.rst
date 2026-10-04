@@ -1,7 +1,7 @@
 STEP_INPUT named-image artifact origin after ordinary preprocessing
 ==================================================================
 
-Investigation checkpoint, not a repaired or live-verified implementation.
+Proposed owner repair; not yet installed or live-verified.
 Reviewed main e1400cb9f278149fea7056b8fc8319d1ebd6ca69 and the retained
 installed source0b3ead24459954829986e2e0763a886bb4d0fef6 exhibit the same
 source-artifact resolution route. Frozen analysis and all originals remain
@@ -155,3 +155,20 @@ the initial parent-gitlink scan correctly yielded zero dependency modules.
 This is relevant-family AST evidence, not a complete NRA semantic proof.
 PR630 head48656092 leaves all five changed production files unchanged against
 the reviewed main. Source checks and installed acceptance are still pending.
+
+Validation checkpoint
+----------------------
+
+All five changed production modules and the focused source-origin controls
+parse successfully; git diff --check passes. The initial six-file source test
+batch did not run: global conftest could not import AckReturnRoute from the
+preserved dirty zmqruntime checkout. A unit-only collection then independently
+failed importing TiffPhotometric from the preserved dirty PolyStore checkout.
+Neither error is counted as a passed test or attributed to the new resolver.
+No dependency checkout was reset, installed or overwritten.
+
+The matching qualified offline builder is being obtained from its existing
+owner. Engineering88 is currently assigned to Singer626; no client/server or
+SCI endpoint was borrowed. Dewey owns the eventual exact88 successor after
+typed closure. Independent source selection/consumer checks continue without
+waiting for the absent630 owner thread.
