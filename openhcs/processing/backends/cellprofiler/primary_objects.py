@@ -164,6 +164,12 @@ def identify_primary_objects(
     """
     Segment primary objects, such as fluorescent nuclei, in a grayscale image.
 
+    Declumping smoothing applies only to INTENSITY marker extraction. SHAPE
+    extracts markers from the foreground labels' distance-to-edge response;
+    automatic_smoothing and smoothing_filter_size do not smooth that response.
+    This is separate from threshold_smoothing_scale. Maxima suppression applies
+    to either marker method.
+
     CellProfiler Parameter Mapping:
     (CellProfiler setting -> Python parameter)
         'Select the input image' -> (pipeline-handled)
@@ -206,8 +212,11 @@ def identify_primary_objects(
         exclude_border_objects: Discard objects touching image border
         unclump_method: Method to distinguish clumped objects
         watershed_method: Method to draw dividing lines between clumped objects
-        automatic_smoothing: Auto-calculate smoothing filter size
-        smoothing_filter_size: Size of smoothing filter for declumping
+        automatic_smoothing: Auto-calculate INTENSITY marker smoothing size;
+            ignored for SHAPE marker extraction.
+        smoothing_filter_size: INTENSITY marker smoothing filter size when
+            automatic_smoothing is False; ignored for SHAPE marker extraction.
+            Separate from threshold_smoothing_scale.
         automatic_suppression: Auto-calculate maxima suppression distance
         maxima_suppression_size: Minimum distance between local maxima
         low_res_maxima: Use lower resolution for finding maxima (faster)
