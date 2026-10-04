@@ -33,6 +33,7 @@ from openhcs.core.runtime_batch_contracts import (
 )
 from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
 from openhcs.core.runtime_identifier import normalize_runtime_identifier
+from openhcs.core.runtime_image_values import image_payload_metadata
 from openhcs.core.runtime_measurements import (
     MeasurementStatistic,
     RuntimeMeasurementFeatureDeclaration,

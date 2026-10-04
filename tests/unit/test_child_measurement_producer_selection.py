@@ -512,13 +512,13 @@ def _upstream_rows(*, sites=("1", "2"), well="A01", time="1"):
 
 def test_actual_upstream_consumer_preserves_all_channels_and_site_correlation():
     rows, child, _ = _upstream_rows(sites=("2", "1"))
-    values = rows.upstream_child_measurement_values(child)
+    values = rows.upstream_child_feature_indexes(child)
     for channel in ("1", "2", "5", "3"):
         feature = f"Intensity_MeanIntensity_Orig{channel}"
         for index in (0, 1):
             for label in (1, 2):
                 assert (
-                    values[index, label][feature]
+                    values[index][feature].values_by_label[label]
                     == int(channel) * 100 + (index + 1) * 10 + label
                 )
 
@@ -527,7 +527,7 @@ def test_actual_upstream_consumer_preserves_all_channels_and_site_correlation():
 def test_actual_upstream_consumer_rejects_incompatible_source_planes(kwargs):
     rows, child, _ = _upstream_rows(**kwargs)
     with pytest.raises(ValueError, match="does not align"):
-        rows.upstream_child_measurement_values(child)
+        rows.upstream_child_feature_indexes(child)
 
 
 def test_actual_parent_means_include_each_channel_without_merging_site_ids():
@@ -577,7 +577,7 @@ def test_upstream_tables_without_source_coordinates_are_rejected():
     )
     table.source_image_provenance_planes = SourceImageProvenancePlanes()
     with pytest.raises(ValueError, match="complete source image-set identity"):
-        rows.upstream_child_measurement_values(child)
+        rows.upstream_child_feature_indexes(child)
 
 
 def test_input_relation_preserves_original_output_and_surviving_input_relations():
@@ -672,7 +672,7 @@ def test_complete_input_keeps_existing_record_scope_ambiguity_guard():
 def test_upstream_repeated_source_coordinates_do_not_merge_distinct_row_planes():
     rows, child, _ = _upstream_rows(sites=("1", "1"))
     with pytest.raises(ValueError, match="row axes .* exceed its source axis"):
-        rows.upstream_child_measurement_values(child)
+        rows.upstream_child_feature_indexes(child)
 
 
 @pytest.mark.parametrize(
