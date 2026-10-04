@@ -50,6 +50,7 @@ if TYPE_CHECKING:
     from openhcs.microscopes.microscope_interfaces import MetadataHandler
     from openhcs.core.vfs_protocol import FileManagerLike
     from polystore.filemanager import FileManager
+    from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
 
 
 LookupValueT = TypeVar("LookupValueT")
@@ -673,8 +674,12 @@ class VirtualWorkspaceSourceProjectionAuthority:
     """Projection authority for source-workspace metadata owned by a plate handler."""
 
     plate_path: Path
-    metadata_handlers: tuple["MetadataHandler", ...]
+    metadata_handler: "MetadataHandler"
+    filemanager: "FileManager"
     cache: VirtualWorkspaceSourceProjectionCache | None = None
+    _workspace_metadata_handler: "OpenHCSMetadataHandler | None" = field(
+        default=None, init=False, compare=False, repr=False,
+    )
 
     @classmethod
     def from_context(
@@ -703,35 +708,38 @@ class VirtualWorkspaceSourceProjectionAuthority:
 
         return cls(
             plate_path=plate_path,
-            metadata_handlers=cls._plate_metadata_handlers(
-                plate_path,
-                metadata_handler,
-                filemanager,
-            ),
+            metadata_handler=metadata_handler,
+            filemanager=filemanager,
             cache=DEFAULT_SOURCE_PROJECTION_CACHE if cache is None else cache,
         )
 
-    @staticmethod
-    def _plate_metadata_handlers(
-        plate_path: Path,
-        metadata_handler: "MetadataHandler",
-        filemanager: "FileManager",
-    ) -> tuple["MetadataHandler", ...]:
-        """Return metadata handlers that can own source-workspace metadata."""
+    def is_bound_to_context(self, context: "ProcessingContext") -> bool:
+        """Compare actual owners, never identities of already-released objects."""
+        return (
+            self.plate_path == Path(context.plate_path)
+            and self.metadata_handler is context.microscope_handler.metadata_handler
+            and self.filemanager is context.filemanager
+        )
 
+    def metadata_handlers(self) -> tuple["MetadataHandler", ...]:
+        """Observe workspace eligibility live while retaining admitted providers."""
         from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
 
-        handlers: list["MetadataHandler"] = [metadata_handler]
-        metadata_path = plate_path / OpenHCSMetadataHandler.METADATA_FILENAME
-        if not isinstance(handlers[0], OpenHCSMetadataHandler) and filemanager.exists(
-            str(metadata_path), Backend.DISK.value
-        ):
-            handlers.append(OpenHCSMetadataHandler(filemanager))
-        return tuple(handlers)
+        if isinstance(self.metadata_handler, OpenHCSMetadataHandler):
+            return (self.metadata_handler,)
+        metadata_path = self.plate_path / OpenHCSMetadataHandler.METADATA_FILENAME
+        if not self.filemanager.exists(str(metadata_path), Backend.DISK.value):
+            return (self.metadata_handler,)
+        workspace_handler = self._workspace_metadata_handler
+        if workspace_handler is None:
+            workspace_handler = OpenHCSMetadataHandler(self.filemanager)
+            object.__setattr__(self, "_workspace_metadata_handler", workspace_handler)
+        workspace_handler.invalidate_metadata_cache()
+        return (self.metadata_handler, workspace_handler)
 
     def metadata_documents(self) -> tuple[OpenHCSMetadataPayload, ...]:
         documents: list[OpenHCSMetadataPayload] = []
-        for metadata_handler in self.metadata_handlers:
+        for metadata_handler in self.metadata_handlers():
             metadata = metadata_handler.source_workspace_metadata_document(
                 self.plate_path
             )

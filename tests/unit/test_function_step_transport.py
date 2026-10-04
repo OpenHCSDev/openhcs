@@ -23,6 +23,7 @@ from openhcs.core.config import (
     PipelineConfig,
 )
 from openhcs.core.callable_contract import CallableContract
+from openhcs.core.function_patterns import CompiledFunctionInvocation, FunctionInvocationKey
 from openhcs.core.function_reference import (
     FunctionReference,
     FunctionReferenceTransportAuthority,
@@ -46,14 +47,16 @@ from openhcs.runtime.zmq_execution_client import (
 )
 
 
-def _execute_spawned_custom_contract(
-    contract: CallableContract,
+def _execute_spawned_custom_invocation(
+    invocation: CompiledFunctionInvocation,
     image_values: list[list[int]],
 ) -> list[list[int]]:
     """Resolve one persisted callable as a fresh spawned worker would."""
     import numpy as np
 
-    result = contract.resolve_runtime_callable()(np.asarray(image_values), offset=3)
+    result = invocation.runtime_callable(
+        np.asarray(image_values), **dict(invocation.runtime_kwargs)
+    )
     return result.tolist()
 
 
@@ -499,6 +502,20 @@ def test_bundle_transport_preserves_prepared_runtime_contract_identity() -> None
     assert restored_item.contract.metadata.prepare is None
     assert restored_item.func.metadata.prepare is None
     assert restored_item.func.resolve() is reference.resolve()
+    (restored_invocation,) = tuple(
+        restored_plan.compiled_function_pattern.iter_invocations()
+    )
+    assert (
+        restored_invocation.runtime_callable
+        is restored_invocation.contract.resolve_runtime_callable()
+    )
+    assert restored_invocation.contract is not transport_invocation.contract
+    assert (
+        CallableContractRuntimeCache.process_cache().get_bound(
+            restored_invocation.contract
+        )
+        is restored_invocation.runtime_callable
+    )
 
 
 def test_generated_source_resolves_catalog_owned_cellprofiler_callable() -> None:
@@ -562,6 +579,15 @@ def codex_pickle_probe(image):
             )
 
             assert restored_step.func is custom_functions.codex_pickle_probe
+            contract = CallableContract.from_callable(reference)
+            invocation = CompiledFunctionInvocation(
+                key=FunctionInvocationKey.from_contract(contract, "default", 0),
+                contract=contract,
+            )
+            restored_invocation = pickle.loads(pickle.dumps(invocation))
+            assert restored_invocation.runtime_callable is custom_func
+            assert restored_invocation.contract is not contract
+            assert restored_invocation.artifact_input_edges == invocation.artifact_input_edges
             assert (
                 CellProfilerModule.require_module("Crop").require_callable()
                 is canonical_crop
@@ -632,6 +658,11 @@ def {func_name}(image, offset=0):
     reference = compiler_pipeline[0].func
     assert isinstance(reference, FunctionReference)
     contract = CallableContract.from_callable(reference)
+    invocation = CompiledFunctionInvocation(
+        key=FunctionInvocationKey.from_contract(contract, "default", 0),
+        contract=contract,
+        kwargs=(("offset", 3),),
+    )
 
     multiprocessing_context = multiprocessing.get_context("spawn")
     try:
@@ -641,8 +672,8 @@ def {func_name}(image, offset=0):
         ) as executor:
             futures = tuple(
                 executor.submit(
-                    _execute_spawned_custom_contract,
-                    contract,
+                    _execute_spawned_custom_invocation,
+                    invocation,
                     [[task_index]],
                 )
                 for task_index in (1, 2)

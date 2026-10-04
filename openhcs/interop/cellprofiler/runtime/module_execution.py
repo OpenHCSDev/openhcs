@@ -52,7 +52,6 @@ from openhcs.core.runtime_object_labels import (
 )
 from openhcs.core.runtime_output_matching import (
     RuntimeMatchedOutput,
-    RuntimeReturnedOutputMatcher,
 )
 from openhcs.core.runtime_profile import RuntimeProfileTimer
 from openhcs.core.runtime_measurements import (
@@ -485,10 +484,10 @@ class CellProfilerModuleExecutor:
     ]:
         """Resolve the callable ABI against this invocation's selected plans."""
 
-        return RuntimeReturnedOutputMatcher(
-            callable_contract=self.callable_contract,
-            returned_output=raw_output,
-        ).resolve_plan_values(tuple(adapter.request.artifact_outputs.values()))
+        return self.callable_contract.resolve_returned_plan_values(
+            raw_output,
+            tuple(adapter.request.artifact_outputs.values()),
+        )
 
     def _replacement_main_flow_output(
         self,

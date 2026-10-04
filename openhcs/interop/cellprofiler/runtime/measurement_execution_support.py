@@ -39,7 +39,6 @@ from openhcs.interop.cellprofiler.runtime.object_measurement_execution import (
 from openhcs.interop.cellprofiler.runtime.measurement_rows import (
     measurement_table_rows,
 )
-from openhcs.core.runtime_output_matching import RuntimeReturnedOutputMatcher
 from openhcs.core.steps.function_runtime import (
     RuntimeCallableArgument,
     RuntimeFunctionOutput,
@@ -377,10 +376,12 @@ class ObjectMeasurementOutputRecorder:
         prepared_invocation: PreparedObjectMeasurementInvocation,
     ) -> None:
         split_started_at = time.perf_counter()
-        _returned_values, matched_outputs = RuntimeReturnedOutputMatcher(
-            callable_contract=self.callable_contract,
-            returned_output=raw_output,
-        ).resolve_plan_values((self.measurement_output_plan,))
+        _returned_values, matched_outputs = (
+            self.callable_contract.resolve_returned_plan_values(
+                raw_output,
+                (self.measurement_output_plan,),
+            )
+        )
         self.split_seconds += time.perf_counter() - split_started_at
         _output_plan, _output_spec, output_value = matched_outputs[0]
         emitted_measurement_rows = measurement_table_rows(output_value)

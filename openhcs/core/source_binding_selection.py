@@ -72,6 +72,7 @@ from openhcs.core.compiled_step_plan import CompiledStepPlan
 
 if TYPE_CHECKING:
     from openhcs.core.runtime_adapters import RuntimeAdapterRequest
+    from openhcs.core.runtime_source_binding_cache import RuntimeSourceResolutionSnapshot
     from polystore.filemanager import FileManager
     from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.microscopes.microscope_interfaces import FilenameParser
@@ -191,6 +192,7 @@ class SourcePatternResolutionContext:
     source_projections_by_virtual_path: Mapping[str, SourceProjection] = field(
         default_factory=dict
     )
+    resolution_snapshot: RuntimeSourceResolutionSnapshot | None = None
 
     @classmethod
     def from_sources(
@@ -272,6 +274,10 @@ class SourcePatternResolutionContext:
         self,
         pattern: SourceCandidatePath,
     ) -> SourceCandidatePathResolution:
+        if self.resolution_snapshot is not None:
+            admitted = self.resolution_snapshot.path_resolutions.get(pattern)
+            if admitted is not None:
+                return admitted
         keys = _cached_source_candidate_pattern_keys(pattern)
         exact_virtual_path = next(
             (key for key in keys if key in self.source_paths_by_virtual_path),
@@ -1124,6 +1130,11 @@ class SourceIdentityResolutionContext(SourcePatternResolutionContext):
     ) -> tuple[tuple[SourceCandidatePath, ...], ...]:
         """Resolve a batch without rescanning unrelated paths for each identity."""
 
+        if self.resolution_snapshot is not None:
+            return self.resolution_snapshot.matching_candidates_for_source_identities(
+                identities, candidates,
+            )
+
         candidates = self.declared_positions_for_candidates(candidates)
         candidates_by_path: dict[str, list[SourceCandidatePath]] = {}
         for candidate in candidates:
@@ -1186,6 +1197,7 @@ class SourceBindingMatchedImageSet(SourceIdentityResolutionContext):
             source_projections_by_virtual_path=(
                 source_context.source_projections_by_virtual_path
             ),
+            resolution_snapshot=source_context.resolution_snapshot,
             bindings=tuple(bindings),
             match_plan=match_plan,
             identity_policy=identity_policy,
