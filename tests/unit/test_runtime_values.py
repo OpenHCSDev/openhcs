@@ -113,6 +113,7 @@ from openhcs.core.source_image_provenance import (
     SourceImageProvenancePlanes,
 )
 from openhcs.core.source_metadata import (
+    SOURCE_VOXEL_SPACING_FIELD,
     SOURCE_PLANE_COUNT_FIELD,
     SOURCE_PLANE_INDEX_FIELD,
     SourceVoxelSpacing,
@@ -3980,6 +3981,26 @@ def test_derived_image_payload_context_uses_source_provenance_atomically() -> No
         "/input/A01_s001_w2_z001_t001.tif",
     )
     assert metadata.source_image_names == ("Grayscale",)
+
+
+@pytest.mark.parametrize("invalid_owner", ("source", "output"))
+def test_derived_image_context_admits_current_calibration_before_channel_axis(
+    invalid_owner,
+):
+    source = ImagePayloadMetadata(source_path="/input/source.tif").payload_with(
+        np.zeros((4, 5), dtype=np.float32)
+    )
+    output = ImagePayloadMetadata(source_path="/stale/output.tif").payload_with(
+        np.ones((4, 5), dtype=np.float32)
+    )
+    metadata = image_payload_metadata(source if invalid_owner == "source" else output)
+    metadata.source_provenance.source_identity.component_metadata = {
+        SOURCE_VOXEL_SPACING_FIELD: "-1,1,1",
+    }
+    metadata.source_channel_axis = False
+
+    with pytest.raises(ValueError, match="finite and positive"):
+        image_payload_metadata(source).derive_payload(source, output)
 
 
 def test_object_label_source_context_keeps_source_aligned_stack_planes() -> None:

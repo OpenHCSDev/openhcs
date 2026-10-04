@@ -436,19 +436,36 @@ class ImagePayloadMetadata(
                         f"{metadata.plane_axis.value!r} axis after the invocation "
                         "selected one plane."
                     )
+        # Admit current source fields before deriving the output. This private
+        # snapshot owns its stripped axes; no intermediate image is published.
         source_context = source_metadata.replace_fields(plane_axis=None)
         if isinstance(data, ImagePayloadMetadataCarrier):
-            source_context = source_context.replace_fields(source_channel_axis=None)
-        metadata = output_metadata.with_source_context_from(source_context)
+            source_context.source_channel_axis = None
+        # Admit current output calibration and geometry before replacing stale
+        # source identity. These fields belong to the returned pixel domain.
+        metadata = output_metadata.with_source_spatial_context_from(source_context)
         if source_metadata.source_provenance.has_values:
-            metadata = metadata.with_source_provenance(
+            # The source owns derived-image provenance. Do not merge every
+            # output plane into a value that this source identity supersedes.
+            source_provenance = (
                 source_metadata.source_provenance.with_derived_source_image_names(
                     output_metadata.source_image_names
                     or source_metadata.source_image_names
                 )
             )
-        return metadata.with_missing_intensity_from(source_metadata).replace_fields(
+        else:
+            source_provenance = metadata.source_provenance.with_missing_from(
+                source_context.source_provenance
+            )
+        return metadata.replace_fields(
+            source_provenance=source_provenance,
+            source_channel_axis=(
+                metadata.source_channel_axis
+                if metadata.source_channel_axis is not None
+                else source_context.source_channel_axis
+            ),
             plane_axis=declared_output_axis,
+            **metadata._missing_intensity_fields(source_metadata),
         )
 
     def project_channel_payload(
@@ -954,30 +971,36 @@ class ImagePayloadMetadata(
             OBJECT_LABEL_SOURCE_SPATIAL_VALUE_NAME,
         )
 
+    def _source_spatial_context_fields(
+        self,
+        source: "ImagePayloadMetadata",
+    ) -> dict[str, Any]:
+        spatial_domain = self.source_spatial_domain.with_missing_from(
+            source.source_spatial_domain
+        )
+        return {
+            "source_spatial_domain": spatial_domain,
+            "source_voxel_spacing": self.source_voxel_spacing.with_missing_from(
+                source.source_voxel_spacing
+            ),
+            "physical_border_edges_yx": (
+                self.physical_border_edges_yx
+                if self.physical_border_edges_yx is not None
+                else source.physical_border_edges_yx
+            ),
+            "mask_defines_border": (
+                self.mask_defines_border
+                if self.mask_defines_border is not None
+                else source.mask_defines_border
+            ),
+        }
+
     def with_source_spatial_context_from(
         self,
         source: "ImagePayloadMetadata",
     ) -> "ImagePayloadMetadata":
         """Fill missing source-image geometry without changing provenance."""
-        spatial_domain = self.source_spatial_domain.with_missing_from(
-            source.source_spatial_domain
-        )
-        return self.replace_fields(
-            source_spatial_domain=spatial_domain,
-            source_voxel_spacing=self.source_voxel_spacing.with_missing_from(
-                source.source_voxel_spacing
-            ),
-            physical_border_edges_yx=(
-                self.physical_border_edges_yx
-                if self.physical_border_edges_yx is not None
-                else source.physical_border_edges_yx
-            ),
-            mask_defines_border=(
-                self.mask_defines_border
-                if self.mask_defines_border is not None
-                else source.mask_defines_border
-            ),
-        )
+        return self.replace_fields(**self._source_spatial_context_fields(source))
 
     def with_source_context_from(
         self,
@@ -1014,41 +1037,48 @@ class ImagePayloadMetadata(
                 "Cannot combine image metadata with conflicting plane axes: "
                 f"{plane_axis.value!r} != {source.plane_axis.value!r}."
             )
-        return self.with_source_spatial_context_from(source).replace_fields(
+        return self.replace_fields(
             source_provenance=source_provenance,
+            **self._source_spatial_context_fields(source),
             source_channel_axis=source_channel_axis,
             plane_axis=plane_axis,
         )
+
+    def _missing_intensity_fields(
+        self,
+        source: "ImagePayloadMetadata",
+    ) -> dict[str, Any]:
+        return {
+            "intensity_scale": (
+                self.intensity_scale
+                if self.intensity_scale is not None
+                else source.intensity_scale
+            ),
+            "source_dtype": (
+                self.source_dtype
+                if self.source_dtype is not None
+                else source.source_dtype
+            ),
+            "unit_interval_intensity": (
+                self.unit_interval_intensity
+                if self.unit_interval_intensity is not None
+                else source.unit_interval_intensity
+            ),
+            "source_plane_intensity_scales": (
+                self.source_plane_intensity_scales
+                or source.source_plane_intensity_scales
+            ),
+            "source_plane_dtypes": (
+                self.source_plane_dtypes or source.source_plane_dtypes
+            ),
+        }
 
     def with_missing_intensity_from(
         self,
         source: "ImagePayloadMetadata",
     ) -> "ImagePayloadMetadata":
         """Fill missing pixel-type and intensity metadata from a source payload."""
-        return self.replace_fields(
-            intensity_scale=(
-                self.intensity_scale
-                if self.intensity_scale is not None
-                else source.intensity_scale
-            ),
-            source_dtype=(
-                self.source_dtype
-                if self.source_dtype is not None
-                else source.source_dtype
-            ),
-            unit_interval_intensity=(
-                self.unit_interval_intensity
-                if self.unit_interval_intensity is not None
-                else source.unit_interval_intensity
-            ),
-            source_plane_intensity_scales=(
-                self.source_plane_intensity_scales
-                or source.source_plane_intensity_scales
-            ),
-            source_plane_dtypes=(
-                self.source_plane_dtypes or source.source_plane_dtypes
-            ),
-        )
+        return self.replace_fields(**self._missing_intensity_fields(source))
 
     def with_source_provenance(
         self,
