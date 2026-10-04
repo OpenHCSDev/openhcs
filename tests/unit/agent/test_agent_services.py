@@ -324,6 +324,11 @@ class _FakeExecutionClient:
     def endpoint_handshake(self):
         return None
 
+    def submit_prepared_pipeline(self, request, *, timeout_ms=OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms):
+        if request.compile_control.compile_only:
+            return self.submit_compile(request, timeout_ms=timeout_ms)
+        return self.submit_pipeline(request, timeout_ms=timeout_ms)
+
     def submit_compile(
         self,
         submission,
@@ -3135,13 +3140,13 @@ def test_execution_session_service_submits_compile_and_execution_jobs(
         ("compile", OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms),
         ("execute", OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms),
     ]
-    assert fake_client.compile_submissions[0].plate_id == str(tmp_path.resolve())
+    assert fake_client.compile_submissions[0].identity.plate_id == str(tmp_path.resolve())
     assert (
         session.pipeline_config_id
         == pipeline_service.get_pipeline(pipeline_ref).pipeline_config_id
     )
     assert (
-        fake_client.compile_submissions[0].pipeline_document.pipeline_config
+        PipelineDocumentAuthority.from_source(fake_client.compile_submissions[0].pipeline_code).pipeline_config
         == pipeline_service.to_pipeline_document(pipeline_ref).pipeline_config
     )
     assert fake_client.status_requests[0] == (
@@ -3155,11 +3160,11 @@ def test_execution_session_service_submits_compile_and_execution_jobs(
     assert len(fake_client.status_requests) == 1
     assert fake_client.disconnect_count == 1
     assert (
-        fake_client.execution_submissions[0].compile_artifact_id
+        fake_client.execution_submissions[0].compile_control.compile_artifact_id
         == _ExecutionTestId.COMPILE
     )
-    assert type(fake_client.compile_submissions[0].pipeline_steps) is list
-    assert len(fake_client.compile_submissions[0].pipeline_steps) == 1
+    assert type(PipelineDocumentAuthority.from_source(fake_client.compile_submissions[0].pipeline_code).pipeline_steps) is list
+    assert len(PipelineDocumentAuthority.from_source(fake_client.compile_submissions[0].pipeline_code).pipeline_steps) == 1
     assert not hasattr(fake_client.compile_submissions[0], "submission_pipeline")
 
 
@@ -3378,11 +3383,9 @@ def test_execution_session_service_preserves_pipeline_source_document(
     execution_service.submit_compile(session_ref.session_id)
 
     submission = fake_client.compile_submissions[0]
-    assert submission.pipeline_document.original_source == pipeline_source
-    assert submission.pipeline_code() == pipeline_source
-    assert submission.pipeline_steps == []
-    assert submission.pipeline_config == pipeline_config
-    assert submission.pipeline_code() == pipeline_source
+    assert submission.pipeline_code == pipeline_source
+    assert PipelineDocumentAuthority.from_source(submission.pipeline_code).pipeline_steps == []
+    assert PipelineDocumentAuthority.from_source(submission.pipeline_code).pipeline_config == pipeline_config
     assert not hasattr(submission, "pipeline_steps_boundary")
 
 
@@ -3895,8 +3898,8 @@ def test_pipeline_source_session_uses_prepared_execution_plate(tmp_path: Path):
     assert session.selected_pipeline_path is None
     job = service.submit_execution(session_ref.session_id)
     assert job.server_execution_id == _ExecutionTestId.EXECUTE
-    assert fake_client.execution_submissions[0].execution_plate_id == str(prepared)
-    assert fake_client.execution_submissions[0].selected_pipeline_path is None
+    assert fake_client.execution_submissions[0].identity.execution_plate_id == str(prepared)
+    assert fake_client.execution_submissions[0].identity.selected_pipeline_path is None
 
     with pytest.raises(AgentPathPolicyError, match="outside allowed roots"):
         service.create_session_from_pipeline_source_request(
@@ -3951,7 +3954,7 @@ def test_completed_pipeline_job_retains_exact_submission_and_server_result(
 
     completed = service.require_completed_pipeline_execution(job.job_id)
 
-    assert completed.submission is fake_client.execution_submissions[0]
+    assert completed.request is fake_client.execution_submissions[0]
     assert completed.record.start_time == 10.0
     assert completed.record.end_time == 12.0
     assert completed.record.results_summary == {"output_plate_root": str(tmp_path)}
