@@ -7,6 +7,7 @@ import pytest
 
 from openhcs.core.aligned_image_payload import (
     ImagePayloadBundleContext, ImagePayloadStackContext, stack_image_payloads,
+    ImagePayloadStackComposition,
 )
 from openhcs.core.image_file_serialization import ImageFileFormat, ImageFileSourceMetadata
 from openhcs.core.runtime_image_values import (
@@ -54,6 +55,7 @@ def test_original_source_binding_composition_and_selected_cp_units(reverse, colo
         np.testing.assert_allclose(image_payload_data(actual), image_payload_data(expected))
         np.testing.assert_array_equal(image_payload_mask(actual), image_payload_mask(original))
         assert image_payload_metadata(actual).source_image_names == ('Source',)
+        assert image_payload_metadata(actual).intensity_scale == 255
         assert image_payload_metadata(actual).source_voxel_spacing == image_payload_metadata(original).source_voxel_spacing
         actual_domain = image_payload_metadata(actual).source_spatial_domain
         original_domain = image_payload_metadata(original).source_spatial_domain
@@ -163,3 +165,20 @@ def test_bundle_leaf_cooperates_with_shared_intensity_and_pixel_owners():
     result = ImagePayloadBundleContext.from_payloads((raw, normalized)).compose()
     np.testing.assert_array_equal(image_payload_data(result)[0], image_payload_data(normalized))
     np.testing.assert_array_equal(image_payload_mask(result), image_payload_mask(raw))
+
+
+def test_saved_output_context_retains_the_independent_composed_buffer_domain():
+    raw = source(np.full((2, 3), 128, dtype=np.uint8))
+    normalized = normalize_image_payload_intensity(raw)
+    inputs = (raw, normalized)
+    copied = stack_image_payloads(inputs, metadata_mode=ImagePayloadMetadataCompositionMode.STACK)
+    restored = ImagePayloadStackComposition.with_saved_output_context(
+        copied, inputs, tuple(image_payload_metadata(value) for value in inputs),
+        single_output_plane_axis=None,
+    )
+    assert image_payload_data(restored) is image_payload_data(copied)
+    for index in (0, 1):
+        selected = image_payload_metadata(restored).for_leading_source_plane(index).payload_with(
+            image_payload_data(restored)[index])
+        np.testing.assert_array_equal(normalize_image_payload_intensity(selected), normalized)
+        assert image_payload_metadata(selected).has_normalized_intensity

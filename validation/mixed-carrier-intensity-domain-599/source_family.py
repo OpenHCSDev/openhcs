@@ -45,7 +45,9 @@ terms = (
     "ImagePayloadStackComposition", "stack_runtime_slices", "ImageFileSourceMetadata",
 )
 failures = []
-production = () if arguments.only_dependencies else ((checkout, revision, "openhcs"),)
+production = () if arguments.only_dependencies else tuple(
+    (checkout, revision, root) for root in ('openhcs', 'scripts', 'benchmark', 'tests')
+)
 for location, version, prefix in (*production, *dependencies):
     source_repo = SourceScopeRepository(location)
     try:

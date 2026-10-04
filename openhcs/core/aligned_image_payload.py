@@ -512,12 +512,13 @@ class ImagePayloadStackComposition(ABC):
     ) -> RuntimeArrayData:
         """Attach saved member context without replacing the independent buffer."""
         data = image_payload_data(stack_payload)
+        current_intensity = image_payload_metadata(stack_payload)
         if (
             len(payloads) == 1
             and single_output_plane_axis is metadata[0].plane_axis
             and np.shape(data) == np.shape(image_payload_data(payloads[0]))
         ):
-            return metadata[0].replace_fields().payload_with(
+            return metadata[0].with_current_intensity_from(current_intensity).payload_with(
                 data, image_payload_mask(stack_payload),
             )
         if np.shape(data)[:1] != (len(payloads),):
@@ -533,7 +534,10 @@ class ImagePayloadStackComposition(ABC):
             else ImagePayloadMetadataCompositionMode.STACK
         )
         output_metadata = ImagePayloadMetadata.compose(
-            tuple(payloads), mode=mode, source_metadata=tuple(metadata),
+            tuple(payloads), mode=mode, source_metadata=tuple(
+                record.with_current_intensity_from(current_intensity, plane_index=index)
+                for index, record in enumerate(metadata)
+            ),
         )
         return output_metadata.payload_with(
             data, _stack_image_payload_mask(tuple(payloads), data),

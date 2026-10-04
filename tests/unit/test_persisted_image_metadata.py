@@ -109,7 +109,7 @@ def test_saved_format_metadata_is_native_and_does_not_reencode(
     assert restored.source_provenance == metadata.source_provenance
     assert restored.plane_axis is None
     if extension in (".png", ".bmp"):
-        assert restored.unit_interval_intensity.scale is None
+        assert restored.unit_interval_intensity is None
         assert restored.physical_border_edges_yx is None
         assert restored.mask_defines_border is None
     else:
@@ -741,7 +741,7 @@ def test_mixed_zarr_batch_preserves_lineage_but_not_quantized_value_proofs(tmp_p
         ),
     )
     assert restored.source_dtype == "uint8"
-    assert restored.unit_interval_intensity.scale is None
+    assert restored.unit_interval_intensity is None
     assert restored.physical_border_edges_yx is None
     assert restored.mask_defines_border is None
     assert restored.source_provenance == metadata.source_provenance
