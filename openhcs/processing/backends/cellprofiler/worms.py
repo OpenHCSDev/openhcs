@@ -141,7 +141,7 @@ from openhcs.processing.backends.cellprofiler.distance_propagation_numba import 
     _propagate_labels_and_distances_zero_image_numba,
 )
 from openhcs.processing.backends.cellprofiler.object_images import (
-    object_label_colormap,
+    ColorImageModeRenderer,
 )
 from openhcs.processing.backends.cellprofiler.worm_geometry import (
     branchpoints,
@@ -2989,7 +2989,7 @@ def _overlapping_worm_outline(
     resolved_colormap = (
         "viridis" if colormap_name.strip().casefold() == "default" else colormap_name
     )
-    colors = object_label_colormap(resolved_colormap, max_label)
+    colors = ColorImageModeRenderer.palette(resolved_colormap, max_label)
     output = np.zeros((*image_shape, 3), dtype=np.float32)
     label_ids = row_array[:, rows.label_column].astype(int, copy=False)
     for label_id in np.unique(label_ids[label_ids > 0]):
