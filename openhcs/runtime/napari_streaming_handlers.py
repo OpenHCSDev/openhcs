@@ -650,6 +650,9 @@ class NapariAggregateAxisBindingAuthority:
         axis_components = component_axis_semantics.layout.components_for_mode(
             ViewerComponentMode.STACK
         )
+        declared_component_values = component_axis_semantics.required_component_values(
+            axis_components
+        )
         extents = cls._aggregate_extents(items)
         if not extents:
             if any(item.plane_component_domain for item in items):
@@ -658,9 +661,6 @@ class NapariAggregateAxisBindingAuthority:
                     "payload-local plane axis."
                 )
             return NapariAggregateAxisBindingSet()
-        declared_component_values = component_axis_semantics.required_component_values(
-            axis_components
-        )
         plane_domains = tuple(item.plane_component_domain.entries for item in items)
         present_domains = tuple(domain for domain in plane_domains if domain)
         if not present_domains:
