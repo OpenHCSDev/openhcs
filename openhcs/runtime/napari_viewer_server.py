@@ -4146,6 +4146,7 @@ class NapariViewerProjectionABC(ABC, Generic[NapariViewerProjectionRequestT]):
             ViewerPayloadField.PATH.value: item.address.path,
             ViewerPayloadField.COMPONENTS.value: dict(components),
             "payload_type": type(data).__name__,
+            "source_voxel_spacing": to_jsonable(item.image_metadata.source_voxel_spacing),
         }
         summary.update(
             item.image_metadata.source_spatial_domain.to_viewer_wire_mapping()

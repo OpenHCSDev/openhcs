@@ -1242,11 +1242,23 @@ class ViewerWindowStateResult(
             len(transform.scale) != self.viewer_ndim
             or len(transform.translate) != self.viewer_ndim
             or not transform.scale
-            or any(value != 1.0 for value in transform.scale)
             or any(value != 0.0 for value in transform.translate)
         ):
             raise ValueError(
                 "Image receipt requires explicit identity pixel placement."
+            )
+        spacing = summary.voxel_spacing
+        if spacing.has_values:
+            if len(layer.axis_labels) != self.viewer_ndim:
+                raise ValueError(
+                    "Calibrated image receipt requires its complete semantic axes."
+                )
+            expected_scale = spacing.layer_coordinate_kwargs(layer.axis_labels)["scale"]
+        else:
+            expected_scale = (1.0,) * self.viewer_ndim
+        if transform.scale != expected_scale:
+            raise ValueError(
+                "Image receipt transform conflicts with its declared source calibration."
             )
         summary.require_full_image_window()
         return (

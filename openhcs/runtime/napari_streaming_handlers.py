@@ -1511,28 +1511,13 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
             raise ValueError(
                 "A native viewer route requires consistent source voxel spacing."
             )
-        component_scales = [1.0] * len(self.display_axis_components)
-        component_units = ["dimensionless"] * len(self.display_axis_components)
-        z_component = AllComponents.Z_INDEX.value
-        if (
-            len(spacing.values_zyx) == 3
-            and z_component in self.display_axis_components
-        ):
-            z_axis = self.display_axis_components.index(z_component)
-            component_scales[z_axis] = spacing.spacing_for_ndim(3)[0]
-            component_units[z_axis] = spacing.native_coordinate_unit
-        scale = (
-            *component_scales,
-            *(1.0 for _ in payload_axis_labels),
-            *spacing.spacing_for_ndim(2),
+        coordinate_kwargs = spacing.layer_coordinate_kwargs(
+            (*self.display_axis_components, *payload_axis_labels, "y", "x")
         )
         return {
-            "scale": scale,
-            "translate": self.translate(payload_axis_labels, scale=scale),
-            "units": (
-                *component_units,
-                *("dimensionless" for _ in payload_axis_labels),
-                *(spacing.native_coordinate_unit for _ in range(2)),
+            **coordinate_kwargs,
+            "translate": self.translate(
+                payload_axis_labels, scale=coordinate_kwargs["scale"]
             ),
         }
 
