@@ -117,3 +117,57 @@ runtime_spatial_graph.py and materialization/core.py unit-frame/projection hunk.
 This checkpoint requests that boundary, not permission to alter their checkout
 or merge whole394. Independent analysis declaration work can proceed after the
 complete owner pass; original failed inputs and sourceguard remain protected.
+
+Current independent continuation
+--------------------------------
+
+Dewey verified the complete immutable567 source archive8513 before releasing
+this existing checkout: engineering567/build-input01/source8513.tar SHA256
+02fe1abad6a2c1a74a9f0b6f9d54b289b9fc78b8214c9d4f38a9e5ca2e3c01a9,
+original Git archive commit8513a7d2483ea09a2ec6b9e9f0193a5a16a56902.
+No corrected567 wheel/native acceptance is inferred from that source archive.
+The finished checkout switched back to this original541 branch, then normally
+merged mainf2066ded at f542d411f39da7a477675bce3b3078518a40cf25. No conflicts,
+foreign gitlink reset, scientific package or borrowed source change occurred.
+
+Original Package parser source-family04 completes the relevant source evidence
+at8513:704 OpenHCS +12 python-introspect +6 metaclass-registry +17 arraybridge
+modules, zero parse omissions,11.187s/235.3MiB/Swap0/terminal0 under original
+common CPU1/512MiB/60s limits. Complete selected ASTs include declarations,
+inheritance, imports, constructors and reads/writes/consumer bodies; not just
+the earlier textual source search. Evidence stays under the existing
+engineering-neurite-units-20261003 root. JSONL SHA256
+55eb03064f95b86b301c7ed46b82703340cd63bdb42f7239507cf041fc9b3ece.
+These are preserved dependency source revisions, not installed-runtime proof.
+This pass is prior8513 source evidence, not an assertion that every later main
+or Root module is unchanged. No repeated global R1/OOM/test batch was run.
+
+Determining current consumer contract: FieldSpec.from_dataclass_type derives
+columns from original nominal fields; DataclassMeasurementColumnarRows does
+not provide a unit-key renaming API. The shared numerical statistics and
+topology therefore need physical/pixel declaration-owned row hooks, not raw
+column replacement. Existing NeuriteOutgrowthCellResult falsely described
+uncalibrated pixels under its _um fields. That source docstring is corrected
+to the actual compiled physical contract; signatures, fields, numerics and
+guard are unchanged. This is a source clarification, NOT the pixel feature.
+
+Actual Root3940bca source contents were inspected: spacing unit remains only
+MICROMETERS/RELATIVE; SpatialGraph carries coordinate_spacing and physical
+radius but no explicit analysis/export unit. Its source_metadata/graph blobs
+are d13f23bb/db26f654, different from8513, so no old-hunk reapplication is
+claimed. Latest Root headf3c66cd7 remains separately owned. The narrow request
+is public at394 comment5975214247; receiving status at541 comment5975217712.
+
+Requested original-owner seam: explicit PIXELS member on SourceVoxelSpacingUnit
+with no physical scalar projection; reused typed analysis spacing/frame distinct
+from acquisition provenance; explicit graph analysis/export unit alongside its
+existing scale/radius; original graph/ROI publication carries that declaration.
+Original SWC admission retains the physical format contract. A pixel declaration
+can select supported graph/ROI formats without inventing physical SWC units.
+No source calibration relabel, copied units roster or generic consumer switch.
+
+Singer's settings/measurement/topology continuation remains independently owned;
+Root release/integration of that exact shared seam is needed for an end-to-end
+pixel graph. No unused parallel analysis implementation or unsupported wrapper
+has been added while this dependency is unresolved. Existing physical guard is
+preserved;541 pixel route is still unimplemented and not installed-qualified.

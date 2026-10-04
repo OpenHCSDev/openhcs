@@ -401,10 +401,11 @@ class NeuriteOutgrowthCellResult:
 
     A process is the owned path partition reached from one soma-adjacent root.
     Count, total, mean, median and maximum all describe those same process
-    lengths, including their branches. Distances use the supplied pixel size:
-    calibrated inputs yield micrometers; an uncalibrated unit pixel size yields
-    pixels despite the legacy ``_um`` column names. No independent seed-relative
-    skeleton measurement rescales them.
+    lengths, including their branches. These ``_um``/``_um2`` fields are the
+    physical result contract. Registered compiled calls require the original
+    source's micrometer calibration; a numeric scale of one does not turn this
+    schema into a pixel-unit contract. No independent seed-relative skeleton
+    measurement rescales the values.
     """
 
     slice_index: int
