@@ -255,6 +255,8 @@ Matched native views complement these numerical results. Supplementary Figure 9 
 
 A separate fresh-context author repaired a joined nuclear pair in a released DNA/actin field through its own review, without reference feedback (Figure 8). The final pipeline exported 55 nuclear instances and 55 associated actin territories, with reconciled object identities. A faint neighbouring pair remained merged, and unresolved actin interfaces limited interpretation of the territories as physical cell boundaries. This run demonstrates local autonomous repair and useful linked outputs, not an exact cell census (Supplementary Data 8).
 
+A fresh retinal author independently revised its foreground model after measuring background admission and weak-body support. Smoothing followed by broad-background subtraction improved local signal discrimination, and the completed final pipeline exported 109 detector instances (Figure 9). Distributed review still found partial faint-body recovery and uncertain ring-shaped partitions; a saved response below the cutoff localized one plausible miss to foreground admission rather than watershed. This is evidence of autonomous diagnosis and useful candidate output, not a validated retinal ganglion-cell count (Supplementary Data 8).
+
 ### Figure 7. Task-only analysis: within-run revision and final coverage
 
 ![Task-only within-run revision and final coverage.](figures/slas/task_only_analysis.png){width=6in}
@@ -266,6 +268,12 @@ A separate fresh-context author repaired a joined nuclear pair in a released DNA
 ![Matched first/final nuclear overlays and a final-only faint-pair failure control.](figures/slas/h003_native_repair.png){width=6in}
 
 \(A) Matched raw DNA and first/final overlays show separation of a joined pair; diffuse support remains in the lower region. A compact neighbour stays separate. (B) Final raw, result-only and combined views retain a faint merge. This fresh-context author revised its own pipeline without reference feedback. The first complete prediction follows technical repair; these local witnesses do not establish exhaustive accuracy or validated actin boundaries. DNA windows are 0–255 (A) and 0–151 (B), gamma 1, final ROI opacity 0.7. Colours are not cross-candidate identities. Original screenshots are clipped/scaled without pixel retouching; physical calibration is unverified. Supplementary Data 8 retains exact capture and crop identities. Source: BBBC007v1 A02, Sabatini laboratory, Whitehead Institute; CC0.
+
+### Figure 9. Autonomous retinal detection in noisy raw images
+
+![Matched whole-field and local retinal raw images and final detector overlays.](figures/slas/retinal_fresh_native.png){width=6in}
+
+\(A) The whole released field and final detector overlay retain the heterogeneous raw background. (B) Matched southwest views show labelled bodies alongside faint unresolved structures. This fresh-context author used the task brief, MCP and packaged skill without earlier retinal outputs or reference feedback. The final execution exported 109 detector instances, including 8 border instances; the 110 contour members are not another cell count. A bounded soma-like region in B had response maximum 0.0195047 below the 0.02 cutoff and no retained support, locating its loss before watershed without resolving its biological class. No manual-reference accuracy is reported. Both raw pairs use RBPMS AF647 channel 1, window 0–70 and gamma 1. Original screenshots are clipped/scaled without pixel retouching; colours denote instances, not a biological certainty class. Physical calibration is unverified. Source: user-provided retinal whole mount R0010; exact original captures and coordinates are retained in Supplementary Data 8.
 
 ## Discussion
 

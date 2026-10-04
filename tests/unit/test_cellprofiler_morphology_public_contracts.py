@@ -214,8 +214,8 @@ def _compiled_contract(case: MorphologyPublicContractCase):
             step_provenance={index: {} for index in range(len(steps))},
         ),
     )
-    provider = CellProfilerInvocationContractProviderFactory.provider_for_session(
-        session
+    provider = CellProfilerInvocationContractProviderFactory.provider_for_pipeline(
+        session.pipeline
     )
     assert provider is not None
     invocation = next(normalize_function_pattern(step.func).iter_items())

@@ -130,7 +130,7 @@ class CellProfilerModuleCallableABI:
         """Return the default image-output source payload."""
 
         del cls
-        return request.declared_source_payload()
+        return request.output_source_payload()
 
     @classmethod
     def output_value(
@@ -157,7 +157,7 @@ class CellProfilerModuleCallableABI:
         source_payload = replace(
             request,
             current_image=request.source.payload,
-        ).declared_source_payload()
+        ).output_source_payload()
         return CellProfilerObjectLabelOutputSourceContext(
             source_payload,
             source_payload,

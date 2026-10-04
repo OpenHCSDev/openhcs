@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, fields, is_dataclass, replace
+from dataclasses import dataclass, field, fields, is_dataclass, replace
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Mapping, MutableMapping, Sequence, get_type_hints
 
@@ -16,7 +16,16 @@ from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.function_patterns import (
     normalize_function_pattern,
+    NormalizedFunctionItem,
     strip_disabled_functions,
+)
+from openhcs.core.invocation_artifacts import (
+    InvocationContractProvider,
+    InvocationContractPlan,
+    ArtifactDeclarationStepContext,
+    InvocationArtifactDeclarationProviderLike,
+    callable_contract_artifact_declarations,
+    PipelineInvocationContractProviderAuthority,
 )
 from openhcs.core.vfs_protocol import (
     FileManagerLike,
@@ -25,6 +34,8 @@ from openhcs.core.vfs_protocol import (
 
 if TYPE_CHECKING:
     from openhcs.core.config import GlobalPipelineConfig
+    from openhcs.core.pipeline.artifact_planning import ArtifactGraph
+    from openhcs.core.artifacts import ArtifactSpecRef
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 
 
@@ -155,16 +166,133 @@ def resolve_declared_dataclass_paths(
 
 
 @dataclass(frozen=True, slots=True)
-class ResolvedPipelineDefinition:
+class ResolvedPipelineDefinition(InvocationContractProvider):
     """Capture enabled saved declarations and their scope/provenance facts.
 
-    Axis sessions derive metadata kwargs and provider contracts from this view;
+    Axis sessions derive metadata kwargs from this view and share its provider;
     authored FunctionSteps keep their public function-pattern syntax.
     """
 
     steps: Sequence[AbstractStep]
     step_scope_ids: Mapping[int, str]
     step_provenance: Mapping[int, Mapping[str, tuple[str | None, type | None]]]
+    declaration_provider: InvocationArtifactDeclarationProviderLike = field(
+        default=callable_contract_artifact_declarations, repr=False, compare=False
+    )
+    _artifact_graphs: tuple[ArtifactGraph, ...] | None = field(
+        default=None, init=False, repr=False, compare=False
+    )
+    _artifact_contexts: tuple[ArtifactDeclarationStepContext, ...] = field(
+        default=(), init=False, repr=False, compare=False
+    )
+    _future_artifact_inputs: tuple[frozenset[ArtifactSpecRef], ...] = field(
+        default=(), init=False, repr=False, compare=False
+    )
+
+    def _admit_artifact_graphs(self) -> None:
+        """Admit fixed contracts and forward topology once, before axis fanout."""
+        if self._artifact_graphs is not None:
+            return
+        from openhcs.constants import GroupBy
+        from openhcs.core.pipeline.artifact_planning import (
+            ArtifactGraph,
+            extract_artifact_declarations,
+        )
+        from openhcs.core.pipeline.funcstep_contract_validator import (
+            FuncStepContractValidator,
+        )
+
+        provider = PipelineInvocationContractProviderAuthority.provider_for_pipeline(
+            self
+        )
+        graphs: list[ArtifactGraph] = []
+        contexts: list[ArtifactDeclarationStepContext] = []
+        context = ArtifactDeclarationStepContext.empty()
+        for index, step in enumerate(self.steps):
+            group_by = (
+                FuncStepContractValidator.normalized_group_by(
+                    step.processing_config.group_by,
+                    step.processing_config.variable_components,
+                    step.name,
+                    step.func,
+                )
+                if isinstance(step, FunctionStep)
+                else GroupBy.NONE
+            )
+            context = replace(
+                context, step_name=step.name, step_index=index
+            ).with_source_binding_scope(
+                source_bindings=step.source_bindings,
+                group_by=group_by,
+                input_source=step.processing_config.input_source,
+                source_groups=(None,),
+            )
+            contexts.append(context)
+            graph = (
+                extract_artifact_declarations(
+                    step.func,
+                    declaration_provider=self.declaration_provider,
+                    invocation_contract_provider=provider,
+                    step_context=context,
+                )
+                if isinstance(step, FunctionStep)
+                else ArtifactGraph.empty()
+            )
+            for item in () if graph.pattern is None else graph.pattern.iter_items():
+                item.contract.validate_artifact_input_parameter_bindings()
+                graph.invocation_declarations[
+                    item.key
+                ].validate_artifact_output_declarations()
+            graph.input_lineage_order
+            graphs.append(graph)
+            context = graph.advance_declaration_context(context)
+        future_inputs: set[ArtifactSpecRef] = set()
+        future: list[frozenset[ArtifactSpecRef]] = []
+        for graph in reversed(graphs):
+            future.append(frozenset(future_inputs))
+            future_inputs.update(
+                consumer.spec.ref()
+                for consumer in (
+                    *graph.consumers,
+                    *graph.non_plan_consumers,
+                )
+            )
+        # Publish all admitted state together; no factory/provider can observe a
+        # partially admitted graph through the pipeline's public provider view.
+        object.__setattr__(self, "_artifact_contexts", tuple(contexts))
+        object.__setattr__(self, "_future_artifact_inputs", tuple(reversed(future)))
+        object.__setattr__(self, "_artifact_graphs", tuple(graphs))
+
+    @property
+    def artifact_graphs(self) -> tuple[ArtifactGraph, ...]:
+        self._admit_artifact_graphs()
+        return self._artifact_graphs
+
+    @property
+    def artifact_contexts(self) -> tuple[ArtifactDeclarationStepContext, ...]:
+        self._admit_artifact_graphs()
+        return self._artifact_contexts
+
+    @property
+    def future_artifact_inputs(self) -> tuple[frozenset[ArtifactSpecRef], ...]:
+        self._admit_artifact_graphs()
+        return self._future_artifact_inputs
+
+    @property
+    def invocation_contract_provider(self) -> InvocationContractProvider:
+        """Use admitted occurrence plans; temporary provider factories are released."""
+        self._admit_artifact_graphs()
+        return self
+
+    def __call__(
+        self,
+        invocation: NormalizedFunctionItem,
+        step_context: ArtifactDeclarationStepContext,
+    ) -> InvocationContractPlan | None:
+        self._admit_artifact_graphs()
+        return self._artifact_graphs[step_context.step_index].invocation_contract_plans[
+            invocation.key
+        ]
 
     def __post_init__(self) -> None:
         missing_scopes = [

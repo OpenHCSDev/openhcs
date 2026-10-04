@@ -406,8 +406,8 @@ def test_real_cellprofiler_declaration_compiles_without_a_table_wide_subject():
             step_provenance={0: {}},
         ),
     )
-    provider = CellProfilerInvocationContractProviderFactory.provider_for_session(
-        session
+    provider = CellProfilerInvocationContractProviderFactory.provider_for_pipeline(
+        session.pipeline
     )
     authored = next(normalize_function_pattern(step.func).iter_items())
     contract = provider.plans[(0, authored.key)].contract

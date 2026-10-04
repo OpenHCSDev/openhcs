@@ -197,8 +197,8 @@ def _compiler_contracts(
                 step_provenance={index: {} for index, state in step_states.items()},
             ),
         )
-        provider = PipelineInvocationContractProviderAuthority.provider_for_session(
-            session,
+        provider = PipelineInvocationContractProviderAuthority.provider_for_pipeline(
+            session.pipeline,
         )
         contracts: list[CallableContract] = []
         for index, snapshot in enumerate(resolved_steps):

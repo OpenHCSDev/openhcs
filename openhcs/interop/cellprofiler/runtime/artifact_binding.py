@@ -297,11 +297,11 @@ class RuntimeInputBindingRequest:
             source_ref.name,
         )
 
-    def artifact_value(
+    def admitted_input_spec(
         self,
         edge: InvocationArtifactInputEdgePlan,
-    ) -> RuntimeCallableArgument:
-        """Resolve one declaration from exactly one compiled runtime authority."""
+    ) -> ArtifactSpec:
+        """Admit an exact input against the current selected declarations."""
 
         spec = edge.spec
         declared = self.declared_inputs.by_ref(spec.ref())
@@ -309,6 +309,15 @@ class RuntimeInputBindingRequest:
             raise ValueError(
                 f"{self.module_name} does not declare artifact input {spec.ref()!r}."
             )
+        return spec
+
+    def artifact_value(
+        self,
+        edge: InvocationArtifactInputEdgePlan,
+    ) -> RuntimeCallableArgument:
+        """Resolve one declaration from exactly one compiled runtime authority."""
+
+        spec = self.admitted_input_spec(edge)
         source_plan = self.adapter.request.source_binding_plan
         source_binding = source_plan.binding_for_artifact_ref(spec.ref())
         source_artifact_binding = (

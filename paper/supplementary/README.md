@@ -787,6 +787,18 @@ restored original-channel tables without changing the soma masks. This case is
 assisted development, not a fresh autonomous success; its packaging overrun and
 nonzero client teardown status remain recorded.
 
+A separate fresh retinal author completed a measured smoothing/background
+subtraction pipeline and retained 109 reconciled detector objects, including
+8 border objects. Local nuisance admission improved, while faint-body extent
+and ring-shaped splits remained uncertain. A saved response localized one
+plausible miss before watershed. This completed uncoached attempt supplies
+useful candidate output and autonomous diagnosis, not a manual-reference
+accuracy estimate or exact RGC total. The
+[fresh retinal outcome record](task_only_analysis/retinal-staged96-outcome.json)
+identifies the independently verified 21 source and 119 payload entries;
+corrected regional captures, exact process closure and client exit 2 remain
+distinct from scientific completion.
+
 A fresh-context paired DNA/actin author also retained 55 nuclei and 55
 source-linked actin territories after repairing a local nuclear merge. A
 faint-neighbour merge, clipped objects and one no-growth territory remained
