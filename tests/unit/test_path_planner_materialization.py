@@ -1205,7 +1205,11 @@ def test_implicit_native_main_flow_provenance_drives_artifact_owned_scope():
         orchestrator=SimpleNamespace(pipeline_config=PipelineConfig()),
         global_config=GlobalPipelineConfig(),
         pipeline=ResolvedPipelineDefinition(
-            steps=steps, step_state_map={index: object() for index in range(len(steps))}
+            steps=steps,
+            step_scope_ids={
+                index: f"plate::step_{index}" for index in range(len(steps))
+            },
+            step_provenance={index: {} for index in range(len(steps))},
         ),
     )
     provider = CellProfilerInvocationContractProviderFactory.provider_for_session(
