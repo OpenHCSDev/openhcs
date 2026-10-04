@@ -2637,7 +2637,9 @@ def write_image_file(
             filename = context.named_source_filename(item.metadata, options.primary_output_suffix)
             if filename is None:
                 filename = (
-                    source_stem_authority.required_source_stem(item.metadata)
+                    source_stem_authority.required_source_stem(
+                        item.metadata, context.artifact_filename_identity,
+                    )
                     + options.primary_output_suffix
                 )
             path = str(paths.parent / filename)

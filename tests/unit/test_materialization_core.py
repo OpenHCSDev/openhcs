@@ -2439,9 +2439,12 @@ def test_declared_volume_save_preserves_pixels_and_exact_plane_selection(
     tmp_path, intrinsic
 ):
     from openhcs.core.artifacts import ImageArtifactType
+    from openhcs.processing.materialization.options import MaterializedFilenameIdentity
     from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
     from openhcs.core.image_file_serialization import TiffImageFileFormat
-    from openhcs.core.runtime_image_values import image_payload_data, image_payload_mask
+    from openhcs.core.runtime_image_values import (
+        image_payload_data, image_payload_mask, image_payload_metadata,
+    )
     from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
     from openhcs.core.source_projection import SourceArtifactProjection, SourcePixelRef
     from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
@@ -2487,15 +2490,21 @@ def test_declared_volume_save_preserves_pixels_and_exact_plane_selection(
     )
     payload = metadata.payload_with(pixels, mask)
     manager = FileManager({"disk": DiskStorageBackend()})
-    spec = MaterializationSpec(ImageFileOptions(filename_suffix=".tif"))
+    spec = MaterializationSpec(ImageFileOptions(
+        filename_suffix=".tif",
+        filename_identity=MaterializedFilenameIdentity.SOURCE_IDENTITY,
+    ))
     batch = prepare_materialization(
         spec,
         payload,
-        str(tmp_path / ("A01_s001_w2_z001_t001.tif" if intrinsic else "output")),
+        str(tmp_path / "output"),
         manager,
         ("disk",),
         context=_SourceSchemaProcessingContext(),
         variable_components=(VariableComponents.Z_INDEX,),
+        artifact_filename_identity=SourceImageIdentity(
+            component_metadata={**components[0], "extension": ".tif"},
+        ),
     )
     batch.save()
     assert len(batch.outputs) == (1 if intrinsic else 3)
@@ -2505,6 +2514,10 @@ def test_declared_volume_save_preserves_pixels_and_exact_plane_selection(
         return
 
     (output,) = batch.outputs
+    assert Path(output.path).name == "A01_s001_w2_z001_t001.tif"
+    assert image_payload_metadata(payload).source_component_metadata.get("z_index") is None
+    assert output.metadata.source_component_metadata.get("z_index") is None
+    assert output.metadata.source_provenance.source_plane_count == 3
     np.testing.assert_array_equal(tifffile.imread(output.path), pixels)
     saved_metadata = TiffImageFileFormat().persisted_metadata(
         Path(output.path), payload
