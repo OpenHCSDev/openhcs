@@ -10,7 +10,7 @@ from metaclass_registry import AutoRegisterMeta
 
 from openhcs.core.aligned_image_payload import (
     AlignedImageStack,
-    stack_image_payload_context,
+    stack_image_payloads,
 )
 from openhcs.core.registry_strategies import NominalTypeKeyedStrategyMixin
 from openhcs.core.runtime_array_values import (
@@ -236,9 +236,8 @@ class RuntimeSliceAlignedImageOutputSourceContextStrategy(
                     output_slice,
                 )
             )
-        return stack_image_payload_context(
+        return stack_image_payloads(
             tuple(contextualized_slices),
-            output_data,
             metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
         )
 
