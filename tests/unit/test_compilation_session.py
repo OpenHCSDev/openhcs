@@ -15,6 +15,7 @@ from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.config import (
     GlobalPipelineConfig,
     LazyNapariStreamingConfig,
+    LazyProcessingConfig,
     LazySourceBindingsConfig,
     LazyStepSourceBindingsConfig,
     PipelineConfig,
@@ -277,7 +278,9 @@ def test_compilation_session_shares_resolved_pipeline_and_owns_axis_plans():
         orchestrator=_orchestrator(),
         global_config=GlobalPipelineConfig(),
         pipeline=ResolvedPipelineDefinition(
-            steps=(_resolved_step(step),), step_state_map={0: step_state}
+            steps=(_resolved_step(step),),
+            step_scope_ids={0: step_state.scope_id},
+            step_provenance={0: {}},
         ),
     )
 
@@ -287,7 +290,7 @@ def test_compilation_session_shares_resolved_pipeline_and_owns_axis_plans():
     captured = session.pipeline.steps[0].func
     assert normalize_function_pattern(captured) is captured
     assert next(captured.iter_items()).func is _identity
-    assert session.pipeline.step_state_map[0] is step_state
+    assert session.pipeline.step_scope_ids[0] == step_state.scope_id
     assert session.pipeline.steps[0].name == "step"
     assert session.plan(0).step_name == "step"
 
@@ -315,7 +318,9 @@ def test_resolved_declarations_reuse_contracts_but_keep_axis_and_author_epochs(m
         return from_callable(cls, func)
 
     monkeypatch.setattr(CallableContract, "from_callable", classmethod(count_contracts))
-    pipeline = PipelineCompiler._filter_enabled_steps(definition, {0: state})
+    pipeline = ResolvedPipelineDefinition(
+        definition, {0: state.scope_id}, step_provenance={0: {}}
+    )
     captured = pipeline.steps[0].func
     (item,) = tuple(captured.iter_items())
     assert definition == [authored] and definition[0].func[1][0][1] is kwargs
@@ -346,7 +351,9 @@ def test_resolved_declarations_reuse_contracts_but_keep_axis_and_author_epochs(m
     assert next(provider_compiled.iter_invocations()).contract is replacement
     kwargs["sigma"] = 7
     assert item.kwargs_dict["sigma"] == 2
-    recaptured = ResolvedPipelineDefinition(definition, {0: state})
+    recaptured = ResolvedPipelineDefinition(
+        definition, {0: state.scope_id}, step_provenance={0: {}}
+    )
     assert next(recaptured.steps[0].func.iter_items()).kwargs_dict["sigma"] == 7
     assert calls == [needs_grid, needs_grid]
 
@@ -361,7 +368,8 @@ def test_compiler_keeps_variable_components_as_stack_source():
             steps=(
                 _resolved_step(step, variable_components=(VariableComponents.CHANNEL,)),
             ),
-            step_state_map={0: SimpleNamespace(scope_id="plate::functionstep_0")},
+            step_scope_ids={0: "plate::functionstep_0"},
+            step_provenance={0: {}},
         ),
     )
 
@@ -418,7 +426,9 @@ def test_path_planner_source_binding_plan_comes_from_objectstate_snapshot():
             orchestrator=_orchestrator(pipeline_state.to_object()),
             global_config=GlobalPipelineConfig(),
             pipeline=ResolvedPipelineDefinition(
-                steps=(snapshot,), step_state_map={0: step_state}
+                steps=(snapshot,),
+                step_scope_ids={0: step_state.scope_id},
+                step_provenance={0: {}},
             ),
         )
 
@@ -477,7 +487,9 @@ def test_compiler_streaming_config_snapshot_preserves_inherited_port():
             orchestrator=_orchestrator(pipeline_state.to_object()),
             global_config=global_config,
             pipeline=ResolvedPipelineDefinition(
-                steps=(snapshot,), step_state_map={0: step_state}
+                steps=(snapshot,),
+                step_scope_ids={0: step_state.scope_id},
+                step_provenance={0: {}},
             ),
         )
 
@@ -505,7 +517,8 @@ def test_compiler_disabled_source_bindings_stay_inert_without_contract_requireme
         global_config=GlobalPipelineConfig(),
         pipeline=ResolvedPipelineDefinition(
             steps=(snapshot,),
-            step_state_map={0: SimpleNamespace(scope_id="plate::functionstep_0")},
+            step_scope_ids={0: "plate::functionstep_0"},
+            step_provenance={0: {}},
         ),
     )
 
@@ -528,7 +541,8 @@ def test_path_planner_activates_declared_source_binding_for_pipeline_start():
         global_config=GlobalPipelineConfig(),
         pipeline=ResolvedPipelineDefinition(
             steps=(snapshot,),
-            step_state_map={0: SimpleNamespace(scope_id="plate::functionstep_0")},
+            step_scope_ids={0: "plate::functionstep_0"},
+            step_provenance={0: {}},
         ),
     )
 
@@ -566,7 +580,8 @@ def test_plate_export_contract_construction_projects_inputs_to_runtime_batch():
         global_config=GlobalPipelineConfig(),
         pipeline=ResolvedPipelineDefinition(
             steps=(snapshot,),
-            step_state_map={0: SimpleNamespace(scope_id="plate::functionstep_0")},
+            step_scope_ids={0: "plate::functionstep_0"},
+            step_provenance={0: {}},
         ),
     )
     dependency_before_provider = session.plan(0).main_input_dependency
@@ -607,7 +622,8 @@ def test_path_planner_preserves_pipeline_start_bindings_for_implicit_main_flow()
         global_config=GlobalPipelineConfig(),
         pipeline=ResolvedPipelineDefinition(
             steps=(snapshot,),
-            step_state_map={0: SimpleNamespace(scope_id="plate::functionstep_0")},
+            step_scope_ids={0: "plate::functionstep_0"},
+            step_provenance={0: {}},
         ),
     )
     execution_bindings, (source_binding_plan, source_universe_plan) = (
@@ -635,7 +651,8 @@ def test_path_planner_step_output_projects_only_exact_source_artifacts() -> None
         global_config=GlobalPipelineConfig(),
         pipeline=ResolvedPipelineDefinition(
             steps=(snapshot,),
-            step_state_map={0: SimpleNamespace(scope_id="plate::functionstep_0")},
+            step_scope_ids={0: "plate::functionstep_0"},
+            step_provenance={0: {}},
         ),
     )
 
@@ -684,7 +701,8 @@ def test_path_planner_preserves_metaxpress_primary_source_order() -> None:
         global_config=GlobalPipelineConfig(),
         pipeline=ResolvedPipelineDefinition(
             steps=(snapshot,),
-            step_state_map={0: SimpleNamespace(scope_id="plate::functionstep_0")},
+            step_scope_ids={0: "plate::functionstep_0"},
+            step_provenance={0: {}},
         ),
     )
     contract = CallableContract.from_callable(neurite_outgrowth_metaxpress)
@@ -803,7 +821,8 @@ def test_path_planner_freezes_only_contract_selected_source_bindings():
         global_config=GlobalPipelineConfig(),
         pipeline=ResolvedPipelineDefinition(
             steps=(snapshot,),
-            step_state_map={0: SimpleNamespace(scope_id="plate::functionstep_0")},
+            step_scope_ids={0: "plate::functionstep_0"},
+            step_provenance={0: {}},
         ),
     )
     execution_bindings, (source_binding_plan, _source_universe_plan) = (
@@ -838,33 +857,75 @@ def test_compiler_pipeline_scope_prevents_cross_pipeline_source_binding_inherita
     )
     first_pipeline = [FunctionStep(func=_identity, name="first")]
     second_pipeline = [FunctionStep(func=_identity, name="second")]
-    registered_scopes: list[tuple[SimpleNamespace, str]] = []
-
-    try:
-        first_scope, _first_config_state, first_resolved = (
-            PipelineCompiler._register_and_resolve_pipeline_once(
-                first_orchestrator,
-                first_pipeline,
-                is_zmq_execution=False,
-            )
-        )
-        registered_scopes.append((first_orchestrator, first_scope))
-
-        second_scope, _second_config_state, second_resolved = (
-            PipelineCompiler._register_and_resolve_pipeline_once(
-                second_orchestrator,
-                second_pipeline,
-                is_zmq_execution=False,
-            )
-        )
-        registered_scopes.append((second_orchestrator, second_scope))
-    finally:
-        for orchestrator, scope_id in registered_scopes:
-            PipelineCompiler._cleanup_compilation_object_states(
-                orchestrator,
-                scope_id,
-            )
+    first_resolved = PipelineCompiler._resolve_pipeline_once(
+        first_orchestrator, first_pipeline
+    )
+    second_resolved = PipelineCompiler._resolve_pipeline_once(
+        second_orchestrator, second_pipeline
+    )
+    first_scope = first_resolved.step_scope_ids[0]
+    second_scope = second_resolved.step_scope_ids[0]
 
     assert first_scope != second_scope
     assert first_resolved.steps[0].source_bindings.bindings == (binding,)
     assert second_resolved.steps[0].source_bindings.is_empty
+
+
+def test_headless_resolution_preserves_saved_ui_ancestors_and_registrations(tmp_path):
+    ObjectStateRegistry.clear()
+    ensure_global_config_context(GlobalPipelineConfig, GlobalPipelineConfig())
+    plate_path = tmp_path / "plate"
+    saved_binding = NamedSourceBinding(alias="DNA")
+    live_binding = NamedSourceBinding(alias="Memb")
+    ui_state = ObjectState(
+        PipelineConfig(
+            source_bindings_config=LazySourceBindingsConfig(bindings=(saved_binding,)),
+            processing_config=LazyProcessingConfig(
+                variable_components=[VariableComponents.SITE],
+            ),
+        ),
+        scope_id=str(plate_path),
+    )
+    ObjectStateRegistry.register(ui_state, _skip_snapshot=True)
+    ui_state.update_parameter("source_bindings_config.bindings", (live_binding,))
+    original_states = ObjectStateRegistry.get_all()
+    original_parameters = dict(ui_state.parameters)
+    observed_registrations = []
+
+    def record_registration(scope, state):
+        observed_registrations.append((scope, state))
+
+    subscription = ObjectStateRegistry.add_register_callback(record_registration)
+    authored = [
+        FunctionStep(func=_identity, name="disabled", enabled=False),
+        FunctionStep(func=_identity, name="enabled"),
+    ]
+    enabled_token = authored[1]._scope_token or "step_1"
+    try:
+        resolved = PipelineCompiler._resolve_pipeline_once(
+            SimpleNamespace(plate_path=plate_path, pipeline_config=PipelineConfig()),
+            authored,
+        )
+        assert len(resolved.steps) == 1
+        assert resolved.steps[0].source_bindings.bindings == (saved_binding,)
+        assert resolved.step_scope_ids[0].endswith(f"::{enabled_token}")
+        source_scope, _source_type = resolved.step_provenance[0][
+            "source_bindings.bindings"
+        ]
+        assert source_scope == str(plate_path)
+        assert ObjectStateRegistry.get_all() == original_states
+        assert ui_state.parameters == original_parameters
+        assert observed_registrations == []
+        assert ui_state.get_resolved_value("source_bindings_config.bindings") == (
+            live_binding,
+        )
+        saved_components = object.__getattribute__(
+            ui_state.object_instance.processing_config, "variable_components"
+        )
+        saved_components.append(VariableComponents.Z_INDEX)
+        assert resolved.steps[0].processing_config.variable_components == [
+            VariableComponents.SITE
+        ]
+    finally:
+        subscription.release()
+        ObjectStateRegistry.clear()

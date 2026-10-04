@@ -24,8 +24,6 @@ from openhcs.core.vfs_protocol import (
 )
 
 if TYPE_CHECKING:
-    from objectstate import ObjectState
-
     from openhcs.core.config import GlobalPipelineConfig
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 
@@ -158,23 +156,39 @@ def resolve_declared_dataclass_paths(
 
 @dataclass(frozen=True, slots=True)
 class ResolvedPipelineDefinition:
-    """Capture enabled declarations once after ObjectState/callable resolution.
+    """Capture enabled saved declarations and their scope/provenance facts.
 
     Axis sessions derive metadata kwargs and provider contracts from this view;
     authored FunctionSteps keep their public function-pattern syntax.
     """
 
     steps: Sequence[AbstractStep]
-    step_state_map: Mapping[int, "ObjectState"]
+    step_scope_ids: Mapping[int, str]
+    step_provenance: Mapping[int, Mapping[str, tuple[str | None, type | None]]]
 
     def __post_init__(self) -> None:
-        missing_states = [
-            index for index in range(len(self.steps)) if index not in self.step_state_map
+        missing_scopes = [
+            index
+            for index in range(len(self.steps))
+            if index not in self.step_scope_ids or index not in self.step_provenance
         ]
-        if missing_states:
+        if missing_scopes:
             raise ValueError(
-                f"Resolved pipeline missing ObjectState entries for steps {missing_states}."
+                f"Resolved pipeline missing scope/provenance facts for steps {missing_scopes}."
             )
+        object.__setattr__(
+            self,
+            "step_provenance",
+            {
+                index: dict(self.step_provenance[index])
+                for index in range(len(self.steps))
+            },
+        )
+        object.__setattr__(
+            self,
+            "step_scope_ids",
+            dict(self.step_scope_ids),
+        )
         object.__setattr__(
             self,
             "steps",
@@ -253,6 +267,7 @@ class CompilationSession:
     def __post_init__(self) -> None:
         if self.plate_scope is None and self.context.plate_path is not None:
             self.plate_scope = CompilationPlateScope.from_context(self.context)
+
     @property
     def axis_id(self) -> str:
         return self.context.axis_id
