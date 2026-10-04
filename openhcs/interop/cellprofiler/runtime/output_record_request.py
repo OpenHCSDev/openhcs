@@ -263,6 +263,7 @@ class CellProfilerOutputRecordRequest(RuntimeInputBindingRequest):
         if value is None:
             return self.artifact_source_payload(edge)
         RuntimeInputBindingRequest.__post_init__(self)
+        self.admitted_input_spec(edge)
         # Admission is live and can replace an edge. Recheck custody after that
         # epoch before using retained context; a changed origin is read once.
         edge = self.adapter.request.require_artifact_input_edge(source_ref)

@@ -7,6 +7,7 @@ import pytest
 from openhcs.core.artifacts import (
     ArtifactOutputPlan,
     ArtifactSpec,
+    ArtifactSpecCollection,
     ImageArtifactType,
     ObjectLabelsArtifactType,
 )
@@ -35,6 +36,8 @@ from openhcs.interop.cellprofiler.runtime.output_recording import (
 from openhcs.interop.cellprofiler.runtime.output_record_request import (
     CellProfilerOutputRecordRequest,
 )
+from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
+from openhcs.interop.cellprofiler.runtime.invocation import CellProfilerImageRequest
 
 
 def _output_record_request(
@@ -434,6 +437,34 @@ def test_record_input_selection_effects_remain_at_each_read_epoch(monkeypatch) -
         assert tuple(events) == expected_events
         assert image_payload_data(actual) is image_payload_data(original)
         assert image_payload_metadata(actual) == image_payload_metadata(original)
+
+    # Consumed context must admit declarations too: a selected edge remaining
+    # in the map cannot excuse a live selector removing its declaration.
+    edge = request.active_input_edges[0]
+    output = ArtifactSpec.output_preserving_source_stack_scope(
+        request.spec.name, request.spec.artifact_type, spec,
+    )
+    consumed = CellProfilerImageRequest(
+        source_image_name=spec.name,
+        image_count=1,
+        payload=request.current_image,
+        execution_mode=ImagePayloadExecutionMode.NATURAL,
+        kwargs=request.kwargs,
+        input_binding_request=request.adapter.request,
+        input_edges=request.active_input_edges,
+        primary_input_edges=(edge,),
+    )
+    request = replace(
+        request, spec=output,
+        output_plan=replace(request.output_plan, relations=output.relations),
+        source=consumed,
+    )
+    monkeypatch.setattr(
+        RuntimeAdapterRequest, "selected_artifact_input_specs",
+        lambda _adapter_request: ArtifactSpecCollection(()),
+    )
+    with pytest.raises(ValueError, match="does not declare artifact input"):
+        request.output_source_payload()
 
 
 def test_record_explicit_object_subset_preserves_binding_admission() -> None:
