@@ -6,7 +6,6 @@ import logging
 import time
 import traceback
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass
 from itertools import zip_longest
 from typing import TYPE_CHECKING
 
@@ -74,23 +73,6 @@ AnchorPatternSelector = Callable[
     [FunctionGroupKey, tuple[SourceCandidatePath, ...]],
     Sequence[SourceCandidatePath],
 ]
-
-
-def record_function_step_runtime_profile(
-    plan: CompiledStepPlan,
-    label: str,
-    seconds: float,
-    *,
-    extra_fields: RuntimeProfileExtraFields = None,
-) -> None:
-    """Record one runtime profile event for a function-step plan."""
-    fields: dict[str, RuntimeProfileFieldValue] = {
-        "step": plan.step_index,
-        "step_name": plan.step_name,
-    }
-    if extra_fields is not None:
-        fields.update(extra_fields)
-    RuntimeProfileLogger.log(logger, label, seconds, **fields)
 
 
 def _single_execution_group_patterns(
@@ -439,8 +421,7 @@ class FunctionStepExecutor:
         before_count = sum(map(len, grouped_patterns.values()))
         after_count = sum(map(len, filtered.values()))
         if before_count != after_count:
-            record_function_step_runtime_profile(
-                self.plan,
+            self.record_runtime_profile(
                 "step_filter_source_anchors",
                 0.0,
                 extra_fields={
@@ -539,8 +520,7 @@ class FunctionStepExecutor:
         before_count = sum(map(len, grouped_patterns.values()))
         after_count = sum(map(len, filtered.values()))
         if before_count != after_count:
-            record_function_step_runtime_profile(
-                self.plan,
+            self.record_runtime_profile(
                 label,
                 0.0,
                 extra_fields={
@@ -553,9 +533,7 @@ class FunctionStepExecutor:
     def source_pattern_context(self) -> SourcePatternResolutionContext:
         """Return source-path context used to filter source-bound anchors."""
 
-        projection = (
-            self.context.runtime_source_workspace_projection_authority.projection_or_empty()
-        )
+        projection = self.context.runtime_source_workspace_projection_authority.projection_or_empty()
         return self.context.runtime_source_binding_context_cache.source_pattern_context(
             parser=self.context.microscope_handler.parser,
             projection=self.context.runtime_source_workspace_projection_cache.filtered_by_axis(
@@ -572,12 +550,13 @@ class FunctionStepExecutor:
         *,
         extra_fields: RuntimeProfileExtraFields = None,
     ) -> None:
-        record_function_step_runtime_profile(
-            self.plan,
-            label,
-            seconds,
-            extra_fields=extra_fields,
-        )
+        fields: dict[str, RuntimeProfileFieldValue] = {
+            "step": self.plan.step_index,
+            "step_name": self.plan.step_name,
+        }
+        if extra_fields is not None:
+            fields.update(extra_fields)
+        RuntimeProfileLogger.log(logger, label, seconds, **fields)
 
     @classmethod
     def execute(
@@ -625,7 +604,9 @@ class FunctionStepExecutor:
             return RuntimeArtifactInput(
                 edge_plan=edge,
                 axis_scope=RuntimeExecutionAxisScope.from_raw(
-                    plan.axis_id, component=None, value=None,
+                    plan.axis_id,
+                    component=None,
+                    value=None,
                 ),
                 backend=Backend.MEMORY.value,
                 source_binding_plan=plan.source_binding_plan,
@@ -669,12 +650,16 @@ class FunctionStepExecutor:
             selected_groups.append((component_key, group, edges))
 
         requests = []
-        for component_index, (component_key, group, edges) in enumerate(selected_groups):
+        for component_index, (component_key, group, edges) in enumerate(
+            selected_groups
+        ):
             cohorts = None
             for edge in edges:
                 edge_cohorts = candidate_scopes(
                     edge,
-                    ComponentGroupScope.from_raw((component_key,), component=scope.component),
+                    ComponentGroupScope.from_raw(
+                        (component_key,), component=scope.component
+                    ),
                 )
                 if not edge_cohorts:
                     raise ValueError(
@@ -832,9 +817,7 @@ class FunctionStepExecutor:
         axis_filter = {f"{axis_name}_filter": [plan.axis_id]}
         source_files = step_output_manifest(self.context).producer_paths_for(plan)
         if source_files is None:
-            source_projection = (
-                self.context.runtime_source_workspace_projection_authority.projection_if_available()
-            )
+            source_projection = self.context.runtime_source_workspace_projection_authority.projection_if_available()
             if (
                 plan.main_input_dependency.kind
                 is StepInputDependencyKind.PIPELINE_START

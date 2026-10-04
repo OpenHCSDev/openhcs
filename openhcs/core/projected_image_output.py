@@ -28,7 +28,9 @@ from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
     object_label_dense_array,
 )
-from openhcs.core.runtime_object_label_building import SourceImageObjectLabelBuildRequest
+from openhcs.core.runtime_object_label_building import (
+    SourceImageObjectLabelBuildRequest,
+)
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,

@@ -422,7 +422,8 @@ class StepOutputManifestStore:
     ) -> tuple[ProducedOutputSemantics, ...]:
         """Select image occurrences directly from this step's current producer cohort."""
         return tuple(
-            record for record in self.produced_records_for(plan)
+            record
+            for record in self.produced_records_for(plan)
             if record.is_image_payload
         )
 
@@ -453,12 +454,15 @@ class StepOutputManifestStore:
         return None if index is None else index.records_for_paths(paths)
 
     def producer_record_index_for(
-        self, plan: CompiledStepPlan, parser: FilenameParser,
+        self,
+        plan: CompiledStepPlan,
+        parser: FilenameParser,
     ) -> ProducedPathRecordIndex | None:
         """Admit one current producer cohort with its correlated address aliases."""
         records = self._selected_unique_producer_records_for(plan, path_ordered=True)
         return (
-            None if records is None
+            None
+            if records is None
             else ProducedPathRecordIndex.from_records(records, parser)
         )
 
@@ -510,7 +514,10 @@ class StepOutputManifestStore:
         records_by_path: dict[str, ProducedOutputSemantics] = {}
         for record in records:
             existing = records_by_path.get(record.output_path)
-            if existing is not None and existing.main_flow_plane_axis is not record.main_flow_plane_axis:
+            if (
+                existing is not None
+                and existing.main_flow_plane_axis is not record.main_flow_plane_axis
+            ):
                 raise ValueError(
                     "One produced output path cannot declare conflicting main-flow image axes: "
                     f"{record.output_path!r}."
@@ -654,11 +661,13 @@ class ProducedPathRecordIndex:
         return next(self.matching_tokens(path), None) is not None
 
     def matching_records(self, path: str) -> tuple[ProducedOutputSemantics, ...]:
-        indices = sorted({
-            index
-            for token in self.matching_tokens(path)
-            for index in self.record_indices_by_token[token]
-        })
+        indices = sorted(
+            {
+                index
+                for token in self.matching_tokens(path)
+                for index in self.record_indices_by_token[token]
+            }
+        )
         return tuple(self.records[index] for index in indices)
 
     def record_for_path(self, path: str) -> ProducedOutputSemantics:
@@ -672,12 +681,14 @@ class ProducedPathRecordIndex:
         return records[0]
 
     def records_for_paths(
-        self, paths: Sequence[str],
+        self,
+        paths: Sequence[str],
     ) -> tuple[ProducedOutputSemantics, ...]:
         return tuple(self.record_for_path(path) for path in paths)
 
     def validate_input_records(
-        self, records: Sequence[ProducedOutputSemantics],
+        self,
+        records: Sequence[ProducedOutputSemantics],
     ) -> None:
         """Validate address cardinality while retaining the already-selected cohort."""
         for record in records:

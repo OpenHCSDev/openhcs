@@ -215,6 +215,39 @@ class ObjectLabelVariantData:
             ),
         )
 
+    def validate_representation(
+        self,
+        *,
+        representation: ObjectLabelRepresentation,
+        value_label: str,
+    ) -> None:
+        """Validate final and optional variants before admitting a label carrier."""
+        label_data = self.labels
+        final_authority = ObjectLabelStorageStrategy.for_value(label_data)
+        final_authority.validate_representation(
+            label_data,
+            representation=representation,
+            value_label=value_label,
+        )
+        for variant_name, variant in (
+            ("unedited_labels", self.unedited_labels),
+            ("small_removed_labels", self.small_removed_labels),
+        ):
+            if variant is None:
+                continue
+            variant_authority = ObjectLabelStorageStrategy.for_value(variant)
+            variant_authority.validate_representation(
+                variant,
+                representation=representation,
+                value_label=f"{value_label} {variant_name}",
+            )
+            if variant_authority.matching_variant(variant, variant, label_data) is None:
+                raise ValueError(
+                    f"{value_label} {variant_name} shape "
+                    f"{variant_authority.label_shape(variant)!r} does not match "
+                    f"final labels shape {final_authority.label_shape(label_data)!r}."
+                )
+
     def in_representation(
         self,
         representation: ObjectLabelRepresentation,
@@ -976,21 +1009,64 @@ class ObjectLabelSet(ObjectLabelValue, NamedArtifactPayload):
         *,
         dimensions: tuple[str, ...] = (),
         source_image_name: str | None = None,
+        source_image_payload: runtime_array_values.RuntimeArrayData | None = None,
+        parent_image_payload: runtime_array_values.RuntimeArrayData | None = None,
+        source_image_names: tuple[str, ...] = (),
     ) -> Self:
-        """Bind artifact identity to an already nominal object-label payload."""
+        """Admit a named label value with its resolved source and parent context."""
+        variants = payload.variant_data
+        provenance = payload.source_provenance
+        spatial_domain = payload.source_spatial_domain
+        plane_axis = payload.plane_axis
+        if source_image_payload is not None:
+            metadata = runtime_image_values.image_payload_metadata(source_image_payload)
+            provenance = object_label_source_context_provenance(
+                payload, source_image_payload
+            )
+            spatial_domain = (
+                payload.object_label_source_spatial_domain().with_missing_from(
+                    metadata.object_label_source_spatial_domain()
+                )
+            )
+            plane_axis = ObjectLabelPlaneDomainStrategy.for_enum_member(
+                payload.domain.scope
+            ).value_plane_axis(payload.plane_axis)
+            variants = variants.in_representation(payload.representation)
+            if isinstance(payload, ObjectLabelSet):
+                payload.validate_artifact_name()
+                if payload.source_image_name == "":
+                    raise ValueError("ObjectLabelSet.source_image_name cannot be empty.")
+            variants.validate_representation(
+                representation=ObjectLabelRepresentation(payload.representation),
+                value_label=type(payload).__name__,
+            )
+        spacing = payload.parent_image_source_voxel_spacing
+        if parent_image_payload is not None:
+            spacing = spacing.with_missing_from(
+                runtime_image_values.image_payload_metadata(
+                    parent_image_payload
+                ).source_voxel_spacing
+            )
+        fallback_names = source_image_names
+        if not fallback_names and source_image_payload is not None:
+            fallback_names = runtime_image_values.image_payload_metadata(
+                source_image_payload
+            ).source_image_names
+        if fallback_names:
+            provenance = provenance.with_source_image_names(
+                provenance.source_image_names or fallback_names
+            )
         return cls(
             name=name,
             dimensions=dimensions,
             source_image_name=source_image_name,
-            variant_data=payload.variant_data,
+            variant_data=variants,
             representation=payload.representation,
             domain=payload.domain,
-            plane_axis=payload.plane_axis,
-            source_spatial_domain=payload.source_spatial_domain,
-            parent_image_source_voxel_spacing=(
-                payload.parent_image_source_voxel_spacing
-            ),
-            source_provenance=payload.source_provenance,
+            plane_axis=plane_axis,
+            source_spatial_domain=spatial_domain,
+            parent_image_source_voxel_spacing=spacing,
+            source_provenance=provenance,
         )
 
     def __post_init__(self, *source_provenance_values: object) -> None:
@@ -1503,31 +1579,11 @@ class ObjectLabelValueStorageStrategy(ObjectLabelStorageStrategy):
         value_label: str,
     ) -> None:
         label_value = cast(ObjectLabelValue, labels)
-        label_data = self.label_data(label_value)
-        final_authority = ObjectLabelStorageStrategy.for_value(label_data)
-        final_authority.validate_representation(
-            label_data,
+        self.label_data(label_value)
+        label_value.variant_data.validate_representation(
             representation=representation,
             value_label=value_label,
         )
-        for variant_name, variant in (
-            ("unedited_labels", label_value.unedited_labels),
-            ("small_removed_labels", label_value.small_removed_labels),
-        ):
-            if variant is None:
-                continue
-            variant_authority = ObjectLabelStorageStrategy.for_value(variant)
-            variant_authority.validate_representation(
-                variant,
-                representation=representation,
-                value_label=f"{value_label} {variant_name}",
-            )
-            if variant_authority.matching_variant(variant, variant, label_data) is None:
-                raise ValueError(
-                    f"{value_label} {variant_name} shape "
-                    f"{variant_authority.label_shape(variant)!r} does not match "
-                    f"final labels shape {final_authority.label_shape(label_data)!r}."
-                )
 
     def validate_plane_count(
         self,

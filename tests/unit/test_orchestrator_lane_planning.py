@@ -1133,7 +1133,7 @@ def test_compiled_execution_returns_settled_nonpersistent_viewer_state_before_cl
 ):
     events = []
     monkeypatch.setattr(
-        compiled_plate_execution_module.OpenHCSMetadataWriter,
+        compiled_plate_execution_module.OpenHCSMetadataTarget,
         "finalize_completed_plate",
         lambda _contexts: events.append("metadata"),
     )

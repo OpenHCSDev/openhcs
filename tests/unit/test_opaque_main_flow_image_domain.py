@@ -19,7 +19,7 @@ from openhcs.core.runtime_image_values import (
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest, PatternGroupRuntime
+from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest
 from openhcs.core.aligned_image_payload import AlignedImageStack, ImageOutputBundle, AlignedImageSliceContext, ImagePayloadStackComposition
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.steps.function_output_manifest import step_output_manifest, StepOutputManifestStore
@@ -35,8 +35,9 @@ def _identity(image):
 
 def _runtime():
     pattern = compile_function_pattern(_identity, {}, {})
-    runtime = object.__new__(PatternGroupRuntime)
-    runtime.request = SimpleNamespace(
+    runtime = PatternGroupExecutionRequest(
+        context=ProcessingContext(axis_id="A01"),
+        pattern_group_info="", component_index=0, component_count=1,
         compiled_group=pattern.default_group,
         execution_plan=CompiledStepPlan(
             step_index=0,
@@ -50,7 +51,7 @@ def _runtime():
             artifact_outputs={},
             execution_group_scope=ComponentGroupScope.ungrouped(),
         ),
-        component_key=None,
+        component_value=None,
     )
     return runtime
 
@@ -132,8 +133,8 @@ def test_nominal_alignment_owner_preserves_single_output_topology(named, axis):
 @pytest.mark.parametrize("count", [1, 3])
 def test_raw_array_fallback_keeps_explicit_runtime_unstack_contract(count):
     runtime = _runtime()
-    runtime.request.context = ProcessingContext(axis_id="A01")
-    runtime.request.context.microscope_handler = SimpleNamespace(parser=SourceSchemaFilenameParser())
+    runtime = replace(runtime, context=ProcessingContext(axis_id="A01"))
+    runtime.context.microscope_handler = SimpleNamespace(parser=SourceSchemaFilenameParser())
     pixels = np.arange(count * 4 * 5, dtype=np.float32).reshape(count, 4, 5)
     projected = runtime._project_output_slices(pixels, [f"source-{i}.tif" for i in range(count)])
     payloads = tuple(payload for payload, _context in projected)
@@ -190,13 +191,13 @@ def test_save_and_next_load_preserve_domain_and_independent_cache(tmp_path, monk
         mask = None
     producer = _runtime()
     pattern = compile_function_pattern(_identity, {}, {})
-    plan = replace(producer.request.execution_plan, output_dir=tmp_path, step_scope_id="whole-producer", compiled_function_pattern=pattern)
-    producer.request.execution_plan = plan
+    plan = replace(producer.execution_plan, output_dir=tmp_path, step_scope_id="whole-producer", compiled_function_pattern=pattern)
+    producer = replace(producer, execution_plan=plan)
     files = _MemoryFiles()
     context = ProcessingContext(axis_id="A01", filemanager=files)
     context.microscope_handler = SimpleNamespace(parser=SourceSchemaFilenameParser())
-    producer.request.context = context
-    producer.pattern_repr = "whole"
+    producer = replace(producer, context=context)
+    producer = replace(producer, pattern_group_info="whole")
     output = (
         ImageOutputBundle((payload,), (AlignedImageSliceContext.main_flow("WholeImage"),))
         if axis is not None or raw_named else payload
@@ -213,13 +214,13 @@ def test_save_and_next_load_preserve_domain_and_independent_cache(tmp_path, monk
         plan, step_index=1, step_scope_id="whole-consumer", input_dir=tmp_path,
         main_input_dependency=StepInputDependency.step_output(source_step_index=0, source_step_scope_id=plan.step_scope_id),
     )
-    consumer = PatternGroupRuntime(PatternGroupExecutionRequest(
+    consumer = PatternGroupExecutionRequest(
         context=context, execution_plan=consumer_plan, compiled_group=pattern.default_group,
         component_index=0, component_count=1,
         pattern_group_info="A01_s001_w1_z{iii}_t001.tif",
-    ))
-    monkeypatch.setattr(consumer, "source_workspace_projection_authority", lambda: SimpleNamespace(projection_if_available=lambda: None))
-    loaded = consumer._load_input_stack()[1]
+    )
+    monkeypatch.setattr(PatternGroupExecutionRequest, "source_workspace_projection_authority", lambda self: SimpleNamespace(projection_if_available=lambda: None))
+    loaded = consumer.load_input_stack()[1]
     assert image_payload_data(loaded).shape == pixels.shape
     assert image_payload_metadata(loaded).plane_axis is axis
     np.testing.assert_array_equal(image_payload_data(loaded), pixels)
@@ -257,7 +258,7 @@ def test_mixed_named_outputs_retain_each_original_axis_before_projection(runtime
 def test_passed_through_record_preserves_collapsed_and_filename_coordinates(tmp_path):
     from openhcs.core.steps.function_output_manifest import ProducedOutputSemantics
     from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
-    plan = replace(_runtime().request.execution_plan, output_dir=tmp_path)
+    plan = replace(_runtime().execution_plan, output_dir=tmp_path)
     record = ProducedOutputSemantics.from_output(
         plan, tmp_path / "A01_s001_w1_z001_t001.tif",
         FunctionOutputIdentity(component_values={"well": "A01"}, filename_component_values={"well": "A01", "z_index": 1}, extension=".tif", source="test"),
@@ -272,7 +273,7 @@ def test_passed_through_record_preserves_collapsed_and_filename_coordinates(tmp_
 def test_duplicate_physical_path_rejects_contradictory_whole_axis(tmp_path):
     from openhcs.core.steps.function_output_manifest import ProducedOutputSemantics
     from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
-    plan = replace(_runtime().request.execution_plan, output_dir=tmp_path)
+    plan = replace(_runtime().execution_plan, output_dir=tmp_path)
     opaque = ProducedOutputSemantics.from_output(
         plan, tmp_path / "A01_s001_w1_z001_t001.tif",
         FunctionOutputIdentity(component_values={"well": "A01"}, extension=".tif", source="test"),
@@ -294,7 +295,7 @@ def test_record_axis_survives_replace_and_pickle(tmp_path):
     import pickle
     from openhcs.core.steps.function_output_manifest import ProducedOutputSemantics
     from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
-    plan = replace(_runtime().request.execution_plan, output_dir=tmp_path)
+    plan = replace(_runtime().execution_plan, output_dir=tmp_path)
     for axis in (None, RuntimePlaneAxis.RUNTIME_SLICE, RuntimePlaneAxis.SOURCE_BINDING):
         record = ProducedOutputSemantics.from_output(
             plan, tmp_path / "A01_s001_w1_z001_t001.tif",
@@ -342,13 +343,13 @@ def test_saved_mixed_named_cohort_rejects_joint_load_and_preserves_selected_doma
     opaque = scalar_metadata.payload_with(opaque_pixels)
     producer = _runtime()
     pattern = compile_function_pattern(_identity, {}, {})
-    plan = replace(producer.request.execution_plan, output_dir=tmp_path, step_scope_id="mixed-producer", compiled_function_pattern=pattern)
-    producer.request.execution_plan = plan
+    plan = replace(producer.execution_plan, output_dir=tmp_path, step_scope_id="mixed-producer", compiled_function_pattern=pattern)
+    producer = replace(producer, execution_plan=plan)
     files = _MemoryFiles()
     context = ProcessingContext(axis_id="A01", filemanager=files)
     context.microscope_handler = SimpleNamespace(parser=SourceSchemaFilenameParser())
-    producer.request.context = context
-    producer.pattern_repr = "mixed"
+    producer = replace(producer, context=context)
+    producer = replace(producer, pattern_group_info="mixed")
 
     # A prior homogeneous producer caches the same physical paths. Mixed replacement
     # must invalidate that cache rather than leave a false joint runtime domain.
@@ -367,17 +368,21 @@ def test_saved_mixed_named_cohort_rejects_joint_load_and_preserves_selected_doma
         consumer_plan = replace(plan, step_index=1, step_scope_id="mixed-consumer", input_dir=tmp_path,
             compiled_function_pattern=compiled,
             main_input_dependency=StepInputDependency.step_output(source_step_index=0, source_step_scope_id=plan.step_scope_id))
-        consumer = PatternGroupRuntime(SimpleNamespace(context=context, execution_plan=consumer_plan,
-            compiled_group=compiled.default_group, source_binding_plan=CompiledSourceBindingPlan.empty(),
-            component_key=None, pattern_group_info="A01_s001_w1_z{iii}_t001.tif"))
-        monkeypatch.setattr(consumer, "source_workspace_projection_authority", lambda: SimpleNamespace(projection_if_available=lambda: None))
+        consumer = PatternGroupExecutionRequest(context=context,
+            execution_plan=consumer_plan,
+            compiled_group=compiled.default_group,
+            component_value=None,
+            pattern_group_info="A01_s001_w1_z{iii}_t001.tif",
+            component_index=0,
+            component_count=1)
+        monkeypatch.setattr(PatternGroupExecutionRequest, "source_workspace_projection_authority", lambda self: SimpleNamespace(projection_if_available=lambda: None))
         return consumer
 
     with pytest.raises(ValueError, match="different declared image axes"):
-        consumer_for(pattern)._load_input_stack()
+        consumer_for(pattern).load_input_stack()
     for name, expected, axis in (("Planes", image_payload_data(planes), RuntimePlaneAxis.RUNTIME_SLICE), ("Volume", opaque_pixels, None)):
         selected = consumer_for(_selected_pattern(name))
-        actual = selected._load_input_stack()[1]
+        actual = selected.load_input_stack()[1]
         np.testing.assert_array_equal(image_payload_data(actual), expected)
         assert image_payload_metadata(actual).plane_axis is axis
         if not cache_hit:
@@ -385,7 +390,7 @@ def test_saved_mixed_named_cohort_rejects_joint_load_and_preserves_selected_doma
         else:
             selected_path = next(r.output_path for r in records if r.producer_identity.output_key == name)
             context.runtime_image_stack_cache.store((selected_path,), memory_type=MEMORY_TYPE_NUMPY, stack=actual)
-        repeated = selected._load_input_stack()[1]
+        repeated = selected.load_input_stack()[1]
         np.testing.assert_array_equal(image_payload_data(repeated), expected)
         assert image_payload_metadata(repeated).plane_axis is axis
 
@@ -419,7 +424,7 @@ def test_opaque_named_bundle_uses_existing_same_slice_mask_composition():
 def test_input_bundle_composition_retains_lazy_plan_device_resolution(tmp_path, monkeypatch):
     from openhcs.core.steps.function_output_manifest import ProducedOutputSemantics
     from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
-    plan = replace(_runtime().request.execution_plan, output_dir=tmp_path)
+    plan = replace(_runtime().execution_plan, output_dir=tmp_path)
     records = tuple(ProducedOutputSemantics.from_output(
         plan, tmp_path / f"A01_s001_w1_z001_t001_{name}.tif",
         FunctionOutputIdentity(component_values={"well": "A01"}, extension=".tif", source="test"),

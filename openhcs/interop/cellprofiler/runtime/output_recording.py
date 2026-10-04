@@ -439,20 +439,31 @@ class ObjectLabelsOutputRecorder(CellProfilerOutputRecorder):
                 f"CellProfiler object-label output {request.spec.name!r} must be "
                 "an ObjectLabelValue."
             )
-        value = request.output_value.with_source_image_context(
-            source_context.source_payload
-        )
-        if source_context.parent_image_payload is not None:
-            value = value.with_parent_image_context(source_context.parent_image_payload)
-        request.adapter.add_objects(
+        construct_started_at = time.perf_counter()
+        labels = request.output_value
+        object_labels = ObjectLabelSet.from_payload(
             request.spec.name,
-            value,
-            source_image_name=request.source.source_image_name,
-            source_image_names=(
-                request.source.source_aliases
-                or source_context.source_metadata.source_image_names
-            ),
+            labels,
+            source_image_name=request.source.source_image_name
+            or labels.source_image_name,
+            dimensions=labels.dimensions,
             source_image_payload=source_context.source_payload,
+            parent_image_payload=source_context.parent_image_payload,
+            source_image_names=request.source.source_aliases,
+        )
+        if source_context.source_payload is not None:
+            object_labels.validate_source_alignment(request.spec.name)
+        CellProfilerRuntimeProfileLogger.object_label_artifact(
+            "recorder_construct_object_labels",
+            time.perf_counter() - construct_started_at,
+            artifact_name=request.spec.name,
+            payload_type=type(labels).__name__,
+            labels=object_labels,
+        )
+        request.adapter._record_native_value(
+            request.spec.name,
+            ObjectLabelsArtifactType,
+            object_labels,
         )
 
 

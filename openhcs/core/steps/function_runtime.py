@@ -11,7 +11,6 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from types import MappingProxyType
 from typing import (
-    Generic,
     Mapping,
     Sequence,
     TypeVar,
@@ -38,7 +37,6 @@ from openhcs.core.component_group_scope import (
 )
 from openhcs.core.component_set import ComponentSet
 from openhcs.core.context.processing_context import ProcessingContext
-from openhcs.core.runtime_profile import RuntimeProfileLogger
 from openhcs.core.debug import (
     DebugCursor,
     DebugEvent,
@@ -76,6 +74,7 @@ from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_output_matching import (
     split_runtime_output,
 )
+from openhcs.core.runtime_profile import RuntimeProfileLogger
 from openhcs.core.runtime_adapters import (
     RuntimeAdapterRequest,
 )
@@ -94,7 +93,6 @@ from openhcs.core.source_workspace_projection import (
     VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjection,
     VirtualWorkspaceSourceProjectionAuthority,
-    VirtualWorkspaceSourceProjectionCache,
 )
 from openhcs.core.source_binding_selection import (
     SourceBindingCandidateMatcher,
@@ -227,97 +225,6 @@ def project_object_label_declared_source_identity(
     return source_payload
 
 
-@dataclass(frozen=True)
-class ComponentArtifactPlans(Generic[ArtifactInputPlanKeyT, ArtifactInputPlanT]):
-    """Artifact plans selected for one grouped component execution."""
-
-    inputs: ArtifactInputPlans[ArtifactInputPlanKeyT, ArtifactInputPlanT]
-    outputs: ArtifactOutputPlans
-
-    @classmethod
-    def from_step_component(
-        cls,
-        plan: CompiledStepPlan,
-        component_key: str | None,
-    ) -> "ComponentArtifactPlans[ArtifactSpecRef, ArtifactInputPlan]":
-        ArtifactInputPlan.require_exact_map(
-            plan.artifact_inputs,
-            boundary="Component artifact input",
-        )
-        return cls(
-            inputs=dict(plan.artifact_inputs),
-            outputs=cls._select_output_plans_for_component(
-                plan.artifact_outputs,
-                plan.execution_group_scope,
-                component_key,
-            ),
-        )
-
-    def select_for_invocation(
-        self: "ComponentArtifactPlans[ArtifactSpecRef, ArtifactInputPlan]",
-        invocation: CompiledFunctionInvocation,
-        *,
-        execution_scope: ComponentGroupScope,
-        component_key: str | None,
-        declared_source_bindings: CompiledSourceBindingPlan = CompiledSourceBindingPlan(),
-        active_source_bindings: CompiledSourceBindingPlan = CompiledSourceBindingPlan(),
-    ) -> "ComponentArtifactPlans[InvocationArtifactInputProjectionKey, InvocationArtifactInputEdgePlan] | None":
-        active_outputs = invocation.output_plans_for_component(
-            execution_scope,
-            component_key,
-        )
-        if active_outputs is None:
-            return None
-        inputs = {}
-        for edge_key, edge in invocation.select_inputs(
-            self.inputs, active_output_plans=active_outputs,
-        ).items():
-            if (
-                edge.main_flow_projection is not None
-                and declared_source_bindings.declares_artifact_ref(edge.spec.ref())
-                and not active_source_bindings.declares_artifact_ref(edge.spec.ref())
-            ):
-                if not invocation.adapter_manages_artifact_inputs:
-                    continue
-                if edge.storage_plan is not None:
-                    raise ValueError(
-                        f"Stored primary input {edge.spec.ref()!r} is not represented "
-                        "by this main-flow payload; its producer cannot substitute "
-                        "for the current payload epoch."
-                    )
-                edge = replace(edge, main_flow_projection=None)
-            inputs[edge_key] = edge
-        return ComponentArtifactPlans(
-            inputs=inputs,
-            outputs=invocation.select_outputs(
-                self.outputs, compiled_output_plans=active_outputs,
-            ),
-        )
-
-    @classmethod
-    def _select_output_plans_for_component(
-        cls,
-        plans: ArtifactOutputPlans,
-        execution_scope: ComponentGroupScope,
-        component_key: str | None,
-    ) -> ArtifactOutputPlans:
-        ArtifactOutputPlan.require_exact_map(
-            plans,
-            boundary="Component artifact output",
-        )
-        return {
-            output_key: projected_plan
-            for output_key, output_plan in plans.items()
-            if (
-                projected_plan := output_plan.for_execution_scope(
-                    execution_scope,
-                    component_key,
-                )
-            )
-            is not None
-        }
-
-
 @dataclass(frozen=True, slots=True, kw_only=True)
 class PatternGroupExecutionScope:
     """Shared pattern-group execution coordinates."""
@@ -425,6 +332,36 @@ class PatternGroupExecutionScope:
             fixed_component_values=self.fixed_component_values,
         )
 
+    @staticmethod
+    def _select_output_plans_for_component(
+        plans: ArtifactOutputPlans,
+        execution_scope: ComponentGroupScope,
+        component_key: str | None,
+    ) -> ArtifactOutputPlans:
+        ArtifactOutputPlan.require_exact_map(
+            plans,
+            boundary="Component artifact output",
+        )
+        return {
+            output_key: projected_plan
+            for output_key, output_plan in plans.items()
+            if (
+                projected_plan := output_plan.for_execution_scope(
+                    execution_scope,
+                    component_key,
+                )
+            )
+            is not None
+        }
+
+    def selected_artifact_output_plans(self) -> ArtifactOutputPlans:
+        """Project current compiled output declarations into this group scope."""
+        return self._select_output_plans_for_component(
+            self.execution_plan.artifact_outputs,
+            self.execution_plan.execution_group_scope,
+            self.component_key,
+        )
+
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class PatternGroupExecutionRequest(PatternGroupExecutionScope):
@@ -433,12 +370,6 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
     pattern_group_info: JsonValue
     component_index: int
     component_count: int
-
-    def load_input_stack(
-        self, runtime: "PatternGroupRuntime",
-    ) -> tuple[list[str], RuntimeArrayData]:
-        """Admit the filename-selected source cohort."""
-        return runtime._load_input_stack()
 
     def loaded_plane_count(
         self,
@@ -454,7 +385,8 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
         )
 
     def loaded_fixed_component_values(
-        self, payload: RuntimeArrayData,
+        self,
+        payload: RuntimeArrayData,
     ) -> RuntimeFixedComponentValues:
         """Capture the source-selected cohort's common fixed coordinates."""
         source_provenance = image_payload_metadata(
@@ -464,9 +396,7 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
         variable_components = ComponentSet.coerce(
             self.execution_plan.variable_components or ()
         )
-        execution_group_component = (
-            self.execution_plan.execution_group_scope.component
-        )
+        execution_group_component = self.execution_plan.execution_group_scope.component
         fixed_components = tuple(
             component
             for component in AllComponents
@@ -482,7 +412,8 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
         return source_provenance.require_common_component_values(fixed_components)
 
     def passthrough_producer_records(
-        self, matching_files: Sequence[str],
+        self,
+        matching_files: Sequence[str],
     ) -> tuple[ProducedOutputSemantics, ...] | None:
         """Resolve the physical source paths selected by this request."""
         return step_output_manifest(self.context).producer_output_records_for_paths(
@@ -491,16 +422,1012 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
             self.context.microscope_handler.parser,
         )
 
+    @property
+    def pattern_repr(self) -> str:
+        return str(self.pattern_group_info)[:100]
+
+    def source_workspace_projection_authority(
+        self,
+    ) -> VirtualWorkspaceSourceProjectionAuthority:
+        return self.context.runtime_source_workspace_projection_authority
+
+    @staticmethod
+    def _is_relative_to(path: Path, root: Path) -> bool:
+        try:
+            path.relative_to(root)
+        except ValueError:
+            return False
+        return True
+
+    @classmethod
+    def _input_memory_path(cls, input_dir: Path, matched_path: str) -> str:
+        """Return the VFS memory path for one matched source path."""
+        path = Path(matched_path)
+        if path.is_absolute() or cls._is_relative_to(path, input_dir):
+            return str(path)
+        return str(input_dir / path)
+
+    @classmethod
+    def _input_relative_path(cls, input_dir: Path, matched_path: str) -> Path:
+        """Return matched path identity relative to the step input root."""
+        path = Path(matched_path)
+        if cls._is_relative_to(path, input_dir):
+            return path.relative_to(input_dir)
+        if path.is_absolute():
+            return Path(path.name)
+        return path
+
+    def run(self) -> None:
+        start_time = time.time() if logger.isEnabledFor(logging.DEBUG) else None
+        plan = self.execution_plan
+        logger.debug("Processing pattern %s for axis %s", self.pattern_repr, plan.axis_id)
+
+        try:
+            load_started_at = time.perf_counter()
+            matching_files, main_data_stack = self.load_input_stack()
+        except NoStepOutputManifestMatch:
+            logger.debug(
+                "Skipping stale pattern group %s for step %s (%s); no files "
+                "belong to producer manifest.",
+                self.pattern_repr,
+                plan.step_index,
+                plan.step_name,
+            )
+            return
+        try:
+            RuntimeProfileLogger.log(
+                logger,
+                "pattern_load_stack",
+                time.perf_counter() - load_started_at,
+                step=plan.step_index,
+                step_name=plan.step_name,
+                pattern=self.pattern_repr,
+            )
+            execute_started_at = time.perf_counter()
+            loaded = PatternGroupData.from_loaded_group(
+                self,
+                matching_files,
+                main_data_stack,
+            )
+            processed_stack = loaded.execute_chain()
+            RuntimeProfileLogger.log(
+                logger,
+                "pattern_execute_chain",
+                time.perf_counter() - execute_started_at,
+                step=plan.step_index,
+                step_name=plan.step_name,
+                pattern=self.pattern_repr,
+            )
+            if isinstance(processed_stack, NoMainFlowOutput):
+                self._record_main_flow_passthrough(loaded.matching_files)
+                RuntimeProfileLogger.log(
+                    logger,
+                    "pattern_no_main_flow_output",
+                    0.0,
+                    step=plan.step_index,
+                    step_name=plan.step_name,
+                    pattern=self.pattern_repr,
+                )
+                logger.debug(
+                    "Pattern group %s for step %s recorded artifacts without "
+                    "publishing main-flow output.",
+                    self.pattern_repr,
+                    plan.step_name,
+                )
+                return
+            if not plan.requires_main_flow_checkpoint(self.context.step_plans):
+                return
+            output_records = self._save_outputs(processed_stack, loaded.matching_files)
+            output_paths = [record.output_path for record in output_records]
+            cleanup_started_at = time.perf_counter()
+            self._cleanup_collapsed_domains(
+                output_records,
+                loaded.matching_files,
+                output_paths,
+            )
+            step_output_manifest(self.context).record_outputs(
+                plan,
+                output_records,
+                collapsed_input_domain=(
+                    len(output_records) < len(loaded.matching_files)
+                ),
+            )
+            RuntimeProfileLogger.log(
+                logger,
+                "pattern_cleanup",
+                time.perf_counter() - cleanup_started_at,
+                step=plan.step_index,
+                step_name=plan.step_name,
+                pattern=self.pattern_repr,
+            )
+            if start_time is not None and logger.isEnabledFor(logging.DEBUG):
+                logger.debug(
+                    "Finished pattern group %s in %.2fs.",
+                    self.pattern_repr,
+                    time.time() - start_time,
+                )
+        except Exception as e:
+            logger.error(
+                "Error processing pattern group %s: %s", self.pattern_repr, e,
+                exc_info=True,
+            )
+            raise ValueError(
+                f"Failed to process pattern group {self.pattern_repr}: {e}"
+            ) from e
+
+    def _record_main_flow_passthrough(self, matching_files: Sequence[str]) -> None:
+        """Record existing main-flow anchors for artifact-only step outputs."""
+        if not matching_files:
+            return
+        plan = self.execution_plan
+        if not plan.requires_main_flow_checkpoint(self.context.step_plans):
+            return
+        parser = self.context.microscope_handler.parser
+        manifest = step_output_manifest(self.context)
+        producer_records = self.passthrough_producer_records(matching_files)
+        if producer_records is None:
+            records = tuple(
+                ProducedOutputSemantics.from_existing_main_flow_path(
+                    plan,
+                    self._input_memory_path(plan.input_dir, matching_file),
+                    parser,
+                )
+                for matching_file in matching_files
+            )
+        else:
+            records = tuple(record.passed_through(plan) for record in producer_records)
+        manifest.record_outputs(plan, records)
+
+    def _producer_output_contexts(
+        self,
+        matching_files: Sequence[str],
+    ) -> tuple[AlignedImageSliceContext, ...]:
+        """Resolve exact producer contexts for the loaded main-flow paths."""
+
+        return step_output_manifest(self.context).producer_output_contexts_for_paths(
+            self.execution_plan,
+            matching_files,
+            self.context.microscope_handler.parser,
+        )
+
+    def load_input_stack(
+        self,
+    ) -> tuple[list[str], RuntimeArrayData]:
+        context = self.context
+        plan = self.execution_plan
+        request = self
+        if not context.microscope_handler:
+            raise RuntimeError("MicroscopeHandler not available in context.")
+
+        output_manifest = step_output_manifest(context)
+        producer_index = output_manifest.producer_record_index_for(
+            plan,
+            context.microscope_handler.parser,
+        )
+        producer_records = (
+            None
+            if producer_index is None
+            else producer_index.matching_records(str(request.pattern_group_info))
+        )
+        producer_matching_files = (
+            ()
+            if producer_records is None
+            else tuple(record.output_path for record in producer_records)
+        )
+        matching_files = list(producer_matching_files)
+        source_projection = (
+            self.source_workspace_projection_authority().projection_if_available()
+        )
+        if not matching_files:
+            matching_files = context.microscope_handler.path_list_from_pattern(
+                str(plan.input_dir),
+                request.pattern_group_info,
+                context.filemanager,
+                plan.read_backend,
+                (
+                    [component.value for component in plan.variable_components]
+                    if plan.variable_components
+                    else None
+                ),
+                pattern_cache=context.runtime_pattern_discovery_cache,
+            )
+        if producer_index is not None and not producer_matching_files:
+            selected_paths = [
+                path for path in matching_files if producer_index.contains(path)
+            ]
+            if matching_files and not selected_paths:
+                raise NoStepOutputManifestMatch
+            matching_files = selected_paths
+
+        if not matching_files:
+            raise ValueError(
+                f"No matching files found for pattern group {self.pattern_repr} "
+                f"in {plan.input_dir}. "
+                f"This indicates either: (1) no image files exist in the directory, "
+                f"(2) files don't match the pattern, or (3) pattern parsing failed. "
+                f"Check that input files exist and match the expected naming convention."
+            )
+
+        matching_files = self._filter_matching_files_for_group(matching_files)
+
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                "Pattern %s matched %d files: %s",
+                self.pattern_repr,
+                len(matching_files),
+                [Path(f).name for f in matching_files],
+            )
+
+        if not producer_matching_files:
+            matching_files.sort()
+        logger.debug(
+            f"Pattern {self.pattern_repr} sorted files: {[Path(f).name for f in matching_files]}"
+        )
+        matching_files = self._filter_matching_files_for_source_bindings(matching_files)
+
+        full_file_paths = [
+            self._input_memory_path(plan.input_dir, file_path)
+            for file_path in matching_files
+        ]
+        workspace_path_lookups = tuple(
+            VirtualWorkspacePathLookup.from_paths(
+                virtual_path,
+                full_virtual_path,
+            )
+            for virtual_path, full_virtual_path in zip(
+                matching_files,
+                full_file_paths,
+                strict=True,
+            )
+        )
+        workspace_source_lookups = (
+            self._workspace_source_binding_lookups(
+                source_projection,
+                workspace_path_lookups,
+            )
+            if source_projection is not None
+            else ()
+        )
+        if producer_index is not None:
+            if producer_matching_files:
+                producer_index.validate_input_records(producer_records)
+            else:
+                producer_records = producer_index.records_for_paths(matching_files)
+        ImagePayloadStackComposition.validate_main_flow_cohort(producer_records)
+        cached_stack = context.runtime_image_stack_cache.get(
+            tuple(full_file_paths),
+            memory_type=plan.input_memory_type,
+        )
+        RuntimeProfileLogger.log(
+            logger,
+            "runtime_stack_cache_get",
+            0.0,
+            step=plan.step_index,
+            step_name=plan.step_name,
+            hit=cached_stack is not None,
+            paths=len(full_file_paths),
+            memory_type=plan.input_memory_type,
+        )
+        if cached_stack is None:
+            raw_slices = SourceFileUniverse(
+                tuple(full_file_paths),
+                (
+                    Backend.MEMORY
+                    if plan.main_input_dependency.kind
+                    is StepInputDependencyKind.STEP_OUTPUT
+                    else Backend(plan.read_backend)
+                ),
+            ).load_images(context.filemanager, zarr_config=plan.zarr_config)
+            if source_projection is not None or not producer_matching_files:
+                raw_slices = self._apply_source_image_loading_semantics(
+                    raw_slices,
+                    workspace_path_lookups,
+                    workspace_source_lookups,
+                    source_projection,
+                )
+
+            if not raw_slices:
+                raise ValueError(
+                    f"No valid images loaded for pattern group {self.pattern_repr} "
+                    f"in {plan.input_dir}. "
+                    f"Found {len(matching_files)} matching files but failed to load any valid images. "
+                    f"This indicates corrupted image files, unsupported formats, or I/O errors. "
+                    f"Check file integrity and format compatibility."
+                )
+
+            main_data_stack = ImagePayloadStackComposition.from_loaded_images(
+                raw_slices,
+                producer_records=producer_records,
+                execution_plan=plan,
+                source_projection=source_projection,
+                workspace_source_lookups=workspace_source_lookups,
+            )
+            if not producer_records:
+                metadata = image_payload_metadata(main_data_stack)
+                domain = request.source_binding_plan.source_spatial_domain.admit_source_cohort(
+                    metadata.source_spatial_domain,
+                    depth=len(matching_files),
+                )
+                main_data_stack = metadata.replace_fields(
+                    source_spatial_domain=domain,
+                ).attach_to(main_data_stack)
+        else:
+            main_data_stack = cached_stack
+
+        return matching_files, main_data_stack
+
+    def _workspace_source_binding_lookups(
+        self,
+        source_projection: VirtualWorkspaceSourceProjection,
+        lookups: Sequence[VirtualWorkspacePathLookup],
+    ) -> tuple[VirtualWorkspacePathLookup, ...]:
+        """Return workspace paths owned by this step's exact source bindings."""
+
+        bindings = self.source_binding_plan.binding_declarations
+        return tuple(
+            lookup
+            for lookup in lookups
+            for projection in (source_projection.source_projection_for(lookup),)
+            if projection is not None
+            and any(projection.matches_binding(binding) for binding in bindings)
+        )
+
+    def _filter_matching_files_for_group(
+        self,
+        matching_files: list[str],
+    ) -> list[str]:
+        """Constrain grouped executions to files from the current component."""
+        if (
+            self.execution_plan.main_input_dependency.kind
+            is StepInputDependencyKind.STEP_OUTPUT
+            or self.compiled_group.runtime_domain
+            is RuntimeInvocationDomain.ARTIFACT_MANAGED
+        ):
+            return matching_files
+        if self.main_flow_source_binding_plan.has_primary_content:
+            return matching_files
+
+        group_component = self.execution_plan.execution_group_value
+        component_value = self.component_value
+        if group_component is None or component_value is None:
+            return matching_files
+
+        parser = self.context.microscope_handler.parser
+        filtered = self.context.runtime_pattern_discovery_cache.files_for_component(
+            parser,
+            matching_files,
+            parser.component_for_name(group_component),
+            component_value,
+        )
+        if not filtered:
+            raise ValueError(
+                f"Pattern group {self.pattern_repr} for {group_component}="
+                f"{component_value!r} matched files, but none carried the "
+                f"expected grouped component. Matched files: {matching_files}"
+            )
+        return filtered
+
+    def _filter_matching_files_for_source_bindings(
+        self,
+        matching_files: list[str],
+    ) -> list[str]:
+        """Constrain the loaded main stack to declared image source bindings."""
+
+        if (
+            self.execution_plan.main_input_dependency.kind
+            is StepInputDependencyKind.STEP_OUTPUT
+        ):
+            return matching_files
+
+        source_binding_plan = self.main_flow_source_binding_plan
+        if not source_binding_plan.has_primary_content:
+            return matching_files
+        bindings = tuple(
+            binding
+            for binding in source_binding_plan.bindings
+            if binding.projection_role is SourceProjectionRole.PRIMARY_PLANE
+        )
+        if not bindings:
+            return matching_files
+        selector_bindings = SourceBindingCandidateMatcher.selector_bindings(bindings)
+
+        source_context = self._source_binding_candidate_context()
+        if (
+            not selector_bindings
+            and not source_context.source_projections_by_virtual_path
+        ):
+            return matching_files
+        compatible = list(
+            SourceBindingMatchedImageSet.from_plan(
+                bindings=bindings,
+                match_plan=source_binding_plan.match_plan,
+                source_context=source_context,
+                identity_policy=(self.context.source_image_set_identity_policy),
+            ).expand(
+                matching_files,
+                source_universe=self._source_binding_load_universe(),
+            )
+        )
+        if compatible:
+            return compatible
+
+        raise ValueError(
+            f"Source-bound step {self.execution_plan.step_name!r} resolved no files for "
+            f"image bindings {[binding.alias for binding in bindings]!r} in pattern "
+            f"{self.pattern_repr}. Matched files before source filtering: "
+            f"{matching_files!r}."
+        )
+
+    def _source_binding_load_universe(self) -> tuple[str, ...]:
+        """Return loadable files available for source image-set expansion."""
+        source_projection = (
+            self.source_workspace_projection_authority().projection_if_available()
+        )
+        request = SourceUniverseRequest.from_context(
+            context=self.context,
+            plan=self.execution_plan,
+            matching_files=(),
+            source_projection=source_projection,
+        )
+        return request.runtime_universe_state().require_load_universe().files
+
+    def _source_binding_candidate_context(self) -> SourcePatternResolutionContext:
+        projection = self.source_workspace_projection_authority().projection_or_empty()
+        return self.context.runtime_source_binding_context_cache.source_pattern_context(
+            parser=self.context.microscope_handler.parser,
+            projection=self.context.runtime_source_workspace_projection_cache.filtered_by_axis(
+                projection,
+                axis_id=self.execution_plan.axis_id,
+            ),
+            metadata_rules=self.source_binding_plan.metadata_rules,
+        )
+
+    def _apply_source_image_loading_semantics(
+        self,
+        raw_slices: Sequence[RuntimeArrayData],
+        workspace_path_lookups: Sequence[VirtualWorkspacePathLookup],
+        workspace_source_lookups: Sequence[VirtualWorkspacePathLookup],
+        source_projection: VirtualWorkspaceSourceProjection | None,
+    ) -> list[RuntimeArrayData]:
+        if source_projection is not None:
+            source_lookups = frozenset(workspace_source_lookups)
+            return [
+                (
+                    self._apply_workspace_source_binding_payload(
+                        payload,
+                        source_projection=source_projection,
+                        lookup=lookup,
+                    )
+                    if lookup in source_lookups
+                    else self._apply_workspace_source_payload(
+                        payload,
+                        source_projection=source_projection,
+                        lookup=lookup,
+                    )
+                )
+                for payload, lookup in zip(
+                    raw_slices,
+                    workspace_path_lookups,
+                    strict=True,
+                )
+            ]
+
+        universe_state = SourceUniverseRequest.from_context(
+            context=self.context,
+            plan=self.execution_plan,
+            matching_files=tuple(
+                lookup.virtual_path for lookup in workspace_path_lookups
+            ),
+            source_projection=None,
+        ).runtime_universe_state()
+        cache = self.context.runtime_source_binding_context_cache
+        source_metadata = cache.normalized_source_metadata(
+            universe_state.source_metadata_by_path
+        )
+        source_context = SourcePatternResolutionContext.from_sources(
+            parser=self.context.microscope_handler.parser,
+            source_paths_by_virtual_path=universe_state.step_input_source_paths,
+            source_metadata_by_path=source_metadata,
+            metadata_rules=self.source_binding_plan.metadata_rules,
+        )
+        return [
+            self._apply_source_binding_payload(
+                payload,
+                source_metadata=source_context.merged_metadata_for_paths(
+                    (
+                        lookup.virtual_path,
+                        lookup.full_virtual_path,
+                    )
+                ),
+                source_path=source_context.source_path_for(lookup.full_virtual_path),
+                read_backend=self.execution_plan.read_backend,
+            )
+            for payload, lookup in zip(
+                raw_slices,
+                workspace_path_lookups,
+                strict=True,
+            )
+        ]
+
+    def _apply_workspace_source_payload(
+        self,
+        payload: RuntimeArrayData,
+        *,
+        source_projection: VirtualWorkspaceSourceProjection,
+        lookup: VirtualWorkspacePathLookup,
+    ) -> RuntimeArrayData:
+        """Attach workspace-owned source identity without requiring a binding."""
+
+        source_ref = source_projection.source_ref_for(lookup)
+        if source_ref is None:
+            return payload
+        source_context = ImagePayloadSourceMetadataContext(
+            SourceImageIdentity(
+                lookup.full_virtual_path,
+                source_projection.source_metadata_for(lookup),
+            ),
+            source_ref.backend,
+            self.context.filemanager,
+            source_ref.backend_address,
+        )
+        metadata = source_context.metadata(payload)
+        return source_projection.project_unbound_payload(
+            lookup,
+            metadata.payload_with(
+                image_payload_data(payload),
+                image_payload_mask(payload),
+            ),
+        )
+
+    def _apply_workspace_source_binding_payload(
+        self,
+        payload: RuntimeArrayData,
+        *,
+        source_projection: VirtualWorkspaceSourceProjection,
+        lookup: VirtualWorkspacePathLookup,
+    ) -> RuntimeArrayData:
+        projection = source_projection.require_source_projection_for(lookup)
+        payload = source_projection.project_payload(lookup, payload)
+        return self._apply_source_binding_payload(
+            payload,
+            source_metadata=source_projection.source_metadata_for(lookup),
+            source_path=lookup.full_virtual_path,
+            source_address=projection.ref.backend_address,
+            read_backend=projection.ref.backend,
+        )
+
+    def _apply_source_binding_payload(
+        self,
+        payload: RuntimeArrayData,
+        *,
+        source_metadata: Mapping[str, object] | None,
+        source_path: str,
+        source_address: str | None = None,
+        read_backend: str | None,
+    ) -> RuntimeArrayData:
+        source_context = ImagePayloadSourceMetadataContext(
+            SourceImageIdentity(source_path, source_metadata),
+            read_backend,
+            self.context.filemanager,
+            source_address,
+        )
+        source_bindings = self.source_binding_plan
+        if not source_bindings.binding_declarations:
+            metadata = source_context.metadata(payload)
+            return metadata.payload_with(
+                image_payload_data(payload),
+                image_payload_mask(payload),
+            )
+        alias = (
+            None
+            if source_metadata is None
+            else source_metadata_value(
+                source_metadata,
+                SOURCE_BINDING_ALIAS_METADATA_FIELD,
+            )
+        )
+        if alias is None:
+            raise ValueError(
+                f"Source-bound payload {source_path!r} has no declared source alias."
+            )
+        binding = source_bindings.binding_for_alias(alias)
+        if binding is None:
+            raise ValueError(
+                f"Source-bound payload {source_path!r} declares unknown alias "
+                f"{alias!r}."
+            )
+        return binding.apply_loaded_payload(payload, source_context)
+
+    def _project_output_slices(
+        self,
+        processed_stack: RuntimeArrayData,
+        matching_files: Sequence[str],
+    ) -> tuple[tuple[RuntimeArrayData, AlignedImageSliceContext | None], ...]:
+        """Project the original output through its nominal image topology."""
+        if isinstance(processed_stack, ImagePayloadMetadataCarrier) and (
+            processed_stack.metadata.plane_axis is None
+            or processed_stack.metadata.persists_whole_image()
+        ):
+            output_context = self._unwrapped_main_flow_output_context()
+            contexts = (
+                (output_context,)
+                if output_context is not None
+                else (
+                    self._producer_output_contexts(matching_files)
+                    if len(matching_files) == 1
+                    else ()
+                )
+            )
+            context = (
+                contexts[0]
+                if contexts
+                else AlignedImageSliceContext.anonymous_main_flow()
+            )
+            return ((processed_stack, context),)
+        if isinstance(processed_stack, AlignedImageStack):
+            return tuple(processed_stack.projected_output_slices())
+        output_context = self._unwrapped_main_flow_output_context()
+        output_projection = RuntimeSliceProjection.preserved_context_for_value(
+            processed_stack
+        )
+        if output_projection is not None:
+            unstack_started_at = time.perf_counter()
+            output_slices = list(
+                RuntimeSliceProjection.value_for_slice(
+                    processed_stack,
+                    output_projection.selected_plane(slice_index),
+                )
+                for slice_index in range(output_projection.axis_size)
+            )
+            RuntimeProfileLogger.log(
+                logger,
+                "pattern_source_unstack",
+                time.perf_counter() - unstack_started_at,
+                step=self.execution_plan.step_index,
+                step_name=self.execution_plan.step_name,
+                slices=len(output_slices),
+            )
+            output_payloads = output_slices
+        else:
+            processed_data = image_payload_data(processed_stack)
+            try:
+                unstack_started_at = time.perf_counter()
+                output_slices = list(
+                    unstack_runtime_slices(
+                        processed_data,
+                        self.execution_plan.output_memory_type,
+                        self.execution_plan.device_id_for(
+                            self.execution_plan.output_memory_type
+                        ),
+                        expected_count=len(matching_files),
+                    )
+                )
+                RuntimeProfileLogger.log(
+                    logger,
+                    "pattern_source_unstack",
+                    time.perf_counter() - unstack_started_at,
+                    step=self.execution_plan.step_index,
+                    step_name=self.execution_plan.step_name,
+                    slices=len(output_slices),
+                )
+            except ValueError as exc:
+                output_shape = np.shape(processed_data)
+                output_ndim = np.ndim(processed_data)
+                logger.error("Function output is not an OpenHCS image stack.")
+                logger.error("Output type: %s", type(processed_stack))
+                logger.error("Output shape: %s", output_shape)
+                logger.error("Output ndim: %s", output_ndim)
+                raise ValueError(
+                    "Main processing must result in an image stack shaped "
+                    f"(N, H, W) or (N, H, W, C), got "
+                    f"{output_shape}"
+                ) from exc
+
+            context_started_at = time.perf_counter()
+            output_payloads = unstack_image_payload_context(
+                processed_stack,
+                output_slices,
+                default_plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            )
+            RuntimeProfileLogger.log(
+                logger,
+                "pattern_payload_context_unstack",
+                time.perf_counter() - context_started_at,
+                step=self.execution_plan.step_index,
+                step_name=self.execution_plan.step_name,
+                slices=len(output_payloads),
+            )
+        slice_contexts = (
+            (output_context,) * len(output_payloads)
+            if output_context is not None
+            else ()
+        )
+        if not slice_contexts and len(output_payloads) == len(matching_files):
+            slice_contexts = self._producer_output_contexts(matching_files)
+        if not slice_contexts:
+            slice_contexts = tuple(
+                AlignedImageSliceContext.anonymous_main_flow()
+                for _payload in output_payloads
+            )
+        return tuple(zip(output_payloads, slice_contexts, strict=True))
+
+    def _unwrapped_main_flow_output_context(
+        self,
+    ) -> AlignedImageSliceContext | None:
+        ArtifactInputPlan.require_exact_map(
+            self.execution_plan.artifact_inputs,
+            boundary="Component artifact input",
+        )
+        return self.compiled_group.unwrapped_main_flow_output_context(
+            self.selected_artifact_output_plans()
+        )
+
+    def _save_outputs(
+        self,
+        processed_stack: RuntimeArrayData,
+        matching_files: list[str],
+    ) -> list[ProducedOutputSemantics]:
+        context = self.context
+        unstack_started_at = time.perf_counter()
+        projected_outputs = self._project_output_slices(processed_stack, matching_files)
+        plan = self.execution_plan
+        explicit_output_surfaces = isinstance(processed_stack, AlignedImageStack)
+        if explicit_output_surfaces:
+            stack_payload = processed_stack.copy_projected_output_stack(
+                projected_outputs,
+                memory_type=plan.output_memory_type,
+                device_id=plan.device_id_for(plan.output_memory_type),
+            )
+        elif isinstance(processed_stack, ImagePayloadMetadataCarrier) and (
+            processed_stack.metadata.plane_axis is None
+            or processed_stack.metadata.persists_whole_image()
+        ):
+            stack_payload = ImagePayloadStackComposition.copy_whole_image(
+                processed_stack,
+                memory_type=plan.output_memory_type,
+                device_id=plan.device_id_for(plan.output_memory_type),
+            )
+        else:
+            stack_payload = processed_stack
+        RuntimeProfileLogger.log(
+            logger,
+            "pattern_validate_unstack",
+            time.perf_counter() - unstack_started_at,
+            step=plan.step_index,
+            step_name=plan.step_name,
+            pattern=self.pattern_repr,
+        )
+        output_contexts = tuple(
+            (
+                context
+                if context is not None
+                else AlignedImageSliceContext.anonymous_main_flow()
+            )
+            for _payload, context in projected_outputs
+        )
+        save_started_at = time.perf_counter()
+
+        def plane_axis_for_output(
+            context: AlignedImageSliceContext,
+        ) -> RuntimePlaneAxis | None:
+            if isinstance(processed_stack, AlignedImageStack):
+                return processed_stack.plane_axis_for_output_context(context)
+            if isinstance(processed_stack, ImagePayloadMetadataCarrier):
+                return image_payload_metadata(processed_stack).plane_axis
+            return RuntimePlaneAxis.RUNTIME_SLICE
+
+        output_slices = tuple(payload for payload, _context in projected_outputs)
+        num_outputs = len(output_slices)
+        num_inputs = len(matching_files)
+
+        if num_outputs < num_inputs:
+            logger.debug(
+                "Function returned %d images from %d inputs - likely "
+                "flattening operation",
+                num_outputs,
+                num_inputs,
+            )
+        elif num_outputs > num_inputs:
+            logger.debug(
+                "Function returned %s output slices from %s positional input "
+                "files; extra slices must carry payload component identity.",
+                num_outputs,
+                num_inputs,
+            )
+
+        output_payloads = []
+        output_payload_metadata = []
+        output_paths_batch = []
+        output_records = []
+
+        overwritten_output_paths: list[str] = []
+        output_directory_exists = context.filemanager.exists(
+            str(self.execution_plan.output_dir),
+            Backend.MEMORY.value,
+        )
+        for i, img_slice in enumerate(output_slices):
+            input_filename = None
+            if i < len(matching_files):
+                input_filename = matching_files[i]
+            output_path_request = FunctionOutputPathRequest(
+                parser=context.microscope_handler.parser,
+                output_dir=self.execution_plan.output_dir,
+                output_payload=img_slice,
+                input_path=input_filename,
+                variable_components=self.execution_plan.variable_components,
+                input_aligned_output=num_outputs == num_inputs,
+                identity_cache=context.runtime_function_output_identity_cache,
+            )
+            try:
+                output_identity = FunctionOutputIdentity.from_request(
+                    output_path_request
+                )
+            except ValueError as exc:
+                if input_filename is None:
+                    raise ValueError(
+                        f"Function returned {num_outputs} output slices but only "
+                        f"{num_inputs} input files were available, and output slice "
+                        f"{i} does not carry payload component identity."
+                    ) from exc
+                raise
+            output_context = output_contexts[i]
+            # Only explicit aligned output surfaces own filename qualifiers.
+            # An unwrapped canonical artifact still owns its typed source
+            # context, while its ordinary main-flow checkpoint keeps the
+            # source filename independently of named artifact materialization.
+            if explicit_output_surfaces and not output_context.is_anonymous_main_flow:
+                output_identity = output_identity.with_filename_qualifier(
+                    output_context.output_key
+                )
+            output_path = output_identity.path_for_request(output_path_request)
+            output_path_text = str(output_path)
+            img_slice = output_context.contextualize_image_payload(img_slice)
+            output_metadata = image_payload_metadata(img_slice)
+            output_component_metadata = output_identity.component_metadata(
+                output_metadata.source_component_metadata,
+            )
+            if output_metadata.source_component_metadata != output_component_metadata:
+                output_metadata = output_metadata.with_source_component_metadata(
+                    output_component_metadata
+                )
+                img_slice = output_metadata.attach_to(img_slice)
+            output_record = ProducedOutputSemantics.from_output(
+                self.execution_plan,
+                output_path_text,
+                output_identity,
+                output_context=output_context,
+                image_metadata=output_metadata,
+                main_flow_plane_axis=plane_axis_for_output(output_context),
+            )
+
+            if output_directory_exists and context.filemanager.exists(
+                output_path_text,
+                Backend.MEMORY.value,
+            ):
+                overwritten_output_paths.append(output_path_text)
+
+            output_payloads.append(img_slice)
+            output_payload_metadata.append(output_metadata)
+            output_paths_batch.append(output_path_text)
+            output_records.append(output_record)
+
+        FunctionOutputIdentity.validate_output_paths(
+            output_paths_batch,
+            input_paths=matching_files,
+            step_name=self.execution_plan.step_name,
+            pattern_repr=self.pattern_repr,
+            identities=output_records,
+        )
+
+        if overwritten_output_paths:
+            for output_path_text in overwritten_output_paths:
+                context.filemanager.delete(output_path_text, Backend.MEMORY.value)
+            context.runtime_image_stack_cache.discard_paths(
+                tuple(overwritten_output_paths)
+            )
+
+        context.filemanager.ensure_directory(
+            str(self.execution_plan.output_dir),
+            Backend.MEMORY.value,
+        )
+        context.filemanager.save_batch(
+            output_payloads,
+            output_paths_batch,
+            Backend.MEMORY.value,
+        )
+        if stack_payload is not None:
+            stack_payload = ImagePayloadStackComposition.with_saved_output_context(
+                stack_payload,
+                output_payloads,
+                output_payload_metadata,
+                single_output_plane_axis=(
+                    plane_axis_for_output(output_contexts[0])
+                    if len(output_payloads) == 1
+                    else None
+                ),
+            )
+            context.runtime_image_stack_cache.store(
+                tuple(output_paths_batch),
+                memory_type=self.execution_plan.output_memory_type,
+                stack=stack_payload,
+            )
+            RuntimeProfileLogger.log(
+                logger,
+                "runtime_stack_cache_store",
+                0.0,
+                step=self.execution_plan.step_index,
+                step_name=self.execution_plan.step_name,
+                paths=len(output_paths_batch),
+                memory_type=self.execution_plan.output_memory_type,
+            )
+        RuntimeProfileLogger.log(
+            logger,
+            "pattern_save_outputs",
+            time.perf_counter() - save_started_at,
+            step=plan.step_index,
+            step_name=plan.step_name,
+            pattern=self.pattern_repr,
+        )
+        return output_records
+
+    def _cleanup_collapsed_domains(
+        self,
+        output_records: Sequence[ProducedOutputSemantics],
+        matching_files: list[str],
+        output_paths: Sequence[str],
+    ) -> None:
+        context = self.context
+        num_outputs = len(output_records)
+        num_inputs = len(matching_files)
+
+        if num_outputs >= num_inputs:
+            return
+
+        if self.execution_plan.input_dir == self.execution_plan.output_dir:
+            return
+
+        retained_paths = {Path(path).as_posix() for path in output_paths}
+        retained_paths.update(
+            Path(record.output_path).as_posix()
+            for record in step_output_manifest(context).produced_records_for(
+                self.execution_plan
+            )
+        )
+        for j in range(num_outputs, num_inputs):
+            unused_filename = matching_files[j]
+            unused_relative_path = self._input_relative_path(
+                self.execution_plan.input_dir,
+                unused_filename,
+            )
+            unused_path = self.execution_plan.output_dir / unused_relative_path
+            if unused_path.as_posix() in retained_paths:
+                continue
+            if context.filemanager.exists(
+                str(unused_path),
+                Backend.MEMORY.value,
+            ):
+                context.runtime_image_stack_cache.discard_paths((str(unused_path),))
+                context.filemanager.delete(
+                    str(unused_path),
+                    Backend.MEMORY.value,
+                )
+                logger.debug(
+                    "Deleted unused collapsed-domain file after reduced "
+                    "output cardinality: %s",
+                    unused_path,
+                )
+
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ArtifactPatternGroupExecutionRequest(PatternGroupExecutionRequest):
     """Admit exact canonical producer values into an independent cohort."""
 
     def load_input_stack(
-        self, runtime: "PatternGroupRuntime",
+        self,
     ) -> tuple[list[str], RuntimeArrayData]:
         edges = self.execution_plan.stored_primary_input_edges_for_group(
-            self.compiled_group, self.component_key,
+            self.compiled_group,
+            self.component_key,
         )
         if not edges:
             raise ValueError("Artifact cohort requires complete stored primary inputs.")
@@ -514,8 +1441,10 @@ class ArtifactPatternGroupExecutionRequest(PatternGroupExecutionRequest):
                 source_binding_plan=self.source_binding_plan,
             )
             records = artifact_input.records(self.context.runtime_value_store)
-            source_payload = edge.spec.artifact_type.source_image_payload_from_runtime_value(
-                artifact_input.composed_value(records),
+            source_payload = (
+                edge.spec.artifact_type.source_image_payload_from_runtime_value(
+                    artifact_input.composed_value(records),
+                )
             )
             if source_payload is None:
                 raise ValueError(
@@ -532,25 +1461,30 @@ class ArtifactPatternGroupExecutionRequest(PatternGroupExecutionRequest):
             )
             matching_files.extend(record.location.path for record in records)
         main_data_stack = ImagePayloadConsumption.NATURAL.compose_image_payload(
-            self.execution_plan.step_name, tuple(payloads),
+            self.execution_plan.step_name,
+            tuple(payloads),
         ).payload
         return matching_files, main_data_stack
 
     def loaded_plane_count(
-        self, matching_files: Sequence[str], payload: RuntimeArrayData,
+        self,
+        matching_files: Sequence[str],
+        payload: RuntimeArrayData,
     ) -> int:
         """Canonical payloads declare their runtime axis independently of paths."""
         count = RuntimeSliceProjection.slice_count_from_values((payload,))
         return 1 if count is None else count
 
     def loaded_fixed_component_values(
-        self, payload: RuntimeArrayData,
+        self,
+        payload: RuntimeArrayData,
     ) -> RuntimeFixedComponentValues:
         """Retain exact producer coordinates admitted by typed discovery."""
         return self.fixed_component_values
 
     def passthrough_producer_records(
-        self, matching_files: Sequence[str],
+        self,
+        matching_files: Sequence[str],
     ) -> tuple[ProducedOutputSemantics, ...]:
         """Preserve input transport independently of artifact context admission."""
         records = step_output_manifest(self.context).producer_records_for(
@@ -565,7 +1499,8 @@ class ArtifactPatternGroupExecutionRequest(PatternGroupExecutionRequest):
 class PatternGroupData(PatternGroupExecutionScope):
     """Complete loaded cohort and its original execution coordinates."""
 
-    artifacts: ComponentArtifactPlans[ArtifactSpecRef, ArtifactInputPlan]
+    artifact_inputs: Mapping[ArtifactSpecRef, ArtifactInputPlan]
+    artifact_outputs: ArtifactOutputPlans
     runtime_plane_index: int
     runtime_plane_count: int
     matching_files: list[str]
@@ -578,14 +1513,16 @@ class PatternGroupData(PatternGroupExecutionScope):
         matching_files: list[str],
         main_data_stack: RuntimeArrayData,
     ) -> "PatternGroupData":
-        artifacts = ComponentArtifactPlans.from_step_component(
-            request.execution_plan,
-            request.component_key,
+        ArtifactInputPlan.require_exact_map(
+            request.execution_plan.artifact_inputs,
+            boundary="Component artifact input",
         )
+        artifact_inputs = dict(request.execution_plan.artifact_inputs)
+        artifact_outputs = request.selected_artifact_output_plans()
         logger.debug(
             "Selected artifact outputs for component %s: %s",
             request.component_key,
-            artifacts.outputs,
+            artifact_outputs,
         )
         return cls(
             matching_files=matching_files,
@@ -593,13 +1530,17 @@ class PatternGroupData(PatternGroupExecutionScope):
             context=request.context,
             execution_plan=request.execution_plan,
             compiled_group=request.compiled_group,
-            artifacts=artifacts,
+            artifact_inputs=artifact_inputs,
+            artifact_outputs=artifact_outputs,
             runtime_plane_index=request.component_index,
             runtime_plane_count=request.loaded_plane_count(
-                matching_files, main_data_stack,
+                matching_files,
+                main_data_stack,
             ),
             component_value=request.component_value,
-            fixed_component_values=request.loaded_fixed_component_values(main_data_stack),
+            fixed_component_values=request.loaded_fixed_component_values(
+                main_data_stack
+            ),
         )
 
     def require_invocations(self) -> None:
@@ -609,56 +1550,68 @@ class PatternGroupData(PatternGroupExecutionScope):
             f"Compiled function group {self.compiled_group.group_key} has no invocations."
         )
 
-
-@dataclass(frozen=True, slots=True)
-class OutputPathBatchEntry:
-    """Resolved identity for one output path in a runtime save batch."""
-
-    index: int
-    input_path: str | None
-    output_path: str
-    identity: FunctionOutputIdentity
-
-    def diagnostic(self) -> str:
-        filename_components = (
-            self.identity.filename_component_values
-            if self.identity.filename_component_values is not None
-            else self.identity.component_values
-        )
-        return (
-            f"#{self.index}: input={self.input_path!r}, output={self.output_path!r}, "
-            f"identity={dict(self.identity.component_values)!r}, "
-            f"filename_identity={dict(filename_components)!r}, "
-            f"source={self.identity.source!r}"
-        )
-
-
-@dataclass(frozen=True, slots=True)
-class OutputPathBatchUniqueness:
-    """Validate that one runtime output batch has unique destination paths."""
-
-    output_paths: Sequence[str]
-    input_paths: Sequence[str]
-    step_name: str
-    pattern_repr: str
-    entries: Sequence[OutputPathBatchEntry] = ()
-
-    def validate(self) -> None:
-        counts: dict[str, int] = {}
-        for path in self.output_paths:
-            if path not in counts:
-                counts[path] = 1
+    def execute_chain(self) -> RuntimeArrayData | NoMainFlowOutput:
+        self.require_invocations()
+        current_stack: RuntimeArrayData | NoMainFlowOutput = self.main_data_stack
+        current_memory_type = self.execution_plan.input_memory_type
+        debug_sink = debug_event_sink_from_context(self.context)
+        declared_source_bindings = self.execution_plan.source_binding_plan
+        for invocation in self.compiled_group.invocations:
+            executor = FunctionCoreExecutor.from_group_invocation(
+                self,
+                invocation,
+                main_data_arg=current_stack,
+                source_memory_type=current_memory_type,
+                declared_source_bindings=declared_source_bindings,
+            )
+            if executor is None:
                 continue
-            counts[path] += 1
-        duplicates = tuple(path for path, count in counts.items() if count > 1)
-        if not duplicates:
-            return
-        raise ValueError(
-            f"Step {self.step_name!r} produced duplicate output path(s) "
-            f"for pattern {self.pattern_repr}: {duplicates!r}. Input files: "
-            f"{tuple(self.input_paths)!r}. Output identity details: "
-            f"{tuple(entry.diagnostic() for entry in self.entries)!r}."
-        )
+            captures_debug = debug_sink.captures_invocation_events()
+            if captures_debug and debug_sink.should_skip_invocation(
+                executor.debug_cursor()
+            ):
+                continue
+
+            invocation_started_at = time.perf_counter()
+            try:
+                current_stack = executor.execute(
+                    debug_sink=debug_sink if captures_debug else None,
+                )
+            except Exception as exc:
+                if captures_debug:
+                    debug_sink.record(
+                        executor.debug_event(
+                            DebugEventType.EXCEPTION,
+                            exception=exc,
+                        )
+                    )
+                raise
+            invocation_seconds = time.perf_counter() - invocation_started_at
+            if captures_debug:
+                after_event = executor.debug_event(
+                    DebugEventType.AFTER_INVOCATION,
+                    timing_seconds=invocation_seconds,
+                )
+                debug_sink.record(after_event)
+                if debug_sink.should_stop_after_invocation(after_event):
+                    break
+            RuntimeProfileLogger.log(
+                logger,
+                "invocation_total",
+                invocation_seconds,
+                function=invocation.key.function_name,
+                group=invocation.key.group_key,
+                position=invocation.key.position,
+            )
+            if isinstance(current_stack, NoMainFlowOutput):
+                return current_stack
+            current_memory_type = executor.invocation.contract.output_memory_type
+        if self.compiled_group.preserves_input_main_flow() and all(
+            invocation.contract.artifact_output_policy.records_outputs
+            for invocation in self.compiled_group.invocations
+        ):
+            return NoMainFlowOutput()
+        return current_stack
 
 
 def _save_artifact_value(
@@ -702,28 +1655,81 @@ def _save_artifact_value(
     return runtime_value.data
 
 
+
+
+
+
 @dataclass(frozen=True, slots=True)
 class FunctionCoreExecutor:
     """Execute one scoped callable invocation and route declared artifact I/O."""
 
     group_data: PatternGroupData
     invocation: CompiledFunctionInvocation
-    artifacts: ComponentArtifactPlans[
-        InvocationArtifactInputProjectionKey,
-        InvocationArtifactInputEdgePlan,
+    artifact_inputs: Mapping[
+        InvocationArtifactInputProjectionKey, InvocationArtifactInputEdgePlan
     ]
+    artifact_outputs: ArtifactOutputPlans
     group_key: str | None
     plane_projection: RuntimePlaneProjection
     main_data_arg: RuntimeArrayData
     source_memory_type: str
 
-    @property
-    def selected_artifact_input_edges(
-        self,
-    ) -> tuple[InvocationArtifactInputEdgePlan, ...]:
-        """Return component-selected compiled occurrences in declaration order."""
-
-        return tuple(self.artifacts.inputs.values())
+    @classmethod
+    def from_group_invocation(
+        cls,
+        group_data: PatternGroupData,
+        invocation: CompiledFunctionInvocation,
+        *,
+        main_data_arg: RuntimeArrayData,
+        source_memory_type: str,
+        declared_source_bindings: CompiledSourceBindingPlan,
+    ) -> "FunctionCoreExecutor | None":
+        """Admit the selected compiled edges and outputs for this live invocation."""
+        group_key = invocation.key.runtime_group_key(group_data.component_value)
+        active_source_bindings = group_data.active_main_flow_source_binding_plan(
+            main_data_arg
+        )
+        active_outputs = invocation.output_plans_for_component(
+            group_data.execution_plan.execution_group_scope,
+            group_data.component_key,
+        )
+        if active_outputs is None:
+            return None
+        inputs = {}
+        for edge_key, edge in invocation.select_inputs(
+            group_data.artifact_inputs,
+            active_output_plans=active_outputs,
+        ).items():
+            if (
+                edge.main_flow_projection is not None
+                and declared_source_bindings.declares_artifact_ref(edge.spec.ref())
+                and not active_source_bindings.declares_artifact_ref(edge.spec.ref())
+            ):
+                if not invocation.adapter_manages_artifact_inputs:
+                    continue
+                if edge.storage_plan is not None:
+                    raise ValueError(
+                        f"Stored primary input {edge.spec.ref()!r} is not represented "
+                        "by this main-flow payload; its producer cannot substitute "
+                        "for the current payload epoch."
+                    )
+                edge = replace(edge, main_flow_projection=None)
+            inputs[edge_key] = edge
+        return cls(
+            group_data=group_data,
+            invocation=invocation,
+            artifact_inputs=inputs,
+            artifact_outputs=invocation.select_outputs(
+                group_data.artifact_outputs,
+                compiled_output_plans=active_outputs,
+            ),
+            group_key=group_key,
+            plane_projection=RuntimePlaneProjection.stack(
+                group_data.runtime_plane_count
+            ),
+            main_data_arg=main_data_arg,
+            source_memory_type=source_memory_type,
+        )
 
     def runtime_adapter_request(
         self,
@@ -732,10 +1738,8 @@ class FunctionCoreExecutor:
         return RuntimeAdapterRequest(
             context=self.group_data.context,
             callable_contract=self.invocation.contract,
-            artifact_inputs={
-                edge.key: edge for edge in self.selected_artifact_input_edges
-            },
-            artifact_outputs=self.artifacts.outputs,
+            artifact_inputs=self.artifact_inputs,
+            artifact_outputs=self.artifact_outputs,
             group_key=self.group_key,
             plane_projection=self.plane_projection,
             source_payload=source_payload,
@@ -746,10 +1750,6 @@ class FunctionCoreExecutor:
             ),
             source_load_plan=self.group_data.execution_plan.source_load_plan,
         )
-
-    @property
-    def function_name(self) -> str:
-        return self.invocation.contract.function_name
 
     def declared_source_payload(
         self,
@@ -765,12 +1765,12 @@ class FunctionCoreExecutor:
                 f"{source_ref!r}."
             )
         stored_payload = loaded_artifact_payloads.get(source_ref)
-        source_binding = (
-            self.group_data.source_binding_plan.binding_for_artifact_ref(source_ref)
+        source_binding = self.group_data.source_binding_plan.binding_for_artifact_ref(
+            source_ref
         )
         main_flow_edges = tuple(
             edge
-            for edge in self.selected_artifact_input_edges
+            for edge in self.artifact_inputs.values()
             if edge.spec.ref() == source_ref and edge.main_flow_projection is not None
         )
         uses_main_flow = bool(
@@ -822,11 +1822,11 @@ class FunctionCoreExecutor:
         if not self.should_load_artifact_inputs():
             return {}
         logger.info(
-            "Artifact inputs for %s: %s", self.function_name, self.artifacts.inputs
+            f"Artifact inputs for {self.invocation.contract.function_name}: {self.artifact_inputs}"
         )
         loaded_artifact_payloads: dict[ArtifactSpecRef, RuntimePayload] = {}
         parameter_values: dict[str, list[RuntimeValue]] = {}
-        for input_plan in self.selected_artifact_input_edges:
+        for input_plan in self.artifact_inputs.values():
             parameter_name = input_plan.spec.parameter_name
             if not input_plan.requires_callable_binding():
                 continue
@@ -859,7 +1859,7 @@ class FunctionCoreExecutor:
         return bool(
             any(
                 edge.requires_callable_binding()
-                for edge in self.selected_artifact_input_edges
+                for edge in self.artifact_inputs.values()
             )
             and not self.invocation.adapter_manages_artifact_inputs
         )
@@ -898,7 +1898,7 @@ class FunctionCoreExecutor:
             logger,
             "artifact_input_load",
             time.perf_counter() - load_started_at,
-            function=self.function_name,
+            function=self.invocation.contract.function_name,
             artifact=arg_name,
             artifact_type=storage_plan.artifact_type.value,
         )
@@ -941,12 +1941,12 @@ class FunctionCoreExecutor:
             input_artifacts=self.debug_artifacts(
                 {
                     edge.storage_plan.ref(): edge.storage_plan
-                    for edge in self.artifacts.inputs.values()
+                    for edge in self.artifact_inputs.values()
                     if edge.storage_plan is not None
                 },
                 input_artifact_values,
             ),
-            output_artifacts=self.debug_artifacts(self.artifacts.outputs),
+            output_artifacts=self.debug_artifacts(self.artifact_outputs),
             exception=exception,
             timing_seconds=timing_seconds,
             invocation_parameters=invocation_parameters,
@@ -1029,7 +2029,7 @@ class FunctionCoreExecutor:
             logger,
             "runtime_adapter_factory",
             time.perf_counter() - adapter_started_at,
-            function=self.function_name,
+            function=self.invocation.contract.function_name,
             adapter=adapter_parameter,
         )
 
@@ -1041,7 +2041,7 @@ class FunctionCoreExecutor:
         loaded_artifact_payloads: Mapping[ArtifactSpecRef, RuntimePayload],
         debug_sink: DebugEventSink | None,
     ) -> RuntimeFunctionOutput:
-        logger.info("Executing function: %s", self.function_name)
+        logger.info("Executing function: %s", self.invocation.contract.function_name)
         func_callable = self.invocation.runtime_callable
         contract = self.invocation.contract
         primary_parameter = self.invocation.primary_input_parameter_name
@@ -1055,7 +2055,7 @@ class FunctionCoreExecutor:
         if debug_sink is not None:
             if primary_parameter is None:
                 raise TypeError(
-                    f"Callable {self.function_name!r} has no declared primary input "
+                    f"Callable {self.invocation.contract.function_name!r} has no declared primary input "
                     "parameter for runtime invocation diagnostics."
                 )
             bound_parameters = dict(final_kwargs)
@@ -1091,8 +2091,8 @@ class FunctionCoreExecutor:
                 "preserved_stack" if selected_plane is None else str(selected_plane)
             )
             artifact_refs = (
-                *(edge.spec.ref() for edge in self.selected_artifact_input_edges),
-                *self.artifacts.outputs,
+                *(edge.spec.ref() for edge in tuple(self.artifact_inputs.values())),
+                *self.artifact_outputs,
             )
             raise type(exc)(
                 f"{exc} Invocation boundary: step_index={cursor.step_index}; "
@@ -1114,7 +2114,7 @@ class FunctionCoreExecutor:
             logger,
             "function_call",
             time.perf_counter() - call_started_at,
-            function=self.function_name,
+            function=self.invocation.contract.function_name,
         )
         return raw_output
 
@@ -1128,7 +2128,7 @@ class FunctionCoreExecutor:
         """Save declared outputs and qualify unsaved canonical returns afterward."""
         if self.invocation.adapter_records_artifact_outputs:
             return self.save_module_recorded_output(raw_output)
-        output_plans = tuple(self.artifacts.outputs.values())
+        output_plans = tuple(self.artifact_outputs.values())
         declared_specs = self.invocation.contract.artifact_outputs
         if not declared_specs:
             if isinstance(raw_output, tuple):
@@ -1257,7 +2257,7 @@ class FunctionCoreExecutor:
             logger,
             "artifact_output_save",
             time.perf_counter() - save_started_at,
-            function=self.function_name,
+            function=self.invocation.contract.function_name,
             artifact=output_key,
             artifact_type=output_plan.artifact_type.value,
         )
@@ -1280,1096 +2280,6 @@ class FunctionCoreExecutor:
         )
 
 
-class PatternGroupRuntime:
-    """Staged runtime for one pattern group."""
-
-    def __init__(self, request: PatternGroupExecutionRequest) -> None:
-        self.request = request
-        self.pattern_repr = str(request.pattern_group_info)[:100]
-
-    def source_workspace_projection_cache(
-        self,
-    ) -> VirtualWorkspaceSourceProjectionCache:
-        """Return the per-context source-workspace projection cache."""
-        return self.request.context.runtime_source_workspace_projection_cache
-
-    def source_workspace_projection_authority(
-        self,
-    ) -> VirtualWorkspaceSourceProjectionAuthority:
-        return self.request.context.runtime_source_workspace_projection_authority
-
-    @staticmethod
-    def _is_relative_to(path: Path, root: Path) -> bool:
-        try:
-            path.relative_to(root)
-        except ValueError:
-            return False
-        return True
-
-    @classmethod
-    def _input_memory_path(cls, input_dir: Path, matched_path: str) -> str:
-        """Return the VFS memory path for one matched source path."""
-        path = Path(matched_path)
-        if path.is_absolute() or cls._is_relative_to(path, input_dir):
-            return str(path)
-        return str(input_dir / path)
-
-    @classmethod
-    def _input_relative_path(cls, input_dir: Path, matched_path: str) -> Path:
-        """Return matched path identity relative to the step input root."""
-        path = Path(matched_path)
-        if cls._is_relative_to(path, input_dir):
-            return path.relative_to(input_dir)
-        if path.is_absolute():
-            return Path(path.name)
-        return path
-
-    def run(self) -> None:
-        start_time = time.time() if logger.isEnabledFor(logging.DEBUG) else None
-        plan = self.request.execution_plan
-        logger.debug("Processing pattern %s for axis %s", self.pattern_repr, plan.axis_id)
-
-        try:
-            load_started_at = time.perf_counter()
-            matching_files, main_data_stack = (
-                self.request.load_input_stack(self)
-            )
-        except NoStepOutputManifestMatch:
-            logger.debug(
-                "Skipping stale pattern group %s for step %s (%s); no files "
-                "belong to producer manifest.",
-                self.pattern_repr,
-                plan.step_index,
-                plan.step_name,
-            )
-            return
-        try:
-            RuntimeProfileLogger.log(
-                logger,
-                "pattern_load_stack",
-                time.perf_counter() - load_started_at,
-                step=plan.step_index,
-                step_name=plan.step_name,
-                pattern=self.pattern_repr,
-            )
-            execute_started_at = time.perf_counter()
-            loaded = PatternGroupData.from_loaded_group(
-                self.request, matching_files, main_data_stack,
-            )
-            processed_stack = self.execute_chain(loaded)
-            RuntimeProfileLogger.log(
-                logger,
-                "pattern_execute_chain",
-                time.perf_counter() - execute_started_at,
-                step=plan.step_index,
-                step_name=plan.step_name,
-                pattern=self.pattern_repr,
-            )
-            if isinstance(processed_stack, NoMainFlowOutput):
-                self._record_main_flow_passthrough(loaded.matching_files)
-                RuntimeProfileLogger.log(
-                    logger,
-                    "pattern_no_main_flow_output",
-                    0.0,
-                    step=plan.step_index,
-                    step_name=plan.step_name,
-                    pattern=self.pattern_repr,
-                )
-                logger.debug(
-                    "Pattern group %s for step %s recorded artifacts without "
-                    "publishing main-flow output.",
-                    self.pattern_repr,
-                    plan.step_name,
-                )
-                return
-            if not plan.requires_main_flow_checkpoint(self.request.context.step_plans):
-                return
-            output_records = self._save_outputs(processed_stack, loaded.matching_files)
-            output_paths = [record.output_path for record in output_records]
-            cleanup_started_at = time.perf_counter()
-            self._cleanup_collapsed_domains(
-                output_records,
-                loaded.matching_files,
-                output_paths,
-            )
-            step_output_manifest(self.request.context).record_outputs(
-                plan,
-                output_records,
-                collapsed_input_domain=(len(output_records) < len(loaded.matching_files)),
-            )
-            RuntimeProfileLogger.log(
-                logger,
-                "pattern_cleanup",
-                time.perf_counter() - cleanup_started_at,
-                step=plan.step_index,
-                step_name=plan.step_name,
-                pattern=self.pattern_repr,
-            )
-            if start_time is not None and logger.isEnabledFor(logging.DEBUG):
-                logger.debug(
-                    "Finished pattern group %s in %.2fs.",
-                    self.pattern_repr,
-                    time.time() - start_time,
-                )
-        except Exception as e:
-            logger.error(
-                "Error processing pattern group %s: %s", self.pattern_repr, e,
-                exc_info=True,
-            )
-            raise ValueError(
-                f"Failed to process pattern group {self.pattern_repr}: {e}"
-            ) from e
-
-    def _record_main_flow_passthrough(self, matching_files: Sequence[str]) -> None:
-        """Record existing main-flow anchors for artifact-only step outputs."""
-        if not matching_files:
-            return
-        plan = self.request.execution_plan
-        if not plan.requires_main_flow_checkpoint(self.request.context.step_plans):
-            return
-        parser = self.request.context.microscope_handler.parser
-        manifest = step_output_manifest(self.request.context)
-        producer_records = self.request.passthrough_producer_records(matching_files)
-        if producer_records is None:
-            records = tuple(
-                ProducedOutputSemantics.from_existing_main_flow_path(
-                    plan,
-                    self._input_memory_path(plan.input_dir, matching_file),
-                    parser,
-                )
-                for matching_file in matching_files
-            )
-        else:
-            records = tuple(record.passed_through(plan) for record in producer_records)
-        manifest.record_outputs(plan, records)
-
-    def _producer_output_contexts(
-        self,
-        matching_files: Sequence[str],
-    ) -> tuple[AlignedImageSliceContext, ...]:
-        """Resolve exact producer contexts for the loaded main-flow paths."""
-
-        return step_output_manifest(
-            self.request.context
-        ).producer_output_contexts_for_paths(
-            self.request.execution_plan,
-            matching_files,
-            self.request.context.microscope_handler.parser,
-        )
-
-    def _load_input_stack(
-        self,
-    ) -> tuple[list[str], RuntimeArrayData]:
-        context = self.request.context
-        plan = self.request.execution_plan
-        request = self.request
-        if not context.microscope_handler:
-            raise RuntimeError("MicroscopeHandler not available in context.")
-
-        output_manifest = step_output_manifest(context)
-        producer_index = output_manifest.producer_record_index_for(
-            plan, context.microscope_handler.parser,
-        )
-        producer_records = (
-            None if producer_index is None
-            else producer_index.matching_records(str(request.pattern_group_info))
-        )
-        producer_matching_files = (
-            () if producer_records is None
-            else tuple(record.output_path for record in producer_records)
-        )
-        matching_files = list(producer_matching_files)
-        source_projection = (
-            self.source_workspace_projection_authority().projection_if_available()
-        )
-        if not matching_files:
-            matching_files = context.microscope_handler.path_list_from_pattern(
-                str(plan.input_dir),
-                request.pattern_group_info,
-                context.filemanager,
-                plan.read_backend,
-                (
-                    [component.value for component in plan.variable_components]
-                    if plan.variable_components
-                    else None
-                ),
-                pattern_cache=context.runtime_pattern_discovery_cache,
-            )
-        if producer_index is not None and not producer_matching_files:
-            selected_paths = [
-                path for path in matching_files if producer_index.contains(path)
-            ]
-            if matching_files and not selected_paths:
-                raise NoStepOutputManifestMatch
-            matching_files = selected_paths
-
-        if not matching_files:
-            raise ValueError(
-                f"No matching files found for pattern group {self.pattern_repr} "
-                f"in {plan.input_dir}. "
-                f"This indicates either: (1) no image files exist in the directory, "
-                f"(2) files don't match the pattern, or (3) pattern parsing failed. "
-                f"Check that input files exist and match the expected naming convention."
-            )
-
-        matching_files = self._filter_matching_files_for_group(matching_files)
-
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(
-                "Pattern %s matched %d files: %s",
-                self.pattern_repr,
-                len(matching_files),
-                [Path(f).name for f in matching_files],
-            )
-
-        if not producer_matching_files:
-            matching_files.sort()
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(
-                "Pattern %s sorted files: %s",
-                self.pattern_repr,
-                [Path(f).name for f in matching_files],
-            )
-        matching_files = self._filter_matching_files_for_source_bindings(matching_files)
-
-        full_file_paths = [
-            self._input_memory_path(plan.input_dir, file_path)
-            for file_path in matching_files
-        ]
-        workspace_path_lookups = tuple(
-            VirtualWorkspacePathLookup.from_paths(
-                virtual_path,
-                full_virtual_path,
-            )
-            for virtual_path, full_virtual_path in zip(
-                matching_files,
-                full_file_paths,
-                strict=True,
-            )
-        )
-        workspace_source_lookups = (
-            self._workspace_source_binding_lookups(
-                source_projection,
-                workspace_path_lookups,
-            )
-            if source_projection is not None
-            else ()
-        )
-        if producer_index is not None:
-            if producer_matching_files:
-                producer_index.validate_input_records(producer_records)
-            else:
-                producer_records = producer_index.records_for_paths(matching_files)
-        ImagePayloadStackComposition.validate_main_flow_cohort(producer_records)
-        cached_stack = context.runtime_image_stack_cache.get(
-            tuple(full_file_paths),
-            memory_type=plan.input_memory_type,
-        )
-        RuntimeProfileLogger.log(
-            logger,
-            "runtime_stack_cache_get",
-            0.0,
-            step=plan.step_index,
-            step_name=plan.step_name,
-            hit=cached_stack is not None,
-            paths=len(full_file_paths),
-            memory_type=plan.input_memory_type,
-        )
-        if cached_stack is None:
-            raw_slices = SourceFileUniverse(
-                tuple(full_file_paths),
-                Backend.MEMORY
-                if plan.main_input_dependency.kind is StepInputDependencyKind.STEP_OUTPUT
-                else Backend(plan.read_backend),
-            ).load_images(context.filemanager, zarr_config=plan.zarr_config)
-            if source_projection is not None or not producer_matching_files:
-                raw_slices = self._apply_source_image_loading_semantics(
-                    raw_slices,
-                    workspace_path_lookups,
-                    workspace_source_lookups,
-                    source_projection,
-                )
-
-            if not raw_slices:
-                raise ValueError(
-                    f"No valid images loaded for pattern group {self.pattern_repr} "
-                    f"in {plan.input_dir}. "
-                    f"Found {len(matching_files)} matching files but failed to load any valid images. "
-                    f"This indicates corrupted image files, unsupported formats, or I/O errors. "
-                    f"Check file integrity and format compatibility."
-                )
-
-            main_data_stack = ImagePayloadStackComposition.from_loaded_images(
-                raw_slices,
-                producer_records=producer_records,
-                execution_plan=plan,
-                source_projection=source_projection,
-                workspace_source_lookups=workspace_source_lookups,
-            )
-            if not producer_records:
-                metadata = image_payload_metadata(main_data_stack)
-                domain = request.source_binding_plan.source_spatial_domain.admit_source_cohort(
-                    metadata.source_spatial_domain,
-                    depth=len(matching_files),
-                )
-                main_data_stack = metadata.replace_fields(
-                    source_spatial_domain=domain,
-                ).attach_to(main_data_stack)
-        else:
-            main_data_stack = cached_stack
-
-        return matching_files, main_data_stack
-
-    def _workspace_source_binding_lookups(
-        self,
-        source_projection: VirtualWorkspaceSourceProjection,
-        lookups: Sequence[VirtualWorkspacePathLookup],
-    ) -> tuple[VirtualWorkspacePathLookup, ...]:
-        """Return workspace paths owned by this step's exact source bindings."""
-
-        bindings = self.request.source_binding_plan.binding_declarations
-        return tuple(
-            lookup
-            for lookup in lookups
-            for projection in (source_projection.source_projection_for(lookup),)
-            if projection is not None
-            and any(projection.matches_binding(binding) for binding in bindings)
-        )
-
-    def _filter_matching_files_for_group(
-        self,
-        matching_files: list[str],
-    ) -> list[str]:
-        """Constrain grouped executions to files from the current component."""
-        if (
-            self.request.execution_plan.main_input_dependency.kind
-            is StepInputDependencyKind.STEP_OUTPUT
-            or self.request.compiled_group.runtime_domain
-            is RuntimeInvocationDomain.ARTIFACT_MANAGED
-        ):
-            return matching_files
-        if self.request.main_flow_source_binding_plan.has_primary_content:
-            return matching_files
-
-        group_component = self.request.execution_plan.execution_group_value
-        component_value = self.request.component_value
-        if group_component is None or component_value is None:
-            return matching_files
-
-        parser = self.request.context.microscope_handler.parser
-        filtered = self.request.context.runtime_pattern_discovery_cache.files_for_component(
-            parser,
-            matching_files,
-            parser.component_for_name(group_component),
-            component_value,
-        )
-        if not filtered:
-            raise ValueError(
-                f"Pattern group {self.pattern_repr} for {group_component}="
-                f"{component_value!r} matched files, but none carried the "
-                f"expected grouped component. Matched files: {matching_files}"
-            )
-        return filtered
-
-    def _filter_matching_files_for_source_bindings(
-        self,
-        matching_files: list[str],
-    ) -> list[str]:
-        """Constrain the loaded main stack to declared image source bindings."""
-
-        if (
-            self.request.execution_plan.main_input_dependency.kind
-            is StepInputDependencyKind.STEP_OUTPUT
-        ):
-            return matching_files
-
-        source_binding_plan = self.request.main_flow_source_binding_plan
-        if not source_binding_plan.has_primary_content:
-            return matching_files
-        bindings = tuple(
-            binding
-            for binding in source_binding_plan.bindings
-            if binding.projection_role is SourceProjectionRole.PRIMARY_PLANE
-        )
-        if not bindings:
-            return matching_files
-        selector_bindings = SourceBindingCandidateMatcher.selector_bindings(bindings)
-
-        source_context = self._source_binding_candidate_context()
-        if (
-            not selector_bindings
-            and not source_context.source_projections_by_virtual_path
-        ):
-            return matching_files
-        compatible = list(
-            SourceBindingMatchedImageSet.from_plan(
-                bindings=bindings,
-                match_plan=source_binding_plan.match_plan,
-                source_context=source_context,
-                identity_policy=(self.request.context.source_image_set_identity_policy),
-            ).expand(
-                matching_files,
-                source_universe=self._source_binding_load_universe(),
-            )
-        )
-        if compatible:
-            return compatible
-
-        raise ValueError(
-            f"Source-bound step {self.request.execution_plan.step_name!r} resolved no files for "
-            f"image bindings {[binding.alias for binding in bindings]!r} in pattern "
-            f"{self.pattern_repr}. Matched files before source filtering: "
-            f"{matching_files!r}."
-        )
-
-    def _source_binding_load_universe(self) -> tuple[str, ...]:
-        """Return loadable files available for source image-set expansion."""
-        source_projection = (
-            self.source_workspace_projection_authority().projection_if_available()
-        )
-        request = SourceUniverseRequest.from_context(
-            context=self.request.context,
-            plan=self.request.execution_plan,
-            matching_files=(),
-            source_projection=source_projection,
-        )
-        return request.runtime_universe_state().require_load_universe().files
-
-    def _source_binding_candidate_context(self) -> SourcePatternResolutionContext:
-        projection = self.source_workspace_projection_authority().projection_or_empty()
-        return self.request.context.runtime_source_binding_context_cache.source_pattern_context(
-            parser=self.request.context.microscope_handler.parser,
-            projection=self.source_workspace_projection_cache().filtered_by_axis(
-                projection,
-                axis_id=self.request.execution_plan.axis_id,
-            ),
-            metadata_rules=self.request.source_binding_plan.metadata_rules,
-        )
-
-    def _apply_source_image_loading_semantics(
-        self,
-        raw_slices: Sequence[RuntimeArrayData],
-        workspace_path_lookups: Sequence[VirtualWorkspacePathLookup],
-        workspace_source_lookups: Sequence[VirtualWorkspacePathLookup],
-        source_projection: VirtualWorkspaceSourceProjection | None,
-    ) -> list[RuntimeArrayData]:
-        if source_projection is not None:
-            source_lookups = frozenset(workspace_source_lookups)
-            return [
-                (
-                    self._apply_workspace_source_binding_payload(
-                        payload,
-                        source_projection=source_projection,
-                        lookup=lookup,
-                    )
-                    if lookup in source_lookups
-                    else self._apply_workspace_source_payload(
-                        payload,
-                        source_projection=source_projection,
-                        lookup=lookup,
-                    )
-                )
-                for payload, lookup in zip(
-                    raw_slices,
-                    workspace_path_lookups,
-                    strict=True,
-                )
-            ]
-
-        universe_state = SourceUniverseRequest.from_context(
-            context=self.request.context,
-            plan=self.request.execution_plan,
-            matching_files=tuple(
-                lookup.virtual_path for lookup in workspace_path_lookups
-            ),
-            source_projection=None,
-        ).runtime_universe_state()
-        cache = self.request.context.runtime_source_binding_context_cache
-        source_metadata = cache.normalized_source_metadata(
-            universe_state.source_metadata_by_path
-        )
-        source_context = SourcePatternResolutionContext.from_sources(
-            parser=self.request.context.microscope_handler.parser,
-            source_paths_by_virtual_path=universe_state.step_input_source_paths,
-            source_metadata_by_path=source_metadata,
-            metadata_rules=self.request.source_binding_plan.metadata_rules,
-        )
-        return [
-            self._apply_source_binding_payload(
-                payload,
-                source_metadata=source_context.merged_metadata_for_paths(
-                    (
-                        lookup.virtual_path,
-                        lookup.full_virtual_path,
-                    )
-                ),
-                source_path=source_context.source_path_for(lookup.full_virtual_path),
-                read_backend=self.request.execution_plan.read_backend,
-            )
-            for payload, lookup in zip(
-                raw_slices,
-                workspace_path_lookups,
-                strict=True,
-            )
-        ]
-
-    def _apply_workspace_source_payload(
-        self,
-        payload: RuntimeArrayData,
-        *,
-        source_projection: VirtualWorkspaceSourceProjection,
-        lookup: VirtualWorkspacePathLookup,
-    ) -> RuntimeArrayData:
-        """Attach workspace-owned source identity without requiring a binding."""
-
-        source_ref = source_projection.source_ref_for(lookup)
-        if source_ref is None:
-            return payload
-        source_context = ImagePayloadSourceMetadataContext(
-            SourceImageIdentity(
-                lookup.full_virtual_path,
-                source_projection.source_metadata_for(lookup),
-            ),
-            source_ref.backend,
-            self.request.context.filemanager,
-            source_ref.backend_address,
-        )
-        metadata = source_context.metadata(payload)
-        return source_projection.project_unbound_payload(
-            lookup,
-            metadata.payload_with(
-                image_payload_data(payload),
-                image_payload_mask(payload),
-            ),
-        )
-
-    def _apply_workspace_source_binding_payload(
-        self,
-        payload: RuntimeArrayData,
-        *,
-        source_projection: VirtualWorkspaceSourceProjection,
-        lookup: VirtualWorkspacePathLookup,
-    ) -> RuntimeArrayData:
-        projection = source_projection.require_source_projection_for(lookup)
-        payload = source_projection.project_payload(lookup, payload)
-        return self._apply_source_binding_payload(
-            payload,
-            source_metadata=source_projection.source_metadata_for(lookup),
-            source_path=lookup.full_virtual_path,
-            source_address=projection.ref.backend_address,
-            read_backend=projection.ref.backend,
-        )
-
-    def _apply_source_binding_payload(
-        self,
-        payload: RuntimeArrayData,
-        *,
-        source_metadata: Mapping[str, object] | None,
-        source_path: str,
-        source_address: str | None = None,
-        read_backend: str | None,
-    ) -> RuntimeArrayData:
-        source_context = ImagePayloadSourceMetadataContext(
-            SourceImageIdentity(source_path, source_metadata),
-            read_backend,
-            self.request.context.filemanager,
-            source_address,
-        )
-        source_bindings = self.request.source_binding_plan
-        if not source_bindings.binding_declarations:
-            metadata = source_context.metadata(payload)
-            return metadata.payload_with(
-                image_payload_data(payload),
-                image_payload_mask(payload),
-            )
-        alias = (
-            None
-            if source_metadata is None
-            else source_metadata_value(
-                source_metadata,
-                SOURCE_BINDING_ALIAS_METADATA_FIELD,
-            )
-        )
-        if alias is None:
-            raise ValueError(
-                f"Source-bound payload {source_path!r} has no declared source alias."
-            )
-        binding = source_bindings.binding_for_alias(alias)
-        if binding is None:
-            raise ValueError(
-                f"Source-bound payload {source_path!r} declares unknown alias "
-                f"{alias!r}."
-            )
-        return binding.apply_loaded_payload(payload, source_context)
-
-    @staticmethod
-    def execute_chain(
-        group_data: PatternGroupData
-    ) -> RuntimeArrayData | NoMainFlowOutput:
-        group_data.require_invocations()
-        current_stack: RuntimeArrayData | NoMainFlowOutput = group_data.main_data_stack
-        current_memory_type = group_data.execution_plan.input_memory_type
-        debug_sink = debug_event_sink_from_context(group_data.context)
-        declared_source_bindings = group_data.execution_plan.source_binding_plan
-        for invocation in group_data.compiled_group.invocations:
-            group_key = invocation.key.runtime_group_key(group_data.component_value)
-            artifacts = group_data.artifacts.select_for_invocation(
-                invocation,
-                execution_scope=group_data.execution_plan.execution_group_scope,
-                component_key=group_data.component_key,
-                declared_source_bindings=declared_source_bindings,
-                active_source_bindings=group_data.active_main_flow_source_binding_plan(
-                    current_stack
-                ),
-            )
-            if artifacts is None:
-                continue
-            executor = FunctionCoreExecutor(
-                main_data_arg=current_stack,
-                source_memory_type=current_memory_type,
-                group_data=group_data,
-                invocation=invocation,
-                artifacts=artifacts,
-                group_key=group_key,
-                plane_projection=RuntimePlaneProjection.stack(
-                    group_data.runtime_plane_count
-                ),
-            )
-            captures_debug = debug_sink.captures_invocation_events()
-            if captures_debug and debug_sink.should_skip_invocation(
-                executor.debug_cursor()
-            ):
-                continue
-
-            invocation_started_at = time.perf_counter()
-            try:
-                current_stack = executor.execute(
-                    debug_sink=debug_sink if captures_debug else None,
-                )
-            except Exception as exc:
-                if captures_debug:
-                    debug_sink.record(
-                        executor.debug_event(
-                            DebugEventType.EXCEPTION,
-                            exception=exc,
-                        )
-                    )
-                raise
-            invocation_seconds = time.perf_counter() - invocation_started_at
-            if captures_debug:
-                after_event = executor.debug_event(
-                    DebugEventType.AFTER_INVOCATION,
-                    timing_seconds=invocation_seconds,
-                )
-                debug_sink.record(after_event)
-                if debug_sink.should_stop_after_invocation(after_event):
-                    break
-            RuntimeProfileLogger.log(
-                logger,
-                "invocation_total",
-                invocation_seconds,
-                function=invocation.key.function_name,
-                group=invocation.key.group_key,
-                position=invocation.key.position,
-            )
-            if isinstance(current_stack, NoMainFlowOutput):
-                return current_stack
-            current_memory_type = executor.invocation.contract.output_memory_type
-        if group_data.compiled_group.preserves_input_main_flow() and all(
-            invocation.contract.artifact_output_policy.records_outputs
-            for invocation in group_data.compiled_group.invocations
-        ):
-            return NoMainFlowOutput()
-        return current_stack
-
-    def _project_output_slices(
-        self,
-        processed_stack: RuntimeArrayData,
-        matching_files: Sequence[str],
-    ) -> tuple[tuple[RuntimeArrayData, AlignedImageSliceContext | None], ...]:
-        """Project the original output through its nominal image topology."""
-        if isinstance(processed_stack, ImagePayloadMetadataCarrier) and (
-            processed_stack.metadata.plane_axis is None
-            or processed_stack.metadata.persists_whole_image()
-        ):
-            output_context = self._unwrapped_main_flow_output_context()
-            contexts = (
-                (output_context,)
-                if output_context is not None
-                else (
-                    self._producer_output_contexts(matching_files)
-                    if len(matching_files) == 1
-                    else ()
-                )
-            )
-            context = (
-                contexts[0] if contexts
-                else AlignedImageSliceContext.anonymous_main_flow()
-            )
-            return ((processed_stack, context),)
-        if isinstance(processed_stack, AlignedImageStack):
-            return tuple(processed_stack.projected_output_slices())
-        output_context = self._unwrapped_main_flow_output_context()
-        output_projection = RuntimeSliceProjection.preserved_context_for_value(
-            processed_stack
-        )
-        if output_projection is not None:
-            unstack_started_at = time.perf_counter()
-            output_slices = list(
-                RuntimeSliceProjection.value_for_slice(
-                    processed_stack,
-                    output_projection.selected_plane(slice_index),
-                )
-                for slice_index in range(output_projection.axis_size)
-            )
-            RuntimeProfileLogger.log(
-                logger,
-                "pattern_source_unstack",
-                time.perf_counter() - unstack_started_at,
-                step=self.request.execution_plan.step_index,
-                step_name=self.request.execution_plan.step_name,
-                slices=len(output_slices),
-            )
-            output_payloads = output_slices
-        else:
-            processed_data = image_payload_data(processed_stack)
-            try:
-                unstack_started_at = time.perf_counter()
-                output_slices = list(
-                    unstack_runtime_slices(
-                        processed_data,
-                        self.request.execution_plan.output_memory_type,
-                        self.request.execution_plan.device_id_for(
-                            self.request.execution_plan.output_memory_type
-                        ),
-                        expected_count=len(matching_files),
-                    )
-                )
-                RuntimeProfileLogger.log(
-                    logger,
-                    "pattern_source_unstack",
-                    time.perf_counter() - unstack_started_at,
-                    step=self.request.execution_plan.step_index,
-                    step_name=self.request.execution_plan.step_name,
-                    slices=len(output_slices),
-                )
-            except ValueError as exc:
-                output_shape = np.shape(processed_data)
-                output_ndim = np.ndim(processed_data)
-                logger.error("Function output is not an OpenHCS image stack.")
-                logger.error("Output type: %s", type(processed_stack))
-                logger.error("Output shape: %s", output_shape)
-                logger.error("Output ndim: %s", output_ndim)
-                raise ValueError(
-                    "Main processing must result in an image stack shaped "
-                    f"(N, H, W) or (N, H, W, C), got "
-                    f"{output_shape}"
-                ) from exc
-
-            context_started_at = time.perf_counter()
-            output_payloads = unstack_image_payload_context(
-                processed_stack,
-                output_slices,
-                default_plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
-            )
-            RuntimeProfileLogger.log(
-                logger,
-                "pattern_payload_context_unstack",
-                time.perf_counter() - context_started_at,
-                step=self.request.execution_plan.step_index,
-                step_name=self.request.execution_plan.step_name,
-                slices=len(output_payloads),
-            )
-        slice_contexts = (
-            (output_context,) * len(output_payloads)
-            if output_context is not None
-            else ()
-        )
-        if not slice_contexts and len(output_payloads) == len(matching_files):
-            slice_contexts = self._producer_output_contexts(matching_files)
-        if not slice_contexts:
-            slice_contexts = tuple(
-                AlignedImageSliceContext.anonymous_main_flow()
-                for _payload in output_payloads
-            )
-        return tuple(zip(output_payloads, slice_contexts, strict=True))
-
-    def _unwrapped_main_flow_output_context(
-        self,
-    ) -> AlignedImageSliceContext | None:
-        return self.request.compiled_group.unwrapped_main_flow_output_context(
-            ComponentArtifactPlans.from_step_component(
-                self.request.execution_plan,
-                self.request.component_key,
-            ).outputs
-        )
-
-    def _save_outputs(
-        self,
-        processed_stack: RuntimeArrayData,
-        matching_files: list[str],
-    ) -> list[ProducedOutputSemantics]:
-        context = self.request.context
-        unstack_started_at = time.perf_counter()
-        projected_outputs = self._project_output_slices(processed_stack, matching_files)
-        plan = self.request.execution_plan
-        explicit_output_surfaces = isinstance(processed_stack, AlignedImageStack)
-        if explicit_output_surfaces:
-            stack_payload = processed_stack.copy_projected_output_stack(
-                projected_outputs,
-                memory_type=plan.output_memory_type,
-                device_id=plan.device_id_for(plan.output_memory_type),
-            )
-        elif isinstance(processed_stack, ImagePayloadMetadataCarrier) and (
-            processed_stack.metadata.plane_axis is None
-            or processed_stack.metadata.persists_whole_image()
-        ):
-            stack_payload = ImagePayloadStackComposition.copy_whole_image(
-                processed_stack,
-                memory_type=plan.output_memory_type,
-                device_id=plan.device_id_for(plan.output_memory_type),
-            )
-        else:
-            stack_payload = processed_stack
-        RuntimeProfileLogger.log(
-            logger,
-            "pattern_validate_unstack",
-            time.perf_counter() - unstack_started_at,
-            step=plan.step_index,
-            step_name=plan.step_name,
-            pattern=self.pattern_repr,
-        )
-        output_contexts = tuple(
-            context if context is not None else AlignedImageSliceContext.anonymous_main_flow()
-            for _payload, context in projected_outputs
-        )
-        save_started_at = time.perf_counter()
-
-        def plane_axis_for_output(
-            context: AlignedImageSliceContext,
-        ) -> RuntimePlaneAxis | None:
-            if isinstance(processed_stack, AlignedImageStack):
-                return processed_stack.plane_axis_for_output_context(context)
-            if isinstance(processed_stack, ImagePayloadMetadataCarrier):
-                return image_payload_metadata(processed_stack).plane_axis
-            return RuntimePlaneAxis.RUNTIME_SLICE
-
-        output_slices = tuple(payload for payload, _context in projected_outputs)
-        num_outputs = len(output_slices)
-        num_inputs = len(matching_files)
-
-        if num_outputs < num_inputs:
-            logger.debug(
-                "Function returned %d images from %d inputs - likely "
-                "flattening operation",
-                num_outputs,
-                num_inputs,
-            )
-        elif num_outputs > num_inputs:
-            logger.debug(
-                "Function returned %s output slices from %s positional input "
-                "files; extra slices must carry payload component identity.",
-                num_outputs,
-                num_inputs,
-            )
-
-        output_payloads = []
-        output_payload_metadata = []
-        output_paths_batch = []
-        output_path_entries = []
-        output_records = []
-
-        overwritten_output_paths: list[str] = []
-        output_directory_exists = context.filemanager.exists(
-            str(self.request.execution_plan.output_dir),
-            Backend.MEMORY.value,
-        )
-        for i, img_slice in enumerate(output_slices):
-            input_filename = None
-            if i < len(matching_files):
-                input_filename = matching_files[i]
-            output_path_request = FunctionOutputPathRequest(
-                parser=context.microscope_handler.parser,
-                output_dir=self.request.execution_plan.output_dir,
-                output_payload=img_slice,
-                input_path=input_filename,
-                variable_components=self.request.execution_plan.variable_components,
-                input_aligned_output=num_outputs == num_inputs,
-                identity_cache=context.runtime_function_output_identity_cache,
-            )
-            try:
-                output_identity = FunctionOutputIdentity.from_request(
-                    output_path_request
-                )
-            except ValueError as exc:
-                if input_filename is None:
-                    raise ValueError(
-                        f"Function returned {num_outputs} output slices but only "
-                        f"{num_inputs} input files were available, and output slice "
-                        f"{i} does not carry payload component identity."
-                    ) from exc
-                raise
-            output_context = output_contexts[i]
-            # Only explicit aligned output surfaces own filename qualifiers.
-            # An unwrapped canonical artifact still owns its typed source
-            # context, while its ordinary main-flow checkpoint keeps the
-            # source filename independently of named artifact materialization.
-            if (
-                explicit_output_surfaces
-                and not output_context.is_anonymous_main_flow
-            ):
-                output_identity = output_identity.with_filename_qualifier(
-                    output_context.output_key
-                )
-            output_path = output_identity.path_for_request(output_path_request)
-            output_path_text = str(output_path)
-            output_path_entries.append(
-                OutputPathBatchEntry(
-                    index=i,
-                    input_path=input_filename,
-                    output_path=output_path_text,
-                    identity=output_identity,
-                )
-            )
-            img_slice = output_context.contextualize_image_payload(img_slice)
-            output_metadata = image_payload_metadata(img_slice)
-            output_component_metadata = output_identity.component_metadata(
-                output_metadata.source_component_metadata,
-            )
-            if output_metadata.source_component_metadata != output_component_metadata:
-                output_metadata = output_metadata.with_source_component_metadata(
-                    output_component_metadata
-                )
-                img_slice = output_metadata.attach_to(img_slice)
-            output_record = ProducedOutputSemantics.from_output(
-                self.request.execution_plan,
-                output_path_text,
-                output_identity,
-                output_context=output_context,
-                image_metadata=output_metadata,
-                main_flow_plane_axis=plane_axis_for_output(output_context),
-            )
-
-            if output_directory_exists and context.filemanager.exists(
-                output_path_text,
-                Backend.MEMORY.value,
-            ):
-                overwritten_output_paths.append(output_path_text)
-
-            output_payloads.append(img_slice)
-            output_payload_metadata.append(output_metadata)
-            output_paths_batch.append(output_path_text)
-            output_records.append(output_record)
-
-        OutputPathBatchUniqueness(
-            output_paths=output_paths_batch,
-            input_paths=matching_files,
-            step_name=self.request.execution_plan.step_name,
-            pattern_repr=self.pattern_repr,
-            entries=output_path_entries,
-        ).validate()
-
-        if overwritten_output_paths:
-            for output_path_text in overwritten_output_paths:
-                context.filemanager.delete(output_path_text, Backend.MEMORY.value)
-            context.runtime_image_stack_cache.discard_paths(
-                tuple(overwritten_output_paths)
-            )
-
-        context.filemanager.ensure_directory(
-            str(self.request.execution_plan.output_dir),
-            Backend.MEMORY.value,
-        )
-        context.filemanager.save_batch(
-            output_payloads,
-            output_paths_batch,
-            Backend.MEMORY.value,
-        )
-        if stack_payload is not None:
-            stack_payload = ImagePayloadStackComposition.with_saved_output_context(
-                stack_payload,
-                output_payloads,
-                output_payload_metadata,
-                single_output_plane_axis=(
-                    plane_axis_for_output(output_contexts[0])
-                    if len(output_payloads) == 1 else None
-                ),
-            )
-            context.runtime_image_stack_cache.store(
-                tuple(output_paths_batch),
-                memory_type=self.request.execution_plan.output_memory_type,
-                stack=stack_payload,
-            )
-            RuntimeProfileLogger.log(
-                logger,
-                "runtime_stack_cache_store",
-                0.0,
-                step=self.request.execution_plan.step_index,
-                step_name=self.request.execution_plan.step_name,
-                paths=len(output_paths_batch),
-                memory_type=self.request.execution_plan.output_memory_type,
-            )
-        RuntimeProfileLogger.log(
-            logger,
-            "pattern_save_outputs",
-            time.perf_counter() - save_started_at,
-            step=plan.step_index,
-            step_name=plan.step_name,
-            pattern=self.pattern_repr,
-        )
-        return output_records
-
-    def _cleanup_collapsed_domains(
-        self,
-        output_records: Sequence[ProducedOutputSemantics],
-        matching_files: list[str],
-        output_paths: Sequence[str],
-    ) -> None:
-        context = self.request.context
-        num_outputs = len(output_records)
-        num_inputs = len(matching_files)
-
-        if num_outputs >= num_inputs:
-            return
-
-        if (
-            self.request.execution_plan.input_dir
-            == self.request.execution_plan.output_dir
-        ):
-            return
-
-        retained_paths = {Path(path).as_posix() for path in output_paths}
-        retained_paths.update(
-            Path(record.output_path).as_posix()
-            for record in step_output_manifest(context).produced_records_for(
-                self.request.execution_plan
-            )
-        )
-        for j in range(num_outputs, num_inputs):
-            unused_filename = matching_files[j]
-            unused_relative_path = self._input_relative_path(
-                self.request.execution_plan.input_dir,
-                unused_filename,
-            )
-            unused_path = self.request.execution_plan.output_dir / unused_relative_path
-            if unused_path.as_posix() in retained_paths:
-                continue
-            if context.filemanager.exists(
-                str(unused_path),
-                Backend.MEMORY.value,
-            ):
-                context.runtime_image_stack_cache.discard_paths((str(unused_path),))
-                context.filemanager.delete(
-                    str(unused_path),
-                    Backend.MEMORY.value,
-                )
-                logger.debug(
-                    "Deleted unused collapsed-domain file after reduced "
-                    "output cardinality: %s",
-                    unused_path,
-                )
-
-
 def _process_single_pattern_group(request: PatternGroupExecutionRequest) -> None:
     """Process one image pattern group through its assigned callable pattern."""
-    PatternGroupRuntime(request).run()
+    request.run()

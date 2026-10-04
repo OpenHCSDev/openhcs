@@ -8,7 +8,6 @@ from openhcs.core.compiled_step_plan import FrameworkDeviceAssignment
 from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.runtime_plane_projection import RuntimePlaneProjection
 from openhcs.core.steps.function_runtime import (
-    ComponentArtifactPlans,
     FunctionCoreExecutor,
 )
 
@@ -43,7 +42,8 @@ def test_function_invocation_enters_declared_execution_memory_scope(
     executor = FunctionCoreExecutor(
         group_data=SimpleNamespace(),
         invocation=invocation,
-        artifacts=ComponentArtifactPlans(inputs={}, outputs={}),
+        artifact_inputs={},
+        artifact_outputs={},
         group_key=None,
         plane_projection=RuntimePlaneProjection.stack(),
         main_data_arg=np.zeros((1, 2, 2)),

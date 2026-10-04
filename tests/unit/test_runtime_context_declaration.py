@@ -24,7 +24,6 @@ from openhcs.core.pipeline.function_contracts import runtime_context_parameter
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneProjection
 from openhcs.core.steps.function_runtime import (
-    ComponentArtifactPlans,
     FunctionCoreExecutor,
     PatternGroupData,
 )
@@ -121,13 +120,16 @@ def test_wrapper_preparation_does_not_resurrect_context_inference():
 
 @pytest.mark.parametrize(
     ("func", "parameter"),
-    [(_inferred_context, "context"), (_without_context, None),
-     (_named_context, "execution_context")],
+    [
+        (_inferred_context, "context"),
+        (_without_context, None),
+        (_named_context, "execution_context"),
+    ],
 )
 def test_runtime_binding_consumes_captured_selection(func, parameter):
     pattern = compile_function_pattern(func, {}, {})
     context = ProcessingContext(axis_id="A01")
-    artifacts = ComponentArtifactPlans(inputs={}, outputs={})
+    artifacts = ({}, {})
     scope = PatternGroupData(
         matching_files=["input.tif"],
         main_data_stack=np.zeros((1, 3, 4), dtype=np.uint16),
@@ -136,14 +138,16 @@ def test_runtime_binding_consumes_captured_selection(func, parameter):
             step_index=0, step_name="Context", step_type="FunctionStep", axis_id="A01"
         ),
         compiled_group=pattern.default_group,
-        artifacts=artifacts,
+        artifact_inputs=artifacts[0],
+        artifact_outputs=artifacts[1],
         runtime_plane_index=0,
         runtime_plane_count=1,
     )
     executor = FunctionCoreExecutor(
         group_data=scope,
         invocation=next(pattern.iter_invocations()),
-        artifacts=artifacts,
+        artifact_inputs=artifacts[0],
+        artifact_outputs=artifacts[1],
         group_key=None,
         plane_projection=RuntimePlaneProjection(),
         main_data_arg=np.zeros((2, 3)),

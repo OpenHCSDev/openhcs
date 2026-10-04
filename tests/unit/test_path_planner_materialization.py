@@ -33,7 +33,10 @@ from openhcs.core.compiled_step_plan import (
 )
 from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
 from openhcs.core.component_set import ComponentSet
-from openhcs.core.component_group_scope import ComponentGroupScope, RuntimeExecutionAxisScope
+from openhcs.core.component_group_scope import (
+    ComponentGroupScope,
+    RuntimeExecutionAxisScope,
+)
 from openhcs.constants.constants import MEMORY_TYPE_NUMPY
 from openhcs.core.memory import numpy
 from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payload_data
@@ -109,7 +112,7 @@ from openhcs.core.step_dependencies import StepInputDependencyKind
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.steps.function_runtime import (
-    ComponentArtifactPlans,
+    PatternGroupExecutionScope,
     FunctionCoreExecutor,
     PatternGroupData,
 )
@@ -140,9 +143,12 @@ def _execute_compiled_metadata_pattern(compiled, input_plans=None, stored_output
     for producer, value in stored_outputs:
         context.runtime_value_store.record(
             RuntimeValue.from_output_plan(
-                producer, value, execution_scope=RuntimeExecutionAxisScope(axis_id="A01")
+                producer,
+                value,
+                execution_scope=RuntimeExecutionAxisScope(axis_id="A01"),
             ),
-            path=producer.path, backend="memory",
+            path=producer.path,
+            backend="memory",
         )
     scope = PatternGroupData(
         matching_files=["input.tif"],
@@ -151,22 +157,21 @@ def _execute_compiled_metadata_pattern(compiled, input_plans=None, stored_output
         execution_plan=plan,
         compiled_group=compiled.default_group,
         component_value=None,
-        artifacts=ComponentArtifactPlans.from_step_component(plan, None),
+        artifact_inputs=dict(plan.artifact_inputs),
+        artifact_outputs=PatternGroupExecutionScope._select_output_plans_for_component(
+            plan.artifact_outputs, plan.execution_group_scope, None
+        ),
         runtime_plane_index=0,
         runtime_plane_count=1,
     )
     (invocation,) = compiled.default_group.invocations
     source = np.arange(6, dtype=np.uint16).reshape(1, 2, 3)
-    result = FunctionCoreExecutor(
+    result = FunctionCoreExecutor.from_group_invocation(
+        scope,
+        invocation,
         main_data_arg=ImagePayloadMetadata().payload_with(source),
         source_memory_type=MEMORY_TYPE_NUMPY,
-        group_data=scope,
-        invocation=invocation,
-        artifacts=scope.artifacts.select_for_invocation(
-            invocation, execution_scope=plan.execution_group_scope, component_key=None
-        ),
-        group_key=None,
-        plane_projection=RuntimePlaneProjection.stack(),
+        declared_source_bindings=scope.execution_plan.source_binding_plan,
     ).execute()
     np.testing.assert_array_equal(image_payload_data(result), source)
     return result
@@ -5423,31 +5428,22 @@ def test_runtime_selects_inputs_from_exact_grouped_invocation_edges():
         execution_group_scope=execution_scope,
         compiled_function_pattern=compiled,
     )
-    component_plans = ComponentArtifactPlans.from_step_component(execution_plan, "1")
     invocations = tuple(compiled.iter_invocations())
-    first_plans = component_plans.select_for_invocation(
-        invocations[0],
-        execution_scope=execution_scope,
-        component_key="1",
-    )
-    second_plans = component_plans.select_for_invocation(
-        invocations[1],
-        execution_scope=execution_scope,
-        component_key="1",
-    )
+    first_plans = invocations[0].select_inputs(storage)
+    second_plans = invocations[1].select_inputs(storage)
 
     assert tuple(
         edge.storage_plan.name
-        for edge in first_plans.inputs.values()
+        for edge in first_plans.values()
         if edge.storage_plan is not None
     ) == (first.name,)
     assert tuple(
         edge.storage_plan.name
-        for edge in second_plans.inputs.values()
+        for edge in second_plans.values()
         if edge.storage_plan is not None
     ) == (second.name,)
-    first_edge = next(iter(first_plans.inputs.values()))
-    second_edge = next(iter(second_plans.inputs.values()))
+    first_edge = next(iter(first_plans.values()))
+    second_edge = next(iter(second_plans.values()))
     assert first_edge.projection is not None
     assert second_edge.projection is not None
     assert first_edge.projection.invocation_scope == (
