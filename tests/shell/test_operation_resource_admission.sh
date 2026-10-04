@@ -81,8 +81,11 @@ rg -q 'avg10=4.82 avg60=1.09 avg300=0.23' "$runtime/resources-below_reserve_obse
 # Recorded retinal receipt rounded to 1.607 GiB: preserve low RAM as a real
 # warning, not a reason to lose bounded status/cleanup on an existing client.
 printf 'MemAvailable: 1685062 kB\n' > "$scratch/host/meminfo"
+export CONTROLLED_HOST_LEVEL=critical
 run 0 ongoing retinal_status_under_pressure
 rg -q 'MemAvailable 1.607 GiB; desktopReserve 2048 MiB; policy=warning' "$runtime/resources-retinal_status_under_pressure.ram"
+jq -e '.level=="critical"' "$runtime/resources-retinal_status_under_pressure.json" >/dev/null
+unset CONTROLLED_HOST_LEVEL
 printf 'full avg10=0.00 avg60=0.00 avg300=0.00 total=324417078\n' > "$scratch/host/pressure"
 run 76 full low_ram_bulk_rejected
 run 76 replacement low_ram_startup_rejected
