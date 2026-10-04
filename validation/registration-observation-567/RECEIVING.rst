@@ -1,9 +1,11 @@
 Registration observation: original installed TCP receiving packet
 ================================================================
 
-Status: prepared, NOT released or launched. Singer owns567 receiving; Planck
-has first94 custody for554, Dewey owns its resource/native/CLI launch authority.
-Parent reviews the source head and receives installed evidence before merge.
+Status: focused installed TCP native receiving PASSED on qualified whole8513.
+Singer verified the replies; Dewey delivered through original retained PTY15414.
+One registration/status and exact native closure succeeded. Original shell
+terminal1 is retained separately; no UNKNOWN recovery is claimed. The historical
+preparation procedure below remains the original packet, not a launch request.
 No new checkout, environment, dependency download, build or installation here.
 
 Current receiving correction
@@ -26,7 +28,12 @@ private target; Singer's reused checkout has no runtime import authority.
 Original131 typed close/client terminal is proven; its new revision UNKNOWN
 is retained and will not be replayed. One distinct registration/status case
 uses the byte-exact source-packet fixture and actual native launch-plan store.
-Public TCP registration proof remains pending; installed controls are not it.
+Public TCP proof is now received in engineering567/public94-attempt01/
+LIVE-RECEIVING01.rst: one registration, matching returned/status handle and exact
+published/persisted digest, followed by successful typed native close. Both
+native188784 and MCP177709 are absent;6012/7012 have no listeners. Original
+recorded shell terminal1 is not relabelled0. All eight public operation replies
+have empty errors and mcp_error=false; no specific public operation failed here.
 
 Whole candidate identity
 ------------------------
@@ -150,11 +157,14 @@ do not infer numerical native exit status. No viewer should ever be started.
 No helper or foreign process is signalled. A missing close disposition stays
 explicitly assigned to the current receiving owner, not silently abandoned.
 
-Remaining named dependencies: parent exact567 package qualification; Planck554
-exact94 closure; Dewey original fresh FUND/launch custody. This packet completes
-source preparation, not a resource reservation or installed acceptance claim.
+Those named prerequisites were satisfied by whole8513 qualification, prior
+exact94 closure and Dewey's original uncapped577 recorded-client handoff.
+Focused registration/observation/closure acceptance is complete; no remaining
+native receiving dependency holds567. This does not resolve original UNKNOWN
+requests, claim live fault-injection coverage, all-zero debt or scientific gain.
 
 Frozen fixture: registration_observation_probe_567.py, 154 bytes, SHA256
 4398ac619555f8a1c0459dbbcb1a6440862fab50602cea1485c756c6ebd1e828.
-Complete packet text/source is under10KiB. No preparation test/native process
-was run; all prior source control evidence remains tied to unchanged production.
+The original prepared packet was under10KiB and launched nothing by itself.
+Its one newly authorised native case is now complete; all prior source controls
+and whole-wheel qualification remain tied to unchanged production8513.

@@ -147,14 +147,15 @@ Includes exact qualified product/test sources, original bootstrap, original
 censuses/R0 JSON and controls01--06 stdout/stderr. Loose originals remain retained;
 pytest whitespace is evidence-only, not rewritten to manufacture diff cleanliness.
 
-Remaining acceptance
---------------------
+Focused native acceptance received
+---------------------------------
 
-Source entrypoint behavior is demonstrated at the strength above. Actual installed
-TCP MCP registration -> returned observation handle -> original native status,
-and successful one-registration observation remain a separate parent receiving
-case. No scientific gain, original H002 outcome recovery, installed readiness,
-all-zero R0 or global R1 closure is claimed. The original UNKNOWN stays immutable.
+The separate installed TCP receiving case now passes: one registration, exact
+returned observation handle, original native read-only publication/persistence
+proof and successful typed close. Full evidence is appended below. Original
+recorded shell terminal1 remains separate, not hidden or relabelled0. No
+scientific gain, original H002 UNKNOWN recovery, all-zero R0 or global R1 closure
+is claimed. No specific public operation remains failing in this focused case.
 
 Parent BOUND-2 correction: one typed registration renderer
 --------------------------------------------------------
@@ -211,8 +212,70 @@ control/audit passes and their original raw outputs. Original larger archive
 is still historical5c4 evidence. Production/tests diff-check passes; authentic
 raw pytest whitespace is retained in archives, not rewritten.
 
-Dewey must qualify the corrected whole candidate for BOTH client/native before
-the prepared ONE-registration/publicTCP handle/status journey. No old package,
-selective overlay or source fixtures count as installed acceptance. Planck554
-has first94 closure; Singer remains the named567 receiving owner. #541 remains
-separate typed pixel/unit ownership with Root shared-frame dependency.
+Those historical receiving prerequisites were satisfied: Dewey qualified the
+whole8513 candidate for BOTH client/native and delivered the original one-case
+journey after prior exact94 closure. No old package, selective overlay or source
+fixture substitutes for the native evidence below. #541 remains separate typed
+pixel/unit ownership with Root shared-frame dependency.
+
+Actual whole-package TCP receiving, 2026-10-04
+--------------------------------------------
+
+Persistent root: /home/ts/wt/openhcs-issue-batch-20260929/engineering567/
+public94-attempt01. Original LIVE-RECEIVING01.rst, raw stdin/stdout/timing and
+native log/startup journal are retained there. Qualified wheel/source8513 is
+unchanged by the receiving-only0aaf checkpoint or this documentation update.
+Wheel SHA2569fde2794d19f5d57837a67c4672e1f1053eed3c95c71ebae7f37c160655756de;
+target is headless01-admission/ADMIN_PACKAGE567/author-workspace/output/target01.
+Original whole verification815 tracked payloads/90 resources/13 skill files/
+984 RECORD entries and nine installed controls remains the package proof.
+
+ONE original normal retained CLI PTY15414 was physically owned by Dewey;
+Singer's cross-thread read-only PTY lookup failed before sending any input.
+No second client was started. Its MCP177709 health reports exact target01,
+errors=[], stale_source_paths=[],86 packaged resources ready. Both original
+MCP/native process command lines activate that same whole target through the
+original paired interpreter. Native188784/create1791080888.84 owns6012TCP/7012.
+Original bootstrap observation returns ready=true; explicit catalogue prepare
+and its same-handle status return ready before source submission.
+
+The154-byte engineering declaration was submitted exactly ONCE, persist=true,
+using its actual native launch-plan store. Original registration returns
+errors=[], registered_count=1, persisted=true, one original source-file path,
+canonical function_id openhcs:registration_observation_probe_567 and the typed
+observation_handle. The direct-six-field read-only status was submitted once;
+errors=[], outcome=registered, returned handle exactly equals registration's
+handle, and published_sources contains precisely the persisted_source identity.
+Exact name/digest/connection/process/store/persist comparisons pass, not just
+counts. SHA2564398ac619555f8a1c0459dbbcb1a6440862fab50602cea1485c756c6ebd1e828
+matches frozen source bytes; cmp against the native saved source is terminal0.
+PUBLIC-RELATIONS01.stdout and PUBLIC-CLOSURE01.stdout retain true assertions.
+
+Original exact close returns request_attempted/acknowledged/process_exited/
+endpoint_terminated/succeeded all true, errors=[], original process_identity.
+At2026-10-04T02:36:04Z independent ps finds native188784 and MCP177709 absent,
+ss finds no6012/7012 listeners. Original script ends at22:35:02-04:00 with
+COMMAND_EXIT_CODE=1. Preserve actual terminal1; numerical native exit code and
+cause of the nonzero recorded-shell disposition are not inferred. Every one
+of the eight public operation batches has errors=[], mcp_error=false and
+payload errors=[]; the terminal1 is not falsely reported as a failed public
+registration/status/close. No operation here is UNKNOWN.
+
+Original uncapped scope787d442349b8407891ced5b3a15b8e84 belongs to the common
+openhcs-blindsol3phase03.slice, CPU1, MemoryMax=infinity/MemorySwapMax=infinity.
+This uses merged577's original operations, not a second launcher or cap override.
+The receiving runtime, including original warmup cache, occupies21MiB; raw
+input/output/timing/native log total44,881 bytes. No viewer, scientific image,
+pipeline execution, provider, download, new environment/build/install/worktree,
+scientific hot update, original uncertain request replay or fault injection.
+Focused native acceptance is complete, not biological or global-audit closure.
+
+Byte-exact native receiving archive:
+docs/validation/custom-registration-native-20261004.tar.gz,31,047 bytes,
+SHA2568d67365976e12d3c896f8431f591e97dfc468d2d7d26052d51fadc6a38db6b77.
+Contains original input/output/timing, native log/startup journal, frozen and
+persisted declaration, original uncapped resource readback and receiving
+projections/command evidence. Archived stdout SHA256 equals original
+ecef55d8af81771c92ffb92b2fcc247f2a6f11e7a6b0d3d09220e400c2593f42.
+Original61PASS/3FAIL, earlier process/lookup negatives and old uncertain sources
+remain separately retained; no original failure was rewritten or replayed.
