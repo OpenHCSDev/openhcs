@@ -1351,7 +1351,7 @@ class SourceBindingMatchedImageSet(SourceIdentityResolutionContext):
         )
         return SourceImageSetIdentity.from_metadata(
             metadata,
-            fallback_source_path=candidate,
+            fallback_source_path=self.source_path_for(candidate),
             policy=self.identity_policy,
         )
 

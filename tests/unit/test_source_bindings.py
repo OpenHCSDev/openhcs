@@ -1103,6 +1103,73 @@ def test_narrow_step_binding_uses_exact_workspace_provenance_identity():
             )
 
 
+@pytest.mark.parametrize("shared_source", [True, False])
+def test_source_binding_members_use_exact_source_identity_without_metadata_axes(
+    shared_source,
+):
+    primary_path = "A01_s001_w2_z001_t001.tif"
+    object_path = "_source/SavedIPO/A01_s001_w2_z001_t001.tif"
+    source_path = "/a/saved.labels.tif"
+    object_source = source_path if shared_source else "/b/saved.labels.tif"
+    metadata = {
+        "well": "A01",
+        "site": "1",
+        "channel": "2",
+        "z_index": "1",
+        "timepoint": "1",
+    }
+    coordinates = tuple(
+        ComponentSelector(component, metadata[component.value])
+        for component in AllComponents
+    )
+    primary = NamedSourceBinding(alias="SavedImage", component_identity=coordinates)
+    objects = NamedSourceBinding(
+        alias="SavedIPO",
+        component_identity=coordinates,
+        artifact_kind=ObjectLabelsArtifactType,
+        projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+    )
+    refs = {
+        primary_path: SourcePixelRef("disk", source_path),
+        object_path: SourcePixelRef("disk", object_source),
+    }
+    address = OpenHCSPlaneAddress.from_complete_source_metadata(metadata)
+    projection = VirtualWorkspaceSourceProjection(
+        source_refs_by_virtual_path=refs,
+        source_metadata_by_path={primary_path: metadata, object_path: metadata},
+        source_projections_by_virtual_path={
+            primary_path: SourcePlaneProjection(
+                address=address, ref=refs[primary_path], source_alias=primary.alias
+            ),
+            object_path: SourceArtifactProjection(
+                address=address,
+                ref=refs[object_path],
+                source_alias=objects.alias,
+                artifact_kind=ObjectLabelsArtifactType,
+            ),
+        },
+    )
+    policy = SourceImageSetIdentityPolicy.from_source_bindings(
+        SourceBindingsConfig(bindings=(primary, objects))
+    )
+    assert not policy.identity_components()
+    matched = SourceBindingMatchedImageSet.from_plan(
+        bindings=(primary, objects),
+        match_plan=SourceBindingMatchPlan(SourceBindingMatchMethod.ORDER),
+        source_context=SourcePatternResolutionContext.from_projection(
+            parser=SourceSchemaFilenameParser(), projection=projection
+        ),
+        identity_policy=policy,
+    )
+    assert matched.members_for_binding(
+        objects,
+        anchor_provenance=SourceImageProvenance(
+            source_path=primary_path, source_component_metadata=metadata
+        ),
+        source_universe=(object_path,),
+    ) == ((object_path,) if shared_source else ())
+
+
 def test_source_binding_members_load_one_store_for_multiple_matching_identities():
     binding = NamedSourceBinding(
         alias="Membrane",
