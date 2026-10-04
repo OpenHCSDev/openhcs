@@ -3,7 +3,6 @@
 from collections.abc import Mapping, Sequence
 from dataclasses import replace
 from enum import Enum
-from functools import lru_cache
 import inspect
 from types import UnionType
 from typing import (
@@ -61,17 +60,27 @@ def runtime_context_parameter(parameter_name: str | None) -> Callable[[F], F]:
                 f"{parameter_name!r}."
             )
         namespace = vars(func)
+        namespace.pop(FunctionContractAttribute.canonical_signature, None)
+        namespace.pop(FunctionContractAttribute.raw_runtime_signature, None)
         namespace[FunctionContractAttribute.runtime_context_parameter] = parameter_name
         return func
 
     return decorator
 
 
-@lru_cache(maxsize=256)
 def resolved_callable_type_hints(func: Callable) -> dict[str, Any]:
     """Return the callable's resolved type contract or propagate its error."""
 
-    return get_type_hints(func)
+    signature = CallableMetadata.prepared_callable_signature(func)
+    if signature is None:
+        return get_type_hints(func)
+    from typing import _strip_annotations
+
+    return {
+        **{name: _strip_annotations(parameter.annotation) for name, parameter in signature.parameters.items()
+           if parameter.annotation is not inspect.Parameter.empty},
+        **({} if signature.return_annotation is inspect.Signature.empty else {"return": _strip_annotations(signature.return_annotation)}),
+    }
 
 
 def annotation_accepts_runtime_type(annotation: object, value_type: type[Any]) -> bool:
@@ -125,7 +134,7 @@ def resolved_callable_parameter(
 ) -> inspect.Parameter:
     """Return one callable parameter with its runtime type hint resolved."""
 
-    signature = inspect.signature(func)
+    signature = CallableMetadata.callable_signature(func)
     parameter = signature.parameters.get(parameter_name)
     if parameter is None:
         raise ValueError(
@@ -152,7 +161,6 @@ class ObjectLabelInputExecutionMode(str, Enum):
         return self is self.FULL_STACK or (
             self is self.MATCH_IMAGE_STACK and image_stack_required
         )
-
 
     def invocation_kwargs(
         self,
@@ -482,7 +490,7 @@ def special_input_parameters_from_callable(
     """Return special-input parameters in their canonical signature order."""
 
     declared_names = special_input_names_from_callable(func)
-    signature = inspect.signature(func)
+    signature = CallableMetadata.callable_signature(func)
     missing = tuple(name for name in declared_names if name not in signature.parameters)
     if missing:
         raise ValueError(

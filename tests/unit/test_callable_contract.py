@@ -553,7 +553,9 @@ def test_function_reference_preserves_batching_through_compiler_and_transport(
     contract = normalized.groups[0].items[0].contract
     restored = pickle.loads(pickle.dumps(contract))
     assert restored.func == reference
-    assert restored.metadata == reference.metadata
+    expected_metadata = reference.metadata.with_prepared_signatures(func, func)
+    assert restored.metadata.canonical_signature == expected_metadata.canonical_signature
+    assert restored.metadata == expected_metadata
     assert restored.runtime_batch_executor(
         RuntimeBatchExecutionDomain.PURE_2D_SLICES
     ) is _batch_executor

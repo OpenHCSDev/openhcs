@@ -401,14 +401,11 @@ def test_bundle_transport_preserves_prepared_runtime_contract_identity() -> None
     )
     from openhcs.core.compiled_step_plan import CompiledStepPlan
     from openhcs.core.context.processing_context import ProcessingContext
-    from openhcs.core.function_patterns import compile_function_pattern
+    from openhcs.core.function_patterns import compile_function_pattern, normalize_function_pattern
     from openhcs.core.orchestrator.execution_result import (
         RuntimeExecutionTransportSerialization,
     )
-    from openhcs.core.steps.function_runtime import (
-        FunctionInvocationCallableCache,
-        FunctionInvocationCallableResolver,
-    )
+    from openhcs.core.callable_contract import CallableContractRuntimeCache
 
     reference = FunctionReferenceTransportAuthority.function_reference(
         cellprofiler_backend.crop
@@ -416,7 +413,28 @@ def test_bundle_transport_preserves_prepared_runtime_contract_identity() -> None
     reference = replace(
         reference, metadata=replace(reference.metadata, prepare=lambda: None)
     )
-    pattern = compile_function_pattern(reference, {}, {})
+    captured = normalize_function_pattern(reference)
+    captured_item = next(captured.iter_items())
+    captured = replace(
+        captured,
+        groups=(
+            replace(
+                captured.groups[0],
+                items=(
+                    replace(
+                        captured_item,
+                        contract=replace(
+                            captured_item.contract,
+                            metadata=replace(
+                                captured_item.contract.metadata, prepare=lambda: None
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+        ),
+    )
+    pattern = compile_function_pattern(captured, {}, {})
     (invocation,) = tuple(pattern.iter_invocations())
     invocation = replace(
         invocation,
@@ -428,10 +446,10 @@ def test_bundle_transport_preserves_prepared_runtime_contract_identity() -> None
     pattern = replace(
         pattern, groups=(replace(pattern.groups[0], invocations=(invocation,)),)
     )
-    prepared_callable = FunctionInvocationCallableResolver.resolve(invocation)
+    prepared_callable = invocation.contract.resolve_runtime_callable()
     plan = CompiledStepPlan(
         step_index=0, step_name="Crop", step_type="FunctionStep", axis_id="A01",
-        func=reference, compiled_function_pattern=pattern,
+        func=captured, compiled_function_pattern=pattern,
     )
     context = ProcessingContext(
         axis_id="A01", step_plans={0: plan},
@@ -449,13 +467,16 @@ def test_bundle_transport_preserves_prepared_runtime_contract_identity() -> None
     transport_plan = transport_context.step_plans[0]
     assert transport_context is not context
     assert transport_plan is not plan
-    assert transport_plan.func.metadata.prepare is None
+    (transport_item,) = tuple(transport_plan.func.iter_items())
+    assert transport_item.contract.metadata.prepare is None
+    assert transport_item.func.metadata.prepare is None
     (transport_invocation,) = tuple(transport_plan.compiled_function_pattern.iter_invocations())
     assert transport_invocation.contract.metadata.prepare is None
     assert invocation.contract.metadata.prepare is not None
-    assert plan.func is reference and reference.metadata.prepare is not None
+    assert plan.func is captured and reference.metadata.prepare is not None
+    assert next(captured.iter_items()).contract.metadata.prepare is not None
     assert plan.compiled_function_pattern is pattern
-    assert FunctionInvocationCallableResolver.resolve(invocation) is prepared_callable
+    assert invocation.contract.resolve_runtime_callable() is prepared_callable
     assert transport_context.runtime_value_store is context.runtime_value_store
     assert transport_context.runtime_image_stack_cache is context.runtime_image_stack_cache
     assert transport_context.filemanager is context.filemanager
@@ -467,15 +488,17 @@ def test_bundle_transport_preserves_prepared_runtime_contract_identity() -> None
     assert serialized_bundle.runtime_contexts is bundle.transport_contexts
     assert context.step_plans[0] is plan
     assert (
-        FunctionInvocationCallableCache.process_cache().get_bound(invocation.contract)
+        CallableContractRuntimeCache.process_cache().get_bound(invocation.contract)
         is prepared_callable
     )
-    assert FunctionInvocationCallableResolver.resolve(invocation) is prepared_callable
+    assert invocation.contract.resolve_runtime_callable() is prepared_callable
     RuntimeExecutionTransportSerialization.register()
     restored = pickle.loads(pickle.dumps(serialized_bundle))
     restored_plan = restored.runtime_contexts["A01"].step_plans[0]
-    assert restored_plan.func.metadata.prepare is None
-    assert restored_plan.func.resolve() is reference.resolve()
+    (restored_item,) = tuple(restored_plan.func.iter_items())
+    assert restored_item.contract.metadata.prepare is None
+    assert restored_item.func.metadata.prepare is None
+    assert restored_item.func.resolve() is reference.resolve()
 
 
 def test_generated_source_resolves_catalog_owned_cellprofiler_callable() -> None:

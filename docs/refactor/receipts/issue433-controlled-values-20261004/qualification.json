@@ -1,0 +1,1425 @@
+{
+  "status": "PASS",
+  "source_head": "a6c0e1e030ae6b9859c7447541a7f1f89531e1cd",
+  "completed_jobs": 16,
+  "strict_comparisons": 32,
+  "one_endpoint": {
+    "pid": 3971124,
+    "create_time": 1791086892.75,
+    "port": 7777
+  },
+  "peak_aggregate_mb": 4002.01171875,
+  "cap_mb": 6144,
+  "postjob_server_rss_mb": [
+    1466.8828125,
+    1561.71484375,
+    1690.3828125,
+    1676.9609375,
+    1621.41796875,
+    1627.8828125,
+    1688.27734375,
+    2017.48828125,
+    2320.0078125,
+    2210.01953125,
+    2210.1640625,
+    2210.1796875,
+    2118.08203125,
+    2117.8828125,
+    2130.8359375,
+    2131.953125
+  ],
+  "scope": "Finite one-server VALUES repeat, not latency or full30 qualification. No forced GC/global clear/threshold changes/restarts. Native outputs reused solely for science.",
+  "live_extra_inspection": "Unavailable in existing wire protocol; STATUS deliberately excludes ExecutionRecord.metadata. Consumed compilation availability tested via existing compiled-artifact inspection.",
+  "memory_samples_sha256": "6488d594fe770328c1545d27688e4de68b732407de79a51e13a65c093d8a7538",
+  "source_freeze_sha256": "ae74357713b962276244810ddf13959565ad38295e954684bc95abb5805a48fd",
+  "ready_server_rss_mb": 962.8125,
+  "server_peak_sampled_mb": 2335.16796875,
+  "rss_sample_count": 6795,
+  "max_observed_sampling_gap_seconds": 0.7706191539764404,
+  "cycle_end_postjob_rss_mb": [
+    1676.9609375,
+    2017.48828125,
+    2210.1796875,
+    2131.953125
+  ],
+  "last_seven_postjob_range_mb": [
+    2117.8828125,
+    2210.1796875
+  ],
+  "retained_output_bytes": 482867459,
+  "archive": {
+    "filename": "original-evidence.tar.gz",
+    "sha256": "7ec66003049ae82dcaabe286a525dc7fd725bcc1fbb28679f07a0fa1d9b85d66",
+    "bytes": 1327577
+  },
+  "archived_files": [
+    {
+      "path": "controlled/source-freeze.json",
+      "sha256": "ae74357713b962276244810ddf13959565ad38295e954684bc95abb5805a48fd",
+      "bytes": 1234263
+    },
+    {
+      "path": "controlled/decision.json",
+      "sha256": "68c7b6317a2d58c70ffc043354d517e57ce1fc87cd1eb77a0023c342c6fb76d1",
+      "bytes": 1191
+    },
+    {
+      "path": "controlled/ready-endpoint.json",
+      "sha256": "cf57018579164c0622ee7eba58d6b66e5deebb0054df5577929da08a5962d552",
+      "bytes": 303
+    },
+    {
+      "path": "controlled/ready-endpoint-final.json",
+      "sha256": "54d7547d7b97391b98ed3a185503de4b96f70f5d4dabe2f4f7496baa5d17d987",
+      "bytes": 134
+    },
+    {
+      "path": "controlled/rss-samples.jsonl",
+      "sha256": "6488d594fe770328c1545d27688e4de68b732407de79a51e13a65c093d8a7538",
+      "bytes": 690157
+    },
+    {
+      "path": "controlled/job-00.json",
+      "sha256": "edb01f901e1b627f97810a99ac9362f25d32db79931c0fec168ee12c5832fab1",
+      "bytes": 27544
+    },
+    {
+      "path": "controlled/job-01.json",
+      "sha256": "5679bd212689b1c6338214d727c666fa441a9ead500eac20c3451ca020fc3fb6",
+      "bytes": 27334
+    },
+    {
+      "path": "controlled/job-02.json",
+      "sha256": "63fe23612abe548dc6235d5e786436cd2669b052eccbc85425164f8712b7730a",
+      "bytes": 27859
+    },
+    {
+      "path": "controlled/job-03.json",
+      "sha256": "53df8bb7c69461998644fcd1d536661a7ed9d91d694d4268f07e1d59180c24e9",
+      "bytes": 27548
+    },
+    {
+      "path": "controlled/job-04.json",
+      "sha256": "9bf77958a79bb8cfdd323238cae5b971b5837739c8e2ff20876f6a69e58e2c03",
+      "bytes": 27551
+    },
+    {
+      "path": "controlled/job-05.json",
+      "sha256": "f72dc1045a8e227b61133f1756dcf3c964833e35c132f31e7d95e1bca9da86e2",
+      "bytes": 27333
+    },
+    {
+      "path": "controlled/job-06.json",
+      "sha256": "e687c876175e225d651c22f1d65f7f9c2eb6ee9ed4ad80031455de7f031c19e8",
+      "bytes": 27861
+    },
+    {
+      "path": "controlled/job-07.json",
+      "sha256": "1a628b635c2d22304a3a9e6d29d6339dd6c7085e40e76ea65faf4fe9af8fb7d5",
+      "bytes": 27548
+    },
+    {
+      "path": "controlled/job-08.json",
+      "sha256": "c6a9d99efe01a5cbdd39402d3dd25e05dc65851281d1b9c3e1f9b4703915abc5",
+      "bytes": 27549
+    },
+    {
+      "path": "controlled/job-09.json",
+      "sha256": "b2f5e6d58a09f518f451e711eb213804737232a3d1f112bb77c8ab9e76736661",
+      "bytes": 27331
+    },
+    {
+      "path": "controlled/job-10.json",
+      "sha256": "da48e122abfaa1db7f579aa538ef4f5c505082162a442554eaec5303e803d79b",
+      "bytes": 27870
+    },
+    {
+      "path": "controlled/job-11.json",
+      "sha256": "51c077f9c9d9df3fe51fbf69ae48cf2b4a6a27df2fd0d84cf05457cccb492a1c",
+      "bytes": 27559
+    },
+    {
+      "path": "controlled/job-12.json",
+      "sha256": "c45b8d5af60ece3e833ebe80503fcb81ebf415ffac6370222ad404155d077e07",
+      "bytes": 27558
+    },
+    {
+      "path": "controlled/job-13.json",
+      "sha256": "3bc7fdd0ff9b8f1ed135cfebda29a470e35eee564b3113b6fb35e5adadbc70d5",
+      "bytes": 27341
+    },
+    {
+      "path": "controlled/job-14.json",
+      "sha256": "bc871c3d9fb6ac19be83fb71baec8d125afbddbf2202d819ba3c2b443eedb5c2",
+      "bytes": 27873
+    },
+    {
+      "path": "controlled/job-15.json",
+      "sha256": "0dcfea14cb2b29e770e359222372c6ff900af50dc4bb89af4b1d94901a433640",
+      "bytes": 27559
+    },
+    {
+      "path": "controller/controller.py",
+      "sha256": "f535758caf792fa4e13d986240816e55ffc25c5b4a37c0d38264babad02bd1f1",
+      "bytes": 17242
+    },
+    {
+      "path": "controller/controller-prelaunch-rejected.py",
+      "sha256": "ca8f5d96d08ae709bb05e35e275992ca708527ccfa0cf3542668f5610c4b124d",
+      "bytes": 17165
+    },
+    {
+      "path": "controller/prepare.log",
+      "sha256": "1e012a6fa3dfb100a3ac9d6dc10ea79c3b2f49bf9c09e1b19968f6b2a7268c98",
+      "bytes": 696
+    },
+    {
+      "path": "controller/run.log",
+      "sha256": "4dc275f26ee1d338f40bb1e8979337c94ab579a76b67689738dfe793274ca2d9",
+      "bytes": 848
+    },
+    {
+      "path": "controller/run-v2.log",
+      "sha256": "cc6f12928ca7f8678b057b210fd16a439a1bc3dbb99cf3641beae1230b636e68",
+      "bytes": 3427
+    },
+    {
+      "path": "prelaunch-red/source-freeze.json",
+      "sha256": "9f0911a79a8db4b9f48135c2063dcbdfce07595730fd2b252e5640602c3d4a1c",
+      "bytes": 1234143
+    },
+    {
+      "path": "prelaunch-red/prelaunch-state-current.json",
+      "sha256": "e0ea5ec628b18b4ce4d1f5962b06815fcc57cb314eaf7fcce6a7cbaf8b65e3a3",
+      "bytes": 1204989
+    },
+    {
+      "path": "query-retention/openhcs-measurement-cache-retention-proof-20261004.py",
+      "sha256": "3105e966ba91ca6b854d0cf549161fe51cb59d4bdd5623f8f9a75bb6a82bbeec",
+      "bytes": 5627
+    },
+    {
+      "path": "query-retention/openhcs-measurement-cache-retention-proof-20261004.json",
+      "sha256": "111cab1ee6ed16986277217c15e613663e32385b10cc266c85a3d665fe6efe2e",
+      "bytes": 1128
+    },
+    {
+      "path": "query-retention/openhcs-measurement-cache-retention-fixed-replay-20261004.py",
+      "sha256": "b927714272ce12276738d97772b32b909bec632677a081a929b2bdfa32843e3d",
+      "bytes": 4271
+    },
+    {
+      "path": "query-retention/openhcs-measurement-cache-retention-fixed-replay-20261004.json",
+      "sha256": "82325ed210b0996b3d8178fd471d2dcbabec38fdcd79bf13160c6dc4bab94c4c",
+      "bytes": 584
+    },
+    {
+      "path": "query-retention/openhcs-measurement-cache-saved-production-replay-20261004.py",
+      "sha256": "57079170797fbc85d3dc236d0a58e07ebcfdc92840890413c6e090a38c089cd4",
+      "bytes": 3438
+    },
+    {
+      "path": "query-retention/openhcs-measurement-cache-saved-production-replay-20261004.json",
+      "sha256": "c0e301136e1d2b2820e51bb673f373fbab70f5d8deebd81ddf8df1da0dc814a8",
+      "bytes": 5447
+    },
+    {
+      "path": "controller/server.log",
+      "sha256": "fc3e1fa7905c3f3f67e6226882457e2f77b690acd3ba0ef69f4178c621ac104f",
+      "bytes": 17802
+    }
+  ],
+  "raw_postjob_rows": [
+    {
+      "index": 0,
+      "case": "cp_tutorial_3d_monolayer",
+      "before": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 1009582080,
+        "epoch": 1791086948.2820473
+      },
+      "after": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 1538138112,
+        "epoch": 1791086956.786006
+      },
+      "after_controller_release": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 1538138112,
+        "epoch": 1791086959.2570045
+      },
+      "retained_record_counts": {
+        "W001": 41
+      },
+      "peak_aggregate_mb_so_far": 2757.8125,
+      "observation_export_bytes": 26229448,
+      "science": [
+        {
+          "native_repeat": 0,
+          "measurement_differences": 0,
+          "image_differences": 0,
+          "tables": [
+            7,
+            6
+          ],
+          "physical_images": [
+            2,
+            2
+          ],
+          "logical_images": [
+            2,
+            2
+          ],
+          "known_relationship_keys": [
+            3,
+            3
+          ]
+        },
+        {
+          "native_repeat": 1,
+          "measurement_differences": 0,
+          "image_differences": 0,
+          "tables": [
+            7,
+            6
+          ],
+          "physical_images": [
+            2,
+            2
+          ],
+          "logical_images": [
+            2,
+            2
+          ],
+          "known_relationship_keys": [
+            3,
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "case": "ExampleSpeckles",
+      "before": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 1538138112,
+        "epoch": 1791086959.270328
+      },
+      "after": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 1637576704,
+        "epoch": 1791086961.1800673
+      },
+      "after_controller_release": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 1637576704,
+        "epoch": 1791086962.3832035
+      },
+      "retained_record_counts": {
+        "W001": 26
+      },
+      "peak_aggregate_mb_so_far": 2862.30078125,
+      "observation_export_bytes": 12407840,
+      "science": [
+        {
+          "native_repeat": 0,
+          "measurement_differences": 0,
+          "image_differences": 0,
+          "tables": [
+            3,
+            3
+          ],
+          "physical_images": [
+            0,
+            0
+          ],
+          "logical_images": [
+            0,
+            0
+          ],
+          "known_relationship_keys": [
+            1,
+            1
+          ]
+        },
+        {
+          "native_repeat": 1,
+          "measurement_differences": 0,
+          "image_differences": 0,
+          "tables": [
+            3,
+            3
+          ],
+          "physical_images": [
+            0,
+            0
+          ],
+          "logical_images": [
+            0,
+            0
+          ],
+          "known_relationship_keys": [
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "case": "cp_tutorial_beginner_segmentation_final",
+      "before": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 1637576704,
+        "epoch": 1791086962.3967478
+      },
+      "after": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 1772494848,
+        "epoch": 1791086967.6351411
+      },
+      "after_controller_release": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 1772494848,
+        "epoch": 1791087032.9085379
+      },
+      "retained_record_counts": {
+        "W001": 44
+      },
+      "peak_aggregate_mb_so_far": 3189.5078125,
+      "observation_export_bytes": 15477083,
+      "science": [
+        {
+          "native_repeat": 0,
+          "measurement_differences": 0,
+          "image_differences": 0,
+          "tables": [
+            7,
+            7
+          ],
+          "physical_images": [
+            2,
+            2
+          ],
+          "logical_images": [
+            2,
+            2
+          ],
+          "known_relationship_keys": [
+            5,
+            5
+          ]
+        },
+        {
+          "native_repeat": 1,
+          "measurement_differences": 0,
+          "image_differences": 0,
+          "tables": [
+            7,
+            7
+          ],
+          "physical_images": [
+            2,
+            2
+          ],
+          "logical_images": [
+            2,
+            2
+          ],
+          "known_relationship_keys": [
+            5,
+            5
+          ]
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "case": "cp_tutorial_3d_monolayer",
+      "before": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 1772494848,
+        "epoch": 1791087032.9218714
+      },
+      "after": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 1758420992,
+        "epoch": 1791087041.079347
+      },
+      "after_controller_release": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 1758420992,
+        "epoch": 1791087042.0794837
+      },
+      "retained_record_counts": {
+        "W001": 41
+      },
+      "peak_aggregate_mb_so_far": 3493.23828125,
+      "observation_export_bytes": 26229440,
+      "science": [
+        {
+          "native_repeat": 0,
+          "measurement_differences": 0,
+          "image_differences": 0,
+          "tables": [
+            7,
+            6
+          ],
+          "physical_images": [
+            2,
+            2
+          ],
+          "logical_images": [
+            2,
+            2
+          ],
+          "known_relationship_keys": [
+            3,
+            3
+          ]
+        },
+        {
+          "native_repeat": 1,
+          "measurement_differences": 0,
+          "image_differences": 0,
+          "tables": [
+            7,
+            6
+          ],
+          "physical_images": [
+            2,
+            2
+          ],
+          "logical_images": [
+            2,
+            2
+          ],
+          "known_relationship_keys": [
+            3,
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "index": 4,
+      "case": "cp_tutorial_3d_monolayer",
+      "before": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 1758420992,
+        "epoch": 1791087042.0934122
+      },
+      "after": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 1700179968,
+        "epoch": 1791087048.7551827
+      },
+      "after_controller_release": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 1700179968,
+        "epoch": 1791087049.610956
+      },
+      "retained_record_counts": {
+        "W001": 41
+      },
+      "peak_aggregate_mb_so_far": 3493.23828125,
+      "observation_export_bytes": 26229451,
+      "science": [
+        {
+          "native_repeat": 0,
+          "measurement_differences": 0,
+          "image_differences": 0,
+          "tables": [
+            7,
+            6
+          ],
+          "physical_images": [
+            2,
+            2
+          ],
+          "logical_images": [
+            2,
+            2
+          ],
+          "known_relationship_keys": [
+            3,
+            3
+          ]
+        },
+        {
+          "native_repeat": 1,
+          "measurement_differences": 0,
+          "image_differences": 0,
+          "tables": [
+            7,
+            6
+          ],
+          "physical_images": [
+            2,
+            2
+          ],
+          "logical_images": [
+            2,
+            2
+          ],
+          "known_relationship_keys": [
+            3,
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "index": 5,
+      "case": "ExampleSpeckles",
+      "before": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 1700179968,
+        "epoch": 1791087049.6250563
+      },
+      "after": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 1706958848,
+        "epoch": 1791087051.375434
+      },
+      "after_controller_release": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 1706958848,
+        "epoch": 1791087052.5788448
+      },
+      "retained_record_counts": {
+        "W001": 26
+      },
+      "peak_aggregate_mb_so_far": 3502.30078125,
+      "observation_export_bytes": 12407843,
+      "science": [
+        {
+          "native_repeat": 0,
+          "measurement_differences": 0,
+          "image_differences": 0,
+          "tables": [
+            3,
+            3
+          ],
+          "physical_images": [
+            0,
+            0
+          ],
+          "logical_images": [
+            0,
+            0
+          ],
+          "known_relationship_keys": [
+            1,
+            1
+          ]
+        },
+        {
+          "native_repeat": 1,
+          "measurement_differences": 0,
+          "image_differences": 0,
+          "tables": [
+            3,
+            3
+          ],
+          "physical_images": [
+            0,
+            0
+          ],
+          "logical_images": [
+            0,
+            0
+          ],
+          "known_relationship_keys": [
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "index": 6,
+      "case": "cp_tutorial_beginner_segmentation_final",
+      "before": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 1706958848,
+        "epoch": 1791087052.5927496
+      },
+      "after": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 1770287104,
+        "epoch": 1791087057.7784603
+      },
+      "after_controller_release": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 1770287104,
+        "epoch": 1791087119.7366214
+      },
+      "retained_record_counts": {
+        "W001": 44
+      },
+      "peak_aggregate_mb_so_far": 3502.30078125,
+      "observation_export_bytes": 15477084,
+      "science": [
+        {
+          "native_repeat": 0,
+          "measurement_differences": 0,
+          "image_differences": 0,
+          "tables": [
+            7,
+            7
+          ],
+          "physical_images": [
+            2,
+            2
+          ],
+          "logical_images": [
+            2,
+            2
+          ],
+          "known_relationship_keys": [
+            5,
+            5
+          ]
+        },
+        {
+          "native_repeat": 1,
+          "measurement_differences": 0,
+          "image_differences": 0,
+          "tables": [
+            7,
+            7
+          ],
+          "physical_images": [
+            2,
+            2
+          ],
+          "logical_images": [
+            2,
+            2
+          ],
+          "known_relationship_keys": [
+            5,
+            5
+          ]
+        }
+      ]
+    },
+    {
+      "index": 7,
+      "case": "cp_tutorial_3d_monolayer",
+      "before": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 1770287104,
+        "epoch": 1791087119.7507863
+      },
+      "after": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 2115489792,
+        "epoch": 1791087127.320304
+      },
+      "after_controller_release": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 2115489792,
+        "epoch": 1791087128.2282498
+      },
+      "retained_record_counts": {
+        "W001": 41
+      },
+      "peak_aggregate_mb_so_far": 3568.140625,
+      "observation_export_bytes": 26229451,
+      "science": [
+        {
+          "native_repeat": 0,
+          "measurement_differences": 0,
+          "image_differences": 0,
+          "tables": [
+            7,
+            6
+          ],
+          "physical_images": [
+            2,
+            2
+          ],
+          "logical_images": [
+            2,
+            2
+          ],
+          "known_relationship_keys": [
+            3,
+            3
+          ]
+        },
+        {
+          "native_repeat": 1,
+          "measurement_differences": 0,
+          "image_differences": 0,
+          "tables": [
+            7,
+            6
+          ],
+          "physical_images": [
+            2,
+            2
+          ],
+          "logical_images": [
+            2,
+            2
+          ],
+          "known_relationship_keys": [
+            3,
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "index": 8,
+      "case": "cp_tutorial_3d_monolayer",
+      "before": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 2115489792,
+        "epoch": 1791087128.2425702
+      },
+      "after": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 2432704512,
+        "epoch": 1791087137.2907908
+      },
+      "after_controller_release": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 2432704512,
+        "epoch": 1791087138.1241124
+      },
+      "retained_record_counts": {
+        "W001": 41
+      },
+      "peak_aggregate_mb_so_far": 4001.98046875,
+      "observation_export_bytes": 26229448,
+      "science": [
+        {
+          "native_repeat": 0,
+          "measurement_differences": 0,
+          "image_differences": 0,
+          "tables": [
+            7,
+            6
+          ],
+          "physical_images": [
+            2,
+            2
+          ],
+          "logical_images": [
+            2,
+            2
+          ],
+          "known_relationship_keys": [
+            3,
+            3
+          ]
+        },
+        {
+          "native_repeat": 1,
+          "measurement_differences": 0,
+          "image_differences": 0,
+          "tables": [
+            7,
+            6
+          ],
+          "physical_images": [
+            2,
+            2
+          ],
+          "logical_images": [
+            2,
+            2
+          ],
+          "known_relationship_keys": [
+            3,
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "index": 9,
+      "case": "ExampleSpeckles",
+      "before": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 2432704512,
+        "epoch": 1791087138.1385155
+      },
+      "after": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 2317373440,
+        "epoch": 1791087140.207031
+      },
+      "after_controller_release": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 2317373440,
+        "epoch": 1791087141.3476853
+      },
+      "retained_record_counts": {
+        "W001": 26
+      },
+      "peak_aggregate_mb_so_far": 4002.01171875,
+      "observation_export_bytes": 12407840,
+      "science": [
+        {
+          "native_repeat": 0,
+          "measurement_differences": 0,
+          "image_differences": 0,
+          "tables": [
+            3,
+            3
+          ],
+          "physical_images": [
+            0,
+            0
+          ],
+          "logical_images": [
+            0,
+            0
+          ],
+          "known_relationship_keys": [
+            1,
+            1
+          ]
+        },
+        {
+          "native_repeat": 1,
+          "measurement_differences": 0,
+          "image_differences": 0,
+          "tables": [
+            3,
+            3
+          ],
+          "physical_images": [
+            0,
+            0
+          ],
+          "logical_images": [
+            0,
+            0
+          ],
+          "known_relationship_keys": [
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "index": 10,
+      "case": "cp_tutorial_beginner_segmentation_final",
+      "before": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 2317373440,
+        "epoch": 1791087141.3624246
+      },
+      "after": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 2317524992,
+        "epoch": 1791087146.3808043
+      },
+      "after_controller_release": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 2317524992,
+        "epoch": 1791087208.0946314
+      },
+      "retained_record_counts": {
+        "W001": 44
+      },
+      "peak_aggregate_mb_so_far": 4002.01171875,
+      "observation_export_bytes": 15477082,
+      "science": [
+        {
+          "native_repeat": 0,
+          "measurement_differences": 0,
+          "image_differences": 0,
+          "tables": [
+            7,
+            7
+          ],
+          "physical_images": [
+            2,
+            2
+          ],
+          "logical_images": [
+            2,
+            2
+          ],
+          "known_relationship_keys": [
+            5,
+            5
+          ]
+        },
+        {
+          "native_repeat": 1,
+          "measurement_differences": 0,
+          "image_differences": 0,
+          "tables": [
+            7,
+            7
+          ],
+          "physical_images": [
+            2,
+            2
+          ],
+          "logical_images": [
+            2,
+            2
+          ],
+          "known_relationship_keys": [
+            5,
+            5
+          ]
+        }
+      ]
+    },
+    {
+      "index": 11,
+      "case": "cp_tutorial_3d_monolayer",
+      "before": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 2317524992,
+        "epoch": 1791087208.109406
+      },
+      "after": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 2317541376,
+        "epoch": 1791087214.6807764
+      },
+      "after_controller_release": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 2317541376,
+        "epoch": 1791087215.5368412
+      },
+      "retained_record_counts": {
+        "W001": 41
+      },
+      "peak_aggregate_mb_so_far": 4002.01171875,
+      "observation_export_bytes": 26229453,
+      "science": [
+        {
+          "native_repeat": 0,
+          "measurement_differences": 0,
+          "image_differences": 0,
+          "tables": [
+            7,
+            6
+          ],
+          "physical_images": [
+            2,
+            2
+          ],
+          "logical_images": [
+            2,
+            2
+          ],
+          "known_relationship_keys": [
+            3,
+            3
+          ]
+        },
+        {
+          "native_repeat": 1,
+          "measurement_differences": 0,
+          "image_differences": 0,
+          "tables": [
+            7,
+            6
+          ],
+          "physical_images": [
+            2,
+            2
+          ],
+          "logical_images": [
+            2,
+            2
+          ],
+          "known_relationship_keys": [
+            3,
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "index": 12,
+      "case": "cp_tutorial_3d_monolayer",
+      "before": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 2317541376,
+        "epoch": 1791087215.5515075
+      },
+      "after": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 2220969984,
+        "epoch": 1791087222.278022
+      },
+      "after_controller_release": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 2220666880,
+        "epoch": 1791087223.472522
+      },
+      "retained_record_counts": {
+        "W001": 41
+      },
+      "peak_aggregate_mb_so_far": 4002.01171875,
+      "observation_export_bytes": 26229454,
+      "science": [
+        {
+          "native_repeat": 0,
+          "measurement_differences": 0,
+          "image_differences": 0,
+          "tables": [
+            7,
+            6
+          ],
+          "physical_images": [
+            2,
+            2
+          ],
+          "logical_images": [
+            2,
+            2
+          ],
+          "known_relationship_keys": [
+            3,
+            3
+          ]
+        },
+        {
+          "native_repeat": 1,
+          "measurement_differences": 0,
+          "image_differences": 0,
+          "tables": [
+            7,
+            6
+          ],
+          "physical_images": [
+            2,
+            2
+          ],
+          "logical_images": [
+            2,
+            2
+          ],
+          "known_relationship_keys": [
+            3,
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "index": 13,
+      "case": "ExampleSpeckles",
+      "before": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 2220666880,
+        "epoch": 1791087223.4863892
+      },
+      "after": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 2220761088,
+        "epoch": 1791087225.049398
+      },
+      "after_controller_release": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 2220761088,
+        "epoch": 1791087225.8335369
+      },
+      "retained_record_counts": {
+        "W001": 26
+      },
+      "peak_aggregate_mb_so_far": 4002.01171875,
+      "observation_export_bytes": 12407781,
+      "science": [
+        {
+          "native_repeat": 0,
+          "measurement_differences": 0,
+          "image_differences": 0,
+          "tables": [
+            3,
+            3
+          ],
+          "physical_images": [
+            0,
+            0
+          ],
+          "logical_images": [
+            0,
+            0
+          ],
+          "known_relationship_keys": [
+            1,
+            1
+          ]
+        },
+        {
+          "native_repeat": 1,
+          "measurement_differences": 0,
+          "image_differences": 0,
+          "tables": [
+            3,
+            3
+          ],
+          "physical_images": [
+            0,
+            0
+          ],
+          "logical_images": [
+            0,
+            0
+          ],
+          "known_relationship_keys": [
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "index": 14,
+      "case": "cp_tutorial_beginner_segmentation_final",
+      "before": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 2220761088,
+        "epoch": 1791087225.847525
+      },
+      "after": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 2234343424,
+        "epoch": 1791087230.8540587
+      },
+      "after_controller_release": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 2234343424,
+        "epoch": 1791087293.734815
+      },
+      "retained_record_counts": {
+        "W001": 44
+      },
+      "peak_aggregate_mb_so_far": 4002.01171875,
+      "observation_export_bytes": 15477084,
+      "science": [
+        {
+          "native_repeat": 0,
+          "measurement_differences": 0,
+          "image_differences": 0,
+          "tables": [
+            7,
+            7
+          ],
+          "physical_images": [
+            2,
+            2
+          ],
+          "logical_images": [
+            2,
+            2
+          ],
+          "known_relationship_keys": [
+            5,
+            5
+          ]
+        },
+        {
+          "native_repeat": 1,
+          "measurement_differences": 0,
+          "image_differences": 0,
+          "tables": [
+            7,
+            7
+          ],
+          "physical_images": [
+            2,
+            2
+          ],
+          "logical_images": [
+            2,
+            2
+          ],
+          "known_relationship_keys": [
+            5,
+            5
+          ]
+        }
+      ]
+    },
+    {
+      "index": 15,
+      "case": "cp_tutorial_3d_monolayer",
+      "before": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 2234343424,
+        "epoch": 1791087293.7494626
+      },
+      "after": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 2235514880,
+        "epoch": 1791087300.9916
+      },
+      "after_controller_release": {
+        "pid": 3971124,
+        "create_time": 1791086892.75,
+        "port": 7777,
+        "server_rss_bytes": 2235514880,
+        "epoch": 1791087301.9009016
+      },
+      "retained_record_counts": {
+        "W001": 41
+      },
+      "peak_aggregate_mb_so_far": 4002.01171875,
+      "observation_export_bytes": 26229457,
+      "science": [
+        {
+          "native_repeat": 0,
+          "measurement_differences": 0,
+          "image_differences": 0,
+          "tables": [
+            7,
+            6
+          ],
+          "physical_images": [
+            2,
+            2
+          ],
+          "logical_images": [
+            2,
+            2
+          ],
+          "known_relationship_keys": [
+            3,
+            3
+          ]
+        },
+        {
+          "native_repeat": 1,
+          "measurement_differences": 0,
+          "image_differences": 0,
+          "tables": [
+            7,
+            6
+          ],
+          "physical_images": [
+            2,
+            2
+          ],
+          "logical_images": [
+            2,
+            2
+          ],
+          "known_relationship_keys": [
+            3,
+            3
+          ]
+        }
+      ]
+    }
+  ],
+  "source_law_not_live_inspection": [
+    "ZMQCompilationRequest.reuse_artifact pops ordinary compilation artifact; actual public inspection unavailable for all16 consumed IDs.",
+    "InMemoryExecutionLifecycleEngine retains terminal records; existing wire STATUS omits ExecutionRecord.metadata so no live extra/record-store byte accounting is claimed.",
+    "ExecutionServer.run_execution finally pops orchestrator extra; worker finally releases image cache and clears RuntimeValueStore. These are source laws, not direct live reference observations.",
+    "CompiledPlateExecutionExtras records parent diagnostics/plate observation; those retained extras are preserved, not globally cleared."
+  ],
+  "closure_recommendation": "Controlled acceptance clause of #433 satisfied: actual #582 retaining-owner mutation/release repair plus finite same-READY VALUES plateau and full strict science. Sole historical allocation cause and infinite/full30 memory safety remain unproved; full catalog/scaling acceptance remains PR394 work."
+}

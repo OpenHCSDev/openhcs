@@ -6,9 +6,12 @@ from collections import OrderedDict
 from contextlib import AbstractContextManager, nullcontext
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Mapping, Sequence
+from typing import TYPE_CHECKING, Any, ClassVar, Mapping, Sequence
+
+from polystore.streaming.identity import StreamProducerIdentity
 
 from openhcs.constants.constants import (
+    Backend,
     GPU_MEMORY_TYPES,
     MemoryType,
     SequentialComponents,
@@ -21,7 +24,11 @@ from openhcs.core.artifacts import (
 )
 from openhcs.core.callable_contract import FunctionStepExecutionScope
 from openhcs.core.component_group_scope import ComponentGroupScope
-from openhcs.core.function_patterns import CompiledFunctionPattern
+from openhcs.core.function_patterns import (
+    CompiledFunctionGroup,
+    CompiledFunctionPattern,
+    InvocationArtifactInputEdgePlan,
+)
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     CompiledSourceUniversePlan,
@@ -30,6 +37,7 @@ from openhcs.core.source_load_plan import SourceLoadPlan
 from openhcs.core.step_dependencies import StepInputDependency
 
 if TYPE_CHECKING:
+    from openhcs.core.aligned_image_payload import AlignedImageSliceContext
     from openhcs.core.config import StreamingConfig
 else:
     StreamingConfig = Any
@@ -254,6 +262,8 @@ class CompiledStepPlan:
     mutate fields on this dataclass rather than writing string-keyed dicts.
     """
 
+    ARTIFACT_OUTPUT_KIND: ClassVar[str] = "artifact"
+
     step_index: int
     step_name: str
     step_type: str
@@ -314,6 +324,109 @@ class CompiledStepPlan:
     create_openhcs_metadata: bool = False
     chainbreaker: bool = False
     error: str | None = None
+
+    def stored_primary_input_edges_for_group(
+        self, group: CompiledFunctionGroup, component_key: str | None,
+    ) -> tuple[InvocationArtifactInputEdgePlan, ...] | None:
+        """Admit exact producer transport only without path-based transforms."""
+        if self.input_conversion is not None or self.sequential_filter_plan.enabled:
+            return None
+        edges = group.stored_primary_input_edges_for_component(
+            self.execution_group_scope, component_key,
+        )
+        if edges and any(
+            edge.storage_plan.source_step_scope_id == self.step_scope_id
+            if edge.storage_plan.source_step_scope_id is not None
+            else edge.storage_plan.source_step_id in (
+                self.step_index, self.step_scope_id,
+            )
+            for edge in edges
+        ):
+            return None
+        return edges
+
+    def requires_main_flow_checkpoint(
+        self, plans: Mapping[int, "CompiledStepPlan"],
+    ) -> bool:
+        """Follow this value's consumers through preserved input lifetimes."""
+        if not plans or self.step_index not in plans:
+            return True
+        consumers: dict[int, list[CompiledStepPlan]] = {}
+        for plan in plans.values():
+            predecessor = plan.main_input_dependency.predecessor_step_index()
+            if predecessor is not None:
+                consumers.setdefault(predecessor, []).append(plan)
+        pending = [self.step_index]
+        visited: set[int] = set()
+        while pending:
+            step_index = pending.pop()
+            if step_index in visited:
+                continue
+            visited.add(step_index)
+            plan = plans.get(step_index)
+            if plan is None:
+                continue
+            if (
+                plan.write_backend != Backend.MEMORY.value
+                or plan.materialized_output is not None
+                or plan.streaming_configs
+                or plan.visualize
+            ):
+                return True
+            for consumer in consumers.get(step_index, ()):
+                pattern = consumer.compiled_function_pattern
+                if pattern is None or any(
+                    (group := pattern.group_for_component(component_key)) is None
+                    or consumer.stored_primary_input_edges_for_group(
+                        group, component_key,
+                    ) is None
+                    for component_key in consumer.execution_group_scope.keys
+                ):
+                    return True
+                if pattern.preserves_input_main_flow():
+                    pending.append(consumer.step_index)
+        return False
+
+    def producer_identity(
+        self,
+        *,
+        output_kind: str,
+        output_key: str,
+        projection_key: str,
+        artifact_kind: str | None = None,
+    ) -> StreamProducerIdentity:
+        """Project this step's identity onto one declared output surface."""
+        return StreamProducerIdentity.pipeline_output(
+            output_kind=output_kind,
+            output_key=output_key,
+            projection_key=projection_key,
+            step_name=self.step_name,
+            pipeline_position=self.pipeline_position,
+            step_scope_id=self.step_scope_id,
+            artifact_kind=artifact_kind,
+        )
+
+    def producer_identity_for_main_flow(
+        self, output_context: AlignedImageSliceContext
+    ) -> StreamProducerIdentity:
+        """Retain the main-flow surface's declared kind, key and projection."""
+        return self.producer_identity(
+            output_kind=output_context.output_kind,
+            output_key=output_context.output_key,
+            projection_key=output_context.projection_key,
+            artifact_kind=output_context.artifact_kind,
+        )
+
+    def producer_identity_for_artifact(
+        self, output_plan: ArtifactOutputPlan
+    ) -> StreamProducerIdentity:
+        """Derive a named artifact producer from its original compiled plan."""
+        return self.producer_identity(
+            output_kind=self.ARTIFACT_OUTPUT_KIND,
+            output_key=output_plan.name,
+            projection_key=output_plan.name,
+            artifact_kind=output_plan.artifact_type.value,
+        )
 
     @property
     def requires_terminal_source_projection(self) -> bool:

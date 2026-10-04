@@ -287,10 +287,10 @@ def _runtime_export_has_semantic_record(
                 "Structured endpoint identity is only valid for relationship records."
             )
         return any(
-            isinstance(record.value.data, ObjectRelationship)
+            isinstance(record.data, ObjectRelationship)
             and (
-                record.value.data.declaration.source.name,
-                record.value.data.declaration.target.name,
+                record.data.declaration.source.name,
+                record.data.declaration.target.name,
             )
             == name
             for record in _runtime_records(
@@ -466,7 +466,7 @@ def test_cppipe_import_executes_through_canonical_zmq_path(
         axis_id="A01",
     )
     assert len(nuclei_records) == 1
-    assert object_label_dense_array(nuclei_records[0].value.data).max() > 0
+    assert object_label_dense_array(nuclei_records[0].data).max() > 0
 
 
 def test_bbbc021_cppipe_executes_named_channel_bindings_through_zmq(
@@ -495,7 +495,7 @@ def test_bbbc021_cppipe_executes_named_channel_bindings_through_zmq(
         axis_id="A01",
     )
     assert len(nuclei_records) == 1
-    assert object_label_dense_array(nuclei_records[0].value.data).max() > 0
+    assert object_label_dense_array(nuclei_records[0].data).max() > 0
     assert len(composite_records) == 1
 
 
@@ -565,7 +565,7 @@ def test_loadimages_cppipe_preserves_source_artifact_bindings_through_zmq(
         axis_id="A01",
     )
     assert len(corrected_records) == 1
-    assert np.asarray(corrected_records[0].value.data).shape[-2:] == (64, 64)
+    assert np.asarray(corrected_records[0].data).shape[-2:] == (64, 64)
 
 
 def test_legacy_examplefly_load_data_cppipe_fails_at_nominal_import_boundary() -> None:
@@ -607,7 +607,7 @@ def test_cppipe_relationship_outputs_are_compiler_derived_over_zmq(
     )
     assert relationship_records
     assert measurement_records
-    relationship = cast(ObjectRelationship, relationship_records[0].value.data)
+    relationship = cast(ObjectRelationship, relationship_records[0].data)
     assert relationship.declaration.source.name == "Nuclei"
     assert relationship.declaration.target.name == "Cells"
     assert relationship.declaration.relationship_type == "Parent"
@@ -675,10 +675,10 @@ def test_percent_positive_cppipe_executes_measurement_consumers_over_zmq(
             export,
             artifact_type=MeasurementsArtifactType,
         )
-        if isinstance(record.value.data, MeasurementTable)
+        if isinstance(record.data, MeasurementTable)
         if any(
             row_mapping["output_name"] == "PercentPositive"
-            for row in record.value.data.rows.iter_row_mappings()
+            for row in record.data.rows.iter_row_mappings()
             for row_mapping in (measurement_row_mapping(row),)
             if "output_name" in row_mapping
         )
@@ -686,7 +686,7 @@ def test_percent_positive_cppipe_executes_measurement_consumers_over_zmq(
     assert calculate_math_records
     calculate_math_table = cast(
         MeasurementTable,
-        calculate_math_records[0].value.data,
+        calculate_math_records[0].data,
     )
     calculate_math_rows = tuple(
         measurement_row_mapping(row)
@@ -722,7 +722,7 @@ def test_examplehuman_cppipe_executes_source_bound_objects_over_zmq(
         axis_id=axis_id,
     )
     assert len(cytoplasm_records) == 1
-    cytoplasm = object_label_dense_array(cytoplasm_records[0].value.data)
+    cytoplasm = object_label_dense_array(cytoplasm_records[0].data)
     assert cytoplasm.ndim == 2 or cytoplasm.ndim == 3 and cytoplasm.shape[0] == 1
     assert _runtime_export_has_semantic_record(
         export,
@@ -760,7 +760,7 @@ def test_official_untangleworms_preserves_overlay_shape_over_zmq(
         axis_id=axis_id,
     )
     assert len(overlay_records) == 1
-    overlay = np.asarray(overlay_records[0].value.data)
+    overlay = np.asarray(overlay_records[0].data)
     assert overlay.ndim == 4
     assert overlay.shape[0] == 2
     assert overlay.shape[-1] == 3
@@ -832,8 +832,8 @@ def test_official_colocalization_preserves_relationships_and_configured_export(
             (
                 record.key.scope.component,
                 record.key.scope.value_text,
-                object_label_dense_array(record.value.data).shape,
-                cast(ObjectLabelValue, record.value.data).plane_axis,
+                object_label_dense_array(record.data).shape,
+                cast(ObjectLabelValue, record.data).plane_axis,
             )
             for record in records
         )
@@ -871,8 +871,8 @@ def test_official_colocalization_preserves_relationships_and_configured_export(
     )
     assert {
         (
-            record.value.data.declaration.source.name,
-            record.value.data.declaration.target.name,
+            record.data.declaration.source.name,
+            record.data.declaration.target.name,
         )
         for record in relationship_records
     } == {
@@ -888,8 +888,8 @@ def test_official_colocalization_preserves_relationships_and_configured_export(
     )
     assert {
         (
-            record.value.data.declaration.source.name,
-            record.value.data.declaration.target.name,
+            record.data.declaration.source.name,
+            record.data.declaration.target.name,
         )
         for record in lineage_records
     } == {
@@ -897,7 +897,7 @@ def test_official_colocalization_preserves_relationships_and_configured_export(
         ("Objects1", "ColocalizedRegion"),
     }
     relationships = tuple(
-        cast(ObjectRelationship, record.value.data) for record in relationship_records
+        cast(ObjectRelationship, record.data) for record in relationship_records
     )
     assert {
         (
@@ -947,7 +947,7 @@ def test_official_neighbors_preserves_measurement_and_image_exports_over_zmq(
         axis_id=axis_id,
     )
     assert cells_records
-    assert object_label_dense_array(cells_records[0].value.data).max() > 0
+    assert object_label_dense_array(cells_records[0].data).max() > 0
     assert _runtime_export_has_semantic_record(
         export,
         name="MeasureObjectNeighbors_6_measurements",

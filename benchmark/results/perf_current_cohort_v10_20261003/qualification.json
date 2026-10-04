@@ -1,0 +1,198 @@
+{
+  "status": "BOUNDED_CURRENT_ORIGINAL_WARM_PRODUCER_AND_LOADER_REPLAY_FULL_GATES_PASS",
+  "issue": 510,
+  "source_revision": "4c636a281de4da7341f4f9f6bb8f718c75644a1d",
+  "protocol": {
+    "hash_seed": 0,
+    "actual_outer_cwd": "/home/ts/code/projects/openhcs",
+    "outer_taskset_cpu": 4,
+    "public_child_cpu": 5,
+    "public_child_cwd": "/home/ts/.local/state/openhcs-maintenance/20261003/current-cohort-capture-v10/output/tmp",
+    "actual_command": "PYTHONDONTWRITEBYTECODE=1 taskset -c 4 /home/ts/code/projects/openhcs/.venv/bin/python /home/ts/.local/state/openhcs-maintenance/20261003/current-cohort-capture-v10/controller.py --run --revision 4c636a281de4da7341f4f9f6bb8f718c75644a1d",
+    "actual_public_handle": 16238,
+    "actual_public_terminal": 0,
+    "failed_preflight_handle": 93559,
+    "failed_preflight_started_driver": false,
+    "effective_environment_sha256": "15a56d8163d7c2b38db7398210ec6e1c700da84184031a6460333193909fd375",
+    "no_environment_field_exclusions_or_reseal": true
+  },
+  "capture": {
+    "graphs": 4,
+    "bytes": 1027681056,
+    "remaining_combined_cap_bytes": 46060768,
+    "per_item_cap": 402653184,
+    "total_cap": 1073741824,
+    "node_cap": 150000,
+    "errors": [],
+    "graphs_scope": [
+      {
+        "key": "13-PatternGroupRuntime-_validate_and_unstack-before",
+        "bytes": 272201079,
+        "sha256": "3c49c2ebc3050c4bd9e62052d7a6e9acd6c095f23849f80f86a115041c544519",
+        "sidecar_sha256": "3ca071d05e7516eda02f3d0cbb6f6f77d6d3defee63991af3f147247eef5bd0b",
+        "owners": 1054,
+        "nonempty_views": 677,
+        "view_entries": 4286
+      },
+      {
+        "key": "13-save-oracle",
+        "bytes": 194819278,
+        "sha256": "c9ed3ce36c322a5d32aeb03f65b1d8d2697775e61231a6d433dae66e7d290542",
+        "sidecar_sha256": "dec76667df2aa673785cc176e23d309ca3fc6a552adbdd67ce957d4e0194e8c0",
+        "owners": 1112,
+        "nonempty_views": 735,
+        "view_entries": 4400
+      },
+      {
+        "key": "14-PatternGroupRuntime-_load_input_stack-before",
+        "bytes": 280297985,
+        "sha256": "2a48c08fdf3eecfdd5af13b0052ce985a21469dbbe5e5c4f97be69682a933780",
+        "sidecar_sha256": "8b6f277dc8d1765e3d6b68f816a91b0b762df72f3128b3294de0f5b513455d26",
+        "owners": 1115,
+        "nonempty_views": 738,
+        "view_entries": 4408
+      },
+      {
+        "key": "14-load-oracle",
+        "bytes": 280362714,
+        "sha256": "20c4d2721789d5c9dfdce4e6ff789cbcfb59d49e87ba53e042deb75be5c3bde7",
+        "sidecar_sha256": "67f9015dde0043870494880620dabbb8e5ea17feb08a1da1ad21398b032228b6",
+        "owners": 1116,
+        "nonempty_views": 738,
+        "view_entries": 4408
+      }
+    ]
+  },
+  "original_producer": {
+    "status": "PASS",
+    "results": [
+      {
+        "kind": "producer13",
+        "status": "PASS",
+        "original_call_started": true,
+        "original_nested_owner_count": 1054,
+        "original_nonempty_views": 677,
+        "nested_exact_capture_refs_restored": true,
+        "captured_external_manifest_available": true,
+        "input_fixture": "/home/ts/.local/state/openhcs-maintenance/20261003/current-cohort-capture-v10/output/saved-inputs/root-813175-139641010583232-0002/cohort-13-PatternGroupRuntime-_validate_and_unstack-before.pkl",
+        "transport": {
+          "root_type": null,
+          "array_count": 1184,
+          "strict_snapshot_restore": true
+        },
+        "original_declaring_method_counts": {},
+        "records": 60,
+        "unstack_seconds": 0.007623694837093353,
+        "save_seconds": 0.021458042785525322,
+        "full_outputdata_records_planes_named_whole_equal": true,
+        "complete_array_alias_graph": true,
+        "array_roles": 123
+      }
+    ],
+    "scope": "V10 original saved receiver, fresh graph each repetition; snapshots remain immutable. Exact gates retained. Diagnostic only: graph-owned captured warm fields restored by declared exact references; globalLRU/privateepoch not guessed. No end-to-end performance claim."
+  },
+  "original_loader": {
+    "status": "PASS",
+    "results": [
+      {
+        "kind": "loader14",
+        "status": "PASS",
+        "original_call_started": true,
+        "original_nested_owner_count": 1115,
+        "original_nonempty_views": 738,
+        "nested_exact_capture_refs_restored": true,
+        "captured_external_manifest_available": true,
+        "input_fixture": "/home/ts/.local/state/openhcs-maintenance/20261003/current-cohort-capture-v10/output/saved-inputs/root-813175-139641010583232-0002/cohort-14-PatternGroupRuntime-_load_input_stack-before.pkl",
+        "transport": {
+          "root_type": null,
+          "array_count": 1244,
+          "strict_snapshot_restore": true
+        },
+        "original_declaring_method_counts": {},
+        "load_seconds": 0.009833849966526031,
+        "full_loaded_metadata_store_cache_equal": true,
+        "complete_array_alias_graph": true,
+        "array_roles": 104
+      }
+    ],
+    "scope": "V10 original saved receiver, fresh graph each repetition; snapshots remain immutable. Exact gates retained. Diagnostic only: graph-owned captured warm fields restored by declared exact references; globalLRU/privateepoch not guessed. No end-to-end performance claim."
+  },
+  "immediate_producer_effects": {
+    "status": "IMMEDIATE_RETAINED_OWNER_EFFECTS_PASS",
+    "kind": "producer13",
+    "before_owners": 1054,
+    "before_nonempty_views": 677,
+    "before_view_entries": 4286,
+    "immediate_after_owners": 1115,
+    "after_nonempty_views": 738,
+    "after_view_entries": 4408,
+    "original_shared_owners_exactly_unchanged": 1050,
+    "original_outside_after_scope": 4,
+    "replay_changed_before_owners": 0,
+    "replay_new_reachable_owners": 61,
+    "outside_original_after_observation_changes": [],
+    "snapshot_sha256": "3c49c2ebc3050c4bd9e62052d7a6e9acd6c095f23849f80f86a115041c544519",
+    "scope": "Observed immediately after original calls, before afteroracle/equality/property checks. Mapping is original before witness path->captured samegraph owner ref->actual restored owner; original after IDs only select observed retained sourceowners, never identify objects across independent processes. Newly reached owners are separate. No candidate/globalLRU/performanceclaim.",
+    "script_sha256": "66848b5c5f5dcf0ccf7552420754aaab2005dc1a2c563961c6b6bc8d49748728"
+  },
+  "immediate_loader_effects": {
+    "status": "IMMEDIATE_RETAINED_OWNER_EFFECTS_PASS",
+    "kind": "loader14",
+    "before_owners": 1115,
+    "before_nonempty_views": 738,
+    "before_view_entries": 4408,
+    "immediate_after_owners": 1116,
+    "after_nonempty_views": 738,
+    "after_view_entries": 4408,
+    "original_shared_owners_exactly_unchanged": 1115,
+    "original_outside_after_scope": 0,
+    "replay_changed_before_owners": 0,
+    "replay_new_reachable_owners": 1,
+    "outside_original_after_observation_changes": [],
+    "snapshot_sha256": "2a48c08fdf3eecfdd5af13b0052ce985a21469dbbe5e5c4f97be69682a933780",
+    "scope": "Observed immediately after original calls, before afteroracle/equality/property checks. Mapping is original before witness path->captured samegraph owner ref->actual restored owner; original after IDs only select observed retained sourceowners, never identify objects across independent processes. Newly reached owners are separate. No candidate/globalLRU/performanceclaim.",
+    "script_sha256": "66848b5c5f5dcf0ccf7552420754aaab2005dc1a2c563961c6b6bc8d49748728"
+  },
+  "full_nested_after_oracles": "Corrected actual save oracle restores all1112anchored owners after nominal parser/FileManager/backend alias registration; full loader after-oracle restores all1116owners through original captured receiver/context. No disconnected-owner exclusion or graph union. Exact rows/reference/presence/order checks from retained adapters complete before output equality.",
+  "science": {
+    "status": "FULL6CSV120TIFF_AND180_PHYSICAL_SOURCE_REFS_PASS",
+    "csv": 6,
+    "tiff": 120,
+    "ordered_source_refs": 180,
+    "physical_volumes": 3,
+    "native_scope": "TRANSITIVE ONLY: exact current saved science equals retained reference and B764-qualified bytes with actual same3physicalvolume inputs/180orderedrefs. Retained2native repetitions verified; native was NOT rerun for current source/environment. Original native compare API RED retained separately; no current native timing ratio or performance claim."
+  },
+  "all_handles_terminal": true,
+  "large_graphs_released_and_temp_encodings_disposed": true,
+  "source_clean": true,
+  "limits": [
+    "Four current original occurrences only: producer13 and loader14, independent actual before/after graphs. Not whole-pipeline heap replay.",
+    "All captured graph-owned declared cache fields and exact presence/absence retained; process-global functools LRU caches explicitly outside scope.",
+    "Diagnostic constructor/call durations are not ordinary pipeline timings or optimization gains.",
+    "Original V7/V8/V9 failures and incomplete original save oracle remain immutable; V10 does not reinterpret their source pins or silently repair them."
+  ],
+  "evidence_hashes": {
+    "controller.py": "4d96ff2362e93d8d0bbe7fe66929d4b88e8791ae2710bbfd3636713a384a358e",
+    "original_replay_v10.py": "7001af6479a05e0dd1afc52a1509a44fed45ce1d0c1151dee3b832dc7a96a74a",
+    "immediate_original_effects_v10.py": "66848b5c5f5dcf0ccf7552420754aaab2005dc1a2c563961c6b6bc8d49748728",
+    "science_validator.py": "3483bec5d1f3f0d12e5a09b63e233db9fed1b11f9d201f8cc37d5ae391a0c599",
+    "output/source-freeze.json": "6d4f4a59e62acbebbd6e21fcff66fa5806f45d99778264e7f5399b666bb3171f",
+    "output/observations.json": "1559ae44e06fed622816b1518132fd738f56e0355faadf9e15cdd2159052f491",
+    "science.json": "6f1a8078dfaa74ea840f398b5e5f5b4c0b7d370a436fc1829e4ad5d90f597b6a",
+    "launch.log": "7d0d52ffcd64337698061f0c4654c66f17a6f6b5b8a8931102a0003f9f6ac9a1",
+    "launch-v2.log": "8e4a5f55bea98fc6a40613ff182af4172800ec8a009ba5bdb3b7ef746994a2d8",
+    "launch-environment-diagnosis-v1.json": "d9d74e533a776d8729b9a97941dc94c1a74edc513e12c750fcc8d0dc336d6219",
+    "launch-environment-diagnosis-v2.json": "032936f8dc7aa279cb468e703ffa04906cfd4b4cda1fb1e44531e697a4c7a071",
+    "producer-original-replay-v10.log": "74091052623a193539dab4a1f11b21640099824a173abfa33ab99fb444853c53",
+    "loader-original-replay-v10.log": "34a4c1394fe4435ccb4d21208fd3385623e9905e965c79055e4ac564fdee46a5",
+    "immediate-original-effects-producer13-v1.json": "d1358af67a0163b223663811dc56f0c5ba5cdf2144d82909b578ae3c943f52a4",
+    "immediate-original-effects-loader14-v1.json": "fee1fb6458bcc5427fb51b748db16202957205d6f25b1a07626e38a3172c6091",
+    "site/nested_cache_retention.py": "7e6d9ca3e7dce0da18a603610576cc9eea2d8038ad936fe2599e5b87d94bf3b1",
+    "site/nested_cache_witness.py": "f8c23b439ea301b761c7329a7273ff66ff2d9a865ff7d377d82d5766432e1055",
+    "site/openhcs_cohort_ownership_v8_20261003.py": "89abcd4587135989c4fb5ff9a7990f6983ad428c9c403390c770c3b9330ee0ee",
+    "site/openhcs_cohort_snapshot_transport_v6_20261002.py": "a8b11cf6401aa0f80617e6734ae67bbbffcecc74ad4f7a59041523e42b850763",
+    "site/openhcs_current_cohort_capture_v10_20261003.py": "ec9af29df043c9f465ba410c7317b6668d903fca3d3308f70716a350e096c98a",
+    "site/ordered_array_role_oracle.py": "cf6b799a8ade0dbf82185fdc2a80f242111b784e1e643f4e91ea3456a6c5718b",
+    "site/sitecustomize.py": "60b213d69117b57d7c5340071db6499ff4b923d6e1baf68b05d8d1f69d8fca59"
+  }
+}

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
+
 from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
@@ -21,6 +23,7 @@ from openhcs.core.artifacts import (
     ArtifactSpecRelation,
     GroupLineageSourceRelation,
     ImageArtifactType,
+    InputImageSetContextSourceRelation,
     InputGroupLineageSourceRelation,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
@@ -47,7 +50,6 @@ from openhcs.core.pipeline.artifact_planning import (
     ArtifactProducer,
     artifact_producers_for_outputs,
 )
-from openhcs.core.pipeline.step_snapshot import StepSnapshot
 from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
@@ -157,7 +159,6 @@ def _compiler_contracts(
         ObjectStateRegistry.register(pipeline_state, _skip_snapshot=True)
         resolved_steps: list[FunctionStep] = []
         step_states: dict[int, ObjectState] = {}
-        snapshots: list[StepSnapshot] = []
         for index, step in enumerate(steps):
             step_state = ObjectState(
                 step,
@@ -169,13 +170,6 @@ def _compiler_contracts(
             assert isinstance(resolved_step, FunctionStep)
             resolved_steps.append(resolved_step)
             step_states[index] = step_state
-            snapshots.append(
-                StepSnapshot(
-                    index=index,
-                    scope_id=step_state.scope_id,
-                    step=resolved_step,
-                )
-            )
 
         context = ProcessingContext(
             step_plans={
@@ -191,31 +185,29 @@ def _compiler_contracts(
         )
         session = CompilationSession.from_context(
             context=context,
-            steps=resolved_steps,
             orchestrator=SimpleNamespace(
                 pipeline_config=pipeline_state.to_object(),
             ),
             global_config=global_config,
-            step_state_map=step_states,
-            snapshots=tuple(snapshots),
+            pipeline=ResolvedPipelineDefinition(
+                steps=resolved_steps, step_state_map=step_states
+            ),
         )
         provider = PipelineInvocationContractProviderAuthority.provider_for_session(
             session,
         )
         contracts: list[CallableContract] = []
-        for snapshot in snapshots:
-            invocations = tuple(
-                normalize_function_pattern(snapshot.step.func).iter_items()
-            )
+        for index, snapshot in enumerate(resolved_steps):
+            invocations = tuple(normalize_function_pattern(snapshot.func).iter_items())
             assert len(invocations) == 1
             plan = provider(
                 invocations[0],
                 ArtifactDeclarationStepContext(
-                    step_name=snapshot.step.name,
-                    step_index=snapshot.index,
-                    source_bindings=snapshot.step.source_bindings,
-                    group_by=snapshot.step.processing_config.group_by,
-                    input_source=snapshot.step.processing_config.input_source,
+                    step_name=snapshot.name,
+                    step_index=index,
+                    source_bindings=snapshot.source_bindings,
+                    group_by=snapshot.processing_config.group_by,
+                    input_source=snapshot.processing_config.input_source,
                 ),
             )
             assert plan is not None
@@ -442,6 +434,59 @@ def test_measurement_output_separates_provenance_from_invocation_group_scope() -
     )
     assert output.group_scope_sources() == (artifact_inputs.specs[0].ref(),)
     assert output.source_stack_scope_sources() == ()
+
+
+def test_object_measurement_context_uses_only_selected_image_inputs() -> None:
+    available = ArtifactSpecCollection(
+        (
+            ArtifactSpec.output("DNA", ImageArtifactType),
+            ArtifactSpec.output("Actin", ImageArtifactType),
+            ArtifactSpec.output("Unselected", ImageArtifactType),
+            ArtifactSpec.output("Nuclei", ObjectLabelsArtifactType),
+            ArtifactSpec.output("Cells", ObjectLabelsArtifactType),
+        )
+    )
+    contract = _callable_contract(
+        _module(
+            3,
+            "MeasureObjectIntensity",
+            {
+                "Select images to measure": "DNA,Actin",
+                "Select objects to measure": "Nuclei,Cells",
+            },
+        ),
+        step_index=2,
+        available_artifacts=available,
+        main_flow_artifacts=ArtifactSpecCollection(()),
+    )
+    images = contract.artifact_inputs.of_artifact_type(ImageArtifactType)
+    objects = contract.artifact_inputs.of_artifact_type(ObjectLabelsArtifactType)
+    assert tuple(spec.name for spec in images) == ("DNA", "Actin")
+    assert tuple(spec.name for spec in objects) == ("Nuclei", "Cells")
+    for spec in objects:
+        assert spec.source_context_sources() == tuple(image.ref() for image in images)
+        assert spec.relations == tuple(
+            InputImageSetContextSourceRelation(image.ref()) for image in images
+        )
+        assert spec.group_scope_sources() == ()
+        assert spec.source_stack_scope_sources() == ()
+        assert spec.stack_broadcast_sources() == ()
+
+
+def test_object_only_measurement_does_not_inherit_visible_image_context() -> None:
+    contract = _callable_contract(
+        _module(3, "MeasureObjectSizeShape", {"Select objects to measure": "Cells"}),
+        step_index=2,
+        available_artifacts=ArtifactSpecCollection(
+            (
+                ArtifactSpec.input("DNA", ImageArtifactType),
+                ArtifactSpec.output("Cells", ObjectLabelsArtifactType),
+            )
+        ),
+        main_flow_artifacts=ArtifactSpecCollection(()),
+    )
+    (objects,) = contract.artifact_inputs.of_artifact_type(ObjectLabelsArtifactType)
+    assert objects.source_context_sources() == ()
 
 
 def test_prior_measurement_selects_its_declared_producer_group_scope() -> None:

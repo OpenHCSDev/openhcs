@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import Counter
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from types import MappingProxyType
@@ -12,6 +12,7 @@ from polystore.streaming.identity import StreamProducerIdentity
 
 from openhcs.core.artifacts import ArtifactSpec, ArtifactType
 from openhcs.core.context.processing_context import ProcessingContext
+from openhcs.core.orchestrator.execution_result import RuntimeExecutionObservation
 from openhcs.core.runtime_exports import (
     RuntimeExportExpectation,
     RuntimeExportObservation,
@@ -25,10 +26,6 @@ from openhcs.core.source_matching import (
     source_component_metadata_items,
 )
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.steps.function_output_manifest import (
-    FunctionStepOutputProducerIdentityAuthority,
-    FunctionStepOutputProducerIdentityRequest,
-)
 from openhcs.processing.materialization import Output
 
 RuntimeArtifactViewerComponentIdentity = tuple[tuple[str, str], ...]
@@ -235,12 +232,13 @@ def runtime_artifact_viewer_expectations(
             if not plan.streaming_configs or not plan.owns_runtime_outputs:
                 continue
             from openhcs.core.steps.function_artifact_materialization import (
-                observed_runtime_artifact_materializations,
+                runtime_artifact_materializations_from_records,
             )
 
-            for materialization in observed_runtime_artifact_materializations(
+            for materialization in runtime_artifact_materializations_from_records(
                 plan,
                 context,
+                context.runtime_value_store.observed_values,
             ):
                 output_plan = materialization.output_plan
                 if plan.compiled_function_pattern.publishes_output_to_main_flow(
@@ -251,12 +249,7 @@ def runtime_artifact_viewer_expectations(
                 viewer_outputs = materialization.viewer_outputs(plan, context)
                 if not viewer_outputs:
                     continue
-                producer = FunctionStepOutputProducerIdentityAuthority.build(
-                    FunctionStepOutputProducerIdentityRequest.from_artifact(
-                        plan,
-                        output_plan,
-                    )
-                )
+                producer = plan.producer_identity_for_artifact(output_plan)
                 payloads = expected_by_producer.setdefault(producer, [])
                 payloads.extend(
                     _runtime_artifact_viewer_output_payloads(
@@ -319,6 +312,8 @@ class RuntimeArtifactExecutionObservation:
     def from_contexts(
         cls,
         execution_contexts: Mapping[str, ProcessingContext],
+        *,
+        runtime_observations: Sequence[RuntimeExecutionObservation],
     ) -> "RuntimeArtifactExecutionObservation":
         identity_policies = frozenset(
             context.source_image_set_identity_policy
@@ -331,8 +326,8 @@ class RuntimeArtifactExecutionObservation:
             )
         return cls(
             records_by_axis=runtime_records_by_axis(execution_contexts),
-            exports=RuntimeExportObservation.from_execution_contexts(
-                execution_contexts
+            exports=RuntimeExportObservation.from_runtime_observations(
+                runtime_observations
             ),
             source_image_set_identity_policy=next(
                 iter(identity_policies),

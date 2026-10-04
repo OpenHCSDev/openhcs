@@ -29,7 +29,10 @@ from openhcs.core.source_metadata import (
     SourceComponentProjectionStrategy,
     SourceVoxelSpacing,
 )
-from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
+from openhcs.core.source_workspace_projection import (
+    VirtualWorkspaceSourceProjection,
+    VirtualWorkspaceSourceProjectionBuilder,
+)
 from metaclass_registry import AutoRegisterMeta
 from polystore.exceptions import MetadataNotFoundError
 from polystore.filemanager import FileManager
@@ -39,6 +42,9 @@ from openhcs.core.virtual_workspace_metadata import (
     FIELDS,
     METADATA_CONFIG,
     MetadataWriteError,
+    OpenHCSMetadataSubdirectories,
+    VirtualWorkspaceMapping,
+    VirtualWorkspaceSourceProjectionEntries,
     component_metadata_field,
     get_metadata_path,
 )
@@ -381,7 +387,65 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
                 plate_root, metadata_document
             )
         )
+        return self._analysis_result_directories(
+            plate_root, subdirectories, source_projection
+        )
 
+    def reconciliation_directories(
+        self, plate_path: Union[str, Path], backend: str
+    ) -> tuple[Path, ...]:
+        """Derive artifact and result destinations from one admitted document.
+
+        Projection records are admitted before workspace fields, as required by
+        completed-plate reconciliation. The same admitted records then populate
+        the result-directory source authority; they are not decoded a second time.
+        """
+        plate_root = Path(plate_path)
+        metadata_path = METADATA_CONFIG.metadata_path(plate_root)
+        if not metadata_path.is_file():
+            return tuple(
+                directory.path
+                for directory in self.analysis_result_directories(plate_root)
+            )
+        document = OpenHCSMetadataSubdirectories.from_path(metadata_path)
+        admitted = tuple(
+            (
+                subdirectory,
+                VirtualWorkspaceSourceProjectionEntries.from_subdirectory(subdirectory),
+            )
+            for _name, subdirectory in document.items()
+        )
+        directories = tuple(
+            plate_root / directory
+            for _subdirectory, entries in admitted
+            for path, projection in entries.entries.items()
+            if (directory := projection.artifact_result_directory(path, backend))
+            is not None
+        )
+        subdirectories = self._metadata_subdirectories(document.metadata, plate_root)
+        source_projection = None
+        if document.has_workspace_mapping():
+            builder = VirtualWorkspaceSourceProjectionBuilder(plate_root)
+            for subdirectory, entries in admitted:
+                builder.ingest_workspace_mapping(
+                    VirtualWorkspaceMapping.from_subdirectory(subdirectory)
+                )
+                builder.ingest_admitted_subdirectory(subdirectory, entries)
+            source_projection = builder.projection()
+        results = self._analysis_result_directories(
+            plate_root, subdirectories, source_projection
+        )
+        return tuple(
+            dict.fromkeys((*directories, *(directory.path for directory in results)))
+        )
+
+    def _analysis_result_directories(
+        self,
+        plate_root: Path,
+        subdirectories: Mapping[str, Mapping[str, Any]],
+        source_projection: VirtualWorkspaceSourceProjection | None,
+    ) -> tuple[AnalysisResultDirectory, ...]:
+        """Admit declared result paths against their document's source authority."""
         result_directories = []
         for subdirectory_name, subdirectory_data in subdirectories.items():
             result_dir_name = _optional_metadata_field(subdirectory_data, "results_dir")

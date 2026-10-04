@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
+
 import inspect
 from types import SimpleNamespace
 from typing import get_type_hints
@@ -30,7 +32,6 @@ from openhcs.core.pipeline.compilation_session import CompilationSession
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.memory.decorators import numpy
-from openhcs.core.pipeline.step_snapshot import StepSnapshot
 from openhcs.core.runtime_object_labels import (
     ObjectLabelSet,
     ObjectLabelPayload,
@@ -102,11 +103,7 @@ def test_relationship_module_number_is_derived_after_public_transport() -> None:
     (restored_step,) = FunctionStepTransportAuthority.pipeline_steps_from_namespace(
         namespace
     )
-    snapshot = StepSnapshot(
-        index=0,
-        scope_id="test::neighbors-module-order",
-        step=restored_step,
-    )
+    snapshot = restored_step
     session = CompilationSession.from_context(
         context=ProcessingContext(
             step_plans={
@@ -119,11 +116,12 @@ def test_relationship_module_number_is_derived_after_public_transport() -> None:
             },
             axis_id="A01",
         ),
-        steps=[restored_step],
         orchestrator=SimpleNamespace(pipeline_config=PipelineConfig()),
         global_config=GlobalPipelineConfig(),
-        step_state_map={0: object()},
-        snapshots=(snapshot,),
+        pipeline=ResolvedPipelineDefinition(
+            steps=(snapshot,),
+            step_state_map={0: SimpleNamespace(scope_id="plate::functionstep_0")},
+        ),
     )
 
     provider = CellProfilerInvocationContractProviderFactory.provider_for_session(
@@ -142,7 +140,7 @@ def test_relationship_module_number_is_derived_after_public_transport() -> None:
 
 def _compiled_neighbor_invocation():
     step = _reconstructed_neighbor_step()
-    snapshot = StepSnapshot(index=0, scope_id="test::neighbors", step=step)
+    snapshot = step
     context = ProcessingContext(
         step_plans={
             0: CompiledStepPlan(
@@ -156,11 +154,12 @@ def _compiled_neighbor_invocation():
     )
     session = CompilationSession.from_context(
         context=context,
-        steps=[step],
         orchestrator=SimpleNamespace(pipeline_config=PipelineConfig()),
         global_config=GlobalPipelineConfig(),
-        step_state_map={0: object()},
-        snapshots=(snapshot,),
+        pipeline=ResolvedPipelineDefinition(
+            steps=(snapshot,),
+            step_state_map={0: SimpleNamespace(scope_id="plate::functionstep_0")},
+        ),
     )
     provider = CellProfilerInvocationContractProviderFactory.provider_for_session(
         session
@@ -363,14 +362,7 @@ def test_compiler_numbers_neighbor_invocation_equivalence_only_within_each_step(
             name="LaterNeighbors",
         ),
     )
-    snapshots = tuple(
-        StepSnapshot(
-            index=index,
-            scope_id=f"test::numbered-neighbors::{index}",
-            step=step,
-        )
-        for index, step in enumerate(steps)
-    )
+    snapshots = tuple(step for index, step in enumerate(steps))
     session = CompilationSession.from_context(
         context=ProcessingContext(
             step_plans={
@@ -384,11 +376,12 @@ def test_compiler_numbers_neighbor_invocation_equivalence_only_within_each_step(
             },
             axis_id="A01",
         ),
-        steps=steps,
         orchestrator=SimpleNamespace(pipeline_config=PipelineConfig()),
         global_config=GlobalPipelineConfig(),
-        step_state_map={index: object() for index in range(len(steps))},
-        snapshots=snapshots,
+        pipeline=ResolvedPipelineDefinition(
+            steps=snapshots,
+            step_state_map={index: object() for index in range(len(steps))},
+        ),
     )
 
     provider = CellProfilerInvocationContractProviderFactory.provider_for_session(
@@ -511,14 +504,7 @@ def test_public_numbering_reconstructs_advanced_repeated_and_distinct_modules() 
         FunctionStep(func=neighbor_pattern, name="MeasureObjectNeighbors"),
         FunctionStep(func=relate_pattern, name="RelateObjects"),
     )
-    snapshots = tuple(
-        StepSnapshot(
-            index=index,
-            scope_id=f"test::advanced-module-numbering::{index}",
-            step=step,
-        )
-        for index, step in enumerate(steps)
-    )
+    snapshots = tuple(step for index, step in enumerate(steps))
     session = CompilationSession.from_context(
         context=ProcessingContext(
             step_plans={
@@ -532,11 +518,12 @@ def test_public_numbering_reconstructs_advanced_repeated_and_distinct_modules() 
             },
             axis_id="A01",
         ),
-        steps=steps,
         orchestrator=SimpleNamespace(pipeline_config=PipelineConfig()),
         global_config=GlobalPipelineConfig(),
-        step_state_map={index: object() for index in range(len(steps))},
-        snapshots=snapshots,
+        pipeline=ResolvedPipelineDefinition(
+            steps=snapshots,
+            step_state_map={index: object() for index in range(len(steps))},
+        ),
     )
     provider = CellProfilerInvocationContractProviderFactory.provider_for_session(
         session

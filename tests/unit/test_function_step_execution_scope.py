@@ -23,7 +23,10 @@ from openhcs.core.artifacts import (
     SpecialArtifactType,
 )
 from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
-from openhcs.core.compiled_step_plan import CompiledStepPlan
+from openhcs.core.compiled_step_plan import (
+    CompiledStepPlan,
+    RuntimeArtifactMaterializationPlan,
+)
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.component_set import ComponentSet
@@ -58,7 +61,6 @@ from openhcs.core.pipeline.path_planner import (
     PathPlannerStepAssemblyStage,
     PathPlannerValidationStage,
 )
-from openhcs.core.pipeline.step_snapshot import StepSnapshot
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_batch_contracts import RuntimeBatchExecutionDomain
 from openhcs.core.measurement_row_materialization import (
@@ -81,6 +83,8 @@ from openhcs.core.step_dependencies import (
     StepInputDependencyKind,
 )
 from openhcs.core.steps.function_step import FunctionStep
+from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.processing.materialization import FileBundleOptions, MaterializationSpec
 
 
 def test_runtime_step_values_share_within_step_and_release_between_steps() -> None:
@@ -129,6 +133,65 @@ def test_runtime_axis_scope_returns_none_only_without_declared_component_axis() 
     )
 
 
+def test_runtime_axis_scope_joins_correlated_rows_without_inventing_states() -> None:
+    rows = tuple(
+        RuntimeExecutionAxisScope.from_raw(
+            "A01", component=None, value=None,
+            fixed_component_values=((AllComponents.SITE, site), (AllComponents.TIMEPOINT, timepoint)),
+        )
+        for site, timepoint in (("1", "3"), ("2", "4"))
+    )
+    time_three = RuntimeExecutionAxisScope.from_raw(
+        "A01", component=None, value=None,
+        fixed_component_values=((AllComponents.TIMEPOINT, "3"),),
+    )
+    joined = tuple(
+        result for row in rows
+        if (result := row.join_execution_cohort(time_three)) is not None
+    )
+    assert joined == (rows[0],)
+    assert rows[0].join_execution_cohort(rows[1]) is None
+
+
+def test_runtime_axis_scope_empty_context_broadcasts_to_actual_correlated_row() -> None:
+    empty = RuntimeExecutionAxisScope.from_raw("A01", component=None, value=None)
+    source = RuntimeExecutionAxisScope.from_raw(
+        "A01", component=None, value=None,
+        fixed_component_values=((AllComponents.SITE, "1"), (AllComponents.TIMEPOINT, "3")),
+    )
+    assert empty.join_execution_cohort(source) == source
+    assert source.join_execution_cohort(empty) == source
+    assert empty.join_execution_cohort(empty) == empty
+
+
+@pytest.mark.parametrize("axis,component,value", [
+    ("B01", AllComponents.CHANNEL, "1"),
+    ("A01", AllComponents.SITE, "1"),
+    ("A01", AllComponents.CHANNEL, "2"),
+])
+def test_runtime_axis_scope_cannot_join_other_execution_group(axis, component, value) -> None:
+    own = RuntimeExecutionAxisScope.from_raw("A01", component=AllComponents.CHANNEL, value="1")
+    other = RuntimeExecutionAxisScope.from_raw(axis, component=component, value=value)
+    assert own.join_execution_cohort(other) is None
+
+
+def test_runtime_axis_scope_join_derives_partial_fixed_context_union() -> None:
+    left = RuntimeExecutionAxisScope.from_raw(
+        "A01", component=None, value=None,
+        fixed_component_values=((AllComponents.SITE, "1"), (AllComponents.TIMEPOINT, "3")),
+    )
+    right = RuntimeExecutionAxisScope.from_raw(
+        "A01", component=None, value=None,
+        fixed_component_values=((AllComponents.TIMEPOINT, "3"), (AllComponents.Z_INDEX, "2")),
+    )
+    expected = RuntimeExecutionAxisScope.from_raw(
+        "A01", component=None, value=None,
+        fixed_component_values=((AllComponents.SITE, "1"), (AllComponents.TIMEPOINT, "3"), (AllComponents.Z_INDEX, "2")),
+    )
+    assert left.join_execution_cohort(right) == expected
+    assert right.join_execution_cohort(left) == expected
+
+
 def test_function_step_execution_scope_is_exact_closed_enum() -> None:
     assert [(member.name, member.value) for member in FunctionStepExecutionScope] == [
         ("AXIS", "axis"),
@@ -163,11 +226,7 @@ def test_plate_scope_drives_no_main_flow_paths() -> None:
     output_dir = Path("/data/plate_processed/images")
     planner.paths = SimpleNamespace(build_output_path=lambda: output_dir)
     planner.steps = PathPlannerStepAssemblyStage(planner)
-    snapshot = StepSnapshot(
-        index=1,
-        scope_id="export",
-        step=FunctionStep(func=lambda image: image, name="export"),
-    )
+    snapshot = FunctionStep(func=lambda image: image, name="export")
 
     dependency = planner.steps.main_input_dependency(
         snapshot,
@@ -670,7 +729,7 @@ def test_plate_scope_progress_stays_live_until_materialization_completes() -> No
     assert events[-1].completed == events[-1].total == 2
 
 
-def test_plate_scope_observation_excludes_preexisting_runtime_history() -> None:
+def test_plate_scope_observation_excludes_preexisting_runtime_history(tmp_path) -> None:
     output_spec = ArtifactSpec.output("ExportBundle", SpecialArtifactType)
 
     @execution_scope(FunctionStepExecutionScope.PLATE)
@@ -678,7 +737,7 @@ def test_plate_scope_observation_excludes_preexisting_runtime_history() -> None:
     @artifact_outputs(output_spec)
     def export(*, artifact_batch: RuntimeArtifactBatch):
         del artifact_batch
-        return {"export.txt": b"data"}
+        return {"Image.csv": "ImageNumber,Count\r\n1,7\r\n"}
 
     plan = _plate_step_plan(
         axis_id="A01",
@@ -689,10 +748,21 @@ def test_plate_scope_observation_excludes_preexisting_runtime_history() -> None:
             name=output_spec.name,
             path="/memory/plate/export",
             artifact_type=output_spec.artifact_type,
+            materialization=MaterializationSpec(FileBundleOptions()),
         ),
         metadata_writer=True,
     )
+    plan.runtime_artifact_materialization = RuntimeArtifactMaterializationPlan(
+        persistent_enabled=True, persistent_backend=Backend.MEMORY.value,
+    )
+    plan.output_plate_root = str(tmp_path)
+    plan.output_dir = tmp_path / "images"
+    plan.analysis_results_dir = str(tmp_path / "analysis")
     context = _plate_context("A01", (plan,))
+    context.metadata_cache = {}
+    context.microscope_handler = SimpleNamespace(
+        parser=SourceSchemaFilenameParser(), microscope_type="test",
+    )
     _record_measurements(
         context,
         name="prior_measurements",
@@ -714,6 +784,16 @@ def test_plate_scope_observation_excludes_preexisting_runtime_history() -> None:
     assert {record.key.name for record in observation.contexts[0].records} == {
         output_spec.name
     }
+    analysis_inputs = observation.contexts[0].analysis_inputs
+    assert analysis_inputs is not None
+    assert analysis_inputs.destination.backend == Backend.MEMORY.value
+    (table,) = tuple(
+        output for group in analysis_inputs.outputs_by_directory.values()
+        for output in group
+    )
+    assert table.csv_content == "ImageNumber,Count\r\n1,7\r\n"
+    assert table.well_id == "A01"
+    assert observation.contexts[0].runtime_export_paths == (table.path,)
     events = [ProgressEvent.from_dict(event) for event in progress_queue.events]
     assert events[-1].phase is ProgressPhase.STEP_COMPLETED
 
@@ -883,7 +963,7 @@ def test_plate_scope_batch_preserves_semantic_variants_for_one_input() -> None:
     assert len(batches) == 1
     selected = batches[0].records(measurement_spec.ref())["A01"]
     assert len(selected) == 2
-    tables = tuple(record.value.data for record in selected)
+    tables = tuple(record.data for record in selected)
     assert all(isinstance(table, MeasurementTable) for table in tables)
     assert {table.subject.object_name for table in tables} == {
         "Nuclei",

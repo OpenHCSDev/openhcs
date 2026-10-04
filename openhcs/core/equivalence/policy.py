@@ -648,6 +648,30 @@ class RuntimeMeasurementDialect:
         """Return static and provider-supplied measurement category prefixes."""
         return _resolved_category_prefixes(runtime_measurement_dialect_cache_id(self))
 
+    def projected_feature_name(
+        self, feature_name: str, qualifier_values: tuple[tuple[str, object], ...]
+    ) -> str:
+        """Render a producer feature using this declaration's qualifier grammar."""
+        return self._projected_feature_name(
+            runtime_measurement_dialect_cache_id(self), feature_name, qualifier_values
+        )
+
+    @staticmethod
+    @lru_cache(maxsize=8192)
+    def _projected_feature_name(
+        dialect_id: int,
+        feature_name: str,
+        qualifier_values: tuple[tuple[str, object], ...],
+    ) -> str:
+        from .measurement_rows import measurement_row_qualifiers
+
+        qualifiers = measurement_row_qualifiers(
+            dict(qualifier_values),
+            runtime_measurement_dialect_for_cache_id(dialect_id),
+            feature_name,
+        )
+        return "_".join((feature_name, *qualifiers)) if qualifiers else feature_name
+
     def spatial_grid_measurement_feature_name(
         self,
         grid_name: str,

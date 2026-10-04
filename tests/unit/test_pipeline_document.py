@@ -158,3 +158,32 @@ def test_render_revalidates_direct_pipeline_document_instances() -> None:
 
     with pytest.raises(TypeError, match="PipelineConfig"):
         PipelineDocumentAuthority.render(invalid)
+
+
+def test_pipeline_document_preserves_intrinsic_volume_source_declaration():
+    import pickle
+    from openhcs.core.config import LazySourceBindingsConfig
+    from openhcs.core.source_bindings import (
+        CompiledSourceBindingPlan,
+        StepSourceBindingsConfig,
+    )
+    from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
+
+    domain = VolumeSourceSpatialDomain()
+    document = PipelineDocumentAuthority.from_values(
+        pipeline_config=PipelineConfig(
+            source_bindings_config=LazySourceBindingsConfig(
+                source_spatial_domain=domain
+            )
+        ),
+        pipeline_steps=[],
+    )
+    source = PipelineDocumentAuthority.render(document)
+    restored = PipelineDocumentAuthority.from_source(source)
+    assert (
+        restored.pipeline_config.source_bindings_config.source_spatial_domain == domain
+    )
+    plan = CompiledSourceBindingPlan.from_config(
+        StepSourceBindingsConfig(source_spatial_domain=domain)
+    )
+    assert pickle.loads(pickle.dumps(plan)).source_spatial_domain == domain

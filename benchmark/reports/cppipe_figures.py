@@ -1192,7 +1192,7 @@ def _plot_average_speedup_points(
             alpha=0.86,
         )
         axis.annotate(
-            "4x target",
+            f"{SPEEDUP_TARGET:g}x target",
             xy=(0.995, SPEEDUP_TARGET),
             xycoords=("axes fraction", "data"),
             xytext=(-2, 3),
@@ -1423,7 +1423,7 @@ class SpeedupDistributionReport:
                 alpha=0.86,
             )
             axis.annotate(
-                "4x target",
+                f"{SPEEDUP_TARGET:g}x target",
                 xy=(SPEEDUP_TARGET, 99.0),
                 xycoords=("data", "data"),
                 xytext=(3, -2),
@@ -1626,7 +1626,10 @@ def _draw_reference_lines(axis, *, metric: FigureMetricSpec, log_y: bool) -> Non
         linestyle="--",
         alpha=0.86,
     )
-    label = "4x target" if metric.key == SPEEDUP_METRIC_KEY else "target"
+    label = (
+        f"{metric.target_line:g}x target"
+        if metric.key == SPEEDUP_METRIC_KEY else "target"
+    )
     axis.annotate(
         label,
         xy=(0.995, metric.target_line),
@@ -1689,7 +1692,7 @@ def _write_benchmark_figure_index(path: Path, outputs: Sequence[Path]) -> None:
         "- `cppipe_accuracy_zoom.*`: broken-axis parity view for tiny numeric drift near 100%.",
         "- `cppipe_raw_seconds.*`: single-thread execution runtime in seconds.",
         "- `cppipe_raw_seconds_log.*`: runtime on a log scale for mixed short and long pipelines.",
-        "- `cppipe_speedup.*`: execution speedup versus native CellProfiler with the 4x target line.",
+        f"- `cppipe_speedup.*`: execution speedup versus native CellProfiler with the {SPEEDUP_TARGET:g}x target line.",
         "- `cppipe_speedup_log.*`: speedup on a log scale for wide dynamic range.",
         "- `cppipe_speedup_summary_statistics.*`: min, max, median, and mean speedup tables.",
         "- `cppipe_speedup_cumulative_distribution.*`: percent of datasets at or above each speedup threshold.",

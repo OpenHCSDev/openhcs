@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 from openhcs.constants.constants import AllComponents
 from openhcs.core.component_set import ComponentSet
 from openhcs.core.source_metadata import (
+    SourceMetadataFields,
     SourceMetadataMapping,
     SourceMetadataScalar,
     SourceMetadataValue,
@@ -386,6 +387,39 @@ class RuntimeExecutionAxisScope:
     def has_fixed_components(self) -> bool:
         return bool(self.fixed_component_values)
 
+    def join_execution_cohort(
+        self,
+        other: "RuntimeExecutionAxisScope",
+    ) -> "RuntimeExecutionAxisScope | None":
+        """Join complete producer coordinates within one consumer execution group.
+
+        An absent fixed coordinate leaves that axis unconstrained. Shared
+        coordinates must agree before either correlated row contributes its
+        remaining coordinates; fields from conflicting rows are never combined.
+        """
+
+        if not isinstance(other, RuntimeExecutionAxisScope):
+            raise TypeError("Execution cohorts require RuntimeExecutionAxisScope values.")
+        if (
+            self.axis_id != other.axis_id
+            or self.component is not other.component
+            or self.value_text != other.value_text
+        ):
+            return None
+        own_fixed = dict(self.fixed_component_values)
+        other_fixed = dict(other.fixed_component_values)
+        if any(
+            own_fixed[component] != other_fixed[component]
+            for component in own_fixed.keys() & other_fixed.keys()
+        ):
+            return None
+        return type(self).from_raw(
+            self.axis_id,
+            component=self.component,
+            value=self.value_text,
+            fixed_component_values=tuple((own_fixed | other_fixed).items()),
+        )
+
     @property
     def source_component_values(self) -> RuntimeFixedComponentValues:
         """Return every typed source coordinate represented by this scope."""
@@ -467,7 +501,7 @@ class RuntimeExecutionAxisScope:
     def fixed_component_metadata(
         self,
         metadata: SourceMetadataMapping | None = None,
-    ) -> dict[str, SourceMetadataValue]:
+    ) -> SourceMetadataMapping:
         """Merge fixed execution coordinates into source component metadata."""
 
         from openhcs.constants.constants import get_multiprocessing_axis
@@ -476,7 +510,9 @@ class RuntimeExecutionAxisScope:
             with_source_component_metadata,
         )
 
-        merged: dict[str, SourceMetadataValue] = dict(metadata or {})
+        merged = SourceMetadataFields.composition_snapshot(
+            metadata if metadata is not None else {}
+        )
         fixed_values = (
             (get_multiprocessing_axis(), self.axis_id),
             *self.fixed_component_values,

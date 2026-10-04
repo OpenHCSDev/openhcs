@@ -1,0 +1,178 @@
+{
+  "pid": 1677824,
+  "thread": 140643152090816,
+  "region": "ZMQExecutionServer._execute_with_orchestrator",
+  "root_dimensions": "{\"case\": \"3d_monolayer_final\", \"compile_artifact_id\": null, \"execution_id\": \"9b5738f2-c0e7-413c-9d58-7aae0b6af48d\", \"kind\": \"compile_only\", \"plate\": \"/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/3d_monolayer/images\"}",
+  "seconds": 1.2939568259753287,
+  "revision": "e8587bd7eb0c4aa283bc300c5eb9f2294f24890f",
+  "source": "/home/ts/code/projects/openhcs-shared-runtime-plumbing",
+  "stats": {
+    "ZMQExecutionServer._initialize_orchestrator": {
+      "owner": "ZMQExecutionServer._initialize_orchestrator",
+      "dimensions": "",
+      "phase": "_initialize_orchestrator",
+      "calls": 1,
+      "inclusive": 0.1277877571992576,
+      "exclusive": 0.1277877571992576
+    },
+    "ZMQExecutionServer._execute_with_orchestrator | {\"case\": \"3d_monolayer_final\", \"compile_artifact_id\": null, \"execution_id\": \"9b5738f2-c0e7-413c-9d58-7aae0b6af48d\", \"kind\": \"compile_only\", \"plate\": \"/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/3d_monolayer/images\"}": {
+      "owner": "ZMQExecutionServer._execute_with_orchestrator",
+      "dimensions": "{\"case\": \"3d_monolayer_final\", \"compile_artifact_id\": null, \"execution_id\": \"9b5738f2-c0e7-413c-9d58-7aae0b6af48d\", \"kind\": \"compile_only\", \"plate\": \"/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/3d_monolayer/images\"}",
+      "phase": "_execute_with_orchestrator",
+      "calls": 1,
+      "inclusive": 1.2939568259753287,
+      "exclusive": 1.166169068776071
+    }
+  },
+  "hooks_installed": [
+    {
+      "module": "openhcs.core.aligned_image_payload",
+      "owner": "",
+      "method": "stack_image_payload_context",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.aligned_image_payload",
+      "owner": "",
+      "method": "unstack_image_payload_context",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.measurement_feature_queries",
+      "owner": "MeasurementFeatureValueIndex",
+      "method": "from_columnar_table_by_object",
+      "descriptor_kind": "classmethod"
+    },
+    {
+      "module": "openhcs.core.virtual_workspace_metadata",
+      "owner": "AtomicMetadataWriter",
+      "method": "publish_source_projection_metadata",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.runtime_stack_cache",
+      "owner": "RuntimeImageStackCache",
+      "method": "get",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.runtime_stack_cache",
+      "owner": "RuntimeImageStackCache",
+      "method": "store",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.steps.function_outputs",
+      "owner": "",
+      "method": "finalize_function_step_outputs",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.steps.function_outputs",
+      "owner": "OpenHCSMetadataWriter",
+      "method": "finalize_completed_plate",
+      "descriptor_kind": "classmethod"
+    },
+    {
+      "module": "openhcs.core.steps.function_outputs",
+      "owner": "RuntimeArtifactMetadataTarget",
+      "method": "reconciliation_targets",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.steps.function_runtime",
+      "owner": "FunctionCoreExecutor",
+      "method": "execute",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.steps.function_runtime",
+      "owner": "PatternGroupRuntime",
+      "method": "_load_input_stack",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.steps.function_runtime",
+      "owner": "PatternGroupRuntime",
+      "method": "_validate_and_unstack",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.steps.function_runtime",
+      "owner": "PatternGroupRuntime",
+      "method": "_save_outputs",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.processing.backends.lib_registry.unified_registry",
+      "owner": "RuntimeCallableInvocation",
+      "method": "call",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.orchestrator.analysis_consolidation",
+      "owner": "",
+      "method": "consolidate_analysis_outputs",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.orchestrator.worker_execution",
+      "owner": "",
+      "method": "execute_worker_lane",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.runtime.zmq_execution_server",
+      "owner": "ZMQExecutionServer",
+      "method": "_execute_with_orchestrator",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.runtime.zmq_execution_server",
+      "owner": "ZMQExecutionServer",
+      "method": "_initialize_orchestrator",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.runtime.zmq_execution_server",
+      "owner": "ZMQExecutionServer",
+      "method": "_export_runtime_observation",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.interop.cellprofiler.runtime.function_contract_execution",
+      "owner": "CellProfilerFunctionContractExecutor",
+      "method": "execute",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.interop.cellprofiler.runtime.measurement_execution_support",
+      "owner": "ObjectMeasurementOutputRecorder",
+      "method": "record",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.interop.cellprofiler.runtime.output_recording",
+      "owner": "CellProfilerOutputRecorder",
+      "method": "record_module_outputs",
+      "descriptor_kind": "classmethod"
+    },
+    {
+      "module": "openhcs.interop.cellprofiler.runtime.module_execution",
+      "owner": "CellProfilerModuleExecutor",
+      "method": "__call__",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.interop.cellprofiler.runtime.module_execution",
+      "owner": "CellProfilerModuleExecutor",
+      "method": "_image_request",
+      "descriptor_kind": "function"
+    }
+  ],
+  "profiling_enabled": false,
+  "runtime_profiling_enabled": false,
+  "diagnostic_errors": [],
+  "captures": false,
+  "scope": "coarse same-run nested exclusive timing partition on the exact source revision recorded in this region. Diagnostic wrappers, no scientific or memory-observer substitutions. Not accepted performance comparison. Declared callable boundary includes filtering/decorated processing/metadata; not pure numerical kernels. Both existing profilers are disabled. These wrappers still add diagnostic overhead; no scaling to uninstrumented clocks or causal performance claims. Query boundary is nested under its actual parent and excluded from parent-exclusive elapsed."
+}

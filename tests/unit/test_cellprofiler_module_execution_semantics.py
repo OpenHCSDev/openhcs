@@ -25,6 +25,7 @@ from openhcs.core.aligned_image_payload import (
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.function_patterns import (
+    MainFlowInputProjection,
     DEFAULT_GROUP_KEY,
     FunctionInvocationKey,
     InvocationArtifactInputEdgePlan,
@@ -109,7 +110,7 @@ def _runtime_with_outputs(
             spec=spec,
             storage_plan=None,
             projection=None,
-            consumes_main_flow=True,
+            main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
         )
         for input_index, spec in enumerate(main_flow_inputs)
     )

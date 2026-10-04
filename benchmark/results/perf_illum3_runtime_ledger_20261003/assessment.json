@@ -1,0 +1,152 @@
+{
+  "status": "DIAGNOSTIC_AND_SCIENCE_PASS_NO_NEW_PRODUCTION_SPEEDUP",
+  "source_head": "4c0d62e45c8afb85e34b69d7279cd00710f519b5",
+  "source_freeze": {
+    "path": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/source-freeze.json",
+    "sha256": "86646806122c73d38de2e9d42efa0bffd471ad0a1db36d7d33ea83dfcbfeb0fc"
+  },
+  "actual_import_dependencies": {
+    "external/ObjectState": {
+      "head": "a01f8939b9bf4659502a33fe3febe62cab0f3c9a",
+      "status": ""
+    },
+    "external/python-introspect": {
+      "head": "ed1e4eb15f7a0bf8315274d3e47858fa2b4372bb",
+      "status": ""
+    },
+    "external/arraybridge": {
+      "head": "1e53d03d9f468322a1c085c8be29485fb139caf2",
+      "status": ""
+    },
+    "external/metaclass-registry": {
+      "head": "393a7e03003cdc56df9013f932ed4f26e632d77a",
+      "status": ""
+    },
+    "external/zmqruntime": {
+      "head": "668edafcb5ee530a163377c936431ae1e8334e85",
+      "status": ""
+    },
+    "external/pycodify": {
+      "head": "792b03413331fdf107e369c924c257a2f0b16126",
+      "status": ""
+    },
+    "external/PolyStore": {
+      "head": "84f322e46871de5ed47e7fd20976ad03e533c1c4",
+      "status": ""
+    },
+    "external/pyqt-reactive": {
+      "head": "ad4948775ab81180a354d4b793d17ee5ddff3972",
+      "status": ""
+    }
+  },
+  "installed_versions": {
+    "python": "3.12.14 (main, Sep 24 2026, 17:57:43) [Clang 22.1.3 ]",
+    "versions": {
+      "openhcs": "0.8.7",
+      "numpy": "2.5.3",
+      "scipy": "1.18.1",
+      "arraybridge": "0.3.6",
+      "polystore": "0.3.0",
+      "python-introspect": "0.1.15",
+      "metaclass-registry": "0.2.2",
+      "zmqruntime": "0.3.0"
+    }
+  },
+  "originals_retained_byte_identical": {
+    "qualification.json": {
+      "original_path": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/qualification.json",
+      "sha256": "89f786ef58cd1c31c2418b66eb15e25a55018c53fbf06c7516a76ed76bada615",
+      "bytes": 17768
+    },
+    "observations.json": {
+      "original_path": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/observations.json",
+      "sha256": "c8b1e3f0704682e2cad20b7a5e27b1651e38b677e74f31d6477eb163185106fd",
+      "bytes": 4831
+    },
+    "controls.json": {
+      "original_path": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/controls.json",
+      "sha256": "358cd70c391cdaae89d5f2ba8514de606ccabcf43be3507dadeba7ae2341f7d1",
+      "bytes": 1520
+    },
+    "science.json": {
+      "original_path": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/science-v3.json",
+      "sha256": "607c68f213baddf4c5dbec97b39efee87451ac16188eadf1ebdea578d5bee9e5",
+      "bytes": 15478
+    },
+    "reader-first-red.json": {
+      "original_path": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/science-first-red.json",
+      "sha256": "de6ae869a4f1fe6eabfa4fc5b5ee87ba052462f26302d0a7a334c7b2c4276c80",
+      "bytes": 872
+    },
+    "reader-environment-audit.json": {
+      "original_path": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/science-first-red-environment-audit.json",
+      "sha256": "4fa0497da2158f883c3af73aaea0b906a63f0d3887d7f82ee89e9c8afc03db20",
+      "bytes": 1285
+    },
+    "render-retention-decision.json": {
+      "original_path": "/tmp/openhcs-render-retention-4c0d62/decision-v1.json",
+      "sha256": "905e189541015681fb58b42da8d28453f76710fbf088156b27260de90239bf94",
+      "bytes": 3626
+    },
+    "render-retention-replay.json": {
+      "original_path": "/tmp/openhcs-render-retention-4c0d62/result-v3.json",
+      "sha256": "28c79034129b4ea13aa7236c842b7b43bb0d6a5e67d84c22c6aca720d6bbed08",
+      "bytes": 29211
+    },
+    "render-retention-class-census.json": {
+      "original_path": "/tmp/openhcs-render-retention-4c0d62/census.json",
+      "sha256": "16f23b40d587e3d9e2005fd6e66d47e4d3264ed90e655b676c425095dfbd02d5",
+      "bytes": 25635
+    },
+    "compile_only-region.json": {
+      "original_path": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/regions/region-2078682-140361443509952-0001.json",
+      "sha256": "cc69523fdae5fe92c4e96ec59609a19eb889fe744316b6ed8419ed0398313ab9",
+      "bytes": 15563
+    },
+    "execution-region.json": {
+      "original_path": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/regions/region-2078682-140361443509952-0002.json",
+      "sha256": "f3c9e01926b069a0103ebb9c70d638a4944c1f429b809b3a7b2e9755efbf80e5",
+      "bytes": 25031
+    },
+    "numba-events-1.json": {
+      "original_path": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/regions/numba-events-2078555-0001.json",
+      "sha256": "df39cc4538c692418c9590759ee2be67c03e712d31b38e59909a2acc414299da",
+      "bytes": 712
+    },
+    "numba-events-2.json": {
+      "original_path": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/regions/numba-events-2078682-0001.json",
+      "sha256": "0cc87c64a35b572441cac162e7a953685af095892641222cef4b52a71d7ace03",
+      "bytes": 843
+    },
+    "numba-events-3.json": {
+      "original_path": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/regions/numba-events-2078682-0002.json",
+      "sha256": "a80829256ff2e4f13f8cb14257b45138aacefb6e2726339b64be55d585c90fde",
+      "bytes": 840
+    },
+    "numba-events-4.json": {
+      "original_path": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/regions/numba-events-2078682-0003.json",
+      "sha256": "c615a8d1c29b5da41bba3237cd1ee02e6f8eba72af2f73290f11ec684571661b",
+      "bytes": 712
+    },
+    "compiler-config-owner-decision.json": {
+      "original_path": "/tmp/openhcs-compile-config-owner-4c0d62/decision.json",
+      "sha256": "f99964708cfe2efa219dc0e254d780dd156f6c29ef720a08215cc29c2470a109",
+      "bytes": 8494
+    },
+    "compiler-config-class-census.json": {
+      "original_path": "/tmp/openhcs-compile-config-owner-4c0d62/census.json",
+      "sha256": "3b89e381bf150b66800e73439e6caecbc33170455ded87d67eb0dfbfdbbec855",
+      "bytes": 27972
+    }
+  },
+  "execution_outside_callable_fraction": 0.7307817861504636,
+  "raw_callable_count": 11,
+  "scope": "One 41-hook ordinary-path diagnostic, READY/startup/shutdown excluded, original OUTCOMES/memory/CPU5/official lease, no cProfile or runtime profiler. Both retained native outputs compared; no fresh native timing or paired performance gain.",
+  "qualification_corrections": [
+    "The qualification late-getter label refers to all ten effective-config reads, including pre-capture reads; .192388s is an inclusive subset of state costs, not additional time or an eligible saving.",
+    "Installed owned ObjectState/python-introspect editables are distinguished from separately frozen canonical dependency source copies. The original 731-module AST census is a different epoch; no current global ownership proof is inferred.",
+    "Framework outside-callable time is an investigation envelope, not an assertion that all work is removable.",
+    "Zero native compile events applies to this observation; disk-cache loading and prior timing variance remain separate questions."
+  ],
+  "ownership_scope": "Current selected13modules71originalClassDefs refreshed through existingNRA, source/countmappingonly; no callback/alias/lifecycle equivalence or eligible wall implied."
+}

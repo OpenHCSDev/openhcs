@@ -47,7 +47,7 @@ from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.steps.function_runtime import FunctionOutputContextStrategy
+
 from openhcs.processing.custom_functions import manager as custom_manager
 from openhcs.processing.materialization import materialize
 from polystore.disk import DiskStorageBackend
@@ -306,8 +306,8 @@ def test_plate_reference_prepares_compiles_and_runs_in_original_parent(
         context = plate["_plate_context"](axis_id, (plan,))
         plate["_record_measurements"](context, name=source.name, path=path, count=0)
         record = context.runtime_value_store.values()[0]
-        assert isinstance(record.value.data, MeasurementTable)
-        record.value.data.rows = reference_namespace["inspect_label_fixture"](fixture)[2]
+        assert isinstance(record.data, MeasurementTable)
+        record.data.rows = reference_namespace["inspect_label_fixture"](fixture)[2]
         plate["_record_measurements"](
             context, name="unrelated_rows", path=f"/memory/{axis_id}/unrelated", count=99,
         )
@@ -319,7 +319,7 @@ def test_plate_reference_prepares_compiles_and_runs_in_original_parent(
         if record.key.name == output.name
     )
     assert len(summaries) == 1  # one parent result, not one execution per axis
-    table = summaries[0].value.data
+    table = summaries[0].data
     assert summaries[0].key.artifact_type is SpecialArtifactType
     assert isinstance(table, DataclassMeasurementColumnarRows)
     assert table.row_mappings() == (
@@ -373,9 +373,7 @@ def test_reference_retains_plane_domain_until_raw_numpy_invocation(
             plane_index=None, axis_size=plane_count,
         )
     )
-    label_payload = FunctionOutputContextStrategy.for_context(
-        ObjectLabelsArtifactType,
-    ).contextualize(stack, labels, None, projection)
+    label_payload = ObjectLabelsArtifactType.contextualize_output(stack, labels, None, projection)
     assert isinstance(label_payload, ObjectLabelPayload)
     np.testing.assert_array_equal(label_payload.labels, stack.data)
     assert label_payload.plane_axis is (
@@ -393,9 +391,7 @@ def test_reference_retains_plane_domain_until_raw_numpy_invocation(
             plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
         ).payload_with(stack.data[:, :-1, :])
         with pytest.raises(ValueError, match="Object-label spatial shape"):
-            FunctionOutputContextStrategy.for_context(
-                ObjectLabelsArtifactType,
-            ).contextualize(stack, wrong_spatial_shape, None, projection)
+            ObjectLabelsArtifactType.contextualize_output(stack, wrong_spatial_shape, None, projection)
     assert not manager.storage_dir.exists()
 
 

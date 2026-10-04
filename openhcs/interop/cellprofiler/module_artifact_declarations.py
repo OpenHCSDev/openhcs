@@ -12,6 +12,7 @@ from typing import (
     ClassVar,
 )
 
+from openhcs.constants.input_source import InputSource
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
@@ -23,6 +24,7 @@ from openhcs.core.artifacts import (
     ImageArtifactType,
     ImageMeasurementSubjectRelation,
     InputGroupLineageSourceRelation,
+    InputImageSetContextSourceRelation,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
     ObjectLineageArtifactType,
@@ -64,6 +66,7 @@ if TYPE_CHECKING:
 
     from openhcs.core.function_patterns import (
         FunctionInvocationKey,
+        NormalizedFunctionItem,
     )
     from openhcs.core.runtime_image_values import ImagePayloadMetadata
     from openhcs.core.runtime_tabular_values import ColumnarRows
@@ -726,7 +729,9 @@ class MeasurementArtifactOutputModule(CellProfilerModule):
             for artifact_input in artifact_inputs.specs
         )
         invocation_domain_inputs = cls.invocation_domain_inputs(
-            cls.require_callable(invocation_key.function_name),
+            CallableContract.from_prepared_callable(
+                cls.require_callable(invocation_key.function_name)
+            ),
             artifact_inputs.specs,
         )
         return (
@@ -1189,6 +1194,58 @@ class ImageMeasurementInputModule(
     )
 
     @classmethod
+    def finalize_artifact_contract_inputs(
+        cls,
+        module: "ModuleBlock",
+        *,
+        invocation_key: "FunctionInvocationKey",
+        step_context: "ArtifactDeclarationStepContext",
+        artifact_inputs: ArtifactSpecCollection,
+    ) -> tuple[ArtifactSpec, ...]:
+        """Bind measured object sets to exactly the selected input image contexts."""
+        inputs = ArtifactSpecCollection(
+            super().finalize_artifact_contract_inputs(
+                module,
+                invocation_key=invocation_key,
+                step_context=step_context,
+                artifact_inputs=artifact_inputs,
+            )
+        )
+        image_contexts = tuple(
+            InputImageSetContextSourceRelation(spec.ref())
+            for spec in inputs.of_artifact_type(ImageArtifactType)
+        )
+        return tuple(
+            replace(spec, relations=(*spec.relations, *image_contexts))
+            if spec.artifact_type is ObjectLabelsArtifactType and image_contexts
+            else spec
+            for spec in inputs
+        )
+
+    @classmethod
+    def input_source_for_contract(
+        cls,
+        callable_contract: CallableContract,
+        *,
+        step_context: "ArtifactDeclarationStepContext",
+    ) -> InputSource:
+        """Keep original measurement images alongside produced image subjects."""
+        produced_refs = frozenset(
+            producer.spec.ref().for_plan_type(ArtifactInputPlan)
+            for producer in step_context.available_artifact_producers
+        )
+        if any(
+            spec.ref() not in produced_refs
+            and step_context.source_bindings.binding_for_artifact_ref(spec.ref()) is not None
+            for spec in callable_contract.artifact_inputs.of_artifact_type(ImageArtifactType)
+        ):
+            return InputSource.PIPELINE_START
+        return super().input_source_for_contract(
+            callable_contract,
+            step_context=step_context,
+        )
+
+    @classmethod
     def measurement_output_relations(
         cls,
         module: "ModuleBlock",
@@ -1216,29 +1273,6 @@ class ImageMeasurementInputModule(
                 artifact_inputs=artifact_inputs,
             ),
             *image_subjects,
-        )
-
-    @classmethod
-    def invocation_module_blocks(
-        cls,
-        module: "ModuleBlock",
-    ) -> tuple["ModuleBlock", ...]:
-        """Expose each natural measurement image as one public invocation."""
-
-        blocks = super().invocation_module_blocks(module)
-        if (
-            CallableContract.from_callable(
-                cls.require_callable()
-            ).image_payload_consumption
-            is ImagePayloadConsumption.COMPOSED
-        ):
-            return blocks
-        (binding,) = cls.declared_artifact_bindings(
-            plan_type=ArtifactInputPlan, artifact_type=ImageArtifactType
-        )
-        return cls.split_invocation_blocks_for_binding(
-            blocks,
-            binding,
         )
 
     @classmethod
@@ -1312,15 +1346,43 @@ class ObjectMeasurementInputModule(
     )
 
     @classmethod
-    def invocation_module_blocks(
+    def finalize_module_blocks_for_invocation(
         cls,
-        module: "ModuleBlock",
+        blocks: tuple["ModuleBlock", ...],
+        *,
+        invocation: "NormalizedFunctionItem",
+        step_context: "ArtifactDeclarationStepContext",
     ) -> tuple["ModuleBlock", ...]:
-        """Expose each measured object set as one scalar-label invocation."""
+        """Require selection intent before reconstructing multiple object subjects."""
 
-        return cls.split_invocation_blocks_for_binding(
-            super().invocation_module_blocks(module),
-            cls.object_measurement_binding,
+        blocks = super().finalize_module_blocks_for_invocation(
+            blocks, invocation=invocation, step_context=step_context,
+        )
+        binding = cls.object_measurement_binding
+        selector = binding.require_parameter_name()
+        if selector not in invocation.kwargs_dict:
+            for block in blocks:
+                subjects = cls.artifact_names_for_binding(block, binding)
+                if len(subjects) > 1:
+                    return ()
+        return blocks
+
+    @classmethod
+    def processing_group_scope_inputs(
+        cls,
+        callable_contract: CallableContract,
+    ) -> tuple[ArtifactSpec, ...]:
+        """Keep all declared measurement subjects in one logical module batch."""
+        source_refs = frozenset(
+            spec.ref() for spec in (
+                *super().processing_group_scope_inputs(callable_contract),
+                *callable_contract.group_scope_inputs,
+            )
+        )
+        return tuple(
+            spec
+            for spec in callable_contract.artifact_inputs
+            if spec.ref() in source_refs
         )
 
 

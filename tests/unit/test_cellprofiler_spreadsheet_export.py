@@ -1645,9 +1645,11 @@ def _measurement_record(
         axis_id=axis_id,
     )
     return StoredRuntimeValue(
-        value,
-        RuntimeArtifactLocation(path=output_plan.path, backend="memory"),
-    )
+               key=value.key,
+               data=value.data,
+               materialization_source_metadata=value.materialization_source_metadata,
+               location=RuntimeArtifactLocation(path=output_plan.path, backend="memory"),
+           )
 
 
 def _fixture_field_dtype(
@@ -1694,6 +1696,8 @@ def _relationship_record(name: str, *, axis_id: str) -> StoredRuntimeValue:
         axis_id=axis_id,
     )
     return StoredRuntimeValue(
-        value,
-        RuntimeArtifactLocation(path=output_plan.path, backend="memory"),
-    )
+               key=value.key,
+               data=value.data,
+               materialization_source_metadata=value.materialization_source_metadata,
+               location=RuntimeArtifactLocation(path=output_plan.path, backend="memory"),
+           )

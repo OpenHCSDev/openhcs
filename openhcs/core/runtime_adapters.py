@@ -38,17 +38,14 @@ from openhcs.core.runtime_image_values import (
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     NamedSourceBinding,
-    SourceBindingRuntimeContext,
 )
 from openhcs.core.source_binding_selection import (
     SourceBindingMatchedImageSet,
-    SourcePatternResolutionContext,
 )
 from openhcs.core.source_image_provenance import (
     SourceImageIdentity,
     SourceImageProvenance,
 )
-from openhcs.core.source_image_semantics import apply_source_binding_payload
 from openhcs.core.source_load_plan import SourceLoadPlan
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
@@ -63,7 +60,6 @@ from openhcs.core.source_workspace_projection import (
 if TYPE_CHECKING:
     from openhcs.core.callable_contract import CallableContract
     from openhcs.core.context.processing_context import ProcessingContext
-    from openhcs.core.steps.function_runtime import FunctionRuntimeScope
     from openhcs.core.runtime_stores import RuntimeArtifactInput
 
 
@@ -94,9 +90,6 @@ class RuntimeAdapterRequest:
         default_factory=dict
     )
     source_binding_plan: CompiledSourceBindingPlan = CompiledSourceBindingPlan.empty()
-    source_binding_context: SourceBindingRuntimeContext = field(
-        default_factory=SourceBindingRuntimeContext.empty
-    )
     group_key: str | None = None
     axis_scope: RuntimeExecutionAxisScope
     plane_projection: RuntimePlaneProjection = field(
@@ -229,8 +222,8 @@ class RuntimeAdapterRequest:
         first = matches[0]
         if any(
             edge.spec != first.spec
-            or (edge.storage_plan, edge.projection, edge.consumes_main_flow)
-            != (first.storage_plan, first.projection, first.consumes_main_flow)
+            or (edge.storage_plan, edge.projection, edge.main_flow_projection)
+            != (first.storage_plan, first.projection, first.main_flow_projection)
             for edge in matches[1:]
         ):
             raise ValueError(
@@ -284,10 +277,12 @@ class RuntimeAdapterRequest:
             projection,
             axis_id=self.axis_scope.axis_id,
         )
-        source_context = SourcePatternResolutionContext.from_projection(
-            parser=self.context.microscope_handler.parser,
-            projection=projection,
-            metadata_rules=self.source_binding_plan.metadata_rules,
+        source_context = (
+            self.context.runtime_source_binding_context_cache.source_pattern_context(
+                parser=self.context.microscope_handler.parser,
+                projection=projection,
+                metadata_rules=self.source_binding_plan.metadata_rules,
+            )
         )
         matched_set = SourceBindingMatchedImageSet.from_plan(
             bindings=self.source_binding_plan.binding_declarations,
@@ -339,9 +334,8 @@ class RuntimeAdapterRequest:
                 )
             projected = projection.project_payload(lookup, payload)
             projected_payloads.append(
-                apply_source_binding_payload(
+                binding.apply_loaded_payload(
                     projected,
-                    binding,
                     ImagePayloadSourceMetadataContext(
                         SourceImageIdentity(
                             member,
@@ -353,91 +347,23 @@ class RuntimeAdapterRequest:
                     ),
                 )
             )
-        return stack_image_payloads(
-            projected_payloads,
-            metadata_mode=ImagePayloadMetadataCompositionMode.for_plane_axis(
-                RuntimePlaneAxis.RUNTIME_SLICE
-            ),
+        payload = (
+            projected_payloads[0]
+            if len(projected_payloads) == 1
+            and image_payload_metadata(projected_payloads[0]).persists_whole_image()
+            else stack_image_payloads(
+                projected_payloads,
+                metadata_mode=ImagePayloadMetadataCompositionMode.for_plane_axis(
+                    RuntimePlaneAxis.RUNTIME_SLICE
+                ),
+            )
         )
-
-    @classmethod
-    def from_source_context(
-        cls,
-        *,
-        context: "ProcessingContext",
-        source_payload: object | None,
-        artifact_inputs: Mapping[
-            "InvocationArtifactInputProjectionKey",
-            "InvocationArtifactInputEdgePlan",
-        ],
-        artifact_outputs: Mapping[ArtifactSpecRef, ArtifactOutputPlan],
-        source_binding_plan: CompiledSourceBindingPlan,
-        source_binding_context: SourceBindingRuntimeContext,
-        group_key: str | None = None,
-        axis_scope: RuntimeExecutionAxisScope | None = None,
-        plane_projection: RuntimePlaneProjection | None = None,
-        variable_components: tuple[VariableComponents, ...] | None = None,
-        source_load_plan: SourceLoadPlan | None = None,
-        callable_contract: "CallableContract | None" = None,
-    ) -> "RuntimeAdapterRequest":
-        """Project a source-binding runtime context into an adapter request."""
-        return cls(
-            context=context,
-            callable_contract=callable_contract,
-            source_payload=source_payload,
-            artifact_inputs=artifact_inputs,
-            artifact_outputs=artifact_outputs,
-            source_binding_plan=source_binding_plan,
-            source_binding_context=source_binding_context,
-            group_key=group_key,
-            axis_scope=(
-                axis_scope
-                if axis_scope is not None
-                else RuntimeExecutionAxisScope.from_context(context)
-            ),
-            plane_projection=(
-                plane_projection
-                if plane_projection is not None
-                else RuntimePlaneProjection.stack()
-            ),
-            variable_components=(
-                tuple(variable_components) if variable_components is not None else ()
-            ),
-            source_load_plan=(
-                source_load_plan if source_load_plan is not None else SourceLoadPlan()
-            ),
+        metadata = image_payload_metadata(payload)
+        domain = self.source_binding_plan.source_spatial_domain.admit_source_cohort(
+            metadata.source_spatial_domain,
+            depth=len(members),
         )
-
-    @classmethod
-    def from_runtime_scope(
-        cls,
-        *,
-        runtime_scope: "FunctionRuntimeScope",
-        artifact_inputs: Mapping[
-            "InvocationArtifactInputProjectionKey",
-            "InvocationArtifactInputEdgePlan",
-        ],
-        artifact_outputs: Mapping[ArtifactSpecRef, ArtifactOutputPlan],
-        group_key: str | None,
-        plane_projection: RuntimePlaneProjection,
-        source_payload: object,
-        callable_contract: "CallableContract | None" = None,
-    ) -> "RuntimeAdapterRequest":
-        """Project an invocation runtime scope into an adapter request."""
-        return cls.from_source_context(
-            context=runtime_scope.context,
-            callable_contract=callable_contract,
-            source_payload=source_payload,
-            artifact_inputs=artifact_inputs,
-            artifact_outputs=artifact_outputs,
-            source_binding_plan=runtime_scope.source_binding_plan,
-            source_binding_context=runtime_scope.source_binding_context,
-            group_key=group_key,
-            axis_scope=runtime_scope.axis_scope,
-            plane_projection=plane_projection,
-            variable_components=tuple(runtime_scope.execution_plan.variable_components),
-            source_load_plan=runtime_scope.execution_plan.source_load_plan,
-        )
+        return metadata.replace_fields(source_spatial_domain=domain).attach_to(payload)
 
 
 RuntimeAdapterFactory = Callable[[RuntimeAdapterRequest], object]
@@ -454,8 +380,18 @@ class RuntimeAdapterSpec:
     parameter_name: str
     factory: RuntimeAdapterFactory
     manages_artifact_inputs: bool = False
-    artifact_output_policy: type[ArtifactOutputPolicy] = NativeReturnArtifactOutputPolicy
+    artifact_output_policy: type[ArtifactOutputPolicy] = (
+        NativeReturnArtifactOutputPolicy
+    )
     runtime_callable_factory: RuntimeCallableFactory | None = None
+
+    def invocation_domain_inputs(
+        self, contract: "CallableContract",
+    ) -> ArtifactSpecCollection:
+        """Use declared context inputs when the callable has no raw image ABI."""
+        if contract.accepts_implicit_main_flow_input:
+            return ArtifactSpecCollection(())
+        return contract.group_scope_inputs
 
     def __post_init__(self) -> None:
         if not self.parameter_name:
@@ -509,7 +445,9 @@ def runtime_adapter(
     factory: RuntimeAdapterFactory,
     *,
     manages_artifact_inputs: bool = False,
-    artifact_output_policy: type[ArtifactOutputPolicy] = NativeReturnArtifactOutputPolicy,
+    artifact_output_policy: type[
+        ArtifactOutputPolicy
+    ] = NativeReturnArtifactOutputPolicy,
     runtime_callable_factory: RuntimeCallableFactory | None = None,
 ) -> Callable[[_F], _F]:
     """Declare that a callable needs an invocation-scoped runtime adapter."""

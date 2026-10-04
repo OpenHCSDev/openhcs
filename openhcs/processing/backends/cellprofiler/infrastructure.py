@@ -41,6 +41,7 @@ from openhcs.core.source_bindings import (
 )
 from openhcs.core.source_matching import source_metadata_component
 from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.interop.cellprofiler.cellprofiler_literals import (
     decode_cellprofiler_setting_literal,
@@ -1408,10 +1409,12 @@ class NamesAndTypesModule(SourceSetupCellProfilerModule):
             explicit_sources.append(explicit_source)
 
         source_stack_components = config.source_stack_components
+        source_spatial_domain = config.source_spatial_domain
         if module.get_setting("Process as 3D?", "No").strip().casefold() == "yes":
             source_stack_components = tuple(
                 dict.fromkeys((*source_stack_components, AllComponents.Z_INDEX))
             )
+            source_spatial_domain = VolumeSourceSpatialDomain()
         voxel_spacing = SourceVoxelSpacing.from_cellprofiler_xyz(
             x=_positive_float_setting(
                 module,
@@ -1436,6 +1439,7 @@ class NamesAndTypesModule(SourceSetupCellProfilerModule):
                 dict.fromkeys((*config.image_plane_sources, *explicit_sources))
             ),
             source_stack_components=source_stack_components,
+            source_spatial_domain=source_spatial_domain,
             source_voxel_spacing=voxel_spacing,
         )
 

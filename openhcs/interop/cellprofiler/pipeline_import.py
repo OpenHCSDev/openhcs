@@ -492,25 +492,9 @@ def _parsed_target_units(
             raise ValueError(
                 f"CellProfiler module {module.name} resolved a noncanonical callable."
             )
-        follows_produced_main_flow = any(
-            declaration_context.main_flow_artifacts.by_ref(spec.ref()) is not None
-            and any(
-                producer.spec.ref().for_plan_type(ArtifactInputPlan) == spec.ref()
-                for producer in declaration_context.available_artifact_producers
-            )
-            for spec in contract.artifact_inputs
-        )
-        input_source = (
-            InputSource.PREVIOUS_STEP
-            if follows_produced_main_flow
-            else (
-                InputSource.PIPELINE_START
-                if any(
-                    source_bindings.binding_for_artifact_ref(spec.ref()) is not None
-                    for spec in contract.artifact_inputs
-                )
-                else InputSource.PREVIOUS_STEP
-            )
+        input_source = module_type.input_source_for_contract(
+            contract,
+            step_context=declaration_context,
         )
         public_source_bindings = _public_step_source_bindings(
             source_bindings,
@@ -528,7 +512,7 @@ def _parsed_target_units(
                 inherited_processing_config,
                 input_source=input_source,
             ),
-            step_context=processing_context,
+            step_context=declaration_context,
         )
         public_source_bindings = _public_step_source_bindings(
             source_bindings,
@@ -585,7 +569,7 @@ def _parsed_target_units(
                     inherited_processing_config,
                     input_source=input_source,
                 ),
-                step_context=resolved_context,
+                step_context=declaration_context,
             )
             public_source_bindings = _public_step_source_bindings(
                 source_bindings,

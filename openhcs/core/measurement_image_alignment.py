@@ -265,237 +265,8 @@ class MeasurementImageLabelAlignmentRequest:
             label_payload=payload_projection,
         )
 
-
-@dataclass(frozen=True, slots=True)
-class PreparedMeasurementObjectLabels:
-    """Single-pass object-label preparation for measurement-image execution."""
-
-    request: MeasurementImageLabelAlignmentRequest
-    source_payload: ObjectLabelValue
-    source_projected_payload: ObjectLabelValue
-    source_projected_labels: ObjectLabelMeasurementSource
-    aligned_source: MeasurementImageAlignmentSource
-    measurement_labels: ObjectLabelMeasurementSource
-    completion_payload: ObjectLabelValue
-
-    @property
-    def aligned_image(self) -> RuntimeArrayData | AlignedImageStack:
-        """Return the image from the source that owns its projected semantics."""
-
-        return self.aligned_source.alignment_image
-
-    @classmethod
-    def from_source(
-        cls,
-        source: MeasurementImageAlignmentSource,
-        label_payload: ObjectLabelValue,
-        *,
-        plane_projector: RuntimePlaneAxisProjector | None = None,
-        align_image_to_labels: bool = True,
-    ) -> "PreparedMeasurementObjectLabels":
-        """Prepare labels from one measurement-image source and payload."""
-        return cls.from_request(
-            request=source.object_label_alignment_request(
-                label_payload,
-                plane_projector=plane_projector,
-                align_image_to_labels=align_image_to_labels,
-            ),
-        )
-
-    @classmethod
-    def from_request(
-        cls,
-        request: MeasurementImageLabelAlignmentRequest,
-    ) -> "PreparedMeasurementObjectLabels":
-        """Prepare image, dense labels, and completion payload in one pass."""
-        if request.label_payload is None:
-            raise TypeError(
-                "Measurement object-label preparation requires label_payload."
-            )
-        profile_enabled = RuntimeProfileLogger.enabled()
-        source_payload = request.label_payload
-        source_projection_timer = RuntimeProfileTimer.start()
-        source_projected_request = request.with_source_projected_labels()
-        source_projected_labels = source_projected_request.labels
-        source_projection_payload = source_projected_request.label_payload
-        if source_projection_payload is None:
-            raise TypeError(
-                "Measurement object-label source projection lost label_payload."
-            )
-        if profile_enabled:
-            RuntimeProfileLogger.log(
-                logger,
-                "measurement_object_labels_source_projection",
-                source_projection_timer.elapsed(),
-                reference_domain=request.reference_domain.value,
-                source_type=type(request.image).__name__,
-                labels_type=type(request.labels).__name__,
-                source_aliases=request.source_aliases,
-            )
-        source_context_timer = RuntimeProfileTimer.start()
-        source_projected_payload = cls.source_context_payload(
-            source_projected_request,
-            source_projection_payload,
-            source_projected_labels,
-        )
-        if profile_enabled:
-            RuntimeProfileLogger.log(
-                logger,
-                "measurement_object_labels_source_context",
-                source_context_timer.elapsed(),
-                reference_domain=request.reference_domain.value,
-                payload_reused=source_projected_payload is source_payload,
-            )
-        image_request = replace(
-            source_projected_request,
-            labels=source_projected_labels,
-            label_payload=source_projected_payload,
-        )
-        image_align_timer = RuntimeProfileTimer.start()
-        if request.align_image_to_labels:
-            aligned_image = MeasurementImageLabelAlignmentStrategy.align(image_request)
-        else:
-            aligned_image = request.image
-        aligned_source = image_request.source.with_alignment_image(aligned_image)
-        if profile_enabled:
-            RuntimeProfileLogger.log(
-                logger,
-                "measurement_object_labels_image_alignment",
-                image_align_timer.elapsed(),
-                reference_domain=request.reference_domain.value,
-                align_image_to_labels=request.align_image_to_labels,
-                aligned_type=type(aligned_image).__name__,
-            )
-        label_align_timer = RuntimeProfileTimer.start()
-        aligned_measurement_labels = MeasurementLabelSourceAlignmentStrategy.align(
-            aligned_image,
-            source_projected_labels,
-            label_payload=source_projected_payload,
-        )
-        measurement_labels = (
-            object_label_dense_array(aligned_measurement_labels)
-            if isinstance(aligned_measurement_labels, ObjectLabelValue)
-            else aligned_measurement_labels
-        )
-        if profile_enabled:
-            RuntimeProfileLogger.log(
-                logger,
-                "measurement_object_labels_label_alignment",
-                label_align_timer.elapsed(),
-                reference_domain=request.reference_domain.value,
-                labels_reused=aligned_measurement_labels is source_projected_labels,
-            )
-        completion_timer = RuntimeProfileTimer.start()
-        completion_payload = source_projected_payload.with_measurement_labels(
-            measurement_labels
-        )
-        if profile_enabled:
-            RuntimeProfileLogger.log(
-                logger,
-                "measurement_object_labels_completion_payload",
-                completion_timer.elapsed(),
-                reference_domain=request.reference_domain.value,
-                payload_reused=completion_payload is source_projected_payload,
-            )
-        return cls(
-            request=request,
-            source_payload=source_payload,
-            source_projected_payload=source_projected_payload,
-            source_projected_labels=source_projected_labels,
-            aligned_source=aligned_source,
-            measurement_labels=measurement_labels,
-            completion_payload=completion_payload,
-        )
-
     @staticmethod
-    def source_context_payload(
-        request: MeasurementImageLabelAlignmentRequest,
-        source_payload: ObjectLabelValue,
-        source_projected_labels: ObjectLabelMeasurementSource,
-    ) -> ObjectLabelValue:
-        """Attach measurement-image source context to projected object labels."""
-        source_variants = source_payload.variant_data
-        if isinstance(source_projected_labels, ObjectLabelValue):
-            variants = source_projected_labels.variant_data
-        elif source_projected_labels is request.labels:
-            variants = source_variants
-        else:
-            variants = ObjectLabelVariantData.compatible_replacement(
-                source_payload,
-                source_projected_labels,
-            )
-        metadata = image_payload_metadata(request.image)
-        payload_domain = source_payload.object_label_source_spatial_domain()
-        source_spatial_domain = (
-            metadata.object_label_source_spatial_domain()
-            .with_missing_from(payload_domain)
-            .with_fill_value(payload_domain.fill_value)
-            .with_value_name(payload_domain.value_name)
-        )
-        if (
-            variants.labels is source_variants.labels
-            and variants.unedited_labels is source_variants.unedited_labels
-            and variants.small_removed_labels is source_variants.small_removed_labels
-            and source_spatial_domain == payload_domain
-        ):
-            return source_payload
-        if (
-            source_projected_labels is request.labels
-            and source_spatial_domain == payload_domain
-        ):
-            return source_payload.with_variants(
-                variants,
-                source_spatial_domain=source_spatial_domain,
-            )
-        if source_spatial_domain != payload_domain:
-            contextual_payload = source_payload.with_variants(
-                variants,
-                source_spatial_domain=source_spatial_domain,
-            )
-            image_source_domain = measurement_image_source_spatial_adapter(
-                request.image
-            )
-            if image_source_domain is None:
-                raise ValueError(
-                    "Measurement source-spatial projection requires an image source domain."
-                )
-            contextual_source_domain = SourceSpatialDomainAdapter.for_value(
-                contextual_payload
-            )
-            if contextual_source_domain is None:
-                raise TypeError(
-                    "Measurement source-spatial projection requires an object-label "
-                    "source domain adapter."
-                )
-            variants = ObjectLabelVariantData.compatible_replacement(
-                contextual_payload,
-                image_source_domain.extract_source_array(
-                    object_label_dense_array(contextual_payload),
-                    spatial_axes_yx=contextual_source_domain.spatial_axes_yx,
-                ),
-            )
-        return source_payload.with_variants(
-            variants,
-            representation=ObjectLabelRepresentation.DENSE_LABELS,
-            source_spatial_domain=source_spatial_domain,
-        )
-
-
-def measurement_image_source_spatial_adapter(
-    image: RuntimeArrayData | AlignedImageStack,
-) -> SourceSpatialDomainAdapter | None:
-    """Return the nominal source-domain adapter for a measurement image."""
-    if isinstance(image, AlignedImageStack):
-        return image.first_slice_source_spatial_adapter()
-    return SourceSpatialDomainAdapter.for_value(image)
-
-
-class MeasurementLabelSourceAlignmentStrategy:
-    """Align labels through nominal image and source-spatial contracts."""
-
-    @classmethod
-    def align(
-        cls,
+    def labels_for_image(
         image: RuntimeArrayData | AlignedImageStack,
         labels: ObjectLabelMeasurementSource | RuntimeSliceAlignedValueSet,
         *,
@@ -540,34 +311,29 @@ class MeasurementLabelSourceAlignmentStrategy:
             return labels
         return label_domain_adapter.value_in_payload_domain(image_domain_adapter)
 
-    @classmethod
-    def align_request_labels_to_image_source(
-        cls,
-        request: MeasurementImageLabelAlignmentRequest,
+    def labels_in_image_source(
+        self,
     ) -> ObjectLabelMeasurementSource | RuntimeSliceAlignedValueSet:
-        """Return request labels projected into the request image source domain."""
-        request = request.with_source_projected_labels()
-        return cls.align(
+        """Project labels into this request's declared image source domain."""
+        request = self.with_source_projected_labels()
+        return self.labels_for_image(
             request.image,
             request.labels,
             label_payload=request.label_payload,
         )
 
+    def aligned(self) -> "MeasurementImageLabelAlignmentRequest":
+        """Return projected image and labels from one coupled alignment pass."""
+        return self.with_source_projected_labels()._with_aligned_source()
 
-class MeasurementImageLabelAlignmentStrategy:
-    """Select measurement-image alignment from existing nominal contracts."""
-
-    @classmethod
-    def align(
-        cls,
-        request: MeasurementImageLabelAlignmentRequest,
-    ) -> RuntimeArrayData | AlignedImageStack:
-        request = request.with_source_projected_labels()
+    def _with_aligned_source(self) -> "MeasurementImageLabelAlignmentRequest":
+        """Align an already projected request without repeating label projection."""
+        request = self
         if request.reference_domain is MeasurementImageReferenceDomain.SOURCE_IMAGE:
             request = request.with_source_projected_image()
             image = request.image
         elif request.reference_domain is MeasurementImageReferenceDomain.OBJECT_LABELS:
-            image = cls.object_label_reference_image(request)
+            image = request.object_label_reference_image()
         else:
             raise ValueError(
                 "Measurement image alignment has no declared reference-domain behavior "
@@ -589,7 +355,7 @@ class MeasurementImageLabelAlignmentStrategy:
                 source_description="Payload-scoped object-label measurement image",
             )
         aligned_labels = (
-            MeasurementLabelSourceAlignmentStrategy.align(
+            self.labels_for_image(
                 image,
                 request.labels,
                 label_payload=label_payload,
@@ -597,19 +363,20 @@ class MeasurementImageLabelAlignmentStrategy:
             if request.reference_domain is MeasurementImageReferenceDomain.SOURCE_IMAGE
             else request.labels
         )
-        cls.validate_alignment(
+        self.validate_alignment(
             image,
             aligned_labels,
             label_payload=label_payload,
         )
-        return image
+        return replace(
+            request,
+            source=request.source.with_alignment_image(image),
+            labels=aligned_labels,
+        )
 
-    @classmethod
-    def object_label_reference_image(
-        cls,
-        request: MeasurementImageLabelAlignmentRequest,
-    ) -> RuntimeArrayData | AlignedImageStack:
+    def object_label_reference_image(self) -> RuntimeArrayData | AlignedImageStack:
         """Return an image selected by declared object-label-domain semantics."""
+        request = self
         label_payload = request.label_payload
         if label_payload is None:
             raise ValueError(
@@ -756,6 +523,237 @@ class MeasurementImageLabelAlignmentStrategy:
                 f"label plane axis={None if label_payload is None else label_payload.plane_axis!r}; "
                 f"label source aliases={None if label_payload is None else label_payload.source_aliases!r}."
             )
+
+
+@dataclass(frozen=True, slots=True)
+class PreparedMeasurementObjectLabels:
+    """Single-pass object-label preparation for measurement-image execution."""
+
+    request: MeasurementImageLabelAlignmentRequest
+    source_payload: ObjectLabelValue
+    source_projected_payload: ObjectLabelValue
+    source_projected_labels: ObjectLabelMeasurementSource
+    aligned_source: MeasurementImageAlignmentSource
+    measurement_labels: ObjectLabelMeasurementSource
+    completion_payload: ObjectLabelValue
+
+    @property
+    def aligned_image(self) -> RuntimeArrayData | AlignedImageStack:
+        """Return the image from the source that owns its projected semantics."""
+
+        return self.aligned_source.alignment_image
+
+    @classmethod
+    def from_source(
+        cls,
+        source: MeasurementImageAlignmentSource,
+        label_payload: ObjectLabelValue,
+        *,
+        plane_projector: RuntimePlaneAxisProjector | None = None,
+        align_image_to_labels: bool = True,
+    ) -> "PreparedMeasurementObjectLabels":
+        """Prepare labels from one measurement-image source and payload."""
+        return cls.from_request(
+            request=source.object_label_alignment_request(
+                label_payload,
+                plane_projector=plane_projector,
+                align_image_to_labels=align_image_to_labels,
+            ),
+        )
+
+    @classmethod
+    def from_request(
+        cls,
+        request: MeasurementImageLabelAlignmentRequest,
+    ) -> "PreparedMeasurementObjectLabels":
+        """Prepare image, dense labels, and completion payload in one pass."""
+        if request.label_payload is None:
+            raise TypeError(
+                "Measurement object-label preparation requires label_payload."
+            )
+        profile_enabled = RuntimeProfileLogger.enabled()
+        source_payload = request.label_payload
+        source_projection_timer = RuntimeProfileTimer.start()
+        source_projected_request = request.with_source_projected_labels()
+        source_projected_labels = source_projected_request.labels
+        source_projection_payload = source_projected_request.label_payload
+        if source_projection_payload is None:
+            raise TypeError(
+                "Measurement object-label source projection lost label_payload."
+            )
+        if profile_enabled:
+            RuntimeProfileLogger.log(
+                logger,
+                "measurement_object_labels_source_projection",
+                source_projection_timer.elapsed(),
+                reference_domain=request.reference_domain.value,
+                source_type=type(request.image).__name__,
+                labels_type=type(request.labels).__name__,
+                source_aliases=request.source_aliases,
+            )
+        source_context_timer = RuntimeProfileTimer.start()
+        source_projected_payload = cls.source_context_payload(
+            source_projected_request,
+            source_projection_payload,
+            source_projected_labels,
+        )
+        if profile_enabled:
+            RuntimeProfileLogger.log(
+                logger,
+                "measurement_object_labels_source_context",
+                source_context_timer.elapsed(),
+                reference_domain=request.reference_domain.value,
+                payload_reused=source_projected_payload is source_payload,
+            )
+        image_request = replace(
+            source_projected_request,
+            labels=source_projected_labels,
+            label_payload=source_projected_payload,
+        )
+        image_align_timer = RuntimeProfileTimer.start()
+        if request.align_image_to_labels:
+            aligned_request = image_request._with_aligned_source()
+            aligned_image = aligned_request.image
+            aligned_source = aligned_request.source
+        else:
+            aligned_image = request.image
+            aligned_source = image_request.source.with_alignment_image(aligned_image)
+        if profile_enabled:
+            RuntimeProfileLogger.log(
+                logger,
+                "measurement_object_labels_image_alignment",
+                image_align_timer.elapsed(),
+                reference_domain=request.reference_domain.value,
+                align_image_to_labels=request.align_image_to_labels,
+                aligned_type=type(aligned_image).__name__,
+            )
+        label_align_timer = RuntimeProfileTimer.start()
+        aligned_measurement_labels = (
+            aligned_request.labels
+            if request.align_image_to_labels
+            and request.reference_domain is MeasurementImageReferenceDomain.SOURCE_IMAGE
+            else image_request.labels_for_image(
+                aligned_image,
+                source_projected_labels,
+                label_payload=source_projected_payload,
+            )
+        )
+        measurement_labels = (
+            object_label_dense_array(aligned_measurement_labels)
+            if isinstance(aligned_measurement_labels, ObjectLabelValue)
+            else aligned_measurement_labels
+        )
+        if profile_enabled:
+            RuntimeProfileLogger.log(
+                logger,
+                "measurement_object_labels_label_alignment",
+                label_align_timer.elapsed(),
+                reference_domain=request.reference_domain.value,
+                labels_reused=aligned_measurement_labels is source_projected_labels,
+            )
+        completion_timer = RuntimeProfileTimer.start()
+        completion_payload = source_projected_payload.with_measurement_labels(
+            measurement_labels
+        )
+        if profile_enabled:
+            RuntimeProfileLogger.log(
+                logger,
+                "measurement_object_labels_completion_payload",
+                completion_timer.elapsed(),
+                reference_domain=request.reference_domain.value,
+                payload_reused=completion_payload is source_projected_payload,
+            )
+        return cls(
+            request=request,
+            source_payload=source_payload,
+            source_projected_payload=source_projected_payload,
+            source_projected_labels=source_projected_labels,
+            aligned_source=aligned_source,
+            measurement_labels=measurement_labels,
+            completion_payload=completion_payload,
+        )
+
+    @staticmethod
+    def source_context_payload(
+        request: MeasurementImageLabelAlignmentRequest,
+        source_payload: ObjectLabelValue,
+        source_projected_labels: ObjectLabelMeasurementSource,
+    ) -> ObjectLabelValue:
+        """Attach measurement-image source context to projected object labels."""
+        source_variants = source_payload.variant_data
+        if isinstance(source_projected_labels, ObjectLabelValue):
+            variants = source_projected_labels.variant_data
+        elif source_projected_labels is request.labels:
+            variants = source_variants
+        else:
+            variants = ObjectLabelVariantData.compatible_replacement(
+                source_payload,
+                source_projected_labels,
+            )
+        metadata = image_payload_metadata(request.image)
+        payload_domain = source_payload.object_label_source_spatial_domain()
+        source_spatial_domain = (
+            metadata.object_label_source_spatial_domain()
+            .with_missing_from(payload_domain)
+            .with_fill_value(payload_domain.fill_value)
+            .with_value_name(payload_domain.value_name)
+        )
+        if (
+            variants.labels is source_variants.labels
+            and variants.unedited_labels is source_variants.unedited_labels
+            and variants.small_removed_labels is source_variants.small_removed_labels
+            and source_spatial_domain == payload_domain
+        ):
+            return source_payload
+        if (
+            source_projected_labels is request.labels
+            and source_spatial_domain == payload_domain
+        ):
+            return source_payload.with_variants(
+                variants,
+                source_spatial_domain=source_spatial_domain,
+            )
+        if source_spatial_domain != payload_domain:
+            contextual_payload = source_payload.with_variants(
+                variants,
+                source_spatial_domain=source_spatial_domain,
+            )
+            image_source_domain = measurement_image_source_spatial_adapter(
+                request.image
+            )
+            if image_source_domain is None:
+                raise ValueError(
+                    "Measurement source-spatial projection requires an image source domain."
+                )
+            contextual_source_domain = SourceSpatialDomainAdapter.for_value(
+                contextual_payload
+            )
+            if contextual_source_domain is None:
+                raise TypeError(
+                    "Measurement source-spatial projection requires an object-label "
+                    "source domain adapter."
+                )
+            variants = ObjectLabelVariantData.compatible_replacement(
+                contextual_payload,
+                image_source_domain.extract_source_array(
+                    object_label_dense_array(contextual_payload),
+                    spatial_axes_yx=contextual_source_domain.spatial_axes_yx,
+                ),
+            )
+        return source_payload.with_variants(
+            variants,
+            representation=ObjectLabelRepresentation.DENSE_LABELS,
+            source_spatial_domain=source_spatial_domain,
+        )
+
+
+def measurement_image_source_spatial_adapter(
+    image: RuntimeArrayData | AlignedImageStack,
+) -> SourceSpatialDomainAdapter | None:
+    """Return the nominal source-domain adapter for a measurement image."""
+    if isinstance(image, AlignedImageStack):
+        return image.first_slice_source_spatial_adapter()
+    return SourceSpatialDomainAdapter.for_value(image)
 
 
 class MeasurementImageReferenceDomain(str, Enum):

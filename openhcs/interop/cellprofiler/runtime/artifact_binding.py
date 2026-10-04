@@ -2,30 +2,21 @@
 
 from __future__ import annotations
 
-from abc import ABC
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
-from functools import lru_cache
 import inspect
-from typing import TypeAlias, cast, get_origin
+from typing import cast, get_origin
 
 from openhcs.core.artifacts import (
-    ArtifactOutputPlan,
     ArtifactSpec,
     ArtifactSpecCollection,
     ArtifactSpecRef,
-    ArtifactType,
-    ArtifactTypeStrategyMatchMixin,
     ImageArtifactType,
     ObjectLabelsArtifactType,
-    ObjectLineageArtifactType,
     MeasurementsArtifactType,
-    SpatialGridArtifactType,
 )
 from openhcs.core.aligned_image_payload import (
-    AlignedImageSliceContext,
     AlignedImageStack,
-    ImageOutputBundle,
 )
 from openhcs.core.function_patterns import (
     InvocationArtifactInputEdgePlan,
@@ -34,22 +25,15 @@ from openhcs.core.function_patterns import (
 from openhcs.core.pipeline.function_contracts import (
     object_label_input_execution_mode_from_callable,
 )
-from openhcs.core.runtime_artifact_queries import MeasurementTableUnion
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
-    image_payload_data,
-    image_payload_mask,
     image_payload_metadata,
 )
 from openhcs.core.runtime_measurements import (
     MeasurementTable,
 )
 from openhcs.core.runtime_object_labels import (
-    ObjectLabelSet,
     ObjectLabelValue,
-)
-from openhcs.core.runtime_object_label_building import (
-    SourceImageObjectLabelBuildRequest,
 )
 from openhcs.core.runtime_slice_alignment import (
     RuntimeSliceAlignedValues,
@@ -57,7 +41,6 @@ from openhcs.core.runtime_slice_alignment import (
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.source_plane_alignment import (
-    SourcePayloadPlaneIdentitySequence,
     SourcePlaneIdentitySequenceAlignment,
 )
 from openhcs.core.runtime_measurements import (
@@ -71,301 +54,17 @@ from openhcs.core.runtime_plane_projection import (
 from openhcs.core.variable_component_stack_requirement import (
     VariableComponentStackRequirementRequest,
 )
-from openhcs.interop.cellprofiler.image_normalization import (
-    normalize_cellprofiler_image_payload,
-)
 from openhcs.interop.cellprofiler.runtime.adapter import (
     CellProfilerRuntimeAdapter,
 )
-from openhcs.interop.cellprofiler.runtime.measurement_source_names import (
-    single_source_name,
-)
-from openhcs.interop.cellprofiler.runtime.main_flow import (
-    cellprofiler_main_flow_output,
+from openhcs.interop.cellprofiler.runtime.output_recording import (
+    CellProfilerOutputRecorder,
 )
 from openhcs.core.steps.function_runtime import (
     RuntimeCallableArgument,
     RuntimeCallableKwargs,
     RuntimeFunctionOutput,
 )
-from openhcs.core.registry_strategies import (
-    MostDerivedContextStrategyMixin,
-)
-
-RuntimeMainFlowArtifactOutput: TypeAlias = tuple[
-    ArtifactOutputPlan,
-    ArtifactSpec,
-    RuntimeCallableArgument,
-]
-
-
-class RuntimeArtifactTypeStrategy(
-    ArtifactTypeStrategyMatchMixin,
-    MostDerivedContextStrategyMixin[type[ArtifactType]],
-    ABC,
-):
-    """Nominal strategy family for ArtifactType-specific runtime semantics."""
-
-    @classmethod
-    @lru_cache(maxsize=None)
-    def for_artifact_type(
-        cls,
-        artifact_type: ArtifactType,
-    ) -> "RuntimeArtifactTypeStrategy":
-        return cls.for_context(
-            ArtifactType.coerce(artifact_type),
-            error_subject="CellProfiler runtime artifact type strategy",
-        )
-
-    @classmethod
-    def for_main_flow_outputs(
-        cls,
-        outputs: tuple[RuntimeMainFlowArtifactOutput, ...],
-    ) -> "RuntimeArtifactTypeStrategy":
-        """Select one nominal strategy from the complete exact output set."""
-
-        artifact_types = frozenset(
-            spec.artifact_type for _plan, spec, _value in outputs
-        )
-        if not artifact_types:
-            raise ValueError("CellProfiler main-flow publication requires an output.")
-        if len(artifact_types) != 1:
-            raise TypeError(
-                "CellProfiler main-flow outputs require one exact artifact type; "
-                f"got {tuple(sorted(kind.require_value() for kind in artifact_types))!r}."
-            )
-        (artifact_type,) = artifact_types
-        return cls.for_artifact_type(artifact_type)
-
-    def runtime_input_value(
-        self, spec: ArtifactSpec, value: RuntimeCallableArgument
-    ) -> RuntimeCallableArgument:
-        """Return the runtime payload bound into absorbed function kwargs."""
-
-        return value
-
-    def raw_runtime_input_value(
-        self, spec: ArtifactSpec, value: RuntimeCallableArgument
-    ) -> RuntimeCallableArgument:
-        """Return the runtime payload before CellProfiler intensity coercion."""
-        return self.runtime_input_value(spec, value)
-
-    def source_image_name(
-        self,
-        spec: ArtifactSpec,
-        value: RuntimeCallableArgument,
-    ) -> str | None:
-        """Return the transitive source image name for one artifact input."""
-        del spec, value
-        return None
-
-    def source_image_payload(
-        self,
-        spec: ArtifactSpec,
-        value: RuntimeCallableArgument,
-    ) -> RuntimeCallableArgument | None:
-        """Return an image payload that carries this artifact's source paths."""
-        return None
-
-    def published_main_flow_output(
-        self,
-        input_value: RuntimeCallableArgument,
-        outputs: tuple[RuntimeMainFlowArtifactOutput, ...],
-        plane_projection: RuntimePlaneAxisValueProjection | None,
-    ) -> RuntimeCallableArgument:
-        """Publish one recorded artifact through the canonical OpenHCS flow."""
-
-        del input_value, plane_projection
-        self.validate_main_flow_outputs(outputs)
-        if len(outputs) != 1:
-            raise ValueError(
-                f"{type(self).__name__} requires exactly one main-flow output, "
-                f"got {len(outputs)}."
-            )
-        return outputs[0][2]
-
-    def validate_main_flow_outputs(
-        self,
-        outputs: tuple[RuntimeMainFlowArtifactOutput, ...],
-    ) -> None:
-        """Require every published output to belong to this nominal strategy."""
-
-        artifact_type = type(self).artifact_type
-        mismatched = tuple(
-            spec.ref()
-            for _plan, spec, _value in outputs
-            if spec.artifact_type is not artifact_type
-        )
-        if mismatched:
-            raise TypeError(
-                f"{type(self).__name__} cannot publish outputs {mismatched!r}."
-            )
-
-
-class ImageArtifactTypeStrategy(RuntimeArtifactTypeStrategy):
-    """Resolve image artifact payloads and source-image lineage."""
-
-    artifact_type = ImageArtifactType
-
-    def raw_runtime_input_value(
-        self, spec: ArtifactSpec, value: RuntimeCallableArgument
-    ) -> RuntimeCallableArgument:
-        payload = value
-        metadata = image_payload_metadata(payload)
-        metadata = metadata.with_source_provenance(
-            metadata.source_provenance.with_derived_source_image_names(
-                (spec.name,)
-            )
-        )
-        return metadata.payload_with(
-            image_payload_data(payload),
-            mask=image_payload_mask(payload),
-        )
-
-    def runtime_input_value(
-        self, spec: ArtifactSpec, value: RuntimeCallableArgument
-    ) -> RuntimeCallableArgument:
-        return normalize_cellprofiler_image_payload(
-            self.raw_runtime_input_value(spec, value)
-        )
-
-    def source_image_name(
-        self,
-        spec: ArtifactSpec,
-        value: RuntimeCallableArgument,
-    ) -> str | None:
-        return single_source_name(
-            image_payload_metadata(
-                self.raw_runtime_input_value(spec, value)
-            ).source_provenance.represented_source_image_names
-        )
-
-    def source_image_payload(
-        self,
-        spec: ArtifactSpec,
-        value: RuntimeCallableArgument,
-    ) -> RuntimeCallableArgument | None:
-        return self.raw_runtime_input_value(spec, value)
-
-    def published_main_flow_output(
-        self,
-        input_value: RuntimeCallableArgument,
-        outputs: tuple[RuntimeMainFlowArtifactOutput, ...],
-        plane_projection: RuntimePlaneAxisValueProjection | None,
-    ) -> RuntimeCallableArgument:
-        """Publish one or more named image outputs with exact plane context."""
-
-        self.validate_main_flow_outputs(outputs)
-        if not outputs:
-            raise ValueError("Image main-flow publication requires an output.")
-        return ImageOutputBundle(
-            tuple(
-                cellprofiler_main_flow_output(
-                    input_value,
-                    output_value,
-                    plane_projection,
-                )
-                for _plan, _spec, output_value in outputs
-            ),
-            AlignedImageSliceContext.main_flow_for_output_plans(
-                tuple(plan for plan, _spec, _value in outputs)
-            ),
-        )
-
-
-class ObjectLabelsArtifactTypeStrategy(RuntimeArtifactTypeStrategy):
-    """Resolve object-label payloads and lineage."""
-
-    artifact_type = ObjectLabelsArtifactType
-
-    def object_labels(
-        self,
-        spec: ArtifactSpec,
-        value: RuntimeCallableArgument,
-    ) -> ObjectLabelSet:
-        """Return the native object value carrying its source-image provenance."""
-
-        if isinstance(value, ObjectLabelSet):
-            return value
-        metadata = image_payload_metadata(value)
-        return SourceImageObjectLabelBuildRequest(
-            image=value,
-            labels=image_payload_data(value),
-            plane_projection=RuntimePlaneAxisValueProjection.from_source_declaration(
-                metadata.plane_axis, metadata.source_provenance,
-            ),
-        ).label_set(
-            name=spec.name,
-            source_image_name=spec.name,
-        )
-
-    def runtime_input_value(
-        self, spec: ArtifactSpec, value: RuntimeCallableArgument
-    ) -> RuntimeCallableArgument:
-        return self.object_labels(spec, value)
-
-    def raw_runtime_input_value(
-        self,
-        spec: ArtifactSpec,
-        value: RuntimeCallableArgument,
-    ) -> RuntimeCallableArgument:
-        """Return the nominal label set in the invocation's component scope."""
-
-        return self.object_labels(spec, value)
-
-    def source_image_name(
-        self,
-        spec: ArtifactSpec,
-        value: RuntimeCallableArgument,
-    ) -> str | None:
-        return self.object_labels(spec, value).source_image_name
-
-    def source_image_payload(
-        self,
-        spec: ArtifactSpec,
-        value: RuntimeCallableArgument,
-    ) -> RuntimeCallableArgument | None:
-        return self.object_labels(spec, value)
-
-
-class MeasurementsArtifactTypeStrategy(RuntimeArtifactTypeStrategy):
-    """Resolve measurement payloads and lineage."""
-
-    artifact_type = MeasurementsArtifactType
-
-    def runtime_input_value(
-        self, spec: ArtifactSpec, value: RuntimeCallableArgument
-    ) -> RuntimeCallableArgument:
-        if not isinstance(value, MeasurementTable):
-            raise TypeError(
-                f"Measurement artifact {spec.name!r} requires a "
-                f"MeasurementTable, got {type(value).__name__}."
-            )
-        return value.rows
-
-    def source_image_name(
-        self,
-        spec: ArtifactSpec,
-        value: RuntimeCallableArgument,
-    ) -> str | None:
-        if not isinstance(value, MeasurementTable):
-            raise TypeError(
-                f"Measurement artifact {spec.name!r} requires a "
-                f"MeasurementTable, got {type(value).__name__}."
-            )
-        return value.source_image_name
-
-
-class RelationshipsArtifactTypeStrategy(RuntimeArtifactTypeStrategy):
-    """Resolve relationship payloads."""
-
-    artifact_type = ObjectLineageArtifactType
-
-
-class SpatialGridArtifactTypeStrategy(RuntimeArtifactTypeStrategy):
-    """Resolve spatial-grid payloads."""
-
-    artifact_type = SpatialGridArtifactType
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -519,13 +218,13 @@ class RuntimeInputBindingRequest:
         slice_axis = MeasurementRowAxisField.SLICE_INDEX
         for spec in measurement_specs:
             spec_tables = tuple(
-                cast(MeasurementTable, record.value.data)
+                cast(MeasurementTable, record.data)
                 for record in self.adapter.artifact_input_records(
                     spec.name,
                     MeasurementsArtifactType,
                 )
             )
-            MeasurementTableUnion(spec.name, spec_tables).row_axis_domain(slice_axis)
+            MeasurementTable.shared_row_axis_domain(spec.name, spec_tables, slice_axis)
             tables.extend(spec_tables)
         return tuple(tables)
 
@@ -577,7 +276,7 @@ class RuntimeInputBindingRequest:
         if source_ref in self.declared_inputs.ref_set():
             source_spec = self.declared_inputs.by_ref(source_ref)
             source_edge = self.input_edge_for_spec(source_spec)
-            return RuntimeArtifactTypeStrategy.for_artifact_type(
+            return CellProfilerOutputRecorder.for_artifact_type(
                 ImageArtifactType
             ).runtime_input_value(source_edge.spec, self.artifact_value(source_edge))
 
@@ -612,20 +311,20 @@ class RuntimeInputBindingRequest:
             )
         source_plan = self.adapter.request.source_binding_plan
         source_binding = source_plan.binding_for_artifact_ref(spec.ref())
-        consumes_main_flow = edge.consumes_main_flow
+        primary_projection = edge.main_flow_projection
         source_artifact_binding = (
             source_binding
-            if edge.storage_plan is None and not consumes_main_flow
+            if edge.storage_plan is None and primary_projection is None
             else None
         )
         runtime_edge = (
-            edge if edge.storage_plan is not None and not consumes_main_flow else None
+            edge if edge.storage_plan is not None and primary_projection is None else None
         )
         authority_count = sum(
             (
                 source_artifact_binding is not None,
                 runtime_edge is not None,
-                consumes_main_flow,
+                primary_projection is not None,
             )
         )
         if authority_count != 1:
@@ -674,7 +373,9 @@ class RuntimeInputBindingRequest:
         return self.artifact_value(self.input_edge_for_spec(spec))
 
     def label_payload_for(self, spec: ArtifactSpec) -> ObjectLabelValue:
-        return ObjectLabelsArtifactTypeStrategy().object_labels(
+        return CellProfilerOutputRecorder.for_artifact_type(
+            ObjectLabelsArtifactType
+        ).object_labels(
             spec, self.artifact_value_for_spec(spec)
         )
 
@@ -806,13 +507,15 @@ class RuntimeInputBindingRequest:
 
         spec = edge.spec
         if spec.artifact_type is ObjectLabelsArtifactType:
-            payload = ObjectLabelsArtifactTypeStrategy().object_labels(
+            payload = CellProfilerOutputRecorder.for_artifact_type(
+                ObjectLabelsArtifactType
+            ).object_labels(
                 spec, self.artifact_value(edge)
             )
             if parameter_name is not None:
                 return self.project_label_argument(payload)
             return payload
-        value = RuntimeArtifactTypeStrategy.for_artifact_type(
+        value = CellProfilerOutputRecorder.for_artifact_type(
             spec.artifact_type
         ).runtime_input_value(spec, self.artifact_value(edge))
         if spec.artifact_type is not ImageArtifactType:
@@ -856,14 +559,12 @@ class RuntimeInputBindingRequest:
         identity_policy = SourceImageSetIdentityPolicy.from_source_bindings(
             self.adapter.request.source_binding_plan
         )
-        image_axis = SourcePayloadPlaneIdentitySequence(
-            broadcast_source,
-            identity_policy,
-        ).runtime_axis_identities()
-        value_axis = SourcePayloadPlaneIdentitySequence(
-            value,
-            identity_policy,
-        ).runtime_axis_identities()
+        image_axis = image_payload_metadata(
+            broadcast_source
+        ).source_provenance.image_set_axis(identity_policy)
+        value_axis = image_payload_metadata(value).source_provenance.image_set_axis(
+            identity_policy
+        )
         selected_indices = SourcePlaneIdentitySequenceAlignment(
             image_axis,
             value_axis,

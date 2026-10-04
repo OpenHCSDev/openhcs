@@ -59,7 +59,6 @@ from openhcs.core.pipeline.path_planner import PathPlanner, PathPlannerArtifactS
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     NamedSourceBinding,
-    SourceBindingRuntimeContext,
 )
 from openhcs.core.source_load_plan import SourceLoadPlan
 from openhcs.core.source_metadata import (
@@ -78,12 +77,8 @@ from openhcs.core.progress.live_measurements import LiveMeasurementProgressPaylo
 from openhcs.core.steps.function_runtime import (
     ComponentArtifactPlans,
     FunctionCoreExecutor,
-    FunctionOutputContextStrategy,
-    FunctionRuntimeScope,
-    ImageFunctionOutputContextStrategy,
     PatternGroupData,
     PatternGroupRuntime,
-    UnchangedFunctionOutputContextStrategy,
 )
 from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
@@ -125,22 +120,6 @@ from openhcs.processing.backends.analysis.multi_template_matching import (
 
 def passthrough(image):
     return image
-
-
-def test_every_registered_artifact_type_has_one_context_strategy_owner() -> None:
-    for artifact_type in ArtifactType.__registry__.values():
-        owners = FunctionOutputContextStrategy.owning_strategy_types(artifact_type)
-        assert len(owners) == 1, artifact_type
-
-
-@pytest.mark.parametrize(
-    "artifact_type",
-    [SpecialArtifactType, MetadataArtifactType],
-)
-def test_context_free_artifacts_use_the_declared_root_strategy(artifact_type) -> None:
-    strategy = FunctionOutputContextStrategy.for_context(artifact_type)
-
-    assert type(strategy) is UnchangedFunctionOutputContextStrategy
 
 
 def test_special_outputs_is_the_artifact_outputs_public_spelling() -> None:
@@ -265,7 +244,9 @@ def _execute_function_core(request: CoreExecutionRequest):
     component_value = (
         None if request.execution_group_scope.is_ungrouped else request.group_key
     )
-    runtime_scope = FunctionRuntimeScope(
+    runtime_scope = PatternGroupData(
+        matching_files=[f"input-{index}.tif" for index in range(request.runtime_plane_count)],
+        main_data_stack=request.main_data_arg,
         context=request.context,
         execution_plan=execution_plan,
         compiled_group=CompiledFunctionGroup(
@@ -277,7 +258,6 @@ def _execute_function_core(request: CoreExecutionRequest):
             execution_plan,
             component_value,
         ),
-        source_binding_context=SourceBindingRuntimeContext.empty(),
         runtime_plane_index=0,
         runtime_plane_count=request.runtime_plane_count,
     )
@@ -285,7 +265,7 @@ def _execute_function_core(request: CoreExecutionRequest):
     return FunctionCoreExecutor(
         main_data_arg=request.main_data_arg,
         source_memory_type=MEMORY_TYPE_NUMPY,
-        runtime_scope=runtime_scope,
+        group_data=runtime_scope,
         invocation=invocation,
         artifacts=runtime_scope.artifacts.select_for_invocation(
             invocation,
@@ -374,9 +354,7 @@ def test_image_output_context_preserves_stack_after_exact_source_projection():
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
 
-    result = FunctionOutputContextStrategy.for_output_plan(
-        output_plan,
-    ).contextualize(
+    result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
         source,
         output,
         output_plan,
@@ -426,9 +404,7 @@ def test_image_output_context_does_not_infer_axis_for_unmarked_payload():
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
 
-    result = FunctionOutputContextStrategy.for_output_plan(
-        output_plan,
-    ).contextualize_from_projector(
+    result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         source,
         np.ones((2, 4, 5), dtype=np.uint16),
         output_plan,
@@ -460,9 +436,7 @@ def test_image_output_context_rejects_declared_output_axis_shape_drift():
         ValueError,
         match="declared 'runtime_slice' axis of size 2",
     ):
-        FunctionOutputContextStrategy.for_output_plan(
-            output_plan,
-        ).contextualize(
+        (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
             np.ones((1, 4, 5), dtype=np.float32),
             output,
             output_plan,
@@ -499,9 +473,7 @@ def test_image_output_context_preserves_complete_scalar_rgb_identity() -> None:
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
 
-    result = FunctionOutputContextStrategy.for_output_plan(
-        output_plan,
-    ).contextualize_from_projector(
+    result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         source,
         output,
         output_plan,
@@ -528,7 +500,7 @@ def test_image_output_context_preserves_target_axis_across_source_rank_change() 
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
     ).payload_with(np.ones((1, 2, 4, 5, 3), dtype=np.float32), None)
 
-    result = FunctionOutputContextStrategy.for_output_plan(None).contextualize(
+    result = ImageArtifactType.contextualize_output(
         source,
         output,
         None,
@@ -587,9 +559,7 @@ def test_image_output_context_projects_complete_multi_plane_identity() -> None:
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
 
-    result = FunctionOutputContextStrategy.for_output_plan(
-        output_plan,
-    ).contextualize_from_projector(
+    result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         source,
         output,
         output_plan,
@@ -630,9 +600,7 @@ def test_named_image_outputs_bypass_unrelated_source_axis_projection():
         ),
     )
 
-    result = FunctionOutputContextStrategy.for_output_plan(
-        None
-    ).contextualize_from_projector(
+    result = ImageArtifactType.contextualize_output_from_projector(
         source,
         bundle,
         None,
@@ -660,21 +628,19 @@ def test_image_output_context_projector_proves_source_ownership_once(
     ).payload_with(np.zeros((2, 4, 5), dtype=np.uint16), None)
     output = np.ones((2, 4, 5), dtype=np.uint8)
     ownership_proofs = []
-    original = ImageFunctionOutputContextStrategy.output_owns_source_context
+    original = ImageArtifactType.output_owns_source_context
 
     def track_ownership_proof(*args):
         ownership_proofs.append(args)
         return original(*args)
 
     monkeypatch.setattr(
-        ImageFunctionOutputContextStrategy,
+        ImageArtifactType,
         "output_owns_source_context",
         staticmethod(track_ownership_proof),
     )
 
-    result = FunctionOutputContextStrategy.for_output_plan(
-        None
-    ).contextualize_from_projector(
+    result = ImageArtifactType.contextualize_output_from_projector(
         source,
         output,
         None,
@@ -685,13 +651,6 @@ def test_image_output_context_projector_proves_source_ownership_once(
     np.testing.assert_array_equal(image_payload_data(result), output)
     assert image_payload_metadata(result).source_image_provenance_planes == (
         image_payload_metadata(source).source_image_provenance_planes
-    )
-
-
-def test_image_output_context_uses_base_projector_resolution() -> None:
-    assert (
-        "contextualize_from_projector"
-        not in ImageFunctionOutputContextStrategy.__dict__
     )
 
 
@@ -1046,7 +1005,7 @@ def test_execute_function_core_saves_named_artifacts():
         axis_id="A01",
     )
     assert len(stored) == 1
-    assert tuple(stored[0].value.data.rows) == ({"count": 2},)
+    assert tuple(stored[0].data.rows) == ({"count": 2},)
 
 
 def test_trailing_object_labels_do_not_replace_canonical_image_output():
@@ -1115,7 +1074,7 @@ def test_trailing_object_labels_do_not_replace_canonical_image_output():
         name=labels_spec.name,
         axis_id=context.axis_id,
     )
-    assert isinstance(stored_labels.value.data, ObjectLabelSet)
+    assert isinstance(stored_labels.data, ObjectLabelSet)
 
 
 def test_execute_function_core_attaches_execution_group_identity_to_artifact():
@@ -1174,7 +1133,7 @@ def test_execute_function_core_attaches_execution_group_identity_to_artifact():
         match_group=True,
     )
     assert len(stored) == 1
-    metadata = image_payload_metadata(stored[0].value.data)
+    metadata = image_payload_metadata(stored[0].data)
     assert dict(metadata.source_component_metadata) == {
         "well": "A01",
         "site": "1",
@@ -1243,8 +1202,8 @@ def test_execute_function_core_attaches_dynamic_execution_group_to_artifact():
         match_group=True,
     )
     assert len(stored) == 1
-    assert stored[0].path == "/memory/A01_w2_segmentation_masks.pkl"
-    metadata = image_payload_metadata(stored[0].value.data)
+    assert stored[0].location.path == "/memory/A01_w2_segmentation_masks.pkl"
+    metadata = image_payload_metadata(stored[0].data)
     assert dict(metadata.source_component_metadata) == {
         "well": "A01",
         "site": "1",
@@ -1341,8 +1300,8 @@ def test_execute_function_core_routes_exact_image_artifact_tuple_to_main_flow():
     green_records = context.runtime_value_store.find(name="Green", axis_id="A01")
     assert len(red_records) == 1
     assert len(green_records) == 1
-    assert image_payload_data(red_records[0].value.data)[0, 0] == 1
-    assert image_payload_data(green_records[0].value.data)[0, 0] == 2
+    assert image_payload_data(red_records[0].data)[0, 0] == 1
+    assert image_payload_data(green_records[0].data)[0, 0] == 2
 
 
 def test_execute_function_core_keeps_image_sidecar_out_of_main_flow():
@@ -1395,7 +1354,7 @@ def test_execute_function_core_keeps_image_sidecar_out_of_main_flow():
     )
     assert len(mask_records) == 1
     np.testing.assert_array_equal(
-        image_payload_data(mask_records[0].value.data),
+        image_payload_data(mask_records[0].data),
         mask,
     )
 
@@ -1446,10 +1405,81 @@ def test_execute_function_core_saves_single_image_artifact_output_to_main_flow()
     )
     stored = context.runtime_value_store.find(name="CorrectedImage", axis_id="A01")
     assert len(stored) == 1
-    np.testing.assert_array_equal(image_payload_data(stored[0].value.data), output)
-    assert image_payload_metadata(stored[0].value.data).source_image_names == (
+    np.testing.assert_array_equal(image_payload_data(stored[0].data), output)
+    assert image_payload_metadata(stored[0].data).source_image_names == (
         "CorrectedImage",
     )
+
+
+def test_saved_canonical_source_projection_survives_main_flow_return():
+    from openhcs.core.projected_image_output import SelectedPlaneImageOutput
+
+    context = ContextStub()
+    pixels = np.arange(12, dtype=np.uint16).reshape(2, 2, 3)
+    paths = ("/source/A01_s001_w2_z001_t001.tif", "/source/A01_s002_w2_z001_t001.tif")
+    source = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=paths,
+            component_metadata=tuple(
+                {"well": "A01", "site": site, "channel": "2", "z_index": "1", "timepoint": "1"}
+                for site in ("1", "2")
+            ),
+        ),
+    ).payload_with(pixels)
+    output = ArtifactSpec.output("Selected", ImageArtifactType)
+    plan = ArtifactOutputPlan(name=output.name, path="/memory/selected.pkl", artifact_type=ImageArtifactType)
+
+    @artifact_outputs(output)
+    def select_second_plane(image):
+        return SelectedPlaneImageOutput(image[1:2], (1,))
+
+    result = _execute_function_core(CoreExecutionRequest(
+        func_callable=select_second_plane, main_data_arg=source, base_kwargs={}, context=context,
+        artifact_inputs={}, artifact_outputs={plan.ref(): plan}, runtime_plane_count=2,
+    ))
+    stored = context.runtime_value_store.find(name=output.name, axis_id="A01")
+    assert len(stored) == 1
+    for payload in (result, stored[0].data):
+        np.testing.assert_array_equal(image_payload_data(payload), pixels[1])
+        metadata = image_payload_metadata(payload)
+        assert metadata.plane_axis is None
+        assert metadata.source_provenance.source_plane_count == 0
+        assert metadata.source_path == paths[1]
+        assert metadata.source_component_metadata["site"] == "2"
+        assert metadata.source_image_names == (output.name,)
+
+
+@pytest.mark.parametrize("declared_canonical", [False, True])
+def test_unsaved_main_return_reads_source_context_after_artifact_save(declared_canonical):
+    context = ContextStub()
+    source = ImagePayloadMetadata(
+        source_path="/source/before.tif",
+        source_component_metadata={"well": "A01", "site": "1", "channel": "2"},
+    ).payload_with(np.zeros((2, 3), dtype=np.float32))
+    sidecar = ArtifactSpec.output("Sidecar", MetadataArtifactType)
+    canonical = ArtifactSpec.output("Unselected", ImageArtifactType)
+    plan = ArtifactOutputPlan(name=sidecar.name, path="/memory/sidecar.pkl", artifact_type=MetadataArtifactType)
+    original_save = context.filemanager.save
+
+    def save_and_change_source(value, path, backend):
+        original_save(value, path, backend)
+        source.metadata.source_path = "/source/after.tif"
+        source.metadata.source_component_metadata = {"well": "A01", "site": "9", "channel": "2"}
+
+    context.filemanager.save = save_and_change_source
+
+    @artifact_outputs(*(canonical, sidecar) if declared_canonical else (sidecar,))
+    def produce(image):
+        return image + 1, {"note": "saved"}
+
+    result = _execute_function_core(CoreExecutionRequest(
+        func_callable=produce, main_data_arg=source, base_kwargs={}, context=context,
+        artifact_inputs={}, artifact_outputs={plan.ref(): plan},
+    ))
+    np.testing.assert_array_equal(image_payload_data(result), np.ones((2, 3)))
+    assert image_payload_metadata(result).source_path == "/source/after.tif"
+    assert image_payload_metadata(result).source_component_metadata["site"] == "9"
 
 
 def test_execute_function_core_names_slice_aligned_image_outputs() -> None:
@@ -1503,7 +1533,7 @@ def test_execute_function_core_names_slice_aligned_image_outputs() -> None:
         name=output_spec.name,
         axis_id=context.axis_id,
     )
-    stored_data = stored.value.data
+    stored_data = stored.data
     assert isinstance(stored_data, RuntimeSliceAlignedValues)
     for index, source_payload in enumerate(source_slices):
         output_payload = stored_data.value_for_slice(index)
@@ -1596,7 +1626,7 @@ def test_execute_function_core_saves_artifact_to_runtime_group_path():
         match_group=True,
     )
     assert len(stored) == 1
-    assert stored[0].path == "/memory/A01_s2_measurements.pkl"
+    assert stored[0].location.path == "/memory/A01_s2_measurements.pkl"
 
 
 def test_execute_function_core_preserves_main_output_source_metadata():
@@ -1704,7 +1734,7 @@ def test_managed_runtime_adapter_output_preserves_authoritative_source_metadata(
     }
 
 
-def test_pattern_group_runtime_stacks_nominal_scalar_rgb_output_as_one_slice():
+def test_pattern_group_runtime_retains_nominal_scalar_rgb_output_as_one_image():
     scalar_output = ImagePayloadMetadata(
         source_path="/input/A01_s1_w3.tif",
         source_component_metadata={
@@ -1752,25 +1782,22 @@ def test_pattern_group_runtime_stacks_nominal_scalar_rgb_output_as_one_slice():
         component_key=None,
     )
 
-    output = runtime._validate_and_unstack(
-        scalar_output,
-        PatternGroupData(
-            matching_files=["source-1.tif", "source-2.tif"],
-            main_data_stack=np.zeros((2, 2, 3), dtype=np.uint16),
-        ),
-    )
-
-    assert output.slices == (scalar_output,)
-    assert output.slice_contexts == (
+    output = runtime._project_output_slices(scalar_output, ["source-1.tif", "source-2.tif"])
+    assert tuple(payload for payload, _context in output) == (scalar_output,)
+    assert tuple(context for _payload, context in output) == (
         AlignedImageSliceContext.main_flow(
             "RGBImage",
             artifact_kind=ImageArtifactType.value,
         ),
     )
-    assert image_payload_data(output.stack_payload).shape == (1, 2, 3, 3)
-    stack_metadata = image_payload_metadata(output.stack_payload)
-    assert stack_metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
-    assert stack_metadata.source_channel_axis == 3
+    from openhcs.core.aligned_image_payload import ImagePayloadStackComposition
+    stack_payload = ImagePayloadStackComposition.copy_whole_image(
+        scalar_output, memory_type=MEMORY_TYPE_NUMPY, device_id=None,
+    )
+    assert image_payload_data(stack_payload).shape == (2, 3, 3)
+    stack_metadata = image_payload_metadata(stack_payload)
+    assert stack_metadata.plane_axis is None
+    assert stack_metadata.source_channel_axis == -1
 
 
 def test_pattern_group_runtime_uses_declared_output_slice_cardinality():
@@ -1794,17 +1821,10 @@ def test_pattern_group_runtime_uses_declared_output_slice_cardinality():
         component_key=None,
     )
 
-    output = runtime._validate_and_unstack(
-        declared_output,
-        PatternGroupData(
-            matching_files=["source-1.tif", "source-2.tif"],
-            main_data_stack=np.zeros((2, 4, 5), dtype=np.float32),
-        ),
-    )
-
-    assert len(output.slices) == 1
-    assert image_payload_data(output.slices[0]).shape == (4, 5)
-    assert output.stack_payload is declared_output
+    output = runtime._project_output_slices(declared_output, ["source-1.tif", "source-2.tif"])
+    assert len(output) == 1
+    assert image_payload_data(output[0][0]).shape == (4, 5)
+    assert image_payload_metadata(declared_output).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
 
 
 def test_pattern_group_runtime_projects_nominal_object_label_stack():
@@ -1841,28 +1861,21 @@ def test_pattern_group_runtime_projects_nominal_object_label_stack():
         component_key=None,
     )
 
-    output = runtime._validate_and_unstack(
-        declared_output,
-        PatternGroupData(
-            matching_files=["source-anchor.tif"],
-            main_data_stack=np.zeros((2, 2, 3), dtype=np.float32),
-        ),
-    )
-
-    assert output.stack_payload is declared_output
-    assert len(output.slices) == 2
-    assert all(isinstance(value, ObjectLabelSet) for value in output.slices)
-    assert [value.name for value in output.slices] == ["SavedChildren"] * 2
-    assert [value.plane_axis for value in output.slices] == [None, None]
-    assert [value.domain.scope for value in output.slices] == [
+    projected = runtime._project_output_slices(declared_output, ["source-anchor.tif"])
+    output = tuple(payload for payload, _context in projected)
+    assert len(output) == 2
+    assert all(isinstance(value, ObjectLabelSet) for value in output)
+    assert [value.name for value in output] == ["SavedChildren"] * 2
+    assert [value.plane_axis for value in output] == [None, None]
+    assert [value.domain.scope for value in output] == [
         ObjectLabelDomainScope.PAYLOAD,
         ObjectLabelDomainScope.PAYLOAD,
     ]
-    assert [value.domain.declared_object_ids for value in output.slices] == [
+    assert [value.domain.declared_object_ids for value in output] == [
         (1,),
         (2,),
     ]
-    for output_slice, expected in zip(output.slices, label_planes, strict=True):
+    for output_slice, expected in zip(output, label_planes, strict=True):
         np.testing.assert_array_equal(output_slice.labels, expected)
 
 
@@ -1905,16 +1918,16 @@ def test_module_runtime_adapter_records_declared_outputs_and_returns_main_flow(
         return main_output
 
     contextualization_plans = []
-    original_for_output_plan = FunctionOutputContextStrategy.for_output_plan
+    original_contextualize = ImageArtifactType.contextualize_output_from_projector
 
-    def track_contextualization(cls, output_plan):
+    def track_contextualization(cls, source, output, output_plan, projector):
         del cls
         contextualization_plans.append(output_plan)
-        return original_for_output_plan(output_plan)
+        return original_contextualize(source, output, output_plan, projector)
 
     monkeypatch.setattr(
-        FunctionOutputContextStrategy,
-        "for_output_plan",
+        ImageArtifactType,
+        "contextualize_output_from_projector",
         classmethod(track_contextualization),
     )
 
@@ -1974,10 +1987,10 @@ def test_execute_function_core_records_image_artifact_as_main_flow():
     )
     assert len(stored) == 1
     np.testing.assert_array_equal(
-        image_payload_data(stored[0].value.data),
+        image_payload_data(stored[0].data),
         source_data + 1,
     )
-    stored_metadata = image_payload_metadata(stored[0].value.data)
+    stored_metadata = image_payload_metadata(stored[0].data)
     assert stored_metadata.source_image_names == (illumination_spec.name,)
     assert stored_metadata.source_provenance.represented_source_image_names == (
         illumination_spec.name,
@@ -2179,7 +2192,7 @@ def test_execute_function_core_uses_object_input_source_for_image_artifact_outpu
 
     stored = context.runtime_value_store.find(name="label_image", axis_id="A01")
     assert len(stored) == 1
-    metadata = image_payload_metadata(stored[0].value.data)
+    metadata = image_payload_metadata(stored[0].data)
     assert (
         tuple(
             dict(item)
@@ -2233,10 +2246,10 @@ def test_execute_function_core_contextualizes_object_label_artifact():
 
     stored = context.runtime_value_store.find(name="nuclei", axis_id="A01")
     assert len(stored) == 1
-    assert isinstance(stored[0].value.data, ObjectLabelSet)
-    assert stored[0].value.data.name == "nuclei"
-    assert stored[0].value.data.source_path == "/input/01_POS002_D.TIF"
-    assert dict(stored[0].value.data.source_component_metadata) == {
+    assert isinstance(stored[0].data, ObjectLabelSet)
+    assert stored[0].data.name == "nuclei"
+    assert stored[0].data.source_path == "/input/01_POS002_D.TIF"
+    assert dict(stored[0].data.source_component_metadata) == {
         "well": "01",
         "site": "POS002",
         "channel": "D",
@@ -2299,7 +2312,7 @@ def test_execute_function_core_aggregates_and_names_slice_aligned_object_labels(
         name=output_spec.name,
         axis_id=context.axis_id,
     )
-    label_set = stored.value.data
+    label_set = stored.data
     assert isinstance(label_set, ObjectLabelSet)
     assert label_set.name == output_spec.name
     assert label_set.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
@@ -2381,11 +2394,11 @@ def test_corrected_image_measurement_subject_compiles_and_executes_columnar_rows
         )
     )
     [stored] = context.runtime_value_store.find(name=rows.name, axis_id=context.axis_id)
-    assert isinstance(stored.value.data, MeasurementTable)
-    assert stored.value.data.subject == MeasurementSubject(
+    assert isinstance(stored.data, MeasurementTable)
+    assert stored.data.subject == MeasurementSubject(
         MeasurementScope.IMAGE, image.name
     )
-    assert tuple(stored.value.data.rows.column_values("cell_count")) == (2,)
+    assert tuple(stored.data.rows.column_values("cell_count")) == (2,)
 
 
 def test_compile_rejects_conflicting_measurement_subject_relations():
@@ -2446,7 +2459,7 @@ def test_execute_function_core_wraps_columnar_rows_with_compiled_measurement_ide
         name=measurement_spec.name,
         axis_id=context.axis_id,
     )
-    table = stored.value.data
+    table = stored.data
     assert isinstance(table, MeasurementTable)
     assert table.name == measurement_spec.name
     assert table.subject == MeasurementSubject(MeasurementScope.ARTIFACT)
@@ -2516,7 +2529,7 @@ def test_native_measurement_rows_retain_two_site_two_channel_source_coordinates(
         name=measurement_spec.name,
         axis_id=context.axis_id,
     )
-    table = stored.value.data
+    table = stored.data
     assert isinstance(table, MeasurementTable)
     expected_rows = (
         {
@@ -2721,7 +2734,7 @@ def test_execute_function_core_preserves_declared_special_result_objects() -> No
         name="match_results",
         axis_id=context.axis_id,
     )
-    assert stored.value.data is match_results
+    assert stored.data is match_results
 
 
 def test_execute_function_core_requires_store_record_even_when_vfs_payload_exists():
@@ -2907,15 +2920,14 @@ def _declared_source_executor(
         spec=spec,
         storage_plan=None,
         projection=None,
-        consumes_main_flow=True,
+
         main_flow_projection=main_flow_projection,
     )
     invocation = invocation.with_artifact_input_edges((edge,))
     return FunctionCoreExecutor(
-        runtime_scope=SimpleNamespace(
+        group_data=SimpleNamespace(
             context=ContextStub(),
             source_binding_plan=source_binding_plan,
-            source_binding_context=SourceBindingRuntimeContext.empty(),
             axis_scope=RuntimeExecutionAxisScope.from_raw(
                 "A01",
                 component=None,
@@ -3106,7 +3118,7 @@ def test_missing_source_origin_is_not_satisfied_by_an_authored_kwarg():
     spec = ArtifactSpec.input("MissingImage", ImageArtifactType, parameter_name="image_to_save")
     executor = _declared_source_executor(spec)
     (original_edge,) = executor.invocation.artifact_input_edges
-    edge = replace(original_edge, consumes_main_flow=False, main_flow_projection=None)
+    edge = replace(original_edge,  main_flow_projection=None)
     primary = ImagePayloadMetadata().payload_with(np.zeros((1, 2, 3), dtype=np.uint16))
     invocation = replace(executor.invocation, kwargs=(("image_to_save", primary),))
     executor = replace(executor, invocation=invocation,

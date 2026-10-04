@@ -25,8 +25,7 @@ from openhcs.core.source_workspace_projection import (
     VirtualWorkspaceSourceProjection,
 )
 from openhcs.core.steps.function_output_identity import (
-    FunctionOutputIdentityAuthority,
-    FunctionOutputPathAuthority,
+    FunctionOutputIdentity,
 )
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.processing.materialization import ImageFileOptions, MaterializationSpec
@@ -275,13 +274,10 @@ def test_real_source_schema_composition_to_named_output_and_image_materializer(
     # suffixes before the named main/checkpoint writer saw the source identity.
     composed = ImagePayloadMetadata.compose((payload,), mode=mode)
     scalar = composed.for_leading_source_plane(0)
-    identity = FunctionOutputIdentityAuthority.filename_identity_from_metadata(
+    identity = FunctionOutputIdentity.from_filename_metadata(
         parser, scalar
     )
-    destination = FunctionOutputPathAuthority.filename_for_identity(
-        parser,
-        replace(identity, filename_qualifier="fixture_image"),
-    )
+    destination = replace(identity, filename_qualifier="fixture_image").filename(parser)
     assert destination == f"{well}_s001_w1_z001_t001_fixture_image{extension}"
     assert destination.count("_s001_w1_z001_t001") == 1
     assert identity.extension == extension

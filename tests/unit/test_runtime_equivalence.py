@@ -8756,15 +8756,13 @@ def test_runtime_measurement_snapshot_preserves_plane_local_single_row_aggregate
         axis_id = f"A01_s00{site}"
         records_by_axis[axis_id] = (
             StoredRuntimeValue(
-                RuntimeValue(
-                    key=ArtifactKey(
-                        name="Crop",
-                        artifact_type=MeasurementsArtifactType,
-                        scope=RuntimeExecutionAxisScope(axis_id=axis_id),
-                    ),
-                    data=table,
+                key=ArtifactKey(
+                    name="Crop",
+                    artifact_type=MeasurementsArtifactType,
+                    scope=RuntimeExecutionAxisScope(axis_id=axis_id),
                 ),
-                RuntimeArtifactLocation(
+                data=table,
+                location=RuntimeArtifactLocation(
                     path=f"/memory/Crop_site{site}.pkl",
                     backend="memory",
                 ),
@@ -10732,15 +10730,13 @@ def test_runtime_reference_artifact_equivalence_ignores_duplicate_measurement_ar
     )
     records = tuple(
         StoredRuntimeValue(
-            RuntimeValue(
-                key=ArtifactKey(
-                    name="MeasureTexture",
-                    artifact_type=MeasurementsArtifactType,
-                    scope=RuntimeExecutionAxisScope(axis_id="A01"),
-                ),
-                data=table,
+            key=ArtifactKey(
+                name="MeasureTexture",
+                artifact_type=MeasurementsArtifactType,
+                scope=RuntimeExecutionAxisScope(axis_id="A01"),
             ),
-            RuntimeArtifactLocation(
+            data=table,
+            location=RuntimeArtifactLocation(
                 path=f"/memory/MeasureTexture_{index}.pkl",
                 backend="memory",
             ),
@@ -10792,15 +10788,13 @@ def test_runtime_reference_artifact_equivalence_ignores_duplicate_image_feature_
     )
     records = tuple(
         StoredRuntimeValue(
-            RuntimeValue(
-                key=ArtifactKey(
-                    name=table.name,
-                    artifact_type=MeasurementsArtifactType,
-                    scope=RuntimeExecutionAxisScope(axis_id="A01"),
-                ),
-                data=table,
+            key=ArtifactKey(
+                name=table.name,
+                artifact_type=MeasurementsArtifactType,
+                scope=RuntimeExecutionAxisScope(axis_id="A01"),
             ),
-            RuntimeArtifactLocation(
+            data=table,
+            location=RuntimeArtifactLocation(
                 path=f"/memory/{table.name}_{index}.pkl",
                 backend="memory",
             ),
@@ -10852,19 +10846,17 @@ def test_runtime_reference_artifact_equivalence_ignores_grouped_duplicate_image_
     )
     records = tuple(
         StoredRuntimeValue(
-            RuntimeValue(
-                key=ArtifactKey(
-                    name=table.name,
-                    artifact_type=MeasurementsArtifactType,
-                    scope=RuntimeExecutionAxisScope(
-                        axis_id="A01",
-                        component=AllComponents.CHANNEL,
-                        value=group_key,
-                    ),
+            key=ArtifactKey(
+                name=table.name,
+                artifact_type=MeasurementsArtifactType,
+                scope=RuntimeExecutionAxisScope(
+                    axis_id="A01",
+                    component=AllComponents.CHANNEL,
+                    value=group_key,
                 ),
-                data=table,
             ),
-            RuntimeArtifactLocation(
+            data=table,
+            location=RuntimeArtifactLocation(
                 path=f"/memory/{table.name}_{group_key}.pkl",
                 backend="memory",
             ),
@@ -10927,15 +10919,13 @@ def test_runtime_reference_artifact_equivalence_applies_tolerance_after_same_pat
     )
     records = tuple(
         StoredRuntimeValue(
-            RuntimeValue(
-                key=ArtifactKey(
-                    name=table.name,
-                    artifact_type=MeasurementsArtifactType,
-                    scope=RuntimeExecutionAxisScope(axis_id="A01"),
-                ),
-                data=table,
+            key=ArtifactKey(
+                name=table.name,
+                artifact_type=MeasurementsArtifactType,
+                scope=RuntimeExecutionAxisScope(axis_id="A01"),
             ),
-            RuntimeArtifactLocation(
+            data=table,
+            location=RuntimeArtifactLocation(
                 path=f"/memory/{table.name}.pkl",
                 backend="memory",
             ),
@@ -11055,15 +11045,13 @@ def test_runtime_reference_artifact_equivalence_preserves_distinct_source_image_
         )
         observation_records.append(
             StoredRuntimeValue(
-                RuntimeValue(
-                    key=ArtifactKey(
-                        name=table.name,
-                        artifact_type=MeasurementsArtifactType,
-                        scope=RuntimeExecutionAxisScope(axis_id="A01"),
-                    ),
-                    data=table,
+                key=ArtifactKey(
+                    name=table.name,
+                    artifact_type=MeasurementsArtifactType,
+                    scope=RuntimeExecutionAxisScope(axis_id="A01"),
                 ),
-                RuntimeArtifactLocation(
+                data=table,
+                location=RuntimeArtifactLocation(
                     path=f"/memory/{Path(source_path).stem}.pkl",
                     backend="memory",
                 ),
@@ -11112,15 +11100,13 @@ def test_runtime_reference_artifact_equivalence_ignores_duplicate_aggregate_tabl
     records_by_axis = {
         axis: (
             StoredRuntimeValue(
-                RuntimeValue(
-                    key=ArtifactKey(
-                        name="IdentifyPrimaryObjects",
-                        artifact_type=MeasurementsArtifactType,
-                        scope=RuntimeExecutionAxisScope(axis_id=axis),
-                    ),
-                    data=table,
+                key=ArtifactKey(
+                    name="IdentifyPrimaryObjects",
+                    artifact_type=MeasurementsArtifactType,
+                    scope=RuntimeExecutionAxisScope(axis_id=axis),
                 ),
-                RuntimeArtifactLocation(
+                data=table,
+                location=RuntimeArtifactLocation(
                     path=f"/memory/IdentifyPrimaryObjects_{axis}.pkl",
                     backend="memory",
                 ),
@@ -11154,42 +11140,40 @@ def test_runtime_reference_artifact_equivalence_ignores_group_replayed_image_tab
     )
     records = tuple(
         StoredRuntimeValue(
-            RuntimeValue(
-                key=ArtifactKey(
-                    name="CalculateMath",
-                    artifact_type=MeasurementsArtifactType,
-                    scope=RuntimeExecutionAxisScope(
-                        axis_id="A01",
-                        component=AllComponents.CHANNEL,
-                        value=channel,
-                    ),
-                ),
-                data=MeasurementTable(
-                    name="CalculateMath",
-                    rows=MeasurementSparseColumnarRows.from_rows(
-                        (
-                            {
-                                "slice_index": 0,
-                                "feature_name": "Math_Stain1Colocalized",
-                                "result_value": 0.25,
-                            },
-                            {
-                                "slice_index": 1,
-                                "feature_name": "Math_Stain1Colocalized",
-                                "result_value": 0.75,
-                            },
-                        ),
-                        fields=(
-                            FieldSpec("slice_index", int),
-                            FieldSpec("feature_name", str),
-                            FieldSpec("result_value", float),
-                        ),
-                    ),
-                    source_path=f"/source/channel_{channel}.tif",
-                    subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            key=ArtifactKey(
+                name="CalculateMath",
+                artifact_type=MeasurementsArtifactType,
+                scope=RuntimeExecutionAxisScope(
+                    axis_id="A01",
+                    component=AllComponents.CHANNEL,
+                    value=channel,
                 ),
             ),
-            RuntimeArtifactLocation(
+            data=MeasurementTable(
+                name="CalculateMath",
+                rows=MeasurementSparseColumnarRows.from_rows(
+                    (
+                        {
+                            "slice_index": 0,
+                            "feature_name": "Math_Stain1Colocalized",
+                            "result_value": 0.25,
+                        },
+                        {
+                            "slice_index": 1,
+                            "feature_name": "Math_Stain1Colocalized",
+                            "result_value": 0.75,
+                        },
+                    ),
+                    fields=(
+                        FieldSpec("slice_index", int),
+                        FieldSpec("feature_name", str),
+                        FieldSpec("result_value", float),
+                    ),
+                ),
+                source_path=f"/source/channel_{channel}.tif",
+                subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            ),
+            location=RuntimeArtifactLocation(
                 path=f"/memory/CalculateMath_{channel}.pkl",
                 backend="memory",
             ),
@@ -11222,37 +11206,35 @@ def test_runtime_reference_artifact_equivalence_preserves_local_group_image_rows
     )
     records = tuple(
         StoredRuntimeValue(
-            RuntimeValue(
-                key=ArtifactKey(
-                    name="CalculateMath",
-                    artifact_type=MeasurementsArtifactType,
-                    scope=RuntimeExecutionAxisScope(
-                        axis_id="A01",
-                        component=AllComponents.CHANNEL,
-                        value=channel,
-                    ),
-                ),
-                data=MeasurementTable(
-                    name="CalculateMath",
-                    rows=MeasurementSparseColumnarRows.from_rows(
-                        (
-                            {
-                                "slice_index": 0,
-                                "feature_name": "Math_Stain1Colocalized",
-                                "result_value": 0.25,
-                            },
-                        ),
-                        fields=(
-                            FieldSpec("slice_index", int),
-                            FieldSpec("feature_name", str),
-                            FieldSpec("result_value", float),
-                        ),
-                    ),
-                    source_path=f"/source/channel_{channel}.tif",
-                    subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            key=ArtifactKey(
+                name="CalculateMath",
+                artifact_type=MeasurementsArtifactType,
+                scope=RuntimeExecutionAxisScope(
+                    axis_id="A01",
+                    component=AllComponents.CHANNEL,
+                    value=channel,
                 ),
             ),
-            RuntimeArtifactLocation(
+            data=MeasurementTable(
+                name="CalculateMath",
+                rows=MeasurementSparseColumnarRows.from_rows(
+                    (
+                        {
+                            "slice_index": 0,
+                            "feature_name": "Math_Stain1Colocalized",
+                            "result_value": 0.25,
+                        },
+                    ),
+                    fields=(
+                        FieldSpec("slice_index", int),
+                        FieldSpec("feature_name", str),
+                        FieldSpec("result_value", float),
+                    ),
+                ),
+                source_path=f"/source/channel_{channel}.tif",
+                subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            ),
+            location=RuntimeArtifactLocation(
                 path=f"/memory/CalculateMath_{channel}.pkl",
                 backend="memory",
             ),
@@ -11303,15 +11285,13 @@ def test_runtime_reference_artifact_equivalence_preserves_same_value_wide_image_
         {
             "A01": (
                 StoredRuntimeValue(
-                    RuntimeValue(
-                        key=ArtifactKey(
-                            name="IdentifyPrimaryObjects",
-                            artifact_type=MeasurementsArtifactType,
-                            scope=RuntimeExecutionAxisScope(axis_id="A01"),
-                        ),
-                        data=table,
+                    key=ArtifactKey(
+                        name="IdentifyPrimaryObjects",
+                        artifact_type=MeasurementsArtifactType,
+                        scope=RuntimeExecutionAxisScope(axis_id="A01"),
                     ),
-                    RuntimeArtifactLocation(
+                    data=table,
+                    location=RuntimeArtifactLocation(
                         path="/memory/IdentifyPrimaryObjects_A01.pkl",
                         backend="memory",
                     ),
@@ -11385,15 +11365,13 @@ def test_runtime_reference_artifact_equivalence_ignores_duplicate_object_rows(
         )
         records.append(
             StoredRuntimeValue(
-                RuntimeValue(
-                    key=ArtifactKey(
-                        name="MeasureTexture",
-                        artifact_type=MeasurementsArtifactType,
-                        scope=RuntimeExecutionAxisScope(axis_id="A01"),
-                    ),
-                    data=table,
+                key=ArtifactKey(
+                    name="MeasureTexture",
+                    artifact_type=MeasurementsArtifactType,
+                    scope=RuntimeExecutionAxisScope(axis_id="A01"),
                 ),
-                RuntimeArtifactLocation(
+                data=table,
+                location=RuntimeArtifactLocation(
                     path=f"/memory/MeasureTexture_{index}.pkl",
                     backend="memory",
                 ),

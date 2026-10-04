@@ -728,7 +728,7 @@ class ObjectLabelsAreaOccupiedRequest:
     SliceIndexRuntimeParameter,
 )
 def measure_image_area_occupied(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     *,
     operand_choices: Sequence[OperandChoice] = (OperandChoice.BINARY_IMAGE,),
     area_occupied_rows: Sequence[AreaOccupiedRow] = (),

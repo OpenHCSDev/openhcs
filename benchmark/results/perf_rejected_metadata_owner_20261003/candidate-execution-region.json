@@ -1,0 +1,714 @@
+{
+  "pid": 1697815,
+  "thread": 139997494724288,
+  "region": "ZMQExecutionServer._execute_with_orchestrator",
+  "root_dimensions": "{\"case\": \"3d_monolayer_final\", \"compile_artifact_id\": \"f3a82019-5257-4583-940c-4dfd40925dfb\", \"execution_id\": \"51ebb3de-fae0-4cd1-80bc-c03eb3ecf311\", \"kind\": \"execution\", \"plate\": \"/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/3d_monolayer/images\"}",
+  "seconds": 8.966167135164142,
+  "revision": "9eee98265c939859d49f0c60bd5b3a2168cb29fe",
+  "source": "/home/ts/code/projects/openhcs-shared-runtime-plumbing",
+  "stats": {
+    "ZMQExecutionServer._initialize_orchestrator": {
+      "owner": "ZMQExecutionServer._initialize_orchestrator",
+      "dimensions": "",
+      "phase": "_initialize_orchestrator",
+      "calls": 1,
+      "inclusive": 0.08220752514898777,
+      "exclusive": 0.08220752514898777
+    },
+    "RuntimeImageStackCache.get": {
+      "owner": "RuntimeImageStackCache.get",
+      "dimensions": "",
+      "phase": "get",
+      "calls": 32,
+      "inclusive": 0.00034267501905560493,
+      "exclusive": 0.00034267501905560493
+    },
+    "stack_image_payload_context": {
+      "owner": "stack_image_payload_context",
+      "dimensions": "",
+      "phase": "stack_image_payload_context",
+      "calls": 28,
+      "inclusive": 0.04168135765939951,
+      "exclusive": 0.04168135765939951
+    },
+    "PatternGroupRuntime._load_input_stack": {
+      "owner": "PatternGroupRuntime._load_input_stack",
+      "dimensions": "",
+      "phase": "_load_input_stack",
+      "calls": 32,
+      "inclusive": 0.8401167313568294,
+      "exclusive": 0.8310769814997911
+    },
+    "CellProfilerModuleExecutor._image_request": {
+      "owner": "CellProfilerModuleExecutor._image_request",
+      "dimensions": "",
+      "phase": "_image_request",
+      "calls": 30,
+      "inclusive": 0.3633091449737549,
+      "exclusive": 0.3633091449737549
+    },
+    "RuntimeCallableInvocation.call | function=openhcs.processing.backends.cellprofiler.intensity.rescale_intensity;view=1": {
+      "owner": "RuntimeCallableInvocation.call",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.intensity.rescale_intensity;view=1",
+      "phase": "declared_callable_boundary",
+      "calls": 2,
+      "inclusive": 0.029291327111423016,
+      "exclusive": 0.029291327111423016
+    },
+    "CellProfilerFunctionContractExecutor.execute | function=openhcs.processing.backends.cellprofiler.intensity.rescale_intensity": {
+      "owner": "CellProfilerFunctionContractExecutor.execute",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.intensity.rescale_intensity",
+      "phase": "execute",
+      "calls": 2,
+      "inclusive": 0.030176815576851368,
+      "exclusive": 0.0008854884654283524
+    },
+    "CellProfilerOutputRecorder.record_module_outputs": {
+      "owner": "CellProfilerOutputRecorder.record_module_outputs",
+      "dimensions": "",
+      "phase": "record_module_outputs",
+      "calls": 26,
+      "inclusive": 0.4135434296913445,
+      "exclusive": 0.4135434296913445
+    },
+    "CellProfilerModuleExecutor.__call__": {
+      "owner": "CellProfilerModuleExecutor.__call__",
+      "dimensions": "",
+      "phase": "__call__",
+      "calls": 32,
+      "inclusive": 5.029390189331025,
+      "exclusive": 0.22105292789638042
+    },
+    "FunctionCoreExecutor.execute | function=rescale_intensity": {
+      "owner": "FunctionCoreExecutor.execute",
+      "dimensions": "function=rescale_intensity",
+      "phase": "execute",
+      "calls": 2,
+      "inclusive": 0.14369932608678937,
+      "exclusive": 0.0003861561417579651
+    },
+    "PatternGroupRuntime._validate_and_unstack": {
+      "owner": "PatternGroupRuntime._validate_and_unstack",
+      "dimensions": "",
+      "phase": "_validate_and_unstack",
+      "calls": 28,
+      "inclusive": 0.2781928963959217,
+      "exclusive": 0.24520861357450485
+    },
+    "RuntimeImageStackCache.store": {
+      "owner": "RuntimeImageStackCache.store",
+      "dimensions": "",
+      "phase": "store",
+      "calls": 28,
+      "inclusive": 0.00023655686527490616,
+      "exclusive": 0.00023655686527490616
+    },
+    "PatternGroupRuntime._save_outputs": {
+      "owner": "PatternGroupRuntime._save_outputs",
+      "dimensions": "",
+      "phase": "_save_outputs",
+      "calls": 28,
+      "inclusive": 0.6775184879079461,
+      "exclusive": 0.6772819310426712
+    },
+    "finalize_function_step_outputs": {
+      "owner": "finalize_function_step_outputs",
+      "dimensions": "",
+      "phase": "finalize_function_step_outputs",
+      "calls": 30,
+      "inclusive": 0.7491098740138113,
+      "exclusive": 0.48047462571412325
+    },
+    "RuntimeCallableInvocation.call | function=openhcs.processing.backends.cellprofiler.image_geometry.resize_volumetric;view=1": {
+      "owner": "RuntimeCallableInvocation.call",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.image_geometry.resize_volumetric;view=1",
+      "phase": "declared_callable_boundary",
+      "calls": 3,
+      "inclusive": 0.12918777717277408,
+      "exclusive": 0.12918777717277408
+    },
+    "CellProfilerFunctionContractExecutor.execute | function=openhcs.processing.backends.cellprofiler.image_geometry.resize_volumetric": {
+      "owner": "CellProfilerFunctionContractExecutor.execute",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.image_geometry.resize_volumetric",
+      "phase": "execute",
+      "calls": 3,
+      "inclusive": 0.1298334114253521,
+      "exclusive": 0.0006456342525780201
+    },
+    "FunctionCoreExecutor.execute | function=resize_volumetric": {
+      "owner": "FunctionCoreExecutor.execute",
+      "dimensions": "function=resize_volumetric",
+      "phase": "execute",
+      "calls": 3,
+      "inclusive": 0.19873877195641398,
+      "exclusive": 0.0007655806839466095
+    },
+    "RuntimeCallableInvocation.call | function=openhcs.processing.backends.cellprofiler.median_filter.medianfilter;view=1": {
+      "owner": "RuntimeCallableInvocation.call",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.median_filter.medianfilter;view=1",
+      "phase": "declared_callable_boundary",
+      "calls": 1,
+      "inclusive": 0.5357745480723679,
+      "exclusive": 0.5357745480723679
+    },
+    "CellProfilerFunctionContractExecutor.execute | function=openhcs.processing.backends.cellprofiler.median_filter.medianfilter": {
+      "owner": "CellProfilerFunctionContractExecutor.execute",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.median_filter.medianfilter",
+      "phase": "execute",
+      "calls": 1,
+      "inclusive": 0.5364011479541659,
+      "exclusive": 0.000626599881798029
+    },
+    "FunctionCoreExecutor.execute | function=medianfilter": {
+      "owner": "FunctionCoreExecutor.execute",
+      "dimensions": "function=medianfilter",
+      "phase": "execute",
+      "calls": 1,
+      "inclusive": 0.5587063231505454,
+      "exclusive": 0.0010953620076179504
+    },
+    "RuntimeCallableInvocation.call | function=openhcs.processing.backends.cellprofiler.thresholding.threshold;view=1": {
+      "owner": "RuntimeCallableInvocation.call",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.thresholding.threshold;view=1",
+      "phase": "declared_callable_boundary",
+      "calls": 3,
+      "inclusive": 0.48295382084324956,
+      "exclusive": 0.48295382084324956
+    },
+    "CellProfilerFunctionContractExecutor.execute | function=openhcs.processing.backends.cellprofiler.thresholding.threshold": {
+      "owner": "CellProfilerFunctionContractExecutor.execute",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.thresholding.threshold",
+      "phase": "execute",
+      "calls": 3,
+      "inclusive": 0.4840805730782449,
+      "exclusive": 0.0011267522349953651
+    },
+    "FunctionCoreExecutor.execute | function=threshold": {
+      "owner": "FunctionCoreExecutor.execute",
+      "dimensions": "function=threshold",
+      "phase": "execute",
+      "calls": 3,
+      "inclusive": 0.6010923348367214,
+      "exclusive": 0.003914329688996077
+    },
+    "RuntimeCallableInvocation.call | function=openhcs.processing.backends.cellprofiler.morphology.remove_holes_3d;view=1": {
+      "owner": "RuntimeCallableInvocation.call",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.morphology.remove_holes_3d;view=1",
+      "phase": "declared_callable_boundary",
+      "calls": 2,
+      "inclusive": 0.10115541890263557,
+      "exclusive": 0.10115541890263557
+    },
+    "CellProfilerFunctionContractExecutor.execute | function=openhcs.processing.backends.cellprofiler.morphology.remove_holes_3d": {
+      "owner": "CellProfilerFunctionContractExecutor.execute",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.morphology.remove_holes_3d",
+      "phase": "execute",
+      "calls": 2,
+      "inclusive": 0.10138663509860635,
+      "exclusive": 0.0002312161959707737
+    },
+    "FunctionCoreExecutor.execute | function=remove_holes_3d": {
+      "owner": "FunctionCoreExecutor.execute",
+      "dimensions": "function=remove_holes_3d",
+      "phase": "execute",
+      "calls": 2,
+      "inclusive": 0.10958591010421515,
+      "exclusive": 0.0005047591403126717
+    },
+    "RuntimeCallableInvocation.call | function=openhcs.processing.backends.cellprofiler.watershed.watershed_cellprofiler4;view=1": {
+      "owner": "RuntimeCallableInvocation.call",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.watershed.watershed_cellprofiler4;view=1",
+      "phase": "declared_callable_boundary",
+      "calls": 2,
+      "inclusive": 0.535675251390785,
+      "exclusive": 0.535675251390785
+    },
+    "CellProfilerFunctionContractExecutor.execute | function=openhcs.processing.backends.cellprofiler.watershed.watershed_cellprofiler4": {
+      "owner": "CellProfilerFunctionContractExecutor.execute",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.watershed.watershed_cellprofiler4",
+      "phase": "execute",
+      "calls": 2,
+      "inclusive": 0.5362195959314704,
+      "exclusive": 0.0005443445406854153
+    },
+    "FunctionCoreExecutor.execute | function=watershed_cellprofiler4": {
+      "owner": "FunctionCoreExecutor.execute",
+      "dimensions": "function=watershed_cellprofiler4",
+      "phase": "execute",
+      "calls": 2,
+      "inclusive": 0.5789050222374499,
+      "exclusive": 0.002408776432275772
+    },
+    "RuntimeCallableInvocation.call | function=openhcs.processing.backends.cellprofiler.morphology.resize_objects_3d;view=1": {
+      "owner": "RuntimeCallableInvocation.call",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.morphology.resize_objects_3d;view=1",
+      "phase": "declared_callable_boundary",
+      "calls": 2,
+      "inclusive": 0.10566109092906117,
+      "exclusive": 0.10566109092906117
+    },
+    "CellProfilerFunctionContractExecutor.execute | function=openhcs.processing.backends.cellprofiler.morphology.resize_objects_3d": {
+      "owner": "CellProfilerFunctionContractExecutor.execute",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.morphology.resize_objects_3d",
+      "phase": "execute",
+      "calls": 2,
+      "inclusive": 0.10626277374103665,
+      "exclusive": 0.0006016828119754791
+    },
+    "FunctionCoreExecutor.execute | function=resize_objects_3d": {
+      "owner": "FunctionCoreExecutor.execute",
+      "dimensions": "function=resize_objects_3d",
+      "phase": "execute",
+      "calls": 2,
+      "inclusive": 0.14153605420142412,
+      "exclusive": 0.0009483452886343002
+    },
+    "RuntimeCallableInvocation.call | function=openhcs.processing.backends.cellprofiler.morphology.erode_objects;view=1": {
+      "owner": "RuntimeCallableInvocation.call",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.morphology.erode_objects;view=1",
+      "phase": "declared_callable_boundary",
+      "calls": 1,
+      "inclusive": 0.0506745669990778,
+      "exclusive": 0.0506745669990778
+    },
+    "CellProfilerFunctionContractExecutor.execute | function=openhcs.processing.backends.cellprofiler.morphology.erode_objects": {
+      "owner": "CellProfilerFunctionContractExecutor.execute",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.morphology.erode_objects",
+      "phase": "execute",
+      "calls": 1,
+      "inclusive": 0.051196648739278316,
+      "exclusive": 0.0005220817402005196
+    },
+    "FunctionCoreExecutor.execute | function=erode_objects": {
+      "owner": "FunctionCoreExecutor.execute",
+      "dimensions": "function=erode_objects",
+      "phase": "execute",
+      "calls": 1,
+      "inclusive": 0.06009216699749231,
+      "exclusive": 0.0004721791483461857
+    },
+    "RuntimeCallableInvocation.call | function=openhcs.processing.backends.cellprofiler.object_images.convert_objects_to_image;view=1": {
+      "owner": "RuntimeCallableInvocation.call",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.object_images.convert_objects_to_image;view=1",
+      "phase": "declared_callable_boundary",
+      "calls": 3,
+      "inclusive": 0.007585550658404827,
+      "exclusive": 0.007585550658404827
+    },
+    "CellProfilerFunctionContractExecutor.execute | function=openhcs.processing.backends.cellprofiler.object_images.convert_objects_to_image": {
+      "owner": "CellProfilerFunctionContractExecutor.execute",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.object_images.convert_objects_to_image",
+      "phase": "execute",
+      "calls": 3,
+      "inclusive": 0.008365179877728224,
+      "exclusive": 0.0007796292193233967
+    },
+    "FunctionCoreExecutor.execute | function=convert_objects_to_image": {
+      "owner": "FunctionCoreExecutor.execute",
+      "dimensions": "function=convert_objects_to_image",
+      "phase": "execute",
+      "calls": 3,
+      "inclusive": 0.04295764910057187,
+      "exclusive": 0.0015249010175466537
+    },
+    "RuntimeCallableInvocation.call | function=openhcs.processing.backends.cellprofiler.image_math.image_math;view=1": {
+      "owner": "RuntimeCallableInvocation.call",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.image_math.image_math;view=1",
+      "phase": "declared_callable_boundary",
+      "calls": 120,
+      "inclusive": 0.056871647015213966,
+      "exclusive": 0.056871647015213966
+    },
+    "CellProfilerFunctionContractExecutor.execute | function=openhcs.processing.backends.cellprofiler.image_math.image_math": {
+      "owner": "CellProfilerFunctionContractExecutor.execute",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.image_math.image_math",
+      "phase": "execute",
+      "calls": 2,
+      "inclusive": 0.0808364930562675,
+      "exclusive": 0.023964846041053534
+    },
+    "FunctionCoreExecutor.execute | function=image_math": {
+      "owner": "FunctionCoreExecutor.execute",
+      "dimensions": "function=image_math",
+      "phase": "execute",
+      "calls": 2,
+      "inclusive": 0.35451433481648564,
+      "exclusive": 0.00045528681948781013
+    },
+    "RuntimeCallableInvocation.call | function=openhcs.processing.backends.cellprofiler.morphology.closing;view=1": {
+      "owner": "RuntimeCallableInvocation.call",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.morphology.closing;view=1",
+      "phase": "declared_callable_boundary",
+      "calls": 1,
+      "inclusive": 0.2598985880613327,
+      "exclusive": 0.2598985880613327
+    },
+    "CellProfilerFunctionContractExecutor.execute | function=openhcs.processing.backends.cellprofiler.morphology.closing": {
+      "owner": "CellProfilerFunctionContractExecutor.execute",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.morphology.closing",
+      "phase": "execute",
+      "calls": 1,
+      "inclusive": 0.2600078550167382,
+      "exclusive": 0.00010926695540547371
+    },
+    "FunctionCoreExecutor.execute | function=closing": {
+      "owner": "FunctionCoreExecutor.execute",
+      "dimensions": "function=closing",
+      "phase": "execute",
+      "calls": 1,
+      "inclusive": 0.2873692591674626,
+      "exclusive": 0.0002643684856593609
+    },
+    "RuntimeCallableInvocation.call | function=openhcs.processing.backends.cellprofiler.image_geometry.mask_image;view=1": {
+      "owner": "RuntimeCallableInvocation.call",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.image_geometry.mask_image;view=1",
+      "phase": "declared_callable_boundary",
+      "calls": 60,
+      "inclusive": 0.013158110901713371,
+      "exclusive": 0.013158110901713371
+    },
+    "CellProfilerFunctionContractExecutor.execute | function=openhcs.processing.backends.cellprofiler.image_geometry.mask_image": {
+      "owner": "CellProfilerFunctionContractExecutor.execute",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.image_geometry.mask_image",
+      "phase": "execute",
+      "calls": 1,
+      "inclusive": 0.03377221338450909,
+      "exclusive": 0.020614102482795715
+    },
+    "FunctionCoreExecutor.execute | function=mask_image": {
+      "owner": "FunctionCoreExecutor.execute",
+      "dimensions": "function=mask_image",
+      "phase": "execute",
+      "calls": 1,
+      "inclusive": 0.06323254993185401,
+      "exclusive": 0.00040600355714559555
+    },
+    "RuntimeCallableInvocation.call | function=openhcs.processing.backends.cellprofiler.morphology.erode_image;view=1": {
+      "owner": "RuntimeCallableInvocation.call",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.morphology.erode_image;view=1",
+      "phase": "declared_callable_boundary",
+      "calls": 1,
+      "inclusive": 0.03734732512384653,
+      "exclusive": 0.03734732512384653
+    },
+    "CellProfilerFunctionContractExecutor.execute | function=openhcs.processing.backends.cellprofiler.morphology.erode_image": {
+      "owner": "CellProfilerFunctionContractExecutor.execute",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.morphology.erode_image",
+      "phase": "execute",
+      "calls": 1,
+      "inclusive": 0.037452553398907185,
+      "exclusive": 0.00010522827506065369
+    },
+    "FunctionCoreExecutor.execute | function=erode_image": {
+      "owner": "FunctionCoreExecutor.execute",
+      "dimensions": "function=erode_image",
+      "phase": "execute",
+      "calls": 1,
+      "inclusive": 0.04374082200229168,
+      "exclusive": 0.0002591479569673538
+    },
+    "RuntimeCallableInvocation.call | function=openhcs.processing.backends.cellprofiler.intensity.measure_object_intensity;view=1": {
+      "owner": "RuntimeCallableInvocation.call",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.intensity.measure_object_intensity;view=1",
+      "phase": "declared_callable_boundary",
+      "calls": 4,
+      "inclusive": 0.8341215569525957,
+      "exclusive": 0.8341215569525957
+    },
+    "CellProfilerFunctionContractExecutor.execute | function=openhcs.processing.backends.cellprofiler.intensity.measure_object_intensity": {
+      "owner": "CellProfilerFunctionContractExecutor.execute",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.intensity.measure_object_intensity",
+      "phase": "execute",
+      "calls": 4,
+      "inclusive": 0.834825670812279,
+      "exclusive": 0.0007041138596832752
+    },
+    "ObjectMeasurementOutputRecorder.record": {
+      "owner": "ObjectMeasurementOutputRecorder.record",
+      "dimensions": "",
+      "phase": "record",
+      "calls": 6,
+      "inclusive": 0.0037249731831252575,
+      "exclusive": 0.0037249731831252575
+    },
+    "FunctionCoreExecutor.execute | function=measure_object_intensity": {
+      "owner": "FunctionCoreExecutor.execute",
+      "dimensions": "function=measure_object_intensity",
+      "phase": "execute",
+      "calls": 4,
+      "inclusive": 1.0454286388121545,
+      "exclusive": 0.004520548973232508
+    },
+    "RuntimeCallableInvocation.call | function=openhcs.processing.backends.cellprofiler.shape.measure_object_size_shape;view=1": {
+      "owner": "RuntimeCallableInvocation.call",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.shape.measure_object_size_shape;view=1",
+      "phase": "declared_callable_boundary",
+      "calls": 2,
+      "inclusive": 0.5032332427799702,
+      "exclusive": 0.5032332427799702
+    },
+    "CellProfilerFunctionContractExecutor.execute | function=openhcs.processing.backends.cellprofiler.shape.measure_object_size_shape": {
+      "owner": "CellProfilerFunctionContractExecutor.execute",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.shape.measure_object_size_shape",
+      "phase": "execute",
+      "calls": 2,
+      "inclusive": 0.5039996360428631,
+      "exclusive": 0.0007663932628929615
+    },
+    "FunctionCoreExecutor.execute | function=measure_object_size_shape": {
+      "owner": "FunctionCoreExecutor.execute",
+      "dimensions": "function=measure_object_size_shape",
+      "phase": "execute",
+      "calls": 2,
+      "inclusive": 0.5173229603096843,
+      "exclusive": 0.002118128351867199
+    },
+    "RuntimeCallableInvocation.call | function=openhcs.processing.backends.cellprofiler.outlines.overlay_objects;view=1": {
+      "owner": "RuntimeCallableInvocation.call",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.outlines.overlay_objects;view=1",
+      "phase": "declared_callable_boundary",
+      "calls": 2,
+      "inclusive": 0.2927272063679993,
+      "exclusive": 0.2927272063679993
+    },
+    "CellProfilerFunctionContractExecutor.execute | function=openhcs.processing.backends.cellprofiler.outlines.overlay_objects": {
+      "owner": "CellProfilerFunctionContractExecutor.execute",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.outlines.overlay_objects",
+      "phase": "execute",
+      "calls": 2,
+      "inclusive": 0.2929425104521215,
+      "exclusive": 0.00021530408412218094
+    },
+    "FunctionCoreExecutor.execute | function=overlay_objects": {
+      "owner": "FunctionCoreExecutor.execute",
+      "dimensions": "function=overlay_objects",
+      "phase": "execute",
+      "calls": 2,
+      "inclusive": 0.3159721801057458,
+      "exclusive": 0.013460240792483091
+    },
+    "RuntimeCallableInvocation.call | function=openhcs.processing.backends.cellprofiler.save_images.save_images;view=1": {
+      "owner": "RuntimeCallableInvocation.call",
+      "dimensions": "function=openhcs.processing.backends.cellprofiler.save_images.save_images;view=1",
+      "phase": "declared_callable_boundary",
+      "calls": 2,
+      "inclusive": 0.0001816130243241787,
+      "exclusive": 0.0001816130243241787
+    },
+    "FunctionCoreExecutor.execute | function=save_images": {
+      "owner": "FunctionCoreExecutor.execute",
+      "dimensions": "function=save_images",
+      "phase": "execute",
+      "calls": 2,
+      "inclusive": 0.17626022081822157,
+      "exclusive": 0.1760786077938974
+    },
+    "AtomicMetadataWriter.publish_source_projection_metadata": {
+      "owner": "AtomicMetadataWriter.publish_source_projection_metadata",
+      "dimensions": "",
+      "phase": "publish_source_projection_metadata",
+      "calls": 5,
+      "inclusive": 0.5068132942542434,
+      "exclusive": 0.5068132942542434
+    },
+    "execute_worker_lane | {\"execution_id\": \"51ebb3de-fae0-4cd1-80bc-c03eb3ecf311\", \"kind\": \"worker_lane\", \"plate\": \"/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/3d_monolayer/images\", \"worker_slot\": \"worker_0\"}": {
+      "owner": "execute_worker_lane",
+      "dimensions": "{\"execution_id\": \"51ebb3de-fae0-4cd1-80bc-c03eb3ecf311\", \"kind\": \"worker_lane\", \"plate\": \"/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/3d_monolayer/images\", \"worker_slot\": \"worker_0\"}",
+      "phase": "execute_worker_lane",
+      "calls": 1,
+      "inclusive": 8.292205615900457,
+      "exclusive": 0.5081131015904248
+    },
+    "consolidate_analysis_outputs": {
+      "owner": "consolidate_analysis_outputs",
+      "dimensions": "",
+      "phase": "consolidate_analysis_outputs",
+      "calls": 1,
+      "inclusive": 1.1913012713193893e-05,
+      "exclusive": 1.1913012713193893e-05
+    },
+    "RuntimeArtifactMetadataTarget.reconciliation_targets": {
+      "owner": "RuntimeArtifactMetadataTarget.reconciliation_targets",
+      "dimensions": "",
+      "phase": "reconciliation_targets",
+      "calls": 1,
+      "inclusive": 0.2939795549027622,
+      "exclusive": 0.2939795549027622
+    },
+    "OpenHCSMetadataWriter.finalize_completed_plate": {
+      "owner": "OpenHCSMetadataWriter.finalize_completed_plate",
+      "dimensions": "",
+      "phase": "finalize_completed_plate",
+      "calls": 1,
+      "inclusive": 0.5114067010581493,
+      "exclusive": 0.007927724625915289
+    },
+    "ZMQExecutionServer._export_runtime_observation": {
+      "owner": "ZMQExecutionServer._export_runtime_observation",
+      "dimensions": "",
+      "phase": "_export_runtime_observation",
+      "calls": 1,
+      "inclusive": 0.010043779853731394,
+      "exclusive": 0.010043779853731394
+    },
+    "ZMQExecutionServer._execute_with_orchestrator | {\"case\": \"3d_monolayer_final\", \"compile_artifact_id\": \"f3a82019-5257-4583-940c-4dfd40925dfb\", \"execution_id\": \"51ebb3de-fae0-4cd1-80bc-c03eb3ecf311\", \"kind\": \"execution\", \"plate\": \"/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/3d_monolayer/images\"}": {
+      "owner": "ZMQExecutionServer._execute_with_orchestrator",
+      "dimensions": "{\"case\": \"3d_monolayer_final\", \"compile_artifact_id\": \"f3a82019-5257-4583-940c-4dfd40925dfb\", \"execution_id\": \"51ebb3de-fae0-4cd1-80bc-c03eb3ecf311\", \"kind\": \"execution\", \"plate\": \"/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/3d_monolayer/images\"}",
+      "phase": "_execute_with_orchestrator",
+      "calls": 1,
+      "inclusive": 8.966167135164142,
+      "exclusive": 0.041612975765019655
+    }
+  },
+  "hooks_installed": [
+    {
+      "module": "openhcs.core.aligned_image_payload",
+      "owner": "",
+      "method": "stack_image_payload_context",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.aligned_image_payload",
+      "owner": "",
+      "method": "unstack_image_payload_context",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.measurement_feature_queries",
+      "owner": "MeasurementFeatureValueIndex",
+      "method": "from_columnar_table_by_object",
+      "descriptor_kind": "classmethod"
+    },
+    {
+      "module": "openhcs.core.virtual_workspace_metadata",
+      "owner": "AtomicMetadataWriter",
+      "method": "publish_source_projection_metadata",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.runtime_stack_cache",
+      "owner": "RuntimeImageStackCache",
+      "method": "get",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.runtime_stack_cache",
+      "owner": "RuntimeImageStackCache",
+      "method": "store",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.steps.function_outputs",
+      "owner": "",
+      "method": "finalize_function_step_outputs",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.steps.function_outputs",
+      "owner": "OpenHCSMetadataWriter",
+      "method": "finalize_completed_plate",
+      "descriptor_kind": "classmethod"
+    },
+    {
+      "module": "openhcs.core.steps.function_outputs",
+      "owner": "RuntimeArtifactMetadataTarget",
+      "method": "reconciliation_targets",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.steps.function_runtime",
+      "owner": "FunctionCoreExecutor",
+      "method": "execute",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.steps.function_runtime",
+      "owner": "PatternGroupRuntime",
+      "method": "_load_input_stack",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.steps.function_runtime",
+      "owner": "PatternGroupRuntime",
+      "method": "_validate_and_unstack",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.steps.function_runtime",
+      "owner": "PatternGroupRuntime",
+      "method": "_save_outputs",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.processing.backends.lib_registry.unified_registry",
+      "owner": "RuntimeCallableInvocation",
+      "method": "call",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.orchestrator.analysis_consolidation",
+      "owner": "",
+      "method": "consolidate_analysis_outputs",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.core.orchestrator.worker_execution",
+      "owner": "",
+      "method": "execute_worker_lane",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.runtime.zmq_execution_server",
+      "owner": "ZMQExecutionServer",
+      "method": "_execute_with_orchestrator",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.runtime.zmq_execution_server",
+      "owner": "ZMQExecutionServer",
+      "method": "_initialize_orchestrator",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.runtime.zmq_execution_server",
+      "owner": "ZMQExecutionServer",
+      "method": "_export_runtime_observation",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.interop.cellprofiler.runtime.function_contract_execution",
+      "owner": "CellProfilerFunctionContractExecutor",
+      "method": "execute",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.interop.cellprofiler.runtime.measurement_execution_support",
+      "owner": "ObjectMeasurementOutputRecorder",
+      "method": "record",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.interop.cellprofiler.runtime.output_recording",
+      "owner": "CellProfilerOutputRecorder",
+      "method": "record_module_outputs",
+      "descriptor_kind": "classmethod"
+    },
+    {
+      "module": "openhcs.interop.cellprofiler.runtime.module_execution",
+      "owner": "CellProfilerModuleExecutor",
+      "method": "__call__",
+      "descriptor_kind": "function"
+    },
+    {
+      "module": "openhcs.interop.cellprofiler.runtime.module_execution",
+      "owner": "CellProfilerModuleExecutor",
+      "method": "_image_request",
+      "descriptor_kind": "function"
+    }
+  ],
+  "profiling_enabled": false,
+  "runtime_profiling_enabled": false,
+  "diagnostic_errors": [],
+  "captures": false,
+  "scope": "coarse same-run nested exclusive timing partition on the exact source revision recorded in this region. Diagnostic wrappers, no scientific or memory-observer substitutions. Not accepted performance comparison. Declared callable boundary includes filtering/decorated processing/metadata; not pure numerical kernels. Both existing profilers are disabled. These wrappers still add diagnostic overhead; no scaling to uninstrumented clocks or causal performance claims. Query boundary is nested under its actual parent and excluded from parent-exclusive elapsed."
+}

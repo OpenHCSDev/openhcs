@@ -358,9 +358,7 @@ class ObjectRelationship(
 
     def __post_init__(self, *source_provenance_values: object) -> None:
         self.validate_artifact_name()
-        self.absorb_explicit_source_provenance(
-            SourceImageProvenance.from_init_values(source_provenance_values)
-        )
+        self.absorb_explicit_source_provenance(source_provenance_values)
         self.normalize_source_provenance_fields()
         if not isinstance(self.declaration, ObjectRelationshipDeclaration):
             raise TypeError(

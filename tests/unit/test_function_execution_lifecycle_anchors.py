@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import Mock
 
 import pytest
 
@@ -21,16 +23,40 @@ from openhcs.core.function_patterns import (
 from openhcs.core.pipeline.function_contracts import artifact_inputs
 from openhcs.core.pipeline.path_planner import PathPlanner, PathPlannerArtifactStage
 from openhcs.core.runtime_adapters import runtime_adapter
+from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
+from openhcs.core.steps.function_output_manifest import _STEP_OUTPUT_MANIFESTS
 from openhcs.core.source_bindings import CompiledSourceBindingPlan, NamedSourceBinding
 from openhcs.core.step_dependencies import StepInputDependency
-from openhcs.core.steps.function_execution import PatternGroups, StepAnchorPatternFilter
+from openhcs.core.steps.function_execution import FunctionStepExecutor
 
-def _anchor_filter(plan: object, output_manifest: object) -> StepAnchorPatternFilter:
-    return StepAnchorPatternFilter(
+
+def _anchor_executor(
+    *, plan, parser, output_manifest, source_workspace_projection_cache
+):
+    executor = object.__new__(FunctionStepExecutor)
+    executor.plan = plan
+    executor.context = Mock(
+        plate_path=Path("."),
+        microscope_handler=SimpleNamespace(
+            parser=parser,
+            metadata_handler=SimpleNamespace(
+                source_workspace_metadata_document=lambda _path: None
+            ),
+        ),
+        filemanager=SimpleNamespace(exists=lambda *_args: False),
+        runtime_source_workspace_projection_cache=source_workspace_projection_cache,
+        runtime_source_binding_context_cache=RuntimeSourceBindingContextCache(),
+    )
+    if output_manifest is not None:
+        _STEP_OUTPUT_MANIFESTS[executor.context] = output_manifest
+    return executor
+
+
+def _anchor_filter(plan: object, output_manifest: object) -> FunctionStepExecutor:
+    return _anchor_executor(
         plan=plan,
         parser=object(),
         output_manifest=output_manifest,
-        source_workspace_authority=None,
         source_workspace_projection_cache=None,
     )
 
@@ -93,7 +119,7 @@ def test_storage_backed_cross_group_uses_producer_lifecycle_anchor(dependency) -
     invocation = next(compiled_pattern.iter_invocations())
     assert invocation.runtime_domain is RuntimeInvocationDomain.ARTIFACT_MANAGED
     assert all(
-        edge.storage_plan is not None and not edge.consumes_main_flow
+        edge.storage_plan is not None and not (edge.main_flow_projection is not None)
         for edge in invocation.artifact_input_edges
     )
 
@@ -120,17 +146,15 @@ def test_storage_backed_cross_group_uses_producer_lifecycle_anchor(dependency) -
             return [path for path in paths if "second" in path]
 
     manifest = ExactProducerManifest()
-    filtered = _anchor_filter(plan, manifest).filtered(
-        PatternGroups(
-            {
-                "1": ("first-anchor.tif",),
-                "2": ("second-anchor.tif",),
-            }
-        )
+    filtered = _anchor_filter(plan, manifest)._filter_anchor_patterns(
+        {
+            "1": ("first-anchor.tif",),
+            "2": ("second-anchor.tif",),
+        }
     )
 
     assert manifest.calls == 2
-    assert filtered.groups == {"1": ("second-anchor.tif",)}
+    assert filtered == {"1": ("second-anchor.tif",)}
 
 
 def test_source_anchored_group_uses_exact_main_flow_producer_manifest() -> None:
@@ -166,9 +190,9 @@ def test_source_anchored_group_uses_exact_main_flow_producer_manifest() -> None:
             return {None: patterns}
 
     manifest = ExactProducerManifest()
-    filtered = _anchor_filter(plan, manifest).filtered(
-        PatternGroups({None: ("unrelated-anchor.tif", "producer-anchor.tif")})
+    filtered = _anchor_filter(plan, manifest)._filter_anchor_patterns(
+        {None: ("unrelated-anchor.tif", "producer-anchor.tif")}
     )
 
     assert manifest.calls == 1
-    assert filtered.groups == {None: ("producer-anchor.tif",)}
+    assert filtered == {None: ("producer-anchor.tif",)}
