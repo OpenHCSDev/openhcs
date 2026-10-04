@@ -139,6 +139,35 @@ same observations with individual points, interquartile ranges and medians.
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
+## Supplementary Figure 9. Native review of task-only repair and retained limits
+
+![Whole-field first/final overlays, an elongated-object repair, a separated-pair control and a remaining small-focus exclusion.](../figures/slas/h001_native_repair.png){width=6in}
+
+\(A) Whole-field raw image and first (a01) and final (a04) overlays at the same
+camera and display window. (B) A continuous elongated signal has two first
+partitions and one final partition. (C) A separated compact pair retains two
+regions in both candidates; these crops use the original matched whole-field
+screenshots, not a later enlarged first-candidate view. (D) Final-only raw,
+result and combined crops show a small bright focus outside the size-selected
+ROI cohort. This is a scope limitation, not a biological error claim against
+that cohort. Raw limits are 8–152 in A, C and D and 8–248 in B; gamma is 1.
+Colours distinguish regions within each view, not corresponding identities
+across candidates. No physical calibration is inferred. These local witnesses
+complement the separate whole-image computational-reference comparison in
+Figure 7A; they do not establish exhaustive biological accuracy.
+
+Source: Robert Haase and BioImageAnalysisNotebooks contributors,
+[`blobs.tif` at the pinned notebook revision](https://github.com/haesleinhuepf/BioImageAnalysisNotebooks/blob/68845a1afaf53bf601958a3fa7d86f3cf8a43219/docs/29_algorithm_validation/blobs.tif),
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Adaptations are
+OpenHCS-derived overlays, native display windows and screenshot cropping/scaling.
+The [source proof](task_only_analysis/h001-native-source-proof.json) and
+[render receipt](task_only_analysis/h001-native-render-receipt.json) retain
+the unchanged source PNG identities and exact display crops.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
 ## Supplementary Figure 10. Matched views of volumetric centroid candidates
 
 ![Raw fluorescence, candidate centroids and combined views from a three-dimensional development continuation.](../figures/slas/h002_development_centroids.png){width=6in}

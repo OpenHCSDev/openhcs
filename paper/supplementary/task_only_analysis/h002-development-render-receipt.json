@@ -1,9 +1,7 @@
 {
   "source_receipt": {
     "path": "source-receipt.json",
-    "sha256": "e260b0865ab7b24c3e7c5131305ea2a10ecfbf46dab6a85e23f88ed4ecabfacd",
-    "at_original_render_sha256": "7221f2383428ec3d3c3b61f2e444ae396aa6224fe70e4a9f7e9e317555b21e90",
-    "amendment": "2026-10-04 CC0 source attribution and superseded historical hold; no rerender or image changes."
+    "sha256": "e260b0865ab7b24c3e7c5131305ea2a10ecfbf46dab6a85e23f88ed4ecabfacd"
   },
   "original_pngs": [
     {
@@ -48,16 +46,58 @@
   "identical_clip_all_six": true,
   "output_dimensions": [
     1854,
-    896
+    1220
   ],
   "panel_scale": 0.6190975865687304,
   "panel_height": 277.3557187827912,
+  "print_typography": {
+    "intended_width_inches": 6,
+    "minimum_label_svg_units": 35,
+    "minimum_label_points_at_intended_width": 8.155339805825243,
+    "title_svg_units": 42,
+    "title_points_at_intended_width": 9.78640776699029,
+    "native_screenshot_footer": "Unchanged embedded source detail, not the publication label.",
+    "print_scale_preview": "900px wide: six inches at 150 pixels/inch"
+  },
   "renderer": [
     "/usr/bin/rsvg-convert",
     "--output",
     "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/planck-h002-capacity-development-proposal/preview.png",
     "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/planck-h002-capacity-development-proposal/candidate.svg"
   ],
+  "print_scale_renderer": [
+    "/usr/bin/rsvg-convert",
+    "--width",
+    "900",
+    "--output",
+    "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/planck-h002-capacity-development-proposal/print-scale-preview.png",
+    "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/planck-h002-capacity-development-proposal/candidate.svg"
+  ],
+  "superseded_render": {
+    "outputs": [
+      {
+        "path": "candidate.svg",
+        "size_bytes": 944158,
+        "sha256": "04a6915cdc73a7a43c738d07a48d798b2150ada276bba6fdc250fb2c891723fa"
+      },
+      {
+        "path": "preview.png",
+        "size_bytes": 334711,
+        "sha256": "c1662fe66f51ec736ec91a77f653e3cde75f5b2f1b5ee8c4ab9223556c559ca5"
+      }
+    ],
+    "output_dimensions": [
+      1854,
+      896
+    ],
+    "source_receipt": {
+      "path": "source-receipt.json",
+      "sha256": "e260b0865ab7b24c3e7c5131305ea2a10ecfbf46dab6a85e23f88ed4ecabfacd",
+      "at_original_render_sha256": "7221f2383428ec3d3c3b61f2e444ae396aa6224fe70e4a9f7e9e317555b21e90",
+      "amendment": "2026-10-04 CC0 source attribution and superseded historical hold; no rerender or image changes."
+    },
+    "reason": "Publication labels undersized at six-inch placement."
+  },
   "supporting_sets": [
     {
       "tag": "xy_z33_p1p99",
@@ -274,13 +314,18 @@
   "outputs": [
     {
       "path": "candidate.svg",
-      "size_bytes": 944158,
-      "sha256": "04a6915cdc73a7a43c738d07a48d798b2150ada276bba6fdc250fb2c891723fa"
+      "size_bytes": 944246,
+      "sha256": "d8bfc82ca47a82b043d9ef842acdd665df1a99564d89205a2bfc1df6b8f911bc"
     },
     {
       "path": "preview.png",
-      "size_bytes": 334711,
-      "sha256": "c1662fe66f51ec736ec91a77f653e3cde75f5b2f1b5ee8c4ab9223556c559ca5"
+      "size_bytes": 395745,
+      "sha256": "52ae85061a4c10044da01ed70738775f1b46a0a5ed2bfc1872af39827cf63075"
+    },
+    {
+      "path": "print-scale-preview.png",
+      "size_bytes": 244732,
+      "sha256": "4c12fa37c1022322bef96e9ce6d22095b723788c36f64eb7762cf1ea9358aea3"
     }
   ]
 }

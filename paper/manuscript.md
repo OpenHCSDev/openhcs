@@ -253,6 +253,8 @@ These completed trials demonstrate useful first scientific choices and subsequen
 
 ### Figure 7. Task-only analysis: within-run revision and final coverage
 
+Matched native views complement these numerical results. Supplementary Figure 9 shows the H001 elongated-object repair, a retained separated-pair control and a small-focus exclusion from the defined cohort. Supplementary Figure 10 separately illustrates the unresolved volumetric-centroid development case; it is not a fresh autonomous result or an accuracy comparison.
+
 ![Task-only within-run revision and final coverage.](figures/slas/task_only_analysis.png){width=6in}
 
 \(A) H001 first/final object F1 on the same whole image, using the notebook-derived computational primary reference. (B) BBBC039 pooled object F1 on the same three development fields, using independent annotations. (C) The final BBBC039 distribution includes all 200 fields, including three annotation-empty fields and the complete low-score tail. The dashed line shows pooled object F1, not the mean of field scores. One-to-one instance matching uses intersection over union at least 0.5. First denotes the initial completed scientific prediction; there is no first-200 comparison. Within-run revision does not isolate a causal skill effect or establish held-out generalization.
