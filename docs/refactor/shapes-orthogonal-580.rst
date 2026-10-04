@@ -78,10 +78,10 @@ modules, zero parse omissions, before and after inventories under
 ``engineering580/geometry-family*.json`` in the persistent issue-batch root.
 The after inventory has one duplicate-membership function owner; Numba is a
 compiled consumer. Dynamic MRO/dispatch was read semantically, not asserted as
-an AST equivalence proof. Applicable catalog decisions: shared implementation
-owner (IMPL), no mirrored membership/cardinality (MEMB), no compatibility or
-runtime suppression path (BOUND/TIME). No heavyweight NRA detector pass is
-claimed.
+an AST equivalence proof. Catalog finding IMPL-12 (one procedure copied with
+drift) identifies the competing Python/Numba implementations. BOUND-2 and TIME-1
+guide avoiding a viewer-local bypass or another retained replacement path. No
+membership detector finding or heavyweight NRA detector pass is claimed.
 
 ``engineering580/napari061-controls06.{stdout,stderr}``: 40 original/new exact
 Python/Numba controls PASS, 334.7 MiB peak, Swap0, terminal0. Existing expected
