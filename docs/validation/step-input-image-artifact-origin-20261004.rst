@@ -93,3 +93,35 @@ No synthetic execution, native launch, source installation or acceptance result
 is claimed by this initial checkpoint. The frozen foreground observation does
 not by itself prove the precise consumed array; source/runtime reproduction is
 the next engineering step, kept separate from assisted science development.
+
+Further interface/630 audit
+----------------------------
+
+PR630 head0ded58b36b92acf3bf7c26dc68989509b66a9a77 leaves the AST of
+source_artifact_payload, source_projection, from_source_declarations and CP
+artifact_value unchanged versus reviewed main. Its reorganized
+FunctionCoreExecutor retains a consumer of source_artifact_payload. The shared
+runtime defect is therefore not already repaired by that owner refactor.
+Coordination was posted once at PR630 issuecomment5981114085.
+
+SourceProjection.matches_binding matches projection role, alias and artifact
+kind, not origin. This makes the new-alias failure versus existing-alias raw
+reload source-backed without treating spatial provenance as processed pixel
+identity. NamedSourceBinding.apply_loaded_payload already owns naming selected
+payload provenance and channel normalization; ImagePayloadMetadata owns exact
+plane/channel projection. Reuse those owners for selection and assignment,
+rather than adding an alias reader or projecting a new alias through a cache
+that only represents original workspace names.
+
+The existing SourceUniverseRequest family and CompiledSourceUniversePlan model
+pipeline-start versus step-input file universes. They must not be copied into
+another resolver hierarchy. Scope matters: a companion SOURCE_ARTIFACT, a
+stack-selected primary plane and a pipeline-start raw measurement are distinct
+admitted contracts, so simply returning the whole current array for every
+STEP_INPUT declaration is not an adequate family repair.
+
+The CP image-normalization entrypoint delegates to the original metadata-owned
+normalize_image_payload_intensity recipe. No independent denominator change is
+indicated by the reviewed uint8/normalized manual-threshold declarations.
+Precise frame-wide consumed pixel equality and installed synthetic acceptance
+remain unproved, not inferred from a label count or copied biological parameters.
