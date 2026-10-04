@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import os
 import time
 import traceback
 from collections.abc import Callable, Mapping, Sequence
@@ -22,6 +21,7 @@ from openhcs.core.component_group_scope import (
     RuntimeExecutionAxisScope,
 )
 from openhcs.core.runtime_stores import RuntimeArtifactInput
+from openhcs.core.runtime_profile import RuntimeProfileLogger, RuntimeProfileFieldValue
 from openhcs.core.callable_contract import ImagePayloadConsumption
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.context.processing_context import ProcessingContext
@@ -40,9 +40,6 @@ from openhcs.core.source_binding_selection import (
     SourcePatternResolutionContext,
 )
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
-from openhcs.core.source_workspace_projection import (
-    VirtualWorkspaceSourceProjectionAuthority,
-)
 from openhcs.core.step_dependencies import StepInputDependencyKind
 from openhcs.core.steps.function_io import (
     generate_materialized_paths,
@@ -68,9 +65,6 @@ if TYPE_CHECKING:
 
 
 logger = logging.getLogger(__name__)
-_PROFILE_RUNTIME_ENV = "OPENHCS_PROFILE_FUNCTION_RUNTIME"
-_PROFILE_RUNTIME_PATH_ENV = "OPENHCS_PROFILE_FUNCTION_RUNTIME_PATH"
-RuntimeProfileFieldValue = str | int | float | bool | None
 RuntimeProfileExtraFields = Mapping[str, RuntimeProfileFieldValue] | None
 DiscoveredPatternCollection = (
     Sequence[SourceCandidatePath]
@@ -82,70 +76,6 @@ AnchorPatternSelector = Callable[
 ]
 
 
-@dataclass(frozen=True, slots=True)
-class RuntimeProfileSettings:
-    """Environment-owned runtime profile output settings."""
-
-    enabled: bool
-    output_path: str | None
-
-    @classmethod
-    def from_environment(cls) -> RuntimeProfileSettings:
-        raw_enabled = os.environ.get(_PROFILE_RUNTIME_ENV)
-        return cls(
-            enabled=(
-                raw_enabled is not None and raw_enabled.lower() in {"1", "true", "yes"}
-            ),
-            output_path=os.environ.get(_PROFILE_RUNTIME_PATH_ENV),
-        )
-
-
-@dataclass(frozen=True, slots=True)
-class StepRuntimeProfileRecord:
-    """One function-step runtime profile event."""
-
-    label: str
-    seconds: float
-    fields: tuple[tuple[str, RuntimeProfileFieldValue], ...]
-
-    @classmethod
-    def from_step(
-        cls,
-        label: str,
-        seconds: float,
-        *,
-        step_index: int,
-        step_name: str | None,
-        extra_fields: RuntimeProfileExtraFields = None,
-    ) -> StepRuntimeProfileRecord:
-        fields: dict[str, RuntimeProfileFieldValue] = {
-            "step": step_index,
-            "step_name": step_name,
-        }
-        if extra_fields is not None:
-            fields.update(extra_fields)
-        return cls(
-            label=label,
-            seconds=seconds,
-            fields=tuple(fields.items()),
-        )
-
-    def emit(self, settings: RuntimeProfileSettings | None = None) -> None:
-        if settings is None:
-            profile_settings = RuntimeProfileSettings.from_environment()
-        else:
-            profile_settings = settings
-        if not profile_settings.enabled:
-            return
-        field_text = " ".join(f"{key}={value}" for key, value in self.fields)
-        logger.info("RUNTIME_PROFILE %s %.6fs %s", self.label, self.seconds, field_text)
-        if profile_settings.output_path is not None:
-            with open(profile_settings.output_path, "a", encoding="utf-8") as handle:
-                handle.write(
-                    f"RUNTIME_PROFILE {self.label} {self.seconds:.6f}s {field_text}\n"
-                )
-
-
 def record_function_step_runtime_profile(
     plan: CompiledStepPlan,
     label: str,
@@ -154,13 +84,13 @@ def record_function_step_runtime_profile(
     extra_fields: RuntimeProfileExtraFields = None,
 ) -> None:
     """Record one runtime profile event for a function-step plan."""
-    StepRuntimeProfileRecord.from_step(
-        label,
-        seconds,
-        step_index=plan.step_index,
-        step_name=plan.step_name,
-        extra_fields=extra_fields,
-    ).emit()
+    fields: dict[str, RuntimeProfileFieldValue] = {
+        "step": plan.step_index,
+        "step_name": plan.step_name,
+    }
+    if extra_fields is not None:
+        fields.update(extra_fields)
+    RuntimeProfileLogger.log(logger, label, seconds, **fields)
 
 
 def _single_execution_group_patterns(
@@ -623,10 +553,9 @@ class FunctionStepExecutor:
     def source_pattern_context(self) -> SourcePatternResolutionContext:
         """Return source-path context used to filter source-bound anchors."""
 
-        projection = VirtualWorkspaceSourceProjectionAuthority.from_context(
-            self.context,
-            cache=self.context.runtime_source_workspace_projection_cache,
-        ).projection_or_empty()
+        projection = (
+            self.context.runtime_source_workspace_projection_authority.projection_or_empty()
+        )
         return self.context.runtime_source_binding_context_cache.source_pattern_context(
             parser=self.context.microscope_handler.parser,
             projection=self.context.runtime_source_workspace_projection_cache.filtered_by_axis(
@@ -903,10 +832,9 @@ class FunctionStepExecutor:
         axis_filter = {f"{axis_name}_filter": [plan.axis_id]}
         source_files = step_output_manifest(self.context).producer_paths_for(plan)
         if source_files is None:
-            source_projection = VirtualWorkspaceSourceProjectionAuthority.from_context(
-                self.context,
-                cache=self.context.runtime_source_workspace_projection_cache,
-            ).projection_if_available()
+            source_projection = (
+                self.context.runtime_source_workspace_projection_authority.projection_if_available()
+            )
             if (
                 plan.main_input_dependency.kind
                 is StepInputDependencyKind.PIPELINE_START
@@ -932,6 +860,7 @@ class FunctionStepExecutor:
             patterns_by_axis = PatternDiscoveryEngine(
                 self.context.microscope_handler.parser,
                 self.context.filemanager,
+                self.context.runtime_pattern_discovery_cache,
             ).auto_detect_patterns_from_axis_files(
                 list(source_files),
                 axis_id=plan.axis_id,
@@ -949,6 +878,7 @@ class FunctionStepExecutor:
             extensions=LOADABLE_IMAGE_EXTENSIONS,
             group_by=plan.group_by,
             variable_components=plan.variable_component_values,
+            pattern_cache=self.context.runtime_pattern_discovery_cache,
             **axis_filter,
         )
 

@@ -54,6 +54,7 @@ if TYPE_CHECKING:
     from openhcs.core.runtime_array_values import RuntimeArrayData
     from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
     from openhcs.core.runtime_image_values import ImagePayloadMetadata
+    from openhcs.core.source_image_provenance import SourceImageProvenance
 
 SOURCE_ALIAS_PART_SEPARATOR = "__"
 SOURCE_BINDING_ALIAS_METADATA_FIELD = "source_alias"
@@ -691,6 +692,46 @@ class SourceSelector:
 
         return any(source_filters_match(path, self.filters) for path in identities)
 
+    def metadata_candidates_match(
+        self,
+        candidates: Iterable[SourceMetadataMapping],
+    ) -> bool:
+        """Match declared coordinates in store or current-payload metadata."""
+        from openhcs.core.source_matching import (
+            semantic_source_metadata_value,
+            source_component_metadata_values,
+            source_metadata_values_equal,
+        )
+
+        candidates = tuple(candidates)
+        return all(
+            any(
+                source_metadata_values_equal(value, selector.value)
+                for metadata in candidates
+                for value in source_component_metadata_values(metadata, selector.component)
+            )
+            for selector in self.components
+        ) and all(
+            any(
+                value is not None and source_metadata_values_equal(value, selector.value)
+                for metadata in candidates
+                for value in (semantic_source_metadata_value(metadata, selector.field),)
+            )
+            for selector in self.metadata
+        )
+
+    def matches_provenance(self, provenance: SourceImageProvenance) -> bool:
+        """Apply the same selectors to identities carried by current pixels."""
+        identities = provenance.represented_source_identities
+        return (
+            (not self.filters or self.path_filters_match(
+                tuple(identity.path for identity in identities if identity.path is not None)
+            ))
+            and self.metadata_candidates_match(
+                tuple(identity.component_metadata or {} for identity in identities)
+            )
+        )
+
 
 def source_alias_measurement_names(alias: str) -> tuple[str, ...]:
     """Return measurement source-name tokens represented by a source alias."""
@@ -850,7 +891,8 @@ class NamedSourceBinding(SourceAssignmentBase):
     """Name selected image planes and their optional component identity.
 
     ``alias`` is the source name presented to pipeline functions and user
-    interfaces. The selected planes retain their exact store-backed pixel identity.
+    interfaces. ``origin`` selects current-step pixels or original store pixels;
+    both retain their declared acquisition provenance.
     ``component_identity`` authoritatively assigns biological coordinates after
     selector resolution, replacing coordinates merely inferred by a source store.
     """
@@ -1077,6 +1119,33 @@ class NamedSourceBinding(SourceAssignmentBase):
         metadata = metadata.replace_fields(source_channel_axis=source_channel_axis)
         return metadata.payload_with(data, image_payload_mask(payload))
 
+    def project_step_input_payload(self, payload: RuntimeArrayData) -> RuntimeArrayData:
+        """Select current pixels by provenance, then assign this binding's name.
+
+        The requested alias names the selection; it need not be an alias on the
+        input carrier. Provenance coordinates select planes, not original pixels.
+        """
+        from openhcs.core.runtime_image_values import image_payload_metadata
+
+        metadata = image_payload_metadata(payload)
+        provenance = metadata.source_provenance
+        if not provenance.has_values:
+            raise ValueError(f"STEP_INPUT binding {self.alias!r} requires source provenance.")
+
+        if not provenance.source_plane_count:
+            if not self.selector.matches_provenance(provenance):
+                raise ValueError(f"STEP_INPUT binding {self.alias!r} selects no current planes.")
+            selected = payload
+        else:
+            selection = tuple(
+                index for index in range(provenance.source_plane_count)
+                if self.selector.matches_provenance(provenance.for_source_plane(index))
+            )
+            if not selection:
+                raise ValueError(f"STEP_INPUT binding {self.alias!r} selects no current planes.")
+            selected = metadata.project_source_planes(payload, selection)
+        return self.apply_loaded_payload(selected, source_context=None)
+
     @staticmethod
     def _monochrome_source_data(
         data: RuntimeArrayData,
@@ -1156,27 +1225,7 @@ class NamedSourceBinding(SourceAssignmentBase):
         if normalized_alias is not None:
             return str(normalized_alias) == self.alias
 
-        from openhcs.core.source_matching import (
-            semantic_source_metadata_value,
-            source_component_metadata_values,
-            source_metadata_values_equal,
-        )
-
-        return all(
-            any(
-                source_metadata_values_equal(value, selector.value)
-                for value in source_component_metadata_values(
-                    metadata,
-                    selector.component,
-                )
-            )
-            for selector in self.selector.components
-        ) and all(
-            (value := semantic_source_metadata_value(metadata, selector.field))
-            is not None
-            and source_metadata_values_equal(value, selector.value)
-            for selector in self.selector.metadata
-        )
+        return self.selector.metadata_candidates_match((metadata,))
 
     def input_plan(
         self,

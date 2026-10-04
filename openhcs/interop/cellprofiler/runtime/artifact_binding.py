@@ -311,11 +311,13 @@ class RuntimeInputBindingRequest:
             )
         source_plan = self.adapter.request.source_binding_plan
         source_binding = source_plan.binding_for_artifact_ref(spec.ref())
-        primary_projection = edge.main_flow_projection
         source_artifact_binding = (
             source_binding
-            if edge.storage_plan is None and primary_projection is None
+            if edge.storage_plan is None
             else None
+        )
+        primary_projection = (
+            edge.main_flow_projection if source_artifact_binding is None else None
         )
         runtime_edge = (
             edge if edge.storage_plan is not None and primary_projection is None else None
@@ -336,7 +338,9 @@ class RuntimeInputBindingRequest:
         if source_artifact_binding is not None:
             value = cast(
                 RuntimeCallableArgument,
-                self.adapter.request.source_artifact_payload(spec.ref()),
+                replace(
+                    self.adapter.request, source_payload=self.current_image,
+                ).source_artifact_payload(spec.ref()),
             )
         elif runtime_edge is not None:
             runtime_input = self.adapter.request.runtime_artifact_input(

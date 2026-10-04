@@ -139,6 +139,63 @@ same observations with individual points, interquartile ranges and medians.
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
+## Supplementary Figure 9. Native review of task-only repair and retained limits
+
+![Whole-field first/final overlays, an elongated-object repair, a separated-pair control and a remaining small-focus exclusion.](../figures/slas/h001_native_repair.png){width=6in}
+
+\(A) Whole-field raw image and first (a01) and final (a04) overlays at the same
+camera and display window. (B) A continuous elongated signal has two first
+partitions and one final partition. (C) A separated compact pair retains two
+regions in both candidates; these crops use the original matched whole-field
+screenshots, not a later enlarged first-candidate view. (D) Final-only raw,
+result and combined crops show a small bright focus outside the size-selected
+ROI cohort. This is a scope limitation, not a biological error claim against
+that cohort. Raw limits are 8–152 in A, C and D and 8–248 in B; gamma is 1.
+Colours distinguish regions within each view, not corresponding identities
+across candidates. No physical calibration is inferred. These local witnesses
+complement the separate whole-image computational-reference comparison in
+Figure 7A; they do not establish exhaustive biological accuracy.
+
+Source: Robert Haase and BioImageAnalysisNotebooks contributors,
+[`blobs.tif` at the pinned notebook revision](https://github.com/haesleinhuepf/BioImageAnalysisNotebooks/blob/68845a1afaf53bf601958a3fa7d86f3cf8a43219/docs/29_algorithm_validation/blobs.tif),
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Adaptations are
+OpenHCS-derived overlays, native display windows and screenshot cropping/scaling.
+The [source proof](task_only_analysis/h001-native-source-proof.json) and
+[render receipt](task_only_analysis/h001-native-render-receipt.json) retain
+the unchanged source PNG identities and exact display crops.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
+## Supplementary Figure 10. Matched views of volumetric centroid candidates
+
+![Raw fluorescence, candidate centroids and combined views from a three-dimensional development continuation.](../figures/slas/h002_development_centroids.png){width=6in}
+
+An ordinary southern profile (top) and an upper profile (bottom) are shown as
+raw fluorescence, centroid points alone and combined views. The upper XY slice
+displays one centre; association with centres on adjacent Z planes remains
+unresolved in the archived three-dimensional review. Rows use zero-based Z
+indices 32 and 36, with raw windows 2750–22382 and 711–58564, respectively;
+gamma is 1. Contrast is fixed within each triplet. These are same-context
+development examples, not a fresh autonomous pass or an accuracy evaluation.
+No physical calibration or scale bar is inferred. The source is the Allen
+Institute for Cell Science `cells3d` nuclear channel, via the pinned Haase
+notebook collection; [CC0 distribution was confirmed by the Allen Institute](https://github.com/scikit-image/scikit-image/issues/6181#issuecomment-1012370105).
+
+The [source receipt](task_only_analysis/h002-development-source-receipt.json)
+retains the six original capture payloads and supporting multi-plane views.
+The [render receipt](task_only_analysis/h002-development-render-receipt.json)
+records unchanged PNG embedding and the identical full-canvas clip used for
+each panel. The [CSV comparison](task_only_analysis/h002-development-csv-comparison.json)
+shows that prominence trials removed boundary rows while retained centroid
+and volume measurements were unchanged; it does not prove voxelwise mask
+equality or one centre per biological nucleus (Supplementary Data 8).
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
 ## Supplementary Data 1. CellProfiler workflow comparison
 
 This supplement indexes source tables and evaluation records. Figure scripts
@@ -646,6 +703,25 @@ from the three score receipts. Its
 [provenance receipt](../figures/slas/independent_agent_validation_provenance.json)
 retain the plotted rows and source/output hashes.
 
+## Supplementary Data 8. Task-only authoring and independent repair
+
+The [task-only evaluation report](task_only_analysis.md) distinguishes first
+completed scientific predictions from final independent repairs on the same
+inputs. H001 compares notebook-derived computational partitions, whereas
+BBBC039 uses independent nuclear annotations. The report also retains the
+BBBC039 full-200-field distribution, operational qualifications and the limits
+of cross-author comparisons. Exact post-freeze evaluation receipts accompany
+the report; original acquisitions, prediction arrays and tool journals remain
+in their frozen study bundles. No reference-score feedback was supplied to
+the authors, and consulted development images are not described as unseen data.
+
+The report separately records a same-author three-dimensional development
+continuation, not a fresh autonomous trial. Seed-prominence increases reduced
+29 centres to 26 by removing boundary fragments while leaving suspect interior
+partitions unchanged. Matched multi-plane review therefore did not accept an
+unqualified biological count. This case has no reference-agreement score and
+does not contribute to the two scored task-only comparisons.
+
 ## Software snapshots and evidence
 
 | Evidence | Software identity | What the record establishes |
@@ -661,6 +737,7 @@ retain the plotted rows and source/output hashes.
 | Comet Assay translation; Figure 4 | Mapping retained from the 0.8.5 figure; regenerated with source hashes in the translation receipt | Unchanged module-to-step mapping, function parameters and generated-code round trip |
 | Custom-function registration; Supplementary Figure 5 | 0.8.5 development checkout with root patch `89ef46cb05` and generic patch `c5aeee2413` | Registration, selection, controls and MCP descriptions |
 | Prospective agent-authored assays; Supplementary Figure 7 | OpenHCS 0.8.5 current-source trials on 15-16 September 2026; frozen source and score receipts retained | Three single-attempt pipelines frozen before held-out scoring; BBBC039/007 annotations and BBBC013 treatment response |
+| Task-only authoring; Supplementary Data 8 | Separately qualified OpenHCS bundles; gpt-6.1-sol trials on 4 October 2026; original source, freeze and scorer identities in evaluation receipts | H001 first/final computational reference agreement; BBBC039 paired three-field repair and separate final full-200 reference agreement; no reference-score feedback |
 
 The full figure receipts retain source hashes and capture-specific changes.
 The custom-function example was registered and selected but not executed on

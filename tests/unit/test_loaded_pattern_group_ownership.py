@@ -9,6 +9,7 @@ import numpy as np
 import pytest
 
 from openhcs.constants.constants import AllComponents, VariableComponents
+from openhcs.core.runtime_profile import RuntimeProfileLogger
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.context.processing_context import ProcessingContext
@@ -24,7 +25,6 @@ from openhcs.core.steps.function_runtime import (
     PatternGroupExecutionRequest,
     PatternGroupExecutionScope,
     PatternGroupRuntime,
-    RuntimeProfileSink,
 )
 from openhcs.core.steps.function_output_manifest import NoStepOutputManifestMatch
 
@@ -154,7 +154,7 @@ def test_scope_admission_follows_load_profile_inside_execution_error_boundary(mo
     events = []
     failure = RuntimeError("cohort admission failed")
     monkeypatch.setattr(runtime, "_load_input_stack", lambda: (events.append("load") or (paths, payload)))
-    monkeypatch.setattr(RuntimeProfileSink, "record", lambda label, *_args, **_kwargs: events.append(label))
+    monkeypatch.setattr(RuntimeProfileLogger, "log", lambda _logger, label, *_args, **_kwargs: events.append(label))
 
     def fail_capture(cls, observed_request, observed_paths, observed_payload):
         assert observed_request is request
@@ -181,7 +181,7 @@ def test_load_errors_and_stale_skip_precede_capture_and_execution_wrapping(monke
         raise failure
 
     monkeypatch.setattr(runtime, "_load_input_stack", failed_load)
-    monkeypatch.setattr(RuntimeProfileSink, "record", lambda *_args, **_kwargs: pytest.fail("failed load must not reach profile/capture"))
+    monkeypatch.setattr(RuntimeProfileLogger, "log", lambda *_args, **_kwargs: pytest.fail("failed load must not reach profile/capture"))
     if isinstance(failure, NoStepOutputManifestMatch):
         assert runtime.run() is None
     else:
@@ -197,7 +197,7 @@ def test_empty_chain_is_rejected_after_full_capture_and_load_profile(monkeypatch
     runtime = PatternGroupRuntime(request)
     labels = []
     monkeypatch.setattr(runtime, "_load_input_stack", lambda: (paths, payload))
-    monkeypatch.setattr(RuntimeProfileSink, "record", lambda label, *_args, **_kwargs: labels.append(label))
+    monkeypatch.setattr(RuntimeProfileLogger, "log", lambda _logger, label, *_args, **_kwargs: labels.append(label))
     with pytest.raises(ValueError, match="has no invocations") as exc:
         runtime.run()
     assert isinstance(exc.value.__cause__, ValueError)

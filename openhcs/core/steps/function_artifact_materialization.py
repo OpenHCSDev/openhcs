@@ -1122,13 +1122,24 @@ class RuntimeArtifactMaterialization:
             source_identity = (
                 ArtifactStreamSourceMetadataAuthority.payload_source_identity(data)
             )
-            record_source = AnalysisOutputDescriptorAuthority.record_source_descriptor(
-                context,
-                plan,
-                record,
-                spec,
-                output_plan=output_plan,
-            )
+            try:
+                record_source = AnalysisOutputDescriptorAuthority.record_source_descriptor(
+                    context,
+                    plan,
+                    record,
+                    spec,
+                    output_plan=output_plan,
+                )
+            except IncompleteFunctionOutputFilenameIdentityError as exc:
+                if not AnalysisOutputDescriptorAuthority.missing_component_is_aggregated(
+                    exc.component_name,
+                    record.key.scope,
+                    tuple(plan.variable_components or ()),
+                ):
+                    raise
+                # A projected stack has no single coordinate on its stacked axis.
+                # The writer names each occurrence from its complete plane identity.
+                record_source = None
             filename_source_identity = (
                 None if record_source is None
                 else AnalysisOutputDescriptorAuthority.source_identity_for_path(

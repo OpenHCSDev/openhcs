@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass, field
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
@@ -27,6 +28,8 @@ from openhcs.core.runtime_plane_projection import RuntimePlaneProjection
 from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.runtime_measurements import MeasurementTable
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
+from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjectionCache
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentityCache
 from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
 from openhcs.core.measurement_feature_queries import (
@@ -43,6 +46,13 @@ class CellProfilerRuntimeTestContext:
     filemanager: object | None
     microscope_handler: object
     source_image_set_identity_policy: SourceImageSetIdentityPolicy
+    plate_path: Path = Path('/plate/Images')
+    runtime_source_binding_context_cache: RuntimeSourceBindingContextCache = field(
+        default_factory=RuntimeSourceBindingContextCache,
+    )
+    runtime_source_workspace_projection_cache: VirtualWorkspaceSourceProjectionCache = field(
+        default_factory=VirtualWorkspaceSourceProjectionCache,
+    )
     runtime_function_output_identity_cache: FunctionOutputIdentityCache = field(
         default_factory=FunctionOutputIdentityCache
     )

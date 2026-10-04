@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from types import MappingProxyType
 from typing import Any, Hashable, TYPE_CHECKING
@@ -15,12 +15,17 @@ from openhcs.core.source_metadata import (
     ResolvedSourceMetadataRecord,
     SourceMetadataMapping,
 )
+from openhcs.core.source_matching import source_component_metadata_items
+from openhcs.core.source_path_identity import source_path_identity_key
 
 if TYPE_CHECKING:
     from openhcs.core.source_binding_selection import (
+        SourceCandidatePathResolution,
         SourcePatternResolutionContext,
         SourceUniverseRuntimeState,
     )
+    from openhcs.core.source_image_provenance import SourceImageIdentity
+    from openhcs.constants.constants import AllComponents
     from openhcs.core.source_workspace_projection import (
         VirtualWorkspaceSourceProjection,
     )
@@ -33,6 +38,75 @@ class RuntimeSourceResolutionSnapshot:
 
     projection: "VirtualWorkspaceSourceProjection"
     context: "SourcePatternResolutionContext"
+    path_resolutions: Mapping[str, "SourceCandidatePathResolution"]
+    component_values: Mapping[str, tuple[Mapping["AllComponents", str], ...]]
+
+    def context_for_matching(self) -> "SourcePatternResolutionContext":
+        """Expose this admitted epoch through the existing matching context."""
+        return replace(self.context, resolution_snapshot=self)
+
+    def matching_candidates_for_source_identities(
+        self,
+        identities: Sequence["SourceImageIdentity"],
+        candidates: Sequence[str],
+    ) -> tuple[tuple[str, ...], ...]:
+        """Join captured paths and correlated component records in query order."""
+        positions = self.context.declared_positions_for_candidates(candidates)
+        if any(position not in self.path_resolutions for position in positions):
+            return self.context.matching_candidates_for_source_identities(
+                identities, candidates,
+            )
+        positions_by_path: dict[str, set[str]] = {}
+        for position in positions:
+            resolution = self.path_resolutions[position]
+            paths = (
+                resolution.mapped_source_paths[0]
+                if resolution.mapped_source_paths else position,
+                *(resolution.virtual_paths or (position,)),
+            )
+            for path in paths:
+                positions_by_path.setdefault(source_path_identity_key(path), set()).add(position)
+
+        queries = tuple(
+            source_component_metadata_items(identity.component_metadata or {})
+            for identity in identities
+        )
+        component_indexes = {}
+        for query in queries:
+            components = tuple(component for component, _ in query)
+            if not components or components in component_indexes:
+                continue
+            index: dict[tuple[str, ...], set[str]] = {}
+            for position in positions:
+                for record in self.component_values[position]:
+                    if all(component in record for component in components):
+                        key = tuple(record[component] for component in components)
+                        index.setdefault(key, set()).add(position)
+            component_indexes[components] = index
+
+        matches = []
+        for identity, query in zip(identities, queries, strict=True):
+            if not identity.addressable:
+                matches.append(())
+                continue
+            path_positions = (
+                None if identity.path is None else positions_by_path.get(
+                    source_path_identity_key(identity.path), set(),
+                )
+            )
+            components = tuple(component for component, _ in query)
+            component_positions = (
+                component_indexes[components].get(
+                    tuple(str(value) for _, value in query), set(),
+                ) if components else None
+            )
+            matches.append(tuple(
+                position for position in positions
+                if (path_positions is None or position in path_positions)
+                and (component_positions is None or position in component_positions)
+                and (components or identity.path is not None)
+            ))
+        return tuple(matches)
 
     @classmethod
     def from_projection(
@@ -45,10 +119,10 @@ class RuntimeSourceResolutionSnapshot:
         """Resolve declared positions into one independently owned runtime view."""
         from openhcs.core.source_binding_selection import (
             DeclaredSourceMetadataRecord,
-            SourcePatternResolutionContext,
+            SourceIdentityResolutionContext,
         )
 
-        context = SourcePatternResolutionContext.from_projection(
+        context = SourceIdentityResolutionContext.from_projection(
             parser=parser,
             projection=projection,
             metadata_rules=metadata_rules,
@@ -82,7 +156,25 @@ class RuntimeSourceResolutionSnapshot:
                 {} if metadata is None else metadata
             )
         context = replace(context, source_metadata_by_path=MappingProxyType(records))
-        return cls(projection=projection, context=context)
+        resolutions = {
+            path: context._candidate_path_resolution(path)
+            for path in context.source_paths_by_virtual_path
+        }
+        components = {
+            path: tuple(
+                MappingProxyType({
+                    component: str(value)
+                    for component, value in source_component_metadata_items(metadata)
+                })
+                for metadata in context.metadata_for_paths(resolution.metadata_paths())
+            )
+            for path, resolution in resolutions.items()
+        }
+        return cls(
+            projection=projection, context=context,
+            path_resolutions=MappingProxyType(resolutions),
+            component_values=MappingProxyType(components),
+        )
 
 
 @dataclass(slots=True)
@@ -113,14 +205,14 @@ class RuntimeSourceBindingContextCache:
         key = (id(projection), id(parser), parser.semantic_identity(), metadata_rules)
         cached = self.source_resolution_snapshots.get(key)
         if cached is not None:
-            return cached.context
+            return cached.context_for_matching()
         snapshot = RuntimeSourceResolutionSnapshot.from_projection(
             parser=parser,
             projection=projection,
             metadata_rules=metadata_rules,
         )
         self.source_resolution_snapshots[key] = snapshot
-        return snapshot.context
+        return snapshot.context_for_matching()
 
     def __reduce__(self) -> tuple[type[RuntimeSourceBindingContextCache], tuple[()]]:
         """Transport reconstructs all derived caches from declaration defaults."""
