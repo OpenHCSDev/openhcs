@@ -502,7 +502,13 @@ class RuntimeExecutionAxisScope:
         self,
         metadata: SourceMetadataMapping | None = None,
     ) -> SourceMetadataMapping:
-        """Project every owned coordinate, rejecting conflicting source identity."""
+        """Project scope coordinates while retaining an explicit measured source.
+
+        A measurement's physical source can differ from its object's grouped
+        channel. Keep that declared source coordinate; only absent group
+        metadata is supplied by this scope. Axis and fixed coordinates must
+        agree, and unrepresented coordinates are never invented.
+        """
         from openhcs.core.source_matching import (
             source_component_metadata_value,
             with_source_component_metadata,
@@ -513,6 +519,8 @@ class RuntimeExecutionAxisScope:
         )
         for component, value in self.source_component_values:
             existing = source_component_metadata_value(merged, component)
+            if component is self.component and existing is not None:
+                continue
             if existing is not None and str(existing) != value:
                 raise ValueError(
                     "Runtime execution scope conflicts with source component metadata "

@@ -246,7 +246,9 @@ def test_path_validation_accepts_explicit_no_main_flow_dependency(
     planner = PathPlanner.__new__(PathPlanner)
     planner.session = SimpleNamespace(
         step_count=2,
-        snapshot=lambda index: SimpleNamespace(name=("axis", "export")[index]),
+        pipeline=SimpleNamespace(
+            steps=(SimpleNamespace(name="axis"), SimpleNamespace(name="export")),
+        ),
     )
     planner.plans = {
         1: CompiledStepPlan(
