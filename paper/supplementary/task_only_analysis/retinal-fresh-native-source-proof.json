@@ -1,0 +1,263 @@
+{
+  "author_run": "R0010_STAGED_96",
+  "tier": "Fresh task-only author, final completed detector output; not a manual-reference accuracy score",
+  "original_freeze": "080b541551b7c351c6fcca9f0fdc0b4d1947761c502d2c3e9e72c99ae0ac82e3",
+  "detector_instances": 109,
+  "border_instances": 8,
+  "roi_contour_members": 110,
+  "input_source": "User-provided retinal whole-mount R0010.czi, RBPMS AF647 channel 1. Not a public reference-annotation dataset.",
+  "raw_window": [
+    0,
+    70
+  ],
+  "gamma": 1,
+  "rendering": "Unchanged original PNG files, native SVG clipping and geometric scale only; no analytical pixel transformation, new execution or scoring.",
+  "crops": {
+    "overview": [
+      566,
+      41,
+      415,
+      415
+    ],
+    "southwest": [
+      413,
+      28,
+      837,
+      442
+    ]
+  },
+  "captures": [
+    {
+      "name": "final-corrected-sw-raw70",
+      "resource": {
+        "mime_type": "image/png",
+        "path": "/run/media/ts/hdd/openhcs-science/next-retina-staged96-after646-20261004/R0010_STAGED_96/screenshots/final-corrected-sw-raw70/20261004T193412165662Z_napari_6017_OpenHCS_Napari_Visualization.png",
+        "sha256": "ba28bf4907f66c111f72e6f6bcd601dddd12d99336f78c04a1a832dc9cc8cfea",
+        "size_bytes": 626790,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///run/media/ts/hdd/openhcs-science/next-retina-staged96-after646-20261004/R0010_STAGED_96/screenshots/final-corrected-sw-raw70/20261004T193412165662Z_napari_6017_OpenHCS_Napari_Visualization.png"
+      },
+      "native_viewport": {
+        "center": [
+          0,
+          260,
+          60
+        ],
+        "zoom": 6
+      },
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          442
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          1,
+          0,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          159.53970417633408,
+          159.60146945088937
+        ]
+      },
+      "region_filename_valid": true,
+      "visible_route_keys": [
+        "origin_manual_kind_manual_projection_selected_images_add70ca94590bf0059962cb8a4a49c7b9ac383b9f4c56f91bc54bf363018911d_channel_1"
+      ]
+    },
+    {
+      "name": "final-corrected-sw-combined70",
+      "resource": {
+        "mime_type": "image/png",
+        "path": "/run/media/ts/hdd/openhcs-science/next-retina-staged96-after646-20261004/R0010_STAGED_96/screenshots/final-corrected-sw-combined70/20261004T193458773604Z_napari_6017_OpenHCS_Napari_Visualization.png",
+        "sha256": "5d9372a6d94459df1d67a449417bca8a12b66513f9416a982921fc936d5bccc1",
+        "size_bytes": 626539,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///run/media/ts/hdd/openhcs-science/next-retina-staged96-after646-20261004/R0010_STAGED_96/screenshots/final-corrected-sw-combined70/20261004T193458773604Z_napari_6017_OpenHCS_Napari_Visualization.png"
+      },
+      "native_viewport": {
+        "center": [
+          0,
+          260,
+          60
+        ],
+        "zoom": 6
+      },
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          442
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          1,
+          0,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          159.53970417633408,
+          159.60146945088937
+        ]
+      },
+      "region_filename_valid": true,
+      "visible_route_keys": [
+        "origin_manual_kind_manual_projection_selected_images_add70ca94590bf0059962cb8a4a49c7b9ac383b9f4c56f91bc54bf363018911d_channel_1",
+        "origin_manual_kind_manual_projection_results_R0010.czi_w1_Somata_step3_rois.roi.zip_channel_1_shapes"
+      ]
+    },
+    {
+      "name": "final-corrected-overview-raw70",
+      "resource": {
+        "mime_type": "image/png",
+        "path": "/run/media/ts/hdd/openhcs-science/next-retina-staged96-after646-20261004/R0010_STAGED_96/screenshots/final-corrected-overview-raw70/20261004T193656222198Z_napari_6017_OpenHCS_Napari_Visualization.png",
+        "sha256": "beaed0234b930bb77375ae2f76d7c55a8b20ca86fee903c7cd6bea6cc33513a1",
+        "size_bytes": 406534,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///run/media/ts/hdd/openhcs-science/next-retina-staged96-after646-20261004/R0010_STAGED_96/screenshots/final-corrected-overview-raw70/20261004T193656222198Z_napari_6017_OpenHCS_Napari_Visualization.png"
+      },
+      "native_viewport": {
+        "center": [
+          0,
+          159.66,
+          159.66
+        ],
+        "zoom": 1.3
+      },
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          442
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          1,
+          0,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          159.53970417633408,
+          159.60146945088937
+        ]
+      },
+      "region_filename_valid": true,
+      "visible_route_keys": [
+        "origin_manual_kind_manual_projection_selected_images_add70ca94590bf0059962cb8a4a49c7b9ac383b9f4c56f91bc54bf363018911d_channel_1"
+      ]
+    },
+    {
+      "name": "final-corrected-overview-combined70",
+      "resource": {
+        "mime_type": "image/png",
+        "path": "/run/media/ts/hdd/openhcs-science/next-retina-staged96-after646-20261004/R0010_STAGED_96/screenshots/final-corrected-overview-combined70/20261004T193742876255Z_napari_6017_OpenHCS_Napari_Visualization.png",
+        "sha256": "c64711a914cb6b98b921a615f6f9e548e7ad2881c84f2d1666500a90d6c5dcd1",
+        "size_bytes": 411739,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///run/media/ts/hdd/openhcs-science/next-retina-staged96-after646-20261004/R0010_STAGED_96/screenshots/final-corrected-overview-combined70/20261004T193742876255Z_napari_6017_OpenHCS_Napari_Visualization.png"
+      },
+      "native_viewport": {
+        "center": [
+          0,
+          159.66,
+          159.66
+        ],
+        "zoom": 1.3
+      },
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          442
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          1,
+          0,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          159.53970417633408,
+          159.60146945088937
+        ]
+      },
+      "region_filename_valid": true,
+      "visible_route_keys": [
+        "origin_manual_kind_manual_projection_selected_images_add70ca94590bf0059962cb8a4a49c7b9ac383b9f4c56f91bc54bf363018911d_channel_1",
+        "origin_manual_kind_manual_projection_results_R0010.czi_w1_Somata_step3_rois.roi.zip_channel_1_shapes"
+      ]
+    }
+  ],
+  "uncertainty": "Southwest native rectangle y1960..2070/x450..550 has contrast maximum 0.0195047 below cutoff 0.02 and zero support/labels; its biological class remains uncertain. Clear-object errors and ambiguous objects must be reported separately. No perfect/manual-infallibility criterion is imposed."
+}
+

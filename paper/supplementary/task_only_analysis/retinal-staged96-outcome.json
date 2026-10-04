@@ -1,0 +1,26 @@
+{
+  "study": "R0010_STAGED_96",
+  "scope": "Fresh-context uncoached development on one released retinal field; useful detector outputs and autonomous diagnosis, not a validated RGC count or held-out result.",
+  "source_root": "/home/ts/wt/openhcs-issue-batch-20260929/next-retina-staged96-after646-20261004/R0010_STAGED_96/author-workspace",
+  "retained_sha256": {
+    "REPORT.md": "ae4f1b5381b3587b7ab6e0dd465286c8a13f2f8142b49fb1b0b2f250ae277d1a",
+    "output/freeze/freeze.json": "080b541551b7c351c6fcca9f0fdc0b4d1947761c502d2c3e9e72c99ae0ac82e3",
+    "output/freeze/source-manifest.json": "992ea02fe05e3ea6cea0e353f16a5890e498923195b332c8ea61629649d31d12",
+    "output/freeze/payload-manifest.json": "5338548b45aa8059f82d77280b154b1ff2161c2f6bcfd1a200b732f588428dc1",
+    "output/attempts/first/pipeline.py": "6360241f1c7f4c4db7c87c7374d3ac1a61d656b1cd1a6e4796b5effc7ff2e942",
+    "output/attempts/contrast020/pipeline.py": "0dcabca5218ce9b9bf3e8e5c4b71ecc8af40c96b8ab7b638c52f8cb70bce5c53",
+    "output/attempts/contrast020/SW-diagnostic.json": "aa60a732e62b421d9c218cd47a30d44adfd56f922bc581c7547f9c7835cf92ac"
+  },
+  "verified_manifest_entries": {"source": 21, "payload": 119},
+  "attempts": [
+    {"candidate": "first", "measured_objects": 243, "border_objects": 19, "execution": "FAILED during viewer settling after scientific outputs", "biological_decision": "rejected"},
+    {"candidate": "class3", "measured_objects": 105, "border_objects": 11, "execution": "COMPLETE", "biological_decision": "rejected"},
+    {"candidate": "contrast020", "measured_objects": 109, "border_objects": 8, "execution": "COMPLETE", "biological_decision": "qualified detector output; validated count withheld"}
+  ],
+  "final_execution_id": "39acd27f-6d47-4ad3-be1e-8985b23c9cb3",
+  "final_compile_id": "d4525a23-8398-4331-bf92-2d93df4262e6",
+  "captures_opened_by_author": 62,
+  "client_numeric_exit": 2,
+  "cleanup": "Original typed viewer/native receipts acknowledge process exit; independent current PID check found neither 2885885 nor 2860740.",
+  "limits": "Rectangle support fractions are not biological accuracy estimates. Faint support, soma extent and ring splits remain unresolved. Initially misnamed views are retained but excluded from distributed QA; corrected captures carry actual coordinates."
+}
