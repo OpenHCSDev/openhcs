@@ -77,11 +77,12 @@ export CONTROLLED_COMMON_SWAP=0 CONTROLLED_COMMON_CURRENT=8589934593
 run 0 ongoing charge_not_a_ceiling
 export CONTROLLED_COMMON_CURRENT=1610612736
 dd if=/dev/zero of="$scratch/run/A/author-workspace/output/controlled-overage.bin" bs=4096 count=257 status=none
-run 1 ongoing retained_output_overage
+run 0 ongoing retained_output_above_estimate
+rg -q 'byte quotas removed' "$runtime/resources-retained_output_above_estimate.output"
 unlink "$scratch/run/A/author-workspace/output/controlled-overage.bin"
 mkdir -p "$scratch/run/A/author-workspace/output/runtime/scratch"
 dd if=/dev/zero of="$scratch/run/A/author-workspace/output/runtime/scratch/controlled-overage.bin" bs=4096 count=257 status=none
-run 1 ongoing scratch_overage
+run 0 ongoing scratch_above_estimate
 unlink "$scratch/run/A/author-workspace/output/runtime/scratch/controlled-overage.bin"
 printf 'full avg10=4.82 avg60=invalid avg300=0.23 total=324417078\n' > "$scratch/host/pressure"
 run 77 ongoing malformed_telemetry

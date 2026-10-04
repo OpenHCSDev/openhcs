@@ -61,29 +61,26 @@ reserved=0
 remaining=0
 for ((i=old_count;i<${#outputs[@]};i++)); do
   limits=$(fleet_limits_for "${authors[i-old_count]}")
-  scratch_cap=$(jq -er '.scratch_per_author_mib*1048576' <<< "$limits")
-  output_cap=$(jq -er '.output_per_author_mib*1048576' <<< "$limits")
-  reserved=$((reserved+output_cap+scratch_cap))
+  scratch_estimate=$(jq -er '.scratch_per_author_mib*1048576' <<< "$limits")
+  output_estimate=$(jq -er '.output_per_author_mib*1048576' <<< "$limits")
+  reserved=$((reserved+output_estimate+scratch_estimate))
   output=${outputs[i]}
   bytes=0; scratch=0
   if [[ -d "$output" ]]; then bytes=$(du -s -B1 "$output" | cut -f1); fi
   if [[ -d "$output/runtime/scratch" ]]; then scratch=$(du -s -B1 "$output/runtime/scratch" | cut -f1); fi
-  printf 'Current %s total=%s scratch=%s retained=%s limits=%s/%s\n' "$output" "$bytes" "$scratch" "$((bytes-scratch))" "$output_cap" "$scratch_cap" | tee -a "$receipt.output"
-  if [[ "${authors[i-old_count]}" == "$FLEET_SLOT" ]]; then
-    test "$scratch" -le "$scratch_cap"
-    test "$((bytes-scratch))" -le "$output_cap"
-  fi
-  # A sibling's actual bytes consume HOME, not this member's permission.
-  # Exhausted components have no unused growth; never subtract their overage
-  # from another member's still-funded reservation.
-  retained_growth=$((output_cap-bytes+scratch))
-  scratch_growth=$((scratch_cap-scratch))
+  printf 'Current %s total=%s scratch=%s retained=%s growthEstimates=%s/%s\n' "$output" "$bytes" "$scratch" "$((bytes-scratch))" "$output_estimate" "$scratch_estimate" | tee -a "$receipt.output"
+  # Original programme values plan remaining physical HOME growth; they are
+  # not output/scratch quotas. Actual usage beyond an estimate is measured,
+  # never a selected-author or sibling veto. No negative growth is credited.
+  retained_growth=$((output_estimate-bytes+scratch))
+  scratch_growth=$((scratch_estimate-scratch))
   if [[ "$retained_growth" -lt 0 ]]; then retained_growth=0; fi
   if [[ "$scratch_growth" -lt 0 ]]; then scratch_growth=0; fi
   remaining=$((remaining+retained_growth+scratch_growth))
   total=$((total+bytes))
 done
 printf 'Programme old=%s current=%s reservedCurrent=%s\n' "$old" "$total" "$reserved" | tee -a "$receipt.output"
+printf 'Operational policy: retained-output/scratch byte quotas removed; programme amounts are growth estimates, not limits. Actual HOME/RAM/pressure and owned cleanup remain authoritative.\n' | tee -a "$receipt.output"
 # Historical allocations are observations, already reflected in df free space.
 # Only still-funded output/scratch growth is reserved against actual HOME.
 home_floor=$(jq -er '.proposed_resource_envelope.minimum_home_ongoing_gib*1073741824' <<< "$FLEET_PROGRAM")
