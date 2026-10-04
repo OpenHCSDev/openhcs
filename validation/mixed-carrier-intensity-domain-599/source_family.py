@@ -1,6 +1,7 @@
 """Read exact Git source through the existing audit Package parser; no product imports."""
 
 import ast
+import argparse
 import hashlib
 import json
 from pathlib import Path
@@ -23,12 +24,19 @@ class SourceScopeRepository(Repository):
 checkout = Path(__file__).resolve().parents[2]
 repo = SourceScopeRepository(checkout)
 revision = repo.git("rev-parse", "HEAD").strip()
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--dependency-root", action="append", default=[])
+parser.add_argument("--only-dependencies", action="store_true")
+arguments = parser.parse_args()
+source_roots = dict(value.split("=", 1) for value in arguments.dependency_root)
 dependencies = []
 for line in repo.git("ls-tree", "-r", revision).splitlines():
     descriptor, path = line.split("\t", 1)
     mode, _, object_id = descriptor.split()
     if mode == "160000":
-        dependencies.append((Path("/home/ts/code/projects/openhcs") / path, object_id, None))
+        if not arguments.only_dependencies or path in source_roots:
+            dependencies.append((Path(source_roots.get(path,
+                str(Path("/home/ts/code/projects/openhcs") / path))), object_id, None))
 
 terms = (
     "ImagePayloadMetadata", "ImageUnitIntervalIntensityMetadata", "intensity_scale",
@@ -37,7 +45,8 @@ terms = (
     "ImagePayloadStackComposition", "stack_runtime_slices", "ImageFileSourceMetadata",
 )
 failures = []
-for location, version, prefix in ((checkout, revision, "openhcs"), *dependencies):
+production = () if arguments.only_dependencies else ((checkout, revision, "openhcs"),)
+for location, version, prefix in (*production, *dependencies):
     source_repo = SourceScopeRepository(location)
     try:
         listing = source_repo.git("ls-tree", "-r", "--name-only", version).splitlines()
@@ -66,11 +75,11 @@ for location, version, prefix in ((checkout, revision, "openhcs"), *dependencies
         print(json.dumps({"root": str(location), "revision": version,
             "error": repr(error)}), flush=True)
 
-for file in (
+for file in (() if arguments.only_dependencies else (
     "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/numpy/_core/shape_base.py",
     "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/skimage/color/colorconv.py",
     "/home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/skimage/util/dtype.py",
-):
+)):
     path = Path(file)
     try:
         text = path.read_text()

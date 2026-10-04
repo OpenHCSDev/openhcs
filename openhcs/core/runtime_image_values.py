@@ -62,7 +62,12 @@ MetadataValueT = TypeVar("MetadataValueT")
 
 @dataclass(frozen=True, slots=True)
 class ImageUnitIntervalIntensityMetadata:
-    """Authored proof that image pixels retain exact unit-interval quantization."""
+    """Normalized analytical pixels, with optional exact quantization proof.
+
+    An absent scale means arithmetic changed the quantization, not that current
+    pixels reverted to acquisition codes. Absence of this record denotes the
+    unnormalized source domain.
+    """
 
     scale: int | None = None
     source_plane_scales: tuple[int | None, ...] = ()
@@ -954,6 +959,68 @@ class ImagePayloadMetadata(
         """Return metadata after an arithmetic transform changed pixel values."""
         return self.replace_fields(
             unit_interval_intensity=ImageUnitIntervalIntensityMetadata(),
+        )
+
+    def normalize_intensity_payload(
+        self, payload: Any, *, dtype: Any = None, channel_index: int = 0,
+    ) -> Any:
+        """Normalize the declared current domain, independently of storage dtype."""
+        array = np.asarray(image_payload_data(payload))
+        target_dtype = np.dtype(np.float32 if dtype is None else dtype)
+        if not (
+            np.issubdtype(array.dtype, np.number)
+            or np.issubdtype(array.dtype, np.bool_)
+        ) or np.issubdtype(array.dtype, np.complexfloating):
+            return payload
+        if self.unit_interval_intensity is not None:
+            return self.payload_with(
+                array.astype(target_dtype, copy=False), image_payload_mask(payload),
+            )
+        if self.plane_axis is not None and self.source_plane_intensity_scales:
+            if len(self.source_plane_intensity_scales) != len(array):
+                raise ValueError(
+                    "Image intensity scales must match the declared leading plane axis."
+                )
+            planes = tuple(
+                self.for_leading_source_plane(index).normalize_intensity_payload(
+                    plane, dtype=target_dtype,
+                )
+                for index, plane in enumerate(array)
+            )
+            proof = _ImagePayloadMetadataComposer.composed_unit_interval_intensity(
+                tuple(image_payload_metadata(plane) for plane in planes)
+            )
+            return self.replace_fields(unit_interval_intensity=proof).payload_with(
+                np.stack(tuple(image_payload_data(plane) for plane in planes)),
+                image_payload_mask(payload),
+            )
+        scale = self.intensity_scale_for_source_plane(channel_index)
+        if scale is None:
+            # Bare arrays are admitted at this original numerical boundary. A
+            # promoted float uses its declared source scale, never a range guess.
+            scale = image_intensity_scale_for_dtype(array.dtype)
+        normalized = array.astype(target_dtype, copy=False)
+        proof_scale = None
+        if scale is not None:
+            if not np.isfinite(scale) or scale <= 0:
+                raise ValueError("Source intensity scale must be finite and positive.")
+            normalized = normalized / float(scale)
+            if np.issubdtype(array.dtype, np.integer) and float(scale).is_integer():
+                proof_scale = int(scale)
+        return self.with_unit_interval_intensity_scale(proof_scale).payload_with(
+            normalized, image_payload_mask(payload),
+        )
+
+    @classmethod
+    def intensity_coherent_payloads(cls, payloads: Sequence[Any]) -> tuple[Any, ...]:
+        """Reconcile raw/normalized members before a dense buffer erases dtype."""
+        metadata = tuple(image_payload_metadata(payload) for payload in payloads)
+        normalized = tuple(record.unit_interval_intensity is not None for record in metadata)
+        if not any(normalized) or all(normalized):
+            return tuple(payloads)
+        return tuple(
+            record.normalize_intensity_payload(payload)
+            for record, payload in zip(metadata, payloads, strict=True)
         )
 
     def without_spatial_domain(self) -> "ImagePayloadMetadata":
@@ -1918,31 +1985,10 @@ def normalize_image_payload_intensity(
     dtype: Any = None,
     channel_index: int = 0,
 ) -> Any:
-    """Normalize image pixels by payload metadata while preserving context."""
-    import numpy as np
-
-    array = np.asarray(image_payload_data(payload))
-    target_dtype = np.float32 if dtype is None else np.dtype(dtype)
-    if np.issubdtype(array.dtype, np.bool_):
-        normalized = array.astype(target_dtype)
-    elif np.issubdtype(array.dtype, np.integer):
-        intensity_scale = image_payload_intensity_scale(
-            payload,
-            channel_index=channel_index,
-        )
-        if intensity_scale is None or intensity_scale <= 1:
-            normalized = array.astype(target_dtype)
-        else:
-            normalized = array.astype(target_dtype) / float(intensity_scale)
-            metadata = image_payload_metadata(
-                payload
-            ).with_unit_interval_intensity_scale(int(intensity_scale))
-            return with_image_payload_data(payload, normalized, metadata=metadata)
-    elif np.issubdtype(array.dtype, np.floating):
-        normalized = array.astype(target_dtype, copy=False)
-    else:
-        return payload
-    return with_image_payload_data(payload, normalized)
+    """Enter the metadata-owned normalization recipe once at the array boundary."""
+    return image_payload_metadata(payload).normalize_intensity_payload(
+        payload, dtype=dtype, channel_index=channel_index,
+    )
 
 
 def _tuple_value(values: tuple[Any, ...], index: int) -> Any | None:
