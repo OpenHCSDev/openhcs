@@ -13,6 +13,11 @@ from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.source_metadata import SourceMetadataMapping
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.steps.abstract import AbstractStep
+from openhcs.core.steps.function_step import FunctionStep
+from openhcs.core.function_patterns import (
+    normalize_function_pattern,
+    strip_disabled_functions,
+)
 from openhcs.core.vfs_protocol import (
     FileManagerLike,
     PlatePathDeclaration,
@@ -153,7 +158,11 @@ def resolve_declared_dataclass_paths(
 
 @dataclass(frozen=True, slots=True)
 class ResolvedPipelineDefinition:
-    """ObjectState-resolved pipeline declaration shared by all axis sessions."""
+    """Capture enabled declarations once after ObjectState/callable resolution.
+
+    Axis sessions derive metadata kwargs and provider contracts from this view;
+    authored FunctionSteps keep their public function-pattern syntax.
+    """
 
     steps: Sequence[AbstractStep]
     step_state_map: Mapping[int, "ObjectState"]
@@ -166,6 +175,22 @@ class ResolvedPipelineDefinition:
             raise ValueError(
                 f"Resolved pipeline missing ObjectState entries for steps {missing_states}."
             )
+        object.__setattr__(
+            self,
+            "steps",
+            tuple(
+                (
+                    step.with_function_spec(
+                        normalize_function_pattern(
+                            strip_disabled_functions(step.func) or []
+                        )
+                    )
+                    if isinstance(step, FunctionStep)
+                    else step
+                )
+                for step in self.steps
+            ),
+        )
 
 
 @dataclass(slots=True)

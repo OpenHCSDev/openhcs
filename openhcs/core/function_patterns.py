@@ -431,6 +431,44 @@ class NormalizedFunctionPattern:
                     )
                 source_key_by_invocation[item.key] = group.source_group_key
 
+    def __bool__(self) -> bool:
+        return any(group.items for group in self.groups)
+
+    @property
+    def source_group_keys(self) -> tuple[FunctionGroupKey, ...]:
+        return tuple(group.source_group_key for group in self.groups)
+
+    def with_artifact_input_values(
+        self, values_by_key: RuntimeKwargMap
+    ) -> "NormalizedFunctionPattern":
+        """Inject this axis's metadata without rebuilding captured declarations."""
+        return replace(
+            self,
+            groups=tuple(
+                replace(
+                    group,
+                    items=tuple(
+                        replace(
+                            item,
+                            kwargs=_freeze_runtime_kwargs(
+                                {
+                                    **item.kwargs_dict,
+                                    **{
+                                        spec.parameter_name: values_by_key[spec.name]
+                                        for spec in item.contract.artifact_inputs
+                                        if spec.binds_callable_parameter()
+                                        and spec.name in values_by_key
+                                    },
+                                }
+                            ),
+                        )
+                        for item in group.items
+                    ),
+                )
+                for group in self.groups
+            ),
+        )
+
     def iter_items(self) -> Iterator[NormalizedFunctionItem]:
         """Yield normalized callable items in runtime order."""
         for group in self.groups:
@@ -1209,6 +1247,9 @@ def get_core_callable(
     func_pattern: FunctionPatternSyntax,
 ) -> FunctionPatternCallable | None:
     """Extract the first effective callable reference from a function pattern."""
+    if isinstance(func_pattern, NormalizedFunctionPattern):
+        return next((item.func for item in func_pattern.iter_items()), None)
+
     if isinstance(func_pattern, FunctionReference):
         return func_pattern
 
@@ -1334,6 +1375,8 @@ def strip_disabled_functions(
     pattern: FunctionPatternSyntax,
 ) -> FunctionPatternSyntax | None:
     """Remove disabled function items from any supported function-pattern shape."""
+    if isinstance(pattern, NormalizedFunctionPattern):
+        return pattern
     if isinstance(pattern, tuple):
         _func, kwargs = _split_function_item(pattern)
         if RUNTIME_CALLABLE_KWARG_POLICY.item_is_disabled(kwargs):
@@ -1385,6 +1428,9 @@ def inject_artifact_input_values(
     """Inject artifact input values only into callables that declare those inputs."""
     if not values_by_key:
         return pattern
+
+    if isinstance(pattern, NormalizedFunctionPattern):
+        return pattern.with_artifact_input_values(values_by_key)
 
     if _is_callable_pattern_item(pattern):
         core_callable = get_core_callable(pattern)

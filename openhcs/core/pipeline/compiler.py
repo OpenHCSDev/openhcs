@@ -1192,10 +1192,9 @@ class PipelineCompiler:
         pipeline_definition: List[AbstractStep],
         step_state_map: Mapping[int, "ObjectState"],
     ) -> ResolvedPipelineDefinition:
-        pipeline = ResolvedPipelineDefinition(pipeline_definition, step_state_map)
         enabled_pairs = [
-            (step, pipeline.step_state_map[index])
-            for index, step in enumerate(pipeline.steps)
+            (step, step_state_map[index])
+            for index, step in enumerate(pipeline_definition)
             if step.enabled
         ]
         pipeline_definition.clear()

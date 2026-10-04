@@ -302,11 +302,11 @@ class PathPlannerExecutionGroups:
         if not isinstance(step, FunctionStep):
             return PathPlannerGroupScope.ungrouped()
 
-        func_pattern = step.func
+        func_pattern = normalize_function_pattern(step.func)
         group_by = self.normalized_group_by(step)
-        if isinstance(func_pattern, dict):
+        if func_pattern.is_grouped:
             scope = PathPlannerGroupScope.from_raw(
-                func_pattern.keys(),
+                func_pattern.source_group_keys,
                 component=self.execution_component_for_dict_pattern(
                     group_by,
                     step.name,
@@ -613,7 +613,9 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
                 (),
             )
 
-        func_pattern = strip_disabled_functions(step.func)
+        func_pattern = normalize_function_pattern(
+            strip_disabled_functions(step.func) or []
+        )
         source_bindings = step.source_bindings
         declaration_context = self.artifact_declaration_context(
             step,
@@ -621,12 +623,12 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
             source_bindings=source_bindings,
         )
         contracts = resolve_function_pattern_contracts(
-            self.declaration_pattern(func_pattern),
+            func_pattern,
             self.planner.invocation_contract_provider,
             declaration_context,
         )
         declarations = extract_artifact_declarations(
-            self.declaration_pattern(func_pattern),
+            func_pattern,
             declaration_provider=self.planner.declaration_provider,
             invocation_contract_provider=self.planner.invocation_contract_provider,
             step_context=declaration_context,
@@ -738,25 +740,6 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
             CompiledSourceUniversePlan.from_source_binding_plan(binding_plan),
         )
 
-    @staticmethod
-    def declaration_pattern(
-        func_pattern: FunctionPatternSyntax | None,
-    ) -> FunctionPatternSyntax:
-        """Return the declaration-time pattern, with disabled-only steps empty."""
-        if func_pattern is None:
-            return []
-        return func_pattern
-
-    @classmethod
-    def stripped_declaration_pattern(
-        cls,
-        func_pattern: FunctionPatternSyntax | None,
-    ) -> FunctionPatternSyntax:
-        """Return declaration pattern after disabled functions are removed."""
-        if func_pattern is None:
-            return []
-        return cls.declaration_pattern(strip_disabled_functions(func_pattern))
-
     def namespace_grouped_outputs_for_runtime_consumers(
         self,
         func_pattern: FunctionPatternSyntax | None,
@@ -766,9 +749,9 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
         """Namespace grouped outputs by the step execution groups."""
         output_refs = tuple(declarations.outputs)
         if (
-            isinstance(func_pattern, dict)
+            not output_refs
             or group_scope.is_ungrouped
-            or not output_refs
+            or normalize_function_pattern(func_pattern).is_grouped
         ):
             return declarations
 
@@ -2328,7 +2311,7 @@ class PathPlannerStepAssemblyStage:
 
             step = self.planner.session.pipeline.steps[i]
             if isinstance(step, FunctionStep):
-                pattern = self.planner.artifacts.stripped_declaration_pattern(step.func)
+                pattern = step.func
                 declarations = extract_artifact_declarations(
                     pattern,
                     declaration_provider=self.planner.declaration_provider,

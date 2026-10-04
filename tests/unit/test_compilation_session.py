@@ -23,6 +23,8 @@ from openhcs.core.config import (
 )
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import (
+    compile_function_pattern,
+    inject_artifact_input_values,
     normalize_function_pattern,
 )
 from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
@@ -280,10 +282,73 @@ def test_compilation_session_shares_resolved_pipeline_and_owns_axis_plans():
     )
 
     assert session.axis_id == "A01"
-    assert session.pipeline.steps[0] is step
+    assert session.pipeline.steps[0] is not step
+    assert step.func is _identity
+    captured = session.pipeline.steps[0].func
+    assert normalize_function_pattern(captured) is captured
+    assert next(captured.iter_items()).func is _identity
     assert session.pipeline.step_state_map[0] is step_state
     assert session.pipeline.steps[0].name == "step"
     assert session.plan(0).step_name == "step"
+
+
+def test_resolved_declarations_reuse_contracts_but_keep_axis_and_author_epochs(monkeypatch):
+    from openhcs.core.pipeline.artifact_planning import extract_artifact_declarations
+    from openhcs.core.invocation_artifacts import InvocationContractPlan
+
+    @artifact_inputs("grid_dimensions")
+    def needs_grid(image, grid_dimensions, *, sigma=1):
+        return image
+
+    kwargs = {"grid_dimensions": None, "sigma": 2}
+    authored = FunctionStep(
+        func={1: [(needs_grid, kwargs), (_identity, {"enabled": False})]},
+        name="Grid",
+    )
+    definition = [authored]
+    state = SimpleNamespace(scope_id="plate::functionstep_0")
+    from_callable = CallableContract.from_callable.__func__
+    calls = []
+
+    def count_contracts(cls, func):
+        calls.append(func)
+        return from_callable(cls, func)
+
+    monkeypatch.setattr(CallableContract, "from_callable", classmethod(count_contracts))
+    pipeline = PipelineCompiler._filter_enabled_steps(definition, {0: state})
+    captured = pipeline.steps[0].func
+    (item,) = tuple(captured.iter_items())
+    assert definition == [authored] and definition[0].func[1][0][1] is kwargs
+    assert captured.source_group_keys == (1,)
+    assert calls == [needs_grid]
+    assert normalize_function_pattern(captured) is captured
+    extract_artifact_declarations(captured)
+    injected = inject_artifact_input_values(captured, {"grid_dimensions": (3, 4)})
+    other_axis = inject_artifact_input_values(captured, {"grid_dimensions": (8, 9)})
+    compiled = compile_function_pattern(injected, {}, {})
+    assert calls == [needs_grid]
+    assert next(injected.iter_items()).contract is item.contract
+    assert next(other_axis.iter_items()).contract is item.contract
+    assert next(compiled.iter_invocations()).contract is item.contract
+    assert next(injected.iter_items()).kwargs_dict["grid_dimensions"] == (3, 4)
+    assert next(other_axis.iter_items()).kwargs_dict["grid_dimensions"] == (8, 9)
+    assert item.kwargs_dict == {"grid_dimensions": None, "sigma": 2}
+
+    replacement = from_callable(CallableContract, needs_grid)
+    provider_compiled = compile_function_pattern(
+        injected,
+        {},
+        {},
+        invocation_contract_provider=lambda _item, _context: InvocationContractPlan(
+            replacement
+        ),
+    )
+    assert next(provider_compiled.iter_invocations()).contract is replacement
+    kwargs["sigma"] = 7
+    assert item.kwargs_dict["sigma"] == 2
+    recaptured = ResolvedPipelineDefinition(definition, {0: state})
+    assert next(recaptured.steps[0].func.iter_items()).kwargs_dict["sigma"] == 7
+    assert calls == [needs_grid, needs_grid]
 
 
 def test_compiler_keeps_variable_components_as_stack_source():
