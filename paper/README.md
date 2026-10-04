@@ -18,12 +18,21 @@ Working author-review draft for **SLAS Technology**:
 
 ## Figures and validation
 
-The six main figures show the shared workflow, matching UI/code/MCP authoring,
+The seven main figures show the shared workflow, matching UI/code/MCP authoring,
 the recorded agent analysis, CellProfiler translation, benchmark results and
-viewer inspection. Eight supplementary figures explain runtime composition,
+viewer inspection, followed by task-only first/final analysis and full-corpus
+coverage. Eight supplementary figures explain runtime composition,
 process boundaries, compiler preparation, connected outputs and custom functions.
 They also report historical timing observations and three prospective
 agent-authored assays on held-out public data.
+
+[Supplementary Data 8](supplementary/task_only_analysis.md) retains the newer
+task-only authoring results separately from those prospective held-out assays.
+Figure 7 consumes the exact post-freeze evaluation receipts, without rerunning
+microscopy analyses or scoring. Regenerate its three panels with
+`python paper/figures/build_slas_task_only.py` in an existing matplotlib-capable
+environment; source/output hashes and plotted observations are retained beside
+the figure.
 
 Generators, editable artwork, native captures and provenance receipts are in
 `figures/`. Scientific examples in this revision use public CellProfiler workflows
