@@ -1,0 +1,27 @@
+{
+  "trial": "H003_FRESH656_96",
+  "scope": "fresh independent development on one released paired field; not held-out evaluation",
+  "final_attempt": "REPAIR03",
+  "disposition": "rejected_for_unqualified_biological_counting",
+  "final_execution_id": "135df1ec-15ec-48da-bbba-40d7fa87ab38",
+  "final_counts": {"nuclei": 56, "seeded_cell_regions": 56, "validated_biological_counts": false},
+  "candidate_counts": {"FIRST": 53, "REPAIR01": 51, "REPAIR02": 54, "REPAIR03": 56},
+  "independent_payload_verification": {"payload_entries": 244, "source_entries": 1, "sha256sum_check_exit_code": 0},
+  "final_qa_capture_count": 90,
+  "reference_answers_opened_or_scored": false,
+  "original_root": "/home/ts/wt/openhcs-issue-batch-20260929/next-h003-fresh96-after656-20261004/H003_FRESH656_96/author-workspace/output",
+  "canonical_payload_root": "/run/media/ts/hdd/openhcs-science/next-h003-fresh96-after656-20261004/H003_FRESH656_96",
+  "original_records": {
+    "FINAL_MANIFEST.json": "845d0c939868784d18b1f66d1c536a8a1dbf0a2ce401cfeca71936b2f1ddcc00",
+    "FINAL_REPORT.md": "b9c33600422073b0ad0539e324f69576bbf1c3009e83a59c5973f3e63e2e05ad",
+    "QA_LEDGER.json": "3617bb8a7c9fe2bc6c1aa7b0e06500f3ff83df0e35627bd3bf6250fb1b7356c9",
+    "pipelines/REPAIR03_dim_marker.py": "ba5e3c790a1d305bbe5a1f68123b66349c9dc1e6128a35200093d3136a0d6a98"
+  },
+  "personally_reviewed_native_captures": {
+    "qa/FINAL_REPAIR03_DNA_isolated_split_object_raw_u255/20261004T211633217051Z_napari_6017_OpenHCS_Napari_Visualization.png": "cf18354dfa1857c907cb2228b6b7500d5e1b15d4de723a576b37e8f13c1c1df5",
+    "qa/FINAL_REPAIR03_DNA_isolated_split_object_result_u60/20261004T211647170086Z_napari_6017_OpenHCS_Napari_Visualization.png": "52bb5db51464e003d4189634bf60da014f0bc59d810dfdd58429dff6f2c4751e",
+    "qa/FINAL_REPAIR03_DNA_isolated_split_object_combined_u255/20261004T211701127091Z_napari_6017_OpenHCS_Napari_Visualization.png": "4a1b0a1019c38db8fe47ca85e1b35e584a16a4650d0840622b88ad6f8ab78d04"
+  },
+  "limitations": ["apparent split is qualitative, not annotated truth", "different combined canvas height prevents exact screen-pixel comparison", "physical calibration unverified", "no task-wide accuracy or causal skill improvement estimate"],
+  "recorded_client_exit_code": 2
+}
