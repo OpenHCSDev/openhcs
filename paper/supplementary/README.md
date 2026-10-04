@@ -779,6 +779,16 @@ accuracy score nor evidence of host-wide RAM exhaustion. Its
 the unchanged freeze, partial inventory and termination receipts. It is distinct
 from the prospective BBBC013 result in Supplementary Data 7.
 
+A later retained-context translocation continuation completed all 96 sources
+and 17,340 cell rows. A measured cytoplasm-admission repair reduced zero growth
+in three diagnostic wells without changing nuclear instances. The full result
+retains 13,359 defined non-edge ratios, 690 defined edge-excluded ratios and
+3,291 undefined zero-growth cases. Compartment validity remains qualified;
+registered plate statistics and dose-response outputs are absent. This is
+same-author recovery, not a fresh autonomous pass. Its
+[development coverage record](task_only_analysis/bbbc013-dev89-outcome.json)
+identifies the independently verified freeze and diagnostic comparison.
+
 The report also records a same-author retinal continuation with 100 inspectable
 RBPMS soma-detector instances. Matched views show useful local improvements,
 but residual dim-body misses and uncertain dense partitions prevent treating
