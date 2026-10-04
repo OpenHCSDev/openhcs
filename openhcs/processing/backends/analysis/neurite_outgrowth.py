@@ -220,13 +220,30 @@ class MetaXpressCellBodySettings:
     """MetaXpress-style body controls plus an OpenHCS engine acceptance gate."""
 
     approximate_max_width: float = 30.0
-    """Approximate maximum short-axis width in micrometers."""
+    """Approximate maximum short-axis width in micrometers.
+
+    Also sets local-background and adaptive-threshold neighbourhood scales.
+    Compact detection tests candidate minor-axis extent; nuclear-seeded body
+    growth uses this scale to bound signal support. It is not the independent
+    CellProfiler marker-smoothing or seed-separation control.
+    """
 
     minimum_area: float = 50.0
-    """Minimum cell-body area in square micrometers."""
+    """Minimum admitted candidate area in square micrometers.
+
+    Converted using pixel spacing and tested after candidate detection or body
+    growth. Candidate area can differ from the visible raw body extent;
+    lowering this gate cannot restore support absent before area qualification.
+    """
 
     intensity_above_local_background: float = 100.0
-    """Minimum absolute intensity difference from local background."""
+    """Minimum absolute local-background response in consumed-image units.
+
+    Compact candidates require their MEAN region response to meet this cutoff,
+    alongside area and width gates. Nuclear support and signal-body growth
+    also use it as a pixelwise support cutoff. It does not replace candidate
+    foreground, marker or division controls.
+    """
 
     channel_index: int | None = None
     """Optional body channel; omitted means the neurite channel."""
@@ -288,10 +305,22 @@ class MetaXpressOutgrowthSettings:
     """Documented outgrowth controls for Neurite Outgrowth."""
 
     maximum_width: float = 4.0
-    """Maximum outgrowth width in micrometers."""
+    """Outgrowth width scale in micrometers.
+
+    Sets tubeness enhancement, threshold smoothing, local-background
+    neighbourhood and topology scales after conversion by pixel spacing.
+    It is not a Gaussian sigma or an independent hard width-only exclusion
+    filter. The adaptive-threshold window also depends on cell-body width.
+    """
 
     intensity_above_local_background: float = 50.0
-    """Minimum absolute intensity difference from local background."""
+    """Per-pixel local-background response cutoff in consumed-image units.
+
+    Initial process admission requires BOTH the enhanced candidate mask and
+    this local-response gate. At this initial admission stage, lowering the
+    cutoff cannot admit pixels excluded by the enhanced candidate mask. Later
+    rooting, ownership and signal-supported repair determine reported traces.
+    """
 
     minimum_cell_growth_to_log_as_significant: float = 10.0
     """Scoring-only total outgrowth threshold in micrometers."""
@@ -299,7 +328,13 @@ class MetaXpressOutgrowthSettings:
     candidate_threshold_correction_factor: float = (
         CELLPROFILER_NEURITE_ENGINE_PROFILE.neurite_candidate_threshold_correction_factor
     )
-    """Adaptive foreground sensitivity; lower values admit dimmer candidates."""
+    """Adaptive Otsu admission factor on the enhanced neurite response.
+
+    Distinct from the local-background response cutoff. Lower values can
+    admit weak paths as well as nuisance signal and fragments; optional
+    hysteresis seeds further restrict candidate components. A denser mask
+    does not establish rooted ownership or complete reported traces.
+    """
 
     candidate_hysteresis_seed_correction_factor: float | None = None
     """Optional stricter seed threshold retaining connected dim candidates."""
