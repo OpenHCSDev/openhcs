@@ -351,6 +351,7 @@ runtime axis, not biological object counts or an inferred well identity:
    :name: callable-artifact-plate-reference
 
    from dataclasses import dataclass
+   from typing import cast
 
    from openhcs.core.artifacts import (
        ArtifactSpec, MeasurementsArtifactType, SpecialArtifactType,
@@ -362,6 +363,7 @@ runtime axis, not biological object counts or an inferred well identity:
    from openhcs.core.pipeline.function_contracts import (
        artifact_inputs, artifact_outputs, execution_scope, runtime_bound_parameters,
    )
+   from openhcs.core.runtime_measurements import MeasurementTable
    from openhcs.core.runtime_stores import RuntimeArtifactBatch
    from openhcs.processing.materialization import CsvOptions, MaterializationSpec
 
@@ -388,7 +390,7 @@ runtime axis, not biological object counts or an inferred well identity:
        rows = tuple(
            PlateSummaryRow(
                axis_id, len(records),
-               sum(record.value.data.rows.row_count() for record in records),
+               sum(cast(MeasurementTable, record.data).rows.row_count() for record in records),
            )
            for axis_id, records in artifact_batch.records(PLATE_ROWS.ref()).items()
        )
@@ -402,7 +404,9 @@ configuration/source bindings; no axis-scoped step may follow a plate step.
 ``artifact_batch`` is required, keyword-only and runtime-owned: do not supply
 it in authored kwargs. Its ``records(spec.ref())`` exposes typed
 ``StoredRuntimeValue`` records by axis; each selected measurement payload is a
-``MeasurementTable`` whose rows retain their schema. No file loading, guessed
+``MeasurementTable`` at ``record.data`` whose rows retain their schema. The cast
+expresses the declared measurement input type; it does not load or convert data.
+No file loading, guessed
 paths, bare dictionary return or ``Any`` annotation is needed.
 
 The current plate executor requires exactly one ``SpecialArtifactType`` output;
