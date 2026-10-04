@@ -2159,15 +2159,16 @@ def measurement_rows_with_source_provenance(
                 f"slice_index={slice_index}, but provenance declares "
                 f"{source_provenance.source_plane_count} runtime plane(s)."
             )
-        return source_provenance.for_source_plane(slice_index).source_component_metadata
+        return source_provenance.component_metadata_for_plane(slice_index)
 
+    metadata_by_row = tuple(metadata_for_row(index) for index in range(row_count))
     for component in AllComponents:
         values = tuple(
             (
                 MEASUREMENT_SPARSE_CELL
                 if (
                     value := source_component_metadata_value(
-                        metadata_for_row(row_index) or {},
+                        metadata_by_row[row_index] or {},
                         component,
                     )
                 )

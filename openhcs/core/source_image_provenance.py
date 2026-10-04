@@ -134,6 +134,22 @@ class SourceImageIdentity:
             component_metadata=self.component_metadata_with_missing_from(fallback),
         )
 
+    def image_set_identities(
+        self,
+        policy: SourceImageSetIdentityPolicy,
+    ) -> frozenset[SourceImageSetIdentity]:
+        """Project this scalar source address into its declared image-set domain."""
+        identity = SourceImageSetIdentity.from_metadata(
+            self.component_metadata or {},
+            fallback_source_path=self.path or "",
+            policy=policy,
+        )
+        return (
+            frozenset()
+            if identity.components == (("source_path", ""),)
+            else frozenset((identity,))
+        )
+
     def component_metadata_with_missing_from(
         self,
         fallback: "SourceImageIdentity",
@@ -956,14 +972,7 @@ class SourceImageProvenance:
         policy: SourceImageSetIdentityPolicy,
     ) -> frozenset[SourceImageSetIdentity]:
         """Return the image-set identity represented by scalar provenance."""
-        identity = SourceImageSetIdentity.from_metadata(
-            self.source_component_metadata or {},
-            fallback_source_path=self.source_path or "",
-            policy=policy,
-        )
-        if identity.components == (("source_path", ""),):
-            return frozenset()
-        return frozenset((identity,))
+        return self.source_identity.image_set_identities(policy)
 
     def image_set_axis(
         self,
@@ -981,9 +990,23 @@ class SourceImageProvenance:
     ) -> tuple[frozenset[SourceImageSetIdentity], ...]:
         """Return one image-set identity entry for every runtime source plane."""
         return tuple(
-            self.for_source_plane(index).image_set_identities(policy)
+            self.source_image_provenance_planes.plane(
+                index
+            ).source_identity.with_missing_from(
+                self.source_identity
+            ).image_set_identities(policy)
             for index in range(self.source_plane_count)
         )
+
+    def component_metadata_for_plane(
+        self, plane_index: int
+    ) -> SourceComponentMetadata | None:
+        """Read current plane coordinates with their scalar source fallback."""
+        if not self.source_plane_count:
+            return self.source_component_metadata
+        return self.source_image_provenance_planes.plane(
+            plane_index
+        ).source_identity.component_metadata_with_missing_from(self.source_identity)
 
     def for_source_plane(self, plane_index: int) -> "SourceImageProvenance":
         if self.source_plane_count == 0:
@@ -1108,16 +1131,20 @@ class SourceImageProvenance:
         components: Sequence[AllComponents],
     ) -> dict[str, tuple[SourceMetadataScalar, ...]]:
         """Return exact component values that vary across declared source planes."""
-        if self.source_plane_count <= 1:
+        if not components or self.source_plane_count <= 1:
             return {}
+        metadata_by_plane = tuple(
+            self.component_metadata_for_plane(index) or {}
+            for index in range(self.source_plane_count)
+        )
         values_by_component: dict[str, tuple[SourceMetadataScalar, ...]] = {}
         for component in components:
             values = tuple(
                 source_component_metadata_raw_value(
-                    self.for_source_plane(plane_index).source_component_metadata or {},
+                    metadata,
                     component,
                 )
-                for plane_index in range(self.source_plane_count)
+                for metadata in metadata_by_plane
             )
             if any(value is None for value in values):
                 continue
@@ -1131,24 +1158,24 @@ class SourceImageProvenance:
     ) -> tuple[tuple[AllComponents, str], ...]:
         """Return fixed component values shared by every represented source plane."""
 
+        if not components:
+            return ()
+        metadata_by_plane = (
+            tuple(
+                self.component_metadata_for_plane(index) or {}
+                for index in range(self.source_plane_count)
+            )
+            if self.source_plane_count
+            else (self.source_component_metadata or {},)
+        )
         values: list[tuple[AllComponents, str]] = []
         for component in components:
-            metadata_values = (
-                tuple(
-                    source_component_metadata_value(
-                        self.for_source_plane(plane_index).source_component_metadata
-                        or {},
-                        component,
-                    )
-                    for plane_index in range(self.source_plane_count)
+            metadata_values = tuple(
+                source_component_metadata_value(
+                    metadata,
+                    component,
                 )
-                if self.source_plane_count
-                else (
-                    source_component_metadata_value(
-                        self.source_component_metadata or {},
-                        component,
-                    ),
-                )
+                for metadata in metadata_by_plane
             )
             if any(value is None for value in metadata_values):
                 raise ValueError(

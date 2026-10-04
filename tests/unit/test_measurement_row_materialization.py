@@ -133,9 +133,9 @@ def test_source_provenance_preserves_producer_image_name_and_fills_coordinates()
 ):
     rows = MeasurementProjectedColumnarRows(
         {
-            "slice_index": (0,),
-            "source_image_name": ("IllumActinAvg",),
-            "mean_intensity": (0.25,),
+            "slice_index": (1, 0, 1),
+            "source_image_name": ("IllumActinAvg",) * 3,
+            "mean_intensity": (0.5, 0.25, 0.75),
         },
         fields=(
             FieldSpec("slice_index", int),
@@ -146,8 +146,11 @@ def test_source_provenance_preserves_producer_image_name_and_fills_coordinates()
     provenance = SourceImageProvenance(
         source_image_names=("IllumActin",),
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
-            paths=("/input/A01_s1_w2.tif",),
-            component_metadata=({"well": "A01", "site": "1", "channel": "2"},),
+            paths=("/input/A01_s1_w2.tif", "/input/A01_s2_w2.tif"),
+            component_metadata=(
+                {"well": "A01", "site": "1", "channel": "2"},
+                {"well": "A01", "site": "2", "channel": "2"},
+            ),
         ),
     )
 
@@ -155,11 +158,27 @@ def test_source_provenance_preserves_producer_image_name_and_fills_coordinates()
 
     assert projected.row_mappings() == (
         {
+            "slice_index": 1,
+            "source_image_name": "IllumActinAvg",
+            "mean_intensity": 0.5,
+            "well": "A01",
+            "site": "2",
+            "channel": "2",
+        },
+        {
             "slice_index": 0,
             "source_image_name": "IllumActinAvg",
             "mean_intensity": 0.25,
             "well": "A01",
             "site": "1",
+            "channel": "2",
+        },
+        {
+            "slice_index": 1,
+            "source_image_name": "IllumActinAvg",
+            "mean_intensity": 0.75,
+            "well": "A01",
+            "site": "2",
             "channel": "2",
         },
     )
