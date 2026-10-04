@@ -731,6 +731,14 @@ accuracy score nor evidence of host-wide RAM exhaustion. Its
 the unchanged freeze, partial inventory and termination receipts. It is distinct
 from the prospective BBBC013 result in Supplementary Data 7.
 
+The report also records a same-author retinal continuation with 100 inspectable
+RBPMS soma-detector instances. Matched views show useful local improvements,
+but residual dim-body misses and uncertain dense partitions prevent treating
+the detector count as a validated RGC total. A measurement-only grouping repair
+restored original-channel tables without changing the soma masks. This case is
+assisted development, not a fresh autonomous success; its packaging overrun and
+nonzero client teardown status remain recorded.
+
 ## Software snapshots and evidence
 
 | Evidence | Software identity | What the record establishes |

@@ -197,6 +197,44 @@ the [compact outcome record](task_only_analysis/bbbc013-repeat94-outcome.json)
 identifies their paths and verified hashes. No execution or uncertain
 registration was replayed for this manuscript update.
 
+## Retinal development: useful candidates with residual misses
+
+The same-author continuation `R0010_REPAIR10_94` revisited one released retinal
+field and its own predecessor outputs. It is not a fresh task-only trial or a
+held-out evaluation. The source contains paired RBPMS, auxiliary fluorescence
+and Hoechst planes at 2586 x 2586 pixels. The final detector uses RBPMS alone;
+Hoechst intensity is measured in the same soma masks, not used to certify one
+retinal ganglion cell per nucleus.
+
+The completed final pipeline retained 100 soma-detector instances. The 102
+exported ROI contours include polygon components and holes and therefore are
+not a second cell count. Compared with the released predecessor, matched native
+views show removal of broad background-associated regions and a more continuous
+southeastern soma footprint. This comparison spans several method choices and
+cannot attribute the difference to smoothing alone. A narrower trial changing
+threshold smoothing from two to four pixels increased detector instances from
+99 to 100 and mask support from 414,225 to 433,545 pixels. Those aggregate changes
+motivated image review; they do not themselves establish a biological repair.
+
+Matched raw-only, result-only and combined views retained supported bright
+bodies and a separated neighbour pair. A diffuse dim southern body remained
+unsegmented, another faint body had only partial support, and a dense central
+cluster remained ambiguously partitioned. These limitations qualify the
+candidate detections rather than erasing their useful local support. The result
+is an inspectable detector output, not a validated biological RGC total or a
+completeness estimate. Measurements use original RBPMS and Hoechst pixels with
+the same label identities; a grouping correction restored both channel tables
+without changing the masks. The final label bytes are identical to those of the
+preceding smoothing candidate. Scientific processing completed, but final
+packaging exceeded the run's declared time bound by approximately 72 seconds,
+and the recorded client teardown exit code was 2; neither qualification is
+silently converted to a clean end-to-end pass.
+
+The [retinal outcome record](task_only_analysis/retinal-repair10-outcome.json)
+identifies the frozen report, consumed pipeline and retained label bytes. No
+new detector execution, reference scoring or pixel transformation was used to
+prepare this account.
+
 ## Scope and retained evidence
 
 [Figure 7 plot data](../figures/slas/task_only_analysis_plot_data.csv) retains
