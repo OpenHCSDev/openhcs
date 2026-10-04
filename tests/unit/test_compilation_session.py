@@ -73,7 +73,7 @@ def test_compiler_captures_scoped_worker_count(pipeline_workers, expected_worker
     try:
         ObjectStateRegistry.register(global_state, _skip_snapshot=True)
         ObjectStateRegistry.register(pipeline_state, _skip_snapshot=True)
-        captured = PipelineCompiler._capture_pipeline_config(pipeline_state)
+        captured = pipeline_state.to_saved_resolved_object()
         assert captured.num_workers == expected_workers
         assignments = PipelineCompiler._calculate_worker_assignments(
             ["A", "B", "C", "D"], captured.num_workers
@@ -243,10 +243,10 @@ def _compile_source_plans_for_contract(
 
 
 class _EffectiveConfigContextOrchestrator:
-    def create_context(self, axis_id: str) -> ProcessingContext:
+    def create_context(self, axis_id: str, *, resolved_config) -> ProcessingContext:
         return ProcessingContext(
             axis_id=axis_id,
-            auto_add_output_plate_to_plate_manager=True,
+            auto_add_output_plate_to_plate_manager=resolved_config.auto_add_output_plate_to_plate_manager,
         )
 
 

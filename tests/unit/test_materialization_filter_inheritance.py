@@ -43,7 +43,7 @@ def _resolved_checkpoint(
         plate_path=plate_path,
         pipeline_config=pipeline_config,
         get_component_keys=lambda _component: ["A01", "B02"],
-        create_context=lambda axis_id: SimpleNamespace(
+        create_context=lambda axis_id, *, resolved_config: SimpleNamespace(
             axis_id=axis_id,
             step_axis_filters={},
         ),
@@ -68,6 +68,7 @@ def _resolved_checkpoint(
     filters = PipelineCompiler._resolve_global_step_axis_filters(
         orchestrator,
         resolved,
+        pipeline_config_state.to_saved_resolved_object(),
     )
     return orchestrator, scope_id, pipeline_config_state, resolved, filters
 

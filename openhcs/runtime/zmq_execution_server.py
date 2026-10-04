@@ -21,6 +21,7 @@ from zmqruntime.messages import (
 from zmqruntime.startup import EndpointStartupStatusCallback
 
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+from objectstate.object_state import ObjectState
 from openhcs.core.config_document import ConfigDocumentAuthority
 from openhcs.core.orchestrator.cancellation import ExecutionCancelledError
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
@@ -550,10 +551,14 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
                 request_context.compile_artifact_id,
             )
             self._ensure_request_global_config_context(request_context)
+            resolved_config = ObjectState(
+                request_context.pipeline_config
+            ).to_saved_resolved_object()
             orchestrator = self._initialize_orchestrator(
                 request_context.execution_id,
                 plate_path_str,
                 request_context.pipeline_config,
+                resolved_config=resolved_config,
                 selected_pipeline_path=request_context.request_payload.selected_pipeline_path,
                 execution_bundle=(
                     self._compiled_artifacts[
@@ -582,6 +587,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
                 debug_execution_config=debug_execution_config,
                 debug_execution_policy=debug_execution_policy,
                 progress_emitter=progress_emitter,
+                resolved_config=resolved_config,
             )
             compilation_resolved = True
             self._record_compilation_outputs(request_context.execution_id, compilation)
@@ -632,6 +638,8 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
         execution_id: str,
         plate_path_str: str,
         pipeline_config,
+        *,
+        resolved_config: GlobalPipelineConfig,
         selected_pipeline_path: str | None = None,
         execution_bundle=None,
     ):
@@ -642,13 +650,14 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
         orchestrator = PipelineOrchestrator(
             plate_path=Path(plate_path_str),
             pipeline_config=pipeline_config,
+            resolved_config=resolved_config,
             selected_pipeline_path=selected_pipeline_path,
             progress_callback=None,
             transport_config=self.config,
         )
         orchestrator.execution_id = execution_id
         if execution_bundle is None:
-            orchestrator.initialize()
+            orchestrator.initialize(resolved_config=resolved_config)
         else:
             orchestrator.adopt_compiled_execution(execution_bundle)
         self.active_executions[execution_id].set_extra("orchestrator", orchestrator)
@@ -703,6 +712,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
         debug_execution_config,
         debug_execution_policy,
         progress_emitter: ZMQProgressEmitter,
+        resolved_config: GlobalPipelineConfig,
     ):
         if request_context.compile_artifact_id is not None:
             self._cleanup_compiled_artifacts()
@@ -711,6 +721,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
             plate_id=request_context.plate_id,
             pipeline_steps=request_context.pipeline_steps,
             orchestrator=orchestrator,
+            resolved_config=resolved_config,
             wells=wells,
             compile_artifact_id=request_context.compile_artifact_id,
             compilation_signature=request_context.compilation_signature,

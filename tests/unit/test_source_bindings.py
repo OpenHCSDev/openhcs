@@ -708,6 +708,57 @@ def test_orchestrator_microscope_init_uses_saved_resolved_pipeline_config(
     assert captured_kwargs["microscope_type"] == Microscope.OPENHCS.value
 
 
+def test_admitted_request_config_survives_next_live_global_context(
+    tmp_path, monkeypatch,
+):
+    from openhcs.core.orchestrator import orchestrator as orchestrator_module
+    from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
+    from openhcs.core.pipeline.compiler import AxisCompilationRequest
+
+    authored = PipelineConfig(microscope=Microscope.OPENHCS)
+    ensure_global_config_context(
+        GlobalPipelineConfig,
+        GlobalPipelineConfig(num_workers=2, auto_add_output_plate_to_plate_manager=True),
+    )
+    admitted = ObjectState(authored).to_saved_resolved_object()
+    ensure_global_config_context(
+        GlobalPipelineConfig,
+        GlobalPipelineConfig(num_workers=4, auto_add_output_plate_to_plate_manager=False),
+    )
+    received = {}
+    monkeypatch.setattr(
+        orchestrator_module, "create_microscope_handler",
+        lambda **kwargs: received.update(kwargs) or SimpleNamespace(),
+    )
+    orchestrator = PipelineOrchestrator(
+        tmp_path, pipeline_config=authored, resolved_config=admitted,
+    )
+    orchestrator.initialize_microscope_handler(admitted)
+    assert received["source_bindings_config"] is admitted.source_bindings_config
+    assert received["microscope_type"] == Microscope.OPENHCS.value
+    assert orchestrator.get_effective_config().num_workers == 4
+
+    orchestrator._initialized = True
+    orchestrator.input_dir = tmp_path
+    request = AxisCompilationRequest(
+        orchestrator=orchestrator,
+        global_config=admitted,
+        pipeline=SimpleNamespace(), path_resolver=SimpleNamespace(),
+        global_step_axis_filters={}, enable_visualizer_override=False,
+        is_zmq_execution=True,
+    )
+    context = request.context_for("A01")
+    assert context.auto_add_output_plate_to_plate_manager is True
+    assert context.tiff_config is admitted.tiff_config
+
+    # The next authored request admits current global and local changes.
+    orchestrator.pipeline_config = PipelineConfig(microscope=Microscope.OPENHCS, num_workers=3)
+    next_request = orchestrator.get_effective_config()
+    assert next_request.num_workers == 3
+    assert next_request.auto_add_output_plate_to_plate_manager is False
+    assert admitted.num_workers == 2
+
+
 def test_source_bindings_expose_generic_resolution_requirements():
     config = StepSourceBindingsConfig(
         bindings=(

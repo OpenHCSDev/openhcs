@@ -98,6 +98,7 @@ class PipelineOrchestrator:
         workspace_path: Optional[Union[str, Path]] = None,
         *,
         pipeline_config: Optional["PipelineConfig"] = None,
+        resolved_config: GlobalPipelineConfig | None = None,
         storage_registry: Optional[Any] = None,
         selected_pipeline_path: Union[str, Path, None] = None,
         progress_callback: Optional[Callable[[Dict[str, Any]], None]] = None,
@@ -192,7 +193,9 @@ class PipelineOrchestrator:
             logger.info("PipelineOrchestrator using global StorageRegistry instance.")
 
         # Override zarr backend with orchestrator's resolved config.
-        effective_config = self.get_effective_config()
+        effective_config = (
+            self.get_effective_config() if resolved_config is None else resolved_config
+        )
         zarr_backend_with_config = ZarrStorageBackend(effective_config.zarr_config)
         self.registry[Backend.ZARR.value] = zarr_backend_with_config
         logger.info(
@@ -295,7 +298,9 @@ class PipelineOrchestrator:
         self._visualizers[(backend_name,)] = vis
         return vis
 
-    def initialize_microscope_handler(self):
+    def initialize_microscope_handler(
+        self, resolved_config: GlobalPipelineConfig | None = None
+    ):
         """Initializes the microscope handler."""
         if self.microscope_handler is not None:
             logger.debug("Microscope handler already initialized.")
@@ -307,7 +312,11 @@ class PipelineOrchestrator:
             f"Initializing microscope handler using input directory: {self.input_dir}..."
         )
         try:
-            shared_context = self.get_effective_config()
+            shared_context = (
+                self.get_effective_config()
+                if resolved_config is None
+                else resolved_config
+            )
             microscope_type = (
                 shared_context.microscope.value
                 if shared_context.microscope != Microscope.AUTO
@@ -396,7 +405,10 @@ class PipelineOrchestrator:
             self._plate_path_frozen = True
 
     def initialize(
-        self, workspace_path: Optional[Union[str, Path]] = None
+        self,
+        workspace_path: Optional[Union[str, Path]] = None,
+        *,
+        resolved_config: GlobalPipelineConfig | None = None,
     ) -> "PipelineOrchestrator":
         """
         Initializes all required components for the orchestrator.
@@ -408,7 +420,12 @@ class PipelineOrchestrator:
             return self
 
         try:
-            self.initialize_microscope_handler()
+            effective_config = (
+                self.get_effective_config()
+                if resolved_config is None
+                else resolved_config
+            )
+            self.initialize_microscope_handler(effective_config)
             self.microscope_handler.source_selection_role().require_available_source(
                 self.plate_path
             )
@@ -426,7 +443,7 @@ class PipelineOrchestrator:
 
             # Log effective backend intent early for debugging test/UI differences
             try:
-                vfs_cfg = self.get_effective_config().vfs_config
+                vfs_cfg = effective_config.vfs_config
                 logger.info(
                     "VFS config at init: read_backend=%s intermediate_backend=%s materialization_backend=%s",
                     vfs_cfg.read_backend,
@@ -460,7 +477,7 @@ class PipelineOrchestrator:
             )
 
             # Ensure complete OpenHCS metadata exists
-            self._ensure_openhcs_metadata()
+            self._ensure_openhcs_metadata(effective_config)
 
             logger.info(
                 "PipelineOrchestrator fully initialized with cached component keys and metadata."
@@ -537,7 +554,9 @@ class PipelineOrchestrator:
     def is_initialized(self) -> bool:
         return self._initialized
 
-    def _ensure_openhcs_metadata(self) -> None:
+    def _ensure_openhcs_metadata(
+        self, resolved_config: GlobalPipelineConfig
+    ) -> None:
         """Ensure complete OpenHCS metadata exists for the plate.
 
         Uses the same context creation logic as pipeline execution to get full metadata
@@ -561,7 +580,9 @@ class PipelineOrchestrator:
         subdir_name = get_subdirectory_name(self.input_dir, self.plate_path)
 
         # Create context using SAME logic as create_context() to get full metadata
-        context = self.create_context(axis_id="metadata_init")
+        context = self.create_context(
+            axis_id="metadata_init", resolved_config=resolved_config
+        )
 
         # Determine correct backend using handler's logic (virtual_workspace for ImageXpress/Opera, disk for others)
         backend = self.microscope_handler.get_primary_backend(
@@ -607,7 +628,9 @@ class PipelineOrchestrator:
 
         return output_plate_root / materialization_path
 
-    def create_context(self, axis_id: str) -> ProcessingContext:
+    def create_context(
+        self, axis_id: str, *, resolved_config: GlobalPipelineConfig | None = None
+    ) -> ProcessingContext:
         """Creates a ProcessingContext for a given multiprocessing axis value."""
         if not self.is_initialized():
             raise RuntimeError(
@@ -620,7 +643,9 @@ class PipelineOrchestrator:
                 "Orchestrator input_dir is not set; initialize orchestrator first."
             )
 
-        effective_config = self.get_effective_config()
+        effective_config = (
+            self.get_effective_config() if resolved_config is None else resolved_config
+        )
         context = ProcessingContext(
             axis_id=axis_id,
             filemanager=self.filemanager,
@@ -694,6 +719,8 @@ class PipelineOrchestrator:
         enable_visualizer_override: bool = False,
         is_zmq_execution: bool = False,
         debug_execution_policy: DebugExecutionPolicy = NoOpDebugExecutionPolicy(),
+        *,
+        resolved_config: GlobalPipelineConfig | None = None,
     ) -> CompiledExecutionBundle:
         """Compile the selected axes into one typed execution bundle."""
         return PipelineCompiler.compile_pipelines(
@@ -703,6 +730,7 @@ class PipelineOrchestrator:
             enable_visualizer_override=enable_visualizer_override,
             is_zmq_execution=is_zmq_execution,
             debug_execution_policy=debug_execution_policy,
+            resolved_config=resolved_config,
         )
 
     def cancel_execution(self):
