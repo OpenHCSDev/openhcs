@@ -2423,6 +2423,8 @@ class PatternGroupRuntime:
         if not matching_files:
             return
         plan = self.request.execution_plan
+        if not plan.requires_main_flow_checkpoint(self.request.context.step_plans):
+            return
         parser = self.request.context.microscope_handler.parser
         manifest = step_output_manifest(self.request.context)
         producer_records = self.request.passthrough_producer_records(matching_files)
