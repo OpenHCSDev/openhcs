@@ -1,5 +1,7 @@
 import importlib
 import json
+import pickle
+import weakref
 from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
@@ -56,11 +58,12 @@ from openhcs.core.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
 )
 from openhcs.core.orchestrator.analysis_consolidation import (
-    execution_analysis_outputs,
+    RuntimeAnalysisConsolidationInputs,
 )
 from openhcs.core.orchestrator.execution_result import (
     RuntimeContextObservation,
     RuntimeExecutionObservation,
+    RuntimeObservationMode,
 )
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.runtime_artifact_values import (
@@ -1547,18 +1550,8 @@ def test_multi_plane_roi_aggregate_defers_source_filenames_to_plane_writer(monke
         ),
     )
     assert (
-        execution_analysis_outputs(
-            {"A01": context},
-            (
-                RuntimeExecutionObservation(
-                    contexts=(
-                        RuntimeContextObservation(
-                            context_key="A01",
-                            records=context.runtime_value_store.observed_values,
-                        ),
-                    )
-                ),
-            ),
+        RuntimeAnalysisConsolidationInputs.from_records(
+            context, context.runtime_value_store.observed_values,
         )
         is None
     )
@@ -1737,18 +1730,8 @@ def test_observed_materialized_paths_use_only_caller_owned_execution_records():
         ),
     }
     context.step_plans = {plan.step_index: plan}
-    consolidation_inputs = execution_analysis_outputs(
-        {"A01": context},
-        (
-            RuntimeExecutionObservation(
-                contexts=(
-                    RuntimeContextObservation(
-                        context_key="A01",
-                        records=current_execution_records,
-                    ),
-                )
-            ),
-        ),
+    consolidation_inputs = RuntimeAnalysisConsolidationInputs.from_records(
+        context, current_execution_records,
     )
     assert consolidation_inputs is not None
     runtime_output = consolidation_inputs.outputs_by_directory[Path("/analysis")][0]
@@ -1852,18 +1835,8 @@ def test_consolidation_preserves_export_bundle_and_text_tables(options, payload)
         persistent_backend="disk",
     )
     context.step_plans = {plan.step_index: plan}
-    consolidation = execution_analysis_outputs(
-        {"A01": context},
-        (
-            RuntimeExecutionObservation(
-                contexts=(
-                    RuntimeContextObservation(
-                        context_key="A01",
-                        records=context.runtime_value_store.observed_values,
-                    ),
-                ),
-            ),
-        ),
+    consolidation = RuntimeAnalysisConsolidationInputs.from_records(
+        context, context.runtime_value_store.observed_values,
     )
     assert consolidation is not None
     outputs = tuple(
@@ -1875,6 +1848,85 @@ def test_consolidation_preserves_export_bundle_and_text_tables(options, payload)
     assert outputs[0].well_id == "A01"
     assert outputs[0].csv_content == "count,intensity\n2,1.25\n"
     assert outputs[0].path.suffix == ".csv"
+
+
+@pytest.mark.parametrize(
+    "observation_mode",
+    (RuntimeObservationMode.OMIT, RuntimeObservationMode.MERGE_INTO_PARENT),
+)
+def test_completed_observation_projects_tables_before_worker_payload_release(
+    observation_mode,
+):
+    image_plan = ArtifactOutputPlan(
+        name="Corrected", path="/memory/Corrected.pkl", artifact_type=ImageArtifactType,
+    )
+    table_plan = ArtifactOutputPlan(
+        name="cell_counts", path="/memory/cell_counts.pkl",
+        artifact_type=MeasurementsArtifactType, materialization=csv_only(),
+    )
+    context = _context(FileManagerStub())
+    image_step = replace(_plan(image_plan), step_index=5)
+    table_step = _plan(table_plan)
+    table_step.runtime_artifact_materialization = RuntimeArtifactMaterializationPlan(
+        persistent_enabled=True, persistent_backend="disk",
+    )
+    context.step_plans = {image_step.step_index: image_step, table_step.step_index: table_step}
+    pixels = np.ones((8, 8), dtype=np.float32)
+    pixel_reference = weakref.ref(pixels)
+    context.runtime_value_store.record(
+        RuntimeValue.normalize(
+            image_plan,
+            ImageMetadataPayload(data=pixels, metadata=ImagePayloadMetadata()),
+            axis_id="A01",
+        ),
+        path=image_plan.path, backend="memory",
+    )
+    context.runtime_value_store.record(
+        RuntimeValue.normalize(
+            table_plan,
+            MeasurementTable(
+                name=table_plan.name,
+                rows=MeasurementSparseColumnarRows.from_rows(
+                    ({"cell_count": 2},), fields=(FieldSpec("cell_count", int),),
+                ),
+                subject=MeasurementSubject(MeasurementScope.ARTIFACT),
+            ),
+            axis_id="A01",
+        ),
+        path=table_plan.path, backend="memory",
+    )
+    observation = RuntimeContextObservation.from_context(
+        context_key="A01", context=context,
+        records=context.runtime_value_store.observed_values,
+        runtime_observation_mode=observation_mode,
+    )
+    context.runtime_value_store.clear()
+    del pixels
+    assert (pixel_reference() is not None) is (
+        observation_mode is RuntimeObservationMode.MERGE_INTO_PARENT
+    )
+    assert len(observation.records) == (
+        2 if observation_mode is RuntimeObservationMode.MERGE_INTO_PARENT else 0
+    )
+    assert len(observation.runtime_export_paths) == 1
+    assert observation.runtime_export_paths[0].suffix == ".csv"
+    assert observation.analysis_inputs is not None
+    assert observation.analysis_inputs.destination.backend == "disk"
+    assert observation.analysis_inputs.destination.images_dir == "/images"
+    execution_observation = RuntimeExecutionObservation(contexts=(observation,))
+    transported = pickle.loads(pickle.dumps(execution_observation))
+    consolidated = RuntimeAnalysisConsolidationInputs.from_observations(
+        {"A01": context}, (transported, transported),
+    )
+    assert consolidated is not None
+    outputs = consolidated.outputs_by_directory[Path("/analysis")]
+    assert len(outputs) == 1
+    assert outputs[0].well_id == "A01"
+    assert "cell_count" in outputs[0].csv_content
+    assert "2" in outputs[0].csv_content
+    assert outputs[0].path == observation.runtime_export_paths[0]
+    with pytest.raises(KeyError, match="unknown compiled context"):
+        RuntimeAnalysisConsolidationInputs.from_observations({}, (transported,))
 
 
 def test_materialize_artifact_outputs_unions_measurement_subject_records(

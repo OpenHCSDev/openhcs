@@ -17,6 +17,9 @@ from openhcs.core.runtime_stores import StoredRuntimeValue
 
 if TYPE_CHECKING:
     from openhcs.core.compiled_execution import CompiledExecutionBundle
+    from openhcs.core.orchestrator.analysis_consolidation import (
+        RuntimeAnalysisConsolidationInputs,
+    )
 
 
 class RuntimeExecutionTransportSerialization:
@@ -61,6 +64,40 @@ class RuntimeContextObservation:
     context_key: str
     records: tuple[StoredRuntimeValue, ...]
     runtime_export_paths: tuple[Path, ...] = field(default_factory=tuple)
+    analysis_inputs: "RuntimeAnalysisConsolidationInputs | None" = None
+
+    @classmethod
+    def from_context(
+        cls,
+        *,
+        context_key: str,
+        context: ProcessingContext,
+        records: tuple[StoredRuntimeValue, ...],
+        runtime_observation_mode: "RuntimeObservationMode",
+    ) -> "RuntimeContextObservation":
+        """Project completed outputs before releasing worker-owned payloads."""
+        from openhcs.core.orchestrator.analysis_consolidation import (
+            RuntimeAnalysisConsolidationInputs,
+        )
+        from openhcs.core.steps.function_artifact_materialization import (
+            observed_runtime_export_artifact_output_paths,
+        )
+
+        return cls(
+            context_key=context_key,
+            records=runtime_observation_mode.retain_records(records, context),
+            runtime_export_paths=tuple(
+                dict.fromkeys(
+                    path
+                    for plan in context.step_plans.values()
+                    if plan.owns_runtime_outputs
+                    for path in observed_runtime_export_artifact_output_paths(
+                        plan, context, records,
+                    )
+                )
+            ),
+            analysis_inputs=RuntimeAnalysisConsolidationInputs.from_records(context, records),
+        )
 
 
 @dataclass(frozen=True)
@@ -88,10 +125,6 @@ class RuntimeObservationMode(Enum):
     def collects_records(self) -> bool:
         return self is not RuntimeObservationMode.OMIT
 
-    @property
-    def releases_worker_records(self) -> bool:
-        return self is RuntimeObservationMode.OMIT
-
     @classmethod
     def from_parent_requirement(cls, required: bool) -> "RuntimeObservationMode":
         """Select the mode implied by compiled parent-side execution needs."""
@@ -102,10 +135,8 @@ class RuntimeObservationMode(Enum):
     def for_compiled_bundle(
         cls, bundle: "CompiledExecutionBundle"
     ) -> "RuntimeObservationMode":
-        """Retain only plate inputs unless another parent consumer needs all records."""
+        """Consolidation carries rendered tables; only plate inputs need records."""
 
-        if bundle.requires_full_parent_runtime_observation:
-            return cls.MERGE_INTO_PARENT
         if bundle.requires_parent_runtime_observation:
             return cls.MERGE_PLATE_INPUTS
         return cls.OMIT
