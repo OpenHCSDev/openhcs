@@ -35,6 +35,7 @@ from openhcs.core.runtime_artifact_queries import (
     runtime_relationship,
 )
 from openhcs.core.measurement_feature_queries import (
+    ColumnarMeasurementTableSchema,
     MeasurementAxisValueProjection,
     MeasurementFeatureQuery,
     MeasurementFeatureValueIndex,
@@ -961,40 +962,23 @@ def test_batch_label_slice_measurement_lookup_scans_each_axis_once(
     np = pytest.importorskip("numpy")
     MeasurementLabelSliceFeatureBatchQueryCache.process_cache().entries.clear()
     MeasurementObjectFeatureAxisBatchQueryCache.process_cache().entries.clear()
-    table_scans: list[tuple[int, int | None, tuple[str, ...]]] = []
-    original_table_value_indexes = (
-        MeasurementObjectFeatureVectorBatchQuery.table_value_indexes
-    )
+    table_scans: list[tuple[int, tuple[int, ...], tuple[str, ...]]] = []
+    original_feature_indexes = ColumnarMeasurementTableSchema.feature_value_indexes
 
-    def counted_table_value_indexes(
-        query: MeasurementObjectFeatureVectorBatchQuery,
-        table: MeasurementTable,
-        table_query: MeasurementFeatureQuery,
-        table_object_names: tuple[str, ...],
-        query_objects_by_requested_object: Mapping[str, str | None],
-        *,
-        projection: MeasurementAxisValueProjection | None = None,
-    ) -> dict[str, MeasurementFeatureValueIndex]:
+    def counted_feature_indexes(schema, table, queries, objects_by_feature, **kwargs):
         table_scans.append(
             (
                 id(table),
-                None if projection is None else projection.value,
-                table_object_names,
+                tuple(kwargs["row_masks"]),
+                tuple(next(iter(objects_by_feature.values()))),
             )
         )
-        return original_table_value_indexes(
-            query,
-            table,
-            table_query,
-            table_object_names,
-            query_objects_by_requested_object,
-            projection=projection,
+        yield from original_feature_indexes(
+            schema, table, queries, objects_by_feature, **kwargs
         )
 
     monkeypatch.setattr(
-        MeasurementObjectFeatureVectorBatchQuery,
-        "table_value_indexes",
-        counted_table_value_indexes,
+        ColumnarMeasurementTableSchema, "feature_value_indexes", counted_feature_indexes
     )
     cell_labels = object_labels(
         np.array(
@@ -1081,9 +1065,8 @@ def test_batch_label_slice_measurement_lookup_scans_each_axis_once(
         [1.5],
         [1.9],
     )
-    assert [(table_id, axis) for table_id, axis, _ in table_scans] == [
-        (id(table), 0),
-        (id(table), 1),
+    assert [(table_id, axes) for table_id, axes, _ in table_scans] == [
+        (id(table), (0, 1)),
     ]
     assert all(
         set(object_names) == {"Cells", "Nuclei"} for _, _, object_names in table_scans

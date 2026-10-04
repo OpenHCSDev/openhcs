@@ -749,6 +749,7 @@ from numba import njit
 from openhcs.constants.constants import MemoryType
 from openhcs.core.memory.decorators import numpy as numpy_decorator
 from openhcs.core.measurement_feature_queries import (
+    ColumnarMeasurementTableSchema,
     MeasurementAxisValueProjection,
     MeasurementFeatureQuery,
     MeasurementFeatureValueIndex,
@@ -1477,8 +1478,8 @@ class RelateObjectsRelationshipMeasurementRows(RelationshipMeasurementRows):
         payload: ObjectRelationship,
     ) -> MeasurementSparseColumnarRows:
         """Return CellProfiler per-parent means over prior child measurements."""
-        values_by_child = self.upstream_child_measurement_values(child_spec)
-        if not values_by_child:
+        indexes_by_slice = self.upstream_child_feature_indexes(child_spec)
+        if not indexes_by_slice:
             return MeasurementSparseColumnarRows.from_rows((), fields=())
         sliced_pairs = payload.payload.runtime_slice_pairs()
         relationship_slices = (
@@ -1506,55 +1507,55 @@ class RelateObjectsRelationshipMeasurementRows(RelationshipMeasurementRows):
             fields.append(FieldSpec(MeasurementRowAxisField.SLICE_INDEX.value, int))
         for slice_index, pairs in relationship_slices:
             value_slice_index = 0 if slice_index is None else slice_index
-            feature_values_by_parent: dict[int, dict[str, list[float]]] = {}
+            children_by_parent: dict[int, list[int]] = {}
             for parent_id, child_id in pairs:
-                if int(parent_id) <= 0:
-                    continue
-                child_values = values_by_child.get(
-                    (value_slice_index, int(child_id)),
-                    {},
-                )
-                if not child_values:
-                    continue
-                parent_feature_values = feature_values_by_parent.setdefault(
-                    int(parent_id),
-                    {},
-                )
-                for feature_name, value in child_values.items():
-                    parent_feature_values.setdefault(feature_name, []).append(value)
-            for parent_id, feature_values in sorted(feature_values_by_parent.items()):
-                means = {
-                    RelateObjectsModule.AggregateMeasurementFeature.MEAN_CHILD.feature_name(
-                        child_object_name=child_spec.name,
-                        child_feature_name=feature_name,
-                    ): float(
-                        np.mean(values)
+                if int(parent_id) > 0:
+                    children_by_parent.setdefault(int(parent_id), []).append(
+                        int(child_id)
                     )
-                    for feature_name, values in sorted(feature_values.items())
-                    if values
-                }
-                if means:
-                    rows.append(
-                        {
-                            MeasurementRowAxisField.OBJECT_NAME.value: parent_spec.name,
-                            MeasurementRowAxisField.OBJECT_LABEL.value: parent_id,
-                            **(
-                                {}
-                                if slice_index is None
-                                else {
-                                    MeasurementRowAxisField.SLICE_INDEX.value: slice_index
-                                }
-                            ),
-                            **means,
-                        }
+            means_by_parent: dict[int, dict[str, float]] = {}
+            for feature_name, feature_index in sorted(
+                indexes_by_slice.get(value_slice_index, {}).items()
+            ):
+                values_by_label = feature_index.values_by_label
+                mean_feature = RelateObjectsModule.AggregateMeasurementFeature.MEAN_CHILD.feature_name(
+                    child_object_name=child_spec.name,
+                    child_feature_name=feature_name,
+                )
+                for parent_id, child_ids in children_by_parent.items():
+                    values = np.fromiter(
+                        (
+                            values_by_label[child_id]
+                            for child_id in child_ids
+                            if child_id in values_by_label
+                        ),
+                        dtype=float,
                     )
-                    fields.extend(
-                        RelateObjectsModule.AggregateMeasurementFeature.MEAN_CHILD.field_spec(
-                            feature_name,
-                            required=False,
+                    if values.size:
+                        means_by_parent.setdefault(parent_id, {})[mean_feature] = float(
+                            np.mean(values)
                         )
-                        for feature_name in means
+            for parent_id, means in sorted(means_by_parent.items()):
+                rows.append(
+                    {
+                        MeasurementRowAxisField.OBJECT_NAME.value: parent_spec.name,
+                        MeasurementRowAxisField.OBJECT_LABEL.value: parent_id,
+                        **(
+                            {}
+                            if slice_index is None
+                            else {
+                                MeasurementRowAxisField.SLICE_INDEX.value: slice_index
+                            }
+                        ),
+                        **means,
+                    }
+                )
+                fields.extend(
+                    RelateObjectsModule.AggregateMeasurementFeature.MEAN_CHILD.field_spec(
+                        feature_name, required=False
                     )
+                    for feature_name in means
+                )
         return MeasurementSparseColumnarRows.from_rows(
             rows,
             fields=FieldSpec.merge_exact(
@@ -1563,11 +1564,11 @@ class RelateObjectsRelationshipMeasurementRows(RelationshipMeasurementRows):
             ),
         )
 
-    def upstream_child_measurement_values(
+    def upstream_child_feature_indexes(
         self,
         child_spec: ArtifactSpec,
-    ) -> dict[tuple[int, int], dict[str, float]]:
-        """Index upstream child values on the relationship's declared plane axis."""
+    ) -> dict[int, dict[str, MeasurementFeatureValueIndex]]:
+        """Index upstream features once on the relationship's declared plane axis."""
         declared_tables: list[MeasurementTable] = []
         for spec in self.request.callable_contract.artifact_inputs.specs:
             if spec.artifact_type is not MeasurementsArtifactType:
@@ -1596,7 +1597,7 @@ class RelateObjectsRelationshipMeasurementRows(RelationshipMeasurementRows):
             child_labels,
             child_spec.name,
         )
-        values_by_child: dict[tuple[int, int], dict[str, float]] = {}
+        indexes_by_slice: dict[int, dict[str, MeasurementFeatureValueIndex]] = {}
         for raw_row in core_rows.rows().iter_row_mappings():
             row = measurement_row_mapping(raw_row)
             slice_index = measurement_axis_integer_value(
@@ -1609,9 +1610,13 @@ class RelateObjectsRelationshipMeasurementRows(RelationshipMeasurementRows):
                     "CellProfiler core object rows require slice and object-label "
                     "identity."
                 )
-            values_by_child.setdefault((slice_index, object_label), {})[
-                str(row[MeasurementRowAxisField.FEATURE_NAME.value])
-            ] = float(row[MeasurementRowValueField.RESULT_VALUE.value])
+            feature_name = str(row[MeasurementRowAxisField.FEATURE_NAME.value])
+            indexes = indexes_by_slice.setdefault(slice_index, {})
+            if feature_name not in indexes:
+                indexes[feature_name] = MeasurementFeatureValueIndex()
+            indexes[feature_name].add(
+                object_label, row[MeasurementRowValueField.RESULT_VALUE.value]
+            )
 
         plane_domains = core_rows.label_plane_domains()
         payload_scoped = (
@@ -1623,13 +1628,15 @@ class RelateObjectsRelationshipMeasurementRows(RelationshipMeasurementRows):
                 slice_index=None if payload_scoped else slice_index,
                 slice_count=None if payload_scoped else len(plane_domains),
             )
+            indexes = indexes_by_slice.setdefault(slice_index, {})
+            feature_name = CellProfilerObjectCoreMeasurementFeature.OBJECT_NUMBER.value
+            if feature_name not in indexes:
+                indexes[feature_name] = MeasurementFeatureValueIndex()
             for object_label, object_number in object_numbers.items():
-                values_by_child.setdefault((slice_index, object_label), {})[
-                    CellProfilerObjectCoreMeasurementFeature.OBJECT_NUMBER.value
-                ] = float(object_number)
+                indexes[feature_name].add(object_label, object_number)
 
         if not tables:
-            return values_by_child
+            return indexes_by_slice
         identity_policy = (
             self.request.adapter.request.context.source_image_set_identity_policy
         )
@@ -1722,40 +1729,53 @@ class RelateObjectsRelationshipMeasurementRows(RelationshipMeasurementRows):
             table_dialect = cellprofiler_lookup_dialect_for_measurement_owner(
                 table.measurement_feature_owner
             )
-            queries = tuple(
-                (
+            queries = {
+                feature_name: MeasurementFeatureQuery(
                     feature_name,
-                    MeasurementFeatureQuery(
-                        feature_name,
-                        object_name=child_spec.name,
-                        dialect=table_dialect,
-                    ),
+                    object_name=child_spec.name,
+                    dialect=table_dialect,
                 )
                 for feature_name in aggregate_features
-            )
-            for _local_slice_index, target_slice_index, row_mask in slice_projections:
-                for feature_name, query in queries:
-                    feature_indexes = MeasurementFeatureValueIndex.from_columnar_table_by_object(
-                        table,
-                        query,
-                        {child_spec.name: query.query_object_name},
-                        row_mask=row_mask,
-                        measurement_value_qualifier=(
-                            RelateObjectsModule.aggregate_child_measurement_value_is_qualified
-                        ),
-                    )
+            }
+            target_slices = {
+                local_slice_index: target_slice_index
+                for local_slice_index, target_slice_index, _row_mask in slice_projections
+            }
+            for (
+                feature_name,
+                indexes_by_local_slice,
+            ) in ColumnarMeasurementTableSchema.from_table(table).feature_value_indexes(
+                table,
+                queries,
+                {
+                    feature_name: {child_spec.name: query.query_object_name}
+                    for feature_name, query in queries.items()
+                },
+                index_type=MeasurementFeatureValueIndex,
+                row_masks={
+                    local_slice_index: row_mask
+                    for local_slice_index, _target_slice_index, row_mask in slice_projections
+                },
+                measurement_value_qualifier=(
+                    RelateObjectsModule.aggregate_child_measurement_value_is_qualified
+                ),
+            ):
+                for (
+                    local_slice_index,
+                    feature_indexes,
+                ) in indexes_by_local_slice.items():
                     feature_index = feature_indexes.get(child_spec.name)
                     if feature_index is None:
                         continue
+                    target_slice_index = target_slices[local_slice_index]
+                    target_index = indexes_by_slice.setdefault(
+                        target_slice_index, {}
+                    ).setdefault(feature_name, MeasurementFeatureValueIndex())
                     for (
                         object_label,
                         numeric_value,
                     ) in feature_index.values_by_label.items():
-                        child_values = values_by_child.setdefault(
-                            (target_slice_index, object_label),
-                            {},
-                        )
-                        previous = child_values.get(feature_name)
+                        previous = target_index.values_by_label.get(object_label)
                         if previous is not None and not (
                             previous == numeric_value
                             or (np.isnan(previous) and np.isnan(numeric_value))
@@ -1766,8 +1786,8 @@ class RelateObjectsRelationshipMeasurementRows(RelationshipMeasurementRows):
                                 f"{target_slice_index}, object {object_label}: "
                                 f"{previous!r} != {numeric_value!r}."
                             )
-                        child_values[feature_name] = numeric_value
-        return values_by_child
+                        target_index.values_by_label[object_label] = numeric_value
+        return indexes_by_slice
 
 
 class NumbaNumpyObjectRelationshipBackendStrategy(ObjectRelationshipBackendStrategy):

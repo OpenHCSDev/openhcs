@@ -13783,7 +13783,10 @@ def test_relateobjects_relationship_rows_project_parent_mean_distances() -> None
     assert "Mean_Children_Distance_Minimum_Parents" in mean_rows[0]
 
 
-def test_relateobjects_parent_means_align_scoped_child_tables_by_source_plane() -> None:
+@pytest.mark.parametrize("conflicting_upstream", (False, True))
+def test_relateobjects_parent_means_align_scoped_child_tables_by_source_plane(
+    conflicting_upstream: bool,
+) -> None:
     source_paths = ("/source/site1.tif", "/source/site2.tif")
     source_metadata = (
         {"well": "A14", "site": "1", "channel": "3"},
@@ -13848,6 +13851,16 @@ def test_relateobjects_parent_means_align_scoped_child_tables_by_source_plane() 
         )
         for site_index, values in enumerate(((0.2, 0.6, 99.0), (0.8, 1.0)))
     )
+    if conflicting_upstream:
+        first = scoped_tables[0]
+        changed_rows = MeasurementSparseColumnarRows(
+            columns={
+                **first.rows.columns,
+                colocalization_feature: (123.0, *first.rows.column_values(colocalization_feature)[1:]),
+            },
+            fields=first.rows.fields,
+        )
+        scoped_tables = (*scoped_tables, replace(first, rows=changed_rows))
     unrelated_table = MeasurementTable(
         name="Unrelated_measurements",
         rows=MeasurementSparseColumnarRows.from_rows(
@@ -13955,6 +13968,13 @@ def test_relateobjects_parent_means_align_scoped_child_tables_by_source_plane() 
     child_spec = executor.callable_contract.artifact_inputs.by_ref(declaration.target)
     assert parent_spec is not None
     assert child_spec is not None
+    if conflicting_upstream:
+        with pytest.raises(ValueError, match="conflicting values"):
+            projector.parent_mean_upstream_measurement_rows(
+                parent_spec=parent_spec, child_spec=child_spec,
+                payload=runtime.relationships[0],
+            )
+        return
     rows = projector.parent_mean_upstream_measurement_rows(
         parent_spec=parent_spec,
         child_spec=child_spec,

@@ -29,6 +29,7 @@ from openhcs.core.measurement_feature_queries import (
     MeasurementFeatureValueIndex,
     MeasurementObjectFeatureVectorBatchQuery,
     MeasurementTableFeatureQuery,
+    MeasurementTableObjectFeatureSemantics,
     MeasurementValueIndexResult,
 )
 from openhcs.core.measurement_lookup_dialect import (
@@ -189,7 +190,7 @@ class MeasurementObjectQuery:
         if isinstance(table.rows, ColumnarRows):
             return (
                 self.object_name
-                in ColumnarMeasurementTableSchema.from_table(table).object_names
+                in MeasurementTableObjectFeatureSemantics.from_table(table).object_names
             )
         if not _measurement_table_may_declare_object_name(table):
             return False
