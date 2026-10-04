@@ -1172,6 +1172,37 @@ class RuntimeArtifactMaterialization:
             output_path_filter=output_path_filter,
         )
 
+    def reused_observation(
+        self, plan: CompiledStepPlan, context: "ProcessingContext",
+    ) -> StepExecutionObservation:
+        """Report historical debug destinations and read their retained CSV text."""
+        from openhcs.core.orchestrator.analysis_consolidation import (
+            RuntimeAnalysisConsolidationInputs,
+        )
+
+        target = plan.runtime_artifact_materialization
+        if not target.has_persistent_target:
+            return StepExecutionObservation.empty()
+        backend = target.require_persistent_backend()
+        outputs = self.outputs(plan, context)
+        locations = (
+            {RuntimeArtifactAddress.from_record(self.record): tuple(
+                RuntimeArtifactLocation(path=output.path, backend=backend)
+                for output in outputs
+            )}
+            if self.spec.participates_in_persistent_materialization()
+            else {}
+        )
+        paths = (
+            tuple(Path(output.path) for output in outputs)
+            if self.spec.participates_in_runtime_export_observation()
+            else ()
+        )
+        return StepExecutionObservation(
+            MappingProxyType(locations), paths,
+            RuntimeAnalysisConsolidationInputs.from_reused_outputs(context, plan, self, outputs),
+        )
+
     def viewer_outputs(
         self,
         plan: CompiledStepPlan,
@@ -1258,54 +1289,19 @@ def runtime_artifact_materializations_from_records(
     return tuple(materializations)
 
 
-def preview_reused_runtime_export_paths(
+def preview_reused_step_outputs(
     plan: CompiledStepPlan,
     context: "ProcessingContext",
     records: tuple[StoredRuntimeValue, ...],
-) -> tuple[Path, ...]:
-    """Predict historical debug-reuse exports, independently of new save outcomes."""
+) -> StepExecutionObservation:
+    """Project explicitly reused historical outputs once, independently of new saves."""
 
     if not plan.runtime_artifact_materialization.has_persistent_target:
-        return ()
-    return tuple(
-        Path(output.path)
-        for materialization in runtime_artifact_materializations_from_records(
-            plan,
-            context,
-            records,
-        )
-        if materialization.spec.participates_in_runtime_export_observation()
-        for output in materialization.outputs(plan, context)
+        return StepExecutionObservation.empty()
+    return StepExecutionObservation.combine(
+        item.reused_observation(plan, context)
+        for item in runtime_artifact_materializations_from_records(plan, context, records)
     )
-
-
-def preview_reused_materialized_artifact_locations(
-    plan: CompiledStepPlan,
-    context: "ProcessingContext",
-    records: tuple[StoredRuntimeValue, ...],
-) -> Mapping[RuntimeArtifactAddress, tuple[RuntimeArtifactLocation, ...]]:
-    """Predict historical debug-reuse destinations from retained logical values."""
-
-    if not plan.runtime_artifact_materialization.has_persistent_target:
-        return {}
-    backend = plan.runtime_artifact_materialization.require_persistent_backend()
-    locations_by_address: dict[
-        RuntimeArtifactAddress,
-        tuple[RuntimeArtifactLocation, ...],
-    ] = {}
-    for materialization in runtime_artifact_materializations_from_records(
-        plan,
-        context,
-        records,
-    ):
-        if not materialization.spec.participates_in_persistent_materialization():
-            continue
-        address = RuntimeArtifactAddress.from_record(materialization.record)
-        locations_by_address[address] = tuple(
-            RuntimeArtifactLocation(path=output.path, backend=backend)
-            for output in materialization.outputs(plan, context)
-        )
-    return locations_by_address
 
 
 def planned_materialization_preview(
@@ -1375,7 +1371,9 @@ class MaterializedRuntimeArtifact(SavedMaterializationOutputs):
 
     materialization: RuntimeArtifactMaterialization
 
-    def observation(self, plan: CompiledStepPlan) -> StepExecutionObservation:
+    def observation(
+        self, plan: CompiledStepPlan, context: "ProcessingContext",
+    ) -> StepExecutionObservation:
         target = plan.runtime_artifact_materialization
         if not target.has_persistent_target:
             return StepExecutionObservation.empty()
@@ -1393,7 +1391,14 @@ class MaterializedRuntimeArtifact(SavedMaterializationOutputs):
             if self.materialization.spec.participates_in_runtime_export_observation()
             else ()
         )
-        return StepExecutionObservation(MappingProxyType({address: locations}), paths)
+        from openhcs.core.orchestrator.analysis_consolidation import (
+            RuntimeAnalysisConsolidationInputs,
+        )
+
+        return StepExecutionObservation(
+            MappingProxyType({address: locations}), paths,
+            RuntimeAnalysisConsolidationInputs.from_saved_outputs(context, plan, self),
+        )
 
 
 def materialize_artifact_outputs(

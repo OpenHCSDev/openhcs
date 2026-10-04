@@ -116,13 +116,15 @@ from openhcs.core.source_metadata import (
     SOURCE_PLANE_INDEX_FIELD,
 )
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.steps.function_artifact_materialization import (
     ArtifactMaterializationBackendPlan,
     PersistentArtifactMaterializationTargetPlan,
     StreamingOnlyArtifactMaterializationTargetPlan,
     actual_materialization_records,
     materialize_artifact_outputs,
-    preview_reused_materialized_artifact_locations,
+    preview_reused_step_outputs,
+    RuntimeArtifactMaterialization,
     planned_materialization_preview,
     runtime_artifact_materializations,
     runtime_artifact_materializations_from_records,
@@ -318,6 +320,14 @@ class FileManagerStub:
 
     def load(self, path, backend):
         return self.memory[path]
+
+    def load_text(self, path, backend):
+        for content, saved_path, saved_backend, _kwargs in reversed(self.saved):
+            if str(saved_path) == str(path) and saved_backend == backend:
+                if not isinstance(content, str):
+                    raise TypeError("Saved output is not text")
+                return content
+        raise FileNotFoundError(path)
 
     def save(self, content, path, backend, **kwargs):
         self.saved.append((content, path, backend, kwargs))
@@ -1530,9 +1540,10 @@ def test_multi_plane_roi_aggregate_defers_source_filenames_to_plane_writer(monke
     assert str(materialization.base_path) == (
         "/analysis/A01_z_index-1_timepoint-1_segmentation_masks_step7.roi.zip"
     )
+    roi_outputs = materialization.outputs(plan, context)
     assert tuple(
         output.path
-        for output in materialization.outputs(plan, context)
+        for output in roi_outputs
         if output.path.endswith(".roi.zip")
     ) == tuple(
         (
@@ -1555,8 +1566,8 @@ def test_multi_plane_roi_aggregate_defers_source_filenames_to_plane_writer(monke
         ),
     )
     assert (
-        RuntimeAnalysisConsolidationInputs.from_records(
-            context, context.runtime_value_store.observed_values,
+        RuntimeAnalysisConsolidationInputs.from_reused_outputs(
+            context, plan, materialization, roi_outputs,
         )
         is None
     )
@@ -1709,11 +1720,24 @@ def test_observed_materialized_paths_use_only_caller_owned_execution_records():
     current_execution_records = context.runtime_value_store.observed_values_after(
         current_execution_cursor
     )
+    saved = materialize_artifact_outputs(
+        context.filemanager, plan,
+        PersistentArtifactMaterializationTargetPlan("disk"), context,
+    )
+    selected_saved = tuple(
+        artifact for artifact in saved
+        if artifact.materialization.record.key == current_execution_records[0].key
+    )
+    assert len(selected_saved) == 1
+    selected_path = selected_saved[0].outputs_for_backend("disk")[0].path
+    historical_content = "cell_count\r\n99\r\n"
+    context.filemanager.save(historical_content, selected_path, "disk")
+    reused = preview_reused_step_outputs(plan, context, current_execution_records)
+    assert reused.analysis_inputs is not None
+    assert reused.analysis_inputs.outputs_by_directory[Path("/analysis")][0].csv_content == historical_content
     assert tuple(
         Path(location.path)
-        for locations in preview_reused_materialized_artifact_locations(
-            plan, context, current_execution_records
-        ).values()
+        for locations in reused.materialized_locations_by_address.values()
         for location in locations
     ) == (
         Path(
@@ -1721,11 +1745,7 @@ def test_observed_materialized_paths_use_only_caller_owned_execution_records():
             "cell_counts_step7_details.csv"
         ),
     )
-    assert preview_reused_materialized_artifact_locations(
-        plan,
-        context,
-        current_execution_records,
-    ) == {
+    assert reused.materialized_locations_by_address == {
         RuntimeArtifactAddress.from_record(current_execution_records[0]): (
             RuntimeArtifactLocation(
                 path=(
@@ -1737,9 +1757,7 @@ def test_observed_materialized_paths_use_only_caller_owned_execution_records():
         ),
     }
     context.step_plans = {plan.step_index: plan}
-    consolidation_inputs = RuntimeAnalysisConsolidationInputs.from_records(
-        context, current_execution_records,
-    )
+    consolidation_inputs = selected_saved[0].observation(plan, context).analysis_inputs
     assert consolidation_inputs is not None
     runtime_output = consolidation_inputs.outputs_by_directory[Path("/analysis")][0]
     assert runtime_output.path == Path(
@@ -1784,13 +1802,10 @@ def test_terminal_persistence_is_reported_without_becoming_declared_export() -> 
         persistent_backend="disk",
     )
 
-    locations = preview_reused_materialized_artifact_locations(
-        plan,
-        context,
-        (record,),
-    )
-
-    assert locations == {
+    reused = preview_reused_step_outputs(plan, context, (record,))
+    assert reused.runtime_export_paths == ()
+    assert reused.analysis_inputs is None
+    assert reused.materialized_locations_by_address == {
         RuntimeArtifactAddress.from_record(record): (
             RuntimeArtifactLocation(
                 path="/analysis/A01_cell_counts_step7_details.csv",
@@ -1841,9 +1856,13 @@ def test_consolidation_preserves_export_bundle_and_text_tables(options, payload)
         persistent_backend="disk",
     )
     context.step_plans = {plan.step_index: plan}
-    consolidation = RuntimeAnalysisConsolidationInputs.from_records(
-        context, context.runtime_value_store.observed_values,
+    saved = materialize_artifact_outputs(
+        context.filemanager, plan,
+        PersistentArtifactMaterializationTargetPlan("disk"), context,
     )
+    consolidation = StepExecutionObservation.combine(
+        artifact.observation(plan, context) for artifact in saved
+    ).analysis_inputs
     assert consolidation is not None
     outputs = tuple(
         output
@@ -1861,7 +1880,7 @@ def test_consolidation_preserves_export_bundle_and_text_tables(options, payload)
     (RuntimeObservationMode.OMIT, RuntimeObservationMode.MERGE_INTO_PARENT),
 )
 def test_completed_observation_projects_tables_before_worker_payload_release(
-    observation_mode,
+    observation_mode, monkeypatch,
 ):
     image_plan = ArtifactOutputPlan(
         name="Corrected", path="/memory/Corrected.pkl", artifact_type=ImageArtifactType,
@@ -1907,14 +1926,19 @@ def test_completed_observation_projects_tables_before_worker_payload_release(
         context.filemanager, table_step,
         PersistentArtifactMaterializationTargetPlan("disk"), context,
     )
+    monkeypatch.setattr(
+        RuntimeArtifactMaterialization, "outputs",
+        lambda *_args, **_kwargs: pytest.fail("Saved tables must not render again"),
+    )
+    step_observation = StepExecutionObservation.combine(
+        artifact.observation(table_step, context) for artifact in saved
+    )
     observation = RuntimeContextObservation.from_context(
         context_key="A01", context=context,
         records=context.runtime_value_store.observed_values,
         runtime_observation_mode=observation_mode,
-        runtime_export_paths=tuple(
-            path for artifact in saved
-            for path in artifact.observation(table_step).runtime_export_paths
-        ),
+        runtime_export_paths=step_observation.runtime_export_paths,
+        analysis_inputs=step_observation.analysis_inputs,
     )
     context.runtime_value_store.clear()
     del pixels

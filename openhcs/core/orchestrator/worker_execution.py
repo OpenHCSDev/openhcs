@@ -23,6 +23,9 @@ from openhcs.core.callable_contract import FunctionStepExecutionScope
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.native_threading import configure_native_thread_count
+from openhcs.core.orchestrator.analysis_consolidation import (
+    RuntimeAnalysisConsolidationInputs,
+)
 from openhcs.core.orchestrator.execution_result import (
     ExecutionResult,
     RuntimeContextObservation,
@@ -55,8 +58,7 @@ from openhcs.core.runtime_stores import (
 )
 from openhcs.core.steps.abstract import AbstractStep, StepExecutionObservation
 from openhcs.core.steps.function_artifact_materialization import (
-    preview_reused_materialized_artifact_locations,
-    preview_reused_runtime_export_paths,
+    preview_reused_step_outputs,
 )
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 
@@ -818,6 +820,9 @@ def _execute_axis_with_sequential_combinations(
                 records=observed_records,
                 runtime_observation_mode=runtime_observation_mode,
                 runtime_export_paths=runtime_export_paths,
+                analysis_inputs=RuntimeAnalysisConsolidationInputs.combine(
+                    item.analysis_inputs for item in result.runtime_observation.contexts
+                ),
             )
         finally:
             # This cache is context-local even when lanes share a process.
@@ -956,6 +961,7 @@ def _execute_single_axis_static(
     lane_context.install_debug_sink(frozen_context)
     runtime_value_store = frozen_context.runtime_value_store
     runtime_export_paths = []
+    analysis_inputs = []
 
     for step_index, step in enumerate(pipeline_definition):
         if cancellation is not None:
@@ -983,18 +989,15 @@ def _execute_single_axis_static(
                 observed_records = runtime_value_store.observed_values_after(
                     observation_cursor
                 )
+                reused_outputs = preview_reused_step_outputs(
+                    step_plan, frozen_context, observed_records,
+                )
                 runtime_progress_context = _runtime_observation_progress_context(
                     observed_records,
-                    # Historical debug previews are not a new-save observation.
-                    materialized_locations_by_address=preview_reused_materialized_artifact_locations(
-                        step_plan, frozen_context, observed_records
-                    ),
+                    materialized_locations_by_address=reused_outputs.materialized_locations_by_address,
                 )
-                runtime_export_paths.extend(
-                    preview_reused_runtime_export_paths(
-                        step_plan, frozen_context, observed_records
-                    )
-                )
+                runtime_export_paths.extend(reused_outputs.runtime_export_paths)
+                analysis_inputs.append(reused_outputs.analysis_inputs)
                 emit(
                     execution_id=lane_context.execution_id,
                     plate_id=lane_context.plate_id,
@@ -1029,6 +1032,7 @@ def _execute_single_axis_static(
         observation_cursor = runtime_value_store.observation_cursor()
         step_observation = step.process(frozen_context, step_index)
         runtime_export_paths.extend(step_observation.runtime_export_paths)
+        analysis_inputs.append(step_observation.analysis_inputs)
         observed_records = runtime_value_store.observed_values_after(observation_cursor)
         runtime_progress_context = _runtime_observation_progress_context(
             observed_records,
@@ -1063,6 +1067,7 @@ def _execute_single_axis_static(
                     context_key=context_key,
                     records=(),
                     runtime_export_paths=tuple(dict.fromkeys(runtime_export_paths)),
+                    analysis_inputs=RuntimeAnalysisConsolidationInputs.combine(analysis_inputs),
                 ),
             )
         ),

@@ -40,6 +40,7 @@ from openhcs.core.debug import DebugExecutionPolicy
 from openhcs.core.execution_visualizer import ExecutionVisualizerABC
 from openhcs.core.function_patterns import CompiledFunctionInvocation
 from openhcs.core.orchestrator.analysis_consolidation import (
+    RuntimeAnalysisConsolidationInputs,
     consolidate_analysis_outputs,
 )
 from openhcs.core.orchestrator.cancellation import ExecutionCancelledError
@@ -77,7 +78,7 @@ from openhcs.core.runtime_stores import (
     replace_runtime_artifact_payload,
 )
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
-from openhcs.core.steps.abstract import AbstractStep
+from openhcs.core.steps.abstract import AbstractStep, StepExecutionObservation
 from openhcs.core.steps.function_outputs import (
     OpenHCSMetadataWriter,
     RuntimeArtifactMaterializationAuthority,
@@ -457,7 +458,7 @@ def execute_plate_scoped_steps(
     plate_step_indexes = validate_plate_scoped_contexts(compiled_contexts)
     total_steps = max(next(iter(compiled_contexts.values())).step_plans) + 1
     records_by_axis = _runtime_record_snapshot(compiled_contexts)
-    runtime_export_paths_by_context = {key: [] for key in compiled_contexts}
+    observations_by_context = {key: [] for key in compiled_contexts}
     for step_index in plate_step_indexes:
         owner_context, owner_plan = _plate_output_owner(
             compiled_contexts,
@@ -550,10 +551,10 @@ def execute_plate_scoped_steps(
                 for key, context in compiled_contexts.items()
                 if context is owner_context
             )
-            runtime_export_paths_by_context[owner_context_key].extend(
-                path
-                for materialization in materializations
-                for path in materialization.observation(owner_plan).runtime_export_paths
+            observations_by_context[owner_context_key].append(
+                StepExecutionObservation.combine(
+                    item.observation(owner_plan, owner_context) for item in materializations
+                )
             )
         _emit_execution_progress(
             progress_queue=progress_queue,
@@ -573,9 +574,15 @@ def execute_plate_scoped_steps(
                 context=context,
                 records=records,
                 runtime_export_paths=tuple(
-                    dict.fromkeys(runtime_export_paths_by_context[context_key])
+                    dict.fromkeys(
+                        path for item in observations_by_context[context_key]
+                        for path in item.runtime_export_paths
+                    )
                 ),
                 runtime_observation_mode=RuntimeObservationMode.MERGE_INTO_PARENT,
+                analysis_inputs=RuntimeAnalysisConsolidationInputs.combine(
+                    item.analysis_inputs for item in observations_by_context[context_key]
+                ),
             )
             for context_key, context in compiled_contexts.items()
             if (

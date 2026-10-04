@@ -34,7 +34,7 @@ from openhcs.core.compiled_step_plan import (
 )
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
-from openhcs.core.config import TiffConfig, WellFilterMode
+from openhcs.core.config import AnalysisConsolidationConfig, TiffConfig, WellFilterMode
 from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.runtime_image_values import (
@@ -348,6 +348,7 @@ def context_stub(filemanager, parser=None):
     context.execution_runtime = SimpleNamespace(execution_axis_values=("A01",))
     context.axis_id = "A01"
     context.tiff_config = TiffConfig()
+    context.analysis_consolidation_config = AnalysisConsolidationConfig()
     context.step_axis_filters = {}
     return context
 
@@ -2526,7 +2527,7 @@ def test_actual_array_exports_only_publish_declared_raster_inventory(
         location
         for artifact in materializations
         for locations in (
-            artifact.observation(plan).materialized_locations_by_address.values()
+            artifact.observation(plan, context).materialized_locations_by_address.values()
         )
         for location in locations
     )

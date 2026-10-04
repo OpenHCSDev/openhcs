@@ -39,11 +39,14 @@ from openhcs.core.runtime_stores import (
 # ProcessingContext is used in type hints
 if TYPE_CHECKING:
     from openhcs.core.context.processing_context import ProcessingContext
+    from openhcs.core.orchestrator.analysis_consolidation import (
+        RuntimeAnalysisConsolidationInputs,
+    )
 
 
 @dataclass(frozen=True, slots=True)
 class StepExecutionObservation:
-    """Execution facts emitted by one step's authoritative side effects."""
+    """Saved outputs and explicitly reused historical outputs from one step."""
 
     materialized_locations_by_address: Mapping[
         RuntimeArtifactAddress,
@@ -51,6 +54,7 @@ class StepExecutionObservation:
     ]
 
     runtime_export_paths: tuple[Path, ...] = field(default_factory=tuple)
+    analysis_inputs: "RuntimeAnalysisConsolidationInputs | None" = None
 
     @classmethod
     def empty(cls) -> "StepExecutionObservation":
@@ -60,8 +64,13 @@ class StepExecutionObservation:
     def combine(
         cls, observations: Iterable["StepExecutionObservation"]
     ) -> "StepExecutionObservation":
+        from openhcs.core.orchestrator.analysis_consolidation import (
+            RuntimeAnalysisConsolidationInputs,
+        )
+
         locations = {}
         paths = []
+        analysis_inputs = []
         for observation in observations:
             for (
                 address,
@@ -71,7 +80,11 @@ class StepExecutionObservation:
                     dict.fromkeys((*locations.get(address, ()), *values))
                 )
             paths.extend(observation.runtime_export_paths)
-        return cls(MappingProxyType(locations), tuple(dict.fromkeys(paths)))
+            analysis_inputs.append(observation.analysis_inputs)
+        return cls(
+            MappingProxyType(locations), tuple(dict.fromkeys(paths)),
+            RuntimeAnalysisConsolidationInputs.combine(analysis_inputs),
+        )
 
 
 # def get_step_id(step: 'AbstractStep') -> str:

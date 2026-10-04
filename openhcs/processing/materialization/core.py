@@ -205,6 +205,7 @@ class RawBackendKwargs(BackendCallKwargs, Mapping[str, MaterializationValue]):
                     (
                         output.metadata.attach_to(output.content)
                         if output.metadata is not None
+                        and ImageFileFormat.is_image_path(output.path)
                         else output.content
                     )
                     for output in outputs

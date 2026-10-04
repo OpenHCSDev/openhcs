@@ -152,7 +152,7 @@ def finalize_function_step_outputs(
             plan,
         )
     return StepExecutionObservation.combine(
-        item.observation(plan) for item in materializations
+        item.observation(plan, context) for item in materializations
     )
 
 

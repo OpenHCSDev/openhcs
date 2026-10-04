@@ -23,7 +23,10 @@ from openhcs.core.artifacts import (
     SpecialArtifactType,
 )
 from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
-from openhcs.core.compiled_step_plan import CompiledStepPlan
+from openhcs.core.compiled_step_plan import (
+    CompiledStepPlan,
+    RuntimeArtifactMaterializationPlan,
+)
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.component_set import ComponentSet
@@ -80,6 +83,8 @@ from openhcs.core.step_dependencies import (
     StepInputDependencyKind,
 )
 from openhcs.core.steps.function_step import FunctionStep
+from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.processing.materialization import FileBundleOptions, MaterializationSpec
 
 
 def test_runtime_step_values_share_within_step_and_release_between_steps() -> None:
@@ -724,7 +729,7 @@ def test_plate_scope_progress_stays_live_until_materialization_completes() -> No
     assert events[-1].completed == events[-1].total == 2
 
 
-def test_plate_scope_observation_excludes_preexisting_runtime_history() -> None:
+def test_plate_scope_observation_excludes_preexisting_runtime_history(tmp_path) -> None:
     output_spec = ArtifactSpec.output("ExportBundle", SpecialArtifactType)
 
     @execution_scope(FunctionStepExecutionScope.PLATE)
@@ -732,7 +737,7 @@ def test_plate_scope_observation_excludes_preexisting_runtime_history() -> None:
     @artifact_outputs(output_spec)
     def export(*, artifact_batch: RuntimeArtifactBatch):
         del artifact_batch
-        return {"export.txt": b"data"}
+        return {"Image.csv": "ImageNumber,Count\r\n1,7\r\n"}
 
     plan = _plate_step_plan(
         axis_id="A01",
@@ -743,10 +748,21 @@ def test_plate_scope_observation_excludes_preexisting_runtime_history() -> None:
             name=output_spec.name,
             path="/memory/plate/export",
             artifact_type=output_spec.artifact_type,
+            materialization=MaterializationSpec(FileBundleOptions()),
         ),
         metadata_writer=True,
     )
+    plan.runtime_artifact_materialization = RuntimeArtifactMaterializationPlan(
+        persistent_enabled=True, persistent_backend=Backend.MEMORY.value,
+    )
+    plan.output_plate_root = str(tmp_path)
+    plan.output_dir = tmp_path / "images"
+    plan.analysis_results_dir = str(tmp_path / "analysis")
     context = _plate_context("A01", (plan,))
+    context.metadata_cache = {}
+    context.microscope_handler = SimpleNamespace(
+        parser=SourceSchemaFilenameParser(), microscope_type="test",
+    )
     _record_measurements(
         context,
         name="prior_measurements",
@@ -768,6 +784,16 @@ def test_plate_scope_observation_excludes_preexisting_runtime_history() -> None:
     assert {record.key.name for record in observation.contexts[0].records} == {
         output_spec.name
     }
+    analysis_inputs = observation.contexts[0].analysis_inputs
+    assert analysis_inputs is not None
+    assert analysis_inputs.destination.backend == Backend.MEMORY.value
+    (table,) = tuple(
+        output for group in analysis_inputs.outputs_by_directory.values()
+        for output in group
+    )
+    assert table.csv_content == "ImageNumber,Count\r\n1,7\r\n"
+    assert table.well_id == "A01"
+    assert observation.contexts[0].runtime_export_paths == (table.path,)
     events = [ProgressEvent.from_dict(event) for event in progress_queue.events]
     assert events[-1].phase is ProgressPhase.STEP_COMPLETED
 

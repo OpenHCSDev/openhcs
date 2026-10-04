@@ -75,16 +75,14 @@ class RuntimeContextObservation:
         records: tuple[StoredRuntimeValue, ...],
         runtime_observation_mode: "RuntimeObservationMode",
         runtime_export_paths: tuple[Path, ...],
+        analysis_inputs: "RuntimeAnalysisConsolidationInputs | None",
     ) -> "RuntimeContextObservation":
-        """Project completed outputs before releasing worker-owned payloads."""
-        from openhcs.core.orchestrator.analysis_consolidation import (
-            RuntimeAnalysisConsolidationInputs,
-        )
+        """Retain requested records beside the completed output projections."""
         return cls(
             context_key=context_key,
             records=runtime_observation_mode.retain_records(records, context),
             runtime_export_paths=tuple(dict.fromkeys(runtime_export_paths)),
-            analysis_inputs=RuntimeAnalysisConsolidationInputs.from_records(context, records),
+            analysis_inputs=analysis_inputs,
         )
 
 

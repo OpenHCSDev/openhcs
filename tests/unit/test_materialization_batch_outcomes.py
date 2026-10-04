@@ -180,12 +180,7 @@ def test_worker_exports_actual_step_outcomes_after_resource_release(
 
     monkeypatch.setattr(
         worker,
-        "preview_reused_materialized_artifact_locations",
-        forbidden_reconstruction,
-    )
-    monkeypatch.setattr(
-        worker,
-        "preview_reused_runtime_export_paths",
+        "preview_reused_step_outputs",
         forbidden_reconstruction,
     )
     result = _execute_axis_with_sequential_combinations(
