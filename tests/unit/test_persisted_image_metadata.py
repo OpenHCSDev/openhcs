@@ -489,7 +489,7 @@ def test_absent_native_scale_retains_only_value_preserved_authored_facts():
     changed = header.project_image_metadata(metadata, values_preserved=False)
     assert changed.intensity_scale is None
     assert changed.source_plane_intensity_scales == (None, None)
-    assert changed.unit_interval_intensity.scale is None
+    assert changed.unit_interval_intensity is None
 
 
 @pytest.mark.parametrize("origin", ((0, 0), (7, 11)))
@@ -696,7 +696,7 @@ def test_lossy_jpeg_clears_exact_value_proofs_even_for_uint8(tmp_path):
     image_format.write(path, payload)
     assert np.any(image_format.read(path) != pixels)
     restored = image_format.persisted_metadata(path, payload)
-    assert restored.unit_interval_intensity.scale is None
+    assert restored.unit_interval_intensity is None
     assert restored.physical_border_edges_yx is None
     assert restored.mask_defines_border is None
     assert restored.source_provenance == metadata.source_provenance

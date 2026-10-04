@@ -864,7 +864,7 @@ class ImagePayloadBundleContext(ImagePayloadStackContext):
         )
         declared_channel_count = sum(axis is not None for axis in channel_axes)
         if declared_channel_count in {0, len(payloads)}:
-            return super().compose_unmasked(
+            return super(ImagePayloadBundleContext, self).compose_unmasked(
                 payloads, memory_type=memory_type, device_id=device_id,
             )
         return self.compose_mixed_channel_payloads(
