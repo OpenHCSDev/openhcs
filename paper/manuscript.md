@@ -284,6 +284,14 @@ final attempt rather than substituting an earlier result. This demonstrates
 stage-specific autonomous diagnosis and local gains, but not consistent repair
 or a validated cell count (Supplementary Data 8).
 
+A fresh public neurite-field author corrected false nuclear splits and retained
+eight compact nuclear objects. It traced a clear segment to the field boundary,
+but recovery of faint processes remained discontinuous and permissive admission
+introduced nearby fragments. The author therefore retained the local segment
+geometry while rejecting whole-field outgrowth and branch ownership as biological
+measurements. This distinguishes useful autonomous correction from complete
+neurite analysis (Supplementary Data 8).
+
 A retained personal-neurite development continuation analysed a nine-field
 stitched mosaic with shared channel fits. It corrected an unintended intensity
 rescaling and retained source-linked paths across sampled tile joins, but dense
