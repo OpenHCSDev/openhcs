@@ -295,3 +295,42 @@ docs/validation/mixed-carrier-intensity-memory03-20261004.tar.gz,
 SHA256 dd2a41387ae495b1677d8ba1d3ca9d9a5dda185ab1fb4cf4093c71c98b5218c3.
 It retains both failed fixture receipts, final passing controls, unchanged
 original R0 evidence, source/bootstrap callers and the before/after ASTs.
+
+Ordinary whole package04 receiving checkpoint
+---------------------------------------------
+
+Pinned source c63af64a604df4d940bfa716c6edce565ec82d47 was archived through
+the original receiving06/prepare-source05 owner and built with the existing
+setuptools builder (offline/no-isolation). The existing pip target materializer
+installed the complete wheel and the previously qualified ObjectState1.1.9,
+python-introspect0.1.16 and PolyStore0.3.2 wheels into a new unused private target:
+/home/ts/wt/openhcs-issue-batch-20260929/engineering599/package01/target.
+No new environment, dependency download, foreign checkout or SCI mutation.
+Build/install terminal0, 8.79s/148604KiB/Swap0 on one CPU. Wheel SHA256
+772705f72b6adda29d26016cf322680527a727331e68f171b2ed89ad5488f7a7.
+
+The original whole receiving04 verifier is PASS:811 tracked source payloads,
+789 Python,910 wheel RECORD entries, complete installed RECORD of all four
+distributions, every declaration-selected knowledge projection and all13
+canonical skill files. Manifest-selected untracked benchmark assets are copied
+only after exact equality with the original qualified06 wheel; SOURCE-ORIGIN.json
+records each authentic origin. Native extensions are built from the original
+declared source by setuptools; their whole wheel/installed payloads match RECORD.
+
+Installed affected-family control is terminal0:26 PASS in5.07s. Imports are
+asserted under this complete target before tests; source checkout tests do not
+replace installed modules. This requalifies the actual CPU/MRO/projection/storage
+and CellProfiler normalization family; physical GPU execution is not claimed.
+
+Tiny public packet public-packet01 declares one12x15 scalar TIFF and one12x15x3
+RGB TIFF through NamesAndTypes plus the ordinary SourceBindingsConfig owner.
+Four registered ImageMath outputs compare independent scalar/monochrome values
+against mixed composition in both operand orders. Public inventory and full
+persisted samples must demonstrate the expected normalized arithmetic, source
+identity and .5 micrometer calibration. No viewer, science or private decoder.
+The next original recorded-client/native lease is coordinated directly with
+Dewey; this checkpoint is whole-installed proof, not public execution acceptance.
+
+Byte-exact builder/control/packet archive:
+docs/validation/mixed-carrier-intensity-package04-20261004.tar.gz.
+All prior source failures and uncertainty dispositions remain unchanged.
