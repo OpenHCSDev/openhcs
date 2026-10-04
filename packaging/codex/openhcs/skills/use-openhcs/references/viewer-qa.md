@@ -114,6 +114,12 @@ At the same position, Z/time and camera scale, capture:
 3. **Raw plus result:** restore raw and result. Inspect biological support and
    alignment, with the same raw window as the first view.
 
+When using `openhcs_isolate_viewer_window_layers`, select the intended visible
+result route for **result only**, not the hidden raw route: isolation includes
+the selected route in its effective visible set. Keep raw mounted but hidden.
+Check the acknowledgement's `visible_route_keys`, not just `applied=true`,
+before capturing; selecting raw can otherwise turn result-only into combined.
+
 Toggle visibility through MCP without changing the candidate's arrays or result
 identity during the matched set. This comparison control does not prohibit
 analytical preprocessing in a subsequent candidate.
