@@ -415,7 +415,7 @@ def test_metadata_satisfied_artifact_input_compiles_without_runtime_plan():
         declarations=declarations,
     )
 
-    assert execution_bindings == EMPTY_SOURCE_BINDINGS
+    assert execution_bindings == CompiledSourceBindingPlan.empty()
     assert execution_group_scope == PathPlannerGroupScope.dynamic(AllComponents.CHANNEL)
     assert runtime_input_plans == {}
     assert compiled is not None
