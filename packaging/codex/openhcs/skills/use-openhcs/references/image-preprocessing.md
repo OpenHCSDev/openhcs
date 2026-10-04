@@ -77,6 +77,15 @@ Pooling the tiles and fitting a stitched image express the same shared-scaling
 intent, but overlap duplication, blending and mosaic padding can change the
 exact histogram. Record the fit domain rather than assuming identical bounds.
 
+One shared position artifact keeps channel placement consistent, but does not
+prove that tiles are aligned. Inspect overlaps for repeated nuclei, parallel
+process ghosts and broken continuations in separate raw channels, not only a
+composite or a matching position list. A composite used to estimate placement
+is a registration input, not an analytical channel merge: follow the canonical
+assembly branch, reload original channel stacks and apply the shared positions
+to raw or explicitly justified normalised inputs. Judge registration separately
+from pooled scaling; a repaired local join does not validate every seam.
+
 ## Slowly varying additive background
 
 Test subtraction of a background estimate or a white top-hat. Its spatial scale
@@ -208,6 +217,14 @@ can approach the failed global threshold. Test dim edge regions and bright
 centre regions, not just a single successful crop. Global Otsu is most plausible
 when classes separate; a dominant background with a sparse foreground tail
 requires checking that assumption rather than blindly choosing Otsu.
+
+For textured/ring-shaped bodies amid diffuse nuisance, compare
+[body-admission models](segmentation-diagnostics.md#compare-body-admission-models)
+before choosing a correction: local background differences and intensity-class
+separation fail differently. Judge corrected support against local body extent
+AND regional negatives, not background uniformity, nuclear eligibility or a
+preferred count. Opposite faint-loss/background-flooding outcomes motivate a
+model change, not repeated scalar toggles.
 
 ## Spots, edges and thin processes
 
