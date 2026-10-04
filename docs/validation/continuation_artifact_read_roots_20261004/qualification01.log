@@ -1,0 +1,54 @@
+Retired scientific writer blind-hdd-h002-h004-p001-20261004-h004_hdd_96-author.scope inactive
+Retired scientific writer blind-hdd-h002-h004-p001-20261004-h004_hdd_96-mcp.scope inactive
+PASS fresh author: no predecessor history/artifact access
+Retired scientific writer blind-hdd-h002-h004-p001-20261004-p001_nine_hdd_95-author.scope inactive
+Retired scientific writer blind-hdd-h002-h004-p001-20261004-p001_nine_hdd_95-mcp.scope inactive
+PASS real closed P001 ancestry: original HOME and HDD roots
+jq: error (at <stdin>:1): inconsistent author context declaration
+PASS malformed context refused
+PASS absent terminal custody refused
+Retired scientific writer blind-hdd-h002-h004-p001-20261004-absent_predecessor-author.scope inactive
+Retired scientific writer blind-hdd-h002-h004-p001-20261004-absent_predecessor-mcp.scope inactive
+jq: error (at /home/ts/wt/openhcs-issue-batch-20260929/next-h002-h004-p001-hdd-20261004/program.json:285): missing or ambiguous ancestry declaration
+PASS missing original declaration refused
+Retired scientific writer retina96-bbbc01395-after636-20261004-p001_nine_hdd_95-author.scope inactive
+Retired scientific writer retina96-bbbc01395-after636-20261004-p001_nine_hdd_95-mcp.scope inactive
+PASS actual live predecessor refused (no fake systemctl outcome)
+Retired scientific writer blind-hdd-h002-h004-p001-20261004-p001_nine_hdd_95-author.scope inactive
+Retired scientific writer blind-hdd-h002-h004-p001-20261004-p001_nine_hdd_95-mcp.scope inactive
+PASS ordinary installed AgentPathPolicy: saved mosaic readable, write denied
+PASS actual bwrap namespace: ancestor HDD opened read-only
+PASS sibling artifacts and general HDD root denied
+PASS new owned phase remains writable under ordinary policy
+PASS original saved mosaic SHA unchanged after ordinary installed policy/OS check
+Retired scientific writer blind-hdd-h002-h004-p001-20261004-h002_hdd_94-author.scope inactive
+Retired scientific writer blind-hdd-h002-h004-p001-20261004-h002_hdd_94-mcp.scope inactive
+root=/home/ts/wt/openhcs-issue-batch-20260929/next-three-taskonly539543-20261003/FUND slot=H002_CAPACITY_DEV94 cwd=/home/ts/wt/openhcs-issue-batch-20260929/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/author-workspace config=/home/ts/wt/openhcs-issue-batch-20260929/h003-fresh-preparation-20261002/author-config.toml skill=/home/ts/wt/openhcs-issue-batch-20260929/engineering-main2b-retina-20261004/receiving03/target/openhcs/agent/resources/knowledge/packaging/codex/openhcs/skills/use-openhcs cli=/home/ts/.codex/packages/standalone/releases/0.160.0-x86_64-unknown-linux-musl/bin/codex unit=h002-capacity-development94-20261004-h002_capacity_dev94-author history_args=["resume","01a1078b-9354-7251-93b6-b40ef784a135"]
+model=gpt-6.1-sol provider=openai effort=high cpu=0,1 display=94 native=6012 viewer=6013 session-bind=/home/ts/wt/openhcs-issue-batch-20260929/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/author-workspace/output/native-sessions
+readonly_history_args=--ro-bind /home/ts/wt/openhcs-issue-batch-20260929/next-h002-h004-p001-hdd-20261004/H002_HDD_94/author-workspace/output /home/ts/wt/openhcs-issue-batch-20260929/next-h002-h004-p001-hdd-20261004/H002_HDD_94/author-workspace/output --ro-bind /run/media/ts/hdd/openhcs-science/next-h002-h004-p001-hdd-20261004/H002_HDD_94 /run/media/ts/hdd/openhcs-science/next-h002-h004-p001-hdd-20261004/H002_HDD_94 --ro-bind /home/ts/wt/openhcs-issue-batch-20260929/next-h002-h004-p001-hdd-20261004/H002_HDD_94/author-workspace/output/native-sessions/2026/10/04/rollout-2026-10-04T10-50-39-01a10765-45f3-7d02-ab2a-f8ab3bf52a1a.jsonl /home/ts/wt/openhcs-issue-batch-20260929/next-h002-h004-p001-hdd-20261004/H002_HDD_94/author-workspace/output/native-sessions/2026/10/04/rollout-2026-10-04T10-50-39-01a10765-45f3-7d02-ab2a-f8ab3bf52a1a.jsonl --ro-bind /home/ts/wt/openhcs-issue-batch-20260929/next-h002-h004-p001-hdd-20261004/H002_HDD_94/author-workspace/output/native-sessions/2026/10/04/rollout-2026-10-04T10-50-39-01a10765-45f3-7d02-ab2a-f8ab3bf52a1a.jsonl /home/ts/.codex/sessions/2026/10/04/rollout-2026-10-04T10-50-39-01a10765-45f3-7d02-ab2a-f8ab3bf52a1a.jsonl 
+readonly_ancestry_outputs=["/home/ts/wt/openhcs-issue-batch-20260929/next-h002-h004-p001-hdd-20261004/H002_HDD_94/author-workspace/output","/run/media/ts/hdd/openhcs-science/next-h002-h004-p001-hdd-20261004/H002_HDD_94"]
+input=/home/ts/wt/openhcs-h002-uncoached-20260929/input read=/home/ts/wt/openhcs-h002-uncoached-20260929/input:/home/ts/wt/openhcs-issue-batch-20260929/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/author-workspace/output:/run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94:/home/ts/wt/openhcs-issue-batch-20260929/engineering-main2b-retina-20261004/receiving03/target/openhcs/agent/resources/knowledge write=/home/ts/wt/openhcs-issue-batch-20260929/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/author-workspace/output:/run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94 scratch=/run/media/ts/hdd/openhcs-science/next-h002-capacity-development94-after629-20261004/H002_CAPACITY_DEV94/runtime/scratch workers=2
+PASS actual production launcher preflight: retained child + readonly ancestor mounts
+	Command being timed: "bash docs/validation/continuation_artifact_read_roots_20261004/qualify.sh"
+	User time (seconds): 0.45
+	System time (seconds): 0.53
+	Percent of CPU this job got: 56%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.75
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 19676
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 1
+	Minor (reclaiming a frame) page faults: 112005
+	Voluntary context switches: 1200
+	Involuntary context switches: 225
+	Swaps: 0
+	File system inputs: 56
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
