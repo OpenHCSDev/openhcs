@@ -333,18 +333,12 @@ class ColumnarMeasurementTableSchema:
     ]:
         """Project one admitted table epoch into feature/object/axis indexes.
 
-        Column values and their qualification are admitted once per physical
-        column. Object labels are resolved once per selected row, shared across
-        features and overlapping axis projections; no data survives this call.
+        Default qualification is shared per physical column. Opaque qualifiers
+        run for each query before reading its object identity, preserving their
+        observable calls and mutations. Nothing survives this call.
         """
         rows = table.rows
         projections = {None: None} if row_masks is None else row_masks
-        object_id_field = self.object_id_field(table.subject.object_id_field)
-        object_ids = (
-            None
-            if object_id_field is None
-            else columnar_row_values(rows, object_id_field)
-        )
         object_labels_by_row: dict[int, int | None] = {}
         admitted_columns: dict[str, tuple[Any, Any]] = {}
         columns_by_token: dict[str, list[str]] = {}
@@ -352,6 +346,9 @@ class ColumnarMeasurementTableSchema:
             columns_by_token.setdefault(token, []).append(column)
         self.feature_masks(tuple(query.field_candidates for query in queries.values()))
         for feature_name, query in queries.items():
+            if measurement_value_qualifier is not None:
+                admitted_columns.clear()
+                object_labels_by_row.clear()
             query_object_names_by_result = query_object_names_by_feature[feature_name]
             if not query.table_source_matches_feature(table):
                 yield feature_name, {
@@ -415,6 +412,12 @@ class ColumnarMeasurementTableSchema:
                 base_mask = np.logical_and(base_mask, source_mask)
             if feature_mask is not None:
                 base_mask = np.logical_and(base_mask, feature_mask)
+            object_id_field = self.object_id_field(table.subject.object_id_field)
+            object_ids = (
+                None
+                if object_id_field is None
+                else columnar_row_values(rows, object_id_field)
+            )
             by_axis = {}
             for axis, row_mask in projections.items():
                 projected_mask = (

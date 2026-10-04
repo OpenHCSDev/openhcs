@@ -92,6 +92,71 @@ from openhcs.core.runtime_artifact_values import RuntimeValue
 AXIS_ID = "A01"
 
 
+@pytest.mark.parametrize("batched", (False, True))
+def test_opaque_feature_qualifier_projects_post_callback_object_identity(batched):
+    import numpy as np
+
+    columns = {
+        "object_label": [1, 2, 3],
+        "updated_label": [7, 8, 9],
+        "value": [3.0, 4.0, MEASUREMENT_SPARSE_CELL],
+    }
+    table = MeasurementTable(
+        name="MutableIdentity",
+        rows=MeasurementSparseColumnarRows(
+            columns,
+            fields=(
+                FieldSpec("object_label", int),
+                FieldSpec("updated_label", int),
+                FieldSpec("value", float),
+            ),
+        ),
+        subject=MeasurementSubject(MeasurementScope.OBJECT, "Cells", "object_label"),
+    )
+    qualified = []
+
+    def qualify(value):
+        qualified.append(value)
+        table.subject = MeasurementSubject(
+            MeasurementScope.OBJECT, "Cells", "updated_label"
+        )
+        if len(qualified) % 2 == 0:
+            first_label = 10 if len(qualified) == 2 else 30
+            columns["updated_label"] = [first_label, first_label + 10, 99]
+        return True
+
+    query = MeasurementFeatureQuery("value", "Cells")
+    row_mask = np.asarray([True, False, False])
+    if batched:
+        indexes = [
+            axes[None]["Cells"]
+            for _, axes in ColumnarMeasurementTableSchema.from_table(
+                table
+            ).feature_value_indexes(
+                table,
+                {"first": query, "second": query},
+                {"first": {"Cells": "Cells"}, "second": {"Cells": "Cells"}},
+                index_type=MeasurementFeatureValueIndex,
+                row_masks={None: row_mask},
+                measurement_value_qualifier=qualify,
+            )
+        ]
+    else:
+        indexes = [
+            MeasurementFeatureValueIndex.from_columnar_table_by_object(
+                table,
+                query,
+                {"Cells": "Cells"},
+                row_mask=row_mask,
+                measurement_value_qualifier=qualify,
+            )["Cells"]
+            for _ in range(2)
+        ]
+
+    assert qualified == [3.0, 4.0, 3.0, 4.0]
+    assert [index.values_by_label for index in indexes] == [{10: 3.0}, {30: 3.0}]
+
+
 @pytest.mark.parametrize(
     ("declaration_type", "field_name"),
     (
