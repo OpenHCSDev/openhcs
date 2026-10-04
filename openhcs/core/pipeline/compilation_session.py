@@ -243,6 +243,7 @@ class ResolvedPipelineDefinition(InvocationContractProvider):
                 graph.invocation_declarations[
                     item.key
                 ].validate_artifact_output_declarations()
+            graph.config_parameters_for_step(step.name)
             graph.input_lineage_order
             graphs.append(graph)
             context = graph.advance_declaration_context(context)

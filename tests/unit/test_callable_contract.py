@@ -40,6 +40,7 @@ from openhcs.core.function_reference import (
 )
 from openhcs.core.function_patterns import normalize_function_pattern
 from openhcs.core.memory.decorators import numpy
+from openhcs.core.pipeline.artifact_planning import extract_artifact_declarations
 from openhcs.core.pipeline.function_contracts import (
     required_variable_components,
     runtime_bound_parameters,
@@ -316,6 +317,18 @@ def test_callable_contract_reads_wrapper_declared_config_parameters(monkeypatch)
     (parameter,) = contract.config_bound_parameters
     assert parameter.annotation is LazyDtypeConfig
     assert parameter.default is declared_parameter.default
+
+    graph = extract_artifact_declarations(process)
+    parameters = graph.config_parameters_for_step("process")
+    assert tuple(parameter.name for parameter in parameters) == ("dtype_config",)
+
+    def forbidden_signature_read(owner):
+        raise AssertionError("Axis binding repeated admitted config schema discovery")
+
+    monkeypatch.setattr(
+        CallableContract, "config_bound_parameters", property(forbidden_signature_read)
+    )
+    assert graph.config_parameters_for_step("process") is parameters
 
 
 def test_config_parameter_schema_refreshes_from_replaced_pipeline_declaration(monkeypatch):
