@@ -18,11 +18,11 @@ from openhcs.core.measurement_lookup_dialect import (
     resolve_runtime_measurement_lookup_dialect,
 )
 from openhcs.core.measurement_row_materialization import (
-    MeasurementObjectLabelResolution,
     MeasurementRowOwnership,
     columnar_row_values,
     is_structural_missing_measurement_cell as _is_structural_missing_measurement_cell,
     measurement_object_label,
+    measurement_object_label_value,
     measurement_row_has_object_identity,
     measurement_row_object_name,
     measurement_row_source_image_name,
@@ -546,7 +546,7 @@ class ColumnarMeasurementTableSchema:
             if not feature_columns:
                 yield feature_name, {axis: {} for axis in projections}
                 continue
-            selected_values: dict[int, object] = {}
+            position_batches, value_batches = [], []
             for column in feature_columns:
                 for offset, segment in table.rows.column_value_segments(column):
                     snapshot = np.array(
@@ -554,15 +554,19 @@ class ColumnarMeasurementTableSchema:
                         copy=True,
                         dtype=None if isinstance(segment, np.ndarray) else object,
                     )
-                    mask = MeasurementScalarLiteral.non_absent_values(snapshot)
-                    for position in np.flatnonzero(mask):
-                        selected_values.setdefault(
-                            int(offset + position), snapshot[position]
-                        )
-            positions = np.asarray(sorted(selected_values), dtype=np.intp)
-            values = np.asarray(
-                [selected_values[position] for position in positions], dtype=object
-            )
+                    selected = np.flatnonzero(
+                        MeasurementScalarLiteral.non_absent_values(snapshot)
+                    )
+                    position_batches.append(offset + selected)
+                    value_batches.append(np.asarray(snapshot[selected], dtype=object))
+            if position_batches:
+                positions, first_alias = np.unique(
+                    np.concatenate(position_batches), return_index=True
+                )
+                values = np.concatenate(value_batches)[first_alias]
+            else:
+                positions = np.empty(0, dtype=np.intp)
+                values = np.empty(0, dtype=object)
             yield feature_name, self._project_feature_indexes(
                 table,
                 query,
@@ -632,10 +636,8 @@ class ColumnarMeasurementTableSchema:
                     row_indices[effective_mask], object_values, strict=True
                 ):
                     if row_index not in object_labels_by_row:
-                        object_labels_by_row[row_index] = (
-                            MeasurementObjectLabelResolution(
-                                object_ids[row_index]
-                            ).object_label
+                        object_labels_by_row[row_index] = measurement_object_label_value(
+                            object_ids[row_index]
                         )
                     object_label = object_labels_by_row[row_index]
                     if object_label is not None:

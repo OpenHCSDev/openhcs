@@ -1693,17 +1693,6 @@ def measurement_row_source_image_name(row: Mapping[str, object]) -> str | None:
     return cast(str | None, MeasurementRowSourceImageName.value_from_row(row))
 
 
-@dataclass(frozen=True, slots=True)
-class MeasurementObjectLabelResolution:
-    """Integer object label resolved from runtime/CSV scalar encodings."""
-
-    value: object
-
-    @property
-    def object_label(self) -> int | None:
-        return measurement_object_label_value(self.value)
-
-
 def measurement_object_label_value(value: object) -> int | None:
     """Return the integer object label represented by one scalar value."""
     if value is None:
