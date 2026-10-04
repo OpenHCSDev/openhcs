@@ -378,13 +378,14 @@ def test_metadata_satisfied_artifact_input_compiles_without_runtime_plan():
     declarations, pattern, _, contracts = _prepare_step_declarations(planner,
         snapshot, 3
     )
-    execution_bindings = planner.artifacts.source_bindings_for_contracts(
-        snapshot,
+    execution_bindings = CompiledSourceBindingPlan.from_contracts(
+        snapshot.source_bindings,
         contracts,
         StepInputDependency.step_output(
             source_step_index=2,
             source_step_scope_id="plate::functionstep_2",
         ),
+        planner.artifact_context.available_artifacts,
     )
     execution_group_scope = planner.execution_groups.get_execution_groups(
         snapshot,
@@ -414,7 +415,7 @@ def test_metadata_satisfied_artifact_input_compiles_without_runtime_plan():
         declarations=declarations,
     )
 
-    assert execution_bindings == EMPTY_SOURCE_BINDINGS
+    assert execution_bindings == CompiledSourceBindingPlan.empty()
     assert execution_group_scope == PathPlannerGroupScope.dynamic(AllComponents.CHANNEL)
     assert runtime_input_plans == {}
     assert compiled is not None
@@ -633,10 +634,11 @@ def test_plate_artifact_consumer_omits_inherited_source_plans():
         callable_scope,
         contracts,
     ) = _prepare_step_declarations(planner, snapshot, 3)
-    execution_bindings = planner.artifacts.source_bindings_for_contracts(
-        snapshot,
+    execution_bindings = CompiledSourceBindingPlan.from_contracts(
+        snapshot.source_bindings,
         contracts,
         StepInputDependency.no_main_flow(),
+        planner.artifact_context.available_artifacts,
     )
     maps = planner.artifacts.compile_plan_maps(
         snapshot,
@@ -4190,10 +4192,11 @@ def test_main_flow_source_anchor_restricts_execution_to_its_exact_channel():
         ),
     )
 
-    contract_bindings = planner.artifacts.source_bindings_for_contracts(
-        snapshot,
+    contract_bindings = CompiledSourceBindingPlan.from_contracts(
+        snapshot.source_bindings,
         (source_contract,),
         StepInputDependency.pipeline_start(),
+        planner.artifact_context.available_artifacts,
     )
     source_anchor_specs = tuple(
         binding.input_spec() for binding in contract_bindings.primary_plane_bindings
@@ -4346,10 +4349,11 @@ def test_execution_anchor_ignores_source_artifact_lineage():
         ),
     )
 
-    contract_bindings = planner.artifacts.source_bindings_for_contracts(
-        snapshot,
+    contract_bindings = CompiledSourceBindingPlan.from_contracts(
+        snapshot.source_bindings,
         (source_contract,),
         StepInputDependency.pipeline_start(),
+        planner.artifact_context.available_artifacts,
     )
     source_anchor_specs = tuple(
         binding.input_spec() for binding in contract_bindings.primary_plane_bindings
@@ -5733,6 +5737,8 @@ def test_grouped_invocations_keep_distinct_edges_for_same_artifact_ref():
 
 def test_main_input_dependency_uses_scope_identity_for_step_output_edges():
     planner = PathPlanner.__new__(PathPlanner)
+    planner.artifact_context = ArtifactDeclarationStepContext.empty()
+    planner.declared = {}
     planner.plans = {
         0: CompiledStepPlan(
             step_index=0,
@@ -5775,6 +5781,8 @@ def test_main_input_dependency_uses_scope_identity_for_step_output_edges():
 
 def test_main_input_dependency_uses_declared_artifact_producer_not_previous_step():
     planner = PathPlanner.__new__(PathPlanner)
+    planner.artifact_context = ArtifactDeclarationStepContext.empty()
+    planner.declared = {}
     planner.plans = {
         index: CompiledStepPlan(
             step_index=index,
@@ -5867,6 +5875,8 @@ def test_main_input_dependency_skips_main_flow_preserving_steps():
         source_step_scope_id="plate::functionstep_0",
     )
     planner = PathPlanner.__new__(PathPlanner)
+    planner.artifact_context = ArtifactDeclarationStepContext.empty()
+    planner.declared = {}
     planner.plans = {
         0: CompiledStepPlan(
             step_index=0,
@@ -5907,6 +5917,8 @@ def test_main_input_dependency_skips_main_flow_preserving_steps():
 
 def test_main_input_dependency_preserves_pipeline_start_edges():
     planner = PathPlanner.__new__(PathPlanner)
+    planner.artifact_context = ArtifactDeclarationStepContext.empty()
+    planner.declared = {}
     planner.plans = {
         1: CompiledStepPlan(
             step_index=1,

@@ -50,7 +50,9 @@ from openhcs.core.xdg_paths import get_openhcs_cache_dir
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 
 if TYPE_CHECKING:
+    from openhcs.core.callable_contract import CallableContract
     from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+    from openhcs.core.step_dependencies import StepInputDependency
     from openhcs.core.runtime_array_values import RuntimeArrayData
     from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
     from openhcs.core.runtime_image_values import ImagePayloadMetadata
@@ -2145,31 +2147,25 @@ class SourceBindingsConfig(SourceBindingDeclarationsMixin, _SourceBindingPlanBas
         if realized_source_metadata is None:
             return declared_fields
 
+        return self.metadata_fields_for_literal_types(
+            SourceMetadataFields.literal_field_types(realized_source_metadata)
+        )
+
+    def metadata_fields_for_literal_types(
+        self, field_types: Mapping[str, type[object] | None]
+    ) -> tuple[FieldSpec, ...]:
+        """Overlay this declaration on one admitted cohort's literal schema."""
+        declared_fields = tuple(self.metadata_fields or ())
         excluded_names = frozenset(
             join.imported_metadata_field
             for table in self.imported_metadata_tables
             for join in table.joins
         )
         declared_names = frozenset(field.name for field in declared_fields)
-        values_by_name: dict[str, list[SourceMetadataScalar]] = {}
-        for metadata in realized_source_metadata:
-            for field_name, value in SourceMetadataFields.original_items(metadata):
-                if (
-                    field_name not in declared_names
-                    and field_name not in excluded_names
-                ):
-                    values_by_name.setdefault(field_name, []).append(value)
-
         realized_fields = tuple(
-            FieldSpec(
-                field_name,
-                next(iter(value_types)) if len(value_types) == 1 else None,
-                required=False,
-            )
-            for field_name, values in values_by_name.items()
-            for value_types in (
-                frozenset(type(value) for value in values if value is not None),
-            )
+            FieldSpec(name, dtype, required=False)
+            for name, dtype in field_types.items()
+            if name not in declared_names and name not in excluded_names
         )
         return FieldSpec.merge_exact(
             (declared_fields, realized_fields),
@@ -2221,17 +2217,17 @@ class StepSourceBindingsConfig(
 
 
 def source_binding_group_keys_for_group_by(
-    source_bindings: StepSourceBindingsConfig,
+    source_bindings: SourceBindingDeclarationsMixin,
     group_by: GroupBy,
     *,
     realized_source_metadata: Iterable[SourceMetadataMapping] | None = None,
 ) -> tuple[str, ...]:
     """Return ordered binding component values for the grouping component."""
 
-    if not isinstance(source_bindings, StepSourceBindingsConfig):
+    if not isinstance(source_bindings, SourceBindingDeclarationsMixin):
         raise TypeError(
             "source_binding_group_keys_for_group_by requires "
-            f"StepSourceBindingsConfig, got {type(source_bindings).__name__}."
+            f"SourceBindingDeclarationsMixin, got {type(source_bindings).__name__}."
         )
     resolved_group_by = group_by if isinstance(group_by, GroupBy) else GroupBy(group_by)
     if resolved_group_by.value is None:
@@ -2306,6 +2302,7 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
         cls,
         config: StepSourceBindingsConfig,
         *,
+        selected_bindings: tuple[NamedSourceBinding, ...] | None = None,
         realized_source_metadata: Iterable[SourceMetadataMapping] | None = None,
     ) -> CompiledSourceBindingPlan:
         if not isinstance(config, StepSourceBindingsConfig):
@@ -2314,7 +2311,10 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
                 f"StepSourceBindingsConfig, got {type(config).__name__}."
             )
         return cls(
-            bindings=config.binding_declarations,
+            bindings=(
+                config.binding_declarations
+                if selected_bindings is None else selected_bindings
+            ),
             metadata_rules=config.metadata_rule_declarations,
             match_plan=config.match_plan,
             metadata_fields=config.metadata_fields_for_realized_source_metadata(
@@ -2323,6 +2323,41 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
             source_stack_components=config.source_stack_components,
             source_spatial_domain=config.source_spatial_domain,
         )
+
+    @classmethod
+    def from_contracts(
+        cls,
+        config: StepSourceBindingsConfig,
+        contracts: Iterable[CallableContract],
+        main_input_dependency: StepInputDependency,
+        available_artifacts: ArtifactSpecCollection,
+    ) -> CompiledSourceBindingPlan:
+        """Admit exact source routing at the declaration's compilation epoch."""
+        contracts = tuple(contracts)
+        implicit_specs = (
+            tuple(binding.input_spec() for binding in config.primary_plane_bindings)
+            if main_input_dependency.uses_pipeline_start_anchors()
+            and any(contract.accepts_implicit_main_flow_input for contract in contracts)
+            else ()
+        )
+        source_specs = tuple(dict.fromkeys((
+            *implicit_specs,
+            *(
+                spec
+                for contract in contracts
+                for spec in contract.artifact_inputs
+                if config.declares_artifact_ref(spec.ref())
+                or available_artifacts.by_name_and_artifact_type(
+                    spec.name, spec.artifact_type
+                ) is not None
+            ),
+        )))
+        if not source_specs:
+            return cls.empty()
+        bindings = config.bindings_for_artifact_specs(source_specs, available_artifacts)
+        if not bindings:
+            return cls.empty()
+        return cls.from_config(config, selected_bindings=bindings)
 
     def __post_init__(self) -> None:
         bindings = normalize_source_binding_values(
