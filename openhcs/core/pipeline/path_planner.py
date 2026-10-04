@@ -6,7 +6,6 @@ This version ACTUALLY eliminates duplication instead of adding abstraction theat
 
 from __future__ import annotations
 
-import inspect
 import logging
 from collections import defaultdict
 from collections.abc import Callable, Hashable, Iterable, Sequence
@@ -663,22 +662,21 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
             specs,
             available_artifacts,
         )
+        binding_domains = tuple(
+            binding.component_domains(
+                realized_source_metadata=self.planner.session.realized_source_metadata
+            )
+            for binding in bindings
+        )
         return tuple(
             PathPlannerGroupScope.from_raw(values, component=component)
             for component in AllComponents
             for values in (
-                tuple(
-                    dict.fromkeys(
-                        value
-                        for binding in bindings
-                        for value in binding.component_values(
-                            component,
-                            realized_source_metadata=(
-                                self.planner.session.realized_source_metadata
-                            ),
-                        )
-                    )
-                ),
+                tuple(dict.fromkeys(
+                    value
+                    for domains in binding_domains
+                    for value in domains.get(component, ())
+                )),
             )
             if values
         )
@@ -1062,21 +1060,11 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
             return None
 
         step_context = self.planner.artifact_context
-        contracts = tuple(item.contract for item in declarations.pattern.iter_items())
-        config_parameters: dict[str, inspect.Parameter] = {}
-        for contract in contracts:
-            for parameter in contract.config_bound_parameters:
-                prior = config_parameters.setdefault(parameter.name, parameter)
-                if prior.annotation is not parameter.annotation:
-                    raise TypeError(
-                        f"FunctionStep {step.name!r} callable pattern "
-                        f"declares incompatible config parameter {parameter.name!r}: "
-                        f"{prior.annotation!r} and {parameter.annotation!r}."
-                    )
         step_values = vars(step)
         pipeline_values = vars(self.planner.session.global_config)
         runtime_parameter_bindings: list[RuntimeParameterBinding] = []
-        for parameter_name, parameter in config_parameters.items():
+        for parameter in declarations.config_parameters_for_step(step.name):
+            parameter_name = parameter.name
             provider = (
                 step_values[parameter_name]
                 if parameter_name in step_values

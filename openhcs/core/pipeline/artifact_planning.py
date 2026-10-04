@@ -1,5 +1,6 @@
 """Artifact graph extraction for compiled function patterns."""
 
+import inspect
 from collections import Counter, OrderedDict, defaultdict
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, replace
@@ -231,6 +232,30 @@ class ArtifactGraph:
     _input_lineage_order: (
         tuple[tuple[ArtifactSpecRef, tuple[ArtifactSpecRef, ...]], ...] | None
     ) = field(default=None, init=False, repr=False, compare=False)
+
+    _config_bound_parameters: tuple[inspect.Parameter, ...] | None = field(
+        default=None, init=False, repr=False, compare=False
+    )
+
+    def config_parameters_for_step(
+        self, step_name: str
+    ) -> tuple[inspect.Parameter, ...]:
+        """Admit the shared signature roster before binding axis-local values."""
+        if self._config_bound_parameters is None:
+            parameters: dict[str, inspect.Parameter] = {}
+            for item in () if self.pattern is None else self.pattern.iter_items():
+                for parameter in item.contract.config_bound_parameters:
+                    prior = parameters.setdefault(parameter.name, parameter)
+                    if prior.annotation is not parameter.annotation:
+                        raise TypeError(
+                            f"FunctionStep {step_name!r} callable pattern "
+                            f"declares incompatible config parameter {parameter.name!r}: "
+                            f"{prior.annotation!r} and {parameter.annotation!r}."
+                        )
+            object.__setattr__(
+                self, "_config_bound_parameters", tuple(parameters.values())
+            )
+        return self._config_bound_parameters
 
     @property
     def input_lineage_order(

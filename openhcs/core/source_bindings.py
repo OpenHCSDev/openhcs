@@ -1182,21 +1182,9 @@ class NamedSourceBinding(SourceAssignmentBase):
     ) -> tuple[str, ...]:
         """Return declared or workspace-realized values for one component axis."""
 
-        identity_values = tuple(
-            selector.value
-            for selector in self.component_identity
-            if selector.component is component
-        )
-        if identity_values:
-            return identity_values
-
-        selector_values = tuple(
-            selector.value
-            for selector in self.selector.components
-            if selector.component is component
-        )
-        if selector_values:
-            return selector_values
+        declared_values = self._declared_component_values(component)
+        if declared_values:
+            return declared_values
 
         if realized_source_metadata is None:
             return ()
@@ -1209,6 +1197,49 @@ class NamedSourceBinding(SourceAssignmentBase):
                 continue
             values.extend(source_component_metadata_values(metadata, component))
         return tuple(dict.fromkeys(values))
+
+    def _declared_component_values(
+        self, component: AllComponents
+    ) -> tuple[str, ...]:
+        """Resolve exact identity values before selector-derived coordinates."""
+        for declarations in (self.component_identity, self.selector.components):
+            values = tuple(
+                selector.value
+                for selector in declarations
+                if selector.component is component
+            )
+            if values:
+                return values
+        return ()
+
+    def component_domains(
+        self,
+        *,
+        realized_source_metadata: Iterable[SourceMetadataMapping] | None = None,
+    ) -> Mapping[AllComponents, tuple[str, ...]]:
+        """Admit all component domains from the same matched source records."""
+        domains = {
+            component: values
+            for component in AllComponents
+            for values in (self._declared_component_values(component),)
+            if values
+        }
+        if realized_source_metadata is None or len(domains) == len(AllComponents):
+            return domains
+        realized: dict[AllComponents, list[str]] = {}
+        for metadata in realized_source_metadata:
+            if not self.matches_realized_source_metadata(metadata):
+                continue
+            for component, values in SourceMetadataFields.component_domains(
+                metadata
+            ).items():
+                if component not in domains:
+                    realized.setdefault(component, []).extend(values)
+        domains.update(
+            (component, tuple(dict.fromkeys(values)))
+            for component, values in realized.items()
+        )
+        return domains
 
     def matches_realized_source_metadata(
         self,
