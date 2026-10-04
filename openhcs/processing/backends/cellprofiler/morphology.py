@@ -2246,6 +2246,10 @@ class NumbaNumpyMorphologyBackendStrategy(NumpyMorphologyBackendStrategy):
         footprint = np.ones((3, 3), dtype=np.bool_)
         self.connected_components(mask, connectivity=2)
         self.fill_labeled_holes(labels)
+        for writable_mask in (False, True):
+            hole_mask = mask.copy()
+            hole_mask.flags.writeable = writable_mask
+            _cellprofiler_fill_labeled_holes_2d(labels, mask=hole_mask)
         self.erode_labeled_objects(labels, footprint)
         self.erode_labeled_objects(
             np.stack((labels, labels)), np.ones((3, 3, 3), dtype=np.bool_)
@@ -2983,6 +2987,58 @@ def _scipy_connected_components(
     return (labels.astype(np.int32, copy=False), int(count))
 
 
+@njit(cache=True, inline="always")
+def _labeled_hole_node_at_numba(source, background, offset, y, x):
+    background_node = background[y, x]
+    return (
+        source[y, x]
+        if background_node == 0 else background_node + offset + 1
+    )
+
+
+@njit(cache=True)
+def _labeled_hole_graph_numba(source, background, offset, node_count):
+    height, width = source.shape
+    boundary_nodes = set()
+    areas = np.zeros(node_count, dtype=np.int64)
+    edges = set()
+    for y in range(height):
+        for x in range(width):
+            node = _labeled_hole_node_at_numba(source, background, offset, y, x)
+            areas[node] += 1
+            if node != 0 and (y == 0 or y + 1 == height or x == 0 or x + 1 == width):
+                boundary_nodes.add(node)
+            if y + 1 < height:
+                other = _labeled_hole_node_at_numba(source, background, offset, y + 1, x)
+                if node != other:
+                    edges.add(min(node, other) * node_count + max(node, other))
+            if x + 1 < width:
+                other = _labeled_hole_node_at_numba(source, background, offset, y, x + 1)
+                if node != other:
+                    edges.add(min(node, other) * node_count + max(node, other))
+    encoded = np.empty(len(edges), dtype=np.int64)
+    index = 0
+    for edge in edges:
+        encoded[index] = edge
+        index += 1
+    boundary = np.empty(len(boundary_nodes), dtype=np.int64)
+    index = 0
+    for node in boundary_nodes:
+        boundary[index] = node
+        index += 1
+    return encoded, boundary, areas
+
+
+@njit(cache=True)
+def _write_labeled_holes_numba(source, background, offset, lookup, mask, has_mask):
+    output = np.empty_like(source)
+    for y in range(source.shape[0]):
+        for x in range(source.shape[1]):
+            node = _labeled_hole_node_at_numba(source, background, offset, y, x)
+            output[y, x] = node if has_mask and not mask[y, x] else lookup[node]
+    return output
+
+
 def _cellprofiler_fill_labeled_holes_2d(
     labels: np.ndarray,
     *,
@@ -3020,30 +3076,28 @@ def _cellprofiler_fill_labeled_holes_2d(
         background,
         structure=ndi.generate_binary_structure(2, 1),
     )
-    working = source.copy().astype(np.int64, copy=False)
-    foreground_label_count = int(working.max(initial=0))
-    working[background_labels != 0] = (
-        background_labels[background_labels != 0] + foreground_label_count + 1
+    # The predicate may mutate the caller's labels. Capture pixels at the
+    # original working-plane admission epoch, before graph/predicate work.
+    captured_source = source.copy(order="C").astype(np.int64, copy=False)
+    if captured_source.size == 0:
+        captured_source[0, 0]  # Preserve the original empty-plane IndexError.
+    foreground_label_count = int(captured_source.max(initial=0))
+    node_count = foreground_label_count + int(background_count) + 2
+    minimum_node = int(captured_source.min(initial=0))
+    if minimum_node < -node_count:
+        raise IndexError(
+            f"index {minimum_node} is out of bounds for axis 0 with size {node_count}"
+        )
+    # Source extrema and scipy's component count admit every dynamic node
+    # index once; the matching plane shapes and raster loops bound pixel reads.
+    edges, boundary_nodes, areas = _labeled_hole_graph_numba(
+        captured_source, background_labels, foreground_label_count, node_count
     )
-    maximum_node = foreground_label_count + int(background_count) + 1
-    node_count = maximum_node + 1
-
+    boundary_nodes = np.sort(boundary_nodes)
     is_not_hole = np.zeros(node_count, dtype=bool)
-    boundary_nodes = np.unique(
-        np.concatenate((working[0, :], working[:, 0], working[-1, :], working[:, -1]))
-    )
-    boundary_nodes = boundary_nodes[boundary_nodes != 0]
     is_not_hole[boundary_nodes] = True
     to_visit = [int(node) for node in boundary_nodes]
-
-    first = np.concatenate((working[:-1, :].ravel(), working[:, :-1].ravel()))
-    second = np.concatenate((working[1:, :].ravel(), working[:, 1:].ravel()))
-    differing = first != second
-    adjacent_first = first[differing].astype(np.int64, copy=False)
-    adjacent_second = second[differing].astype(np.int64, copy=False)
-    lower_nodes = np.minimum(adjacent_first, adjacent_second)
-    upper_nodes = np.maximum(adjacent_first, adjacent_second)
-    undirected_edges = np.unique(lower_nodes * node_count + upper_nodes)
+    undirected_edges = np.sort(edges)
     adjacency: list[list[int]] = [[] for _ in range(node_count)]
     for encoded_edge in undirected_edges:
         left, right = divmod(int(encoded_edge), node_count)
@@ -3051,7 +3105,8 @@ def _cellprofiler_fill_labeled_holes_2d(
         adjacency[right].append(left)
 
     if size_predicate is not None:
-        areas = np.bincount(working.ravel(), minlength=node_count)
+        if minimum_node < 0:
+            raise ValueError("'list' argument must have no negative elements")
         for node, area in enumerate(areas):
             if (
                 node > 0
@@ -3097,11 +3152,17 @@ def _cellprofiler_fill_labeled_holes_2d(
     lookup = np.arange(node_count, dtype=np.int64)
     lookup[foreground_label_count + 1 :] = 0
     lookup[~is_not_hole] = adjacent_non_hole[~is_not_hole]
-    if mask_array is None:
-        output = lookup[working]
-    else:
-        output = working.copy()
-        output[mask_array] = lookup[working[mask_array]]
+    if mask_array is not None and mask_array.shape != captured_source.shape:
+        # Boolean indexing historically rejects a predicate-mutated mask shape.
+        np.empty(captured_source.shape)[mask_array]
+    output_mask = (
+        np.empty((0, 0), dtype=np.bool_)
+        if mask_array is None else np.ascontiguousarray(mask_array)
+    )
+    output = _write_labeled_holes_numba(
+        captured_source, background_labels, foreground_label_count, lookup,
+        output_mask, mask_array is not None,
+    )
     return output.astype(source.dtype, copy=False)
 
 

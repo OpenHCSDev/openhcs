@@ -189,6 +189,29 @@ def test_fill_labeled_holes_mask_excludes_background_from_fill_domain() -> None:
     assert filled[1, 1] == 0
 
 
+def test_fill_labeled_holes_captures_labels_before_mutating_predicate() -> None:
+    labels = np.ones((7, 7), dtype=np.int32)
+    labels[1:-1, 1:-1] = 0
+    labels[3, 3] = 2
+    mask = np.ones(labels.shape, dtype=bool)
+
+    def mutate_inputs(_area: int, _is_foreground: bool) -> bool:
+        labels[:] = 99
+        mask[2, 2] = False
+        return True
+
+    filled = morphology_module._cellprofiler_fill_labeled_holes_2d(
+        labels, mask=mask, size_predicate=mutate_inputs
+    )
+
+    expected = np.ones((7, 7), dtype=np.int32)
+    # A mask changed after graph admission exposes the captured virtual
+    # background node, just as the original masked working-plane write did.
+    expected[2, 2] = 4
+    np.testing.assert_array_equal(filled, expected)
+    np.testing.assert_array_equal(labels, np.full(labels.shape, 99, dtype=np.int32))
+
+
 def test_fill_labeled_holes_handles_stacked_planes_planewise() -> None:
     labels = np.zeros((2, 6, 6), dtype=np.int32)
     labels[:, 1:5, 1:5] = 3
