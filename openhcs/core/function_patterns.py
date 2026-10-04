@@ -844,11 +844,6 @@ class CompiledFunctionGroup:
             and edge.spec.artifact_type.carries_source_image_context
         )
         if not primary_edges:
-            if any(
-                invocation.contract.accepts_implicit_main_flow_input
-                for invocation, edges in active
-            ):
-                return None
             primary_edges = tuple(
                 edge
                 for invocation, edges in active
