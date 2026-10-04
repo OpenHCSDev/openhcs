@@ -197,3 +197,38 @@ archive and all frozen scientific journals/UNKNOWN dispositions remain intact.
 
 Archive: docs/validation/mixed-carrier-intensity-source02-20261004.tar.gz,
 SHA256 f060dbbbec0ace28daeedf24dee83d00cb3af717b10887d973b39daa24411031.
+
+Declared-memory and arithmetic-domain review correction
+------------------------------------------------------
+
+Parent review identified a reachable non-NumPy boundary: mixed intensity
+reconciliation precedes the original runtime stack's host conversion. The
+shared composition now resolves the original carrier's destination/device
+before reconciliation, through one ancestor recipe also used by both pixel
+hooks. The intensity owner uses the original ArrayBridge MemoryType.to_numpy
+leaf before numerical operations; stack_runtime_slices still owns the final
+conversion. Mask stacking derives its device from the output memory owner,
+replacing the previous literal zero. No backend switch, converter or device
+store is introduced. Applicable ownership findings are BOUND-2 and IMPL-12.
+
+The original complete-family AST remains archived. Supplemental original audit
+Package AST in memory-owner-ast-before07.jsonl covers OpenHCS memory and the
+entire CellProfiler interop family plus exact recorded ArrayBridge source.
+CellProfilerCompileTime contracts install the existing runtime adapter;
+CellProfilerModuleExecutor._image_request and ImageOutputRecorder.runtime_input_value
+normalize declared image inputs, including named/special inputs. Measurement
+inputs also use normalize_cellprofiler_image_payload. Threshold explicitly
+normalizes at its numerical entrypoint. The arithmetic proof-clearing callers
+are smoothing, illumination, morphology, thresholding, color, image math,
+edge enhancement, image geometry, intensity and feature enhancement. Direct
+helper calls do not establish the adapter invariant. Consequently the shared
+without_unit_interval_intensity_scale method now invalidates only an existing
+normalized proof: raw-domain arithmetic remains raw, not implicitly normalized.
+No caller-specific normalization patches are added.
+
+Focused post-change memory/domain controls are next. They run the real original
+MemoryType conversion and stack owners with a CPU-controlled CuPy leaf that
+forbids implicit __array__, in both source orders, stack/bundle compositions,
+implicit and explicit destinations, and nonzero device/mask preservation.
+This source fixture cannot claim physical GPU or installed/public acceptance.
+The previous 267/85 controls and original failure archives remain unchanged.

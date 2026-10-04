@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any, TypeVar
 
 import numpy as np
-from arraybridge import ArrayGeometry
+from arraybridge import ArrayGeometry, MemoryType, detect_memory_type
 from python_introspect import dataclass_from_mapping
 from zmqruntime.viewer_protocol import (
     ViewerWireField,
@@ -195,8 +195,13 @@ class ImagePayloadIntensityFields(ABC):
         )
 
     def without_unit_interval_intensity_scale(self) -> "ImagePayloadMetadata":
-        """Return metadata after an arithmetic transform changed pixel values."""
-        return self.replace_fields(unit_interval_intensity=ImageUnitIntervalIntensityMetadata())
+        """Invalidate quantization without changing the current intensity domain."""
+        return self.replace_fields(
+            unit_interval_intensity=(
+                ImageUnitIntervalIntensityMetadata() if self.has_normalized_intensity
+                else None
+            )
+        )
 
     def with_current_intensity_from(
         self, source: "ImagePayloadIntensityFields", *, plane_index: int | None = None,
@@ -213,7 +218,8 @@ class ImagePayloadIntensityFields(ABC):
         self, payload: Any, *, dtype: Any = None, channel_index: int = 0,
     ) -> Any:
         """Normalize the declared current domain, independently of storage dtype."""
-        array = np.asarray(image_payload_data(payload))
+        data = image_payload_data(payload)
+        array = np.asarray(MemoryType(detect_memory_type(data)).to_numpy(data))
         target_dtype = np.dtype(np.float32 if dtype is None else dtype)
         if not (
             np.issubdtype(array.dtype, np.number)

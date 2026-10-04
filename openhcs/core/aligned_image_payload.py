@@ -557,9 +557,26 @@ class ImagePayloadStackComposition(ABC):
         """Preserve each input's declared provenance unless the axis owner projects it."""
         return metadata
 
+    @staticmethod
+    def composition_memory_domain(
+        payloads: tuple[RuntimeArrayData, ...], *,
+        memory_type: str | None = None, device_id: int | None = None,
+    ) -> tuple[str, int | None]:
+        """Resolve one composition destination through the original memory owner."""
+        if memory_type is not None:
+            return memory_type, device_id
+        memory_type = detect_memory_type(payloads[0])
+        return memory_type, MemoryType(memory_type).device_id_of(payloads[0])
+
     def compose(
         self, *, memory_type: str | None = None, device_id: int | None = None,
     ) -> Any:
+        # Intensity reconciliation projects pixels to the numerical host domain.
+        # Resolve the destination from the original carrier before that projection.
+        memory_type, device_id = self.composition_memory_domain(
+            tuple(image_payload_data(payload) for payload in self.composition_payloads),
+            memory_type=memory_type, device_id=device_id,
+        )
         payloads = ImagePayloadMetadata.intensity_coherent_payloads(self.composition_payloads)
         composed = self.compose_unmasked(
             tuple(image_payload_data(payload) for payload in payloads),
@@ -576,9 +593,9 @@ class ImagePayloadStackComposition(ABC):
         self, payloads: tuple[RuntimeArrayData, ...], *,
         memory_type: str | None = None, device_id: int | None = None,
     ) -> RuntimeArrayData:
-        if memory_type is None:
-            memory_type = detect_memory_type(payloads[0])
-            device_id = MemoryType(memory_type).device_id_of(payloads[0])
+        memory_type, device_id = self.composition_memory_domain(
+            payloads, memory_type=memory_type, device_id=device_id,
+        )
         return stack_runtime_slices(
             payloads, memory_type, device_id,
         )
@@ -669,7 +686,7 @@ def _stack_image_payload_mask(
     return stack_runtime_slices(
         resolved_masks,
         detect_memory_type(stack),
-        0,
+        MemoryType(detect_memory_type(stack)).device_id_of(stack),
     )
 
 
@@ -855,9 +872,9 @@ class ImagePayloadBundleContext(ImagePayloadStackContext):
         *, memory_type: str | None = None, device_id: int | None = None,
     ) -> RuntimeArrayData:
         """Compose image payload arrays without mask/metadata wrapping."""
-        if memory_type is None:
-            memory_type = detect_memory_type(payloads[0])
-            device_id = MemoryType(memory_type).device_id_of(payloads[0])
+        memory_type, device_id = self.composition_memory_domain(
+            payloads, memory_type=memory_type, device_id=device_id,
+        )
         channel_axes = tuple(
             metadata.normalized_source_channel_axis(payload)
             for payload, metadata in zip(

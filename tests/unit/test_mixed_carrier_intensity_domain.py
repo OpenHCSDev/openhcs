@@ -186,8 +186,30 @@ def test_saved_output_context_retains_the_independent_composed_buffer_domain():
 
 def test_common_quantization_requires_every_current_plane_not_only_known_members():
     raw = source(np.full((2, 3), 128, dtype=np.uint8))
-    remapped = image_payload_metadata(raw).without_unit_interval_intensity_scale().payload_with(
+    normalized = normalize_image_payload_intensity(raw)
+    remapped = image_payload_metadata(normalized).without_unit_interval_intensity_scale().payload_with(
         np.full((2, 3), 0.123456, dtype=np.float32))
     mixed = stack_image_payloads((raw, remapped), metadata_mode=ImagePayloadMetadataCompositionMode.STACK)
     assert image_payload_metadata(mixed).common_unit_interval_intensity_scale() is None
     assert image_payload_metadata(mixed).for_leading_source_plane(0).unit_interval_intensity_scale == 255
+
+
+@pytest.mark.parametrize('normalized', (False, True))
+def test_proof_invalidation_preserves_the_current_numerical_domain(normalized):
+    from openhcs.processing.backends.cellprofiler.color import (
+        color_to_gray_combine_output_metadata,
+    )
+
+    raw = source(np.full((2, 3), 128, dtype=np.uint8))
+    payload = normalize_image_payload_intensity(raw) if normalized else raw
+    # Use the original arithmetic output metadata owner, not a test-side marker.
+    metadata = color_to_gray_combine_output_metadata(payload)
+    transformed = metadata.payload_with(
+        image_payload_data(payload).astype(np.float32) * 0.5,
+        image_payload_mask(payload),
+    )
+    assert metadata.has_normalized_intensity is normalized
+    assert metadata.unit_interval_intensity_scale is None
+    expected = image_payload_data(payload) * (0.5 if normalized else 0.5 / 255)
+    np.testing.assert_allclose(normalize_image_payload_intensity(transformed), expected)
+    assert metadata.intensity_scale == 255
