@@ -388,7 +388,9 @@ class RuntimeAdapterSpec:
     def invocation_domain_inputs(
         self, contract: "CallableContract",
     ) -> ArtifactSpecCollection:
-        """Return declared inputs supplying this adapter's invocation carrier."""
+        """Use declared context inputs when the callable has no raw image ABI."""
+        if contract.accepts_implicit_main_flow_input:
+            return ArtifactSpecCollection(())
         return contract.group_scope_inputs
 
     def __post_init__(self) -> None:
