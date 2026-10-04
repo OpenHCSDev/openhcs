@@ -203,14 +203,14 @@ for retirement_case in policy_change tampered_grant tampered_policy; do
   jq --arg phase "controlled-$retirement_case" '.phase=$phase' \
     "$scratch/retirement/successor-declaration.json" > "$scratch/retirement-$retirement_case/successor-declaration.json"
   if [[ "$retirement_case" == policy_change ]]; then
-    jq '.resource_policy={aggregate_memory_max_bytes:2097152}' \
+    jq '.resource_policy={desktop_growth_reserve_mib:1}' \
       "$scratch/retirement-$retirement_case/successor-declaration.json" > "$scratch/changed-policy.json"
     mv "$scratch/changed-policy.json" "$scratch/retirement-$retirement_case/successor-declaration.json"
   fi
   bash "$owner" prepare "$scratch/funding" "$scratch/retirement-$retirement_case" "$scratch/qualification.json"
   case "$retirement_case" in
     tampered_grant) change='.funded_members += [{slot:"INDEPENDENT_C",run_owner_root:(.retained_output_roots[0] | sub("/old-b/B/author-workspace/output$";"/next"))}]' ;;
-    tampered_policy) change='.proposed_resource_envelope.aggregate_memory_max_bytes=2097152' ;;
+    tampered_policy) change='.proposed_resource_envelope.desktop_growth_reserve_mib=1' ;;
     policy_change) change='.' ;;
   esac
   jq "$change" "$scratch/retirement-$retirement_case/program.json" > "$scratch/changed-proposal.json"
@@ -250,7 +250,7 @@ status=$?
 set -e
 test "$status" = 42
 runtime="$scratch/old-a/A/author-workspace/output/runtime"
-rg -q 'CONTROLLED_EXEC cap=7 cpu=25' "$runtime/mcp.stdout"
+rg -q 'CONTROLLED_EXEC cpu=25' "$runtime/mcp.stdout"
 test -f "$runtime/first-mcp-started.epoch"
 test ! -e "$scratch/funding/A"
 (cd "$scratch/old-a"; sha256sum --check --quiet READY-FREEZE.sha256)
@@ -262,7 +262,7 @@ set -e
 test "$status" = 1
 test ! -e "$runtime/resources-forbidden02.output"
 sha256sum --check --quiet "$scratch/retained-startup.sha256"
-printf 'PASS original recorded path: own cap7/CPU25, exact child42, run-local clock/journals, no replay\n'
+printf 'PASS original uncapped recorded path: CPU25, exact child42, run-local clock/journals, no replay\n'
 
 # Initial publication uses the SAME writer, not a manually copied head/store.
 mkdir "$scratch/initial-run"

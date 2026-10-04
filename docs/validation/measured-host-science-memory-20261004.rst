@@ -55,3 +55,29 @@ Initial checkpoint: coherent source and documentation, bash syntax/diff checks
 pass. Controlled family checks and real uncapped original entrypoint receiving
 are next, not claimed complete by syntax or this receipt. No SCI/provider turn,
 old job replay, live installed overlay or source freeze rewrite occurred.
+
+Working controls and real guard receiving
+----------------------------------------
+
+Existing original shell controls were migrated after the ownership change:
+resource admission, atomic funding publication/retirement, author-context
+projection and real util-linux recorded PTY admission. All four pass. Tests of
+deleted residual-cap semantics were removed; measured desktop refusal76,
+PSI refusal77, physical disk refusal78, malformed telemetry, own output quota,
+exact helper identity, terminal retirement, canonical FUND, known pre-start
+rejection and non-replay after journal creation remain covered.
+
+First resource fixture stopped before PSI because it supplied no helper
+handoff: the old empty cap map had accidentally skipped identity verification.
+That original negative is retained. The fixture now supplies the existing
+terminal/handoff schema, never a cap-based helper roster. The initially omitted
+context test argument is also retained as a known source-command error, not a
+runtime or provider attempt.
+
+Authoritative successful logs under the persistent engineering577 directory:
+resource03.log, funding02.log, context03.log and recorder02.log. Controls01/02
+remain intact. The real original resource-check entrypoint also passed against
+the actual canonical FUND and kernel cgroup with the parent's uncapped scope:
+actual-guard01.log. This is measured-host guard receiving, not native/science
+execution, and does not reclassify any original OOM or UNKNOWN. The next
+recorded installed-client receiving uses this same complete operation family.
