@@ -69,6 +69,11 @@ new allocation fits. Startup and large allocation admission still protect
 desktop disk/RAM and measured pressure. Never replay an uncertain input or
 automatically freeze/kill the run merely because ongoing telemetry warns.
 
+There is no numeric PSI admission cutoff. Interpret the actual recent10/60
+pressure, host availability and family usage together; plan additional buffers
+and reduce parallelism or defer cold/heavy work when real pressure warrants it.
+A valid observation is not proof that a large allocation fits.
+
 Iterate on your OWN measured/visible QA failures until acceptance, the actual
 time/resource bound or an irreducible blocker. There is no arbitrary candidate
 count limit. Rejecting a candidate does not by itself end the task. Technical

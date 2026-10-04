@@ -67,11 +67,12 @@ mv "$scratch/funding-with-closed-path.json" "$scratch/funding/program.json"
 run 0 ongoing closed_paths_not_inventoried
 runtime="$scratch/run/A/author-workspace/output/runtime"
 rg -q 'avg10=4.82 avg60=1.09 avg300=0.23' "$runtime/resources-original_review.psi"
-rg -q 'Pressure warning:' "$runtime/resources-original_review.psi"
+rg -q 'no numeric PSI admission cutoff' "$runtime/resources-original_review.psi-policy"
+! jq -e '.proposed_resource_envelope | has("full_memory_psi_max_percent")' "$scratch/funding/program.json" >/dev/null
 rg -q 'measuredCharge=1610612736 measuredSwap=0' "$runtime/resources-original_review.ram-scopes"
 rg -q 'observed=1 unavailable=0' "$runtime/resources-original_review.ram-scopes"
-run 77 full growth_rejected
-run 77 replacement replacement_rejected
+run 0 full pressure_not_numeric_ceiling
+run 0 replacement small_receiving_not_stale_pressure_veto
 printf 'MemAvailable: 4718592 kB\n' > "$scratch/host/meminfo"
 run 0 ongoing no_invented_future_ram_reservation
 printf 'MemAvailable: 1048576 kB\n' > "$scratch/host/meminfo"
@@ -161,6 +162,7 @@ jq -n --arg root "$scratch" '{phase:"headless-control",
 }' > "$scratch/admin-run/successor-declaration.json"
 printf '{"target":"/controlled/no-install","source_head":"controlled"}\n' > "$scratch/qualification.json"
 bash "$operations/project-program.sh" prepare "$scratch/funding" "$scratch/admin-run" "$scratch/qualification.json"
+! jq -e '.proposed_resource_envelope | has("full_memory_psi_max_percent")' "$scratch/admin-run/program.json" >/dev/null
 (cd "$scratch/admin-run"; sha256sum program.json successor-declaration.json > READY-FREEZE.sha256)
 FLEET_PARENT_RELEASED=1 bash "$operations/project-program.sh" publish "$scratch/funding" "$scratch/admin-run" \
   "$(sha256sum "$scratch/funding/program.json" | cut -d' ' -f1)"

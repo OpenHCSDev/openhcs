@@ -797,6 +797,20 @@ restored original-channel tables without changing the soma masks. This case is
 assisted development, not a fresh autonomous success; its packaging overrun and
 nonzero client teardown status remain recorded.
 
+A later fresh BBBC039 repeat retained complete labels, projections and tables
+for 156 of 200 fields; cleanup cancelled the remaining coverage. Post-freeze
+matching at IoU at least 0.5 found 14,999 matches, 920 excess predictions and
+2,902 missed reference objects, giving precision 0.9422, recall 0.8379 and
+pooled F1 0.8870. The earlier complete run, restricted to these same fields,
+scored 0.9089. On the 81 fields shared by the later run's first and repaired
+expansions, excess predictions fell from 449 to 421 while matches and misses
+were unchanged. This supports a local specificity improvement, not improved
+task-wide sensitivity. The
+[partial nuclei evaluation record](task_only_analysis/bbbc039-fresh656-partial-outcome.json)
+identifies the immutable source, terminal journals and original scorer. The
+incomplete subset is not random or unseen validation; missing fields are not
+silently treated as correct predictions.
+
 A separate fresh retinal author completed a measured smoothing/background
 subtraction pipeline and retained 109 reconciled detector objects, including
 8 border objects. Local nuisance admission improved, while faint-body extent
@@ -841,6 +855,18 @@ without reference feedback. Its final 56 nuclear and 56 seeded cell labels are
 algorithmic counts, not an accepted biological census. The
 [fresh paired-field outcome record](task_only_analysis/h003-fresh96-outcome.json)
 binds the independently verified 244-payload freeze, final source and review.
+
+A fresh public neurite-field repeat corrected nuclear false splits, retaining
+eight compact nuclear objects and a supported 51.56-pixel neurite segment censored
+at the field boundary. Faint-path discontinuities, near-process fragments and
+uncertain crossing ownership prevented acceptance of whole-field outgrowth.
+The final 143 branches and 6,795.71-pixel outgrowth sum remain model outputs,
+not accepted biological measurements; relative spacing does not establish
+micrometre calibration. The
+[fresh neurite outcome record](task_only_analysis/h004-fresh95-outcome.json)
+binds the frozen source and independently checked 283 scientific files, 112
+control files, three completed MCP journals and two retained journal prefixes.
+No reference answers were opened for this review.
 
 A retained personal-neurite development continuation also analysed a reused
 nine-field mosaic with pooled channel fits. A fixed-DN clipping repair corrected

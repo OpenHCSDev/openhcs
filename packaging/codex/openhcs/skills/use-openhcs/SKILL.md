@@ -50,7 +50,9 @@ Before the FIRST segmentation method/parameter proposal, follow
 body admission or wait for a split to retrieve marker reasoning. Use the
 [empirical measurement procedure](references/measurement-interpretation.md#measure-feature-scales-before-choosing-parameters)
 to relate distributed positives and nuisance-only controls to the actual consumed
-alias/response and its units, and within-body maxima versus a genuine pair to
+alias/response and its units, including
+[available whole no-object fields before widening](references/measurement-interpretation.md#include-no-object-fields-before-widening),
+and within-body maxima versus a genuine pair to
 the proposed landscape. Keep method/parameter rationale in the trial, not a
 borrowed default justified only by raw diameter.
 When an image defect motivates analytical preprocessing, read

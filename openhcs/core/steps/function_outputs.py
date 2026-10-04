@@ -18,7 +18,7 @@ from metaclass_registry import (
     extract_key_from_class_name,
 )
 from polystore.streaming.identity import StreamProducerIdentity
-from polystore.streaming.viewer_transport import ViewerStreamProducer
+from polystore.streaming.viewer_transport import ViewerStreamProducer, ViewerStreamSourceMetadata
 from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.constants.constants import Backend
@@ -47,6 +47,7 @@ from openhcs.core.runtime_slice_projection import (
 )
 from openhcs.core.source_image_provenance import (
     SourceComponentMetadata,
+    SourceImageIdentity,
 )
 from openhcs.core.source_projection import (
     OpenHCSPlaneAddress,
@@ -76,6 +77,7 @@ from openhcs.core.steps.stream_component_semantics import (
     StreamComponentMessageExtraAuthority,
     StreamImagePayloadMetadataProjector,
     StreamSourceComponentMetadataItems,
+    StreamViewerComponentMetadataProjector,
 )
 from openhcs.core.virtual_workspace_metadata import (
     METADATA_CONFIG,
@@ -448,7 +450,25 @@ class StreamOutputBatch:
     @property
     def source_metadata_items(self) -> StreamSourceComponentMetadataItems:
         return StreamSourceComponentMetadataItems.from_values(
-            item.source_component_metadata for item in self.items
+            values
+            for item in self.items
+            for values in StreamSourceComponentMetadataItems.from_image_metadata(
+                item.metadata,
+                fallback_source_identity=SourceImageIdentity(
+                    component_metadata=item.source_component_metadata,
+                ),
+            ).values
+        )
+
+    def viewer_source_metadata(
+        self, component_order: tuple[str, ...]
+    ) -> ViewerStreamSourceMetadata:
+        """Keep one scalar route address per image, excluding its plane axes."""
+        return StreamViewerComponentMetadataProjector.for_item_fields(
+            component_order,
+            self.item_fields(component_order),
+        ).indexed_source_metadata(
+            tuple(item.source_component_metadata for item in self.items)
         )
 
     def item_fields(self, component_order: tuple[str, ...]) -> dict:
@@ -598,6 +618,9 @@ class StreamOutputsAuthority:
                             source_metadata_items=stream_batch.source_metadata_items,
                         ).viewer_backend_kwargs(
                             producer=stream_batch.producer,
+                            source_metadata=stream_batch.viewer_source_metadata(
+                                producer_metadata.layout.component_order,
+                            ),
                         )
                     )
                     stream_backend_kwargs = stream_backend_kwargs.with_item_fields(

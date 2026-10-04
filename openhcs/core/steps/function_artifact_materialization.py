@@ -516,6 +516,12 @@ class RuntimeArtifactMaterialization:
         fallback_source_identity = (
             fallback_source_identity or self.payload_source_identity(self.data)
         )
+        metadata = image_payload_metadata(self.data)
+        if metadata.plane_axis is not None:
+            return StreamSourceComponentMetadataItems.from_image_metadata(
+                metadata,
+                fallback_source_identity=fallback_source_identity,
+            )
         emitted_identities = self.spec.emitted_source_identities(self.data)
         if emitted_identities:
             return StreamSourceComponentMetadataItems.from_source_identities(
