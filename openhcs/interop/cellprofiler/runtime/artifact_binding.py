@@ -338,7 +338,9 @@ class RuntimeInputBindingRequest:
         if source_artifact_binding is not None:
             value = cast(
                 RuntimeCallableArgument,
-                self.adapter.request.source_artifact_payload(spec.ref()),
+                replace(
+                    self.adapter.request, source_payload=self.current_image,
+                ).source_artifact_payload(spec.ref()),
             )
         elif runtime_edge is not None:
             runtime_input = self.adapter.request.runtime_artifact_input(

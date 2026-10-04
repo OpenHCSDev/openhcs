@@ -172,3 +172,19 @@ owner. Engineering88 is currently assigned to Singer626; no client/server or
 SCI endpoint was borrowed. Dewey owns the eventual exact88 successor after
 typed closure. Independent source selection/consumer checks continue without
 waiting for the absent630 owner thread.
+
+The qualified whole wheel at dfe961555 passed the existing complete byte/RECORD
+verifier:912 entries,812 source matches including789 Python modules and13
+skill files. The initial verifier wrapper wrongly retained the historical
+source path; all checks were preserved while retargeting that comparison to
+the actual pinned archive. Source, wheel, target and Git bytes agreed for the
+determining adapter before qualification. All281 focused installed tests passed.
+
+Additional CP consumer checks found an incomplete migration: a public module
+invocation can carry current_image while the originally constructed adapter
+request has no source_payload. The three observed failures were not interpreted
+as scientific failure. RuntimeInputBindingRequest now derives the resolver
+request from its actual current_image rather than a nullable earlier snapshot.
+The source origin still has one resolver; no alternate loader is introduced.
+This follow-up requires a newly pinned whole wheel and final CP checks before
+installed/public acceptance is claimed.
