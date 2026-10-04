@@ -804,8 +804,8 @@
       "document_id": "openhcs_measurement_interpretation",
       "section_count": 0,
       "source_path": "packaging/codex/openhcs/skills/use-openhcs/references/measurement-interpretation.md",
-      "summary": "Empirical native viewer feature measurements to justify diameter, separation, smoothing, background and shape parameters; pixel sampling and ROI limitations, coordinate transforms and uncertainty. Measurement-image choice, calibrated 2-D/3-D quantities, colocalisation controls, replicate hierarchy and comparable figures.",
-      "tags": ["measurement interpretation", "empirical parameter selection", "napari feature measurement", "diameter radius seed separation", "line profile geometry", "native coordinates uncertainty", "raw intensity measurement", "volume anisotropic Z spacing", "3D projection", "colocalisation colocalization", "Pearson Manders Costes", "background bleed through", "biological replicate pseudoreplication", "physical units", "publication scale bar", "shared contrast"],
+      "summary": "Empirical native viewer measurements for first-candidate method and parameter selection: body/background, within-body texture and genuine-pair geometry choose the marker landscape before smoothing/separation. Diameter, background and shape parameters; coordinate transforms and uncertainty, calibrated quantities, colocalisation and comparable figures.",
+      "tags": ["measurement interpretation", "empirical parameter selection", "first candidate declumping method", "marker landscape internal texture", "genuine close pair suppression", "napari feature measurement", "diameter radius seed separation", "line profile geometry", "native coordinates uncertainty", "raw intensity measurement", "volume anisotropic Z spacing", "3D projection", "colocalisation colocalization", "Pearson Manders Costes", "background bleed through", "biological replicate pseudoreplication", "physical units", "publication scale bar", "shared contrast"],
       "title": "Choose valid microscopy measurements and comparisons"
     },
     {
