@@ -799,6 +799,15 @@ identifies the independently verified 21 source and 119 payload entries;
 corrected regional captures, exact process closure and client exit 2 remain
 distinct from scientific completion.
 
+A fresh whole-volume centre author matched all 15 manual reference annotations
+at the predeclared 30-voxel distance, with 10 unmatched predictions; at 10
+voxels it matched 14 of 15. First/final centres and scores were identical,
+and the author caught its unsuccessful condensed-mass repair. The reference
+is not established as exhaustive, so this is annotated-centre agreement,
+not a verified cell census. The separate native Points interaction gap remains.
+The [fresh volumetric evaluation receipt](task_only_analysis/h002-fresh95-postfreeze-evaluation.json)
+retains all distance sensitivities and sealed input/scorer identities.
+
 A fresh-context paired DNA/actin author also retained 55 nuclei and 55
 source-linked actin territories after repairing a local nuclear merge. A
 faint-neighbour merge, clipped objects and one no-growth territory remained
