@@ -966,6 +966,30 @@ class SourceVoxelSpacing:
             )
         return self.values_zyx[-ndim:]
 
+    def layer_coordinate_kwargs(
+        self, axis_labels: Sequence[str]
+    ) -> dict[str, tuple[float, ...] | tuple[str, ...]]:
+        """Project source calibration onto semantic layer axes and payload bands."""
+        labels = tuple(axis_labels)
+        if (
+            len(labels) < 2
+            or labels[-2:] != ("y", "x")
+            or len(set(labels)) != len(labels)
+        ):
+            raise ValueError(
+                "Source calibration requires unique semantic axes ending in Y/X."
+            )
+        scale = [1.0] * len(labels)
+        units = ["dimensionless"] * len(labels)
+        scale[-2:] = self.spacing_for_ndim(2)
+        units[-2:] = (self.native_coordinate_unit,) * 2
+        z_component = AllComponents.Z_INDEX.value
+        if len(self.values_zyx) == 3 and z_component in labels:
+            z_axis = labels.index(z_component)
+            scale[z_axis] = self.spacing_for_ndim(3)[0]
+            units[z_axis] = self.native_coordinate_unit
+        return {"scale": tuple(scale), "units": tuple(units)}
+
     @property
     def native_coordinate_unit(self) -> str:
         """Unknown calibration is pixels, never an inferred physical unit."""

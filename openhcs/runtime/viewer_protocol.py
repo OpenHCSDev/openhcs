@@ -65,6 +65,7 @@ from zmqruntime.viewer_protocol import (
     ViewerTransportEndpoint,
 )
 
+from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.execution_visualizer import ExecutionVisualizerABC
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.core.streaming_config_factory import (
@@ -326,8 +327,15 @@ class ViewerShapeStatistics(ViewerProjectionRecord):
 
 @dataclass(frozen=True, kw_only=True)
 class ViewerSourceSpatialSummary(ViewerProjectionRecord):
+    source_voxel_spacing: SourceVoxelSpacing | None | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+
     spatial_origin_yx: tuple[StrictInt, StrictInt] | None | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
     source_spatial_shape_yx: tuple[StrictInt, StrictInt] | None | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+
+    @property
+    def voxel_spacing(self) -> SourceVoxelSpacing:
+        """Retain declared calibration, with unspecified spacing for legacy receipts."""
+        return self.optional(self.source_voxel_spacing) or SourceVoxelSpacing()
 
     @property
     def source_domain(self) -> ViewerSourceSpatialDomainPayload:
