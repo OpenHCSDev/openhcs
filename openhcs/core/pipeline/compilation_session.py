@@ -10,7 +10,7 @@ from objectstate import DataclassFieldAccess
 
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.context.processing_context import ProcessingContext
-from openhcs.core.source_metadata import SourceMetadataMapping
+from openhcs.core.source_metadata import SourceMetadataFields, SourceMetadataMapping
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.steps.function_step import FunctionStep
@@ -194,6 +194,7 @@ class ResolvedPipelineDefinition(InvocationContractProvider):
         if self._artifact_graphs is not None:
             return
         from openhcs.constants import GroupBy
+        from openhcs.core.callable_contract import FunctionStepExecutionScope
         from openhcs.core.pipeline.artifact_planning import (
             ArtifactGraph,
             extract_artifact_declarations,
@@ -243,6 +244,38 @@ class ResolvedPipelineDefinition(InvocationContractProvider):
                 graph.invocation_declarations[
                     item.key
                 ].validate_artifact_output_declarations()
+            previous = graphs[-1] if graphs else None
+            previous_pattern = None if previous is None else previous.pattern
+            dependency = graph.resolve_main_input_dependency(
+                step,
+                index,
+                execution_scope=FunctionStepExecutionScope.require_uniform(
+                    () if graph.pattern is None else (
+                        item.contract for item in graph.pattern.iter_items()
+                    )
+                ),
+                source_bindings=step.source_bindings,
+                context=context,
+                declared={},
+                step_scope_ids=self.step_scope_ids,
+                previous_dependency=(
+                    None if previous is None else previous.main_input_dependency
+                ),
+                previous_preserves_input_main_flow=(
+                    bool(previous_pattern)
+                    and all(
+                        bool(group.items)
+                        and all(
+                            item.contract.preserves_input_main_flow()
+                            for item in group.items
+                        )
+                        for group in previous_pattern.groups
+                    )
+                ),
+            )
+            graph = graph.with_source_binding_plan(
+                step.source_bindings, dependency, context
+            )
             graph.config_parameters_for_step(step.name)
             graph.input_lineage_order
             graphs.append(graph)
@@ -356,6 +389,10 @@ class CompilationSession:
     plate_scope: CompilationPlateScope | None = None
     is_zmq_execution: bool = False
 
+    _source_literal_field_types: Mapping[str, type[object] | None] | None = field(
+        default=None, init=False, repr=False
+    )
+
     @classmethod
     def from_context(
         cls,
@@ -417,6 +454,15 @@ class CompilationSession:
             self.source_workspace_projection.source_metadata_by_path.values()
         )
         return metadata or None
+
+    @property
+    def source_literal_field_types(self) -> Mapping[str, type[object] | None]:
+        """Admit literal types once from this session's captured source projection."""
+        if self._source_literal_field_types is None:
+            self._source_literal_field_types = SourceMetadataFields.literal_field_types(
+                self.realized_source_metadata or ()
+            )
+        return self._source_literal_field_types
 
     @property
     def step_count(self) -> int:

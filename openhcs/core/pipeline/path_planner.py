@@ -67,6 +67,7 @@ from openhcs.core.source_bindings import (
     CompiledSourceUniversePlan,
     EMPTY_SOURCE_BINDINGS,
     StepSourceBindingsConfig,
+    SourceBindingDeclarationsMixin,
     source_binding_group_keys_for_group_by,
 )
 from openhcs.core.step_dependencies import (
@@ -303,7 +304,7 @@ class PathPlannerExecutionGroups:
         step: AbstractStep,
         input_component_scopes: PathPlannerComponentScopes | None = None,
         *,
-        source_bindings: StepSourceBindingsConfig | None = None,
+        source_bindings: SourceBindingDeclarationsMixin | None = None,
         contracts: Sequence[CallableContract] = (),
     ) -> PathPlannerGroupScope:
         """Determine which component groups this step will execute for."""
@@ -517,7 +518,7 @@ class PathPlannerExecutionGroups:
         step: AbstractStep,
         group_by: GroupBy | None,
         *,
-        source_bindings: StepSourceBindingsConfig | None = None,
+        source_bindings: SourceBindingDeclarationsMixin | None = None,
     ) -> PathPlannerGroupScope:
         """Derive execution groups declared by source-binding component identity."""
         group_by_component = PathPlannerComponentScopes.component_from_group_by(group_by)
@@ -602,58 +603,10 @@ class PathPlannerMetadataArtifactInjection:
 class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
     """Artifact declaration and I/O planning with inherited metadata binding."""
 
-    def source_bindings_for_contracts(
-        self,
-        step: AbstractStep,
-        contracts: Iterable[CallableContract],
-        main_input_dependency: StepInputDependency,
-    ) -> StepSourceBindingsConfig:
-        """Project bindings to implicit main flow and exact public source inputs."""
-
-        contracts = tuple(contracts)
-        source_bindings = step.source_bindings
-        available_artifacts = self.planner.artifact_context.available_artifacts
-        implicit_main_flow_specs = (
-            tuple(
-                binding.input_spec() for binding in source_bindings.primary_plane_bindings
-            )
-            if (
-                main_input_dependency.kind is StepInputDependencyKind.PIPELINE_START
-                and any(contract.accepts_implicit_main_flow_input for contract in contracts)
-            )
-            else ()
-        )
-        source_specs = tuple(
-            dict.fromkeys(
-                (
-                    *implicit_main_flow_specs,
-                    *(
-                        spec
-                        for contract in contracts
-                        for spec in contract.artifact_inputs
-                        if (
-                            source_bindings.binding_for_artifact_ref(spec.ref()) is not None
-                            or available_artifacts.by_name_and_artifact_type(
-                                spec.name,
-                                spec.artifact_type,
-                            )
-                            is not None
-                        )
-                    ),
-                )
-            )
-        )
-        if not source_specs:
-            return EMPTY_SOURCE_BINDINGS
-        return source_bindings.for_artifact_specs(
-            source_specs,
-            available_artifacts,
-        )
-
     def source_binding_component_domains(
         self,
         specs: Iterable[ArtifactSpec],
-        source_bindings: StepSourceBindingsConfig,
+        source_bindings: SourceBindingDeclarationsMixin,
         available_artifacts: ArtifactSpecCollection,
     ) -> tuple[PathPlannerGroupScope, ...]:
         """Compile every declared component domain owned by source bindings."""
@@ -681,25 +634,6 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
             if values
         )
 
-    def compile_source_plans(
-        self,
-        step: AbstractStep,
-        source_bindings: StepSourceBindingsConfig,
-    ) -> tuple[CompiledSourceBindingPlan, CompiledSourceUniversePlan]:
-        """Freeze invocation-scoped source declarations into runtime plans."""
-
-        if not source_bindings.binding_declarations:
-            binding_plan = CompiledSourceBindingPlan.empty()
-        else:
-            binding_plan = CompiledSourceBindingPlan.from_config(
-                source_bindings,
-                realized_source_metadata=(self.planner.session.realized_source_metadata),
-            )
-        return (
-            binding_plan,
-            CompiledSourceUniversePlan.from_source_binding_plan(binding_plan),
-        )
-
     def compile_plan_maps(
         self,
         step: AbstractStep,
@@ -707,14 +641,25 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
         declarations: ArtifactGraph,
         group_scope: PathPlannerGroupScope,
         execution_scope: FunctionStepExecutionScope = FunctionStepExecutionScope.AXIS,
-        source_bindings: StepSourceBindingsConfig = EMPTY_SOURCE_BINDINGS,
+        source_bindings: StepSourceBindingsConfig | CompiledSourceBindingPlan = EMPTY_SOURCE_BINDINGS,
     ) -> ArtifactPlanMaps:
         """Compile artifact declarations into runtime I/O maps."""
         step_name = step.name
         group_by = PathPlannerExecutionGroups.normalized_group_by(step)
-        source_binding_plan, source_universe_plan = self.compile_source_plans(
-            step,
-            source_bindings,
+        source_binding_plan = (
+            source_bindings
+            if isinstance(source_bindings, CompiledSourceBindingPlan)
+            else (
+                CompiledSourceBindingPlan.from_config(
+                    source_bindings,
+                    realized_source_metadata=self.planner.session.realized_source_metadata,
+                )
+                if source_bindings.binding_declarations
+                else CompiledSourceBindingPlan.empty()
+            )
+        )
+        source_universe_plan = CompiledSourceUniversePlan.from_source_binding_plan(
+            source_binding_plan
         )
         consumer_variable_components = ComponentSet.from_enum_values(
             step.processing_config.variable_components or ()
@@ -918,7 +863,7 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
         artifact_inputs: Mapping[ArtifactSpecRef, ArtifactInputPlan],
         *,
         group_scope: PathPlannerGroupScope,
-        source_bindings: StepSourceBindingsConfig,
+        source_bindings: SourceBindingDeclarationsMixin,
         group_by: GroupBy | None,
     ) -> dict[ArtifactSpecRef, PathPlannerGroupScope]:
         """Return exact group scopes for every declared relation source."""
@@ -1123,7 +1068,7 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
         ],
         execution_group_scope: PathPlannerGroupScope,
         consumer_variable_components: ComponentSet,
-        source_bindings: StepSourceBindingsConfig = EMPTY_SOURCE_BINDINGS,
+        source_bindings: StepSourceBindingsConfig | CompiledSourceBindingPlan = EMPTY_SOURCE_BINDINGS,
         available_artifacts: ArtifactSpecCollection = ArtifactSpecCollection(()),
         main_flow_artifacts: ArtifactSpecCollection = ArtifactSpecCollection(()),
         metadata_artifact_available: Callable[[str], bool] = lambda _name: False,
@@ -1232,7 +1177,7 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
             PathPlannerGroupScope,
         ],
         consumer_variable_components: ComponentSet,
-        source_bindings: StepSourceBindingsConfig,
+        source_bindings: SourceBindingDeclarationsMixin,
         available_artifacts: ArtifactSpecCollection,
         main_flow_projection: MainFlowInputProjection | None,
     ) -> InvocationArtifactInputEdgePlan:
@@ -1419,7 +1364,7 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
             ]
             | None
         ) = None,
-        source_bindings: StepSourceBindingsConfig,
+        source_bindings: SourceBindingDeclarationsMixin,
         variable_components: ComponentSet,
         step_name: Optional[str] = None,
     ) -> dict[ArtifactSpecRef, ArtifactOutputPlan]:
@@ -1634,7 +1579,7 @@ class PathPlannerArtifactStage(PathPlannerMetadataArtifactInjection):
         declarations: ArtifactGraph,
         sid: int,
         consumer_scope: PathPlannerGroupScope,
-        source_bindings: StepSourceBindingsConfig,
+        source_bindings: SourceBindingDeclarationsMixin,
         variable_components: ComponentSet,
         step_name: Optional[str] = None,
         *,
@@ -2126,27 +2071,16 @@ class PathPlannerStepAssemblyStage:
             else tuple(item.contract for item in func_pattern.iter_items())
         )
         execution_scope = FunctionStepExecutionScope.require_uniform(contracts)
-        resolved_source_bindings = step.source_bindings
-        main_input_dependency = self.main_input_dependency(
-            step,
-            step_index,
-            declarations=declarations,
-            execution_scope=execution_scope,
-            source_bindings=resolved_source_bindings,
-        )
-        contract_source_bindings = self.planner.artifacts.source_bindings_for_contracts(
-            step,
-            contracts,
-            main_input_dependency,
-        )
-        source_anchor_specs = tuple(
-            binding.input_spec()
-            for binding in contract_source_bindings.primary_plane_bindings
-        )
-        execution_source_bindings = contract_source_bindings.for_artifact_specs(
-            source_anchor_specs,
-            self.planner.artifact_context.available_artifacts,
-        )
+        main_input_dependency = declarations.main_input_dependency
+        contract_source_bindings = declarations.source_binding_plan
+        if contract_source_bindings.binding_declarations:
+            fields = step.source_bindings.metadata_fields_for_literal_types(
+                self.planner.session.source_literal_field_types
+            )
+            if fields != contract_source_bindings.metadata_fields:
+                contract_source_bindings = replace(
+                    contract_source_bindings, metadata_fields=fields
+                )
         input_component_scopes = self.input_component_scopes(main_input_dependency)
         input_dir, output_dir = self.step_io_dirs(main_input_dependency, step_index)
         group_scope = (
@@ -2155,7 +2089,7 @@ class PathPlannerStepAssemblyStage:
             else self.planner.execution_groups.get_execution_groups(
                 step,
                 input_component_scopes,
-                source_bindings=execution_source_bindings,
+                source_bindings=contract_source_bindings,
                 contracts=contracts,
             )
         )
@@ -2270,116 +2204,32 @@ class PathPlannerStepAssemblyStage:
         *,
         declarations: ArtifactGraph = ArtifactGraph(),
         execution_scope: FunctionStepExecutionScope = FunctionStepExecutionScope.AXIS,
-        source_bindings: StepSourceBindingsConfig = EMPTY_SOURCE_BINDINGS,
+        source_bindings: StepSourceBindingsConfig | CompiledSourceBindingPlan = EMPTY_SOURCE_BINDINGS,
     ) -> StepInputDependency:
         """Resolve the explicit main-input edge for one step."""
         existing_plan = self.planner.plans.get(step_index)
         if existing_plan is not None and existing_plan.main_input_dependency.is_resolved:
             return existing_plan.main_input_dependency
 
-        if (
-            isinstance(step, FunctionStep)
-            and execution_scope is FunctionStepExecutionScope.PLATE
-        ):
-            return StepInputDependency.no_main_flow()
-
-        if (
-            step_index == 0
-            or step.processing_config.input_source == InputSource.PIPELINE_START
-        ):
-            return StepInputDependency.pipeline_start()
-
-        local_output_refs = frozenset(
-            producer.spec.ref() for producer in declarations.producers
-        )
-        main_input_specs = tuple(
-            dict.fromkeys(
-                consumer.spec
-                for consumer in declarations.non_plan_consumers
-                if not source_bindings.declares_artifact_ref(consumer.spec.ref())
-                and consumer.spec.ref().for_plan_type(ArtifactOutputPlan)
-                not in local_output_refs
-            )
-        )
-        producer_step_indices: list[int | str] = []
-        for main_input_spec in main_input_specs:
-            producer_ref = main_input_spec.ref().for_plan_type(ArtifactOutputPlan)
-            producer_plan = self.planner.declared.get(producer_ref)
-            context_producer = (
-                self.planner.artifact_context.available_artifact_producer_for(
-                    main_input_spec
-                )
-            )
-            candidate_indices = tuple(
-                dict.fromkeys(
-                    candidate
-                    for candidate in (
-                        (
-                            None
-                            if producer_plan is None
-                            else producer_plan.producer_step_index
-                        ),
-                        (
-                            None
-                            if context_producer is None
-                            else context_producer.producer_step_index
-                        ),
-                    )
-                    if candidate is not None
-                )
-            )
-            if not candidate_indices:
-                raise MissingArtifactInputError(
-                    step_id=step_index,
-                    artifact_key=producer_ref.name,
-                    step_name=step.name,
-                )
-            if len(candidate_indices) > 1:
-                raise ValueError(
-                    f"Main-flow artifact {producer_ref!r} has conflicting producer "
-                    f"steps {candidate_indices!r}."
-                )
-            producer_step_indices.append(candidate_indices[0])
-
-        producer_step_indices = tuple(dict.fromkeys(producer_step_indices))
-        if len(producer_step_indices) > 1:
-            raise ValueError(
-                f"Step {step.name!r} declares main-flow inputs from multiple "
-                f"producer steps {producer_step_indices!r}: {main_input_specs!r}."
-            )
-        if producer_step_indices:
-            producer_index = producer_step_indices[0]
-            if not isinstance(producer_index, int):
-                raise TypeError(
-                    f"Main-flow artifact producer for step {step.name!r} has "
-                    f"non-integer step identity {producer_index!r}."
-                )
-            producer_scope_id = self.planner.plans[producer_index].step_scope_id
-            if not producer_scope_id:
-                raise ValueError(
-                    f"Main-flow artifact producer step {producer_index} has no "
-                    "compiled scope identity."
-                )
-            return StepInputDependency.step_output(
-                source_step_index=producer_index,
-                source_step_scope_id=producer_scope_id,
-            )
-
-        producer_index = step_index - 1
-        producer_plan = self.planner.plans[producer_index]
-        compiled_pattern = producer_plan.compiled_function_pattern
-        if compiled_pattern is not None and compiled_pattern.preserves_input_main_flow():
-            if not producer_plan.main_input_dependency.is_resolved:
-                raise RuntimeError(
-                    f"Main-flow-preserving step {producer_index} has no resolved "
-                    "main-input dependency."
-                )
-            return producer_plan.main_input_dependency
-
-        producer_scope_id = self.planner.plans[producer_index].step_scope_id
-        return StepInputDependency.step_output(
-            source_step_index=producer_index,
-            source_step_scope_id=producer_scope_id,
+        previous = self.planner.plans.get(step_index - 1)
+        return declarations.resolve_main_input_dependency(
+            step,
+            step_index,
+            execution_scope=execution_scope,
+            source_bindings=source_bindings,
+            context=self.planner.artifact_context,
+            declared=self.planner.declared,
+            step_scope_ids={
+                index: plan.step_scope_id for index, plan in self.planner.plans.items()
+            },
+            previous_dependency=(
+                None if previous is None else previous.main_input_dependency
+            ),
+            previous_preserves_input_main_flow=(
+                previous is not None
+                and previous.compiled_function_pattern is not None
+                and previous.compiled_function_pattern.preserves_input_main_flow()
+            ),
         )
 
     def step_io_dirs(

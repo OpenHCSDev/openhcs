@@ -238,6 +238,22 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
         return None
 
     @classmethod
+    def literal_field_types(
+        cls, metadata_records: Iterable[SourceMetadataMapping]
+    ) -> Mapping[str, type[object] | None]:
+        """Infer ordered source literal types for one admitted source cohort."""
+        types_by_name: dict[str, set[type[object]]] = {}
+        for metadata in metadata_records:
+            for name, value in cls.original_items(metadata):
+                value_types = types_by_name.setdefault(name, set())
+                if value is not None:
+                    value_types.add(type(value))
+        return MappingProxyType({
+            name: next(iter(value_types)) if len(value_types) == 1 else None
+            for name, value_types in types_by_name.items()
+        })
+
+    @classmethod
     def component_value(
         cls, metadata: SourceMetadataMapping, component: AllComponents
     ) -> str | None:
