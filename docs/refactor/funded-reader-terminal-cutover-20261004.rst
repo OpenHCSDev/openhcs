@@ -28,3 +28,12 @@ reader and controlled shell consumers semantically inspected. Existing audit
 overlay targets the complete operations root: zero Python modules; Bash/JQ
 are explicitly outside Python AST proof. Shell syntax, original-family controls
 and actual canonical receiving/admission are the behavioral acceptance.
+
+Qualification: original test_funded_programme_publication.sh publication01
+terminal0 confirms old field100 retained, new run field absent, final reader
+retirement removes it, expected revision/no replay, exact controlled recorder
+child42 and untouched journals. Original test_operation_resource_admission.sh
+resource01 terminal0 preserves real desktop/custody/deadline failures while
+high PSI4.82/1.09/.23 remains observational, never a new numeric veto.
+Persistent logs are engineering-active-reader-cutover-20261004-{publication01,
+resource01}.log under the existing issue-batch; no native or provider launched.
