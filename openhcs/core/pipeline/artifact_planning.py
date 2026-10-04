@@ -2,15 +2,17 @@
 
 from collections import Counter, OrderedDict, defaultdict
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from typing import Any, Callable, ClassVar, Iterable, Iterator, Mapping, Optional
 
+from openhcs.core.artifact_key_selection import ArtifactPlanKeySelector
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactMaterializationPayload,
     ArtifactOutputPlan,
     ArtifactSpec,
     ArtifactSpecAccumulator,
+    ArtifactSpecCollection,
     ArtifactSpecRef,
     ArtifactType,
     ArtifactTypeStrategyMatchMixin,
@@ -20,11 +22,17 @@ from openhcs.core.artifacts import (
 )
 from openhcs.core.function_patterns import DEFAULT_GROUP_KEY
 from openhcs.core.function_patterns import FunctionInvocationKey
-from openhcs.core.function_patterns import normalize_function_pattern
+from openhcs.core.function_patterns import (
+    normalize_function_pattern,
+    NormalizedFunctionPattern,
+    NormalizedFunctionItem,
+)
 from openhcs.core.invocation_artifacts import (
     ArtifactDeclarationStepContext,
     CompositeInvocationContractProvider,
     InvocationContractProvider,
+    InvocationContractPlan,
+    unnamed_main_flow_artifact_name,
     InvocationArtifactDeclarationProviderLike,
     callable_contract_artifact_declarations,
 )
@@ -34,7 +42,6 @@ from openhcs.processing.materialization import (
     ImageFileOptions,
     MaterializedFilenameIdentity,
     ROIOptions,
-    StreamingOnlyMaterializationSpec,
     TerminalMaterializationSpec,
 )
 
@@ -214,6 +221,122 @@ class ArtifactGraph:
     producers: tuple[ArtifactProducer, ...] = ()
     consumers: tuple[ArtifactConsumer, ...] = ()
     non_plan_consumers: tuple[ArtifactConsumer, ...] = ()
+    pattern: NormalizedFunctionPattern | None = field(default=None, repr=False)
+    invocation_contract_plans: Mapping[
+        FunctionInvocationKey, InvocationContractPlan | None
+    ] = field(default_factory=dict, repr=False)
+    invocation_declarations: Mapping[FunctionInvocationKey, ArtifactPlanKeySelector] = (
+        field(default_factory=dict, repr=False)
+    )
+    _input_lineage_order: (
+        tuple[tuple[ArtifactSpecRef, tuple[ArtifactSpecRef, ...]], ...] | None
+    ) = field(default=None, init=False, repr=False, compare=False)
+
+    @property
+    def input_lineage_order(
+        self,
+    ) -> tuple[tuple[ArtifactSpecRef, tuple[ArtifactSpecRef, ...]], ...]:
+        """Admit output-reachable input topology once, retaining self-lineage leaves."""
+        if self._input_lineage_order is not None:
+            return self._input_lineage_order
+        inputs = self.inputs
+        order: list[tuple[ArtifactSpecRef, tuple[ArtifactSpecRef, ...]]] = []
+        visited: set[ArtifactSpecRef] = set()
+        resolving: set[ArtifactSpecRef] = set()
+
+        def visit(ref: ArtifactSpecRef) -> None:
+            if ref in visited:
+                return
+            if ref in resolving:
+                raise ValueError(
+                    f"Input group-lineage declarations contain a cycle at {ref!r}."
+                )
+            resolving.add(ref)
+            spec = inputs.get(ref)
+            sources = () if spec is None else spec.group_scope_sources()
+            for source in sources:
+                if source != ref:
+                    visit(source)
+            resolving.remove(ref)
+            visited.add(ref)
+            order.append((ref, sources))
+
+        for output in self.outputs.values():
+            for ref in output.group_scope_sources():
+                visit(ref)
+        object.__setattr__(self, "_input_lineage_order", tuple(order))
+        return self._input_lineage_order
+
+    def advance_declaration_context(
+        self,
+        context: ArtifactDeclarationStepContext,
+    ) -> ArtifactDeclarationStepContext:
+        """Advance plate-fixed named and anonymous flow before axis specialization."""
+        producers = tuple(
+            replace(producer, producer_step_index=context.step_index)
+            for producer in self.producers
+        )
+        main_flow = context.main_flow_artifacts
+        pattern = self.pattern
+        if pattern and not all(
+            item.contract.preserves_input_main_flow() for item in pattern.iter_items()
+        ):
+            main_specs: list[ArtifactSpec] = []
+            outputs = self.outputs
+            for group in pattern.groups:
+                named_refs: tuple[ArtifactSpecRef, ...] = ()
+                implicit_owner = None
+                for item in group.items:
+                    selected_refs = frozenset(
+                        spec.ref()
+                        for spec in self.invocation_declarations[
+                            item.key
+                        ].artifact_key_specs.for_plan_type(ArtifactOutputPlan)
+                    )
+                    refs = tuple(
+                        spec.ref()
+                        for spec in item.contract.canonical_return_output_specs
+                        if spec.ref() in selected_refs
+                    )
+                    if refs:
+                        named_refs, implicit_owner = refs, None
+                    elif not item.contract.preserves_input_main_flow():
+                        named_refs, implicit_owner = (), item
+                if named_refs:
+                    main_specs.extend(
+                        spec.for_plan_type(ArtifactInputPlan)
+                        for ref, spec in outputs.items()
+                        if ref in named_refs
+                    )
+                elif implicit_owner is not None:
+                    spec = ArtifactSpec.output(
+                        unnamed_main_flow_artifact_name(
+                            context.step_index, implicit_owner.key
+                        ),
+                        ImageArtifactType,
+                    )
+                    producers += (
+                        ArtifactProducer(
+                            spec=spec,
+                            groups=(
+                                None
+                                if group.group_key == DEFAULT_GROUP_KEY
+                                else group.group_key,
+                            ),
+                            invocation_keys=(implicit_owner.key,),
+                            producer_step_index=context.step_index,
+                        ),
+                    )
+                    main_specs.append(spec.for_plan_type(ArtifactInputPlan))
+            main_flow = ArtifactSpecCollection(
+                ArtifactSpecCollection(main_specs).unique(
+                    conflict_context="compiled main flow"
+                )
+            )
+        return context.advance_artifact_graph(
+            replace(self, producers=producers),
+            main_flow_artifacts=main_flow,
+        )
 
     @classmethod
     def empty(cls) -> "ArtifactGraph":
@@ -328,11 +451,7 @@ class ArtifactGraph:
                     producer_step_index=producer.producer_step_index,
                 )
             )
-        return ArtifactGraph(
-            producers=tuple(producers),
-            consumers=self.consumers,
-            non_plan_consumers=self.non_plan_consumers,
-        )
+        return replace(self, producers=tuple(producers))
 
     @staticmethod
     def _require_output_group_values(
@@ -406,12 +525,19 @@ def extract_artifact_declarations(
     ] = defaultdict(list)
     consumers: list[ArtifactConsumer] = []
     declared_input_consumers: list[ArtifactConsumer] = []
+    contract_plans: dict[FunctionInvocationKey, InvocationContractPlan | None] = {}
+    declarations: dict[FunctionInvocationKey, ArtifactPlanKeySelector] = {}
+    normalized = normalize_function_pattern(pattern)
+    resolved_items: dict[FunctionInvocationKey, NormalizedFunctionItem] = {}
 
-    for invocation in normalize_function_pattern(pattern).iter_items():
+    for invocation in normalized.iter_items():
         contract_plan = invocation_contract_provider(invocation, step_context)
+        contract_plans[invocation.key] = contract_plan
         if contract_plan is not None:
             invocation = replace(invocation, contract=contract_plan.contract)
+        resolved_items[invocation.key] = invocation
         artifact_selector = declaration_provider(invocation, step_context)
+        declarations[invocation.key] = artifact_selector
         artifact_selector.validate_artifact_relation_refs(
             owner_name=invocation.contract.function_name,
         )
@@ -447,7 +573,19 @@ def extract_artifact_declarations(
             )
 
     planned_input_refs = frozenset(consumer.spec.ref() for consumer in consumers)
+    resolved_pattern = replace(
+        normalized,
+        groups=tuple(
+            replace(
+                group, items=tuple(resolved_items[item.key] for item in group.items)
+            )
+            for group in normalized.groups
+        ),
+    )
     return ArtifactGraph(
+        pattern=resolved_pattern,
+        invocation_contract_plans=contract_plans,
+        invocation_declarations=declarations,
         producers=tuple(
             ArtifactProducer(
                 spec=spec,

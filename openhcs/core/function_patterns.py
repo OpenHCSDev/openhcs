@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from openhcs.core.aligned_image_payload import AlignedImageSliceContext
     from openhcs.core.compiled_step_plan import FrameworkDeviceAssignment
     from openhcs.core.pipeline.compilation_session import CompilationPathResolver
+    from openhcs.core.pipeline.artifact_planning import ArtifactGraph
     from openhcs.core.steps.function_runtime import FunctionCoreExecutor
 
 from arraybridge import MemoryType
@@ -885,8 +886,12 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
         step_context: ArtifactDeclarationStepContext,
         runtime_parameter_bindings: Sequence[RuntimeParameterBinding],
         path_resolver: "CompilationPathResolver | None",
+        artifact_graph: "ArtifactGraph | None" = None,
     ) -> "CompiledFunctionInvocation":
-        contract_plan = invocation_contract_provider(item, step_context)
+        contract_plan = (
+            invocation_contract_provider(item, step_context) if artifact_graph is None
+            else artifact_graph.invocation_contract_plans[item.key]
+        )
         if contract_plan is None:
             invocation_kwargs = item.kwargs
         else:
@@ -895,9 +900,13 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
                 step_context,
             )
             item = replace(item, contract=contract_plan.contract)
-        artifact_selector = declaration_provider(item, step_context)
-        item.contract.validate_artifact_input_parameter_bindings()
-        artifact_selector.validate_artifact_output_declarations()
+        artifact_selector = (
+            declaration_provider(item, step_context) if artifact_graph is None
+            else artifact_graph.invocation_declarations[item.key]
+        )
+        if artifact_graph is None:
+            item.contract.validate_artifact_input_parameter_bindings()
+            artifact_selector.validate_artifact_output_declarations()
         artifact_input_plans = artifact_selector.select_plans(
             ArtifactInputPlan,
             input_plans,
@@ -1179,6 +1188,7 @@ class CompiledFunctionGroup:
         step_context: ArtifactDeclarationStepContext,
         runtime_parameter_bindings: Sequence[RuntimeParameterBinding],
         path_resolver: "CompilationPathResolver | None",
+        artifact_graph: "ArtifactGraph | None" = None,
     ) -> "CompiledFunctionGroup":
         """Compile an authored group through its declaration-owned invocation values."""
         return cls(
@@ -1193,6 +1203,7 @@ class CompiledFunctionGroup:
                     step_context=step_context,
                     runtime_parameter_bindings=runtime_parameter_bindings,
                     path_resolver=path_resolver,
+                    artifact_graph=artifact_graph,
                 )
                 for item in normalized_group.items
             ),
@@ -1536,6 +1547,7 @@ def compile_function_pattern(
     ),
     runtime_parameter_bindings: Sequence[RuntimeParameterBinding] = (),
     path_resolver: "CompilationPathResolver | None" = None,
+    artifact_graph: "ArtifactGraph | None" = None,
 ) -> CompiledFunctionPattern:
     """Compile raw FunctionStep.func syntax into the runtime source of truth."""
     normalized = normalize_function_pattern(pattern)
@@ -1551,6 +1563,7 @@ def compile_function_pattern(
                 step_context=step_context,
                 runtime_parameter_bindings=runtime_parameter_bindings,
                 path_resolver=path_resolver,
+                artifact_graph=artifact_graph,
             )
             for group in normalized.groups
         ),

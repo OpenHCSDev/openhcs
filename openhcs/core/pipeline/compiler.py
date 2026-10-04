@@ -320,10 +320,7 @@ class PipelineCompiler:
     def _plan_context_paths(
         session: CompilationSession,
     ) -> None:
-        PipelinePathPlanner.prepare_pipeline_paths(
-            session,
-            invocation_contract_provider=session.pipeline.invocation_contract_provider,
-        )
+        PipelinePathPlanner.prepare_pipeline_paths(session)
 
     @staticmethod
     def _supplement_step_plans(session: CompilationSession) -> None:
