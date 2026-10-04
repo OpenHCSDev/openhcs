@@ -410,14 +410,45 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
     ):
         logger.info("[%s] Starting plate %s", execution_id, request_payload.plate_id)
 
+        request_payload.compile_control.validate()
+        self._cleanup_compiled_artifacts()
+        if request_payload.compile_artifact_id is not None:
+            artifact = self._compiled_artifacts.get(request_payload.compile_artifact_id)
+            if artifact is None:
+                raise ValueError(
+                    f"Missing compile artifact '{request_payload.compile_artifact_id}'. "
+                    "Re-run compilation before execution."
+                )
+            auxiliary = ZMQAuxiliaryExecutionParams.from_transport(
+                request_payload.config_params
+            )
+            retain = self._retain_compile_artifact(auxiliary.debug_execution_config)
+            artifact.require_compatible_request(
+                plate_id=request_payload.plate_id,
+                signature=(
+                    request_payload.debug_replay_signature
+                    if retain
+                    else request_payload.compilation_signature
+                ),
+                retain_compile_artifact=retain,
+            )
+            return self._execute_with_orchestrator(
+                ZMQExecutionContext(
+                    execution_id=execution_id,
+                    request_payload=request_payload,
+                    pipeline_steps=list(
+                        artifact.compilation.execution_bundle.pipeline_definition
+                    ),
+                    configs=artifact.configs,
+                )
+            )
+
         import openhcs.processing.func_registry as func_registry_module
 
         if func_registry_module.pipeline_source_requires_import_projection(
             request_payload.pipeline_code
         ):
             func_registry_module.initialize_registry()
-
-        self._cleanup_compiled_artifacts()
 
         module_name = f"openhcs_zmq_pipeline_{request_payload.pipeline_sha}"
         module = ModuleType(module_name)
@@ -524,6 +555,13 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
                 plate_path_str,
                 request_context.pipeline_config,
                 selected_pipeline_path=request_context.request_payload.selected_pipeline_path,
+                execution_bundle=(
+                    self._compiled_artifacts[
+                        request_context.compile_artifact_id
+                    ].compilation.execution_bundle
+                    if request_context.compile_artifact_id is not None
+                    else None
+                ),
             )
             self._raise_if_cancelled(request_context.execution_id, "initialization")
             wells = self._wells_for_execution(
@@ -595,6 +633,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
         plate_path_str: str,
         pipeline_config,
         selected_pipeline_path: str | None = None,
+        execution_bundle=None,
     ):
         from pathlib import Path
 
@@ -608,7 +647,10 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
             transport_config=self.config,
         )
         orchestrator.execution_id = execution_id
-        orchestrator.initialize()
+        if execution_bundle is None:
+            orchestrator.initialize()
+        else:
+            orchestrator.adopt_compiled_execution(execution_bundle)
         self.active_executions[execution_id].set_extra("orchestrator", orchestrator)
         return orchestrator
 
@@ -825,6 +867,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
                 compilation_signature=request_context.compilation_signature,
                 debug_replay_signature=request_context.debug_replay_signature,
                 compilation=compilation,
+                configs=request_context.configs,
             )
         )
         logger.info(

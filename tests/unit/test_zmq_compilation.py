@@ -5,6 +5,8 @@ from dataclasses import replace
 
 import pytest
 
+from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+from openhcs.runtime.zmq_execution_signature import OpenHCSExecutionConfigBundle
 from openhcs.core.compiled_execution import (
     CompiledExecutionBundle,
     CompiledRuntimeEnvironmentPlan,
@@ -166,6 +168,9 @@ def test_reused_compile_artifact_reads_step_names_from_compiled_plans() -> None:
     )
     artifacts = {
         "artifact-1": ZMQCompileArtifactRecord(
+            configs=OpenHCSExecutionConfigBundle(
+                GlobalPipelineConfig(), PipelineConfig()
+            ),
             execution_id="compile-1",
             plate_id="/tmp/plate",
             compilation_signature="signature",
@@ -271,6 +276,7 @@ def test_rejected_reuse_preserves_artifact_for_a_valid_request(retain, invalid):
         runtime_environment=_runtime_environment(),
     )
     artifact = ZMQCompileArtifactRecord(
+        configs=OpenHCSExecutionConfigBundle(GlobalPipelineConfig(), PipelineConfig()),
         execution_id="compile-1",
         plate_id="/plate",
         compilation_signature="signature",
