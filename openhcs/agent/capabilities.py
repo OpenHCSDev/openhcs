@@ -2112,6 +2112,7 @@ class ListKnowledgeDocumentsCapability(
 
 
 class GetKnowledgeDocumentCapability(
+    MainThreadProgressCapability,
     HostedTransportCapabilityMixin,
     KnowledgeCapability,
 ):

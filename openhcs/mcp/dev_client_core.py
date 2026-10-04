@@ -17,7 +17,7 @@ from dataclasses import dataclass, field, fields, is_dataclass, replace
 from enum import Enum
 from functools import singledispatch
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar, Self, TextIO, TypeVar, cast, get_type_hints
+from typing import TYPE_CHECKING, ClassVar, Self, TextIO, TypeVar, cast, get_args, get_type_hints
 
 from metaclass_registry import AutoRegisterMeta
 from python_introspect import (
@@ -43,6 +43,7 @@ from openhcs.agent.dto.common import (
     JsonValue,
 )
 from openhcs.agent.dto.execution import PipelineExecutionSubmissionRequest
+from openhcs.agent.dto.mcp import McpBoundaryFailure, McpToolErrorResult
 from openhcs.agent.dto.ui_bridge import (
     UiActionInvocationStatus,
     UiBridgeOperationRef,
@@ -426,9 +427,7 @@ class McpDevToolResult:
             capability = get_agent_capability(self.tool)
         except KeyError:
             return self
-        contracts = capability.output_contract_types
-        if not contracts:
-            return self
+        contracts = (*capability.output_contract_types, *get_args(McpBoundaryFailure))
         return replace(
             self,
             payloads=tuple(
@@ -463,7 +462,11 @@ class McpDevToolResult:
         if not self.payloads:
             return None
         payload = self.payloads[0]
-        return None if isinstance(payload, McpDevPayloadFailure) else payload
+        return (
+            None
+            if isinstance(payload, (McpDevPayloadFailure, McpToolErrorResult))
+            else payload
+        )
 
     def decoded_payload_as(
         self, output_contract: type[DeclaredPayloadT]

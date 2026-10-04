@@ -9,6 +9,7 @@ import pytest
 from openhcs.agent.capabilities import AgentResultFamilyContract, StartOwnedRuntimeCapability
 from openhcs.agent.dto.common import AgentError, AgentResultEnvelope, SCHEMA_VERSION
 from openhcs.agent.dto.execution import RuntimeBootstrapState, RuntimeBootstrapHandle
+from openhcs.agent.dto.mcp import McpToolErrorResult
 from openhcs.mcp.dev_client_core import (
     McpDevToolBatchResponse, McpDevToolResult, McpDevPayloadFailure, McpDevServerSpec,
     state_surface_document, state_surface_payload, ui_bridge_operation_result,
@@ -16,6 +17,43 @@ from openhcs.mcp.dev_client_core import (
 )
 from openhcs.mcp.dev_client_rendering import McpDevOutputRenderer
 from openhcs.serialization.json import to_jsonable
+
+
+def test_valid_tool_boundary_failure_is_not_a_malformed_runtime_state():
+    original = McpToolErrorResult(
+        schema_version=SCHEMA_VERSION, ok=False,
+        tool=StartOwnedRuntimeCapability.name,
+        errors=(AgentError(
+            code="mcp_call_not_started", message="Cancelled before invocation."
+        ),),
+    )
+    result = McpDevToolResult(
+        original.tool, False, (to_jsonable(original),)
+    ).decoded_for_rendering()
+    assert result.payloads == (original,)
+    assert result.first_decoded_payload() is None
+    assert result.agent_error_codes() == ("mcp_call_not_started",)
+    assert result.has_errors()
+    assert result.decoded_for_rendering().payloads[0] is result.payloads[0]
+
+
+@pytest.mark.parametrize("change", (
+    {"ok": True}, {"errors": []}, {"foreign_field": "not admitted"},
+))
+def test_contradictory_tool_error_contract_remains_a_failed_receipt(change):
+    original = McpToolErrorResult(
+        schema_version=SCHEMA_VERSION, ok=False,
+        tool=StartOwnedRuntimeCapability.name,
+        errors=(AgentError(code="mcp_call_not_started", message="Cancelled."),),
+    )
+    wire = {**to_jsonable(original), **change}
+    result = McpDevToolResult(
+        original.tool, False, (wire,)
+    ).decoded_for_rendering()
+    assert isinstance(result.payloads[0], McpDevPayloadFailure)
+    assert result.payloads[0].receipt is wire
+    assert result.first_decoded_payload() is None
+    assert "mcp_payload_invalid" in result.agent_error_codes()
 
 
 def test_actual_saved_successful_startup_descends_without_presentation():

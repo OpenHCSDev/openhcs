@@ -13,12 +13,15 @@ from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 from openhcs.agent.capabilities import (
     AgentCapabilityDeclaration,
     CreateOrchestratorSessionFromPipelineSourceCapability,
+    GetKnowledgeDocumentCapability,
     InspectPipelineSourceArtifactPlanCapability,
     MainThreadProgressCapability,
 )
 from openhcs.agent.dto.common import AgentError, SCHEMA_VERSION
 from openhcs.agent.dto.execution import ArtifactPlanInspection
-from openhcs.mcp.execution import McpMainThreadDispatcher, McpTransportExecutor
+from openhcs.mcp.execution import (
+    McpMainThreadDispatcher, McpQueuedCallNotStartedError, McpTransportExecutor,
+)
 from pyqt_reactive.services.ui_thread_dispatch import (
     UiThreadDispatchError, UiThreadDispatcherClosedError, UiThreadDispatchTimeoutError,
 )
@@ -29,6 +32,7 @@ from openhcs.serialization.json import to_jsonable
 @pytest.mark.parametrize("declaration", (
     InspectPipelineSourceArtifactPlanCapability,
     CreateOrchestratorSessionFromPipelineSourceCapability,
+    GetKnowledgeDocumentCapability,
 ))
 def test_source_leaf_composes_original_progress_and_affinity(declaration):
     assert issubclass(declaration, MainThreadProgressCapability)
@@ -200,8 +204,9 @@ def test_not_started_dispatch_is_cancelled_without_invoking_callback():
         task = asyncio.create_task(executor.dispatcher.invoke(first))
         assert await asyncio.to_thread(entered.wait, 1)
         try:
-            with pytest.raises(UiThreadDispatchTimeoutError):
+            with pytest.raises(McpQueuedCallNotStartedError) as cancelled:
                 await asyncio.to_thread(executor.dispatcher.call, lambda: calls.append("forbidden"), timeout_ms=1)
+            assert cancelled.value.to_agent_error().code == "mcp_call_not_started"
         finally:
             second_finished.set()
         await task
