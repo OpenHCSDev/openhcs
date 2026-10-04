@@ -1003,7 +1003,7 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
         ):
             if not plan.create_openhcs_metadata:
                 projection_entries = target.produced_projection_entries(context, plan)
-                if not projection_entries.entries:
+                if projection_entries.is_empty:
                     continue
                 AtomicMetadataWriter().merge_source_projection_metadata(
                     METADATA_CONFIG.metadata_path(target.plate_root),
