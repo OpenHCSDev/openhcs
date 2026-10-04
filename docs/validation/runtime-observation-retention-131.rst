@@ -31,16 +31,38 @@ Verification scope
 NRA/refactor-audit owner-family AST evidence covers declarations, reads, writes,
 imports and related consumers before edits. Proportionate controls then cover
 table equality, excluded exports, richer-payload CSV, PLATE inputs, transport,
-completed-image release and error/cancellation. Real installed public synthetic
-receiving will measure per-process/family RSS, PSS, private dirty and swap over
-repeated bounded complete native executions, idle and typed lifecycle closure.
+completed-image release and error/cancellation. Installed controls passed all147
+affected cases across two preserved attempts: first141PASS/6 authored-fixture
+failures, then6 corrected fixture passes. No production guards were weakened.
+Ordinary target01 matches815 packaged source files,90 assets and13 skill files.
 
-Status: coherent source implementation, controls not yet executed and no installed
-or public memory acceptance claimed. Shared runtime hunks are coordinated with
-Root394; current482573173 has no determining change to this owner family.
+Public native receiving completed the synthetic eight-well/sixteen-field job
+and a separate one-well explicit VALUES export. Original public readers verify
+all16 rectangle ROI areas/bounds, two correctly scoped measurement rows per
+well, consolidated eight-well totals and source/output bounded pixel equality.
+The public measured-run finalizer validates the separate value export against
+its original compile/job/endpoint identities. PLATE semantics are covered by
+installed controls, not a new public PLATE execution in this case.
+
+The same installed MCP/native family stayed within4GiB/Swap0/oneCPU, with
+1787359232B recorded peak. Native3907958 acknowledged typed shutdown and exact
+process exit; MCP3901290 and its original scope are also gone. No forcedGC,
+restart, biological input or cap increase was used. Shared runtime hunks remain
+coordinated with Root394; current482573173 has no determining family change.
 
 The original issue additionally concerns repeated health, function catalog,
 knowledge, artifact-plan and custom-registration requests in a long-lived MCP.
-That mixed route needs its own per-process growth measurement, including source
-revisions. Warm baseline is not growth. This native consolidation fix does not
-by itself close that scope, and no unverified native OOM cause is asserted.
+Thirty repeated health/catalog/knowledge rounds plus five artifact-plan queries
+were recorded separately from cold imports and the intentional VALUES export.
+Post-first-job MCP RSS377836KiB; after ten warm rounds377868KiB; final382976KiB
+includes subsequent validation, registration and pixel-reader imports. Native
+final RSS1490992KiB is below its post-first-job1500528KiB. These short mixed
+measurements do not establish a long-session leak slope. Registration revision
+two returned an uncertain outcome; it remains preserved and unreplayed, not
+counted as successful revision validation. Issue131 therefore remains open;
+this verified default-consolidation fix does not assert the cause of the old
+biological OOM or claim the complete original mixed-MCP problem resolved.
+
+Original evidence: issue131-memory/QUALIFICATION01.rst and
+issue131-memory/public94-attempt01/PUBLIC-ACCEPTANCE01.rst under the persistent
+issue-batch root, with original stdin/stdout/timing, native logs and outputs.
