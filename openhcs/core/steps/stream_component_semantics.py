@@ -404,6 +404,32 @@ class StreamSourceComponentMetadataItems:
         return cls(tuple(values))
 
     @classmethod
+    def from_image_metadata(
+        cls,
+        metadata: ImagePayloadMetadata,
+        *,
+        fallback_source_identity: SourceImageIdentity | None = None,
+    ) -> "StreamSourceComponentMetadataItems":
+        """Observe exact retained planes, not only their common scalar address.
+
+        These are domain observations, not one route address per emitted image.
+        A collapsed image's contributor provenance must not recreate a pixel axis.
+        """
+        provenance = metadata.source_provenance
+        identities = (
+            tuple(
+                provenance.for_source_plane(index).scalar_source_identity
+                for index in range(provenance.source_plane_count)
+            )
+            if metadata.plane_axis is not None and provenance.source_plane_count
+            else (provenance.scalar_source_identity,)
+        )
+        return cls.from_source_identities(
+            identities,
+            fallback_source_identity=fallback_source_identity,
+        )
+
+    @classmethod
     def from_source_identities(
         cls,
         identities: Iterable[SourceImageIdentity],
