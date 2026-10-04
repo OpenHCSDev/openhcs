@@ -334,3 +334,29 @@ Dewey; this checkpoint is whole-installed proof, not public execution acceptance
 Byte-exact builder/control/packet archive:
 docs/validation/mixed-carrier-intensity-package04-20261004.tar.gz.
 All prior source failures and uncertainty dispositions remain unchanged.
+
+Final ordinary installed/public acceptance06
+-------------------------------------------
+
+The historical pending receiving status above is now superseded. One whole
+combined source422/target02 incorporates this production plus614; whole RECORD
+proof and installed controls PASS. One original public client/native lease
+completed the named-artifact-only CP workflow, inventory and ALL720 intensity
+values exactly, including both arithmetic operand orders and source calibration.
+The same lease completed SourceBindings→positions→assembly614, ALL560 mosaic
+values and exact nine saved source contributors per channel. Original canonical
+native VALUES observations validate their declared artifact/axis expectations.
+See mixed-carrier-position-public-receiving06-20261004.rst and byte-exact sibling
+archive SHA25612638e8d8b7b5dcd126f0999d070eb45a395999c5b43d7923c5b3ed440c5f264.
+
+Automatic final Reverse image publication still failed in the earlier original
+job. Historical435 is closed for its accepted aggregate/Mosaic cases; this new
+variant is not silently assigned to closed435 or proven600-independent. Its
+exact trace and unchanged writer-family source evidence are preserved for a
+named follow-up, without holding the accepted named-artifact-only workflow.
+Original native close ACK/exited/succeeded; native and MCP gone, all ports empty.
+Original CLI terminal2 is retained due to earlier negative commands/job, not0.
+
+Normal main09edf6cac integration changes none of this PR's six production
+files compared with received422. Newer main/dependency changes are not reported
+as installed/public-tested here. No repeated suite, rebuild or SCI hot update.
