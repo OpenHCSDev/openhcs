@@ -109,7 +109,13 @@ primary-object contract, `use_advanced_settings=False` selects basic threshold
 behavior; it does not justify the inherited declumping choices. Marker extraction
 and watershed dividing-line landscapes are separate controls, and automatic
 smoothing/suppression can override entered sizes. Inspect those effective
-choices before assuming your measured settings are active. A validated example
+choices before assuming your measured settings are active. Before proposing
+the first method, also justify the boundary landscape on the same isolated
+body and genuine pair: plausible seed positions do not prove that intensity
+or shape-based dividing lines will follow the supported inter-body boundary.
+An internally textured intensity surface can cut one body unevenly even when
+its markers are appropriate; inspect the expected seam as well as peak placement.
+A validated example
 supplies a working contract, not evidence that its intensity landscape matches
 this raw morphology. Choose the method first, then justify smoothing, prominence
 and minimum separation in that method's units, keeping the genuine pair and
