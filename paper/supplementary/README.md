@@ -870,6 +870,19 @@ not an exact census or validated cell boundaries. The
 [paired-channel outcome record](task_only_analysis/h003-postpause-outcome.json)
 identifies the independently verified 148-artifact freeze and consumed sources.
 
+A subsequent independent author recovered three missed nuclei in the same
+released field, then restored a dim nucleus and clipped border object lost
+during the initial repair. Separating core detection from boundary growth
+produced 54 nuclear instances and 54 associated actin territories. One territory
+had no extra-nuclear growth; crowded body divisions remained uncertain.
+The [paired-field repair record](task_only_analysis/h003-fresh656-local-repair.json)
+retains the exact pipeline, custom audit, source provenance and independently
+checked 83 artifact entries, including one journal prefix. These support useful
+local nuclear recovery, not a manual-reference accuracy score or a complete
+biological cell census. Both owned processes were independently absent after
+typed closure; client exit 2 is retained separately. Original failed attempts
+and the operational staging deviation remain in the author's report.
+
 The report also retains a fresh BBBC007 repeat across all 16 DNA/actin pairs.
 Its final 1,335 primary and secondary label identities reconcile, but dense
 bright nuclei remain undetected. The author rejected population-level use;
