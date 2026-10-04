@@ -35,6 +35,7 @@ from openhcs.core.artifacts import (
 from openhcs.core.callable_contract import (
     CallableContract,
     FunctionStepExecutionScope,
+    ImagePayloadConsumption,
     PrimaryImageCarrierRequirement,
 )
 from openhcs.core.component_group_scope import ComponentGroupScope
@@ -1079,6 +1080,19 @@ class CompiledFunctionPattern:
 
     groups: tuple[CompiledFunctionGroup, ...]
     is_grouped: bool
+    replaces_inherited_main_flow_domain: bool = field(init=False)
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "replaces_inherited_main_flow_domain",
+            self.is_grouped
+            or any(
+                invocation.contract.image_payload_consumption
+                is ImagePayloadConsumption.COMPOSED
+                for invocation in self.iter_invocations()
+            ),
+        )
 
     @property
     def runtime_domain(self) -> RuntimeInvocationDomain:
