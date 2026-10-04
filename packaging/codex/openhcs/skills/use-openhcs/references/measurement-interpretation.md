@@ -105,9 +105,11 @@ or preprocessing decision, not stronger downstream suppression.
 
 Reflect the callable's effective method and basic/advanced/automatic settings,
 not just the arguments copied from a validated example. In the CellProfiler
-primary-object contract, `use_advanced_settings=False` selects basic behavior;
-inspect which declumping, smoothing and suppression choices that mode actually
-uses before assuming explicit advanced values are active. A validated example
+primary-object contract, `use_advanced_settings=False` selects basic threshold
+behavior; it does not justify the inherited declumping choices. Marker extraction
+and watershed dividing-line landscapes are separate controls, and automatic
+smoothing/suppression can override entered sizes. Inspect those effective
+choices before assuming your measured settings are active. A validated example
 supplies a working contract, not evidence that its intensity landscape matches
 this raw morphology. Choose the method first, then justify smoothing, prominence
 and minimum separation in that method's units, keeping the genuine pair and
