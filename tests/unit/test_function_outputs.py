@@ -479,30 +479,37 @@ def test_memory_output_writer_materializes_preserved_source_at_current_destinati
     assert target.produced_projection_entries(context, plan) is not None
 
 
-def test_function_output_identity_preserves_non_axis_source_metadata() -> None:
+@pytest.mark.parametrize("source_extension", (None, ".czi"))
+def test_function_output_identity_preserves_non_axis_source_metadata(source_extension) -> None:
     identity = FunctionOutputIdentity(
         component_values={"channel": "2", "site": "1"},
         extension=".tif",
         source="test",
     )
 
-    metadata = identity.component_metadata(
-        {
+    source_metadata = {
             "Run": "Sequence1",
             "Specimen": "DrosophilaEmbryo",
             "ChannelNumber": "1",
             "OpenHCSOriginalSourceMetadata": {"FrameNumber": "0007"},
-        }
-    )
+    }
+    if source_extension is not None:
+        source_metadata["extension"] = source_extension
+    metadata = identity.component_metadata(source_metadata)
 
     assert metadata == {
         "Run": "Sequence1",
         "Specimen": "DrosophilaEmbryo",
         "channel": "2",
         "site": "1",
-        "extension": ".tif",
         "OpenHCSOriginalSourceMetadata": {"FrameNumber": "0007"},
+        **({"extension": source_extension} if source_extension is not None else {}),
     }
+    assert identity.filename_component_metadata() == {
+        "channel": "2", "site": "1", "extension": ".tif",
+    }
+    assert source_metadata["ChannelNumber"] == "1"
+    assert source_metadata.get("extension") == source_extension
 
 
 def test_step_output_manifest_prefers_main_dependency_over_auxiliary_artifact_inputs():

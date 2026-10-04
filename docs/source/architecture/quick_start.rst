@@ -113,6 +113,11 @@ Use this sequence:
 5. Retrieve the matching section with ``openhcs_get_knowledge_document``. The
    Official30 source section ids end in ``-openhcs-python`` and are generated
    from the exact manifest-resolved ``.cppipe`` only when requested.
+   Before a FIRST segmentation method/parameter proposal, retrieve
+   ``openhcs_autonomous_analysis_strategy`` section
+   ``match-the-strategy-to-the-failure``. Its first-method routes connect
+   foreground/nuisance admission AND the chosen marker landscape where applicable;
+   these are pre-authoring decisions, not only post-failure diagnostics.
 6. Before setting configuration values, call
    ``openhcs_describe_config_schema`` for ``pipeline``, ``global``, or ``step``
    and follow a returned nested ``path_prefix``. Use a field's

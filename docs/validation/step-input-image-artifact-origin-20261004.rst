@@ -1,0 +1,277 @@
+STEP_INPUT named-image artifact origin after ordinary preprocessing
+==================================================================
+
+Owner repair installed in an isolated qualified wheel; public synthetic MCP
+acceptance is verified below, together with411 installed controls. The initial281 focused installed controls passed; the
+wider CP family exposed the follow-up consumer and fixture boundaries recorded
+below. No frozen biological execution is replayed.
+Reviewed main e1400cb9f278149fea7056b8fc8319d1ebd6ca69 and the retained
+installed source0b3ead24459954829986e2e0763a886bb4d0fef6 exhibit the same
+source-artifact resolution route. Frozen analysis and all originals remain
+unchanged; no reference, scientific correction or parameter advice is supplied.
+
+Observed public workflow
+-------------------------
+
+A source-bound image enters two ordinary registered NumPy processing steps.
+The following CellProfiler primary-object step declares PREVIOUS_STEP and an
+image alias with origin STEP_INPUT. With a new alias the invocation raises
+``Source-bound artifact ... resolved no workspace members``. With the original
+raw alias the invocation completes, but its threshold support is inconsistent
+with the separately measured processed image. That second pixel-origin inference
+is not a demonstrated full-array equality. Zero surviving objects does not
+prove absence of biological objects or identify the underlying gate by itself.
+
+The complete frozen source uses normal PipelineDocument/FunctionStep/source
+binding declarations. The original raw and measured processed arrays are uint8;
+the manual threshold is expressed in the existing CellProfiler normalized
+domain. No independent normalization defect has been established.
+
+Determining owners and consumers
+--------------------------------
+
+* ``SourceAssignmentBase.origin`` in core/source_bindings.py explicitly defines
+  selection from prior-step input versus pipeline-start sources. The existing
+  CompiledSourceUniversePlan also models that distinction; it is not a new flag
+  to invent at the adapter.
+* PathPlanner's advance_artifact_context_after_compiled_pattern creates an
+  implicit unnamed image artifact for ordinary unlabelled NumPy returns.
+  The previous source alias is consequently not the current main-flow artifact
+  name merely because its spatial provenance remains attached.
+* InvocationArtifactInputEdgePlan.source_projection in function_patterns.py
+  assigns a main-flow projection only when the exact artifact ref is in BOTH
+  current main-flow artifacts and the invocation's group-scope sources.
+* PathPlanner.compile_invocation_input_edges compiles unstored named source
+  edges from those declarations. Its separate process_artifact_inputs omits
+  storage plans for exact declared source bindings.
+* CP RuntimeInputBindingRequest.artifact_value (artifact_binding.py300--365)
+  sends a source-only edge to RuntimeAdapterRequest.source_artifact_payload.
+* RuntimeAdapterRequest.source_artifact_payload (runtime_adapters.py251--366)
+  unconditionally resolves members through VirtualWorkspaceSourceProjection
+  and loads Backend.VIRTUAL_WORKSPACE. It does not consult binding.origin.
+  A new alias cannot match the original workspace source; an existing alias
+  can load its original pixels despite declaring STEP_INPUT.
+* FunctionCoreExecutor.declared_source_payload is the other direct consumer of
+  that same resolver. A CP-only special case would leave the authority split.
+
+Existing refactor-audit Package AST parsing covered200 current-main modules in
+core and CP runtime with zero parse omissions. The resolver has exactly two
+direct call sites in that scope: FunctionCoreExecutor and CP artifact binding.
+This is targeted source evidence, not an NRA semantic proof or a complete
+dependency/selector migration census. The initial file-root Package invocation
+parsed zero modules; it was corrected to actual directory roots, not reported
+as coverage.
+
+The applicable ownership failure is IDEN-5 (declared source origin versus a
+different pixel authority at consumption), with IMPL-13 as the repair risk if
+another adapter-specific origin mechanism is added. The correct change must
+extend the existing origin/source projection owner and migrate both consumers,
+not add aliases, a second workspace, a reader fallback or a string dispatch.
+
+Ownership and acceptance
+-------------------------
+
+Popper owns the binding investigation. Singer's626 change owns automatic/named
+publication metadata only and is semantically separate. PR630 crosses execution,
+runtime and output identity; coordinate its integration owner before changing
+those files. This checkpoint deliberately contains no competing runtime hunk.
+
+Use a modest synthetic scalar image and the existing registered processing/CP
+pipeline entrypoint, not the frozen retinal field. Retain an original raw alias,
+apply an ordinary operation that produces distinguishable pixels, then select
+an explicit STEP_INPUT alias at primary objects and measure the original alias
+with PIPELINE_START in a separate downstream step. Acceptance must demonstrate:
+
+* new and reused STEP_INPUT aliases select the actual processed pixels;
+* PIPELINE_START retains raw pixels and source identity;
+* exact component/plane selectors work for a multi-channel or multi-plane
+  processed carrier, including a supported companion source-artifact input;
+* a genuinely absent/ambiguous selection still fails through its original owner;
+* current main-flow/named artifact producers and both resolver consumers use
+  one consistent authority, with replaced decisions removed;
+* the existing installed public MCP compile/execute/measurement path confirms
+  the result after the coherent implementation, not only mocked adapter tests.
+
+No synthetic execution, native launch, source installation or acceptance result
+is claimed by this initial checkpoint. The frozen foreground observation does
+not by itself prove the precise consumed array; source/runtime reproduction is
+the next engineering step, kept separate from assisted science development.
+
+Further interface/630 audit
+----------------------------
+
+PR630 head0ded58b36b92acf3bf7c26dc68989509b66a9a77 leaves the AST of
+source_artifact_payload, source_projection, from_source_declarations and CP
+artifact_value unchanged versus reviewed main. Its reorganized
+FunctionCoreExecutor retains a consumer of source_artifact_payload. The shared
+runtime defect is therefore not already repaired by that owner refactor.
+Coordination was posted once at PR630 issuecomment5981114085.
+
+SourceProjection.matches_binding matches projection role, alias and artifact
+kind, not origin. This makes the new-alias failure versus existing-alias raw
+reload source-backed without treating spatial provenance as processed pixel
+identity. NamedSourceBinding.apply_loaded_payload already owns naming selected
+payload provenance and channel normalization; ImagePayloadMetadata owns exact
+plane/channel projection. Reuse those owners for selection and assignment,
+rather than adding an alias reader or projecting a new alias through a cache
+that only represents original workspace names.
+
+The existing SourceUniverseRequest family and CompiledSourceUniversePlan model
+pipeline-start versus step-input file universes. They must not be copied into
+another resolver hierarchy. Scope matters: a companion SOURCE_ARTIFACT, a
+stack-selected primary plane and a pipeline-start raw measurement are distinct
+admitted contracts, so simply returning the whole current array for every
+STEP_INPUT declaration is not an adequate family repair.
+
+The CP image-normalization entrypoint delegates to the original metadata-owned
+normalize_image_payload_intensity recipe. No independent denominator change is
+indicated by the reviewed uint8/normalized manual-threshold declarations.
+Precise frame-wide consumed pixel equality and installed synthetic acceptance
+remain unproved, not inferred from a label count or copied biological parameters.
+
+Proposed owner repair
+----------------------
+
+The published implementation now extends the existing registered
+SourceUniverseRequest family: StepInputSourceUniverseRequest projects primary
+images from current pixels, and PipelineStartSourceUniverseRequest inherits the
+original workspace loader. Companion SOURCE_ARTIFACT inputs retain that loader.
+RuntimeAdapterRequest deletes its unconditional loading procedure and delegates
+to the declared origin owner. No new adapter, registry or origin store is added.
+
+SourceSelector owns metadata matching for both candidate paths and current
+provenance; the replaced candidate and realized-metadata loops are deleted.
+NamedSourceBinding owns assignment after selection, and ImagePayloadMetadata
+owns the shared plane/channel pixel projection. A new alias names selected
+processed pixels rather than demanding an original-workspace alias.
+
+CP's unstored source-binding edge now uses the same origin resolver even when
+an exact main-flow name is also present. This prevents a PIPELINE_START binding
+from accidentally consuming processed pixels through CP's primary-input path.
+FunctionCoreExecutor already delegates source bindings to the same resolver.
+No function_runtime or PR630 checkout edit is needed.
+
+Before editing, Package AST parsed176 core and24 CP runtime modules, plus6
+metaclass-registry,12 python-introspect,17 arraybridge and63 PolyStore modules:
+zero unparsed files. Dependencies were read from their own repositories after
+the initial parent-gitlink scan correctly yielded zero dependency modules.
+This is relevant-family AST evidence, not a complete NRA semantic proof.
+PR630 head48656092 leaves all five changed production files unchanged against
+the reviewed main. Source checks and installed acceptance are still pending.
+
+Validation checkpoint
+----------------------
+
+All five changed production modules and the focused source-origin controls
+parse successfully; git diff --check passes. The initial six-file source test
+batch did not run: global conftest could not import AckReturnRoute from the
+preserved dirty zmqruntime checkout. A unit-only collection then independently
+failed importing TiffPhotometric from the preserved dirty PolyStore checkout.
+Neither error is counted as a passed test or attributed to the new resolver.
+No dependency checkout was reset, installed or overwritten.
+
+The matching qualified offline builder is being obtained from its existing
+owner. Engineering88 is currently assigned to Singer626; no client/server or
+SCI endpoint was borrowed. Dewey owns the eventual exact88 successor after
+typed closure. Independent source selection/consumer checks continue without
+waiting for the absent630 owner thread.
+
+The qualified whole wheel at dfe961555 passed the existing complete byte/RECORD
+verifier:912 entries,812 source matches including789 Python modules and13
+skill files. The initial verifier wrapper wrongly retained the historical
+source path; all checks were preserved while retargeting that comparison to
+the actual pinned archive. Source, wheel, target and Git bytes agreed for the
+determining adapter before qualification. All281 focused installed tests passed.
+
+Additional CP consumer checks found an incomplete migration: a public module
+invocation can carry current_image while the originally constructed adapter
+request has no source_payload. The three observed failures were not interpreted
+as scientific failure. RuntimeInputBindingRequest now derives the resolver
+request from its actual current_image rather than a nullable earlier snapshot.
+The source origin still has one resolver; no alternate loader is introduced.
+This follow-up requires a newly pinned whole wheel and final CP checks before
+installed/public acceptance is claimed.
+
+The wider installed batch passed405 checks before three explicit PIPELINE_START
+measurement fixtures failed: their minimal context had neither canonical source
+workspace caches nor plate metadata, because they previously consumed a supplied
+raw stack through the main-flow branch. The fixture now supplies those existing
+nominal services and builds its workspace metadata through SourceProjectionSet,
+leaving all intensity/object assertions unchanged. Production does not silently
+substitute current processed pixels when original raw pixels were requested.
+
+Consumer-complete installed validation
+--------------------------------------
+
+Whole-wheel source ee9d9e37ed123a0d1382bcdc6ec6b9705d6c16c8 passed the original
+byte/RECORD verifier, including789 Python source matches and13 managed skill
+files. With the completed workspace fixture, all411 installed controls passed
+in32.26s across source bindings, function IO/projection/artifacts and CP runtime.
+The installed package location was printed before collection, avoiding the
+preserved dirty checkout's dependency bootstrap. Actual log:
+engineering-step-input-origin-633-20261004/receiving02/installed-controls.log.
+Later branch changes contain documentation/test fixtures only; packaged
+production and knowledge bytes remain unchanged from that qualified source.
+
+The public88 packet contains three complete synthetic PipelineDocuments:
+new STEP_INPUT alias, reused STEP_INPUT alias, and original PIPELINE_START raw
+admission, all retaining a separate raw-intensity measurement. A32x32 synthetic
+TIFF is on the declared HDD artifact root, not copied from any scientific run.
+Its acquisition SHA and expected distinct raw/response intensity domains are
+recorded in public88/SYNTHETIC-INPUT.json. No public result is claimed yet.
+
+Dewey retired the positively closed626 route and published the633 successor
+without changing the active SCI members. The first633 startup admission exited77
+before client creation because actual memory full PSI was elevated; there was
+no633 client/native launch or UNKNOWN execution. That refusal is preserved.
+After installed checks completed, memory pressure was observed to have fallen;
+any startup needs a distinct passing admission, not a replay of the refused one.
+
+Public installed acceptance and custody
+----------------------------------------
+
+The fresh ``popper633_public88_start01`` admission passed with10.146GiB RAM
+available and full memory PSI0.00/0.01/0.15. The earlier pre-client exit77 remains
+unchanged. One recorded client (invocation f629a3526ae543e9974ccdd1af8c3b68)
+imported the qualified receiving02 wheel at ee9d9e37. The normal owned runtime
+handle identified PID1560544/create_time1791127634.59 on6020; startup progress
+was retained through kernel/catalog preparation. A catalog-preparation request
+before the execution endpoint was ready was rejected without delivery; after
+the same handle became ready, all three public sessions compiled and executed.
+
+The normal MCP entrypoint executed the new-name and reused-name STEP_INPUT
+pipelines and the opposing explicit PIPELINE_START control. Existing canonical
+runtime observation exports validate all three executions. Exported full32x32
+labels and threshold-support arrays match exactly: both processed cases have
+zero support/objects; the raw control has the expected36-pixel single object.
+The separate PIPELINE_START measurement in every case retains raw mean
+0.5174019932746887, minimum128/255 and maximum240/255 within float32 tolerance.
+Two public32x32 image samples exactly reproduce the processed output (2048
+pixels checked), and acquisition identity/channel/spacing remain attached.
+The original synthetic input SHA remains unchanged.
+
+The reader initially assumed all identities used absolute paths. The third
+control correctly retained an acquisition-relative workspace identity, unlike
+the absolute current-carrier identities. The receipt resolves that original
+relative identity against the same acquisition and also verifies the original
+absolute filter path. The initial failed assertion is preserved; no production
+fallback or selector weakening was introduced. Final acceptance receipt is
+``engineering-step-input-origin-633-20261004/public88/verify-public02.stdout``;
+the verifier reuses the existing public reply reader and native export owner.
+This proves the synthetic public workflow, not full-array equality for any
+frozen scientific run or biological accuracy. Multi-plane/missing-selection
+and companion-source contracts remain covered by the411 installed controls,
+not claimed as three-channel public acceptance here.
+
+The exact owned runtime acknowledged close, terminated its endpoint and exited
+successfully. The client then ended with exit1 due to the retained earlier
+catalog request error; its three scientific execution jobs were complete and
+the error is not hidden as a zero-exit client. Original recorder journals are
+closed and the client scope is inactive/not-found. No633 runtime is retained.
+``public88/OWNER-633-TERMINAL.rst`` records the closed journal hashes.
+
+Main626 was integrated normally at branch2d9860e93. Its separate output-identity
+hunk does not modify these five source-selection files; the installed public
+target stays pinned to ee9d9e37 rather than being falsely described as a rebuilt
+post-merge wheel. Eight dirty dependency checkouts and four diagnostic
+directories remain unchanged. Frozen science was never replayed or coached.
