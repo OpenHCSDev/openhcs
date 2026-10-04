@@ -2337,7 +2337,7 @@ class PathPlannerStepAssemblyStage:
     def plan_step(self, step: AbstractStep, step_index: int) -> None:
         """Plan one step's directories, artifacts, and executable pattern."""
         self.planner.plans[step_index].step_scope_id = (
-            self.planner.session.pipeline.step_state_map[step_index].scope_id
+            self.planner.session.pipeline.step_scope_ids[step_index]
         )
         self.planner.artifact_context = self.planner.artifacts.artifact_declaration_context(
             step, step_index
