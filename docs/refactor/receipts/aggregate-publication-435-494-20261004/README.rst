@@ -74,10 +74,10 @@ single scalar-plane address.
 
 The standard TIFF metadata receiver retains its actual channel-axis/header facts;
 this control does not relabel a four-plane runtime stack as intrinsic ZYX Volume.
-It establishes the requested writer/materializer publication boundary, not a
-public PURE_3D producer execution, old failed-job replay, fresh MCP receiving
-journey, native scientific qualification or performance improvement. Ordinary
-installed aggregate receiving remains a separate pending acceptance gate.
+At that historical stage, this established the writer/materializer boundary
+without public execution or fresh MCP receiving. The completed ordinary receiving
+section below now covers those consumers. Neither stage establishes old failed-job
+replay, native scientific qualification or performance improvement.
 
 Reproduction and retained receipts
 ---------------------------------
@@ -124,34 +124,87 @@ files alongside them). No production adjustment or normalized-source API expansi
 was made at that initial adjudication stage. The subsequent repair below changes
 this parameter to require successful publication.
 
-Pending ordinary installed aggregate receiving plan
---------------------------------------------------
+Completed ordinary installed receiving
+-------------------------------------
 
-Use the existing installed-consumer #419 controller's private output/environment
-and public MCP SDK lifecycle, with a NEW synthetic case rather than the failed
-#494 job. Freeze the parent-reviewed source/dependency/input epoch before running.
-Persist a uniquely named custom function through CustomFunctionManager in its
-private XDG data root so parent/server/spawn resolve the same declared source.
-The function uses the original public PURE_3D and image-artifact declaration APIs
-and copies its input as one named image. Do not force an intrinsic Volume domain.
+Both bounded public cases now PASS. The final controller imports production
+source ``a0bb0f4089a85475e112cea32d60132c1cd94752`` with the actual installed
+editable dependencies, including ZMQRuntime
+``04d813fe6c93f74166c05847afb1eae158d3c817``. CustomFunctionManager registers the
+original producer bytes; PipelineDocumentAuthority renders, saves and reopens
+the typed documents. Public MCP compile/execute reaches COMPLETE. Complete public
+inventory and pixel samples pass, followed by identical readback in a second
+independent SDK process.
 
-Write four real 5 x 7 uint16 source TIFFs with complete CHANNEL1/SITE1/WELL A01/
-TIME1/Z0..3 identities and 2/.65/.65 micrometer spacing. Author one CHANNEL-grouped,
-variable-Z processing step with named source binding, runtime-artifact
-materialization and ordinary saved image metadata enabled. Render/save/reopen the
-pipeline through PipelineDocumentAuthority. Through the existing fresh MCP SDK
-controller, create the session, submit public compile and execute to terminal,
-and retain OUTCOMES using the existing export owner.
+The aggregate execution was already COMPLETE on
+``ee23a11d4f05e088fc5e267e98862281d993eb29`` and is reused byte-exact without
+processing again. All nine inventory records remain visible: four source image
+planes, four scalar checkpoints and one named aggregate. The named aggregate
+retains all 140 uint16 values in a 4 x 5 x 7 array, 2/.65/.65 micrometer spacing,
+ordered runtime Z0..3 and their four original physical contributors. Its semantic
+address is None; CHANNEL1 scope fixes SITE1/TIME1 and carries no scalar Z. Exactly
+one durable row describes this named physical occurrence. Scalar records remain
+in the complete inventory and are not mislabeled as aggregates.
 
-Inspect/sample the resulting plate in a distinct fresh SDK context. Compare the
-complete physical aggregate array against all 140 input values, uint16 and source
-calibration; decode the actual durable projection and require one logical saved
-occurrence, semantic address None, exact producer scope and all four correlated
-source paths/Z coordinates. Record the physical storage filename independently
-of that semantic domain. A missing plate grid may legitimately report PARTIAL;
-compile/execute and exact source/pixel acceptance must still pass. Shut down only
-owned children. This is a plan only: no server, registry, public job or native
-client has been launched for this new case.
+The fresh Mosaic execution on ``a0bb0f408`` consumes two real 4 x 5 TIFFs and
+returns a genuine two-dimensional 8 x 5 image through SourceProjectedImageOutput.
+All three main/checkpoint/named physical outputs retain all 40 uint16 values,
+.5/.5 micrometer spacing, two ordered original SITE1/SITE2 contributors and zero
+runtime planes. Scalar SITE and plane axis are absent. Each has semantic address
+None and its own single durable row. The producer explicitly drops the source
+spatial grid: rank remains two, while source origin and source shape are None.
+Output array geometry is independently 8 x 5.
+
+Two remaining generic defects were exposed and fixed through existing owners:
+
+* Workspace REL/FULL keys can refer to the identical SourceProjection.
+  SourcePatternResolutionContext now counts that object as one declaration
+  position while retaining both identity paths and separately resolved metadata
+  records. Distinct projection instances and mapping-only declarations remain
+  independent; strict ambiguity and source-position checks stay active.
+* FunctionCoreExecutor.save_artifact_outputs already normalizes the selected
+  canonical producer value. Removing outer recontextualization prevents consumed
+  runtime planes from being restored onto a contributor-only Mosaic. Raw and
+  unselected-canonical outputs still contextualize after save callbacks;
+  adapter-owned and NoMain branches retain their existing behavior.
+
+The authoritative final receipt is
+``/home/ts/.local/state/openhcs-maintenance/20261004/public-435-aggregate-mosaic-v8/journey.json``.
+``public-receiving-summary.json`` pins that receipt, controller/helper, source and
+environment freeze, all 3 Mosaic / all 9 aggregate physical records, metadata,
+prior failure receipts and two direct production-owner replays. The freeze pins
+50 prepared files, including original custom functions, six input TIFFs, valid
+saved documents, v4-v7 receipts and earlier complete outputs. The earlier v3
+receipt is retained separately. Startup-owned registry caches may populate;
+scientific inputs, source and installed dependencies are unchanged. Only the fresh
+Mosaic output folder is relocated; the recorded AST check preserves the original
+pipeline steps and source-binding declaration.
+
+The exact final commands were::
+
+   /home/ts/code/projects/openhcs/.venv/bin/python -B /var/tmp/run_public_435_aggregate_mosaic_qualified_v8_20261004.py --qualify-head a0bb0f4089a85475e112cea32d60132c1cd94752
+   /home/ts/code/projects/openhcs/.venv/bin/python -B /var/tmp/run_public_435_aggregate_mosaic_qualified_v8_20261004.py --run
+
+The run used owned port 6563, CPU3, a 600-second journey deadline and a 128 MiB
+data guard. Final source/dependency/interpreter/native/input/controller and prior
+output guards pass. Controller exit is zero; runtime PID 1285281 (create time
+1791103474.58) acknowledges close and exits. Both SDK children exit zero and the
+official execution lease is released. Missing plate grid dimensions legitimately
+produce PARTIAL inspection with no other warning; no grid is manufactured.
+
+Earlier v3-v7 failures remain unchanged. The v3 fixture omitted filename metadata
+extraction, so did not declare its intended Z domain; v4 corrects that declaration
+through MetadataExtractionRule without changing input or producer bytes.
+Subsequent alias ambiguity and double normalization were real production defects.
+Enum/property/checker mistakes and rejected source-grid expectations are retained
+separately. No saved output metadata is repaired by hand.
+
+This completes the ordinary synthetic NEW494 aggregate and contributor-only
+Mosaic receiving obligation. It does not replay the unavailable historical
+biological #494 job or prove that failure cause. It makes no native CP or
+performance claim: V15 timings and twelve native comparisons remain separately
+qualified on source ``4f2e44701`` and are not rerun or attributed to this
+correctness follow-up.
 
 
 Contributor-only source authority repair
@@ -199,10 +252,10 @@ scalar/aggregate negative kind, path, source metadata and producer-scope control
 remain active. Real scalar path/alias admissions, ROI storage names and RGB
 filename-selector controls remain active as separate contracts.
 
-Final validation is recorded below. No installed/public producer execution,
-foreign failed-job replay, native scientific qualification, or performance gain
-is claimed by this repair. The ordinary installed aggregate receiving plan above
-remains pending.
+Final validation of this historical repair is recorded below. Its unit control
+does not itself claim public execution, foreign failed-job replay, native
+scientific qualification or performance gain. The completed ordinary receiving
+section above supplies separate public execution and fresh-reopen evidence.
 
 The final coupled command was::
 
