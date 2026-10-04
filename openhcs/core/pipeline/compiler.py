@@ -1860,16 +1860,6 @@ class PipelineCompiler:
                 axis_request,
                 axis_values_to_process,
             )
-            # Preparation belongs to callable admission before compilation. Bind
-            # process-local adapters here so execution workers inherit them.
-            for context in compiled_contexts.values():
-                if not context.step_plans:
-                    continue
-                for step_plan in context.step_plans.values():
-                    pattern = step_plan.compiled_function_pattern
-                    if pattern is not None:
-                        for invocation in pattern.iter_invocations():
-                            invocation.contract.resolve_runtime_callable()
             worker_assignments = PipelineCompiler._calculate_worker_assignments(
                 list(compiled_contexts.keys()),
                 num_workers,

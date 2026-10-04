@@ -11,7 +11,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Hashable, Iterator, Mapping, Sequence
 from contextlib import AbstractContextManager, nullcontext
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field, fields, replace
 from functools import partial
 from enum import Enum
 from pathlib import Path
@@ -519,6 +519,11 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
         repr=False,
         compare=False,
     )
+    _input_memory_type: MemoryType | None = field(
+        init=False,
+        repr=False,
+        compare=False,
+    )
     _execution_memory_type: MemoryType | None = field(
         init=False,
         repr=False,
@@ -593,6 +598,19 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
                 else declaration.main_flow_output_source_payload
             ),
         )
+        input_memory_type = None
+        if (
+            self.contract.input_memory_type is not None
+            and self.contract.output_memory_type is not None
+        ):
+            input_declaration, _ = self.contract.require_memory_types(
+                callable_label=(
+                    f"{self.contract.function_name}"
+                    f"[{self.key.group_key}:{self.key.position}]"
+                ),
+            )
+            input_memory_type = MemoryType(input_declaration)
+        object.__setattr__(self, "_input_memory_type", input_memory_type)
         object.__setattr__(
             self,
             "_execution_memory_type",
@@ -601,19 +619,12 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
 
     def __reduce__(self) -> tuple[Callable, tuple]:
         """Rebind process-local executable state from declaration-only transport."""
-        return (
-            type(self),
-            (
-                self.key,
-                self.contract,
-                self.kwargs,
-                self.artifact_output_plans,
-                self.artifact_input_edges,
-                self.runtime_parameter_bindings,
-                self.input_device_id,
-                self.execution_device_id,
-            ),
-        )
+        constructor_values = {
+            declared.name: getattr(self, declared.name)
+            for declared in fields(self)
+            if declared.init
+        }
+        return partial(type(self), **constructor_values), ()
 
     def with_device_assignment(
         self,
@@ -633,6 +644,14 @@ class CompiledFunctionInvocation(NormalizedFunctionItem):
                 if self._execution_memory_type is None
                 else assignment.device_id_for(self._execution_memory_type)
             ),
+        )
+
+    def convert_input(self, data: object, source_memory_type: str) -> object:
+        """Place the active predecessor's pixels on the compiled input domain."""
+        if self._input_memory_type is None:
+            self.contract.require_memory_types()
+        return MemoryType(source_memory_type).convert_to(
+            data, self._input_memory_type, self.input_device_id
         )
 
     def main_flow_call_argument(self, source_payload: object) -> object:

@@ -65,7 +65,6 @@ from openhcs.core.aligned_image_payload import (
     unstack_image_payload_context,
 )
 from openhcs.core.memory import (
-    convert_memory,
     unstack_runtime_slices,
 )
 from openhcs.core.runtime_stores import (
@@ -958,12 +957,9 @@ class FunctionCoreExecutor:
         *,
         debug_sink: DebugEventSink | None = None,
     ) -> RuntimePayload | NoMainFlowOutput:
-        input_memory_type = self.invocation.input_memory_type
-        converted_data = convert_memory(
-            data=image_payload_data(self.main_data_arg),
-            source_type=self.source_memory_type,
-            target_type=input_memory_type,
-            gpu_id=self.invocation.input_device_id,
+        converted_data = self.invocation.convert_input(
+            image_payload_data(self.main_data_arg),
+            self.source_memory_type,
         )
         source_payload = with_image_payload_data(self.main_data_arg, converted_data)
         main_data_arg = self.invocation.main_flow_call_argument(source_payload)

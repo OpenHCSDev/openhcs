@@ -1451,11 +1451,23 @@ class CallableContract(ArtifactPlanKeySelector):
             return None
         return self.runtime_batch_executors.get(domain)
 
-    def require_memory_types(self) -> tuple[str, str]:
+    def require_memory_types(
+        self, *, callable_label: str | None = None
+    ) -> tuple[str, str]:
         """Admit both declared memory domains before runtime conversion."""
         if self.input_memory_type is None or self.output_memory_type is None:
             raise ValueError(
                 f"Callable {self.function_name!r} is missing memory types."
+            )
+        valid_types = frozenset(memory_type.value for memory_type in MemoryType)
+        if (
+            self.input_memory_type not in valid_types
+            or self.output_memory_type not in valid_types
+        ):
+            raise ValueError(
+                f"Function '{callable_label or self.function_name}' has invalid "
+                f"memory types: {self.input_memory_type}/{self.output_memory_type}. "
+                f"Valid: {', '.join(sorted(valid_types))}"
             )
         return self.input_memory_type, self.output_memory_type
 
