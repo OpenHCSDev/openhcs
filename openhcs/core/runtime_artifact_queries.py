@@ -23,7 +23,6 @@ from openhcs.core.measurement_row_materialization import (
     measurement_table_axis_values,
 )
 from openhcs.core.measurement_feature_queries import (
-    ColumnarMeasurementTableSchema,
     IndexedObjectMeasurementLabelPlaneBinding,
     MeasurementAxisValueProjection,
     MeasurementFeatureValueIndex,
@@ -32,15 +31,7 @@ from openhcs.core.measurement_feature_queries import (
     MeasurementTableObjectFeatureSemantics,
     MeasurementValueIndexResult,
 )
-from openhcs.core.measurement_lookup_dialect import (
-    resolve_runtime_measurement_lookup_dialect,
-)
-from openhcs.core.process_local_cache import (
-    BoundedCache,
-    RegisteredProcessLocalBoundedCache,
-    identity_owner_tuples_match,
-    named_identity_owner_tuples_match,
-)
+from openhcs.core.process_local_cache import BoundedCache
 from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementSubject,
@@ -83,37 +74,6 @@ class RuntimeMeasurementTablesQueryCache(
     ]
 ):
     """Store-owned measurement tables for one axis and component group."""
-
-
-MeasurementLabelSliceFeatureBatchCacheValue = tuple[
-    tuple[MeasurementTable, ...],
-    tuple[tuple[str, object], ...],
-    Mapping[str, tuple[Any, ...]],
-]
-
-
-@dataclass(frozen=True, slots=True)
-class MeasurementLabelSliceFeatureBatchCacheKey:
-    """Identity key for label-plane feature projections."""
-
-    feature_name: str
-    object_names: tuple[str, ...]
-    dialect_identity: int
-    row_axis: MeasurementRowAxisField
-    table_identities: tuple[int, ...]
-    label_identities: tuple[tuple[str, int], ...]
-    row_axis_values: tuple[tuple[str, tuple[int, ...]], ...]
-
-
-class MeasurementLabelSliceFeatureBatchQueryCache(
-    RegisteredProcessLocalBoundedCache[
-        MeasurementLabelSliceFeatureBatchCacheKey,
-        MeasurementLabelSliceFeatureBatchCacheValue,
-    ]
-):
-    """Process-local cache for repeated label-plane feature projections."""
-
-    max_entries = 1024
 
 
 @dataclass(frozen=True, slots=True)
@@ -660,10 +620,6 @@ class MeasurementLabelSliceFeatureBatchQuery(MeasurementLabelSliceFeatureQuery):
 
     def values_by_object(self) -> Mapping[str, tuple[Any, ...]]:
         """Return label-plane-aligned vectors keyed by object name."""
-        cached = self.cached_values_by_object()
-        if cached is not None:
-            return cached
-
         label_planes_by_object = {
             object_name: self.object_feature_query(object_name).label_planes(labels)
             for object_name, labels in self.labels_by_object.items()
@@ -738,13 +694,11 @@ class MeasurementLabelSliceFeatureBatchQuery(MeasurementLabelSliceFeatureQuery):
                     strict=True,
                 )
             )
-        return self.cache_values_by_object(
-            MappingProxyType(
-                {
-                    object_name: values_by_object[object_name]
-                    for object_name in object_names
-                }
-            )
+        return MappingProxyType(
+            {
+                object_name: values_by_object[object_name]
+                for object_name in object_names
+            }
         )
 
     def object_feature_query(
@@ -759,73 +713,6 @@ class MeasurementLabelSliceFeatureBatchQuery(MeasurementLabelSliceFeatureQuery):
             row_axis=self.row_axis,
             plane_projector=self.plane_projector,
         )
-
-    def cache_key(self) -> MeasurementLabelSliceFeatureBatchCacheKey:
-        """Return the identity key for this label-plane feature projection."""
-        object_names = self.object_names
-        return MeasurementLabelSliceFeatureBatchCacheKey(
-            feature_name=self.feature_name,
-            object_names=object_names,
-            dialect_identity=id(
-                resolve_runtime_measurement_lookup_dialect(self.dialect)
-            ),
-            row_axis=self.row_axis,
-            table_identities=tuple(id(table) for table in self.measurement_tables),
-            label_identities=tuple(
-                (object_name, id(self.labels_by_object[object_name]))
-                for object_name in object_names
-            ),
-            row_axis_values=tuple(
-                (
-                    object_name,
-                    self.object_feature_query(object_name)
-                    .select_axis(self.labels_by_object[object_name])
-                    .row_axis_values,
-                )
-                for object_name in object_names
-            ),
-        )
-
-    def table_owners(self) -> tuple[MeasurementTable, ...]:
-        """Return table owners used to protect identity-keyed cache entries."""
-        return self.measurement_tables
-
-    def label_owners(self) -> tuple[tuple[str, object], ...]:
-        """Return label owners used to protect identity-keyed cache entries."""
-        return tuple(
-            (object_name, self.labels_by_object[object_name])
-            for object_name in self.object_names
-        )
-
-    def cached_values_by_object(self) -> Mapping[str, tuple[Any, ...]] | None:
-        """Return cached label-plane feature projections when owners still match."""
-        cached = (
-            MeasurementLabelSliceFeatureBatchQueryCache.process_cache().cached_value(
-                self.cache_key()
-            )
-        )
-        if cached is None:
-            return None
-        cached_tables, cached_labels, cached_values = cached
-        if not identity_owner_tuples_match(cached_tables, self.table_owners()):
-            return None
-        if not named_identity_owner_tuples_match(cached_labels, self.label_owners()):
-            return None
-        return cached_values
-
-    def cache_values_by_object(
-        self,
-        values_by_object: Mapping[str, tuple[Any, ...]],
-    ) -> Mapping[str, tuple[Any, ...]]:
-        """Store label-plane feature projections with identity-owner protection."""
-        return MeasurementLabelSliceFeatureBatchQueryCache.process_cache().store_value(
-            self.cache_key(),
-            (
-                self.table_owners(),
-                self.label_owners(),
-                values_by_object,
-            ),
-        )[2]
 
 
 def _merge_measurement_value_index(
