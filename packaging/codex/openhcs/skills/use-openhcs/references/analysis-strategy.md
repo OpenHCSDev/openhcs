@@ -25,6 +25,7 @@ It distinguishes missing information from an unhelpful display.
 | Observation or task | Retrieve | Decision to make |
 | --- | --- | --- |
 | FIRST foreground proposal, especially textured/ring bodies or regional nuisance | [openhcs_segmentation_diagnostics](segmentation-diagnostics.md#compare-body-admission-models), then [openhcs_image_preprocessing](image-preprocessing.md) when needed | Does admission on the consumed alias/response preserve distributed positives while excluding nuisance-only regions? |
+| FIRST threshold proposal or widening a positive-only sample to more fields | [openhcs_measurement_interpretation](measurement-interpretation.md#include-no-object-fields-before-widening) | Does the sampled scope include available whole no-object fields as well as genuine dim positives? |
 | FIRST marker/declumping proposal, including a shape-based method | [openhcs_measurement_interpretation](measurement-interpretation.md#choose-the-marker-landscape-before-the-first-candidate) | Does the actual chosen landscape distinguish within-body maxima from a genuine pair, with justified competition and spacing units? |
 | Uneven background, noisy seeds, dim objects, bright outliers | [openhcs_image_preprocessing](image-preprocessing.md) | Which nuisance model fits, and what biology must survive? |
 | Touching nuclei, one body split, merged cells, zero-growth secondary objects | [openhcs_segmentation_diagnostics](segmentation-diagnostics.md) | Is the failure in foreground, markers, separation or secondary growth? |

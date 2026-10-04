@@ -37,6 +37,8 @@ TASKS = (
     ("volume anisotropic Z spacing", "openhcs_measurement_interpretation"),
     ("Pearson Manders Costes", "openhcs_measurement_interpretation"),
     ("current processing intensity units", "openhcs_measurement_interpretation"),
+    ("whole no-object field sampling", "openhcs_measurement_interpretation"),
+    ("Otsu noise partition threshold floor", "openhcs_measurement_interpretation"),
     ("recipe error memory", "openhcs_analysis_learning"),
     ("canvas resize recapture", "openhcs_viewer_qa"),
     ("per image contrast check", "openhcs_viewer_qa"),
@@ -143,6 +145,27 @@ def test_domain_knowledge_remains_progressively_retrieved():
             assert Path(document.source_path).name in links
 
 
+def test_no_object_field_section_is_complete_at_normal_section_bound():
+    service = KnowledgeBaseService(repo_root=ROOT)
+    section = service.get_document(
+        KnowledgeBaseDocumentRequest.from_fields(
+            document_id="openhcs_measurement_interpretation",
+            section_id="include-no-object-fields-before-widening",
+            max_chars=4000,
+        )
+    )
+    document = service.get_document(
+        KnowledgeBaseDocumentRequest.from_fields(
+            document_id="openhcs_measurement_interpretation",
+            max_chars=MAX_DOCUMENT_CHARS,
+        )
+    )
+    assert not section.errors and not document.errors
+    assert not section.truncated and not document.truncated
+    assert section.content and section.content in document.content
+    assert section.selected_section_id == "include-no-object-fields-before-widening"
+
+
 def test_complete_projected_skill_sync_preserves_canonical_resource_bytes(tmp_path):
     project = runpy.run_path(str(ROOT / "scripts/build_mcp_knowledge_assets.py"))
     projection = tmp_path / "knowledge"
@@ -152,6 +175,7 @@ def test_complete_projected_skill_sync_preserves_canonical_resource_bytes(tmp_pa
     for document_id, section_id in (
         ("openhcs_architecture_quick_start", "task-authorization"),
         ("openhcs_measurement_interpretation", "current-processing-intensity-units"),
+        ("openhcs_measurement_interpretation", "include-no-object-fields-before-widening"),
         ("openhcs_segmentation_diagnostics", "foreground-before-unclumping"),
         ("openhcs_segmentation_diagnostics", "separate-support-recovery-from-rooted-graph-validity"),
     ):

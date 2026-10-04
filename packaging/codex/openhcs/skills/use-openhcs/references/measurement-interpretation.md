@@ -24,6 +24,9 @@ measurements, not ground truth or an automatically validated parameter choice.
    scale range. Retain extremes and ambiguity rather than measuring only objects
    the current detector finds. For 3-D, inspect multiple Z planes and orthogonal
    views when exposed; a projected width does not establish Z extent.
+   Where available, include whole near-background/no-object fields using
+   [the first-candidate and pre-widen control](#include-no-object-fields-before-widening),
+   not only background patches beside positive objects.
 3. Use exposed native measurement capabilities where available and retain their
    receipts. For bounded raw evidence, `openhcs_sample_viewer_window_image`
    takes `route_key`, route-local `axis_indices`, native `y`, `x`, `height`,
@@ -106,6 +109,35 @@ width/body detection; newly admitted background bridges oppose it. Check optiona
 before attributing loss to rooting. If support survives the declared admission
 and retention gates but reported paths are absent, investigate rooting/topology
 rather than lowering admission.
+
+### Include no-object fields before widening
+
+Before the FIRST threshold proposal and before widening a positive-only sample,
+inspect whole near-background or apparently no-object fields where the available
+development data includes them. Use faint-preserving raw views at context and
+native scales, across relevant axes, to distinguish no supported target from dim
+objects, debris or an unhelpful display. A percentile, histogram, low count or
+one quiet crop alone does not establish that a whole field is empty. If this
+stratum is unavailable, record that coverage limit rather than inventing it.
+
+An automatic threshold is not an object-presence test. [Otsu's histogram
+partition](https://bioimagebook.github.io/chapters/2-processing/3-thresholding/thresholding.html)
+can separate brighter noise from darker noise even when no target objects are
+present. Successful labels on signal-bearing fields therefore do not establish
+specificity in no-object fields. Inspect threshold support and resulting labels
+against matched raw/result/combined views in both strata before wider execution.
+
+If background partitioning is the failure, a measured lower threshold bound is
+one possible hypothesis only when the reflected callable supports it and the
+[consumed intensity units](#current-processing-intensity-units), acquisition and
+preprocessing mappings are comparable across fields. Measure background and
+genuine dim-positive values on that alias; a source-unit floor cannot be copied
+unchanged onto a normalised or remapped response. Check that the effective bound
+rejects unsupported background while retaining dim-positive support and ordinary
+positive boundaries. Do not infer a universal floor from dtype, an observed
+maximum or a percentile-based blank classification. If the distributions overlap
+or units are incomparable, reconsider the supported admission/preprocessing model
+and retain the uncertainty instead of forcing a blank result.
 
 ### Choose the marker landscape before the first candidate
 
