@@ -7,7 +7,7 @@ import os
 from abc import ABC
 from dataclasses import dataclass, replace
 from pathlib import Path, PurePosixPath
-from typing import TYPE_CHECKING, Callable, ClassVar, Mapping, Sequence, TypeAlias
+from typing import TYPE_CHECKING, ClassVar, Mapping, Sequence, TypeAlias
 
 from metaclass_registry import AutoRegisterMeta
 from polystore.zarr_batch import ZarrBatchAxis, ZarrBatchAxisRole, ZarrBatchLayout
@@ -24,13 +24,9 @@ from openhcs.core.image_file_serialization import (
 )
 from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_array_values import RuntimeArrayData
-from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.runtime_image_values import (
     image_payload_data,
-    image_payload_mask,
-    image_payload_metadata,
 )
-from openhcs.core.source_image_provenance import SourceImageIdentity
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
 
 if TYPE_CHECKING:
@@ -63,79 +59,6 @@ def prepare_storage_image_payloads(
     if backend == Backend.DISK.value:
         return prepare_disk_image_payloads(payloads, paths)
     return [image_payload_data(payload) for payload in payloads]
-
-
-@dataclass(frozen=True, slots=True)
-class StepPreloadFileSet:
-    """Execution-scoped source files that must be available in memory backend."""
-
-    paths: tuple[str, ...]
-
-    @classmethod
-    def from_paths(cls, paths: Sequence[str | Path]) -> "StepPreloadFileSet":
-        """Return a deterministic file set while preserving first-seen order."""
-        return cls(tuple(dict.fromkeys(str(path) for path in paths)))
-
-    def missing_memory_paths(
-        self,
-        filemanager: FileManager,
-    ) -> tuple[str, ...]:
-        """Return source paths not already copied into the execution memory backend."""
-        return tuple(
-            path
-            for path in self.paths
-            if not filemanager.exists(path, Backend.MEMORY.value)
-        )
-
-    def load_missing_payloads(
-        self,
-        *,
-        filemanager: FileManager,
-        read_backend: str,
-        zarr_config: ZarrBackendConfig | None,
-    ) -> tuple[tuple[str, ...], list[RuntimeArrayData]]:
-        """Load missing source payloads and wrap them with source metadata."""
-        missing_paths = self.missing_memory_paths(filemanager)
-        if not missing_paths:
-            return (), []
-        if read_backend == Backend.ZARR.value:
-            raw_images = filemanager.load_batch(
-                list(missing_paths),
-                read_backend,
-                zarr_config=zarr_config,
-            )
-        else:
-            raw_images = filemanager.load_batch(list(missing_paths), read_backend)
-        return missing_paths, [
-            _preloaded_image_payload(
-                image,
-                source_path=file_path,
-                read_backend=read_backend,
-                filemanager=filemanager,
-            )
-            for image, file_path in zip(raw_images, missing_paths, strict=True)
-        ]
-
-
-def _preloaded_image_payload(
-    image: RuntimeArrayData,
-    *,
-    source_path: str,
-    read_backend: str,
-    filemanager: FileManager,
-) -> RuntimeArrayData:
-    """Preserve loader-owned metadata or derive it through the source backend."""
-    metadata = image_payload_metadata(image)
-    if not metadata.has_values:
-        metadata = ImagePayloadSourceMetadataContext(
-            SourceImageIdentity(source_path),
-            read_backend=read_backend,
-            filemanager=filemanager,
-        ).metadata(image)
-    return metadata.payload_with(
-        image_payload_data(image),
-        image_payload_mask(image),
-    )
 
 
 def generate_materialized_paths(
@@ -445,96 +368,6 @@ def get_all_image_paths(
         axis_id,
     )
     return full_file_paths
-
-
-def create_image_path_getter(
-    axis_id: str,
-    filemanager: FileManager,
-    microscope_handler: MicroscopeHandler,
-) -> Callable[[str | Path, str], list[str]]:
-    """Create a path getter bound to one multiprocessing axis value."""
-
-    def get_paths_for_axis(input_dir: str | Path, backend: str) -> list[str]:
-        return get_all_image_paths(
-            input_dir=input_dir,
-            axis_id=axis_id,
-            backend=backend,
-            filemanager=filemanager,
-            microscope_handler=microscope_handler,
-        )
-
-    return get_paths_for_axis
-
-
-def bulk_preload_step_images(
-    step_input_dir: Path,
-    axis_id: str,
-    read_backend: str,
-    filemanager: FileManager,
-    microscope_handler: MicroscopeHandler,
-    zarr_config: ZarrBackendConfig | None = None,
-    patterns_to_preload: Sequence[str] | None = None,
-    variable_components: Sequence[str] | None = None,
-) -> None:
-    """Preload this step's images from the source backend into the memory backend."""
-    if patterns_to_preload is not None:
-        all_files = (
-            file_path
-            for pattern in patterns_to_preload
-            for file_path in microscope_handler.path_list_from_pattern(
-                str(step_input_dir),
-                pattern,
-                filemanager,
-                read_backend,
-                variable_components,
-            )
-        )
-        full_file_paths = (
-            (
-                str(step_input_dir / file_path)
-                if not Path(file_path).is_absolute()
-                else str(file_path)
-            )
-            for file_path in all_files
-        )
-    else:
-        get_paths_for_axis = create_image_path_getter(
-            axis_id, filemanager, microscope_handler
-        )
-        full_file_paths = get_paths_for_axis(step_input_dir, read_backend)
-
-    preload_file_set = StepPreloadFileSet.from_paths(full_file_paths)
-
-    if not preload_file_set.paths:
-        raise RuntimeError(
-            f"Bulk preload found no files for axis {axis_id} in {step_input_dir} "
-            f"with backend {read_backend}."
-        )
-
-    filemanager.ensure_directory(str(step_input_dir), Backend.MEMORY.value)
-    for parent in dict.fromkeys(
-        str(Path(path).parent) for path in preload_file_set.paths
-    ):
-        filemanager.ensure_directory(parent, Backend.MEMORY.value)
-    missing_paths, raw_images = preload_file_set.load_missing_payloads(
-        filemanager=filemanager,
-        read_backend=read_backend,
-        zarr_config=zarr_config,
-    )
-    if not missing_paths:
-        logger.debug(
-            "Bulk preload reused %s memory-backed files for axis %s",
-            len(preload_file_set.paths),
-            axis_id,
-        )
-        return
-    logger.debug(
-        "Bulk preload loading %s/%s files for axis %s",
-        len(missing_paths),
-        len(preload_file_set.paths),
-        axis_id,
-    )
-    filemanager.save_batch(list(raw_images), list(missing_paths), Backend.MEMORY.value)
 
 
 def update_metadata_for_zarr_conversion(

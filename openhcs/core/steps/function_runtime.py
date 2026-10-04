@@ -121,6 +121,7 @@ from openhcs.core.source_workspace_projection import (
 from openhcs.core.source_binding_selection import (
     SourceBindingCandidateMatcher,
     SourceBindingMatchedImageSet,
+    SourceFileUniverse,
     SourceUniverseRequest,
     SourcePatternResolutionContext,
 )
@@ -2557,7 +2558,7 @@ class PatternGroupRuntime:
                 str(plan.input_dir),
                 request.pattern_group_info,
                 context.filemanager,
-                Backend.MEMORY.value,
+                plan.read_backend,
                 (
                     [component.value for component in plan.variable_components]
                     if plan.variable_components
@@ -2642,10 +2643,10 @@ class PatternGroupRuntime:
             memory_type=plan.input_memory_type,
         )
         if cached_stack is None:
-            raw_slices = context.filemanager.load_batch(
-                full_file_paths,
-                Backend.MEMORY.value,
-            )
+            raw_slices = SourceFileUniverse(
+                tuple(full_file_paths),
+                Backend.MEMORY if producer_matching_files else Backend(plan.read_backend),
+            ).load_images(context.filemanager, zarr_config=plan.zarr_config)
             if source_projection is not None or not producer_matching_files:
                 raw_slices = self._apply_source_image_loading_semantics(
                     raw_slices,

@@ -8,7 +8,7 @@ import pytest
 from objectstate.global_config import GlobalContextValues
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.constants.constants import AllComponents, GroupBy, VariableComponents
+from openhcs.constants.constants import AllComponents, Backend, GroupBy, VariableComponents
 from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
     ImagePayloadBundleContext,
@@ -2139,7 +2139,6 @@ def test_first_step_prepares_raw_source_anchors_under_semantic_binding_groups(
         "MCP_DNA": ("A01_s{iii}_w1_z001_t001.tif",),
         "MCP_AGP": ("A01_s{iii}_w2_z001_t001.tif",),
     }
-    executor._preload_inputs_if_needed(grouped_patterns)
 
     request = PatternGroupExecutionRequest(
         context=context,
@@ -2153,6 +2152,12 @@ def test_first_step_prepares_raw_source_anchors_under_semantic_binding_groups(
     loaded = PatternGroupRuntime(request)._load_input_stack()
 
     assert loaded[0] == ["A01_s001_w1_z001_t001.tif"]
+    assert context.filemanager.exists(
+        str(executor.plan.input_dir / "A01_s001_w1_z001_t001.tif"), Backend.MEMORY.value,
+    )
+    assert not context.filemanager.exists(
+        str(executor.plan.input_dir / "A01_s001_w2_z001_t001.tif"), Backend.MEMORY.value,
+    )
 
 
 def test_source_bound_artifact_managed_step_keeps_source_anchors() -> None:
@@ -3950,6 +3955,7 @@ def test_producer_anchored_pipeline_start_paths_use_exact_source_projection_bund
         step_type="FunctionStep",
         axis_id="A01",
         input_dir=tmp_path,
+        read_backend="memory",
         input_memory_type="numpy",
         variable_components=(),
         main_input_dependency=StepInputDependency.pipeline_start(),

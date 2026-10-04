@@ -11,8 +11,6 @@ from dataclasses import dataclass, field
 from itertools import zip_longest
 from typing import TYPE_CHECKING
 
-import psutil
-
 from openhcs.constants import MULTIPROCESSING_AXIS
 from openhcs.constants.constants import (
     LOADABLE_IMAGE_EXTENSIONS,
@@ -45,7 +43,6 @@ from openhcs.core.source_workspace_projection import (
 )
 from openhcs.core.step_dependencies import StepInputDependencyKind
 from openhcs.core.steps.function_io import (
-    bulk_preload_step_images,
     generate_materialized_paths,
     get_all_image_paths,
     save_materialized_data,
@@ -890,12 +887,6 @@ class FunctionStepExecutor:
                 "step_prepare_groups",
                 time.perf_counter() - phase_started_at,
             )
-            phase_started_at = time.perf_counter()
-            self._preload_inputs_if_needed(grouped_patterns)
-            self.record_runtime_profile(
-                "step_preload_inputs",
-                time.perf_counter() - phase_started_at,
-            )
         if not execution_requests:
             raise ValueError(
                 f"No execution cohorts found for step {plan.step_index} "
@@ -1181,55 +1172,6 @@ class FunctionStepExecutor:
                 f"({plan.step_name}) in well {plan.axis_id}"
             )
         return grouped_patterns
-
-    def _preload_inputs_if_needed(
-        self,
-        grouped_patterns: PatternGroups,
-    ) -> None:
-        plan = self.plan
-        if plan.read_backend == Backend.MEMORY.value:
-            return
-
-        process = psutil.Process(os.getpid())
-        mem_before_mb = process.memory_info().rss / 1024 / 1024
-        logger.debug("Memory before preload: %.1f MB RSS", mem_before_mb)
-
-        if plan.sequential_filter_plan.enabled:
-            patterns_to_preload = [
-                pattern
-                for pattern_list in grouped_patterns.values()
-                for pattern in pattern_list
-            ]
-            logger.info(
-                "Sequential mode: preloading %s filtered patterns",
-                len(patterns_to_preload),
-            )
-            bulk_preload_step_images(
-                plan.input_dir,
-                plan.axis_id,
-                plan.read_backend,
-                self.context.filemanager,
-                self.context.microscope_handler,
-                plan.zarr_config,
-                patterns_to_preload=patterns_to_preload,
-                variable_components=plan.variable_component_values,
-            )
-        else:
-            bulk_preload_step_images(
-                plan.input_dir,
-                plan.axis_id,
-                plan.read_backend,
-                self.context.filemanager,
-                self.context.microscope_handler,
-                plan.zarr_config,
-            )
-
-        mem_after_mb = process.memory_info().rss / 1024 / 1024
-        logger.debug(
-            "Memory after preload: %.1f MB RSS (+%.1f MB)",
-            mem_after_mb,
-            mem_after_mb - mem_before_mb,
-        )
 
     def _execute_pattern_groups(
         self,

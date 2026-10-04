@@ -58,9 +58,12 @@ from openhcs.core.source_path_identity import (
 from openhcs.core.source_projection import SourceProjection
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.steps.function_io import get_all_image_paths
+from openhcs.core.runtime_array_values import RuntimeArrayData
+from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 
 if TYPE_CHECKING:
+    from polystore.filemanager import FileManager
     from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.microscopes.microscope_interfaces import FilenameParser
 
@@ -1514,6 +1517,49 @@ class SourceFileUniverse:
 
     files: tuple[str, ...]
     backend: Backend
+
+    def load_images(
+        self,
+        filemanager: "FileManager",
+        *,
+        zarr_config: Mapping[str, object] | None = None,
+    ) -> list[RuntimeArrayData]:
+        """Load this exact source cohort, retaining its execution-local memory copy."""
+        if self.backend is Backend.MEMORY:
+            return filemanager.load_batch(list(self.files), self.backend.value)
+        missing = tuple(dict.fromkeys(
+            path for path in self.files
+            if not filemanager.exists(path, Backend.MEMORY.value)
+        ))
+        loaded_by_path = {}
+        if missing:
+            pixels = filemanager.load_batch(
+                list(missing), self.backend.value,
+                **({"zarr_config": zarr_config} if self.backend is Backend.ZARR else {}),
+            )
+            loaded_by_path.update(
+                (path, ImagePayloadSourceMetadataContext(
+                    SourceImageIdentity(path),
+                    read_backend=self.backend.value,
+                    filemanager=filemanager,
+                ).payload(image))
+                for path, image in zip(missing, pixels, strict=True)
+            )
+            for parent in dict.fromkeys(str(Path(path).parent) for path in missing):
+                filemanager.ensure_directory(parent, Backend.MEMORY.value)
+            filemanager.save_batch(
+                list(loaded_by_path.values()), list(loaded_by_path), Backend.MEMORY.value,
+            )
+        retained = tuple(dict.fromkeys(
+            path for path in self.files if path not in loaded_by_path
+        ))
+        if retained:
+            loaded_by_path.update(zip(
+                retained,
+                filemanager.load_batch(list(retained), Backend.MEMORY.value),
+                strict=True,
+            ))
+        return [loaded_by_path[path] for path in self.files]
 
 
 @dataclass(frozen=True, slots=True)

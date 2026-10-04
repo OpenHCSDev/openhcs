@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 
 from openhcs.constants.constants import Backend
-from openhcs.core.steps.function_io import bulk_preload_step_images
+from openhcs.core.source_binding_selection import SourceFileUniverse
 from openhcs.microscopes.bioformats import BioFormatsHandler
 from tests.unit.bioformats_fixture import (
     bioformats_filemanager,
@@ -11,7 +11,7 @@ from tests.unit.bioformats_fixture import (
 )
 
 
-def test_bioformats_handler_preloads_planes_through_runtime_path(
+def test_bioformats_handler_loads_selected_planes_through_runtime_path(
     tmp_path: Path,
 ) -> None:
     stack = write_bioformats_manifest_fixture(tmp_path)
@@ -19,14 +19,9 @@ def test_bioformats_handler_preloads_planes_through_runtime_path(
     handler = BioFormatsHandler(filemanager)
     handler.initialize_workspace(tmp_path, filemanager)
 
-    bulk_preload_step_images(
-        step_input_dir=tmp_path,
-        axis_id="A01",
-        read_backend=Backend.VIRTUAL_WORKSPACE.value,
-        filemanager=filemanager,
-        microscope_handler=handler,
-        patterns_to_preload=("A01_s001_w1_z001_t001.tif",),
-    )
+    SourceFileUniverse(
+        (str(tmp_path / "A01_s001_w1_z001_t001.tif"),), Backend.VIRTUAL_WORKSPACE,
+    ).load_images(filemanager)
 
     loaded = filemanager.load_batch(
         [str(tmp_path / "A01_s001_w1_z001_t001.tif")],

@@ -306,9 +306,6 @@ def test_function_step_execution_does_not_prepare_callables_in_hot_path(monkeypa
                 {None: ["image.tif"]}
             )
 
-        def _preload_inputs_if_needed(self, grouped_patterns):
-            events.append(("preload", tuple(grouped_patterns.groups)))
-
         def _prepare_callables(self, grouped_patterns):
             raise AssertionError("callable warmup belongs to compilation")
 
