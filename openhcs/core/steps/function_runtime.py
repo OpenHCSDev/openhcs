@@ -1089,23 +1089,10 @@ class FunctionCoreExecutor:
             loaded_artifact_payloads=loaded_artifact_payloads,
             debug_sink=debug_sink,
         )
-        main_output = self.save_artifact_outputs(
+        return self.save_artifact_outputs(
             raw_output,
             source_payload,
             loaded_artifact_payloads=loaded_artifact_payloads,
-        )
-        if isinstance(main_output, NoMainFlowOutput):
-            return main_output
-        if self.invocation.adapter_records_artifact_outputs:
-            return main_output
-        output_source_payload = self.main_flow_output_source_payload(
-            self.execution_group_source_payload(source_payload)
-        )
-        return ImageArtifactType.contextualize_output_from_projector(
-            output_source_payload,
-            main_output,
-            None,
-            self.plane_projection,
         )
 
     def main_flow_call_argument(
@@ -1260,6 +1247,7 @@ class FunctionCoreExecutor:
         *,
         loaded_artifact_payloads: Mapping[ArtifactSpecRef, RuntimePayload],
     ) -> RuntimePayload | NoMainFlowOutput:
+        """Save declared outputs and qualify unsaved canonical returns afterward."""
         if self.invocation.adapter_records_artifact_outputs:
             return self.save_module_recorded_output(raw_output)
         output_plans = tuple(self.artifacts.outputs.values())
@@ -1270,51 +1258,64 @@ class FunctionCoreExecutor:
                     "Tuple returns require declared special-output slots; multiple "
                     "main-flow images must be packed as AlignedImageStack."
                 )
-            return raw_output
-
-        output_matcher = RuntimeReturnedOutputMatcher(
-            callable_contract=self.invocation.contract,
-            returned_output=raw_output,
-        )
-        _returned_values, matched_outputs = output_matcher.resolve_plan_values(
-            output_plans
-        )
-        saved_values = {
-            output_plan.ref(): self.save_artifact_output(
-                output_plan.name,
-                output_plan,
-                output_value,
-                source_payload,
-                loaded_artifact_payloads=loaded_artifact_payloads,
+            main_output = raw_output
+        else:
+            output_matcher = RuntimeReturnedOutputMatcher(
+                callable_contract=self.invocation.contract,
+                returned_output=raw_output,
             )
-            for output_plan, _output_spec, output_value in matched_outputs
-        }
-        canonical_refs = frozenset(
-            spec.ref()
-            for spec in self.invocation.contract.canonical_return_output_specs
-        )
-        main_outputs = tuple(
-            (output_plan, output_spec, saved_values[output_plan.ref()])
-            for output_plan, output_spec, _output_value in matched_outputs
-            if output_plan.ref() in canonical_refs
-        )
-        if main_outputs:
-            output_values = tuple(
-                output_value
-                for _output_plan, _output_spec, output_value in main_outputs
+            _returned_values, matched_outputs = output_matcher.resolve_plan_values(
+                output_plans
             )
-            if len(output_values) == 1:
-                return output_values[0]
-            return ImageOutputBundle(
-                output_values,
-                AlignedImageSliceContext.main_flow_for_output_plans(
-                    tuple(
-                        output_plan
-                        for output_plan, _output_spec, _output_value in main_outputs
-                    )
-                ),
+            saved_values = {
+                output_plan.ref(): self.save_artifact_output(
+                    output_plan.name,
+                    output_plan,
+                    output_value,
+                    source_payload,
+                    loaded_artifact_payloads=loaded_artifact_payloads,
+                )
+                for output_plan, _output_spec, output_value in matched_outputs
+            }
+            canonical_refs = frozenset(
+                spec.ref()
+                for spec in self.invocation.contract.canonical_return_output_specs
             )
-        return output_matcher.canonical_output
+            main_outputs = tuple(
+                (output_plan, output_spec, saved_values[output_plan.ref()])
+                for output_plan, output_spec, _output_value in matched_outputs
+                if output_plan.ref() in canonical_refs
+            )
+            if main_outputs:
+                # These values already own their declared source transformation.
+                # Reapplying the input context would restore consumed planes.
+                output_values = tuple(
+                    output_value
+                    for _output_plan, _output_spec, output_value in main_outputs
+                )
+                if len(output_values) == 1:
+                    return output_values[0]
+                return ImageOutputBundle(
+                    output_values,
+                    AlignedImageSliceContext.main_flow_for_output_plans(
+                        tuple(
+                            output_plan
+                            for output_plan, _output_spec, _output_value in main_outputs
+                        )
+                    ),
+                )
+            main_output = output_matcher.canonical_output
+        if isinstance(main_output, NoMainFlowOutput):
+            return main_output
+        output_source_payload = self.main_flow_output_source_payload(
+            self.execution_group_source_payload(source_payload)
+        )
+        return ImageArtifactType.contextualize_output_from_projector(
+            output_source_payload,
+            main_output,
+            None,
+            self.plane_projection,
+        )
 
     def save_module_recorded_output(
         self,

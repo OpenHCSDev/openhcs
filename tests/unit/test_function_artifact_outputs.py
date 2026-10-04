@@ -1411,6 +1411,77 @@ def test_execute_function_core_saves_single_image_artifact_output_to_main_flow()
     )
 
 
+def test_saved_canonical_source_projection_survives_main_flow_return():
+    from openhcs.core.projected_image_output import SelectedPlaneImageOutput
+
+    context = ContextStub()
+    pixels = np.arange(12, dtype=np.uint16).reshape(2, 2, 3)
+    paths = ("/source/A01_s001_w2_z001_t001.tif", "/source/A01_s002_w2_z001_t001.tif")
+    source = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=paths,
+            component_metadata=tuple(
+                {"well": "A01", "site": site, "channel": "2", "z_index": "1", "timepoint": "1"}
+                for site in ("1", "2")
+            ),
+        ),
+    ).payload_with(pixels)
+    output = ArtifactSpec.output("Selected", ImageArtifactType)
+    plan = ArtifactOutputPlan(name=output.name, path="/memory/selected.pkl", artifact_type=ImageArtifactType)
+
+    @artifact_outputs(output)
+    def select_second_plane(image):
+        return SelectedPlaneImageOutput(image[1:2], (1,))
+
+    result = _execute_function_core(CoreExecutionRequest(
+        func_callable=select_second_plane, main_data_arg=source, base_kwargs={}, context=context,
+        artifact_inputs={}, artifact_outputs={plan.ref(): plan}, runtime_plane_count=2,
+    ))
+    stored = context.runtime_value_store.find(name=output.name, axis_id="A01")
+    assert len(stored) == 1
+    for payload in (result, stored[0].data):
+        np.testing.assert_array_equal(image_payload_data(payload), pixels[1])
+        metadata = image_payload_metadata(payload)
+        assert metadata.plane_axis is None
+        assert metadata.source_provenance.source_plane_count == 0
+        assert metadata.source_path == paths[1]
+        assert metadata.source_component_metadata["site"] == "2"
+        assert metadata.source_image_names == (output.name,)
+
+
+@pytest.mark.parametrize("declared_canonical", [False, True])
+def test_unsaved_main_return_reads_source_context_after_artifact_save(declared_canonical):
+    context = ContextStub()
+    source = ImagePayloadMetadata(
+        source_path="/source/before.tif",
+        source_component_metadata={"well": "A01", "site": "1", "channel": "2"},
+    ).payload_with(np.zeros((2, 3), dtype=np.float32))
+    sidecar = ArtifactSpec.output("Sidecar", MetadataArtifactType)
+    canonical = ArtifactSpec.output("Unselected", ImageArtifactType)
+    plan = ArtifactOutputPlan(name=sidecar.name, path="/memory/sidecar.pkl", artifact_type=MetadataArtifactType)
+    original_save = context.filemanager.save
+
+    def save_and_change_source(value, path, backend):
+        original_save(value, path, backend)
+        source.metadata.source_path = "/source/after.tif"
+        source.metadata.source_component_metadata = {"well": "A01", "site": "9", "channel": "2"}
+
+    context.filemanager.save = save_and_change_source
+
+    @artifact_outputs(*(canonical, sidecar) if declared_canonical else (sidecar,))
+    def produce(image):
+        return image + 1, {"note": "saved"}
+
+    result = _execute_function_core(CoreExecutionRequest(
+        func_callable=produce, main_data_arg=source, base_kwargs={}, context=context,
+        artifact_inputs={}, artifact_outputs={plan.ref(): plan},
+    ))
+    np.testing.assert_array_equal(image_payload_data(result), np.ones((2, 3)))
+    assert image_payload_metadata(result).source_path == "/source/after.tif"
+    assert image_payload_metadata(result).source_component_metadata["site"] == "9"
+
+
 def test_execute_function_core_names_slice_aligned_image_outputs() -> None:
     context = ContextStub()
     source_slices = tuple(
