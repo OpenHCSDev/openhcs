@@ -14,6 +14,7 @@ import numpy as np
 from openhcs.processing.backends.cellprofiler._preparation import (
     CellProfilerCallableKernelPreparation,
 )
+from openhcs.core.runtime_profile import RuntimeProfiler
 from openhcs.core.artifacts import (
     ImageArtifactType,
     ArtifactSpecCollection,
@@ -651,7 +652,6 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import lru_cache
 import logging
-import os
 import time
 from typing import ClassVar
 from metaclass_registry import AutoRegisterMeta
@@ -746,8 +746,8 @@ MORPHOLOGY_STRATEGY_REGISTRY_KEY = "strategy_label"
 SPARSE_CUBIC_BOOLEAN_RESAMPLE_RADIUS = 2.0
 EIGHT_NEIGHBOR_KERNEL = np.array([[1, 1, 1], [1, 0, 1], [1, 1, 1]], dtype=np.uint8)
 FOUR_CONNECTED_KERNEL = np.array([[0, 1, 0], [1, 0, 1], [0, 1, 0]], dtype=np.uint8)
-PROFILE_RUNTIME_ENV = "OPENHCS_PROFILE_FUNCTION_RUNTIME"
 logger = logging.getLogger(__name__)
+runtime_profiler = RuntimeProfiler(logger)
 
 
 class MorphOperation(Enum):
@@ -6310,17 +6310,6 @@ def filter_physical_border_objects_numba(
     return (output, True)
 
 
-def profile_function_runtime_enabled() -> bool:
-    return os.environ.get(PROFILE_RUNTIME_ENV, "").lower() in {"1", "true", "yes"}
-
-
-def log_function_runtime_profile(label: str, seconds: float, **fields: object) -> None:
-    if not profile_function_runtime_enabled():
-        return
-    field_text = " ".join((f"{key}={value}" for key, value in fields.items()))
-    logger.info("RUNTIME_PROFILE %s %.6fs %s", label, seconds, field_text)
-
-
 @numpy_decorator(contract=ProcessingContract.PURE_2D)
 @special_inputs("labels")
 def erode_objects(
@@ -6356,14 +6345,14 @@ def erode_objects(
     phase_started_at = time.perf_counter()
     input_labels = ObjectLabelIdDomainStrategy.for_value(labels).present_ids(labels)
     input_count = len(input_labels)
-    log_function_runtime_profile(
+    runtime_profiler.log(
         "erode_objects_input_labels", time.perf_counter() - phase_started_at
     )
     phase_started_at = time.perf_counter()
     eroded = MorphologyBackendStrategy.for_memory_type().erode_labeled_objects(
         labels, footprint
     )
-    log_function_runtime_profile(
+    runtime_profiler.log(
         "erode_objects_backend", time.perf_counter() - phase_started_at
     )
     eroded_labels = ObjectLabelIdDomainStrategy.for_value(eroded).present_ids(eroded)
@@ -6376,7 +6365,7 @@ def erode_objects(
         )
         preservation = MidpointPreservationPolicy.for_footprint(footprint)
         eroded = preservation.preserve_missing_labels(labels, eroded, missing_labels)
-        log_function_runtime_profile(
+        runtime_profiler.log(
             "erode_objects_preserve_midpoints",
             time.perf_counter() - phase_started_at,
             missing=len(missing_labels),
@@ -6389,7 +6378,7 @@ def erode_objects(
         phase_started_at = time.perf_counter()
         eroded = relabel(eroded > 0).astype(labels.dtype)
         output_labels = tuple(range(1, int(eroded.max()) + 1))
-        log_function_runtime_profile(
+        runtime_profiler.log(
             "erode_objects_relabel", time.perf_counter() - phase_started_at
         )
     output_count = len(output_labels)
@@ -6413,10 +6402,10 @@ def erode_objects(
         relationship = object_label_identity_lineage_payload(
             source_labels, eroded_value
         )
-    log_function_runtime_profile(
+    runtime_profiler.log(
         "erode_objects_lineage", time.perf_counter() - phase_started_at
     )
-    log_function_runtime_profile(
+    runtime_profiler.log(
         "erode_objects_total", time.perf_counter() - total_started_at
     )
     return (

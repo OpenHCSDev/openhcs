@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
+from openhcs.core.runtime_profile import RuntimeProfileFieldValue
 from openhcs.core.image_shapes import ArrayShape
 from openhcs.core.artifacts import ArtifactSpec
 from openhcs.core.runtime_object_labels import (
@@ -15,7 +16,6 @@ from openhcs.core.runtime_image_values import (
 from openhcs.interop.cellprofiler.runtime.invocation import CellProfilerMeasurementImage
 from openhcs.core.steps.function_runtime import (
     RuntimeCallableArgument,
-    RuntimeProfileFieldValue,
 )
 
 
@@ -73,7 +73,7 @@ def dense_label_argument_stage_profile_fields(
 def cellprofiler_profile_payload_fields(
     prefix: str,
     value: RuntimeCallableArgument,
-) -> dict[str, RuntimeCallableArgument]:
+) -> dict[str, RuntimeProfileFieldValue]:
     """Return cheap payload shape/size fields for CellProfiler runtime profiling."""
     data = image_payload_data(value)
     data_array = data if isinstance(data, np.ndarray) else None
@@ -86,7 +86,7 @@ def cellprofiler_profile_payload_fields(
 
 def object_label_artifact_profile_fields(
     value: ObjectLabelValue,
-) -> dict[str, RuntimeCallableArgument]:
+) -> dict[str, RuntimeProfileFieldValue]:
     """Return object-label artifact fields for runtime adapter profiling."""
     source_component_metadata = None
     if value.source_component_metadata is not None:
