@@ -1,0 +1,11 @@
+# Shared label-color rendering acceptance
+
+The existing ImageModeRenderer owns rendering-mode selection; ColorImageModeRenderer owns the indexed-label palette and RGB blending capability. GrayToColorSchemeRunner composes unrelated channel weights, and memory backend provider keys do not select rendering modes.
+
+OverlayObjects currently rebuilds RGB planes, foreground gathers and blend terms, then stacks a volume. Consolidate palette generation and indexed RGB blending on ColorImageModeRenderer, preserving plane-local maximum normalization and exact float32 arithmetic. Remove the old private plane-renderer and palette after migrating actual consumers. Keep public image metadata/mask output projection on its existing owner.
+
+Registry preparation must derive registered renderer declarations through ImageModeRenderer, using existing persistent Numba preparation before READY. No runtime readiness fallback or parallel kernel roster.
+
+Retained evidence: label-color-renderer-replay-v1 contains original CPPipe-bound RescaleDNA/RescaleMemb input frontiers and current science-qualified Nuclei/Cells labels. A single private pair gave 79.725→13.423ms and 156.935→14.456ms with identical RGB bytes and unchanged inputs. This establishes only a numerical prototype: no whole-pipeline gain or original runtime metadata identity claim.
+
+Production gates: saved original pixel frontiers; existing mismatched-geometry and volume-context controls; Color-mode luminance and palette consumers; readonly labels and scalar opacity precision; registry preparation followed by no new runtime signatures. Preserve NaN/infinity, negative labels, modulo bounds, zero palettes, independent buffers, source channel projection and masks. Whole-pipeline/science acceptance will be combined with other qualified work rather than repeated here.
