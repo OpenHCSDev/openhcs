@@ -176,12 +176,11 @@ class ImagePayloadIntensityFields(ABC):
         """Return the common unit-interval quantization proof for this payload."""
         if self.source_plane_unit_interval_intensity_scales:
             present = tuple(
-                int(scale)
+                scale
                 for plane_index in range(len(self.source_plane_unit_interval_intensity_scales))
                 for scale in (self.unit_interval_intensity_scale_for_source_plane(plane_index),)
-                if scale is not None
             )
-            if not present:
+            if any(scale is None for scale in present):
                 return None
             first = present[0]
             if all(scale == first for scale in present):

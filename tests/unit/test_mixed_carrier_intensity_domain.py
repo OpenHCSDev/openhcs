@@ -182,3 +182,12 @@ def test_saved_output_context_retains_the_independent_composed_buffer_domain():
             image_payload_data(restored)[index])
         np.testing.assert_array_equal(normalize_image_payload_intensity(selected), normalized)
         assert image_payload_metadata(selected).has_normalized_intensity
+
+
+def test_common_quantization_requires_every_current_plane_not_only_known_members():
+    raw = source(np.full((2, 3), 128, dtype=np.uint8))
+    remapped = image_payload_metadata(raw).without_unit_interval_intensity_scale().payload_with(
+        np.full((2, 3), 0.123456, dtype=np.float32))
+    mixed = stack_image_payloads((raw, remapped), metadata_mode=ImagePayloadMetadataCompositionMode.STACK)
+    assert image_payload_metadata(mixed).common_unit_interval_intensity_scale() is None
+    assert image_payload_metadata(mixed).for_leading_source_plane(0).unit_interval_intensity_scale == 255
