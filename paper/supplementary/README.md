@@ -139,6 +139,34 @@ same observations with individual points, interquartile ranges and medians.
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
+## Supplementary Figure 10. Matched views of volumetric centroid candidates
+
+![Raw fluorescence, candidate centroids and combined views from a three-dimensional development continuation.](../figures/slas/h002_development_centroids.png){width=6in}
+
+An ordinary southern profile (top) and an upper profile (bottom) are shown as
+raw fluorescence, centroid points alone and combined views. The upper XY slice
+displays one centre; association with centres on adjacent Z planes remains
+unresolved in the archived three-dimensional review. Rows use zero-based Z
+indices 32 and 36, with raw windows 2750–22382 and 711–58564, respectively;
+gamma is 1. Contrast is fixed within each triplet. These are same-context
+development examples, not a fresh autonomous pass or an accuracy evaluation.
+No physical calibration or scale bar is inferred. The source is the Allen
+Institute for Cell Science `cells3d` nuclear channel, via the pinned Haase
+notebook collection; [CC0 distribution was confirmed by the Allen Institute](https://github.com/scikit-image/scikit-image/issues/6181#issuecomment-1012370105).
+
+The [source receipt](task_only_analysis/h002-development-source-receipt.json)
+retains the six original capture payloads and supporting multi-plane views.
+The [render receipt](task_only_analysis/h002-development-render-receipt.json)
+records unchanged PNG embedding and the identical full-canvas clip used for
+each panel. The [CSV comparison](task_only_analysis/h002-development-csv-comparison.json)
+shows that prominence trials removed boundary rows while retained centroid
+and volume measurements were unchanged; it does not prove voxelwise mask
+equality or one centre per biological nucleus (Supplementary Data 8).
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
 ## Supplementary Data 1. CellProfiler workflow comparison
 
 This supplement indexes source tables and evaluation records. Figure scripts
