@@ -29,6 +29,8 @@ TASKS = (
     ("nucleus split watershed", "openhcs_segmentation_diagnostics"),
     ("zero growth cytoplasm", "openhcs_segmentation_diagnostics"),
     ("all foreground threshold units", "openhcs_segmentation_diagnostics"),
+    ("strong seed component retention", "openhcs_segmentation_diagnostics"),
+    ("near-track nuisance fragments", "openhcs_segmentation_diagnostics"),
     ("volume anisotropic Z spacing", "openhcs_measurement_interpretation"),
     ("Pearson Manders Costes", "openhcs_measurement_interpretation"),
     ("current processing intensity units", "openhcs_measurement_interpretation"),
@@ -148,6 +150,7 @@ def test_complete_projected_skill_sync_preserves_canonical_resource_bytes(tmp_pa
         ("openhcs_architecture_quick_start", "task-authorization"),
         ("openhcs_measurement_interpretation", "current-processing-intensity-units"),
         ("openhcs_segmentation_diagnostics", "foreground-before-unclumping"),
+        ("openhcs_segmentation_diagnostics", "separate-support-recovery-from-rooted-graph-validity"),
     ):
         request = KnowledgeBaseDocumentRequest.from_fields(
             document_id=document_id, section_id=section_id, max_chars=4_000
