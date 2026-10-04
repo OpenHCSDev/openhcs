@@ -116,6 +116,7 @@ def test_nonsequential_axis_compilation_finishes_its_initial_session(monkeypatch
     request = SimpleNamespace(
         context_for=lambda axis_id: events.append(f"context:{axis_id}") or context,
         orchestrator=SimpleNamespace(),
+        materialization_planner=SimpleNamespace(),
         enable_visualizer_override=False,
     )
     monkeypatch.setattr(
@@ -136,7 +137,7 @@ def test_nonsequential_axis_compilation_finishes_its_initial_session(monkeypatch
     monkeypatch.setattr(
         PipelineCompiler,
         "plan_materialization_flags",
-        lambda planned: (
+        lambda planned, planner: (
             events.append("materialization") if planned is session else None
         ),
     )
@@ -260,6 +261,7 @@ def test_axis_compilation_request_preserves_effective_auto_add_flag():
         path_resolver=SimpleNamespace(),
         global_step_axis_filters={},
         source_projections_by_axis={},
+        materialization_planner=SimpleNamespace(),
         enable_visualizer_override=False,
         is_zmq_execution=True,
     )

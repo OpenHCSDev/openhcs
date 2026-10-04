@@ -108,16 +108,7 @@ def test_path_zero_keeps_inherited_step_checkpoint_independent(tmp_path) -> None
         ),
     )
     context = SimpleNamespace(axis_id="A01", step_plans=[plan])
-    MaterializationFlagPlanner.prepare_pipeline_flags(
-        context,
-        [
-            SimpleNamespace(
-                processing_config=SimpleNamespace(
-                    input_source=InputSource.PREVIOUS_STEP,
-                )
-            )
-        ],
-        plate_path=orchestrator.plate_path,
+    MaterializationFlagPlanner(
         pipeline_config=SimpleNamespace(
             vfs_config=VFSConfig(
                 read_backend=Backend.DISK,
@@ -125,7 +116,19 @@ def test_path_zero_keeps_inherited_step_checkpoint_independent(tmp_path) -> None
             ),
             path_planning_config=effective_config.path_planning_config,
         ),
+        microscope_handler=SimpleNamespace(),
+        filemanager=object(),
+        input_dir=Path("/plate"),
         available_axis_values=("A01", "B02"),
+    ).prepare_pipeline_flags(
+        context,
+        [
+            SimpleNamespace(
+                processing_config=SimpleNamespace(
+                    input_source=InputSource.PREVIOUS_STEP
+                )
+            )
+        ],
     )
 
     assert plan.write_backend == Backend.MEMORY.value
