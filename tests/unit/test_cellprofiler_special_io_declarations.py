@@ -431,11 +431,11 @@ def test_optional_object_special_input_does_not_consume_primary_image() -> None:
     objects = ArtifactSpec.input("Nuclei", ObjectLabelsArtifactType)
 
     assert MeasureImageIntensityModule.primary_image_inputs(
-        measure_image_intensity,
+        CallableContract.from_prepared_callable(measure_image_intensity),
         (image,),
     ) == (image,)
     assert MeasureImageIntensityModule.primary_image_inputs(
-        measure_image_intensity_objects,
+        CallableContract.from_prepared_callable(measure_image_intensity_objects),
         (image, objects),
     ) == (image,)
 

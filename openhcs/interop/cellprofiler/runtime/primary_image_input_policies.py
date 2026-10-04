@@ -2,16 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import replace
 
 from openhcs.core.artifacts import (
     ArtifactSpec,
 )
+from openhcs.core.callable_contract import CallableContract
 from openhcs.core.runtime_object_labels import ObjectLabelValue
 from openhcs.core.steps.function_runtime import (
     RuntimeCallableKwargs,
-    RuntimeFunctionOutput,
 )
 from openhcs.interop.cellprofiler.runtime.invocation import CellProfilerImageRequest
 
@@ -22,21 +21,21 @@ class ObjectLabelDrivenPrimaryImageInputPolicy:
     @classmethod
     def primary_image_inputs(
         cls,
-        func: Callable[..., RuntimeFunctionOutput],
+        contract: CallableContract,
         declared_inputs: tuple[ArtifactSpec, ...],
     ) -> tuple[ArtifactSpec, ...]:
-        del cls, func, declared_inputs
+        del cls, contract, declared_inputs
         return ()
 
     @classmethod
     def invocation_domain_inputs(
         cls,
-        func: Callable[..., RuntimeFunctionOutput],
+        contract: CallableContract,
         declared_inputs: tuple[ArtifactSpec, ...],
     ) -> tuple[ArtifactSpec, ...]:
         """Return the exact object-label input that owns one invocation."""
 
-        del func
+        del contract
         binding = cls.primary_image_domain_input_binding()
         parameter_name = binding.require_runtime_parameter_name()
         artifact_type = binding.require_artifact_type()

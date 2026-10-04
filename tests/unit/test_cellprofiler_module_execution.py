@@ -449,6 +449,38 @@ def _module_executor(
     return executor
 
 
+
+def test_compiled_image_request_does_not_repeat_authored_callable_preparation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    module = CellProfilerModule.require_module("Crop")
+    raw = module.require_callable()
+    source_spec = ArtifactSpec.input("Input", ImageArtifactType)
+    contract = _compiled_callable_contract(raw, artifact_inputs=(source_spec,))
+    image = np.full((4, 5), 0.25, dtype=np.float32)
+    adapter = _FakeCellProfilerRuntime(
+        {source_spec.name: image},
+        callable_contract=contract,
+        artifact_input_edges=(_artifact_input_edge_for_test(source_spec),),
+    )
+
+    def reject_authored_preparation(*args, **kwargs):
+        raise AssertionError("Runtime re-entered authored callable preparation")
+
+    monkeypatch.setattr(CallableContract, "from_callable", reject_authored_preparation)
+    monkeypatch.setattr(
+        module, "_install_callable_parameter_help", reject_authored_preparation
+    )
+    executor = CellProfilerModuleExecutor(raw, contract)
+    image_request = executor._image_request(
+        image, adapter,
+        module_type=executor.module_type(),
+        active_input_specs=contract.artifact_inputs.specs,
+    )
+
+    assert image_request.source_aliases == (source_spec.name,)
+    np.testing.assert_array_equal(image_payload_data(image_request.payload), image)
+
 def test_default_invocation_keeps_compiled_source_bindings_outside_anchor_group() -> (
     None
 ):
@@ -9953,7 +9985,7 @@ def test_mask_objects_uses_object_labels_as_primary_execution_domain() -> None:
     module_type = MaskObjectsModule
     assert (
         module_type.primary_image_inputs(
-            mask_objects,
+            contract,
             contract.artifact_inputs,
         )
         == ()

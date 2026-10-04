@@ -1033,7 +1033,9 @@ class CellProfilerModuleArtifactContracts:
 
         del module, binding, name, step_context, output_position
         primary_images = cls.primary_image_inputs(
-            cls.require_callable(invocation_key.function_name),
+            CallableContract.from_prepared_callable(
+                cls.require_callable(invocation_key.function_name)
+            ),
             artifact_inputs.specs,
         )
         lineage_inputs = ArtifactSpecCollection(
@@ -1171,7 +1173,7 @@ class CellProfilerModuleArtifactContracts:
             artifact_inputs=ArtifactSpecCollection(inputs),
         )
         remaining_inputs = list(inputs)
-        primary_image_inputs = cls.primary_image_inputs(func, inputs)
+        primary_image_inputs = cls.primary_image_inputs(callable_contract, inputs)
         for primary_image_input in primary_image_inputs:
             remaining_inputs.remove(primary_image_input)
         artifact_inputs = ArtifactSpecCollection(

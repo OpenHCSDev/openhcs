@@ -247,7 +247,7 @@ class CellProfilerMeasurementTableModule(ABC):
             request.callable_contract
         )
         primary_image_inputs = module_type.primary_image_inputs(
-            request.callable_contract.resolve_canonical_raw_callable(),
+            request.callable_contract,
             request.callable_contract.artifact_inputs.specs,
         )
         current_source_name = request.source.source_image_name

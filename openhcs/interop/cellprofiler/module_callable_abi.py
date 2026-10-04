@@ -166,15 +166,12 @@ class CellProfilerModuleCallableABI:
     @classmethod
     def primary_image_inputs(
         cls,
-        func: "Callable[..., RuntimeFunctionOutput]",
+        contract: CallableContract,
         declared_inputs: tuple[ArtifactSpec, ...],
     ) -> tuple[ArtifactSpec, ...]:
         """Return non-special image inputs that drive invocation slices."""
 
-        if (
-            CallableContract.from_callable(func).execution_scope
-            is FunctionStepExecutionScope.PLATE
-        ):
+        if contract.execution_scope is FunctionStepExecutionScope.PLATE:
             return ()
         image_inputs = ArtifactSpecCollection(declared_inputs).of_artifact_type(
             ImageArtifactType
@@ -188,12 +185,12 @@ class CellProfilerModuleCallableABI:
     @classmethod
     def invocation_domain_inputs(
         cls,
-        func: "Callable[..., RuntimeFunctionOutput]",
+        contract: CallableContract,
         declared_inputs: tuple[ArtifactSpec, ...],
     ) -> tuple[ArtifactSpec, ...]:
         """Return the inputs whose component scope owns one invocation."""
 
-        primary_images = cls.primary_image_inputs(func, declared_inputs)
+        primary_images = cls.primary_image_inputs(contract, declared_inputs)
         if primary_images:
             return primary_images
         object_inputs = ArtifactSpecCollection(declared_inputs).of_artifact_type(

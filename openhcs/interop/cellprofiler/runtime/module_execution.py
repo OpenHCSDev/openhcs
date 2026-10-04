@@ -179,15 +179,7 @@ class CellProfilerModuleExecutor:
                 f"{self.callable_contract.function_name!r} does not match resolved "
                 f"raw callable {self.raw_func.__name__!r}."
             )
-        module_type = self.module_type()
-        if self.raw_func is not module_type.require_callable(
-            self.callable_contract.function_name
-        ):
-            raise ValueError(
-                f"CellProfiler callable {self.callable_contract.function_name!r} "
-                f"is not the declaration-owned callable for module "
-                f"{module_type.require_module_name()!r}."
-            )
+        self.module_type()
 
     def module_type(self) -> type[CellProfilerModule]:
         """Return the nominal module declaration that owns this callable."""
@@ -606,7 +598,7 @@ class CellProfilerModuleExecutor:
             current_image=current_image,
         )
         return module_type.primary_image_inputs(
-            self.raw_func,
+            self.callable_contract,
             request.primary_image_inputs,
         )
 
@@ -1303,7 +1295,7 @@ class CellProfilerModuleExecutor:
             current_image=current_image,
         )
         image_inputs = module_type.primary_image_inputs(
-            self.raw_func,
+            self.callable_contract,
             input_binding.primary_image_inputs,
         )
         runtime_projection = RuntimePlaneAxisValueProjection.from_projector(

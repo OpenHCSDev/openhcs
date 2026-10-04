@@ -729,7 +729,9 @@ class MeasurementArtifactOutputModule(CellProfilerModule):
             for artifact_input in artifact_inputs.specs
         )
         invocation_domain_inputs = cls.invocation_domain_inputs(
-            cls.require_callable(invocation_key.function_name),
+            CallableContract.from_prepared_callable(
+                cls.require_callable(invocation_key.function_name)
+            ),
             artifact_inputs.specs,
         )
         return (
