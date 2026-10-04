@@ -823,6 +823,20 @@ identifies the independently verified 21 source and 119 payload entries;
 corrected regional captures, exact process closure and client exit 2 remain
 distinct from scientific completion.
 
+A later independent retinal repeat retained 118 detector instances and 119
+exported contours. It preserved a conspicuous bright pair and repaired an
+additional body split through increased marker smoothing. Distributed review
+still found questionable partitions, irregular body extents and uncertain
+weak-body admission. These local gains are useful partial autonomous results,
+not evidence of a complete cell census or a manual-reference accuracy score.
+The [retinal repeat outcome record](task_only_analysis/retinal-fresh656-outcome.json)
+binds the final pipeline and independently checked 215 manifest entries and
+82 saved PNGs. Three recorded journal prefixes were checked; this does not
+claim a sealed outer author journal. Exact owned-process closure and client
+exit 2 are recorded separately. Figure 9 depicts the earlier 109-object run,
+not this repeat; the [detailed account](task_only_analysis.md) retains its
+parameter changes and limits of interpretation.
+
 A fresh whole-volume centre author matched all 15 manual reference annotations
 at the predeclared 30-voxel distance, with 10 unmatched predictions; at 10
 voxels it matched 14 of 15. First/final centres and scores were identical,
@@ -855,6 +869,19 @@ explicitly identified. These outputs support qualified exploratory measurements,
 not an exact census or validated cell boundaries. The
 [paired-channel outcome record](task_only_analysis/h003-postpause-outcome.json)
 identifies the independently verified 148-artifact freeze and consumed sources.
+
+A subsequent independent author recovered three missed nuclei in the same
+released field, then restored a dim nucleus and clipped border object lost
+during the initial repair. Separating core detection from boundary growth
+produced 54 nuclear instances and 54 associated actin territories. One territory
+had no extra-nuclear growth; crowded body divisions remained uncertain.
+The [paired-field repair record](task_only_analysis/h003-fresh656-local-repair.json)
+retains the exact pipeline, custom audit, source provenance and independently
+checked 83 artifact entries, including one journal prefix. These support useful
+local nuclear recovery, not a manual-reference accuracy score or a complete
+biological cell census. Both owned processes were independently absent after
+typed closure; client exit 2 is retained separately. Original failed attempts
+and the operational staging deviation remain in the author's report.
 
 The report also retains a fresh BBBC007 repeat across all 16 DNA/actin pairs.
 Its final 1,335 primary and secondary label identities reconcile, but dense
