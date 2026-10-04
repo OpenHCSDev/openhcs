@@ -218,6 +218,32 @@ def test_not_started_dispatch_is_cancelled_without_invoking_callback():
         executor.close()
 
 
+@pytest.mark.parametrize("queued", (False, True), ids=("ui-direct", "queued-started"))
+def test_callback_timeout_after_side_effect_is_not_prestart_cancellation(queued):
+    executor = McpTransportExecutor()
+    calls = []
+    original = UiThreadDispatchTimeoutError("Callback timed out after its side effect.")
+
+    def callback():
+        calls.append("side-effect")
+        raise original
+
+    async def exercise():
+        return await asyncio.to_thread(executor.dispatcher.call, callback)
+
+    try:
+        with pytest.raises(UiThreadDispatchTimeoutError) as caught:
+            if queued:
+                executor.run(exercise)
+            else:
+                executor.dispatcher.call(callback)
+        assert caught.value is original
+        assert not isinstance(caught.value, McpQueuedCallNotStartedError)
+        assert calls == ["side-effect"]
+    finally:
+        executor.close()
+
+
 def test_closed_dispatcher_rejects_without_invocation():
     executor = McpTransportExecutor()
     calls = []

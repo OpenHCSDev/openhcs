@@ -54,15 +54,19 @@ class McpMainThreadDispatcher(UiThreadDispatcher):
         self, callback: Callable[[], ResultT], *, timeout_ms: int = 5000
     ) -> ResultT:
         request_context = copy_context()
-        try:
-            return super().call(
-                lambda: request_context.run(callback), timeout_ms=timeout_ms
-            )
-        except UiThreadDispatchTimeoutError as error:
-            # The original owner raises only after cancel() wins before start;
-            # a started call waits its real completion instead. No process probe,
-            # second dispatch clock, or retry decision belongs to this boundary.
-            raise McpQueuedCallNotStartedError(str(error)) from error
+        return super().call(
+            lambda: request_context.run(callback), timeout_ms=timeout_ms
+        )
+
+    @staticmethod
+    def _dispatch_timeout_error() -> UiThreadDispatchTimeoutError:
+        """Project only the original dispatch owner's successful cancellation.
+
+        The owner passes this error to its queued call's atomic cancel(). A
+        callback's own exception, including a dispatch timeout after a side
+        effect, remains the callback outcome and never passes through this hook.
+        """
+        return McpQueuedCallNotStartedError("Timed out waiting for UI thread dispatch.")
 
     async def invoke(self, callback: Callable[[], ResultT]) -> ResultT:
         """Await the original affine call without blocking SDK notifications."""
