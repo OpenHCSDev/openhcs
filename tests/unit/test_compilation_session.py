@@ -35,12 +35,13 @@ from openhcs.core.pipeline.compiler import AxisCompilationRequest, PipelineCompi
 from openhcs.core.pipeline.function_contracts import artifact_inputs
 from openhcs.core.pipeline.path_planner import (
     PathPlanner,
-    PathPlannerArtifactStage,
     PathPlannerExecutionGroups,
 )
 from openhcs.core.steps.abstract import AbstractStep
 from openhcs.core.source_bindings import (
     EMPTY_SOURCE_BINDINGS,
+    CompiledSourceBindingPlan,
+    CompiledSourceUniversePlan,
     ComponentSelector,
     MetadataExtractionRule,
     MetadataSource,
@@ -229,19 +230,22 @@ def _compile_source_plans_for_contract(
     func,
     main_input_dependency: StepInputDependency = StepInputDependency.pipeline_start(),
 ):
-    planner = SimpleNamespace(
-        session=session,
-        artifact_context=ArtifactDeclarationStepContext.empty(),
-    )
-    stage = PathPlannerArtifactStage(planner)
-    execution_bindings = stage.source_bindings_for_contracts(
-        snapshot,
+    execution_bindings = CompiledSourceBindingPlan.from_contracts(
+        snapshot.source_bindings,
         (CallableContract.from_callable(func),),
         main_input_dependency,
+        ArtifactDeclarationStepContext.empty().available_artifacts,
     )
-    return execution_bindings, stage.compile_source_plans(
-        snapshot,
-        execution_bindings,
+    fields = snapshot.source_bindings.metadata_fields_for_literal_types(
+        session.source_literal_field_types
+    )
+    compiled = (
+        replace(execution_bindings, metadata_fields=fields)
+        if execution_bindings.bindings else execution_bindings
+    )
+    return execution_bindings, (
+        compiled,
+        CompiledSourceUniversePlan.from_source_binding_plan(compiled),
     )
 
 
@@ -274,7 +278,7 @@ def test_axis_compilation_request_preserves_effective_auto_add_flag():
     )
 
 
-def test_compilation_session_shares_resolved_pipeline_and_owns_axis_plans():
+def test_compilation_session_shares_resolved_pipeline_and_owns_axis_plans(monkeypatch):
     step = FunctionStep(func=_identity, name="step")
     step_state = SimpleNamespace(scope_id="plate::functionstep_0")
     session = CompilationSession.from_context(
@@ -282,7 +286,12 @@ def test_compilation_session_shares_resolved_pipeline_and_owns_axis_plans():
         orchestrator=_orchestrator(),
         global_config=GlobalPipelineConfig(),
         pipeline=ResolvedPipelineDefinition(
-            steps=(_resolved_step(step),),
+            steps=(_resolved_step(
+                step,
+                source_bindings=StepSourceBindingsConfig(
+                    enabled=True, bindings=(NamedSourceBinding(alias="DNA"),)
+                ),
+            ),),
             step_scope_ids={0: step_state.scope_id},
             step_provenance={0: {}},
         ),
@@ -298,10 +307,57 @@ def test_compilation_session_shares_resolved_pipeline_and_owns_axis_plans():
     assert session.pipeline.steps[0].name == "step"
     assert session.plan(0).step_name == "step"
 
+    from openhcs.core.source_metadata import (
+        ORIGINAL_SOURCE_METADATA_FIELD,
+        DurableSourceMetadata,
+        SourceMetadataFields,
+    )
+    from openhcs.core.source_workspace_projection import (
+        VirtualWorkspaceSourceProjection,
+    )
+
+    first_graph = session.pipeline.artifact_graphs[0]
+    assert first_graph.main_input_dependency == StepInputDependency.pipeline_start()
+    assert first_graph.source_binding_plan.bindings == (
+        session.pipeline.steps[0].source_bindings.bindings[0],
+    )
+    calls = []
+    infer = SourceMetadataFields.literal_field_types.__func__
+
+    def infer_fields(cls, records):
+        calls.append(tuple(records))
+        return infer(cls, calls[-1])
+
+    monkeypatch.setattr(
+        SourceMetadataFields, "literal_field_types", classmethod(infer_fields)
+    )
+    for axis, value, expected_type in (("A01", 1, int), ("A02", "Drug", str)):
+        context = _context()
+        context.axis_id = axis
+        other = CompilationSession.from_context(
+            context=context,
+            orchestrator=_orchestrator(),
+            global_config=GlobalPipelineConfig(),
+            pipeline=session.pipeline,
+            source_workspace_projection=VirtualWorkspaceSourceProjection(
+                source_refs_by_virtual_path={},
+                source_metadata_by_path={
+                    "image": DurableSourceMetadata.from_mapping({
+                        ORIGINAL_SOURCE_METADATA_FIELD: {"Dose": value}
+                    }),
+                },
+            ),
+        )
+        assert other.pipeline.artifact_graphs[0] is first_graph
+        assert other.source_literal_field_types == {"Dose": expected_type}
+        assert other.source_literal_field_types == {"Dose": expected_type}
+        assert other.plans is not session.plans
+    assert len(calls) == 2
+
 
 def test_resolved_declarations_reuse_contracts_but_keep_axis_and_author_epochs(monkeypatch):
-    from openhcs.core.pipeline.artifact_planning import extract_artifact_declarations
     from openhcs.core.invocation_artifacts import InvocationContractPlan
+    from openhcs.core.pipeline.artifact_planning import extract_artifact_declarations
 
     @artifact_inputs("grid_dimensions")
     def needs_grid(image, grid_dimensions, *, sigma=1):

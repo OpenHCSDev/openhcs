@@ -4,7 +4,7 @@ import inspect
 from collections import Counter, OrderedDict, defaultdict
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, replace
-from typing import Any, Callable, ClassVar, Iterable, Iterator, Mapping, Optional
+from typing import Any, Callable, ClassVar, Iterable, Iterator, Mapping, Optional, TYPE_CHECKING
 
 from openhcs.core.artifact_key_selection import ArtifactPlanKeySelector
 from openhcs.core.artifacts import (
@@ -45,6 +45,15 @@ from openhcs.processing.materialization import (
     ROIOptions,
     TerminalMaterializationSpec,
 )
+
+from openhcs.constants.input_source import InputSource
+from openhcs.core.callable_contract import FunctionStepExecutionScope
+from openhcs.core.source_bindings import CompiledSourceBindingPlan, StepSourceBindingsConfig
+from openhcs.core.step_dependencies import StepInputDependency
+from openhcs.core.steps.function_step import FunctionStep
+
+if TYPE_CHECKING:
+    from openhcs.core.steps.abstract import AbstractStep
 
 class AutomaticArtifactOutputMaterializationStrategy(
     ArtifactTypeStrategyMatchMixin,
@@ -229,6 +238,12 @@ class ArtifactGraph:
     invocation_declarations: Mapping[FunctionInvocationKey, ArtifactPlanKeySelector] = (
         field(default_factory=dict, repr=False)
     )
+    main_input_dependency: StepInputDependency = field(
+        default_factory=StepInputDependency.unresolved
+    )
+    source_binding_plan: CompiledSourceBindingPlan = field(
+        default_factory=CompiledSourceBindingPlan.empty
+    )
     _input_lineage_order: (
         tuple[tuple[ArtifactSpecRef, tuple[ArtifactSpecRef, ...]], ...] | None
     ) = field(default=None, init=False, repr=False, compare=False)
@@ -236,6 +251,146 @@ class ArtifactGraph:
     _config_bound_parameters: tuple[inspect.Parameter, ...] | None = field(
         default=None, init=False, repr=False, compare=False
     )
+
+    def resolve_main_input_dependency(
+        self,
+        step: "AbstractStep",
+        step_index: int,
+        *,
+        execution_scope: FunctionStepExecutionScope,
+        source_bindings: StepSourceBindingsConfig,
+        context: ArtifactDeclarationStepContext,
+        declared: Mapping[ArtifactSpecRef, ArtifactOutputPlan],
+        step_scope_ids: Mapping[int, str],
+        previous_dependency: StepInputDependency | None,
+        previous_preserves_input_main_flow: bool,
+    ) -> StepInputDependency:
+        """Resolve fixed topology or a standalone planner's explicit producer facts."""
+        if (
+            isinstance(step, FunctionStep)
+            and execution_scope is FunctionStepExecutionScope.PLATE
+        ):
+            return StepInputDependency.no_main_flow()
+
+        if (
+            step_index == 0
+            or step.processing_config.input_source == InputSource.PIPELINE_START
+        ):
+            return StepInputDependency.pipeline_start()
+
+        local_output_refs = frozenset(
+            producer.spec.ref() for producer in self.producers
+        )
+        main_input_specs = tuple(
+            dict.fromkeys(
+                consumer.spec
+                for consumer in self.non_plan_consumers
+                if not source_bindings.declares_artifact_ref(consumer.spec.ref())
+                and consumer.spec.ref().for_plan_type(ArtifactOutputPlan)
+                not in local_output_refs
+            )
+        )
+        producer_step_indices: list[int | str] = []
+        for main_input_spec in main_input_specs:
+            producer_ref = main_input_spec.ref().for_plan_type(ArtifactOutputPlan)
+            producer_plan = declared.get(producer_ref)
+            context_producer = (
+                context.available_artifact_producer_for(
+                    main_input_spec
+                )
+            )
+            candidate_indices = tuple(
+                dict.fromkeys(
+                    candidate
+                    for candidate in (
+                        (
+                            None
+                            if producer_plan is None
+                            else producer_plan.producer_step_index
+                        ),
+                        (
+                            None
+                            if context_producer is None
+                            else context_producer.producer_step_index
+                        ),
+                    )
+                    if candidate is not None
+                )
+            )
+            if not candidate_indices:
+                from openhcs.core.pipeline.path_planner import MissingArtifactInputError
+
+                raise MissingArtifactInputError(
+                    step_id=step_index,
+                    artifact_key=producer_ref.name,
+                    step_name=step.name,
+                )
+            if len(candidate_indices) > 1:
+                raise ValueError(
+                    f"Main-flow artifact {producer_ref!r} has conflicting producer "
+                    f"steps {candidate_indices!r}."
+                )
+            producer_step_indices.append(candidate_indices[0])
+
+        producer_step_indices = tuple(dict.fromkeys(producer_step_indices))
+        if len(producer_step_indices) > 1:
+            raise ValueError(
+                f"Step {step.name!r} declares main-flow inputs from multiple "
+                f"producer steps {producer_step_indices!r}: {main_input_specs!r}."
+            )
+        if producer_step_indices:
+            producer_index = producer_step_indices[0]
+            if not isinstance(producer_index, int):
+                raise TypeError(
+                    f"Main-flow artifact producer for step {step.name!r} has "
+                    f"non-integer step identity {producer_index!r}."
+                )
+            producer_scope_id = step_scope_ids[producer_index]
+            if not producer_scope_id:
+                raise ValueError(
+                    f"Main-flow artifact producer step {producer_index} has no "
+                    "compiled scope identity."
+                )
+            return StepInputDependency.step_output(
+                source_step_index=producer_index,
+                source_step_scope_id=producer_scope_id,
+            )
+
+        producer_index = step_index - 1
+        if previous_preserves_input_main_flow:
+            if previous_dependency is None or not previous_dependency.is_resolved:
+                raise RuntimeError(
+                    f"Main-flow-preserving step {producer_index} has no resolved "
+                    "main-input dependency."
+                )
+            return previous_dependency
+
+        producer_scope_id = step_scope_ids[producer_index]
+        return StepInputDependency.step_output(
+            source_step_index=producer_index,
+            source_step_scope_id=producer_scope_id,
+        )
+
+    def with_source_binding_plan(
+        self,
+        config: StepSourceBindingsConfig,
+        dependency: StepInputDependency,
+        context: ArtifactDeclarationStepContext,
+    ) -> "ArtifactGraph":
+        """Capture fixed source routing once per graph."""
+        binding_plan = CompiledSourceBindingPlan.from_contracts(
+            config,
+            () if self.pattern is None else (
+                item.contract for item in self.pattern.iter_items()
+            ),
+            dependency,
+            context.available_artifacts,
+        )
+        return replace(
+            self,
+            main_input_dependency=dependency,
+            source_binding_plan=binding_plan,
+        )
 
     def config_parameters_for_step(
         self, step_name: str
