@@ -767,7 +767,6 @@ from openhcs.core.runtime_output_matching import (
     RuntimeOutputBundle,
 )
 from openhcs.core.source_plane_alignment import (
-    SourcePayloadPlaneIdentitySequence,
     SourcePlaneIdentitySequenceAlignment,
 )
 from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
@@ -1640,10 +1639,9 @@ class RelateObjectsRelationshipMeasurementRows(RelationshipMeasurementRows):
         identity_policy = (
             self.request.adapter.request.context.source_image_set_identity_policy
         )
-        child_axis = SourcePayloadPlaneIdentitySequence(
-            child_labels,
-            identity_policy,
-        ).runtime_axis_identities()
+        child_axis = image_payload_metadata(
+            child_labels
+        ).source_provenance.image_set_axis(identity_policy)
         if not child_axis:
             raise ValueError(
                 f"RelateObjects child measurements for {child_spec.name!r} require "

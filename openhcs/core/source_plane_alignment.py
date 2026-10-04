@@ -2,126 +2,17 @@
 
 from __future__ import annotations
 
-from collections import OrderedDict
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, ClassVar
+from typing import ClassVar
 
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    image_payload_metadata,
-)
-from openhcs.core.source_image_provenance import SourceImageProvenanceIdentity
 from openhcs.core.source_matching import (
     SourceImageSetIdentity,
     SourceImageSetIdentityCompatibility,
     SourceImageSetIdentityPairPredicate,
-    SourceImageSetIdentityPolicy,
 )
 
 SourcePlaneIdentitySequence = tuple[frozenset[SourceImageSetIdentity], ...]
-SourcePayloadPlaneIdentitySequenceCacheValue = SourcePlaneIdentitySequence
-_source_payload_plane_identity_sequence_cache_size = 65536
-
-
-@dataclass(frozen=True, slots=True)
-class SourcePayloadPlaneIdentitySequenceCacheKey:
-    """Stable identity key for cached per-plane source identity projection."""
-
-    source_provenance_identity: SourceImageProvenanceIdentity
-    policy: SourceImageSetIdentityPolicy
-
-
-_source_payload_plane_identity_sequence_cache: OrderedDict[
-    SourcePayloadPlaneIdentitySequenceCacheKey,
-    SourcePayloadPlaneIdentitySequenceCacheValue,
-] = OrderedDict()
-
-
-def _cached_source_payload_plane_identity_sequence(
-    key: SourcePayloadPlaneIdentitySequenceCacheKey,
-) -> SourcePayloadPlaneIdentitySequenceCacheValue | None:
-    try:
-        value = _source_payload_plane_identity_sequence_cache[key]
-    except KeyError:
-        return None
-    _source_payload_plane_identity_sequence_cache.move_to_end(key)
-    return value
-
-
-def _store_source_payload_plane_identity_sequence(
-    key: SourcePayloadPlaneIdentitySequenceCacheKey,
-    value: SourcePayloadPlaneIdentitySequenceCacheValue,
-) -> SourcePayloadPlaneIdentitySequenceCacheValue:
-    _source_payload_plane_identity_sequence_cache[key] = value
-    _source_payload_plane_identity_sequence_cache.move_to_end(key)
-    if (
-        len(_source_payload_plane_identity_sequence_cache)
-        > _source_payload_plane_identity_sequence_cache_size
-    ):
-        _source_payload_plane_identity_sequence_cache.popitem(last=False)
-    return value
-
-
-@dataclass(frozen=True, slots=True)
-class SourcePayloadPlaneIdentity:
-    """Source image-set identities represented by one runtime payload plane."""
-
-    metadata: ImagePayloadMetadata
-    policy: SourceImageSetIdentityPolicy
-
-    @classmethod
-    def from_payload(
-        cls,
-        payload: Any,
-        policy: SourceImageSetIdentityPolicy,
-    ) -> "SourcePayloadPlaneIdentity":
-        return cls(image_payload_metadata(payload), policy)
-
-    def identities(self) -> frozenset[SourceImageSetIdentity]:
-        return self.metadata.source_provenance.image_set_identities(self.policy)
-
-
-@dataclass(frozen=True, slots=True)
-class SourcePayloadPlaneIdentitySequence:
-    """Per-plane source identities for stack-like or already-sliced payloads."""
-
-    payload: Any
-    policy: SourceImageSetIdentityPolicy
-
-    def identities(self) -> SourcePlaneIdentitySequence:
-        metadata = image_payload_metadata(self.payload)
-        cache_key = SourcePayloadPlaneIdentitySequenceCacheKey(
-            metadata.source_provenance.equality_identity,
-            self.policy,
-        )
-        cached = _cached_source_payload_plane_identity_sequence(cache_key)
-        if cached is not None:
-            return cached
-        return _store_source_payload_plane_identity_sequence(
-            cache_key,
-            metadata.source_provenance.image_set_plane_identities(self.policy),
-        )
-
-    def runtime_axis_identities(self) -> SourcePlaneIdentitySequence:
-        """Return the image-set identity axis carried by this payload."""
-        metadata = image_payload_metadata(self.payload)
-        return metadata.source_provenance.image_set_axis(self.policy)
-
-    @property
-    def has_identity(self) -> bool:
-        return any(self.identities())
-
-    @classmethod
-    def from_payloads(
-        cls,
-        payloads: Sequence[Any],
-        policy: SourceImageSetIdentityPolicy,
-    ) -> SourcePlaneIdentitySequence:
-        return tuple(
-            SourcePayloadPlaneIdentity.from_payload(payload, policy).identities()
-            for payload in payloads
-        )
 
 
 @dataclass(frozen=True, slots=True)

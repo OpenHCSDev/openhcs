@@ -16,7 +16,6 @@ from openhcs.core.artifacts import (
 from openhcs.core.runtime_object_label_domains import ObjectLabelDomainScope
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.source_plane_alignment import (
-    SourcePayloadPlaneIdentitySequence,
     SourcePlaneIdentitySequenceAlignment,
 )
 from openhcs.core.runtime_image_values import (
@@ -193,10 +192,9 @@ class CellProfilerOutputRecordRequest(RuntimeInputBindingRequest):
             )
         )
         image_set_axes = tuple(
-            SourcePayloadPlaneIdentitySequence(
-                value,
-                identity_policy,
-            ).runtime_axis_identities()
+            image_payload_metadata(value).source_provenance.image_set_axis(
+                identity_policy
+            )
             for value in artifact_values
         )
         unaligned_indexes = SourcePlaneIdentitySequenceAlignment.unaligned_axis_indexes(

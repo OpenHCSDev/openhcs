@@ -41,7 +41,6 @@ from openhcs.core.runtime_slice_alignment import (
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.source_plane_alignment import (
-    SourcePayloadPlaneIdentitySequence,
     SourcePlaneIdentitySequenceAlignment,
 )
 from openhcs.core.runtime_measurements import (
@@ -560,14 +559,12 @@ class RuntimeInputBindingRequest:
         identity_policy = SourceImageSetIdentityPolicy.from_source_bindings(
             self.adapter.request.source_binding_plan
         )
-        image_axis = SourcePayloadPlaneIdentitySequence(
-            broadcast_source,
-            identity_policy,
-        ).runtime_axis_identities()
-        value_axis = SourcePayloadPlaneIdentitySequence(
-            value,
-            identity_policy,
-        ).runtime_axis_identities()
+        image_axis = image_payload_metadata(
+            broadcast_source
+        ).source_provenance.image_set_axis(identity_policy)
+        value_axis = image_payload_metadata(value).source_provenance.image_set_axis(
+            identity_policy
+        )
         selected_indices = SourcePlaneIdentitySequenceAlignment(
             image_axis,
             value_axis,

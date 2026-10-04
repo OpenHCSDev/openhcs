@@ -742,7 +742,6 @@ class DeclaredImageOutputPayloadMeasurementRecordMixin(
         )
         from openhcs.core.source_matching import SourceImageSetIdentityPolicy
         from openhcs.core.source_plane_alignment import (
-            SourcePayloadPlaneIdentitySequence,
             SourcePlaneIdentitySequenceAlignment,
         )
 
@@ -765,10 +764,9 @@ class DeclaredImageOutputPayloadMeasurementRecordMixin(
             request.adapter.request.source_binding_plan
         )
         identity_axes = tuple(
-            SourcePayloadPlaneIdentitySequence(
-                payload,
-                identity_policy,
-            ).runtime_axis_identities()
+            image_payload_metadata(payload).source_provenance.image_set_axis(
+                identity_policy
+            )
             for payload in source_payloads
         )
         missing_identity_specs = tuple(
