@@ -37,6 +37,7 @@ from openhcs.core.orchestrator.execution_result import (
 )
 from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
 from openhcs.core.runtime_artifact_values import RuntimeValue
+from openhcs.core.runtime_image_values import ImageMetadataPayload, ImagePayloadMetadata
 from openhcs.core.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
@@ -147,17 +148,17 @@ def test_compiled_execution_bundle_derives_runtime_observation_mode(
 
 
 @pytest.mark.parametrize(
-    ("consolidation_enabled", "persistent_enabled", "spec_type", "expected"),
+    ("consolidation_enabled", "persistent_enabled", "spec_type"),
     (
-        (True, True, MaterializationSpec, True),
-        (False, True, MaterializationSpec, False),
-        (True, False, MaterializationSpec, False),
-        (True, True, TerminalMaterializationSpec, False),
-        (True, True, None, False),
+        (True, True, MaterializationSpec),
+        (False, True, MaterializationSpec),
+        (True, False, MaterializationSpec),
+        (True, True, TerminalMaterializationSpec),
+        (True, True, None),
     ),
 )
-def test_consolidation_retains_declared_persistent_export_records(
-    consolidation_enabled, persistent_enabled, spec_type, expected
+def test_consolidation_does_not_require_parent_payload_records(
+    consolidation_enabled, persistent_enabled, spec_type
 ):
     output = ArtifactOutputPlan(
         name="measurements",
@@ -189,13 +190,8 @@ def test_consolidation_retains_declared_persistent_export_records(
         runtime_environment=_runtime_environment(),
     )
 
-    assert bundle.requires_parent_runtime_observation is expected
-    assert bundle.requires_full_parent_runtime_observation is expected
-    assert RuntimeObservationMode.for_compiled_bundle(bundle) is (
-        RuntimeObservationMode.MERGE_INTO_PARENT
-        if expected
-        else RuntimeObservationMode.OMIT
-    )
+    assert bundle.requires_parent_runtime_observation is False
+    assert RuntimeObservationMode.for_compiled_bundle(bundle) is RuntimeObservationMode.OMIT
 
 
 def test_plate_input_retention_uses_compiled_consumer_types() -> None:
@@ -256,7 +252,13 @@ def test_axis_only_worker_lane_releases_runtime_values_after_each_axis(
         pixels = np.ones((1024, 1024), dtype=np.float32)
         payload_references.append(weakref.ref(pixels))
         context.runtime_value_store.record(
-            RuntimeValue.normalize(output_plan, pixels, axis_id=context.axis_id),
+            RuntimeValue.normalize(
+                output_plan,
+                ImageMetadataPayload(
+                    data=pixels, metadata=ImagePayloadMetadata(source_dtype="float32"),
+                ),
+                axis_id=context.axis_id,
+            ),
             path=output_plan.path,
             backend="memory",
         )
@@ -519,3 +521,47 @@ def test_worker_lane_releases_previous_axis_stack_before_next_axis(
     assert all(result.is_success() for result in results.values())
     assert all(reference() is None for reference in references)
     assert all(not context.runtime_image_stack_cache.stacks for context in contexts)
+
+
+@pytest.mark.parametrize(
+    "observation_mode",
+    (RuntimeObservationMode.OMIT, RuntimeObservationMode.MERGE_PLATE_INPUTS),
+)
+@pytest.mark.parametrize("release_process_resources", (True, False))
+def test_worker_lane_releases_unconsumed_image_records_before_next_axis(
+    monkeypatch, observation_mode, release_process_resources,
+):
+    references = []
+    contexts = [ProcessingContext(axis_id=axis) for axis in ("A01", "A02", "A03")]
+    output_plan = ArtifactOutputPlan(
+        name="processed", path="/memory/processed.pkl", artifact_type=ImageArtifactType,
+    )
+
+    def execute_axis(_pipeline, context, _lane, **_kwargs):
+        assert all(reference() is None for reference in references)
+        pixels = np.ones((16, 16), dtype=np.float32)
+        references.append(weakref.ref(pixels))
+        context.runtime_value_store.record(
+            RuntimeValue.normalize(output_plan, pixels, axis_id=context.axis_id),
+            path=output_plan.path, backend="memory",
+        )
+        return ExecutionResult.success(context.axis_id)
+
+    monkeypatch.setattr(worker_execution, "_execute_single_axis_static", execute_axis)
+    monkeypatch.setattr(worker_execution, "emit", lambda **_kwargs: None)
+    results = worker_execution.execute_worker_lane(
+        pipeline_definition=[object()],
+        lane_axis_contexts=[
+            (context.axis_id, [(context.axis_id, context)]) for context in contexts
+        ],
+        lane_context=WorkerLaneExecutionContext(
+            execution_id="execution", plate_id="plate",
+            debug_execution_policy=NoOpDebugExecutionPolicy(), worker_slot="worker",
+            worker_assignments={"worker": [context.axis_id for context in contexts]},
+        ),
+        runtime_observation_mode=observation_mode,
+        release_axis_resources=release_process_resources,
+    )
+    assert all(result.is_success() for result in results.values())
+    assert all(reference() is None for reference in references)
+    assert all(not context.runtime_value_store.observed_values for context in contexts)

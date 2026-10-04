@@ -925,8 +925,8 @@ def test_analysis_consolidation_propagates_runtime_failures(monkeypatch):
         ),
     )
     monkeypatch.setattr(
-        analysis_consolidation_module,
-        "execution_analysis_outputs",
+        analysis_consolidation_module.RuntimeAnalysisConsolidationInputs,
+        "from_observations",
         lambda *args: inputs,
     )
     monkeypatch.setattr(
