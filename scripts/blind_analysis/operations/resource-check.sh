@@ -7,7 +7,7 @@ flock --shared 9
 source "$(dirname "${BASH_SOURCE[0]}")/slot-env.sh" "$1" "${2:?slot}"
 phase=${3:?unique observation}
 case "$phase" in ''|*[!a-zA-Z0-9_-]*) exit 64;; esac
-mode=${4:-ongoing}
+mode=${4:?explicit operation mode: ongoing, full, replacement, bootstrap or ledger}
 # Growth qualification is not a universal stop for a bounded continuation.
 # Desktop reserve and PSI describe future growth admission. Below-reserve
 # ongoing observations must still be able to resolve jobs and release buffers.

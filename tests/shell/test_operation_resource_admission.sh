@@ -42,6 +42,7 @@ run() {
   test "$status" = "$expected"
   printf 'PASS %s mode=%s status=%s\n' "$phase" "$mode" "$status"
 }
+run 1 '' missing_operation_mode
 run 1 ongoing before_recorded_client
 runtime="$scratch/run/A/author-workspace/output/runtime"
 # External recorded-client lifecycle evidence; no MCP/native/provider runs.
@@ -74,7 +75,24 @@ run 77 replacement replacement_rejected
 printf 'MemAvailable: 4718592 kB\n' > "$scratch/host/meminfo"
 run 0 ongoing no_invented_future_ram_reservation
 printf 'MemAvailable: 1048576 kB\n' > "$scratch/host/meminfo"
-run 76 ongoing insufficient_operation_ram
+run 0 ongoing below_reserve_observation
+rg -q 'Memory warning:' "$runtime/resources-below_reserve_observation.ram"
+rg -q 'avg10=4.82 avg60=1.09 avg300=0.23' "$runtime/resources-below_reserve_observation.psi"
+# Recorded retinal receipt rounded to 1.607 GiB: preserve low RAM as a real
+# warning, not a reason to lose bounded status/cleanup on an existing client.
+printf 'MemAvailable: 1685062 kB\n' > "$scratch/host/meminfo"
+run 0 ongoing retinal_status_under_pressure
+rg -q 'MemAvailable 1.607 GiB; desktopReserve 2048 MiB; policy=warning' "$runtime/resources-retinal_status_under_pressure.ram"
+printf 'full avg10=0.00 avg60=0.00 avg300=0.00 total=324417078\n' > "$scratch/host/pressure"
+run 76 full low_ram_bulk_rejected
+run 76 replacement low_ram_startup_rejected
+printf 'MemAvailable: invalid kB\n' > "$scratch/host/meminfo"
+run 76 ongoing malformed_ram
+printf 'MemTotal: 4194304 kB\n' > "$scratch/host/meminfo"
+run 76 ongoing missing_ram
+printf 'MemAvailable: 1685062 kB\nMemAvailable: 1685062 kB\n' > "$scratch/host/meminfo"
+run 76 ongoing duplicate_ram
+printf 'full avg10=4.82 avg60=1.09 avg300=0.23 total=324417078\n' > "$scratch/host/pressure"
 printf 'MemAvailable: 5767168 kB\n' > "$scratch/host/meminfo"
 run 0 ongoing resident_charge_not_reserved_twice
 printf 'MemAvailable: 16454287 kB\n' > "$scratch/host/meminfo"
@@ -149,14 +167,14 @@ test "$(rg -c '^Current ' "$runtime/resources-selected_output_only.output")" = 1
 run 0 ledger complete_growth_forecast
 test "$(rg -c '^Current ' "$runtime/resources-complete_growth_forecast.output")" = 2
 run 0 ongoing continuing_original_scope_owner
-rg -q 'required 2048 MiB' "$runtime/resources-continuing_original_scope_owner.ram"
+rg -q 'desktopReserve 2048 MiB' "$runtime/resources-continuing_original_scope_owner.ram"
 export CONTROLLED_SCI_MAX=268435456 CONTROLLED_SCI_CURRENT=134217728
 export CONTROLLED_CLI_MAX=0 CONTROLLED_CLI_CURRENT=0
 printf 'MemAvailable: 2232320 kB\n' > "$scratch/host/meminfo"
 printf 'full avg10=0.00 avg60=0.00 avg300=0.00 total=324417078\n' > "$scratch/host/pressure"
 run 0 full headless_disabled_cli ADMIN
 admin_runtime="$scratch/admin-run/ADMIN/author-workspace/output/runtime"
-rg -q 'required 2048 MiB' "$admin_runtime/resources-headless_disabled_cli.ram"
+rg -q 'desktopReserve 2048 MiB' "$admin_runtime/resources-headless_disabled_cli.ram"
 export CONTROLLED_SCI_MAX=4294967296 CONTROLLED_SCI_CURRENT=1342177280
 export CONTROLLED_CLI_MAX=536870912 CONTROLLED_CLI_CURRENT=268435456
 printf 'MemAvailable: 16454287 kB\n' > "$scratch/host/meminfo"
