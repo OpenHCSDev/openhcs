@@ -140,3 +140,70 @@ integration before its successful derived outcome can roundtrip. The diagnostic
 source checkpoint works independently and does not claim recovery/replay of any
 UNKNOWN operation. Planck's disjoint Shapes geometry ownership was confirmed;
 522 selection/lifecycle and541 Root units ownership remain untouched.
+
+Reviewed dependency and actual CLI receiving
+-------------------------------------------
+
+The preceding dependency-release blocker is historical. Parent owns the distinct
+python-introspect checkout and PR10. Source reviewed at ee0b65f and final
+ac7b2388ed800649a8d0157f00056471a466dd20: dataclasses.fields owns membership;
+get_type_hints(include_extras=True) and the existing recursive annotation decoder
+own input conversion; only init fields reach the constructor. Supplied non-init
+values are compared with validated actual constructed values, never assigned.
+Omitted derived fields are legal; contradictory values and unknown fields fail
+closed. No outcome special case, mirrored field roster or second codec exists.
+Equality retains the field owner's existing Python equality contract; this is
+not an array-specific comparison extension. No concrete defect found in review.
+
+Read-only codec source selected after original OpenHCS source activation, before
+any consumers, through the existing source bootstrap. Actual imported codec:
+/home/ts/wt/python-introspect-derived-decode-20261004/src/python_introspect/
+dataclass_projection.py, SHA256
+d2be277051b070d73503025a3addcde8016787e18a369c45b60be0c0edb65fea.
+The receiving process imported version0.1.15 at fad3cbb. Exact source diff to
+ac7b238's0.1.16 changes only __version__ in src/python_introspect/__init__.py;
+the tested decoder and all other source algorithms are byte-identical. No
+foreign gitlink, installed dependency or existing scientific target was changed.
+
+SHELL-COMBINED-CLI05 retained terminal1:17 source controls passed, including the
+new independent derived declaration using inherited cooperative describe hooks,
+omitted derived fields and contradiction rejection without generic consumers
+being edited. Four receiving cases failed before wire dispatch because the new
+fixture mistakenly supplied --no-resident-server instead of the original
+--no-resident option. This was a known harness error, not native UNKNOWN.
+Original log retained:7.24s wall,261568KiB peakRSS,Swap0. The corrected fixture
+also consumes the real pretty-printed JSON documents through stdlib JSONDecoder.
+
+Only the four affected receiving cases ran in SHELL-COMBINED-CLI06. All passed:
+normal dev_client.main -> persistent shell -> original McpDevClient.start/execute
+and command/framing/DTO decoding -> canonical JSON -> shell aggregate returncode.
+Only the transport context/peer is controlled, reusing the existing pipeline
+ControlledWireSession. Process launches are forbidden by the fixture. Exact
+original command arguments/tool order and complete saved replies are retained.
+No old process was contacted, no source was evaluated, no native operation or
+registration was replayed, and no new MCP/native/client subprocess was started.
+
+The eight original successful replies yield shell terminal0. The original
+registration observation is the declared DTO with registered outcome, zero
+errors, one published source and its exact persisted proof; canonical projection
+equals the entire original status receipt. The three copied malformed replies
+(contradictory outcome, boolean outcome, undeclared field) each yield terminal1,
+visible mcp_payload_invalid/ValueError cause and the full original receipt with
+the single explicit test mutation. Native receipt errors remain empty; local
+decode errors remain a separate fact. Re-decoding canonical batches retains the
+same cause once and nonzero status.
+
+Actual controls06 terminal0,4PASS,5.73s wall,254896KiB peakRSS,Swap0. Full canonical
+CLI outputs and per-case statuses are in the raw stdout, not just test assertions.
+No successful17-control repeat or7GiB installed cold import occurred. Before this
+source batch, original resource check read9.3GiB available, critical warnings
+for existing swap/disk, full-memory PSI avg10=.24 then .17. This receipt reports
+actual measured resource cost, not a new hard cap or scientific admission rule.
+
+The real closed native TCP journey remains the accepted merged567 evidence;
+this acceptance establishes its corrected source CLI decoding/rendering/exit
+path with a controlled closed-reply peer. It does not claim a fresh installed
+0.1.16 client/native journey or recovery of an uncertain mutation. Public
+dependency0.1.16 publication and future bundle projection remain Dewey's release
+ownership. Existing OpenHCS dependency floor is still >=0.1.14; original metadata
+owner must carry the corrected minimum for ordinary future installation.

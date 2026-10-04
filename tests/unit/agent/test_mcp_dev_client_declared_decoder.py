@@ -1,5 +1,5 @@
 """Original successful native receipt, replayed offline: NEVER start a process."""
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import json
 from pathlib import Path
 import sys
@@ -69,6 +69,43 @@ def test_renderless_new_declaration_decodes_and_executes_cooperative_mro():
     assert type(value) is RenderlessResult and type(value.fact) is DeclaredFact
     assert value.describe() == "independent:owned"
     assert result.decoded_for_rendering().first_decoded_payload() is value
+
+
+@dataclass(frozen=True, kw_only=True)
+class DerivedRenderlessResult(RenderlessResult):
+    description: str = field(init=False)
+
+    def __post_init__(self):
+        object.__setattr__(self, "description", self.describe())
+
+
+class DerivedRenderlessCapability(RenderlessCapability):
+    name = "openhcs_decoder_derived_case578"
+    cli_command = "decoder-derived-case578"
+    output_contract = DerivedRenderlessResult
+
+
+def test_independent_derived_declaration_executes_existing_cooperative_hooks():
+    original = DerivedRenderlessResult(schema_version=SCHEMA_VERSION, fact=DeclaredFact(value="owned"))
+    wire = to_jsonable(original)
+    result = McpDevToolResult(DerivedRenderlessCapability.name, False, (wire,)).decoded_for_rendering()
+    value = result.first_decoded_payload()
+    assert value == original and value.description == "independent:owned"
+    assert value.describe() == "independent:owned"
+    assert not result.has_errors()
+    del wire["description"]
+    omitted = McpDevToolResult(DerivedRenderlessCapability.name, False, (wire,)).decoded_for_rendering()
+    assert omitted.first_decoded_payload() == original
+
+
+def test_independent_derived_claim_cannot_override_cooperative_owner():
+    original = DerivedRenderlessResult(schema_version=SCHEMA_VERSION, fact=DeclaredFact(value="owned"))
+    wire = {**to_jsonable(original), "description": "override"}
+    result = McpDevToolResult(DerivedRenderlessCapability.name, False, (wire,)).decoded_for_rendering()
+    assert result.has_errors() and result.first_decoded_payload() is None
+    assert isinstance(result.payloads[0], McpDevPayloadFailure)
+    assert result.payloads[0].receipt == wire
+    assert "disagrees" in result.diagnostic_errors()[0].message
 
 
 def test_renderless_malformed_record_is_rejected_with_original_receipt():
