@@ -127,3 +127,17 @@ callable-receive03.log/PTy29521 terminal0 records45PASS/.68s. Pytest cache warni
 and imported-plugin warning are retained; no repeated run solely for warnings.
 These checks are ordinary installed registered-callable acceptance, not MCP
 catalog/server, science pipeline or autonomous retinal acceptance.
+
+declared-cost01.log/PTy38587 terminal0: same installed declaration radius150
+on96x128 float32 synthetic plane completed .109319s; finite float32, unchanged
+input. Process peak stayed348032KiB before/after the call. This peak includes
+warm imports and is not a zero-allocation proof. Original SciPy filtering was
+NOT run at this size (its offsets formula would request6.47GiB). No throughput
+extrapolation to2586x2586 or stable campaign claimed. Own target22,630,400B,
+wheel4,407,296B and source build21,307,392B were measured; no parallel fleet.
+
+Normal current-main integration3612ba4982500427a5cb9199f1daddd28393ffa9 changed
+only independent operations/docs/shell controls. The installed processing bytes
+remain identical; the private wheel is honestly pinned to92ecee source, not
+claimed to include the later unrelated main operations. Foreign dirty links and
+old diagnostic directories remain unstaged/unmodified.
