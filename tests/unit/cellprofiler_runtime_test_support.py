@@ -29,8 +29,8 @@ from openhcs.core.runtime_measurements import MeasurementTable
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentityCache
 from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
-from openhcs.interop.cellprofiler.runtime.object_measurement_tables import (
-    ObjectMeasurementTableIndex,
+from openhcs.core.measurement_feature_queries import (
+    ColumnarMeasurementTableSchema,
 )
 from openhcs.microscopes.imagexpress import ImageXpressFilenameParser
 
@@ -126,14 +126,10 @@ def object_measurement_tables_for_test(
 ) -> tuple[MeasurementTable, ...]:
     """Query object measurement tables through their nominal index owner."""
 
-    index = ObjectMeasurementTableIndex.from_tables(
-        adapter.measurement_tables(
-            group_key=group_key,
-            match_group=match_group,
-        )
+    return ColumnarMeasurementTableSchema.tables_for_object(
+        adapter.measurement_tables(group_key=group_key, match_group=match_group),
+        object_name,
     )
-    tables = index.for_object(object_name)
-    return () if tables is None else tables
 
 
 def runtime_adapter_request_for_test(

@@ -34,7 +34,6 @@ from openhcs.core.runtime_batch_contracts import (
 from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
 from openhcs.core.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.runtime_measurements import (
-    MeasurementScalarLiteral,
     MeasurementStatistic,
     RuntimeMeasurementFeatureDeclaration,
     RuntimeMeasurementFeatureSemanticMarker,
@@ -201,12 +200,6 @@ class RelateObjectsModule(
             feature_name,
             RelateObjectsChildMeanFeatureMarker,
         )
-
-    @staticmethod
-    def aggregate_child_measurement_value_is_qualified(value: object) -> bool:
-        """Retain explicit missing values so child means propagate them."""
-
-        return not MeasurementScalarLiteral(value).is_absent
 
     class DistanceMeasurementFeature(FormattingMeasurementFeatureTemplate):
         """Parent-qualified distance features emitted by RelateObjects."""
@@ -753,7 +746,6 @@ from openhcs.core.measurement_feature_queries import (
     MeasurementAxisValueProjection,
     MeasurementFeatureQuery,
     MeasurementFeatureValueIndex,
-    MeasurementTableObjectFeatureSemantics,
 )
 from openhcs.core.measurement_row_materialization import (
     ConcatenatedColumnarRows,
@@ -833,9 +825,6 @@ class RelateObjectsDistanceAggregateFeatureSemantics(
         return feature.unqualified_feature_name
 
 
-from openhcs.interop.cellprofiler.runtime.object_measurement_tables import (
-    ObjectMeasurementTableIndex,
-)
 from openhcs.processing.backends.cellprofiler._backend import (
     BackendProviderInput,
     DEFAULT_CELLPROFILER_BACKEND_SELECTION,
@@ -1583,14 +1572,9 @@ class RelateObjectsRelationshipMeasurementRows(RelationshipMeasurementRows):
                         f"{type(table).__name__}, not MeasurementTable."
                     )
                 declared_tables.append(table)
-        tables = ObjectMeasurementTableIndex.from_tables(
-            tuple(declared_tables)
-        ).for_object(child_spec.name)
-        if tables is None:
-            raise RuntimeError(
-                "A complete object-measurement table index returned an unknown "
-                "selection."
-            )
+        tables = ColumnarMeasurementTableSchema.tables_for_object(
+            tuple(declared_tables), child_spec.name
+        )
         child_labels = self.unprojected_object_labels(child_spec)
         core_rows = ObjectLocationMeasurementRows(
             child_labels,
@@ -1650,7 +1634,7 @@ class RelateObjectsRelationshipMeasurementRows(RelationshipMeasurementRows):
 
         row_axis = MeasurementRowAxisField.SLICE_INDEX
         for table in tables:
-            semantics = MeasurementTableObjectFeatureSemantics.from_table(table)
+            semantics = ColumnarMeasurementTableSchema.from_table(table)
             table_axis = table.source_provenance.image_set_axis(identity_policy)
             if not table_axis:
                 raise ValueError(
@@ -1669,7 +1653,7 @@ class RelateObjectsRelationshipMeasurementRows(RelationshipMeasurementRows):
             aggregate_features = tuple(
                 sorted(
                     feature_name
-                    for feature_name in semantics.feature_names
+                    for feature_name in semantics.feature_names(table)
                     if RelateObjectsModule.aggregates_child_measurement_feature(
                         feature_name
                     )
@@ -1742,7 +1726,9 @@ class RelateObjectsRelationshipMeasurementRows(RelationshipMeasurementRows):
             for (
                 feature_name,
                 indexes_by_local_slice,
-            ) in ColumnarMeasurementTableSchema.from_table(table).feature_value_indexes(
+            ) in ColumnarMeasurementTableSchema.from_table(
+                table
+            ).non_absent_feature_value_indexes(
                 table,
                 queries,
                 {
@@ -1754,9 +1740,6 @@ class RelateObjectsRelationshipMeasurementRows(RelationshipMeasurementRows):
                     local_slice_index: row_mask
                     for local_slice_index, _target_slice_index, row_mask in slice_projections
                 },
-                measurement_value_qualifier=(
-                    RelateObjectsModule.aggregate_child_measurement_value_is_qualified
-                ),
             ):
                 for (
                     local_slice_index,
@@ -1872,7 +1855,9 @@ class NumbaNumpyObjectRelationshipBackendStrategy(ObjectRelationshipBackendStrat
         label_count = int(labels.max())
         if label_count == 0:
             return np.empty((0, 2), dtype=np.float64)
-        centroids = dense_label_centers_2d_numba(np.ascontiguousarray(labels), label_count)
+        centroids = dense_label_centers_2d_numba(
+            np.ascontiguousarray(labels), label_count
+        )
         return centroids[1:]
 
 

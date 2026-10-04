@@ -42,7 +42,6 @@ from openhcs.core.measurement_feature_queries import (
     RuntimeObjectLabelMeasurementQueryCache,
     MeasurementFeatureValueIndex,
     MeasurementObjectFeatureVectorBatchQuery,
-    MeasurementTableObjectFeatureSemantics,
     matching_measurement_field,
     measurement_feature_candidates,
     ordered_measurement_feature_candidates,
@@ -296,7 +295,9 @@ def test_measurement_row_mapping_accepts_slotted_dataclasses() -> None:
     }
 
 
-def test_measurement_row_mapping_observes_current_dataclass_with_independent_values() -> None:
+def test_measurement_row_mapping_observes_current_dataclass_with_independent_values() -> (
+    None
+):
     @dataclass(slots=True)
     class MutableMeasurementRow:
         object_name: str
@@ -706,7 +707,9 @@ def test_measurement_feature_query_uses_table_object_id_field() -> None:
     assert values.tolist() == [10.0, 20.0]
 
 
-def test_measurement_table_semantics_observes_current_row_and_subject_declarations() -> None:
+def test_measurement_table_semantics_observes_current_row_and_subject_declarations() -> (
+    None
+):
     table = MeasurementTable(
         name="ObjectMeasurements",
         rows=MeasurementSparseColumnarRows.from_rows(
@@ -723,19 +726,22 @@ def test_measurement_table_semantics_observes_current_row_and_subject_declaratio
         subject=MeasurementSubject(MeasurementScope.ARTIFACT, "ObjectMeasurements"),
     )
 
-    first = MeasurementTableObjectFeatureSemantics.from_table(table)
+    first_schema = ColumnarMeasurementTableSchema.from_table(table)
+    first = (first_schema.object_names(table), first_schema.feature_names(table))
     table.rows = MeasurementSparseColumnarRows(
         {**table.rows.columns, "object_name": ("Nuclei", "Nuclei")},
         fields=table.rows.fields,
     )
-    second = MeasurementTableObjectFeatureSemantics.from_table(table)
+    second_schema = ColumnarMeasurementTableSchema.from_table(table)
+    second = (second_schema.object_names(table), second_schema.feature_names(table))
     table.subject = MeasurementSubject(MeasurementScope.OBJECT, "SelectedObjects")
-    third = MeasurementTableObjectFeatureSemantics.from_table(table)
+    third_schema = ColumnarMeasurementTableSchema.from_table(table)
+    third = (third_schema.object_names(table), third_schema.feature_names(table))
 
-    assert first.object_names == ("Cells",)
-    assert second.object_names == ("Nuclei",)
-    assert third.object_names == ("SelectedObjects",)
-    assert "area" in first.feature_names == second.feature_names == third.feature_names
+    assert first[0] == ("Cells",)
+    assert second[0] == ("Nuclei",)
+    assert third[0] == ("SelectedObjects",)
+    assert "area" in first[1] == second[1] == third[1]
 
 
 def test_measurement_feature_candidates_match_cellprofiler_compact_metric_names() -> (
@@ -1399,9 +1405,13 @@ def test_row_sequence_feature_semantics_ignore_stale_partition_fields() -> None:
         subject=MeasurementSubject(MeasurementScope.OBJECT, "Objects2"),
     )
 
-    semantics = MeasurementTableObjectFeatureSemantics.from_table(table)
+    semantics_schema = ColumnarMeasurementTableSchema.from_table(table)
+    semantics = (
+        semantics_schema.object_names(table),
+        semantics_schema.feature_names(table),
+    )
 
-    assert "Children_Objects2_Count" not in semantics.feature_names
+    assert "Children_Objects2_Count" not in semantics[1]
 
 
 def test_measurement_table_axis_query_projects_sequence_rows() -> None:
@@ -1433,9 +1443,9 @@ def test_measurement_table_axis_query_projects_sequence_rows() -> None:
     assert projected.rows.row_mappings() == (
         {"slice_index": 1, "object_label": 1, "area": 20.0},
     )
-    assert MeasurementTableObjectFeatureSemantics.from_table(
+    assert ColumnarMeasurementTableSchema.from_table(table).feature_names(
         table
-    ).feature_names == frozenset({"area"})
+    ) == frozenset({"area"})
 
 
 def test_measurement_table_union_preserves_compatible_schema() -> None:
@@ -1573,13 +1583,15 @@ def test_measurement_table_union_bundles_sources_per_declared_runtime_slice() ->
 
     # A later export reads the tables' current provenance, not the prior join epoch.
     first = tables[0]
-    first.source_provenance = first.source_provenance.with_source_image_provenance_planes(
-        SourceImageProvenancePlanes.from_components(
-            paths=("/changed/site-1.tif", "/changed/site-2.tif"),
-            component_metadata=(
-                {"well": "A01", "site": "1"},
-                {"well": "A01", "site": "2"},
-            ),
+    first.source_provenance = (
+        first.source_provenance.with_source_image_provenance_planes(
+            SourceImageProvenancePlanes.from_components(
+                paths=("/changed/site-1.tif", "/changed/site-2.tif"),
+                component_metadata=(
+                    {"well": "A01", "site": "1"},
+                    {"well": "A01", "site": "2"},
+                ),
+            )
         )
     )
     current = MeasurementTable.joined_source_provenance("quality_metrics", tables)
@@ -1855,14 +1867,15 @@ def _record_native(
     )
 
 
-def test_batch_measurement_queries_release_owners_and_observe_store_replacement() -> None:
+def test_batch_measurement_queries_release_owners_and_observe_store_replacement() -> (
+    None
+):
     np = pytest.importorskip("numpy")
 
     def run_query_epoch():
         store = RuntimeValueStore()
         pixels = {
-            name: np.ones((2, 32, 32), dtype=np.int32)
-            for name in ("Cells", "Nuclei")
+            name: np.ones((2, 32, 32), dtype=np.int32) for name in ("Cells", "Nuclei")
         }
         labels = {
             name: object_labels(value, declared_object_id_domains=((1,), (1,)))
@@ -1885,14 +1898,19 @@ def test_batch_measurement_queries_release_owners_and_observe_store_replacement(
                     FieldSpec("FormFactor", float),
                 ),
             ),
-            subject=MeasurementSubject(MeasurementScope.ARTIFACT, "MixedShapeMeasurements"),
+            subject=MeasurementSubject(
+                MeasurementScope.ARTIFACT, "MixedShapeMeasurements"
+            ),
         )
         plan = ArtifactOutputPlan(
-            name=table.name, path="/memory/measurements", artifact_type=MeasurementsArtifactType
+            name=table.name,
+            path="/memory/measurements",
+            artifact_type=MeasurementsArtifactType,
         )
         store.record(
             RuntimeValue.normalize(plan, table, axis_id=AXIS_ID),
-            path=plan.path, backend="memory",
+            path=plan.path,
+            backend="memory",
         )
         query = MeasurementLabelSliceFeatureBatchQuery(
             measurement_tables=(table,),
@@ -1907,8 +1925,11 @@ def test_batch_measurement_queries_release_owners_and_observe_store_replacement(
         owned_cache = store.query_cache(RuntimeObjectLabelMeasurementQueryCache)
         owned_cache.store_value(
             RuntimeObjectLabelMeasurementQuery(
-                axis_id=AXIS_ID, group_key=None, object_name="Cells",
-                feature_name="AreaShape_FormFactor", label_domain=(1,),
+                axis_id=AXIS_ID,
+                group_key=None,
+                object_name="Cells",
+                feature_name="AreaShape_FormFactor",
+                label_domain=(1,),
                 label_plane_domains=((1,), (1,)),
             ),
             vectors["Cells"],
@@ -1916,7 +1937,8 @@ def test_batch_measurement_queries_release_owners_and_observe_store_replacement(
         feature_values[0] = 7.5
         store.replace(
             RuntimeValue.normalize(plan, table, axis_id=AXIS_ID),
-            path=plan.path, backend="memory",
+            path=plan.path,
+            backend="memory",
         )
         assert not owned_cache.entries
         assert query.values_by_object()["Cells"][0].tolist() == [7.5]
@@ -1929,3 +1951,40 @@ def test_batch_measurement_queries_release_owners_and_observe_store_replacement(
         return references
 
     assert all(reference() is None for reference in run_query_epoch())
+
+
+def test_declared_non_absent_query_observes_labels_after_each_scalar_conversion():
+    labels = [1, 2]
+    conversions = []
+
+    class UpdatingNumericText(str):
+        def __float__(self):
+            conversions.append(self)
+            labels[:] = [10 * len(conversions), 20 * len(conversions)]
+            return float(str(self))
+
+    table = MeasurementTable(
+        name="MutableNumericCells",
+        rows=MeasurementSparseColumnarRows(
+            {
+                "object_label": labels,
+                "value": [UpdatingNumericText("3"), UpdatingNumericText("4")],
+            },
+            fields=(FieldSpec("object_label", int), FieldSpec("value", float)),
+        ),
+        subject=MeasurementSubject(MeasurementScope.OBJECT, "Cells"),
+    )
+    query = MeasurementFeatureQuery("value", "Cells")
+    indexes = [
+        axes[None]["Cells"].values_by_label
+        for _, axes in ColumnarMeasurementTableSchema.from_table(
+            table
+        ).non_absent_feature_value_indexes(
+            table,
+            {"first": query, "second": query},
+            {"first": {"Cells": "Cells"}, "second": {"Cells": "Cells"}},
+            index_type=MeasurementFeatureValueIndex,
+        )
+    ]
+    assert indexes == [{20: 3.0, 40: 4.0}, {40: 3.0, 80: 4.0}]
+    assert conversions == ["3", "4", "3", "4"]

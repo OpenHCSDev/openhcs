@@ -212,13 +212,13 @@ def test_declared_child_measurements_gather_all_exact_producer_channels(dynamic)
         "3",
         "3",
     ]
-    from openhcs.interop.cellprofiler.runtime.object_measurement_tables import (
-        ObjectMeasurementTableIndex,
+    from openhcs.core.measurement_feature_queries import (
+        ColumnarMeasurementTableSchema,
     )
 
-    children = ObjectMeasurementTableIndex.from_tables(
-        tuple(record.data for record in records)
-    ).for_object("Children")
+    children = ColumnarMeasurementTableSchema.tables_for_object(
+        tuple(record.data for record in records), "Children"
+    )
     assert [table.source_image_name for table in children] == [
         "Orig1",
         "Orig2",

@@ -28,7 +28,7 @@ from openhcs.core.measurement_feature_queries import (
     MeasurementFeatureValueIndex,
     MeasurementObjectFeatureVectorBatchQuery,
     MeasurementTableFeatureQuery,
-    MeasurementTableObjectFeatureSemantics,
+    ColumnarMeasurementTableSchema,
     MeasurementValueIndexResult,
 )
 from openhcs.core.process_local_cache import BoundedCache
@@ -148,10 +148,9 @@ class MeasurementObjectQuery:
         if table.subject.scope is MeasurementScope.OBJECT:
             return table.subject.name == self.object_name
         if isinstance(table.rows, ColumnarRows):
-            return (
-                self.object_name
-                in MeasurementTableObjectFeatureSemantics.from_table(table).object_names
-            )
+            return self.object_name in ColumnarMeasurementTableSchema.from_table(
+                table
+            ).object_names(table)
         if not _measurement_table_may_declare_object_name(table):
             return False
         return any(
@@ -695,10 +694,7 @@ class MeasurementLabelSliceFeatureBatchQuery(MeasurementLabelSliceFeatureQuery):
                 )
             )
         return MappingProxyType(
-            {
-                object_name: values_by_object[object_name]
-                for object_name in object_names
-            }
+            {object_name: values_by_object[object_name] for object_name in object_names}
         )
 
     def object_feature_query(

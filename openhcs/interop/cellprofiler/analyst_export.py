@@ -85,7 +85,6 @@ from .database_column_dialect import (
 from .image_set_numbering import CellProfilerImageSetNumbering
 from .measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,
-    cellprofiler_projected_measurement_feature_name,
 )
 from .module_declarations import CellProfilerModule
 from .source_metadata import CellProfilerSourceMetadataField
@@ -677,9 +676,9 @@ class CPATableRowProjection:
         accumulator = WideMeasurementRowAccumulator(
             CELLPROFILER_MEASUREMENT_DIALECT.row_identity_contract
         )
-        accumulator.add(
+        accumulator.add_declared_rows(
             projected_rows,
-            cellprofiler_projected_measurement_feature_name,
+            CELLPROFILER_MEASUREMENT_DIALECT,
             default_subject=default_subject,
             default_scope=table.subject.scope,
             source_image_name=table.source_image_name,
@@ -817,7 +816,7 @@ class CPATableRowProjection:
                 dtype=None if value_field is None else value_field.dtype,
                 required=False,
             )
-        feature_name = cellprofiler_projected_measurement_feature_name(
+        feature_name = CELLPROFILER_MEASUREMENT_DIALECT.projected_feature_name(
             field_name,
             (),
         )

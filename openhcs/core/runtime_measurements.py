@@ -349,6 +349,7 @@ class MeasurementTable(
                 )
         return domains
 
+
 @dataclass(frozen=True, slots=True)
 class ObjectLabelMeasurementValues:
     """Numeric measurements bound to explicit object-label identities."""
@@ -1344,6 +1345,14 @@ class MeasurementScalarLiteral:
             stripped = self.raw_value.strip()
             return stripped or None
         return None
+
+    @classmethod
+    def non_absent_values(cls, values: Sequence[object]) -> np.ndarray:
+        """Classify physical cells while retaining explicit nonfinite values."""
+        if isinstance(values, np.ndarray) and values.dtype.kind in "iuf":
+            return np.ones(values.shape, dtype=bool)
+        array = np.asarray(values, dtype=object)
+        return np.asarray([not cls(value).is_absent for value in array], dtype=bool)
 
     @property
     def is_absent(self) -> bool:

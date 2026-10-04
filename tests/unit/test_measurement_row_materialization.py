@@ -481,3 +481,60 @@ def test_dataclass_column_admission_owns_snapshot_and_releases_source_rows() -> 
     gc.collect()
     assert row_ref() is None
     assert admitted_samples == [2.5]
+
+
+def test_bounded_preview_is_live_but_explicit_column_admission_keeps_snapshot() -> None:
+    from openhcs.core.measurement_feature_queries import (
+        ColumnarMeasurementTableSchema,
+        MeasurementFeatureQuery,
+        MeasurementFeatureValueIndex,
+    )
+    from openhcs.core.progress.live_measurements import _columnar_row_preview
+    from openhcs.core.runtime_measurements import (
+        MeasurementScope,
+        MeasurementSubject,
+        MeasurementTable,
+    )
+
+    first = MeasurementProjectedColumnarRows(
+        {"object_label": np.array([1]), "area": np.array([1.0])},
+        fields=(FieldSpec("object_label", int), FieldSpec("area", float)),
+    )
+    second = MeasurementProjectedColumnarRows(
+        {"object_label": np.array([2]), "other": np.array([2.0])},
+        fields=(FieldSpec("object_label", int), FieldSpec("other", float)),
+    )
+    rows = ConcatenatedColumnarRows((first, second))
+    table = MeasurementTable(
+        name="Cells",
+        rows=rows,
+        subject=MeasurementSubject(MeasurementScope.OBJECT, "Cells"),
+    )
+    assert "area" in rows.columns
+    assert "absent" not in rows.columns
+    preview = _columnar_row_preview(rows, 1, 2)
+    assert preview.rows == ({"object_label": 1, "area": 1.0},)
+    first.columns["area"][0] = 7.0
+    query = MeasurementFeatureQuery("area", object_name="Cells")
+
+    def current_index():
+        return next(
+            ColumnarMeasurementTableSchema.from_table(
+                table
+            ).non_absent_feature_value_indexes(
+                table,
+                {"area": query},
+                {"area": {"Cells": "Cells"}},
+                index_type=MeasurementFeatureValueIndex,
+            )
+        )[1][None]["Cells"]
+
+    assert current_index().values_by_label == {1: 7.0}
+    whole_column = rows.column_values("area")
+    whole_column[1] = 9.0
+    first.columns["area"][0] = 11.0
+    assert current_index().values_by_label == {1: 7.0, 2: 9.0}
+    assert _columnar_row_preview(rows, 2, 2).rows == (
+        {"object_label": 1, "area": 7.0},
+        {"object_label": 2, "area": 9.0},
+    )

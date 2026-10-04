@@ -154,8 +154,8 @@ from openhcs.interop.cellprofiler.runtime.object_label_measurements import (
     ObjectLabelMeasurementSliceRequest,
     RelationshipPlaneProjectionResolution,
 )
-from openhcs.interop.cellprofiler.runtime.object_measurement_tables import (
-    ObjectMeasurementTableIndex,
+from openhcs.core.measurement_feature_queries import (
+    ColumnarMeasurementTableSchema,
 )
 from openhcs.interop.cellprofiler.runtime.object_measurement_vectors import (
     MeasurementImageOperandVectorResolution,
@@ -819,7 +819,11 @@ def _executor_for_contract(
                     spec=spec,
                     storage_plan=None,
                     projection=None,
-                    main_flow_projection=(MainFlowInputProjection.DECLARED_SOURCE_IMAGE if spec.ref() in main_flow_input_refs else None),
+                    main_flow_projection=(
+                        MainFlowInputProjection.DECLARED_SOURCE_IMAGE
+                        if spec.ref() in main_flow_input_refs
+                        else None
+                    ),
                 )
             )
             continue
@@ -3111,12 +3115,12 @@ def test_cellprofiler_adapter_discovers_single_realized_dynamic_grouped_input():
     assert objects.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
     assert objects.domain.declared_object_id_domains == ((1,),)
 
-
     # A dynamic component never grants access to another compiled producer path.
     (edge,) = _compiled_artifact_inputs.values()
     for undeclared_paths in (None, {"1": "/other/Nuclei_s1.pkl"}):
         mismatched_edge = replace(
-            edge, storage_plan=replace(edge.storage_plan, paths_by_group=undeclared_paths)
+            edge,
+            storage_plan=replace(edge.storage_plan, paths_by_group=undeclared_paths),
         )
         mismatched_consumer = CellProfilerRuntimeAdapter(
             request=replace(
@@ -3124,7 +3128,9 @@ def test_cellprofiler_adapter_discovers_single_realized_dynamic_grouped_input():
             ),
             backend=consumer.backend,
         )
-        with pytest.raises(RuntimeError, match="Missing dynamic grouped artifact input"):
+        with pytest.raises(
+            RuntimeError, match="Missing dynamic grouped artifact input"
+        ):
             mismatched_consumer.get_objects(NUCLEI)
 
 
@@ -7090,9 +7096,11 @@ def test_object_measurement_table_index_uses_declared_subject_for_unnamed_rows()
         ),
     )
 
-    tables = ObjectMeasurementTableIndex.from_tables((table,)).for_object_feature(
+    tables = ColumnarMeasurementTableSchema.tables_for_object_feature(
+        (table,),
         "Cells",
         "AreaShape_FormFactor",
+        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
     )
 
     assert tables == (table,)

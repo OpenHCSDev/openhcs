@@ -53,8 +53,8 @@ from openhcs.interop.cellprofiler.runtime.invocation import (
 from openhcs.interop.cellprofiler.runtime.object_label_measurements import (
     ObjectLabelMeasurementSliceRequest,
 )
-from openhcs.interop.cellprofiler.runtime.object_measurement_tables import (
-    ObjectMeasurementTableIndex,
+from openhcs.core.measurement_feature_queries import (
+    ColumnarMeasurementTableSchema,
 )
 from openhcs.interop.cellprofiler.runtime.runtime_profile import (
     CellProfilerRuntimeProfileLogger,
@@ -432,9 +432,11 @@ class CellProfilerObjectMeasurementVectorBinding(ObjectLabelMeasurementSliceRequ
                 f"{self.request.adapter.request.require_callable_contract().module_name} feature {self.feature_name!r} "
                 "requires a declared MeasurementsArtifactType runtime input."
             )
-        matches = ObjectMeasurementTableIndex.from_tables(declared).for_object_feature(
+        matches = ColumnarMeasurementTableSchema.tables_for_object_feature(
+            declared,
             self.object_name,
             self.feature_name,
+            dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
         )
         if not matches:
             raise ValueError(

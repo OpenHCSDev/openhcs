@@ -39,7 +39,7 @@ for axis, records in batch.records_by_axis.items():
         )
         accumulator.add(
             table.rows,
-            export.cellprofiler_projected_measurement_feature_name,
+            export.CELLPROFILER_MEASUREMENT_DIALECT.projected_feature_name,
             default_subject=export._measurement_subject_name(table),
             default_scope=table.subject.scope,
             source_image_name=table.source_image_name,

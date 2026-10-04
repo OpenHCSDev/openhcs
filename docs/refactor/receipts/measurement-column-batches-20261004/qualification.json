@@ -1,0 +1,32 @@
+{
+  "scope": "one production implementation replay on original retained Beginner VALUES leaf owners; registry/sourcealias readiness excluded, no pipeline/native run or accepted latency",
+  "base_head": "9ae6f7d31fb9c44b9bb2e3ba8ad31c2d372446e6",
+  "preview_old_s": 0.010128967463970184,
+  "preview_new_s": 0.008156565949320793,
+  "query_old_s": 0.4122339151799679,
+  "query_new_s": 0.39500196371227503,
+  "export_old_s": 0.6767069287598133,
+  "export_new_s": 0.45112940296530724,
+  "coupled_replay_delta_s": 0.24478187877684832,
+  "indexes": 448,
+  "values": 188212,
+  "exact_indexes": true,
+  "exact_recomputed_upstream_mean_cells": 30105,
+  "untouched_retained_distance_mean_cells_in_exact_rendered_bundle": 270,
+  "exact_saved_files": 7,
+  "exact_csv_bytes": true,
+  "limits": [
+    "Single replay, no causal full-pipeline speedup claim",
+    "Preview now bounded live read rather than accidental whole-column freeze",
+    "Explicit whole-column snapshots/writes remain authority",
+    "Public arbitrary qualifiers/projectors keep original callback admission",
+    "Original496 full graph/cap/preexport acceptance not claimed"
+  ],
+  "source_diff_sha256": "504d9b166f7f4a3dbe2937334dcc8ad07c7f3113bfd6cdbe0706feb12b354a24",
+  "semantic_controls": {
+    "original_joined_controls_passed": 116,
+    "consumer_projection_controls_passed": 7,
+    "final_opaque_and_authored_scalar_epoch_controls_passed": 4,
+    "failing_control_before_repair": "str-subclass __float__ was lost during inferred Unicode snapshot conversion"
+  }
+}

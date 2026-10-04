@@ -83,6 +83,24 @@ class ColumnarRows(ABC):
             return columns[column]
         return self[column]
 
+    def column_value_segments(
+        self, column: str
+    ) -> Iterable[tuple[int, Sequence[object]]]:
+        """Read the current physical segments of one column in row order."""
+        yield 0, self.column_values(column)
+
+    def bounded_column_values(self, column: str, row_stop: int) -> Sequence[object]:
+        """Read a prefix without requiring whole-column admission."""
+        return self.column_values(column)[:row_stop]
+
+    def columnar_row_batches(
+        self,
+    ) -> Iterable[tuple[int, Mapping[str, Sequence[object]]]]:
+        """Read correlated column batches at the current payload epoch."""
+        yield self.row_count(), {
+            str(column): self.column_values(str(column)) for column in self.columns
+        }
+
     def row_count(self) -> int:
         """Return the number of rows represented by this columnar payload."""
         columns = self.columns

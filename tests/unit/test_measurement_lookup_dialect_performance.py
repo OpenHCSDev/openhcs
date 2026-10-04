@@ -237,9 +237,6 @@ def test_feature_batch_preserves_overlapping_axes_last_write_and_live_columns() 
 def test_feature_batch_keeps_alias_column_priority_and_feature_qualification() -> None:
     import numpy as np
     from openhcs.core.measurement_row_materialization import MEASUREMENT_SPARSE_CELL
-    from openhcs.processing.backends.cellprofiler.relationships import (
-        RelateObjectsModule,
-    )
 
     table = MeasurementTable(
         name="SourceQualified",
@@ -280,12 +277,11 @@ def test_feature_batch_keeps_alias_column_priority_and_feature_qualification() -
     assert default == {"DNA": {1: 1.0, 2: 2.0, 3: 4.0}, "Memb": {5: 5.0}}
     qualified = {
         feature: axes[None]["Nuclei"].values_by_label
-        for feature, axes in schema.feature_value_indexes(
+        for feature, axes in schema.non_absent_feature_value_indexes(
             table,
             queries,
             objects,
             index_type=MeasurementFeatureValueIndex,
-            measurement_value_qualifier=RelateObjectsModule.aggregate_child_measurement_value_is_qualified,
         )
     }
     assert qualified["DNA"][1] == 1.0
@@ -297,7 +293,7 @@ def test_feature_batch_keeps_alias_column_priority_and_feature_qualification() -
 def test_shared_rows_keep_table_subject_and_result_constructor_authorities() -> None:
     import pytest
     from openhcs.core.measurement_feature_queries import (
-        MeasurementTableObjectFeatureSemantics,
+        ColumnarMeasurementTableSchema,
     )
 
     rows = MeasurementSparseColumnarRows(
@@ -337,18 +333,20 @@ def test_shared_rows_keep_table_subject_and_result_constructor_authorities() -> 
             MeasurementScope.ARTIFACT, "Mixed", id_field="cell_key"
         ),
     )
-    first = MeasurementTableObjectFeatureSemantics.from_table(fixed)
-    second = MeasurementTableObjectFeatureSemantics.from_table(nuclei)
-    combined = MeasurementTableObjectFeatureSemantics.from_table(mixed)
-    assert first.object_names == ("Cells",)
-    assert second.object_names == ("Nuclei",)
-    assert combined.object_names == ("Cells", "Nuclei")
-    assert (
-        "cell_key" not in first.feature_names and "nucleus_key" in first.feature_names
+    first_schema = ColumnarMeasurementTableSchema.from_table(fixed)
+    first = (first_schema.object_names(fixed), first_schema.feature_names(fixed))
+    second_schema = ColumnarMeasurementTableSchema.from_table(nuclei)
+    second = (second_schema.object_names(nuclei), second_schema.feature_names(nuclei))
+    combined_schema = ColumnarMeasurementTableSchema.from_table(mixed)
+    combined = (
+        combined_schema.object_names(mixed),
+        combined_schema.feature_names(mixed),
     )
-    assert (
-        "nucleus_key" not in second.feature_names and "cell_key" in second.feature_names
-    )
+    assert first[0] == ("Cells",)
+    assert second[0] == ("Nuclei",)
+    assert combined[0] == ("Cells", "Nuclei")
+    assert "cell_key" not in first[1] and "nucleus_key" in first[1]
+    assert "nucleus_key" not in second[1] and "cell_key" in second[1]
 
     class PositiveLabelIndex(MeasurementFeatureValueIndex):
         def __init__(self, values_by_label=None, positional_values=None):

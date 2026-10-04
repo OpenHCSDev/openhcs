@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 
 from openhcs.core.measurement_feature_queries import (
+    ColumnarMeasurementTableSchema,
     MeasurementFeatureQuery,
     MeasurementFeatureValueIndex,
 )
@@ -18,7 +19,6 @@ from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
 )
-from openhcs.processing.backends.cellprofiler.relationships import RelateObjectsModule
 
 
 def test_relateobjects_child_mean_qualification_retains_explicit_nan_only() -> None:
@@ -66,14 +66,16 @@ def test_relateobjects_child_mean_qualification_retains_explicit_nan_only() -> N
         query,
         {"Mitochondria": "Mitochondria"},
     )
-    qualified_indexes = MeasurementFeatureValueIndex.from_columnar_table_by_object(
-        table,
-        query,
-        {"Mitochondria": "Mitochondria"},
-        measurement_value_qualifier=(
-            RelateObjectsModule.aggregate_child_measurement_value_is_qualified
-        ),
-    )
+    qualified_indexes = next(
+        ColumnarMeasurementTableSchema.from_table(
+            table
+        ).non_absent_feature_value_indexes(
+            table,
+            {query.feature_name: query},
+            {query.feature_name: {"Mitochondria": "Mitochondria"}},
+            index_type=MeasurementFeatureValueIndex,
+        )
+    )[1][None]
 
     assert default_indexes is not None
     assert qualified_indexes is not None

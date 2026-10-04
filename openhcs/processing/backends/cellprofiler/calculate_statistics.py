@@ -25,7 +25,7 @@ from openhcs.core.equivalence.policy import normalize_runtime_identifier
 from openhcs.core.memory.decorators import numpy
 from openhcs.core.measurement_feature_queries import (
     MeasurementFeatureQuery,
-    MeasurementTableObjectFeatureSemantics,
+    ColumnarMeasurementTableSchema,
 )
 from openhcs.core.measurement_row_materialization import (
     MeasurementProjectedColumnarRows,
@@ -417,17 +417,17 @@ def _statistics_feature_series(
     for table in measurement_tables:
         if table.subject.scope not in {MeasurementScope.IMAGE, MeasurementScope.OBJECT}:
             continue
-        semantics = MeasurementTableObjectFeatureSemantics.from_table(table)
+        semantics = ColumnarMeasurementTableSchema.from_table(table)
         object_names = (
             (MeasurementScope.IMAGE.value.title(),)
             if table.subject.scope is MeasurementScope.IMAGE
-            else semantics.object_names
+            else semantics.object_names(table)
         )
         for object_name in object_names:
             query_object_name = (
                 None if table.subject.scope is MeasurementScope.IMAGE else object_name
             )
-            for feature_name in sorted(semantics.feature_names):
+            for feature_name in sorted(semantics.feature_names(table)):
                 if (
                     feature_name in MeasurementRowAxisField.field_names()
                     or feature_name in MeasurementRowValueField.field_names()

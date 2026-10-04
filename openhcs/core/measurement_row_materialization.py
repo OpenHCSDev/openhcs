@@ -14,8 +14,9 @@ from collections.abc import (
 from dataclasses import dataclass, field, fields as dataclass_fields, is_dataclass
 from dataclasses import replace as dataclass_replace
 from functools import lru_cache
+from itertools import chain
 from types import MappingProxyType
-from typing import Any, ClassVar, TypeAlias, cast
+from typing import Any, ClassVar, TYPE_CHECKING, TypeAlias, cast
 
 from metaclass_registry import AutoRegisterMeta
 from openhcs.constants.constants import AllComponents
@@ -141,6 +142,10 @@ def measurement_table_axis_values(
         )
         if axis_integer is not None
     }
+
+
+if TYPE_CHECKING:
+    from openhcs.core.equivalence.policy import RuntimeMeasurementDialect
 
 
 ProjectedMeasurementRows: TypeAlias = Sequence[Mapping[str, Any]] | ColumnarRows
@@ -510,6 +515,9 @@ class ColumnarRowColumnOverlay(Mapping[str, Sequence[Any]]):
             return self.overlay_columns[column_name]
         return self.base_columns[column_name]
 
+    def __contains__(self, column_name: object) -> bool:
+        return column_name in self.column_names
+
     def __iter__(self):
         return iter(self.column_names)
 
@@ -789,6 +797,122 @@ class WideMeasurementRowAccumulator:
         columns = {
             str(column): rows.column_values(str(column)) for column in rows.columns
         }
+        feature_columns = wide_measurement_feature_columns(
+            columns,
+            object_id_field=object_id_field,
+            qualifier_field_names=qualifier_field_names,
+        )
+        self._add_columns(
+            columns,
+            row_count,
+            feature_columns,
+            project_feature_name,
+            default_subject=default_subject,
+            default_scope=default_scope,
+            source_image_name=source_image_name,
+            object_id_field=object_id_field,
+            qualifier_field_names=qualifier_field_names,
+            missing_cell=missing_cell,
+        )
+
+    def add_declared_rows(
+        self,
+        rows: ColumnarRows,
+        dialect: RuntimeMeasurementDialect,
+        *,
+        default_subject: str,
+        default_scope: MeasurementScope = MeasurementScope.ARTIFACT,
+        source_image_name: str | None = None,
+        object_id_field: str | None = None,
+        qualifier_field_names: Iterable[str] = (),
+        missing_cell: object = MEASUREMENT_SPARSE_CELL,
+    ) -> None:
+        """Admit correlated physical batches using a declared export grammar.
+
+        Opaque callbacks retain add()'s complete, writable column admission.
+        Here snapshots are call-local and no sparse union arrays are retained.
+        """
+        names = tuple(str(column) for column in rows.columns)
+        batches = tuple(
+            (
+                count,
+                {
+                    name: np.array(
+                        values,
+                        copy=True,
+                        dtype=None if isinstance(values, np.ndarray) else object,
+                    )
+                    for name, values in columns.items()
+                },
+            )
+            for count, columns in rows.columnar_row_batches()
+        )
+        eligible = frozenset(
+            name
+            for name, _values in wide_measurement_feature_columns(
+                {
+                    name: chain.from_iterable(
+                        columns[name] for _count, columns in batches if name in columns
+                    )
+                    for name in names
+                },
+                object_id_field=object_id_field,
+                qualifier_field_names=qualifier_field_names,
+            )
+        )
+        structural_names = tuple(name for name in names if name not in eligible)
+        for count, source_columns in batches:
+            if not count:
+                continue
+            columns = {
+                name: source_columns[name]
+                for name in names
+                if name in source_columns
+                and (
+                    name not in eligible
+                    or any(
+                        not is_structural_missing_measurement_cell(value)
+                        for value in source_columns[name]
+                    )
+                )
+            }
+            for name in structural_names:
+                if name not in columns:
+                    values = np.empty(count, dtype=object)
+                    values.fill(MEASUREMENT_SPARSE_CELL)
+                    columns[name] = values
+            columns = {name: columns[name] for name in names if name in columns}
+            self._add_columns(
+                columns,
+                count,
+                tuple(
+                    (name, values)
+                    for name, values in columns.items()
+                    if name in eligible
+                ),
+                dialect.projected_feature_name,
+                default_subject=default_subject,
+                default_scope=default_scope,
+                source_image_name=source_image_name,
+                object_id_field=object_id_field,
+                qualifier_field_names=qualifier_field_names,
+                missing_cell=missing_cell,
+            )
+
+    def _add_columns(
+        self,
+        columns: Mapping[str, Sequence[object]],
+        row_count: int,
+        feature_columns: tuple[tuple[str, Sequence[object]], ...],
+        project_feature_name: MeasurementFeatureNameProjection,
+        *,
+        default_subject: str,
+        default_scope: MeasurementScope,
+        source_image_name: str | None,
+        object_id_field: str | None,
+        qualifier_field_names: Iterable[str],
+        missing_cell: object,
+    ) -> None:
         feature_fields = MeasurementRowAxisField.feature_name_field_names_ordered()
         value_fields = MeasurementRowValueField.field_names_ordered()
         qualifier_fields = tuple(
@@ -816,11 +940,7 @@ class WideMeasurementRowAccumulator:
             for field_name, values in columns.items()
             if normalize_runtime_identifier(field_name) in identity_field_names
         )
-        feature_columns = wide_measurement_feature_columns(
-            columns,
-            object_id_field=object_id_field,
-            qualifier_field_names=qualifier_fields,
-        )
+
         source_values = columns.get(MeasurementRowAxisField.SOURCE_IMAGE_NAME.value)
         object_name_values = columns.get(MeasurementRowAxisField.OBJECT_NAME.value)
         object_id_columns = tuple(
@@ -1926,6 +2046,9 @@ class ConcatenatedColumnarRowColumns(Mapping[str, Sequence[object]]):
         self._column_cache[column_name] = values
         return values
 
+    def __contains__(self, column_name: object) -> bool:
+        return column_name in self.column_names
+
     def __iter__(self):
         return iter(self.column_names)
 
@@ -1955,6 +2078,55 @@ class ConcatenatedColumnarRows(MeasurementColumnarRowsView):
 
     def __len__(self) -> int:
         return sum(columnar_row_count(row_batch) for row_batch in self.row_batches)
+
+    def row_count(self) -> int:
+        return len(self)
+
+    def column_value_segments(
+        self, column: str
+    ) -> Iterable[tuple[int, Sequence[object]]]:
+        if column not in self.columns:
+            raise KeyError(column)
+        cached = self.columns._column_cache.get(column)
+        if cached is not None:
+            yield 0, cached
+            return
+        offset = 0
+        for row_batch in self.row_batches:
+            if column in row_batch.columns:
+                for local_offset, values in row_batch.column_value_segments(column):
+                    yield offset + local_offset, values
+            offset += row_batch.row_count()
+
+    def bounded_column_values(self, column: str, row_stop: int) -> Sequence[object]:
+        cached = self.columns._column_cache.get(column)
+        if cached is not None:
+            return cached[:row_stop]
+        values = np.empty(min(max(0, row_stop), self.row_count()), dtype=object)
+        values.fill(MEASUREMENT_SPARSE_CELL)
+        for offset, segment in self.column_value_segments(column):
+            if offset >= len(values):
+                break
+            count = min(len(segment), len(values) - offset)
+            values[offset : offset + count] = segment[:count]
+        return values
+
+    def columnar_row_batches(
+        self,
+    ) -> Iterable[tuple[int, Mapping[str, Sequence[object]]]]:
+        offset = 0
+        for row_batch in self.row_batches:
+            for count, columns in row_batch.columnar_row_batches():
+                yield count, {
+                    name: (
+                        self.columns._column_cache[name][offset : offset + count]
+                        if name in self.columns._column_cache
+                        else columns[name]
+                    )
+                    for name in self.columns
+                    if name in self.columns._column_cache or name in columns
+                }
+                offset += count
 
     @property
     def covers_declared_object_measurement_domain(self) -> bool:

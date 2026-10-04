@@ -71,7 +71,6 @@ from openhcs.interop.cellprofiler.module_artifact_declarations import (
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,
-    cellprofiler_projected_measurement_feature_name,
 )
 from openhcs.interop.cellprofiler.parser import ModuleBlock
 from openhcs.interop.cellprofiler.setting_names import (
@@ -486,12 +485,12 @@ def _measurement_tables(
                 slice_indices=row_domain.present_axis_values(slice_axis.value),
                 owner=table.name,
             )
-            accumulator.add(
+            accumulator.add_declared_rows(
                 image_numbers.project_measurement_rows(
                     scope=record.key.scope,
                     table=table,
                 ),
-                cellprofiler_projected_measurement_feature_name,
+                CELLPROFILER_MEASUREMENT_DIALECT,
                 default_subject=_measurement_subject_name(table),
                 default_scope=table.subject.scope,
                 source_image_name=table.source_image_name,
@@ -510,9 +509,9 @@ def _measurement_tables(
                     [],
                 ).append(metadata)
     for table in CellProfilerModule.derive_experiment_measurement_tables(all_tables):
-        accumulator.add(
+        accumulator.add_declared_rows(
             table.rows,
-            cellprofiler_projected_measurement_feature_name,
+            CELLPROFILER_MEASUREMENT_DIALECT,
             default_subject=_measurement_subject_name(table),
             default_scope=table.subject.scope,
             source_image_name=table.source_image_name,
@@ -542,7 +541,7 @@ def _measurement_tables(
                 if field_name != MeasurementRowAxisField.SLICE_INDEX.value
             )
         )
-        accumulator.add(
+        accumulator.add_declared_rows(
             MeasurementSparseColumnarRows.from_rows(
                 source_metadata_rows,
                 fields=(
@@ -553,7 +552,7 @@ def _measurement_tables(
                     ),
                 ),
             ),
-            cellprofiler_projected_measurement_feature_name,
+            CELLPROFILER_MEASUREMENT_DIALECT,
             default_subject="Image",
             default_scope=MeasurementScope.IMAGE,
         )
