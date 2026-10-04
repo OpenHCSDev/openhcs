@@ -82,8 +82,15 @@ scratch is FLEET_SCRATCH on that same declared filesystem. If those paths equal
 the original output, the run has no separate destination declaration.
 Use ordinary registered output declarations: PathPlanningConfig.global_output_folder
 chooses the output-plate parent, and artifact/checkpoint destinations must remain
-within that compiled output plate's normal contract. Do not create symlinks to
-bypass path policy, change source/input paths, or put author history on HDD.
+within that compiled output plate's normal contract. Keep the released original
+input inventory and bytes unchanged. If a registered microscope needs a writable
+plate workspace for metadata or cache files, use its supported workspace route
+or stage byte-identical copies of the released raw files under your declared
+writable FLEET_ARTIFACT_ROOT. Record the original/staged paths and matching raw
+hashes; use that owned workspace through ordinary MCP admission and path policy.
+This permits operational staging, not new data, scientific preprocessing, heldout
+access or a change to the acquisition. Do not delete shared locks, make original
+inputs writable, create symlinks to bypass path policy, or put author history on HDD.
 Freeze canonical payload paths and hashes in the HOME handoff rather than copying
 all payloads back into a second final tree. The guard reports actual free space
 on the declared destination; size writes against that filesystem.
