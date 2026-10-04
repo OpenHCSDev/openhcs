@@ -89,7 +89,10 @@ ledger/startup observations measure funded runs for cleanup/staging forecasts.
 Closed output paths remain once as custody declarations, without recursively
 inventorying their contents on every action: actual df already charges those
 bytes, and the cleanup owner inventories retained evidence. Admission requires
-actual free HOME above the declared physical reserve. Growth estimates are
+actual free HOME above the declared physical reserve for startup/large allocations.
+Ongoing bounded observations require the original recorded live MCP incarnation;
+the same reserve is a warning, not a universal veto on reads or small QA. Exhausted
+or malformed free-space telemetry rejects. Growth estimates are
 reported as planning warnings, never added to that admission floor. Neither a selected
 member's nor a sibling's output/scratch usage above an estimate rejects an
 operation. Those bytes consume actual physical HOME, not a quota. The original
@@ -128,13 +131,24 @@ full-stall pressure category, not a second numeric limit for ongoing work.
 
 Every observation preserves all kernel pressure windows plus a separate
 operation-policy receipt. Missing, repeated or malformed pressure
-measurements reject. Low available RAM, actual free HOME below its reserve, inactive
+measurements reject. Low available RAM, startup free HOME below its reserve, inactive
 expired clocks and missing custody still reject through their original owners.
 High pressure alone is not declared safe: insufficient actual host desktop
 headroom stops allocating work, irrespective of whether a former cap matched.
 ``ledger`` remains ledger-only, never
 scientific admission. New clients still require replacement admission; do not
 use an ongoing observation as permission to launch unreserved growth.
+
+``ongoing`` is an existing-client operation capability, not a tool-name bypass.
+The original slot owner verifies the first-start marker, retained three client
+journals, active MCP InvocationID and common-slice identity. The recorder still
+owns the sole pre-client ``replacement`` admission; author launch now uses that
+startup mode too. ``full`` admits potentially large compile/execution/export
+allocations. Registered capability mutation/effect metadata and actual request
+shape guide that choice; read-only does not imply cheap. No MCP name roster,
+per-call policy store, new quota, or alternative admission implementation is
+introduced. Disk warnings are not a future-buffer guarantee: actual write errors
+and uncertain receipts remain visible, and large work still requires admission.
 
 The original successor projection and funding publisher no longer carry the
 removed per-author science/CLI/helper RAM ceilings or aggregate RAM/swap cap.

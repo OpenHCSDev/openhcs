@@ -42,6 +42,12 @@ run() {
   test "$status" = "$expected"
   printf 'PASS %s mode=%s status=%s\n' "$phase" "$mode" "$status"
 }
+run 1 ongoing before_recorded_client
+runtime="$scratch/run/A/author-workspace/output/runtime"
+# External recorded-client lifecycle evidence; no MCP/native/provider runs.
+date -u +%s > "$runtime/first-mcp-started.epoch"
+touch "$runtime/mcp.stdin" "$runtime/mcp.stdout" "$runtime/mcp.timing"
+sha256sum "$runtime/mcp.stdin" "$runtime/mcp.stdout" "$runtime/mcp.timing" > "$scratch/client-journals.sha256"
 run 0 ongoing original_review
 # Old allocations are charged by df, not inventoried for every action.
 mkdir "$scratch/retired-output"
@@ -78,7 +84,15 @@ rg -q 'Planning warning:' "$runtime/resources-forecast_not_ongoing_permission.di
 printf 'full avg10=0.00 avg60=0.00 avg300=0.00 total=324417078\n' > "$scratch/host/pressure"
 run 0 replacement forecast_not_startup_permission
 export CONTROLLED_HOME_BYTES=2147483647
-run 78 ongoing actual_disk_below_reserve
+run 0 ongoing existing_qa_below_startup_reserve
+rg -q 'Disk warning: below startup reserve' "$runtime/resources-existing_qa_below_startup_reserve.disk"
+run 78 replacement startup_below_reserve
+run 78 full bulk_allocation_below_reserve
+export CONTROLLED_HOME_BYTES=0
+run 78 ongoing exhausted_destination
+export CONTROLLED_HOME_BYTES=2147483647 CONTROLLED_MCP_ACTIVE=0
+run 1 ongoing dead_client_not_continuation
+unset CONTROLLED_MCP_ACTIVE
 export CONTROLLED_HOME_BYTES=8353711390
 printf 'full avg10=4.82 avg60=1.09 avg300=0.23 total=324417078\n' > "$scratch/host/pressure"
 export CONTROLLED_HOME_BYTES=8353711390 CONTROLLED_COMMON_SWAP=1
@@ -105,7 +119,7 @@ run 0 replacement low_pressure_replacement
 export CONTROLLED_SCI_MAX=4294967297
 run 0 ongoing child_limit_not_admission_authority
 export CONTROLLED_SCI_MAX=4294967296 CONTROLLED_PROCESS_STATE=not-found
-run 0 ongoing no_residual_cap_estimate
+run 1 ongoing missing_original_client
 unset CONTROLLED_PROCESS_STATE
 export CONTROLLED_COMMON_CURRENT=8455716864
 printf 'MemAvailable: 2232320 kB\n' > "$scratch/host/meminfo"
@@ -139,7 +153,8 @@ rg -q 'required 2048 MiB' "$runtime/resources-continuing_original_scope_owner.ra
 export CONTROLLED_SCI_MAX=268435456 CONTROLLED_SCI_CURRENT=134217728
 export CONTROLLED_CLI_MAX=0 CONTROLLED_CLI_CURRENT=0
 printf 'MemAvailable: 2232320 kB\n' > "$scratch/host/meminfo"
-run 0 ongoing headless_disabled_cli ADMIN
+printf 'full avg10=0.00 avg60=0.00 avg300=0.00 total=324417078\n' > "$scratch/host/pressure"
+run 0 full headless_disabled_cli ADMIN
 admin_runtime="$scratch/admin-run/ADMIN/author-workspace/output/runtime"
 rg -q 'required 2048 MiB' "$admin_runtime/resources-headless_disabled_cli.ram"
 export CONTROLLED_SCI_MAX=4294967296 CONTROLLED_SCI_CURRENT=1342177280
@@ -151,5 +166,5 @@ sha256sum --check --quiet "$scratch/original-receipt.sha256"
 printf '1\n' > "$runtime/first-mcp-started.epoch"
 run 1 ongoing expired_clock
 (cd "$scratch/run"; sha256sum --check --quiet READY-FREEZE.sha256)
-test ! -e "$runtime/mcp.stdin"
+sha256sum --check --quiet "$scratch/client-journals.sha256"
 printf 'PASS original immutable run, deadline, receipt uniqueness and no client/native custody preserved\n'

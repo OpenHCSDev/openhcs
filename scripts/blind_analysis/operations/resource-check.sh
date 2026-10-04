@@ -12,9 +12,9 @@ mode=${4:-ongoing}
 # The same owner requires actual host headroom below; PSI is
 # telemetry for ongoing work, and fatal when admitting future fleet growth.
 case "$mode" in
-  ongoing) pressure_policy=warning ;;
-  full|replacement|bootstrap) pressure_policy=reject ;;
-  ledger) pressure_policy=ledger ;;
+  ongoing) pressure_policy=warning; disk_policy=warning ;;
+  full|replacement|bootstrap) pressure_policy=reject; disk_policy=reject ;;
+  ledger) pressure_policy=ledger; disk_policy=warning ;;
   *) exit 64 ;;
 esac
 runtime="$FLEET_WORKSPACE/output/runtime"
@@ -28,6 +28,9 @@ if [[ -e "$runtime/first-mcp-started.epoch" ]]; then
 fi
 receipt="$runtime/resources-$phase"
 test ! -e "$receipt.output"
+# Ongoing means an already recorded live client, not permission to bootstrap
+# another process. The existing recorder owns this incarnation and its clock.
+if [[ "$mode" == ongoing ]]; then fleet_require_live_client; fi
 
 # Canonicalize custody once and reject overlaps. Closed bytes are already in df;
 # the cleanup owner inventories them, not each scientific action.
@@ -81,12 +84,18 @@ printf 'Operational policy: retained-output/scratch byte quotas removed; program
 # Forecasts guide cleanup/staging, not permission for an unrelated capture.
 # Admission protects actual free HOME; no all-fleet estimate is added to its floor.
 home_floor=$(jq -er '.proposed_resource_envelope.minimum_home_ongoing_gib*1073741824' <<< "$FLEET_PROGRAM")
-df --output=avail -B1 /home/ts | awk -v floor="$home_floor" -v forecast="$remaining" '
+df --output=avail -B1 /home/ts | awk -v floor="$home_floor" -v forecast="$remaining" -v policy="$disk_policy" '
   NR==2 {
-    printf "HomeAvailable %.3f GiB; required %.3f GiB\n",$1/1073741824,floor/1073741824
-    if($1<floor) exit 78
+    if($1 !~ /^[0-9]+$/ || $1+0<=0) exit 78
+    printf "HomeAvailable %.3f GiB; startupReserve %.3f GiB; policy=%s\n",$1/1073741824,floor/1073741824,policy
+    if($1<floor) {
+      if(policy=="reject") exit 78
+      printf "Disk warning: below startup reserve. Existing-client bounded reads/QA only; no cold launch or bulk allocation permission. Check actual destination writes and coordinate owned cleanup.\n"
+    }
     if($1<floor+forecast) printf "Planning warning: remaining growth estimate %.3f GiB exceeds space above reserve; stage real allocations and coordinate cleanup, not a quota/refusal.\n",forecast/1073741824
-  }' | tee "$receipt.disk"
+    observed=1
+  }
+  END {if(!observed) exit 78}' | tee "$receipt.disk"
 if [[ "$mode" == ledger ]]; then printf 'Ledger-only PASS; not SCI admission\n'; exit; fi
 
 fleet_require_joint_slice
