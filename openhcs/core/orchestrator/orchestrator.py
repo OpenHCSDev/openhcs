@@ -22,6 +22,7 @@ from openhcs.core.compiled_execution import CompiledExecutionBundle
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.execution_visualizer import ExecutionVisualizerABC
 from objectstate.object_state import ObjectState
+from objectstate.object_state_registry import ObjectStateRegistry
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
 
 
@@ -1038,16 +1039,24 @@ class PipelineOrchestrator:
         previous_config = self._pipeline_config
         previous_source_bindings = None
         if previous_config is not None:
-            previous_source_bindings = (
-                ObjectState(previous_config)
-                .to_saved_resolved_object()
-                .source_bindings_config
+            previous_resolved, _ = ObjectState.resolve_saved_object(
+                previous_config,
+                ancestor_objects_with_scopes=(
+                    ObjectStateRegistry.get_ancestor_objects_with_scopes(
+                        None, use_saved=True
+                    )
+                ),
             )
-        current_source_bindings = (
-            ObjectState(pipeline_config)
-            .to_saved_resolved_object()
-            .source_bindings_config
+            previous_source_bindings = previous_resolved.source_bindings_config
+        current_resolved, _ = ObjectState.resolve_saved_object(
+            pipeline_config,
+            ancestor_objects_with_scopes=(
+                ObjectStateRegistry.get_ancestor_objects_with_scopes(
+                    None, use_saved=True
+                )
+            ),
         )
+        current_source_bindings = current_resolved.source_bindings_config
         source_bindings_changed = (
             previous_source_bindings is not None
             and previous_source_bindings != current_source_bindings
@@ -1101,7 +1110,14 @@ class PipelineOrchestrator:
         if self.pipeline_config is None:
             raise RuntimeError("No pipeline configuration available for resolution")
 
-        result = ObjectState(self.pipeline_config).to_saved_resolved_object()
+        result, _ = ObjectState.resolve_saved_object(
+            self.pipeline_config,
+            ancestor_objects_with_scopes=(
+                ObjectStateRegistry.get_ancestor_objects_with_scopes(
+                    None, use_saved=True
+                )
+            ),
+        )
         if not isinstance(result, GlobalPipelineConfig):
             raise TypeError(
                 "Resolved pipeline configuration must be GlobalPipelineConfig, "

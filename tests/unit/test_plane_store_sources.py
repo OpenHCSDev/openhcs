@@ -6,6 +6,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 import zarr
+from objectstate import ObjectState
 from objectstate.lazy_factory import ensure_global_config_context
 from ome_zarr.format import Format
 from polystore.base import ensure_storage_registry, storage_registry
@@ -356,6 +357,10 @@ def test_saved_source_bindings_rebuild_canonical_store_projection(
     tmp_path: Path,
     fmt: Format,
 ) -> None:
+    def reject_editor(*args, **kwargs):
+        raise AssertionError("Saved runtime config capture must not construct an editor")
+
+    monkeypatch.setattr(ObjectState, "__init__", reject_editor)
     stores = _write_mixed_stores(tmp_path, fmt)
     monkeypatch.setattr(
         BioFormatsJavaContext,
