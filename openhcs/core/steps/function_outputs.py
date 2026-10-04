@@ -756,7 +756,11 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
             raise ValueError("OpenHCS metadata requires a file manager.")
         if context.metadata_cache is None:
             raise ValueError("Produced metadata requires declared component labels.")
-        projection_entries = self.produced_projection_entries(context, produced_plan)
+        projection_entries = (
+            None
+            if produced_plan is None
+            else self.produced_projection_entries(context, produced_plan)
+        )
         handler = context.microscope_handler
         parser = handler.parser
         microscope_type = handler.microscope_type
@@ -787,11 +791,13 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
     def produced_projection_entries(
         self,
         context: ProcessingContext,
-        plan: CompiledStepPlan | None,
-    ) -> VirtualWorkspaceSourceProjectionEntries | None:
-        """Project the current saved plan while its typed memory outputs remain."""
-        if plan is None:
-            return None  # Plate reconciliation must not reload cleaned step memory.
+        plan: CompiledStepPlan,
+    ) -> VirtualWorkspaceSourceProjectionEntries:
+        """Project this step's update, including an empty non-image update.
+
+        Only write's absent step plan selects completed-directory reconciliation;
+        an empty step must not reconcile other producers' in-flight images.
+        """
         if context.filemanager is None:
             raise ValueError("OpenHCS metadata requires a file manager.")
         target = type(self).from_plan(plan)
@@ -889,7 +895,7 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
             )
         )
         if not projection_paths:
-            return None
+            return VirtualWorkspaceSourceProjectionEntries(MappingProxyType({}))
         return VirtualWorkspaceSourceProjectionEntries.from_projection_paths(
             projection_paths
         )
@@ -1020,7 +1026,7 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
         ):
             if not plan.create_openhcs_metadata:
                 projection_entries = target.produced_projection_entries(context, plan)
-                if projection_entries is None:
+                if projection_entries.is_empty:
                     continue
                 AtomicMetadataWriter().merge_source_projection_metadata(
                     METADATA_CONFIG.metadata_path(target.plate_root),

@@ -417,6 +417,11 @@ class VirtualWorkspaceSourceProjectionEntries:
     entries: Mapping[str, SourceProjection]
 
     @property
+    def is_empty(self) -> bool:
+        """Whether this admitted update contains any source projections."""
+        return not self.entries
+
+    @property
     def projection_paths(self) -> tuple[tuple[SourceProjection, str], ...]:
         """Expose serialization order directly from the admitted path owner."""
         return tuple((projection, path) for path, projection in self.entries.items())
