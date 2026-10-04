@@ -28,8 +28,11 @@ from openhcs.mcp.dev_client_rendering import (
     CatalogRenderOptions,
     CodeDocumentRenderOptions,
     McpDevOutputRenderer,
+    McpDevTypedOutputRenderer,
+    McpDevOutputRenderOptions,
     McpDevPayloadProjection,
 )
+from openhcs.serialization.json import to_jsonable
 from openhcs.mcp.dev_client_renderers.object_state import ObjectStateScopeRenderer
 from openhcs.mcp.dev_client_renderers.viewer import (
     RuntimeServerRenderer,
@@ -461,56 +464,54 @@ class FunctionSearchRenderer(McpDevOutputRenderer):
         return lines
 
 
-class CustomFunctionRegistrationRenderer(McpDevOutputRenderer):
+class CustomFunctionRegistrationRenderer(McpDevTypedOutputRenderer):
     """Compact renderer for custom-function registration results."""
 
     output_contract = CustomFunctionRegistrationResult
+    unavailable_summary = "Custom function registration: <unavailable>"
 
     @classmethod
-    def render(cls, response: JsonObject) -> str:
-        payload = McpDevPayloadProjection.first_tool_payload(response)
-        if payload is None:
-            return json.dumps(response, indent=2, sort_keys=True)
-        errors = McpDevPayloadProjection.sequence_of_mappings(payload.get("errors"))
-        if errors:
+    def render_payload(
+        cls, payload: CustomFunctionRegistrationResult, options: McpDevOutputRenderOptions,
+    ) -> str:
+        del options
+        # The existing typed ancestor owns batch decode and diagnostic rendering.
+        if payload.errors:
             return "\n".join(
                 (
                     "Custom function registration: incomplete observation or projection",
-                    f"Retained native receipt registered_count: {McpDevPayloadProjection.text(payload.get('registered_count'))} (zero/absent does not prove no mutation)",
-                    *ViewerValidationRenderer._error_lines(errors),
-                    "Read-only observation handle: " + json.dumps(payload.get("observation_handle"), sort_keys=True),
+                    f"Retained native receipt registered_count: {payload.registered_count} (zero/absent does not prove no mutation)",
+                    "Read-only observation handle: " + json.dumps(to_jsonable(payload.observation_handle), sort_keys=True),
                 )
             )
-        functions = McpDevPayloadProjection.sequence_of_mappings(
-            payload.get("functions")
-        )
         lines = [
             (
                 "Custom function registration: "
-                f"registered={McpDevPayloadProjection.text(payload.get('registered_count'))} "
-                f"persisted={McpDevPayloadProjection.text(payload.get('persisted'))} "
-                f"storage={McpDevPayloadProjection.text(payload.get('storage_dir'))}"
+                f"registered={payload.registered_count} "
+                f"persisted={payload.persisted} "
+                f"storage={McpDevPayloadProjection.text(payload.storage_dir)}"
             )
         ]
-        source_paths = payload.get("source_file_paths")
-        if source_paths:
+        if payload.source_file_paths:
             lines.append(
-                f"Files: {ViewerValidationRenderer._sequence_text(source_paths)}"
+                f"Files: {','.join(payload.source_file_paths)}"
             )
-        if functions:
+        if payload.functions:
             lines.append("Functions:")
-            lines.extend(FunctionSearchRenderer._item_lines(functions))
-            if payload.get("persisted") is False:
+            for function in payload.functions:
+                lines.append(f"- {function.function_id}: {function.signature} tags={','.join(function.backend_tags)}")
+                if function.summary:
+                    lines.append(f"  {function.summary}")
+            if not payload.persisted:
                 lines.append(
                     "Lifetime: process-local only; follow-up dev_client commands "
                     "start a fresh MCP process. Omit --no-persist or reuse the "
                     "same MCP session before using these function ids."
                 )
             lines.append("Next:")
-            for function in functions:
-                function_id = McpDevPayloadProjection.text(function.get("function_id"))
-                lines.append(f"- function {function_id}")
-                lines.append(f"- draft-pipeline-step {function_id} --name <step_name>")
+            for function in payload.functions:
+                lines.append(f"- function {function.function_id}")
+                lines.append(f"- draft-pipeline-step {function.function_id} --name <step_name>")
         return "\n".join(lines)
 
 
