@@ -2075,10 +2075,57 @@ class NumpyMorphologyBackendStrategy(MorphologyBackendStrategy):
         return _scipy_disk_footprint(radius)
 
     def grayscale_closing(self, image: np.ndarray, footprint: np.ndarray) -> np.ndarray:
-        return _skimage_grayscale_closing(image, footprint)
+        return self._grayscale_morphology(image, footprint, first_pass_is_dilation=True)
 
     def grayscale_opening(self, image: np.ndarray, footprint: np.ndarray) -> np.ndarray:
-        return _skimage_grayscale_opening(image, footprint)
+        return self._grayscale_morphology(image, footprint, first_pass_is_dilation=False)
+
+    def _grayscale_morphology(
+        self,
+        image: np.ndarray,
+        footprint: np.ndarray,
+        *,
+        first_pass_is_dilation: bool,
+    ) -> np.ndarray:
+        image_array = np.asarray(image)
+        footprint_array = np.asarray(footprint, dtype=bool)
+        # Native floating-point ordering is shared by the span filters on
+        # finite values. Keep the provider's original NaN and signed-zero
+        # behavior, unsupported dtypes, and genuinely volumetric footprints.
+        if (
+            image_array.dtype not in (np.dtype(np.float32), np.dtype(np.float64))
+            or image_array.ndim < 2
+            or footprint_array.ndim != image_array.ndim
+            or any(size != 1 for size in footprint_array.shape[:-2])
+            or image_array.size == 0
+            or not footprint_array.any()
+            or not np.isfinite(image_array).all()
+            or np.any((image_array == 0) & np.signbit(image_array))
+        ):
+            native_operation = (
+                _skimage_grayscale_closing
+                if first_pass_is_dilation
+                else _skimage_grayscale_opening
+            )
+            return native_operation(image_array, footprint_array)
+
+        from skimage.morphology.footprints import mirror_footprint, pad_footprint
+
+        footprint_2d = pad_footprint(
+            footprint_array.reshape(footprint_array.shape[-2:]), pad_end=False
+        )
+        first_offsets = FootprintOffsetTable.from_footprint(
+            footprint_2d, dimension_policy=FOOTPRINT_OFFSET_2D_POLICY
+        )
+        second_offsets = FootprintOffsetTable.from_footprint(
+            mirror_footprint(footprint_2d), dimension_policy=FOOTPRINT_OFFSET_2D_POLICY
+        )
+        intermediate = first_offsets.grayscale_extremum(
+            image_array, maximum=first_pass_is_dilation
+        )
+        return second_offsets.grayscale_extremum(
+            intermediate, maximum=not first_pass_is_dilation
+        )
 
     def erode_labeled_objects(
         self, labels: np.ndarray, footprint: np.ndarray
@@ -3544,7 +3591,7 @@ FOOTPRINT_OFFSET_2D_OR_3D_POLICY = FootprintOffsetDimensionPolicy(
 
 @dataclass(frozen=True, slots=True)
 class FootprintOffsetTable:
-    """Contiguous centered offsets for Numba morphology kernels."""
+    """Centered footprint geometry for native and Numba morphology kernels."""
 
     offsets: np.ndarray
 
@@ -3565,6 +3612,55 @@ class FootprintOffsetTable:
     @property
     def x_offsets(self) -> np.ndarray:
         return self.offsets[:, 1]
+
+    def horizontal_spans(self) -> tuple[tuple[int, int, int], ...]:
+        """Group adjacent offsets into exact inclusive horizontal intervals."""
+        spans: list[tuple[int, int, int]] = []
+        for y, x in self.offsets:
+            y, x = int(y), int(x)
+            if spans and spans[-1][0] == y and spans[-1][2] + 1 == x:
+                row, first, _ = spans[-1]
+                spans[-1] = (row, first, x)
+            else:
+                spans.append((y, x, x))
+        return tuple(spans)
+
+    def grayscale_extremum(
+        self, image: np.ndarray, *, maximum: bool
+    ) -> np.ndarray:
+        """Reduce the exact union of spans, sharing each horizontal window."""
+        from scipy.ndimage import maximum_filter1d, minimum_filter1d
+
+        spans = self.horizontal_spans()
+        left = max(0, -min(first for _, first, _ in spans))
+        right = max(0, max(last for _, _, last in spans))
+        padding = [(0, 0)] * image.ndim
+        padding[-1] = (left, right)
+        # All selected windows lie within this native half-sample reflected
+        # extension, including interval centers outside the original image.
+        padded = np.pad(image, padding, mode="symmetric")
+        filter_operation = maximum_filter1d if maximum else minimum_filter1d
+        lengths = sorted({last - first + 1 for _, first, last in spans})
+        horizontal = {
+            length: filter_operation(padded, size=length, axis=-1, mode="reflect")
+            for length in lengths
+        }
+        height, width = image.shape[-2:]
+        combine = np.maximum if maximum else np.minimum
+        output = None
+        for row_offset, first, last in spans:
+            length = last - first + 1
+            rows = (np.arange(height) + row_offset) % (2 * height)
+            rows = np.where(rows < height, rows, 2 * height - rows - 1)
+            center = left + first + length // 2
+            values = np.take(
+                horizontal[length][..., center : center + width], rows, axis=-2
+            )
+            if output is None:
+                output = values
+            else:
+                combine(output, values, out=output)
+        return output
 
 
 def _border_component_ids(component_labels: np.ndarray) -> set[int]:
