@@ -30,6 +30,7 @@ $funding[0] as $original
 | if ($new.resource_policy|type)!="object"
   then error("missing resource policy") else . end
 | .proposed_resource_envelope += $original.proposed_resource_envelope + $new.resource_policy
+| del(.proposed_resource_envelope.total_output_and_scratch_mib)
 | .authors = $original.authors
 | .authors |= map(
     . as $member

@@ -15,12 +15,11 @@ jq -n --arg root "$scratch" --arg operations "$operations" '{
     helper_custody:{program_root:($root+"/run"),slot:"A"}}],
   funded_members:[{slot:"A",run_owner_root:($root+"/run")}],
   proposed_resource_envelope:{aggregate_memory_max_bytes:8589934592,
-    total_output_and_scratch_mib:10240,minimum_home_ongoing_gib:2,
+    minimum_home_ongoing_gib:2,
     output_per_author_mib:1,scratch_per_author_mib:1,per_author_science_mib:4096,
     per_author_cli_mib:512,helper_caps_mib:{},desktop_growth_reserve_mib:2048,full_memory_psi_max_percent:1}
 }' > "$scratch/run/program.json"
-printf 'Controlled initialization only; no scientific release.\n' > "$scratch/run/PARENT-RELEASE.rst"
-(cd "$scratch/run"; sha256sum program.json PARENT-RELEASE.rst > READY-FREEZE.sha256)
+(cd "$scratch/run"; sha256sum program.json > READY-FREEZE.sha256)
 FLEET_PARENT_RELEASED=1 bash "$operations/project-program.sh" initialize "$scratch/funding" "$scratch/run" absent
 export CONTROLLED_HOST="$scratch/host" CONTROLLED_HOME_BYTES=8353711390
 export CONTROLLED_COMMON_MAX=8589934592 CONTROLLED_COMMON_CURRENT=1610612736 CONTROLLED_COMMON_SWAP=0
@@ -39,6 +38,17 @@ run() {
   printf 'PASS %s mode=%s status=%s\n' "$phase" "$mode" "$status"
 }
 run 0 ongoing original_review
+# Old allocations are measured, but do not consume an invented historical
+# ceiling. Actual df capacity and remaining funded growth remain authoritative.
+mkdir "$scratch/retired-output"
+dd if=/dev/zero of="$scratch/retired-output/preserved-evidence.bin" bs=4096 count=16 status=none
+jq --arg old "$scratch/retired-output" '.retained_output_roots=[$old] |
+  .proposed_resource_envelope.total_output_and_scratch_mib=0' \
+  "$scratch/funding/program.json" > "$scratch/funding-with-old-history.json"
+mv "$scratch/funding-with-old-history.json" "$scratch/funding/program.json"
+run 0 ongoing measured_history_not_capped
+old_bytes=$(du -s -B1 "$scratch/retired-output" | cut -f1)
+rg -q "Programme old=$old_bytes " "$scratch/run/A/author-workspace/output/runtime/resources-measured_history_not_capped.output"
 runtime="$scratch/run/A/author-workspace/output/runtime"
 rg -q 'avg10=4.82 avg60=1.09 avg300=0.23' "$runtime/resources-original_review.psi"
 rg -q 'Pressure warning:' "$runtime/resources-original_review.psi"
@@ -57,6 +67,13 @@ run 1 ongoing unsafe_swap
 export CONTROLLED_COMMON_SWAP=0 CONTROLLED_COMMON_CURRENT=8589934593
 run 1 ongoing overcharged_slice
 export CONTROLLED_COMMON_CURRENT=1610612736
+dd if=/dev/zero of="$scratch/run/A/author-workspace/output/controlled-overage.bin" bs=4096 count=257 status=none
+run 1 ongoing retained_output_overage
+unlink "$scratch/run/A/author-workspace/output/controlled-overage.bin"
+mkdir -p "$scratch/run/A/author-workspace/output/runtime/scratch"
+dd if=/dev/zero of="$scratch/run/A/author-workspace/output/runtime/scratch/controlled-overage.bin" bs=4096 count=257 status=none
+run 1 ongoing scratch_overage
+unlink "$scratch/run/A/author-workspace/output/runtime/scratch/controlled-overage.bin"
 printf 'full avg10=4.82 avg60=invalid avg300=0.23 total=324417078\n' > "$scratch/host/pressure"
 run 77 ongoing malformed_telemetry
 printf 'full avg10=4.82 avg60=1.09 total=324417078\n' > "$scratch/host/pressure"
@@ -90,8 +107,7 @@ jq -n --arg root "$scratch" '{phase:"headless-control",
 }' > "$scratch/admin-run/successor-declaration.json"
 printf '{"target":"/controlled/no-install","source_head":"controlled"}\n' > "$scratch/qualification.json"
 bash "$operations/project-program.sh" prepare "$scratch/funding" "$scratch/admin-run" "$scratch/qualification.json"
-printf 'Controlled admin publication only; no SCI launch.\n' > "$scratch/admin-run/PARENT-RELEASE.rst"
-(cd "$scratch/admin-run"; sha256sum program.json successor-declaration.json PARENT-RELEASE.rst > READY-FREEZE.sha256)
+(cd "$scratch/admin-run"; sha256sum program.json successor-declaration.json > READY-FREEZE.sha256)
 FLEET_PARENT_RELEASED=1 bash "$operations/project-program.sh" publish "$scratch/funding" "$scratch/admin-run" \
   "$(sha256sum "$scratch/funding/program.json" | cut -d' ' -f1)"
 run 0 ongoing continuing_original_scope_owner

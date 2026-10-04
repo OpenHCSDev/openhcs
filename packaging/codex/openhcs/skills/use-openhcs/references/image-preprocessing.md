@@ -61,6 +61,22 @@ silently substituting the detection transform; see
 [measurement-image choice](measurement-interpretation.md#detection-pixels-versus-measurement-pixels).
 Do not silently apply per-field normalisation to treatment comparisons.
 
+### Shared scaling for fields of one mosaic
+
+For fields belonging to the same well or mosaic, fit one low/high percentile
+pair over the complete field stack **per channel**, then apply that shared
+mapping to every field. This applies whether segmentation is field-by-field
+or follows stitching; stitching is not required to obtain consistent scaling.
+Independent field fits give the same raw signal different analytical values
+depending on its neighbours and can distort seam and detection comparisons.
+Use the canonical `image_analysis_workflow` assembly/grouping contract and
+inspect the compiled SITE scope and live stack-normalisation callable: a
+singleton field invocation does not pool the other fields. Keep channels and
+unrelated wells separate unless the task explicitly calls for a wider fit.
+Pooling the tiles and fitting a stitched image express the same shared-scaling
+intent, but overlap duplication, blending and mosaic padding can change the
+exact histogram. Record the fit domain rather than assuming identical bounds.
+
 ## Slowly varying additive background
 
 Test subtraction of a background estimate or a white top-hat. Its spatial scale

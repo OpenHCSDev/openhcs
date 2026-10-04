@@ -2,7 +2,6 @@
 # Internal recorded-client performer; admission belongs to recorded-mcp.sh.
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/slot-env.sh" "${1:?root}" "${2:?slot}"
-test "$FLEET_PARENT_RELEASED" = 1
 DISPLAY=:$FLEET_DISPLAY /usr/bin/xprop -root _NET_SUPPORTING_WM_CHECK _NET_SUPPORTED > "$FLEET_WORKSPACE/output/runtime/wm-before-mcp.txt"
 rg -q WINDOW "$FLEET_WORKSPACE/output/runtime/wm-before-mcp.txt"
 test -f "$FLEET_INSTALL/openhcs/mcp/server.py"

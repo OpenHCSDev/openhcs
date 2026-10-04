@@ -1244,15 +1244,19 @@ class ComponentArtifactPlans(Generic[ArtifactInputPlanKeyT, ArtifactInputPlanT])
         execution_scope: ComponentGroupScope,
         component_key: str | None,
     ) -> "ComponentArtifactPlans[InvocationArtifactInputProjectionKey, InvocationArtifactInputEdgePlan] | None":
-        projected = invocation.for_component_execution(
+        active_outputs = invocation.output_plans_for_component(
             execution_scope,
             component_key,
         )
-        if projected is None:
+        if active_outputs is None:
             return None
         return ComponentArtifactPlans(
-            inputs=projected.select_inputs(self.inputs),
-            outputs=projected.select_outputs(self.outputs),
+            inputs=invocation.select_inputs(
+                self.inputs, active_output_plans=active_outputs,
+            ),
+            outputs=invocation.select_outputs(
+                self.outputs, compiled_output_plans=active_outputs,
+            ),
         )
 
     def select_source_bound_inputs(
@@ -1501,14 +1505,11 @@ class FunctionRuntimeScope(PatternGroupExecutionScope):
                 declared_source_bindings=declared_source_bindings,
                 active_source_bindings=active_main_flow_bindings,
             )
-            runtime_invocation = invocation.for_runtime_outputs(
-                output_plans=tuple(artifacts.outputs.values()),
-            )
             executor = FunctionCoreExecutor(
                 main_data_arg=current_stack,
                 source_memory_type=current_memory_type,
                 runtime_scope=self,
-                invocation=runtime_invocation,
+                invocation=invocation,
                 artifacts=artifacts,
                 group_key=group_key,
                 plane_projection=RuntimePlaneProjection.stack(self.runtime_plane_count),
@@ -2188,7 +2189,7 @@ class FunctionCoreExecutor(FunctionInvocationArtifactScope):
             )
             artifact_refs = (
                 *(edge.spec.ref() for edge in self.selected_artifact_input_edges),
-                *(plan.ref() for plan in self.invocation.artifact_output_plans),
+                *self.artifacts.outputs,
             )
             raise type(exc)(
                 f"{exc} Invocation boundary: step_index={cursor.step_index}; "

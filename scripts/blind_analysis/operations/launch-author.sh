@@ -34,9 +34,7 @@ if [[ "${3:-}" == --preflight ]]; then
   printf 'input=%s read=%s:%s:%s write=%s workers=%s\n' "$FLEET_INPUT" "$FLEET_INPUT" "$FLEET_WORKSPACE/output" "$FLEET_INSTALL/openhcs/agent/resources/knowledge" "$FLEET_WORKSPACE/output" "$(jq -er '.proposed_resource_envelope.science_workers_per_author' "$FLEET_RUN_ROOT/program.json")"
   exit
 fi
-test "$FLEET_PARENT_RELEASED" = 1
 fleet_require_writer_release
-test -f "$FLEET_RUN_ROOT/PARENT-RELEASE.rst"
 test -f "$FLEET_RUN_ROOT/READY-FREEZE.sha256"
 (cd "$FLEET_RUN_ROOT"; sha256sum --check --quiet READY-FREEZE.sha256)
 mkdir -p "$FLEET_WORKSPACE/output/runtime" "$FLEET_WORKSPACE/output/native-sessions"

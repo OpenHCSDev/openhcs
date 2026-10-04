@@ -10,31 +10,37 @@ mkdir -p "$funding"
 # The same lock is held shared by a complete admission, exclusive by publication.
 exec 9>"$funding/program.lock"
 flock --exclusive 9
+
+project_program() {
+    local qualification=${1:?authoritative package qualification} previous members original template target head
+    previous=$(jq -er '.predecessor_program_root' "$run/successor-declaration.json") || return
+    test "$(realpath -m "$previous")" = "$(realpath -m "$funding")" || return
+    # Membership references come from funding; physical declarations come from
+    # their immutable run owner through the original slot projection.
+    members=$(bash "$operations/slot-env.sh" "$funding" --project-members) || return
+    original=$(jq -ce --argjson members "$members" '.authors=$members' "$funding/program.json") || return
+    template=$(jq -er '.run_template_root' "$run/successor-declaration.json") || return
+    test "$(jq -er '.funding_root' "$template/program.json")" = "$funding" || return
+    target=$(jq -er '.target' "$qualification") || return
+    head=$(jq -er '.source_head' "$qualification") || return
+    jq --slurpfile replacement <(jq --arg proof "$qualification" '.package_qualification=$proof' "$run/successor-declaration.json") \
+      --slurpfile funding <(printf '%s\n' "$original") \
+      --arg operation_owner_root "$operations" --arg successor_root "$run" \
+      --arg source_install "$target" \
+      --arg source_head "$head" \
+      -f "$operations/successor-program.jq" "$template/program.json"
+}
+
 case "$mode" in
   prepare)
     qualification=${4:?authoritative package qualification}
     test ! -e "$run/program.json"
     test ! -e "$run/READY-FREEZE.sha256"
-    previous=$(jq -er '.predecessor_program_root' "$run/successor-declaration.json")
-    test "$(realpath -m "$previous")" = "$(realpath -m "$funding")"
-    # Membership references come from funding; physical declarations come from
-    # their immutable run owner through the original slot projection.
-    members=$(bash "$operations/slot-env.sh" "$funding" --project-members)
-    original=$(jq -ce --argjson members "$members" '.authors=$members' "$funding/program.json")
-    template=$(jq -er '.run_template_root' "$run/successor-declaration.json")
-    test "$(jq -er '.funding_root' "$template/program.json")" = "$funding"
-    jq --slurpfile replacement <(jq --arg proof "$qualification" '.package_qualification=$proof' "$run/successor-declaration.json") \
-      --slurpfile funding <(printf '%s\n' "$original") \
-      --arg operation_owner_root "$operations" --arg successor_root "$run" \
-      --arg source_install "$(jq -er '.target' "$qualification")" \
-      --arg source_head "$(jq -er '.source_head' "$qualification")" \
-      -f "$operations/successor-program.jq" "$template/program.json" > "$run/program.json"
+    project_program "$qualification" > "$run/program.json"
     exit
     ;;
   initialize|publish)
     expected=${4:?reviewed current programme SHA256}
-    test "${FLEET_PARENT_RELEASED:-0}" = 1
-    test -f "$run/PARENT-RELEASE.rst"
     test -f "$run/READY-FREEZE.sha256"
     (cd "$run"; sha256sum --check --quiet READY-FREEZE.sha256)
     test "$(jq -er '.funding_root' "$run/program.json")" = "$funding"
@@ -55,9 +61,23 @@ case "$mode" in
       receipts=$(jq -ce '[.members[].terminal_custody_receipt, .retired_members[].terminal_custody_receipt] |
         if all(.[]; type=="string" and length>0) then . else error("missing terminal custody") end' "$run/successor-declaration.json")
       while IFS= read -r receipt; do test -f "$receipt"; done < <(jq -r '.[]' <<< "$receipts")
-    # Parent's exact terminal/borrower evidence and release are the authority.
+    # Exact terminal/borrower evidence owns retirement, never scope/PID absence.
     # No scope disappearance, failed client or UNKNOWN automatically retires a run.
     test ! -e "$run/publication-before.json"
+    fi
+    if [[ "$mode" == initialize ]] || ! jq -e '
+      .members==[] and .additional_authors==[] and
+      (.retired_members|length)>0 and .resource_policy=={}
+    ' "$run/successor-declaration.json" >/dev/null; then
+      # The authorized publisher grants permission once in the existing FUND.
+      # A repeated parent-owned file is not another permission authority.
+      test "${FLEET_PARENT_RELEASED:-0}" = 1
+    else
+      # Standing retirement authority cannot introduce grants or change policy.
+      # Reuse the original projector; do not maintain another expected roster.
+      qualification=$(jq -er '.qualification_receipt' "$run/program.json")
+      projected=$(project_program "$qualification")
+      test "$(jq -cS . <<< "$projected")" = "$(jq -cS . "$run/program.json")"
     fi
     members=$(jq -ce '.funded_members | select(type=="array") |
       if (map(.slot)|unique|length)!=length then error("ambiguous funded member") else . end' "$run/program.json")
@@ -77,7 +97,7 @@ case "$mode" in
     # Never mirror physical run declarations into the mutable membership owner.
     jq '{scope_slice, retained_output_roots, authors:.funded_members,
       proposed_resource_envelope:(.proposed_resource_envelope | {
-        aggregate_memory_max_bytes, total_output_and_scratch_mib,
+        aggregate_memory_max_bytes,
         minimum_home_ongoing_gib, desktop_growth_reserve_mib, full_memory_psi_max_percent})
     }' "$run/program.json" > "$pending"
     mv "$pending" "$funding/program.json"
