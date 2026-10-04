@@ -21,7 +21,7 @@ from polystore.streaming.identity import StreamProducerIdentity
 from polystore.streaming.viewer_transport import ViewerStreamProducer
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.constants.constants import AllComponents, Backend
+from openhcs.constants.constants import Backend
 from openhcs.core.artifacts import ImageArtifactType
 from openhcs.core.axis_filter import step_axis_allows_config
 from openhcs.core.compiled_step_plan import (
@@ -819,15 +819,10 @@ class OpenHCSMetadataWriter:
                 source_metadata = record.source_metadata_for_projection(
                     metadata, destination
                 )
-                address = record.filename_address
-                if metadata.persists_whole_image():
-                    address = None
-                elif metadata.source_provenance.varying_plane_component_values(
-                    tuple(AllComponents)
-                ):
-                    address = OpenHCSPlaneAddress.from_complete_source_metadata(
-                        source_metadata
-                    )
+                address = (
+                    None if metadata.persists_whole_image()
+                    else OpenHCSPlaneAddress.from_complete_source_metadata(source_metadata)
+                )
                 if address is None:
                     projection_paths.append(
                         (

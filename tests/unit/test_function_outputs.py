@@ -1626,9 +1626,12 @@ def test_produced_projection_metadata_persists_typed_collapsed_semantics(
     )
     assert "site" not in restored.source_component_metadata
     assert len(restored.source_provenance.represented_source_identities) == 2
-    assert record["address"]["site"] == "1"
+    assert record["address"] is None
+    assert record["execution_scope"]["fixed_component_values"] == [
+        ["channel", "1"], ["z_index", "1"], ["timepoint", "1"],
+    ]
     assert "site" not in record["source_metadata"]
-    assert subdirectory[FIELDS.SOURCE_METADATA]["images/A01_s1_w1.tif"]["site"] == "1"
+    assert "site" not in subdirectory[FIELDS.SOURCE_METADATA]["images/A01_s1_w1.tif"]
 
 
 def test_runtime_image_artifact_projects_persisted_source_binding(

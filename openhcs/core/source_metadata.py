@@ -54,6 +54,17 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
 
     fields: tuple[tuple[str, SourceMetadataValue], ...]
 
+    @staticmethod
+    def canonical_component_value(
+        component: AllComponents | None,
+        value: SourceMetadataScalar,
+    ) -> str | int:
+        """Canonicalize numeric variable coordinates while retaining labels."""
+        if component is None or not component.is_variable_axis():
+            return str(value)
+        value_text = str(value)
+        return int(value_text) if value_text.isdecimal() else value_text
+
     @classmethod
     def from_mapping(cls, metadata: SourceMetadataMapping) -> Self:
         return cls(tuple(metadata.items()))

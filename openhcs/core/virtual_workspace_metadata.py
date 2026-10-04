@@ -239,7 +239,7 @@ class AtomicMetadataWriter:
         )
         subdirectory[FIELDS.PIXEL_SIZE] = SourceVoxelSpacing.metadata_pixel_size(
             SourceVoxelSpacing.from_source_metadata(projection.source_metadata)
-            for projection in projections.plane_projections
+            for projection in projections.execution_anchor_projections
         )
 
     def _execute_update(

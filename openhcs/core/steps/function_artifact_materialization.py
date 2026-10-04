@@ -47,8 +47,10 @@ from openhcs.core.source_image_provenance import (
     SourceImageProvenanceFields,
 )
 from openhcs.core.source_matching import (
+    source_component_metadata_items,
     with_source_component_metadata,
 )
+from openhcs.core.source_metadata import SourceMetadataFields
 from openhcs.core.source_projection import OpenHCSPlaneAddress
 from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.steps.function_output_identity import (
@@ -689,6 +691,33 @@ class AnalysisOutputDescriptorAuthority:
                 source_filename=record_source.filename,
             )
 
+        if record is not None:
+            metadata = (
+                output_plan.materialization_metadata(record)
+                if output_plan is not None
+                else cls.record_payload_metadata(record)
+            )
+            source_identity = (
+                None
+                if metadata is None
+                else metadata.source_provenance.scalar_source_identity
+            )
+            if source_identity is not None and not source_identity.addressable:
+                source_identity = None
+            if artifact_path is not None and (
+                dict_key is not None
+                or cls.source_identity_for_path(context, artifact_path) is not None
+            ):
+                return ArtifactAnalysisOutputDescriptor(
+                    filename=f"{Path(artifact_path).stem}.roi.zip",
+                    source_identity=source_identity,
+                )
+            return cls.aggregate_descriptor(
+                output_key,
+                plan,
+                scope=record.key.scope,
+                source_identity=source_identity,
+            )
         if artifact_path is not None:
             source_identity = cls.source_identity_for_path(
                 context,
@@ -743,9 +772,35 @@ class AnalysisOutputDescriptorAuthority:
         cls,
         record: StoredRuntimeValue,
         metadata: ImagePayloadMetadata,
+        parser_context: FunctionOutputParserContext,
     ) -> ImagePayloadMetadata:
-        """Attach the artifact key's complete typed execution identity."""
+        """Admit scalar source coordinates before attaching execution identity."""
 
+        provenance = metadata.source_provenance
+        if (
+            not provenance.source_image_provenance_planes.has_values
+            and not metadata.persists_whole_image()
+        ):
+            source_identity = provenance.scalar_source_identity.with_parsed_path_components(
+                parser_context.parser
+            )
+            if source_identity.component_metadata is not None:
+                component_metadata = SourceMetadataFields.with_fields(
+                    source_identity.component_metadata,
+                    {},
+                    components=(
+                        (
+                            component,
+                            SourceMetadataFields.canonical_component_value(component, value),
+                        )
+                        for component, value in source_component_metadata_items(
+                            source_identity.component_metadata
+                        )
+                    ),
+                )
+                metadata = metadata.with_source_provenance(
+                    provenance.with_source_component_metadata(component_metadata)
+                )
         scope = record.key.scope
         if scope.has_fixed_components:
             component_metadata = scope.fixed_component_metadata(
@@ -789,11 +844,15 @@ class AnalysisOutputDescriptorAuthority:
             != output_plan.source_context_source()
         ):
             metadata = output_plan.materialization_metadata(record)
+        parser_context = FunctionOutputParserContext.from_processing_context(context)
         metadata = cls.record_metadata_with_runtime_scope(
             record,
             metadata,
+            parser_context,
         )
-        parser_context = FunctionOutputParserContext.from_processing_context(context)
+        source_identity = metadata.source_provenance.scalar_source_identity
+        if not source_identity.addressable:
+            source_identity = None
         use_filename_identity = materialization_spec.uses_filename_source_identity(
             record.data
         )
@@ -844,53 +903,15 @@ class AnalysisOutputDescriptorAuthority:
             else:
                 return ArtifactRecordSourceDescriptor(
                     filename=filename,
-                    source_identity=cls.record_source_identity_from_metadata(
-                        metadata,
-                        identity,
-                    ),
+                    source_identity=source_identity,
                 )
         source_path = metadata.source_provenance.scalar_source_identity.path
         if source_path is None:
             return None
         return ArtifactRecordSourceDescriptor(
             filename=Path(source_path).name,
-            source_identity=cls.record_source_identity_from_metadata(
-                metadata,
-                identity,
-            ),
+            source_identity=source_identity,
         )
-
-    @classmethod
-    def record_source_identity_from_metadata(
-        cls,
-        metadata: ImagePayloadMetadata,
-        identity: FunctionOutputIdentity | None,
-    ) -> SourceImageIdentity | None:
-        """Return scalar source identity with parser-resolved component metadata."""
-        source_identity = metadata.source_provenance.scalar_source_identity
-        if identity is not None:
-            if metadata.source_component_metadata is None:
-                component_metadata = {}
-            else:
-                component_metadata = dict(metadata.source_component_metadata)
-            identity_metadata = identity.filename_component_metadata()
-            for key, value in identity_metadata.items():
-                component = AllComponents.from_value(str(key))
-                if component is None:
-                    component_metadata[str(key)] = value
-                    continue
-                component_metadata = with_source_component_metadata(
-                    component_metadata,
-                    component,
-                    value,
-                )
-            source_identity = SourceImageIdentity(
-                path=source_identity.path,
-                component_metadata=component_metadata,
-            )
-        if source_identity.addressable:
-            return source_identity
-        return None
 
     @classmethod
     def materialization_base_path(
@@ -917,12 +938,26 @@ class AnalysisOutputDescriptorAuthority:
         path: str | Path,
     ) -> SourceImageIdentity | None:
         """Return microscope source identity for a source path when available."""
-        component_metadata = FunctionOutputParserContext.from_processing_context(
-            context
-        ).parse_path_metadata(path)
-        if component_metadata is None:
+        parser = FunctionOutputParserContext.from_processing_context(context).parser
+        parsed = parser.parse_filename(Path(path).name)
+        if parsed is None:
             return None
-        return SourceImageIdentity(component_metadata=component_metadata)
+        component_metadata = parsed.wire_mapping()
+        return SourceImageIdentity(
+            component_metadata=SourceMetadataFields.with_fields(
+                component_metadata,
+                {},
+                components=(
+                    (
+                        component,
+                        SourceMetadataFields.canonical_component_value(component, value),
+                    )
+                    for component, value in source_component_metadata_items(
+                        component_metadata
+                    )
+                ),
+            )
+        )
 
 
 def actual_materialization_records(
@@ -1106,7 +1141,10 @@ class RuntimeArtifactMaterialization:
                 output_plan=output_plan,
             )
             filename_source_identity = (
-                None if record_source is None else record_source.source_identity
+                None if record_source is None
+                else AnalysisOutputDescriptorAuthority.source_identity_for_path(
+                    context, record_source.filename,
+                )
             )
             aggregate_descriptor = (
                 AnalysisOutputDescriptorAuthority.aggregate_descriptor(
@@ -1139,7 +1177,13 @@ class RuntimeArtifactMaterialization:
                 output_plan=output_plan,
             )
             source_identity = output_descriptor.source_identity
-            filename_source_identity = output_descriptor.source_identity
+            filename_source_identity = (
+                output_descriptor.source_identity
+                if output_descriptor.source_filename is None
+                else AnalysisOutputDescriptorAuthority.source_identity_for_path(
+                    context, output_descriptor.source_filename,
+                )
+            )
         return cls(
             output_plan=output_plan,
             spec=spec,
@@ -1435,7 +1479,11 @@ def materialize_artifact_outputs(
             backend_plan.backend_kwargs(
                 materialization_spec=materialization.spec,
                 data=data,
-                fallback_source_identity=materialization.source_identity,
+                fallback_source_identity=(
+                    materialization.filename_source_identity
+                    if materialization.spec.uses_filename_source_identity(data)
+                    else materialization.source_identity
+                ),
                 producer_identity=(
                     plan.producer_identity_for_artifact(materialization.output_plan)
                 ),

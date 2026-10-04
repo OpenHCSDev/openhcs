@@ -323,7 +323,7 @@ class FunctionOutputIdentity:
         if metadata is None:
             return {}
         return {
-            component.value: cls.coerce_component_value(component, value)
+            component.value: SourceMetadataFields.canonical_component_value(component, value)
             for component, value in source_component_metadata_items(metadata)
         }
 
@@ -333,20 +333,10 @@ class FunctionOutputIdentity:
         parsed: FilenameParseResult,
     ) -> dict[str, FunctionOutputComponentValue]:
         return {
-            str(component.value): cls.coerce_component_value(component, value)
+            str(component.value): SourceMetadataFields.canonical_component_value(component, value)
             for component, value in parsed.declared_values()
             if value is not None
         }
-
-    @staticmethod
-    def coerce_component_value(
-        component: AllComponents | None,
-        value: ParsedFilenameValue,
-    ) -> FunctionOutputComponentValue:
-        if component is None or not component.is_variable_axis():
-            return str(value)
-        value_text = str(value)
-        return int(value_text) if value_text.isdecimal() else value_text
 
     @classmethod
     def from_request(cls, request: FunctionOutputPathRequest) -> FunctionOutputIdentity:

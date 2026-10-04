@@ -28,6 +28,9 @@ from openhcs.core.runtime_image_values import (
 from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.runtime_object_label_building import SourceImageObjectLabelBuildRequest
 from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.source_image_provenance import (
+    SourceImageProvenance, SourceImageProvenancePlanes,
+)
 from openhcs.core.source_projection import SourceProjectionMetadataSerializer
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.steps.function_outputs import (
@@ -50,8 +53,10 @@ from openhcs.processing.materialization import (
         "same_occurrence", "different_path", "stale_scope", "conflicting_metadata", "different_kind",
     )),
     ("conflicting_scope", True),
+    ("mosaic_context", False),
 ))
 def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario, aggregate):
+    mosaic = scenario == "mosaic_context"
     same_persisted_path = scenario != "different_path"
     filemanager = FileManager({
         Backend.DISK.value: DiskStorageBackend(),
@@ -78,7 +83,10 @@ def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario, a
         "well": "A01", "site": "1", "channel": "2",
         "z_index": "1", "timepoint": "1", "extension": ".tif",
     }
-    roles = (("RawRole", 1.0), ("CappedRole", 0.5))
+    roles = (
+        (("MosaicRole", 1.0),) if mosaic
+        else (("RawRole", 1.0), ("CappedRole", 0.5))
+    )
     if aggregate:
         components.update(channel="1", z_index="0")
         plan.variable_components = (VariableComponents.Z_INDEX,)
@@ -143,6 +151,31 @@ def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario, a
                 source_voxel_spacing=SourceVoxelSpacing((0.65, 0.65)),
             ),
         )
+        if mosaic:
+            source_dir = tmp_path / "physical_source"
+            filemanager.ensure_directory(source_dir, Backend.DISK.value)
+            mosaic_pixels = np.arange(40, dtype=np.uint16).reshape(2, 4, 5)
+            contributor_paths = tuple(
+                source_dir / f"A01_s{site:03d}_w2_z001_t001.tif" for site in (1, 2)
+            )
+            for path, plane in zip(contributor_paths, mosaic_pixels, strict=True):
+                filemanager.save(plane, str(path), Backend.DISK.value)
+            payload = ImagePayloadMetadata(
+                source_image_names=(role,),
+                source_voxel_spacing=SourceVoxelSpacing((0.5, 0.5)),
+                source_provenance=SourceImageProvenance(
+                    source_component_metadata={
+                        key: value for key, value in components.items() if key != "site"
+                    },
+                    source_image_provenance_planes=SourceImageProvenancePlanes.from_contributor_components(
+                        paths=tuple(str(path) for path in contributor_paths),
+                        component_metadata=({"site": "1"}, {"site": "2"}),
+                    ),
+                ),
+            ).payload_with(np.stack([
+                filemanager.load(str(path), Backend.DISK.value)
+                for path in contributor_paths
+            ]))
         if aggregate:
             payload = ImageFunctionOutputContextStrategy().contextualize(
                 source_stack, pixels.copy(), output_plan,
@@ -190,8 +223,30 @@ def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario, a
                         ),
                     ) if scenario == "conflicting_scope" else execution_scope
                 ),
-            ) if aggregate else RuntimeValue.normalize(output_plan, artifact_payload, axis_id="A01")
+            ) if aggregate else (
+                RuntimeValue.normalize_for_execution_scope(
+                    output_plan, artifact_payload,
+                    execution_scope=RuntimeExecutionAxisScope.from_raw(
+                        "A01", component=None, value=None, fixed_component_values=(
+                            (AllComponents.CHANNEL, "2"), (AllComponents.Z_INDEX, "1"),
+                            (AllComponents.TIMEPOINT, "1"),
+                        ),
+                    ),
+                ) if mosaic else RuntimeValue.normalize(output_plan, artifact_payload, axis_id="A01")
+            )
         )
+        if mosaic:
+            payload = value.data
+            output_identity = FunctionOutputIdentity(
+                component_values={
+                    key: value for key, value in components.items()
+                    if key not in ("site", "extension")
+                },
+                filename_component_values={
+                    key: value for key, value in components.items() if key != "extension"
+                },
+                extension=".tif", source="collapsed Mosaic contributors",
+            )
         context.runtime_value_store.record(
             value,
             path=output_plan.path, backend=Backend.MEMORY.value,
@@ -219,6 +274,10 @@ def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario, a
                       "address": record.filename_address.as_component_metadata()} for record in records],
         "materialized": [{"path": output.path,
                           "role": item.materialization.output_plan.name,
+                          "semantic_source": None if item.materialization.source_identity is None else {
+                              "path": item.materialization.source_identity.path,
+                              "component_metadata": dict(item.materialization.source_identity.component_metadata or {}),
+                          },
                           "producer_scope": item.materialization.output_plan.producer_step_scope_id,
                           "stored_key": repr(item.materialization.record.key)}
                          for item in saved for output in item.outputs_for_backend(Backend.DISK.value)],
@@ -241,15 +300,17 @@ def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario, a
         assert produced_paths == materialized_paths
     else:
         assert produced_paths.isdisjoint(materialized_paths)
-    if aggregate:
+    if mosaic:
+        expected_sums = {780.0}
+    elif aggregate:
         expected_sums = {140.0} if scenario == "different_kind" else {float(pixels.sum())}
     else:
         expected_sums = {20.0} if scenario == "different_kind" else {20.0, 10.0}
     assert {float(tifffile.imread(item["path"]).sum()) for item in receipt["materialized"]} == expected_sums
-    if scenario != "same_occurrence" and not (aggregate and scenario == "different_path"):
+    if scenario not in ("same_occurrence", "mosaic_context") and not (aggregate and scenario == "different_path"):
         message = (
             "Conflicting metadata for persisted image"
-            if scenario in ("conflicting_metadata", "conflicting_scope")
+            if scenario in ("conflicting_metadata", "conflicting_scope", "mosaic_context")
             else "Duplicate source projection address"
         )
         with pytest.raises(ValueError, match=message) as rejection:
@@ -287,6 +348,15 @@ def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario, a
             assert image.dtype == np.uint16
             np.testing.assert_array_equal(image, pixels)
     structured = target.produced_projection_entries(context, plan)
+    if mosaic:
+        (main_flow,) = receipt["pre_join_main_flow"]
+        (artifact,) = receipt["pre_join_artifacts"]
+        assert main_flow["address"] is artifact["address"] is None
+        assert main_flow["execution_scope"] == artifact["execution_scope"]
+        assert main_flow["image_metadata"] == artifact["image_metadata"]
+        assert main_flow["source_metadata"] == artifact["source_metadata"]
+        assert receipt["produced"][0]["address"]["site"] == "1"
+        assert "site" not in receipt["materialized"][0]["semantic_source"]["component_metadata"]
     structured = SourceProjectionMetadataSerializer.projection_fields(
         structured.projection_paths
     )
@@ -302,6 +372,19 @@ def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario, a
     assert {projection.source_alias for projection in projections.values()} == {role for role, _ in roles}
     for relative_path in relative_paths:
         projection = projections[relative_path]
+        if mosaic:
+            assert projection.address is None
+            metadata = projection.image_metadata
+            assert "site" not in metadata.source_component_metadata
+            assert metadata.source_provenance.source_plane_count == 0
+            assert metadata.source_image_provenance_planes.contributor_count == 2
+            assert metadata.source_voxel_spacing.values_zyx == (0.5, 0.5)
+            assert projection.execution_scope.fixed_component_values == (
+                (AllComponents.CHANNEL, "2"), (AllComponents.Z_INDEX, "1"),
+                (AllComponents.TIMEPOINT, "1"),
+            )
+            np.testing.assert_array_equal(tifffile.imread(tmp_path / relative_path), mosaic_pixels)
+            continue
         if aggregate:
             assert projection.address is None
             np.testing.assert_array_equal(tifffile.imread(tmp_path / relative_path), pixels)
