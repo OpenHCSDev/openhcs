@@ -568,12 +568,14 @@ def execute_plate_scoped_steps(
 
     return RuntimeExecutionObservation(
         contexts=tuple(
-            RuntimeContextObservation(
+            RuntimeContextObservation.from_context(
                 context_key=context_key,
+                context=context,
                 records=records,
                 runtime_export_paths=tuple(
                     dict.fromkeys(runtime_export_paths_by_context[context_key])
                 ),
+                runtime_observation_mode=RuntimeObservationMode.MERGE_INTO_PARENT,
             )
             for context_key, context in compiled_contexts.items()
             if (

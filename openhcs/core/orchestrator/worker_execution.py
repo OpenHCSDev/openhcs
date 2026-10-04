@@ -812,26 +812,27 @@ def _execute_axis_with_sequential_combinations(
                 for observation in result.runtime_observation.contexts
                 for path in observation.runtime_export_paths
             )
+            observation = RuntimeContextObservation.from_context(
+                context_key=context_key,
+                context=frozen_context,
+                records=observed_records,
+                runtime_observation_mode=runtime_observation_mode,
+                runtime_export_paths=runtime_export_paths,
+            )
         finally:
             # This cache is context-local even when lanes share a process.
-            # Runtime observations remain owned by the value store below.
+            # Required records and table projections now belong to the observation.
             frozen_context.release_execution_image_cache()
             if release_axis_resources:
                 _release_runtime_resources((frozen_context,), owner=f"axis {axis_id}")
-        retained_records = runtime_observation_mode.retain_records(
-            observed_records,
-            frozen_context,
-        )
-        if retained_records or runtime_export_paths:
-            runtime_observations.append(
-                RuntimeContextObservation(
-                    context_key=context_key,
-                    records=retained_records,
-                    runtime_export_paths=runtime_export_paths,
-                )
-            )
-        if runtime_observation_mode.releases_worker_records:
             frozen_context.runtime_value_store.clear()
+        if (
+            observation.records
+            or observation.runtime_export_paths
+            or observation.analysis_inputs
+        ):
+            runtime_observations.append(observation)
+        del observed_records
 
         if not result.is_success():
             logger.error(
