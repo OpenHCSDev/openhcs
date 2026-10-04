@@ -262,13 +262,11 @@ class StepOutputManifestStore:
         field(default_factory=dict)
     )
     records_revision: int = 0
-    selected_records_by_plan: dict[
-        tuple[int, int],
+    selected_records_by_source: dict[
+        tuple[
+            int, StepOutputManifestKey | None, frozenset[tuple[str, str, str | None]]
+        ],
         tuple[ProducedOutputSemantics, ...] | None,
-    ] = field(default_factory=dict)
-    filtered_paths_by_plan: dict[
-        tuple[int, int, tuple[str, ...], int],
-        tuple[str, ...],
     ] = field(default_factory=dict)
 
     def begin_step(
@@ -324,8 +322,7 @@ class StepOutputManifestStore:
 
     def _invalidate_record_selection_caches(self) -> None:
         self.records_revision += 1
-        self.selected_records_by_plan.clear()
-        self.filtered_paths_by_plan.clear()
+        self.selected_records_by_source.clear()
 
     def producer_records_for(
         self,
@@ -455,43 +452,45 @@ class StepOutputManifestStore:
         paths: Sequence[str],
         parser: FilenameParser,
     ) -> list[str]:
-        cache_key = (
-            self.records_revision,
-            id(plan),
-            tuple(str(path) for path in paths),
-            id(parser),
-        )
-        cached = self.filtered_paths_by_plan.get(cache_key)
-        if cached is not None:
-            return list(cached)
-
         index = self.producer_record_index_for(plan, parser)
         if index is None:
             return list(paths)
         selected = [path for path in paths if index.contains(path)]
         if selected:
-            self.filtered_paths_by_plan[cache_key] = tuple(selected)
             return selected
         if paths:
             raise NoStepOutputManifestMatch
-        self.filtered_paths_by_plan[cache_key] = ()
         return []
+
+    def _producer_selection_key(
+        self,
+        plan: CompiledStepPlan,
+    ) -> tuple[
+        int, StepOutputManifestKey | None, frozenset[tuple[str, str, str | None]]
+    ]:
+        """Select by current producer declarations, never a temporary plan address."""
+        return (
+            self.records_revision,
+            self._main_input_producer_key(plan),
+            self._requested_producer_outputs(plan),
+        )
 
     def _selected_unique_producer_records_for(
         self,
         plan: CompiledStepPlan,
     ) -> tuple[ProducedOutputSemantics, ...] | None:
-        cache_key = (self.records_revision, id(plan))
-        if cache_key in self.selected_records_by_plan:
-            return self.selected_records_by_plan[cache_key]
+        cache_key = self._producer_selection_key(plan)
+        if cache_key in self.selected_records_by_source:
+            return self.selected_records_by_source[cache_key]
 
-        producer_records = self.producer_records_for(plan)
-        if producer_records is None:
-            self.selected_records_by_plan[cache_key] = None
+        producer_key, requested = cache_key[1:]
+        if producer_key is None:
+            self.selected_records_by_source[cache_key] = None
             return None
-        selected = self._select_requested_producer_records(plan, producer_records)
+        producer_records = self.records_for_key(producer_key)
+        selected = self._select_requested_producer_records(requested, producer_records)
         selected = self._unique_output_path_records(selected)
-        self.selected_records_by_plan[cache_key] = selected
+        self.selected_records_by_source[cache_key] = selected
         return selected
 
     @staticmethod
@@ -511,10 +510,9 @@ class StepOutputManifestStore:
 
     def _select_requested_producer_records(
         self,
-        plan: CompiledStepPlan,
+        requested: frozenset[tuple[str, str, str | None]],
         producer_records: Sequence[ProducedOutputSemantics],
     ) -> tuple[ProducedOutputSemantics, ...]:
-        requested = self._requested_producer_outputs(plan)
         if not requested:
             return tuple(producer_records)
         selected = tuple(
