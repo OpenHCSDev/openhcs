@@ -449,7 +449,9 @@ class ContextualObjectLabelOutputValueContextStrategy(
                 "Contextual object-label output strategy requires "
                 f"ObjectLabelValue, got {type(output_value).__name__}."
             )
-        return output_value.with_source_image_context(source_payload)
+        return output_value.with_source_image_context(
+            source_payload
+        ).with_parent_image_context(source_payload)
 
 
 class DenseArrayObjectLabelOutputValueContextStrategy(

@@ -365,7 +365,7 @@ from openhcs.processing.backends.cellprofiler.shape import (
     MeasureObjectSizeShapeModule,
     ShapeObjectMeasurementRows,
     _surface_area,
-    _surface_areas_3d_from_labels,
+    measure_object_size_shape_feature_arrays,
     measure_object_size_shape,
 )
 from openhcs.processing.backends.cellprofiler.structuring_elements import (
@@ -18212,8 +18212,12 @@ def test_measure_object_size_shape_surface_areas_match_marching_cubes_oracle() -
         )
         expected.append(_surface_area(labels[bounds] == label_id))
 
+    features, measured_labels = measure_object_size_shape_feature_arrays(
+        labels, calculate_advanced=False, calculate_zernikes=False,
+    )
+    np.testing.assert_array_equal(measured_labels, label_ids)
     np.testing.assert_allclose(
-        _surface_areas_3d_from_labels(labels, label_ids),
+        features[MeasureObjectSizeShapeModule.MeasurementFeature.SURFACE_AREA.value],
         np.asarray(expected, dtype=np.float64),
         rtol=1e-6,
         atol=1e-5,
