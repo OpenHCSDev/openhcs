@@ -133,9 +133,7 @@ from openhcs.core.source_bindings import (
 )
 from openhcs.core.source_load_plan import SourceLoadPlan
 from openhcs.core.steps.function_runtime import (
-    ComponentArtifactPlans,
     PatternGroupData,
-    PatternGroupRuntime,
 )
 from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
@@ -342,7 +340,9 @@ class DebugRuntimeFixture:
         resolved_artifact_inputs = {} if artifact_inputs is None else artifact_inputs
         resolved_artifact_outputs = {} if artifact_outputs is None else artifact_outputs
         runtime_scope = PatternGroupData(
-            matching_files=[f"input-{index}.tif" for index in range(runtime_plane_count)],
+            matching_files=[
+                f"input-{index}.tif" for index in range(runtime_plane_count)
+            ],
             main_data_stack=initial_data_stack,
             context=context,
             execution_plan=cls.execution_plan(
@@ -353,14 +353,12 @@ class DebugRuntimeFixture:
                 group_key=cls.GROUP_KEY,
                 invocations=invocations,
             ),
-            artifacts=ComponentArtifactPlans(
-                inputs=resolved_artifact_inputs,
-                outputs=resolved_artifact_outputs,
-            ),
+            artifact_inputs=resolved_artifact_inputs,
+            artifact_outputs=resolved_artifact_outputs,
             runtime_plane_index=runtime_plane_index,
             runtime_plane_count=runtime_plane_count,
         )
-        return PatternGroupRuntime.execute_chain(runtime_scope)
+        return runtime_scope.execute_chain()
 
     @classmethod
     def cursor(cls) -> DebugCursor:

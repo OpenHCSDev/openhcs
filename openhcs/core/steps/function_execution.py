@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import logging
-import os
 import time
 import traceback
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass
 from itertools import zip_longest
 from typing import TYPE_CHECKING
 
@@ -22,6 +20,7 @@ from openhcs.core.component_group_scope import (
     RuntimeExecutionAxisScope,
 )
 from openhcs.core.runtime_stores import RuntimeArtifactInput
+from openhcs.core.runtime_profile import RuntimeProfileLogger
 from openhcs.core.callable_contract import ImagePayloadConsumption
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.context.processing_context import ProcessingContext
@@ -68,8 +67,6 @@ if TYPE_CHECKING:
 
 
 logger = logging.getLogger(__name__)
-_PROFILE_RUNTIME_ENV = "OPENHCS_PROFILE_FUNCTION_RUNTIME"
-_PROFILE_RUNTIME_PATH_ENV = "OPENHCS_PROFILE_FUNCTION_RUNTIME_PATH"
 RuntimeProfileFieldValue = str | int | float | bool | None
 RuntimeProfileExtraFields = Mapping[str, RuntimeProfileFieldValue] | None
 DiscoveredPatternCollection = (
@@ -80,87 +77,6 @@ AnchorPatternSelector = Callable[
     [FunctionGroupKey, tuple[SourceCandidatePath, ...]],
     Sequence[SourceCandidatePath],
 ]
-
-
-@dataclass(frozen=True, slots=True)
-class RuntimeProfileSettings:
-    """Environment-owned runtime profile output settings."""
-
-    enabled: bool
-    output_path: str | None
-
-    @classmethod
-    def from_environment(cls) -> RuntimeProfileSettings:
-        raw_enabled = os.environ.get(_PROFILE_RUNTIME_ENV)
-        return cls(
-            enabled=(
-                raw_enabled is not None and raw_enabled.lower() in {"1", "true", "yes"}
-            ),
-            output_path=os.environ.get(_PROFILE_RUNTIME_PATH_ENV),
-        )
-
-
-@dataclass(frozen=True, slots=True)
-class StepRuntimeProfileRecord:
-    """One function-step runtime profile event."""
-
-    label: str
-    seconds: float
-    fields: tuple[tuple[str, RuntimeProfileFieldValue], ...]
-
-    @classmethod
-    def from_step(
-        cls,
-        label: str,
-        seconds: float,
-        *,
-        step_index: int,
-        step_name: str | None,
-        extra_fields: RuntimeProfileExtraFields = None,
-    ) -> StepRuntimeProfileRecord:
-        fields: dict[str, RuntimeProfileFieldValue] = {
-            "step": step_index,
-            "step_name": step_name,
-        }
-        if extra_fields is not None:
-            fields.update(extra_fields)
-        return cls(
-            label=label,
-            seconds=seconds,
-            fields=tuple(fields.items()),
-        )
-
-    def emit(self, settings: RuntimeProfileSettings | None = None) -> None:
-        if settings is None:
-            profile_settings = RuntimeProfileSettings.from_environment()
-        else:
-            profile_settings = settings
-        if not profile_settings.enabled:
-            return
-        field_text = " ".join(f"{key}={value}" for key, value in self.fields)
-        logger.info("RUNTIME_PROFILE %s %.6fs %s", self.label, self.seconds, field_text)
-        if profile_settings.output_path is not None:
-            with open(profile_settings.output_path, "a", encoding="utf-8") as handle:
-                handle.write(
-                    f"RUNTIME_PROFILE {self.label} {self.seconds:.6f}s {field_text}\n"
-                )
-
-
-def record_function_step_runtime_profile(
-    plan: CompiledStepPlan,
-    label: str,
-    seconds: float,
-    *,
-    extra_fields: RuntimeProfileExtraFields = None,
-) -> None:
-    """Record one runtime profile event for a function-step plan."""
-    StepRuntimeProfileRecord.from_step(
-        label,
-        seconds,
-        step_index=plan.step_index,
-        step_name=plan.step_name,
-        extra_fields=extra_fields,
-    ).emit()
 
 
 def _single_execution_group_patterns(
@@ -509,8 +425,7 @@ class FunctionStepExecutor:
         before_count = sum(map(len, grouped_patterns.values()))
         after_count = sum(map(len, filtered.values()))
         if before_count != after_count:
-            record_function_step_runtime_profile(
-                self.plan,
+            self.record_runtime_profile(
                 "step_filter_source_anchors",
                 0.0,
                 extra_fields={
@@ -609,8 +524,7 @@ class FunctionStepExecutor:
         before_count = sum(map(len, grouped_patterns.values()))
         after_count = sum(map(len, filtered.values()))
         if before_count != after_count:
-            record_function_step_runtime_profile(
-                self.plan,
+            self.record_runtime_profile(
                 label,
                 0.0,
                 extra_fields={
@@ -643,12 +557,13 @@ class FunctionStepExecutor:
         *,
         extra_fields: RuntimeProfileExtraFields = None,
     ) -> None:
-        record_function_step_runtime_profile(
-            self.plan,
-            label,
-            seconds,
-            extra_fields=extra_fields,
-        )
+        fields: dict[str, RuntimeProfileFieldValue] = {
+            "step": self.plan.step_index,
+            "step_name": self.plan.step_name,
+        }
+        if extra_fields is not None:
+            fields.update(extra_fields)
+        RuntimeProfileLogger.log(logger, label, seconds, **fields)
 
     @classmethod
     def execute(
@@ -696,7 +611,9 @@ class FunctionStepExecutor:
             return RuntimeArtifactInput(
                 edge_plan=edge,
                 axis_scope=RuntimeExecutionAxisScope.from_raw(
-                    plan.axis_id, component=None, value=None,
+                    plan.axis_id,
+                    component=None,
+                    value=None,
                 ),
                 backend=Backend.MEMORY.value,
                 source_binding_plan=plan.source_binding_plan,
@@ -740,12 +657,16 @@ class FunctionStepExecutor:
             selected_groups.append((component_key, group, edges))
 
         requests = []
-        for component_index, (component_key, group, edges) in enumerate(selected_groups):
+        for component_index, (component_key, group, edges) in enumerate(
+            selected_groups
+        ):
             cohorts = None
             for edge in edges:
                 edge_cohorts = candidate_scopes(
                     edge,
-                    ComponentGroupScope.from_raw((component_key,), component=scope.component),
+                    ComponentGroupScope.from_raw(
+                        (component_key,), component=scope.component
+                    ),
                 )
                 if not edge_cohorts:
                     raise ValueError(

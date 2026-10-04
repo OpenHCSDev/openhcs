@@ -179,8 +179,11 @@ from openhcs.core.source_matching import (
 )
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.context.processing_context import ProcessingContext
+from openhcs.core.function_patterns import compile_function_pattern
+from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.core.steps.function_runtime import (
-    PatternGroupRuntime,
+    PatternGroupExecutionRequest,
 )
 from openhcs.core.steps.stream_component_semantics import (
     StreamImagePayloadMetadataProjector,
@@ -9538,18 +9541,21 @@ def test_image_output_context_preserves_aligned_image_stack_payload():
 
 def _pattern_group_runtime_for_output_memory(
     output_memory_type: str,
-) -> PatternGroupRuntime:
-    runtime = object.__new__(PatternGroupRuntime)
-    runtime.request = SimpleNamespace(
+) -> PatternGroupExecutionRequest:
+    context = ProcessingContext(axis_id="A01")
+    context.microscope_handler = SimpleNamespace(parser=SourceSchemaFilenameParser())
+    return PatternGroupExecutionRequest(
+        context=context,
+        compiled_group=compile_function_pattern(lambda image: image, {}, {}).default_group,
+        pattern_group_info="", component_index=0, component_count=1,
         execution_plan=CompiledStepPlan(
             step_index=0,
             step_name="pattern output",
             step_type="FunctionStep",
             axis_id="A01",
             output_memory_type=output_memory_type,
-        )
+        ),
     )
-    return runtime
 
 
 def test_pattern_group_runtime_unstacks_aligned_image_stack_output():

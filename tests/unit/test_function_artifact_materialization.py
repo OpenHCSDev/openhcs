@@ -118,7 +118,6 @@ from openhcs.core.source_metadata import (
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.steps.function_artifact_materialization import (
-    ArtifactMaterializationBackendPlan,
     PersistentArtifactMaterializationTargetPlan,
     StreamingOnlyArtifactMaterializationTargetPlan,
     actual_materialization_records,
@@ -517,29 +516,51 @@ def test_named_artifact_streaming_respects_compiled_streaming_filter():
     )
     target = StreamingOnlyArtifactMaterializationTargetPlan()
 
-    excluded = target.backend_plan(plan, context, materialization)
+    excluded = target.streaming_viewer_surfaces(plan, context, materialization)
 
-    assert excluded.streaming_viewer_surfaces == {}
+    assert excluded == {}
 
     context.axis_id = "B03"
-    included = target.backend_plan(plan, context, materialization)
+    included = target.streaming_viewer_surfaces(plan, context, materialization)
 
-    assert tuple(included.streaming_viewer_surfaces) == ("napari_stream",)
+    assert tuple(included) == ("napari_stream",)
 
 
 def test_viewer_output_expectation_omits_empty_stream_payload() -> None:
     filemanager = FileManager({"napari_stream": NapariStreamingBackend()})
     context = _context(filemanager)
-    viewer_surface = streaming_config_stub().streaming_viewer_surface(context)
-    backend_plan = ArtifactMaterializationBackendPlan(
-        persistent_backend_kwargs={},
-        streaming_viewer_surfaces={"napari_stream": viewer_surface},
+    output_plan = ArtifactOutputPlan(
+        name="Nuclei",
+        path="/memory/Nuclei.pkl",
+        artifact_type=ObjectLabelsArtifactType,
+        materialization=roi_zip(),
+    )
+    record = context.runtime_value_store.record(
+        RuntimeValue.normalize(
+            output_plan,
+            ObjectLabelPayload(
+                variant_data=ObjectLabelVariantData(
+                    labels=np.zeros((8, 8), dtype=np.int32)
+                ),
+                domain=ObjectLabelDomain(declared_object_count=0),
+            ),
+            axis_id="A01",
+        ),
+        path=output_plan.path,
+        backend="memory",
+    )
+    plan = _plan(
+        output_plan, streaming_configs={"napari_stream": streaming_config_stub()}
+    )
+    materialization = RuntimeArtifactMaterialization.from_record(
+        output_plan=output_plan,
+        record=record,
+        plan=plan,
+        context=context,
     )
 
-    assert not backend_plan.supports_stream_output(
-        filemanager,
-        Output(path="/analysis/A01_neurites.graph.roi.zip", content=[]),
-    )
+    assert materialization.outputs(plan, context)
+    assert materialization.viewer_outputs(plan, context) == ()
 
 
 def test_planned_materialization_preview_uses_declared_candidate_paths():

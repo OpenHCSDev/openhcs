@@ -20,7 +20,7 @@ from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payload_data
 from openhcs.core.steps.function_output_manifest import step_output_manifest
-from openhcs.core.steps.function_runtime import PatternGroupRuntime
+from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 
 
@@ -49,13 +49,13 @@ def _runtime(tmp_path):
         artifact_outputs={},
         execution_group_scope=ComponentGroupScope.ungrouped(),
     )
-    runtime = PatternGroupRuntime(SimpleNamespace(
-        context=context,
-        execution_plan=plan,
-        compiled_group=compile_function_pattern(_identity, {}, {}).default_group,
-        component_key=None,
-        pattern_group_info="A01_s001_w1_z001_t001.tif",
-    ))
+    runtime = PatternGroupExecutionRequest(context=context,
+            execution_plan=plan,
+            compiled_group=compile_function_pattern(_identity, {}, {}).default_group,
+            component_value=None,
+            pattern_group_info="A01_s001_w1_z001_t001.tif",
+            component_index=0,
+            component_count=1)
     payload = ImagePayloadMetadata(
         source_path=SOURCE,
         source_component_metadata={
@@ -67,7 +67,7 @@ def _runtime(tmp_path):
 
 def test_buffer_preparation_failure_precedes_any_vfs_publication(tmp_path, monkeypatch):
     runtime, payload = _runtime(tmp_path)
-    files = runtime.request.context.filemanager
+    files = runtime.context.filemanager
     events = []
 
     def fail_copy(*args, **kwargs):
@@ -82,12 +82,12 @@ def test_buffer_preparation_failure_precedes_any_vfs_publication(tmp_path, monke
     with pytest.raises(ValueError, match="buffer allocation failed"):
         runtime._save_outputs(payload, [SOURCE])
     assert events == ["copy"]
-    assert runtime.request.context.runtime_image_stack_cache.stacks == {}
+    assert runtime.context.runtime_image_stack_cache.stacks == {}
 
 
 def test_saved_metadata_failure_keeps_actual_commit_but_no_cache_or_manifest(tmp_path, monkeypatch):
     runtime, payload = _runtime(tmp_path)
-    files = runtime.request.context.filemanager
+    files = runtime.context.filemanager
     path = str(tmp_path / "A01_s001_w1_z001_t001.tif")
 
     def fail_attachment(*args, **kwargs):
@@ -99,13 +99,13 @@ def test_saved_metadata_failure_keeps_actual_commit_but_no_cache_or_manifest(tmp
     with pytest.raises(ValueError, match="saved context failed"):
         runtime._save_outputs(payload, [SOURCE])
     assert np.shares_memory(image_payload_data(files.load(path, "memory")), payload.data)
-    assert runtime.request.context.runtime_image_stack_cache.stacks == {}
-    assert step_output_manifest(runtime.request.context).produced_records_for(runtime.request.execution_plan) == ()
+    assert runtime.context.runtime_image_stack_cache.stacks == {}
+    assert step_output_manifest(runtime.context).produced_records_for(runtime.execution_plan) == ()
 
 
 def test_duplicate_output_paths_leave_existing_memory_value_and_cache_intact(tmp_path):
     runtime, payload = _runtime(tmp_path)
-    context = runtime.request.context
+    context = runtime.context
     path = str(tmp_path / "A01_s001_w1_z001_t001.tif")
     previous = np.full((4, 5), 9, dtype=np.float32)
     context.filemanager.ensure_directory(str(tmp_path), "memory")
@@ -120,7 +120,7 @@ def test_duplicate_output_paths_leave_existing_memory_value_and_cache_intact(tmp
 
 def test_original_named_owner_is_consulted_at_saved_metadata_epoch(tmp_path):
     runtime, payload = _runtime(tmp_path)
-    files = runtime.request.context.filemanager
+    files = runtime.context.filemanager
     path = str(tmp_path / "A01_s001_w1_z001_t001_Named.tif")
     calls = []
 
@@ -136,7 +136,7 @@ def test_original_named_owner_is_consulted_at_saved_metadata_epoch(tmp_path):
         runtime._save_outputs(output, [SOURCE])
     assert calls == [False, True]
     np.testing.assert_array_equal(image_payload_data(files.load(path, "memory")), payload.data)
-    assert runtime.request.context.runtime_image_stack_cache.stacks == {}
+    assert runtime.context.runtime_image_stack_cache.stacks == {}
 
 
 def test_anonymous_context_is_shared_by_record_and_post_save_axis_hooks(tmp_path):

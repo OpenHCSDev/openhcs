@@ -1,3 +1,4 @@
+from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
 from types import SimpleNamespace
@@ -75,10 +76,9 @@ from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.progress.live_measurements import LiveMeasurementProgressPayload
 from openhcs.core.steps.function_runtime import (
-    ComponentArtifactPlans,
+    PatternGroupExecutionScope,
     FunctionCoreExecutor,
     PatternGroupData,
-    PatternGroupRuntime,
 )
 from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
@@ -244,7 +244,9 @@ def _execute_function_core(request: CoreExecutionRequest):
         None if request.execution_group_scope.is_ungrouped else request.group_key
     )
     runtime_scope = PatternGroupData(
-        matching_files=[f"input-{index}.tif" for index in range(request.runtime_plane_count)],
+        matching_files=[
+            f"input-{index}.tif" for index in range(request.runtime_plane_count)
+        ],
         main_data_stack=request.main_data_arg,
         context=request.context,
         execution_plan=execution_plan,
@@ -253,28 +255,21 @@ def _execute_function_core(request: CoreExecutionRequest):
             invocations=(invocation,),
         ),
         component_value=component_value,
-        artifacts=ComponentArtifactPlans.from_step_component(
-            execution_plan,
+        artifact_inputs=dict(execution_plan.artifact_inputs),
+        artifact_outputs=PatternGroupExecutionScope._select_output_plans_for_component(
+            execution_plan.artifact_outputs,
+            execution_plan.execution_group_scope,
             component_value,
         ),
         runtime_plane_index=0,
         runtime_plane_count=request.runtime_plane_count,
     )
-    group_key = invocation.key.runtime_group_key(runtime_scope.component_value)
-    return FunctionCoreExecutor(
+    return FunctionCoreExecutor.from_group_invocation(
+        runtime_scope,
+        invocation,
         main_data_arg=request.main_data_arg,
         source_memory_type=MEMORY_TYPE_NUMPY,
-        group_data=runtime_scope,
-        invocation=invocation,
-        artifacts=runtime_scope.artifacts.select_for_invocation(
-            invocation,
-            execution_scope=runtime_scope.execution_plan.execution_group_scope,
-            component_key=runtime_scope.component_key,
-        ),
-        group_key=group_key,
-        plane_projection=RuntimePlaneProjection.stack(
-            runtime_scope.runtime_plane_count
-        ),
+        declared_source_bindings=runtime_scope.execution_plan.source_binding_plan,
     ).execute()
 
 
@@ -1755,8 +1750,7 @@ def test_pattern_group_runtime_retains_nominal_scalar_rgb_output_as_one_image():
             {plan.ref(): plan for plan in (output_plan,)},
         ).iter_invocations()
     )
-    runtime = object.__new__(PatternGroupRuntime)
-    runtime.request = SimpleNamespace(
+    runtime = PatternGroupExecutionRequest(
         compiled_group=CompiledFunctionGroup(
             group_key="default",
             invocations=(invocation,),
@@ -1773,10 +1767,16 @@ def test_pattern_group_runtime_retains_nominal_scalar_rgb_output_as_one_image():
                 output_plan.ref(): output_plan,
             },
         ),
-        component_key=None,
+        component_value=None,
+        context=SimpleNamespace(),
+        pattern_group_info="fixture",
+        component_index=0,
+        component_count=1,
     )
 
-    output = runtime._project_output_slices(scalar_output, ["source-1.tif", "source-2.tif"])
+    output = runtime._project_output_slices(
+        scalar_output, ["source-1.tif", "source-2.tif"]
+    )
     assert tuple(payload for payload, _context in output) == (scalar_output,)
     assert tuple(context for _payload, context in output) == (
         AlignedImageSliceContext.main_flow(
@@ -1785,8 +1785,11 @@ def test_pattern_group_runtime_retains_nominal_scalar_rgb_output_as_one_image():
         ),
     )
     from openhcs.core.aligned_image_payload import ImagePayloadStackComposition
+
     stack_payload = ImagePayloadStackComposition.copy_whole_image(
-        scalar_output, memory_type=MEMORY_TYPE_NUMPY, device_id=None,
+        scalar_output,
+        memory_type=MEMORY_TYPE_NUMPY,
+        device_id=None,
     )
     assert image_payload_data(stack_payload).shape == (2, 3, 3)
     stack_metadata = image_payload_metadata(stack_payload)
@@ -1799,8 +1802,7 @@ def test_pattern_group_runtime_uses_declared_output_slice_cardinality():
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
     ).payload_with(np.ones((1, 4, 5), dtype=np.float32), None)
 
-    runtime = object.__new__(PatternGroupRuntime)
-    runtime.request = SimpleNamespace(
+    runtime = PatternGroupExecutionRequest(
         compiled_group=compile_function_pattern(passthrough, {}, {}).default_group,
         execution_plan=CompiledStepPlan(
             step_index=0,
@@ -1812,13 +1814,22 @@ def test_pattern_group_runtime_uses_declared_output_slice_cardinality():
             execution_group_scope=ComponentGroupScope.ungrouped(),
             artifact_outputs={},
         ),
-        component_key=None,
+        component_value=None,
+        context=SimpleNamespace(),
+        pattern_group_info="fixture",
+        component_index=0,
+        component_count=1,
     )
 
-    output = runtime._project_output_slices(declared_output, ["source-1.tif", "source-2.tif"])
+    output = runtime._project_output_slices(
+        declared_output, ["source-1.tif", "source-2.tif"]
+    )
     assert len(output) == 1
     assert image_payload_data(output[0][0]).shape == (4, 5)
-    assert image_payload_metadata(declared_output).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert (
+        image_payload_metadata(declared_output).plane_axis
+        is RuntimePlaneAxis.RUNTIME_SLICE
+    )
 
 
 def test_pattern_group_runtime_projects_nominal_object_label_stack():
@@ -1839,8 +1850,7 @@ def test_pattern_group_runtime_projects_nominal_object_label_stack():
         ),
     )
 
-    runtime = object.__new__(PatternGroupRuntime)
-    runtime.request = SimpleNamespace(
+    runtime = PatternGroupExecutionRequest(
         compiled_group=compile_function_pattern(passthrough, {}, {}).default_group,
         execution_plan=CompiledStepPlan(
             step_index=0,
@@ -1852,7 +1862,11 @@ def test_pattern_group_runtime_projects_nominal_object_label_stack():
             execution_group_scope=ComponentGroupScope.ungrouped(),
             artifact_outputs={},
         ),
-        component_key=None,
+        component_value=None,
+        context=SimpleNamespace(),
+        pattern_group_info="fixture",
+        component_index=0,
+        component_count=1,
     )
 
     projected = runtime._project_output_slices(declared_output, ["source-anchor.tif"])
@@ -2914,7 +2928,6 @@ def _declared_source_executor(
         spec=spec,
         storage_plan=None,
         projection=None,
-
         main_flow_projection=main_flow_projection,
     )
     invocation = invocation.with_artifact_input_edges((edge,))
@@ -2933,7 +2946,8 @@ def _declared_source_executor(
             ),
         ),
         invocation=invocation,
-        artifacts=ComponentArtifactPlans(inputs={edge.key: edge}, outputs={}),
+        artifact_inputs={edge.key: edge},
+        artifact_outputs={},
         group_key=None,
         plane_projection=RuntimePlaneProjection.stack(),
         main_data_arg=object(),
@@ -3109,14 +3123,20 @@ def test_declared_source_payload_prefers_exact_loaded_ref_over_main_flow() -> No
 
 
 def test_missing_source_origin_is_not_satisfied_by_an_authored_kwarg():
-    spec = ArtifactSpec.input("MissingImage", ImageArtifactType, parameter_name="image_to_save")
+    spec = ArtifactSpec.input(
+        "MissingImage", ImageArtifactType, parameter_name="image_to_save"
+    )
     executor = _declared_source_executor(spec)
     (original_edge,) = executor.invocation.artifact_input_edges
-    edge = replace(original_edge,  main_flow_projection=None)
+    edge = replace(original_edge, main_flow_projection=None)
     primary = ImagePayloadMetadata().payload_with(np.zeros((1, 2, 3), dtype=np.uint16))
     invocation = replace(executor.invocation, kwargs=(("image_to_save", primary),))
-    executor = replace(executor, invocation=invocation,
-                       artifacts=ComponentArtifactPlans(inputs={edge.key: edge}, outputs={}))
+    executor = replace(
+        executor,
+        invocation=invocation,
+        artifact_inputs={edge.key: edge},
+        artifact_outputs={},
+    )
     with pytest.raises(ValueError, match="must resolve to exactly one .* resolved 0"):
         executor.load_artifact_inputs(invocation.kwargs_dict, primary)
 

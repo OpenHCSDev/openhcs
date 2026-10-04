@@ -289,9 +289,9 @@ def test_distinct_aliases_that_normalize_to_one_filename_still_conflict(tmp_path
     assert paths[0] == paths[1]
     # Existing main-flow destination authority rejects this declared naming
     # collision instead of choosing a new suffix or inventing a channel.
-    from openhcs.core.steps.function_runtime import OutputPathBatchUniqueness
+    from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
     with pytest.raises(ValueError, match="duplicate"):
-        OutputPathBatchUniqueness(output_paths=paths, input_paths=[], step_name=plan.step_name, pattern_repr="declared roles").validate()
+        FunctionOutputIdentity.validate_output_paths(paths, input_paths=[], step_name=plan.step_name, pattern_repr="declared roles")
 
 
 def test_batch_binds_actual_purpose_once_without_rewriting_plan_or_source(monkeypatch, tmp_path):

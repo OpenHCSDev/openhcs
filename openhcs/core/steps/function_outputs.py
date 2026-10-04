@@ -70,7 +70,6 @@ from openhcs.core.steps.function_io import (
 )
 from openhcs.core.steps.function_output_identity import (
     FunctionOutputIdentity,
-    FunctionOutputParserContext,
 )
 from openhcs.core.steps.function_output_manifest import (
     ProducedOutputSemantics,
@@ -198,11 +197,12 @@ class MemoryOutputWriter:
             Backend.MEMORY.value,
         )
         output_paths = [
-            record.path_under(plan.output_dir)
-            for record in produced_outputs
+            record.path_under(plan.output_dir) for record in produced_outputs
         ]
-        parser_context = FunctionOutputParserContext.from_processing_context(context)
-        row, col = parser_context.parser.extract_component_coordinates(plan.axis_id)
+        handler = context.microscope_handler
+        parser = handler.parser
+        microscope_type = handler.microscope_type
+        row, col = parser.extract_component_coordinates(plan.axis_id)
         context.filemanager.ensure_directory(
             plan.output_dir,
             plan.write_backend,
@@ -227,8 +227,8 @@ class MemoryOutputWriter:
                 ),
                 row=row,
                 col=col,
-                parser_name=parser_context.parser_name,
-                microscope_type=parser_context.microscope_type,
+                parser_name=parser.__class__.__name__,
+                microscope_type=microscope_type,
                 **({"tiff_config": config} if config is not None else {}),
             )
 
@@ -258,10 +258,7 @@ class MaterializedImageOutputWriter:
             return
 
         produced_outputs = step_output_manifest(context).image_records_for(plan)
-        memory_paths = [
-            record.memory_path(plan)
-            for record in produced_outputs
-        ]
+        memory_paths = [record.memory_path(plan) for record in produced_outputs]
         if not produced_outputs:
             return
         memory_data = context.filemanager.load_batch(
@@ -363,7 +360,10 @@ class StreamOutputBatch:
 
         items: list[StreamOutputItem] = []
         for payload, path, produced_output in zip(
-            payloads, paths, produced_outputs, strict=True,
+            payloads,
+            paths,
+            produced_outputs,
+            strict=True,
         ):
             projected_items = tuple(
                 cls.project_item(
@@ -419,7 +419,10 @@ class StreamOutputBatch:
             tuple[str, ...], list[tuple[StreamPayload, str, ProducedOutputSemantics]]
         ] = {}
         for payload, path, produced_output in zip(
-            payloads, paths, produced_outputs, strict=True,
+            payloads,
+            paths,
+            produced_outputs,
+            strict=True,
         ):
             projection = produced_output.producer_identity.route_parts()
             projections.setdefault(projection, []).append(
@@ -545,10 +548,7 @@ class StreamOutputsAuthority:
                 )
                 continue
             produced_outputs = step_output_manifest(context).image_records_for(plan)
-            memory_paths = [
-                record.memory_path(plan)
-                for record in produced_outputs
-            ]
+            memory_paths = [record.memory_path(plan) for record in produced_outputs]
             if not memory_paths:
                 logger.info(
                     "No produced image outputs to stream for step %s.",
@@ -750,9 +750,9 @@ class OpenHCSMetadataWriter:
             projection_entries = self.produced_projection_entries(
                 context, produced_plan
             )
-            parser_context = FunctionOutputParserContext.from_processing_context(
-                context
-            )
+            handler = context.microscope_handler
+            parser = handler.parser
+            microscope_type = handler.microscope_type
             saved_image_paths = tuple(
                 str(Path(path).relative_to(self.plate_root))
                 for path in context.filemanager.list_image_files(
@@ -763,16 +763,17 @@ class OpenHCSMetadataWriter:
                 METADATA_CONFIG.metadata_path(self.plate_root),
                 self.sub_dir,
                 projection_entries,
-                serializer=SourceProjectionMetadataSerializer(parser_context.parser),
+                serializer=SourceProjectionMetadataSerializer(parser),
                 saved_image_paths=saved_image_paths,
-                microscope_handler_name=parser_context.microscope_type,
-                source_filename_parser_name=parser_context.parser_name,
+                microscope_handler_name=microscope_type,
+                source_filename_parser_name=parser.__class__.__name__,
                 component_labels=context.metadata_cache,
                 backend=self.backend,
                 is_main=self.is_main,
                 results_dir=(
                     str(Path(self.results_dir).relative_to(self.plate_root))
-                    if self.results_dir is not None else None
+                    if self.results_dir is not None
+                    else None
                 ),
             )
 
@@ -796,10 +797,7 @@ class OpenHCSMetadataWriter:
             records = self.produced_records(context, plan)
             payloads = (
                 context.filemanager.load_batch(
-                    [
-                        record.memory_path(plan)
-                        for record in records
-                    ],
+                    [record.memory_path(plan) for record in records],
                     Backend.MEMORY.value,
                 )
                 if records
@@ -820,8 +818,11 @@ class OpenHCSMetadataWriter:
                     metadata, destination
                 )
                 address = (
-                    None if metadata.persists_whole_image()
-                    else OpenHCSPlaneAddress.from_complete_source_metadata(source_metadata)
+                    None
+                    if metadata.persists_whole_image()
+                    else OpenHCSPlaneAddress.from_complete_source_metadata(
+                        source_metadata
+                    )
                 )
                 if address is None:
                     projection_paths.append(
@@ -839,7 +840,8 @@ class OpenHCSMetadataWriter:
                         )
                     )
                     produced_projections[Path(destination)] = (
-                        record, projection_paths[-1][0]
+                        record,
+                        projection_paths[-1][0],
                     )
                     continue
                 if address not in declared_addresses:
@@ -857,7 +859,8 @@ class OpenHCSMetadataWriter:
                         )
                     )
                     produced_projections[Path(destination)] = (
-                        record, projection_paths[-1][0]
+                        record,
+                        projection_paths[-1][0],
                     )
                     continue
                 projection_paths.append(
@@ -874,7 +877,8 @@ class OpenHCSMetadataWriter:
                     )
                 )
                 produced_projections[Path(destination)] = (
-                    record, projection_paths[-1][0]
+                    record,
+                    projection_paths[-1][0],
                 )
             projection_paths.extend(
                 self.runtime_artifact_projection_paths(
