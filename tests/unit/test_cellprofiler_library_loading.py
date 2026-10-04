@@ -2059,7 +2059,6 @@ def test_identify_primary_objects_does_not_size_filter_after_hole_fill() -> None
 
 def test_watershed_xy_downsample_factors_preserve_leading_axes():
     from openhcs.processing.backends.cellprofiler.watershed import (
-        watershed_connected_components,
         watershed_regionprops_stats,
         watershed_xy_downsample_factors,
     )
@@ -2067,7 +2066,11 @@ def test_watershed_xy_downsample_factors_preserve_leading_axes():
     assert watershed_xy_downsample_factors(2, 2) == (2.0, 2.0)
     assert watershed_xy_downsample_factors(3, 2) == (1.0, 2.0, 2.0)
     assert watershed_xy_downsample_factors(4, 2) == (1.0, 1.0, 2.0, 2.0)
-    labels = watershed_connected_components(np.ones((2, 3, 4, 5), dtype=bool))
+    from openhcs.processing.backends.cellprofiler.morphology import MorphologyBackendStrategy
+
+    labels = MorphologyBackendStrategy.for_memory_type().label_equal_values(
+        np.ones((2, 3, 4, 5), dtype=bool)
+    )
     assert labels.shape == (2, 3, 4, 5)
     assert labels.dtype == np.int32
     object_count, mean_area = watershed_regionprops_stats(labels)

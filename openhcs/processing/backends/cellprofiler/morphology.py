@@ -673,6 +673,9 @@ from openhcs.core.pipeline.function_contracts import (
 )
 from openhcs.core.public_api import public_names_from_objects
 from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from openhcs.processing.backends.cellprofiler.morphology_connected_components_numba import (
+    equal_value_components_numba,
+)
 from openhcs.core.image_shapes import (
     apply_over_trailing_spatial_axes,
     trailing_spatial_factors,
@@ -1913,6 +1916,10 @@ class MorphologyBackendStrategy(
         """Label foreground components in a binary 2-D mask."""
 
     @abstractmethod
+    def label_equal_values(self, values: np.ndarray) -> np.ndarray:
+        """Label equal nonzero values with full trailing spatial connectivity."""
+
+    @abstractmethod
     def disk_footprint(self, radius: float) -> np.ndarray:
         """Return a 2-D disk footprint."""
 
@@ -2058,6 +2065,24 @@ class NumpyMorphologyBackendStrategy(MorphologyBackendStrategy):
         self, mask: np.ndarray, *, connectivity: int = 2
     ) -> tuple[np.ndarray, int]:
         return _scipy_connected_components(mask, connectivity=connectivity)
+
+    def prepare_backend(self) -> None:
+        labels = np.array([[[0, 1], [2, 1]]], dtype=np.intp)
+        for writeable in (True, False):
+            labels.flags.writeable = writeable
+            self.label_equal_values(labels)
+
+    def label_equal_values(self, values: np.ndarray) -> np.ndarray:
+        array = np.asarray(values)
+        if array.ndim == 0:
+            raise NotImplementedError("Connected labeling requires a spatial axis.")
+        if array.ndim > 3:
+            return apply_over_trailing_spatial_axes(
+                array, 3, self.label_equal_values, dtype=np.int32
+            )
+        spatial_shape = (1,) * (3 - array.ndim) + array.shape
+        labels = np.ascontiguousarray(array, dtype=np.intp).reshape(spatial_shape)
+        return equal_value_components_numba(labels).reshape(array.shape)
 
     def disk_footprint(self, radius: float) -> np.ndarray:
         return _scipy_disk_footprint(radius)
@@ -2290,6 +2315,7 @@ class NumbaNumpyMorphologyBackendStrategy(NumpyMorphologyBackendStrategy):
     is_default_backend = True
 
     def prepare_backend(self) -> None:
+        super().prepare_backend()
         mask = np.array(
             [[False, True, False], [True, True, False], [False, False, True]],
             dtype=np.bool_,
