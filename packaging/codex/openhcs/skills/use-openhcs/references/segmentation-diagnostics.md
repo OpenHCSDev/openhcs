@@ -50,6 +50,12 @@ not by count agreement or a requirement of zero errors.
 
 ## Touching round objects and watershed
 
+Before the first candidate, use the measurement guide's
+[marker-landscape selection](measurement-interpretation.md#choose-the-marker-landscape-before-the-first-candidate)
+to connect body/background, within-body texture and genuine-pair geometry to
+the method and its smoothing/separation settings. Measuring size alone does
+not justify inheriting an example's intensity declumping or automatic defaults.
+
 A distance-map/marker-controlled watershed is a candidate for separating
 touching compact objects, not a universal definition of a cell. Inspect the
 support mask, distance or intensity landscape and seed positions independently.
