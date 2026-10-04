@@ -122,7 +122,8 @@ declared OpenHCS ``napari>=0.7.1`` supported release. The same owner repair is
 published from v0.7.1 at ``99c0f9081e2b3e6dde4601668ba32566a739f2e7``; that
 release needs matching app-model, napari-console, napari-plugin-engine, npe2,
 PyOpenGL, vispy and pydantic-extra-types not present in the paired environment.
-No supported-version dependency installation or distribution release is claimed.
+That original checkpoint did not claim a supported-version installation or
+distribution release; its immutable backport receipts remain retained.
 
 The receiving case reuses the original tiny engineering494 four-plane raw input
 and engineering548 source-bearing Shapes archives. True YZ raw precedes
@@ -135,3 +136,44 @@ unlaunched; Dewey owns transfer/admission of the next cleanly released lane.
 Remaining: real Qt/installed public MCP orthogonal-before-streaming settlement,
 same-source reopen/navigation and exact closure. No live viewer, catalog,
 native or science process was launched for this checkpoint.
+
+Supported stable-source receiving checkpoint
+-------------------------------------------
+
+Parent subsequently authorized the normal dependency delta, staged privately
+without changing the paired environment. Reused Napari checkout now selects
+the published stable-v0.7.1 repair ``99c0f9081e2b3e6dde4601668ba32566a739f2e7``.
+Original setuptools/SCM built ``napari-0.7.2.dev3+g99c0f9081-py3-none-any.whl``;
+this is its honest derived patch version, not relabelled unmodified v0.7.1.
+Wheel SHA256 ``8df86a6fa7ae28786034c62846593ee3ee5c9dcac45501c06aa6fadb6938e20d``.
+
+Normal resolver reused compatible installed packages and required only eight
+dependency wheels: app-model0.5.1, vispy0.16.2, napari-console0.1.4,
+napari-plugin-engine0.2.1, npe2-0.9.0, pydantic-extra-types2.11.1,
+PyOpenGL3.1.10 and click8.1.8. Retained delta wheels total5500928 bytes;
+installed private dependency prefix totals36974592 bytes. No new environment,
+worktree, shared installation or scientist-prefix update.
+
+``engineering580/package19/PROVENANCE24.json`` verifies all nine original
+wheel hashes and installed RECORD payloads, all908 Napari RECORD members,
+903 source assets, every effective base dependency requirement and actual
+Napari/Vispy/app-model/helper import origins. The compiled function's
+``py_func`` is still the original Python membership owner. Imports resolve
+``package19/lib/python3.12/site-packages`` before compatible paired packages.
+The original bare-target import failure in ``proof23.timing`` is retained:
+Napari treated that directory as editable. Moving the unchanged generated
+bundle into a standard private site-packages layout obeyed its installation
+owner; no guard bypass, source patch or alternate loader was added.
+
+``supported-family18.json`` covers704 OpenHCS and103 dependency modules with
+zero parse omissions. ``supported-controls25.log`` verifies44 original
+Python/Numba and native Shapes-model controls on the installed supported family:
+terminal0,15.89seconds,459228KiB maxRSS, zero swaps. Models explicitly drive
+their original slice consumer; these controls do not claim Qt rendering.
+No agent-defined memory or swap caps were imposed.
+
+``READY26.json`` and ``PUBLIC-SUPPORTED26.rst`` pin this package and the same
+tiny public raw/Shapes orthogonal-before-streaming case. Dewey owns one
+positively closed existing slot; science viewers and fourth-retina placement
+remain protected. Qt/public MCP settlement, actual captures and typed closure
+are still pending. No new native runtime, viewer or public client was started.
