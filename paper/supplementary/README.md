@@ -248,30 +248,25 @@ OpenHCS-derived overlays, native display windows and screenshot cropping/scaling
 
 ![Matched first/final nuclear overlays and a final-only faint-pair failure control.](../figures/slas/h003_native_repair.png){width=6in}
 
-\(A) Matched raw DNA and first-complete and final overlays show a joined pair
-represented separately after the author's revisions; diffuse connecting support
-remains in the lower region. A compact neighbour remains separately represented.
-(B) Final raw, result-only and combined views retain one joined ROI across two
-faint interiors. The first complete prediction is candidate01_retry01, following
-technical repair; the final is candidate06. This fresh-context author received
-no reference-score feedback. The remaining merge is not claimed to have been
-introduced by the final revision. These local witnesses do not establish
-exhaustive biological accuracy or validated actin territory boundaries.
+\(A) Matched raw DNA and first/final overlays show separation of a joined pair;
+diffuse support remains in the lower region. A compact neighbour stays separate.
+(B) Final raw, result-only and combined views retain a faint merge. This
+fresh-context author revised its own pipeline without reference feedback.
+Candidate01_retry01 follows technical repair; candidate06 is final. These local
+witnesses do not establish exhaustive accuracy or validated actin boundaries.
 
-DNA windows are 0–255 in A and 0–151 in B; gamma is 1 and final ROI opacity
-is 0.7. Colours are not cross-candidate identities. The final A crop is shifted
-11 screen pixels vertically to match the same native region after a canvas-height
-change; camera centre and zoom are unchanged. Aligned raw RGB equality is
-presentation evidence, not segmentation accuracy. Complete source screenshots
-are embedded unchanged, with SVG clipping/scaling only. Physical calibration
-is unverified. The [source proof](task_only_analysis/h003-native-source-proof.json)
-and [render receipt](task_only_analysis/h003-native-render-receipt.json) retain
-the original capture identities and exact presentation crops.
+DNA windows are 0–255 (A) and 0–151 (B), gamma 1, final ROI opacity 0.7.
+Colours are not cross-candidate identities. The final A crop accounts for an
+11-pixel canvas shift at unchanged camera and zoom. Raw RGB alignment proves
+presentation only. Original screenshots are embedded unchanged and clipped/scaled;
+physical calibration is unverified. The
+[source proof](task_only_analysis/h003-native-source-proof.json) and
+[render receipt](task_only_analysis/h003-native-render-receipt.json) retain capture
+identities and crops.
 
 Source: [Broad Bioimage Benchmark Collection BBBC007v1](https://bbbc.broadinstitute.org/BBBC007),
-field A02, Drosophila Kc167 DNA/actin images, courtesy of the laboratory of
-David Sabatini, Whitehead Institute for Biomedical Research; Jones et al.
-(2005) and Ljosa et al. (2012), as recommended by the collection.
+field A02, Drosophila Kc167 DNA/actin; David Sabatini laboratory, Whitehead
+Institute; Jones et al. (2005) and Ljosa et al. (2012).
 [CC0](https://creativecommons.org/publicdomain/zero/1.0/). Adaptations are
 OpenHCS-derived overlays, native display windows and screenshot cropping/scaling.
 
