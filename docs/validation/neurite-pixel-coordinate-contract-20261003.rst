@@ -171,3 +171,43 @@ Root release/integration of that exact shared seam is needed for an end-to-end
 pixel graph. No unused parallel analysis implementation or unsupported wrapper
 has been added while this dependency is unresolved. Existing physical guard is
 preserved;541 pixel route is still unimplemented and not installed-qualified.
+
+Independent detector projection checkpoint
+------------------------------------------
+
+Current394f3c66cd7 file claims and all open PR titles/heads were rechecked.
+No active analysis settings owner overlaps this hunk; Root's source metadata,
+graph and materialization files remain untouched. Dewey builds567 from its
+immutable8513 archive, not this reused checkout. #131's new uncertain revision
+is preserved and is not a registration receiving input or replay authorization.
+
+The existing settings now own their dimensional projections. Body maximum
+width/minimum area live on MetaXpressCellBodySettings, outgrowth width on
+MetaXpressOutgrowthSettings, and nuclear wavelength bounds on the existing
+MetaXpressWavelengthSettings ancestor. Primary detection, nuclear propagation,
+signal-body filling, neurite detection and the compact registered physical
+recipe consume those hooks. Five dimensional expressions remain solely at
+their five declaration hooks; the competing consumer expressions are deleted.
+No settings mirror, units roster, decoder or second detection algorithm exists.
+
+This is the working physical detector seam needed by the pixel continuation,
+not a new registered pixel callable. Physical artifact admission, settings
+fields/defaults, result headings, topology spacing and graph/export semantics
+are unchanged. Root's analysis/export unit integration is still needed before
+the pixel route can be enabled honestly. Analysis and export unit identity are
+not inferred from numeric one or acquisition-relative calibration.
+
+New-case source controls use declaration-only projection hooks through the
+original body detectors and wavelength ancestor. Independent audit and width/
+area capabilities compose with cooperative super and declared C3 MRO. The
+compact physical callable must produce identical labels, physical rows and
+graph for equivalent projected controls; no generic consumer edit is needed
+for these new declarations. These controls have been authored after the
+coherent owner change; qualification is pending at this source checkpoint.
+
+Original complete8513 AST/dependency evidence remains applicable to the
+unchanged underlying family; the determining two analysis modules differ from
+8513 only by the prior physical-schema doc clarification before this hunk.
+Changed-module AST and original pinned R0 will qualify this actual delta,
+followed by a bounded focused source batch. No global R1, installed/public
+pixel acceptance or autonomous scientific improvement is claimed.

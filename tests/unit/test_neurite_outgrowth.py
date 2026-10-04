@@ -1,4 +1,4 @@
-from dataclasses import fields
+from dataclasses import dataclass, fields
 from inspect import signature
 
 import numpy as np
@@ -115,6 +115,64 @@ def _with_separate_body_channel(neurite_stack):
     rows, columns = disk((64, 20), 9, shape=body_image.shape)
     body_image[rows, columns] = 1000
     return np.stack((body_image, neurite_stack[0]))
+
+
+def test_compact_physical_recipe_uses_declared_dimension_hooks_without_consumer_edits():
+    projections = []
+
+    class ProjectionAudit:
+        def maximum_width_px(self, pixel_size_um):
+            projections.append(type(self))
+            return super().maximum_width_px(pixel_size_um)
+
+    class HalfWidthProjection:
+        def maximum_width_px(self, pixel_size_um):
+            return super().maximum_width_px(pixel_size_um) / 2.0
+
+    class QuarterAreaProjection:
+        def minimum_area_px(self, pixel_size_um):
+            return super().minimum_area_px(pixel_size_um) / 4.0
+
+    @dataclass(frozen=True)
+    class DeclaredBody(
+        ProjectionAudit, HalfWidthProjection, QuarterAreaProjection,
+        MetaXpressCellBodySettings,
+    ):
+        pass
+
+    @dataclass(frozen=True)
+    class DeclaredOutgrowth(
+        ProjectionAudit, HalfWidthProjection, MetaXpressOutgrowthSettings
+    ):
+        pass
+
+    image = _draw_fluorescent_neuron(branched=True)
+    original = image.copy()
+    expected = _implementation()(
+        image, cell_body=_cell_body_settings(), outgrowth=_outgrowth_settings(),
+        pixel_size=1.3556,
+    )
+    actual = _implementation()(
+        image,
+        cell_body=DeclaredBody(
+            approximate_max_width=60.0, minimum_area=400.0,
+            intensity_above_local_background=100.0,
+        ),
+        outgrowth=DeclaredOutgrowth(
+            maximum_width=6.0, intensity_above_local_background=100.0,
+            minimum_cell_growth_to_log_as_significant=20.0,
+        ),
+        pixel_size=1.3556,
+    )
+    np.testing.assert_array_equal(image, original)
+    assert actual[0] is expected[0] is image
+    assert _rows(actual[1]) == _rows(expected[1])
+    assert _rows(actual[2]) == _rows(expected[2])
+    assert _rows(actual[1])[0]["number_of_cells"] > 0
+    for actual_labels, expected_labels in zip(actual[3:7], expected[3:7]):
+        np.testing.assert_array_equal(actual_labels, expected_labels)
+    assert actual[-1] == expected[-1]
+    assert DeclaredBody in projections and DeclaredOutgrowth in projections
 
 
 def test_signature_exposes_documented_metaxpress_controls_only():

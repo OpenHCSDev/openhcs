@@ -266,6 +266,14 @@ class MetaXpressCellBodySettings:
         ):
             raise ValueError("cell_body.channel_index must be a non-negative integer")
 
+    def maximum_width_px(self, pixel_size_um: float) -> float:
+        """Project this declaration's maximum body width into image pixels."""
+        return self.approximate_max_width / pixel_size_um
+
+    def minimum_area_px(self, pixel_size_um: float) -> float:
+        """Project this declaration's minimum body area into image pixels."""
+        return self.minimum_area / pixel_size_um**2
+
     def contract_candidates(
         self,
         labels: np.ndarray,
@@ -276,9 +284,9 @@ class MetaXpressCellBodySettings:
         return _cell_body_contract_candidates(
             labels,
             response,
-            minimum_area_px=self.minimum_area / pixel_size_um**2,
+            minimum_area_px=self.minimum_area_px(pixel_size_um),
             minimum_inscribed_diameter_px=self.minimum_inscribed_diameter_px,
-            maximum_width_px=self.approximate_max_width / pixel_size_um,
+            maximum_width_px=self.maximum_width_px(pixel_size_um),
             intensity_threshold=self.intensity_above_local_background,
         )
 
@@ -303,6 +311,10 @@ class MetaXpressOutgrowthSettings:
 
     candidate_hysteresis_seed_correction_factor: float | None = None
     """Optional stricter seed threshold retaining connected dim candidates."""
+
+    def maximum_width_px(self, pixel_size_um: float) -> float:
+        """Project this declaration's outgrowth width into image pixels."""
+        return self.maximum_width / pixel_size_um
 
     def validate(self) -> None:
         if not np.isfinite(self.maximum_width) or self.maximum_width <= 0:
@@ -901,7 +913,7 @@ def neurite_outgrowth_metaxpress(
             bright_objects=bright_objects,
         )
     )
-    outgrowth_width_px = outgrowth.maximum_width / pixel_size_um
+    outgrowth_width_px = outgrowth.maximum_width_px(pixel_size_um)
     nuclear_seed_mode = use_nuclear_stain and body_detection_channel_index == int(
         nuclear_stain.channel_index
     )
@@ -915,7 +927,7 @@ def neurite_outgrowth_metaxpress(
         secondary_owner_regions = _identify_secondary_owner_regions_cellprofiler(
             neurite_image,
             cell_body_payload,
-            body_width_px=cell_body.approximate_max_width / pixel_size_um,
+            body_width_px=cell_body.maximum_width_px(pixel_size_um),
             bright_objects=bright_objects,
         )
     if nuclear_seed_mode and not nuclear_seeded_signal_body_mode:
@@ -931,7 +943,7 @@ def neurite_outgrowth_metaxpress(
         secondary_owner_regions = _identify_secondary_owner_regions_cellprofiler(
             neurite_image,
             cell_body_payload,
-            body_width_px=cell_body.approximate_max_width / pixel_size_um,
+            body_width_px=cell_body.maximum_width_px(pixel_size_um),
             bright_objects=bright_objects,
         )
 
@@ -1242,7 +1254,7 @@ def _identify_cell_bodies_cellprofiler(
 ):
     """Detect with CP IPO, then apply the MetaXpress-owned body predicates."""
 
-    maximum_width_px = settings.approximate_max_width / pixel_size_um
+    maximum_width_px = settings.maximum_width_px(pixel_size_um)
     _, _, detected_payload, *_ = _raw_processing_leaf(identify_primary_objects)(
         _cellprofiler_foreground_image(image, bright_objects=bright_objects),
         **CELLPROFILER_NEURITE_ENGINE_PROFILE.compact_body_detection_kwargs(
@@ -1298,7 +1310,7 @@ def _identify_nuclear_seeded_cell_bodies_cellprofiler(
 ):
     """Propagate DAPI seeds through soma signal, then apply the body contract."""
 
-    maximum_width_px = settings.approximate_max_width / pixel_size_um
+    maximum_width_px = settings.maximum_width_px(pixel_size_um)
     seed_payload_template = _identify_cell_bodies_cellprofiler(
         image,
         settings,
@@ -1435,8 +1447,8 @@ def _identify_neurites_cellprofiler(
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Return the public mask, CP medial axis, and local signal evidence."""
 
-    outgrowth_width_px = settings.maximum_width / pixel_size_um
-    body_width_px = cell_body.approximate_max_width / pixel_size_um
+    outgrowth_width_px = settings.maximum_width_px(pixel_size_um)
+    body_width_px = cell_body.maximum_width_px(pixel_size_um)
     cp_image = _cellprofiler_foreground_image(
         image,
         bright_objects=bright_objects,
@@ -1633,11 +1645,12 @@ def _derive_signal_cell_bodies(
     seeds = np.asarray(nuclear_seed_labels, dtype=np.int32)
     if seeds.shape != neurite_image.shape:
         raise ValueError("nuclear seeds and neurite image must share a shape")
-    maximum_radius_px = settings.approximate_max_width / (2.0 * pixel_size_um)
-    minimum_area_px = settings.minimum_area / pixel_size_um**2
+    maximum_width_px = settings.maximum_width_px(pixel_size_um)
+    maximum_radius_px = maximum_width_px / 2.0
+    minimum_area_px = settings.minimum_area_px(pixel_size_um)
     response = local_background_response(
         neurite_image,
-        object_width_px=settings.approximate_max_width / pixel_size_um,
+        object_width_px=maximum_width_px,
         bright_objects=bright_objects,
     )
     body_foreground = response >= settings.intensity_above_local_background
@@ -1669,7 +1682,7 @@ def _derive_signal_cell_bodies(
         local_foreground_width = (
             2.0 * float(foreground_distance[owner_slice][seed_centroid]) - 1.0
         )
-        if local_foreground_width > settings.approximate_max_width / pixel_size_um:
+        if local_foreground_width > maximum_width_px:
             continue
         distance_to_nearest_seed, nearest_seed_coordinates = ndi.distance_transform_edt(
             local_seeds == 0,

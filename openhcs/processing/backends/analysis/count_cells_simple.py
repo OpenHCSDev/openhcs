@@ -154,6 +154,14 @@ class MetaXpressWavelengthSettings:
     intensity_above_local_background: float = 100.0
     """Minimum raw-intensity difference above adaptive local background."""
 
+    def minimum_width_px(self, pixel_size_um: float) -> float:
+        """Project this wavelength's lower width into image pixels."""
+        return self.approx_min_width / pixel_size_um
+
+    def maximum_width_px(self, pixel_size_um: float) -> float:
+        """Project this wavelength's upper width into image pixels."""
+        return self.approx_max_width / pixel_size_um
+
     def validate(self, name: str) -> None:
         """Validate one wavelength's complete public settings block."""
 
@@ -594,8 +602,8 @@ def round_object_segmentation_stages(
 ) -> RoundObjectSegmentationStages:
     """Run the shared detector once and retain its exact acceptance evidence."""
 
-    min_width_px = settings.approx_min_width / pixel_size_um
-    max_width_px = settings.approx_max_width / pixel_size_um
+    min_width_px = settings.minimum_width_px(pixel_size_um)
+    max_width_px = settings.maximum_width_px(pixel_size_um)
     intensity_above_background = local_background_response(
         slice_data,
         object_width_px=max_width_px,

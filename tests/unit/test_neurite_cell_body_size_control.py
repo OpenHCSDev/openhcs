@@ -9,6 +9,7 @@ from openhcs.core.runtime_object_labels import object_label_dense_array
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
     CELLPROFILER_NEURITE_ENGINE_PROFILE,
     MetaXpressCellBodySettings,
+    _derive_signal_cell_bodies,
     _identify_cell_bodies_cellprofiler,
     _identify_nuclear_seeded_cell_bodies_cellprofiler,
 )
@@ -123,3 +124,74 @@ def test_body_size_gate_requires_finite_nonnegative_pixel_units(diameter):
     settings = MetaXpressCellBodySettings(minimum_inscribed_diameter_px=diameter)
     with pytest.raises(ValueError, match="minimum_inscribed_diameter_px"):
         settings.validate()
+
+
+@pytest.mark.parametrize("detector", ("primary", "nuclear_seeded", "signal_body"))
+def test_independent_body_projection_composes_through_existing_detectors(detector):
+    """A declaration changes controls, not the shared detection consumers.
+
+    This local candidate declaration is not the pending registered pixel-unit
+    neurite route: graph/measurement units remain a separate required contract.
+    """
+    projections = []
+
+    class ProjectionAudit:
+        def maximum_width_px(self, pixel_size_um):
+            projections.append("width")
+            return super().maximum_width_px(pixel_size_um)
+
+        def minimum_area_px(self, pixel_size_um):
+            projections.append("area")
+            return super().minimum_area_px(pixel_size_um)
+
+    @dataclass(frozen=True)
+    class PixelCandidateDeclaration(MetaXpressCellBodySettings):
+        body_width_pixels: float = 30.0
+        body_area_pixels: float = 20.0
+
+        def maximum_width_px(self, pixel_size_um):
+            return self.body_width_pixels
+
+        def minimum_area_px(self, pixel_size_um):
+            return self.body_area_pixels
+
+    @dataclass(frozen=True)
+    class AuditedPixelCandidate(ProjectionAudit, PixelCandidateDeclaration):
+        pass
+
+    calibration = 1.3556
+    declared = AuditedPixelCandidate(
+        approximate_max_width=1.0,
+        minimum_area=10000.0,
+        minimum_inscribed_diameter_px=5.0,
+    )
+    physical = MetaXpressCellBodySettings(
+        approximate_max_width=declared.body_width_pixels * calibration,
+        minimum_area=declared.body_area_pixels * calibration**2,
+        minimum_inscribed_diameter_px=5.0,
+    )
+    image = _small_body_image()
+    nuclei = np.zeros(image.shape, dtype=np.int32)
+    nuclei[30:33, 30:33] = 1
+
+    def detect(settings):
+        if detector == "signal_body":
+            return _derive_signal_cell_bodies(
+                nuclei, image, settings, calibration, bright_objects=True
+            )
+        if detector == "nuclear_seeded":
+            payload = _identify_nuclear_seeded_cell_bodies_cellprofiler(
+                image, settings, calibration, bright_objects=True,
+                nuclei_labels=nuclei,
+            )
+        else:
+            payload = _identify_cell_bodies_cellprofiler(
+                image, settings, calibration, bright_objects=True
+            )
+        return object_label_dense_array(payload)
+
+    actual = detect(declared)
+    expected = detect(physical)
+    assert np.any(actual)
+    np.testing.assert_array_equal(actual, expected)
+    assert "width" in projections and "area" in projections
