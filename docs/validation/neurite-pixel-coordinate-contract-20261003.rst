@@ -261,3 +261,101 @@ integration exists nor changes physical calibration admission. #567 still uses
 Dewey's separate archived8513 candidate. Its public observation case awaits
 whole-package qualification and positively observed original131 client/native
 closure on6012; the newly retained uncertain revision is never replayed.
+
+Current-main receiving checkpoint, 2026-10-04
+-------------------------------------------
+
+Normal merge7916ddad2c270c40177d3def81d62009cbb67464 integrates main7fb3c09b,
+including accepted594 declaration descriptions, without changing the five
+owned detector projections. Planck released the finished source checkout:
+ordinary594 package/receiving uses its immutable private target and a different
+source checkout. All six dirty foreign gitlinks, seventh gitlink absence and
+untracked historical evidence are preserved. No new worktree, environment,
+installation, native process, scientific input or author contact.
+
+Latest NRA/refactor-audit skills and authoritative archive patterns were read.
+Required relation remains distinct acquisition calibration versus declared
+analysis/export units (IDEN-1/2), original typed spacing/graph/materialization
+owners rather than mirrored units or raw field renaming (BOUND-2/8), and one
+shared detection/topology recipe with declaration hooks rather than copied
+procedures (IMPL-12). The working independent hooks remain on the existing
+body/outgrowth settings and wavelength ancestor, not a new forwarding facade.
+
+The original source-family04.py caller was reused unchanged against merged7916:
+704 OpenHCS,12 python-introspect,6 metaclass-registry,17 arraybridge modules;
+zero parse omissions, retained complete related ASTs and dependency identities.
+Terminal0,12.46s,213532KiB maximum RSS, process swaps0. These are source
+declaration/write/read/import/MRO facts, not global R1 or runtime acceptance.
+
+Current18 focused source controls PASS, terminal0,11.53s,438776KiB maximum RSS,
+process swaps0. Whole body-gate family, primary/nuclear-seeded/signal growth,
+inherited wavelength cooperative hooks, original compact physical callable and
+both public signatures are exercised. The unchanged source input, masks,
+physical rows and graph equality controls remain intact; new declaration-only
+capabilities execute their cooperative hooks without generic consumer edits.
+This independently qualifies current-main integration, not a pixel route.
+Original historical19-control receipt remains unchanged. Two existing pytest
+configuration warnings are retained. Shared historical cgroup peaks are not
+attributed to this test. No invented memory/swap cap was restored.
+
+Exact current two-production-file R0 against main7fb3: every measured count
+delta0, code lines+17. Original old-base code+16 receipt remains historical;
+neither result is a global audit or a waived positive switch delta.
+
+Determining shared dependency, not historical status
+--------------------------------------------------
+
+Actual Root394 head a0bb0f4089a85475e112cea32d60132c1cd94752 was fetched and read.
+SourceVoxelSpacingUnit at source_metadata.py764 declares MICROMETERS/RELATIVE
+only. SpatialGraph at runtime_spatial_graph.py190 still carries bare
+coordinate_spacing and physical radii, with no explicit analysis/export unit.
+The original ROI writer at processing/materialization/core.py3411 constructs
+SourceVoxelSpacing(graph.coordinate_spacing), selecting its physical default.
+The original SWC writer scales coordinates using the bare graph spacing.
+Complete ASTs for these three actual shared modules are retained separately;
+three parsed,zero omissions. This corrects the obsolete core/materialization
+path in earlier receiving prose; its original record is preserved above.
+
+Root remains the exclusive shared-file owner. The current narrow release or
+integration request is394 comment5978234373, following5975214247; no release
+or existing explicit pixel analysis frame was found in the inspected current
+claims/source. The required hunk is original spacing-unit/graph/export behavior:
+explicit pixel analysis unit without physical scalar calibration, typed analysis
+spacing carried by graph/export independently of acquisition provenance, and
+original physical SWC admission retained. Unit/format policy belongs on those
+owners. No generic switch, alternate exporter, calibration1.0 bypass or unused
+parallel measurement implementation is added while this seam is unavailable.
+
+The registered pixel row/graph route remains unimplemented. This is the precise
+Root dependency, not a hosted-CI, acknowledgement, test or package hold. After
+the shared contract is integrated/released, Singer owns the single measurement
+construction/topology consumer migration and source qualification; ordinary
+installed/public pixel receiving then requires a released engineering lane.
+
+Separate new source-projection witness
+-------------------------------------
+
+Read-only original BBBC007 log950..1166 in
+next-bbbc00796-ownp00188-after593-20261004/BBBC007_PUBLIC593_96/author-workspace/
+output/runtime/scratch/data/openhcs/logs/
+openhcs_zmq_server_port_6016_1791102257189925629.log records first
+PersistNuclei01 conversion failure before the writer. A01 has runtime_slice
+size8 versus returned(4,450,450); A02 has RUNTIME_SLICE versus SOURCE_BINDING.
+Original attempts/candidate01_first.py and failed job remain untouched.
+ImageOutputRecorder.record reaches contextualize/output_owns_source_context,
+then ImagePayloadMetadata.has_complete_source_identity and plane validation.
+This identifies the determining boundary, not the earlier wrong producer.
+No guard is weakened and no original request is replayed.
+
+Those five related Root production modules materially differ from installed
+main7fb3. Current Root reproduction/fix is NOT claimed. Dewey combined this
+witness with the existing P001 source-assembly observation in the SAME
+Root394 comment5978205597; there is no duplicate issue/patch or scientist
+feedback. It is distinct from541's unit-bearing graph dependency.
+
+Current raw controls/source evidence is archived separately in
+neurite-current-owner-controls-20261004.tar.gz,4910507bytes,SHA256
+a03ddd1f91be288d3d0cb7604df8aedaeb7d094415d8b925d4e6f37728885b49;
+the original earlier archives,
+failures and loose originals remain intact under engineering-neurite-units-
+20261003. The current source checkpoint changes no shared Root implementation.
