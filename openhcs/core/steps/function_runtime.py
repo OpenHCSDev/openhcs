@@ -11,7 +11,6 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from types import MappingProxyType
 from typing import (
-    Callable,
     Generic,
     Mapping,
     Sequence,
@@ -66,7 +65,6 @@ from openhcs.core.aligned_image_payload import (
     unstack_image_payload_context,
 )
 from openhcs.core.memory import (
-    convert_memory,
     unstack_runtime_slices,
 )
 from openhcs.core.runtime_stores import (
@@ -76,7 +74,7 @@ from openhcs.core.runtime_stores import (
 )
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_output_matching import (
-    RuntimeReturnedOutputMatcher,
+    split_runtime_output,
 )
 from openhcs.core.runtime_adapters import (
     RuntimeAdapterRequest,
@@ -824,7 +822,7 @@ class FunctionCoreExecutor:
         if not self.should_load_artifact_inputs():
             return {}
         logger.info(
-            f"Artifact inputs for {self.function_name}: {self.artifacts.inputs}"
+            "Artifact inputs for %s: %s", self.function_name, self.artifacts.inputs
         )
         loaded_artifact_payloads: dict[ArtifactSpecRef, RuntimePayload] = {}
         parameter_values: dict[str, list[RuntimeValue]] = {}
@@ -875,8 +873,9 @@ class FunctionCoreExecutor:
         if storage_plan is None:
             raise ValueError("Artifact input loading requires a storage-backed edge.")
         logger.info(
-            f"Loading artifact input '{arg_name}' from path '{storage_plan.path}' "
-            "(memory backend)"
+            "Loading artifact input '%s' from path '%s' (memory backend)",
+            arg_name,
+            storage_plan.path,
         )
         load_started_at = time.perf_counter()
         try:
@@ -888,8 +887,10 @@ class FunctionCoreExecutor:
             ).projected_values(self.group_data.context.runtime_value_store)
         except Exception as exc:
             logger.error(
-                f"Failed to load artifact input '{arg_name}' from "
-                f"'{storage_plan.path}': {exc}",
+                "Failed to load artifact input '%s' from '%s': %s",
+                arg_name,
+                storage_plan.path,
+                exc,
                 exc_info=True,
             )
             raise
@@ -951,43 +952,18 @@ class FunctionCoreExecutor:
             invocation_parameters=invocation_parameters,
         )
 
-    @property
-    def func_callable(self) -> Callable:
-        return self.invocation.contract.resolve_runtime_callable()
-
-    @property
-    def base_kwargs(self) -> RuntimeCallableKwargs:
-        return self.invocation.kwargs_dict
-
-    def main_flow_output_source_payload(
-        self,
-        source_payload: RuntimePayload,
-    ) -> RuntimePayload:
-        """Project source context through the callable's nominal processing contract."""
-
-        return self.invocation.contract.require_processing_contract().declaration.main_flow_output_source_payload(
-            source_payload
-        )
-
     def execute(
         self,
         *,
         debug_sink: DebugEventSink | None = None,
     ) -> RuntimePayload | NoMainFlowOutput:
-        input_memory_type, _ = self.invocation.contract.require_memory_types()
-        target_device_id = self.group_data.execution_plan.device_id_for(
-            input_memory_type
-        )
-        converted_data = convert_memory(
-            data=image_payload_data(self.main_data_arg),
-            source_type=self.source_memory_type,
-            target_type=input_memory_type,
-            gpu_id=target_device_id,
+        converted_data = self.invocation.convert_input(
+            image_payload_data(self.main_data_arg),
+            self.source_memory_type,
         )
         source_payload = with_image_payload_data(self.main_data_arg, converted_data)
-        main_data_arg = self.main_flow_call_argument(source_payload)
-        final_kwargs = dict(self.base_kwargs)
-        self.bind_compiled_runtime_parameters(final_kwargs)
+        main_data_arg = self.invocation.main_flow_call_argument(source_payload)
+        final_kwargs = dict(self.invocation.runtime_kwargs)
         loads_artifact_inputs = self.should_load_artifact_inputs()
         loaded_artifact_payloads: dict[ArtifactSpecRef, RuntimePayload] = {}
         if loads_artifact_inputs:
@@ -1008,13 +984,6 @@ class FunctionCoreExecutor:
             source_payload,
             loaded_artifact_payloads=loaded_artifact_payloads,
         )
-
-    def main_flow_call_argument(
-        self, source_payload: RuntimePayload
-    ) -> RuntimeCallableArgument:
-        """Project through the callable's declared processing and raw ABI owners."""
-
-        return self.invocation.contract.main_flow_call_argument(source_payload)
 
     def execution_group_source_payload(
         self,
@@ -1043,13 +1012,6 @@ class FunctionCoreExecutor:
         if context_parameter_name is not None:
             final_kwargs[context_parameter_name] = self.group_data.context
 
-    def bind_compiled_runtime_parameters(
-        self,
-        final_kwargs: dict[str, RuntimeCallableArgument],
-    ) -> None:
-        for binding in self.invocation.runtime_parameter_bindings:
-            final_kwargs[binding.parameter_name] = binding.value
-
     def bind_runtime_adapter(
         self,
         final_kwargs: dict[str, RuntimeCallableArgument],
@@ -1058,7 +1020,7 @@ class FunctionCoreExecutor:
         runtime_adapter = self.invocation.contract.runtime_adapter
         if runtime_adapter is None:
             return
-        adapter_parameter = runtime_adapter.require_parameter_name()
+        adapter_parameter = self.invocation.adapter_parameter_name
         adapter_started_at = time.perf_counter()
         final_kwargs[adapter_parameter] = runtime_adapter.factory(
             self.runtime_adapter_request(source_payload)
@@ -1079,17 +1041,14 @@ class FunctionCoreExecutor:
         loaded_artifact_payloads: Mapping[ArtifactSpecRef, RuntimePayload],
         debug_sink: DebugEventSink | None,
     ) -> RuntimeFunctionOutput:
-        logger.info(f"Executing function: {self.function_name}")
-        func_callable = self.func_callable
+        logger.info("Executing function: %s", self.function_name)
+        func_callable = self.invocation.runtime_callable
         contract = self.invocation.contract
-        primary_parameter = contract.primary_input_parameter_name
-        bound_parameters = dict(final_kwargs)
-        if primary_parameter is not None:
-            bound_parameters[primary_parameter] = main_data_arg
+        primary_parameter = self.invocation.primary_input_parameter_name
         plane_projector: RuntimePlaneAxisProjector = self.plane_projection
         runtime_adapter = self.invocation.contract.runtime_adapter
         if runtime_adapter is not None:
-            adapter_parameter = runtime_adapter.require_parameter_name()
+            adapter_parameter = self.invocation.adapter_parameter_name
             adapter_value = final_kwargs[adapter_parameter]
             if isinstance(adapter_value, RuntimePlaneAxisProjector):
                 plane_projector = adapter_value
@@ -1099,6 +1058,8 @@ class FunctionCoreExecutor:
                     f"Callable {self.function_name!r} has no declared primary input "
                     "parameter for runtime invocation diagnostics."
                 )
+            bound_parameters = dict(final_kwargs)
+            bound_parameters[primary_parameter] = main_data_arg
             debug_sink.record(
                 self.debug_event(
                     DebugEventType.BEFORE_INVOCATION,
@@ -1111,14 +1072,15 @@ class FunctionCoreExecutor:
             )
         call_started_at = time.perf_counter()
         try:
-            with self.group_data.execution_plan.memory_device_scope(
-                contract.execution_memory_type
-            ):
+            with self.invocation.execution_device_scope():
                 raw_output = func_callable(
                     main_data_arg,
                     **final_kwargs,
                 )
         except RuntimeSliceProjectionDeclarationError as exc:
+            bound_parameters = dict(final_kwargs)
+            if primary_parameter is not None:
+                bound_parameters[primary_parameter] = main_data_arg
             cursor = self.debug_cursor()
             invocation_parameters = DebugInvocationParameter.from_kwargs(
                 bound_parameters,
@@ -1176,12 +1138,11 @@ class FunctionCoreExecutor:
                 )
             main_output = raw_output
         else:
-            output_matcher = RuntimeReturnedOutputMatcher(
-                callable_contract=self.invocation.contract,
-                returned_output=raw_output,
-            )
-            _returned_values, matched_outputs = output_matcher.resolve_plan_values(
-                output_plans
+            _returned_values, matched_outputs = (
+                self.invocation.contract.resolve_returned_plan_values(
+                    raw_output,
+                    output_plans,
+                )
             )
             saved_values = {
                 output_plan.ref(): self.save_artifact_output(
@@ -1193,10 +1154,7 @@ class FunctionCoreExecutor:
                 )
                 for output_plan, _output_spec, output_value in matched_outputs
             }
-            canonical_refs = frozenset(
-                spec.ref()
-                for spec in self.invocation.contract.canonical_return_output_specs
-            )
+            canonical_refs = self.invocation.contract.canonical_return_output_refs
             main_outputs = tuple(
                 (output_plan, output_spec, saved_values[output_plan.ref()])
                 for output_plan, output_spec, _output_value in matched_outputs
@@ -1220,10 +1178,10 @@ class FunctionCoreExecutor:
                         )
                     ),
                 )
-            main_output = output_matcher.canonical_output
+            main_output = split_runtime_output(raw_output)[0]
         if isinstance(main_output, NoMainFlowOutput):
             return main_output
-        output_source_payload = self.main_flow_output_source_payload(
+        output_source_payload = self.invocation.main_flow_output_source_payload(
             self.execution_group_source_payload(source_payload)
         )
         return ImageArtifactType.contextualize_output_from_projector(
@@ -1258,8 +1216,9 @@ class FunctionCoreExecutor:
         loaded_artifact_payloads: Mapping[ArtifactSpecRef, RuntimePayload],
     ) -> RuntimePayload:
         logger.info(
-            f"Saving artifact output '{output_key}' to VFS path '{output_plan.path}' "
-            "(memory backend)"
+            "Saving artifact output '%s' to VFS path '%s' (memory backend)",
+            output_key,
+            output_plan.path,
         )
         save_started_at = time.perf_counter()
         artifact_source_payload = self.artifact_output_source_payload(
@@ -1267,7 +1226,7 @@ class FunctionCoreExecutor:
             source_payload,
             loaded_artifact_payloads=loaded_artifact_payloads,
         )
-        output_source_payload = self.main_flow_output_source_payload(
+        output_source_payload = self.invocation.main_flow_output_source_payload(
             self.execution_group_source_payload(artifact_source_payload)
         )
         materialization_source_metadata = None
@@ -1337,10 +1296,7 @@ class PatternGroupRuntime:
     def source_workspace_projection_authority(
         self,
     ) -> VirtualWorkspaceSourceProjectionAuthority:
-        return VirtualWorkspaceSourceProjectionAuthority.from_context(
-            self.request.context,
-            cache=self.source_workspace_projection_cache(),
-        )
+        return self.request.context.runtime_source_workspace_projection_authority
 
     @staticmethod
     def _is_relative_to(path: Path, root: Path) -> bool:
@@ -1369,9 +1325,9 @@ class PatternGroupRuntime:
         return path
 
     def run(self) -> None:
-        start_time = time.time()
+        start_time = time.time() if logger.isEnabledFor(logging.DEBUG) else None
         plan = self.request.execution_plan
-        logger.debug(f"Processing pattern {self.pattern_repr} for axis {plan.axis_id}")
+        logger.debug("Processing pattern %s for axis %s", self.pattern_repr, plan.axis_id)
 
         try:
             load_started_at = time.perf_counter()
@@ -1449,19 +1405,16 @@ class PatternGroupRuntime:
                 step_name=plan.step_name,
                 pattern=self.pattern_repr,
             )
-            logger.debug(
-                f"Finished pattern group {self.pattern_repr} in {(time.time() - start_time):.2f}s."
-            )
+            if start_time is not None and logger.isEnabledFor(logging.DEBUG):
+                logger.debug(
+                    "Finished pattern group %s in %.2fs.",
+                    self.pattern_repr,
+                    time.time() - start_time,
+                )
         except Exception as e:
-            import traceback
-
-            full_traceback = traceback.format_exc()
             logger.error(
-                f"Error processing pattern group {self.pattern_repr}: {e}",
+                "Error processing pattern group %s: %s", self.pattern_repr, e,
                 exc_info=True,
-            )
-            logger.error(
-                f"Full traceback for pattern group {self.pattern_repr}:\n{full_traceback}"
             )
             raise ValueError(
                 f"Failed to process pattern group {self.pattern_repr}: {e}"
@@ -1540,6 +1493,7 @@ class PatternGroupRuntime:
                     if plan.variable_components
                     else None
                 ),
+                pattern_cache=context.runtime_pattern_discovery_cache,
             )
         if producer_index is not None and not producer_matching_files:
             selected_paths = [
@@ -1560,17 +1514,22 @@ class PatternGroupRuntime:
 
         matching_files = self._filter_matching_files_for_group(matching_files)
 
-        logger.debug(
-            "Pattern %s matched %d files: %s",
-            self.pattern_repr,
-            len(matching_files),
-            [Path(f).name for f in matching_files],
-        )
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                "Pattern %s matched %d files: %s",
+                self.pattern_repr,
+                len(matching_files),
+                [Path(f).name for f in matching_files],
+            )
 
-        matching_files.sort()
-        logger.debug(
-            f"Pattern {self.pattern_repr} sorted files: {[Path(f).name for f in matching_files]}"
-        )
+        if not producer_matching_files:
+            matching_files.sort()
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                "Pattern %s sorted files: %s",
+                self.pattern_repr,
+                [Path(f).name for f in matching_files],
+            )
         matching_files = self._filter_matching_files_for_source_bindings(matching_files)
 
         full_file_paths = [
@@ -1597,13 +1556,10 @@ class PatternGroupRuntime:
             else ()
         )
         if producer_index is not None:
-            producer_records = tuple(sorted(
-                producer_records, key=lambda record: record.output_path,
-            ))
-            if matching_files != [record.output_path for record in producer_records]:
-                producer_records = producer_index.records_for_paths(matching_files)
-            else:
+            if producer_matching_files:
                 producer_index.validate_input_records(producer_records)
+            else:
+                producer_records = producer_index.records_for_paths(matching_files)
         ImagePayloadStackComposition.validate_main_flow_cohort(producer_records)
         cached_stack = context.runtime_image_stack_cache.get(
             tuple(full_file_paths),
@@ -1701,14 +1657,12 @@ class PatternGroupRuntime:
             return matching_files
 
         parser = self.request.context.microscope_handler.parser
-        group_component_declaration = parser.component_for_name(group_component)
-        filtered = [
-            filename
-            for filename in matching_files
-            if (metadata := parser.parse_filename(Path(filename).name))
-            and str(metadata.value_for(group_component_declaration))
-            == str(component_value)
-        ]
+        filtered = self.request.context.runtime_pattern_discovery_cache.files_for_component(
+            parser,
+            matching_files,
+            parser.component_for_name(group_component),
+            component_value,
+        )
         if not filtered:
             raise ValueError(
                 f"Pattern group {self.pattern_repr} for {group_component}="
@@ -2103,7 +2057,7 @@ class PatternGroupRuntime:
                 output_shape = np.shape(processed_data)
                 output_ndim = np.ndim(processed_data)
                 logger.error("Function output is not an OpenHCS image stack.")
-                logger.error(f"Output type: {type(processed_stack)}")
+                logger.error("Output type: %s", type(processed_stack))
                 logger.error("Output shape: %s", output_shape)
                 logger.error("Output ndim: %s", output_ndim)
                 raise ValueError(

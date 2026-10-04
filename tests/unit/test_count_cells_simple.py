@@ -13,7 +13,6 @@ from openhcs.core.artifacts import (
     ObjectLabelsArtifactType,
 )
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.runtime_output_matching import RuntimeReturnedOutputMatcher
 from openhcs.processing.backends.analysis.count_cells_simple import (
     Foreground,
     MetaXpressW2Settings,
@@ -592,7 +591,7 @@ def test_round_object_diagnostics_preserve_kernel_output_and_rejection_identity(
     )
     raw, measurements, prefilter, accepted, weak_core, adjacent_satellites = returned
     contract = CallableContract.from_callable(inspect_metaxpress_round_objects)
-    matched = RuntimeReturnedOutputMatcher(contract, returned).resolve()
+    matched = contract.resolve_returned_output(returned)
     assert (
         matched[count_cells_simple_module.ROUND_OBJECT_WIDTHS_OUTPUT.ref()]
         is measurements

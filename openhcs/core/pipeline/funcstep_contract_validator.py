@@ -31,7 +31,6 @@ from typing import (
 
 from openhcs.constants.constants import (
     GroupBy,
-    VALID_MEMORY_TYPES,
     get_openhcs_config,
 )
 from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
@@ -109,10 +108,6 @@ def missing_memory_type_error(func_name, step_name):
 
 def inconsistent_memory_types_error(step_name, func1, func2):
     return f"Functions in step '{step_name}' have different memory types: {func1} vs {func2}"
-
-
-def invalid_memory_type_error(func_name, input_type, output_type, valid_types):
-    return f"Function '{func_name}' has invalid memory types: {input_type}/{output_type}. Valid: {valid_types}"
 
 
 def invalid_pattern_error(pattern):
@@ -1031,29 +1026,14 @@ class FuncStepContractValidator:
 
         input_type = contract.input_memory_type
         output_type = contract.output_memory_type
-        execution_type = contract.execution_memory_type
         if input_type is None or output_type is None:
             raise ValueError(
                 missing_memory_type_error(contract.function_name, step_name)
             )
-        if (
-            input_type not in VALID_MEMORY_TYPES
-            or output_type not in VALID_MEMORY_TYPES
-        ):
-            raise ValueError(
-                invalid_memory_type_error(
-                    callable_label or contract.function_name,
-                    input_type,
-                    output_type,
-                    ", ".join(sorted(VALID_MEMORY_TYPES)),
-                )
-            )
-        if execution_type is not None and execution_type not in VALID_MEMORY_TYPES:
-            raise ValueError(
-                f"Callable {contract.function_name!r} in step {step_name!r} "
-                f"declares invalid execution memory type {execution_type!r}; "
-                f"valid memory types are {', '.join(sorted(VALID_MEMORY_TYPES))}."
-            )
+        input_type, output_type = contract.require_memory_types(
+            callable_label=callable_label,
+        )
+        contract.require_execution_memory_type(step_name=step_name)
         return input_type, output_type
 
     @staticmethod

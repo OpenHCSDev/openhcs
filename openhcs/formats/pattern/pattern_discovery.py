@@ -16,6 +16,7 @@ from polystore.filemanager import FileManager
 
 from openhcs.constants.constants import DEFAULT_IMAGE_EXTENSION
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
+from openhcs.core.runtime_pattern_cache import RuntimePatternDiscoveryCache
 
 # Core OpenHCS Interfaces
 from openhcs.microscopes.microscope_interfaces import FilenameParser
@@ -48,16 +49,18 @@ class PatternDiscoveryEngine:
     # Constants
     PLACEHOLDER_PATTERN = "{iii}"
 
-    def __init__(self, parser: FilenameParser, filemanager: FileManager):
-        """
-        Initialize the pattern discovery engine.
-
-        Args:
-            parser: Parser for microscopy filenames
-            filemanager: FileManager for file system operations
-        """
+    def __init__(
+        self,
+        parser: FilenameParser,
+        filemanager: FileManager,
+        pattern_cache: RuntimePatternDiscoveryCache | None = None,
+    ):
+        """Initialize the pattern discovery engine."""
         self.parser = parser
         self.filemanager = filemanager
+        self.pattern_cache = (
+            RuntimePatternDiscoveryCache() if pattern_cache is None else pattern_cache
+        )
 
     def path_list_from_pattern(
         self,
@@ -66,21 +69,7 @@ class PatternDiscoveryEngine:
         backend: str,
         variable_components: Optional[List[str]] = None,
     ) -> List[str]:
-        """
-        Get a list of filenames matching a pattern in a directory.
-
-        Args:
-            directory: Directory to search (string or Path object)
-            pattern: Pattern to match (string with optional {iii} placeholders)
-            backend: Backend to use for file operations (required)
-            variable_components: List of components that can vary (will be ignored during matching)
-
-        Returns:
-            List of matching filenames
-
-        Raises:
-            ValueError: If directory does not exist
-        """
+        """Get a list of filenames matching a pattern in a directory."""
         directory_path = str(directory)  # Keep as string for FileManager consistency
         if not self.filemanager.is_dir(directory_path, backend):
             raise FileNotFoundError(f"Directory not found: {directory_path}")
@@ -95,6 +84,7 @@ class PatternDiscoveryEngine:
             )  # Use os.path.join instead of /
             file_exists = self.filemanager.exists(file_path, backend)
             if file_exists:
+                self.pattern_cache.metadata_for_filename(self.parser, pattern_str)
                 return [pattern_str]
             return []
 
@@ -102,7 +92,7 @@ class PatternDiscoveryEngine:
         logger.debug("Using pattern template: %s", pattern_str)
 
         # Parse pattern template to get expected structure
-        pattern_metadata = self.parser.parse_filename(pattern_str)
+        pattern_metadata = self.pattern_cache.metadata_for_filename(self.parser, pattern_str)
         if not pattern_metadata:
             logger.error("Failed to parse pattern template: %s", pattern_str)
             return []
@@ -122,7 +112,7 @@ class PatternDiscoveryEngine:
                 continue
 
             # Parse the actual filename
-            file_metadata = self.parser.parse_filename(filename)
+            file_metadata = self.pattern_cache.metadata_for_filename(self.parser, filename)
             if not file_metadata:
                 continue
 
@@ -140,17 +130,7 @@ class PatternDiscoveryEngine:
         pattern_metadata: FilenameParseResult,
         variable_components: List[str],
     ) -> bool:
-        """
-        Check if a file's metadata matches a pattern's structure.
-
-        Args:
-            file_metadata: Metadata extracted from actual filename
-            pattern_metadata: Metadata extracted from pattern template
-            variable_components: List of components that can vary
-
-        Returns:
-            True if file matches pattern structure, False otherwise
-        """
+        """Check if a file's metadata matches a pattern's structure."""
         # Check all components in the pattern
         variable_declarations = {
             self.parser.component_for_name(component)
@@ -205,7 +185,7 @@ class PatternDiscoveryEngine:
             # The has_placeholders() check is only relevant when using patterns as concrete filenames
             # For pattern discovery and grouping, we WANT patterns with placeholders
 
-            metadata = self.parser.parse_filename(pattern_str)
+            metadata = self.pattern_cache.metadata_for_filename(self.parser, pattern_str)
             component_declaration = self.parser.component_for_name(component)
 
             if metadata is None or metadata.value_for(component_declaration) is None:
@@ -221,17 +201,7 @@ class PatternDiscoveryEngine:
     def subdivide_patterns_by_components(
         self, patterns: List[str], components: List[str]
     ) -> Dict[tuple, List[str]]:
-        """
-        Subdivide patterns by multiple component values.
-
-        Args:
-            patterns: List of pattern strings
-            components: List of component names to subdivide by
-
-        Returns:
-            Dictionary mapping component value tuples to pattern lists
-            Example: {('001', '1'): [...], ('001', '2'): [...]}
-        """
+        """Subdivide patterns by multiple component values."""
         if not components:
             return {(): patterns}
 
@@ -240,7 +210,7 @@ class PatternDiscoveryEngine:
             self.parser.component_for_name(component) for component in components
         )
         for pattern in patterns:
-            metadata = self.parser.parse_filename(str(pattern))
+            metadata = self.pattern_cache.metadata_for_filename(self.parser, str(pattern))
             if not metadata:
                 raise ValueError(f"Failed to parse pattern: {pattern}")
             key = tuple(
@@ -419,7 +389,7 @@ class PatternDiscoveryEngine:
                 logger.warning(f"Unexpected file path type: {type(img_path).__name__}")
                 continue
 
-            metadata = self.parser.parse_filename(filename)
+            metadata = self.pattern_cache.metadata_for_filename(self.parser, filename)
             if not metadata:
                 continue
 
@@ -444,20 +414,7 @@ class PatternDiscoveryEngine:
     def _generate_patterns_for_files(
         self, files: List[Any], variable_components: List[str], axis_value: str
     ) -> List[str]:
-        """
-        Generate patterns for a list of files.
-
-        Args:
-            files: List of file path objects representing files
-            variable_components: List of components that can vary in the pattern
-
-        Returns:
-            List of pattern strings
-
-        Raises:
-            TypeError: If files list is not a list
-            ValueError: If pattern templates cannot be instantiated
-        """
+        """Generate patterns for a list of files."""
         # Validate input parameters
         if not isinstance(files, list):
             raise TypeError(
@@ -483,7 +440,7 @@ class PatternDiscoveryEngine:
                 logger.warning(f"Unexpected file path type: {type(file_path).__name__}")
                 continue
 
-            metadata = self.parser.parse_filename(filename)
+            metadata = self.pattern_cache.metadata_for_filename(self.parser, filename)
             if not metadata:
                 continue
 
@@ -521,7 +478,7 @@ class PatternDiscoveryEngine:
             )
 
             # Validate that the pattern can be instantiated
-            if not self.parser.parse_filename(pattern_str):
+            if not self.pattern_cache.metadata_for_filename(self.parser, pattern_str):
                 raise ValueError(
                     f"Clause 93 Violation: Pattern template '{pattern_str}' cannot be instantiated"
                 )

@@ -50,6 +50,7 @@ from openhcs.core.artifact_key_selection import (
     NativeReturnArtifactOutputPolicy,
 )
 from openhcs.core.artifacts import (
+    ArtifactOutputPlan,
     ArtifactSpec,
     ArtifactSpecCollection,
     ArtifactSpecRef,
@@ -71,6 +72,8 @@ if TYPE_CHECKING:
     from openhcs.core.pipeline.compilation_session import CompilationPathResolver
     from openhcs.core.processing_preparation import PreparationOperation
     from openhcs.core.runtime_adapters import RuntimeAdapterSpec
+    from openhcs.core.runtime_output_matching import RuntimeMatchedOutput
+    from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
     from openhcs.core.runtime_batch_contracts import RuntimeBatchExecutionDomain
     from openhcs.core.vfs_protocol import PlatePathDeclaration
     from openhcs.processing.backends.lib_registry.unified_registry import (
@@ -535,7 +538,11 @@ class CallableMetadata:
             )
         if not normalized:
             normalized = spec_parameter_names
-        object.__setattr__(self, "artifact_input_parameter_names", normalized)
+        object.__setattr__(
+            self,
+            "artifact_input_parameter_names",
+            normalized,
+        )
         _validate_optional_enum(
             self.primary_image_carrier_requirement,
             PrimaryImageCarrierRequirement,
@@ -779,6 +786,93 @@ class CallableContract(ArtifactPlanKeySelector):
         None
     )
 
+    artifact_outputs: ArtifactSpecCollection = dataclasses.field(
+        init=False,
+        repr=False,
+        compare=False,
+    )
+    canonical_return_output_specs: ArtifactSpecCollection = dataclasses.field(
+        init=False,
+        repr=False,
+        compare=False,
+    )
+    trailing_return_output_specs: ArtifactSpecCollection = dataclasses.field(
+        init=False,
+        repr=False,
+        compare=False,
+    )
+    _return_specs_by_ref: Mapping[ArtifactSpecRef, ArtifactSpec] = dataclasses.field(
+        init=False,
+        repr=False,
+        compare=False,
+    )
+    canonical_return_output_refs: tuple[ArtifactSpecRef, ...] = dataclasses.field(
+        init=False,
+        repr=False,
+        compare=False,
+    )
+    _trailing_return_output_refs: tuple[ArtifactSpecRef, ...] = dataclasses.field(
+        init=False,
+        repr=False,
+        compare=False,
+    )
+
+    def __post_init__(self) -> None:
+        """Capture the declared positional ABI once, before any returned values."""
+        outputs = ArtifactSpecCollection(self.metadata.artifact_outputs)
+        by_ref: dict[ArtifactSpecRef, ArtifactSpec] = {}
+        for spec in outputs:
+            ref = spec.ref()
+            if ref in by_ref:
+                raise ValueError(
+                    f"Callable output ABI contains duplicate artifact ref {ref!r}."
+                )
+            by_ref[ref] = spec
+        canonical_count = 0
+        if self.execution_scope is FunctionStepExecutionScope.PLATE:
+            canonical_count = min(1, len(outputs))
+        elif outputs and outputs[0].participates_in_main_flow:
+            canonical_count = 1
+            if outputs[0].artifact_type is ImageArtifactType:
+                for spec in outputs[1:]:
+                    if (
+                        not spec.participates_in_main_flow
+                        or spec.artifact_type is not ImageArtifactType
+                    ):
+                        break
+                    canonical_count += 1
+        refs = tuple(by_ref)
+        object.__setattr__(
+            self,
+            "artifact_outputs",
+            outputs,
+        )
+        object.__setattr__(
+            self,
+            "canonical_return_output_specs",
+            ArtifactSpecCollection(outputs[:canonical_count]),
+        )
+        object.__setattr__(
+            self,
+            "trailing_return_output_specs",
+            ArtifactSpecCollection(outputs[canonical_count:]),
+        )
+        object.__setattr__(
+            self,
+            "_return_specs_by_ref",
+            MappingProxyType(by_ref),
+        )
+        object.__setattr__(
+            self,
+            "canonical_return_output_refs",
+            refs[:canonical_count],
+        )
+        object.__setattr__(
+            self,
+            "_trailing_return_output_refs",
+            refs[canonical_count:],
+        )
+
     def __reduce__(
         self,
     ) -> tuple[Callable[..., "CallableContract"], tuple[Any, ...]]:
@@ -866,11 +960,6 @@ class CallableContract(ArtifactPlanKeySelector):
         return self.metadata.artifact_input_parameter_names
 
     @property
-    def artifact_outputs(self) -> ArtifactSpecCollection:
-        """Return effective compiled output declarations in contract order."""
-        return ArtifactSpecCollection(self.metadata.artifact_outputs)
-
-    @property
     def main_flow_outputs(self) -> ArtifactSpecCollection:
         """Return declared outputs eligible for the canonical image flow."""
 
@@ -878,32 +967,159 @@ class CallableContract(ArtifactPlanKeySelector):
             spec for spec in self.artifact_outputs if spec.participates_in_main_flow
         )
 
-    @property
-    def canonical_return_output_specs(self) -> ArtifactSpecCollection:
-        """Return named outputs carried by the callable's first return slot."""
+    def contextualize_returned_canonical_output(
+        self,
+        returned_output: Any,
+        *,
+        plane_projection: RuntimePlaneAxisValueProjection | None = None,
+    ) -> Any:
+        """Attach the compiled canonical ABI to one exact returned image axis."""
 
-        declared_outputs = self.artifact_outputs
-        if self.execution_scope is FunctionStepExecutionScope.PLATE:
-            return ArtifactSpecCollection(declared_outputs[:1])
-        if not declared_outputs or not declared_outputs[0].participates_in_main_flow:
-            return ArtifactSpecCollection(())
-        canonical_count = 1
-        if declared_outputs[0].artifact_type is ImageArtifactType:
-            for spec in declared_outputs[1:]:
-                if (
-                    not spec.participates_in_main_flow
-                    or spec.artifact_type is not ImageArtifactType
-                ):
-                    break
-                canonical_count += 1
-        return ArtifactSpecCollection(declared_outputs[:canonical_count])
+        from openhcs.core.aligned_image_payload import (
+            AlignedImageSliceContext,
+            AlignedImageStack,
+            pack_aligned_image_outputs,
+        )
+        from openhcs.core.runtime_image_values import image_payload_metadata
+        from openhcs.core.runtime_output_matching import split_runtime_output
+        from openhcs.core.runtime_slice_projection import (
+            RuntimeSliceProjection,
+            RuntimeSliceProjectionDeclarationError,
+        )
 
-    @property
-    def trailing_return_output_specs(self) -> ArtifactSpecCollection:
-        """Return named outputs carried by trailing positional return slots."""
+        canonical_specs = self.canonical_return_output_specs.specs
+        if len(canonical_specs) <= 1:
+            return returned_output
+        canonical_output, trailing_outputs = split_runtime_output(returned_output)
+        if isinstance(canonical_output, AlignedImageStack):
+            if canonical_output.slice_contexts:
+                return returned_output
+            output_values = canonical_output.slices
+        else:
+            projection = plane_projection
+            function_name = self.function_name
+            if projection is None:
+                raise RuntimeSliceProjectionDeclarationError(
+                    f"{function_name} declares {len(canonical_specs)} canonical "
+                    "outputs but returned a non-aligned payload without a "
+                    "compiled plane projection."
+                )
+            if projection.plane_index is not None:
+                raise RuntimeSliceProjectionDeclarationError(
+                    f"{function_name} declares {len(canonical_specs)} canonical "
+                    "outputs after the compiled plane projection already selected "
+                    f"plane {projection.plane_index}."
+                )
+            if projection.axis_size != len(canonical_specs):
+                raise ValueError(
+                    f"{function_name} declares {len(canonical_specs)} canonical "
+                    "outputs but its compiled plane projection declares "
+                    f"{projection.axis_size} value(s)."
+                )
+            output_axis = image_payload_metadata(canonical_output).plane_axis
+            if output_axis is not projection.axis:
+                raise RuntimeSliceProjectionDeclarationError(
+                    f"{function_name} declares {len(canonical_specs)} canonical "
+                    "outputs but its returned payload does not declare the "
+                    f"compiled {projection.axis.value!r} plane axis; got "
+                    f"{output_axis!r}."
+                )
+            output_values = tuple(
+                RuntimeSliceProjection.value_for_slice(
+                    canonical_output,
+                    projection.selected_plane(output_index),
+                )
+                for output_index in range(projection.axis_size)
+            )
+        if len(output_values) != len(canonical_specs):
+            raise ValueError(
+                f"{self.function_name} returned {len(output_values)} "
+                "canonical output value(s) for "
+                f"{len(canonical_specs)} compiled output spec(s)."
+            )
+        contextualized_output = pack_aligned_image_outputs(
+            output_values,
+            slice_contexts=AlignedImageSliceContext.main_flow_for_artifact_specs(
+                canonical_specs
+            ),
+        )
+        return (
+            (contextualized_output, *trailing_outputs)
+            if trailing_outputs
+            else contextualized_output
+        )
 
-        canonical_count = len(self.canonical_return_output_specs)
-        return ArtifactSpecCollection(self.artifact_outputs[canonical_count:])
+    def resolve_returned_output(
+        self, returned_output: Any
+    ) -> dict[ArtifactSpecRef, Any]:
+        """Resolve every output in the callable ABI."""
+
+        from openhcs.core.aligned_image_payload import AlignedImageStack
+        from openhcs.core.runtime_output_matching import split_runtime_output
+
+        canonical_output, trailing_values = split_runtime_output(returned_output)
+        trailing_specs = self.trailing_return_output_specs.specs
+        if len(trailing_values) != len(trailing_specs):
+            raise ValueError(
+                "Runtime callable trailing return count does not match its "
+                f"declared trailing output slots: {len(trailing_values)} != "
+                f"{len(trailing_specs)}."
+            )
+        resolved = {
+            ref: value
+            for ref, value in zip(
+                self._trailing_return_output_refs,
+                trailing_values,
+                strict=True,
+            )
+        }
+        canonical_specs = self.canonical_return_output_specs.specs
+        if len(canonical_specs) == 1:
+            resolved[self.canonical_return_output_refs[0]] = canonical_output
+        elif canonical_specs:
+            if not isinstance(canonical_output, AlignedImageStack):
+                raise TypeError(
+                    "Multiple canonical output specs require an AlignedImageStack with "
+                    "one exact named slice context per output."
+                )
+            resolved.update(
+                canonical_output.output_values_for_artifact_specs(canonical_specs)
+            )
+        return resolved
+
+    def resolve_returned_plan_values(
+        self,
+        returned_output: Any,
+        selected_output_plans: tuple[ArtifactOutputPlan, ...],
+    ) -> tuple[
+        dict[ArtifactSpecRef, Any],
+        tuple[RuntimeMatchedOutput, ...],
+    ]:
+        """Resolve the complete ABI and bind exact selected runtime plans once."""
+
+        returned_values = self.resolve_returned_output(returned_output)
+        specs_by_ref = self._return_specs_by_ref
+        selected_refs: set[ArtifactSpecRef] = set()
+        matched_outputs: list[RuntimeMatchedOutput] = []
+        for plan in selected_output_plans:
+            if not isinstance(plan, ArtifactOutputPlan):
+                raise TypeError(
+                    "Selected runtime outputs must be ArtifactOutputPlan values, "
+                    f"got {type(plan).__name__}."
+                )
+            ref = plan.ref()
+            if ref in selected_refs:
+                raise ValueError(
+                    f"Selected runtime output plans contain duplicate ref {ref!r}."
+                )
+            selected_refs.add(ref)
+            spec = specs_by_ref.get(ref)
+            if spec is None:
+                raise ValueError(
+                    f"Selected output plan {ref!r} is not declared by the callable ABI."
+                )
+            matched_outputs.append((plan, spec, returned_values[ref]))
+        return returned_values, tuple(matched_outputs)
 
     @property
     def output_group_scope_sources(self) -> tuple[ArtifactSpecRef, ...]:
@@ -1235,13 +1451,42 @@ class CallableContract(ArtifactPlanKeySelector):
             return None
         return self.runtime_batch_executors.get(domain)
 
-    def require_memory_types(self) -> tuple[str, str]:
+    def require_memory_types(
+        self, *, callable_label: str | None = None
+    ) -> tuple[str, str]:
         """Admit both declared memory domains before runtime conversion."""
         if self.input_memory_type is None or self.output_memory_type is None:
             raise ValueError(
                 f"Callable {self.function_name!r} is missing memory types."
             )
+        valid_types = frozenset(memory_type.value for memory_type in MemoryType)
+        if (
+            self.input_memory_type not in valid_types
+            or self.output_memory_type not in valid_types
+        ):
+            raise ValueError(
+                f"Function '{callable_label or self.function_name}' has invalid "
+                f"memory types: {self.input_memory_type}/{self.output_memory_type}. "
+                f"Valid: {', '.join(sorted(valid_types))}"
+            )
         return self.input_memory_type, self.output_memory_type
+
+    def require_execution_memory_type(
+        self, *, step_name: str | None = None
+    ) -> MemoryType | None:
+        """Admit the declared execution framework with its callable context."""
+        declaration = self.execution_memory_type
+        if declaration is None:
+            return None
+        valid_types = frozenset(memory_type.value for memory_type in MemoryType)
+        if declaration not in valid_types:
+            step_context = "" if step_name is None else f" in step {step_name!r}"
+            raise ValueError(
+                f"Callable {self.function_name!r}{step_context} "
+                f"declares invalid execution memory type {declaration!r}; "
+                f"valid memory types are {', '.join(sorted(valid_types))}."
+            )
+        return MemoryType(declaration)
 
     def resolve_runtime_callable(self) -> Callable[..., object]:
         """Return the executable callable for this contract."""
