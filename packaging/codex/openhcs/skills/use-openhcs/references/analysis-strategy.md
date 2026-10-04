@@ -116,9 +116,14 @@ body-to-path associations either. Technical completion remains separate from
 these biological judgements.
 
 Autonomous success means materially useful quality for that scope, not perfect
-accuracy or exact agreement with human annotations. Grade false positives,
-false negatives, splits, merges and coverage across the distributed sample;
-record their frequency, spatial distribution, effect on the claim and uncertainty.
+accuracy or exact agreement with human annotations. Report achieved coverage,
+clear misses, nuisance admission, splits/merges, boundary quality and downstream
+measurement suitability separately across the distributed sample. Link each
+judgement to witnesses, spatial extent and uncertainty rather than collapsing
+them into a single validated/rejected label. Useful detection can coexist with
+boundaries unsuitable for area or fluorescence measurements; supported geometry
+does not resolve every object's identity or association. Quantify frequency only
+when the reviewed sample supplies a defensible denominator.
 Human annotations and algorithms can both be incomplete or mistaken: retain
 reference disagreement rather than treating either as exhaustive biological truth.
 An isolated plausible error does not automatically reject the whole analysis.
@@ -142,6 +147,15 @@ do not invent a confidence interval or silently drop uncertain objects. A few
 accepted witnesses do not establish whole-field completeness. Withhold a
 whole-population claim when unresolved cases invalidate it, not every unrelated
 finding merely because one claim remains uncertain.
+
+When the user accepts an imperfect result for a stated use, retain it as a
+practical reviewed baseline with its exact source/result identity, matched
+witnesses, supported claims and known limits. This is not proof of unreviewed
+claims, independent validation or autonomous performance. Keep that best-reviewed
+baseline distinct from the latest local-repair predecessor: compare recovered
+coverage and regressions against both when relevant, rather than assuming that
+the newest candidate is the best overall. Acceptance need not end useful
+development, and an unresolved case need not erase the accepted findings.
 
 Partial support is not a stopping rule for a clear failure. Follow the existing
 [earliest-stage diagnosis](segmentation-diagnostics.md), make one discriminating
