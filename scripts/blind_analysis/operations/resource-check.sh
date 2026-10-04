@@ -81,6 +81,7 @@ for ((i=old_count;i<${#outputs[@]};i++)); do
 done
 printf 'Programme retainedRoots=%s measuredCurrent=%s growthEstimate=%s remainingGrowthEstimate=%s scope=%s\n' "$old_count" "$total" "$reserved" "$remaining" "$mode" | tee -a "$receipt.output"
 printf 'Operational policy: retained-output/scratch byte quotas removed; programme amounts are growth estimates, not limits. Actual HOME/RAM/pressure and owned cleanup remain authoritative.\n' | tee -a "$receipt.output"
+printf 'Operation admission revision: existing recorded-client bounded observations/QA use ongoing warning policy; cold startup and large allocations require replacement/bootstrap/full. No tool-name exception, new client, or UNKNOWN replay is authorized by an ongoing PASS.\n' | tee -a "$receipt.output"
 # Forecasts guide cleanup/staging, not permission for an unrelated capture.
 # Admission protects actual free HOME; no all-fleet estimate is added to its floor.
 home_floor=$(jq -er '.proposed_resource_envelope.minimum_home_ongoing_gib*1073741824' <<< "$FLEET_PROGRAM")
