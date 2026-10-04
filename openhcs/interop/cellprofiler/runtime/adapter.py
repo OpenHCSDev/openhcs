@@ -100,7 +100,7 @@ class CellProfilerRuntimeAdapterSpec(RuntimeAdapterSpec):
 
         module = CellProfilerModule.require_callable_contract_owner(contract)
         return ArtifactSpecCollection(module.invocation_domain_inputs(
-            contract.resolve_canonical_raw_callable(), contract.artifact_inputs.specs,
+            contract, contract.artifact_inputs.specs,
         ))
 
 
