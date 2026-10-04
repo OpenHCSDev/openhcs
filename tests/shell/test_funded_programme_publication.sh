@@ -71,6 +71,9 @@ jq -e 'all(.authors[]; keys==["run_owner_root","slot"]) and
 test "$(sha256sum "$scratch/next/publication-before.json" | cut -d' ' -f1)" = "$expected"
 jq -e --arg root "$scratch" '.authors[0].run_owner_root==($root+"/old-a") and (.authors|length)==2' "$scratch/funding/program.json" >/dev/null
 printf 'PASS one current programme atomically transitions roster+history; continuing run identity unchanged\n'
+jq -e '.proposed_resource_envelope.full_memory_psi_max_percent==100' "$scratch/funding/program.json" >/dev/null
+! jq -e '.proposed_resource_envelope | has("full_memory_psi_max_percent")' "$scratch/next/program.json" >/dev/null
+printf 'PASS sealed continuing reader retains original FUND field; new run does not declare it\n'
 set +e
 FLEET_PARENT_RELEASED=1 bash "$owner" publish "$scratch/funding" "$scratch/next" "$expected"
 status=$?
@@ -231,6 +234,7 @@ status=$?
 set -e
 test "$status" != 0
 printf 'PASS one continuing author sees current retirement without run/permission/clock edits; removed author loses funding\n'
+jq -e '.proposed_resource_envelope.full_memory_psi_max_percent==100' "$scratch/funding/program.json" >/dev/null
 
 # Actual recorder/guard/slot/client; only external X/systemctl/exec controlled.
 printf 'Controlled helper terminal custody, not production authority.\n' > "$scratch/helper-terminal.rst"
@@ -294,9 +298,11 @@ bash "$owner" prepare "$scratch/funding" "$scratch/last-retirement" "$scratch/qu
 (cd "$scratch/last-retirement"; sha256sum program.json successor-declaration.json "$scratch/terminal-a.rst" > READY-FREEZE.sha256)
 env -u FLEET_PARENT_RELEASED bash "$owner" publish "$scratch/funding" "$scratch/last-retirement" "$expected"
 jq -e '(.authors|length)==0 and (.retained_output_roots|length)==3' "$scratch/funding/program.json" >/dev/null
+! jq -e '.proposed_resource_envelope | has("full_memory_psi_max_percent")' "$scratch/funding/program.json" >/dev/null
 (cd "$scratch/old-a"; sha256sum --check --quiet READY-FREEZE.sha256)
 sha256sum --check --quiet "$scratch/retained-startup.sha256"
 printf 'PASS last terminal writer releases all future growth; complete output and original run/journals remain\n'
+printf 'PASS final sealed reader retirement removes its shared contract automatically\n'
 
 # Optional real mounted-destination control. This is a declaration consumed by
 # the unchanged original prepare/publish/launcher/ledger route, not a client.

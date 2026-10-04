@@ -7,7 +7,7 @@ from pathlib import Path
 
 from openhcs.agent.dto.knowledge import KnowledgeBaseDocumentRequest, KnowledgeBaseSearchRequest
 from openhcs.agent.services.knowledge_base_service import (
-    KnowledgeBaseService, load_document_specs_from_manifest,
+    MAX_DOCUMENT_CHARS, KnowledgeBaseService, load_document_specs_from_manifest,
 )
 from openhcs.agent.skill_bundle import AGENT_PLUGIN_MANIFEST_PATH, AgentSkillBundle
 from openhcs.agent.skill_sync import sync_skills
@@ -38,6 +38,17 @@ def test_real_viewer_guide_projection_retrieval_and_skill_delivery(tmp_path):
         # The original renderer joins source lines; compare all content, not a
         # wording substring that would pretend to prove the guide's decisions.
         assert reply.content == "\n".join((root / path).read_text().splitlines())
+        if document_id == "openhcs_viewer_qa":
+            section = next(item for item in reply.sections
+                           if item.section_id == "keep-iterative-review-within-its-resource-budget")
+            excerpt = service.get_document(KnowledgeBaseDocumentRequest.from_fields(
+                document_id=document_id, section_id=section.section_id,
+                max_chars=MAX_DOCUMENT_CHARS,
+            ))
+            assert not excerpt.errors and not excerpt.truncated
+            assert excerpt.content == "\n".join(
+                (root / path).read_text().splitlines()[section.start_line - 1:section.end_line]
+            )
         paths.append(path)
     found = service.search(KnowledgeBaseSearchRequest(query="viewer layer retirement", limit=5))
     assert any(hit.document.document_id == "openhcs_viewer_qa" for hit in found.hits)
