@@ -21,7 +21,7 @@ openhcs_zmq_server_port_6020_1791141656418933168.log2395-2430 reports missing ty
 address results/A04_wDNA_nucleus_labels_step0.labels.tif during the Nuclear
 geometry measurement step. This is not626's repaired storage-extension conflict.
 
-The ancestor OpenHCSMetadataTarget.produced_projection_entries returnsNone for
+Before this correction, OpenHCSMetadataTarget.produced_projection_entries returnsNone for
 both a real step with zero image projections and completed-plate reconciliation
 with planNone. AtomicMetadataWriter interprets thatNone as final directory
 reconciliation and enforces its strict complete-inventory guard too early.
@@ -48,20 +48,22 @@ projection owner). This trace is not global NRA/R1 or executed behavior.
 Implemented owner and complete migration
 ---------------------------------------
 
-Only OpenHCSMetadataTarget in function_outputs.py changes in production.
+The owning OpenHCSMetadataTarget in function_outputs.py carries the phase fix.
 produced_projection_entries now takes a real CompiledStepPlan and returns a
 typed VirtualWorkspaceSourceProjectionEntries for every step, including an empty
 non-image update. The owning write lifecycle selectsNone ONLY when its actual
 produced_plan isNone. Thus step cardinality no longer decides publication phase.
-write_for_step's merge-only path checks the typed entries directly and retains
-its existing no-write behavior for an empty update. All inherited target leaves
+write_for_step's merge-only path asks the original admitted entries owner's
+derived is_empty property and retains its existing no-write behavior for an
+empty update. The property adds no state or alternative projection authority.
+All inherited target leaves
 use this ancestor; no consumer roster, new state store, wrapper or type switch
 was added. Both production projection callers are migrated in the same batch.
 The obsolete nullable step projection and its empty=None decision are deleted.
 
-AtomicMetadataWriter and VirtualWorkspaceSourceProjectionEntries are unchanged,
-including strict final missing-address admission, pruning and retained record
-validation. SourceProjectionSet's separate nonempty workspace invariant remains
+AtomicMetadataWriter is unchanged, including strict final missing-address
+admission, pruning and retained record validation. The entries owner only adds
+the cardinality query above. SourceProjectionSet's separate nonempty workspace invariant remains
 unchanged: empty updates use the existing entries value, not an empty dataset.
 No dependency, installed package or scientific declaration is modified.
 
@@ -95,8 +97,65 @@ Exercise an independent declaration/cooperative hook through generic discovery,
 without adding consumer edits. Then qualify ordinary installed registered and
 public parallel multiwell saved-label/measurement execution on a NEW synthetic
 input, preserving exact pixels/addresses/calibration and all original negatives.
-Source controls have not yet run at this implementation checkpoint. Ordinary
-whole installed/public multiwell acceptance remains separate and required.
+Source qualification and receiving packet
+----------------------------------------
+
+Original plugin-free/provider-free source bootstrap, unchanged existing paired
+interpreter and read-only tabular ABI: publication668-source-controls01 passed85
+controls with33 explicit unrelated deselections, terminal0,11.35s,368572KiB RSS,
+Swap0. This batch is pinned to production924605638; source metadata module origin
+and the original borrowed native path are asserted. The tabular C++ source is
+byte-identical to the already qualified626 build (SHA256
+15acc82b8ab64268bd1ea4f83fa7a68f527bf317f002e9f39e15be321e03b28e).
+No build/install, registry startup, native server, viewer or scientist ran.
+
+The original R0 at924605638 measured all changed production files against main9b6
+and found foreign_absence_probe+1 at the merge-only raw entries read. That receipt
+is retained, not waived. The owning admitted entries type now exposes its own
+derived cardinality; the caller asks that type rather than probing its raw map.
+Production9327f3c096b2f990aac38d33adeb8f23c175bd25 changes exactly TWO production
+files. Original R0-02 includes both: parse omissions0, all positive deltas0,
+none_identity-1. The7 affected owner/strict-final/cooperative/late-plate controls
+after this owner change pass, terminal0,4.72s,304788KiB RSS,Swap0;77 unrelated
+tests are explicitly deselected. The unchanged85-case batch is not rerun.
+Both raw warning receipts retain plugin-free pytest's two unknown asyncio
+configuration-option warnings; these are not missing or failed controls.
+
+Changed-owner AST after02 admits all176 core modules, omissions0, and retains the
+two changed owners' complete trees,3.10s/155732KiB/Swap0. Other production and
+declared dependency source closure is byte-unchanged and retains before01's
+evidence. No global NRA/R1 or installed readiness is inferred.
+
+Normal integration aa0079db8d8443cf32fbfe8b94f525e2de960f30 receives maina3d9a24d0
+(including666's config schema/default separation). Both production files and
+both affected test files are byte-unchanged from qualified9327f3c09. That new
+upstream declaration/default change is separately qualified by its owner; this
+receipt does not claim its new branch was tested here. Eight foreign gitlinks
+remain unmodified in the commits.
+
+Archive empty-step-publication-668-source01.tar.gz retains the original complete
+ASTs, commands' stdout/stderr, both R0 receipts (including the positive first
+result), source-only triage and receiving packet, byte-exact. SHA256
+4741b9f721744f2b18e0ce724203eced28dbbf44b6089bcea7868cdb482acf88 (2.0MiB).
+Loose original files remain under engineering620; no raw failures or evidence
+were rewritten. Archived pytest whitespace does not pollute production/docs
+diff checks.
+
+The prepared distinct packet is engineering620/public668/{pipeline.py,
+labels-and-measurements.cppipe,prepare_fixture.py,RECEIVING.rst}. It reuses the
+accepted503 scalar04 nominal primary-image PLUS categorical-object-source
+declarations, then registered UINT16 image publication and size/shape measurement
+on wellsA01/A04 with two declared worker lanes. Default automatic publication
+stays enabled. It has no invented source receipts, callable, alias or algorithm.
+The source-only packet uses literal declared paths valid for normal public source
+decoding, not a guessed __file__ namespace. Source data generation has not run.
+
+Planck explicitly receives the NEXT complete candidate bundle before669 merge,
+with now-published official ObjectState1.2. Target05/main9b6 lacks669 and is not
+its installed acceptance; it remains the separate663 recipe receiving. Actual
+installed registered and public parallel multiwell image/table/typed-address
+acceptance remains pending through the existing sole builder/native lane owner.
+No second client, overlay or scientific hotpatch has been started here.
 
 Original detailed receiving triage is retained at engineering620/
 BBBC007-EMPTY-STEP-PUBLICATION-TRIAGE-20261004.rst under the issue-batch root.
