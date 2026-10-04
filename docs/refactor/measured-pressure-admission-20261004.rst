@@ -34,5 +34,25 @@ exit77 was before MCP dispatch; a later receiving02 passed and owns the active
 eded089b incarnation. Neither is replayed. Current immutable science/engineering
 operations, FUND and their original refusal journals are not rewritten.
 
-Qualification is recorded separately after coherent source implementation.
-Source tests do not claim biological acceptance or public native success.
+Qualification after coherent source implementation: original shell resource
+admission control01 and funded-publication control01 terminal0. High samples
+4.82/1.09/.23 pass both full/replacement when desktop space is available; low
+RAM startup, malformed RAM/pressure, dead/foreign clients, missing custody,
+expired clocks, overlapping roots and duplicate receipt/publication still
+reject. Projector and publisher delete the old field. Existing provider-free
+recorded-client child42/lifecycle control passes, no new native/provider run.
+
+Actual current original FUND/engineering671 full observation
+psi_source_accept01 terminal0: MemAvailable12.698GiB, fullPSI .01/.55/.35,
+measured common charge9700007936B/swap947216384B and actual family RSS/PSS.
+No configured PSI override, admission bypass, new MCP request or another client.
+This exercises the changed production entrypoint against real host/family and
+existing granted custody; it does not install this source into frozen clients.
+All original refusal/runtime science evidence remains unchanged.
+
+Evidence paths: issue-batch/engineering-pressure-policy-20261004-control01.log,
+engineering-pressure-policy-20261004-publication01.log,
+engineering-pressure-policy-20261004-live01.log and ast-coverage01.json in
+engineering-pressure-policy-20261004. The existing overlay reports zero Python
+sites in the Bash/JQ-only owner root, not Python structural or behavioral proof.
+Shell syntax/diff checks pass. No biology or public-native acceptance claimed.
