@@ -45,6 +45,9 @@ landscapes through [marker and boundary selection](measurement-interpretation.md
 not a universal shape/intensity preference. For noisy ring/textured bodies, use
 [the body-admission contrast](segmentation-diagnostics.md#compare-body-admission-models)
 before assuming a neuronal function name or nuclear anchor supplies boundaries.
+For faint-process repairs, distinguish [recovered support from rooted graph validity](segmentation-diagnostics.md#separate-support-recovery-from-rooted-graph-validity):
+improved local sensitivity can coexist with soma loops, fragments or unresolved
+ownership. Retain the useful repair and its remaining claim-specific limits.
 
 Continue development in the retained analysis context after an authorised
 correction; archiving a failed candidate is not a requirement to restart with a
