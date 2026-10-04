@@ -35,7 +35,7 @@ from openhcs.agent.services.plate_streaming_service import PlateStreamingService
 from openhcs.constants.constants import AllComponents
 from openhcs.core.runtime_image_values import image_payload_metadata, image_payload_data
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.core.viewer_streaming_service import ViewerStreamingSource
 from openhcs.core.plate_file_inventory import PlateFileKind
@@ -173,7 +173,14 @@ def test_observed_and_declared_wire_domains_have_distinct_order_contracts():
 
 
 @pytest.mark.parametrize("historical_dtype", [None, "int32"])
-def test_native_persisted_aggregate_source_projection_preserves_order(tmp_path, historical_dtype):
+@pytest.mark.parametrize("spacing", (
+    SourceVoxelSpacing(),
+    SourceVoxelSpacing((2.0, 0.65, 0.65)),
+    SourceVoxelSpacing((2.0, 1.0, 0.75), SourceVoxelSpacingUnit.RELATIVE),
+))
+def test_native_persisted_aggregate_source_projection_preserves_order(
+    tmp_path, historical_dtype, spacing
+):
     path = tmp_path / "aggregate.labels.tif"
     expected = np.arange(2 * 8 * 9, dtype=np.int64).reshape(2, 8, 9)
     manager = FileManager({"disk": DiskStorageBackend()})
@@ -197,9 +204,12 @@ def test_native_persisted_aggregate_source_projection_preserves_order(tmp_path, 
             components=fixture.layers[0].payload_summaries[0].components,
             path=str(path), stream_layer_data_type=StreamingDataType.IMAGE,
         ),
-        image_metadata=ImagePayloadMetadata(source_spatial_domain=SourceSpatialDomain(
-            origin_yx=(0, 0), source_shape_yx=(8, 9),
-        )),
+        image_metadata=ImagePayloadMetadata(
+            source_voxel_spacing=spacing,
+            source_spatial_domain=SourceSpatialDomain(
+                origin_yx=(0, 0), source_shape_yx=(8, 9),
+            ),
+        ),
         plane_component_domain=ViewerComponentValueDomainPayload.from_ordered_wire_mapping(
             {"channel": [2, 1]}, context="synthetic native receipt",
         ),
@@ -222,7 +232,36 @@ def test_native_persisted_aggregate_source_projection_preserves_order(tmp_path, 
     assert summary.require_plane_components() == {"channel": (2, 1)}
     if historical_dtype is not None:
         summary = replace(summary, dtype=historical_dtype)
+    from openhcs.runtime.napari_streaming_handlers import NapariAxisPresentation
+    from openhcs.runtime.viewer_component_system import ViewerLayerAxisProjection
+
+    presentation = NapariAxisPresentation(
+        entries=native_semantics.entries,
+        layout=native_semantics.layout,
+        route_key=fixture.layers[0].route_key,
+        projection=ViewerLayerAxisProjection(
+            projected_axis_components=("channel",),
+            component_values={"channel": [1, 2]},
+            routed_component_values={"channel": [1, 2]},
+            axis_offsets=(0,),
+            scalar_component_values={},
+        ),
+    )
+    coordinate_kwargs = presentation.spatial_layer_kwargs((native_item,))
     state = receipt_state(path, summary=summary)
+    state = replace(
+        state,
+        viewer_ndim=len(presentation.axis_labels),
+        layers=(replace(
+            state.layers[0],
+            axis_labels=presentation.axis_labels,
+            native_transform=ViewerNativeLayerTransform(
+                scale=coordinate_kwargs["scale"],
+                translate=coordinate_kwargs["translate"],
+            ),
+        ),),
+    )
+    assert summary.voxel_spacing == spacing
     data = json.dumps(to_jsonable(state), sort_keys=True).encode()
     resource_path = tmp_path / "canonical-viewer-state.json"
     resource_path.write_bytes(data)
@@ -380,7 +419,7 @@ def test_native_persisted_aggregate_source_projection_preserves_order(tmp_path, 
     displayed = _build_nd_image_array([item], display_projection, bindings)
     np.testing.assert_array_equal(displayed[0], expected[1])
     np.testing.assert_array_equal(displayed[1], expected[0])
-    assert not metadata.source_voxel_spacing.has_values
+    assert metadata.source_voxel_spacing == spacing
     assert metadata.source_channel_axis is None
     with pytest.raises(ValueError, match="window conflicts"):
         source.require_projected_image_window(
@@ -498,3 +537,30 @@ def test_standalone_mcp_streaming_uses_declared_receipt_and_explicit_bridge(tmp_
     assert admitted_request.source_receipt == receipt
     assert admitted_request.connection.port == 5631
     assert admitted_connection.descriptor_file_path == str(tmp_path / "exact-ui.json")
+
+
+@pytest.mark.parametrize("change", ("scale", "missing_axes", "duplicate_axes", "translation", "crop"))
+def test_calibrated_receipt_rejects_conflicting_native_placement(tmp_path, change):
+    spacing = SourceVoxelSpacing((2.0, 0.65, 0.65))
+    state = receipt_state(tmp_path / "aggregate.labels.tif")
+    summary = replace(state.layers[0].payload_summaries[0], source_voxel_spacing=spacing)
+    axes = ("channel", "z_index", "timepoint", "site", "well", "y", "x")
+    transform = ViewerNativeLayerTransform(
+        scale=spacing.layer_coordinate_kwargs(axes)["scale"], translate=(0,) * 7
+    )
+    if change == "scale":
+        transform = replace(transform, scale=(1,) * 7)
+    elif change == "translation":
+        transform = replace(transform, translate=(0, 0, 0, 0, 0, 1, 0))
+    elif change == "missing_axes":
+        axes = ()
+    elif change == "duplicate_axes":
+        axes = ("z_index", "z_index", "timepoint", "site", "well", "y", "x")
+    else:
+        summary = replace(summary, spatial_origin_yx=(1, 0))
+    state = replace(state, layers=(replace(
+        state.layers[0], axis_labels=axes,
+        payload_summaries=(summary,), native_transform=transform,
+    ),))
+    with pytest.raises(ValueError):
+        state.image_payload_binding_for(str(tmp_path / "aggregate.labels.tif"))

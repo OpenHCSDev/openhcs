@@ -429,6 +429,7 @@ class PlateStreamingService:
                         origin_yx=domain.origin_yx,
                         source_shape_yx=domain.source_shape_yx,
                     ),
+                    source_voxel_spacing=record.summary.voxel_spacing,
                 ),
             )
             builder.record_workspace_source_path(image_path, projection.ref)
