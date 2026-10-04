@@ -157,7 +157,9 @@ def test_malformed_action_is_nonzero_and_preserves_invalid_wire_receipt(monkeypa
     assert dev_client.main(["selected-workflow", "run_plate"]) == 1
     assert "mcp_payload_invalid" in capsys.readouterr().out
     assert dev_client.main(["selected-workflow", "run_plate", "--json"]) == 1
-    assert json.loads(capsys.readouterr().out)["results"][0]["payloads"][0] == malformed
+    rejection = json.loads(capsys.readouterr().out)["results"][0]["payloads"][0]
+    assert rejection["receipt"] == malformed
+    assert rejection["errors"] == to_jsonable(result.diagnostic_errors())
 
 
 def test_poll_presentation_rejects_row_missing_declared_state_field():

@@ -190,7 +190,9 @@ def test_malformed_receipt_never_becomes_successful_empty_sample(receipt):
     response = McpDevToolBatchResponse.from_results(McpDevServerSpec(sys.executable), (result,))
     assert isinstance(result.payloads[0], McpDevPayloadFailure)
     assert result.payloads[0].receipt == receipt
-    assert to_jsonable(response)["results"][0]["payloads"][0] == receipt
+    rejection = to_jsonable(response)["results"][0]["payloads"][0]
+    assert rejection["receipt"] == receipt
+    assert rejection["errors"] == to_jsonable(result.diagnostic_errors())
     text = PlateImageSampleRenderer.render(response)
     assert "mcp_payload_invalid" in text
     assert "Image:" not in text
