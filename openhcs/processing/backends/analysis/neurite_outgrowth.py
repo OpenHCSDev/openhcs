@@ -317,9 +317,9 @@ class MetaXpressOutgrowthSettings:
     """Per-pixel local-background response cutoff in consumed-image units.
 
     Initial process admission requires BOTH the enhanced candidate mask and
-    this local-response gate. Lowering this cutoff cannot recover pixels
-    excluded by the enhanced candidate mask. Later rooting, ownership and
-    signal-supported repair determine the reported traces.
+    this local-response gate. At this initial admission stage, lowering the
+    cutoff cannot admit pixels excluded by the enhanced candidate mask. Later
+    rooting, ownership and signal-supported repair determine reported traces.
     """
 
     minimum_cell_growth_to_log_as_significant: float = 10.0
