@@ -2,11 +2,12 @@ Empty step publication and completed-directory reconciliation
 ============================================================
 
 Singer owns issue668's publication lifecycle correction. Frozen receiving03 and
-the original BBBC007 jobs remain unchanged. Root658's active provider/graph work
-and661's consumed-output recording are separate; their published file rosters do
-not claim function_outputs.py or virtual_workspace_metadata.py. Precise shared
-hunk coordination is public at658 comment5984001511; no shared-file release is
-claimed by this initial checkpoint.
+the original BBBC007 jobs remain unchanged. Shared-hunk coordination is public
+at658 comment5984001511; parent checked the same current rosters and explicitly
+released this scoped writer correction without an acknowledgement hold.
+Root658/661 subsequently merged into main9b6e69fb52165fcaea2f4b390202f4046f332932;
+both writer files are unchanged across that integration. This branch received
+that main normally, preserving eight foreign gitlinks and all retained evidence.
 
 Determining source
 ------------------
@@ -42,7 +43,50 @@ Before edits, trace all inherited target declarations, step/final writers,
 projection admission/serialization, registry discovery and atomic update users
 through existing audit AST tooling. Applicable catalog lead: IDEN-1 (None
 answers two different lifecycle questions); BOUND-2 (reuse the original typed
-projection owner). This initial trace is not global NRA/R1 or executed behavior.
+projection owner). This trace is not global NRA/R1 or executed behavior.
+
+Implemented owner and complete migration
+---------------------------------------
+
+Only OpenHCSMetadataTarget in function_outputs.py changes in production.
+produced_projection_entries now takes a real CompiledStepPlan and returns a
+typed VirtualWorkspaceSourceProjectionEntries for every step, including an empty
+non-image update. The owning write lifecycle selectsNone ONLY when its actual
+produced_plan isNone. Thus step cardinality no longer decides publication phase.
+write_for_step's merge-only path checks the typed entries directly and retains
+its existing no-write behavior for an empty update. All inherited target leaves
+use this ancestor; no consumer roster, new state store, wrapper or type switch
+was added. Both production projection callers are migrated in the same batch.
+The obsolete nullable step projection and its empty=None decision are deleted.
+
+AtomicMetadataWriter and VirtualWorkspaceSourceProjectionEntries are unchanged,
+including strict final missing-address admission, pruning and retained record
+validation. SourceProjectionSet's separate nonempty workspace invariant remains
+unchanged: empty updates use the existing entries value, not an empty dataset.
+No dependency, installed package or scientific declaration is modified.
+
+Original audit Package admission at pre-edit integration7aecc7ed05c5c39141c056ef2b17e81fb374a195
+parsed700 production,705 tests,89 scripts,156 benchmark modules. Exact declared
+PolyStore89deeef3662eabb11bc520fad9acd976698636bd and
+metaclass-registry393a7e03003cdc56df9013f932ed4f26e632d77a source keepers add63/6
+modules. Parse omissions0. Selected full ASTs include12 production publication,
+projection, inventory and orchestrator owners;25 test modules;1 script;2
+benchmark modules. All dependency ASTs were retained, not product-imported.
+Original publication668-family-before01.jsonl/stderr are in engineering620.
+Terminal0,37.90s,559536KiB RSS,Swap0; no512MiB compliance claim is made for this
+actual AST pass. Its original source facts show declarations, imports, fields,
+calls, conditions, registry hooks and target inheritance. Dynamic registry
+resolution is tested separately; this is static family evidence, not global R1.
+
+Final behavioral controls are added only after this source decision: a saved
+measurement CSV sharing a directory with an as-yet-unpublished image must publish
+an empty step update, preserve bytes, still fail actual final reconciliation,
+then reconcile after the original typed producer publication. The existing
+independent target declaration composes its real cooperative audit/image/result
+capabilities, exercises repeated step publication with a pending image and the
+strict final error, without generic consumer changes. Its original public
+result-inventory assertion is retained. The old internal empty=None expectation
+is migrated to the newly explicit empty typed update, not silently dropped.
 
 Final controls must cover image producer updates, empty measurement-only step
 updates while a different saved image is not yet published, later publication,
@@ -51,7 +95,8 @@ Exercise an independent declaration/cooperative hook through generic discovery,
 without adding consumer edits. Then qualify ordinary installed registered and
 public parallel multiwell saved-label/measurement execution on a NEW synthetic
 input, preserving exact pixels/addresses/calibration and all original negatives.
-No source/installed/public acceptance is claimed by this initial checkpoint.
+Source controls have not yet run at this implementation checkpoint. Ordinary
+whole installed/public multiwell acceptance remains separate and required.
 
 Original detailed receiving triage is retained at engineering620/
 BBBC007-EMPTY-STEP-PUBLICATION-TRIAGE-20261004.rst under the issue-batch root.
