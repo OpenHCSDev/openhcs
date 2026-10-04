@@ -43,6 +43,18 @@ yet observed; an unchanged writer file does not rule out a600 interaction.
 Existing435 rejected-pair fixtures expose actual raising-frame operands without
 reimplementing the comparison and provide genuine contradiction controls.
 
+Existing source_family.py, using the original audit Package parser, parsed700
+production,89 script,156 benchmark and703 test modules at2cbd03cf2. Its first
+26.69s/481576KiB/Swap0 pass retained three missing-source failures in the default
+dependency checkouts. Read-only use of already authenticated engineering599
+source-references resolved those exact commits in a separate dependency-only
+pass: ObjectState59, pycodify12 and ZMQRuntime67 modules, failures0. The first
+pass's remaining dependency modules total470. All source parse omissions are0;
+this is AST coverage, not a complete NRA/R1 or behavioral proof. Original logs
+remain in validation/automatic-publication620-family-before01.{jsonl,stderr}
+and automatic-publication620-family-dependencies02.{jsonl,stderr}. No dependency
+checkout, package, environment or original receipt was modified.
+
 The source pass follows both production paths and all related declarations,
 writes and consumers before choosing a repair. Applicable catalog leads are
 BOUND-2 (reuse the typed owner), IDEN-1 (do not conflate persisted occurrence,
