@@ -343,6 +343,21 @@ thousands of independently treated samples. Keep controls and exclusions
 visible. A statistical report must separate effect, variability and independent
 sample size from image-level counts.
 
+When measurements request several sources or slices, reconcile their intended
+coverage with the compiled source bindings, invocation/grouping and typed
+artifact inputs through `openhcs_inspect_pipeline_source_artifact_plan`, then
+discover the exposed export-read or quantitative-results capability and check
+actual source, object and slice identities and own-source values. Successful
+execution can still deliver only one requested source; an unchanged label
+artifact does not establish measurement coverage. Derive expected coverage from
+the callable and export's declared long/wide layout, plane-local versus
+volumetric identity, aggregation and exclusions—not a universal Cartesian grid
+or grouping setting. In a long-format table, blank columns belonging to another
+source can be legitimate when each row's own-source measurement is present.
+Distinguish those blanks from an absent requested source, omitted eligible
+object/slice or genuinely missing value; retain justified exclusions and any
+preview truncation rather than treating a partial table as a complete export.
+
 ## Figures and reporting
 
 Use lossless scientific artifacts for reanalysis. A PNG/WebP screenshot or RGB
