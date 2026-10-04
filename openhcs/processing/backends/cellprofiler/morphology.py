@@ -2089,6 +2089,11 @@ class NumpyMorphologyBackendStrategy(MorphologyBackendStrategy):
     ) -> np.ndarray:
         image_array = np.asarray(image)
         footprint_array = np.asarray(footprint, dtype=bool)
+        native_operation = (
+            _skimage_grayscale_closing
+            if first_pass_is_dilation
+            else _skimage_grayscale_opening
+        )
         # Native floating-point ordering is shared by the span filters on
         # finite values. Keep the provider's original NaN and signed-zero
         # behavior, unsupported dtypes, and genuinely volumetric footprints.
@@ -2099,14 +2104,10 @@ class NumpyMorphologyBackendStrategy(MorphologyBackendStrategy):
             or any(size != 1 for size in footprint_array.shape[:-2])
             or image_array.size == 0
             or not footprint_array.any()
+            or footprint_array.all()
             or not np.isfinite(image_array).all()
             or np.any((image_array == 0) & np.signbit(image_array))
         ):
-            native_operation = (
-                _skimage_grayscale_closing
-                if first_pass_is_dilation
-                else _skimage_grayscale_opening
-            )
             return native_operation(image_array, footprint_array)
 
         from skimage.morphology.footprints import mirror_footprint, pad_footprint
@@ -2117,6 +2118,11 @@ class NumpyMorphologyBackendStrategy(MorphologyBackendStrategy):
         first_offsets = FootprintOffsetTable.from_footprint(
             footprint_2d, dimension_policy=FOOTPRINT_OFFSET_2D_POLICY
         )
+        # Singleton spans eliminate no horizontal neighbor visits. Rectangular
+        # footprints above stay native as well; odd rectangles already use
+        # SciPy's separable filters, while even ones are excluded conservatively.
+        if all(first == last for _, first, last in first_offsets.horizontal_spans()):
+            return native_operation(image_array, footprint_array)
         second_offsets = FootprintOffsetTable.from_footprint(
             mirror_footprint(footprint_2d), dimension_policy=FOOTPRINT_OFFSET_2D_POLICY
         )
@@ -3641,25 +3647,27 @@ class FootprintOffsetTable:
         padded = np.pad(image, padding, mode="symmetric")
         filter_operation = maximum_filter1d if maximum else minimum_filter1d
         lengths = sorted({last - first + 1 for _, first, last in spans})
-        horizontal = {
-            length: filter_operation(padded, size=length, axis=-1, mode="reflect")
-            for length in lengths
-        }
+        horizontal = np.empty_like(padded)
         height, width = image.shape[-2:]
         combine = np.maximum if maximum else np.minimum
         output = None
-        for row_offset, first, last in spans:
-            length = last - first + 1
-            rows = (np.arange(height) + row_offset) % (2 * height)
-            rows = np.where(rows < height, rows, 2 * height - rows - 1)
-            center = left + first + length // 2
-            values = np.take(
-                horizontal[length][..., center : center + width], rows, axis=-2
+        for length in lengths:
+            filter_operation(
+                padded, size=length, axis=-1, mode="reflect", output=horizontal
             )
-            if output is None:
-                output = values
-            else:
-                combine(output, values, out=output)
+            for row_offset, first, last in spans:
+                if last - first + 1 != length:
+                    continue
+                rows = (np.arange(height) + row_offset) % (2 * height)
+                rows = np.where(rows < height, rows, 2 * height - rows - 1)
+                center = left + first + length // 2
+                values = np.take(
+                    horizontal[..., center : center + width], rows, axis=-2
+                )
+                if output is None:
+                    output = values
+                else:
+                    combine(output, values, out=output)
         return output
 
 
