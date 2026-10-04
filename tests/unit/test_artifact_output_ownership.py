@@ -1,5 +1,7 @@
 """Compile invariants apply independently of artifact recording ownership."""
 
+from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
+
 from dataclasses import replace
 from types import SimpleNamespace
 
@@ -343,7 +345,6 @@ def test_real_cellprofiler_declaration_compiles_without_a_table_wide_subject():
     from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
     from openhcs.core.pipeline.compilation_session import CompilationSession
-    from openhcs.core.pipeline.step_snapshot import StepSnapshot
     from openhcs.core.source_bindings import (
         NamedSourceBinding,
         StepSourceBindingsConfig,
@@ -397,11 +398,12 @@ def test_real_cellprofiler_declaration_compiles_without_a_table_wide_subject():
                 ),
             },
         ),
-        steps=[step],
         orchestrator=SimpleNamespace(pipeline_config=PipelineConfig()),
         global_config=GlobalPipelineConfig(),
-        step_state_map={0: object()},
-        snapshots=(StepSnapshot(index=0, scope_id="test::cp-output-owner", step=step),),
+        pipeline=ResolvedPipelineDefinition(
+            steps=(step,),
+            step_state_map={0: SimpleNamespace(scope_id="plate::functionstep_0")},
+        ),
     )
     provider = CellProfilerInvocationContractProviderFactory.provider_for_session(
         session

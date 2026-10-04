@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from dataclasses import dataclass, fields, is_dataclass, replace
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Mapping, MutableMapping, Sequence, get_type_hints
@@ -11,10 +10,6 @@ from objectstate import DataclassFieldAccess
 
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.context.processing_context import ProcessingContext
-from openhcs.core.pipeline.step_snapshot import (
-    StepSnapshot,
-    build_step_snapshots,
-)
 from openhcs.core.source_metadata import SourceMetadataMapping
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.steps.abstract import AbstractStep
@@ -156,21 +151,36 @@ def resolve_declared_dataclass_paths(
     return replace(value, **replacements) if replacements else value
 
 
+@dataclass(frozen=True, slots=True)
+class ResolvedPipelineDefinition:
+    """ObjectState-resolved pipeline declaration shared by all axis sessions."""
+
+    steps: Sequence[AbstractStep]
+    step_state_map: Mapping[int, "ObjectState"]
+
+    def __post_init__(self) -> None:
+        missing_states = [
+            index for index in range(len(self.steps)) if index not in self.step_state_map
+        ]
+        if missing_states:
+            raise ValueError(
+                f"Resolved pipeline missing ObjectState entries for steps {missing_states}."
+            )
+
+
 @dataclass(slots=True)
 class CompilationSession:
     """Compiler boundary for one ProcessingContext.
 
     The session is not a dict wrapper. It owns the invariants tying together the
-    resolved step list, ObjectState map, StepSnapshot tuple, context, and mutable
+    resolved pipeline declaration, context, and mutable
     compiled-plan map for one axis or sequential-combination context.
     """
 
     context: ProcessingContext
-    steps: Sequence[AbstractStep]
+    pipeline: ResolvedPipelineDefinition
     orchestrator: "PipelineOrchestrator"
     global_config: "GlobalPipelineConfig"
-    step_state_map: Mapping[int, "ObjectState"]
-    snapshots: tuple[StepSnapshot, ...]
     plans: MutableMapping[int, CompiledStepPlan]
     source_workspace_projection: VirtualWorkspaceSourceProjection
     path_resolver: CompilationPathResolver | None = None
@@ -183,11 +193,9 @@ class CompilationSession:
         cls,
         *,
         context: ProcessingContext,
-        steps: Sequence[AbstractStep],
+        pipeline: ResolvedPipelineDefinition,
         orchestrator: "PipelineOrchestrator",
         global_config: "GlobalPipelineConfig",
-        step_state_map: Mapping[int, "ObjectState"],
-        snapshots: tuple[StepSnapshot, ...] | None = None,
         source_workspace_projection: VirtualWorkspaceSourceProjection | None = None,
         path_resolver: CompilationPathResolver | None = None,
         metadata_writer: bool = False,
@@ -196,15 +204,11 @@ class CompilationSession:
     ) -> "CompilationSession":
         if context.step_plans is None:
             raise ValueError("CompilationSession requires context.step_plans.")
-        if snapshots is None:
-            snapshots = build_step_snapshots(steps, step_state_map)
         return cls(
             context=context,
-            steps=steps,
+            pipeline=pipeline,
             orchestrator=orchestrator,
             global_config=global_config,
-            step_state_map=step_state_map,
-            snapshots=snapshots,
             plans=context.step_plans,
             source_workspace_projection=(
                 VirtualWorkspaceSourceProjection.empty(context.plate_path)
@@ -224,34 +228,6 @@ class CompilationSession:
     def __post_init__(self) -> None:
         if self.plate_scope is None and self.context.plate_path is not None:
             self.plate_scope = CompilationPlateScope.from_context(self.context)
-        if len(self.steps) != len(self.snapshots):
-            raise ValueError(
-                "CompilationSession requires one StepSnapshot per step: "
-                f"{len(self.snapshots)} snapshots for {len(self.steps)} steps."
-            )
-        missing_states = [
-            index
-            for index in range(len(self.steps))
-            if index not in self.step_state_map
-        ]
-        if missing_states:
-            raise ValueError(
-                f"CompilationSession missing ObjectState entries for steps "
-                f"{missing_states}."
-            )
-        for expected_index, (snapshot, step) in enumerate(
-            zip(self.snapshots, self.steps, strict=True)
-        ):
-            if snapshot.index != expected_index:
-                raise ValueError(
-                    f"StepSnapshot index mismatch: expected {expected_index}, "
-                    f"got {snapshot.index}."
-                )
-            if snapshot.step is not step:
-                raise ValueError(
-                    f"StepSnapshot {expected_index} does not reference its resolved step."
-                )
-
     @property
     def axis_id(self) -> str:
         return self.context.axis_id
@@ -273,35 +249,16 @@ class CompilationSession:
         )
         return metadata or None
 
-    def step(self, index: int) -> AbstractStep:
-        return self.steps[index]
-
-    def snapshot(self, index: int) -> StepSnapshot:
-        return self.snapshots[index]
-
     @property
     def step_count(self) -> int:
-        return len(self.snapshots)
-
-    def indexed_snapshots(self) -> Iterator[tuple[int, StepSnapshot]]:
-        return iter(enumerate(self.snapshots))
-
-    def reverse_snapshot_indices(self) -> range:
-        return range(self.step_count - 1, -1, -1)
-
-    def step_state(self, index: int) -> "ObjectState":
-        try:
-            return self.step_state_map[index]
-        except KeyError as exc:
-            raise ValueError(f"Missing ObjectState for step {index}.") from exc
+        return len(self.pipeline.steps)
 
     def plan(self, index: int) -> CompiledStepPlan:
         try:
             return self.plans[index]
         except KeyError as exc:
-            snapshot = self.snapshot(index)
             raise ValueError(
-                f"Missing compiled plan for step {index} ({snapshot.step.name})."
+                f"Missing compiled plan for step {index} ({self.pipeline.steps[index].name})."
             ) from exc
 
     def main_flow_plan_ancestry(
@@ -325,12 +282,3 @@ class CompilationSession:
             if source_step_index is None:
                 return tuple(ancestry)
             current_index = source_step_index
-
-
-@dataclass(frozen=True, slots=True)
-class ResolvedPipelineDefinition:
-    """ObjectState-resolved pipeline declaration shared by all axis sessions."""
-
-    steps: Sequence[AbstractStep]
-    step_state_map: Mapping[int, "ObjectState"]
-    snapshots: tuple[StepSnapshot, ...]

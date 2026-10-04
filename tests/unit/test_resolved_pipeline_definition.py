@@ -1,14 +1,9 @@
-from dataclasses import fields
-
+from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
 import pytest
 
 from openhcs.constants import VariableComponents
 from openhcs.constants.input_source import InputSource
 from openhcs.core.config import ProcessingConfig, StepMaterializationConfig
-from openhcs.core.pipeline.step_snapshot import (
-    StepSnapshot,
-    build_step_snapshots,
-)
 from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
@@ -27,10 +22,10 @@ class StateStub:
         self.scope_id = scope_id
 
     def to_object(self):
-        raise AssertionError("StepSnapshot must not call ObjectState.to_object()")
+        raise AssertionError("Resolved pipeline must not call ObjectState.to_object()")
 
 
-def test_step_snapshot_reads_semantics_from_resolved_step_without_object_conversion():
+def test_resolved_pipeline_reads_steps_without_object_conversion():
     source_bindings = StepSourceBindingsConfig(
         bindings=(
             NamedSourceBinding(
@@ -54,24 +49,20 @@ def test_step_snapshot_reads_semantics_from_resolved_step_without_object_convers
     )
     state = StateStub()
 
-    snapshot = build_step_snapshots([step], {0: state})[0]
-
-    assert [field.name for field in fields(StepSnapshot)] == [
-        "index",
-        "scope_id",
-        "step",
-    ]
-    assert snapshot.scope_id == "plate::functionstep_0"
-    assert snapshot.step is step
-    assert snapshot.step.source_bindings is source_bindings
-    assert snapshot.step.processing_config.input_source is InputSource.PIPELINE_START
-    assert snapshot.step.processing_config.variable_components == [
+    pipeline = ResolvedPipelineDefinition([step], {0: state})
+    assert pipeline.steps[0] is step
+    assert pipeline.step_state_map[0] is state
+    assert pipeline.steps[0].source_bindings is source_bindings
+    assert (
+        pipeline.steps[0].processing_config.input_source is InputSource.PIPELINE_START
+    )
+    assert pipeline.steps[0].processing_config.variable_components == [
         VariableComponents.SITE
     ]
 
 
-def test_build_step_snapshots_requires_matching_objectstate():
+def test_resolved_pipeline_requires_matching_objectstate():
     step = FunctionStep(func=_identity, name="missing")
 
-    with pytest.raises(ValueError, match="Missing ObjectState"):
-        build_step_snapshots([step], {})
+    with pytest.raises(ValueError, match="missing ObjectState"):
+        ResolvedPipelineDefinition([step], {})

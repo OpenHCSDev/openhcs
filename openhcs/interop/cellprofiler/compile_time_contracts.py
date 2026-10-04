@@ -147,29 +147,25 @@ class CellProfilerInvocationContractProviderFactory(InvocationContractProviderFa
         ] = {}
         forward_context = ArtifactDeclarationStepContext.empty()
         next_module_num = 1
-        for snapshot in session.snapshots:
-            if (
-                not snapshot.step.enabled
-                or not isinstance(snapshot.step, FunctionStep)
-                or snapshot.step.func is None
-            ):
+        for step_index, step in enumerate(session.pipeline.steps):
+            if not step.enabled or not isinstance(step, FunctionStep) or step.func is None:
                 continue
-            source_bindings = snapshot.step.source_bindings
+            source_bindings = step.source_bindings
             effective_source_bindings = source_bindings.for_input_source(
-                snapshot.step.processing_config.input_source
+                step.processing_config.input_source
             )
             forward_context = replace(
                 forward_context,
-                step_name=snapshot.step.name,
-                step_index=snapshot.index,
+                step_name=step.name,
+                step_index=step_index,
             ).with_source_binding_scope(
                 source_bindings=effective_source_bindings,
-                group_by=snapshot.step.processing_config.group_by,
-                input_source=snapshot.step.processing_config.input_source,
+                group_by=step.processing_config.group_by,
+                input_source=step.processing_config.input_source,
             )
             step_context = forward_context
 
-            normalized_pattern = normalize_function_pattern(snapshot.step.func)
+            normalized_pattern = normalize_function_pattern(step.func)
             first_step_module_num = next_module_num
             step_invocations = []
             group_contexts: list[ArtifactDeclarationStepContext] = []
@@ -210,7 +206,7 @@ class CellProfilerInvocationContractProviderFactory(InvocationContractProviderFa
                                 (
                                     ArtifactSpec.input(
                                         unnamed_main_flow_artifact_name(
-                                            snapshot.index,
+                                            step_index,
                                             invocation.key,
                                         ),
                                         ImageArtifactType,
@@ -255,7 +251,7 @@ class CellProfilerInvocationContractProviderFactory(InvocationContractProviderFa
                     except (TypeError, ValueError) as exc:
                         raise type(exc)(
                             "CellProfiler contract compilation failed for step "
-                            f"{snapshot.index} ({snapshot.step.name!r}), invocation "
+                            f"{step_index} ({step.name!r}), invocation "
                             f"{invocation.key!r}, module {module_type.__name__}: {exc}"
                         ) from exc
                     compiled_contract = replace(
@@ -272,11 +268,11 @@ class CellProfilerInvocationContractProviderFactory(InvocationContractProviderFa
                             ),
                         ),
                     )
-                    key = (snapshot.index, invocation.key)
+                    key = (step_index, invocation.key)
                     if key in plans:
                         raise ValueError(
                             f"Duplicate CellProfiler invocation contract for step "
-                            f"{snapshot.index} ({snapshot.step.name!r}), invocation "
+                            f"{step_index} ({step.name!r}), invocation "
                             f"{invocation.key!r}, module {module_type.__name__}: "
                             f"{key!r}."
                         )

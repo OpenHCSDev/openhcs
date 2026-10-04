@@ -1,5 +1,7 @@
 """CellProfiler runtime callable introspection behavior."""
 
+from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
+
 import subprocess
 import sys
 from types import SimpleNamespace
@@ -28,7 +30,6 @@ from openhcs.core.function_patterns import (
 from openhcs.core.function_reference import FunctionReferenceTransportAuthority
 from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.compilation_session import CompilationSession
-from openhcs.core.pipeline.step_snapshot import StepSnapshot
 from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
@@ -51,16 +52,9 @@ from openhcs.processing.backends.cellprofiler import (
 )
 
 
-def _snapshot_for_step(index: int, step: FunctionStep) -> StepSnapshot:
-    return StepSnapshot(index=index, scope_id=f"test::functionstep_{index}", step=step)
-
-
 def _compilation_session_for_steps(
     steps: list[FunctionStep],
 ) -> CompilationSession:
-    snapshots = tuple(
-        _snapshot_for_step(index, step) for index, step in enumerate(steps)
-    )
     return CompilationSession.from_context(
         context=ProcessingContext(
             step_plans={
@@ -74,11 +68,11 @@ def _compilation_session_for_steps(
             },
             axis_id="A01",
         ),
-        steps=steps,
         orchestrator=SimpleNamespace(pipeline_config=PipelineConfig()),
         global_config=GlobalPipelineConfig(),
-        step_state_map={index: object() for index in range(len(steps))},
-        snapshots=snapshots,
+        pipeline=ResolvedPipelineDefinition(
+            steps=steps, step_state_map={index: object() for index in range(len(steps))}
+        ),
     )
 
 

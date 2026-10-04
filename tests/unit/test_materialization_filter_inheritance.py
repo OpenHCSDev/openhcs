@@ -67,8 +67,7 @@ def _resolved_checkpoint(
     )
     filters = PipelineCompiler._resolve_global_step_axis_filters(
         orchestrator,
-        resolved.snapshots,
-        resolved.step_state_map,
+        resolved,
     )
     return orchestrator, scope_id, pipeline_config_state, resolved, filters
 
@@ -81,8 +80,8 @@ def test_path_zero_keeps_inherited_step_checkpoint_independent(tmp_path) -> None
     )
 
     try:
-        snapshot = resolved.snapshots[0]
-        checkpoint_config = snapshot.step.step_materialization_config
+        snapshot = resolved.steps[0]
+        checkpoint_config = snapshot.step_materialization_config
         assert checkpoint_config.well_filter == 0
         assert filters[0].allows(checkpoint_config, "A01")
         assert not filters[0].allows(checkpoint_config, "B02")
@@ -97,7 +96,7 @@ def test_path_zero_keeps_inherited_step_checkpoint_independent(tmp_path) -> None
             )
         )
         assert (
-            materialization_stage.materialized_output_dir_for_step(snapshot)
+            materialization_stage.materialized_output_dir_for_step(snapshot, 0)
             == checkpoint_dir
         )
 
@@ -154,7 +153,7 @@ def test_explicit_checkpoint_filter_overrides_inherited_workload(tmp_path) -> No
     )
 
     try:
-        checkpoint_config = resolved.snapshots[0].step.step_materialization_config
+        checkpoint_config = resolved.steps[0].step_materialization_config
         assert checkpoint_config.well_filter == "B02"
         assert not filters[0].allows(checkpoint_config, "A01")
         assert filters[0].allows(checkpoint_config, "B02")

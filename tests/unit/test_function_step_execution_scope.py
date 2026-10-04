@@ -58,7 +58,6 @@ from openhcs.core.pipeline.path_planner import (
     PathPlannerStepAssemblyStage,
     PathPlannerValidationStage,
 )
-from openhcs.core.pipeline.step_snapshot import StepSnapshot
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_batch_contracts import RuntimeBatchExecutionDomain
 from openhcs.core.measurement_row_materialization import (
@@ -222,11 +221,7 @@ def test_plate_scope_drives_no_main_flow_paths() -> None:
     output_dir = Path("/data/plate_processed/images")
     planner.paths = SimpleNamespace(build_output_path=lambda: output_dir)
     planner.steps = PathPlannerStepAssemblyStage(planner)
-    snapshot = StepSnapshot(
-        index=1,
-        scope_id="export",
-        step=FunctionStep(func=lambda image: image, name="export"),
-    )
+    snapshot = FunctionStep(func=lambda image: image, name="export")
 
     dependency = planner.steps.main_input_dependency(
         snapshot,

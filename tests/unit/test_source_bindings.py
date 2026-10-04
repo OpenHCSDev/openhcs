@@ -32,7 +32,6 @@ from openhcs.core.config import (
     LazyStepSourceBindingsConfig,
     PipelineConfig,
 )
-from openhcs.core.pipeline.step_snapshot import StepSnapshot
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_binding_selection import (
     SourceBindingCandidateMatcher,
@@ -429,22 +428,16 @@ def test_step_source_bindings_inherit_plate_source_bindings_for_snapshot():
             exclude_params=["func"],
         )
         ObjectStateRegistry.register(step_state, _skip_snapshot=True)
-        snapshot = StepSnapshot(
-            index=0,
-            scope_id=step_state.scope_id,
-            step=step_state.to_saved_resolved_object(),
-        )
+        snapshot = step_state.to_saved_resolved_object()
     finally:
         ObjectStateRegistry.clear()
 
-    assert snapshot.step.source_bindings.bindings == (binding,)
-    assert snapshot.step.source_bindings.source_stack_components == (
-        AllComponents.Z_INDEX,
-    )
-    assert snapshot.step.source_bindings.grouping_metadata_fields == ("Plate",)
-    assert snapshot.step.source_bindings.metadata_fields == metadata_fields
+    assert snapshot.source_bindings.bindings == (binding,)
+    assert snapshot.source_bindings.source_stack_components == (AllComponents.Z_INDEX,)
+    assert snapshot.source_bindings.grouping_metadata_fields == ("Plate",)
+    assert snapshot.source_bindings.metadata_fields == metadata_fields
     compiled = CompiledSourceBindingPlan.from_config(
-        snapshot.step.source_bindings,
+        snapshot.source_bindings,
     )
     assert compiled.bindings == (binding,)
     assert compiled.source_stack_components == (AllComponents.Z_INDEX,)
@@ -516,17 +509,13 @@ def test_enabled_step_source_bindings_compile_inherited_bindings():
             exclude_params=["func"],
         )
         ObjectStateRegistry.register(step_state, _skip_snapshot=True)
-        snapshot = StepSnapshot(
-            index=0,
-            scope_id=step_state.scope_id,
-            step=step_state.to_saved_resolved_object(),
-        )
+        snapshot = step_state.to_saved_resolved_object()
     finally:
         ObjectStateRegistry.clear()
 
-    assert snapshot.step.source_bindings.bindings == (binding,)
+    assert snapshot.source_bindings.bindings == (binding,)
     assert CompiledSourceBindingPlan.from_config(
-        snapshot.step.source_bindings,
+        snapshot.source_bindings,
     ).bindings == (binding,)
 
 
@@ -554,18 +543,14 @@ def test_pipeline_step_source_bindings_enabled_inherits_to_function_steps():
             exclude_params=["func"],
         )
         ObjectStateRegistry.register(step_state, _skip_snapshot=True)
-        snapshot = StepSnapshot(
-            index=0,
-            scope_id=step_state.scope_id,
-            step=step_state.to_saved_resolved_object(),
-        )
+        snapshot = step_state.to_saved_resolved_object()
     finally:
         ObjectStateRegistry.clear()
 
-    assert snapshot.step.source_bindings.enabled is True
-    assert snapshot.step.source_bindings.bindings == (binding,)
+    assert snapshot.source_bindings.enabled is True
+    assert snapshot.source_bindings.bindings == (binding,)
     assert CompiledSourceBindingPlan.from_config(
-        snapshot.step.source_bindings,
+        snapshot.source_bindings,
     ).bindings == (binding,)
 
 
