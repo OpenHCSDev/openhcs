@@ -250,24 +250,50 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
         )
 
     @classmethod
+    def _ordered_component_fields(
+        cls, metadata: SourceMetadataMapping
+    ) -> Iterator[tuple[AllComponents, SourceMetadataNonNullScalar]]:
+        """Admit component fields once, with canonical spelling before aliases."""
+        scalars = cls.scalar_items(metadata)
+        cls.original_items(metadata)
+        aliases: list[tuple[AllComponents, SourceMetadataNonNullScalar]] = []
+        for name, value in scalars:
+            if value is None:
+                continue
+            name = str(name)
+            component = source_metadata_component(name)
+            if component is None:
+                continue
+            item = (component, value)
+            if name == component.value:
+                yield item
+            else:
+                aliases.append(item)
+        yield from aliases
+
+    @classmethod
     def component_values(
         cls, metadata: SourceMetadataMapping, component: AllComponents
     ) -> tuple[str, ...]:
-        scalars = cls.scalar_items(metadata)
-        cls.original_items(metadata)
-        values = [
+        """Read only the requested component from the current field admission."""
+        return tuple(dict.fromkeys(
             str(value)
-            for field, value in scalars
-            if str(field) == component.value and value is not None
-        ]
-        values.extend(
-            str(value)
-            for field, value in scalars
-            if str(field) != component.value
-            and source_metadata_component(str(field)) is component
-            and value is not None
-        )
-        return tuple(dict.fromkeys(values))
+            for owner, value in cls._ordered_component_fields(metadata)
+            if owner is component
+        ))
+
+    @classmethod
+    def component_domains(
+        cls, metadata: SourceMetadataMapping
+    ) -> Mapping[AllComponents, tuple[str, ...]]:
+        """Expand all ordered component domains from one current field admission."""
+        domains: dict[AllComponents, list[str]] = {}
+        for component, value in cls._ordered_component_fields(metadata):
+            domains.setdefault(component, []).append(str(value))
+        return {
+            component: tuple(dict.fromkeys(values))
+            for component, values in domains.items()
+        }
 
     @staticmethod
     def readonly_snapshot(metadata: SourceMetadataMapping) -> SourceMetadataMapping:

@@ -154,6 +154,7 @@ class AxisCompilationRequest:
     path_resolver: CompilationPathResolver
     global_step_axis_filters: StepAxisFilterMap
     source_projections_by_axis: Mapping[str, VirtualWorkspaceSourceProjection]
+    materialization_planner: MaterializationFlagPlanner
     enable_visualizer_override: bool
     is_zmq_execution: bool
 
@@ -529,7 +530,10 @@ class PipelineCompiler:
                 step_plan.zarr_config = None
 
     @staticmethod
-    def plan_materialization_flags(session: CompilationSession) -> None:
+    def plan_materialization_flags(
+        session: CompilationSession,
+        materialization_planner: MaterializationFlagPlanner,
+    ) -> None:
         """
         Plans and injects materialization flags into context.step_plans
         by calling MaterializationFlagPlanner.
@@ -545,18 +549,7 @@ class PipelineCompiler:
             )
             return
 
-        # MaterializationFlagPlanner.prepare_pipeline_flags now takes context and pipeline_definition
-        # and modifies context.step_plans in-place.
-        # CRITICAL: Pass merged config (not raw pipeline_config) for proper global config inheritance
-        MaterializationFlagPlanner.prepare_pipeline_flags(
-            context,
-            session.pipeline.steps,
-            session.orchestrator.plate_path,
-            session.global_config,  # Use merged config instead of raw pipeline_config
-            available_axis_values=session.orchestrator.get_component_keys(
-                get_multiprocessing_axis()
-            ),
-        )
+        materialization_planner.prepare_pipeline_flags(context, session.pipeline.steps)
 
         # Post-check (optional, but good for ensuring contracts are met by the planner)
         for step_index, step in enumerate(session.pipeline.steps):
@@ -578,11 +571,14 @@ class PipelineCompiler:
                     f"Materialization flag planning incomplete for step {step.name} (index: {step_index}). "
                     f"Missing required keys: {missing_keys}."
                 )
-        PipelineCompiler._compile_runtime_artifact_materialization_plans(session)
+        PipelineCompiler._compile_runtime_artifact_materialization_plans(
+            session, materialization_planner,
+        )
 
     @staticmethod
     def _compile_runtime_artifact_materialization_plans(
         session: CompilationSession,
+        materialization_planner: MaterializationFlagPlanner,
     ) -> None:
         globally_enabled = bool(session.global_config.materialize_runtime_artifacts)
         persistent_backend = None
@@ -599,9 +595,8 @@ class PipelineCompiler:
 
         if persistent_step_indexes:
             persistent_backend = (
-                MaterializationFlagPlanner._resolve_materialization_backend(
-                    session.context,
-                    session.global_config.vfs_config,
+                materialization_planner.resolve_backend(
+                    session.global_config.vfs_config.materialization_backend,
                 )
             )
         for step_index, step_plan in session.plans.items():
@@ -1060,6 +1055,7 @@ class PipelineCompiler:
             )
         context = PipelineCompiler._compile_single_axis_context(
             session,
+            materialization_planner=request.materialization_planner,
             enable_visualizer_override=request.enable_visualizer_override,
         )
         return {axis_id: context}
@@ -1103,7 +1099,9 @@ class PipelineCompiler:
                 metadata_writer,
             )
             PipelineCompiler.declare_zarr_stores(session)
-            PipelineCompiler.plan_materialization_flags(session)
+            PipelineCompiler.plan_materialization_flags(
+                session, request.materialization_planner,
+            )
             PipelineCompiler._run_post_plan_compile_stages(
                 session,
                 enable_visualizer_override=request.enable_visualizer_override,
@@ -1116,12 +1114,13 @@ class PipelineCompiler:
     def _compile_single_axis_context(
         session: CompilationSession,
         *,
+        materialization_planner: MaterializationFlagPlanner,
         enable_visualizer_override: bool,
     ) -> ProcessingContext:
         """Finish a nonsequential axis using its validated initial plan."""
         context = session.context
         PipelineCompiler.declare_zarr_stores(session)
-        PipelineCompiler.plan_materialization_flags(session)
+        PipelineCompiler.plan_materialization_flags(session, materialization_planner)
         PipelineCompiler._run_post_plan_compile_stages(
             session,
             enable_visualizer_override=enable_visualizer_override,
@@ -1652,6 +1651,15 @@ class PipelineCompiler:
                 pipeline=pipeline_inputs,
                 path_resolver=path_resolver,
                 global_step_axis_filters=global_step_axis_filters,
+                materialization_planner=MaterializationFlagPlanner(
+                    pipeline_config=effective_config,
+                    microscope_handler=orchestrator.microscope_handler,
+                    filemanager=orchestrator.filemanager,
+                    input_dir=orchestrator.input_dir,
+                    available_axis_values=orchestrator.get_component_keys(
+                        get_multiprocessing_axis()
+                    ),
+                ),
                 source_projections_by_axis=(
                     orchestrator.source_workspace_projection().partition_by_axes(
                         axis_values_to_process

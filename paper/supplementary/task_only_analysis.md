@@ -418,6 +418,87 @@ execution completion and successful process closure. The
 binds the original freeze, consumed pipeline, registered detector and final
 evidence. No detector execution or scoring was repeated for this account.
 
+## Full-field paired-channel repeat: diagnosis without successful repair
+
+A separate fresh author, `BBBC007_FRESH651_88`, completed all 16 paired
+DNA/actin fields without reference outlines, earlier scientific solutions or
+reference-score feedback. Its first completed scientific candidate contained
+1,417 nuclear objects. The final candidate retained 1,335 nuclear identities
+and the same number of seed-associated cell labels, with no absent secondary
+IDs, extra secondary IDs or lost nuclear seed pixels. These checks establish
+identity conservation, not biological recall or physical cell boundaries.
+
+The author identified a dense bright nuclear cluster in A02 site 1 without
+outlines and rejected full-field population use. A last change from shape to
+intensity markers, with suppression increased from 6 to 8 pixels, reduced
+this field's detected count from 46 to 38 without recovering the missing
+cluster. Dense actin interfaces, clipping and fragmented compartments also
+qualified cell-boundary interpretation. Useful isolated-object diagnostic
+findings were retained; they do not establish full-field coverage.
+
+The coordinator independently verified every original manifest entry in its
+`attempt_sources` and `payloads` arrays and opened the unchanged corrected
+A02 raw and final DNA overlay captures. The final overlay visibly retains
+the missing dense cluster. An earlier black raw capture was rejected, and
+the corrected raw and final captures have different screen footprints; they
+support a field-level finding, not a pixel-matched intensity comparison.
+The [independent review](../../docs/validation/bbbc007-fresh651-independent-review-20261004.rst)
+records the exact paths, final capture identity and verification scope.
+No reference outlines were scored for this repeat.
+
+The final-image finding did not establish the earliest failed stage. Absent
+foreground, missing markers and removal of merged components by filtering
+remain distinct hypotheses requiring retained intermediate evidence. The
+canonical skill already describes that diagnostic sequence. This trial
+therefore demonstrates autonomous failure detection but not successful
+repair or a validated reusable parameter recipe. Its recorded client exit
+exceeded the 75-minute deadline by about eight seconds; that operational
+qualification remains separate from scientific completion and rejection.
+
+## Personal neurite mosaic: technical recovery and retained biological losses
+
+The retained same-author continuation `P001_STITCH_DEV94` used a previously
+assembled 2857 x 2858-pixel, two-channel mosaic from nine overlapping fields.
+All nine fields were development data; there was no remaining unseen reserve.
+Shared placements and blending were reused, not recomputed independently by
+channel. Inherited 1st/99th-percentile fits pooled all nine contributing images
+per channel: DAPI 616–3839 DN and FITC 143–20445 DN. The continuation applied
+those fixed limits without per-field or mosaic refitting. Clipping after
+blending does not reproduce clipping before blending exactly.
+
+The first candidate's rescaler unexpectedly mapped the selected interval to
+uint16 0–65535. Native raw/processed profiles exposed the mismatch. The second
+candidate replaced only that operation with a registered fixed-DN clip; its
+checked profile preserved in-range values. Compilation and execution completed,
+and the native viewer supplied distributed raw/result/combined comparisons.
+The corrected analytical mapping did not resolve the biological failures.
+
+The final output contained 1,429 admitted body IDs and 1,570 nuclear labels.
+Native tables reported 150,442.4259 micrometres of algorithm-defined outgrowth,
+with 228 zero-growth bodies and 1,201 nonzero graph owners. These are descriptive
+outputs, not accepted neuronal totals or complete morphology. The declared
+spacing was 1.3556 micrometres per XY pixel and was not independently calibrated.
+SWC-coordinate remeasurement exceeded the native path-feature sum by about
+0.8326%; the exported geometric and path-feature definitions are retained
+separately rather than presented as identical measurements.
+
+The author retained useful local paths, linked graph-feature selection and
+sampled seam/junction continuity. Dense-region DAPI review nevertheless showed
+clear anchors without admitted ROIs and a close pair sharing one label; several
+body masks underfilled connected FITC signal, with uncertain crossing ownership.
+The coordinator independently opened the frozen dense-region DAPI triplet and
+confirmed the missing anchors. These material counting failures, not a demand
+for perfect agreement on ambiguous cells, motivated rejection for complete
+counting and morphology. The original freeze remains immutable while further
+development is separately assigned.
+
+All 1,033 canonical payload entries and the final pipeline hash passed independent
+verification. The run sealed within its 75-minute clock, including cleanup;
+owned native/viewer processes were closed, while client exit code 2 remains
+recorded. The [stitched-development outcome record](task_only_analysis/p001-stitched94-outcome.json)
+binds the original report, manifest and pipeline identities. No new scientific
+execution or reference scoring was performed for this account.
+
 ## Scope and retained evidence
 
 [Figure 7 plot data](../figures/slas/task_only_analysis_plot_data.csv) retains

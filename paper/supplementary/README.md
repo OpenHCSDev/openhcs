@@ -816,6 +816,23 @@ not an exact census or validated cell boundaries. The
 [paired-channel outcome record](task_only_analysis/h003-postpause-outcome.json)
 identifies the independently verified 148-artifact freeze and consumed sources.
 
+The report also retains a fresh BBBC007 repeat across all 16 DNA/actin pairs.
+Its final 1,335 primary and secondary label identities reconcile, but dense
+bright nuclei remain undetected. The author rejected population-level use;
+independent post-freeze image review confirmed the missed cluster. This is
+autonomous failure detection, not successful repair or an instance-accuracy
+estimate. The [independent review](../../docs/validation/bbbc007-fresh651-independent-review-20261004.rst)
+retains the original evidence identities and qualified verification scope.
+
+A retained personal-neurite development continuation also analysed a reused
+nine-field mosaic with pooled channel fits. A fixed-DN clipping repair corrected
+unexpected rescaling, but dense nuclear misses and soma underfill prevented
+complete counting and morphology. Its 1,429 body IDs and native outgrowth sum
+remain descriptive algorithm outputs, not accepted biological totals. This is
+same-author development, not a fresh autonomous success. The
+[stitched-development outcome record](task_only_analysis/p001-stitched94-outcome.json)
+identifies the independently verified freeze and original report.
+
 ## Software snapshots and evidence
 
 | Evidence | Software identity | What the record establishes |

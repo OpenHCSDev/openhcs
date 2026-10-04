@@ -817,6 +817,10 @@ class CallableContract(ArtifactPlanKeySelector):
         compare=False,
     )
 
+    _declared_path_parameters: Mapping[str, "PlatePathDeclaration"] | None = (
+        dataclasses.field(default=None, init=False, repr=False, compare=False)
+    )
+
     def __post_init__(self) -> None:
         """Capture the declared positional ABI once, before any returned values."""
         outputs = ArtifactSpecCollection(self.metadata.artifact_outputs)
@@ -872,6 +876,10 @@ class CallableContract(ArtifactPlanKeySelector):
             "_trailing_return_output_refs",
             refs[canonical_count:],
         )
+        if self.metadata.canonical_signature is not None:
+            object.__setattr__(
+                self, "_declared_path_parameters", self._derive_path_parameters()
+            )
 
     def __reduce__(
         self,
@@ -1257,6 +1265,12 @@ class CallableContract(ArtifactPlanKeySelector):
     def declared_path_parameters(self) -> Mapping[str, "PlatePathDeclaration"]:
         """Plate-relative path declarations keyed by public parameter name."""
 
+        if self._declared_path_parameters is not None:
+            return self._declared_path_parameters
+        return self._derive_path_parameters()
+
+    def _derive_path_parameters(self) -> Mapping[str, "PlatePathDeclaration"]:
+        """Read the same signature epoch as the owning callable declaration."""
         from openhcs.core.vfs_protocol import PlatePathDeclaration
 
         declarations = {
