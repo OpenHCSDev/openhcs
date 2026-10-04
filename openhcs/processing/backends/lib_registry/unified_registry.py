@@ -1578,6 +1578,9 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
             if normalized_parameter is None:
                 public_original_parameters.append(parameter)
                 continue
+            normalized_parameter = normalized_parameter.replace(
+                default=normalized_parameter.annotation(),
+            )
             runtime_config_parameters.append(normalized_parameter)
             public_original_parameters.append(normalized_parameter)
         public_original_parameters = tuple(public_original_parameters)

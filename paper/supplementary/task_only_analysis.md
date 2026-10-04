@@ -127,6 +127,59 @@ The author terminated successfully at 2026-10-04T13:33:23.914 UTC; the recorded
 MCP client exited with code 2. Six growing-journal snapshots retain the exact
 later post-writer-exit owner seal, without rewriting the scientific freeze.
 
+## Fresh volumetric centres: reference coverage without successful repair
+
+The fresh task-only author `H002_FRESH651_95` analysed the whole original
+60 × 256 × 256-voxel acquisition without earlier pipelines, reference centres
+or scoring feedback. Its first successful numerical prediction and final
+attempt each returned 25 geometric centres. Fourteen candidates touch a volume
+boundary; eleven do not. Coordinates are fractional, zero-based Z,Y,X voxels,
+not verified physical distances. The final source SHA-256 is
+`da8956561fc90078aed8695ecf0e457d4175358318bbba5ae5ab4d1946ac0483`.
+
+Parent evaluation began after the original final answer and process exit.
+All 2,528 canonical artifact hashes and four final-source hashes matched, and
+exact owned viewer/native closure was independently confirmed. The original
+client exit 2 remains separate from the completed scientific execution.
+The unchanged point scorer and fifteen-centre manual reference match the
+previously sealed digests. One-to-one matching uses the predeclared primary
+distance of 30 unscaled voxels, not a fitted threshold.
+
+| Reference comparison, whole volume | First | Final |
+| --- | ---: | ---: |
+| Predicted centres | 25 | 25 |
+| Matched annotations | 15 | 15 |
+| Unmatched predictions | 10 | 10 |
+| Missed annotations | 0 | 0 |
+| Reference precision | 60% | 60% |
+| Reference recall | 100% | 100% |
+| Reference F1 | 75% | 75% |
+| Mean matched distance, voxels | 4.841 | 4.841 |
+| Maximum matched distance, voxels | 10.534 | 10.534 |
+
+At the predeclared 10-voxel sensitivity distance, each prediction matches
+14 of 15 annotations, with 11 unmatched predictions and F1 70%; at 20 and
+40 voxels each matches all 15. The manual reference has not been established
+as exhaustive. Thus unmatched predictions are not automatically spurious
+cells, and these metrics measure annotation agreement rather than a complete
+biological census. Boundary status alone does not identify the extra objects.
+No perfect-agreement or infallible-human-reference criterion is imposed.
+
+The author's measured bright-core repair predicted two centres for a condensed
+two-lobed structure, but every final row retained shape markers and all 25
+centroid, volume and boundary values were unchanged. The author caught this
+failed prediction during matched raw/result/combined XY, XZ and YZ review.
+The repair did not improve the reference scores. Ordinary supported centres
+remain useful, while the biological identity of the condensed masses is
+unresolved. The displayed centre raster is not a native Points layer; point
+feature selection was not demonstrated. These interaction and biological
+limitations are distinct from the completed numerical result.
+
+The [post-freeze evaluation receipt](task_only_analysis/h002-fresh95-postfreeze-evaluation.json)
+retains exact scorer/reference/prediction hashes, unchanged API results and all
+distance sensitivities. No scientific analysis was rerun, no answers were
+supplied to an author and no corrected result was substituted for this freeze.
+
 ## Three-dimensional development: count reduction without split repair
 
 A separate same-author development continuation, `H002_CAPACITY_DEV94`, tested

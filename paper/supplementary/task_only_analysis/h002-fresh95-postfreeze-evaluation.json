@@ -1,0 +1,191 @@
+{
+  "author_run": "H002_FRESH651_95",
+  "inputs": [
+    {
+      "path": "/home/ts/code/projects/openhcs/benchmark/score_point_centres.py",
+      "sha256": "a80eecefc791dd755444892cde5816df8c6a6bad15b9dd350fadfd23d6156af8"
+    },
+    {
+      "path": "/home/ts/.local/share/openhcs-blind-evaluation/haase_cells3d_20260927/cells3d_annotations.csv",
+      "sha256": "572f71b8770b4190cc6806000bde6a4e118f0c17d758faef0a7a5d0e4fbaa81f"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h002-fresh95-after651-20261004/H002_FRESH651_95/attempt02/staged_input_openhcs/results/image.ome.tif_site-1_channel-1_timepoint-1_nucleus_centres_step0_details.csv",
+      "sha256": "a960ce058eb9a526328cd9ff9eab6ad2a0b4341b4818289bad582305d5eb43a8"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h002-fresh95-after651-20261004/H002_FRESH651_95/attempt06/staged_input_openhcs/results/image.ome.tif_site-1_channel-1_timepoint-1_nucleus_centres_step4_details.csv",
+      "sha256": "12a64508108177eb85cc2329af6a6dab05e7dd7a9c9ed6ccf3817f5d10fe7dbd"
+    }
+  ],
+  "limits": [
+    "Unscaled voxel distances, not physical localisation",
+    "Whole-volume centre correspondence, not mask quality",
+    "Native Points interaction remains unverified",
+    "Frozen biological repair had unchanged geometry; no repair gain claimed"
+  ],
+  "primary_threshold_voxels": 30,
+  "reference_completeness": "Not established as exhaustive whole-volume biological annotation; unmatched predictions are not proven spurious cells",
+  "scores": {
+    "final": {
+      "10": {
+        "ambiguous_prediction_points": 0,
+        "ambiguous_reference_points": 0,
+        "coordinate_order": "z,y,x",
+        "distance_unit": "unscaled_voxels",
+        "f1": 0.7000000000000001,
+        "false_negatives": 1,
+        "false_positives": 11,
+        "max_localisation_error_voxels": 7.201746918967285,
+        "mean_localisation_error_voxels": 4.434577866161095,
+        "precision": 0.56,
+        "predicted_points": 25,
+        "recall": 0.9333333333333333,
+        "reference_points": 15,
+        "signed_count_error": 10,
+        "threshold_voxels": 10,
+        "true_positives": 14
+      },
+      "20": {
+        "ambiguous_prediction_points": 0,
+        "ambiguous_reference_points": 0,
+        "coordinate_order": "z,y,x",
+        "distance_unit": "unscaled_voxels",
+        "f1": 0.7499999999999999,
+        "false_negatives": 0,
+        "false_positives": 10,
+        "max_localisation_error_voxels": 10.533675423644423,
+        "mean_localisation_error_voxels": 4.841184369993317,
+        "precision": 0.6,
+        "predicted_points": 25,
+        "recall": 1,
+        "reference_points": 15,
+        "signed_count_error": 10,
+        "threshold_voxels": 20,
+        "true_positives": 15
+      },
+      "30": {
+        "ambiguous_prediction_points": 0,
+        "ambiguous_reference_points": 1,
+        "coordinate_order": "z,y,x",
+        "distance_unit": "unscaled_voxels",
+        "f1": 0.7499999999999999,
+        "false_negatives": 0,
+        "false_positives": 10,
+        "max_localisation_error_voxels": 10.533675423644423,
+        "mean_localisation_error_voxels": 4.841184369993317,
+        "precision": 0.6,
+        "predicted_points": 25,
+        "recall": 1,
+        "reference_points": 15,
+        "signed_count_error": 10,
+        "threshold_voxels": 30,
+        "true_positives": 15
+      },
+      "40": {
+        "ambiguous_prediction_points": 0,
+        "ambiguous_reference_points": 2,
+        "coordinate_order": "z,y,x",
+        "distance_unit": "unscaled_voxels",
+        "f1": 0.7499999999999999,
+        "false_negatives": 0,
+        "false_positives": 10,
+        "max_localisation_error_voxels": 10.533675423644423,
+        "mean_localisation_error_voxels": 4.841184369993317,
+        "precision": 0.6,
+        "predicted_points": 25,
+        "recall": 1,
+        "reference_points": 15,
+        "signed_count_error": 10,
+        "threshold_voxels": 40,
+        "true_positives": 15
+      }
+    },
+    "first": {
+      "10": {
+        "ambiguous_prediction_points": 0,
+        "ambiguous_reference_points": 0,
+        "coordinate_order": "z,y,x",
+        "distance_unit": "unscaled_voxels",
+        "f1": 0.7000000000000001,
+        "false_negatives": 1,
+        "false_positives": 11,
+        "max_localisation_error_voxels": 7.201746918967285,
+        "mean_localisation_error_voxels": 4.434577866161095,
+        "precision": 0.56,
+        "predicted_points": 25,
+        "recall": 0.9333333333333333,
+        "reference_points": 15,
+        "signed_count_error": 10,
+        "threshold_voxels": 10,
+        "true_positives": 14
+      },
+      "20": {
+        "ambiguous_prediction_points": 0,
+        "ambiguous_reference_points": 0,
+        "coordinate_order": "z,y,x",
+        "distance_unit": "unscaled_voxels",
+        "f1": 0.7499999999999999,
+        "false_negatives": 0,
+        "false_positives": 10,
+        "max_localisation_error_voxels": 10.533675423644423,
+        "mean_localisation_error_voxels": 4.841184369993317,
+        "precision": 0.6,
+        "predicted_points": 25,
+        "recall": 1,
+        "reference_points": 15,
+        "signed_count_error": 10,
+        "threshold_voxels": 20,
+        "true_positives": 15
+      },
+      "30": {
+        "ambiguous_prediction_points": 0,
+        "ambiguous_reference_points": 1,
+        "coordinate_order": "z,y,x",
+        "distance_unit": "unscaled_voxels",
+        "f1": 0.7499999999999999,
+        "false_negatives": 0,
+        "false_positives": 10,
+        "max_localisation_error_voxels": 10.533675423644423,
+        "mean_localisation_error_voxels": 4.841184369993317,
+        "precision": 0.6,
+        "predicted_points": 25,
+        "recall": 1,
+        "reference_points": 15,
+        "signed_count_error": 10,
+        "threshold_voxels": 30,
+        "true_positives": 15
+      },
+      "40": {
+        "ambiguous_prediction_points": 0,
+        "ambiguous_reference_points": 2,
+        "coordinate_order": "z,y,x",
+        "distance_unit": "unscaled_voxels",
+        "f1": 0.7499999999999999,
+        "false_negatives": 0,
+        "false_positives": 10,
+        "max_localisation_error_voxels": 10.533675423644423,
+        "mean_localisation_error_voxels": 4.841184369993317,
+        "precision": 0.6,
+        "predicted_points": 25,
+        "recall": 1,
+        "reference_points": 15,
+        "signed_count_error": 10,
+        "threshold_voxels": 40,
+        "true_positives": 15
+      }
+    }
+  },
+  "sensitivity_thresholds_voxels": [
+    10,
+    20,
+    40
+  ],
+  "tier": "Parent postfreeze evaluation after original author final answer and process exit; no scientific rerun or reference feedback",
+  "original_author_final_answer_verified": true,
+  "owned_runtime_closure_independently_verified": true,
+  "all_2528_manifest_hashes_verified": true,
+  "final_source_hashes_verified": 4,
+  "evaluation_python": "/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/bin/python",
+  "initial_evaluation_environment_failure": "Existing paper build-only interpreter lacked NumPy; no environment changed. Retried in existing numerical environment with original scorer and input hashes unchanged."
+}
