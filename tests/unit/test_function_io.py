@@ -456,6 +456,7 @@ def test_virtual_pipeline_source_universe_does_not_mix_physical_paths(
         source_projection=projection,
     )
 
+    universe = request.source_universe()
     state = request.contribute_runtime_state(
         SourceUniverseRuntimeState(),
         universe,

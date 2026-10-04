@@ -13,10 +13,7 @@ from typing import ClassVar, Mapping, Sequence, TYPE_CHECKING
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.constants.constants import Backend
-from openhcs.core.registry_strategies import (
-    EnumKeyedStrategyMixin,
-    MostDerivedContextStrategyMixin,
-)
+from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
 from openhcs.core.path_pattern_matching import PathPatternTemplateMatcher
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
@@ -1691,9 +1688,22 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
         state = SourceUniverseRuntimeState()
         for request_type in cls.registered_request_types():
             universe_request = request_type.from_request(request)
-            universe = SourceUniverseStrategy.universe(universe_request)
+            universe = universe_request.source_universe()
             state = universe_request.contribute_runtime_state(state, universe)
         return state
+
+    def source_universe(self) -> SourceFileUniverse:
+        """Resolve current-axis files through their declared source backend."""
+        return SourceFileUniverse(
+            files=(
+                self.require_source_projection().pipeline_start_files(
+                    axis_id=self.plan.axis_id,
+                )
+                if self.uses_virtual_workspace_projection
+                else self.axis_files()
+            ),
+            backend=self.source_backend,
+        )
 
     def contribute_runtime_state(
         self,
@@ -1786,6 +1796,12 @@ class StepInputSourceUniverseRequest(SourceUniverseRequest):
 
     universe_request_kind = "step_input"
 
+    def source_universe(self) -> SourceFileUniverse:
+        """Expand source selectors; otherwise retain the selected pattern files."""
+        if not self.requires_step_input_selector_resolution:
+            return SourceFileUniverse(self.matching_files, self.source_backend)
+        return SourceUniverseRequest.source_universe(self)
+
     def contribute_runtime_state(
         self,
         state: SourceUniverseRuntimeState,
@@ -1804,6 +1820,25 @@ class PipelineStartSourceUniverseRequest(SourceUniverseRequest):
     """Request for the source universe represented by the pipeline start."""
 
     universe_request_kind = "pipeline_start"
+
+    def source_universe(self) -> SourceFileUniverse:
+        """Resolve the declared original-source scope independently of step input."""
+        if not self.requires_full_pipeline_source_universe:
+            return SourceUniverseRequest.source_universe(self)
+        if self.source_projection is not None:
+            return SourceFileUniverse(
+                self.source_projection.pipeline_start_files(), self.source_backend,
+            )
+        backend = self.physical_full_universe_backend()
+        return SourceFileUniverse(
+            files=tuple(
+                str(path)
+                for path in self.context.filemanager.list_files(
+                    str(self.context.input_dir), backend.value, recursive=True,
+                )
+            ),
+            backend=backend,
+        )
 
     def contribute_runtime_state(
         self,
@@ -1877,215 +1912,3 @@ class VirtualWorkspacePipelineStartListingBackendPolicy(
     """Virtual-workspace pipeline-start fan-out lists disk files."""
 
     source_backend = Backend.VIRTUAL_WORKSPACE
-
-
-class SourceUniverseStrategy(
-    MostDerivedContextStrategyMixin[SourceUniverseRequest],
-    ABC,
-):
-    """Registered source-universe selection for source-binding runtime scopes."""
-
-    __registry_key__ = "strategy_key"
-    __skip_if_no_key__ = True
-
-    strategy_key: ClassVar[str | None] = None
-
-    @classmethod
-    def universe(cls, request: SourceUniverseRequest) -> SourceFileUniverse:
-        strategy = cls.for_context(
-            request,
-            error_subject="Source universe",
-        )
-        if strategy is None:
-            raise ValueError("Source universe requires a strategy.")
-        return strategy.source_universe(request)
-
-    @abstractmethod
-    def source_universe(self, request: SourceUniverseRequest) -> SourceFileUniverse:
-        """Return source files and backend for pipeline-start bindings."""
-
-
-class StepInputSourceUniverseStrategy(SourceUniverseStrategy, ABC):
-    """Source-universe strategy branch for current step input."""
-
-    def matches(self, request: SourceUniverseRequest) -> bool:
-        return isinstance(
-            request,
-            StepInputSourceUniverseRequest,
-        ) and self.matches_step_input(request)
-
-    @abstractmethod
-    def matches_step_input(self, request: StepInputSourceUniverseRequest) -> bool:
-        """Return whether this strategy owns one step-input request."""
-
-
-class PipelineStartSourceUniverseStrategy(SourceUniverseStrategy, ABC):
-    """Source-universe strategy branch for original pipeline input."""
-
-    def matches(self, request: SourceUniverseRequest) -> bool:
-        return isinstance(
-            request,
-            PipelineStartSourceUniverseRequest,
-        ) and self.matches_pipeline_start(request)
-
-    @abstractmethod
-    def matches_pipeline_start(
-        self,
-        request: PipelineStartSourceUniverseRequest,
-    ) -> bool:
-        """Return whether this strategy owns one pipeline-start request."""
-
-
-class AxisFilesSourceUniverseStrategy(SourceUniverseStrategy):
-    """Source-universe strategy that uses current-axis files from the source backend."""
-
-    def source_universe(self, request: SourceUniverseRequest) -> SourceFileUniverse:
-        return SourceFileUniverse(
-            files=request.axis_files(),
-            backend=request.source_backend,
-        )
-
-
-class StepInputAxisFilesSourceUniverseStrategy(
-    AxisFilesSourceUniverseStrategy,
-    StepInputSourceUniverseStrategy,
-    ABC,
-):
-    """Axis-file universe strategy branch for current step input."""
-
-
-class PipelineStartAxisFilesSourceUniverseStrategy(
-    AxisFilesSourceUniverseStrategy,
-    PipelineStartSourceUniverseStrategy,
-    ABC,
-):
-    """Axis-file universe strategy branch for original pipeline input."""
-
-
-class CurrentPatternStepInputSourceUniverseStrategy(StepInputSourceUniverseStrategy):
-    """Use the already-loaded pattern files when selectors do not need fan-out."""
-
-    strategy_key = "step_input_current_pattern"
-
-    def matches_step_input(self, request: StepInputSourceUniverseRequest) -> bool:
-        return not request.requires_step_input_selector_resolution
-
-    def source_universe(self, request: SourceUniverseRequest) -> SourceFileUniverse:
-        return SourceFileUniverse(
-            files=request.matching_files,
-            backend=request.source_backend,
-        )
-
-
-class VirtualWorkspaceStepInputSourceUniverseStrategy(StepInputSourceUniverseStrategy):
-    """Use source-schema virtual files when selector resolution must span sources."""
-
-    strategy_key = "step_input_virtual_workspace_source_projection"
-
-    def matches_step_input(self, request: StepInputSourceUniverseRequest) -> bool:
-        return (
-            request.requires_step_input_selector_resolution
-            and request.uses_virtual_workspace_projection
-        )
-
-    def source_universe(self, request: SourceUniverseRequest) -> SourceFileUniverse:
-        return SourceFileUniverse(
-            files=request.require_source_projection().pipeline_start_files(
-                axis_id=request.plan.axis_id
-            ),
-            backend=request.source_backend,
-        )
-
-
-class PhysicalAxisStepInputSourceUniverseStrategy(
-    StepInputAxisFilesSourceUniverseStrategy,
-):
-    """Use physical axis files when source selectors need fan-out outside VWS."""
-
-    strategy_key = "step_input_physical_axis"
-
-    def matches_step_input(self, request: StepInputSourceUniverseRequest) -> bool:
-        return (
-            request.requires_step_input_selector_resolution
-            and not request.uses_virtual_workspace_projection
-        )
-
-
-class AxisScopedPipelineStartSourceUniverseStrategy(
-    PipelineStartAxisFilesSourceUniverseStrategy,
-):
-    """Use the current axis source files when full pipeline fan-out is unnecessary."""
-
-    strategy_key = "axis_scoped"
-
-    def matches_pipeline_start(
-        self,
-        request: PipelineStartSourceUniverseRequest,
-    ) -> bool:
-        return not request.requires_full_pipeline_source_universe
-
-    def source_universe(self, request: SourceUniverseRequest) -> SourceFileUniverse:
-        if request.uses_virtual_workspace_projection:
-            return SourceFileUniverse(
-                files=request.require_source_projection().pipeline_start_files(
-                    axis_id=request.plan.axis_id
-                ),
-                backend=request.source_backend,
-            )
-        return SourceFileUniverse(
-            files=request.axis_files(),
-            backend=request.source_backend,
-        )
-
-
-class VirtualWorkspacePipelineStartSourceUniverseStrategy(
-    PipelineStartSourceUniverseStrategy,
-):
-    """Use declared virtual-workspace source paths for pipeline-start fan-out."""
-
-    strategy_key = "virtual_workspace_source_projection"
-
-    def matches_pipeline_start(
-        self,
-        request: PipelineStartSourceUniverseRequest,
-    ) -> bool:
-        return (
-            request.requires_full_pipeline_source_universe
-            and request.source_projection is not None
-        )
-
-    def source_universe(self, request: SourceUniverseRequest) -> SourceFileUniverse:
-        projection = request.require_source_projection()
-        return SourceFileUniverse(
-            files=projection.pipeline_start_files(),
-            backend=request.source_backend,
-        )
-
-
-class PhysicalPipelineStartSourceUniverseStrategy(PipelineStartSourceUniverseStrategy):
-    """Use a file listing backend for full pipeline fan-out outside VWS."""
-
-    strategy_key = "physical_full_universe"
-
-    def matches_pipeline_start(
-        self,
-        request: PipelineStartSourceUniverseRequest,
-    ) -> bool:
-        return (
-            request.requires_full_pipeline_source_universe
-            and request.source_projection is None
-        )
-
-    def source_universe(self, request: SourceUniverseRequest) -> SourceFileUniverse:
-        universe_backend = request.physical_full_universe_backend()
-        return SourceFileUniverse(
-            files=tuple(
-                str(path)
-                for path in request.context.filemanager.list_files(
-                    str(request.context.input_dir),
-                    universe_backend.value,
-                    recursive=True,
-                )
-            ),
-            backend=universe_backend,
-        )
