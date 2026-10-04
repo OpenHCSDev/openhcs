@@ -125,3 +125,33 @@ normalize_image_payload_intensity recipe. No independent denominator change is
 indicated by the reviewed uint8/normalized manual-threshold declarations.
 Precise frame-wide consumed pixel equality and installed synthetic acceptance
 remain unproved, not inferred from a label count or copied biological parameters.
+
+Proposed owner repair
+----------------------
+
+The published implementation now extends the existing registered
+SourceUniverseRequest family: StepInputSourceUniverseRequest projects primary
+images from current pixels, and PipelineStartSourceUniverseRequest inherits the
+original workspace loader. Companion SOURCE_ARTIFACT inputs retain that loader.
+RuntimeAdapterRequest deletes its unconditional loading procedure and delegates
+to the declared origin owner. No new adapter, registry or origin store is added.
+
+SourceSelector owns metadata matching for both candidate paths and current
+provenance; the replaced candidate and realized-metadata loops are deleted.
+NamedSourceBinding owns assignment after selection, and ImagePayloadMetadata
+owns the shared plane/channel pixel projection. A new alias names selected
+processed pixels rather than demanding an original-workspace alias.
+
+CP's unstored source-binding edge now uses the same origin resolver even when
+an exact main-flow name is also present. This prevents a PIPELINE_START binding
+from accidentally consuming processed pixels through CP's primary-input path.
+FunctionCoreExecutor already delegates source bindings to the same resolver.
+No function_runtime or PR630 checkout edit is needed.
+
+Before editing, Package AST parsed176 core and24 CP runtime modules, plus6
+metaclass-registry,12 python-introspect,17 arraybridge and63 PolyStore modules:
+zero unparsed files. Dependencies were read from their own repositories after
+the initial parent-gitlink scan correctly yielded zero dependency modules.
+This is relevant-family AST evidence, not a complete NRA semantic proof.
+PR630 head48656092 leaves all five changed production files unchanged against
+the reviewed main. Source checks and installed acceptance are still pending.

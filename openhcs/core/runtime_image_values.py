@@ -947,6 +947,14 @@ class ImagePayloadMetadata(
                 "with provenance planes "
                 f"{self.source_image_provenance_planes.identity!r}."
             )
+        return self.project_source_planes(payload, source_plane_selection)
+
+    def project_source_planes(
+        self,
+        payload: RuntimeArrayData,
+        source_plane_selection: tuple[int, ...],
+    ) -> RuntimeArrayData:
+        """Project selected provenance planes through their declared pixel axis."""
         if not source_plane_selection:
             return self.attach_to(payload)
         complete_source_axis = tuple(range(self.source_provenance.source_plane_count))
@@ -959,7 +967,7 @@ class ImagePayloadMetadata(
                     raise ValueError(
                         "Declared source-image channel projection requires exactly "
                         f"one channel; got source planes {source_plane_selection!r} "
-                        f"for {source_image_name!r}."
+                        "for the requested source selection."
                     )
                 return self.project_channel_payload(
                     payload,
