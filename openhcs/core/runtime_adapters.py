@@ -16,7 +16,6 @@ from openhcs.core.artifact_key_selection import (
 )
 from openhcs.core.aligned_image_payload import (
     ImagePayloadExecutionMode,
-    stack_image_payloads,
 )
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
@@ -30,31 +29,17 @@ from openhcs.core.function_patterns import (
     InvocationArtifactInputEdgePlan,
     InvocationArtifactInputProjectionKey,
 )
-from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadataCompositionMode,
-    image_payload_metadata,
-)
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     NamedSourceBinding,
 )
 from openhcs.core.source_binding_selection import (
-    SourceBindingMatchedImageSet,
-)
-from openhcs.core.source_image_provenance import (
-    SourceImageIdentity,
-    SourceImageProvenance,
+    SourceUniverseRequest,
 )
 from openhcs.core.source_load_plan import SourceLoadPlan
 from openhcs.core.runtime_plane_projection import (
-    RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
     RuntimePlaneProjection,
-)
-from openhcs.core.source_workspace_projection import (
-    VirtualWorkspacePathLookup,
-    VirtualWorkspaceSourceProjectionAuthority,
 )
 
 if TYPE_CHECKING:
@@ -249,121 +234,10 @@ class RuntimeAdapterRequest:
         )
 
     def source_artifact_payload(self, ref: ArtifactSpecRef) -> object:
-        """Resolve one source-bound artifact through workspace matching and VFS."""
-
+        """Resolve a named input through its existing source-origin owner."""
         binding = self.source_binding_for_artifact_ref(ref)
-        source_payload = self.source_payload
-        source_provenance = (
-            None
-            if source_payload is None
-            else image_payload_metadata(source_payload).source_provenance
-        )
-        if source_provenance is not None and not source_provenance.has_values:
-            raise ValueError(
-                f"Source-bound artifact {ref!r} requires main-flow source provenance."
-            )
-
-        cache = self.context.runtime_source_workspace_projection_cache
-        projection = VirtualWorkspaceSourceProjectionAuthority.from_context(
-            self.context,
-            cache=cache,
-        ).projection_if_available()
-        if projection is None:
-            raise ValueError(
-                f"Source-bound artifact {ref!r} requires a virtual-workspace "
-                "source projection."
-            )
-        projection = cache.filtered_by_axis(
-            projection,
-            axis_id=self.axis_scope.axis_id,
-        )
-        source_context = (
-            self.context.runtime_source_binding_context_cache.source_pattern_context(
-                parser=self.context.microscope_handler.parser,
-                projection=projection,
-                metadata_rules=self.source_binding_plan.metadata_rules,
-            )
-        )
-        matched_set = SourceBindingMatchedImageSet.from_plan(
-            bindings=self.source_binding_plan.binding_declarations,
-            match_plan=self.source_binding_plan.match_plan,
-            source_context=source_context,
-            identity_policy=self.context.source_image_set_identity_policy,
-        )
-        source_universe = tuple(
-            dict.fromkeys(
-                source_path
-                for declared_binding in self.source_binding_plan.binding_declarations
-                for source_path in projection.files_for_projection_role(
-                    declared_binding.projection_role,
-                    axis_id=self.axis_scope.axis_id,
-                )
-            )
-        )
-        members = matched_set.members_for_binding(
-            binding,
-            anchor_provenance=(
-                source_provenance
-                if source_provenance is not None
-                else SourceImageProvenance()
-            ),
-            source_universe=source_universe,
-        )
-        if not members:
-            raise ValueError(
-                f"Source-bound artifact {ref!r} resolved no workspace members."
-            )
-
-        payloads = self.context.filemanager.load_batch(
-            list(members),
-            Backend.VIRTUAL_WORKSPACE.value,
-        )
-        if len(payloads) != len(members):
-            raise ValueError(
-                f"Source-bound artifact {ref!r} loaded {len(payloads)} payloads "
-                f"for {len(members)} workspace members."
-            )
-        projected_payloads = []
-        for member, payload in zip(members, payloads, strict=True):
-            lookup = VirtualWorkspacePathLookup.from_paths(member, member)
-            source_projection = projection.require_source_projection_for(lookup)
-            if not source_projection.matches_binding(binding):
-                raise ValueError(
-                    f"Workspace projection for {member!r} does not match compiled "
-                    f"source artifact {ref!r}."
-                )
-            projected = projection.project_payload(lookup, payload)
-            projected_payloads.append(
-                binding.apply_loaded_payload(
-                    projected,
-                    ImagePayloadSourceMetadataContext(
-                        SourceImageIdentity(
-                            member,
-                            projection.source_metadata_for(lookup),
-                        ),
-                        source_projection.ref.backend,
-                        self.context.filemanager,
-                        source_projection.ref.backend_address,
-                    ),
-                )
-            )
-        payload = (
-            projected_payloads[0]
-            if len(projected_payloads) == 1
-            and image_payload_metadata(projected_payloads[0]).persists_whole_image()
-            else stack_image_payloads(
-                projected_payloads,
-                metadata_mode=ImagePayloadMetadataCompositionMode.for_plane_axis(
-                    RuntimePlaneAxis.RUNTIME_SLICE
-                ),
-            )
-        )
-        metadata = image_payload_metadata(payload)
-        domain = self.source_binding_plan.source_spatial_domain.admit_source_cohort(
-            metadata.source_spatial_domain,
-            depth=len(members),
-        )
-        return metadata.replace_fields(source_spatial_domain=domain).attach_to(payload)
+        owner = SourceUniverseRequest.for_binding(binding)
+        return owner.source_artifact_payload(self, binding)
 
 
 RuntimeAdapterFactory = Callable[[RuntimeAdapterRequest], object]
