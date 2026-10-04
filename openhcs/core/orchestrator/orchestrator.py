@@ -480,6 +480,69 @@ class PipelineOrchestrator:
             logger.error(f"Failed to initialize orchestrator: {e}")
             raise
 
+    def adopt_compiled_execution(
+        self,
+        execution_bundle: CompiledExecutionBundle,
+    ) -> "PipelineOrchestrator":
+        """Bind an admitted compiled source domain to this fresh runtime owner."""
+        if self._initialized or self.state is not OrchestratorState.CREATED:
+            raise RuntimeError(
+                "Compiled execution can only be adopted before initialization."
+            )
+        contexts = tuple(execution_bundle.runtime_contexts.values())
+        if not contexts:
+            raise ValueError("Compile artifact missing compiled_contexts")
+        source = contexts[0]
+        if (
+            source.microscope_handler is None
+            or source.input_dir is None
+            or source.filemanager is None
+        ):
+            raise ValueError("Compiled execution lacks its admitted source workspace.")
+        source_registry = source.filemanager.registry
+        for context in contexts:
+            if (
+                context.plate_path != self.plate_path
+                or context.input_dir != source.input_dir
+                or context.workspace_path != source.workspace_path
+                or context.microscope_handler is not source.microscope_handler
+                or context.filemanager is None
+                or context.filemanager.registry.keys() != source_registry.keys()
+                or any(
+                    backend is not source_registry[name]
+                    for name, backend in context.filemanager.registry.items()
+                )
+            ):
+                raise ValueError(
+                    "Compiled execution source domain does not match this runtime."
+                )
+        if source_registry.get(Backend.MEMORY.value) is not self.registry.get(
+            Backend.MEMORY.value
+        ):
+            raise ValueError(
+                "Compiled execution memory backend does not match this runtime."
+            )
+        source.microscope_handler.source_selection_role().require_available_source(
+            self.plate_path
+        )
+        self.registry = dict(source_registry)
+        self.registry[Backend.ZARR.value] = self.filemanager.registry[
+            Backend.ZARR.value
+        ]
+        self.filemanager = FileManager(self.registry)
+        self.microscope_handler = source.microscope_handler
+        self.input_dir = source.input_dir
+        self.workspace_path = source.workspace_path
+        self.default_pipeline_definition = list(execution_bundle.pipeline_definition)
+        from openhcs.constants import MULTIPROCESSING_AXIS
+
+        self._component_keys_cache[MULTIPROCESSING_AXIS] = list(
+            execution_bundle.axis_ids
+        )
+        self._initialized = True
+        self._state = OrchestratorState.READY
+        return self
+
     def is_initialized(self) -> bool:
         return self._initialized
 

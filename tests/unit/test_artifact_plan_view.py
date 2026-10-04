@@ -10,6 +10,8 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PyQt6.QtWidgets import QApplication
 
+from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+from openhcs.runtime.zmq_execution_signature import OpenHCSExecutionConfigBundle
 from openhcs.core.artifact_inspection import (
     CompiledArtifactInspection,
     CompiledArtifactInspectionControlPayload,
@@ -217,6 +219,7 @@ def test_compiled_inspection_preserves_exact_contract_edges_and_plans() -> None:
 def test_registered_control_router_reads_retained_compile_artifact() -> None:
     expected, _output_plan, bundle = _compiled_fixture()
     record = ZMQCompileArtifactRecord(
+        configs=OpenHCSExecutionConfigBundle(GlobalPipelineConfig(), PipelineConfig()),
         execution_id="compile-1",
         plate_id="/plates/one",
         compilation_signature="request",

@@ -13,6 +13,8 @@ from types import SimpleNamespace
 from zmqruntime import TcpDataControlPortPairAuthority
 from zmqruntime.config import TransportMode
 
+from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+from openhcs.runtime.zmq_execution_signature import OpenHCSExecutionConfigBundle
 from openhcs.core.artifact_inspection import (
     CompiledArtifactInspectionControlPayload,
     CompiledArtifactInspectionRequest,
@@ -238,6 +240,9 @@ def _compiled_record() -> tuple[ZMQCompileArtifactRecord, ArtifactOutputPlan]:
     )
     return (
         ZMQCompileArtifactRecord(
+            configs=OpenHCSExecutionConfigBundle(
+                GlobalPipelineConfig(), PipelineConfig()
+            ),
             execution_id="compile-1",
             plate_id="/plates/one",
             compilation_signature="request",

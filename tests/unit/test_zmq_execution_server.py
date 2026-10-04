@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+from dataclasses import replace
 from queue import SimpleQueue
 from types import ModuleType, SimpleNamespace
 
@@ -226,8 +227,10 @@ def test_server_exports_outcomes_without_projecting_compiled_values(
     assert record.get_extra("runtime_observation_export_scope") == "outcomes"
 
 
-def test_zmq_server_reconstructs_pipeline_and_configs_for_artifact_execution(
+@pytest.mark.parametrize("changed", (None, "pipeline", "config", "plate"))
+def test_zmq_server_admits_compiled_declaration_without_reevaluating_source(
     monkeypatch,
+    changed,
 ) -> None:
     import openhcs.processing.func_registry as func_registry_module
 
@@ -263,8 +266,72 @@ def test_zmq_server_reconstructs_pipeline_and_configs_for_artifact_execution(
         compile_control=ZMQExecutionCompileControl(compile_artifact_id="compile-1"),
     )
 
-    context = server._execute_pipeline("exec-1", request_payload)
+    from openhcs.core.compiled_execution import (
+        CompiledExecutionBundle,
+        CompiledRuntimeEnvironmentPlan,
+    )
+    from openhcs.runtime.zmq_compilation import (
+        ZMQCompileArtifactRecord,
+        ZMQCompilationResult,
+    )
 
+    configs = OpenHCSExecutionConfigBundle(GlobalPipelineConfig(), PipelineConfig())
+    bundle = CompiledExecutionBundle(
+        pipeline_definition=[],
+        runtime_contexts={},
+        transport_contexts={},
+        worker_assignments={},
+        runtime_environment=CompiledRuntimeEnvironmentPlan.from_global_config(
+            configs.global_pipeline,
+            compiled_contexts={},
+            server_mode=True,
+        ),
+    )
+    server._compiled_artifacts["compile-1"] = ZMQCompileArtifactRecord(
+        execution_id="compile-1",
+        plate_id=request_payload.plate_id,
+        compilation_signature=request_payload.compilation_signature,
+        debug_replay_signature=request_payload.debug_replay_signature,
+        compilation=ZMQCompilationResult(bundle, []),
+        configs=configs,
+    )
+    monkeypatch.setattr(
+        server,
+        "_resolve_request_config",
+        lambda *args: pytest.fail("Artifact executed config source"),
+    )
+    monkeypatch.setattr(
+        zmq_execution_server_module.PipelineDocumentAuthority,
+        "from_namespace",
+        lambda *args: pytest.fail("Artifact rebuilt pipeline declaration"),
+    )
+    if changed == "pipeline":
+        request_payload = replace(
+            request_payload,
+            pipeline_code=request_payload.pipeline_code
+            + "\nraise AssertionError('must not execute')\n",
+        )
+    elif changed == "config":
+        request_payload = replace(
+            request_payload,
+            config_transport=replace(
+                request_payload.config_transport,
+                config_code="raise AssertionError('must not execute')",
+            ),
+        )
+    elif changed == "plate":
+        request_payload = replace(
+            request_payload,
+            identity=replace(request_payload.identity, plate_id="/different/source"),
+        )
+    if changed is not None:
+        with pytest.raises(ValueError, match="does not match execution request"):
+            server._execute_pipeline("exec-1", request_payload)
+        assert "compile-1" in server._compiled_artifacts
+        return
+    context = server._execute_pipeline("exec-1", request_payload)
+    assert context.execution_id == "exec-1"
+    assert context.configs is configs
     assert type(context.pipeline_steps) is list
     assert context.pipeline_steps == []
     assert isinstance(context.configs, OpenHCSExecutionConfigBundle)
@@ -422,3 +489,109 @@ def test_zmq_server_stop_releases_process_resources_when_transport_stop_fails(
         server.stop()
 
     assert events == ["transport", "catalog", ("process_resources", True)]
+
+
+def test_compiled_source_adoption_owns_fresh_runtime_services_and_live_source_gate(
+    tmp_path,
+):
+    import json
+    from polystore.base import reset_memory_backend
+    from polystore.virtual_workspace import VirtualWorkspaceBackend
+    from openhcs.constants.constants import Backend
+    from openhcs.core.compiled_execution import (
+        CompiledExecutionBundle,
+        CompiledRuntimeEnvironmentPlan,
+    )
+    from openhcs.core.context.processing_context import ProcessingContext
+    from openhcs.core.orchestrator.cancellation import ExecutionCancelledError
+    from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
+    from openhcs.microscopes.openhcs import OpenHCSMicroscopeHandler
+
+    previous = PipelineOrchestrator(
+        plate_path=tmp_path, pipeline_config=PipelineConfig()
+    )
+    metadata_path = tmp_path / "polystore_metadata.json"
+    metadata_path.write_text(
+        json.dumps(
+            {
+                "subdirectories": {
+                    "images": {
+                        "workspace_mapping": {
+                            "image.tif": {
+                                "backend": Backend.MEMORY.value,
+                                "backend_address": str(tmp_path / "source.tif"),
+                                "source_axis_indices": [],
+                            }
+                        },
+                    }
+                }
+            }
+        )
+    )
+    virtual_workspace = VirtualWorkspaceBackend(plate_root=tmp_path)
+    previous.filemanager.register_backend(
+        Backend.VIRTUAL_WORKSPACE.value, virtual_workspace
+    )
+    previous._execution_cancellation.request()
+    previous.filemanager.ensure_directory(str(tmp_path), Backend.MEMORY.value)
+    previous.filemanager.save("stale", str(tmp_path / "old.tif"), Backend.MEMORY.value)
+    handler = OpenHCSMicroscopeHandler(previous.filemanager)
+    context = ProcessingContext(axis_id="A01", filemanager=previous.filemanager)
+    context.plate_path = tmp_path
+    context.input_dir = tmp_path
+    context.microscope_handler = handler
+    transport = ProcessingContext(axis_id="A01")
+    bundle = CompiledExecutionBundle(
+        pipeline_definition=[],
+        runtime_contexts={"A01": context},
+        transport_contexts={"A01": transport},
+        worker_assignments={},
+        runtime_environment=CompiledRuntimeEnvironmentPlan.from_global_config(
+            GlobalPipelineConfig(),
+            compiled_contexts={"A01": context},
+            server_mode=True,
+        ),
+    )
+    reset_memory_backend()
+    runtime = PipelineOrchestrator(
+        plate_path=tmp_path, pipeline_config=PipelineConfig()
+    )
+    runtime.execution_id = "next-execution"
+    runtime.adopt_compiled_execution(bundle)
+    assert runtime.filemanager is not previous.filemanager
+    assert (
+        runtime.filemanager.registry[Backend.VIRTUAL_WORKSPACE.value]
+        is virtual_workspace
+    )
+    assert not runtime.filemanager.exists(
+        str(tmp_path / "old.tif"), Backend.MEMORY.value
+    )
+    assert not context.filemanager.exists(
+        str(tmp_path / "old.tif"), Backend.MEMORY.value
+    )
+    runtime.filemanager.save("live", str(tmp_path / "source.tif"), Backend.MEMORY.value)
+    assert (
+        runtime.filemanager.load(
+            str(tmp_path / "image.tif"),
+            Backend.VIRTUAL_WORKSPACE.value,
+        )
+        == "live"
+    )
+    assert bundle.runtime_contexts["A01"] is context
+    assert bundle.transport_contexts["A01"] is transport
+    assert runtime.microscope_handler is handler
+    assert runtime.execution_id == "next-execution"
+    signal = runtime._execution_cancellation.begin()
+    signal.raise_if_requested("new execution")
+    runtime._execution_cancellation.request()
+    with pytest.raises(ExecutionCancelledError):
+        signal.raise_if_requested("active execution")
+    runtime._execution_cancellation.finish(signal)
+    metadata_path.unlink()
+    tmp_path.rmdir()
+    unavailable = PipelineOrchestrator(
+        plate_path=tmp_path, pipeline_config=PipelineConfig()
+    )
+    with pytest.raises(FileNotFoundError):
+        unavailable.adopt_compiled_execution(bundle)
+    assert not unavailable.is_initialized()
