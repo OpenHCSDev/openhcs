@@ -5,7 +5,7 @@ systemctl() {
   test "$2" = show
   if [[ "$3" != controlled.slice ]]; then
     local role
-    case "$3" in *-mcp.scope) role=SCI ;; *-author.scope) role=CLI ;; *) return 64 ;; esac
+    case "$3" in *-mcp.scope) role=SCI ;; *-author.scope) role=CLI ;; *-x94.scope|*-wm94.scope|*-vnc94.scope) role=HELPER ;; *) return 64 ;; esac
     case "$5" in
       LoadState)
         if [[ "$role" == CLI && "$CONTROLLED_CLI_MAX" == 0 ]]; then printf 'not-found\n'
@@ -21,11 +21,16 @@ systemctl() {
     return
   fi
   case "$5" in
-    MemoryMax) printf '%s\n' "$CONTROLLED_COMMON_MAX" ;;
     MemoryCurrent) printf '%s\n' "$CONTROLLED_COMMON_CURRENT" ;;
-    MemorySwapMax) printf '%s\n' "$CONTROLLED_COMMON_SWAP" ;;
+    MemorySwapCurrent) printf '%s\n' "$CONTROLLED_COMMON_SWAP" ;;
+    ControlGroup) printf '/controlled-resource-fixture\n' ;;
     *) return 64 ;;
   esac
+}
+find() {
+  if [[ "$1" == /sys/fs/cgroup/controlled-resource-fixture ]]; then
+    printf '%s\n' "$$"
+  else command find "$@"; fi
 }
 df() { printf 'Avail\n%s\n' "$CONTROLLED_HOME_BYTES"; }
 awk() {

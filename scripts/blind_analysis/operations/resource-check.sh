@@ -9,7 +9,7 @@ phase=${3:?unique observation}
 case "$phase" in ''|*[!a-zA-Z0-9_-]*) exit 64;; esac
 mode=${4:-ongoing}
 # Growth qualification is not a universal stop for a bounded continuation.
-# The same owner requires actual RAM for the operation budget below; PSI is
+# The same owner requires actual host headroom below; PSI is
 # telemetry for ongoing work, and fatal when admitting future fleet growth.
 case "$mode" in
   ongoing) pressure_policy=warning ;;
@@ -100,34 +100,31 @@ printf '%s\n' "$status" > "$receipt.helper-exit"
 printf 'Host helper diagnostic only (status %s):\n' "$status"
 cat "$receipt.json"
 floor=$(jq -er '.proposed_resource_envelope.desktop_growth_reserve_mib' <<< "$FLEET_PROGRAM")
-if [[ "$mode" == full ]]; then floor=$((floor+FLEET_COMBINED_MIB)); fi
-
-# The existing common slice is the aggregate RAM owner. Its current charge
-# already includes continuing runs and inherited helpers, so do not sum them again.
-maximum=$(systemctl --user show "$FLEET_SLICE" -p MemoryMax --value)
+# The existing slice identifies the physical family, not an invented capacity.
+# Charge and swap are observations; never derive host headroom from a hard cap.
 current=$(systemctl --user show "$FLEET_SLICE" -p MemoryCurrent --value)
 [[ "$current" =~ ^[0-9]+$ ]]
-test "$current" -le "$maximum"
-growth=$((maximum-current))
-printf 'Joint slice %s charge=%s cap=%s remaining=%s\n' "$FLEET_SLICE" "$current" "$maximum" "$growth" | tee "$receipt.ram-scopes"
-if [[ "$mode" == ongoing ]]; then
-  # Resident charges are already in the common slice. Reserve only the
-  # selected member's remaining process capacity, not full ceilings again.
-  science_growth=$(fleet_process_growth_bound_bytes mcp 2>> "$receipt.operation-budget")
-  author_growth=$(fleet_process_growth_bound_bytes author 2>> "$receipt.operation-budget")
-  budget_bytes=$((science_growth+author_growth))
-  test "$budget_bytes" -le "$maximum"
-  if [[ "$growth" -lt "$budget_bytes" ]]; then budget_bytes=$growth; fi
-  floor=$((floor+(budget_bytes+1048575)/1048576))
-  printf 'Bounded ongoing member=%s incrementalGrowthBound=%s bytes\n' "$FLEET_SLOT" "$budget_bytes" | tee -a "$receipt.operation-budget"
-fi
+swap=$(systemctl --user show "$FLEET_SLICE" -p MemorySwapCurrent --value)
+[[ "$swap" =~ ^[0-9]+$ ]]
+printf 'Joint slice %s measuredCharge=%s measuredSwap=%s bytes\n' "$FLEET_SLICE" "$current" "$swap" | tee "$receipt.ram-scopes"
+# RSS/PSS come from this exact kernel-owned family, not a copied funded PID list.
+cgroup=$(systemctl --user show "$FLEET_SLICE" -p ControlGroup --value)
+[[ "$cgroup" == /* && "$cgroup" != / ]]
+rss=0; pss=0; observed=0; vanished=0
+while IFS= read -r pid; do
+  [[ "$pid" =~ ^[0-9]+$ ]] || exit 1
+  if sample=$(awk '/^Rss:/ {rss=$2} /^Pss:/ {pss=$2} END {printf "%d %d",rss,pss}' "/proc/$pid/smaps_rollup" 2>/dev/null); then
+    read -r process_rss process_pss <<< "$sample"
+    rss=$((rss+process_rss)); pss=$((pss+process_pss)); observed=$((observed+1))
+  else vanished=$((vanished+1)); fi
+done < <(find "/sys/fs/cgroup$cgroup" -name cgroup.procs -exec cat {} + | sort -nu)
+printf 'Family snapshot RSS=%sKiB PSS=%sKiB observed=%s unavailable=%s (not an allocation guarantee)\n' "$rss" "$pss" "$observed" "$vanished" | tee -a "$receipt.ram-scopes"
 if [[ "$mode" == replacement || "$mode" == bootstrap ]]; then
   if [[ "$mode" == bootstrap ]]; then fleet_require_bootstrap_custody; else fleet_require_helpers; fi
-  floor=$((floor+(growth+1048575)/1048576))
 fi
 psi_max=$(jq -er '.proposed_resource_envelope.full_memory_psi_max_percent | select(type=="number" and .>=0 and .<=100)' <<< "$FLEET_PROGRAM")
 awk -v floor="$floor" '/MemAvailable:/ {printf "MemAvailable %.3f GiB; required %d MiB\n",$2/1048576,floor; if($2<floor*1024) exit 76}' /proc/meminfo | tee "$receipt.ram"
-printf 'Pressure admission mode=%s policy=%s limit=%s%%; enforced RAM budget and all windows retained\n' "$mode" "$pressure_policy" "$psi_max" | tee "$receipt.psi-policy"
+printf 'Pressure admission mode=%s policy=%s limit=%s%%; measured desktop headroom and all windows retained\n' "$mode" "$pressure_policy" "$psi_max" | tee "$receipt.psi-policy"
 awk -v limit="$psi_max" -v policy="$pressure_policy" '
   BEGIN {count=split("avg10 avg60 avg300", required, " ")}
   /^full / {

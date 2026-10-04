@@ -18,9 +18,7 @@ export OPENHCS_AGENT_READ_ROOTS="$FLEET_WORKSPACE/output:$scratch:$FLEET_INPUT:$
 export OPENHCS_AGENT_WRITE_ROOTS="$FLEET_WORKSPACE/output:$scratch:$reservations"
 mkdir -p "$XDG_CACHE_HOME" "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_STATE_HOME" "$XDG_RUNTIME_DIR" "$NUMBA_CACHE_DIR" "$MPLCONFIGDIR"
 chmod 700 "$XDG_RUNTIME_DIR"
-cap=$(fleet_process_limit_mib mcp)
-test "$cap" -gt 0
 cpu=$(jq -er '.proposed_resource_envelope.cpu_quota_per_author_percent' <<< "$FLEET_RUN_PROGRAM")
 test ! -e "$FLEET_WORKSPACE/output/runtime/first-mcp-started.epoch"
 date -u +%s | tee "$FLEET_WORKSPACE/output/runtime/first-mcp-started.epoch"
-exec /usr/bin/env XDG_RUNTIME_DIR=/run/user/1000 /usr/bin/systemd-run --user --scope --slice="$FLEET_SLICE" --unit="$FLEET_UNIT-mcp" -p MemoryMax="${cap}M" -p MemorySwapMax=0 -p CPUQuota="${cpu}%" /usr/bin/env XDG_RUNTIME_DIR="$scratch/runtime" /usr/bin/taskset -c "$FLEET_CPU" "$FLEET_PYTHON" -B -m openhcs.mcp.dev_client --no-resident --timeout-seconds 10 shell --no-prompt
+exec /usr/bin/env XDG_RUNTIME_DIR=/run/user/1000 /usr/bin/systemd-run --user --scope --slice="$FLEET_SLICE" --unit="$FLEET_UNIT-mcp" -p CPUQuota="${cpu}%" /usr/bin/env XDG_RUNTIME_DIR="$scratch/runtime" /usr/bin/taskset -c "$FLEET_CPU" "$FLEET_PYTHON" -B -m openhcs.mcp.dev_client --no-resident --timeout-seconds 10 shell --no-prompt
