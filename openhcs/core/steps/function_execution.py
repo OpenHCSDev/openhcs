@@ -6,8 +6,8 @@ import logging
 import os
 import time
 import traceback
-from collections.abc import Callable, Iterator, Mapping, Sequence
-from dataclasses import dataclass, field
+from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass
 from itertools import zip_longest
 from typing import TYPE_CHECKING
 
@@ -17,7 +17,10 @@ from openhcs.constants.constants import (
     Backend,
 )
 from openhcs.core.component_set import ComponentSet
-from openhcs.core.component_group_scope import ComponentGroupScope, RuntimeExecutionAxisScope
+from openhcs.core.component_group_scope import (
+    ComponentGroupScope,
+    RuntimeExecutionAxisScope,
+)
 from openhcs.core.runtime_stores import RuntimeArtifactInput
 from openhcs.core.callable_contract import ImagePayloadConsumption
 from openhcs.core.compiled_step_plan import CompiledStepPlan
@@ -25,12 +28,12 @@ from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import (
     CompiledFunctionGroup,
     FunctionGroupKey,
+    GroupedPatternMap,
     InvocationArtifactInputEdgePlan,
     RuntimeInvocationDomain,
 )
 from openhcs.core.progress import ProgressPhase, ProgressStatus, emit
 from openhcs.core.runtime_pattern_cache import RuntimePatternDiscoveryCacheKey
-from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
 from openhcs.core.source_binding_selection import (
     SourceBoundAnchorPatternPolicy,
     SourceCandidatePath,
@@ -39,7 +42,6 @@ from openhcs.core.source_binding_selection import (
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.source_workspace_projection import (
     VirtualWorkspaceSourceProjectionAuthority,
-    VirtualWorkspaceSourceProjectionCache,
 )
 from openhcs.core.step_dependencies import StepInputDependencyKind
 from openhcs.core.steps.function_io import (
@@ -50,7 +52,6 @@ from openhcs.core.steps.function_io import (
 )
 from openhcs.core.steps.function_output_manifest import (
     NoStepOutputManifestMatch,
-    StepOutputManifestStore,
     step_output_manifest,
 )
 from openhcs.core.steps.abstract import StepExecutionObservation
@@ -162,80 +163,6 @@ def record_function_step_runtime_profile(
     ).emit()
 
 
-@dataclass(frozen=True, slots=True)
-class PatternGroups:
-    """Execution anchors grouped by compiled function-pattern component."""
-
-    groups: Mapping[FunctionGroupKey, tuple[SourceCandidatePath, ...]]
-
-    @classmethod
-    def from_prepared(
-        cls,
-        grouped_patterns: Mapping[FunctionGroupKey, Sequence[SourceCandidatePath]],
-    ) -> PatternGroups:
-        return cls(
-            {
-                group_key: tuple(str(pattern) for pattern in pattern_list)
-                for group_key, pattern_list in grouped_patterns.items()
-            }
-        )
-
-    def items(
-        self,
-    ) -> Iterator[tuple[FunctionGroupKey, tuple[SourceCandidatePath, ...]]]:
-        return iter(self.groups.items())
-
-    def values(self) -> Iterator[tuple[SourceCandidatePath, ...]]:
-        return iter(self.groups.values())
-
-    def __len__(self) -> int:
-        return len(self.groups)
-
-    def total_count(self) -> int:
-        return sum(len(pattern_list) for pattern_list in self.groups.values())
-
-    def map_groups(
-        self,
-        selector: AnchorPatternSelector,
-    ) -> PatternGroups:
-        return PatternGroups.from_prepared(
-            {
-                group_key: selector(group_key, pattern_list)
-                for group_key, pattern_list in self.groups.items()
-            }
-        )
-
-    def execution_requests(
-        self,
-        context: ProcessingContext,
-        plan: CompiledStepPlan,
-    ) -> tuple[PatternGroupExecutionRequest, ...]:
-        """Admit source anchors to their complete compiled execution coordinates."""
-
-        requests = []
-        for component_index, (component_value, patterns) in enumerate(self.items()):
-            compiled_group = plan.compiled_function_pattern.group_for_component(
-                component_value
-            )
-            if compiled_group is None:
-                raise ValueError(
-                    f"No compiled function group for component {component_value!r}."
-                )
-            requests.extend(
-                PatternGroupExecutionRequest(
-                    context=context,
-                    execution_plan=plan,
-                    pattern_group_info=pattern,
-                    compiled_group=compiled_group,
-                    component_value=component_value,
-                    component_index=component_index,
-                    component_count=len(self),
-                )
-                for pattern in patterns
-            )
-        return tuple(requests)
-
-
 def _single_execution_group_patterns(
     patterns: DiscoveredPatternCollection,
 ) -> Sequence[SourceCandidatePath]:
@@ -247,89 +174,133 @@ def _single_execution_group_patterns(
     )
 
 
-@dataclass(frozen=True, slots=True)
-class StepAnchorPatternFilter:
-    """Apply source, producer, and artifact-domain filtering to anchor groups."""
+def _filter_patterns_by_component(
+    patterns: DiscoveredPatternCollection,
+    component: str,
+    target_value: str,
+    parser: FilenameParser,
+) -> DiscoveredPatternCollection:
+    """Filter pattern strings by a fixed parsed component value."""
 
-    plan: CompiledStepPlan
-    parser: FilenameParser
-    output_manifest: StepOutputManifestStore
-    source_workspace_authority: VirtualWorkspaceSourceProjectionAuthority
-    source_workspace_projection_cache: VirtualWorkspaceSourceProjectionCache
-    source_binding_context_cache: RuntimeSourceBindingContextCache = field(
-        default_factory=RuntimeSourceBindingContextCache
-    )
+    def filter_pattern_list(
+        pattern_list: Sequence[SourceCandidatePath],
+    ) -> list[SourceCandidatePath]:
+        filtered: list[SourceCandidatePath] = []
+        component_declaration = parser.component_for_name(component)
+        for pattern in pattern_list:
+            metadata = parser.parse_filename(str(pattern))
+            if metadata and str(metadata.value_for(component_declaration)) == str(
+                target_value
+            ):
+                filtered.append(pattern)
+        return filtered
 
-    @classmethod
-    def from_context(
-        cls,
-        context: ProcessingContext,
-        plan: CompiledStepPlan,
-    ) -> StepAnchorPatternFilter:
-        return cls(
-            plan=plan,
-            parser=context.microscope_handler.parser,
-            output_manifest=step_output_manifest(context),
-            source_workspace_authority=(
-                VirtualWorkspaceSourceProjectionAuthority.from_context(
-                    context,
-                    cache=context.runtime_source_workspace_projection_cache,
+    if isinstance(patterns, dict):
+        filtered_by_group = {}
+        for group_key, pattern_list in patterns.items():
+            filtered_list = filter_pattern_list(pattern_list)
+            if filtered_list:
+                filtered_by_group[group_key] = filtered_list
+        return filtered_by_group
+
+    return filter_pattern_list(patterns)
+
+
+class FunctionStepExecutor:
+    """Run one compiled FunctionStep plan for one multiprocessing axis."""
+
+    def __init__(self, context: ProcessingContext, step_index: int) -> None:
+        self.context = context
+        compiled_plan = context.step_plans[step_index]
+        if not isinstance(compiled_plan, CompiledStepPlan):
+            raise TypeError(
+                f"FunctionStep {step_index} requires CompiledStepPlan, got "
+                f"{type(compiled_plan).__name__}."
+            )
+        self.plan = compiled_plan.require_function_execution_ready()
+
+    def _execution_requests(
+        self,
+        grouped_patterns: GroupedPatternMap,
+    ) -> tuple[PatternGroupExecutionRequest, ...]:
+        """Admit source anchors to their complete compiled execution coordinates."""
+
+        plan = self.plan
+        requests = []
+        for component_index, (component_value, patterns) in enumerate(
+            grouped_patterns.items()
+        ):
+            compiled_group = plan.compiled_function_pattern.group_for_component(
+                component_value
+            )
+            if compiled_group is None:
+                raise ValueError(
+                    f"No compiled function group for component {component_value!r}."
                 )
-            ),
-            source_workspace_projection_cache=(
-                context.runtime_source_workspace_projection_cache
-            ),
-            source_binding_context_cache=context.runtime_source_binding_context_cache,
-        )
+            requests.extend(
+                PatternGroupExecutionRequest(
+                    context=self.context,
+                    execution_plan=plan,
+                    pattern_group_info=pattern,
+                    compiled_group=compiled_group,
+                    component_value=component_value,
+                    component_index=component_index,
+                    component_count=len(grouped_patterns),
+                )
+                for pattern in patterns
+            )
+        return tuple(requests)
 
-    def filtered(self, grouped_patterns: PatternGroups) -> PatternGroups:
+    def _filter_anchor_patterns(
+        self, grouped_patterns: GroupedPatternMap
+    ) -> GroupedPatternMap:
         grouped_patterns = self.source_bound_anchor_patterns(grouped_patterns)
         grouped_patterns = self.producer_anchor_patterns(grouped_patterns)
         grouped_patterns = self.execution_group_anchor_patterns(grouped_patterns)
-        grouped_patterns = PatternGroups.from_prepared(
-            self.plan.compiled_function_pattern.prepare_grouped_patterns(
-                grouped_patterns.groups,
-                default_component=self.plan.execution_group_value,
-            )
+        grouped_patterns = self.plan.compiled_function_pattern.prepare_grouped_patterns(
+            grouped_patterns,
+            default_component=self.plan.execution_group_value,
         )
         return self.artifact_driven_anchor_patterns(grouped_patterns)
 
     def execution_group_anchor_patterns(
         self,
-        grouped_patterns: PatternGroups,
-    ) -> PatternGroups:
+        grouped_patterns: GroupedPatternMap,
+    ) -> GroupedPatternMap:
         """Map validated lifecycle anchors onto compiler-owned execution groups."""
 
         pattern = self.plan.compiled_function_pattern
         source_owns_groups = (
             pattern.runtime_domain is RuntimeInvocationDomain.SOURCE_ANCHORED
         )
-        if not grouped_patterns.groups:
+        if not grouped_patterns:
             return grouped_patterns
 
         if source_owns_groups:
-            producer_groups = self.output_manifest.producer_patterns_by_execution_group(
+            producer_groups = step_output_manifest(
+                self.context
+            ).producer_patterns_by_execution_group(
                 self.plan,
                 tuple(
                     pattern
                     for patterns in grouped_patterns.values()
                     for pattern in patterns
                 ),
-                self.parser,
+                self.context.microscope_handler.parser,
             )
             if producer_groups is not None:
-                return PatternGroups.from_prepared(producer_groups)
-            execution_scope = self.plan.execution_group_scope
-            return PatternGroups.from_prepared(
-                {
-                    group_key: pattern_list
-                    for group_key, pattern_list in grouped_patterns.items()
-                    if execution_scope.contains_runtime_key(group_key)
+                return {
+                    key: tuple(patterns) for key, patterns in producer_groups.items()
                 }
-            )
+            execution_scope = self.plan.execution_group_scope
+            return {
+                group_key: pattern_list
+                for group_key, pattern_list in grouped_patterns.items()
+                if execution_scope.contains_runtime_key(group_key)
+            }
 
         execution_group_keys = self.plan.execution_group_scope.runtime_keys(
-            grouped_patterns.groups
+            grouped_patterns
         )
         canonical_anchors = next(
             (
@@ -339,17 +310,15 @@ class StepAnchorPatternFilter:
             ),
             (),
         )
-        return PatternGroups.from_prepared(
-            {
-                group_key: grouped_patterns.groups.get(group_key) or canonical_anchors
-                for group_key in execution_group_keys
-            }
-        )
+        return {
+            group_key: grouped_patterns.get(group_key) or canonical_anchors
+            for group_key in execution_group_keys
+        }
 
     def source_bound_anchor_patterns(
         self,
-        grouped_patterns: PatternGroups,
-    ) -> PatternGroups:
+        grouped_patterns: GroupedPatternMap,
+    ) -> GroupedPatternMap:
         """Restrict source-bound step anchors to compatible declared sources."""
 
         if not self.plan.main_input_dependency.uses_pipeline_start_anchors():
@@ -416,8 +385,9 @@ class StepAnchorPatternFilter:
             selected_pattern = next(selected_patterns, exhausted)
             retained_by_group: dict[
                 FunctionGroupKey,
+                GroupedPatternMap,
                 list[SourceCandidatePath],
-            ] = {component_value: [] for component_value in grouped_patterns.groups}
+            ] = {component_value: [] for component_value in grouped_patterns}
             for component_value, pattern in candidate_occurrences:
                 if selected_pattern is exhausted:
                     break
@@ -484,15 +454,15 @@ class StepAnchorPatternFilter:
 
     def default_source_bound_anchor_patterns(
         self,
-        grouped_patterns: PatternGroups,
+        grouped_patterns: GroupedPatternMap,
         *,
         policy: SourceBoundAnchorPatternPolicy,
         source_context: SourcePatternResolutionContext,
-    ) -> PatternGroups:
+    ) -> GroupedPatternMap:
         """Project raw source anchors onto compiler-owned semantic groups."""
 
         execution_scope = self.plan.execution_group_scope
-        target_keys = execution_scope.runtime_keys(grouped_patterns.groups)
+        target_keys = execution_scope.runtime_keys(grouped_patterns)
         all_candidates = tuple(
             pattern
             for pattern_list in grouped_patterns.values()
@@ -500,6 +470,7 @@ class StepAnchorPatternFilter:
         )
         selected_groups: dict[
             FunctionGroupKey,
+            GroupedPatternMap,
             Sequence[SourceCandidatePath],
         ] = {}
         for target_key in target_keys:
@@ -507,7 +478,7 @@ class StepAnchorPatternFilter:
                 self.plan.compiled_function_pattern.default_group,
                 component_value=target_key,
             )
-            local_candidates = grouped_patterns.groups.get(target_key)
+            local_candidates = grouped_patterns.get(target_key)
             requires_cross_group_resolution = (
                 execution_scope.component is not None
                 and target_key is not None
@@ -525,16 +496,18 @@ class StepAnchorPatternFilter:
             selected_groups[target_key] = (
                 ()
                 if bindings is None
-                else policy.select(
-                    candidates,
-                    bindings=bindings.binding_declarations,
-                    source_context=source_context,
+                else tuple(
+                    policy.select(
+                        candidates,
+                        bindings=bindings.binding_declarations,
+                        source_context=source_context,
+                    )
                 )
             )
 
-        filtered = PatternGroups.from_prepared(selected_groups)
-        before_count = grouped_patterns.total_count()
-        after_count = filtered.total_count()
+        filtered = selected_groups
+        before_count = sum(map(len, grouped_patterns.values()))
+        after_count = sum(map(len, filtered.values()))
         if before_count != after_count:
             record_function_step_runtime_profile(
                 self.plan,
@@ -577,8 +550,8 @@ class StepAnchorPatternFilter:
 
     def producer_anchor_patterns(
         self,
-        grouped_patterns: PatternGroups,
-    ) -> PatternGroups:
+        grouped_patterns: GroupedPatternMap,
+    ) -> GroupedPatternMap:
         """Restrict previous-step anchors to the declared producer's files."""
 
         def select_producer_paths(
@@ -586,10 +559,10 @@ class StepAnchorPatternFilter:
             pattern_list: tuple[SourceCandidatePath, ...],
         ) -> Sequence[SourceCandidatePath]:
             try:
-                return self.output_manifest.filter_to_producer_paths(
+                return step_output_manifest(self.context).filter_to_producer_paths(
                     self.plan,
                     tuple(pattern_list),
-                    self.parser,
+                    self.context.microscope_handler.parser,
                 )
             except NoStepOutputManifestMatch:
                 return ()
@@ -602,8 +575,8 @@ class StepAnchorPatternFilter:
 
     def artifact_driven_anchor_patterns(
         self,
-        grouped_patterns: PatternGroups,
-    ) -> PatternGroups:
+        grouped_patterns: GroupedPatternMap,
+    ) -> GroupedPatternMap:
         """Select the lifecycle anchors required by each compiled runtime domain."""
 
         def select_lifecycle_anchors(
@@ -626,12 +599,15 @@ class StepAnchorPatternFilter:
     def apply(
         self,
         label: str,
-        grouped_patterns: PatternGroups,
+        grouped_patterns: GroupedPatternMap,
         selector: AnchorPatternSelector,
-    ) -> PatternGroups:
-        filtered = grouped_patterns.map_groups(selector)
-        before_count = grouped_patterns.total_count()
-        after_count = filtered.total_count()
+    ) -> GroupedPatternMap:
+        filtered = {
+            key: tuple(selector(key, patterns))
+            for key, patterns in grouped_patterns.items()
+        }
+        before_count = sum(map(len, grouped_patterns.values()))
+        after_count = sum(map(len, filtered.values()))
         if before_count != after_count:
             record_function_step_runtime_profile(
                 self.plan,
@@ -647,61 +623,18 @@ class StepAnchorPatternFilter:
     def source_pattern_context(self) -> SourcePatternResolutionContext:
         """Return source-path context used to filter source-bound anchors."""
 
-        projection = self.source_workspace_authority.projection_or_empty()
-        return self.source_binding_context_cache.source_pattern_context(
-            parser=self.parser,
-            projection=self.source_workspace_projection_cache.filtered_by_axis(
+        projection = VirtualWorkspaceSourceProjectionAuthority.from_context(
+            self.context,
+            cache=self.context.runtime_source_workspace_projection_cache,
+        ).projection_or_empty()
+        return self.context.runtime_source_binding_context_cache.source_pattern_context(
+            parser=self.context.microscope_handler.parser,
+            projection=self.context.runtime_source_workspace_projection_cache.filtered_by_axis(
                 projection,
                 axis_id=self.plan.axis_id,
             ),
             metadata_rules=self.plan.source_binding_plan.metadata_rules,
         )
-
-
-def _filter_patterns_by_component(
-    patterns: DiscoveredPatternCollection,
-    component: str,
-    target_value: str,
-    parser: FilenameParser,
-) -> DiscoveredPatternCollection:
-    """Filter pattern strings by a fixed parsed component value."""
-
-    def filter_pattern_list(
-        pattern_list: Sequence[SourceCandidatePath],
-    ) -> list[SourceCandidatePath]:
-        filtered: list[SourceCandidatePath] = []
-        component_declaration = parser.component_for_name(component)
-        for pattern in pattern_list:
-            metadata = parser.parse_filename(str(pattern))
-            if metadata and str(metadata.value_for(component_declaration)) == str(
-                target_value
-            ):
-                filtered.append(pattern)
-        return filtered
-
-    if isinstance(patterns, dict):
-        filtered_by_group = {}
-        for group_key, pattern_list in patterns.items():
-            filtered_list = filter_pattern_list(pattern_list)
-            if filtered_list:
-                filtered_by_group[group_key] = filtered_list
-        return filtered_by_group
-
-    return filter_pattern_list(patterns)
-
-
-class FunctionStepExecutor:
-    """Run one compiled FunctionStep plan for one multiprocessing axis."""
-
-    def __init__(self, context: ProcessingContext, step_index: int) -> None:
-        self.context = context
-        compiled_plan = context.step_plans[step_index]
-        if not isinstance(compiled_plan, CompiledStepPlan):
-            raise TypeError(
-                f"FunctionStep {step_index} requires CompiledStepPlan, got "
-                f"{type(compiled_plan).__name__}."
-            )
-        self.plan = compiled_plan.require_function_execution_ready()
 
     def record_runtime_profile(
         self,
@@ -882,7 +815,7 @@ class FunctionStepExecutor:
             self._apply_sequential_filter(patterns_by_axis)
             phase_started_at = time.perf_counter()
             grouped_patterns = self._prepare_groups(patterns_by_axis)
-            execution_requests = grouped_patterns.execution_requests(self.context, plan)
+            execution_requests = self._execution_requests(grouped_patterns)
             self.record_runtime_profile(
                 "step_prepare_groups",
                 time.perf_counter() - phase_started_at,
@@ -1139,7 +1072,7 @@ class FunctionStepExecutor:
     def _prepare_groups(
         self,
         patterns_by_axis: Mapping[str, DiscoveredPatternCollection],
-    ) -> PatternGroups:
+    ) -> GroupedPatternMap:
         plan = self.plan
         axis_patterns = patterns_by_axis[plan.axis_id]
         execution_group_value = plan.execution_group_value
@@ -1156,17 +1089,17 @@ class FunctionStepExecutor:
         ):
             axis_patterns = _single_execution_group_patterns(axis_patterns)
 
-        pattern_filter = StepAnchorPatternFilter.from_context(
-            context=self.context,
-            plan=self.plan,
-        )
-        grouped_patterns = PatternGroups.from_prepared(
+        discovered_groups = (
             axis_patterns
             if isinstance(axis_patterns, Mapping)
             else {execution_group_value: axis_patterns}
         )
-        grouped_patterns = pattern_filter.filtered(grouped_patterns)
-        if grouped_patterns.total_count() == 0:
+        grouped_patterns = {
+            key: tuple(str(pattern) for pattern in patterns)
+            for key, patterns in discovered_groups.items()
+        }
+        grouped_patterns = self._filter_anchor_patterns(grouped_patterns)
+        if sum(map(len, grouped_patterns.values())) == 0:
             raise ValueError(
                 f"No pattern groups found for step {plan.step_index} "
                 f"({plan.step_name}) in well {plan.axis_id}"

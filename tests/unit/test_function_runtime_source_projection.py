@@ -2,13 +2,19 @@ from collections.abc import Callable
 from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import Mock
 
 import numpy as np
 import pytest
 from objectstate.global_config import GlobalContextValues
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.constants.constants import AllComponents, Backend, GroupBy, VariableComponents
+from openhcs.constants.constants import (
+    AllComponents,
+    Backend,
+    GroupBy,
+    VariableComponents,
+)
 from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
     ImagePayloadBundleContext,
@@ -58,6 +64,8 @@ from openhcs.core.runtime_image_values import (
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_stack_cache import RuntimeImageStackCache
 from openhcs.core.source_binding_selection import SourcePatternResolutionContext
+from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
+from openhcs.core.steps.function_output_manifest import _STEP_OUTPUT_MANIFESTS
 from openhcs.core.source_bindings import (
     SOURCE_BINDING_ALIAS_METADATA_FIELD,
     CompiledSourceBindingPlan,
@@ -91,8 +99,6 @@ from openhcs.core.source_workspace_projection import (
 from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.core.steps.function_execution import (
     FunctionStepExecutor,
-    PatternGroups,
-    StepAnchorPatternFilter,
 )
 from openhcs.core.steps.function_output_identity import (
     FunctionOutputIdentity,
@@ -107,6 +113,28 @@ from openhcs.core.steps.function_output_manifest import (
 )
 from openhcs.formats.pattern.pattern_discovery import PatternDiscoveryEngine
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+
+
+def _anchor_executor(
+    *, plan, parser, output_manifest, source_workspace_projection_cache
+):
+    executor = object.__new__(FunctionStepExecutor)
+    executor.plan = plan
+    executor.context = Mock(
+        plate_path=Path("."),
+        microscope_handler=SimpleNamespace(
+            parser=parser,
+            metadata_handler=SimpleNamespace(
+                source_workspace_metadata_document=lambda _path: None
+            ),
+        ),
+        filemanager=SimpleNamespace(exists=lambda *_args: False),
+        runtime_source_workspace_projection_cache=source_workspace_projection_cache,
+        runtime_source_binding_context_cache=RuntimeSourceBindingContextCache(),
+    )
+    if output_manifest is not None:
+        _STEP_OUTPUT_MANIFESTS[executor.context] = output_manifest
+    return executor
 
 
 def _source_manifest(plan, paths_and_components):
@@ -1325,12 +1353,11 @@ def test_step_output_anchor_filter_skips_source_binding_filter() -> None:
             bindings=(NamedSourceBinding(alias="OrigDNA"),)
         ),
     )
-    grouped_patterns = PatternGroups({None: ("A14_s{iii}_w1_z001_t001.tif",)})
-    pattern_filter = StepAnchorPatternFilter(
+    grouped_patterns = {None: ("A14_s{iii}_w1_z001_t001.tif",)}
+    pattern_filter = _anchor_executor(
         plan=plan,
         parser=None,
         output_manifest=StepOutputManifestStore(),
-        source_workspace_authority=None,
         source_workspace_projection_cache=VirtualWorkspaceSourceProjectionCache(),
     )
 
@@ -1353,18 +1380,17 @@ def test_step_output_anchor_uses_compiler_owned_component_scope() -> None:
         ),
         compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
     )
-    grouped_patterns = PatternGroups({"2": ("A01_s{iii}_w2_z001_t001.tif",)})
-    pattern_filter = StepAnchorPatternFilter(
+    grouped_patterns = {"2": ("A01_s{iii}_w2_z001_t001.tif",)}
+    pattern_filter = _anchor_executor(
         plan=plan,
         parser=SourceSchemaFilenameParser(),
         output_manifest=_source_manifest(
             plan, [("A01_s001_w2_z001_t001.tif", {"channel": 0})]
         ),
-        source_workspace_authority=None,
         source_workspace_projection_cache=VirtualWorkspaceSourceProjectionCache(),
     )
 
-    assert pattern_filter.execution_group_anchor_patterns(grouped_patterns).groups == {
+    assert pattern_filter.execution_group_anchor_patterns(grouped_patterns) == {
         "0": ("A01_s{iii}_w2_z001_t001.tif",),
     }
 
@@ -1396,27 +1422,19 @@ def test_step_output_dispatch_projects_producer_group_before_pattern_selection(
         ),
         compiled_function_pattern=compiled_pattern,
     )
-    pattern_filter = StepAnchorPatternFilter(
+    pattern_filter = _anchor_executor(
         plan=plan,
         parser=SourceSchemaFilenameParser(),
         output_manifest=_source_manifest(
             plan, [("A01_s001_w1_z001_t001.tif", {"channel": 2})]
         ),
-        source_workspace_authority=None,
         source_workspace_projection_cache=VirtualWorkspaceSourceProjectionCache(),
     )
-    monkeypatch.setattr(
-        StepAnchorPatternFilter,
-        "from_context",
-        classmethod(lambda cls, context, plan: pattern_filter),
-    )
-    executor = object.__new__(FunctionStepExecutor)
-    executor.context = SimpleNamespace()
-    executor.plan = plan
+    executor = pattern_filter
 
     grouped = executor._prepare_groups({"A01": {"1": ("A01_s{iii}_w1_z001_t001.tif",)}})
 
-    assert grouped.groups == {
+    assert grouped == {
         "2": ("A01_s{iii}_w1_z001_t001.tif",),
     }
 
@@ -1482,26 +1500,23 @@ def test_artifact_managed_dispatch_validates_producer_before_group_projection() 
     def filter_to_producer_paths(_plan, paths, _parser):
         return tuple(path for path in paths if "_w2_" in path)
 
-    pattern_filter = StepAnchorPatternFilter(
+    pattern_filter = _anchor_executor(
         plan=plan,
         parser=SourceSchemaFilenameParser(),
         output_manifest=SimpleNamespace(
             filter_to_producer_paths=filter_to_producer_paths,
         ),
-        source_workspace_authority=None,
         source_workspace_projection_cache=VirtualWorkspaceSourceProjectionCache(),
     )
 
-    filtered = pattern_filter.filtered(
-        PatternGroups(
-            {
-                "1": ("A01_s{iii}_w1_z001_t001.tif",),
-                "2": ("A01_s{iii}_w2_z001_t001.tif",),
-            }
-        )
+    filtered = pattern_filter._filter_anchor_patterns(
+        {
+            "1": ("A01_s{iii}_w1_z001_t001.tif",),
+            "2": ("A01_s{iii}_w2_z001_t001.tif",),
+        }
     )
 
-    assert filtered.groups == {
+    assert filtered == {
         "1": ("A01_s{iii}_w2_z001_t001.tif",),
     }
 
@@ -1551,13 +1566,11 @@ def test_step_output_anchor_resolves_dynamic_component_scope_from_patterns() -> 
             {},
         ),
     )
-    grouped_patterns = PatternGroups(
-        {
-            "1": ("A01_s001_w{iii}_z001_t001.tif",),
-            "2": ("A01_s002_w{iii}_z001_t001.tif",),
-        }
-    )
-    pattern_filter = StepAnchorPatternFilter(
+    grouped_patterns = {
+        "1": ("A01_s001_w{iii}_z001_t001.tif",),
+        "2": ("A01_s002_w{iii}_z001_t001.tif",),
+    }
+    pattern_filter = _anchor_executor(
         plan=plan,
         parser=SourceSchemaFilenameParser(),
         output_manifest=_source_manifest(
@@ -1567,13 +1580,12 @@ def test_step_output_anchor_resolves_dynamic_component_scope_from_patterns() -> 
                 ("A01_s002_w1_z001_t001.tif", {}),
             ],
         ),
-        source_workspace_authority=None,
         source_workspace_projection_cache=VirtualWorkspaceSourceProjectionCache(),
     )
 
     assert (
-        pattern_filter.execution_group_anchor_patterns(grouped_patterns).groups
-        == grouped_patterns.groups
+        pattern_filter.execution_group_anchor_patterns(grouped_patterns)
+        == grouped_patterns
     )
 
 
@@ -1590,22 +1602,19 @@ def test_source_anchor_uses_compiler_owned_static_component_scope() -> None:
             {},
         ),
     )
-    grouped_patterns = PatternGroups(
-        {
-            "1": ("A01_s{iii}_w1_z001_t001.tif",),
-            "2": ("A01_s{iii}_w2_z001_t001.tif",),
-            "3": ("A01_s{iii}_w3_z001_t001.tif",),
-        }
-    )
-    pattern_filter = StepAnchorPatternFilter(
+    grouped_patterns = {
+        "1": ("A01_s{iii}_w1_z001_t001.tif",),
+        "2": ("A01_s{iii}_w2_z001_t001.tif",),
+        "3": ("A01_s{iii}_w3_z001_t001.tif",),
+    }
+    pattern_filter = _anchor_executor(
         plan=plan,
         parser=None,
         output_manifest=StepOutputManifestStore(),
-        source_workspace_authority=None,
         source_workspace_projection_cache=VirtualWorkspaceSourceProjectionCache(),
     )
 
-    assert pattern_filter.execution_group_anchor_patterns(grouped_patterns).groups == {
+    assert pattern_filter.execution_group_anchor_patterns(grouped_patterns) == {
         "1": ("A01_s{iii}_w1_z001_t001.tif",),
     }
 
@@ -1675,33 +1684,28 @@ def test_source_bound_anchor_filter_combines_ordered_non_grouped_source_sets() -
             {plan.ref(): plan for plan in (measurement_plan,)},
         ),
     )
-    pattern_filter = StepAnchorPatternFilter(
+    pattern_filter = _anchor_executor(
         plan=plan,
         parser=SourceSchemaFilenameParser(),
         output_manifest=StepOutputManifestStore(),
-        source_workspace_authority=SimpleNamespace(
-            projection_or_empty=lambda: VirtualWorkspaceSourceProjection.empty()
-        ),
         source_workspace_projection_cache=VirtualWorkspaceSourceProjectionCache(),
     )
 
     filtered = pattern_filter.source_bound_anchor_patterns(
-        PatternGroups(
-            {
-                "1": (
-                    "A01_s001_w1_z001_t001.tif",
-                    "A01_s002_w1_z001_t001.tif",
-                ),
-                "2": (
-                    "A01_s001_w2_z001_t001.tif",
-                    "A01_s002_w2_z001_t001.tif",
-                ),
-                "3": ("A01_s001_w3_z001_t001.tif",),
-            }
-        )
+        {
+            "1": (
+                "A01_s001_w1_z001_t001.tif",
+                "A01_s002_w1_z001_t001.tif",
+            ),
+            "2": (
+                "A01_s001_w2_z001_t001.tif",
+                "A01_s002_w2_z001_t001.tif",
+            ),
+            "3": ("A01_s001_w3_z001_t001.tif",),
+        }
     )
 
-    assert filtered.groups == {
+    assert filtered == {
         "1": (
             "A01_s001_w1_z001_t001.tif",
             "A01_s002_w1_z001_t001.tif",
@@ -1842,28 +1846,23 @@ def test_compiled_implicit_main_flow_uses_execution_component_source_anchor() ->
         ),
         compiled_function_pattern=compiled_pattern,
     )
-    pattern_filter = StepAnchorPatternFilter(
+    pattern_filter = _anchor_executor(
         plan=plan,
         parser=SourceSchemaFilenameParser(),
         output_manifest=StepOutputManifestStore(),
-        source_workspace_authority=SimpleNamespace(
-            projection_or_empty=lambda: VirtualWorkspaceSourceProjection.empty()
-        ),
         source_workspace_projection_cache=VirtualWorkspaceSourceProjectionCache(),
     )
-    grouped_patterns = PatternGroups(
-        {
-            "1": ("A01_s001_w1_z001_t001.tif",),
-            "3": ("A01_s001_w3_z001_t001.tif",),
-        }
-    )
+    grouped_patterns = {
+        "1": ("A01_s001_w1_z001_t001.tif",),
+        "3": ("A01_s001_w3_z001_t001.tif",),
+    }
 
     source_anchors = pattern_filter.source_bound_anchor_patterns(grouped_patterns)
-    assert source_anchors.groups == {
+    assert source_anchors == {
         "1": (),
         "3": ("A01_s001_w3_z001_t001.tif",),
     }
-    assert pattern_filter.execution_group_anchor_patterns(source_anchors).groups == {
+    assert pattern_filter.execution_group_anchor_patterns(source_anchors) == {
         "3": ("A01_s001_w3_z001_t001.tif",),
     }
 
@@ -1905,29 +1904,24 @@ def test_source_anchored_dict_pattern_excludes_out_of_scope_source_group() -> No
         ),
         compiled_function_pattern=compiled_pattern,
     )
-    pattern_filter = StepAnchorPatternFilter(
+    pattern_filter = _anchor_executor(
         plan=plan,
         parser=SourceSchemaFilenameParser(),
         output_manifest=StepOutputManifestStore(),
-        source_workspace_authority=SimpleNamespace(
-            projection_or_empty=lambda: VirtualWorkspaceSourceProjection.empty()
-        ),
         source_workspace_projection_cache=VirtualWorkspaceSourceProjectionCache(),
     )
-    grouped_patterns = PatternGroups(
-        {
-            "1": ("A01_s001_w1_z001_t001.tif",),
-            "2": ("A01_s001_w2_z001_t001.tif",),
-        }
-    )
+    grouped_patterns = {
+        "1": ("A01_s001_w1_z001_t001.tif",),
+        "2": ("A01_s001_w2_z001_t001.tif",),
+    }
 
     source_anchors = pattern_filter.source_bound_anchor_patterns(grouped_patterns)
 
-    assert source_anchors.groups == {
+    assert source_anchors == {
         "1": ("A01_s001_w1_z001_t001.tif",),
         "2": (),
     }
-    assert pattern_filter.execution_group_anchor_patterns(source_anchors).groups == {
+    assert pattern_filter.execution_group_anchor_patterns(source_anchors) == {
         "1": ("A01_s001_w1_z001_t001.tif",),
     }
 
@@ -1964,27 +1958,22 @@ def test_exact_source_artifact_filters_undeclared_detected_component_groups() ->
         ),
         compiled_function_pattern=compile_function_pattern(exact_source_input, {}, {}),
     )
-    pattern_filter = StepAnchorPatternFilter(
+    pattern_filter = _anchor_executor(
         plan=plan,
         parser=SourceSchemaFilenameParser(),
         output_manifest=StepOutputManifestStore(),
-        source_workspace_authority=SimpleNamespace(
-            projection_or_empty=lambda: VirtualWorkspaceSourceProjection.empty()
-        ),
         source_workspace_projection_cache=VirtualWorkspaceSourceProjectionCache(),
     )
 
     filtered = pattern_filter.source_bound_anchor_patterns(
-        PatternGroups(
-            {
-                "1": ("A01_s001_w1_z001_t001.tif",),
-                "2": ("A01_s001_w2_z001_t001.tif",),
-                "3": ("A01_s001_w3_z001_t001.tif",),
-            }
-        )
+        {
+            "1": ("A01_s001_w1_z001_t001.tif",),
+            "2": ("A01_s001_w2_z001_t001.tif",),
+            "3": ("A01_s001_w3_z001_t001.tif",),
+        }
     )
 
-    assert filtered.groups == {
+    assert filtered == {
         "1": ("A01_s001_w1_z001_t001.tif",),
     }
 
@@ -2022,26 +2011,21 @@ def test_pipeline_start_anchors_project_raw_selectors_to_semantic_groups() -> No
             {},
         ),
     )
-    pattern_filter = StepAnchorPatternFilter(
+    pattern_filter = _anchor_executor(
         plan=plan,
         parser=SourceSchemaFilenameParser(),
         output_manifest=StepOutputManifestStore(),
-        source_workspace_authority=SimpleNamespace(
-            projection_or_empty=lambda: VirtualWorkspaceSourceProjection.empty()
-        ),
         source_workspace_projection_cache=VirtualWorkspaceSourceProjectionCache(),
     )
 
     filtered = pattern_filter.source_bound_anchor_patterns(
-        PatternGroups(
-            {
-                "1": ("A01_s001_w1_z001_t001.tif",),
-                "2": ("A01_s001_w2_z001_t001.tif",),
-            }
-        )
+        {
+            "1": ("A01_s001_w1_z001_t001.tif",),
+            "2": ("A01_s001_w2_z001_t001.tif",),
+        }
     )
 
-    assert filtered.groups == {
+    assert filtered == {
         "MCP_DNA": ("A01_s001_w1_z001_t001.tif",),
         "MCP_AGP": ("A01_s001_w2_z001_t001.tif",),
     }
@@ -2135,7 +2119,7 @@ def test_first_step_prepares_raw_source_anchors_under_semantic_binding_groups(
 
     assert executor.plan.main_input_dependency == StepInputDependency.pipeline_start()
     assert executor.plan.source_binding_plan.has_primary_content
-    assert grouped_patterns.groups == {
+    assert grouped_patterns == {
         "MCP_DNA": ("A01_s{iii}_w1_z001_t001.tif",),
         "MCP_AGP": ("A01_s{iii}_w2_z001_t001.tif",),
     }
@@ -2145,7 +2129,7 @@ def test_first_step_prepares_raw_source_anchors_under_semantic_binding_groups(
         execution_plan=executor.plan,
         compiled_group=executor.plan.compiled_function_pattern.default_group,
         component_value="MCP_DNA",
-        pattern_group_info=grouped_patterns.groups["MCP_DNA"][0],
+        pattern_group_info=grouped_patterns["MCP_DNA"][0],
         component_index=0,
         component_count=2,
     )
@@ -2153,10 +2137,12 @@ def test_first_step_prepares_raw_source_anchors_under_semantic_binding_groups(
 
     assert loaded[0] == ["A01_s001_w1_z001_t001.tif"]
     assert context.filemanager.exists(
-        str(executor.plan.input_dir / "A01_s001_w1_z001_t001.tif"), Backend.MEMORY.value,
+        str(executor.plan.input_dir / "A01_s001_w1_z001_t001.tif"),
+        Backend.MEMORY.value,
     )
     assert not context.filemanager.exists(
-        str(executor.plan.input_dir / "A01_s001_w2_z001_t001.tif"), Backend.MEMORY.value,
+        str(executor.plan.input_dir / "A01_s001_w2_z001_t001.tif"),
+        Backend.MEMORY.value,
     )
 
 
@@ -2203,25 +2189,20 @@ def test_source_bound_artifact_managed_step_keeps_source_anchors() -> None:
         execution_group_scope=ComponentGroupScope.ungrouped(),
         compiled_function_pattern=compiled_pattern,
     )
-    pattern_filter = StepAnchorPatternFilter(
+    pattern_filter = _anchor_executor(
         plan=plan,
         parser=SourceSchemaFilenameParser(),
         output_manifest=StepOutputManifestStore(),
-        source_workspace_authority=SimpleNamespace(
-            projection_or_empty=lambda: VirtualWorkspaceSourceProjection.empty()
-        ),
         source_workspace_projection_cache=VirtualWorkspaceSourceProjectionCache(),
     )
-    grouped_patterns = PatternGroups(
-        {
-            None: (
-                "A01_s001_w1_z001_t001.tif",
-                "A01_s002_w1_z001_t001.tif",
-            )
-        }
-    )
+    grouped_patterns = {
+        None: (
+            "A01_s001_w1_z001_t001.tif",
+            "A01_s002_w1_z001_t001.tif",
+        )
+    }
 
-    assert pattern_filter.filtered(grouped_patterns).groups == grouped_patterns.groups
+    assert pattern_filter._filter_anchor_patterns(grouped_patterns) == grouped_patterns
 
 
 def test_default_callable_runtime_scope_projects_bindings_to_selected_group() -> None:

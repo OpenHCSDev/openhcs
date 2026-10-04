@@ -302,9 +302,7 @@ def test_function_step_execution_does_not_prepare_callables_in_hot_path(monkeypa
 
         def _prepare_groups(self, patterns_by_axis):
             events.append(("groups", tuple(patterns_by_axis)))
-            return function_execution.PatternGroups.from_prepared(
-                {None: ["image.tif"]}
-            )
+            return {None: ("image.tif",)}
 
         def _prepare_callables(self, grouped_patterns):
             raise AssertionError("callable warmup belongs to compilation")
