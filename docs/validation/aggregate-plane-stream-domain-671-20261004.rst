@@ -48,7 +48,22 @@ rejections. AST is source evidence, not public settlement acceptance.
 Validation status
 -----------------
 
-Focused source controls and actual installed native settlement are not yet
-claimed. #669 receiving06 publication is separately pinnedcf10bb; this source
-change is NOT overlaid on that immutable target or a scientist. P001's adjacent
+Focused source controls:44 passed in671-source-controls04.log; its one remaining
+setup error was the omitted original viewer_ack_return_route fixture. A distinct
+bounded follow-up loaded the ORIGINAL tests/conftest.py using the installed
+dependency bootstrap before selecting these source modules: the remaining
+selected-plane persistence/QA-stream test passed, terminal0, in
+671-source-controls05.log. Thus all45 selected controls pass across the two
+original receipts, not a fabricated single all-pass run. Peak456088/461632KiB;
+no invented memory/swap ceiling. Earlier bootstrap/pytest configuration
+negatives01..03 and fixture omission04 are preserved, not product failures.
+
+Actual installed native aggregate settlement remains unverified. #669 receiving06
+publication is separately pinnedcf10bb; this source change is NOT overlaid on
+that immutable target or a scientist. Its installed two-well publication now
+passes, with exact typed native closure, independently of676. Singer explicitly
+confirmed the shared function_outputs.py changes are disjoint:669 owns the
+OpenHCSMetadataTarget publication hunk;676 owns StreamOutputBatch domain/route
+projection. Normal current-main integration after669 merge plus installed
+aggregate-plane acceptance are required before676 merge. P001's adjacent
 timeout later recovered; it is not proven this defect or a persistent deadviewer.
