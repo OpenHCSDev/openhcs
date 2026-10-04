@@ -23,3 +23,9 @@ Archive: [byte-exact source/raw evidence](docs/validation/custom-registration-ob
 Installed public TCP registration -> observation and successful one-registration proof remain parent receiving acceptance. Current source MCP checks use a controlled in-process client, not a new native runtime. Ratchet-positive cause/error/renderer sites remain visible for review; draft does not claim full R0/R1 closure. Original UNKNOWN does not become failure/nonmutation or permission to retry.
 
 CI deferred; no hosted-CI or unchanged-test ceremony. Does not auto-close historical uncertain inputs or claim scientific success.
+
+### Installed receiving packet (prepared, no launch)
+
+[Exact one-request TCP packet](validation/registration-observation-567/RECEIVING.rst) and [original retained CLI command templates](validation/registration-observation-567/PUBLIC.commands) are published, with a frozen154-byte declaration. One source-bearing registration, same-process handle/status; no viewer, science, pipeline or second negative/retry. Evidence reserve <=64MiB through the original resource owner.
+
+Planck confirmed #554 package04 and whole-main successor10 preparation do **not** contain unmerged #567. Parent exact package integration/qualification is the determining dependency, not another source test or CI gate. Planck has first94 viewer receiving; Dewey owns actual original FUND/launch handoff after exact closure. No shared target mutation/build/installation or lease adoption occurred. #541 remains Singer's separately owned typed pixel/unit work with Root shared-frame dependency.
