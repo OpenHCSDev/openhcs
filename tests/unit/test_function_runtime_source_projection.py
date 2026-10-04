@@ -5781,9 +5781,13 @@ def test_producer_admission_rederives_live_storage_aliases_each_epoch(
     record = replace(records[0], filename_component_values=storage_components)
     store.record_outputs(producer, (record,))
     old_index = store.producer_record_index_for(consumer, parser)
+    old_alias = record.without_filename_qualifier().filename(parser)
+    assert store.filter_to_producer_paths(consumer, (old_alias,), parser) == [old_alias]
     storage_components["channel"] = 9
     new_alias = record.without_filename_qualifier().filename(parser)
 
+    with pytest.raises(NoStepOutputManifestMatch):
+        store.filter_to_producer_paths(consumer, (old_alias,), parser)
     assert old_index.matching_records(new_alias) == ()
     current_index = store.producer_record_index_for(consumer, parser)
     assert current_index.matching_records(new_alias) == (record,)

@@ -28,7 +28,9 @@ from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
     object_label_dense_array,
 )
-from openhcs.core.runtime_object_label_building import SourceImageObjectLabelBuildRequest
+from openhcs.core.runtime_object_label_building import (
+    SourceImageObjectLabelBuildRequest,
+)
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
@@ -449,7 +451,9 @@ class ContextualObjectLabelOutputValueContextStrategy(
                 "Contextual object-label output strategy requires "
                 f"ObjectLabelValue, got {type(output_value).__name__}."
             )
-        return output_value.with_source_image_context(source_payload)
+        return output_value.with_source_image_context(
+            source_payload
+        ).with_parent_image_context(source_payload)
 
 
 class DenseArrayObjectLabelOutputValueContextStrategy(

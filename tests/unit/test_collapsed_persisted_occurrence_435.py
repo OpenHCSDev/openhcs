@@ -37,9 +37,9 @@ from openhcs.core.source_projection import (
 )
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
+from openhcs.core.steps.function_artifact_materialization import ArtifactMaterializationTargetPlan
 from openhcs.core.steps.function_outputs import (
     PrimaryImageMetadataTarget,
-    RuntimeArtifactMaterializationAuthority,
 )
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.processing.materialization import (
@@ -133,11 +133,6 @@ def _actual_saved_occurrence(tmp_path, scenario):
         artifact_payload = metadata.with_source_component_metadata(
             {**semantic_components, "site": "2"},
         ).payload_with(pixels)
-    context.runtime_value_store.record(
-        RuntimeValue.normalize(output_plan, artifact_payload, axis_id="A01"),
-        path=output_plan.path,
-        backend=Backend.MEMORY.value,
-    )
     destination = plan.output_dir / filename
     filemanager.ensure_directory(plan.output_dir, Backend.MEMORY.value)
     filemanager.ensure_directory(plan.output_dir, Backend.DISK.value)
@@ -160,6 +155,16 @@ def _actual_saved_occurrence(tmp_path, scenario):
         ),
     )
     target = PrimaryImageMetadataTarget.from_plan(plan)
+    (record,) = target.produced_records(context, plan)
+    context.runtime_value_store.record(
+        RuntimeValue.normalize_for_execution_scope(
+            output_plan,
+            artifact_payload,
+            execution_scope=record.execution_scope(plan),
+        ),
+        path=output_plan.path,
+        backend=Backend.MEMORY.value,
+    )
     # This is the existing accepted main-flow publication, before a mirror is added.
     original = target.produced_projection_entries(context, plan)
     original = SourceProjectionMetadataSerializer.projection_fields(
@@ -168,9 +173,11 @@ def _actual_saved_occurrence(tmp_path, scenario):
     assert len(original["source_projection"]) == 1
     if scenario == "collapsed_site":
         row = original["source_projection"][0]
-        assert row["address"]["site"] == "1"
+        assert row["address"] is None
+        (record,) = target.produced_records(context, plan)
+        assert record.filename_address.as_component_metadata()["site"] == "1"
         assert "site" not in row["source_metadata"]
-    saved = RuntimeArtifactMaterializationAuthority.materialize(context, plan)
+    saved = ArtifactMaterializationTargetPlan.materialize(context, plan)
     assert len(saved) == 1
     (output,) = saved[0].outputs_for_backend(Backend.DISK.value)
     assert output.path == str(destination)
@@ -305,7 +312,9 @@ def test_collapsed_same_path_mirror_retains_filename_and_semantic_views(tmp_path
         structured.projection_paths
     )
     (row,) = structured["source_projection"]
-    assert row["address"]["site"] == "1"
+    assert row["address"] is None
+    (record,) = target.produced_records(context, plan)
+    assert record.filename_address.as_component_metadata()["site"] == "1"
     assert row["source_alias"] == "Mosaic"
     assert "site" not in row["source_metadata"]
     metadata = ImagePayloadMetadata.from_mapping(
@@ -321,7 +330,7 @@ def test_collapsed_same_path_mirror_retains_filename_and_semantic_views(tmp_path
         tmp_path, document
     )
     projection = reopened.source_projections_by_virtual_path[row["virtual_path"]]
-    assert projection.address.as_component_metadata()["site"] == "1"
+    assert projection.address is None
     assert "site" not in projection.image_metadata.source_component_metadata
     assert (
         len(projection.image_metadata.source_provenance.represented_source_identities)

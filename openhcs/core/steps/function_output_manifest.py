@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
 from pathlib import Path
-from typing import Hashable, Iterator, Sequence
+from typing import Iterator, Sequence
 from weakref import WeakKeyDictionary
 
 from polystore.streaming.identity import StreamProducerIdentity
@@ -268,16 +268,6 @@ class StepOutputManifestStore:
         ],
         tuple[ProducedOutputSemantics, ...] | None,
     ] = field(default_factory=dict)
-    filtered_paths_by_source: dict[
-        tuple[
-            int,
-            StepOutputManifestKey | None,
-            frozenset[tuple[str, str, str | None]],
-            tuple[str, ...],
-            tuple[Hashable, ...],
-        ],
-        tuple[str, ...],
-    ] = field(default_factory=dict)
 
     def begin_step(
         self,
@@ -333,7 +323,6 @@ class StepOutputManifestStore:
     def _invalidate_record_selection_caches(self) -> None:
         self.records_revision += 1
         self.selected_records_by_source.clear()
-        self.filtered_paths_by_source.clear()
 
     def producer_records_for(
         self,
@@ -467,25 +456,14 @@ class StepOutputManifestStore:
         paths: Sequence[str],
         parser: FilenameParser,
     ) -> list[str]:
-        cache_key = (
-            *self._producer_selection_key(plan),
-            tuple(str(path) for path in paths),
-            parser.semantic_identity(),
-        )
-        cached = self.filtered_paths_by_source.get(cache_key)
-        if cached is not None:
-            return list(cached)
-
         index = self.producer_record_index_for(plan, parser)
         if index is None:
             return list(paths)
         selected = [path for path in paths if index.contains(path)]
         if selected:
-            self.filtered_paths_by_source[cache_key] = tuple(selected)
             return selected
         if paths:
             raise NoStepOutputManifestMatch
-        self.filtered_paths_by_source[cache_key] = ()
         return []
 
     def _producer_selection_key(

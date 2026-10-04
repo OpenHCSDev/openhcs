@@ -31,7 +31,7 @@ from openhcs.core.steps.function_artifact_materialization import (
     RuntimeArtifactMaterialization,
 )
 from openhcs.core.steps.function_outputs import (
-    OpenHCSMetadataWriter,
+    OpenHCSMetadataTarget,
     ProducedImageMetadataCapability,
     RuntimeArtifactMetadataTarget,
 )
@@ -197,13 +197,13 @@ def test_saved_roi_only_batch_publishes_and_reconciles_without_rendering(
         publication_context, plate, destination, monkeypatch
     )
     plan = plan_for(plate)
-    targets = OpenHCSMetadataWriter.OutputTarget.for_execution(
+    targets = OpenHCSMetadataTarget.for_execution(
         publication_context,
         plan,
         artifact_materializations=(outcome,),
     )
     assert tuple(target.output_dir for target in targets) == (plate / destination,)
-    OpenHCSMetadataWriter.write(
+    OpenHCSMetadataTarget.write_for_step(
         publication_context, plan, artifact_materializations=(outcome,)
     )
     assert result_paths(plate, publication_context) == (output.path,)
@@ -219,7 +219,7 @@ def test_saved_roi_only_batch_publishes_and_reconciles_without_rendering(
         for target in owner.reconciliation_targets(publication_context)
     )
     assert plate / destination in reconciled
-    OpenHCSMetadataWriter.finalize_completed_plate({"A01": publication_context})
+    OpenHCSMetadataTarget.finalize_completed_plate({"A01": publication_context})
     assert result_paths(plate, publication_context) == (output.path,)
 
 
@@ -333,7 +333,7 @@ def test_new_result_declaration_composes_cooperative_hooks_without_consumer_edit
     outcome, output = save_archive_outcome(
         publication_context, plate, destination, monkeypatch
     )
-    registry = OpenHCSMetadataWriter.OutputTarget.__registry__
+    registry = OpenHCSMetadataTarget.__registry__
     original_declarations = dict(registry)
     try:
 
@@ -358,7 +358,7 @@ def test_new_result_declaration_composes_cooperative_hooks_without_consumer_edit
             plan_for(plate),
             runtime_artifact_materialization=RuntimeArtifactMaterializationPlan(),
         )
-        (target,) = OpenHCSMetadataWriter.OutputTarget.for_execution(
+        (target,) = OpenHCSMetadataTarget.for_execution(
             publication_context,
             plan,
             artifact_materializations=(outcome,),
@@ -383,7 +383,7 @@ def test_files_without_successful_batch_outcomes_do_not_create_step_targets(
     directory.mkdir(parents=True)
     (directory / "not_a_saved_outcome.roi.zip").write_bytes(b"synthetic admission only")
     assert (
-        OpenHCSMetadataWriter.OutputTarget.for_execution(
+        OpenHCSMetadataTarget.for_execution(
             publication_context,
             plan_for(plate),
             artifact_materializations=(),

@@ -7,9 +7,9 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from types import MappingProxyType
-from typing import TYPE_CHECKING, ClassVar, cast
+from typing import TYPE_CHECKING, ClassVar
 
-import numpy as np
+import logging
 from metaclass_registry import AutoRegisterMeta
 from polystore.streaming.identity import StreamProducerIdentity
 from polystore.streaming.viewer_transport import ViewerStreamProducer
@@ -17,25 +17,18 @@ from polystore.streaming.viewer_transport import ViewerStreamProducer
 from openhcs.constants.constants import AllComponents, Backend, VariableComponents
 from openhcs.core.artifacts import (
     ArtifactOutputPlan,
-    ArtifactType,
-    ArtifactTypeStrategyMatchMixin,
-    ImageArtifactType,
-    MeasurementsArtifactType,
 )
 from openhcs.core.axis_filter import step_axis_allows_config
 from openhcs.microscopes.microscope_interfaces import FilenameParser
-from openhcs.core.compiled_step_plan import CompiledStepPlan
+from openhcs.core.compiled_step_plan import (
+    CompiledStepPlan,
+    RuntimeArtifactMaterializationPlan,
+)
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.component_set import ComponentSet
-from openhcs.core.registry_strategies import MostDerivedContextStrategyMixin
-from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
-    image_payload_data,
     image_payload_metadata,
-)
-from openhcs.core.runtime_measurements import (
-    MeasurementTable,
 )
 from openhcs.core.runtime_stores import (
     RuntimeArtifactAddress,
@@ -80,215 +73,7 @@ if TYPE_CHECKING:
     from openhcs.core.context.processing_context import ProcessingContext
 
 
-class ArtifactMaterializationRecordReducer(
-    ArtifactTypeStrategyMatchMixin,
-    MostDerivedContextStrategyMixin[type[ArtifactType]],
-):
-    """Registered reducer from runtime store records to materialization records."""
-
-    artifact_type: ClassVar[type[ArtifactType] | None] = ArtifactType
-
-    def records_for_output(
-        self,
-        *,
-        records: tuple[StoredRuntimeValue, ...],
-        output_plan: ArtifactOutputPlan,
-    ) -> tuple[StoredRuntimeValue, ...]:
-        """Reduce records across every compiled group of one artifact output."""
-
-        del output_plan
-        return records
-
-    def records_for_exact_scopes(
-        self,
-        *,
-        records: tuple[StoredRuntimeValue, ...],
-        output_plan: ArtifactOutputPlan,
-        axis_id: str,
-        group_key: str | None,
-    ) -> tuple[StoredRuntimeValue, ...]:
-        """Partition records by exact scope before artifact-specific reduction."""
-
-        records_by_scope: dict[
-            RuntimeExecutionAxisScope,
-            list[StoredRuntimeValue],
-        ] = {}
-        for record in records:
-            records_by_scope.setdefault(record.key.scope, []).append(record)
-        return tuple(
-            reduced_record
-            for scoped_records in records_by_scope.values()
-            for reduced_record in self.records_for_group(
-                records=tuple(scoped_records),
-                output_plan=output_plan,
-                axis_id=axis_id,
-                group_key=group_key,
-            )
-        )
-
-    def records_for_group(
-        self,
-        *,
-        records: tuple[StoredRuntimeValue, ...],
-        output_plan: ArtifactOutputPlan,
-        axis_id: str,
-        group_key: str | None,
-    ) -> tuple[StoredRuntimeValue, ...]:
-        del output_plan, axis_id, group_key
-        if len(records) <= 1:
-            return records
-        record_locations = tuple(
-            (
-                record.key.semantic_id,
-                record.location.path,
-            )
-            for record in records
-        )
-        raise RuntimeError(
-            f"Ambiguous RuntimeValueStore records for planned artifact "
-            f"materialization '{records[0].key.name}' "
-            f"({records[0].key.artifact_type.value}) on axis "
-            f"'{records[0].key.scope.axis_id}' group "
-            f"{records[0].key.scope.value_text!r}: {record_locations!r}."
-        )
-
-
-class ImageArtifactMaterializationRecordReducer(ArtifactMaterializationRecordReducer):
-    """Reduce redundant scalar image records to their source-address owner."""
-
-    artifact_type = ImageArtifactType
-
-    def records_for_output(
-        self,
-        *,
-        records: tuple[StoredRuntimeValue, ...],
-        output_plan: ArtifactOutputPlan,
-    ) -> tuple[StoredRuntimeValue, ...]:
-        if not output_plan.materialization_uses_source_identity_filename():
-            return records
-
-        addressed_records: list[
-            tuple[StoredRuntimeValue, OpenHCSPlaneAddress | None]
-        ] = []
-        records_by_address: dict[
-            OpenHCSPlaneAddress,
-            list[StoredRuntimeValue],
-        ] = {}
-        for record in records:
-            payload = output_plan.materialization_payload(record)
-            metadata = image_payload_metadata(payload)
-            address = OpenHCSPlaneAddress.from_complete_source_metadata(
-                metadata.source_component_metadata
-            )
-            addressed_records.append((record, address))
-            if address is not None:
-                records_by_address.setdefault(address, []).append(record)
-
-        reduced_records: list[StoredRuntimeValue] = []
-        emitted_addresses: set[OpenHCSPlaneAddress] = set()
-        for record, address in addressed_records:
-            if address is None:
-                reduced_records.append(record)
-                continue
-            if address in emitted_addresses:
-                continue
-            emitted_addresses.add(address)
-            reduced_records.append(
-                self._record_for_scalar_address(
-                    output_plan,
-                    address,
-                    tuple(records_by_address[address]),
-                )
-            )
-        return tuple(reduced_records)
-
-    @classmethod
-    def _record_for_scalar_address(
-        cls,
-        output_plan: ArtifactOutputPlan,
-        address: OpenHCSPlaneAddress,
-        records: tuple[StoredRuntimeValue, ...],
-    ) -> StoredRuntimeValue:
-        if len(records) == 1:
-            return records[0]
-
-        owner_records = tuple(
-            record
-            for record in records
-            if all(
-                address.value_for(component) == value
-                for component, value in record.key.scope.source_component_values
-            )
-        )
-        if len(owner_records) != 1:
-            raise ValueError(
-                "Scalar image materialization requires one execution scope matching "
-                f"source address {address!r} for artifact {output_plan.name!r}; "
-                f"found {len(owner_records)} among "
-                f"{tuple(record.key.scope for record in records)!r}."
-            )
-
-        owner_record = owner_records[0]
-        owner_payload = output_plan.materialization_payload(owner_record)
-        for record in records:
-            payload = output_plan.materialization_payload(record)
-            if not cls._payloads_are_equivalent(owner_payload, payload):
-                raise ValueError(
-                    "Conflicting scalar image materialization payloads for source "
-                    f"address {address!r} and artifact {output_plan.name!r}: "
-                    f"{owner_record.key.scope!r} != {record.key.scope!r}."
-                )
-        return owner_record
-
-    @staticmethod
-    def _payloads_are_equivalent(left: object, right: object) -> bool:
-        left_metadata = image_payload_metadata(left)
-        right_metadata = image_payload_metadata(right)
-        if left_metadata != right_metadata:
-            return False
-        left_data = np.asarray(image_payload_data(left))
-        right_data = np.asarray(image_payload_data(right))
-        return left_data.dtype == right_data.dtype and np.array_equal(
-            left_data, right_data, equal_nan=True
-        )
-
-
-class MeasurementArtifactMaterializationRecordReducer(
-    ArtifactMaterializationRecordReducer
-):
-    """Union same-artifact measurement subject records before materialization."""
-
-    artifact_type = MeasurementsArtifactType
-
-    def records_for_group(
-        self,
-        *,
-        records: tuple[StoredRuntimeValue, ...],
-        output_plan: ArtifactOutputPlan,
-        axis_id: str,
-        group_key: str | None,
-    ) -> tuple[StoredRuntimeValue, ...]:
-        if len(records) <= 1:
-            return records
-        group_plan = output_plan.for_group(group_key)
-        tables = tuple(cast(MeasurementTable, record.data) for record in records)
-        table = MeasurementTable.join_artifact(output_plan.name, tables)
-        value = RuntimeValue.normalize_for_execution_scope(
-            group_plan,
-            table,
-            execution_scope=records[0].key.scope,
-        )
-        return (
-            StoredRuntimeValue(
-                key=value.key,
-                data=value.data,
-                materialization_source_metadata=value.materialization_source_metadata,
-                location=RuntimeArtifactLocation(
-                    path=group_plan.path,
-                    backend=Backend.MEMORY.value,
-                ),
-            ),
-        )
+logger = logging.getLogger(__name__)
 
 
 class ArtifactMaterializationTargetPlan(ABC, metaclass=AutoRegisterMeta):
@@ -297,6 +82,126 @@ class ArtifactMaterializationTargetPlan(ABC, metaclass=AutoRegisterMeta):
     __registry_key__ = "target_key"
     __skip_if_no_key__ = True
     target_key: ClassVar[str | None] = None
+
+    @classmethod
+    def materialize(
+        cls,
+        context: ProcessingContext,
+        plan: CompiledStepPlan,
+    ) -> tuple[MaterializedRuntimeArtifact, ...]:
+        if not plan.artifact_outputs:
+            return ()
+        materialization_plan = plan.runtime_artifact_materialization
+        has_persistent_target = materialization_plan.has_persistent_target
+        has_streaming_target = bool(plan.streaming_configs)
+        if not has_persistent_target and not has_streaming_target:
+            logger.info("Skipping runtime artifact materialization and streaming")
+            return ()
+
+        logger.info(
+            "Starting materialization for %s artifact outputs",
+            len(plan.artifact_outputs),
+        )
+        filemanager = context.filemanager
+        target = cls.from_config(materialization_plan)
+        materializations = target.materialize_outputs(filemanager, plan, context)
+        logger.info("Completed artifact materialization")
+        return materializations
+
+    @classmethod
+    def from_config(
+        cls,
+        materialization_plan: RuntimeArtifactMaterializationPlan,
+    ) -> (
+        PersistentArtifactMaterializationTargetPlan
+        | StreamingOnlyArtifactMaterializationTargetPlan
+    ):
+        if not materialization_plan.has_persistent_target:
+            logger.info("Skipping persistent runtime artifact materialization")
+            return StreamingOnlyArtifactMaterializationTargetPlan()
+
+        return PersistentArtifactMaterializationTargetPlan(
+            materialization_plan.require_persistent_backend()
+        )
+
+    def materialize_outputs(
+        self,
+        filemanager: "FileManager",
+        plan: CompiledStepPlan,
+        context: "ProcessingContext",
+    ) -> tuple[MaterializedRuntimeArtifact, ...]:
+        """Save each exact artifact batch once and return its successful outputs."""
+        saved_materializations = []
+        images_dir = plan.artifact_images_dir
+
+        for materialization in runtime_artifact_materializations(plan, context):
+            persistent_backend_kwargs = self.persistent_backend_kwargs(context)
+            streaming_viewer_surfaces = self.streaming_viewer_surfaces(
+                plan,
+                context,
+                materialization,
+            )
+            record = materialization.record
+            data = materialization.data
+            filemanager.ensure_directory(
+                Path(record.location.path).parent, record.location.backend
+            )
+            stream_output_paths = materialization.spec.candidate_paths(
+                str(materialization.base_path)
+            )
+            backends = [
+                *(
+                    persistent_backend_kwargs
+                    if materialization.spec.participates_in_persistent_materialization()
+                    else ()
+                ),
+                *self.streamable_viewer_surfaces(
+                    filemanager=filemanager,
+                    streaming_viewer_surfaces=streaming_viewer_surfaces,
+                    stream_output_paths=stream_output_paths,
+                ),
+            ]
+            if not backends:
+                continue
+            batch = prepare_materialization(
+                materialization.spec,
+                data,
+                str(materialization.base_path),
+                filemanager,
+                backends,
+                self.backend_kwargs(
+                    materialization=materialization,
+                    persistent_backend_kwargs=persistent_backend_kwargs,
+                    streaming_viewer_surfaces=streaming_viewer_surfaces,
+                    fallback_source_identity=(
+                        materialization.filename_source_identity
+                        if materialization.spec.uses_filename_source_identity(data)
+                        else materialization.source_identity
+                    ),
+                    producer_identity=(
+                        plan.producer_identity_for_artifact(materialization.output_plan)
+                    ),
+                    context=context,
+                    filemanager=filemanager,
+                    images_dir=images_dir,
+                    stream_output_paths=stream_output_paths,
+                ),
+                context=context,
+                artifact_source_identity=materialization.source_identity,
+                artifact_filename_identity=materialization.filename_source_identity,
+                variable_components=materialization.output_plan.variable_components,
+                pipeline_position=plan.pipeline_position,
+                output_plan=materialization.output_plan,
+            )
+            saved_materializations.append(
+                MaterializedRuntimeArtifact(
+                    outputs_by_backend=MappingProxyType(
+                        dict(batch.save().outputs_by_backend)
+                    ),
+                    materialization=materialization,
+                )
+            )
+        return tuple(saved_materializations)
 
     def streaming_viewer_surfaces(
         self,
@@ -470,9 +375,7 @@ def actual_materialization_records(
         raise RuntimeError(
             f"Artifact output plan '{output_plan.name}' has no group keys."
         )
-    reducer = ArtifactMaterializationRecordReducer.for_artifact_type(
-        output_plan.artifact_type
-    )
+    artifact_type = output_plan.artifact_type
 
     if output_plan.group_component is not None and tuple(output_plan.group_keys) == (
         None,
@@ -505,14 +408,13 @@ def actual_materialization_records(
                     for record in dynamic_records
                     if str(record.key.scope.value_text) == group_key
                 )
-                for record in reducer.records_for_exact_scopes(
+                for record in artifact_type.reduce_materialization_scopes(
                     records=records_for_group,
                     output_plan=output_plan,
-                    axis_id=plan.axis_id,
                     group_key=group_key,
                 ):
                     record_sort_items.append((group_order[group_key], record))
-            return reducer.records_for_output(
+            return artifact_type.reduce_materialization_records(
                 records=tuple(
                     record
                     for _, record in sorted(
@@ -544,10 +446,9 @@ def actual_materialization_records(
         if not records:
             missing_group_keys.append(group_key)
             continue
-        for record in reducer.records_for_exact_scopes(
+        for record in artifact_type.reduce_materialization_scopes(
             records=records,
             output_plan=output_plan,
-            axis_id=plan.axis_id,
             group_key=group_key,
         ):
             record_sort_items.append((group_order[group_key], record))
@@ -576,7 +477,7 @@ def actual_materialization_records(
             and store.get(candidate.key).location == candidate.location
         )
         if identity_records:
-            return reducer.records_for_output(
+            return artifact_type.reduce_materialization_records(
                 records=identity_records,
                 output_plan=output_plan,
             )
@@ -587,7 +488,7 @@ def actual_materialization_records(
             f"Candidate same-name records: "
             f"{candidate_locations!r}."
         )
-    return reducer.records_for_output(
+    return artifact_type.reduce_materialization_records(
         records=tuple(
             record for _, record in sorted(record_sort_items, key=lambda item: item[0])
         ),
@@ -1213,10 +1114,8 @@ def runtime_artifact_materializations_from_records(
                 axis_id=plan.axis_id,
             )
         )
-        reducer = ArtifactMaterializationRecordReducer.for_artifact_type(
-            output_plan.artifact_type
-        )
-        for record in reducer.records_for_output(
+        artifact_type = output_plan.artifact_type
+        for record in artifact_type.reduce_materialization_records(
             records=output_records,
             output_plan=output_plan,
         ):
@@ -1346,83 +1245,3 @@ class MaterializedRuntimeArtifact(SavedMaterializationOutputs):
             paths,
             RuntimeAnalysisConsolidationInputs.from_saved_outputs(context, plan, self),
         )
-
-
-def materialize_artifact_outputs(
-    filemanager: "FileManager",
-    plan: CompiledStepPlan,
-    target_plan: ArtifactMaterializationTargetPlan,
-    context: "ProcessingContext",
-) -> tuple[MaterializedRuntimeArtifact, ...]:
-    """Save each exact artifact batch once and return its successful outputs."""
-    saved_materializations = []
-    images_dir = plan.artifact_images_dir
-
-    for materialization in runtime_artifact_materializations(plan, context):
-        persistent_backend_kwargs = target_plan.persistent_backend_kwargs(context)
-        streaming_viewer_surfaces = target_plan.streaming_viewer_surfaces(
-            plan,
-            context,
-            materialization,
-        )
-        record = materialization.record
-        data = materialization.data
-        filemanager.ensure_directory(
-            Path(record.location.path).parent, record.location.backend
-        )
-        stream_output_paths = materialization.spec.candidate_paths(
-            str(materialization.base_path)
-        )
-        backends = [
-            *(
-                persistent_backend_kwargs
-                if materialization.spec.participates_in_persistent_materialization()
-                else ()
-            ),
-            *target_plan.streamable_viewer_surfaces(
-                filemanager=filemanager,
-                streaming_viewer_surfaces=streaming_viewer_surfaces,
-                stream_output_paths=stream_output_paths,
-            ),
-        ]
-        if not backends:
-            continue
-        batch = prepare_materialization(
-            materialization.spec,
-            data,
-            str(materialization.base_path),
-            filemanager,
-            backends,
-            target_plan.backend_kwargs(
-                materialization=materialization,
-                persistent_backend_kwargs=persistent_backend_kwargs,
-                streaming_viewer_surfaces=streaming_viewer_surfaces,
-                fallback_source_identity=(
-                    materialization.filename_source_identity
-                    if materialization.spec.uses_filename_source_identity(data)
-                    else materialization.source_identity
-                ),
-                producer_identity=(
-                    plan.producer_identity_for_artifact(materialization.output_plan)
-                ),
-                context=context,
-                filemanager=filemanager,
-                images_dir=images_dir,
-                stream_output_paths=stream_output_paths,
-            ),
-            context=context,
-            artifact_source_identity=materialization.source_identity,
-            artifact_filename_identity=materialization.filename_source_identity,
-            variable_components=materialization.output_plan.variable_components,
-            pipeline_position=plan.pipeline_position,
-            output_plan=materialization.output_plan,
-        )
-        saved_materializations.append(
-            MaterializedRuntimeArtifact(
-                outputs_by_backend=MappingProxyType(
-                    dict(batch.save().outputs_by_backend)
-                ),
-                materialization=materialization,
-            )
-        )
-    return tuple(saved_materializations)

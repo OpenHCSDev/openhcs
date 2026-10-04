@@ -26,8 +26,9 @@ from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProje
 from openhcs.core.steps.function_output_identity import (
     FunctionOutputIdentity,
 )
+from openhcs.core.steps.function_artifact_materialization import ArtifactMaterializationTargetPlan
 from openhcs.core.steps.function_outputs import (
-    PrimaryImageMetadataTarget, RuntimeArtifactMaterializationAuthority,
+    PrimaryImageMetadataTarget,
 )
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 
@@ -111,7 +112,7 @@ def test_automatic_two_role_images_publish_their_actual_saved_occurrences(tmp_pa
                 image_metadata=payload.metadata, identity=identity,
             )
             expected[output.name].append((destination, payload.data))
-    saved = RuntimeArtifactMaterializationAuthority.materialize(context, plan)
+    saved = ArtifactMaterializationTargetPlan.materialize(context, plan)
     target = replace(PrimaryImageMetadataTarget.from_plan(plan), artifact_materializations=saved)
     # The original implementation raises its real duplicate projection guard
     # here: both automatic materializations used the same unqualified path.

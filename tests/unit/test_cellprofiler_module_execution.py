@@ -2927,7 +2927,8 @@ def test_object_label_recorder_suppresses_parent_spacing_when_policy_declares_no
         assert name == "Nuclei"
         return object_payload
 
-    def add_objects(name, labels, **kwargs):
+    def record_native_value(name, kind, labels, **kwargs):
+        assert kind is ObjectLabelsArtifactType
         recorded["name"] = name
         recorded["labels"] = labels
         recorded["kwargs"] = kwargs
@@ -2961,7 +2962,7 @@ def test_object_label_recorder_suppresses_parent_spacing_when_policy_declares_no
         ),
     )
     runtime.get_objects = get_objects
-    runtime.add_objects = add_objects
+    runtime._record_native_value = record_native_value
 
     output = _output_from_input("ResizedNuclei", "Nuclei")
     request = _cellprofiler_output_record_request(
@@ -3023,13 +3024,14 @@ def test_contextual_object_label_recorder_fills_missing_parent_spacing_from_decl
     )
     recorded: dict[str, object] = {}
 
-    def add_objects(name, labels, **kwargs):
+    def record_native_value(name, kind, labels, **kwargs):
+        assert kind is ObjectLabelsArtifactType
         recorded["name"] = name
         recorded["labels"] = labels
         recorded["kwargs"] = kwargs
 
     runtime = _FakeCellProfilerRuntime({"Memb": image_payload})
-    runtime.add_objects = add_objects
+    runtime._record_native_value = record_native_value
 
     output = _output_from_input(
         "Cells",
@@ -4264,14 +4266,16 @@ class _FakeCellProfilerRuntime(CellProfilerRuntimeAdapter):
     ) -> None:
         self.measurements.append(table)
 
-    def add_objects(
+    def _record_native_value(
         self,
         name: str,
-        labels: object,
+        expected_kind: ArtifactType,
+        native_value: object,
         **kwargs: object,
-    ) -> object:
-        self.objects.append((name, labels, kwargs))
-        return super().add_objects(name, labels, **kwargs)
+    ) -> StoredRuntimeValue:
+        if expected_kind is ObjectLabelsArtifactType:
+            self.objects.append((name, native_value, kwargs))
+        return super()._record_native_value(name, expected_kind, native_value, **kwargs)
 
     def _seed_runtime_object(
         self,
@@ -11928,7 +11932,7 @@ def test_object_label_output_recorder_uses_output_label_domain() -> None:
     )
 
     _name, recorded_payload, _kwargs = runtime.objects[0]
-    assert isinstance(recorded_payload, ObjectLabelPayload)
+    assert isinstance(recorded_payload, ObjectLabelSet)
     assert recorded_payload.domain.declared_object_count is None
     assert recorded_payload.domain.declared_object_ids == tuple(range(1, 5))
     np.testing.assert_array_equal(recorded_payload.labels, output_labels)

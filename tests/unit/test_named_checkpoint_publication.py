@@ -31,7 +31,7 @@ from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payloa
 from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.source_projection import OpenHCSPlaneAddress, SourceArtifactProjection
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
-from openhcs.core.steps.function_outputs import OpenHCSMetadataWriter
+from openhcs.core.steps.function_outputs import OpenHCSMetadataTarget
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.core.virtual_workspace_metadata import MetadataWriteError
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
@@ -95,7 +95,7 @@ def test_named_and_ordinary_checkpoint_inventory_owns_every_address(tmp_path, ma
     bundle = orchestrator.compile_pipelines([step])
     for context in bundle.runtime_contexts.values():
         step.process(context, 0)
-    OpenHCSMetadataWriter.finalize_completed_plate(bundle.runtime_contexts)
+    OpenHCSMetadataTarget.finalize_completed_plate(bundle.runtime_contexts)
     root = tmp_path / "source_out"
     metadata = json.loads((root / "openhcs_metadata.json").read_text())
     reopened = VirtualWorkspaceSourceProjection.from_openhcs_metadata(root, metadata)
@@ -147,4 +147,4 @@ def test_named_and_ordinary_checkpoint_inventory_owns_every_address(tmp_path, ma
     # error. This is not a missing-address permissive fallback.
     tifffile.imwrite(root / "checkpoints" / "unaddressed.tif", np.zeros((8, 8), dtype=np.uint16))
     with pytest.raises(MetadataWriteError, match="Saved images lack typed produced addresses.*unaddressed"):
-        OpenHCSMetadataWriter.finalize_completed_plate(bundle.runtime_contexts)
+        OpenHCSMetadataTarget.finalize_completed_plate(bundle.runtime_contexts)
