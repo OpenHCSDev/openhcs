@@ -216,3 +216,14 @@ decision still outstanding; no competing distribution name, compatibility
 alias, manual live-prefix patch or unsupported0.6 substitute is authorized or
 claimed. Source tests, private package qualification, future public acceptance
 and dependency publication remain separate strengths.
+
+``engineering580/COLOCATED-READY33.rst`` records the normal receiving correction:
+original12 qualified wheels in one new private package30 site-packages root,
+41927495 bytes, materialization2.56s/maxRSS55600KiB. Original nine-wheel proof
+passed before a caller-variable shadowing error; the distinct remaining
+three-wheel proof passed and proves the existing child import root selects
+this combined prefix. No source/dependency change, rebuild, download,
+environment, shared install or runtime wrapper. The prior live attempt remains
+negative for supported-stack provenance; corrected-prefix public acceptance
+is pending the next actually free engineering loan, not claimed from these
+package checks.
