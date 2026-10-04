@@ -29,7 +29,8 @@ fi
 receipt="$runtime/resources-$phase"
 test ! -e "$receipt.output"
 
-# Canonicalize membership once and reject overlaps before counting any bytes.
+# Canonicalize custody once and reject overlaps. Closed bytes are already in df;
+# the cleanup owner inventories them, not each scientific action.
 outputs=()
 retained_roots=$(jq -ce '.retained_output_roots | select(type=="array")' <<< "$FLEET_PROGRAM")
 while IFS= read -r output; do outputs+=("$(realpath -m "$output")"); done \
@@ -49,17 +50,13 @@ for ((i=0;i<${#outputs[@]};i++)); do
     fi
   done
 done
-old=0
-for ((i=0;i<old_count;i++)); do
-  test -d "${outputs[i]}"
-  bytes=$(du -s -B1 "${outputs[i]}" | cut -f1)
-  printf 'Retained %s %s bytes\n' "${outputs[i]}" "$bytes" | tee -a "$receipt.output"
-  old=$((old+bytes))
-done
 total=0
 reserved=0
 remaining=0
 for ((i=old_count;i<${#outputs[@]};i++)); do
+  # An ongoing observation measures its own output, not recursive sibling trees.
+  # The existing ledger/startup modes report the complete funded growth forecast.
+  if [[ "$mode" == ongoing && "${authors[i-old_count]}" != "$FLEET_SLOT" ]]; then continue; fi
   limits=$(fleet_limits_for "${authors[i-old_count]}")
   scratch_estimate=$(jq -er '.scratch_per_author_mib*1048576' <<< "$limits")
   output_estimate=$(jq -er '.output_per_author_mib*1048576' <<< "$limits")
@@ -79,12 +76,17 @@ for ((i=old_count;i<${#outputs[@]};i++)); do
   remaining=$((remaining+retained_growth+scratch_growth))
   total=$((total+bytes))
 done
-printf 'Programme old=%s current=%s reservedCurrent=%s\n' "$old" "$total" "$reserved" | tee -a "$receipt.output"
+printf 'Programme retainedRoots=%s measuredCurrent=%s growthEstimate=%s remainingGrowthEstimate=%s scope=%s\n' "$old_count" "$total" "$reserved" "$remaining" "$mode" | tee -a "$receipt.output"
 printf 'Operational policy: retained-output/scratch byte quotas removed; programme amounts are growth estimates, not limits. Actual HOME/RAM/pressure and owned cleanup remain authoritative.\n' | tee -a "$receipt.output"
-# Historical allocations are observations, already reflected in df free space.
-# Only still-funded output/scratch growth is reserved against actual HOME.
+# Forecasts guide cleanup/staging, not permission for an unrelated capture.
+# Admission protects actual free HOME; no all-fleet estimate is added to its floor.
 home_floor=$(jq -er '.proposed_resource_envelope.minimum_home_ongoing_gib*1073741824' <<< "$FLEET_PROGRAM")
-df --output=avail -B1 /home/ts | awk -v floor="$((home_floor+remaining))" 'NR==2 {printf "HomeAvailable %.3f GiB; required %.3f GiB\n",$1/1073741824,floor/1073741824; if($1<floor) exit 78}' | tee "$receipt.disk"
+df --output=avail -B1 /home/ts | awk -v floor="$home_floor" -v forecast="$remaining" '
+  NR==2 {
+    printf "HomeAvailable %.3f GiB; required %.3f GiB\n",$1/1073741824,floor/1073741824
+    if($1<floor) exit 78
+    if($1<floor+forecast) printf "Planning warning: remaining growth estimate %.3f GiB exceeds space above reserve; stage real allocations and coordinate cleanup, not a quota/refusal.\n",forecast/1073741824
+  }' | tee "$receipt.disk"
 if [[ "$mode" == ledger ]]; then printf 'Ledger-only PASS; not SCI admission\n'; exit; fi
 
 fleet_require_joint_slice
