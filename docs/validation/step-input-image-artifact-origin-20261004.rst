@@ -1,7 +1,10 @@
 STEP_INPUT named-image artifact origin after ordinary preprocessing
 ==================================================================
 
-Proposed owner repair; not yet installed or live-verified.
+Owner repair installed in an isolated qualified wheel; public MCP acceptance
+is not yet verified. The initial281 focused installed controls passed; the
+wider CP family exposed the follow-up consumer and fixture boundaries recorded
+below. No frozen biological execution is replayed.
 Reviewed main e1400cb9f278149fea7056b8fc8319d1ebd6ca69 and the retained
 installed source0b3ead24459954829986e2e0763a886bb4d0fef6 exhibit the same
 source-artifact resolution route. Frozen analysis and all originals remain
@@ -188,3 +191,11 @@ request from its actual current_image rather than a nullable earlier snapshot.
 The source origin still has one resolver; no alternate loader is introduced.
 This follow-up requires a newly pinned whole wheel and final CP checks before
 installed/public acceptance is claimed.
+
+The wider installed batch passed405 checks before three explicit PIPELINE_START
+measurement fixtures failed: their minimal context had neither canonical source
+workspace caches nor plate metadata, because they previously consumed a supplied
+raw stack through the main-flow branch. The fixture now supplies those existing
+nominal services and builds its workspace metadata through SourceProjectionSet,
+leaving all intensity/object assertions unchanged. Production does not silently
+substitute current processed pixels when original raw pixels were requested.

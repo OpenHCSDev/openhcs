@@ -1,6 +1,7 @@
 import importlib
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Annotated, ClassVar
 
@@ -687,10 +688,49 @@ def _pipeline_start_contains_binding(alias):
 
 
 def _source_bound_image_adapter(output_bindings, images):
+    from polystore.virtual_workspace import SourcePixelRef
+    from openhcs.core.source_projection import (
+        OpenHCSPlaneAddress, SourcePlaneProjection, SourceProjectionSet,
+    )
+    from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
+    from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+
     filemanager = FileManagerStub()
     for alias, image in images.items():
         filemanager.saved[("memory", f"/src/{alias}.tif")] = image
     context = ContextStub(filemanager)
+    projections = SourceProjectionSet(tuple(
+        SourcePlaneProjection(
+            address=OpenHCSPlaneAddress.from_values('A01', '1', str(index), '1', '1'),
+            ref=SourcePixelRef('memory', f'/src/{alias}.tif'),
+            source_alias=alias,
+        )
+        for index, alias in enumerate(images, start=1)
+    ))
+    subdirectory = projections.metadata_dict(
+        parser=SourceSchemaFilenameParser(),
+        microscope_handler_name='SourceBindingsHandler',
+        source_filename_parser_name='SourceSchemaFilenameParser',
+        grid_dimensions=[1, 1], pixel_size=1.,
+    )
+    document = {'subdirectories': {'.': subdirectory}}
+    context.microscope_handler.metadata_handler = SimpleNamespace(
+        source_workspace_metadata_document=lambda _plate: document,
+    )
+    workspace = VirtualWorkspaceSourceProjection.from_openhcs_metadata(
+        Path(context.input_dir), document,
+    )
+    for path, projection in workspace.source_projections_by_virtual_path.items():
+        pixels = images[projection.source_alias]
+        payload = ImagePayloadMetadata(
+            source_path=projection.ref.backend_address,
+            source_image_names=(projection.source_alias,),
+            source_spatial_domain=SourceSpatialDomain(
+                origin_yx=(0, 0), source_shape_yx=pixels.shape[-2:],
+            ),
+        ).payload_with(pixels)
+        filemanager.saved[('virtual_workspace', path)] = payload
+        filemanager.saved[('virtual_workspace', str(Path(context.input_dir) / path))] = payload
     return cellprofiler_runtime_adapter_for_test(
         runtime_value_store=RuntimeValueStore(),
         axis_scope=runtime_axis_scope(AXIS_ID),
