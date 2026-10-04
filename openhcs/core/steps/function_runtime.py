@@ -918,6 +918,7 @@ class ObjectLabelImageOutputSourceContextStrategy(ImageOutputSourceContextStrate
             plane_projection is not None
             and plane_projection.plane_index is None
             and image_payload_metadata(source_payload).plane_axis is None
+            and not image_payload_metadata(source_payload).persists_whole_image()
             and np.ndim(object_label_dense_array(source_payload)) >= 3
         )
 
@@ -933,6 +934,10 @@ class ObjectLabelImageOutputSourceContextStrategy(ImageOutputSourceContextStrate
                 f"{type(source_payload).__name__}."
             )
         source_metadata = image_payload_metadata(source_payload)
+        if source_metadata.persists_whole_image():
+            return source_metadata.derive_payload(
+                source_payload, output_value, plane_projection=None,
+            )
         if plane_projection is None or plane_projection.plane_index is not None:
             return source_metadata.derive_payload(
                 source_payload,

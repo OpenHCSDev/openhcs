@@ -949,6 +949,16 @@ class CallableContract(ArtifactPlanKeySelector):
         return self.artifact_output_policy.preserves_input_main_flow(self)
 
     @property
+    def invocation_domain_inputs(self) -> ArtifactSpecCollection:
+        """Derive carrier inputs through the declared adapter's nominal owner."""
+        adapter = self.runtime_adapter
+        return (
+            self.group_scope_inputs
+            if adapter is None
+            else adapter.invocation_domain_inputs(self)
+        )
+
+    @property
     def runtime_adapter(self) -> RuntimeAdapterSpec | None:
         """Declared runtime adapter."""
         return self.metadata.runtime_adapter

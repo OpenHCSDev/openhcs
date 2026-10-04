@@ -847,9 +847,10 @@ class CompiledFunctionGroup:
             primary_edges = tuple(
                 edge
                 for invocation, edges in active
+                for domain_refs in (invocation.contract.invocation_domain_inputs.ref_set(),)
                 for edge in edges
                 if edge.spec.ref()
-                in invocation.contract.group_scope_inputs.ref_set()
+                in domain_refs
                 and edge.spec.artifact_type.carries_source_image_context
             )
         if not primary_edges or any(

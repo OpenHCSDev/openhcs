@@ -385,6 +385,12 @@ class RuntimeAdapterSpec:
     )
     runtime_callable_factory: RuntimeCallableFactory | None = None
 
+    def invocation_domain_inputs(
+        self, contract: "CallableContract",
+    ) -> ArtifactSpecCollection:
+        """Return declared inputs supplying this adapter's invocation carrier."""
+        return contract.group_scope_inputs
+
     def __post_init__(self) -> None:
         if not self.parameter_name:
             raise ValueError("RuntimeAdapterSpec.parameter_name cannot be empty.")
