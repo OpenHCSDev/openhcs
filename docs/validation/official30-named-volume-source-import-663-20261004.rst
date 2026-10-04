@@ -2,7 +2,9 @@ Named 3-D recipe sources lost during lazy configuration merge (#663)
 =================================================================
 
 Singer owns this receiving integration. This checkpoint records a determined
-source defect; it does not yet change production or claim recipe validation.
+failure of the retained ObjectState1.1.9 bundle. The original generic fix already
+exists in merged ObjectState #15, and current OpenHCS already requires1.2.0.
+No duplicate production fix is introduced here.
 Base main is bd888ed76f16dbf2c577bc013d84ece9df548e23. The finished isolated
 checkout was reused on fix/official30-source-config-import-20261004 after a
 process-reference check found no borrower. Eight existing foreign gitlink
@@ -70,8 +72,8 @@ peak344704KiB, and records the exact swallowed source_depth AttributeError.
 Each command had an ordinary60s outer bound and one CPU; no memory/swap ceiling
 was invented. Original complete stdout/stderr and scripts are retained.
 
-Owner coordination and next implementation
------------------------------------------
+Owner coordination and existing implementation
+---------------------------------------------
 
 Issue https://github.com/OpenHCSDev/openhcs/issues/663 records the reproducer.
 Current open #658 owns fixed compilation graph/provider files; #661 owns
@@ -81,21 +83,60 @@ https://github.com/OpenHCSDev/openhcs/pull/658#issuecomment-5983821095.
 Existing #521 artifact-only source/group configuration has a different retained
 prepared-workspace source-selection correction, not this nested leaf exception.
 
-The required fix belongs to the original generic lazy/nested-config owner in
-ObjectState, preserving the nominal declared leaf and ordinary same-type lazy
-inheritance. No recipe alias, eager source clone, mirrored source store, second
-merger, weaker artifact guard or consumer type switch is an acceptable repair.
+The original generic lazy/nested-config owner in ObjectState already carries
+the fix: commit5c6ac06f24dee7cd7df2ca4ac5472fab431bd43d, merged through
+https://github.com/OpenHCSDev/ObjectState/pull/15 as
+dbc3c64c5f7ebde88c1fedf03cb8aff4dbe1f4c1. Its original issue #14 describes this
+EXACT origDNA tutorial failure. The current generic merger normalizes lazy/base
+types through the existing registry, chooses the authored nominal owner when
+that owner changes, and inherits only fields actually shared with the base.
+Subtype-only fields stay on their declaration. Same-owner lazy overlays retain
+the original base-owner merge; an explicit return to the base nominal type is
+also supported. No recipe alias, eager source clone, mirrored source store,
+second merger, weaker artifact guard or consumer switch was added.
 BOUND-7 is relevant to the broad AttributeError catch hiding a real nested owner
 failure; IMPL-3 is the avoided alternative of concrete spatial-type switches in
 the importer. NRA/refactor-audit, authoritative skill archive and pattern catalog
-were read before this checkpoint. Complete owner/consumer AST closure remains
-an implementation prerequisite, not a behavioral proof.
+were read before this checkpoint. No new structural implementation or global
+AST/R1 claim is made; existing owner code and its complete two-file production/
+control diff were read. The shared recursive algorithm remains in the original
+context owner, with all three recursive/context callers using it.
 
-No released persistent ObjectState checkout was found in its actual worktree
-list. Its shared/foreign source has not been edited. The exact remaining dependency
-is release of an existing dependency checkout or integration of the generic owner
-patch by its active owner. Singer will qualify the OpenHCS receiving family;
-shared #658/#661 files remain protected until scoped release.
+The first checkpoint's proposed dependency implementation/release need was
+superseded by reading authenticated dependency main. No released persistent
+ObjectState checkout existed; the user authorized one different-repository
+worktree, now at ``/home/ts/wt/objectstate-nested-config-declaration-20261004``.
+It is clean at27dbe365d7b858691898dac9b50c96f0a211979b, version1.2.0, with
+NO new dependency changes or PR. Current OpenHCS already declares
+``objectstate>=1.2.0,<2`` and its gitlink pins that exact dependency main.
+The failing frozen target instead contains the earlier1.1.9 wheel. Its
+ObjectState context source is not byte-identical to that pin; the earlier
+four-file OpenHCS comparison must not be mistaken for dependency equivalence.
+Original #15 documents49 source controls and a31-step tutorial import.
+Coordination was corrected at
+https://github.com/OpenHCSDev/openhcs/pull/658#issuecomment-5983869671.
+Shared #658/#661 files and the live author bundle remain untouched.
+
+Current source-qualified receiving
+----------------------------------
+
+``qualify_existing_fix.py`` imports the exact unchanged installed OpenHCS
+recipe/importer with the authenticated, already-merged ObjectState1.2.0 source
+selected before import. No installation or installed file is changed.
+``existing-fix06`` exits0 in56.26s, peak650000KiB, swap0, one CPU. The original
+recipe imports to31 FunctionSteps; aliases are exactly origDNA/origMito/origMemb,
+and the nominal VolumeSourceSpatialDomain remains. The original
+PipelineDocumentAuthority renders18892 characters of public pipeline source,
+SHA256 3d73f9d0b82117ba48ee8ce94017a8ff7b279342758c3bcbf06ba2616db91355.
+
+ObjectState context source SHA256 is
+25b1a7aa1dc6abc96b6ff91dd14e27fc3804c06f8c45a2c7a3ca6a3dd01b35a0;
+the original installed1.1.9 counterpart is
+a01b0fc8aeb9b5b0888346f725f92cbfd96b90963bf20001b5414a5e6cd6c0e6.
+This is explicitly source-qualified receiving, not whole installed/MCP
+qualification or a hot replacement of the retained bundle. No new ObjectState
+production changes or duplicate dependency PR exist. Its worktree stays clean
+and remains a named read-only source keeper for this receiving command.
 
 Acceptance
 ----------
@@ -110,3 +151,11 @@ normal installed validation/representative3-D compilation must pass.
 Tutorial import and compilation do not establish Official30 selected-value
 parity or biological quality. Those claims require their original independent
 contracts. The original failed request and frozen author bundle remain immutable.
+
+Disposition: the exact source repair is already merged and the current
+OpenHCS dependency floor/gitlink already include it. Source-qualified public
+pipeline rendering now passes independently. The remaining receiving check is
+ordinary public knowledge retrieval plus validation/representative3-D compile
+on a future whole matched bundle containing ObjectState1.2.0, through its existing
+builder/lane owner. Neither an importer patch nor a new source release is needed.
+This historical retained1.1.9 failure does not establish a current-main defect.
