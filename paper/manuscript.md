@@ -262,7 +262,18 @@ Matched native views complement these numerical results. Supplementary Figure 9 
 
 A separate fresh-context author repaired a joined nuclear pair in a released DNA/actin field through its own review, without reference feedback (Figure 8). The final pipeline exported 55 nuclear instances and 55 associated actin territories, with reconciled object identities. A faint neighbouring pair remained merged, and unresolved actin interfaces limited interpretation of the territories as physical cell boundaries. This run demonstrates local autonomous repair and useful linked outputs, not an exact cell census (Supplementary Data 8).
 
+A subsequent independent author on the same released field recovered three
+missed nuclei by separating high-threshold core detection from lower-threshold
+boundary growth. This also restored a dim nucleus and clipped edge object lost
+during its first repair. The final 54 nuclear instances and associated actin
+territories retained one no-growth candidate and uncertain crowded cell-body
+divisions. Nuclear recovery therefore succeeded locally even where cell-body
+interpretation remained unresolved; no manual-reference accuracy score was
+calculated for this repeat (Supplementary Data 8).
+
 A fresh retinal author independently revised its foreground model after measuring background admission and weak-body support. Smoothing followed by broad-background subtraction improved local signal discrimination, and the completed final pipeline exported 109 detector instances (Figure 9). Distributed review still found partial faint-body recovery and uncertain ring-shaped partitions; a saved response below the cutoff localized one plausible miss to foreground admission rather than watershed. This is evidence of autonomous diagnosis and useful candidate output, not a validated retinal ganglion-cell count (Supplementary Data 8).
+
+A subsequent independent retinal author retained separation of a conspicuous bright pair and repaired an additional body split by increasing marker smoothing. Its final pipeline produced 118 detector instances. Distributed review still showed excess partitions and uncertain weak-body admission, so the useful local segmentation gains were reported separately from the unresolved whole-field count. No manual-reference accuracy was measured; this repeat illustrates partial autonomous success rather than either a complete cell census or a wholly unusable analysis (Supplementary Data 8).
 
 A fresh whole-volume nucleus-centre trial matched all 15 manual reference
 centres at the predeclared 30-voxel tolerance, with 10 unmatched predictions;
@@ -272,6 +283,15 @@ spurious cells. First and final geometries and reference scores were identical:
 the author detected that its local bright-core repair had not changed the
 condensed structure. Useful annotated-centre coverage was therefore distinct
 from successful repair, a complete cell census and native point interaction
+(Supplementary Data 8).
+
+A later fresh volumetric author repaired two centres within one continuous
+body after rejecting an ineffective marker adjustment. Measured basin-contact
+separation motivated the repair; native XY and orthogonal views supported one
+representative, while a positive control's centre remained unchanged. The
+frozen result retained 26 provisional centres, but a second association,
+border supports and obscured final field views remained unresolved. This is
+a successful local autonomous repair, not a validated whole-volume count
 (Supplementary Data 8).
 
 Not every completed trial improved its biological result. A separate fresh

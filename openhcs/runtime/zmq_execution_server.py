@@ -14,6 +14,7 @@ from zmqruntime.config import TransportMode
 from zmqruntime.execution import ExecutionServer
 from zmqruntime.messages import (
     ExecuteRequest,
+    ExecutionRecord,
     ExecutionStatus,
     MessageFields,
     StatusRequest,
@@ -368,24 +369,16 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
             execution_payload=execution_payload,
         )
 
-    def run_execution(self, execution_id, request, record):
-        """Run an execution and enrich results_summary with output plate path.
-
-        The base zmqruntime ExecutionServer only populates well_count/wells in
-        results_summary. OpenHCS needs the final output plate root (computed by
-        path planning during compilation) so the UI can optionally auto-add it
-        as a new orchestrator in Plate Manager.
-        """
-        super().run_execution(execution_id, request, record)
-
+    def finalize_execution_record(self, record: ExecutionRecord) -> None:
+        """Attach OpenHCS summary fields before terminal status is published."""
         try:
             self._attach_results_summary_extras(
-                execution_id=execution_id, record=record
+                execution_id=record.execution_id, record=record
             )
         except Exception as e:
             logger.warning(
                 "[%s] Failed to attach output_plate_root to results_summary: %s",
-                execution_id,
+                record.execution_id,
                 e,
             )
 

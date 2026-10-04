@@ -83,6 +83,7 @@ case "$mode" in
       if (map(.slot)|unique|length)!=length then error("ambiguous funded member") else . end' "$run/program.json")
     # Resolve every reference through its original declaration before admission
     # can see it. No missing/foreign permissions enter the funded programme.
+    retained_reader_contract='{}'
     while IFS= read -r reference; do
       owner=$(jq -er '.run_owner_root' <<< "$reference")
       member=$(jq -er '.slot' <<< "$reference")
@@ -90,14 +91,23 @@ case "$mode" in
       test "$(jq -er '.funding_root' "$owner/program.json")" = "$funding"
       jq -e --arg member "$member" --arg owner "$owner" '[.authors[] |
         select(.slot==$member and .run_owner_root==$owner)] | length==1' "$owner/program.json" >/dev/null
+      # Sealed predecessors still read this original FUND field. New run
+      # declarations/guards no longer declare or consume it. Retain its current
+      # value only while an actual funded writer declares that contract; the
+      # same terminal retirement removes it after the final reader leaves.
+      if [[ "$mode" == publish ]] && jq -e \
+        '.proposed_resource_envelope | has("full_memory_psi_max_percent")' "$owner/program.json" >/dev/null; then
+        retained_reader_contract=$(jq -c '.proposed_resource_envelope |
+          {full_memory_psi_max_percent} | with_entries(select(.value != null))' "$funding/program.json")
+      fi
     done < <(jq -c '.[]' <<< "$members")
     if [[ "$mode" == publish ]]; then cp "$funding/program.json" "$run/publication-before.json"; fi
     pending=$(mktemp "$funding/.program.XXXXXXXX")
     trap 'test ! -e "$pending" || unlink "$pending"' EXIT
     # Never mirror physical run declarations into the mutable membership owner.
-    jq '{scope_slice, retained_output_roots, authors:.funded_members,
+    jq --argjson retained_reader_contract "$retained_reader_contract" '{scope_slice, retained_output_roots, authors:.funded_members,
       proposed_resource_envelope:(.proposed_resource_envelope | {
-        minimum_home_ongoing_gib, desktop_growth_reserve_mib})
+        minimum_home_ongoing_gib, desktop_growth_reserve_mib} + $retained_reader_contract)
     }' "$run/program.json" > "$pending"
     mv "$pending" "$funding/program.json"
     sha256sum "$funding/program.json"

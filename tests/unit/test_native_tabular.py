@@ -18,7 +18,7 @@ from openhcs.core.measurement_row_materialization import (
 from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
     SpreadsheetDelimiter,
     SpreadsheetNanRepresentation,
-    _render_csv,
+    SpreadsheetFileSelection,
 )
 
 
@@ -72,10 +72,19 @@ def test_csv_matches_standard_writer_with_explicit_nonfinite_values(delimiter, m
     writer.writerows(enumerate(normalized))
     expected = stream.getvalue()
     rows = tuple({"index": index, "value": value} for index, value in enumerate(values))
-    assert _render_csv(rows, delimiter=delimiter, nan_representation=mode) == expected
     assert (
-        _render_csv(
+        SpreadsheetFileSelection(("Image",), "Image.csv").render_csv(
+            rows,
+            active_subjects=("Image",),
+            delimiter=delimiter,
+            nan_representation=mode,
+        )
+        == expected
+    )
+    assert (
+        SpreadsheetFileSelection(("Image",), "Image.csv").render_csv(
             tuple(UserDict(row) for row in rows),
+            active_subjects=("Image",),
             delimiter=delimiter,
             nan_representation=mode,
         )
@@ -95,8 +104,9 @@ def test_csv_matches_standard_writer_with_explicit_nonfinite_values(delimiter, m
 )
 def test_empty_cells_and_missing_columns(rows, expected):
     assert (
-        _render_csv(
+        SpreadsheetFileSelection(("Image",), "Image.csv").render_csv(
             rows,
+            active_subjects=("Image",),
             delimiter=SpreadsheetDelimiter.COMMA,
             nan_representation=SpreadsheetNanRepresentation.NAN,
         )
@@ -110,8 +120,9 @@ def test_unicode_subclasses_are_not_stringified_again():
             raise AssertionError("csv.writer uses Unicode subclasses directly")
 
     assert (
-        _render_csv(
+        SpreadsheetFileSelection(("Image",), "Image.csv").render_csv(
             ({Text("field"): Text("a,b")},),
+            active_subjects=("Image",),
             delimiter=SpreadsheetDelimiter.COMMA,
             nan_representation=SpreadsheetNanRepresentation.NAN,
         )
@@ -139,8 +150,9 @@ def test_csv_normalizes_whole_row_before_stringification_and_retains_values():
             return "second"
 
     row.update(first=First(), second=Second(1))
-    result = _render_csv(
+    result = SpreadsheetFileSelection(("Image",), "Image.csv").render_csv(
         (row,),
+        active_subjects=("Image",),
         delimiter=SpreadsheetDelimiter.COMMA,
         nan_representation=SpreadsheetNanRepresentation.NAN,
     )
@@ -157,8 +169,9 @@ def test_nonfinite_float_subclass_skips_its_stringification():
             raise AssertionError("normalized nonfinite values are already text")
 
     assert (
-        _render_csv(
+        SpreadsheetFileSelection(("Image",), "Image.csv").render_csv(
             ({"value": BecomesNan(1)},),
+            active_subjects=("Image",),
             delimiter=SpreadsheetDelimiter.COMMA,
             nan_representation=SpreadsheetNanRepresentation.NAN,
         )
@@ -168,14 +181,16 @@ def test_nonfinite_float_subclass_skips_its_stringification():
 
 def test_numeric_conversion_failure_does_not_poison_next_render():
     with pytest.raises(OverflowError):
-        _render_csv(
+        SpreadsheetFileSelection(("Image",), "Image.csv").render_csv(
             ({"value": 10**500},),
+            active_subjects=("Image",),
             delimiter=SpreadsheetDelimiter.COMMA,
             nan_representation=SpreadsheetNanRepresentation.NAN,
         )
     assert (
-        _render_csv(
+        SpreadsheetFileSelection(("Image",), "Image.csv").render_csv(
             ({"value": 1.0},),
+            active_subjects=("Image",),
             delimiter=SpreadsheetDelimiter.COMMA,
             nan_representation=SpreadsheetNanRepresentation.NAN,
         )
