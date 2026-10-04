@@ -1,7 +1,9 @@
 Custom registration observation checkpoint
 ==========================================
 
-Singer receiving owner; production qualified at 5c4b5adf0 (base mainb551a6ff3).
+Singer receiving owner; initial production qualified at 5c4b5adf0 (base mainb551a6ff3).
+The narrow typed-renderer correction below is qualified at a799352b9; current
+whole candidate normally includes main4f9e10820 through merge45bb6fc90.
 Root394 head7d7e1249 was checked for crossing before edits. It owns the shared
 execution server/compiler/producer family; no change to those files is proposed.
 561 owns resource admission. Original562 source/archive remains published and
@@ -153,3 +155,64 @@ TCP MCP registration -> returned observation handle -> original native status,
 and successful one-registration observation remain a separate parent receiving
 case. No scientific gain, original H002 outcome recovery, installed readiness,
 all-zero R0 or global R1 closure is claimed. The original UNKNOWN stays immutable.
+
+Parent BOUND-2 correction: one typed registration renderer
+--------------------------------------------------------
+
+Candidate2b39117cd was superseded BEFORE build. Dewey explicitly confirmed no
+ADMIN567, materialization, build, client or native launch had started; its
+whole-main10 target is separate and contains no567. No source borrower remained.
+Foreign gitlinks, original uncertain input, failed controls and first archive
+are unchanged. Root compiler/materialization ownership is not crossed.
+
+CustomFunctionRegistrationRenderer now inherits existing McpDevTypedOutputRenderer.
+The ancestor owns McpDevToolBatchResponse.for_rendering, declared DTO decoding,
+renderer discovery and McpDiagnosticRenderer.typed_error_lines. The member's
+render_payload hook formats CustomFunctionRegistrationResult and its declared
+FunctionCatalogEntry/handle fields. All ten raw get reads in this ONE renderer,
+its raw payload/error projection and sibling raw function formatting calls are
+deleted. No sibling knowledge renderer, codec, response or registry is changed.
+The original explicit persisted-is-False lifetime guard is retained on the DTO.
+
+RegisterCustomFunctionCommandSpec is an original SingleToolCommandSpec, so the
+ancestor's selected decoded payload is the registration contract. The existing
+payload_for API takes AgentCapabilitySpec, not a DTO class; focused controls
+independently verify payload_for(agent_capabilities.register_custom_function)
+retains the complete original CustomFunctionRegistrationResult. Production
+does not copy the ancestor's framing/diagnostic procedure into a leaf.
+
+Final renderer02: 3 PASS, 27 deselected, two original pytest configuration
+warnings. Covers uncertain count0/cause/handle, confirmed-native count1 with
+local projection failure, and success/function/path/lifetime/next commands.
+Typed errors render once; complete serialized observation handle is retained;
+zero/absence remains explicitly NOT proof of no mutation. The original renderer01
+3-PASS batch and first audit remain historical evidence, not overwritten.
+Final combined controls/AST/R0 scope: terminal0, 6.719s, 160.4 MiB, Swap0/OOM0,
+original common slice, CPU1/512MiB/60s. No application/native process launched.
+
+Original Package parser reread the changed MCP consumer family: 33 modules,
+zero parse omissions; retained full ASTs of relevant rendering/batch/command
+modules at a799352b9f229182de888d3d996ba2e6083f4155. The original full704/32/12/6
+census above remains the broader family evidence; no repeated global R1 claim.
+Original unmodified debt_census.py SHA256:
+fbe4651372d4d79963075d7fb6ba6dedf90d5e88e14eee07f845c5d836974e35.
+Correction R0 versus2b391: literal_key_get -10, none_identity -1, all other
+counts zero, including foreign absence probes. Initial6716 audit's +1 probe
+is retained; restoring the original explicit non-persistence guard removed it.
+Whole567 R0 versus merged main4f9 over ALL ten production files now has gets -8,
+None checks +4, isinstance +1, broad except +3, classes +7, enum +1, lines +202;
+switches/arms/chains/absence probes/codecs zero. This is NOT all-zero R0.
+
+Narrow byte-exact source/raw-log/AST/R0 archive:
+docs/validation/custom-registration-renderer-20261003.tar.gz, 890,567 bytes;
+SHA256 35f16c072659d300fcace7fa89c694ae07558f8ea908714de1a21f77b6b8b503.
+It includes final a799 renderer and original unchanged owner sources, both
+control/audit passes and their original raw outputs. Original larger archive
+is still historical5c4 evidence. Production/tests diff-check passes; authentic
+raw pytest whitespace is retained in archives, not rewritten.
+
+Dewey must qualify the corrected whole candidate for BOTH client/native before
+the prepared ONE-registration/publicTCP handle/status journey. No old package,
+selective overlay or source fixtures count as installed acceptance. Planck554
+has first94 closure; Singer remains the named567 receiving owner. #541 remains
+separate typed pixel/unit ownership with Root shared-frame dependency.

@@ -9,7 +9,7 @@ No new checkout, environment, dependency download, build or installation here.
 Whole candidate identity
 ------------------------
 
-567 head888e5e5aa / product5c4b5adf0 is the source control checkpoint. Source
+567 product5c4b5adf0 is the original source control checkpoint. Source
 MCP controls06 passed with exact read-only paired ZMQRuntime backing. That is
 NOT an installed native acceptance. Both client and native must contain the ten
 567 production files identified in the main receipt; both paths must appear in
@@ -20,13 +20,16 @@ Planck confirmed554 immutable package04 has NO567 and only creates viewer6013,
 not native6012. Whole-main10 is likewise not567 acceptance. At the parent's
 direction the receiving branch now normally merges currentmain4f9e10820 into
 567, merge45bb6fc908daec28a6c53148e8bdbbdb77d99915. It carries569/572,568/571,
-current APIs and original funding consumers. All ten567 production files remain
-BYTE-IDENTICAL to qualified5c4b5adf0; operations and packaged guides are
-BYTE-IDENTICAL to currentmain. No conflict, rebase or foreign edit occurred.
+current APIs and original funding consumers. Parent BOUND-2 correction now moves
+ONE registration renderer onto the existing typed ancestor at a799352b9;
+3 focused controls PASS, original R0 gets -10 / no added counts for that correction.
+Nine other567 production files remain BYTE-IDENTICAL to qualified5c4b5adf0;
+operations and packaged guides are BYTE-IDENTICAL to merged main4f9. No conflict,
+rebase or foreign edit occurred. Candidate2b391 was superseded BEFORE build.
 
 Dewey is the original offline whole-candidate builder. Build/qualify one ordinary
-candidate package from the exact final published head (this merge plus receipt
-only), then use it for BOTH client and native. Dependency inputs are documented
+candidate package from the exact final published corrected head, then use it
+for BOTH client and native. Dependency inputs are documented
 in DEPENDENCIES.rst and paired-dependencies01.json; no selective overlay or old
 target claims. No build/installation has occurred in this worker. Frozen09 and
 original SCI remain unchanged; currentmain10 and567 are distinct source claims.

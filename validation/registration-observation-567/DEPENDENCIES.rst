@@ -4,8 +4,12 @@
 Receiving branch: fix/custom-registration-observation-20261003 in existing
 /home/ts/wt/openhcs-ui-workflow-rendering-20261001. Normal merge45bb6fc908daec28a6c53148e8bdbbdb77d99915
 contains parent-reviewed567 production5c4b5adf0 and currentmain4f9e10820e12e2f47376ee5050b5f9436604f5f1.
-The final published receipt-only descendant is the exact candidate head sent
-to Dewey. Foreign externals, all original failure logs and other branches stay.
+Parent BOUND-2 review required a narrow typed-renderer correction, source-qualified
+at a799352b9. Candidate2b391 was superseded before any build or source borrow.
+The final published descendant of a799 is the exact candidate head sent to
+Dewey; nine other567 production files remain qualified5c4 bytes. Foreign
+externals, all original failure logs and other branches stay. Dependency inputs
+below are unchanged; whole candidate qualification must use corrected bytes.
 
 Builder owner and interpreter
 ----------------------------
