@@ -5,6 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
+from functools import lru_cache
 from typing import Annotated, ClassVar
 
 from metaclass_registry import AutoRegisterMeta
@@ -177,6 +178,12 @@ class ColorImageModeRenderer(ImageModeRenderer):
         return colors
 
     @classmethod
+    @lru_cache(maxsize=256)
+    def blend_palette(cls, colormap_name: str, num_labels: int) -> np.ndarray:
+        """Retain the positive-label palette for repeated indexed blending."""
+        return cls.palette(colormap_name, max(num_labels, 0))[1:]
+
+    @classmethod
     def blend_image(
         cls,
         grayscale: np.ndarray,
@@ -190,12 +197,12 @@ class ColorImageModeRenderer(ImageModeRenderer):
         """Blend indexed label colors into one grayscale plane or volume."""
         if grayscale.shape != labels.shape:
             raise ValueError(
-                "OverlayObjects image and labels must exactly match; "
+                "Indexed label colors and grayscale pixels must exactly match; "
                 f"got {grayscale.shape!r} and {labels.shape!r}."
             )
         if labels.ndim not in (2, 3):
             raise ValueError(
-                "OverlayObjects requires 2-D or 3-D object labels, got "
+                "Indexed color blending requires 2-D or 3-D object labels, got "
                 f"shape {labels.shape!r}."
             )
         is_plane = labels.ndim == 2
@@ -209,7 +216,10 @@ class ColorImageModeRenderer(ImageModeRenderer):
         label_count = int(labels.max()) if max_label is None else int(max_label)
         if seed is not None:
             np.random.seed(seed)
-        colors = cls.palette(colormap_value, max(label_count, 0))[1:]
+        colors = cls.blend_palette(colormap_value, label_count)
+        if seed is not None and len(grayscale) > 1:
+            # Each later plane historically reset the seed before its palette hit.
+            np.random.seed(seed)
         weight_dtype = np.result_type(np.empty((0,), dtype=np.float32), opacity)
         output = _blend_label_colors(
             normalized,
