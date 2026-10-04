@@ -455,3 +455,29 @@ def test_sparse_rows_reject_columns_absent_from_declared_fields() -> None:
             ({"value": 1.0},),
             fields=(FieldSpec("other", float),),
         )
+
+
+def test_dataclass_column_admission_owns_snapshot_and_releases_source_rows() -> None:
+    import gc
+    import weakref
+
+    from openhcs.core.runtime_tabular_values import measurement_row_mapping
+
+    @dataclass
+    class MutableMeasurementRow:
+        object_label: int
+        samples: list[float]
+
+    row = MutableMeasurementRow(1, [2.5])
+    row_ref = weakref.ref(row)
+    rows = DataclassMeasurementColumnarRows((row,))
+    admitted_samples = rows.column_values("samples")[0]
+    row.samples.append(7.5)
+    assert measurement_row_mapping(row)["samples"] == [2.5, 7.5]
+    assert admitted_samples == [2.5]
+    assert rows.row_mappings() == ({"object_label": 1, "samples": [2.5]},)
+
+    del rows, row
+    gc.collect()
+    assert row_ref() is None
+    assert admitted_samples == [2.5]

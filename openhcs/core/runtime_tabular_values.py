@@ -13,8 +13,6 @@ from enum import Enum
 from types import UnionType
 from typing import Annotated, Any, Union, get_args, get_origin, get_type_hints
 
-from openhcs.core.process_local_cache import RegisteredProcessLocalBoundedCache
-
 
 class ColumnarRows(ABC):
     """Nominal ABC for schema-bearing table payloads exposing named columns."""
@@ -262,29 +260,8 @@ def measurement_row_mapping(row: object) -> Mapping[str, object]:
     if isinstance(row, Mapping):
         return row
     if is_dataclass(row):
-        return MeasurementRowMappingCache.process_cache().mapping(row)
+        return asdict(row)
     raise TypeError(f"Unsupported measurement row type {type(row).__name__}.")
-
-
-@dataclass(slots=True)
-class MeasurementRowMappingCache(
-    RegisteredProcessLocalBoundedCache[int, tuple[object, Mapping[str, object]]]
-):
-    """Bounded process-local cache for immutable dataclass measurement rows."""
-
-    max_entries: int = 262144
-
-    def mapping(self, row: object) -> Mapping[str, object]:
-        row_id = id(row)
-        cached = self.cached_value(row_id)
-        if cached is not None:
-            cached_row, row_mapping = cached
-            if cached_row is row:
-                return row_mapping
-            del self.entries[row_id]
-        row_mapping = asdict(row)
-        self.store_value(row_id, (row, row_mapping))
-        return row_mapping
 
 
 class MeasurementObjectRowIdentity(str, Enum):
