@@ -698,7 +698,8 @@ def test_cellprofiler_provider_reconstructs_exact_contract_from_public_step() ->
         global_config=GlobalPipelineConfig(),
         pipeline=ResolvedPipelineDefinition(
             steps=(snapshot,),
-            step_state_map={0: SimpleNamespace(scope_id="plate::functionstep_0")},
+            step_scope_ids={0: "plate::functionstep_0"},
+            step_provenance={0: {}},
         ),
     )
     callable_state = vars(color_to_gray).copy()
@@ -774,10 +775,8 @@ def test_cellprofiler_provider_advances_native_artifacts_through_generic_graph()
         global_config=GlobalPipelineConfig(),
         pipeline=ResolvedPipelineDefinition(
             steps=steps,
-            step_state_map={
-                0: SimpleNamespace(scope_id="plate::functionstep_0"),
-                1: SimpleNamespace(scope_id="plate::functionstep_1"),
-            },
+            step_scope_ids={0: "plate::functionstep_0", 1: "plate::functionstep_1"},
+            step_provenance={0: {}, 1: {}},
         ),
     )
 
@@ -833,7 +832,8 @@ def test_cellprofiler_provider_leaves_native_same_name_callable_unclaimed() -> N
         global_config=GlobalPipelineConfig(),
         pipeline=ResolvedPipelineDefinition(
             steps=(snapshot,),
-            step_state_map={0: SimpleNamespace(scope_id="plate::functionstep_0")},
+            step_scope_ids={0: "plate::functionstep_0"},
+            step_provenance={0: {}},
         ),
     )
 
@@ -1161,7 +1161,8 @@ def test_cellprofiler_provider_rejects_under_specified_one_image_align() -> None
         global_config=GlobalPipelineConfig(),
         pipeline=ResolvedPipelineDefinition(
             steps=(snapshot,),
-            step_state_map={0: SimpleNamespace(scope_id="plate::functionstep_0")},
+            step_scope_ids={0: "plate::functionstep_0"},
+            step_provenance={0: {}},
         ),
     )
 
@@ -1309,10 +1310,8 @@ def test_calculate_math_provider_keeps_object_identity_and_output_name_public() 
         global_config=GlobalPipelineConfig(),
         pipeline=ResolvedPipelineDefinition(
             steps=steps,
-            step_state_map={
-                0: SimpleNamespace(scope_id="plate::functionstep_0"),
-                1: SimpleNamespace(scope_id="plate::functionstep_1"),
-            },
+            step_scope_ids={0: "plate::functionstep_0", 1: "plate::functionstep_1"},
+            step_provenance={0: {}, 1: {}},
         ),
     )
 
@@ -1404,7 +1403,10 @@ def test_native_unnamed_main_flow_remains_a_canonical_contract_input() -> None:
                 global_config=GlobalPipelineConfig(),
                 pipeline=ResolvedPipelineDefinition(
                     steps=steps,
-                    step_state_map={index: object() for index in range(len(steps))},
+                    step_scope_ids={
+                        index: f"plate::step_{index}" for index in range(len(steps))
+                    },
+                    step_provenance={index: {} for index in range(len(steps))},
                 ),
             ),
             steps,

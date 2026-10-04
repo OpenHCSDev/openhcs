@@ -190,7 +190,11 @@ def _compiler_contracts(
             ),
             global_config=global_config,
             pipeline=ResolvedPipelineDefinition(
-                steps=resolved_steps, step_state_map=step_states
+                steps=resolved_steps,
+                step_scope_ids={
+                    index: state.scope_id for index, state in step_states.items()
+                },
+                step_provenance={index: {} for index, state in step_states.items()},
             ),
         )
         provider = PipelineInvocationContractProviderAuthority.provider_for_session(

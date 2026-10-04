@@ -402,7 +402,8 @@ def test_real_cellprofiler_declaration_compiles_without_a_table_wide_subject():
         global_config=GlobalPipelineConfig(),
         pipeline=ResolvedPipelineDefinition(
             steps=(step,),
-            step_state_map={0: SimpleNamespace(scope_id="plate::functionstep_0")},
+            step_scope_ids={0: "plate::functionstep_0"},
+            step_provenance={0: {}},
         ),
     )
     provider = CellProfilerInvocationContractProviderFactory.provider_for_session(

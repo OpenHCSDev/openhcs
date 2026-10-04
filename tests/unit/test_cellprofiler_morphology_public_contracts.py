@@ -208,7 +208,10 @@ def _compiled_contract(case: MorphologyPublicContractCase):
         global_config=GlobalPipelineConfig(),
         pipeline=ResolvedPipelineDefinition(
             steps=snapshots,
-            step_state_map={index: object() for index in range(len(steps))},
+            step_scope_ids={
+                index: f"plate::step_{index}" for index in range(len(steps))
+            },
+            step_provenance={index: {} for index in range(len(steps))},
         ),
     )
     provider = CellProfilerInvocationContractProviderFactory.provider_for_session(
