@@ -330,8 +330,8 @@ authoring.
 Together, the task-only trials demonstrate useful initial choices, local
 recovery and self-diagnosis without reference-score feedback. Their quantitative
 comparisons and matched views distinguish detection, object separation,
-boundary extent and execution coverage. Performance on one repaired region
-does not predict performance throughout an image or on a new dataset.
+boundary extent and execution coverage. Repair of one region alone does not
+establish quality throughout an image or performance on a new dataset.
 Supplementary Data 8 retains the individual attempts, pipeline freezes and
 reference definitions. Supplementary Figures 9–12 separately show task-only
 local controls and same-author development cases; those development cases
