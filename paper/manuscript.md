@@ -381,6 +381,13 @@ joins, but incomplete nuclear and soma detection limited its morphology
 measurements. That assisted continuation is distinct from fresh autonomous
 authoring.
 
+A later retained-context continuation completed fieldwise processing of all
+nine personal-neurite fields. Matched review at three sites showed supported
+bodies and process segments alongside faint gaps and incomplete body association
+in a dense cluster. The overlapping fields were not summed as unique cells or
+independent replicates; fieldwise coverage is distinct from stitched analysis
+and complete outgrowth measurement (Supplementary Data 8).
+
 A fresh, treatment-aware translocation author completed all 96 BBBC013 wells
 using scientific settings chosen from six development wells and frozen before
 the remaining 90 were opened. Its measured first candidate retained ordinary

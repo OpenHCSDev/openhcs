@@ -1211,6 +1211,17 @@ same-author development, not a fresh autonomous success. The
 [stitched-development outcome record](task_only_analysis/p001-stitched94-outcome.json)
 identifies the independently verified freeze and original report.
 
+A later same-author personal-neurite development phase completed all nine
+fields separately and retained masks, per-object/per-field tables and graph
+artifacts. Independent review of thirteen original captures at sites 1, 5 and
+9 found supported bodies and process geometry, but faint continuity gaps and
+incomplete body association in dense support remained. The field outputs are
+diagnostic algorithm measurements, not unique-cell totals or complete per-cell
+lengths. This fieldwise checkpoint does not establish stitched-analysis success.
+The [nine-field development review](../../figure-collection-20261004/P001-DEV89-NINE-FIELD-INDEPENDENT-REVIEW.rst)
+records the frozen pipeline, per-field row counts, original capture identities
+and the scope of independent checks. No reference answers were used.
+
 ## Software snapshots and evidence
 
 | Evidence | Software identity | What the record establishes |
