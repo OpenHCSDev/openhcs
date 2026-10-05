@@ -351,6 +351,31 @@ Supplementary Data 8 retains the score and source review.
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
+## Supplementary Figure 19. Raw-supported junction repair with remaining gaps
+
+![Matched native raw, earlier support, final support and combined neurite views.](../figures/slas/h004_junction_native.png){width=5.3in}
+
+\(A) Raw process channel. (B) Ridge-derived candidate support before the final
+repair. (C) Final support adds a separate strong-raw mask. (D) Raw channel with
+final skeleton and soma display. These same-coordinate views come from one
+unguided author of an 800 x 800-pixel public neurite field. In a selected
+30 x 40-pixel junction tile, 19 of 291 raw pixels at intensity at least 20 were
+absent from the earlier candidate; none were absent from the final candidate.
+The 31 x 31-pixel quiet control retained zero candidate pixels. These selected
+checks measure raw-support agreement, not ground-truth recall. Soma exclusion
+was added separately between the two attempts and removes interior skeleton
+loops; that change is not attributed to the strong-raw union. Weak branches
+still have gaps, bright puncta remain a nuisance, and crossings do not determine
+cell ownership. Per-neuron outgrowth lengths and anatomical branch counts were
+not accepted. Raw window 0–80, gamma 1; camera centre y365,x370, zoom 3.
+Original screenshots are clipped/scaled without retouching. Physical calibration,
+stain identities and biological cell identity are unverified. Supplementary
+Data 8 links the retained pipelines and independent source review.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
 ## Supplementary Table 1. Reusable libraries and their roles
 
 | Library | Role in OpenHCS |

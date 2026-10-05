@@ -1,0 +1,50 @@
+{
+  "status": "LOCAL_RECEIVING_PASS_PUBLIC_SCI_PENDING",
+  "issue": 779,
+  "baseline": "cd270592d03201ab73807bdc453de40dc299b019",
+  "failure": "Original 3D RemoveHoles rejects preserved literal RUNTIME_SLICE volume as aligned source bundle; original job status ERROR/zero successful wells is retained.",
+  "ownership": {
+    "common": "ImagePayloadSliceStack is the abstract slice-storage/projection/publication parent; no independent metadata or pixel cache added.",
+    "bundles": "AlignedImageStack and ImageOutputBundle retain separate-input and named-output semantics.",
+    "literal": "ProducedImageStack is a sibling whole-image owner; NATURAL/FULL_STACK and metadata geometry match dense carriers.",
+    "attachment": "Source-context axis admission delegates to the existing metadata attach_to/with_metadata operation; no premature data unwrap.",
+    "aggregation": "The existing ImagePayloadPure2DAuxiliaryOutputAggregator now declares ImagePayloadMetadataCarrier so literal owners remain admitted after leaving the bundle family. Ordinary declared nominal distance precedes the generic mixed fallback; this prevents ImageOutputBundle from being stolen by literal aggregation. No leaf roster or compatibility strategy."
+  },
+  "validation": {
+    "existing_controls": "167 initial core controls plus corrected affected controls; 72 publication/device/source-context controls. Final affected receiving passed real PURE2D/PURE3D volume, named output subclass, literal metadata, and nominal aggregation controls.",
+    "actual_saved_mask": {
+      "status": "PASS",
+      "head": "cd270592d03201ab73807bdc453de40dc299b019",
+      "scope": "Untimed actual saved 60-plane mask array through registered remove_holes_3d contract, with explicitly declared calibrated source metadata; not the failed run exact threshold input or full pipeline qualification. No runtime/performance claim.",
+      "frontier": "/home/ts/.local/state/openhcs-maintenance/20261004/constant-surface-watershed-frontier-v1/frontier.npz",
+      "frontier_sha256": "90b15ea8644e658fbc07345657bbceb49feab83eaa11ebb8fa8fdffa73630624",
+      "shape": [
+        60,
+        256,
+        256
+      ],
+      "dtype": "float32",
+      "source_sha256": "4036bbfabe6f2db3b194fce4dcbfa00695f2902b86adeab8cee0fd80f10078d0",
+      "outputs_pixels_masks_dtype_shape_metadata_equal": true,
+      "publication_retains_deferred_owner": true,
+      "transport_retains_deferred_owner": true,
+      "inputs_unchanged": true,
+      "source_input_guards": "PASS"
+    },
+    "layout": {
+      "status": "PASS",
+      "multi_literal_vs_dense_composition": "same mode, exact pixels and metadata",
+      "mixed_ndarray_metadata_carrier": "exact promoted pixels, same nominal literal aggregation",
+      "named_output_bundles": "same declared names, exact surface transposition",
+      "scope": "untimed owner receiving, not pipeline science or performance"
+    },
+    "limits": "Saved 60-plane array is a prior real mask frontier with explicitly declared calibrated source metadata, not the exact failed threshold input. The final selection correction is covered separately by named/mixed layout and affected controls. No public pipeline or timing performed here; root owns original 3D plus four-case scientific receiving."
+  },
+  "formats": "Internal runtime artifact pickle fields and concrete class identities unchanged; restart processes for changed nominal hierarchy/registry. External TIFF/CSV/pipeline formats unchanged.",
+  "artifacts": {
+    "private_packet": "/home/ts/.local/state/openhcs-maintenance/20261005/literal-stack-pure3d-admission-v1",
+    "census_sha256": "d53deaa876654daa4d1e5541ae1ae7cc19c23b156a412de4f00aba24c276c011",
+    "consumer_replay_sha256": "8cd83741e252b71e74a400c564d1fa80e8904e28d45d1b632c7963f1924e9d42",
+    "layout_replay_sha256": "b914c9226c77533fa50fab3cbdc6b01c8c400799cc5eca55d090dc15789d00a7"
+  }
+}

@@ -13,7 +13,7 @@ from openhcs.core.artifacts import (
     ArtifactSpec,
     ArtifactSpecCollection,
     ImageArtifactType,
-    MeasurementsArtifactType,
+    MeasurementBearingArtifactType,
     RelationshipsArtifactType,
     SpecialArtifactType,
 )
@@ -579,10 +579,10 @@ class ExportToDatabaseModule(ArtifactExportModule):
         selected_image_name_set = frozenset(selected_image_names)
         inputs: list[ArtifactSpec] = []
         for spec in available.specs:
-            if spec.artifact_type in {
-                MeasurementsArtifactType,
-                RelationshipsArtifactType,
-            }:
+            if (
+                issubclass(spec.artifact_type, MeasurementBearingArtifactType)
+                or spec.artifact_type is RelationshipsArtifactType
+            ):
                 inputs.append(spec.for_plan_type(ArtifactInputPlan))
             elif (
                 spec.artifact_type is ImageArtifactType

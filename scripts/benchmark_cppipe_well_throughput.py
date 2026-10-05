@@ -186,7 +186,7 @@ def main() -> int:
         print(f"figures={figures_output_dir}")
         for output in figure_outputs:
             print(output)
-    return 0
+    return int(any(not result.is_successful() for result in results))
 
 
 def _parse_observation_key(raw_value: str):

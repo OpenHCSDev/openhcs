@@ -1,0 +1,77 @@
+{
+  "source_head": "f872547d4616b3a6464b64034ebd371422df180c",
+  "pr_heads": {
+    "767": "9150ad5d05875da6cca3e1f09c1029c0477cdf06",
+    "768": "1194dc58752932ca31b360ae28fec95239aec1ae",
+    "770": "beec5e3546c737dbe1a3f93f94134fb520c02420"
+  },
+  "scope": "CPU5, one well/thread, one ordinary observation each, startup/catalog/kernel preparation excluded, retained native warmup+one measured observation, existing measurement tolerances and exact exported images; all four complete output inventories pass. Coupled batch: no individual causal attribution or stable speedup floor.",
+  "failed_prior_batch": "d5575d6588e4c84f9e748fd431ad094ee49b1ae7 had three measurement parity failures; Wound1.400s observation did not repeat. Preserve it as evidence, not representative timing.",
+  "comparisons": [
+    {
+      "case": "ExampleSpeckles",
+      "compile_seconds": 0.20772385597229004,
+      "execute_seconds": 0.5299422740936279,
+      "total_seconds": 0.8299143039621413,
+      "previous_execute_seconds": 0.8172142505645752,
+      "previous_total_seconds": 1.1137255621142685,
+      "execute_delta_seconds": -0.28727197647094727,
+      "total_delta_seconds": -0.28381125815212727,
+      "native_execution_seconds": 1.9121274552308023,
+      "native_total_seconds": 2.014032178092748,
+      "execution_speedup": 3.608180642884466,
+      "total_speedup": 2.4267953552281747,
+      "scientific_status": "PASS",
+      "native_report_sha256": "d17f44b27d40946965c7f3227f347926fd1d6cc710f83b921699a1a868cd406b"
+    },
+    {
+      "case": "ExampleVitra",
+      "compile_seconds": 0.17503905296325684,
+      "execute_seconds": 1.424692153930664,
+      "total_seconds": 1.6862105638720095,
+      "previous_execute_seconds": 1.3826496601104736,
+      "previous_total_seconds": 1.646515249274671,
+      "execute_delta_seconds": 0.04204249382019043,
+      "total_delta_seconds": 0.03969531459733844,
+      "native_execution_seconds": 2.7783419392071664,
+      "native_total_seconds": 2.9668581392616034,
+      "execution_speedup": 1.9501349337411884,
+      "total_speedup": 1.759482595369863,
+      "scientific_status": "PASS",
+      "native_report_sha256": "a11f37b8b4d57d847efa0f854195530ac90a4da72ce751658aa93e1cf00a46af"
+    },
+    {
+      "case": "ExampleWoundHealing",
+      "compile_seconds": 0.09088253974914551,
+      "execute_seconds": 1.868335485458374,
+      "total_seconds": 2.020139404106885,
+      "previous_execute_seconds": 2.334986448287964,
+      "previous_total_seconds": 2.492800211068243,
+      "execute_delta_seconds": -0.46665096282958984,
+      "total_delta_seconds": -0.4726608069613576,
+      "native_execution_seconds": 3.7158190980553627,
+      "native_total_seconds": 3.8183068688958883,
+      "execution_speedup": 1.9888393315741848,
+      "total_speedup": 1.890120484325676,
+      "scientific_status": "PASS",
+      "native_report_sha256": "f28e45199aa5b554a2f39af5d64960c4fbd027f4ba98407001b290d3d61337bc"
+    },
+    {
+      "case": "ExampleYeastPatches",
+      "compile_seconds": 0.2621185779571533,
+      "execute_seconds": 2.0938608646392822,
+      "total_seconds": 2.4683544947765768,
+      "previous_execute_seconds": 1.8994076251983643,
+      "previous_total_seconds": 2.2938381442800164,
+      "execute_delta_seconds": 0.19445323944091797,
+      "total_delta_seconds": 0.17451635049656034,
+      "native_execution_seconds": 4.697637589182705,
+      "native_total_seconds": 4.791621568147093,
+      "execution_speedup": 2.2435290083097215,
+      "total_speedup": 1.941220994912567,
+      "scientific_status": "PASS",
+      "native_report_sha256": "e8a4cc7530d776cc984c5b1545df13ba9eaa48fbecadbd7e5ea89793870b254a"
+    }
+  ],
+  "science_sha256": "cf9712606930d739dea61ca8ce340e280cf875f425e65ffad9454a4bfbf1c614"
+}

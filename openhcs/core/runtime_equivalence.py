@@ -35,8 +35,8 @@ from openhcs.core.artifacts import (
     ArtifactTypeStrategyMatchMixin,
     ObjectLabelsArtifactType,
     MeasurementsArtifactType,
+    MeasurementBearingArtifactType,
     RelationshipsArtifactType,
-    SpatialGridArtifactType,
 )
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.measurement_row_materialization import (
@@ -122,7 +122,6 @@ from openhcs.core.equivalence.measurement_facts import (
     RuntimeRowProjectionRecord,
     record_measurement_facts,
     runtime_measurement_fact_counter,
-    spatial_grid_measurement_facts,
 )
 from openhcs.core.equivalence.measurement_features import (
     RuntimeMeasurementDescriptorSemantics,
@@ -636,13 +635,15 @@ class RuntimeMeasurementObservationAxis:
     def accept_measurement_table(
         self,
         record: StoredRuntimeValue,
+        dialect: RuntimeMeasurementDialect,
     ) -> None:
-        self.measurement_tables.append(
+        self.measurement_tables.extend(
             RuntimeScopedMeasurementTable(
-                cast(MeasurementTable, record.data),
+                table,
                 record_identity=record.location.path,
                 execution_scope=record.key.scope,
             )
+            for table in record.key.artifact_type.measurement_tables(record, dialect)
         )
 
     def accept_object_label_record(self, record: StoredRuntimeValue) -> None:
@@ -875,13 +876,6 @@ class RuntimeMeasurementProjectionState(RuntimeObjectMeasurementFactRowDomain):
         counter = runtime_measurement_fact_counter(self.measurement_fact_counts, key)
         self.measurement_fact_counter_object_cache[cache_key] = (key, counter)
         return counter
-
-    def record_spatial_grid(self, record: StoredRuntimeValue) -> None:
-        record_measurement_facts(
-            self.measurement_fact_counts,
-            spatial_grid_measurement_facts(record, self.policy),
-            required_keys=self.required_measurement_keys,
-        )
 
     def project_recorded_row_fact_counts(self) -> RuntimeMeasurementFactCounterMap:
         """Finalize projected row facts without artifact-owned completions."""
@@ -1371,27 +1365,12 @@ class RuntimeMeasurementObservationRecordHandler(
         """Record one runtime artifact into measurement-observation state."""
 
 
-class SpatialGridObservationRecordHandler(RuntimeMeasurementObservationRecordHandler):
-    """Record spatial-grid artifacts as direct measurement facts."""
-
-    artifact_type = SpatialGridArtifactType
-
-    def record(
-        self,
-        state: RuntimeMeasurementProjectionState,
-        axis_observation: RuntimeMeasurementObservationAxis,
-        record: StoredRuntimeValue,
-    ) -> None:
-        del axis_observation
-        state.record_spatial_grid(record)
-
-
 class MeasurementTableObservationRecordHandler(
     RuntimeMeasurementObservationRecordHandler
 ):
     """Collect measurement-table artifacts for one canonical axis projection."""
 
-    artifact_type = MeasurementsArtifactType
+    artifact_type = MeasurementBearingArtifactType
 
     def record(
         self,
@@ -1399,8 +1378,9 @@ class MeasurementTableObservationRecordHandler(
         axis_observation: RuntimeMeasurementObservationAxis,
         record: StoredRuntimeValue,
     ) -> None:
-        del state
-        axis_observation.accept_measurement_table(record)
+        axis_observation.accept_measurement_table(
+            record, state.policy.measurement_dialect
+        )
 
 
 class ObjectLabelsObservationRecordHandler(RuntimeMeasurementObservationRecordHandler):

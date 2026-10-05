@@ -12,6 +12,7 @@ from openhcs.core.runtime_object_labels import (
     ObjectLabelData,
     ObjectLabelValue,
     ObjectLabelVariantData,
+    PlaneStackObjectLabelVariantData,
     object_label_dense_array,
     object_label_stack_planes,
 )
@@ -173,6 +174,37 @@ class ObjectLabelPure2DSliceAggregator:
         )
 
     def aggregate_values(self) -> ObjectLabelValue:
+        from openhcs.core.memory import MemoryType
+
+        if (
+            self.representation is ObjectLabelRepresentation.DENSE_LABELS
+            and MemoryType(self.memory_type) is MemoryType.NUMPY
+        ):
+            final_planes = tuple(self.slice_labels(value, ObjectLabelVariant.FINAL) for value in self.values)
+            unedited_planes = (
+                tuple(self.slice_labels(value, ObjectLabelVariant.UNEDITED) for value in self.values)
+                if ObjectLabelVariantData.variant_is_present(ObjectLabelVariant.UNEDITED, self.values)
+                else (None,) * len(self.values)
+            )
+            small_removed_planes = (
+                tuple(self.slice_labels(value, ObjectLabelVariant.SMALL_REMOVED) for value in self.values)
+                if ObjectLabelVariantData.variant_is_present(ObjectLabelVariant.SMALL_REMOVED, self.values)
+                else (None,) * len(self.values)
+            )
+            return self.output_value(
+                PlaneStackObjectLabelVariantData(
+                    tuple(
+                        ObjectLabelVariantData(
+                            labels=final, unedited_labels=unedited,
+                            small_removed_labels=small_removed,
+                        )
+                        for final, unedited, small_removed in zip(
+                            final_planes, unedited_planes, small_removed_planes, strict=True,
+                        )
+                    ),
+                    self.memory_type,
+                )
+            )
         return self.output_value(
             ObjectLabelVariantData(
                 labels=self.aggregate_variant(ObjectLabelVariant.FINAL),

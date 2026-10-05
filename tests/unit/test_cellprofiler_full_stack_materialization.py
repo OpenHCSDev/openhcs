@@ -1,5 +1,7 @@
 """Dense full-stack ABI must consume aligned source/artifact values correctly."""
 
+from dataclasses import replace
+
 import numpy as np
 import pytest
 
@@ -9,8 +11,10 @@ from openhcs.core.aligned_image_payload import (
     ImageOutputBundle,
     ImagePayloadExecutionMode,
     ImagePayloadStackComposition,
+    ImagePayloadSliceStack,
     compose_aligned_image_payload,
 )
+from openhcs.core.artifacts import ArtifactSpec, ImageArtifactType
 from openhcs.core.callable_contract import CallableContract, CallableMetadata
 from openhcs.core.measurement_row_materialization import MeasurementSparseColumnarRows
 from openhcs.core.runtime_measurements import (
@@ -40,6 +44,7 @@ from openhcs.interop.cellprofiler.runtime.function_contract_execution import (
     CellProfilerFunctionContractExecutor,
 )
 from openhcs.processing.backends.cellprofiler.intensity import rescale_intensity
+from openhcs.processing.backends.cellprofiler.morphology import remove_holes, remove_holes_3d
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 
 
@@ -62,6 +67,55 @@ def test_real_rescale_full_stack_materializes_composed_runtime_sources():
     )
     expected = np.stack((data, data), axis=1) / 23.0
     np.testing.assert_allclose(image_payload_data(result), expected)
+
+
+@pytest.mark.parametrize("function", (remove_holes, remove_holes_3d))
+def test_literal_volume_keeps_dense_contract_semantics_without_bundle_classification(function):
+    pixels = np.ones((60, 6, 8), dtype=np.float32)
+    pixels[20:22, 2:4, 3:5] = 0
+    mask = np.ones(pixels.shape, dtype=bool)
+    mask[:, 0, 0] = False
+    metadata = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        source_voxel_spacing=SourceVoxelSpacing(
+            (1.25, 2.5, 3.0), SourceVoxelSpacingUnit.MICROMETERS,
+        ),
+        source_spatial_domain=SourceSpatialDomain(source_shape_yx=(6, 8)),
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=tuple(f"/inputs/source_{index}.tif" for index in range(60)),
+            component_metadata=tuple({"site": str(index)} for index in range(60)),
+        ),
+    )
+    dense = metadata.payload_with(pixels, mask)
+    projection = RuntimePlaneAxisValueProjection.preserve(
+        axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=60,
+    )
+    literal = ImagePayloadSliceStack.from_output_slices(
+        tuple(RuntimeSliceProjection.value_for_slice(dense, projection.selected_plane(index))
+              for index in range(60)),
+        memory_type="numpy", plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+    )
+    assert not isinstance(literal, AlignedImageStack)
+    composition = compose_aligned_image_payload("literal volume", (literal,))
+    assert composition.execution_mode is ImagePayloadExecutionMode.NATURAL
+    assert composition.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert literal._composed_payload is None
+    contract = CallableContract.from_callable(function)
+    contract = replace(contract, metadata=replace(
+        contract.metadata, artifact_outputs=(ArtifactSpec.output("Filled", ImageArtifactType),),
+    ))
+    executor = CellProfilerFunctionContractExecutor()
+    outputs = tuple(
+        executor.execute(
+            contract, contract.resolve_canonical_raw_callable(), value, {},
+            execution_mode=compose_aligned_image_payload("volume", (value,)).execution_mode,
+            plane_projection=projection,
+        )
+        for value in (dense, literal)
+    )
+    np.testing.assert_array_equal(image_payload_data(outputs[1]), image_payload_data(outputs[0]))
+    np.testing.assert_array_equal(image_payload_mask(outputs[1]), image_payload_mask(outputs[0]))
+    assert image_payload_metadata(outputs[1]) == image_payload_metadata(outputs[0])
 
 
 @pytest.mark.parametrize("processing_contract", tuple(ProcessingContract))
