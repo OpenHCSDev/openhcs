@@ -402,6 +402,16 @@ in a dense cluster. The overlapping fields were not summed as unique cells or
 independent replicates; fieldwise coverage is distinct from stitched analysis
 and complete outgrowth measurement (Supplementary Data 8).
 
+A subsequent development phase analysed the assembled canvas rather than
+summing overlapping fields. Its selected checkpoint retained 1,567 body labels
+and assigned process geometry across the mosaic. Independent recalculation
+from every per-cell row reproduced the native length, area, process and branch
+summaries. Matched views showed supported bright processes and remaining faint
+gaps; lowering the local-response threshold recovered a connection but added
+an unsupported lateral branch, so the author rejected that trial. This provides
+a reproducible stitched development result, with incomplete fine-path coverage
+and uncertain ownership at crowded crossings (Supplementary Data 8).
+
 A fresh, treatment-aware translocation author completed all 96 BBBC013 wells
 using scientific settings chosen from six development wells and frozen before
 the remaining 90 were opened. Its measured first candidate retained ordinary
