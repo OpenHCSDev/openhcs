@@ -587,7 +587,7 @@ from enum import Enum
 from typing import Any
 import numpy as np
 from openhcs.core.aligned_image_payload import (
-    AlignedImageStack,
+    ImagePayloadSliceStack,
     payload_slices_for_alignment,
 )
 from openhcs.core.image_shapes import (
@@ -1009,7 +1009,7 @@ def restore_image_mask_planes(
     """Restore masked planes through the image payload's declared owner."""
     if not masked_planes:
         raise ValueError("Cannot restore an empty CellProfiler image plane set.")
-    if isinstance(original_image, AlignedImageStack):
+    if isinstance(original_image, ImagePayloadSliceStack):
         if len(masked_planes) != len(original_image.slices):
             raise ValueError(
                 "Aligned image result cardinality must exactly match its owner: "

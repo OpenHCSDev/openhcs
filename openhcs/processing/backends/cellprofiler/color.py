@@ -1924,10 +1924,23 @@ def combine_color_to_gray(
     color_stack = nhwc_color_stack(image)
     channels = np.asarray(channel_indices, dtype=int)
     weights = np.asarray(contributions, dtype=float) / float(sum(contributions))
-    result = np.sum(
-        color_stack[..., channels] * weights[np.newaxis, np.newaxis, np.newaxis, :],
-        axis=3,
-    )
+    # Admit every index before numerical work, without copying the full color cube.
+    selected_pixel = color_stack[:1, :1, :1, channels]
+    if color_stack.shape[:-1] == (1, 1, 1):
+        # Here the selected channel axis is contiguous: retain NumPy's reduction
+        # order, which can differ from streaming for more than eight channels.
+        result = np.sum(selected_pixel * weights, axis=3)
+    else:
+        result = np.zeros(
+            color_stack.shape[:-1],
+            dtype=np.result_type(color_stack.dtype, weights.dtype),
+        )
+        product = np.empty_like(result)
+        for channel, weight in zip(channels, weights, strict=True):
+            np.multiply(
+                color_stack[..., channel], weight, dtype=result.dtype, out=product
+            )
+            np.add(result, product, out=result)
     return restore_color_to_gray_shape(image, result)
 
 

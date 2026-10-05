@@ -233,6 +233,75 @@ class FigureSheet:
         print(f"Rendered {self.stem}")
 
 
+def h001_scored():
+    """Native witnesses from the exact fresh author evaluated in Figure 5A."""
+    sheet = FigureSheet("h001_scored_native", "", 6.4)
+    sheet.source(
+        ROOT / "figure-collection-20261004/H001-FRESH586-SCORED-NATIVE-REVIEW.rst"
+    )
+    evaluation_path = (
+        ROOT / "paper/supplementary/task_only_analysis/h001-fresh586-postfreeze-evaluation.json"
+    )
+    sheet.source(evaluation_path)
+    evaluation = json.loads(evaluation_path.read_text())
+    first, final = evaluation["attempts"]
+    sheet.text(
+        3, 97, "H001: native views from the scored task-only run",
+        size=18, weight="bold", va="top",
+    )
+    for y, title, prefix, crop, bottom, height in (
+        (89, "A  Matched overview", "overview", (553, 40, 995, 478), 47, 36),
+        (41, "B  Elongated-body false split repaired", "detail", (297, 28, 1037, 492), 9, 26),
+    ):
+        sheet.text(3, y, title, size=15, weight="bold")
+        for x, stage, label in (
+            (3, "raw", "Raw"), (35, "first", "First, a01"), (67, "final", "Final, a04")
+        ):
+            sheet.text(x, y - 5, label, size=14)
+            sheet.source_image(
+                OUTPUT / "h001_scored_sources" / f"{prefix}_{stage}.png",
+                (x, bottom, 29, height), crop=crop,
+            )
+    sheet.text(
+        3, 3,
+        f"Object F1 {first['derived_f1']:.3f} → {final['derived_f1']:.3f}; "
+        f"{final['score']['false_negative_objects']} reference misses remain.",
+        size=14,
+    )
+    sheet.save()
+
+
+def h004_junction():
+    """Retained neurite support repair, separate from crossing ownership."""
+    sheet = FigureSheet("h004_junction_native", "", 6.3)
+    sheet.source(ROOT / "figure-collection-20261004/H004-FRESH10-NATIVE-REVIEW.rst")
+    metrics_path = ROOT / "paper/supplementary/task_only_analysis/h004-fresh10/final-metrics.json"
+    sheet.source(metrics_path)
+    metrics = json.loads(metrics_path.read_text())
+    for attempt in ("BIO04", "BIO06"):
+        sheet.source(ROOT / f"paper/supplementary/task_only_analysis/h004-fresh10/{attempt}.py")
+    sheet.text(3, 97, "Neurite support: a recovered junction, remaining gaps", size=18, weight="bold", va="top")
+    for x, y, name, label in (
+        (3, 53, "raw", "A  Raw process channel"),
+        (52, 53, "before", "B  Before: ridge-derived support"),
+        (3, 12, "final", "C  Final: strong-raw support added"),
+        (52, 12, "combined", "D  Final raw + skeleton / soma"),
+    ):
+        sheet.text(x, y + 35, label, size=14, weight="bold")
+        sheet.source_image(
+            OUTPUT / "h004_junction_sources" / f"{name}.png",
+            (x, y, 45, 32), crop=(297, 28, 1250, 430),
+        )
+    sheet.text(
+        3, 5,
+        f"Selected bright-junction tile: {metrics['junction_raw20_count']} strong raw pixels; "
+        f"{metrics['junction_raw20_missing_final']} excluded in final support.",
+        size=14,
+    )
+    sheet.text(3, 1, "Local support recovery is not complete tracing or neuron ownership.", size=14)
+    sheet.save()
+
+
 def architecture():
     sheet = FigureSheet(
         "shared_workflow", "OpenHCS: one editable workflow from images to results", 8.1

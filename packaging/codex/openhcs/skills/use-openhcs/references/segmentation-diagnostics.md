@@ -131,6 +131,18 @@ landscape or support failure remains. Preserve that partial improvement and
 diagnose the remaining split rather than discarding it or repeating an
 ineffective suppression change.
 
+If duplicate landmarks remain inside a supported continuous body after that
+repair, compare their per-axis spacing with a genuine neighbour pair on the
+actual consumed landscape. Where the reflected extractor supports it, test
+component-local, axis-aware exclusion or body association from those measured
+scales, declaring its metric and physical or voxel-index units. Preserve
+foreground and unrelated marker settings so the changed stage is identifiable.
+Component membership is not biological identity: touching neighbours can share
+support, and an exclusion that removes internal peaks can merge a real pair,
+including through Z. Recheck representative locations and isolated, close-pair,
+border and multi-lobed controls; retain local improvements while qualifying
+unresolved identity, rather than choosing a radius or count universally.
+
 For point-only counts of extended objects, maxima are candidate landmarks, not
 automatically distinct bodies. Track candidate multiplicity within each sampled
 raw body across the axes present; in 3-D, inspect through Z and orthogonal views,
@@ -194,6 +206,19 @@ operation or pruning short branches can repair one crop and remove genuine
 biology elsewhere; retain a faint-path regression control.
 
 ### Separate support recovery from rooted graph validity
+
+If a raw-supported junction disappears from a ridge-enhanced candidate, compare
+the raw pixels, enhanced response and admitted mask at that junction and an
+ordinary path. More permissive thresholding cannot recover pixels absent from
+the response. Where measured source/background separation supports it and the
+registry exposes the required operations, test combining enhanced support with
+a separately justified strong raw-signal mask. Keep processing units explicit;
+do not copy a raw threshold from another image. Inspect isolated bright puncta,
+near-track halos, false bridges and a faint-path control after the union. Apply
+the same soma-exclusion and graph stages when comparing candidates, so added
+support is not confused with a simultaneous loop-removal repair. Recovered
+junction pixels establish local support, not anatomical connectivity, crossing
+ownership or complete neurite length; retain any remaining gaps separately.
 
 Where the declared detector uses optional strong-seed/component retention,
 permissive admission is not the last support gate. A connected candidate can

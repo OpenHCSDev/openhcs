@@ -12,6 +12,7 @@ import numpy as np
 from openhcs.core.artifacts import (
     ArtifactType,
     MeasurementsArtifactType,
+    MeasurementBearingArtifactType,
     RelationshipsArtifactType,
     SpatialGridArtifactType,
 )
@@ -184,14 +185,29 @@ def runtime_measurement_tables(
     """Return all measurement tables in a runtime query context."""
     cache_key = (context.axis_id, context.group_key)
     store_cache = context.store.query_cache(RuntimeMeasurementTablesQueryCache)
-    cached = store_cache.cached_value(cache_key)
+    records = tuple(
+        record
+        for record in context.find()
+        if issubclass(record.key.artifact_type, MeasurementBearingArtifactType)
+    )
+    # Stored tables retain their carrier identity. Derived geometry views must
+    # observe the current geometry rather than caching a detached row snapshot.
+    stored_tables_only = all(
+        record.key.artifact_type is MeasurementsArtifactType for record in records
+    )
+    cached = store_cache.cached_value(cache_key) if stored_tables_only else None
     if cached is not None:
         return cached
+    from openhcs.core.equivalence.policy import DEFAULT_RUNTIME_MEASUREMENT_DIALECT
+
     tables = tuple(
-        cast(MeasurementTable, record.data)
-        for record in context.find(artifact_type=MeasurementsArtifactType)
+        table
+        for record in records
+        for table in record.key.artifact_type.measurement_tables(
+            record, DEFAULT_RUNTIME_MEASUREMENT_DIALECT
+        )
     )
-    return store_cache.store_value(cache_key, tables)
+    return store_cache.store_value(cache_key, tables) if stored_tables_only else tables
 
 
 def runtime_measurement_tables_for_object(

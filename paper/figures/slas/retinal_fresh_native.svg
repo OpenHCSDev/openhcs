@@ -1,19 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1520" height="1320" viewBox="0 0 1520 1320" role="img" aria-labelledby="title description">
-<title id="title">Fresh autonomous retinal detector output with matched noisy raw evidence</title>
-<desc id="description">Original whole-field and southwest raw and combined screenshots from R0010_STAGED_96. The 109 detector instances are not a manual-reference accuracy estimate. Faint structures and ambiguous partitions remain.</desc>
-<rect width="1520" height="1320" fill="white"/>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1520" height="1730" viewBox="0 0 1520 1730" role="img" aria-labelledby="title description">
+<title id="title">Autonomous retinal repair preserves a genuine neighbouring pair</title>
+<desc id="description">Matched original raw and final-outline captures from R0010_FRESH09_96. The final candidate retains 102 algorithmic instances, separates a northwest pair and repairs a southeast body partition. Raw and overlay background mappings differ as disclosed in the caption; no pixels are retouched in figure preparation.</desc>
+<rect width="1520" height="1730" fill="white"/>
 <g font-family="sans-serif" fill="#182438">
-<text x="24" y="36" font-size="36" font-weight="700">A</text><text x="68" y="36" font-size="31" font-weight="600">Whole field · noisy raw and final detector</text>
-<text x="24" y="84" font-size="29">Raw RBPMS · window 0–70</text>
-<g transform="translate(24 100) scale(1.7445783132530122)"><defs><clipPath id="A0"><rect width="415" height="415"/></clipPath></defs><g clip-path="url(#A0)"><image x="-566" y="-41" width="1440" height="944" xlink:href="retinal_fresh_sources/final-corrected-overview-raw70.png"/></g></g>
-<text x="772" y="84" font-size="29">Raw + final detector</text>
-<g transform="translate(772 100) scale(1.7445783132530122)"><defs><clipPath id="A1"><rect width="415" height="415"/></clipPath></defs><g clip-path="url(#A1)"><image x="-566" y="-41" width="1440" height="944" xlink:href="retinal_fresh_sources/final-corrected-overview-combined70.png"/></g></g>
-<text x="24" y="860" font-size="36" font-weight="700">B</text><text x="68" y="860" font-size="31" font-weight="600">Southwest · faint-body admission remains uncertain</text>
-<text x="24" y="908" font-size="29">Raw RBPMS · window 0–70</text>
-<g transform="translate(24 924) scale(0.8649940262843488)"><defs><clipPath id="B0"><rect width="837" height="442"/></clipPath></defs><g clip-path="url(#B0)"><image x="-413" y="-28" width="1440" height="944" xlink:href="retinal_fresh_sources/final-corrected-sw-raw70.png"/></g></g>
-<text x="772" y="908" font-size="29">Raw + final detector</text>
-<g transform="translate(772 924) scale(0.8649940262843488)"><defs><clipPath id="B1"><rect width="837" height="442"/></clipPath></defs><g clip-path="url(#B1)"><image x="-413" y="-28" width="1440" height="944" xlink:href="retinal_fresh_sources/final-corrected-sw-combined70.png"/></g></g>
+<text x="24" y="36" font-size="36" font-weight="700">A</text><text x="68" y="36" font-size="31" font-weight="600">Whole field · detection in heterogeneous background</text>
+<text x="24" y="84" font-size="29">Raw RBPMS</text><text x="772" y="84" font-size="29">Final outlines on display-stretched RBPMS</text>
+<g transform="translate(96 100) scale(1.3842482100238664)"><defs><clipPath id="A0"><rect width="419" height="419"/></clipPath></defs><g clip-path="url(#A0)"><image x="-564" y="-39" width="1440" height="944" xlink:href="retinal_fresh_sources/c10-overview-raw.png"/></g></g>
+<g transform="translate(844 100) scale(1.3842482100238664)"><defs><clipPath id="A1"><rect width="419" height="419"/></clipPath></defs><g clip-path="url(#A1)"><image x="-564" y="-39" width="1440" height="944" xlink:href="retinal_fresh_sources/c10-overview-outline.png"/></g></g>
+<text x="24" y="726" font-size="36" font-weight="700">B</text><text x="68" y="726" font-size="31" font-weight="600">Northwest · neighbouring bodies remain separate</text>
+<text x="24" y="772" font-size="29">Raw RBPMS</text><text x="772" y="772" font-size="29">Final outlines</text>
+<g transform="translate(24 790) scale(1.2066666666666668)"><defs><clipPath id="B0"><rect width="600" height="330"/></clipPath></defs><g clip-path="url(#B0)"><image x="-590" y="-90" width="1440" height="944" xlink:href="retinal_fresh_sources/c10-nw-raw.png"/></g></g>
+<g transform="translate(772 790) scale(1.2066666666666668)"><defs><clipPath id="B1"><rect width="600" height="330"/></clipPath></defs><g clip-path="url(#B1)"><image x="-590" y="-90" width="1440" height="944" xlink:href="retinal_fresh_sources/c10-nw-outline.png"/></g></g>
+<text x="24" y="1246" font-size="36" font-weight="700">C</text><text x="68" y="1246" font-size="31" font-weight="600">Southeast · one continuous body after repair</text>
+<text x="24" y="1292" font-size="29">Raw RBPMS</text><text x="772" y="1292" font-size="29">Final outline</text>
+<g transform="translate(24 1310) scale(1.2066666666666668)"><defs><clipPath id="C0"><rect width="600" height="330"/></clipPath></defs><g clip-path="url(#C0)"><image x="-540" y="-85" width="1440" height="944" xlink:href="retinal_fresh_sources/c10-se-raw.png"/></g></g>
+<g transform="translate(772 1310) scale(1.2066666666666668)"><defs><clipPath id="C1"><rect width="600" height="330"/></clipPath></defs><g clip-path="url(#C1)"><image x="-540" y="-85" width="1440" height="944" xlink:href="retinal_fresh_sources/c10-se-outline.png"/></g></g>
 </g>
 </svg>
-

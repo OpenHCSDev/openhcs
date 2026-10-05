@@ -1,0 +1,91 @@
+{
+  "source_head": "57884dcc132f4c517d4422bf127de3706abd0e2e",
+  "comparisons": [
+    {
+      "case": "ExampleSpeckles",
+      "compile_seconds": 0.21046948432922363,
+      "execute_seconds": 0.6211814880371094,
+      "total_seconds": 0.9107705671340227,
+      "native_execution_seconds": 1.9121274552308023,
+      "native_total_seconds": 2.014032178092748,
+      "execution_speedup": 3.0782106229098893,
+      "total_speedup": 2.211349653547134,
+      "previous_execute_seconds": 0.6749529838562012,
+      "previous_total_seconds": 0.9709084127098322,
+      "execute_delta_seconds": -0.0537714958190918,
+      "total_delta_seconds": -0.06013784557580948
+    },
+    {
+      "case": "ExampleVitra",
+      "compile_seconds": 0.18727707862854004,
+      "execute_seconds": 1.2134902477264404,
+      "total_seconds": 1.4923312338069081,
+      "native_execution_seconds": 2.7783419392071664,
+      "native_total_seconds": 2.9668581392616034,
+      "execution_speedup": 2.2895461619181416,
+      "total_speedup": 1.9880694527133937,
+      "previous_execute_seconds": 1.1804585456848145,
+      "previous_total_seconds": 1.4631884088739753,
+      "execute_delta_seconds": 0.03303170204162598,
+      "total_delta_seconds": 0.029142824932932854
+    },
+    {
+      "case": "ExampleWoundHealing",
+      "compile_seconds": 0.09926509857177734,
+      "execute_seconds": 1.1368000507354736,
+      "total_seconds": 1.3024572301656008,
+      "native_execution_seconds": 3.7158190980553627,
+      "native_total_seconds": 3.8183068688958883,
+      "execution_speedup": 3.268665492802666,
+      "total_speedup": 2.9316178531331967,
+      "previous_execute_seconds": 1.0572621822357178,
+      "previous_total_seconds": 1.2061162451282144,
+      "execute_delta_seconds": 0.07953786849975586,
+      "total_delta_seconds": 0.09634098503738642
+    },
+    {
+      "case": "ExampleYeastPatches",
+      "compile_seconds": 0.2683711051940918,
+      "execute_seconds": 1.7390220165252686,
+      "total_seconds": 2.1298095788806677,
+      "native_execution_seconds": 4.697637589182705,
+      "native_total_seconds": 4.791621568147093,
+      "execution_speedup": 2.70131001479155,
+      "total_speedup": 2.249788720860836,
+      "previous_execute_seconds": 1.4117457866668701,
+      "previous_total_seconds": 1.8136256281286478,
+      "execute_delta_seconds": 0.32727622985839844,
+      "total_delta_seconds": 0.3161839507520199
+    },
+    {
+      "case": "cp_tutorial_3d_monolayer",
+      "compile_seconds": 0.5338466167449951,
+      "execute_seconds": 3.7493772506713867,
+      "total_seconds": 4.451215113978833,
+      "native_execution_seconds": 13.462446173187345,
+      "native_total_seconds": 13.591950635425746,
+      "execution_speedup": 3.590581921511546,
+      "total_speedup": 3.053537132532836,
+      "previous_execute_seconds": 3.833413,
+      "previous_total_seconds": 4.491624,
+      "execute_delta_seconds": -0.08403574932861346,
+      "total_delta_seconds": -0.04040888602116688
+    }
+  ],
+  "science_sha256": "53371996a3e7c32eb3c1a6b7c2a4872943cae1631fad859e974f50567133e561",
+  "previous_receiving_sha256": "694ea1a328ab82a46221de007af1df8c1856ad1edde037640ee5d3a074cbf0b1",
+  "scope": "One ordinary candidate observation per pipeline; CPU5, 1w_1t, READY/catalog/kernel/server startup excluded. Retained native clocks; changes are coupled, no causal allocation or stable speedup floor. Original3D prior timings rounded from retained qualified source68f60c89a.",
+  "status": "PASS",
+  "issue": 779,
+  "pr": 780,
+  "private_packet": "/home/ts/.local/state/openhcs-maintenance/20261005/literal-stack-family-fivecase-ordinary-v1",
+  "component_receipt_sha256": {
+    "strict-science-four.json": "7cae81ee0e4fcf8087827c580add02eb97cbd93087c5ccce6ebcca36030c4f65",
+    "strict-science-3d.json": "0a6e5ede51ffbc7991b97a83ac260fbf5632261cd1fc4a2682c7ebf427c43aa1",
+    "candidate/source-before.json": "62b77f6144b2129f5d63f2fbabbc98c1e1636cd4b7d888095131fba608945f2d",
+    "candidate/source-after.json": "62b77f6144b2129f5d63f2fbabbc98c1e1636cd4b7d888095131fba608945f2d",
+    "candidate/terminal.json": "03e276a2c304fe70cc3bb6c772cc760b1ea86cd18c0b0d0a6f6e6bd2012187ac",
+    "candidate/pipeline-outcomes.json": "b459527337c278a6655772f32ecdb6dfd6459671dfd761e95198bdea3cb5ff0c"
+  },
+  "limits": "The hierarchy repair restores original3D correctness. Timing deltas are single observations with no per-change causal attribution. Vitra remains below2x total; Yeast and Wound are slower than prior observations. Native clocks are retained, not rerun. No reliable2x floor or complete catalog claim."
+}

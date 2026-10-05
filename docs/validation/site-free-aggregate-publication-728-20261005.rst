@@ -249,3 +249,79 @@ The same tiny ordinary installed packet now explicitly requires saved-label
 reopening qualification after the existing producer owner supplies the correct
 nominal declaration. No new production patch, runtime, scientific replay,
 source-receipt fabrication or repeated test batch occurred.
+Installed case02: acquired-site CSV collision
+-------------------------------------------
+
+The original public receiving12 case02 completed execution
+``e6a9522f-4af4-4880-a4c9-68dd3a823961`` with four steps and no execution
+errors. Default and checkpoint aggregate images retain all 96 expected uint16
+pixels across two channels, SITE-free scalar metadata, two original contributor
+paths per channel, and Y/X spacing 0.25/0.5 micrometers. This positive result
+does not establish complete table-publication acceptance.
+
+``receiving12/public95/verify-case02-03.log`` proves a distinct failure: the
+acquired SITE1/channel1 record retains total intensity 0.004028381779789925,
+but its address-bound exported CSV contains SITE3's 0.004760814 value. The
+different original runtime addresses share a channel-only memory location;
+publication reused that location's filename and overwrote the first CSV.
+Original inputs, job, exports, CSVs and journals are preserved. No execution
+was repeated to obtain this observation. Earlier verifier failures concerned
+its incorrect assumptions about normalized image pixels and runtime-plane
+versus contributor metadata; they are retained separately.
+
+Planck takes the existing publication/path family from Singer. The source
+repair removes the runtime-location filename branch in
+``RuntimeArtifactMaterialization._analysis_identity``. The existing
+``_aggregate_identity`` consumes the complete ``RuntimeExecutionAxisScope``
+for an artifact-named occurrence. Actual source-filename writers still use
+their original admitted source identity. No fixture rename, duplicate writer,
+new identity store, source reload or guard relaxation repairs the failure.
+Applicable ownership pattern: IDEN-6, storage location mistaken for record
+identity. The automatic-measurement strategy, writer, observation export,
+consolidation and final consumers continue to use the existing address relation.
+
+Focused controls cover both insertion orders, original automatic terminal CSV
+declarations, explicit source-named CSV declarations, shared runtime locations,
+exact saved row values and distinct address-bound paths. Historical tests that
+asserted a memory filename as persistent identity are migrated to the existing
+scope-owned identity without weakening their row assertions. Source checks and
+corrected ordinary installed/public acceptance remain separate; the original
+receiving12 target is immutable.
+
+The same original client then reloaded the two saved default images through
+ordinary output-plate inventory. Pixels and physical calibration survived, but
+the new manual route incorrectly acquired SITE1 from the retained filename;
+the compiled route for the exact same image was SITE-free. Before/after native
+state and the original refused explicit-result-directory requests are retained.
+The existing ``PlateImageInventory._record`` was overwriting canonical source
+metadata with parsed filename fields. It now parses filenames only when no
+explicit source metadata exists. Browser records and streaming consume the
+same original metadata, including meaningful absence of a collapsed component.
+The source control loads an actual TIFF through inventory and streaming and
+checks every pixel, SITE absence, calibration and original contributor lineage.
+
+The original95 native and viewer both closed through their exact typed owners;
+client38241 reached terminal exit1. ``receiving12/public95/OWNER-TERMINAL.rst``
+and the closed original journal seals retain this disposition. No corrected
+runtime acceptance has been claimed or replayed into the frozen output.
+
+Address-family controls02: 79 passed, terminal0; controls01 retained 70 passes
+and seven failures (five old memory-name assertions, two new source-filename
+expectations). Those tests now distinguish ordinary automatic artifact-named
+CSV output from explicit source-named output; exact row/value assertions remain.
+Reload controls01 retained63 passes/three failures: a new fixture omitted its
+required execution scope, an old OME assertion expected parsed int instead of
+the canonical source string, and an unrelated old point-model fixture lacks
+the existing native ``element_identity`` capability. The last is not a claimed
+production or #732 regression, and no fractional-Z guard is weakened for it.
+
+Final reload controls02: 27 passed, terminal0, 8.41s pytest time. Together with
+the79 address-family controls02, 106 affected controls pass. The two source
+changes delete six net production lines and add no authority, registry or
+codec. Source-address-family01.ast uses the existing refactor-audit parser on
+14 related production owners/consumers before and after: 28 complete ASTs,
+zero parse omissions. Original broader source-family ASTs remain retained;
+this update is focused source evidence, not global R1 or installed acceptance.
+The failed public case remains immutable. A future ordinary package and a
+distinct public case must verify all acquired table addresses and saved
+SITE-free image reload before this PR can claim complete publication acceptance.

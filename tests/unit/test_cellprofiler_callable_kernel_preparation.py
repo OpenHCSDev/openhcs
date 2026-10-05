@@ -12,6 +12,7 @@ import psutil
 import pytest
 from metaclass_registry import AutoRegisterMeta
 from numba import config as numba_config
+from numba.core.registry import CPUDispatcher
 
 from openhcs.core.callable_contract import prepare_processing_callable
 from openhcs.core.processing_preparation import (
@@ -84,7 +85,7 @@ def test_generic_kernel_registry_prepares_non_cellprofiler_families_once(
 
 def test_real_declarations_own_independent_registry_obligations():
     from openhcs.processing.backends.cellprofiler.grid import (
-        IdentifyObjectsInGridKernelPreparation,
+        GridKernelPreparation,
     )
     from openhcs.processing.backends.cellprofiler.morphology import (
         ExpandOrShrinkObjectsKernelPreparation,
@@ -97,7 +98,7 @@ def test_real_declarations_own_independent_registry_obligations():
     )
 
     declarations = (
-        IdentifyObjectsInGridKernelPreparation,
+        GridKernelPreparation,
         ExpandOrShrinkObjectsKernelPreparation,
         IdentifyPrimaryObjectsKernelPreparation,
         ObjectSizeShapeKernelPreparation,
@@ -109,26 +110,38 @@ def test_real_declarations_own_independent_registry_obligations():
         assert declaration().identity == declaration().identity
 
 
+def test_grid_preparation_covers_definition_and_every_declared_shape():
+    from openhcs.processing.backends.cellprofiler import grid
+
+    grid.GridKernelPreparation().execute()
+    kernels = tuple(
+        value for value in vars(grid).values()
+        if isinstance(value, CPUDispatcher)
+    )
+    assert kernels
+    assert all(kernel.signatures for kernel in kernels)
+
+
 def test_declared_cache_admission_requires_cpu_and_explicit_cache(
     monkeypatch, tmp_path
 ):
     from openhcs.processing.backends.cellprofiler.grid import (
-        IdentifyObjectsInGridKernelPreparation,
+        GridKernelPreparation,
     )
 
     monkeypatch.setenv("OPENHCS_CPU_ONLY", "true")
     monkeypatch.setattr(numba_config, "CACHE_DIR", str(tmp_path))
-    assert IdentifyObjectsInGridKernelPreparation.can_prepare_in_child()
+    assert GridKernelPreparation.can_prepare_in_child()
     index = tmp_path / "nested" / "compiled.nbi"
     index.parent.mkdir()
     index.touch()
-    assert IdentifyObjectsInGridKernelPreparation.can_prepare_in_child()
+    assert GridKernelPreparation.can_prepare_in_child()
     index.unlink()
     monkeypatch.setattr(numba_config, "CACHE_DIR", "")
-    assert not IdentifyObjectsInGridKernelPreparation.can_prepare_in_child()
+    assert not GridKernelPreparation.can_prepare_in_child()
     monkeypatch.setattr(numba_config, "CACHE_DIR", str(tmp_path))
     monkeypatch.setenv("OPENHCS_CPU_ONLY", "false")
-    assert not IdentifyObjectsInGridKernelPreparation.can_prepare_in_child()
+    assert not GridKernelPreparation.can_prepare_in_child()
 
 
 def test_non_cpu_backend_admission_does_not_discover_lazy_providers(monkeypatch):
@@ -149,13 +162,13 @@ def test_non_cpu_backend_admission_does_not_discover_lazy_providers(monkeypatch)
 
 def test_fixture_capture_keeps_callable_preparation_in_parent(monkeypatch, tmp_path):
     from openhcs.processing.backends.cellprofiler.grid import (
-        IdentifyObjectsInGridKernelPreparation,
+        GridKernelPreparation,
     )
 
     monkeypatch.setenv("OPENHCS_CPU_ONLY", "true")
     monkeypatch.setattr(numba_config, "CACHE_DIR", str(tmp_path / "cache"))
     monkeypatch.setenv("OPENHCS_CAPTURE_CELLPROFILER_FIXTURES_DIR", str(tmp_path))
-    assert not IdentifyObjectsInGridKernelPreparation.can_prepare_in_child()
+    assert not GridKernelPreparation.can_prepare_in_child()
 
 
 def test_capture_preparation_retains_registry_module_callable_effect_order(
