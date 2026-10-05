@@ -1850,10 +1850,7 @@ def test_function_catalog_reuses_projection_until_registry_mapping_changes(monke
         == repeated.items[0].signature
         == "sample_processing_function(sigma=1.0)"
     )
-    assert (
-        catalog.search(query="sample", compact_signatures=True).items[0].signature
-        == first.items[0].signature
-    )
+    assert catalog.search(query="sample", compact_signatures=True).items[0] is first.items[0]
     assert (
         catalog.get("test:sample_processing_function").entry.signature
         == "sample_processing_function(sigma=2.0)"

@@ -330,24 +330,7 @@ class CatalogSearchProjection:
     metadata: FunctionMetadata
     entry: FunctionCatalogEntry
     parameters: tuple[FunctionParameterSpec, ...]
-    compact_signature: str
-
-    def entry_for_views(
-        self, signature_view: SignatureView, summary_view: SummaryView
-    ) -> FunctionCatalogEntry:
-        """Derive presentation from the same admitted declaration snapshot."""
-        if not signature_view.compact and not summary_view.compact:
-            return self.entry
-        return replace(
-            self.entry,
-            signature=(
-                self.compact_signature if signature_view.compact else self.entry.signature
-            ),
-            summary=(
-                None if self.entry.summary is None
-                else _bounded_summary(self.entry.summary, summary_view)
-            ),
-        )
+    compact_entry: FunctionCatalogEntry
 
 
 class ParameterDocumentationPolicy:
@@ -887,10 +870,6 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
         """Return ranked entries selected from the authoritative registry."""
         query_filter = CatalogFilterText.from_request(query)
         library_filter = CatalogFilterText.from_request(library)
-        signature_view = (
-            SignatureView.COMPACT if compact_signatures else SignatureView.FULL
-        )
-        summary_view = SummaryView.COMPACT if compact_signatures else SummaryView.FULL
         metadata_by_id = self._all_metadata(
             status_callback=status_callback,
             cancellation=cancellation,
@@ -903,7 +882,7 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
         candidates = []
         catalog_entries = []
         for projection in projections:
-            entry = projection.entry_for_views(signature_view, summary_view)
+            entry = projection.compact_entry if compact_signatures else projection.entry
             catalog_entries.append(entry)
             if not library_filter.accepts_library_or_tag(
                 entry.library,
@@ -954,25 +933,27 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
             signature = PARAMETER_DOCUMENTATION_POLICY.visible_signature(
                 metadata.func, contract
             )
+            entry = self._entry(
+                function_id, metadata, SignatureView.FULL, SummaryView.FULL,
+                contract=contract, visible_signature=signature,
+            )
             projections.append(
                 CatalogSearchProjection(
                     metadata=metadata,
-                    entry=self._entry(
-                        function_id,
-                        metadata,
-                        SignatureView.FULL,
-                        SummaryView.FULL,
-                        contract=contract,
-                        visible_signature=signature,
-                    ),
+                    entry=entry,
                     parameters=PARAMETER_DOCUMENTATION_POLICY.parameter_specs(
                         metadata.func,
                         contract,
                     ),
-                    compact_signature=PARAMETER_DOCUMENTATION_POLICY.render_signature(
-                        signature,
-                        _metadata_display_name(function_id, metadata),
-                        SignatureView.COMPACT,
+                    compact_entry=replace(
+                        entry,
+                        signature=PARAMETER_DOCUMENTATION_POLICY.render_signature(
+                            signature, entry.name, SignatureView.COMPACT
+                        ),
+                        summary=(
+                            None if entry.summary is None
+                            else _bounded_summary(entry.summary, SummaryView.COMPACT)
+                        ),
                     ),
                 )
             )
