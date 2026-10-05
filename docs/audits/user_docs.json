@@ -1507,7 +1507,7 @@
   },
   {
     "path": "docs/source/guide_for_biologists/image_sources.rst",
-    "source_sha256": "8a4a45c89a263d1da25150009a8fd55af1edeae621b3028878c9f138e40375ed",
+    "source_sha256": "59e171378f8827620c00e6cc6407ea2ec2d13c18e51afea57dfb67a0c19db418",
     "audience": [
       "imaging scientists",
       "source-integration operators"
@@ -1604,6 +1604,26 @@
         "path": "external/PolyStore/tests/test_ome_zarr_metadata.py",
         "sha256": "7444723fcc0bd0cdedd6d8b9454be57ce929caa61698539da55c782f0b7fb420",
         "role": "Proves format-independent store discovery, legacy metadata precedence, declared resolution lookup, malformed-metadata rejection, and dimension-name validation."
+      },
+      {
+        "path": "openhcs/core/artifacts.py",
+        "sha256": "c80450105c2acf01cb8cf2fbb0a0de0653b0f7171a744608fe7e43f879298d53",
+        "role": "Owns InputImageSetContextSourceRelation and its exact input-image and context-bearing target constraints."
+      },
+      {
+        "path": "openhcs/core/runtime_stores.py",
+        "sha256": "d9987379e3729720d0efcc32bff113d4a583f5b97bb5bfb1a5abd45c57acb8ea",
+        "role": "RuntimeArtifactInput resolves exact artifact addresses and checks execution context through the declared image-set relation; it does not select arbitrary same-shape labels."
+      },
+      {
+        "path": "openhcs/core/source_matching.py",
+        "sha256": "128e3b8be9ef3c24ebe357a385a1ca6685cacdc83545bd2dd362849c1dcf95b3",
+        "role": "SourceImageSetIdentityPolicy derives plane membership and retained sample identity from source declarations."
+      },
+      {
+        "path": "openhcs/interop/cellprofiler/module_artifact_declarations.py",
+        "sha256": "ae3582a5d3252827c520ce14d15b0fd860e0d9486dd103e9178f3340805ff889",
+        "role": "The existing object-measurement declaration ancestor derives label input image-set relations from its selected image specs."
       }
     ],
     "findings": [
@@ -1624,7 +1644,8 @@
       "On 2026-09-07, the minimum-stack PolyStore environment resolved the declared development install on Python 3.11 with Zarr 3.0.10 and ome-zarr 0.12.2 and passed dependency compatibility checks; the frozen bd5a616 candidate passed 486 tests with two deliberate skips. Physical-store tests also exercised the current Zarr 3.3.0 and ome-zarr 0.19.1 stack.",
       "On 2026-09-07, re-read the complete source-loading how-to after moving NGFF runtime imports from adapter/backend registration to actual discovery and read-only store opening. The documented formats, source identities, and separate native/Java decoding boundaries remain unchanged. Upstream location.create preserves subclass, mode, and format for nested wells and images. The unchanged declaration-import regression and real fresh-process discovery across both formats passed in the 27-test OpenHCS source suite; PolyStore passed 487 tests with two skips on the minimum runtime and 488 with one skip on the latest GPU-enabled runtime. Only the three directly reviewed changed authority hashes were refreshed.",
       "On 2026-09-08, re-read this page against the compiler saved-scope resolution fix: worker assignment and runtime environment consume one concrete resolved configuration; public pipeline declarations remain unchanged.",
-      "On 2026-09-16, re-read the complete how-to against persisted semantic metadata replay. Added the procedure for reopening generated output plates without recreating collapsed axes from filename coordinates; 277 focused source, output, materialization, and provenance tests passed."
+      "On 2026-09-16, re-read the complete how-to against persisted semantic metadata replay. Added the procedure for reopening generated output plates without recreating collapsed axes from filename coordinates; 277 focused source, output, materialization, and provenance tests passed.",
+      "2026-10-05: re-read the complete guide and the existing authoring routes against source bindings, RuntimeArtifactInput, SourceImageSetIdentityPolicy, and the CellProfiler measurement declaration ancestor. Added a conditional pre-authoring distinction between assembled image scope and declared label image-set context; preserved grouping, broadcast, sample identity and wrong-source checks. Focused qualification is recorded in docs/validation/source-scoped-photometry-authoring/RECEIPT.rst; it is documentation/contract delivery, not biological or live-author acceptance."
     ]
   },
   {

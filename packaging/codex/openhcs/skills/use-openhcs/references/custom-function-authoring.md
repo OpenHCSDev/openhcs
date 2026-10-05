@@ -18,6 +18,11 @@ plate** example: exact `PLATE` decorators, keyword-only `RuntimeArtifactBatch`,
 nominal record traversal, typed output and ordinary registration/pipeline use.
 Record the missing operation and expected input axes, dtype, units, memory
 backend, outputs and empty-input behaviour before writing source.
+For multi-channel measurements or labels produced on another aligned channel,
+retrieve `openhcs_image_sources#plan-image-stacks-and-source-bound-labels-before-authoring`
+before declaring inputs. Current image-stack scope and the label input's
+image-set-context relation are different contracts; an artifact name and
+nominal label annotation alone do not establish cross-channel compatibility.
 For centre detection, specify what defines a centre, coordinate order/origin,
 label identity and whether a count covers one plane or the whole volume.
 For native feature-bearing 3-D Points, retrieve **Materialize typed 3D centres
