@@ -20,6 +20,12 @@ Record the missing operation and expected input axes, dtype, units, memory
 backend, outputs and empty-input behaviour before writing source.
 For centre detection, specify what defines a centre, coordinate order/origin,
 label identity and whether a count covers one plane or the whole volume.
+For native feature-bearing 3-D Points, retrieve **Materialize typed 3D centres
+as feature-bearing Points** in `openhcs_callable_artifact_authoring`: existing
+`MeasurementsArtifactType` plus `PointROIOptions`, not a new Points artifact or
+rounded centre-voxel image. When adding diagnostic Images, use that document's
+**Return diagnostic images without flattening the ABI** section for the aligned
+canonical image slot and trailing typed outputs.
 
 Before writing source, verify the intended imports, decorators, helper types
 and enum members against the actual public declarations for the installed
