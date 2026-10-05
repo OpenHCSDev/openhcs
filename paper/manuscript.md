@@ -383,8 +383,8 @@ supports recovery of the assay response, not exhaustive segmentation accuracy
 or unseen-dataset generalisation; it is distinct from the prospective experiment
 above (Supplementary Data 8).
 
-A later independent translocation author also completed all 96 wells, but
-produced less complete compartments. Its recorded continuation retained
+A later independent translocation author also completed all 96 wells, with
+incomplete compartments in the inspected fields. Its recorded continuation retained
 18,331 nuclear seed rows and 14,496 defined nuclear-to-cytoplasmic ratios;
 3,835 ratios were undefined because cytoplasmic regions had no pixels.
 Matched native review found a faint nuclear miss and regions confined to
