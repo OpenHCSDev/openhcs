@@ -303,8 +303,15 @@ changed output delivery while retaining the same detector. Independent raw,
 point-only and combined XY/XZ/YZ review supported centre placement inside
 ordinary nuclei. A bright lobed complex and cropped border supports retained
 identity uncertainty. This trial demonstrates useful measurement-first
-localisation, with reference accuracy and an exhaustive biological count
-remaining unmeasured (Supplementary Data 8).
+localisation. After the workflow was frozen, one-to-one matching recovered
+all 15 manually annotated centres within the predeclared 30-voxel distance,
+with a mean localisation error of 4.80 voxels. All 15 also matched within
+20 voxels, and 14 matched within 10 voxels. Eleven of the 26 predictions were
+unmatched to these annotations. Their coverage was not established as
+exhaustive, so unmatched predictions do not establish false biological
+detections. These unscaled voxel distances assess centre placement rather
+than physical distance, segmentation boundaries or a whole-volume census
+(Supplementary Data 8).
 
 A fresh public neurite-field author identified bright junction pixels lost
 after ridge enhancement and restored them by combining enhanced support with
