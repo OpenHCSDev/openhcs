@@ -239,6 +239,17 @@ run, 61 field scores improved, 123 decreased and 16 were unchanged. The repeat
 retained useful agreement but did not improve overall accuracy; 314 additional
 misses accounted for most of the reduction (Supplementary Figure 20).
 
+A subsequent independent author achieved pooled F1 0.904 across all 200
+fields, with precision 0.944 and recall 0.866. It matched 20,457 of the same
+23,615 annotated nuclei, with 1,205 unmatched predictions and 3,158 missed
+annotations. Field F1 reached at least 0.90 in 137 fields; seven annotated
+fields remained below 0.80. All three annotation-empty fields had no
+detections. On its six initial development fields, the author's own revisions
+increased F1 from 0.826 to 0.840, recovering 17 additional matches while adding
+two unmatched predictions. The complete-corpus score was close to the earlier
+0.906 result, rather than an improvement; no first-attempt score across 200
+fields or causal skill effect is inferred (Supplementary Data 8).
+
 ### Image review supports local repair with regression controls
 
 In a released DNA/actin field, a fresh author separated a joined nuclear pair

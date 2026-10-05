@@ -954,6 +954,49 @@ and [original scoring account](../../figure-collection-20261004/BBBC039-FRESH10-
 retain unchanged frozen payloads, references, original failures and lifecycle
 dispositions. No reference-score feedback was given to the author.
 
+### BBBC039 fresh13: full-corpus agreement and six-field repair
+
+The independent author completed the same 200 single-channel DNA fields and
+selected a frozen method without reference-score feedback. Postfreeze scoring
+used the existing instance-mask decoder and one-to-one IoU 0.5 matcher on all
+200 original source/channel identities. Only six first-method predictions
+were materialised; the first/final comparison is restricted to those same six
+fields and their 708 annotated nuclei.
+
+| Scope | Annotated nuclei | Predicted instances | Matched | Unmatched predictions | Missed annotations | Pooled F1 |
+|---|---:|---:|---:|---:|---:|---:|
+| First, same six fields | 708 | 558 | 523 | 35 | 185 | 0.8262 |
+| Final, same six fields | 708 | 577 | 540 | 37 | 168 | 0.8405 |
+| Final, all 200 fields | 23,615 | 21,662 | 20,457 | 1,205 | 3,158 | 0.9036 |
+
+Final precision was 0.9444 and recall 0.8663. Of the 200 fields, 137 had F1
+at least 0.90 and seven annotation-bearing fields had F1 below 0.80. All three
+annotation-empty fields had zero predictions. The canonical scorer defines
+their individual F1 as zero; they remain in the all-field macro-F1 of 0.8886,
+rather than being dropped or relabelled as perfect. Pooled F1 by the original
+training/validation/test partitions was 0.9014/0.9035/0.9085, on 100/50/50
+fields. The full-corpus result includes development fields and is not a
+first-attempt or wholly unseen generalisation estimate.
+
+This repeat recovered 17 additional annotated nuclei on the paired six-field
+sample, with two additional unmatched predictions. Its all-field F1 was close
+to the earlier complete author's 0.9062, rather than better. The
+[independent final image review](../../figure-collection-20261004/BBBC039-FRESH13-FINAL-VISUAL-REVIEW.rst)
+supports ordinary-body coverage in dense and sparse reserve fields and the
+reviewed empty-field control; the
+[development review](../../figure-collection-20261004/BBBC039-FRESH13-DEVELOPMENT-WITNESS-REVIEW.rst)
+retains plausible crowded-object merges. Neither agreement with manual
+annotations nor the overlap-based split/merge diagnostic establishes
+infallible biological identity or a viable-cell census.
+
+The [complete evaluation receipt](task_only_analysis/bbbc039-fresh13-postfreeze-evaluation.json)
+retains all 200 per-field scores, the same-six comparison, source/reference
+hashes, original closed-journal checks and canonical scorer origins. It is
+byte-identical to the evaluator's original result. Scoring completed serially
+in 13.1 seconds with peak RSS 128.5 MiB, without pipeline execution or author
+feedback. The original complete 200-field execution remains separate from
+the later failed viewer-QA settlement; the review uses retained final captures.
+
 ### H003 fresh10: nuclear recovery and selective body admission
 
 A separate task-only author corrected internal-texture splits, then detected
