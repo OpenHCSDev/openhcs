@@ -54,6 +54,15 @@ execution converts settlement refusal into the original execution failure.
 NapariLayerRetirementControlMessageAction delegates to the existing component
 coordinator and route retirement boundary. Those protections remain intact.
 
+Existing refactor-audit Package/Repository AST loading parsed702 production
+Python modules with zero parse omissions. The declaration/attribute query
+enumerated settlement writes in NapariLayerSettlementState and the route
+store, reads in display/control/retirement, ManagedViewerLifecycleMixin,
+compiled_plate_execution, viewer_streaming_service and Fiji progress consumers.
+This is production source enumeration, not dependency semantic closure or
+behavioral proof. Installed dependency owners and dynamic Qt callbacks still
+need semantic closure before a structural patch is claimed complete.
+
 Next implementation and acceptance
 ---------------------------------
 
