@@ -149,12 +149,19 @@ Capture groups under the native PNG root above are:
 Each timestamp has prefix20261005T and suffixZ, followed by the same native
 filename suffix used above. Camera and window receipts are the corresponding
 output/receipts/<group>view.json and <group>win.json; visibility receipts use
-rawiso, resultiso and combinediso. In the B01 DNA result/combined screenshots,
-the raw-layer title instead says GFP/G06. The typed visible-route and intensity
-identities select DNA/B01, and the displayed raw structures match the B01
-raw-only image. This is a retained presentation-identity discrepancy, not
-evidence that the scientific arrays were channel-swapped. Its source cause
-is assigned separately to the viewer owner; no new capture was requested.
+rawiso, resultiso and combinediso. The original review misidentified the
+GFP/G06 row in the B01 DNA result/combined screenshots as the visible raw layer.
+Independent full-resolution review found its eye icon slashed: that adjacent
+row is hidden. Selecting B01 Shapes scrolls Napari's descending layer list;
+the two displayed neighbouring rows are not an inventory of visible layers.
+The original isolation receipts select DNA/B01 raw, B01 DNA Shapes, and both,
+respectively, without errors. The displayed combined structures match the
+B01 raw-only witness. These captures therefore establish neither a native
+title defect nor a scientific channel swap. No patch or new capture is needed.
+The original observation and its correction remain in issue551 comments
+5998200338, 5998551339 and 5998570860; the source/receipt diagnosis is retained
+under engineering551/NATIVE-LAYER-ROW-DIAGNOSIS15.rst in the issue-batch root.
+The earlier footer defect repaired by merged554 is a separate historical scope.
 
 Independent handoff verification found 367 complete author-control files
 unchanged and one append-only outer native journal with an intact recorded
