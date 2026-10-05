@@ -12908,6 +12908,83 @@ def test_filterobjects_binds_selection_measurement_values_to_label_slices(
     assert filtered_array[1, 3, 3] == 0
 
 
+@pytest.mark.parametrize("carrier_axis, binary_operand", (
+    (RuntimePlaneAxis.SOURCE_BINDING, False),
+    (RuntimePlaneAxis.RUNTIME_SLICE, False),
+    (RuntimePlaneAxis.RUNTIME_SLICE, True),
+))
+def test_area_occupied_rows_preserve_the_selected_domain(carrier_axis, binary_operand) -> None:
+    from openhcs.processing.backends.cellprofiler.area_occupied import OperandChoice
+
+    object_specs = tuple(
+        ArtifactSpec.input(name, ObjectLabelsArtifactType, parameter_name="object_labels")
+        for name in ("Primary", "Other")
+    )
+    objects = {}
+    for name, areas in (("Primary", (1, 4)), ("Other", (2, 3))):
+        labels = np.zeros((2, 3, 3), dtype=np.int32)
+        for plane, area in enumerate(areas):
+            labels[plane].flat[:area] = 1
+        objects[name] = ObjectLabelSet(
+            name=name,
+            variant_data=ObjectLabelVariantData(labels=labels),
+            domain=ObjectLabelDomain(
+                declared_object_id_domains=((1,), (1,)),
+                scope=ObjectLabelDomainScope.PLANE,
+            ),
+            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        )
+    measurement_spec = ArtifactSpec.output(
+        "AreaMeasurements", MeasurementsArtifactType,
+        measurement_feature_owner=MeasureImageAreaOccupiedBinaryModule,
+        relations=tuple(ArtifactSpecRelation(source=spec.ref()) for spec in object_specs),
+    )
+    binary_spec = ArtifactSpec.input("Binary", ImageArtifactType)
+    input_specs = ((binary_spec,) if binary_operand else ()) + object_specs
+    contract = _compiled_callable_contract(
+        MeasureImageAreaOccupiedBinaryModule.require_callable(),
+        artifact_inputs=input_specs, artifact_outputs=(measurement_spec,),
+    )
+    assert contract.invocation_domain_inputs.specs == (
+        (binary_spec,) if binary_operand else object_specs
+    )
+    carrier_pixels = np.zeros((2 if binary_operand else 3, 3, 3), dtype=np.float32)
+    if binary_operand:
+        carrier_pixels[0].flat[:3] = 1
+        carrier_pixels[1].flat[:6] = 1
+    carrier = ImagePayloadMetadata(
+        plane_axis=carrier_axis,
+        source_image_names=("Binary",) if binary_operand else (),
+    ).payload_with(carrier_pixels)
+    runtime = _FakeCellProfilerRuntime(
+        {"Binary": carrier} if binary_operand else {}, objects=objects,
+        artifact_input_edges=tuple(_artifact_input_edge_for_test(spec) for spec in input_specs),
+        plane_projection=RuntimePlaneProjection.stack(2),
+    )
+    runtime.request = replace(runtime.request, artifact_outputs={
+        measurement_spec.ref(): _artifact_output_plan(measurement_spec),
+    })
+    result = _run_module(
+        _module_executor(contract), carrier, cellprofiler_runtime=runtime,
+        operand_choices=((OperandChoice.BINARY_IMAGE,) if binary_operand else ())
+        + (OperandChoice.OBJECTS, OperandChoice.OBJECTS),
+        dtype_config=DtypeConfig(),
+    )
+    assert result is carrier
+    rows = tuple(runtime.measurements[0].rows.row_mappings())
+    measured = tuple(
+        (row["slice_index"], row["source_image_name"],
+         row[f"AreaOccupied_AreaOccupied_{row['source_image_name']}"])
+        for row in rows
+    )
+    expected = ((0, "Primary", 1.0), (0, "Other", 2.0),
+                (1, "Primary", 4.0), (1, "Other", 3.0))
+    if binary_operand:
+        expected = ((0, "Binary", 3.0), *expected[:2],
+                    (1, "Binary", 6.0), *expected[2:])
+    assert measured == expected
+
+
 def test_relationship_measurements_preserve_pure_2d_slice_indices() -> None:
     parent_labels = np.zeros((2, 5, 5), dtype=np.int32)
     child_labels = np.zeros((2, 5, 5), dtype=np.int32)
