@@ -71,13 +71,22 @@
   "compiler_source_issue": 785,
   "compiler_source_pr": 786,
   "main_integration": {
-    "merged_main_head": "09bce19292541acd4441a15c2c755a4a00912494",
+    "merged_main_head": "e144adcd5825aa74fccdda2844a03303f80d2a54",
     "controls": "123 existing invocation-grouping/source-projection/provenance controls PASS",
     "control_log_sha256": "92b81a03c3c429883f4694721a6b2ef3625fdd2d7c59bfaa480d78e89557762f",
     "production_file_delta_since_measurement": [
       "openhcs/core/equivalence/measurement_rows.py",
-      "openhcs/core/equivalence/relationships.py"
+      "openhcs/core/equivalence/relationships.py",
+      "openhcs/processing/backends/cellprofiler/_font_raster.c",
+      "openhcs/processing/backends/cellprofiler/_font_raster_native.cpp",
+      "openhcs/processing/backends/cellprofiler/tracking.py"
     ],
-    "scope": "Main integration adds the qualified comparator identity/correlation repair and paper/receipts. Compiler, source admission and numerical processing files remain identical to the measured source. No unchanged benchmark repeat."
+    "scope": "Main integration adds comparator identity/correlation repair, separately qualified tracking renderer/native font engine, and paper/receipts. Advanced selected producer/numerical algorithms, compiler and source admission files remain unchanged. No unchanged benchmark repeat.",
+    "tracking_receiving_pr": 468,
+    "font_abi_custody": "collective-measurement-advanced-ordinary-v3/main468-font-abi-custody.json",
+    "tracking_main_integration_control": {
+      "result": "Existing advanced measurement invocation/source group control PASS",
+      "sha256": "33b662fdd3508192388779035d895f2d57122672755940fd2356172dbe21537b"
+    }
   }
 }
