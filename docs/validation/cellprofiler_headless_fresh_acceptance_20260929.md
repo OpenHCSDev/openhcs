@@ -1,29 +1,36 @@
 # Authorized fresh bootstrap acceptance
 
 Owner: `openhcs-headless-bootstrap-worker` (Singer), issue #138, draft PR #207.
-Owner authorization now permits normal fresh dev acceptance, but **only after
-Euler explicitly releases the shared heavy-validation slot**. Do not poll or
-spin on `/home/ts/wt/openhcs-issue-batch-20260929/validation.lock`.
+Singer resumes current integration. The former Euler slot, fixed8GiB RAM veto
+and4GiB scratch quota are historical policy, not current admission. Use the
+actual receiving-lane owner's handoff for heavy work, without polling an old
+lock or waiting on a historical acknowledgement.
 
 ## Owned output and limits
 
 - Disposable root: `/home/ts/.cache/agent-scratch/openhcs-issue-bootstrap-20260929`.
 - Purpose: fresh CP/core 4.2.8.1 oracle, explicit pip cache, build temporary files.
-- Maximum aggregate owned disposable allocation: 4 GiB. No whole-cache copy.
+- Observe actual disk/RAM/pressure and concurrent work; no invented quota.
+  Reuse admitted caches without copying them or changing shared Fiji data.
 - Persistent logs/receipts: this worktree's `docs/validation` directory; retain
   failed-build logs and exact command/source/pin evidence before cleanup.
 - Interpreter: existing `/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python`
   (3.9.25). JDK: existing `/usr/lib/jvm/java-11-openjdk`. No Python/JDK download.
-- Public declared-pin package downloads are allowed; inspect relevant existing
-  wheel cache first. The initial pip wheel-cache listing contained no native CP
-  wheels (only an unrelated package), so do not copy unrelated cache contents.
+- Current instruction permits no new dependency downloads. Read-only inspection
+  still finds no CP/native closure in the existing pip wheel cache. The existing
+  oracle has setuptools69.5.1, not declared80.9.0; do not upgrade it or downgrade
+  the pin. Identify an admitted exact cached wheel/source closure before fresh
+  create; an existing installation is not construction evidence.
 - No installed user package/source change, GUI, fleet, paid service or blind data.
 
 ## Run once the slot is released
 
-Run the resource guard immediately before building and preserve at least 8 GiB
-available RAM. Acquire the shared lock nonblocking once; if unavailable, do not
-retry in a loop. The entire build and native acceptance must hold that lock.
+Run the existing resource guard and interpret actual pressure, available RAM,
+disk and concurrency before building. The target-owning VenvCapability shares
+resource observation between plan/create; its existing typed JSON owner records
+available memory and free disk bytes without a fixed admission threshold.
+Create logs those facts before commands and retains them with success/failure
+evidence. This observation does not waive genuine resource exhaustion.
 
 Create a new attempt directory under the owned root. Place the oracle, pip cache
 and `TMPDIR` there. Run the current worktree's real `create` command with:
@@ -39,8 +46,8 @@ and `TMPDIR` there. Run the current worktree's real `create` command with:
 ```
 
 Keep resource supervision on the owned running build, not on Euler's lock or
-process. Stop the owned build before exceeding the 4 GiB budget or violating
-RAM headroom; retain its failure/output evidence. Build subprocesses are bounded
+process. Adjust concurrency if actual capacity or pressure warrants it and
+retain failure/output evidence. Build subprocesses are bounded
 to 900 seconds per stage; native verification is bounded to 120 seconds.
 Never restart an observation timeout to conceal uncertain state.
 
@@ -59,6 +66,8 @@ settings, confirmed isolated mode plus disabled config files loaded no redirects
 Plan/Create share one declared cache capability; the stage owner builds the
 isolated pip command. No install was needed for this check.
 
-Authorized, not started: waiting for Euler's release notification. No lock check,
-build, download, new environment or JVM was initiated to obtain this slot. The
-previous source-hashed receipts remain valid only for their recorded sources.
+Current source correction is independent of fresh-create qualification. The
+remaining receiving requirement is an admitted exact cached dependency closure
+and the current heavy-lane handoff, not Euler's historical release. No build,
+download, new environment or JVM is claimed by this plan. Previous source-hashed
+receipts and original failed/drift evidence retain their exact historical scope.

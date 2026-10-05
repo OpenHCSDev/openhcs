@@ -355,7 +355,6 @@ def test_creation_runs_exact_plan_then_verifies_new_oracle(tmp_path, monkeypatch
     monkeypatch.setattr(
         bootstrap.OraclePreflight, "require_build_tools", lambda *args: None
     )
-    monkeypatch.setattr(bootstrap, "require_creation_headroom", lambda *args: None)
     commands = []
 
     def run(command, *args, **kwargs):
@@ -397,6 +396,9 @@ def test_creation_runs_exact_plan_then_verifies_new_oracle(tmp_path, monkeypatch
         json.loads(json.dumps(verified[0][1]["construction"]["commands"])) == commands
     )
     assert "allow_version_drift" not in verified[0][1]
+    resources = verified[0][1]["construction"]["resources"]
+    assert set(resources) == {"free_disk_bytes", "available_memory_bytes"}
+    assert all(type(value) is int and value >= 0 for value in resources.values())
 
 
 def test_native_build_failure_preserves_receipt_and_stops_remaining_stages(
@@ -408,7 +410,6 @@ def test_native_build_failure_preserves_receipt_and_stops_remaining_stages(
     monkeypatch.setattr(
         bootstrap.OraclePreflight, "require_build_tools", lambda *args: None
     )
-    monkeypatch.setattr(bootstrap, "require_creation_headroom", lambda *args: None)
     commands = []
 
     def fail_native_build(command, *args, **kwargs):
@@ -441,6 +442,8 @@ def test_native_build_failure_preserves_receipt_and_stops_remaining_stages(
     assert receipt["status"] == "construction_failed"
     assert receipt["stderr"] == "compiler failed"
     assert "python-javabridge==4.0.5" in receipt["failed_command"]
+    assert receipt["resources"]["free_disk_bytes"] >= 0
+    assert receipt["resources"]["available_memory_bytes"] >= 0
 
 
 @pytest.mark.parametrize(
@@ -450,7 +453,7 @@ def test_native_build_failure_preserves_receipt_and_stops_remaining_stages(
         (10 * 1024**3, 7 * 1024**2),
     ],
 )
-def test_creation_headroom_rejects_low_disk_or_ram(
+def test_creation_records_low_capacity_without_arbitrary_veto(
     tmp_path, monkeypatch, free_bytes, available_kib
 ):
     monkeypatch.setattr(
@@ -458,13 +461,48 @@ def test_creation_headroom_rejects_low_disk_or_ram(
         "disk_usage",
         lambda path: bootstrap.shutil._ntuple_diskusage(20 * 1024**3, 0, free_bytes),
     )
+    original_read_text = bootstrap.Path.read_text
     monkeypatch.setattr(
         bootstrap.Path,
         "read_text",
-        lambda *args: "MemAvailable: " + str(available_kib) + " kB\n",
+        lambda path, *args, **kwargs: (
+            "MemAvailable: " + str(available_kib) + " kB\n"
+            if path == Path("/proc/meminfo")
+            else original_read_text(path, *args, **kwargs)
+        ),
     )
-    with pytest.raises(ValueError, match="GiB"):
-        bootstrap.require_creation_headroom(tmp_path)
+    monkeypatch.setattr(
+        bootstrap.OraclePreflight, "inspect", lambda *args: fake_preflight()
+    )
+    monkeypatch.setattr(
+        bootstrap.OraclePreflight, "require_build_tools", lambda *args: None
+    )
+    commands = []
+    monkeypatch.setattr(
+        bootstrap, "run",
+        lambda command, *args, **kwargs: (
+            commands.append(command) or subprocess.CompletedProcess(command, 0, "", "")
+        ),
+    )
+    verified = []
+    monkeypatch.setattr(
+        bootstrap, "verify",
+        lambda *args, **kwargs: verified.append(kwargs) or 0,
+    )
+    assert bootstrap.main([
+        "create", "--java-home", str(tmp_path), "--python", "/python",
+        "--venv", str(tmp_path / "new-oracle"),
+        "--receipt", str(tmp_path / "receipt.json"),
+    ]) == 0
+    assert len(commands) == 1 + len(bootstrap.install_stages(bootstrap.read_pins()))
+    resources = verified[0]["construction"]["resources"]
+    assert resources == {
+        "free_disk_bytes": free_bytes,
+        "available_memory_bytes": available_kib * 1024,
+    }
+    assert bootstrap.CreationResourceObservation.from_json(
+        json.dumps(resources)
+    ) == bootstrap.CreationResourceObservation(free_bytes, available_kib * 1024)
 
 
 def test_new_command_is_discovered_parsed_and_executed_from_one_declaration(capsys):

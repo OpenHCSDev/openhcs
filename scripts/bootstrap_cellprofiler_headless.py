@@ -559,17 +559,22 @@ def verify(
     return int(receipt["status"] == "failed")
 
 
-def require_creation_headroom(parent: Path) -> None:
-    if shutil.disk_usage(parent).free < 4 * 1024**3:
-        raise ValueError(
-            "At least 4 GiB free disk is required before creating the oracle"
+@dataclass(frozen=True)
+class CreationResourceObservation(TypedJsonRecord):
+    """Observed capacity is evidence, not an invented installation quota."""
+
+    free_disk_bytes: int
+    available_memory_bytes: int
+
+    @classmethod
+    def inspect(cls, parent: Path) -> "CreationResourceObservation":
+        memory = dict(
+            line.split(":", 1)
+            for line in Path("/proc/meminfo").read_text().splitlines()
         )
-    memory = dict(
-        line.split(":", 1) for line in Path("/proc/meminfo").read_text().splitlines()
-    )
-    if int(memory["MemAvailable"].split()[0]) < 8 * 1024**2:
-        raise ValueError(
-            "At least 8 GiB available RAM is required before creating the oracle"
+        return cls(
+            free_disk_bytes=shutil.disk_usage(parent).free,
+            available_memory_bytes=int(memory["MemAvailable"].split()[0]) * 1024,
         )
 
 
@@ -696,6 +701,9 @@ class VenvCapability(PipCacheCapability):
     def target(self) -> Path:
         return self.venv.expanduser().absolute()
 
+    def observe_creation_resources(self) -> CreationResourceObservation:
+        return CreationResourceObservation.inspect(self.target.parent)
+
     def construction_commands(self) -> list[list[str]]:
         stages = install_stages(read_pins())
         return [
@@ -761,6 +769,7 @@ class PlanCommand(VenvCapability, OracleCapability, Command):
                 dict(
                     preflight=asdict(self.inspect_oracle()),
                     venv=str(self.target),
+                    resources=asdict(self.observe_creation_resources()),
                     commands=self.construction_commands(),
                     omitted_dependencies=["cellprofiler -> wxPython"],
                 ),
@@ -801,7 +810,8 @@ class CreateCommand(VenvCapability, OracleCapability, EvidenceCapability, Comman
         if not target.parent.is_dir():
             raise ValueError("Environment parent must already exist")
         preflight.require_build_tools()
-        require_creation_headroom(target.parent)
+        resources = self.observe_creation_resources()
+        print(resources.to_json(), file=sys.stderr, flush=True)
         commands = self.construction_commands()
         environment = native_environment(self.jdk)
         try:
@@ -822,6 +832,7 @@ class CreateCommand(VenvCapability, OracleCapability, EvidenceCapability, Comman
                     stderr=str(error.stderr),
                     venv=str(target),
                     commands=commands,
+                    resources=asdict(resources),
                 ),
             )
             raise
@@ -830,7 +841,9 @@ class CreateCommand(VenvCapability, OracleCapability, EvidenceCapability, Comman
             self.jdk,
             preflight,
             receipt_path,
-            construction=dict(venv=str(target), commands=commands),
+            construction=dict(
+                venv=str(target), commands=commands, resources=asdict(resources)
+            ),
         )
 
 

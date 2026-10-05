@@ -29,12 +29,15 @@ pip, creating a virtual environment, or starting CellProfiler's JVM.
 
 ## Create and validate a fresh oracle
 
-Reserve disk and RAM first. The script requires at least 4 GiB free disk and
-8 GiB available RAM before creation; allow additional space for pip's existing
-cache and build scratch. In a shared agent batch, obtain coordinator approval
-for the environment/download budget, run the resource guard, and acquire the
-batch's nonblocking validation lock around the entire create/verify command.
-Do not run it against a shared or installed environment.
+Inspect actual host memory, pressure, disk space and concurrent workloads first;
+adjust concurrency when those observations warrant it. The script records
+available memory and free target-filesystem disk space in bytes, without a fixed
+RAM or scratch quota. Plan and create share the target-owning observation hook;
+creation logs its observation before installation and retains it with success
+or failure evidence. Reuse admitted caches without copying shared Fiji data.
+For a shared receiving lane, use its current owner's handoff and resource check,
+not an obsolete lock or historical agent's acknowledgement. Do not run against
+a shared or installed environment; downloads require their own authorization.
 
 ```sh
 python scripts/bootstrap_cellprofiler_headless.py create \
