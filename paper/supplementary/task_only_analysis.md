@@ -423,7 +423,7 @@ a faint neighbour elsewhere remained merged. The author ultimately registered
 a custom detector through the ordinary OpenHCS function/artifact route, retaining
 its consumed response, markers and support as diagnostics.
 
-Figure 8 shows matched raw and first/final native overlays of
+Figure 6 shows matched raw and first/final native overlays of
 the repaired pair, alongside final raw, result-only and combined views of the
 remaining faint merge. The first completed prediction follows a technical
 submission repair; these panels compare scientific outputs within the same
@@ -715,8 +715,9 @@ exits and are not certified by this prefix check. The
 [retinal repeat outcome record](task_only_analysis/retinal-fresh656-outcome.json)
 identifies the preserved report, manifest, pipeline and inspected captures.
 No analysis, private scoring or source-image transformation was rerun for this
-account. Figure 9 continues to show the separate 109-instance predecessor and
-must not be interpreted as an image of this 118-instance repeat.
+account. The separate 109-instance predecessor retains its original captures
+and source proof. Main Figure 7 shows the later 102-instance repeat, not this
+118-instance repeat.
 
 ## BBBC039 fresh08: batch coverage completed in a separate continuation
 
@@ -747,7 +748,7 @@ completed batch and regional failure evidence are retained for subsequent
 learning rather than discarded for failing to achieve perfect segmentation.
 The [completion record](task_only_analysis/bbbc039-fresh08-completion18.rst)
 identifies the source phases, original terminal receipt and independent checks.
-These outputs do not replace Figure 7's separately scored trial.
+These outputs do not replace Figure 5's separately scored trial.
 
 ## Retinal fresh09: local repair with a retained neighbour control
 
@@ -775,7 +776,7 @@ and visual acceptance. No manual retinal count or mask score was obtained.
 The [independent final review](../../figure-collection-20261004/R0010-C10-INDEPENDENT-LOCAL-REPAIR-REVIEW.rst)
 and [intermediate tradeoff](../../figure-collection-20261004/R0010-C08-REGIONAL-TRADEOFF-REVIEW.rst)
 retain original capture identities, table checks and lifecycle qualifications.
-Main Figure 9 now shows this final candidate's whole field, northwest pair
+Main Figure 7 now shows this final candidate's whole field, northwest pair
 and southeast continuous envelope. Its [native source proof](task_only_analysis/retinal-fresh09-native-source-proof.json)
 binds six unchanged original PNGs, the frozen pipeline, native camera settings
 and exact geometric crops. Raw views use window 0–63 and gamma 1. The outline
@@ -825,7 +826,7 @@ does not imply sealed outer journals or verified runtime retirement.
 
 ### Programme-wide evidence scope
 
-[Figure 7 plot data](../figures/slas/task_only_analysis_plot_data.csv) retains
+[Figure 5 plot data](../figures/slas/task_only_analysis_plot_data.csv) retains
 the plotted first/final observations and all 200 field scores. Its
 [figure receipt](../figures/slas/task_only_analysis_provenance.json) records
 source, generator and output hashes. The

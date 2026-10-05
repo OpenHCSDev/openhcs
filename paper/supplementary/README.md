@@ -271,7 +271,7 @@ Source: BBBC007v1 A02, Sabatini laboratory, Whitehead Institute; CC0.
 
 ![Matched northeast raw, label-only and outline views from the final retinal candidate.](../figures/slas/retinal_fresh09_detail.png){width=6in}
 
-The same final candidate shown in main Figure 9 retains uncertain object
+The same final candidate shown in main Figure 7 retains uncertain object
 partitions in a different region. The upper elongated footprint spans vertically
 adjacent fluorescence bodies; the lower-right lobed region has uncertain
 identity and boundary extent. These local observations separate useful
@@ -279,12 +279,49 @@ body detection from a complete cell census. The three panels retain the same
 native camera and crop. Grayscale labels are dark in the original native
 display; darkness does not indicate absent numerical labels. Raw RBPMS uses
 window 0–63, gamma 1. The outline background uses the frozen pipeline's
-intensity stretch and display range 0–63/255, as in main Figure 9. Original
+intensity stretch and display range 0–63/255, as in main Figure 7. Original
 screenshots were clipped/scaled without pixel retouching. This is regional
 visual evidence, not a manual-reference error rate. Source: user-provided
 retinal whole mount R0010. The [shared native source proof](task_only_analysis/retinal-fresh09-native-source-proof.json)
 retains capture hashes, display choices and crop coordinates for both figures;
 Supplementary Data 8 records the independently checked tables and final scope.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
+## Supplementary Figure 15. A familiar CellProfiler pipeline expressed as OpenHCS steps
+
+![CellProfiler modules, imported function steps and named-object relationships.](../figures/slas/cellprofiler_translation.png){width=5.8in}
+
+\(A) The public ExampleCometAssay pipeline maps image loading to source bindings and processing to 12 function steps. Rows align original modules and imported functions; multiplicity marks repeated calls. Spreadsheet export runs plate-wide. (B) MeasureObjectSizeShape applies the same function to Comet, CometHead and CometTail within one step. (C) Masking the comet with its head, with inversion enabled, defines CometTail. The diagram is derived from the source pipeline and importer; function identities, parameters and counts are checked against its retained mapping.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
+## Supplementary Figure 16. Image and object inspection in Fiji and napari
+
+![Recorded image and ROI inspection in two viewers.](../figures/slas/inspectable_results.png){width=5.5in}
+
+\(A) Fiji displays a single NeuronCyto II field 1 nuclear plane with nine corresponding native ROI Manager entries. (B) A separate three-plane napari demonstration shows segmented objects, a selected ROI-list entry and the displayed channel/Z coordinates. Its accompanying recording shows selection navigating between planes. These are retained viewer demonstrations, separate from the unattended analysis in Figure 3; their segmentation outputs are not compared with each other. Details enlarge the ROI entries and a nuclear outline in A, and the selected object, highlighted list entry and coordinates in B. The full captures and checksum records are retained in the gallery archive.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
+## Supplementary Table 1. Reusable libraries and their roles
+
+| Library | Role in OpenHCS |
+| --- | --- |
+| [metaclass-registry](https://github.com/OpenHCSDev/metaclass-registry) | Discovers classes implementing a shared interface and makes them available for selection. |
+| [python-introspect](https://github.com/OpenHCSDev/python-introspect) | Reads a function's parameters, types, defaults and documentation. |
+| [ObjectState](https://github.com/OpenHCSDev/objectstate) | Tracks editable settings and resolves shared defaults and local overrides. |
+| [pyqt-reactive](https://github.com/OpenHCSDev/pyqt-reactive) | Generates parameter controls and updates them as settings change. |
+| [pycodify](https://github.com/OpenHCSDev/pycodify) | Generates editable Python representations and manages their imports. |
+| [ArrayBridge](https://github.com/OpenHCSDev/arraybridge) | Converts arrays between supported libraries and manages their computational resources. |
+| [PolyStore](https://github.com/OpenHCSDev/PolyStore) | Reads, writes and streams data through supported storage interfaces. |
+| [ZMQRuntime](https://github.com/OpenHCSDev/zmqruntime) | Coordinates communication, startup, shutdown and progress between processes. |
 
 ```{=openxml}
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
