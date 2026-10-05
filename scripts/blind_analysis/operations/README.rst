@@ -102,8 +102,17 @@ introduce MemoryMax or MemorySwapMax. An engineering row without a scientific
 brief cannot launch a paid analysis author. Original
 environment, path masks, first-start clock and10s request idle remain unchanged.
 
-Before scientific actions resource-check.sh FUNDING SLOT UNIQUE_PHASE consumes
-current membership. Ongoing observations measure only the selected run's output;
+Before a coherent bounded read/QA burst, resource-check.sh FUNDING SLOT
+UNIQUE_PHASE ongoing consumes current membership and observes actual resources.
+Related small state reads, display changes, matched captures and owned cleanup
+do not need a full programme observation before every command. Recheck when
+pressure/headroom or work size changes, another allocation begins, or a
+resource/write failure appears. Each tool retains its ordinary path, revision,
+incarnation and uncertain-input custody checks. This is operator planning, not
+a cached grant, timer, poller or new admission mechanism. Cold native startup
+and new/large allocations still require a fresh appropriately sized observation
+through the existing owner before dispatch.
+Ongoing observations measure only the selected run's output;
 ledger/startup observations measure funded runs for cleanup/staging forecasts.
 Closed output paths remain once as custody declarations, without recursively
 inventorying their contents on every action: actual df already charges those
