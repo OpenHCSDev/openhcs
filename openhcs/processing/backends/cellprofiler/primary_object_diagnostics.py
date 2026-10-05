@@ -20,6 +20,7 @@ from openhcs.core.artifacts import (
     SourceStackLineageSourceRelation,
 )
 from openhcs.core.measurement_row_materialization import DataclassMeasurementColumnarRows
+from openhcs.core.projected_image_output import SelectedPlaneImageOutput
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     MaskedImagePayload,
@@ -68,6 +69,30 @@ class DiagnosticPlaneSource:
                 source_plane_dtypes=(),
             ),
         )
+
+
+class SelectedDiagnosticPlaneImageOutput(SelectedPlaneImageOutput):
+    """An unchanged-raster diagnostic with selected-source and response units.
+
+    Selection/axis admission belongs to SelectedPlaneImageOutput. Diagnostic
+    intensity semantics belong to DiagnosticPlaneSource, not acquisition dtype.
+    Unlike a cropped selected output, these planes retain the source geometry.
+    """
+
+    def resolve_source_context(self, source, projection):
+        selected = super().resolve_source_context(source, projection)
+        source_metadata = image_payload_metadata(source)
+        source_shape = source_metadata.spatial_shape_yx(source)
+        if source_shape != tuple(selected.shape[-2:]):
+            raise ValueError("Diagnostic plane must preserve the source spatial shape.")
+        diagnostic = DiagnosticPlaneSource.from_image(selected)
+        diagnostic = DiagnosticPlaneSource(
+            diagnostic.metadata.replace_fields(
+                source_spatial_domain=source_metadata.source_spatial_domain,
+            ),
+            diagnostic.validity_mask,
+        )
+        return diagnostic.plane(image_payload_data(selected))
 
 
 class DeclumpingEvidence(ABC):

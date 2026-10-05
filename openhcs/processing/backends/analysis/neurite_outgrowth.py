@@ -11,7 +11,7 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass, replace
 from enum import Enum
 from itertools import combinations
-from typing import Iterable, Mapping, Sequence
+from typing import Iterable, Mapping, NamedTuple, Sequence, Tuple, get_type_hints
 
 import numpy as np
 from scipy import ndimage as ndi
@@ -76,6 +76,7 @@ from ..cellprofiler.feature_enhancement import (
 )
 from ..cellprofiler.medial_axis import medialaxis
 from ..cellprofiler.primary_objects import identify_primary_objects
+from ..cellprofiler.primary_object_diagnostics import SelectedDiagnosticPlaneImageOutput
 from ..cellprofiler.secondary import (
     SecondaryMethod,
     identify_secondary_objects,
@@ -232,6 +233,7 @@ class CellProfilerNeuriteEngineProfile:
             NEURITE_SECONDARY_OWNERSHIP_OUTPUT,
             NEURITE_TOPOLOGY_DROPPED_TRACE_OUTPUT,
             NEURITE_TOPOLOGY_ADDED_TRACE_OUTPUT,
+            *NeuriteAdmissionPlanes.artifact_specs(),
             cls.morphology_output(),
         )
 
@@ -330,15 +332,16 @@ class CellProfilerNeuriteEngineProfile:
                 dtype=np.int32,
             )
 
-        outgrowth_binary, outgrowth_skeleton, outgrowth_response = (
-            _identify_neurites_cellprofiler(
-                neurite_image,
-                cell_body,
-                outgrowth,
-                coordinate_scale,
-                bright_objects=bright_objects,
-            )
+        admission = _identify_neurites_cellprofiler(
+            neurite_image,
+            cell_body,
+            outgrowth,
+            coordinate_scale,
+            bright_objects=bright_objects,
         )
+        outgrowth_binary = admission.mask
+        outgrowth_skeleton = admission.skeleton
+        outgrowth_response = admission.response
         outgrowth_width_px = outgrowth.maximum_width_px(coordinate_scale)
         nuclear_seed_mode = use_nuclear_stain and body_detection_channel_index == int(
             nuclear_stain.channel_index
@@ -642,6 +645,7 @@ class CellProfilerNeuriteEngineProfile:
                 topology_added_trace.astype(np.uint8, copy=False)[None],
                 (neurite_channel_index,),
             ),
+            *admission.planes.selected_outputs(neurite_channel_index),
             neurite_morphology,
         )
 
@@ -1116,6 +1120,60 @@ NEURITE_TOPOLOGY_ADDED_TRACE_OUTPUT = _neurite_qa_checkpoint_output(
 )
 
 
+class NeuriteAdmissionPlanes(NamedTuple):
+    """Original consumed stage values; field order owns checkpoint order.
+
+    threshold_support precedes optional seeded-component retention;
+    retained_support follows it. With retention disabled they are the same
+    computed support, not evidence of an executed seed gate. local_support is
+    the independent raw-unit response gate, before intersection/body exclusion.
+    """
+
+    enhanced_response: np.ndarray
+    threshold_support: np.ndarray
+    retained_support: np.ndarray
+    local_response: np.ndarray
+    local_support: np.ndarray
+
+    @classmethod
+    def artifact_specs(cls) -> tuple[ArtifactSpec, ...]:
+        return tuple(
+            _neurite_qa_checkpoint_output(f"neurite_{name}") for name in cls._fields
+        )
+
+    def selected_outputs(
+        self, source_index: int
+    ) -> tuple[SelectedDiagnosticPlaneImageOutput, ...]:
+        return tuple(
+            SelectedDiagnosticPlaneImageOutput(plane[None], (source_index,))
+            for plane in self
+        )
+
+
+@dataclass(frozen=True)
+class NeuriteAdmissionResult:
+    """Detection and diagnostic consumers share one original execution."""
+
+    mask: np.ndarray
+    skeleton: np.ndarray
+    planes: NeuriteAdmissionPlanes
+
+    @property
+    def response(self) -> np.ndarray:
+        return self.planes.local_response
+
+
+# Both callable ABIs derive diagnostic slots from the same stage declaration.
+NeuriteOutgrowthRuntimeTuple = Tuple[(
+    np.ndarray, DataclassMeasurementColumnarRows, DataclassMeasurementColumnarRows,
+    np.ndarray, np.ndarray, np.ndarray, np.ndarray,
+    SelectedPlaneImageOutput, SelectedPlaneImageOutput, SelectedPlaneImageOutput,
+    SelectedPlaneImageOutput, SelectedPlaneImageOutput,
+    *(SelectedDiagnosticPlaneImageOutput for _ in get_type_hints(NeuriteAdmissionPlanes)),
+    SpatialGraph,
+)]
+
+
 @dataclass(frozen=True)
 class _TopologyResult:
     path_owners: np.ndarray
@@ -1281,21 +1339,7 @@ def neurite_outgrowth_metaxpress(
     use_nuclear_stain: bool = False,
     nuclear_stain: MetaXpressNuclearSettings = MetaXpressNuclearSettings(),
     pixel_size: HiddenPixelSize = HiddenPixelSize(1.0),
-) -> tuple[
-    np.ndarray,
-    DataclassMeasurementColumnarRows,
-    DataclassMeasurementColumnarRows,
-    np.ndarray,
-    np.ndarray,
-    np.ndarray,
-    np.ndarray,
-    SelectedPlaneImageOutput,
-    SelectedPlaneImageOutput,
-    SelectedPlaneImageOutput,
-    SelectedPlaneImageOutput,
-    SelectedPlaneImageOutput,
-    SpatialGraph,
-]:
+) -> NeuriteOutgrowthRuntimeTuple:
     """Measure cell bodies and attached neurites in one 2D channel stack.
 
     The MetaXpress-style controls cover:
@@ -1336,6 +1380,11 @@ def neurite_outgrowth_metaxpress(
         direct table, ROI-path, and SWC inspection. Object-label artifacts retain
         complete integer masks as lossless TIFFs alongside contour ROI archives;
         ROI area filtering does not remove pixels from those TIFFs.
+        On-demand admission checkpoints retain this execution's enhanced response,
+        threshold support before and after optional seeded-component retention,
+        local response and its independent support gate. They do not rerun
+        detection. Responses retain their computed units, not acquisition dtype
+        scaling; support planes are boolean and source/channel aligned.
     """
 
     return CELLPROFILER_NEURITE_ENGINE_PROFILE.analyze(
@@ -1360,21 +1409,7 @@ def neurite_outgrowth_metaxpress_pixels(
     outgrowth: PixelOutgrowthSettings = PixelOutgrowthSettings(),
     use_nuclear_stain: bool = False,
     nuclear_stain: PixelNuclearSettings = PixelNuclearSettings(),
-) -> tuple[
-    np.ndarray,
-    DataclassMeasurementColumnarRows,
-    DataclassMeasurementColumnarRows,
-    np.ndarray,
-    np.ndarray,
-    np.ndarray,
-    np.ndarray,
-    SelectedPlaneImageOutput,
-    SelectedPlaneImageOutput,
-    SelectedPlaneImageOutput,
-    SelectedPlaneImageOutput,
-    SelectedPlaneImageOutput,
-    SpatialGraph,
-]:
+) -> NeuriteOutgrowthRuntimeTuple:
     """Measure soma-rooted neurite morphology explicitly in source-pixel units.
 
     Input is a 2D channel stack (C, Y, X). Widths and significant-growth lengths
@@ -1385,7 +1420,7 @@ def neurite_outgrowth_metaxpress_pixels(
     Rows and graph edges declare their coordinate unit. The graph's analysis
     metric does not replace acquisition calibration: original source metadata
     contextualizes native ROI placement. Pixel graphs publish graph ROIs, not
-    physical SWC files. The unchanged image and twelve declared artifacts have
+    physical SWC files. The unchanged image and declared artifacts have
     the same identity/subject relations as the physical recipe.
     """
     return PIXEL_CELLPROFILER_NEURITE_ENGINE_PROFILE.analyze(
@@ -1625,8 +1660,8 @@ def _identify_neurites_cellprofiler(
     coordinate_scale: float,
     *,
     bright_objects: bool,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Return the public mask, CP medial axis, and local signal evidence."""
+) -> NeuriteAdmissionResult:
+    """Retain the original consumed evidence alongside detection results."""
 
     outgrowth_width_px = settings.maximum_width_px(coordinate_scale)
     body_width_px = cell_body.maximum_width_px(coordinate_scale)
@@ -1649,6 +1684,7 @@ def _identify_neurites_cellprofiler(
         ),
     )
     cp_mask = np.asarray(image_payload_data(cp_mask_payload)) > 0
+    threshold_support = cp_mask
     if settings.candidate_hysteresis_seed_correction_factor is not None:
         seed_mask_payload, _ = _raw_processing_leaf(threshold)(
             enhanced,
@@ -1670,12 +1706,20 @@ def _identify_neurites_cellprofiler(
         object_width_px=outgrowth_width_px,
         bright_objects=bright_objects,
     )
-    outgrowth_mask = cp_mask & (response >= settings.intensity_above_local_background)
+    local_support = response >= settings.intensity_above_local_background
+    outgrowth_mask = cp_mask & local_support
     skeleton_payload = _raw_processing_leaf(medialaxis)(
         outgrowth_mask.astype(np.float32, copy=False)
     )
     skeleton = np.asarray(image_payload_data(skeleton_payload)) > 0
-    return outgrowth_mask, skeleton, response
+    return NeuriteAdmissionResult(
+        outgrowth_mask,
+        skeleton,
+        NeuriteAdmissionPlanes(
+            np.asarray(image_payload_data(enhanced)), threshold_support, cp_mask,
+            response, local_support,
+        ),
+    )
 
 
 def _seeded_candidate_components(

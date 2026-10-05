@@ -23,6 +23,7 @@ from openhcs.processing.backends.cellprofiler.primary_object_diagnostics import 
     ExecutedDeclumpingEvidence,
     PrimaryObjectDiagnosticPlanes,
     PrimaryObjectsRuntimeTuple,
+    SelectedDiagnosticPlaneImageOutput,
     UnexecutedDeclumpingEvidence,
 )
 from openhcs.processing.materialization import (
@@ -63,6 +64,35 @@ def _objects(source):
         small_removed_labels=small_removed,
         declared_object_count=1,
     ).payload()
+
+
+def test_selected_response_keeps_source_frame_without_acquisition_intensity_scale():
+    from openhcs.core.runtime_plane_projection import (
+        RuntimePlaneAxis, RuntimePlaneAxisValueProjection,
+    )
+    from openhcs.core.runtime_image_values import normalize_image_payload_intensity
+
+    source = _source()
+    stack = source.metadata.replace_fields(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        source_dtype="uint16",
+    ).payload_with(source.data[None])
+    pixels = np.linspace(0, 3, 30, dtype=np.float32).reshape(1, 5, 6)
+    projection = RuntimePlaneAxisValueProjection.preserve(
+        axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=1
+    )
+    output = SelectedDiagnosticPlaneImageOutput(pixels, (0,))
+    resolved = output.resolve_source_context(stack, projection)
+    np.testing.assert_array_equal(resolved.data, pixels[0])
+    np.testing.assert_array_equal(normalize_image_payload_intensity(resolved), pixels[0])
+    assert resolved.metadata.source_path == source.metadata.source_path
+    assert resolved.metadata.source_spatial_domain == source.metadata.source_spatial_domain
+    assert resolved.metadata.source_dtype == "float32"
+    assert resolved.metadata.intensity_scale is None
+    with pytest.raises(ValueError, match="preserve the source spatial shape"):
+        SelectedDiagnosticPlaneImageOutput(pixels[:, :4], (0,)).resolve_source_context(
+            stack, projection
+        )
 
 
 @pytest.mark.parametrize("executed", [False, True])
