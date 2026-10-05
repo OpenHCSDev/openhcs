@@ -131,6 +131,18 @@ landscape or support failure remains. Preserve that partial improvement and
 diagnose the remaining split rather than discarding it or repeating an
 ineffective suppression change.
 
+If duplicate landmarks remain inside a supported continuous body after that
+repair, compare their per-axis spacing with a genuine neighbour pair on the
+actual consumed landscape. Where the reflected extractor supports it, test
+component-local, axis-aware exclusion or body association from those measured
+scales, declaring its metric and physical or voxel-index units. Preserve
+foreground and unrelated marker settings so the changed stage is identifiable.
+Component membership is not biological identity: touching neighbours can share
+support, and an exclusion that removes internal peaks can merge a real pair,
+including through Z. Recheck representative locations and isolated, close-pair,
+border and multi-lobed controls; retain local improvements while qualifying
+unresolved identity, rather than choosing a radius or count universally.
+
 For point-only counts of extended objects, maxima are candidate landmarks, not
 automatically distinct bodies. Track candidate multiplicity within each sampled
 raw body across the axes present; in 3-D, inspect through Z and orthogonal views,
