@@ -62,7 +62,9 @@ from python_introspect import (
 )
 
 from openhcs.constants import MemoryType
-from openhcs.core.aligned_image_payload import AlignedImageStack, ProducedImageStack
+from openhcs.core.aligned_image_payload import (
+    AlignedImageStack, ImagePayloadSliceStack, ProducedImageStack,
+)
 from openhcs.core.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     MeasurementRowsAxisProjection,
@@ -79,6 +81,7 @@ from openhcs.core.runtime_batch_contracts import (
     runtime_batch_executors_from_callable,
 )
 from openhcs.core.runtime_image_values import (
+    ImagePayloadMetadataCarrier,
     ImageMetadataPayload,
     ImagePayloadMetadata,
     ImagePayloadMetadataCompositionMode,
@@ -761,6 +764,8 @@ class RuntimeArrayPure2DAuxiliaryOutputAggregator(Pure2DAuxiliaryOutputAggregato
         )
 
     def type_distance(self, values: list[Any]) -> int:
+        if super().supports(values):
+            return super().type_distance(values)
         if self.owns_mixed_values(values):
             return 0
         return super().type_distance(values)
@@ -791,7 +796,7 @@ class ImagePayloadPure2DAuxiliaryOutputAggregator(
 ):
     """Stack image payload slices and reattach composed runtime image context."""
 
-    value_type = None
+    value_type = ImagePayloadMetadataCarrier
     include_in_family = True
 
     def _accepts_mixed_value(self, value: Any) -> bool:
@@ -807,7 +812,7 @@ class ImagePayloadPure2DAuxiliaryOutputAggregator(
         *,
         plane_axis: RuntimePlaneAxis,
     ) -> Any:
-        return AlignedImageStack.from_output_slices(
+        return ImagePayloadSliceStack.from_output_slices(
             values, memory_type=memory_type, plane_axis=plane_axis,
         )
 
@@ -873,7 +878,7 @@ class NumPyPure2DAuxiliaryOutputAggregator(Pure2DAuxiliaryOutputAggregator):
         *,
         plane_axis: RuntimePlaneAxis,
     ) -> Any:
-        return AlignedImageStack.from_output_slices(
+        return ImagePayloadSliceStack.from_output_slices(
             values, memory_type=memory_type, plane_axis=plane_axis,
         )
 

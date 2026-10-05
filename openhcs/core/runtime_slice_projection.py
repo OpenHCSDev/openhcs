@@ -16,7 +16,7 @@ from metaclass_registry import AutoRegisterMeta
 
 from openhcs.constants.constants import VariableComponents
 from openhcs.core.aligned_image_payload import (
-    AlignedImageStack,
+    ImagePayloadSliceStack,
     AlignedImageStackKwargResolver,
     ImageOutputBundle,
 )
@@ -81,7 +81,7 @@ RuntimeProjectionData: TypeAlias = (
     | SparseIJVLabelRows
     | ObjectLabelSet
     | ObjectLabelPayload
-    | AlignedImageStack
+    | ImagePayloadSliceStack
     | RuntimeSliceAlignedValueSet
     | RuntimeSliceProjectableValue
     | RuntimePlaneAxisValueProjection
@@ -573,10 +573,10 @@ class ImagePayloadRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStrategy)
         )
 
 
-class AlignedImageStackRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStrategy):
-    """Project an aligned image stack through its declared outer or inner axis."""
+class ImagePayloadSliceStackRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStrategy):
+    """Project either stack composition through its declared outer or inner axis."""
 
-    value_type = AlignedImageStack
+    value_type = ImagePayloadSliceStack
 
     def resolve_aligned_kwarg(
         self,
@@ -588,14 +588,14 @@ class AlignedImageStackRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStra
         )
 
     def full_stack_value(self, value: RuntimeProjectionData) -> RuntimeProjectionData:
-        return cast(AlignedImageStack, value).compose()
+        return cast(ImagePayloadSliceStack, value).compose()
 
     def value_for_slice(
         self,
         value: RuntimeProjectionData,
         context: RuntimePlaneAxisValueProjection,
     ) -> RuntimeProjectionData:
-        aligned = cast(AlignedImageStack, value)
+        aligned = cast(ImagePayloadSliceStack, value)
         if context.axis is aligned.composition_metadata_mode.plane_axis:
             return aligned.aligned_slice(
                 context.require_plane_index(),
@@ -620,11 +620,11 @@ class AlignedImageStackRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStra
         self,
         value: RuntimeProjectionData,
     ) -> int | None:
-        return cast(AlignedImageStack, value).runtime_slice_count
+        return cast(ImagePayloadSliceStack, value).runtime_slice_count
 
 
 class ImageOutputBundleRuntimeSliceProjectionStrategy(
-    AlignedImageStackRuntimeSliceProjectionStrategy
+    ImagePayloadSliceStackRuntimeSliceProjectionStrategy
 ):
     """Project each named output through its shared declared runtime axis."""
 
