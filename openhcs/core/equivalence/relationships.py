@@ -139,7 +139,9 @@ class RuntimeScopedMeasurementTable:
                 measurement_row_mapping(raw_row),
                 object_row_identity=self.table.rows.object_row_identity,
             )
-            object_id = row.object_label()
+            object_id = row.object_label(
+                object_id_field=self.table.subject.object_id_field
+            )
             if object_id is None:
                 continue
             slice_indices.add(
@@ -1275,7 +1277,9 @@ class ExportedRelationshipMeasurementSemantics(RelationshipMeasurementSemantics)
                 continue
             for values in table.rows.iter_row_mappings():
                 row = RuntimeMeasurementRowMapping(measurement_row_mapping(values))
-                object_id = row.object_label()
+                object_id = row.object_label(
+                    object_id_field=table.subject.object_id_field
+                )
                 if object_id is None:
                     raise ValueError(
                         f"Relationship endpoint {subject.name!r} lacks an object identity."
@@ -1430,7 +1434,9 @@ class ExportedRelationshipMeasurementSemantics(RelationshipMeasurementSemantics)
                 values = pairs.setdefault(key, [])
                 for raw_row in table.rows.iter_row_mappings():
                     row = RuntimeMeasurementRowMapping(measurement_row_mapping(raw_row))
-                    child_id = row.object_label()
+                    child_id = row.object_label(
+                        object_id_field=table.subject.object_id_field
+                    )
                     parent_id = MeasurementScalarLiteral(
                         row.row[field.name]
                     ).integer_value

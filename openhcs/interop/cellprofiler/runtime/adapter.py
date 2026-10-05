@@ -14,6 +14,7 @@ from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPol
 from openhcs.core.artifacts import (
     ArtifactOutputPlan,
     ArtifactSpec,
+    ArtifactSpecCollection,
     ArtifactType,
     ImageArtifactType,
     MeasurementsArtifactType,
@@ -22,10 +23,7 @@ from openhcs.core.artifacts import (
     RelationshipsArtifactType,
     SpatialGridArtifactType,
 )
-from openhcs.core.runtime_adapters import RuntimeAdapterRequest
-from openhcs.core.runtime_artifact_queries import (
-    MeasurementTableUnion,
-)
+from openhcs.core.runtime_adapters import RuntimeAdapterRequest, RuntimeAdapterSpec
 from openhcs.core.runtime_artifact_values import (
     RuntimeValue,
 )
@@ -90,6 +88,22 @@ class CellProfilerRecordedArtifactOutputPolicy(AdapterRecordedArtifactOutputPoli
         spec.require_measurement_feature_owner()
 
 
+class CellProfilerRuntimeAdapterSpec(RuntimeAdapterSpec):
+    """Derive CP invocation carriers from the module's declared input domain."""
+
+    __slots__ = ()
+
+    def invocation_domain_inputs(
+        self, contract: CallableContract,
+    ) -> ArtifactSpecCollection:
+        from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
+
+        module = CellProfilerModule.require_callable_contract_owner(contract)
+        return ArtifactSpecCollection(module.invocation_domain_inputs(
+            contract, contract.artifact_inputs.specs,
+        ))
+
+
 @dataclass(slots=True)
 class CellProfilerRuntimeAdapter(RuntimePlaneAxisProjector):
     """CellProfiler-like API backed by typed OpenHCS runtime state.
@@ -109,13 +123,12 @@ class CellProfilerRuntimeAdapter(RuntimePlaneAxisProjector):
     def runtime_adapter_spec(cls):
         """Return the sole compiled CellProfiler runtime-adapter declaration."""
 
-        from openhcs.core.runtime_adapters import RuntimeAdapterSpec
         from openhcs.interop.cellprofiler.runtime.module_execution import (
             cellprofiler_runtime_adapter_factory,
             cellprofiler_runtime_callable_factory,
         )
 
-        return RuntimeAdapterSpec(
+        return CellProfilerRuntimeAdapterSpec(
             parameter_name=cls.require_parameter_name(),
             factory=cellprofiler_runtime_adapter_factory,
             manages_artifact_inputs=True,
@@ -218,7 +231,7 @@ class CellProfilerRuntimeAdapter(RuntimePlaneAxisProjector):
                 f"CellProfiler output {output_plan.ref()!r} requires exactly one "
                 f"invocation record, got {len(records)}."
             )
-        return RuntimeValue.compose((records[0].value,))
+        return RuntimeValue.compose((records[0],))
 
     def require_artifact_available(
         self,
@@ -304,7 +317,9 @@ class CellProfilerRuntimeAdapter(RuntimePlaneAxisProjector):
             (),
         )
         if runtime_projection is None or runtime_projection.plane_index is None:
-            return projected
+            return cast(
+                RuntimeArrayData, RuntimeSliceProjection.full_stack_value(projected),
+            )
         return cast(
             RuntimeArrayData,
             RuntimeSliceProjection.value_for_slice(projected, runtime_projection),
@@ -436,10 +451,9 @@ class CellProfilerRuntimeAdapter(RuntimePlaneAxisProjector):
             MeasurementsArtifactType,
             group_key=group_key,
         )
-        return MeasurementTableUnion(
-            name,
-            tuple(cast(MeasurementTable, record.value.data) for record in records),
-        ).as_table()
+        return MeasurementTable.join(
+            name, tuple(cast(MeasurementTable, record.data) for record in records)
+        )
 
     def measurement_tables(
         self,
@@ -452,7 +466,7 @@ class CellProfilerRuntimeAdapter(RuntimePlaneAxisProjector):
             group_key=group_key,
             match_group=match_group,
         )
-        return tuple(cast(MeasurementTable, record.value.data) for record in records)
+        return tuple(cast(MeasurementTable, record.data) for record in records)
 
     def declared_measurement_input_records(
         self,

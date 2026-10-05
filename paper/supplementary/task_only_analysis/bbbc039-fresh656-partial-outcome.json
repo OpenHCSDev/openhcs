@@ -1,0 +1,38 @@
+{
+  "trial": "BBBC039_FRESH656_88",
+  "scope": "post-freeze reference agreement on completed development fields, not full200 or unseen validation",
+  "requested_fields": 200,
+  "completed_fields": 156,
+  "incomplete_fields": 44,
+  "final": {
+    "predicted_objects": 15919,
+    "reference_objects": 17901,
+    "true_positives": 14999,
+    "false_positives": 920,
+    "false_negatives": 2902,
+    "precision": 0.9422074250895157,
+    "recall": 0.8378861516116418,
+    "micro_f1": 0.886989946777055
+  },
+  "earlier612_same156": {"true_positives":15595,"false_positives":821,"false_negatives":2306,"micro_f1":0.9088789812629309},
+  "paired_first_final_81": {
+    "true_positives_unchanged": 7701,
+    "false_negatives_unchanged": 1234,
+    "first_false_positives": 449,
+    "final_false_positives": 421,
+    "first_micro_f1": 0.9014925373134328,
+    "final_micro_f1": 0.9029723867034062
+  },
+  "match_iou": 0.5,
+  "final_pipeline_sha256": "6b9740f81a17e347ea4f47aa9ba1898cc91e0b4462252edb05d460064a16f2af",
+  "original_evaluation_path": "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/bbbc039-fresh656-partial-postfreeze-evaluation.json",
+  "original_evaluation_sha256": "b1dd7fc46fc0978f872819f7a34567df4d04a3ea96f15c81aec8ec57aee0f3cb",
+  "original_driver_sha256": "b1ff06f3b245d30fba746ec820054c05395a0605aafb075532c989667c31f488",
+  "scoring_owner": "benchmark.validation.scoring.instance_segmentation_metrics",
+  "reference_owner": "benchmark.validation.references.ValidationReferenceStrategy",
+  "closed_author_and_client_journals_checked_before_after": 6,
+  "scientific_prediction_hashes_checked_before_after": true,
+  "reference_hashes_checked_before_after": true,
+  "pipeline_execution_or_author_feedback": false,
+  "limits": ["Developed and incomplete coverage subset, not random sampling", "Earlier and later bundles/settings differ; no skill-only causal estimate", "Reference agreement is not perfect biological truth", "Original recorded client exit2 and bookkeeping overrun remain preserved"]
+}

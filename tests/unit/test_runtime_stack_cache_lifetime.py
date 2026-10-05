@@ -38,7 +38,7 @@ def test_release_drops_all_cached_views_and_allows_reuse(context_owned: bool) ->
     assert all(cache.get(entry, memory_type="numpy") is None for entry in paths)
     replacement = np.zeros((1, 8, 8), dtype=np.uint16)
     cache.store(paths[0], memory_type="numpy", stack=replacement)
-    assert cache.get(paths[0], memory_type="numpy").stack is replacement
+    assert cache.get(paths[0], memory_type="numpy") is replacement
 
 
 def test_context_image_cache_release_preserves_runtime_artifacts_and_observations() -> (

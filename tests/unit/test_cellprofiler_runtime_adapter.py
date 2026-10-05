@@ -1,6 +1,7 @@
 import importlib
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Annotated, ClassVar
 
@@ -34,6 +35,7 @@ from openhcs.core.component_group_scope import (
 )
 from openhcs.core.config import DtypeConfig
 from openhcs.core.function_patterns import (
+    MainFlowInputProjection,
     DEFAULT_GROUP_KEY,
     FunctionInvocationKey,
     InvocationArtifactInputEdgePlan,
@@ -59,7 +61,6 @@ from openhcs.core.pipeline.function_contracts import (
 from openhcs.core.runtime_artifact_queries import (
     MeasurementLabelSliceFeatureQuery,
     MeasurementTableAxisProjection,
-    MeasurementTableUnion,
 )
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_batch_contracts import SliceIndexRuntimeParameter
@@ -122,7 +123,6 @@ from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     NamedSourceBinding,
     SourceBindingOrigin,
-    SourceBindingRuntimeContext,
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
@@ -155,8 +155,8 @@ from openhcs.interop.cellprofiler.runtime.object_label_measurements import (
     ObjectLabelMeasurementSliceRequest,
     RelationshipPlaneProjectionResolution,
 )
-from openhcs.interop.cellprofiler.runtime.object_measurement_tables import (
-    ObjectMeasurementTableIndex,
+from openhcs.core.measurement_feature_queries import (
+    ColumnarMeasurementTableSchema,
 )
 from openhcs.interop.cellprofiler.runtime.object_measurement_vectors import (
     MeasurementImageOperandVectorResolution,
@@ -283,7 +283,7 @@ def _output_objects(adapter: CellProfilerRuntimeAdapter, name: str) -> ObjectLab
         _selected_output_plan(adapter, name, ObjectLabelsArtifactType)
     )
     assert len(records) == 1
-    value = records[0].value.data
+    value = records[0].data
     assert isinstance(value, ObjectLabelSet)
     return value
 
@@ -295,9 +295,9 @@ def _output_measurements(
     records = adapter.artifact_output_records(
         _selected_output_plan(adapter, name, MeasurementsArtifactType)
     )
-    tables = tuple(record.value.data for record in records)
+    tables = tuple(record.data for record in records)
     assert all(isinstance(table, MeasurementTable) for table in tables)
-    return MeasurementTableUnion(name, tables).as_table()
+    return MeasurementTable.join(name, tables)
 
 
 def _output_relationship(
@@ -307,7 +307,7 @@ def _output_relationship(
     records = adapter.artifact_output_records(
         _selected_output_plan(adapter, name, RelationshipsArtifactType)
     )
-    relationships = tuple(record.value.data for record in records)
+    relationships = tuple(record.data for record in records)
     assert all(isinstance(value, ObjectRelationship) for value in relationships)
     if len(relationships) == 1:
         return relationships[0]
@@ -321,7 +321,7 @@ def _output_spatial_grid(
     records = adapter.artifact_output_records(
         _selected_output_plan(adapter, name, SpatialGridArtifactType)
     )
-    value = RuntimeValue.compose(tuple(record.value for record in records))
+    value = RuntimeValue.compose(tuple(record for record in records))
     assert isinstance(value, (SpatialGrid, RuntimeSliceAlignedValues))
     return value
 
@@ -649,7 +649,6 @@ def _adapter(
     source_bindings=StepSourceBindingsConfig(
         bindings=(NamedSourceBinding(alias=DNA_IMAGE),)
     ),
-    source_binding_context=SourceBindingRuntimeContext.empty(),
     processing_context=None,
     plane_projection=RuntimePlaneProjection.stack(1),
     callable_contract=None,
@@ -660,7 +659,6 @@ def _adapter(
         axis_scope=runtime_axis_scope(AXIS_ID),
         artifact_output_bindings=output_bindings,
         source_binding_plan=_compiled_source_binding_plan(source_bindings),
-        source_binding_context=source_binding_context,
         plane_projection=plane_projection,
         callable_contract=callable_contract,
         microscope_handler=(
@@ -690,11 +688,49 @@ def _pipeline_start_contains_binding(alias):
 
 
 def _source_bound_image_adapter(output_bindings, images):
+    from polystore.virtual_workspace import SourcePixelRef
+    from openhcs.core.source_projection import (
+        OpenHCSPlaneAddress, SourcePlaneProjection, SourceProjectionSet,
+    )
+    from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
+    from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+
     filemanager = FileManagerStub()
-    paths = tuple(f"/src/{alias}.tif" for alias in images)
     for alias, image in images.items():
         filemanager.saved[("memory", f"/src/{alias}.tif")] = image
     context = ContextStub(filemanager)
+    projections = SourceProjectionSet(tuple(
+        SourcePlaneProjection(
+            address=OpenHCSPlaneAddress.from_values('A01', '1', str(index), '1', '1'),
+            ref=SourcePixelRef('memory', f'/src/{alias}.tif'),
+            source_alias=alias,
+        )
+        for index, alias in enumerate(images, start=1)
+    ))
+    subdirectory = projections.metadata_dict(
+        parser=SourceSchemaFilenameParser(),
+        microscope_handler_name='SourceBindingsHandler',
+        source_filename_parser_name='SourceSchemaFilenameParser',
+        grid_dimensions=[1, 1], pixel_size=1.,
+    )
+    document = {'subdirectories': {'.': subdirectory}}
+    context.microscope_handler.metadata_handler = SimpleNamespace(
+        source_workspace_metadata_document=lambda _plate: document,
+    )
+    workspace = VirtualWorkspaceSourceProjection.from_openhcs_metadata(
+        Path(context.input_dir), document,
+    )
+    for path, projection in workspace.source_projections_by_virtual_path.items():
+        pixels = images[projection.source_alias]
+        payload = ImagePayloadMetadata(
+            source_path=projection.ref.backend_address,
+            source_image_names=(projection.source_alias,),
+            source_spatial_domain=SourceSpatialDomain(
+                origin_yx=(0, 0), source_shape_yx=pixels.shape[-2:],
+            ),
+        ).payload_with(pixels)
+        filemanager.saved[('virtual_workspace', path)] = payload
+        filemanager.saved[('virtual_workspace', str(Path(context.input_dir) / path))] = payload
     return cellprofiler_runtime_adapter_for_test(
         runtime_value_store=RuntimeValueStore(),
         axis_scope=runtime_axis_scope(AXIS_ID),
@@ -706,12 +742,6 @@ def _source_bound_image_adapter(output_bindings, images):
                     _pipeline_start_contains_binding(alias) for alias in images
                 )
             )
-        ),
-        source_binding_context=SourceBindingRuntimeContext(
-            step_input_files=paths,
-            step_input_dir="/src",
-            pipeline_input_files=paths,
-            pipeline_input_backend="memory",
         ),
         microscope_handler=(context).microscope_handler,
         filemanager=filemanager,
@@ -829,7 +859,11 @@ def _executor_for_contract(
                     spec=spec,
                     storage_plan=None,
                     projection=None,
-                    consumes_main_flow=spec.ref() in main_flow_input_refs,
+                    main_flow_projection=(
+                        MainFlowInputProjection.DECLARED_SOURCE_IMAGE
+                        if spec.ref() in main_flow_input_refs
+                        else None
+                    ),
                 )
             )
             continue
@@ -1019,8 +1053,8 @@ def test_cellprofiler_adapter_adds_and_reads_objects_through_runtime_store():
     )
     objects = _output_objects(adapter, NUCLEI)
 
-    assert isinstance(record.value.data, ObjectLabelSet)
-    assert record.value.data.name == NUCLEI
+    assert isinstance(record.data, ObjectLabelSet)
+    assert record.data.name == NUCLEI
     assert objects.labels is labels
     assert objects.source_image_name == DNA_IMAGE
     assert objects.dimensions == ("y", "x")
@@ -1062,14 +1096,14 @@ def test_cellprofiler_adapter_contextualizes_source_aligned_object_label_stack()
         source_image_payload=source_image,
     )
 
-    assert isinstance(record.value.data, ObjectLabelSet)
-    assert record.value.data.source_image_provenance_planes.paths == (
+    assert isinstance(record.data, ObjectLabelSet)
+    assert record.data.source_image_provenance_planes.paths == (
         "/src/A01_s001_w1_z001_t001.tif",
         "/src/A01_s002_w1_z001_t001.tif",
     )
     assert tuple(
         dict(metadata)
-        for metadata in record.value.data.source_image_provenance_planes.component_metadata
+        for metadata in record.data.source_image_provenance_planes.component_metadata
         if metadata is not None
     ) == (
         {"well": "A01", "site": "1", "channel": "1"},
@@ -1079,7 +1113,7 @@ def test_cellprofiler_adapter_contextualizes_source_aligned_object_label_stack()
     assert isinstance(saved_payload, ObjectLabelSet)
     assert (
         saved_payload.source_image_provenance_planes.paths
-        == record.value.data.source_image_provenance_planes.paths
+        == record.data.source_image_provenance_planes.paths
     )
 
 
@@ -1119,7 +1153,7 @@ def test_cellprofiler_adapter_contextualizes_single_source_aligned_label_plane()
         source_image_payload=source_image,
     )
 
-    object_labels = record.value.data
+    object_labels = record.data
     assert isinstance(object_labels, ObjectLabelSet)
     object_labels.validate_source_alignment(NUCLEI)
     assert object_labels.source_image_provenance_planes.paths == (source_path,)
@@ -1151,9 +1185,9 @@ def test_cellprofiler_adapter_preserves_sparse_ijv_object_value_representation()
 
     record = adapter.add_objects(NUCLEI, labels)
 
-    assert isinstance(record.value.data, ObjectLabelSet)
-    assert record.value.data.representation is ObjectLabelRepresentation.SPARSE_IJV
-    assert record.value.data.labels is sparse_rows
+    assert isinstance(record.data, ObjectLabelSet)
+    assert record.data.representation is ObjectLabelRepresentation.SPARSE_IJV
+    assert record.data.labels is sparse_rows
     objects = _output_objects(adapter, NUCLEI)
     assert objects.representation is ObjectLabelRepresentation.SPARSE_IJV
     assert objects.labels is sparse_rows
@@ -1214,11 +1248,6 @@ def test_cellprofiler_adapter_does_not_cache_current_image_object_selection():
         "/src/A01_s001_w1_z001_t001.tif",
         "/src/A01_s002_w1_z001_t001.tif",
     )
-    source_binding_context = SourceBindingRuntimeContext(
-        step_input_files=source_paths,
-        step_input_dir="/src",
-        pipeline_input_files=source_paths,
-    )
     filemanager = FileManagerStub()
     processing_context = ContextStub(filemanager)
 
@@ -1230,7 +1259,6 @@ def test_cellprofiler_adapter_does_not_cache_current_image_object_selection():
             runtime_value_store=store,
             axis_scope=runtime_axis_scope(AXIS_ID),
             artifact_output_bindings=output_bindings,
-            source_binding_context=source_binding_context,
             group_key=group_key,
             microscope_handler=(
                 processing_context.microscope_handler
@@ -1280,7 +1308,6 @@ def test_cellprofiler_adapter_does_not_cache_current_image_object_selection():
             )
         },
         variable_components=(VariableComponents.SITE,),
-        source_binding_context=source_binding_context,
         microscope_handler=(
             processing_context.microscope_handler
             if processing_context is not None
@@ -1562,9 +1589,6 @@ def test_cellprofiler_adapter_does_not_source_scope_default_image_records():
         axis_scope=runtime_axis_scope(AXIS_ID),
         artifact_inputs=_compiled_artifact_inputs,
         variable_components=(VariableComponents.SITE,),
-        source_binding_context=SourceBindingRuntimeContext(
-            step_input_files=("/src/A01_s003_w1.tif",),
-        ),
         filemanager=filemanager,
         callable_contract=_compiled_callable_contract(
             calculate_math,
@@ -1626,11 +1650,6 @@ def test_cellprofiler_adapter_stacks_declared_default_image_input_runtime_groups
             ).payload_with(np.full((2, 2), value, dtype=np.float32), None),
         )
 
-    source_binding_context = SourceBindingRuntimeContext(
-        step_input_files=source_paths,
-        current_step_input_files=source_paths,
-        pipeline_input_files=source_paths,
-    )
     _compiled_artifact_inputs = {
         edge.key: edge
         for edge in (
@@ -1662,7 +1681,6 @@ def test_cellprofiler_adapter_stacks_declared_default_image_input_runtime_groups
         runtime_value_store=store,
         axis_scope=runtime_axis_scope(AXIS_ID, "well", AXIS_ID),
         artifact_inputs=_compiled_artifact_inputs,
-        source_binding_context=source_binding_context,
         microscope_handler=(context).microscope_handler,
         filemanager=filemanager,
         variable_components=(VariableComponents.SITE,),
@@ -1759,12 +1777,6 @@ def test_cellprofiler_adapter_keeps_multisource_current_image_grouped_when_files
         runtime_value_store=store,
         axis_scope=runtime_axis_scope(AXIS_ID),
         artifact_inputs=_compiled_artifact_inputs,
-        source_binding_context=SourceBindingRuntimeContext(
-            step_input_files=source_paths,
-            current_step_input_files=(source_paths[0],),
-            pipeline_input_files=source_paths,
-            source_metadata_by_path=source_metadata_by_path,
-        ),
         microscope_handler=(context).microscope_handler,
         filemanager=filemanager,
         variable_components=(VariableComponents.SITE,),
@@ -1831,11 +1843,6 @@ def test_cellprofiler_adapter_stacks_declared_image_input_for_pattern_group():
             ).payload_with(np.full((2, 2), value, dtype=np.float32), None),
         )
 
-    source_binding_context = SourceBindingRuntimeContext(
-        step_input_files=source_paths,
-        current_step_input_files=source_paths,
-        pipeline_input_files=source_paths,
-    )
     _compiled_artifact_inputs = {
         edge.key: edge
         for edge in (
@@ -1861,7 +1868,6 @@ def test_cellprofiler_adapter_stacks_declared_image_input_for_pattern_group():
         axis_scope=runtime_axis_scope(AXIS_ID),
         group_key="A01_s{iii}_w1_z001_t001.tif",
         artifact_inputs=_compiled_artifact_inputs,
-        source_binding_context=source_binding_context,
         microscope_handler=(context).microscope_handler,
         filemanager=filemanager,
         variable_components=(VariableComponents.SITE,),
@@ -1896,7 +1902,6 @@ def test_cellprofiler_adapter_records_output_in_declared_invocation_group():
     filemanager = FileManagerStub()
     output_name = "MembMasked"
     source_path = "/plate/Images/3d_monolayer_xy1_ch3.tif"
-    mask_path = "/plate/Images/3d_monolayer_xy1_ch1.tif"
     output_plan = ArtifactOutputPlan(
         name=output_name,
         path=f"/memory/{output_name}.pkl",
@@ -1922,15 +1927,6 @@ def test_cellprofiler_adapter_records_output_in_declared_invocation_group():
         group_key="3",
         artifact_output_bindings=(
             _output_binding(output_name, ImageArtifactType, plan=output_plan),
-        ),
-        source_binding_context=SourceBindingRuntimeContext(
-            step_input_files=(mask_path,),
-            current_step_input_files=(mask_path,),
-            pipeline_input_files=(
-                "/plate/Images/3d_monolayer_xy1_ch0.tif",
-                mask_path,
-                source_path,
-            ),
         ),
         microscope_handler=(ContextStub(filemanager)).microscope_handler,
         filemanager=filemanager,
@@ -2041,11 +2037,6 @@ def test_cellprofiler_adapter_projects_source_bound_runtime_image_to_group_plane
         group_key="2",
         plane_projection=RuntimePlaneProjection.selected(1, 2),
         artifact_inputs=_compiled_artifact_inputs,
-        source_binding_context=SourceBindingRuntimeContext(
-            source_metadata_by_path=dict(
-                zip(source_paths, source_metadata, strict=True)
-            ),
-        ),
         filemanager=filemanager,
         callable_contract=_compiled_callable_contract(
             calculate_math,
@@ -2145,11 +2136,6 @@ def test_cellprofiler_adapter_deduplicates_grouped_runtime_image_input_locations
         axis_scope=runtime_axis_scope(AXIS_ID, "site", "2"),
         plane_projection=RuntimePlaneProjection.selected(1, 2),
         artifact_inputs=_compiled_artifact_inputs,
-        source_binding_context=SourceBindingRuntimeContext(
-            source_metadata_by_path=dict(
-                zip(source_paths, source_metadata, strict=True)
-            ),
-        ),
         filemanager=filemanager,
         callable_contract=_compiled_callable_contract(
             calculate_math,
@@ -2724,9 +2710,6 @@ def test_cellprofiler_adapter_keeps_template_scoped_object_records_grouped():
         axis_scope=runtime_axis_scope(AXIS_ID),
         artifact_inputs=_compiled_artifact_inputs,
         variable_components=(VariableComponents.SITE,),
-        source_binding_context=SourceBindingRuntimeContext(
-            step_input_files=("/src/A01_s{iii}_w1.tif",),
-        ),
         filemanager=filemanager,
         callable_contract=_compiled_callable_contract(
             calculate_math,
@@ -3140,6 +3123,7 @@ def test_cellprofiler_adapter_discovers_single_realized_dynamic_grouped_input():
                     artifact_type=ObjectLabelsArtifactType,
                     group_keys=(None,),
                     group_component=AllComponents.CHANNEL,
+                    paths_by_group={"1": realized_path},
                 ),
                 invocation_scope=ComponentGroupScope.ungrouped(),
                 producer_selection_scope=ComponentGroupScope.dynamic(
@@ -3170,6 +3154,24 @@ def test_cellprofiler_adapter_discovers_single_realized_dynamic_grouped_input():
     np.testing.assert_array_equal(objects.labels, realized_labels[None, ...])
     assert objects.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
     assert objects.domain.declared_object_id_domains == ((1,),)
+
+    # A dynamic component never grants access to another compiled producer path.
+    (edge,) = _compiled_artifact_inputs.values()
+    for undeclared_paths in (None, {"1": "/other/Nuclei_s1.pkl"}):
+        mismatched_edge = replace(
+            edge,
+            storage_plan=replace(edge.storage_plan, paths_by_group=undeclared_paths),
+        )
+        mismatched_consumer = CellProfilerRuntimeAdapter(
+            request=replace(
+                consumer.request, artifact_inputs={edge.key: mismatched_edge}
+            ),
+            backend=consumer.backend,
+        )
+        with pytest.raises(
+            RuntimeError, match="Missing dynamic grouped artifact input"
+        ):
+            mismatched_consumer.get_objects(NUCLEI)
 
 
 def test_cellprofiler_adapter_discovers_realized_dynamic_grouped_object_inputs():
@@ -3225,6 +3227,7 @@ def test_cellprofiler_adapter_discovers_realized_dynamic_grouped_object_inputs()
                     artifact_type=ObjectLabelsArtifactType,
                     group_keys=(None,),
                     group_component=AllComponents.CHANNEL,
+                    paths_by_group=group_paths,
                 ),
                 invocation_scope=ComponentGroupScope.ungrouped(),
                 producer_selection_scope=ComponentGroupScope.dynamic(
@@ -3395,22 +3398,6 @@ def test_cellprofiler_adapter_does_not_resolve_object_input_from_source_context(
             ),
         )
 
-    source_binding_context = SourceBindingRuntimeContext(
-        step_input_files=(
-            "/plate/Images/A01_s002_w1_z001_t001.tif",
-            "/plate/Images/A01_s002_w2_z001_t001.tif",
-        ),
-        pipeline_input_files=(
-            "/plate/Images/A01_s001_w1_z001_t001.tif",
-            "/plate/Images/A01_s001_w2_z001_t001.tif",
-            "/plate/Images/A01_s002_w1_z001_t001.tif",
-            "/plate/Images/A01_s002_w2_z001_t001.tif",
-        ),
-        current_step_input_files=(
-            "/plate/Images/A01_s002_w1_z001_t001.tif",
-            "/plate/Images/A01_s002_w2_z001_t001.tif",
-        ),
-    )
     _compiled_artifact_inputs = {
         edge.key: edge
         for edge in (
@@ -3440,7 +3427,6 @@ def test_cellprofiler_adapter_does_not_resolve_object_input_from_source_context(
         runtime_value_store=store,
         axis_scope=runtime_axis_scope(AXIS_ID),
         artifact_inputs=_compiled_artifact_inputs,
-        source_binding_context=source_binding_context,
         microscope_handler=(ContextStub(filemanager)).microscope_handler,
         filemanager=filemanager,
         variable_components=(VariableComponents.SITE,),
@@ -3549,6 +3535,10 @@ def test_cellprofiler_adapter_preserves_ungrouped_runtime_slice_output_stack():
 def test_cellprofiler_adapter_stacks_dynamic_compiled_grouped_images():
     filemanager = FileManagerStub()
     store = RuntimeValueStore()
+    group_paths = {
+        "1": "/memory/DNA_s1.pkl",
+        "2": "/memory/DNA_s2.pkl",
+    }
     first = cellprofiler_runtime_adapter_for_test(
         runtime_value_store=store,
         axis_scope=runtime_axis_scope(AXIS_ID),
@@ -3559,11 +3549,11 @@ def test_cellprofiler_adapter_stacks_dynamic_compiled_grouped_images():
                 ImageArtifactType,
                 plan=ArtifactOutputPlan(
                     name=DNA_IMAGE,
-                    path="/memory/DNA_s1.pkl",
+                    path=group_paths["1"],
                     artifact_type=ImageArtifactType,
                     group_keys=("1",),
                     group_component=AllComponents.SITE,
-                    paths_by_group={"1": "/memory/DNA_s1.pkl"},
+                    paths_by_group={"1": group_paths["1"]},
                 ),
             ),
         ),
@@ -3579,11 +3569,11 @@ def test_cellprofiler_adapter_stacks_dynamic_compiled_grouped_images():
                 ImageArtifactType,
                 plan=ArtifactOutputPlan(
                     name=DNA_IMAGE,
-                    path="/memory/DNA_s2.pkl",
+                    path=group_paths["2"],
                     artifact_type=ImageArtifactType,
                     group_keys=("2",),
                     group_component=AllComponents.SITE,
-                    paths_by_group={"2": "/memory/DNA_s2.pkl"},
+                    paths_by_group={"2": group_paths["2"]},
                 ),
             ),
         ),
@@ -3601,6 +3591,7 @@ def test_cellprofiler_adapter_stacks_dynamic_compiled_grouped_images():
                     artifact_type=ImageArtifactType,
                     group_keys=(None,),
                     group_component=AllComponents.SITE,
+                    paths_by_group=group_paths,
                 ),
                 invocation_scope=ComponentGroupScope.ungrouped(),
                 producer_selection_scope=ComponentGroupScope.dynamic(
@@ -3728,7 +3719,7 @@ def test_cellprofiler_adapter_relationships_validate_declared_inputs_by_location
         )
     )
 
-    assert relationship.value.artifact_type is RelationshipsArtifactType
+    assert relationship.artifact_type is RelationshipsArtifactType
 
 
 def test_cellprofiler_adapter_declared_relationship_allows_pruned_child_endpoint():
@@ -3759,9 +3750,9 @@ def test_cellprofiler_adapter_declared_relationship_allows_pruned_child_endpoint
         )
     )
 
-    assert relationship.value.artifact_type is RelationshipsArtifactType
-    assert isinstance(relationship.value.data, ObjectRelationship)
-    assert relationship.value.data.declaration.target.name == "FilteredCells"
+    assert relationship.artifact_type is RelationshipsArtifactType
+    assert isinstance(relationship.data, ObjectRelationship)
+    assert relationship.data.declaration.target.name == "FilteredCells"
 
 
 def test_cellprofiler_adapter_relationships_accept_grouped_parent_inputs():
@@ -3858,7 +3849,7 @@ def test_cellprofiler_adapter_relationships_accept_grouped_parent_inputs():
         )
     )
 
-    assert relationship.value.artifact_type is RelationshipsArtifactType
+    assert relationship.artifact_type is RelationshipsArtifactType
 
 
 def test_cellprofiler_adapter_relationships_allow_same_invocation_child_output():
@@ -3935,7 +3926,7 @@ def test_cellprofiler_adapter_relationships_allow_same_invocation_child_output()
         )
     )
 
-    assert relationship.value.artifact_type is RelationshipsArtifactType
+    assert relationship.artifact_type is RelationshipsArtifactType
 
 
 def test_cellprofiler_adapter_adds_and_reads_spatial_grid_artifacts():
@@ -4043,8 +4034,8 @@ def test_cellprofiler_adapter_replaces_existing_payload_with_latest_binding():
         NUCLEI, ObjectLabelPayload(variant_data=ObjectLabelVariantData(labels=second))
     )
 
-    assert isinstance(record.value.data, ObjectLabelSet)
-    assert record.value.data.labels is second
+    assert isinstance(record.data, ObjectLabelSet)
+    assert record.data.labels is second
     assert filemanager.deleted == [("memory", "/memory/Nuclei.pkl")]
     saved_objects = filemanager.saved[("memory", "/memory/Nuclei.pkl")]
     assert isinstance(saved_objects, ObjectLabelSet)
@@ -4139,7 +4130,7 @@ def test_cellprofiler_adapter_records_ungrouped_measurements_once():
     )
 
     assert len(records) == 1
-    assert records[0].path == "/memory/A01_Measurements.pkl"
+    assert records[0].location.path == "/memory/A01_Measurements.pkl"
 
 
 def test_cellprofiler_adapter_uses_static_output_scope():
@@ -4268,7 +4259,7 @@ def test_cellprofiler_adapter_preserves_same_artifact_measurement_subjects():
     )
 
     tables = tuple(
-        record.value.data
+        record.data
         for record in adapter.artifact_output_records(measurement_output_plan)
     )
 
@@ -4358,14 +4349,6 @@ def test_cellprofiler_adapter_does_not_select_measurement_record_from_current_so
             )
         )
 
-    source_binding_context = SourceBindingRuntimeContext(
-        step_input_files=("/plate/Images/A01_s002_w1_z001_t001.tif",),
-        pipeline_input_files=(
-            "/plate/Images/A01_s001_w1_z001_t001.tif",
-            "/plate/Images/A01_s002_w1_z001_t001.tif",
-        ),
-        current_step_input_files=("/plate/Images/A01_s002_w1_z001_t001.tif",),
-    )
     _compiled_artifact_inputs = {
         edge.key: edge
         for edge in (
@@ -4395,7 +4378,6 @@ def test_cellprofiler_adapter_does_not_select_measurement_record_from_current_so
         runtime_value_store=store,
         axis_scope=runtime_axis_scope(AXIS_ID),
         artifact_inputs=_compiled_artifact_inputs,
-        source_binding_context=source_binding_context,
         microscope_handler=(ContextStub(filemanager)).microscope_handler,
         filemanager=filemanager,
         variable_components=(VariableComponents.SITE,),
@@ -4622,7 +4604,7 @@ def test_cellprofiler_adapter_hides_undeclared_same_name_object_table_occurrence
                         NUCLEI_MEASUREMENTS,
                     ),
                 )
-            ).value.data
+            ).data
         )
     _compiled_artifact_inputs = {
         edge.key: edge
@@ -7154,9 +7136,11 @@ def test_object_measurement_table_index_uses_declared_subject_for_unnamed_rows()
         ),
     )
 
-    tables = ObjectMeasurementTableIndex.from_tables((table,)).for_object_feature(
+    tables = ColumnarMeasurementTableSchema.tables_for_object_feature(
+        (table,),
         "Cells",
         "AreaShape_FormFactor",
+        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
     )
 
     assert tables == (table,)

@@ -34,6 +34,7 @@ from openhcs.core.runtime_pattern_cache import RuntimePatternDiscoveryCache
 from openhcs.core.runtime_stack_cache import RuntimeImageStackCache
 from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
 from openhcs.core.source_workspace_projection import (
+    VirtualWorkspaceSourceProjectionAuthority,
     VirtualWorkspaceSourceProjectionCache,
 )
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
@@ -134,6 +135,9 @@ class ProcessingContext:
         self.runtime_source_workspace_projection_cache = (
             VirtualWorkspaceSourceProjectionCache()
         )
+        self._runtime_source_workspace_projection_authority: (
+            VirtualWorkspaceSourceProjectionAuthority | None
+        ) = None
         self.source_image_set_identity_policy = SourceImageSetIdentityPolicy()
         self.axis_id = axis_id
         self.filemanager = filemanager
@@ -167,6 +171,20 @@ class ProcessingContext:
         self.pipeline_sequential_mode = False
         self.pipeline_sequential_combinations = None
         self.current_sequential_combination = None
+
+    @property
+    def runtime_source_workspace_projection_authority(
+        self,
+    ) -> VirtualWorkspaceSourceProjectionAuthority:
+        """Hold the context's metadata owners; projection documents remain live."""
+        authority = self._runtime_source_workspace_projection_authority
+        if authority is None or not authority.is_bound_to_context(self):
+            authority = VirtualWorkspaceSourceProjectionAuthority.from_context(
+                self,
+                cache=self.runtime_source_workspace_projection_cache,
+            )
+            self._runtime_source_workspace_projection_authority = authority
+        return authority
 
     def bind_execution_runtime(
         self,

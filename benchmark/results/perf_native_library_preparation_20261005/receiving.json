@@ -1,0 +1,47 @@
+{
+  "scope": "Shared endpoint preparation dependency; not an end-to-end performance comparison. No persisted format changes.",
+  "diagnostic": {
+    "source_head": "f13798834db7e6857b1927e3edb4ad84a34dac72",
+    "method": "ONE configure_native_thread_count(1) after normal catalogue READY, with cProfile; setup/warmup excluded",
+    "whole_consumer_seconds": 0.028647571336477995,
+    "library_discovery_seconds": 0.028423659,
+    "first_path_resolution_seconds": 0.017276267,
+    "apply_limits_seconds": 4.1127e-05,
+    "profiling_included": true
+  },
+  "normal_ready_receiving": {
+    "source_head": "e1e0d2a56c7966a377d60e061503015f217afae1",
+    "scope": "Untimed normal public catalogue preparation; no pipeline/performance observation",
+    "status": "PASS",
+    "catalogue_projections_current": true,
+    "future_done_before_query": false,
+    "thread_limits_unchanged_by_discovery": true,
+    "subsequent_dynamic_limit_sequence": [
+      2,
+      1
+    ],
+    "loaded_library_count": 4,
+    "source_guard": "PASS",
+    "eight_dependency_guard": "PASS",
+    "per_job_configuration_source_unchanged": true
+  },
+  "final_lifecycle_change": "26122b9ab69 adds cancellation recheck after the same discovery call; four existing catalogue cancellation/failure controls pass. No further READY or performance repeat.",
+  "controls": {
+    "existing_catalogue_cancellation_failure": {
+      "passed": 4,
+      "seconds": 1.71
+    }
+  },
+  "authority": "Public threadpool_info warms threadpoolctl existing source-path cache. Each execution still creates a fresh ThreadpoolController and applies requested limits; no retained controller, library roster or new ready flag.",
+  "limits": [
+    "Diagnostic consumer cost is not an ordinary pipeline saving; estimated path coldness17.3ms is only a partial dependency towards the remaining single-well gap.",
+    "Actual end-to-end transfer remains unmeasured here.",
+    "No before/after whole pipeline, native timing or new science results are asserted."
+  ],
+  "private_receipt_sha256": {
+    "result.json": "94cb063ff3bf3118df18767508b86b078716dd67e46098ed09fc3a8deb0ac3cf",
+    "configure.prof": "743cbcfbfbb4ec30284106fb7d33d14256ec55d7b4b91fb394e427f22a7baf7f",
+    "ready-receiving.json": "c547fdc565c886d392275410641144bcf4aacb946e18e4a1e5058deba1564c21",
+    "decision.json": "33891ba1581ff0c5722dd85d45798fad9f3fc907a90cb51b4d6408def8b3a590"
+  }
+}

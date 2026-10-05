@@ -102,6 +102,29 @@ projection. Saving a changed source-binding config invalidates that projection;
 the next normal initialization rebuilds it and updates the available aliases and
 coordinates without a separate UI metadata copy.
 
+Joining an external metadata table
+-----------------------------------
+
+``ImportedMetadataTable`` joins apply to the assembled logical source set,
+not separately to each named channel. Before declaring its joins, compare the
+join fields across all members of a representative set. Each join key must have
+one consistent value among the members that supply it; a complete identity
+must resolve to a row in the table.
+
+For example, paired DNA and actin images may share well, site, Z and time while
+their channel names and relative paths differ. Join a set-level table using the
+shared identity appropriate to that acquisition, not the differing channel or
+file path. Keep plane-specific channel/path provenance in the original plane
+manifest and source-binding declarations. If projecting a set-level table from
+that manifest, retain the original and check that non-key columns also have
+the intended set-level meaning; do not silently choose one channel's values.
+
+If initialization reports conflicting imported join values, repair the table's
+scope or join declaration rather than renaming the channels to agree. Omitting
+channel from a table join does not omit it from physical source identity or
+permit contradictory plane identities. Reflect the current imported-table
+schema before authoring its typed declarations.
+
 Binding positions are not microscope channel values
 ---------------------------------------------------
 

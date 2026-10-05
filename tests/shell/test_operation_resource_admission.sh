@@ -42,6 +42,13 @@ run() {
   test "$status" = "$expected"
   printf 'PASS %s mode=%s status=%s\n' "$phase" "$mode" "$status"
 }
+run 1 '' missing_operation_mode
+run 1 ongoing before_recorded_client
+runtime="$scratch/run/A/author-workspace/output/runtime"
+# External recorded-client lifecycle evidence; no MCP/native/provider runs.
+date -u +%s > "$runtime/first-mcp-started.epoch"
+touch "$runtime/mcp.stdin" "$runtime/mcp.stdout" "$runtime/mcp.timing"
+sha256sum "$runtime/mcp.stdin" "$runtime/mcp.stdout" "$runtime/mcp.timing" > "$scratch/client-journals.sha256"
 run 0 ongoing original_review
 # Old allocations are charged by df, not inventoried for every action.
 mkdir "$scratch/retired-output"
@@ -60,25 +67,54 @@ mv "$scratch/funding-with-closed-path.json" "$scratch/funding/program.json"
 run 0 ongoing closed_paths_not_inventoried
 runtime="$scratch/run/A/author-workspace/output/runtime"
 rg -q 'avg10=4.82 avg60=1.09 avg300=0.23' "$runtime/resources-original_review.psi"
-rg -q 'Pressure warning:' "$runtime/resources-original_review.psi"
+rg -q 'no numeric PSI admission cutoff' "$runtime/resources-original_review.psi-policy"
+! jq -e '.proposed_resource_envelope | has("full_memory_psi_max_percent")' "$scratch/funding/program.json" >/dev/null
 rg -q 'measuredCharge=1610612736 measuredSwap=0' "$runtime/resources-original_review.ram-scopes"
 rg -q 'observed=1 unavailable=0' "$runtime/resources-original_review.ram-scopes"
-run 77 full growth_rejected
-run 77 replacement replacement_rejected
+run 0 full pressure_not_numeric_ceiling
+run 0 replacement small_receiving_not_stale_pressure_veto
 printf 'MemAvailable: 4718592 kB\n' > "$scratch/host/meminfo"
 run 0 ongoing no_invented_future_ram_reservation
 printf 'MemAvailable: 1048576 kB\n' > "$scratch/host/meminfo"
-run 76 ongoing insufficient_operation_ram
+run 0 ongoing below_reserve_observation
+rg -q 'Memory warning:' "$runtime/resources-below_reserve_observation.ram"
+rg -q 'avg10=4.82 avg60=1.09 avg300=0.23' "$runtime/resources-below_reserve_observation.psi"
+# Recorded retinal receipt rounded to 1.607 GiB: preserve low RAM as a real
+# warning, not a reason to lose bounded status/cleanup on an existing client.
+printf 'MemAvailable: 1685062 kB\n' > "$scratch/host/meminfo"
+export CONTROLLED_HOST_LEVEL=critical
+run 0 ongoing retinal_status_under_pressure
+rg -q 'MemAvailable 1.607 GiB; desktopReserve 2048 MiB; policy=warning' "$runtime/resources-retinal_status_under_pressure.ram"
+jq -e '.level=="critical"' "$runtime/resources-retinal_status_under_pressure.json" >/dev/null
+unset CONTROLLED_HOST_LEVEL
+printf 'full avg10=0.00 avg60=0.00 avg300=0.00 total=324417078\n' > "$scratch/host/pressure"
+run 76 full low_ram_bulk_rejected
+run 76 replacement low_ram_startup_rejected
+printf 'MemAvailable: invalid kB\n' > "$scratch/host/meminfo"
+run 76 ongoing malformed_ram
+printf 'MemTotal: 4194304 kB\n' > "$scratch/host/meminfo"
+run 76 ongoing missing_ram
+printf 'MemAvailable: 1685062 kB\nMemAvailable: 1685062 kB\n' > "$scratch/host/meminfo"
+run 76 ongoing duplicate_ram
+printf 'full avg10=4.82 avg60=1.09 avg300=0.23 total=324417078\n' > "$scratch/host/pressure"
 printf 'MemAvailable: 5767168 kB\n' > "$scratch/host/meminfo"
 run 0 ongoing resident_charge_not_reserved_twice
 printf 'MemAvailable: 16454287 kB\n' > "$scratch/host/meminfo"
 export CONTROLLED_HOME_BYTES=2147483648
 run 0 ongoing forecast_not_ongoing_permission
-rg -q 'Planning warning:' "$runtime/resources-forecast_not_ongoing_permission.disk"
+rg -q 'remainingGrowthEstimate=' "$runtime/resources-forecast_not_ongoing_permission.output"
 printf 'full avg10=0.00 avg60=0.00 avg300=0.00 total=324417078\n' > "$scratch/host/pressure"
 run 0 replacement forecast_not_startup_permission
 export CONTROLLED_HOME_BYTES=2147483647
-run 78 ongoing actual_disk_below_reserve
+run 0 ongoing existing_qa_below_startup_reserve
+rg -q 'Disk warning: below startup reserve' "$runtime/resources-existing_qa_below_startup_reserve.disk"
+run 78 replacement startup_below_reserve
+run 78 full bulk_allocation_below_reserve
+export CONTROLLED_HOME_BYTES=0
+run 78 ongoing exhausted_destination
+export CONTROLLED_HOME_BYTES=2147483647 CONTROLLED_MCP_ACTIVE=0
+run 1 ongoing dead_client_not_continuation
+unset CONTROLLED_MCP_ACTIVE
 export CONTROLLED_HOME_BYTES=8353711390
 printf 'full avg10=4.82 avg60=1.09 avg300=0.23 total=324417078\n' > "$scratch/host/pressure"
 export CONTROLLED_HOME_BYTES=8353711390 CONTROLLED_COMMON_SWAP=1
@@ -105,7 +141,7 @@ run 0 replacement low_pressure_replacement
 export CONTROLLED_SCI_MAX=4294967297
 run 0 ongoing child_limit_not_admission_authority
 export CONTROLLED_SCI_MAX=4294967296 CONTROLLED_PROCESS_STATE=not-found
-run 0 ongoing no_residual_cap_estimate
+run 1 ongoing missing_original_client
 unset CONTROLLED_PROCESS_STATE
 export CONTROLLED_COMMON_CURRENT=8455716864
 printf 'MemAvailable: 2232320 kB\n' > "$scratch/host/meminfo"
@@ -126,6 +162,7 @@ jq -n --arg root "$scratch" '{phase:"headless-control",
 }' > "$scratch/admin-run/successor-declaration.json"
 printf '{"target":"/controlled/no-install","source_head":"controlled"}\n' > "$scratch/qualification.json"
 bash "$operations/project-program.sh" prepare "$scratch/funding" "$scratch/admin-run" "$scratch/qualification.json"
+! jq -e '.proposed_resource_envelope | has("full_memory_psi_max_percent")' "$scratch/admin-run/program.json" >/dev/null
 (cd "$scratch/admin-run"; sha256sum program.json successor-declaration.json > READY-FREEZE.sha256)
 FLEET_PARENT_RELEASED=1 bash "$operations/project-program.sh" publish "$scratch/funding" "$scratch/admin-run" \
   "$(sha256sum "$scratch/funding/program.json" | cut -d' ' -f1)"
@@ -135,21 +172,59 @@ test "$(rg -c '^Current ' "$runtime/resources-selected_output_only.output")" = 1
 run 0 ledger complete_growth_forecast
 test "$(rg -c '^Current ' "$runtime/resources-complete_growth_forecast.output")" = 2
 run 0 ongoing continuing_original_scope_owner
-rg -q 'required 2048 MiB' "$runtime/resources-continuing_original_scope_owner.ram"
+rg -q 'desktopReserve 2048 MiB' "$runtime/resources-continuing_original_scope_owner.ram"
 export CONTROLLED_SCI_MAX=268435456 CONTROLLED_SCI_CURRENT=134217728
 export CONTROLLED_CLI_MAX=0 CONTROLLED_CLI_CURRENT=0
 printf 'MemAvailable: 2232320 kB\n' > "$scratch/host/meminfo"
-run 0 ongoing headless_disabled_cli ADMIN
+printf 'full avg10=0.00 avg60=0.00 avg300=0.00 total=324417078\n' > "$scratch/host/pressure"
+run 0 full headless_disabled_cli ADMIN
 admin_runtime="$scratch/admin-run/ADMIN/author-workspace/output/runtime"
-rg -q 'required 2048 MiB' "$admin_runtime/resources-headless_disabled_cli.ram"
+rg -q 'desktopReserve 2048 MiB' "$admin_runtime/resources-headless_disabled_cli.ram"
 export CONTROLLED_SCI_MAX=4294967296 CONTROLLED_SCI_CURRENT=1342177280
 export CONTROLLED_CLI_MAX=536870912 CONTROLLED_CLI_CURRENT=268435456
 printf 'MemAvailable: 16454287 kB\n' > "$scratch/host/meminfo"
 sha256sum "$runtime/resources-original_review".* > "$scratch/original-receipt.sha256"
 run 1 ongoing original_review
 sha256sum --check --quiet "$scratch/original-receipt.sha256"
-printf '1\n' > "$runtime/first-mcp-started.epoch"
-run 1 ongoing expired_clock
+# Exact original BB13 close-refusal timing, through the original mode owner.
+# Host clock is controlled; no real client/native or expired request is replayed.
+export CONTROLLED_NOW=10000
+printf '5498\n' > "$runtime/first-mcp-started.epoch"
+run 0 ongoing expired_owned_cleanup
+rg -q 'Deadline elapsed=4502 allowed=4500 seconds; mode=ongoing policy=warning' "$runtime/resources-expired_owned_cleanup.deadline"
+rg -q 'Scientific interval expired:' "$runtime/resources-expired_owned_cleanup.deadline"
+rg -q 'Existing recorded client' "$scratch/expired_owned_cleanup.log"
+run 1 full expired_scientific_dispatch
+run 1 replacement expired_client_startup
+run 1 bootstrap expired_helper_startup
+run 0 ledger expired_ledger
+rg -q 'Ledger-only PASS; not SCI admission' "$scratch/expired_ledger.log"
+export CONTROLLED_MCP_ACTIVE=0
+run 1 ongoing expired_dead_client
+unset CONTROLLED_MCP_ACTIVE
+# Warn does not disable the ordinary physical-space validation.
+export CONTROLLED_HOME_BYTES=0
+run 78 ongoing expired_exhausted_destination
+export CONTROLLED_HOME_BYTES=8353711390
+printf '5500\n' > "$runtime/first-mcp-started.epoch"
+run 1 full deadline_exact_boundary
+printf '5501\n' > "$runtime/first-mcp-started.epoch"
+run 0 full deadline_one_second_remaining
+# The future admin run came through the SAME successor projector with no
+# declared interval. Preserve the old expired run and its unchanged clock.
+printf '1\n' > "$admin_runtime/first-mcp-started.epoch"
+run 0 full undeclared_interval_continues ADMIN
+rg -q 'Recorded elapsed=9999 seconds; scientific interval undeclared; mode=full' \
+  "$admin_runtime/resources-undeclared_interval_continues.deadline"
+jq -e '.task_minutes_from_first_mcp_start==null' "$scratch/admin-run/program.json" >/dev/null
+jq -e '.task_minutes_from_first_mcp_start==75' "$scratch/run/program.json" >/dev/null
+printf '5498\n' > "$runtime/first-mcp-started.epoch"
+run 1 full original_expiry_still_owned
 (cd "$scratch/run"; sha256sum --check --quiet READY-FREEZE.sha256)
-test ! -e "$runtime/mcp.stdin"
-printf 'PASS original immutable run, deadline, receipt uniqueness and no client/native custody preserved\n'
+printf '5498\n' > "$runtime/first-mcp-started.epoch"
+sha256sum "$runtime/first-mcp-started.epoch" "$runtime/resources-expired_owned_cleanup.deadline" > "$scratch/expired-custody.sha256"
+run 1 ongoing expired_owned_cleanup
+sha256sum --check --quiet "$scratch/expired-custody.sha256"
+(cd "$scratch/run"; sha256sum --check --quiet READY-FREEZE.sha256)
+sha256sum --check --quiet "$scratch/client-journals.sha256"
+printf 'PASS original immutable run, scientific deadline, expired settlement, receipt uniqueness and no client/native custody preserved\n'

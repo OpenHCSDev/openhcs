@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections import Counter
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from typing import cast, Generic, TypeVar
+from typing import Generic, TypeVar
 
 from openhcs.core.equivalence.cells import (
     RuntimeCellMissingStrategy,
@@ -31,13 +31,6 @@ from openhcs.core.runtime_measurements import (
     MeasuredObjectAnchorFeatureMarker,
     MeasurementScope,
 )
-from openhcs.core.runtime_artifact_values import (
-    RuntimeValue,
-)
-from openhcs.core.runtime_spatial_grid import (
-    SpatialGrid,
-)
-from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValueSet
 
 RuntimeMeasurementFact = tuple[
     RuntimeMeasurementFeatureKey,
@@ -530,54 +523,3 @@ class RuntimeMeasurementFactProjectionContract:
         return tuple(
             (key, value) for key, values in values_by_key.items() for value in values
         )
-
-
-def spatial_grid_measurement_facts(
-    value: RuntimeValue,
-    policy: RuntimeEquivalencePolicy,
-) -> RuntimeMeasurementFacts:
-    """Project a typed spatial-grid artifact to dialect-rendered image facts."""
-    return tuple(
-        fact
-        for grid in _spatial_grids_from_runtime_value(value)
-        for fact in _single_spatial_grid_measurement_facts(value, grid, policy)
-    )
-
-
-def _single_spatial_grid_measurement_facts(
-    value: RuntimeValue,
-    grid: SpatialGrid,
-    policy: RuntimeEquivalencePolicy,
-) -> RuntimeMeasurementFacts:
-    grid_name = normalize_runtime_identifier(value.name or grid.name)
-    subject = RuntimeMeasurementSubjectKey(MeasurementScope.IMAGE, "Image")
-    fields = (
-        ("columns", grid.columns),
-        ("rows", grid.rows),
-        ("x_origin", grid.x_origin),
-        ("x_spacing", grid.x_spacing),
-        ("y_origin", grid.y_origin),
-        ("y_spacing", grid.y_spacing),
-    )
-    return tuple(
-        (
-            RuntimeMeasurementFeatureKey(
-                subject,
-                policy.measurement_dialect.spatial_grid_measurement_feature_name(
-                    grid_name,
-                    field_name,
-                ),
-            ),
-            runtime_cell_signature(str(field_value), policy),
-        )
-        for field_name, field_value in fields
-    )
-
-
-def _spatial_grids_from_runtime_value(value: RuntimeValue) -> tuple[SpatialGrid, ...]:
-    if isinstance(value.data, RuntimeSliceAlignedValueSet):
-        return tuple(
-            cast(SpatialGrid, value.data.value_for_slice(index))
-            for index in range(value.data.slice_count)
-        )
-    return (cast(SpatialGrid, value.data),)

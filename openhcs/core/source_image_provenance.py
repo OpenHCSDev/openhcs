@@ -20,6 +20,8 @@ from openhcs.constants.constants import AllComponents
 from openhcs.core.source_metadata import (
     SOURCE_PLANE_COUNT_FIELD,
     SOURCE_PLANE_INDEX_FIELD,
+    OwnedSourceMetadataFields,
+    SourceMetadataFields,
     SourceMetadataMapping,
     SourceMetadataScalar,
     SourceMetadataValue,
@@ -69,20 +71,12 @@ def normalize_source_path(source_path: str | None) -> str | None:
     return str(source_path)
 
 
-def _normalize_component_metadata(
-    metadata: SourceComponentMetadata | None,
-) -> SourceComponentMetadata | None:
-    if metadata is None:
-        return None
-    return MappingProxyType(dict(metadata))
-
-
 def _component_metadata_identity(
     metadata: SourceComponentMetadata | None,
 ) -> tuple[tuple[str, str], ...] | None:
     if metadata is None:
         return None
-    return tuple(sorted((str(key), repr(value)) for key, value in metadata.items()))
+    return SourceMetadataFields.provenance_identity_items(metadata)
 
 
 def _tuple_value(values: tuple[Any, ...], index: int) -> Any | None:
@@ -101,7 +95,10 @@ class SourceImageIdentity:
 
     def __post_init__(self) -> None:
         self.path = normalize_source_path(self.path)
-        self.component_metadata = _normalize_component_metadata(self.component_metadata)
+        if self.component_metadata is not None:
+            self.component_metadata = SourceMetadataFields.readonly_snapshot(
+                self.component_metadata
+            )
         self._identity = (
             self.path,
             _component_metadata_identity(self.component_metadata),
@@ -137,6 +134,22 @@ class SourceImageIdentity:
             component_metadata=self.component_metadata_with_missing_from(fallback),
         )
 
+    def image_set_identities(
+        self,
+        policy: SourceImageSetIdentityPolicy,
+    ) -> frozenset[SourceImageSetIdentity]:
+        """Project this scalar source address into its declared image-set domain."""
+        identity = SourceImageSetIdentity.from_metadata(
+            self.component_metadata or {},
+            fallback_source_path=self.path or "",
+            policy=policy,
+        )
+        return (
+            frozenset()
+            if identity.components == (("source_path", ""),)
+            else frozenset((identity,))
+        )
+
     def component_metadata_with_missing_from(
         self,
         fallback: "SourceImageIdentity",
@@ -147,21 +160,10 @@ class SourceImageIdentity:
         if fallback.component_metadata is None:
             return self.component_metadata
 
-        merged = dict(self.component_metadata)
-        for component in AllComponents:
-            if source_component_metadata_value(merged, component) is not None:
-                continue
-            fallback_value = source_component_metadata_raw_value(
-                fallback.component_metadata,
-                component,
-            )
-            if fallback_value is not None:
-                merged[component.value] = fallback_value
-        if self.filename_extension is None:
-            extension = fallback.filename_extension
-            if extension is not None:
-                merged["extension"] = extension
-        return MappingProxyType(merged)
+        merged = SourceMetadataFields.with_missing_from(
+            self.component_metadata, fallback.component_metadata
+        )
+        return SourceMetadataFields.readonly_snapshot(merged)
 
     def with_parsed_path_components(
         self,
@@ -668,7 +670,29 @@ class SourceImageProvenancePlanes:
                     )
                 )
             runtime_index += 1
-        return type(self)(tuple(contributors))
+        unique_contributors: list[SourceImageProvenanceContributor] = []
+        named_addresses: dict[
+            tuple[str, str | None], list[SourceImageProvenanceContributor]
+        ] = {}
+        for contributor in contributors:
+            # A derived image and its original can name the same source at this
+            # runtime slice. Removed axes represent source identities, not the
+            # number of routes through which those sources contributed pixels.
+            # Read current addresses; the identity snapshot can predate edits.
+            if (
+                contributor.source_image_name is not None
+                and contributor.source_identity.addressable
+            ):
+                address = (contributor.source_image_name, contributor.path)
+                same_address = named_addresses.setdefault(address, [])
+                if any(
+                    existing.component_metadata == contributor.component_metadata
+                    for existing in same_address
+                ):
+                    continue
+                same_address.append(contributor)
+            unique_contributors.append(contributor)
+        return type(self)(tuple(unique_contributors))
 
     def with_missing_from(
         self,
@@ -714,6 +738,142 @@ class SourceImageProvenance:
             self.source_identity.identity,
             self.source_image_provenance_planes.identity,
             self.source_image_names,
+        )
+
+    def as_runtime_plane(self) -> RuntimeSourceImageProvenancePlane:
+        """Compose one scalar source, retaining its non-projectable contributors."""
+        names = self.source_image_names
+        contributors = self.source_image_provenance_planes.as_contributors(names).planes
+        if len(names) > 1:
+            raise ValueError(
+                "Composed image payload provenance permits at most one "
+                f"source alias per scalar plane, got {names!r}."
+            )
+        return RuntimeSourceImageProvenancePlane(
+            SourceImageIdentity(self.source_path, self.source_component_metadata),
+            contributors,
+            names[0] if names else None,
+        )
+
+    @classmethod
+    def stack(
+        cls,
+        sources: Sequence["SourceImageProvenance"],
+        *,
+        scalar_sources: Sequence["SourceImageProvenance"] | None = None,
+        preserve_single_topology: bool = True,
+    ) -> Self:
+        """Compose ordered runtime sources with their common scalar coordinates."""
+        return cls._compose(
+            tuple(sources),
+            scalar_sources,
+            preserve_single_topology=preserve_single_topology,
+            bundle=False,
+        )
+
+    @classmethod
+    def bundle(
+        cls,
+        sources: Sequence["SourceImageProvenance"],
+        *,
+        scalar_sources: Sequence["SourceImageProvenance"] | None = None,
+        preserve_single_topology: bool = False,
+    ) -> Self:
+        """Compose same-slice sources, retaining nonconflicting partial coordinates."""
+        return cls._compose(
+            tuple(sources),
+            scalar_sources,
+            preserve_single_topology=preserve_single_topology,
+            bundle=True,
+        )
+
+    @staticmethod
+    def bundle_component_metadata(
+        sources: Sequence["SourceImageProvenance"],
+        *,
+        scalar_sources: Sequence["SourceImageProvenance"] | None = None,
+    ) -> SourceComponentMetadata | None:
+        metadata = tuple(
+            SourceMetadataFields.composition_snapshot(fields)
+            for fields in SourceImageProvenance._composition_component_metadata(
+                sources, scalar_sources
+            )
+            if fields is not None
+        )
+        common: dict[str, SourceMetadataValue] = {}
+        for name in set().union(*(fields.keys() for fields in metadata)):
+            values = tuple(fields[name] for fields in metadata if name in fields)
+            if values and all(value == values[0] for value in values):
+                common[name] = values[0]
+        if not common:
+            return None
+        owner = (
+            metadata[0]
+            if metadata
+            and all(
+                isinstance(fields, OwnedSourceMetadataFields) for fields in metadata
+            )
+            else {}
+        )
+        derived = SourceMetadataFields.derived_mapping(owner, common)
+        return (
+            derived
+            if isinstance(derived, OwnedSourceMetadataFields)
+            else MappingProxyType(derived)
+        )
+
+    @staticmethod
+    def _composition_component_metadata(
+        sources: Sequence["SourceImageProvenance"],
+        scalar_sources: Sequence["SourceImageProvenance"] | None,
+    ) -> tuple[SourceComponentMetadata | None, ...]:
+        """Retain authored scalar coordinates before inheriting selected plane facts."""
+        if scalar_sources is None:
+            scalar_sources = sources
+        return tuple(
+            (
+                scalar.source_component_metadata
+                if scalar.source_component_metadata is not None
+                else selected.source_component_metadata
+            )
+            for scalar, selected in zip(scalar_sources, sources, strict=True)
+        )
+
+    @classmethod
+    def _compose(
+        cls,
+        sources: tuple["SourceImageProvenance", ...],
+        scalar_sources: Sequence["SourceImageProvenance"] | None,
+        *,
+        preserve_single_topology: bool,
+        bundle: bool,
+    ) -> Self:
+        if not sources:
+            raise ValueError("Source provenance composition cannot be empty.")
+        planes = (
+            sources[0].source_image_provenance_planes
+            if preserve_single_topology
+            and len(sources) == 1
+            and sources[0].source_plane_count > 1
+            else SourceImageProvenancePlanes(
+                tuple(source.as_runtime_plane() for source in sources)
+            )
+        )
+        component_metadata = (
+            cls.bundle_component_metadata(sources, scalar_sources=scalar_sources)
+            if bundle
+            else common_source_component_metadata(
+                cls._composition_component_metadata(sources, scalar_sources)
+            )
+        )
+        present_paths = tuple(
+            source.source_path for source in sources if source.source_path is not None
+        )
+        return cls(
+            source_path=common_source_path(present_paths),
+            source_component_metadata=component_metadata,
+            source_image_provenance_planes=planes,
+            source_image_names=planes.runtime_source_image_names,
         )
 
     @classmethod
@@ -829,19 +989,45 @@ class SourceImageProvenance:
             )
         return self.source_identity
 
+    def required_scalar_components(
+        self, component_order: Iterable[str]
+    ) -> tuple[str, ...]:
+        """Exclude only coordinates proven reduced into pixel contributors.
+
+        Contributors do not own a projectable runtime axis. A component that
+        varies across their complete source addresses therefore has no scalar
+        address on the derived image. Absent or incomplete contributor evidence
+        cannot exempt an acquired plane from its required coordinates.
+        """
+        contributors = self.source_image_provenance_planes.contributors
+        scalar_components = SourceMetadataFields.component_domains(
+            self.scalar_source_identity.component_metadata or {}
+        )
+        contributor_components = tuple(
+            SourceMetadataFields.component_domains(contributor.component_metadata or {})
+            for contributor in contributors
+        )
+        reduced = set()
+        for component in AllComponents:
+            if component in scalar_components:
+                continue
+            if len(contributor_components) < 2 or not all(
+                len(values.get(component, ())) == 1 for values in contributor_components
+            ):
+                continue
+            values = frozenset(
+                value for values in contributor_components for value in values[component]
+            )
+            if len(values) > 1:
+                reduced.add(component.value)
+        return tuple(component for component in component_order if component not in reduced)
+
     def image_set_identities(
         self,
         policy: SourceImageSetIdentityPolicy,
     ) -> frozenset[SourceImageSetIdentity]:
         """Return the image-set identity represented by scalar provenance."""
-        identity = SourceImageSetIdentity.from_metadata(
-            self.source_component_metadata or {},
-            fallback_source_path=self.source_path or "",
-            policy=policy,
-        )
-        if identity.components == (("source_path", ""),):
-            return frozenset()
-        return frozenset((identity,))
+        return self.source_identity.image_set_identities(policy)
 
     def image_set_axis(
         self,
@@ -859,9 +1045,23 @@ class SourceImageProvenance:
     ) -> tuple[frozenset[SourceImageSetIdentity], ...]:
         """Return one image-set identity entry for every runtime source plane."""
         return tuple(
-            self.for_source_plane(index).image_set_identities(policy)
+            self.source_image_provenance_planes.plane(
+                index
+            ).source_identity.with_missing_from(
+                self.source_identity
+            ).image_set_identities(policy)
             for index in range(self.source_plane_count)
         )
+
+    def component_metadata_for_plane(
+        self, plane_index: int
+    ) -> SourceComponentMetadata | None:
+        """Read current plane coordinates with their scalar source fallback."""
+        if not self.source_plane_count:
+            return self.source_component_metadata
+        return self.source_image_provenance_planes.plane(
+            plane_index
+        ).source_identity.component_metadata_with_missing_from(self.source_identity)
 
     def for_source_plane(self, plane_index: int) -> "SourceImageProvenance":
         if self.source_plane_count == 0:
@@ -986,16 +1186,20 @@ class SourceImageProvenance:
         components: Sequence[AllComponents],
     ) -> dict[str, tuple[SourceMetadataScalar, ...]]:
         """Return exact component values that vary across declared source planes."""
-        if self.source_plane_count <= 1:
+        if not components or self.source_plane_count <= 1:
             return {}
+        metadata_by_plane = tuple(
+            self.component_metadata_for_plane(index) or {}
+            for index in range(self.source_plane_count)
+        )
         values_by_component: dict[str, tuple[SourceMetadataScalar, ...]] = {}
         for component in components:
             values = tuple(
                 source_component_metadata_raw_value(
-                    self.for_source_plane(plane_index).source_component_metadata or {},
+                    metadata,
                     component,
                 )
-                for plane_index in range(self.source_plane_count)
+                for metadata in metadata_by_plane
             )
             if any(value is None for value in values):
                 continue
@@ -1009,24 +1213,24 @@ class SourceImageProvenance:
     ) -> tuple[tuple[AllComponents, str], ...]:
         """Return fixed component values shared by every represented source plane."""
 
+        if not components:
+            return ()
+        metadata_by_plane = (
+            tuple(
+                self.component_metadata_for_plane(index) or {}
+                for index in range(self.source_plane_count)
+            )
+            if self.source_plane_count
+            else (self.source_component_metadata or {},)
+        )
         values: list[tuple[AllComponents, str]] = []
         for component in components:
-            metadata_values = (
-                tuple(
-                    source_component_metadata_value(
-                        self.for_source_plane(plane_index).source_component_metadata
-                        or {},
-                        component,
-                    )
-                    for plane_index in range(self.source_plane_count)
+            metadata_values = tuple(
+                source_component_metadata_value(
+                    metadata,
+                    component,
                 )
-                if self.source_plane_count
-                else (
-                    source_component_metadata_value(
-                        self.source_component_metadata or {},
-                        component,
-                    ),
-                )
+                for metadata in metadata_by_plane
             )
             if any(value is None for value in metadata_values):
                 raise ValueError(
@@ -1505,18 +1709,15 @@ class SourcePlaneIndexedMetadata:
         self,
         plane_index: int,
     ) -> SourceComponentMetadata:
-        metadata = {
-            **dict(self.scalar_metadata),
-            SOURCE_PLANE_INDEX_FIELD: str(plane_index),
-            SOURCE_PLANE_COUNT_FIELD: str(self.source_plane_count),
-        }
-        return MappingProxyType(
-            with_source_component_metadata(
-                metadata,
-                AllComponents.Z_INDEX,
-                self.z_index_for_plane(plane_index),
-            )
+        metadata = SourceMetadataFields.with_fields(
+            SourceMetadataFields.composition_snapshot(self.scalar_metadata),
+            {
+                SOURCE_PLANE_INDEX_FIELD: str(plane_index),
+                SOURCE_PLANE_COUNT_FIELD: str(self.source_plane_count),
+            },
+            components=((AllComponents.Z_INDEX, self.z_index_for_plane(plane_index)),),
         )
+        return SourceMetadataFields.readonly_snapshot(metadata)
 
     def z_index_for_plane(self, plane_index: int) -> int:
         scalar_z_index = source_component_metadata_value(
@@ -1585,7 +1786,9 @@ def common_source_component_metadata(
     }
     if not common_metadata:
         return None
-    return MappingProxyType(common_metadata)
+    return SourceMetadataFields.readonly_snapshot(
+        SourceMetadataFields.derived_mapping(consensus, common_metadata)
+    )
 
 
 def source_component_metadata_consensus(
@@ -1594,7 +1797,9 @@ def source_component_metadata_consensus(
     """Return every metadata field, nulling values that differ between planes."""
 
     metadata_values = tuple(
-        dict(metadata) for metadata in metadata_by_plane if metadata is not None
+        SourceMetadataFields.composition_snapshot(metadata)
+        for metadata in metadata_by_plane
+        if metadata is not None
     )
     if len(metadata_values) != len(metadata_by_plane):
         return None
@@ -1618,7 +1823,17 @@ def source_component_metadata_consensus(
             and all(value == present_values[0] for value in present_values)
             else None
         )
-    return MappingProxyType(consensus)
+    owner = (
+        metadata_values[0]
+        if all(
+            isinstance(metadata, OwnedSourceMetadataFields)
+            for metadata in metadata_values
+        )
+        else {}
+    )
+    return SourceMetadataFields.readonly_snapshot(
+        SourceMetadataFields.derived_mapping(owner, consensus)
+    )
 
 
 def common_source_path(paths: Sequence[str | None]) -> str | None:
@@ -1775,8 +1990,17 @@ class SourceImageProvenanceFields:
 
     def absorb_explicit_source_provenance(
         self,
-        explicit: SourceImageProvenance,
+        values: SourceProvenanceInitValues,
     ) -> None:
+        """Decode authored aliases once, leaving absent constructor facts absent."""
+        if all(
+            value is default
+            for value, default in zip(
+                values, SourceImageProvenance.__init__.__defaults__, strict=True
+            )
+        ):
+            return
+        explicit = SourceImageProvenance.from_init_values(values)
         if not explicit.has_values:
             return
         self.source_provenance = explicit.with_missing_from(self.source_provenance)

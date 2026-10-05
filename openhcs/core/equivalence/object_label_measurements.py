@@ -314,7 +314,7 @@ class RuntimeObjectLabelMeasurementAuthority:
         identifier_subjects: set[RuntimeMeasurementSubjectKey] = set()
         location_subjects: set[RuntimeMeasurementSubjectKey] = set()
         for record in records:
-            object_labels = cast(ObjectLabelSet, record.value.data)
+            object_labels = cast(ObjectLabelSet, record.data)
             subject = RuntimeMeasurementSubjectKey(
                 MeasurementScope.OBJECT,
                 object_labels.name,
@@ -401,7 +401,7 @@ class RuntimeObjectLabelInstanceCatalog:
         counts: dict[RuntimeMeasurementSubjectKey, int] = {}
         named_plane_domains: list[tuple[str, tuple[tuple[int, ...], ...]]] = []
         for record in records:
-            object_labels = cast(ObjectLabelSet, record.value.data)
+            object_labels = cast(ObjectLabelSet, record.data)
             subject = RuntimeMeasurementSubjectKey(
                 MeasurementScope.OBJECT,
                 object_labels.name,
@@ -508,7 +508,7 @@ class ObjectLabelMeasurementCompletion(ObjectLabelMeasurementState):
         facts: RuntimeMeasurementFactList = []
         for record in records:
             context = ObjectLabelMeasurementContext.from_runtime_value(
-                record.value,
+                record,
                 self.policy,
                 self.object_identifier_subjects,
                 self.object_location_subjects,
@@ -885,7 +885,7 @@ def object_label_measurement_values_for_name(
 
     values_by_feature: RuntimeObjectValuesByLabel = {}
     for record in records:
-        object_labels = cast(ObjectLabelSet, record.value.data)
+        object_labels = cast(ObjectLabelSet, record.data)
         if normalize_runtime_identifier(object_labels.name) != subject.name:
             continue
         for key, values in object_label_location_values_by_label(

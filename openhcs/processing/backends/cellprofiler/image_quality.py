@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.process_local_cache import RegisteredProcessLocalBoundedCache
 
 from abc import ABC, abstractmethod
@@ -1565,7 +1566,7 @@ def _haralick_h3_numba(image: np.ndarray, scale: int) -> float:
 
 @numpy(contract=ProcessingContract.PURE_2D)
 def measure_image_quality(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     include_scaling: bool = True,
     calculate_blur: bool = True,
     calculate_saturation: bool = True,

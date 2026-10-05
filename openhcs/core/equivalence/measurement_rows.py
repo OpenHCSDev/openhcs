@@ -1101,7 +1101,14 @@ class RuntimeMeasurementRowMapping:
     def object_name(self) -> str | None:
         return cast(str | None, self.declared_value(MeasurementRowObjectName))
 
-    def object_label(self) -> int | None:
+    def object_label(self, *, object_id_field: str | None = None) -> int | None:
+        """Resolve the declared object identity before generic row-axis aliases."""
+        if object_id_field is not None:
+            return MeasurementRowObjectLabel.value_from_row(
+                self.row,
+                normalized_fields=self.normalized_fields,
+                object_id_field=object_id_field,
+            )
         return cast(int | None, self.declared_value(MeasurementRowObjectLabel))
 
     def object_identity_value(
@@ -1195,7 +1202,16 @@ class RuntimeObjectMeasurementRowIdentity:
         axis_key: str | None,
         policy: RuntimeEquivalencePolicy,
     ) -> "RuntimeObjectMeasurementRowIdentity | None":
-        object_label = row.object_label()
+        selected_field = (
+            policy.measurement_dialect.row_identity_contract.selected_object_identity_field(
+                row.normalized_field_names
+            )
+        )
+        object_label = row.object_label(
+            object_id_field=(
+                None if selected_field is None else row.normalized_fields[selected_field]
+            )
+        )
         if object_label is None:
             return None
         return cls(

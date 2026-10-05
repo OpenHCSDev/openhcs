@@ -46,7 +46,8 @@ class SourceSchemaFilenameParser(FilenameParser):
         timepoint_padding: int = 3,
     ) -> str:
         address = OpenHCSPlaneAddress.from_component_values(
-            components.declared_values()
+            (component, components.required_value(component))
+            for component, _value in components.declared_values()
         )
         return address.filename(
             extension=components.extension,

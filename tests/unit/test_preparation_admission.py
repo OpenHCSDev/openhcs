@@ -11,13 +11,14 @@ from openhcs.core.autoregister_preparation import AutoRegisterRegistryPreparatio
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.function_patterns import (
-    CompiledFunctionGroup, CompiledFunctionInvocation, CompiledFunctionPattern,
+    CompiledFunctionInvocation,
     FunctionInvocationKey,
 )
 from openhcs.core.processing_preparation import (
-    PreparationCacheBatch, PreparationCacheWorker, PreparationOperation,
+    PreparationCacheBatch,
+    PreparationCacheWorker,
+    PreparationOperation,
 )
-from openhcs.core.steps.function_runtime import prepare_compiled_context_callables
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
 
 
@@ -65,30 +66,34 @@ class AuditAfter(DeclaredCache, AdmissionAudit):
 def simulated_workers(monkeypatch, affinity):
     """Use actual scheduling/cleanup but no child or socket, under one CPU."""
     import openhcs.core.processing_preparation as owner
-    monkeypatch.setattr(owner.multiprocessing, "get_all_start_methods", lambda: ["fork"])
+
+    monkeypatch.setattr(
+        owner.multiprocessing, "get_all_start_methods", lambda: ["fork"]
+    )
     monkeypatch.setattr(os, "sched_getaffinity", lambda pid: set(range(affinity)))
     active, started, peak, closed = [], [], [], []
 
     class Worker:
-        def __init__(self, operation):
-            self.operation = operation
+        def __init__(self, operations):
+            self.operations = operations
             self.result_connection = object()
             self.process = SimpleNamespace(pid=len(started) + 1)
             self.closed = False
 
         def wait(self):
-            self.operation.execute()
+            for operation in self.operations:
+                operation.execute()
 
         def close(self):
             if not self.closed:
                 self.closed = True
                 active.remove(self)
-                closed.append(self.operation.name)
+                closed.append(tuple(operation.name for operation in self.operations))
 
-    def start(context, operation):
-        worker = Worker(operation)
+    def start(context, operations):
+        worker = Worker(operations)
         active.append(worker)
-        started.append(operation.name)
+        started.append(tuple(operation.name for operation in operations))
         peak.append(len(active))
         return worker
 
@@ -97,18 +102,30 @@ def simulated_workers(monkeypatch, affinity):
     return started, peak, closed
 
 
-def test_default_budget_does_not_spawn_implicit_four_worker_pool(monkeypatch):
+def test_default_budget_uses_one_serial_child_not_four_worker_pool(monkeypatch):
     events = []
-    started, _, _ = simulated_workers(monkeypatch, 1)
+    started, peak, closed = simulated_workers(monkeypatch, 1)
     operations = tuple(DeclaredCache(str(index), events) for index in range(7))
     PreparationCacheBatch(operations).populate_child_caches()
-    assert not started and not events
+    assert started == closed == [tuple(operation.name for operation in operations)]
+    assert max(peak) == 1
+    assert events == [
+        *(("admit", operation.name) for operation in operations),
+        *(("execute", operation.name) for operation in operations),
+    ]
+    assert not PreparationOperation._completed
 
 
-@pytest.mark.parametrize("affinity,budget,expected", [(1, 8, 0), (8, 1, 0), (2, 8, 2), (8, 2, 2), (8, 3, 3)])
+@pytest.mark.parametrize(
+    "affinity,budget,expected", [(1, 8, 1), (8, 1, 1), (2, 8, 2), (8, 2, 2), (8, 3, 3)]
+)
 @pytest.mark.parametrize("declaration", [AuditBefore, AuditAfter])
 def test_new_cooperative_capability_obeys_affinity_budget_and_refills(
-    monkeypatch, affinity, budget, expected, declaration,
+    monkeypatch,
+    affinity,
+    budget,
+    expected,
+    declaration,
 ):
     events = []
     started, peak, closed = simulated_workers(monkeypatch, affinity)
@@ -116,7 +133,12 @@ def test_new_cooperative_capability_obeys_affinity_budget_and_refills(
     PreparationCacheBatch(operations).populate_child_caches(max_workers=budget)
     if expected:
         assert max(peak) == expected
-        assert started == closed == [operation.name for operation in operations]
+        expected_batches = (
+            [tuple(operation.name for operation in operations)]
+            if expected == 1
+            else [(operation.name,) for operation in operations]
+        )
+        assert started == closed == expected_batches
         for operation in operations:
             hooks = [kind for kind, name in events if name == operation.name]
             expected_hooks = ["before", "admit", "after", "execute"]
@@ -141,7 +163,8 @@ def test_invalid_budget_cannot_discover_or_launch(monkeypatch, budget):
 
 @pytest.mark.parametrize("fails", [False, True])
 def test_startup_prepares_entire_catalog_and_dynamic_compilation_remains_guarded(
-    monkeypatch, fails,
+    monkeypatch,
+    fails,
 ):
     events = []
     module = ModuleType("_admitted_preparation_source")
@@ -163,15 +186,35 @@ def test_startup_prepares_entire_catalog_and_dynamic_compilation_remains_guarded
         events.append("selected")
         if fails:
             raise RuntimeError("selected preparation failed")
+
     selected.__dict__[FunctionContractAttribute.processing_prepare] = prepare_selected
-    unselected.__dict__[FunctionContractAttribute.processing_prepare] = lambda: events.append("unselected")
-    dynamic.__dict__[FunctionContractAttribute.processing_prepare] = lambda: events.append("dynamic")
-    metadata = {"selected": SimpleNamespace(func=selected), "unselected": SimpleNamespace(func=unselected)}
+    unselected.__dict__[FunctionContractAttribute.processing_prepare] = (
+        lambda: events.append("unselected")
+    )
+    dynamic.__dict__[FunctionContractAttribute.processing_prepare] = (
+        lambda: events.append("dynamic")
+    )
+    metadata = {
+        "selected": SimpleNamespace(func=selected),
+        "unselected": SimpleNamespace(func=unselected),
+    }
     monkeypatch.setattr(RegistryService, "_metadata_cache", None)
-    monkeypatch.setattr(RegistryService, "_available_registry_instances", classmethod(lambda cls: ()))
-    monkeypatch.setattr(RegistryService, "_metadata_from_instances", classmethod(lambda cls, instances: metadata))
-    monkeypatch.setattr(AutoRegisterRegistryPreparation, "module_registry_families", staticmethod(lambda module: ()))
-    monkeypatch.setattr(PreparationCacheBatch, "populate_child_caches", lambda self, **kwargs: None)
+    monkeypatch.setattr(
+        RegistryService, "_available_registry_instances", classmethod(lambda cls: ())
+    )
+    monkeypatch.setattr(
+        RegistryService,
+        "_metadata_from_instances",
+        classmethod(lambda cls, instances: metadata),
+    )
+    monkeypatch.setattr(
+        AutoRegisterRegistryPreparation,
+        "module_registry_families",
+        staticmethod(lambda module: ()),
+    )
+    monkeypatch.setattr(
+        PreparationCacheBatch, "populate_child_caches", lambda self, **kwargs: None
+    )
     if fails:
         for _ in range(2):
             with pytest.raises(RuntimeError, match="selected preparation failed"):
@@ -189,13 +232,13 @@ def test_startup_prepares_entire_catalog_and_dynamic_compilation_remains_guarded
     )
     dynamic_invocation = CompiledFunctionInvocation(
         key=FunctionInvocationKey("dynamic", "default", 1),
-        contract=CallableContract.from_callable(dynamic),
+        contract=CallableContract.from_prepared_callable(dynamic),
     )
-    group = CompiledFunctionGroup("default", (invocation, dynamic_invocation))
-    pattern = CompiledFunctionPattern(groups=(group,), is_grouped=False)
-    context = SimpleNamespace(step_plans={0: SimpleNamespace(step_index=0, compiled_function_pattern=pattern)})
-    prepare_compiled_context_callables({"A01": context}, max_workers=1)
-    prepare_compiled_context_callables({"A01": context}, max_workers=1)
+    assert events == ["selected", "unselected", "dynamic"]
+    assert dynamic_invocation.contract.metadata.canonical_signature is not None
+    for _ in range(2):
+        invocation.contract.resolve_runtime_callable()
+        dynamic_invocation.contract.resolve_runtime_callable()
     assert events == ["selected", "unselected", "dynamic"]
 
 
@@ -203,42 +246,60 @@ def test_unavailable_affinity_does_not_admit_speculative_parallelism(monkeypatch
     events = []
     started, _, _ = simulated_workers(monkeypatch, 8)
     monkeypatch.delattr(os, "sched_getaffinity")
-    PreparationCacheBatch(tuple(DeclaredCache(str(i), events) for i in range(3))).populate_child_caches(max_workers=8)
+    PreparationCacheBatch(
+        tuple(DeclaredCache(str(i), events) for i in range(3))
+    ).populate_child_caches(max_workers=8)
     assert not started and not events
 
 
 def test_affinity_query_failure_is_not_misreported_as_success(monkeypatch):
     events = []
     started, _, _ = simulated_workers(monkeypatch, 8)
+
     def fail(pid):
         raise OSError("affinity admission failed")
+
     monkeypatch.setattr(os, "sched_getaffinity", fail)
     with pytest.raises(OSError, match="affinity admission failed"):
-        PreparationCacheBatch(tuple(DeclaredCache(str(i), events) for i in range(3))).populate_child_caches(max_workers=8)
+        PreparationCacheBatch(
+            tuple(DeclaredCache(str(i), events) for i in range(3))
+        ).populate_child_caches(max_workers=8)
     assert not started and not events
 
 
-def test_failure_in_refilled_slot_closes_every_exact_worker(monkeypatch):
+@pytest.mark.parametrize("affinity", [1, 2])
+def test_failure_in_refilled_slot_closes_every_exact_worker(monkeypatch, affinity):
     events = []
-    started, peak, closed = simulated_workers(monkeypatch, 2)
+    started, peak, closed = simulated_workers(monkeypatch, affinity)
+
     class FailingCache(DeclaredCache):
         def execute(self):
             super().execute()
             raise RuntimeError("refilled cache failed")
-    operations = (*tuple(DeclaredCache(str(i), events) for i in range(4)), FailingCache("failed", events), DeclaredCache("not-started", events))
+
+    operations = (
+        *tuple(DeclaredCache(str(i), events) for i in range(4)),
+        FailingCache("failed", events),
+        DeclaredCache("not-started", events),
+    )
     with pytest.raises(RuntimeError, match="refilled cache failed"):
         PreparationCacheBatch(operations).populate_child_caches(max_workers=8)
-    assert max(peak) == 2
+    assert max(peak) == affinity
     assert set(closed) == set(started)
+    if affinity == 1:
+        assert ("execute", "not-started") not in events
     assert not PreparationOperation._completed
 
 
 def test_selected_hook_failure_is_not_admitted_as_completed(monkeypatch):
     events = []
+
     def hook():
         events.append("attempt")
         raise RuntimeError("selected preparation failed")
+
     from openhcs.core.processing_preparation import CallableHookPreparation
+
     operation = CallableHookPreparation(hook, None, "new_selected")
     for _ in range(2):
         with pytest.raises(RuntimeError, match="selected preparation failed"):

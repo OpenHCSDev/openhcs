@@ -3166,7 +3166,7 @@ def test_napari_display_pipeline_rejects_axis_labels_for_wrong_viewer_ndim():
         dims = FakeDims()
         text_overlay = FakeTextOverlay()
 
-    layer = type("Layer", (), {"data": np.zeros((2, 2, 8, 16))})()
+    layer = type("Layer", (), {"data": np.zeros((2, 2, 8, 16)), "visible": True})()
     server = _FakeNapariServer()
     server.layer_route_state = NapariLayerRouteStateStore.empty()
     server.viewer = FakeViewer()
@@ -5985,24 +5985,23 @@ def test_napari_shapes_layer_display_applies_route_global_axis_translate():
         component_values={"channel": [4], "site": [1, 2]},
         axis_offsets=(3, 0),
     )
+    item = _layer_item(
+        {"channel": 4, "site": 1},
+        [
+            {
+                "type": "polygon",
+                "coordinates": [[0, 0], [0, 2], [2, 2], [2, 0]],
+                "metadata": {"source_spatial_shape_yx": (3, 3)},
+            }
+        ],
+        stream_layer_data_type=StreamingDataType.SHAPES,
+    )
 
     napari_viewer_server.NapariShapesLayerDisplayHandler().handle(
         napari_viewer_server.NapariLayerDisplayRequest(
             pipeline=pipeline,
             presentation=presentation,
-            items=[
-                _layer_item(
-                    {"channel": 4, "site": 1},
-                    [
-                        {
-                            "type": "polygon",
-                            "coordinates": [[0, 0], [0, 2], [2, 2], [2, 0]],
-                            "metadata": {"source_spatial_shape_yx": (3, 3)},
-                        }
-                    ],
-                    stream_layer_data_type=StreamingDataType.SHAPES,
-                )
-            ],
+            items=[item],
             display_config=NapariDisplayConfig(),
         )
     )
@@ -6019,6 +6018,7 @@ def test_napari_shapes_layer_display_applies_route_global_axis_translate():
         "source_spatial_shape_yx": ["(3, 3)"],
         "label": [1],
         "path": ["test"],
+        NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE: [item.element_identity(0)],
     }
     assert layer_kwargs["ndim"] == 4
     assert layer_kwargs["edge_color"] == "label"

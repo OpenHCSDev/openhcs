@@ -30,12 +30,13 @@ from openhcs.core.source_metadata import (
     OriginalSourceMetadata,
     SourceFilterPathMetadata,
     SourceMetadataMapping,
-    SourceMetadataRoleView,
+    SourceMetadataFields,
     SourceMetadataScalar,
     SourceMetadataValue,
     SourceComponentProjectionStrategy,
     path_metadata_values_equivalent,
     source_metadata_field_identity,
+    source_metadata_component,
     source_metadata_dict,
     source_metadata_scalar,
 )
@@ -709,7 +710,7 @@ def overlay_source_metadata(
     for component, value in projected_components.items():
         overlaid = with_source_component_metadata(overlaid, component, value)
 
-    for field, value in SourceMetadataRoleView(additions).scalar_items():
+    for field, value in SourceMetadataFields.scalar_items(additions):
         if value is None:
             continue
         component = source_metadata_component(field)
@@ -770,7 +771,7 @@ def source_metadata_value(
     key: str,
 ) -> SourceMetadataScalar:
     """Return one source-literal metadata value by its exact declared key."""
-    return _source_metadata_lookup_projection(metadata).value(key)
+    return SourceMetadataFields.literal_value(metadata, key)
 
 
 def source_component_metadata_value(
@@ -819,7 +820,7 @@ def semantic_source_metadata_value(
     field_identity = source_metadata_field_identity(field_name)
     semantic_values = tuple(
         value
-        for field, value in SourceMetadataRoleView(metadata).scalar_items()
+        for field, value in SourceMetadataFields.scalar_items(metadata)
         if value is not None
         and source_metadata_field_identity(str(field)) == field_identity
     )
@@ -846,14 +847,14 @@ def source_component_metadata_values(
     component: AllComponents,
 ) -> tuple[str, ...]:
     """Return all metadata values that semantically describe a component."""
-    return _source_metadata_lookup_projection(metadata).component_values(component)
+    return SourceMetadataFields.component_values(metadata, component)
 
 
 def with_source_component_metadata(
     metadata: SourceMetadataMapping,
     component: AllComponents,
     value: SourceMetadataScalar,
-) -> dict[str, SourceMetadataValue]:
+) -> SourceMetadataMapping:
     """Return metadata with one canonical component value.
 
     Source schemas can carry CellProfiler spellings such as ``Well`` and OpenHCS
@@ -861,15 +862,7 @@ def with_source_component_metadata(
     every semantic spelling so later normalized lookups cannot observe both the
     old and new component values.
     """
-    return {
-        **{
-            key: field_value
-            for key, field_value in metadata.items()
-            if key == ORIGINAL_SOURCE_METADATA_FIELD
-            or source_metadata_component(str(key)) is not component
-        },
-        component.value: str(value),
-    }
+    return SourceMetadataFields.with_component(metadata, component, value)
 
 
 def source_metadata_values_equal(
@@ -969,60 +962,8 @@ class SourceAxisMetadataScope:
         return any(
             metadata_value is not None
             and source_metadata_values_equal(str(metadata_value), value)
-            for metadata_value in SourceMetadataRoleView(metadata).scalar_values()
+            for metadata_value in SourceMetadataFields.scalar_values(metadata)
         )
-
-
-@lru_cache(maxsize=256)
-def source_metadata_component(field: str) -> AllComponents | None:
-    """Return the nominal component owner of a metadata field."""
-
-    return SourceComponentProjectionStrategy.component_for_metadata_field(field)
-
-
-@dataclass(frozen=True, slots=True)
-class SourceMetadataLookupProjection:
-    """Lookup projection over the current contents of one source metadata mapping."""
-
-    scalar_items: tuple[tuple[str, SourceMetadataScalar], ...]
-    original_items: tuple[tuple[str, SourceMetadataScalar], ...]
-
-    def value(self, key: str) -> SourceMetadataScalar:
-        """Return a source-literal metadata value by exact key."""
-        for candidate_key, value in self.original_items:
-            if str(candidate_key) == key and value is not None:
-                return value
-        for candidate_key, value in self.scalar_items:
-            if str(candidate_key) == key and value is not None:
-                return value
-        return None
-
-    def component_values(self, component: AllComponents) -> tuple[str, ...]:
-        """Return all metadata values that semantically describe a component."""
-        values: list[str] = []
-        for field, field_value in self.scalar_items:
-            field_text = str(field)
-            if field_text == component.value and field_value is not None:
-                values.append(str(field_value))
-        for field, field_value in self.scalar_items:
-            field_text = str(field)
-            if (
-                field_text != component.value
-                and source_metadata_component(field_text) is component
-            ) and field_value is not None:
-                values.append(str(field_value))
-        return tuple(dict.fromkeys(values))
-
-
-def _source_metadata_lookup_projection(
-    metadata: SourceMetadataMapping,
-) -> SourceMetadataLookupProjection:
-    """Derive a lookup projection from the current nominal metadata role view."""
-    role_view = SourceMetadataRoleView(metadata)
-    return SourceMetadataLookupProjection(
-        scalar_items=role_view.scalar_items(),
-        original_items=role_view.original_items(),
-    )
 
 
 def _require_filter_value(clause: SourceFilterClause) -> str:

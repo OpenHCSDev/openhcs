@@ -1,0 +1,490 @@
+{
+  "scope": "Independent postfreeze artifact and native-bitmap review; no scientific execution or reference scoring",
+  "author": "H003_FRESH10_COVERAGE_89",
+  "science_manifest_sha256": "9ba86b82c42b79bb694583b37b7bc0221da01be5f94c6974dbafe3f910d9634a",
+  "verified_manifest_entries": 708,
+  "verified_manifest_bytes": 102331145,
+  "all_manifest_entry_sizes_and_sha256_match": true,
+  "final_pipeline_sha256": "d5d97e3253328718516191dd0f44ffc5a75c7de18122a7abc78058f8a31519ed",
+  "counts": {
+    "Nuclei": 55,
+    "SeededCells": 55,
+    "Cells": 53,
+    "UnsupportedCells": 2
+  },
+  "integer_mask_check": {
+    "shape_yx": [
+      400,
+      400
+    ],
+    "native_sample_yx": [
+      [
+        154,
+        253
+      ],
+      [
+        165,
+        270
+      ]
+    ],
+    "C03_labels": [
+      12,
+      12
+    ],
+    "C06_labels": [
+      15,
+      16
+    ],
+    "C03_instance_count": 50,
+    "C06_instance_count": 55
+  },
+  "personally_inspected_native_captures": [
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h00488-h00389-bbbc03996-fresh10-after-capacity-20261005/H003_FRESH10_COVERAGE_89/qa/final_C06/full/DNA_raw_0_100/20261005T124839320606Z_napari_6023_OpenHCS_Napari_Visualization.png",
+      "sha256": "15c91eecef30010b1bf9ae9aaecbf488584774bc5ca6eeac07f45be54552b88a",
+      "camera": {
+        "center": [
+          0,
+          199.5,
+          199.5
+        ],
+        "zoom": 1.092
+      },
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          464
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          199.5,
+          199.5
+        ]
+      },
+      "visible_route_keys": [
+        "origin_pipeline_kind_main_projection_main_step_0_scope__run_media_ts_hdd_openhcs-science_next-h00488-h00389-bbbc03996-fresh10-after-capacity-20261005_H003_FRESH10_COVERAGE_89_raw_workspace::pipeline::submission_7f76485cf040::step_0_name_Nuclei_channel_1_well_A02"
+      ],
+      "numeric_windows": {
+        "origin_pipeline_kind_main_projection_main_step_0_scope__run_media_ts_hdd_openhcs-science_next-h00488-h00389-bbbc03996-fresh10-after-capacity-20261005_H003_FRESH10_COVERAGE_89_raw_workspace::pipeline::submission_7f76485cf040::step_0_name_Nuclei_channel_1_well_A02": {
+          "contrast_limits": [
+            0,
+            100
+          ],
+          "gamma": 1
+        }
+      }
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h00488-h00389-bbbc03996-fresh10-after-capacity-20261005/H003_FRESH10_COVERAGE_89/qa/final_C06/full/Actin_raw_0_80/20261005T124845716192Z_napari_6023_OpenHCS_Napari_Visualization.png",
+      "sha256": "acd5dde1a38ccf83528c45f108169b589bc43c2b4ef8fb7f0d2c34bf7b11abc2",
+      "camera": {
+        "center": [
+          0,
+          199.5,
+          199.5
+        ],
+        "zoom": 1.092
+      },
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          464
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          199.5,
+          199.5
+        ]
+      },
+      "visible_route_keys": [
+        "origin_pipeline_kind_main_projection_main_step_2_scope__run_media_ts_hdd_openhcs-science_next-h00488-h00389-bbbc03996-fresh10-after-capacity-20261005_H003_FRESH10_COVERAGE_89_raw_workspace::pipeline::submission_7f76485cf040::step_2_name_Cells_channel_2_well_A02"
+      ],
+      "numeric_windows": {
+        "origin_pipeline_kind_main_projection_main_step_2_scope__run_media_ts_hdd_openhcs-science_next-h00488-h00389-bbbc03996-fresh10-after-capacity-20261005_H003_FRESH10_COVERAGE_89_raw_workspace::pipeline::submission_7f76485cf040::step_2_name_Cells_channel_2_well_A02": {
+          "contrast_limits": [
+            0,
+            80
+          ],
+          "gamma": 1
+        }
+      }
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h00488-h00389-bbbc03996-fresh10-after-capacity-20261005/H003_FRESH10_COVERAGE_89/qa/final_C06/full/Nuclei_result/20261005T124852917523Z_napari_6023_OpenHCS_Napari_Visualization.png",
+      "sha256": "58339f4f17d55a7e8e8122864cb42a8f87a04b68f19a97e69d9cbcf80912192d",
+      "camera": {
+        "center": [
+          0,
+          199.5,
+          199.5
+        ],
+        "zoom": 1.092
+      },
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          464
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          199.5,
+          199.5
+        ]
+      },
+      "visible_route_keys": [
+        "origin_pipeline_kind_artifact_projection_Nuclei_step_0_scope__run_media_ts_hdd_openhcs-science_next-h00488-h00389-bbbc03996-fresh10-after-capacity-20261005_H003_FRESH10_COVERAGE_89_raw_workspace::pipeline::submission_7f76485cf040::step_0_name_Nuclei_channel_1_well_A02"
+      ],
+      "numeric_windows": {}
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h00488-h00389-bbbc03996-fresh10-after-capacity-20261005/H003_FRESH10_COVERAGE_89/qa/final_C06/top_pair/DNA_raw_0_100/20261005T130003428231Z_napari_6023_OpenHCS_Napari_Visualization.png",
+      "sha256": "d23b32072137131005c1c98d24a8c01e658c4f238b1832b4f5c04388064526ea",
+      "camera": {
+        "center": [
+          0,
+          158,
+          260
+        ],
+        "zoom": 4
+      },
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          464
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          199.5,
+          199.5
+        ]
+      },
+      "visible_route_keys": [
+        "origin_pipeline_kind_main_projection_main_step_0_scope__run_media_ts_hdd_openhcs-science_next-h00488-h00389-bbbc03996-fresh10-after-capacity-20261005_H003_FRESH10_COVERAGE_89_raw_workspace::pipeline::submission_7f76485cf040::step_0_name_Nuclei_channel_1_well_A02"
+      ],
+      "numeric_windows": {
+        "origin_pipeline_kind_main_projection_main_step_0_scope__run_media_ts_hdd_openhcs-science_next-h00488-h00389-bbbc03996-fresh10-after-capacity-20261005_H003_FRESH10_COVERAGE_89_raw_workspace::pipeline::submission_7f76485cf040::step_0_name_Nuclei_channel_1_well_A02": {
+          "contrast_limits": [
+            0,
+            100
+          ],
+          "gamma": 1
+        }
+      }
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h00488-h00389-bbbc03996-fresh10-after-capacity-20261005/H003_FRESH10_COVERAGE_89/qa/final_C06/top_pair/Actin_raw_0_80/20261005T130010334260Z_napari_6023_OpenHCS_Napari_Visualization.png",
+      "sha256": "8ce51c3a4c7cc301a76385362fdad68dbc68635407aa0c9451d1d3a0d898c89a",
+      "camera": {
+        "center": [
+          0,
+          158,
+          260
+        ],
+        "zoom": 4
+      },
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          464
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          199.5,
+          199.5
+        ]
+      },
+      "visible_route_keys": [
+        "origin_pipeline_kind_main_projection_main_step_2_scope__run_media_ts_hdd_openhcs-science_next-h00488-h00389-bbbc03996-fresh10-after-capacity-20261005_H003_FRESH10_COVERAGE_89_raw_workspace::pipeline::submission_7f76485cf040::step_2_name_Cells_channel_2_well_A02"
+      ],
+      "numeric_windows": {
+        "origin_pipeline_kind_main_projection_main_step_2_scope__run_media_ts_hdd_openhcs-science_next-h00488-h00389-bbbc03996-fresh10-after-capacity-20261005_H003_FRESH10_COVERAGE_89_raw_workspace::pipeline::submission_7f76485cf040::step_2_name_Cells_channel_2_well_A02": {
+          "contrast_limits": [
+            0,
+            80
+          ],
+          "gamma": 1
+        }
+      }
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h00488-h00389-bbbc03996-fresh10-after-capacity-20261005/H003_FRESH10_COVERAGE_89/qa/final_C06/full/DNAOutlineQA/20261005T124919221681Z_napari_6023_OpenHCS_Napari_Visualization.png",
+      "sha256": "30d063ae1bd2ce8a0a7a67bd876149a0a191059bbbcf30a6a551fffa106ffe14",
+      "camera": {
+        "center": [
+          0,
+          199.5,
+          199.5
+        ],
+        "zoom": 1.092
+      },
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          464
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          199.5,
+          199.5
+        ]
+      },
+      "visible_route_keys": [
+        "origin_pipeline_kind_main_projection_main_step_8_scope__run_media_ts_hdd_openhcs-science_next-h00488-h00389-bbbc03996-fresh10-after-capacity-20261005_H003_FRESH10_COVERAGE_89_raw_workspace::pipeline::submission_7f76485cf040::step_8_name_DNAOutlineQA_channel_1_well_A02_color_plane"
+      ],
+      "numeric_windows": {}
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h00488-h00389-bbbc03996-fresh10-after-capacity-20261005/H003_FRESH10_COVERAGE_89/qa/final_C06/full/ActinOutlineQA/20261005T124925583551Z_napari_6023_OpenHCS_Napari_Visualization.png",
+      "sha256": "b496a68ada3a246e0e741b3f6ef692502f474ef8936f3a2bdb750dc532f041aa",
+      "camera": {
+        "center": [
+          0,
+          199.5,
+          199.5
+        ],
+        "zoom": 1.092
+      },
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          464
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          199.5,
+          199.5
+        ]
+      },
+      "visible_route_keys": [
+        "origin_pipeline_kind_main_projection_main_step_9_scope__run_media_ts_hdd_openhcs-science_next-h00488-h00389-bbbc03996-fresh10-after-capacity-20261005_H003_FRESH10_COVERAGE_89_raw_workspace::pipeline::submission_7f76485cf040::step_9_name_ActinOutlineQA_channel_2_well_A02_color_plane"
+      ],
+      "numeric_windows": {}
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h00488-h00389-bbbc03996-fresh10-after-capacity-20261005/H003_FRESH10_COVERAGE_89/qa/final_C06/top_pair/DNAOutlineQA/20261005T125441208216Z_napari_6023_OpenHCS_Napari_Visualization.png",
+      "sha256": "0f38631903eeeff40481ab99967c34f9ecd425210aa0e1cfe451c9fbbb8fed20",
+      "camera": {
+        "center": [
+          0,
+          158,
+          260
+        ],
+        "zoom": 4
+      },
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          464
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          199.5,
+          199.5
+        ]
+      },
+      "visible_route_keys": [
+        "origin_pipeline_kind_main_projection_main_step_8_scope__run_media_ts_hdd_openhcs-science_next-h00488-h00389-bbbc03996-fresh10-after-capacity-20261005_H003_FRESH10_COVERAGE_89_raw_workspace::pipeline::submission_7f76485cf040::step_8_name_DNAOutlineQA_channel_1_well_A02_color_plane"
+      ],
+      "numeric_windows": {}
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h00488-h00389-bbbc03996-fresh10-after-capacity-20261005/H003_FRESH10_COVERAGE_89/qa/final_C06/top_pair/Nuclei/20261005T125932699102Z_napari_6023_OpenHCS_Napari_Visualization.png",
+      "sha256": "e04b91e6235f74c0e153f617e827544f3b99b3fcf0a44c397fdf9b870517fe5e",
+      "camera": {
+        "center": [
+          0,
+          158,
+          260
+        ],
+        "zoom": 4
+      },
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          464
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          199.5,
+          199.5
+        ]
+      },
+      "visible_route_keys": [
+        "origin_pipeline_kind_artifact_projection_Nuclei_step_0_scope__run_media_ts_hdd_openhcs-science_next-h00488-h00389-bbbc03996-fresh10-after-capacity-20261005_H003_FRESH10_COVERAGE_89_raw_workspace::pipeline::submission_7f76485cf040::step_0_name_Nuclei_channel_1_well_A02"
+      ],
+      "numeric_windows": {}
+    }
+  ],
+  "interpretation": "Useful ordinary nuclear localisation and supported bright/dim pair separation. RGB outlines have frozen analytical gray backgrounds, not the raw-only diagnostic window. Crowded body boundaries and elongated nuclear identity remain uncertain; no manual-reference or exhaustive biological accuracy."
+}

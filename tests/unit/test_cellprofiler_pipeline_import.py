@@ -16,7 +16,9 @@ from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactSpec,
     ArtifactSpecCollection,
+    ArtifactSpecRelation,
     ImageArtifactType,
+    MeasurementsArtifactType,
     ObjectLabelsArtifactType,
 )
 from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
@@ -35,6 +37,7 @@ from openhcs.core.source_bindings import (
     ComponentSelector,
     NamedSourceBinding,
     SourceBindingMatchMethod,
+    SourceBindingsConfig,
     SourceProjectionRole,
     StepSourceBindingsConfig,
 )
@@ -43,14 +46,16 @@ from openhcs.core.vfs_protocol import FileManagerLike
 from openhcs.interop.cellprofiler.module_declarations import (
     CellProfilerModule,
 )
-from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
+from openhcs.interop.cellprofiler.parser import CPPipeParser, ModuleBlock, ModuleSetting
 from openhcs.interop.cellprofiler.pipeline_import import (
+    _parsed_pipeline_declaration,
     _ParsedTargetUnit,
     _public_kwargs_for_target,
     _public_step_source_bindings,
     _SelectedInputBindingOccurrence,
     import_cellprofiler_pipeline,
 )
+from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
 from openhcs.interop.cellprofiler.setting_names import (
     SettingNameFamily,
     setting_values,
@@ -1180,7 +1185,7 @@ CorrectIlluminationApply:[module_num:5|enabled:True]
     ) == ("CorrectedStain1", "CorrectedStain2")
 
 
-def test_repeated_natural_measurement_images_use_group_local_source_identity() -> None:
+def test_repeated_measurement_images_preserve_one_complete_module_roster() -> None:
     cppipe_path = Path("pipelines/grouped-measurements.cppipe")
     filemanager = _MemoryFileManager(
         {cppipe_path: """CellProfiler Pipeline: https://cellprofiler.org
@@ -1214,28 +1219,27 @@ MeasureObjectIntensity:[module_num:3|enabled:True]
         step for step in pipeline_steps if step.name == "MeasureObjectIntensity"
     )
     invocations = tuple(normalize_function_pattern(measurement_step.func).iter_items())
-    assert tuple(invocation.key.group_key for invocation in invocations) == ("1", "2")
-    assert all(
-        "select_images_to_measure" not in invocation.kwargs_dict
-        for invocation in invocations
+    assert tuple(invocation.key.group_key for invocation in invocations) == (
+        DEFAULT_GROUP_KEY,
     )
-    assert tuple(invocation.kwargs_dict for invocation in invocations) == (
-        {},
-        {"select_object_sets_to_measure": "Nuclei"},
-    )
+    assert invocations[0].kwargs_dict["select_images_to_measure"] == ("DNA", "PH3")
     with config_context(pipeline_config):
-        assert measurement_step.processing_config.group_by is GroupBy.CHANNEL
+        assert measurement_step.processing_config.group_by is GroupBy.NONE
+        assert measurement_step.processing_config.input_source is InputSource.PIPELINE_START
 
 
-def test_repeated_object_measurements_retain_each_scalar_object_selection() -> None:
+def test_measurement_rosters_preserve_exact_subjects_across_public_transport() -> None:
     cppipe_path = Path("pipelines/repeated-object-measurements.cppipe")
     filemanager = _MemoryFileManager(
         {cppipe_path: """CellProfiler Pipeline: https://cellprofiler.org
 NamesAndTypes:[module_num:1|enabled:True]
-    Assignments count:1
+    Assignments count:2
     Select the image type:Grayscale image
     Name to assign these images:DNA
     Select the rule criteria:and (metadata does channel "1")
+    Select the image type:Grayscale image
+    Name to assign these images:RNA
+    Select the rule criteria:and (metadata does channel "2")
 MedianFilter:[module_num:2|enabled:True]
     Select the input image:DNA
     Name the output image:CorrDNA
@@ -1252,7 +1256,7 @@ IdentifyTertiaryObjects:[module_num:5|enabled:True]
     Select the smaller identified objects:Nuclei
     Name the tertiary objects to be identified:Cytoplasm
 MeasureObjectIntensity:[module_num:6|enabled:True]
-    Select images to measure:CorrDNA
+    Select images to measure:CorrDNA, RNA
     Select objects to measure:Nuclei, Cells, Cytoplasm
 """}
     )
@@ -1270,10 +1274,11 @@ MeasureObjectIntensity:[module_num:6|enabled:True]
     measurement_invocations = tuple(
         normalize_function_pattern(measurement_steps[0].func).iter_items()
     )
-    assert tuple(
-        invocation.kwargs_dict["select_object_sets_to_measure"]
-        for invocation in measurement_invocations
-    ) == ("Nuclei", "Cells", "Cytoplasm")
+    assert len(measurement_invocations) == 1
+    assert measurement_invocations[0].key.group_key == DEFAULT_GROUP_KEY
+    assert measurement_invocations[0].kwargs_dict["select_images_to_measure"] == (
+        "CorrDNA", "RNA",
+    )
 
     source = FunctionStepTransportAuthority.source_from_pipeline(pipeline_steps)
     namespace: dict[str, object] = {}
@@ -1286,10 +1291,102 @@ MeasureObjectIntensity:[module_num:6|enabled:True]
     )
     assert FunctionStepTransportAuthority.source_from_pipeline(reconstructed) == source
     assert tuple(
-        invocation.kwargs_dict["select_object_sets_to_measure"]
+        invocation.key
         for step in reconstructed_measurements
         for invocation in normalize_function_pattern(step.func).iter_items()
+    ) == (measurement_invocations[0].key,)
+
+    parser = CPPipeParser()
+    modules = tuple(
+        parser.parse(cppipe_path, filemanager=filemanager, backend=Backend.MEMORY)
+    )
+    declaration = _parsed_pipeline_declaration(
+        modules,
+        CellProfilerModule.source_bindings_for_modules(
+            modules,
+            SourceBindingsConfig(image_plane_sources=parser.image_plane_sources),
+        ),
+        binder=SettingsBinder(source_root=cppipe_path.parent),
+    )
+    target = next(
+        unit for unit in declaration.target_units
+        if unit.module.name == "MeasureObjectIntensity"
+    )
+    module_type = CellProfilerModule.require_module("MeasureObjectIntensity")
+    reconstructed_invocation = next(
+        normalize_function_pattern(reconstructed_measurements[0].func).iter_items()
+    )
+    blocks, consumed = module_type.module_blocks_for_invocation(
+        invocation=reconstructed_invocation, step_context=target.context,
+    )
+    assert len(blocks) == 1
+    numbered, _next_module_num = CellProfilerModule.number_step_invocation_blocks(
+        (blocks,), first_module_num=1,
+    )
+    contract, _consumed = module_type.invocation_callable_contract(
+        invocation=reconstructed_invocation,
+        numbered_module_blocks=numbered[0],
+        consumed_kwarg_names=consumed,
+        step_context=target.context,
+    )
+    assert tuple(spec.ref() for spec in contract.artifact_inputs) == tuple(
+        spec.ref() for spec in target.contract.artifact_inputs
+    )
+    assert tuple(spec.name for spec in contract.artifact_inputs) == (
+        "CorrDNA", "RNA", "Nuclei", "Cells", "Cytoplasm",
+    )
+    (measurement_output,) = contract.artifact_outputs.of_artifact_type(
+        MeasurementsArtifactType,
+    )
+    assert tuple(
+        subject.name
+        for subject in ArtifactSpecRelation.measurement_subjects_for_output(
+            measurement_output,
+        )
     ) == ("Nuclei", "Cells", "Cytoplasm")
+
+
+def test_object_measurement_subjects_across_channels_share_one_invocation() -> None:
+    cppipe_path = Path("pipelines/cross-channel-object-measurements.cppipe")
+    filemanager = _MemoryFileManager(
+        {cppipe_path: """CellProfiler Pipeline: https://cellprofiler.org
+NamesAndTypes:[module_num:1|enabled:True]
+    Assignments count:2
+    Select the image type:Grayscale image
+    Name to assign these images:DNA
+    Select the rule criteria:and (metadata does channel "1")
+    Select the image type:Grayscale image
+    Name to assign these images:RNA
+    Select the rule criteria:and (metadata does channel "2")
+IdentifyPrimaryObjects:[module_num:2|enabled:True]
+    Select the input image:DNA
+    Name the primary objects to be identified:Nuclei
+IdentifyPrimaryObjects:[module_num:3|enabled:True]
+    Select the input image:RNA
+    Name the primary objects to be identified:Cells
+IdentifyPrimaryObjects:[module_num:4|enabled:True]
+    Select the input image:RNA
+    Name the primary objects to be identified:Unmeasured
+MeasureObjectSizeShape:[module_num:5|enabled:True]
+    Select object sets to measure:Nuclei, Cells
+"""}
+    )
+    steps, config = import_cellprofiler_pipeline(
+        cppipe_path, filemanager=filemanager, backend=Backend.MEMORY,
+    )
+    (measurement_step,) = tuple(
+        step for step in steps if step.name == "MeasureObjectSizeShape"
+    )
+    (invocation,) = tuple(
+        normalize_function_pattern(measurement_step.func).iter_items()
+    )
+    assert invocation.key.group_key == DEFAULT_GROUP_KEY
+    assert invocation.kwargs_dict["select_object_sets_to_measure"] == (
+        "Nuclei", "Cells",
+    )
+    with config_context(config):
+        assert measurement_step.processing_config.group_by is GroupBy.NONE
+        assert measurement_step.processing_config.input_source is InputSource.PREVIOUS_STEP
 
 
 def test_mixed_source_and_produced_measurements_share_one_step() -> None:

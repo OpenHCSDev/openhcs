@@ -7,6 +7,7 @@ from typing import ClassVar
 
 from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.callable_contract import runtime_image_execution_mode
+from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     image_payload_data,
     image_payload_metadata,
@@ -41,7 +42,7 @@ from openhcs.processing.backends.lib_registry.unified_registry import Processing
 
 @runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
 @numpy(contract=ProcessingContract.FLEXIBLE)
-def gaussian_filter(image: np.ndarray, sigma: float = 1.0) -> np.ndarray:
+def gaussian_filter(image: RuntimeArrayData, sigma: float = 1.0) -> np.ndarray:
     """
     Apply CellProfiler-compatible Gaussian smoothing to an image.
 

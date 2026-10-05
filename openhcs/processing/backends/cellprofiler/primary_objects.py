@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 from enum import Enum
 from openhcs.core.memory import numpy
 from openhcs.core.public_api import public_names_from_objects
+from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     image_payload_data,
@@ -89,6 +90,7 @@ from openhcs.processing.backends.cellprofiler._backend import (
 from openhcs.processing.backends.cellprofiler.enum_attributes import (
     CellProfilerEnumAttributeMixin,
 )
+from openhcs.core.callable_contract import CallableContract
 from openhcs.core.artifacts import (
     ArtifactSpecCollection,
     ImageArtifactType,
@@ -123,7 +125,7 @@ class ExcessObjectHandling(CellProfilerEnumAttributeMixin, Enum):
 
 @numpy(contract=ProcessingContract.PURE_2D)
 def identify_primary_objects(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     min_diameter: int = 10,
     max_diameter: int = 40,
     exclude_size: bool = True,
@@ -161,6 +163,12 @@ def identify_primary_objects(
 ) -> PrimaryObjectsRuntimeTuple:
     """
     Segment primary objects, such as fluorescent nuclei, in a grayscale image.
+
+    Declumping smoothing applies only to INTENSITY marker extraction. SHAPE
+    extracts markers from the foreground labels' distance-to-edge response;
+    automatic_smoothing and smoothing_filter_size do not smooth that response.
+    This is separate from threshold_smoothing_scale. Maxima suppression applies
+    to either marker method.
 
     CellProfiler Parameter Mapping:
     (CellProfiler setting -> Python parameter)
@@ -204,8 +212,11 @@ def identify_primary_objects(
         exclude_border_objects: Discard objects touching image border
         unclump_method: Method to distinguish clumped objects
         watershed_method: Method to draw dividing lines between clumped objects
-        automatic_smoothing: Auto-calculate smoothing filter size
-        smoothing_filter_size: Size of smoothing filter for declumping
+        automatic_smoothing: Auto-calculate INTENSITY marker smoothing size;
+            ignored for SHAPE marker extraction.
+        smoothing_filter_size: INTENSITY marker smoothing filter size when
+            automatic_smoothing is False; ignored for SHAPE marker extraction.
+            Separate from threshold_smoothing_scale.
         automatic_suppression: Auto-calculate maxima suppression distance
         maxima_suppression_size: Minimum distance between local maxima
         low_res_maxima: Use lower resolution for finding maxima (faster)
@@ -645,7 +656,10 @@ class IdentifyPrimaryObjectsModule(
             artifact_outputs=artifact_outputs,
         )
         source = cls.primary_image_inputs(
-            cls.require_callable(invocation_key.function_name), artifact_inputs.specs
+            CallableContract.from_prepared_callable(
+                cls.require_callable(invocation_key.function_name)
+            ),
+            artifact_inputs.specs,
         )
         if len(source) != 1:
             raise ValueError("IdentifyPrimaryObjects diagnostics require one source image.")

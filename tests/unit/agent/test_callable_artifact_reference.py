@@ -47,7 +47,7 @@ from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.steps.function_runtime import FunctionOutputContextStrategy
+
 from openhcs.processing.custom_functions import manager as custom_manager
 from openhcs.processing.materialization import materialize
 from polystore.disk import DiskStorageBackend
@@ -59,6 +59,8 @@ DOCUMENT_PATH = "docs/source/development/callable_artifact_authoring.rst"
 DOCUMENT_ID = "openhcs_callable_artifact_authoring"
 REFERENCE_BLOCKS = (
     "callable-artifact-reference",
+    "callable-artifact-points-reference",
+    "callable-artifact-diagnostic-reference",
     "callable-artifact-input-reference",
     "callable-artifact-plate-reference",
 )
@@ -173,6 +175,91 @@ def test_reference_executes_and_compiles_actual_function_step(reference_namespac
     assert not namespace["FixtureFeatureOwner"].owns_measurement_feature_name("unknown")
 
 
+def test_diagnostic_reference_uses_one_canonical_slot_and_exact_trailing_artifacts(
+    reference_namespace,
+):
+    namespace = reference_namespace
+    function = namespace["inspect_label_fixture_with_diagnostic"]
+    contract = CallableContract.from_callable(function)
+    pixels = np.zeros((8, 8), dtype=np.uint16)
+    pixels[2:6, 3:7] = 7
+    returned = function(pixels)
+    assert len(returned) == 3
+    assert contract.canonical_return_output_specs.names() == (
+        "fixture_image", "fixture_diagnostic",
+    )
+    assert contract.trailing_return_output_specs.names() == (
+        "fixture_labels", "fixture_object_rows",
+    )
+    matched = contract.resolve_returned_output(returned)
+    np.testing.assert_array_equal(matched[namespace["FIXTURE_IMAGE"].ref()], pixels)
+    np.testing.assert_array_equal(
+        matched[namespace["FIXTURE_DIAGNOSTIC"].ref()], pixels > 0,
+    )
+    assert matched[namespace["FIXTURE_ROWS"].ref()].row_mappings() == (
+        {"slice_index": 0, "object_label": 7, "pixel_count": 16},
+    )
+    with pytest.raises(ValueError, match="trailing return count"):
+        contract.resolve_returned_output((pixels, pixels > 0, returned[1], returned[2]))
+
+
+def test_points_declaration_materializes_fractional_geometry_and_full_source_domain(
+    reference_namespace, tmp_path,
+):
+    from openhcs.core.roi_point_metadata import ROIFractionalZ
+    from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
+    from openhcs.core.runtime_measurements import MeasurementTable
+    from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
+    from polystore.roi import PointShape
+
+    namespace = reference_namespace
+    spec = namespace["CENTRE_ROWS"]
+    labels = namespace["CENTRE_LABELS"]
+    plan = ArtifactOutputPlan(
+        name=spec.name, path="/synthetic/centre_rows", artifact_type=spec.artifact_type,
+        relations=spec.relations,
+    )
+    assert plan.object_subject_binding().source == labels.ref()
+    row = namespace["CentreRow"](7, 1.5, 1.25, 2.5)
+    carrier = namespace["DataclassMeasurementColumnarRows"](
+        (row,), row_type=namespace["CentreRow"],
+    )
+    # Direct materialization supplies the same nominal context normally owned
+    # by runtime contextualization, without inventing an archive/CSV writer.
+    table = MeasurementTable(
+        name=spec.name, rows=carrier, subject=plan.measurement_subject(),
+        measurement_feature_owner=namespace["CentreFeatureOwner"],
+        source_path="/synthetic/volume.tif",
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=("/synthetic/volume.tif",) * 4,
+            component_metadata=tuple(
+                {"well": "A01", "site": 1, "channel": 1, "z_index": z, "timepoint": 1}
+                for z in range(4)
+            ),
+        ),
+    )
+    materialize(
+        spec.materialization, data=table, path=str(tmp_path / "centres"),
+        filemanager=FileManager({"disk": DiskStorageBackend()}),
+        backends=["disk"], backend_kwargs={},
+    )
+    csv_options = next(
+        option for option in spec.materialization.outputs
+        if isinstance(option, namespace["CsvOptions"])
+    )
+    assert (tmp_path / ("centres" + csv_options.filename_suffix)).read_text().splitlines() == [
+        "object_label,center_z,center_y,center_x", "7,1.5,1.25,2.5",
+    ]
+    rois = load_rois_from_zip(tmp_path / "centres_points.roi.zip")
+    assert rois[0].shapes == [PointShape(y=1.25, x=2.5)]
+    assert rois[0].metadata["object_label"] == 7
+    assert ROIFractionalZ.decode(rois[0].metadata) == ROIFractionalZ(1.5)
+    metadata = ROIArchiveSourceMetadata.decode(rois)
+    domain = ROIFractionalZ.source_component_domain(rois, metadata)
+    assert tuple(plane["z_index"] for plane in domain) == (0, 1, 2, 3)
+    assert metadata.source_path == "/synthetic/volume.tif"
+
+
 def test_input_reference_compiles_nominal_binding_and_repairs_wrong_annotation(
     reference_namespace,
 ):
@@ -202,13 +289,10 @@ def test_input_reference_compiles_nominal_binding_and_repairs_wrong_annotation(
     original_annotation = raw.__annotations__["objects"]
     try:
         raw.__annotations__["objects"] = np.ndarray
-        from openhcs.core.pipeline.function_contracts import resolved_callable_type_hints
-        resolved_callable_type_hints.cache_clear()
         with pytest.raises(TypeError, match="does not accept object_labels artifact payloads"):
             compile_function_pattern(function, {plan.ref(): plan}, {})
     finally:
         raw.__annotations__["objects"] = original_annotation
-        resolved_callable_type_hints.cache_clear()
     compile_function_pattern(function, {plan.ref(): plan}, {})
 
 
@@ -306,8 +390,8 @@ def test_plate_reference_prepares_compiles_and_runs_in_original_parent(
         context = plate["_plate_context"](axis_id, (plan,))
         plate["_record_measurements"](context, name=source.name, path=path, count=0)
         record = context.runtime_value_store.values()[0]
-        assert isinstance(record.value.data, MeasurementTable)
-        record.value.data.rows = reference_namespace["inspect_label_fixture"](fixture)[2]
+        assert isinstance(record.data, MeasurementTable)
+        record.data.rows = reference_namespace["inspect_label_fixture"](fixture)[2]
         plate["_record_measurements"](
             context, name="unrelated_rows", path=f"/memory/{axis_id}/unrelated", count=99,
         )
@@ -319,7 +403,7 @@ def test_plate_reference_prepares_compiles_and_runs_in_original_parent(
         if record.key.name == output.name
     )
     assert len(summaries) == 1  # one parent result, not one execution per axis
-    table = summaries[0].value.data
+    table = summaries[0].data
     assert summaries[0].key.artifact_type is SpecialArtifactType
     assert isinstance(table, DataclassMeasurementColumnarRows)
     assert table.row_mappings() == (
@@ -373,9 +457,7 @@ def test_reference_retains_plane_domain_until_raw_numpy_invocation(
             plane_index=None, axis_size=plane_count,
         )
     )
-    label_payload = FunctionOutputContextStrategy.for_context(
-        ObjectLabelsArtifactType,
-    ).contextualize(stack, labels, None, projection)
+    label_payload = ObjectLabelsArtifactType.contextualize_output(stack, labels, None, projection)
     assert isinstance(label_payload, ObjectLabelPayload)
     np.testing.assert_array_equal(label_payload.labels, stack.data)
     assert label_payload.plane_axis is (
@@ -393,9 +475,7 @@ def test_reference_retains_plane_domain_until_raw_numpy_invocation(
             plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
         ).payload_with(stack.data[:, :-1, :])
         with pytest.raises(ValueError, match="Object-label spatial shape"):
-            FunctionOutputContextStrategy.for_context(
-                ObjectLabelsArtifactType,
-            ).contextualize(stack, wrong_spatial_shape, None, projection)
+            ObjectLabelsArtifactType.contextualize_output(stack, wrong_spatial_shape, None, projection)
     assert not manager.storage_dir.exists()
 
 
@@ -494,6 +574,9 @@ def test_packaged_knowledge_projection_retains_executable_reference(tmp_path):
     )
     assert "def inspect_label_fixture(" in document.content
     assert "from openhcs.core.memory import numpy" in document.content
+    for query in ("PointROIOptions fractional centres", "aligned diagnostic image returns"):
+        hits = service.search(KnowledgeBaseSearchRequest(query=query, limit=10))
+        assert DOCUMENT_ID in {hit.document.document_id for hit in hits.hits}
     for block in REFERENCE_BLOCKS:
         for line in _reference_block(block).splitlines():
             if line.strip():
@@ -506,3 +589,18 @@ def test_packaged_knowledge_projection_retains_executable_reference(tmp_path):
     source_path = "packaging/codex/openhcs/skills/use-openhcs/references/custom-function-authoring.md"
     assert (destination / source_path).read_bytes() == (ROOT / source_path).read_bytes()
     assert "Summarize declared measurements once per" in route.content
+    for section_id in (
+        "materialize-typed-3d-centres-as-feature-bearing-points",
+        "return-diagnostic-images-without-flattening-the-abi",
+    ):
+        selected = service.get_document(KnowledgeBaseDocumentRequest.from_fields(
+            document_id=DOCUMENT_ID, section_id=section_id, max_chars=10_000,
+        ))
+        assert not selected.errors and not selected.truncated
+        assert selected.selected_section_id == section_id
+        original = KnowledgeBaseService(repo_root=ROOT).get_document(
+            KnowledgeBaseDocumentRequest.from_fields(
+                document_id=DOCUMENT_ID, section_id=section_id, max_chars=10_000,
+            )
+        )
+        assert selected.content == original.content

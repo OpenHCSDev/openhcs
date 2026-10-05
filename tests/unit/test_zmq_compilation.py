@@ -106,6 +106,7 @@ class _FreshCompileOrchestrator:
         well_filter,
         is_zmq_execution,
         debug_execution_policy,
+        resolved_config,
     ) -> CompiledExecutionBundle:
         self.calls.append(
             {
@@ -113,6 +114,7 @@ class _FreshCompileOrchestrator:
                 "well_filter": well_filter,
                 "is_zmq_execution": is_zmq_execution,
                 "debug_execution_policy": debug_execution_policy,
+                "resolved_config": resolved_config,
             }
         )
         time.sleep(0.03)
@@ -184,6 +186,7 @@ def test_reused_compile_artifact_reads_step_names_from_compiled_plans() -> None:
         plate_id="/tmp/plate",
         pipeline_steps=[],
         orchestrator=None,
+        resolved_config=GlobalPipelineConfig(),
         wells=["A01"],
         compile_artifact_id="artifact-1",
         compilation_signature="signature",
@@ -224,6 +227,7 @@ def test_compile_fresh_emits_heartbeat_during_long_compilation() -> None:
         plate_id="/tmp/plate",
         pipeline_steps=[_StrippedStepShell(), _StrippedStepShell()],
         orchestrator=orchestrator,
+        resolved_config=GlobalPipelineConfig(),
         wells=["A01"],
         compile_artifact_id=None,
         compilation_signature="signature",
@@ -247,6 +251,7 @@ def test_compile_fresh_emits_heartbeat_during_long_compilation() -> None:
             "well_filter": ["A01"],
             "is_zmq_execution": True,
             "debug_execution_policy": "debug-policy",
+            "resolved_config": request.resolved_config,
         }
     ]
     assert progress_emitter.compiled_init_events == [
@@ -306,6 +311,7 @@ def test_rejected_reuse_preserves_artifact_for_a_valid_request(retain, invalid):
         plate_id="/plate",
         pipeline_steps=[],
         orchestrator=None,
+        resolved_config=GlobalPipelineConfig(),
         wells=["A01"],
         compile_artifact_id="artifact-1",
         compilation_signature="signature",

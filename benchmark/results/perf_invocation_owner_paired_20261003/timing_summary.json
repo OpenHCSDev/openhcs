@@ -1,0 +1,73 @@
+{
+  "status": "QUALIFIED_DESCRIPTIVE_TWO_REPEATS",
+  "source_head": "c59eaa55fe3d3e49f3ecb727a14a91e56e2957f6",
+  "cases": {
+    "cp_tutorial_3d_monolayer": {
+      "ordinary_observations": {
+        "compile_seconds": [
+          1.1835861206054688,
+          1.1569459438323975
+        ],
+        "execute_seconds": [
+          9.616796970367432,
+          8.426356315612793
+        ],
+        "total_seconds": [
+          11.650369129143655,
+          10.390410478692502
+        ]
+      },
+      "native_invocation_observations": [
+        14.520403317175806,
+        15.06611712090671
+      ],
+      "means": {
+        "compile_seconds": 1.170266032218933,
+        "execute_seconds": 9.021576642990112,
+        "total_seconds": 11.020389803918079,
+        "native_invocation_seconds": 14.793260219041258
+      },
+      "execution_speedup": 1.6397644008861603,
+      "total_speedup": 1.3423536265279665,
+      "remaining_2x_execution_gap": 1.6249465334694833,
+      "source_head": "c59eaa55fe3d3e49f3ecb727a14a91e56e2957f6",
+      "well_count": 1,
+      "image_sets": 1,
+      "science": "ALL4_PAIR_COMPARISONS_PASS"
+    },
+    "ExampleSpeckles": {
+      "ordinary_observations": {
+        "compile_seconds": [
+          0.5536556243896484,
+          0.5043470859527588
+        ],
+        "execute_seconds": [
+          1.810366153717041,
+          1.2980256080627441
+        ],
+        "total_seconds": [
+          2.7351605952717364,
+          2.1317388960160315
+        ]
+      },
+      "native_invocation_observations": [
+        1.9850073368288577,
+        1.9430433670058846
+      ],
+      "means": {
+        "compile_seconds": 0.5290013551712036,
+        "execute_seconds": 1.5541958808898926,
+        "total_seconds": 2.433449745643884,
+        "native_invocation_seconds": 1.9640253519173712
+      },
+      "execution_speedup": 1.2636922900560132,
+      "total_speedup": 0.8070950942928536,
+      "remaining_2x_execution_gap": 0.572183204931207,
+      "source_head": "c59eaa55fe3d3e49f3ecb727a14a91e56e2957f6",
+      "well_count": 1,
+      "image_sets": 1,
+      "science": "ALL4_PAIR_COMPARISONS_PASS"
+    }
+  },
+  "scope": "Two ordinary observations versus two fresh measured native warm observations. READY/serverstartup/shutdown and nativeimports/JVM/pipelineload/fullwarmup excluded by existing clocks. DefaultOUTCOMES/RSS. No causal optimization/full30/scaling claim. Native invocation clock covers full selected well; no division by plane/image-set count."
+}

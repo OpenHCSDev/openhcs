@@ -1,0 +1,122 @@
+{
+  "status": "READ_ONLY; CONDITIONAL_POSTCAPTURE_ROUTE_UNQUALIFIED; NO_IMPLEMENTATION",
+  "source_head": "4c0d62e45c8afb85e34b69d7279cd00710f519b5",
+  "actual_dependency_heads": {
+    "ObjectState": "a01f8939b9bf4659502a33fe3febe62cab0f3c9a",
+    "python-introspect": "ed1e4eb15f7a0bf8315274d3e47858fa2b4372bb"
+  },
+  "current_selected_NRA_class_census": "71 original/71 canonical classes in13 actual owned determining modules; whole731-module census remains historical. Only lazy_factory differs among selected modules from that original census. Unrefreshed external/MRO and future-head bindings OPEN.",
+  "diagnostic": {
+    "observations": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/observations.json",
+    "sha256": "c8b1e3f0704682e2cad20b7a5e27b1651e38b677e74f31d6477eb163185106fd",
+    "regions": [
+      {
+        "path": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/regions/region-2078682-140361443509952-0001.json",
+        "sha256": "cc69523fdae5fe92c4e96ec59609a19eb889fe744316b6ed8419ed0398313ab9"
+      },
+      {
+        "path": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/output/regions/region-2078682-140361443509952-0002.json",
+        "sha256": "f3c9e01926b069a0103ebb9c70d638a4944c1f429b809b3a7b2e9755efbf80e5"
+      }
+    ],
+    "compile_root_seconds": 0.5882621230557561,
+    "ObjectState_disjoint_seconds": 0.3834735373966396,
+    "all10_getter_inclusive_seconds": 0.19238800555467606,
+    "counts": {
+      "PipelineCompiler.compile_pipelines": 1,
+      "PipelineCompiler._register_and_resolve_pipeline_once": 1,
+      "PipelineCompiler._capture_pipeline_config": 1,
+      "AxisCompilationRequest.context_for": 1,
+      "CompilationSession.from_context": 1,
+      "PipelineOrchestrator.create_context": 3,
+      "PipelineOrchestrator.get_effective_config": 10,
+      "ObjectState.__init__": 23,
+      "ObjectState._compute_resolved_snapshot": 46,
+      "ObjectState._reconstruct_from_resolved": 343,
+      "ObjectState.to_saved_resolved_object": 21
+    },
+    "execution_ObjectState_disjoint_seconds": 0.05523737985640764,
+    "attribution_law": "Owner aggregate only; no percall timing/source frames. Normal source path reconciles counts, not proof of individual event provenance or equal cost."
+  },
+  "before_captured_pipeline_config": [
+    {
+      "consumer": "orchestrator Zarr registry setup",
+      "source": "orchestrator.py:204"
+    },
+    {
+      "consumer": "microscope initialization",
+      "source": "orchestrator.py:319"
+    },
+    {
+      "consumer": "workspace VFS logging",
+      "source": "orchestrator.py:438"
+    },
+    {
+      "consumer": "metadata_init context",
+      "source": "orchestrator.py:510 -> :569"
+    },
+    {
+      "consumer": "axis selection",
+      "source": "compiler.py:1028"
+    }
+  ],
+  "after_captured_pipeline_config": [
+    {
+      "consumer": "temp axis-filter context",
+      "source": "compiler.py:1246 -> orchestrator.py:569"
+    },
+    {
+      "consumer": "actual axis context",
+      "source": "compiler.py:206 -> orchestrator.py:569"
+    },
+    {
+      "consumer": "input-conversion VFS",
+      "source": "compiler.py:373"
+    },
+    {
+      "consumer": "Zarr-declaration VFS",
+      "source": "compiler.py:607"
+    },
+    {
+      "consumer": "final worker log after cleanup/stripping/COMPILED",
+      "source": "compiler.py:1749"
+    }
+  ],
+  "source_count_reconciliation": "Normal10-step1-axis path:13 registered compiler states(global,pipeline,delegated orchestrator,10steps)+10 ephemeral getters=23; two initial live/saved snapshots each=46. Three contexts are metadata_init/temp/axis. Arbitrary extension paths with coincident aggregate counts remain OPEN.",
+  "owners": [
+    "ZMQExecutionContext.configs/OpenHCSExecutionConfigBundle retains decoded global_pipeline and authored lazy plate_pipeline. These are not a captured concrete merged effective config; passing either directly is wrong.",
+    "Server installs request global context and initializes orchestrator before registered compiler capture. Early reads can observe handler/default/validator callback epochs.",
+    "PipelineCompiler registers named saved hierarchy and resolves submitted steps once, retaining step ObjectStates for actual live inherited-field provenance.",
+    "_capture_pipeline_config produces saved concrete GlobalPipelineConfig. resolve_declared_dataclass_paths normalizes its paths; local effective_config then feeds AxisCompilationRequest.global_config and CompilationSession.global_config.",
+    "AxisCompilationRequest.context_for creates fresh context then overwrites captured policy/filters/analysis/plate fields. TIFF and auto-add are currently fresh. CompilationSession already owns captured VFS/runtime configuration."
+  ],
+  "strongest_existing_nominal_route": "A common PipelineOrchestrator context-construction algorithm can accept explicit existing captured compiler config while its public fresh context path stays current. Local effective_config supplies temp context before AxisCompilationRequest exists; AxisCompilationRequest/CompilationSession supply axis/VFS consumers. Finalization would need its same saved-source/late-validation law admitted separately. This is the previously conditional snapshot-owner route, not a new proved fast path/cache/wrapper.",
+  "counterexamples": [
+    "Saved registered state has scoped ancestor sources; fresh getter creates scope-less state resolving current saved global context. Sharing authored object does not prove equal answers.",
+    "test_compiler_captures_scoped_worker_count changes global context after capture and proves captured worker count remains old. Fresh getter can instead read changed global values for TIFF/auto-add/VFS. Signature equality cannot prove same internal config epoch.",
+    "Handler get_component_keys/get_available_backends and extension planning callbacks can replace global/orchestrator config after capture. Changed source is rejected on future client submissions, but an internal callback may change effective values without changing request strings.",
+    "_reconstruct_from_resolved invokes real actual subtype constructors/validators every read. A later callback-only error is presently observable. Finalization cleans scopes, strips steps and sets COMPILED before its fresh getter; moving/removing it changes partial effects and first errors.",
+    "GlobalPipelineConfig and built-in TiffConfig are frozen; prior blanket mutable-TIFF claim is false. ProcessingContext attributes are independently replaceable. Mutable extension/container values, subtype behavior and constructor/error epochs still need controls.",
+    "_resolve_step_axis_filters still invokes step_state.get_provenance; live provenance is a production consumer. Unconditional live=saved collapse or deleting live snapshots remains invalid.",
+    "Captured config paths are normalized while fresh/early reads may preserve authored relative values. Do not silently substitute field authorities or add a synchronized field mirror."
+  ],
+  "signature_law": "Independent client compile and execution builder renders remain; mutated authored pipeline/config changes compilation_signature and reuse_artifact rejects mismatches. This protects external next-request epochs, not callback mutations inside a compile transaction.",
+  "maximum_payoff": {
+    "all10_getter_upper_envelope_seconds": 0.19238800555467606,
+    "eligible5_postcapture_seconds": "UNKNOWN; no average division or nested-clock sums permitted.",
+    "entire_family_upper_envelope_seconds": 0.3834735373966396,
+    "mandatory_in_entire_family": "Registered hierarchy+saved resolution+live provenance+value validation+early initialization. Not a removable cost.",
+    "Illum3_total_2x_gap_seconds": 1.22610824,
+    "all10_getter_fraction_of_total_gap": 0.15690947934146177,
+    "execution_gain_claim": 0,
+    "decision": "No current qualified route materially removes the0.383s family. Five-read capture migration cannot claim0.192s either. Do not polish: source-law/control qualification and same-phase eligible timing would be necessary before whole compiler prototype."
+  },
+  "custody": {
+    "production_edits": false,
+    "OpenHCS_or_dependency_runtime_imports": false,
+    "config_replays_or_scientific_runs": false,
+    "new_environment_checkout_capture": false,
+    "original_artifacts_copied": false,
+    "only_NRA_static_indexes_executed": true
+  }
+}

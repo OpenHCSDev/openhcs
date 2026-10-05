@@ -32,8 +32,8 @@ from openhcs.core.runtime_object_labels import (
 )
 from openhcs.core.runtime_tabular_values import MeasurementObjectRowIdentity
 from openhcs.interop.cellprofiler.measurement_dialect import (
+    CELLPROFILER_MEASUREMENT_DIALECT,
     CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
-    cellprofiler_projected_measurement_feature_name,
 )
 from openhcs.processing.backends.cellprofiler._backend import (
     CellProfilerBackendProvider,
@@ -387,7 +387,7 @@ def test_intensity_zernike_rows_own_native_feature_identity_and_axes():
     )
     assert native_feature_name == "RadialDistribution_ZernikeMagnitude_BF_image_2_0"
     assert (
-        cellprofiler_projected_measurement_feature_name(
+        CELLPROFILER_MEASUREMENT_DIALECT.projected_feature_name(
             native_feature_name,
             (("n", 2), ("m", 0)),
         )

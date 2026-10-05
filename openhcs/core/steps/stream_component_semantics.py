@@ -43,6 +43,7 @@ from openhcs.core.runtime_slice_projection import (
 from openhcs.core.source_image_provenance import (
     SourceComponentMetadata,
     SourceImageIdentity,
+    SourceImageProvenance,
 )
 from openhcs.core.source_matching import (
     source_component_metadata_raw_value,
@@ -118,9 +119,17 @@ class StreamImagePayloadMetadataProjector:
         component_order: tuple[str, ...],
     ) -> tuple[tuple[int, ...], ...]:
         """Group ordered items by the metadata common to one wire batch."""
+        return cls.partition_item_fields(
+            cls.item_fields(metadata, component_order) for metadata in metadata_items
+        )
+
+    @staticmethod
+    def partition_item_fields(
+        fields: Iterable[dict[str, ViewerWireValue]],
+    ) -> tuple[tuple[int, ...], ...]:
+        """Partition the actual rendered image or geometry fields once."""
         partitions: list[tuple[dict[str, ViewerWireValue], list[int]]] = []
-        for index, metadata in enumerate(metadata_items):
-            item_fields = cls.item_fields(metadata, component_order)
+        for index, item_fields in enumerate(fields):
             for partition_fields, indices in partitions:
                 if partition_fields == item_fields:
                     indices.append(index)
@@ -245,6 +254,17 @@ class StreamScopedDisplayConfig(ViewerDisplayConfigABC):
 
     base: ViewerDisplayConfigABC
     component_order: tuple[str, ...]
+
+    @classmethod
+    def for_source_provenance(
+        cls,
+        base: ViewerDisplayConfigABC,
+        provenance: SourceImageProvenance,
+    ) -> ViewerDisplayConfigABC:
+        """Consume the source owner's scalar-coordinate requirements."""
+        order = tuple(str(component) for component in base.COMPONENT_ORDER)
+        required = provenance.required_scalar_components(order)
+        return base if required == order else cls(base, required)
 
     @property
     def COMPONENT_ORDER(self) -> tuple[str, ...]:
@@ -402,6 +422,32 @@ class StreamSourceComponentMetadataItems:
         values: Iterable[StreamComponentMetadata],
     ) -> "StreamSourceComponentMetadataItems":
         return cls(tuple(values))
+
+    @classmethod
+    def from_image_metadata(
+        cls,
+        metadata: ImagePayloadMetadata,
+        *,
+        fallback_source_identity: SourceImageIdentity | None = None,
+    ) -> "StreamSourceComponentMetadataItems":
+        """Observe exact retained planes, not only their common scalar address.
+
+        These are domain observations, not one route address per emitted image.
+        A collapsed image's contributor provenance must not recreate a pixel axis.
+        """
+        provenance = metadata.source_provenance
+        identities = (
+            tuple(
+                provenance.for_source_plane(index).scalar_source_identity
+                for index in range(provenance.source_plane_count)
+            )
+            if metadata.plane_axis is not None and provenance.source_plane_count
+            else (provenance.scalar_source_identity,)
+        )
+        return cls.from_source_identities(
+            identities,
+            fallback_source_identity=fallback_source_identity,
+        )
 
     @classmethod
     def from_source_identities(

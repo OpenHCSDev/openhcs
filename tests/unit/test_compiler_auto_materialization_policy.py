@@ -1,5 +1,6 @@
 """Compiler persistence follows declared versus compiler-added export ownership."""
 
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -16,19 +17,20 @@ from openhcs.processing.materialization import (
 )
 from openhcs.processing.materialization.persistence import TerminalMaterializationSpec
 
+
 def test_disabling_automatic_materialization_keeps_only_declared_exports(
     monkeypatch,
 ) -> None:
     backend_requests = []
 
-    def backend(context, vfs_config):
-        backend_requests.append((context, vfs_config))
+    def backend(self, declaration):
+        backend_requests.append(declaration)
         return "disk"
 
     monkeypatch.setattr(
         MaterializationFlagPlanner,
-        "_resolve_materialization_backend",
-        staticmethod(backend),
+        "resolve_backend",
+        backend,
     )
     automatic_labels = SimpleNamespace(
         materialization=TerminalMaterializationSpec(ROIOptions(min_area=1))
@@ -41,7 +43,7 @@ def test_disabling_automatic_materialization_keeps_only_declared_exports(
         1: SimpleNamespace(artifact_outputs={"export": declared_image}),
     }
     context = object()
-    vfs_config = object()
+    vfs_config = SimpleNamespace(materialization_backend="disk")
     session = SimpleNamespace(
         global_config=SimpleNamespace(
             materialize_runtime_artifacts=False,
@@ -51,9 +53,18 @@ def test_disabling_automatic_materialization_keeps_only_declared_exports(
         plans=plans,
     )
 
-    PipelineCompiler._compile_runtime_artifact_materialization_plans(session)
+    planner = MaterializationFlagPlanner(
+        pipeline_config=SimpleNamespace(
+            path_planning_config=SimpleNamespace(well_filter=None)
+        ),
+        microscope_handler=SimpleNamespace(),
+        filemanager=object(),
+        input_dir=Path("/plate"),
+        available_axis_values=("A01",),
+    )
+    PipelineCompiler._compile_runtime_artifact_materialization_plans(session, planner)
 
-    assert backend_requests == [(context, vfs_config)]
+    assert backend_requests == [vfs_config.materialization_backend]
     assert not plans[0].runtime_artifact_materialization.has_persistent_target
     assert plans[1].runtime_artifact_materialization.has_persistent_target
     assert plans[1].runtime_artifact_materialization.require_persistent_backend() == (
@@ -71,4 +82,6 @@ def test_materialization_owner_admits_only_its_enabled_backend(backend):
     assert enabled.persists_to_backend(backend) is True
     assert enabled.persists_to_backend("other-backend") is False
     with pytest.raises(RuntimeError, match="has no persistent backend"):
-        RuntimeArtifactMaterializationPlan(persistent_enabled=True).persists_to_backend(backend)
+        RuntimeArtifactMaterializationPlan(persistent_enabled=True).persists_to_backend(
+            backend
+        )

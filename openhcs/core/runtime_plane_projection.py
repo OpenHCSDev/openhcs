@@ -297,6 +297,21 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceProjectableValue):
             axis_size=axis_size,
         )
 
+    def validate_source_declaration(
+        self, axis: RuntimePlaneAxis | None, source: "SourceImageProvenance",
+    ) -> None:
+        """Check an explicit projection against retained acquisition declarations."""
+        if axis is None:
+            return
+        declared_count = source.source_plane_count
+        if self.axis is not axis or (
+            declared_count > 0 and self.axis_size != declared_count
+        ):
+            raise ValueError(
+                "Object-label plane projection conflicts with the source-image "
+                "axis declaration."
+            )
+
     @classmethod
     def require_from_projector(
         cls,

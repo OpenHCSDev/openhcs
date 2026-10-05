@@ -369,8 +369,10 @@ def test_worker_runtime_observation_excludes_inherited_store_history(monkeypatch
         context,
         _lane_context,
         *,
+        context_key,
         cancellation=None,
     ):
+        assert context_key == "A01"
         current_records.append(
             context.runtime_value_store.replace(
                 measurement_value(2),

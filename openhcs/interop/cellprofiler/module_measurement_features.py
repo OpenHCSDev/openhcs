@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 from abc import ABC
-from collections.abc import Mapping, Sequence
-from functools import lru_cache
+from collections.abc import Callable, Mapping, Sequence
+from functools import lru_cache, partial
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -29,6 +29,9 @@ from openhcs.core.runtime_measurements import (
 from openhcs.core.runtime_tabular_values import FieldSpec
 
 if TYPE_CHECKING:
+    from openhcs.interop.cellprofiler.runtime.measurement_rows import (
+        FormattingMeasurementFeatureTemplate,
+    )
     from openhcs.core.artifacts import ArtifactSpec
     from openhcs.core.callable_contract import CallableContract
     from openhcs.core.runtime_measurements import MeasurementTable
@@ -170,15 +173,39 @@ class CellProfilerMeasurementFeatureOwner(RuntimeMeasurementFeatureOwner):
     def database_measurement_field(cls, field: FieldSpec) -> FieldSpec:
         """Project a runtime field through its module-owned database declaration."""
 
+        return cls.database_measurement_field_projection()(field)
+
+    @classmethod
+    def database_measurement_field_projection(cls) -> Callable[[FieldSpec], FieldSpec]:
+        """Bind current declarations for one table's ordered field admission.
+
+        A subsequent operation discovers the module's current MRO and nested
+        declarations again. Feature matching and dtype hooks remain live.
+        Custom table projection owners override this operation; the scalar API
+        delegates to it for a fresh single-field operation.
+        """
+
         from openhcs.interop.cellprofiler.runtime.measurement_rows import (
             FormattingMeasurementFeatureTemplate,
         )
 
+        return partial(
+            cls._database_measurement_field,
+            feature_types=cls.declared_authority_types(
+                FormattingMeasurementFeatureTemplate
+            ),
+        )
+
+    @classmethod
+    def _database_measurement_field(
+        cls,
+        field: FieldSpec,
+        *,
+        feature_types: tuple[type[FormattingMeasurementFeatureTemplate], ...],
+    ) -> FieldSpec:
         matches = tuple(
             feature
-            for feature_type in cls.declared_authority_types(
-                FormattingMeasurementFeatureTemplate
-            )
+            for feature_type in feature_types
             for feature in feature_type
             if feature.matches_feature_name(field.name)
             and type(feature).database_measurement_dtype() is not None

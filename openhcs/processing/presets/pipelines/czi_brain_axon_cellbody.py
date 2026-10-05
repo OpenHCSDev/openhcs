@@ -51,9 +51,7 @@ from openhcs.core.source_bindings import (
     SourceSelector,
 )
 from openhcs.core.source_projection import SourceCandidate, SourcePlaneDataset
-from openhcs.core.steps.function_output_manifest import (
-    FunctionStepOutputProducerIdentityRequest,
-)
+from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.microscopes.bioformats import BioFormatsHandler, BioFormatsMetadataHandler
 from openhcs.microscopes.bioformats_adapter import BIOFORMATS_MANIFEST_FILENAME
@@ -478,7 +476,7 @@ def czi_brain_axon_cellbody_demo_contribution(
     ) -> StreamProducerIdentity:
         return StreamProducerIdentity.pipeline_output(
             output_kind=(
-                FunctionStepOutputProducerIdentityRequest.ARTIFACT_OUTPUT_KIND
+                CompiledStepPlan.ARTIFACT_OUTPUT_KIND
             ),
             output_key=output_spec.name,
             projection_key=output_spec.name,

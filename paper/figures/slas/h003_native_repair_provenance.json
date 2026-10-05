@@ -1,0 +1,14 @@
+{
+  "scope": "Matched native captures from H003_POSTPAUSE_88, a fresh-context uncoached author's within-run revision; local repair and retained failure, not a reference accuracy estimate.",
+  "output_sha256": {
+    "h003_native_repair.png": "ed147bd88b98fb817e7dd67e96e6582e8a244cfcf02a8c449a604b527ce54e47",
+    "h003_native_repair.svg": "40fa30d4eb8c8ddb68cccf1d2e8c6c8518dfe9b837486e77b8d6623875b83b2b"
+  },
+  "source_sha256": {
+    "paper/supplementary/task_only_analysis/h003-native-source-proof.json": "a923abe4a26034dc430925d988a18dcf68de8ee97d90f8e72d3755e7a67bf0a2",
+    "paper/supplementary/task_only_analysis/h003-native-render-receipt.json": "684da97862f3c064780f3e635abf599d8cc8f4b0fa1a6e3f5d1e14c2d015844a"
+  },
+  "rendering": "Six complete unchanged PNG embeddings; matched C4 crop with documented 11-pixel final vertical offset, identical final C2 crops. Existing SVG/rsvg workflow; no retouching, recolouring or new scientific execution. Minimum typeset label 8.727 points at six inches.",
+  "attribution": "BBBC007v1 A02 Drosophila Kc167 DNA/actin, Sabatini laboratory, Whitehead Institute; Jones 2005 and Ljosa 2012, CC0.",
+  "limits": "A shows local separation repair; B retains a faint merge. RGB alignment proves presentation only. Native colours are not cross-candidate identities; physical calibration and exhaustive biological accuracy are unverified."
+}

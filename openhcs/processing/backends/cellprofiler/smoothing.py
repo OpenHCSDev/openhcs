@@ -5,6 +5,7 @@ from collections.abc import Callable
 from typing import Any
 from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.callable_contract import runtime_image_execution_mode
+from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     image_payload_data,
     with_image_payload_data,
@@ -357,8 +358,13 @@ class OpenCVMaskedGaussianFilterRequest(MaskedFilterRequest):
         import cv2
 
         image_array = self.image_array
-        mask_array = self.mask_array
+        mask_array = None if self.mask is None else self.mask_array
         kernel = GaussianKernel1D(self.sigma).array.astype(np.float32, copy=False)
+        if mask_array is None:
+            filtered = cv2.sepFilter2D(
+                image_array, cv2.CV_32F, kernel, kernel, borderType=cv2.BORDER_CONSTANT
+            )
+            return self._normalize_full_support(filtered, kernel)
         masked_image = np.zeros(image_array.shape, dtype=np.float32)
         np.copyto(masked_image, image_array, where=mask_array.astype(bool, copy=False))
         filtered = cv2.sepFilter2D(
@@ -368,6 +374,41 @@ class OpenCVMaskedGaussianFilterRequest(MaskedFilterRequest):
             mask_array, cv2.CV_32F, kernel, kernel, borderType=cv2.BORDER_CONSTANT
         )
         return filtered / (weights + np.finfo(np.float32).eps)
+
+    def _normalize_full_support(
+        self, filtered: np.ndarray, kernel: np.ndarray
+    ) -> np.ndarray:
+        import cv2
+
+        width = filtered.shape[1]
+        radius = kernel.size // 2
+        # Full-support interior columns repeat. Filter only the two boundaries
+        # and one interior column, retaining OpenCV's constant-border weights.
+        shape = (filtered.shape[0], min(width, kernel.size), *filtered.shape[2:])
+        weights = cv2.sepFilter2D(
+            np.ones(shape, dtype=np.float32),
+            cv2.CV_32F,
+            kernel,
+            kernel,
+            borderType=cv2.BORDER_CONSTANT,
+        )
+        weights += np.finfo(np.float32).eps
+        if width <= kernel.size:
+            np.divide(filtered, weights, out=filtered)
+        else:
+            np.divide(filtered[:, :radius], weights[:, :radius], out=filtered[:, :radius])
+            np.divide(
+                filtered[:, radius : width - radius],
+                weights[:, radius : radius + 1],
+                out=filtered[:, radius : width - radius],
+            )
+            if radius:
+                np.divide(
+                    filtered[:, width - radius :],
+                    weights[:, radius + 1 :],
+                    out=filtered[:, width - radius :],
+                )
+        return filtered
 
     @classmethod
     def apply_stack(
@@ -790,7 +831,7 @@ def _fit_polynomial(
 
 
 def smooth_image(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     smoothing_method: SmoothingMethod = SmoothingMethod.GAUSSIAN_FILTER,
     auto_object_size: bool = True,
     object_size: float = 16.0,
@@ -839,7 +880,7 @@ def smooth_image(
 
 @numpy_decorator(contract=ProcessingContract.PURE_2D)
 def smooth(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     smoothing_method: SmoothingMethod = SmoothingMethod.GAUSSIAN_FILTER,
     auto_object_size: bool = True,
     object_size: float = 16.0,
@@ -862,7 +903,7 @@ def smooth(
 @runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
 @numpy_decorator(contract=ProcessingContract.FLEXIBLE)
 def reducenoise(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     patch_size: int = 5,
     patch_distance: int = 6,
     cutoff_distance: float = 0.1,

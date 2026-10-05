@@ -5,12 +5,10 @@ from __future__ import annotations
 import logging
 import time
 from abc import ABC, abstractmethod
-from collections.abc import Callable
 from dataclasses import dataclass, replace
 from enum import Enum
 from itertools import count
 from pathlib import Path
-from typing import Self
 
 from zmqruntime.execution import ExecutionProgressObservation
 from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
@@ -76,6 +74,7 @@ from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
 from openhcs.microscopes.exceptions import MicroscopePixelSizeUnavailableError
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
 from openhcs.runtime.zmq_execution_client import (
+    ZMQExecutionRequestBuilder,
     ExecutionSubmissionPreparationTimeoutError,
     OpenHCSExecutionSubmission,
     ZMQExecutionClient,
@@ -252,18 +251,9 @@ class ExecutionClientABC(ABC):
         return None
 
     @abstractmethod
-    def submit_compile(
+    def submit_prepared_pipeline(
         self,
-        submission: OpenHCSExecutionSubmission,
-        *,
-        timeout_ms: int = OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms,
-    ) -> JsonObject:
-        raise NotImplementedError
-
-    @abstractmethod
-    def submit_pipeline(
-        self,
-        submission: OpenHCSExecutionSubmission,
+        request: ZMQExecutionRequestBuilder,
         *,
         timeout_ms: int = OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms,
     ) -> JsonObject:
@@ -303,48 +293,17 @@ class ExecutionClientABC(ABC):
         raise NotImplementedError
 
 
-ExecutionSubmitter = Callable[
-    [ExecutionClientABC, OpenHCSExecutionSubmission, int],
-    JsonObject,
-]
-
-
 class ExecutionJobKind(Enum):
-    COMPILE = (
-        "compile",
-        lambda client, submission, timeout_ms: client.submit_compile(
-            submission,
-            timeout_ms=timeout_ms,
-        ),
-    )
-    EXECUTE = (
-        "execute",
-        lambda client, submission, timeout_ms: client.submit_pipeline(
-            submission,
-            timeout_ms=timeout_ms,
-        ),
-    )
+    COMPILE = "compile"
+    EXECUTE = "execute"
 
-    def __new__(
-        cls,
-        value: str,
-        submitter: ExecutionSubmitter,
-    ) -> Self:
-        member = object.__new__(cls)
-        member._value_ = value
-        member._submitter = submitter
-        return member
-
-    def submit(
-        self,
-        client: ExecutionClientABC,
-        submission: OpenHCSExecutionSubmission,
-        *,
-        timeout_ms: int,
-    ) -> JsonObject:
-        """Submit through the operation owned by this job kind."""
-
-        return self._submitter(client, submission, timeout_ms)
+    def prepare_request(
+        self, submission: OpenHCSExecutionSubmission
+    ) -> ZMQExecutionRequestBuilder:
+        """Admit the exact wire declaration selected by this job kind."""
+        return ZMQExecutionRequestBuilder.from_task(
+            submission.compile_request() if self is self.COMPILE else submission
+        )
 
 
 class ExecutionClientFactoryABC(ABC):
@@ -363,21 +322,13 @@ class ZMQExecutionClientAdapter(ExecutionClientABC):
     def endpoint_handshake(self) -> PongResponse | None:
         return self.client.connected_endpoint
 
-    def submit_compile(
+    def submit_prepared_pipeline(
         self,
-        submission: OpenHCSExecutionSubmission,
+        request: ZMQExecutionRequestBuilder,
         *,
         timeout_ms: int = OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms,
     ) -> JsonObject:
-        return dict(self.client.submit_compile(submission, timeout_ms=timeout_ms))
-
-    def submit_pipeline(
-        self,
-        submission: OpenHCSExecutionSubmission,
-        *,
-        timeout_ms: int = OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms,
-    ) -> JsonObject:
-        return dict(self.client.submit_pipeline(submission, timeout_ms=timeout_ms))
+        return dict(self.client.submit_prepared_pipeline(request, timeout_ms=timeout_ms))
 
     def get_status(
         self,
@@ -569,7 +520,7 @@ class ExecutionJobRecord:
     ref: ExecutionJobRef
     response: JsonObject
     client: ExecutionClientABC | None
-    submission: OpenHCSExecutionSubmission | None = None
+    request: ZMQExecutionRequestBuilder | None = None
     endpoint: PongResponse | None = None
 
     def status(self, response: JsonObject | None = None) -> ExecutionJobStatus:
@@ -664,7 +615,7 @@ class ExecutionJobStore:
         response: JsonObject,
         client: ExecutionClientABC | None,
         *,
-        submission: OpenHCSExecutionSubmission | None = None,
+        request: ZMQExecutionRequestBuilder | None = None,
         endpoint: PongResponse | None = None,
     ) -> ExecutionJobRef:
         job_id = f"job-{next(self._counter)}"
@@ -681,7 +632,7 @@ class ExecutionJobStore:
             ref=ref,
             response=response,
             client=client,
-            submission=submission,
+            request=request,
             endpoint=endpoint,
         )
         return ref
@@ -712,7 +663,7 @@ class ExecutionJobSubmission:
 
     client: ExecutionClientABC
     response: JsonObject
-    submission: OpenHCSExecutionSubmission
+    request: ZMQExecutionRequestBuilder
     endpoint: PongResponse | None
 
 
@@ -720,7 +671,7 @@ class ExecutionJobSubmission:
 class CompletedPipelineExecution:
     """The exact ordinary submission and server-owned successful result."""
 
-    submission: OpenHCSExecutionSubmission
+    request: ZMQExecutionRequestBuilder
     record: ExecutionRecord
     endpoint: PongResponse | None
 
@@ -739,10 +690,11 @@ class ExecutionClientGateway:
         timeout_ms: int = OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms,
     ) -> ExecutionJobSubmission:
         client = self.factory.create_client(record.session.connection)
-        execution_request = record.submission(compile_artifact_id, auxiliary_params)
+        execution_request = kind.prepare_request(
+            record.submission(compile_artifact_id, auxiliary_params)
+        )
         try:
-            response = kind.submit(
-                client,
+            response = client.submit_prepared_pipeline(
                 execution_request,
                 timeout_ms=timeout_ms,
             )
@@ -763,7 +715,7 @@ class ExecutionClientGateway:
         return ExecutionJobSubmission(
             client=client,
             response=dict(response),
-            submission=execution_request,
+            request=execution_request,
             endpoint=endpoint,
         )
 
@@ -1184,12 +1136,12 @@ class ExecutionSessionService:
             raise RuntimeError(
                 f"Pipeline execution {job_id} has no successful server result."
             )
-        if job.submission is None:
+        if job.request is None:
             raise RuntimeError(
                 f"Pipeline execution {job_id} has no retained submission."
             )
         return CompletedPipelineExecution(
-            submission=job.submission,
+            request=job.request,
             record=snapshot.execution,
             endpoint=job.endpoint,
         )
@@ -1290,7 +1242,7 @@ class ExecutionSessionService:
             kind,
             submission.response,
             client=submission.client,
-            submission=submission.submission,
+            request=submission.request,
             endpoint=submission.endpoint,
         )
         if wait and ref.server_execution_id is not None:

@@ -12,7 +12,7 @@ from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_metadata import (
-    SourceMetadataRoleView,
+    SourceMetadataFields,
     SourceVoxelSpacing,
     SourceVoxelSpacingUnit,
     SOURCE_VOXEL_SPACING_FIELD,
@@ -330,9 +330,7 @@ def test_source_binding_workspace_projector_assigns_selector_channels(tmp_path):
     }
     assert all("image_type" not in source for source in serialized_sources)
     filter_paths_by_alias = {
-        str(source["source_alias"]): SourceMetadataRoleView(
-            source
-        ).source_filter_paths()
+        str(source["source_alias"]): SourceMetadataFields.source_filter_paths(source)
         for source in serialized_sources
     }
     assert filter_paths_by_alias == {
@@ -386,7 +384,7 @@ def test_source_binding_workspace_projects_semantic_identity_after_raw_selection
 
     assert projection.address.value_for(AllComponents.CHANNEL) == "MCP_DNA"
     original_metadata = dict(
-        SourceMetadataRoleView(projection.source_metadata).original_items()
+        SourceMetadataFields.original_items(projection.source_metadata)
     )
     assert original_metadata[AllComponents.CHANNEL.value] == "1"
 
@@ -609,7 +607,7 @@ def test_group_address_preserves_distinct_source_well_as_literal_metadata(tmp_pa
     source_metadata = next(iter(metadata[FIELDS.SOURCE_METADATA].values()))
 
     assert source_metadata["well"] == "Sequence1"
-    assert dict(SourceMetadataRoleView(source_metadata).original_items()) == {
+    assert dict(SourceMetadataFields.original_items(source_metadata)) == {
         "Well": "A01",
         "FrameNumber": "0000",
         "Run": "Sequence1",
@@ -788,7 +786,7 @@ def test_order_source_sets_join_imported_metadata_across_aliases(tmp_path):
     assert {projection.source_alias for projection in projections} == {"DNA", "Actin"}
     for projection in projections:
         original = dict(
-            SourceMetadataRoleView(projection.source_metadata).original_items()
+            SourceMetadataFields.original_items(projection.source_metadata)
         )
         assert original["Compound"] == "DMSO"
         assert original["Dose"] == "0"
@@ -912,7 +910,7 @@ def test_metadata_source_sets_propagate_imported_metadata(tmp_path):
 
     assert len(projections) == 2
     assert all(
-        dict(SourceMetadataRoleView(item.source_metadata).original_items())["Compound"]
+        dict(SourceMetadataFields.original_items(item.source_metadata))["Compound"]
         == "DrugA"
         for item in projections
     )
@@ -958,7 +956,7 @@ def test_imported_metadata_duplicate_join_uses_first_matching_row(tmp_path):
 
     assert metadata["Site"] == "1"
     assert metadata["Compound"] == "First"
-    original = dict(SourceMetadataRoleView(metadata).original_items())
+    original = dict(SourceMetadataFields.original_items(metadata))
     assert original["Site"] == "1"
     assert original["Plate"] == "20585"
     assert original["Well"] == "A01"
@@ -1006,7 +1004,7 @@ def test_imported_metadata_later_stage_overrides_extracted_field(tmp_path):
     assert metadata["Plate"] == "plate_1"
     assert metadata["Dose"] == "0"
     assert projection.address.value_for(AllComponents.WELL) == "A01"
-    original = dict(SourceMetadataRoleView(metadata).original_items())
+    original = dict(SourceMetadataFields.original_items(metadata))
     assert original["Plate"] == "plate_1"
     assert original["Well"] == "A01"
     assert original["ChannelNumber"] == "2"
@@ -1058,7 +1056,7 @@ def test_imported_metadata_coerces_join_and_payload_values_through_declared_type
         filemanager=_filemanager(),
     )
     projection = projection_set.projections[0]
-    original = dict(SourceMetadataRoleView(projection.source_metadata).original_items())
+    original = dict(SourceMetadataFields.original_items(projection.source_metadata))
 
     assert original["Site"] == 5
     assert original["Dose"] == 0.25
@@ -1072,7 +1070,7 @@ def test_imported_metadata_coerces_join_and_payload_values_through_declared_type
         pixel_size=1.0,
     )
     serialized = next(iter(metadata[FIELDS.SOURCE_METADATA].values()))
-    serialized_original = dict(SourceMetadataRoleView(serialized).original_items())
+    serialized_original = dict(SourceMetadataFields.original_items(serialized))
     assert serialized_original["Dose"] == 0.25
     assert serialized_original["Frame"] == 7
 
@@ -1161,7 +1159,7 @@ def test_imported_metadata_skips_source_sets_with_partial_join_identity(tmp_path
     )
 
     assert "Compound" not in dict(
-        SourceMetadataRoleView(projection.source_metadata).original_items()
+        SourceMetadataFields.original_items(projection.source_metadata)
     )
 
 
@@ -1285,7 +1283,7 @@ def test_source_bindings_reinitialization_resolves_current_imported_metadata(tmp
         )
     )
     assert (
-        dict(SourceMetadataRoleView(first_metadata).original_items())["Compound"]
+        dict(SourceMetadataFields.original_items(first_metadata))["Compound"]
         == "First"
     )
 
@@ -1300,7 +1298,7 @@ def test_source_bindings_reinitialization_resolves_current_imported_metadata(tmp
 
     assert metadata_path.read_bytes() != first_payload
     assert (
-        dict(SourceMetadataRoleView(second_metadata).original_items())["Compound"]
+        dict(SourceMetadataFields.original_items(second_metadata))["Compound"]
         == "Second"
     )
 

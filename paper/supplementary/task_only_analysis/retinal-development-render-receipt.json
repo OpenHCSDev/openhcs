@@ -1,0 +1,141 @@
+{
+  "source_receipt_sha256": "643ca463a917b11994f18a5d7605e89ab5595fe5f48a271a9f75b21ed07c5872",
+  "panel_sources": [
+    {
+      "panel": [
+        0,
+        0
+      ],
+      "group": "final_southeast_raw",
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-retina-repair94-pairedfresh95-uncapped10-20261004/R0010_REPAIR10_94/author-workspace/output/screenshots/final_southeast_raw/20261004T050920739785Z_napari_6013_OpenHCS_Napari_Visualization.png",
+      "sha256": "89523c9c6f5762095f0997ed940d8597d7c42af8c2bd54454bb226db0ced50f6",
+      "bytes": 631932
+    },
+    {
+      "panel": [
+        0,
+        1
+      ],
+      "group": "compare_southeast_saved04_result",
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-retina-repair94-pairedfresh95-uncapped10-20261004/R0010_REPAIR10_94/author-workspace/output/screenshots/compare_southeast_saved04_result/20261004T051423933022Z_napari_6013_OpenHCS_Napari_Visualization.png",
+      "sha256": "8fa802aa9916fc182398917d3bb3ae0ca1f58fff8ae249fe14f36737aa9343ac",
+      "bytes": 137440
+    },
+    {
+      "panel": [
+        0,
+        2
+      ],
+      "group": "compare_southeast_saved04_combined",
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-retina-repair94-pairedfresh95-uncapped10-20261004/R0010_REPAIR10_94/author-workspace/output/screenshots/compare_southeast_saved04_combined/20261004T051430848291Z_napari_6013_OpenHCS_Napari_Visualization.png",
+      "sha256": "606c7693cca45aea333ad237a14259c62f5561d1140e060226a273f61d51721d",
+      "bytes": 689249
+    },
+    {
+      "panel": [
+        1,
+        0
+      ],
+      "group": "final_southeast_raw",
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-retina-repair94-pairedfresh95-uncapped10-20261004/R0010_REPAIR10_94/author-workspace/output/screenshots/final_southeast_raw/20261004T050920739785Z_napari_6013_OpenHCS_Napari_Visualization.png",
+      "sha256": "89523c9c6f5762095f0997ed940d8597d7c42af8c2bd54454bb226db0ced50f6",
+      "bytes": 631932
+    },
+    {
+      "panel": [
+        1,
+        1
+      ],
+      "group": "final_southeast_result",
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-retina-repair94-pairedfresh95-uncapped10-20261004/R0010_REPAIR10_94/author-workspace/output/screenshots/final_southeast_result/20261004T050927547925Z_napari_6013_OpenHCS_Napari_Visualization.png",
+      "sha256": "fca2be71413c863926668b1232c48dbc23a8318dd2b474e4992f69ded837b631",
+      "bytes": 131626
+    },
+    {
+      "panel": [
+        1,
+        2
+      ],
+      "group": "final_southeast_combined",
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-retina-repair94-pairedfresh95-uncapped10-20261004/R0010_REPAIR10_94/author-workspace/output/screenshots/final_southeast_combined/20261004T050934530706Z_napari_6013_OpenHCS_Napari_Visualization.png",
+      "sha256": "75c2c9e742fe146929d28d358a4cd507b0ab83a8fab1c9a16e0db5c7cb0b5604",
+      "bytes": 682582
+    }
+  ],
+  "unchanged_compressed_png_embedding": true,
+  "shared_raw_control_in_both_rows": true,
+  "identical_clip_xywh": [
+    297,
+    28,
+    953,
+    442
+  ],
+  "output_dimensions": [
+    1854,
+    1160
+  ],
+  "panel_scale": 0.6190975865687304,
+  "native_capture_dimensions": [
+    1440,
+    944
+  ],
+  "native_canvas_dimensions": [
+    953,
+    442
+  ],
+  "same_viewport": {
+    "center": [
+      0.0,
+      247.06109822119097,
+      277.9437354988398
+    ],
+    "zoom": 8.095
+  },
+  "minimum_publication_label_points_at_six_inches": 8.155339805825243,
+  "title_points_at_six_inches": 9.78640776699029,
+  "print_preview": "900px wide; six inches at150ppi",
+  "commands": [
+    {
+      "command": [
+        "/usr/bin/rsvg-convert",
+        "--output",
+        "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/planck-r0010-repair10-panel-proposal/preview.png",
+        "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/planck-r0010-repair10-panel-proposal/candidate.svg"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/usr/bin/rsvg-convert",
+        "--width",
+        "900",
+        "--output",
+        "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/planck-r0010-repair10-panel-proposal/print-scale-preview.png",
+        "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/planck-r0010-repair10-panel-proposal/candidate.svg"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "outputs": [
+    {
+      "path": "candidate.svg",
+      "bytes": 3876687,
+      "sha256": "948c0df93013696b3943716337f2cdb6743aa416a49e3bff80f36dd3d746f056"
+    },
+    {
+      "path": "preview.png",
+      "bytes": 690017,
+      "sha256": "176a6675a410c6a16a52111db5d641715f9b24c3304cc6271ca6cf068818f443"
+    },
+    {
+      "path": "print-scale-preview.png",
+      "bytes": 284467,
+      "sha256": "418ef2c52c4a63aa336e8d428cc6486ae5acf1f393b104e62a2ea44b720cf71f"
+    }
+  ],
+  "scope": "Assisted development; different admission models. No score, biological count or independently calibrated scale."
+}

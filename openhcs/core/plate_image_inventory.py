@@ -322,9 +322,10 @@ class PlateImageInventory:
         }
         if resolved_source_metadata is not None:
             metadata.update(dict(resolved_source_metadata))
-        parsed = handler.parse_image_path(image_file)
-        if parsed is not None:
-            metadata.update(parsed.wire_mapping())
+        if resolved_source_metadata is None:
+            parsed = handler.parse_image_path(image_file)
+            if parsed is not None:
+                metadata.update(parsed.wire_mapping())
         source_file = Path(source_path)
         metadata["size"] = file_size_label(source_file)
         metadata["modified"] = file_modified_label(source_file)

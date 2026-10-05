@@ -34,7 +34,7 @@ if TYPE_CHECKING:
         NormalizedFunctionItem,
     )
     from openhcs.core.pipeline.artifact_planning import ArtifactGraph, ArtifactProducer
-    from openhcs.core.pipeline.compilation_session import CompilationSession
+    from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
 
 
 def unnamed_main_flow_artifact_name(
@@ -366,11 +366,11 @@ class InvocationContractProviderFactory(ABC, metaclass=AutoRegisterMeta):
 
     @classmethod
     @abstractmethod
-    def provider_for_session(
+    def provider_for_pipeline(
         cls,
-        session: "CompilationSession",
+        pipeline: "ResolvedPipelineDefinition",
     ) -> InvocationContractProvider | None:
-        """Return an invocation-contract provider for one compilation session."""
+        """Admit contracts from the saved pipeline declaration."""
 
 
 class MainFlowArtifactContractProvider(
@@ -418,8 +418,8 @@ class MainFlowArtifactContractProvider(
         )
 
     @classmethod
-    def provider_for_session(
-        cls, session: "CompilationSession"
+    def provider_for_pipeline(
+        cls, pipeline: "ResolvedPipelineDefinition"
     ) -> InvocationContractProvider:
         return cls()
 
@@ -496,14 +496,14 @@ class PipelineInvocationContractProviderAuthority:
         return dict(kwargs if values is None else values)
 
     @classmethod
-    def provider_for_session(
+    def provider_for_pipeline(
         cls,
-        session: "CompilationSession",
+        pipeline: "ResolvedPipelineDefinition",
     ) -> InvocationContractProvider:
         providers: list[InvocationContractProvider] = []
 
         for provider_factory in InvocationContractProviderFactory.__registry__.values():
-            provider = provider_factory.provider_for_session(session)
+            provider = provider_factory.provider_for_pipeline(pipeline)
             if provider is not None:
                 providers.append(provider)
         return CompositeInvocationContractProvider(tuple(providers))

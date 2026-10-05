@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.core.pipeline.path_planner import PathPlanner
+from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 
 
@@ -45,6 +46,7 @@ def test_path_planner_scopes_source_metadata_to_compilation_axis() -> None:
             ).source_metadata_by_path.values()
         ),
         step_count=0,
+        pipeline=ResolvedPipelineDefinition(steps=(), step_scope_ids={}, step_provenance={}),
     )
 
     planner = PathPlanner(session)

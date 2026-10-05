@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from typing import Any, ClassVar, TypeVar
 
 import numpy as np
+from numpy.typing import DTypeLike
 from arraybridge import ArrayGeometry
 from metaclass_registry import AutoRegisterMeta
 
@@ -293,6 +294,7 @@ def apply_over_trailing_spatial_axes(
     operation: Callable[[ArrayT], ArrayT],
     *,
     fill_value: object = 0,
+    dtype: DTypeLike | None = None,
 ) -> ArrayT:
     """Apply an operation to trailing spatial axes while preserving leading axes."""
     if spatial_rank <= 0:
@@ -303,7 +305,7 @@ def apply_over_trailing_spatial_axes(
         )
     if array.ndim == spatial_rank:
         return operation(array)
-    output = np.full_like(array, fill_value)
+    output = np.full_like(array, fill_value, dtype=dtype)
     leading_shape = array.shape[: array.ndim - spatial_rank]
     for leading_index in np.ndindex(leading_shape):
         output[leading_index] = operation(array[leading_index])

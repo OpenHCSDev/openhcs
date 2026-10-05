@@ -11,6 +11,7 @@ from tests.unit.cellprofiler_runtime_test_support import (
     cellprofiler_runtime_input_edge_for_test,
 )
 
+from openhcs.core.aligned_image_payload import AlignedImageStack, ProducedImageStack
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
@@ -97,15 +98,20 @@ def test_runtime_adapter_recomposes_images_from_runtime_value_store() -> None:
             )
         },
     )
-    first_payload = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
-    ).payload_with(np.full((1, 2, 2), 1.0, dtype=np.float32), None)
+    producer_pixels = np.full((2, 2), 1.0, dtype=np.float32)
+    first_payload = AlignedImageStack.from_output_slices(
+        (producer_pixels,), memory_type="numpy", plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+    )
     first_value = RuntimeValue.normalize(
         output_plan,
         first_payload,
         axis_id=AXIS_ID,
     )
     store.replace(first_value, path=output_plan.path, backend=adapter.backend)
+    assert isinstance(first_value.data, ProducedImageStack)
+    assert first_value.data._composed_payload is None
+    # PURE2D publication borrows until dense consumption, just as PURE3D does.
+    producer_pixels[:] = 3
 
     first = adapter.get_image(DNA_IMAGE)
     recomposed = adapter.get_image(DNA_IMAGE)
@@ -113,7 +119,7 @@ def test_runtime_adapter_recomposes_images_from_runtime_value_store() -> None:
     assert recomposed is first
     np.testing.assert_array_equal(
         image_payload_data(recomposed),
-        np.full((1, 2, 2), 1.0, dtype=np.float32),
+        np.full((1, 2, 2), 3.0, dtype=np.float32),
     )
 
     replacement_payload = ImagePayloadMetadata(
@@ -329,7 +335,7 @@ def test_relationship_replacement_invalidates_cached_child_counts() -> None:
                 axis_id=AXIS_ID,
             )
             assert len(records) == 1
-            relationship = records[0].value.data
+            relationship = records[0].data
             assert isinstance(relationship, ObjectRelationship)
             return relationship
 

@@ -8,18 +8,15 @@ following OpenHCS standards for explicit contracts and type safety.
 import copyreg
 from dataclasses import dataclass, field
 from enum import Enum
-from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Mapping, Optional
 
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.runtime_stores import StoredRuntimeValue
+from openhcs.core.steps.abstract import StepExecutionObservation
 
 if TYPE_CHECKING:
     from openhcs.core.compiled_execution import CompiledExecutionBundle
-    from openhcs.core.orchestrator.analysis_consolidation import (
-        RuntimeAnalysisConsolidationInputs,
-    )
 
 
 class RuntimeExecutionTransportSerialization:
@@ -63,8 +60,7 @@ class RuntimeContextObservation:
 
     context_key: str
     records: tuple[StoredRuntimeValue, ...]
-    runtime_export_paths: tuple[Path, ...] = field(default_factory=tuple)
-    analysis_inputs: "RuntimeAnalysisConsolidationInputs | None" = None
+    outputs: StepExecutionObservation = field(default_factory=StepExecutionObservation.empty)
 
     @classmethod
     def from_context(
@@ -74,29 +70,13 @@ class RuntimeContextObservation:
         context: ProcessingContext,
         records: tuple[StoredRuntimeValue, ...],
         runtime_observation_mode: "RuntimeObservationMode",
+        outputs: StepExecutionObservation,
     ) -> "RuntimeContextObservation":
-        """Project completed outputs before releasing worker-owned payloads."""
-        from openhcs.core.orchestrator.analysis_consolidation import (
-            RuntimeAnalysisConsolidationInputs,
-        )
-        from openhcs.core.steps.function_artifact_materialization import (
-            observed_runtime_export_artifact_output_paths,
-        )
-
+        """Retain requested records beside the completed output projections."""
         return cls(
             context_key=context_key,
             records=runtime_observation_mode.retain_records(records, context),
-            runtime_export_paths=tuple(
-                dict.fromkeys(
-                    path
-                    for plan in context.step_plans.values()
-                    if plan.owns_runtime_outputs
-                    for path in observed_runtime_export_artifact_output_paths(
-                        plan, context, records,
-                    )
-                )
-            ),
-            analysis_inputs=RuntimeAnalysisConsolidationInputs.from_records(context, records),
+            outputs=outputs,
         )
 
 

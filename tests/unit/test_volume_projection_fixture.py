@@ -4,6 +4,8 @@ These source controls do not prove BioFormats discovery, compilation, native
 execution, saved CSV/ROI publication, an installed MCP journey, or biology.
 """
 
+from openhcs.core.artifacts import MeasurementsArtifactType, ObjectLabelsArtifactType
+
 import importlib.util
 from pathlib import Path
 import sys
@@ -19,7 +21,7 @@ from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlane
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_projection import OpenHCSPlaneAddress
 from openhcs.core.source_matching import source_component_metadata_value
-from openhcs.core.steps.function_runtime import ImageFunctionOutputContextStrategy, MeasurementsFunctionOutputContextStrategy, ObjectLabelsFunctionOutputContextStrategy
+
 
 
 spec = importlib.util.spec_from_file_location(
@@ -62,7 +64,7 @@ def test_selected_then_full_stack_outputs_keep_exact_source_context(source_volum
     original_pixels = image_payload_data(source_volume)
     selected_indices = indices or (0, 1, 2)
     selection = fixture.select_volume_fixture_planes_v2(source_volume, indices)
-    projected = ImageFunctionOutputContextStrategy().contextualize(
+    projected = ImageArtifactType.contextualize_output(
         source_volume, selection, output_plan(fixture.SELECTED_VOLUME),
         RuntimePlaneAxisValueProjection(RuntimePlaneAxis.RUNTIME_SLICE, (), None, 3),
     )
@@ -79,13 +81,13 @@ def test_selected_then_full_stack_outputs_keep_exact_source_context(source_volum
     projection = RuntimePlaneAxisValueProjection(RuntimePlaneAxis.RUNTIME_SLICE, (), None, len(selected_indices))
     for _ in range(2):
         image, labels, rows = fixture.inspect_volume_fixture_v2(projected)
-        contextual_image = ImageFunctionOutputContextStrategy().contextualize(
+        contextual_image = ImageArtifactType.contextualize_output(
             projected, image, output_plan(fixture.VOLUME_IMAGE), projection,
         )
-        contextual_labels = ObjectLabelsFunctionOutputContextStrategy().contextualize(
+        contextual_labels = ObjectLabelsArtifactType.contextualize_output(
             projected, labels, output_plan(fixture.VOLUME_LABELS), projection,
         )
-        contextual_rows = MeasurementsFunctionOutputContextStrategy().contextualize(
+        contextual_rows = MeasurementsArtifactType.contextualize_output(
             projected, rows, output_plan(fixture.VOLUME_ROWS), projection,
         )
         np.testing.assert_array_equal(image_payload_data(contextual_image), expected)
@@ -121,7 +123,7 @@ def test_empty_label_stack_keeps_schema_and_exact_plane_context(source_volume):
     empty = image_payload_metadata(source_volume).payload_with(np.zeros((3, 8, 9), dtype=np.uint16))
     image, labels, rows = fixture.inspect_volume_fixture_v2(empty)
     projection = RuntimePlaneAxisValueProjection(RuntimePlaneAxis.RUNTIME_SLICE, (), None, 3)
-    contextual = ObjectLabelsFunctionOutputContextStrategy().contextualize(
+    contextual = ObjectLabelsArtifactType.contextualize_output(
         image, labels, output_plan(fixture.VOLUME_LABELS), projection,
     )
     assert contextual.declared_plane_count() == 3
@@ -129,7 +131,7 @@ def test_empty_label_stack_keeps_schema_and_exact_plane_context(source_volume):
     contextual.validate_source_alignment(fixture.VOLUME_LABELS.name)
     assert len(rows) == 0 and rows.row_type is fixture.VolumeProjectionFixtureRow
     assert all(len(rows.column_values(field.name)) == 0 for field in rows.fields)
-    table = MeasurementsFunctionOutputContextStrategy().contextualize(
+    table = MeasurementsArtifactType.contextualize_output(
         image, rows, output_plan(fixture.VOLUME_ROWS), projection,
     )
     assert len(table.rows) == 0

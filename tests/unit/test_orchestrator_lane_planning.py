@@ -57,6 +57,7 @@ from openhcs.core.orchestrator.worker_lanes import (
     CompiledContextLanePlanner,
     ForkInheritedWorkerExecutionState,
     WorkerAssignmentPlan,
+    WorkerLaneExecutionContext,
     WorkerLaneExecutionPlan,
 )
 from openhcs.core.progress import ProgressEvent, ProgressExecutionContext, ProgressPhase
@@ -372,7 +373,6 @@ def test_executor_factory_uses_inline_lane_for_single_threaded_worker(monkeypatc
     resources = WorkerExecutorFactory(
         log_file_base=None,
         progress_queue="queue",
-        progress_context=PROGRESS_CONTEXT,
         cancellation=ExecutionCancellationSignal(),
     ).create(
         runtime_environment=_runtime_environment(
@@ -435,7 +435,6 @@ def test_executor_factory_uses_inline_lane_for_single_fork_worker(monkeypatch):
     resources = WorkerExecutorFactory(
         log_file_base="/tmp/worker",
         progress_queue="queue",
-        progress_context=PROGRESS_CONTEXT,
         cancellation=ExecutionCancellationSignal(),
     ).create(
         runtime_environment=_runtime_environment(
@@ -474,7 +473,6 @@ def test_executor_factory_creates_thread_pool_for_multi_worker_threading(monkeyp
     resources = WorkerExecutorFactory(
         log_file_base=None,
         progress_queue="queue",
-        progress_context=PROGRESS_CONTEXT,
         cancellation=ExecutionCancellationSignal(),
     ).create(
         runtime_environment=_runtime_environment(
@@ -502,7 +500,6 @@ def test_executor_factory_uses_fork_inherited_lane_without_pool(monkeypatch):
     resources = WorkerExecutorFactory(
         log_file_base="/tmp/worker",
         progress_queue="queue",
-        progress_context=PROGRESS_CONTEXT,
         cancellation=ExecutionCancellationSignal(),
     ).create(
         runtime_environment=_runtime_environment(
@@ -545,7 +542,6 @@ def test_executor_factory_creates_process_pool_with_worker_initializer(monkeypat
     resources = WorkerExecutorFactory(
         log_file_base="/tmp/worker-log",
         progress_queue="queue",
-        progress_context=PROGRESS_CONTEXT,
         cancellation=ExecutionCancellationSignal(),
     ).create(
         runtime_environment=runtime_environment,
@@ -559,7 +555,6 @@ def test_executor_factory_creates_process_pool_with_worker_initializer(monkeypat
     assert created["initargs"] == (
         "/tmp/worker-log",
         "queue",
-        PROGRESS_CONTEXT,
     )
     assert isinstance(resources, PooledWorkerExecutorResources)
     assert resources.uses_fork_inherited_contexts is False
@@ -669,7 +664,11 @@ def test_worker_lane_honours_cancellation_before_next_axis(monkeypatch):
         "_execute_axis_with_sequential_combinations",
         execute_axis,
     )
-    lane_context = SimpleNamespace()
+    lane_context = WorkerLaneExecutionContext(
+        execution_id="cancel-lane", plate_id="synthetic",
+        debug_execution_policy=NoOpDebugExecutionPolicy(), worker_slot="worker_0",
+        worker_assignments={"worker_0": ["A01", "B01"]},
+    )
     lane_axis_contexts = [
         ("A01", [("A01", SimpleNamespace(axis_id="A01"))]),
         ("B01", [("B01", SimpleNamespace(axis_id="B01"))]),
@@ -1133,7 +1132,7 @@ def test_compiled_execution_returns_settled_nonpersistent_viewer_state_before_cl
 ):
     events = []
     monkeypatch.setattr(
-        compiled_plate_execution_module.OpenHCSMetadataWriter,
+        compiled_plate_execution_module.OpenHCSMetadataTarget,
         "finalize_completed_plate",
         lambda _contexts: events.append("metadata"),
     )

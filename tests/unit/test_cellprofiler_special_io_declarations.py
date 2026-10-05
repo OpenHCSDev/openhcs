@@ -40,6 +40,7 @@ from openhcs.core.pipeline.function_contracts import (
     runtime_bound_parameter_names_from_callable,
 )
 from openhcs.core.runtime_relationships import DirectedObjectRelationshipPayload
+from openhcs.core.runtime_plane_projection import RuntimeSliceInvariantValue
 from openhcs.core.runtime_tabular_values import ColumnarRows
 from openhcs.interop.cellprofiler.module_artifact_declarations import (
     MeasurementArtifactOutputModule,
@@ -84,6 +85,9 @@ from openhcs.processing.backends.cellprofiler.neighbors import (
 from openhcs.processing.backends.cellprofiler.primary_objects import (
     IdentifyPrimaryObjectsModule,
     identify_primary_objects,
+)
+from openhcs.processing.backends.cellprofiler.primary_object_diagnostics import (
+    PrimaryObjectDiagnosticPlanes,
 )
 from openhcs.processing.backends.cellprofiler.secondary import (
     IdentifySecondaryObjectsModule,
@@ -427,11 +431,11 @@ def test_optional_object_special_input_does_not_consume_primary_image() -> None:
     objects = ArtifactSpec.input("Nuclei", ObjectLabelsArtifactType)
 
     assert MeasureImageIntensityModule.primary_image_inputs(
-        measure_image_intensity,
+        CallableContract.from_prepared_callable(measure_image_intensity),
         (image,),
     ) == (image,)
     assert MeasureImageIntensityModule.primary_image_inputs(
-        measure_image_intensity_objects,
+        CallableContract.from_prepared_callable(measure_image_intensity_objects),
         (image, objects),
     ) == (image,)
 
@@ -603,7 +607,11 @@ def test_fixed_return_slots_follow_nominal_contract_output_order() -> None:
                 main_flow=(dna,),
             ),
             identify_primary_objects,
-            (MeasurementsArtifactType, ObjectLabelsArtifactType),
+            (
+                MeasurementsArtifactType,
+                ObjectLabelsArtifactType,
+                *((ImageArtifactType,) * len(PrimaryObjectDiagnosticPlanes._fields)),
+            ),
         ),
         (
             _contract(
@@ -707,6 +715,22 @@ def test_fixed_return_slots_follow_nominal_contract_output_order() -> None:
             len(contract.trailing_return_output_specs) + 1
         )
 
+    primary_contract = next(
+        contract
+        for contract, func, _artifact_types in contracts_and_functions
+        if func is identify_primary_objects
+    )
+    diagnostic_outputs = primary_contract.trailing_return_output_specs[2:]
+    diagnostic_prefix = ArtifactSidecarRole.QA_CHECKPOINT.name_for(nuclei.name)
+    assert tuple(spec.name for spec in diagnostic_outputs) == tuple(
+        f"{diagnostic_prefix}__{stage}"
+        for stage in PrimaryObjectDiagnosticPlanes._fields
+    )
+    assert all(
+        spec.sidecar_role is ArtifactSidecarRole.QA_CHECKPOINT
+        for spec in diagnostic_outputs
+    )
+
 
 def test_contract_order_owns_guided_grid_and_tertiary_input_mapping() -> None:
     grid = ArtifactSpec.output("Grid", SpatialGridArtifactType)
@@ -803,9 +827,19 @@ def test_object_colocalization_rank_provider_is_runtime_bound() -> None:
     assert parameter.kind is inspect.Parameter.KEYWORD_ONLY
     assert runtime_bound_parameter_names_from_callable(
         measure_colocalization_objects
-    ) == ("rank_provider", "threshold_mask_outputs")
-    assert CallableContract.from_callable(
-        measure_colocalization_objects
-    ).config_bound_parameter_names == ("dtype_config",)
+    ) == ("rank_provider", "threshold_mask_outputs", "costes_threshold_batch")
+    contract = CallableContract.from_callable(measure_colocalization_objects)
+    assert contract.config_bound_parameter_names == ("dtype_config",)
     assert parameters["dtype_config"].annotation is LazyDtypeConfig
     assert "rank_provider" in parameter_exclusions(measure_colocalization_objects)
+    assert parameters["costes_threshold_batch"].kind is inspect.Parameter.KEYWORD_ONLY
+    assert parameters["costes_threshold_batch"].default is None
+    assert "costes_threshold_batch" in parameter_exclusions(
+        measure_colocalization_objects
+    )
+    costes_declaration = next(
+        declaration
+        for declaration in contract.metadata.runtime_bound_parameters
+        if declaration.require_parameter_name() == "costes_threshold_batch"
+    )
+    assert costes_declaration.annotation_type is RuntimeSliceInvariantValue

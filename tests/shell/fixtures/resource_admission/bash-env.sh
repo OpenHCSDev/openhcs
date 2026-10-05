@@ -1,7 +1,18 @@
 #!/bin/bash
 # Only external host observations are controlled; original admission runs intact.
+date() {
+  if [[ "$*" == '-u +%s' && -n "${CONTROLLED_NOW:-}" ]]; then
+    printf '%s\n' "$CONTROLLED_NOW"
+  else command date "$@"; fi
+}
 systemctl() {
-  if [[ "$2" == is-active ]]; then return 0; fi
+  if [[ "$2" == is-active ]]; then
+    if [[ "$4" == *-mcp.scope ]]; then
+      test "${CONTROLLED_MCP_ACTIVE:-1}" = 1
+      test "${CONTROLLED_PROCESS_STATE:-loaded}" = loaded
+    fi
+    return
+  fi
   test "$2" = show
   if [[ "$3" != controlled.slice ]]; then
     local role
@@ -53,6 +64,6 @@ awk() {
   command awk "${args[@]}"
 }
 function /home/ts/bin/agent-resource-check() {
-  printf '{"level":"warning","controlled_host_observation":true}\n'
+  printf '{"level":"%s","controlled_host_observation":true}\n' "${CONTROLLED_HOST_LEVEL:-warning}"
   return 2
 }

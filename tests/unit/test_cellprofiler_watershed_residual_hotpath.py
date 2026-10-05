@@ -5,6 +5,8 @@ import pytest
 import skimage.measure
 import skimage.segmentation
 
+from openhcs.processing.backends.cellprofiler.morphology import MorphologyBackendStrategy
+
 from openhcs.core.runtime_image_values import ImageMetadataPayload, ImagePayloadMetadata
 from openhcs.core.runtime_object_label_domains import ObjectLabelDomainScope
 from openhcs.core.runtime_object_labels import object_label_dense_array
@@ -18,7 +20,6 @@ from openhcs.processing.backends.cellprofiler.watershed import (
     WatershedParameters,
     WatershedSeedMethod,
     watershed_cellprofiler4,
-    watershed_connected_components,
 )
 
 
@@ -123,7 +124,9 @@ def test_nonempty_sparse_high_markers_preserve_connectivity_reference(
         mask,
         parameters,
     )
-    labels = watershed_connected_components(actual_initial_labels)
+    labels = MorphologyBackendStrategy.for_memory_type().label_equal_values(
+        actual_initial_labels
+    )
 
     np.testing.assert_array_equal(actual_initial_labels, initial_labels)
     assert mask_source is image

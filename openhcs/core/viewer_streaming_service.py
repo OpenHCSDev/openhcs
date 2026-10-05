@@ -33,7 +33,6 @@ from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
-from openhcs.core.roi_point_metadata import ROIFractionalZ
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     image_payload_data,
@@ -522,7 +521,12 @@ class ViewerStreamingSource(ViewerStreamSourceIdentity):
             metadata = None if projection is None else projection.image_metadata
             if metadata is not None and metadata.plane_axis is not None:
                 values.extend(
-                    metadata.source_image_provenance_planes.runtime_component_metadata
+                    StreamSourceComponentMetadataItems.from_image_metadata(
+                        metadata,
+                        fallback_source_identity=SourceImageIdentity(
+                            component_metadata=metadata_by_path[path],
+                        ),
+                    ).values
                 )
             else:
                 values.append(metadata_by_path[path])
@@ -823,7 +827,7 @@ class StreamingService:
         paths: list[str] = []
         loaded_indices: list[int] = []
         archive_metadata: list[ImagePayloadMetadata | None] = []
-        point_domains: dict[str, tuple[SourceComponentMetadata, ...]] = {}
+        geometric_domains: dict[str, tuple[SourceComponentMetadata, ...]] = {}
 
         for i, filename in enumerate(request.roi_filenames, 1):
             file_path = Path(self.source.plate_path) / filename
@@ -843,9 +847,9 @@ class StreamingService:
                 )
             archive_metadata.append(metadata)
             if metadata is not None:
-                point_domain = ROIFractionalZ.source_component_domain(rois, metadata)
-                if point_domain is not None:
-                    point_domains[filename] = point_domain
+                geometric_domain = ROIArchiveSourceMetadata.source_component_domain(rois, metadata)
+                if geometric_domain is not None:
+                    geometric_domains[filename] = geometric_domain
             data_list.append(rois)
             paths.append(filename)
             loaded_indices.append(i - 1)
@@ -917,12 +921,12 @@ class StreamingService:
             if metadata is not None
         )
         metadata_by_path.update(
-            (path, dict(domain[0])) for path, domain in point_domains.items()
+            (path, dict(domain[0])) for path, domain in geometric_domains.items()
         )
         source_metadata_items = StreamSourceComponentMetadataItems.from_values(
             component_metadata
             for path in paths
-            for component_metadata in point_domains.get(path, (metadata_by_path[path],))
+            for component_metadata in geometric_domains.get(path, (metadata_by_path[path],))
         )
         message_authority = StreamComponentMessageExtraAuthority.from_viewer_surface(
             viewer_surface,
@@ -942,12 +946,15 @@ class StreamingService:
             self.source.calibrated_metadata(metadata) for metadata in archive_metadata
         ]
         component_order = message_authority.layout.component_order
-        for indices in StreamImagePayloadMetadataProjector.partition_indices(
-            payload_metadata, component_order
-        ):
-            item_fields = StreamImagePayloadMetadataProjector.item_fields(
-                payload_metadata[indices[0]], component_order
+        item_fields_by_archive = tuple(
+            ROIArchiveSourceMetadata.stream_item_fields(
+                rois, metadata,
+                StreamImagePayloadMetadataProjector.item_fields(metadata, component_order),
             )
+            for rois, metadata in zip(data_list, payload_metadata, strict=True)
+        )
+        for indices in StreamImagePayloadMetadataProjector.partition_item_fields(item_fields_by_archive):
+            item_fields = item_fields_by_archive[indices[0]]
             stream_backend_kwargs = message_authority.viewer_backend_kwargs(
                 producer=producer.for_indices(
                     tuple(loaded_indices[index] for index in indices), total

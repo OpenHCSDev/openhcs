@@ -4,7 +4,7 @@ One funded programme, immutable run permissions
 These NEXT versions complete the original Bash/JQ operations family. One fixed
 funding root owns current membership, retained history, desktop protection and
 joint disk admission. Each immutable run owns its author declarations, source,
-configuration, operations, permissions, helpers, recording paths and75min clock.
+configuration, operations, permissions, helpers, recording paths and first-start clock.
 No Python runtime, client timeout, installed science or current packet changes.
 
 Project and publish through the existing projector
@@ -21,6 +21,14 @@ members/retired_members/additional_authors hooks with exact custody receipts.
 The template supplies defaults, not funding membership or current reservations::
 
   bash operations/project-program.sh prepare FUNDING NEXT PACKAGE-QUALIFICATION.json
+
+The successor declaration owns ``task_minutes_from_first_mcp_start``: null or
+an omitted value means no imposed scientific interval. A positive integer
+explicitly declares minutes from that run's first recorded MCP startup.
+The projector does not inherit a historical template's 75-minute cutoff.
+Already funded runs retain their original declaration and clock unchanged;
+elapsed-time evidence, periodic checkpoints and measured resource admission
+remain required for a continuous development phase.
 
 The original successor JQ produces only NEXT's own physical author declarations
 and a funded_members proposal of references. The parent freezes NEXT, including
@@ -62,6 +70,17 @@ custody, original admission and the immutable RUN freeze. The launcher preserves
 fresh masked history, readonly raw input, original configured model/provider,
 per-author lock, recording and CLI scope. It does not adopt an existing author.
 
+For an explicitly declared same-author continuation (``fresh_history=false``
+with an already forked ``native_thread_id``), the original slot owner projects
+the closed ``writer_handoff`` declarations into native history and scientific
+read roots. Each predecessor must belong to the same canonical funding owner
+and have its original terminal custody. The launcher read-only mounts its
+retained control/output and declared payload destination, alongside the existing
+canonical parent rollout mounts. MCP adds those exact roots only to its read
+policy, never its write policy. New results remain in the new run's destination.
+Fresh authors receive no predecessor history or artifact roots. No copied
+arrays, reconstructed history, broader HDD grant or second permission store.
+
 Use the canonical AUTHOR-PACKET.rst for every new declaration. Start the ONE
 recorded interactive client with tools.exec_command tty=true::
 
@@ -83,16 +102,28 @@ introduce MemoryMax or MemorySwapMax. An engineering row without a scientific
 brief cannot launch a paid analysis author. Original
 environment, path masks, first-start clock and10s request idle remain unchanged.
 
-Before scientific actions resource-check.sh FUNDING SLOT UNIQUE_PHASE consumes
-current membership. Ongoing observations measure only the selected run's output;
+Before a coherent bounded read/QA burst, resource-check.sh FUNDING SLOT
+UNIQUE_PHASE ongoing consumes current membership and observes actual resources.
+Related small state reads, display changes, matched captures and owned cleanup
+do not need a full programme observation before every command. Recheck when
+pressure/headroom or work size changes, another allocation begins, or a
+resource/write failure appears. Each tool retains its ordinary path, revision,
+incarnation and uncertain-input custody checks. This is operator planning, not
+a cached grant, timer, poller or new admission mechanism. Cold native startup
+and new/large allocations still require a fresh appropriately sized observation
+through the existing owner before dispatch.
+Ongoing observations measure only the selected run's output;
 ledger/startup observations measure funded runs for cleanup/staging forecasts.
 Closed output paths remain once as custody declarations, without recursively
 inventorying their contents on every action: actual df already charges those
 bytes, and the cleanup owner inventories retained evidence. Admission requires
-actual free HOME above the declared physical reserve. Growth estimates are
+actual free HOME above the declared physical reserve for startup/large allocations.
+Ongoing bounded observations require the original recorded live MCP incarnation;
+the same reserve is a warning, not a universal veto on reads or small QA. Exhausted
+or malformed free-space telemetry rejects. Growth estimates are
 reported as planning warnings, never added to that admission floor. Neither a selected
 member's nor a sibling's output/scratch usage above an estimate rejects an
-operation. Those bytes consume actual physical HOME, not a quota. The original
+operation. Those bytes consume their actual physical destination, not a quota. The original
 programme amounts are estimates only; no replacement ceiling is introduced.
 Remaining growth is derived independently for retained
 and scratch components, clamped to zero once each is exhausted; an overage
@@ -102,6 +133,30 @@ original lifecycle performers and declared InvocationID custody; scientific
 writer retirement is independent. No helper/provider/native operation is part
 of the source controls. Future installed entrypoint and operational release are
 parent-owned acceptance after this source checkpoint.
+
+Declared payload destination
+----------------------------
+
+An immutable member may declare ``artifact_destination`` with absolute ``path``
+and ``mount``. The existing HDD mount is ``/run/media/ts/hdd``; path is an
+exclusive, ordinarily provisioned run/slot directory beneath it. The original
+projector carries this declaration and slot-env derives FLEET_ARTIFACT_ROOT
+and FLEET_SCRATCH. Admission and performers require that mount, a writable
+canonical directory (not a symlink), and findmnt identifying the same mount.
+No fallback directory is created when the HDD is absent.
+
+MCP read/write roots explicitly admit the payload directory. Existing
+PathPlanningConfig.global_output_folder and artifact/checkpoint declarations
+place scientific payloads there without a persistence/path-policy bypass.
+The author also directs large captures/arrays there. HOME retains source,
+pipeline text, native history, journals and handoff manifests. Large cache/
+temp scratch follows payloads; runtime registered-function source/data,
+private config/state and POSIX0700 IPC runtime
+stay on HOME because the HDD is NTFS. Telemetry measures control plus payload
+once and reports actual destination free space. Retirement records both roots
+once through the same original retained-root projection. No shadow storage or
+second ledger. Historical undeclared runs retain their original HOME semantics;
+active declarations/operation bytes are not rewritten.
 
 Operation-scoped pressure and disabled endpoints
 ------------------------------------------------
@@ -119,22 +174,56 @@ state and common-family membership stay required, but old helper memory/swap
 limit equality is not health. Helper roles derive from the original performer
 files, not another cap map; headless VNC0 needs no GUI helper family.
 
-For that bounded action, full-stall PSI is retained as warning telemetry rather
-than a universal stop. ``full``, ``replacement`` and ``bootstrap`` admit future
-growth and reject ``avg10``, ``avg60`` or ``avg300`` above the SAME existing
-``full_memory_psi_max_percent``. No threshold is raised or clipped; no pressure
-sample is rewritten. The field describes a growth qualifier in the kernel's
-full-stall pressure category, not a second numeric limit for ongoing work.
+Full-stall PSI is telemetry in every operation mode, not a numeric admission
+ceiling. The successor projector deletes the old cutoff field and the publisher
+does not carry it into future funding. No replacement threshold, override flag
+or second guard is introduced. Preserve the kernel's actual10/60/300 windows;
+interpret recent10/60 pressure alongside MemAvailable, family RSS/PSS and the
+specific operation's expected additional buffers. Stage a small receiving case
+serially with fewer workers rather than treating a historical1% sample as a
+universal stop. Defer additional cold/heavy work when actual desktop pressure
+warrants it. PASS reports valid custody and observations, not a guarantee that
+an arbitrary allocation fits.
+
+MemAvailable below the declared desktop reserve warns for ongoing work:
+observing a running job and releasing owned buffers must remain possible under
+real pressure. Startup and large allocations retain their desktop reserve check.
+Preserve original refusals and frozen operation bytes; a new named pre-dispatch
+observation is not permission to replay an UNKNOWN or start another client.
 
 Every observation preserves all kernel pressure windows plus a separate
 operation-policy receipt. Missing, repeated or malformed pressure
-measurements reject. Low available RAM, actual free HOME below its reserve, inactive
-expired clocks and missing custody still reject through their original owners.
+measurements reject. Missing, repeated or malformed MemAvailable also rejects.
+For startup/large allocations, available RAM or free HOME below its reserve
+still rejects. Inactive owners and missing custody reject through their original
+owners. When a scientific interval is explicitly declared, the original recorded
+clock limits scientific dispatch, not settlement: expiry rejects ``full``,
+``replacement`` and ``bootstrap``. ``ongoing`` records
+the overrun and permits only observing already-dispatched work, preserving
+evidence/freeze and exact owned cleanup, with its live-client identity and
+resource checks unchanged. ``ledger`` can still report custody/growth but never
+dispatches work. No new candidate, parameter trial or process is authorized
+after expiry; the clock is neither extended nor reset. Unique deadline receipts
+preserve both refusals and settlement observations without replacing history.
+When no interval is declared, the same first-start marker records elapsed time
+without imposing a cutoff. Actual resource and custody checks still apply.
 High pressure alone is not declared safe: insufficient actual host desktop
 headroom stops allocating work, irrespective of whether a former cap matched.
 ``ledger`` remains ledger-only, never
 scientific admission. New clients still require replacement admission; do not
 use an ongoing observation as permission to launch unreserved growth.
+
+Every call must supply its operation mode; there is no implicit ongoing mode.
+``ongoing`` is an existing-client operation capability, not a tool-name bypass.
+The original slot owner verifies the first-start marker, retained three client
+journals, active MCP InvocationID and common-slice identity. The recorder still
+owns the sole pre-client ``replacement`` admission; author launch now uses that
+startup mode too. ``full`` admits potentially large compile/execution/export
+allocations. Registered capability mutation/effect metadata and actual request
+shape guide that choice; read-only does not imply cheap. No MCP name roster,
+per-call policy store, new quota, or alternative admission implementation is
+introduced. Disk warnings are not a future-buffer guarantee: actual write errors
+and uncertain receipts remain visible, and large work still requires admission.
 
 The original successor projection and funding publisher no longer carry the
 removed per-author science/CLI/helper RAM ceilings or aggregate RAM/swap cap.

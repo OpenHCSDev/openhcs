@@ -38,7 +38,6 @@ from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.source_bindings import (
     ImportedMetadataTable,
-    SourceBindingRuntimeContext,
 )
 from tests.unit.cellprofiler_runtime_test_support import (
     cellprofiler_runtime_adapter_for_test,

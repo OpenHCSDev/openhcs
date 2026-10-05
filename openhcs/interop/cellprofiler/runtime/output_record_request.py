@@ -16,7 +16,6 @@ from openhcs.core.artifacts import (
 from openhcs.core.runtime_object_label_domains import ObjectLabelDomainScope
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.source_plane_alignment import (
-    SourcePayloadPlaneIdentitySequence,
     SourcePlaneIdentitySequenceAlignment,
 )
 from openhcs.core.runtime_image_values import (
@@ -30,7 +29,6 @@ from openhcs.interop.cellprofiler.runtime.invocation import (
     CellProfilerMeasurementImage,
 )
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
-    RuntimeArtifactTypeStrategy,
     RuntimeInputBindingRequest,
 )
 from openhcs.core.steps.function_runtime import (
@@ -194,10 +192,9 @@ class CellProfilerOutputRecordRequest(RuntimeInputBindingRequest):
             )
         )
         image_set_axes = tuple(
-            SourcePayloadPlaneIdentitySequence(
-                value,
-                identity_policy,
-            ).runtime_axis_identities()
+            image_payload_metadata(value).source_provenance.image_set_axis(
+                identity_policy
+            )
             for value in artifact_values
         )
         unaligned_indexes = SourcePlaneIdentitySequenceAlignment.unaligned_axis_indexes(
@@ -221,20 +218,21 @@ class CellProfilerOutputRecordRequest(RuntimeInputBindingRequest):
 
         spec = edge.spec
         RuntimeInputBindingRequest.__post_init__(self)
-        payload = RuntimeArtifactTypeStrategy.for_artifact_type(
-            spec.artifact_type
-        ).source_image_payload(
-            spec,
-            self.runtime_value(
-                edge,
-                parameter_name=spec.parameter_name,
-            ),
-        )
+        value = self.runtime_value(edge, parameter_name=spec.parameter_name)
+        return self.source_payload_from_input_value(edge, value)
+
+    def source_payload_from_input_value(
+        self,
+        edge: InvocationArtifactInputEdgePlan,
+        value: RuntimeCallableArgument,
+    ) -> RuntimeCallableArgument:
+        """Admit source context carried by an exact input's runtime value."""
+
+        payload = edge.spec.artifact_type.source_image_payload_from_runtime_value(value)
         if payload is None:
             raise TypeError(
                 f"Callable {self.callable_contract.function_name!r} input "
-                f"{spec.ref()!r} does not carry source "
-                "image context."
+                f"{edge.spec.ref()!r} does not carry source image context."
             )
         return payload
 
@@ -251,6 +249,28 @@ class CellProfilerOutputRecordRequest(RuntimeInputBindingRequest):
         return self.artifact_source_payload(
             self.adapter.request.require_artifact_input_edge(source_ref)
         )
+
+    def output_source_payload(self) -> RuntimeCallableArgument:
+        """Use consumed context; independently requested source reads remain live."""
+
+        source_ref = self.output_plan.source_context_source()
+        if source_ref is None:
+            return self.declared_source_payload()
+        # Selection and same-reference origin ambiguity are admitted even when
+        # the actual callable carrier already supplies this output's context.
+        edge = self.adapter.request.require_artifact_input_edge(source_ref)
+        value = self.source.consumed_input_value(edge, self.adapter.request)
+        if value is None:
+            return self.artifact_source_payload(edge)
+        RuntimeInputBindingRequest.__post_init__(self)
+        self.admitted_input_spec(edge)
+        # Admission is live and can replace an edge. Recheck custody after that
+        # epoch before using retained context; a changed origin is read once.
+        edge = self.adapter.request.require_artifact_input_edge(source_ref)
+        value = self.source.consumed_input_value(edge, self.adapter.request)
+        if value is None:
+            value = self.runtime_value(edge, parameter_name=edge.spec.parameter_name)
+        return self.source_payload_from_input_value(edge, value)
 
     def materialization_source_metadata(self) -> ImagePayloadMetadata | None:
         """Return independent filename-source metadata declared by this output."""

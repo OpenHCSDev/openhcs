@@ -1,3 +1,4 @@
+import json
 import sys
 from pathlib import Path
 from dataclasses import replace
@@ -7,7 +8,12 @@ from types import ModuleType, SimpleNamespace
 import pytest
 from objectstate import get_current_global_config
 from zmqruntime.execution import ExecutionServer
-from zmqruntime.messages import ExecutionRecord, ExecutionStatus
+from zmqruntime.messages import (
+    ExecuteRequest,
+    ExecutionRecord,
+    ExecutionStatus,
+    MessageFields,
+)
 
 import openhcs.runtime.zmq_execution_server as zmq_execution_server_module
 from openhcs.constants.constants import GroupBy
@@ -17,6 +23,10 @@ from openhcs.core.config import (
     ProcessingConfig,
 )
 from openhcs.core.execution_state import ExecutionOutputPlateSummary
+from openhcs.core.steps.abstract import StepExecutionObservation
+from openhcs.core.orchestrator.compiled_plate_execution import (
+    CompiledPlateExecutionResults,
+)
 from openhcs.core.orchestrator.execution_result import (
     ExecutionResult,
     RuntimeContextObservation,
@@ -87,6 +97,59 @@ def test_zmq_execution_context_seeds_saved_global_config_for_compilation() -> No
     )
     assert saved_global_config is global_config
     assert saved_global_config.processing_config.group_by is GroupBy.CHANNEL
+
+
+@pytest.mark.parametrize("invalid_output_metadata", (False, True))
+def test_terminal_notification_contains_openhcs_summary_before_cleanup(
+    monkeypatch, caplog, invalid_output_metadata
+) -> None:
+    server = ZMQExecutionServer(port=5555)
+    monkeypatch.setattr(
+        server, "execute_task", lambda _execution_id, _request: {"W001": None}
+    )
+    monkeypatch.setattr(server, "_kill_worker_processes", lambda: 0)
+    record = ExecutionRecord(
+        execution_id="exec-finalized",
+        plate_id="/tmp/plate",
+        client_address=None,
+        status=ExecutionStatus.QUEUED.value,
+    )
+    record.set_extra("orchestrator", object())
+    output_plate = ExecutionOutputPlateSummary(
+        output_plate_root="/tmp/output",
+        auto_add_output_plate_to_plate_manager=True,
+    )
+    record.set_extra(
+        ExecutionOutputPlateSummary.EXECUTION_RECORD_KEY,
+        "invalid" if invalid_output_metadata else output_plate,
+    )
+    record.set_extra("runtime_observation_export_path", "/tmp/outcomes.json")
+    record.set_extra("runtime_observation_export_scope", "outcomes")
+    server._lifecycle.enqueue(record)
+
+    server.run_execution(
+        record.execution_id,
+        ExecuteRequest(plate_id=record.plate_id, pipeline_code="pass"),
+        record,
+    )
+
+    terminal = server.progress_queue.get_nowait()[MessageFields.EXECUTION]
+    assert terminal[MessageFields.STATUS] == ExecutionStatus.COMPLETE.value
+    assert terminal[MessageFields.START_TIME] is not None
+    assert terminal[MessageFields.END_TIME] is not None
+    summary = terminal[MessageFields.RESULTS_SUMMARY]
+    assert summary[MessageFields.WELL_COUNT] == 1
+    assert summary[MessageFields.WELLS] == ["W001"]
+    if invalid_output_metadata:
+        assert "Failed to attach output_plate_root" in caplog.text
+        assert "output_plate_root" not in summary
+    else:
+        for name, value in output_plate.results_summary_fields().items():
+            assert summary[name] == value
+        assert summary["runtime_observation_export_path"] == "/tmp/outcomes.json"
+        assert summary["runtime_observation_export_scope"] == "outcomes"
+    assert terminal[MessageFields.RESULTS_SUMMARY] == record.results_summary
+    assert record.get_extra("orchestrator") is None
 
 
 @pytest.mark.parametrize(
@@ -193,20 +256,22 @@ def test_server_exports_outcomes_without_projecting_compiled_values(
     server._export_runtime_observation(
         request_context=request_context,
         compilation=compilation,
-        execution_results={
-            "A01": ExecutionResult.success(
-                "A01",
-                runtime_observation=RuntimeExecutionObservation(
-                    contexts=(
-                        RuntimeContextObservation(
-                            "context",
-                            (),
-                            runtime_export_paths=(declared_output,),
-                        ),
-                    )
-                ),
-            )
-        },
+        execution_results=CompiledPlateExecutionResults(
+            {
+                "A01": ExecutionResult.success(
+                    "A01",
+                    runtime_observation=RuntimeExecutionObservation(
+                        contexts=(
+                            RuntimeContextObservation(
+                                "context",
+                                (),
+                                outputs=StepExecutionObservation({}, (declared_output,)),
+                            ),
+                        )
+                    ),
+                )
+            }
+        ),
     )
 
     export = ZMQRuntimeExecutionOutcomeExport.read(export_path)
@@ -384,42 +449,65 @@ def test_zmq_server_prepares_virtual_import_before_evaluating_pipeline(
     assert context.pipeline_steps == []
 
 
-def test_zmq_server_forwards_parent_execution_progress_without_worker_claim() -> None:
-    server = object.__new__(ZMQExecutionServer)
+def test_zmq_server_admits_all_progress_through_generic_terminal_watermark() -> None:
+    from zmqruntime.execution.progress_stream import ProgressStreamSubscriber
+    from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
+
+    server = ZMQExecutionServer()
+    record = ExecutionRecord("execution-1", "plate-1", None, ExecutionStatus.RUNNING.value)
+    server.active_executions[record.execution_id] = record
     server._worker_assignments_by_execution = {
         "execution-1": {"worker_0": ["A01", "B01"]}
     }
-    server.progress_queue = SimpleQueue()
     worker_queue = SimpleQueue()
     progress_context = ProgressExecutionContext(
-        execution_id="execution-1",
-        plate_id="plate-1",
+        execution_id=record.execution_id,
+        plate_id=record.plate_id,
     )
-    worker_queue.put(
-        create_event(
-            ProgressEventPayload(
-                identity=progress_context.identity_for_event(
-                    axis_id="",
-                    step_name="ExportToDatabase",
-                ),
-                phase=ProgressPhase.RUNNING,
-                status=ProgressStatus.RUNNING,
-                completed=32,
-                total=33,
-                percent=(32 / 33) * 100.0,
-            )
-        ).to_dict()
+    parent = create_event(
+        ProgressEventPayload(
+            identity=progress_context.identity_for_event(
+                axis_id="", step_name="ExportToDatabase",
+            ),
+            phase=ProgressPhase.RUNNING,
+            status=ProgressStatus.RUNNING,
+            completed=32, total=33, percent=(32 / 33) * 100.0,
+        )
     )
+    server._enqueue_progress(parent.to_dict())
+    worker_queue.put(parent.to_dict())
+    worker = replace(
+        parent,
+        identity=progress_context.identity_for_event(
+            axis_id="A01", step_name="ExportToDatabase",
+        ),
+        worker_slot="worker_0",
+        owned_wells=["A01", "B01"],
+    )
+    worker_queue.put(worker.to_dict())
     worker_queue.put(None)
-
     server._forward_worker_progress(worker_queue)
 
-    event = ProgressEvent.from_dict(server.progress_queue.get())
+    published = [server.progress_queue.get_nowait() for _ in range(3)]
+    received = []
+    client = ZMQExecutionClient(progress_callback=received.append)
+    subscriber = ProgressStreamSubscriber(lambda: None, client._record_progress)
+    for payload in published:
+        assert subscriber._dispatch_message(json.dumps(payload))
+    assert [payload[MessageFields.PROGRESS_SEQUENCE] for payload in received] == [1, 2, 3]
+    assert client.progress_observation(record.execution_id).sequence == 3
+    assert record.to_dict()[MessageFields.PROGRESS_SEQUENCE] == 3
+    assert record.progress_event == published[-1]
+    event = ProgressEvent.from_dict(published[1])
     assert event.axis_id == ""
     assert event.worker_slot is None
     assert event.owned_wells is None
     assert event.worker_assignments == {"worker_0": ["A01", "B01"]}
     assert event.total_wells == ["A01", "B01"]
+    worker_event = ProgressEvent.from_dict(published[2])
+    assert worker_event.axis_id == "A01"
+    assert worker_event.worker_slot == "worker_0"
+    assert worker_event.owned_wells == ["A01", "B01"]
 
 
 def test_zmq_server_records_the_compilation_output_plate_value_without_rebuilding_it() -> (

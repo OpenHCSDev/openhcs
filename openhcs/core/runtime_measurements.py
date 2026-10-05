@@ -75,9 +75,7 @@ class MeasurementTable(
         return self.rows.iter_row_mappings()
 
     def __post_init__(self, *source_provenance_values: object) -> None:
-        self.absorb_explicit_source_provenance(
-            SourceImageProvenance.from_init_values(source_provenance_values)
-        )
+        self.absorb_explicit_source_provenance(source_provenance_values)
         self.normalize_source_provenance_fields()
         self.validate_artifact_name()
         if self.source_image_name == "":
@@ -137,6 +135,219 @@ class MeasurementTable(
                 self.source_image_name,
             )
         )
+
+    @classmethod
+    def join(cls, name: str, tables: tuple[MeasurementTable, ...]) -> MeasurementTable:
+        """Concatenate tables with one exact subject, feature owner and image owner."""
+        cls._require_join(name, tables)
+        if len(tables) == 1:
+            return tables[0]
+        subjects = tuple(dict.fromkeys(table.subject for table in tables))
+        if len(subjects) != 1:
+            raise ValueError(
+                "Measurement table unions require one exact nominal subject; "
+                f"got {subjects!r}."
+            )
+        owners = tuple(
+            dict.fromkeys(table.measurement_feature_owner for table in tables)
+        )
+        if len(owners) != 1:
+            raise ValueError(
+                "Measurement table unions require one exact nominal measurement "
+                f"feature owner; got {owners!r}."
+            )
+        source_names = tuple(dict.fromkeys(table.source_image_name for table in tables))
+        if len(source_names) != 1:
+            raise ValueError(
+                "Measurement table unions require one exact source-image owner; "
+                f"got {source_names!r}."
+            )
+        from openhcs.core.measurement_row_materialization import (
+            ConcatenatedColumnarRows,
+        )
+
+        return cls(
+            name=name,
+            rows=ConcatenatedColumnarRows(tuple(table.rows for table in tables)),
+            source_image_name=source_names[0],
+            subject=subjects[0],
+            measurement_feature_owner=owners[0],
+            source_provenance=cls.joined_source_provenance(name, tables),
+        )
+
+    @classmethod
+    def join_artifact(
+        cls, name: str, tables: tuple[MeasurementTable, ...]
+    ) -> MeasurementTable:
+        """Re-own mixed subject rows as one lossless artifact-level export table."""
+        cls._require_join(name, tables)
+        from openhcs.core.measurement_row_materialization import (
+            ConcatenatedColumnarRows,
+            MeasurementRowOwnership,
+        )
+
+        return cls(
+            name=name,
+            rows=ConcatenatedColumnarRows(
+                tuple(
+                    MeasurementRowOwnership(
+                        object_name=table.subject.object_name,
+                        source_image_name=(
+                            table.source_image_name or table.subject.source_image_name
+                        ),
+                    ).annotate_rows(table.rows)
+                    for table in tables
+                )
+            ),
+            subject=MeasurementSubject(MeasurementScope.ARTIFACT, name),
+            source_provenance=cls.joined_source_provenance(name, tables),
+        )
+
+    @staticmethod
+    def _require_join(name: str, tables: tuple[MeasurementTable, ...]) -> None:
+        if not name:
+            raise ValueError("MeasurementTable join name cannot be empty.")
+        if not tables:
+            raise ValueError("MeasurementTable join tables cannot be empty.")
+
+    @classmethod
+    def joined_source_provenance(
+        cls, name: str, tables: tuple[MeasurementTable, ...]
+    ) -> SourceImageProvenance:
+        """Compose exact table provenance on its declared runtime-slice axis."""
+        cls._require_join(name, tables)
+        if len(tables) == 1:
+            return tables[0].source_provenance
+        slice_axis = MeasurementRowAxisField.SLICE_INDEX
+        table_domains = cls._row_axis_domains(name, tables, slice_axis)
+        if table_domains is None:
+            sources = tuple(table.source_provenance for table in tables)
+            if not any(source.has_values for source in sources):
+                return SourceImageProvenance()
+            return SourceImageProvenance.stack(
+                tuple(
+                    (
+                        source.for_source_plane(0)
+                        if source.source_plane_count == 1
+                        else source
+                    )
+                    for source in sources
+                ),
+                scalar_sources=sources,
+            )
+        axis_domain = tuple(
+            sorted({value for domain in table_domains for value in domain})
+        )
+        declared_plane_counts = tuple(
+            table.source_provenance.source_plane_count
+            for table in tables
+            if table.source_provenance.source_plane_count > 0
+        )
+        distinct_plane_counts = tuple(dict.fromkeys(declared_plane_counts))
+        if len(distinct_plane_counts) > 1:
+            raise ValueError(
+                f"Measurement table union {name!r} cannot align declared "
+                f"source-plane counts {distinct_plane_counts!r}."
+            )
+        axis_size = (
+            distinct_plane_counts[0] if distinct_plane_counts else max(axis_domain) + 1
+        )
+        if max(axis_domain) >= axis_size:
+            raise ValueError(
+                f"Measurement table union {name!r} declares "
+                f"{slice_axis.value}={max(axis_domain)} beyond its source-plane "
+                f"axis of size {axis_size}."
+            )
+        for table, domain in zip(tables, table_domains, strict=True):
+            provenance = table.source_provenance
+            if (
+                provenance.source_plane_count == 0
+                and provenance.has_values
+                and len(domain) > 1
+            ):
+                raise ValueError(
+                    f"Measurement table {table.name!r} carries scalar source "
+                    f"provenance for multiple {slice_axis.value} values {domain!r}."
+                )
+        planes: list[SourceImageProvenance] = []
+        for plane_index in range(axis_size):
+            sources = tuple(
+                (
+                    table.source_provenance.for_source_plane(plane_index)
+                    if table.source_provenance.source_plane_count > 0
+                    else table.source_provenance
+                )
+                for table, domain in zip(tables, table_domains, strict=True)
+                if table.source_provenance.source_plane_count > 0
+                or domain == (plane_index,)
+            )
+            if not sources:
+                raise ValueError(
+                    f"Measurement table union {name!r} has no declared "
+                    f"source provenance for {slice_axis.value}={plane_index}."
+                )
+            planes.append(
+                sources[0]
+                if len(sources) == 1
+                else (
+                    SourceImageProvenance.bundle(
+                        sources
+                    ).with_runtime_planes_as_contributors()
+                    if any(source.has_values for source in sources)
+                    else SourceImageProvenance()
+                )
+            )
+        return (
+            SourceImageProvenance.stack(tuple(planes))
+            if any(plane.has_values for plane in planes)
+            else SourceImageProvenance()
+        )
+
+    @classmethod
+    def shared_row_axis_domain(
+        cls,
+        name: str,
+        tables: tuple[MeasurementTable, ...],
+        axis: MeasurementRowAxisField,
+    ) -> tuple[int, ...] | None:
+        """Return the exact joined row-axis domain, or None for axisless rows."""
+        cls._require_join(name, tables)
+        domains = cls._row_axis_domains(name, tables, axis)
+        if domains is None:
+            return None
+        return tuple(sorted({value for domain in domains for value in domain}))
+
+    @staticmethod
+    def _row_axis_domains(
+        name: str, tables: tuple[MeasurementTable, ...], axis: MeasurementRowAxisField
+    ) -> tuple[tuple[int, ...], ...] | None:
+        from openhcs.core.measurement_row_materialization import (
+            MeasurementRowsAxisProjection,
+        )
+
+        projections = tuple(
+            MeasurementRowsAxisProjection.from_rows(table.rows) for table in tables
+        )
+        declarations = tuple(
+            projection.declares_axis_field(axis)
+            or any(field.name == axis.value for field in table.rows.fields)
+            for table, projection in zip(tables, projections, strict=True)
+        )
+        if not any(declarations):
+            return None
+        domains = tuple(
+            projection.present_axis_values(axis.value) for projection in projections
+        )
+        if not any(domains):
+            return None
+        for table, projection, domain in zip(tables, projections, domains, strict=True):
+            if projection.has_rows and not domain:
+                raise ValueError(
+                    f"Measurement table union {name!r} mixes declared and "
+                    f"axisless {axis.value!r} row domains; table {table.name!r} "
+                    "declares no concrete axis value."
+                )
+        return domains
 
 
 @dataclass(frozen=True, slots=True)
@@ -1134,6 +1345,14 @@ class MeasurementScalarLiteral:
             stripped = self.raw_value.strip()
             return stripped or None
         return None
+
+    @classmethod
+    def non_absent_values(cls, values: Sequence[object]) -> np.ndarray:
+        """Classify physical cells while retaining explicit nonfinite values."""
+        if isinstance(values, np.ndarray) and values.dtype.kind in "iuf":
+            return np.ones(values.shape, dtype=bool)
+        array = np.asarray(values, dtype=object)
+        return np.asarray([not cls(value).is_absent for value in array], dtype=bool)
 
     @property
     def is_absent(self) -> bool:

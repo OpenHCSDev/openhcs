@@ -9,14 +9,16 @@ from openhcs.core.runtime_image_values import (
     image_payload_data,
     image_payload_metadata,
 )
-from openhcs.interop.cellprofiler.runtime.artifact_binding import RuntimeArtifactTypeStrategy
+from openhcs.interop.cellprofiler.runtime.output_recording import (
+    CellProfilerOutputRecorder,
+)
 
 
 def test_integer_call_mutation_does_not_replace_post_call_source():
     spec = ArtifactSpec.input("DNA", ImageArtifactType)
     pixels = np.arange(12, dtype=np.uint8).reshape(3, 4)
     source = ImagePayloadMetadata(source_image_names=("Original",)).payload_with(pixels)
-    strategy = RuntimeArtifactTypeStrategy.for_artifact_type(spec.artifact_type)
+    strategy = CellProfilerOutputRecorder.for_artifact_type(spec.artifact_type)
     raw = strategy.raw_runtime_input_value(spec, source)
     assert image_payload_data(raw) is pixels
     assert image_payload_metadata(raw) is not image_payload_metadata(source)
@@ -37,7 +39,7 @@ def test_raw_source_derivation_preserves_live_nested_source_mapping():
     source = ImagePayloadMetadata(
         source_component_metadata={"nested": {"selected": "before"}},
     ).payload_with(np.zeros((2, 3), dtype=np.uint8))
-    strategy = RuntimeArtifactTypeStrategy.for_artifact_type(spec.artifact_type)
+    strategy = CellProfilerOutputRecorder.for_artifact_type(spec.artifact_type)
     first = strategy.raw_runtime_input_value(spec, source)
     nested = image_payload_metadata(source).source_component_metadata["nested"]
     assert image_payload_metadata(first) is not image_payload_metadata(source)
@@ -50,7 +52,7 @@ def test_raw_source_derivation_preserves_live_nested_source_mapping():
 
 def test_measurement_type_errors_remain_at_value_consumption():
     spec = ArtifactSpec.input("Intensity", MeasurementsArtifactType)
-    strategy = RuntimeArtifactTypeStrategy.for_artifact_type(spec.artifact_type)
+    strategy = CellProfilerOutputRecorder.for_artifact_type(spec.artifact_type)
     with pytest.raises(TypeError, match="Measurement artifact 'Intensity' requires a MeasurementTable, got object"):
         strategy.runtime_input_value(spec, object())
     with pytest.raises(TypeError, match="Measurement artifact 'Intensity' requires a MeasurementTable, got object"):

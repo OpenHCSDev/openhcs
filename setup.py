@@ -10,6 +10,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 
 from setuptools import Extension, setup
+from setuptools.command.build_ext import build_ext as _build_ext
 from setuptools.command.build_py import build_py as _build_py
 from setuptools.command.sdist import sdist as _sdist
 
@@ -72,6 +73,9 @@ class OpenHCSNativeExtension(Extension, ABC):
             extra_compile_args=["/O2"] if os.name == "nt" else ["-O3"],
         )
 
+    def prepare_build_sources(self, build_root: Path) -> None:
+        """Prepare any generated sources at the native package-build boundary."""
+
     @classmethod
     def declared_extensions(cls) -> list[Extension]:
         """Derive compilation targets from concrete declarations in this family."""
@@ -90,9 +94,62 @@ class TabularNativeExtension(OpenHCSNativeExtension):
         return "openhcs.core._tabular_native"
 
 
+class MedianNativeExtension(OpenHCSNativeExtension):
+    @property
+    def qualified_module_name(self) -> str:
+        return "openhcs.processing.backends.cellprofiler._median_native"
+
+    def prepare_build_sources(self, build_root: Path) -> None:
+        generator = runpy.run_path(
+            str(Path(__file__).resolve().parent / "scripts/build_median_network.py")
+        )
+        generated_root = build_root / "median-network"
+        generator["build_median_network_header"](
+            generated_root / "_median_network_generated.h"
+        )
+        self.include_dirs.append(str(generated_root.resolve()))
+        self.depends.extend([
+            str(Path(__file__).resolve().parent / "scripts/build_median_network.py"),
+            str(generated_root / "_median_network_generated.h"),
+        ])
+
+
+class FontRasterNativeExtension(OpenHCSNativeExtension):
+    """Keep the CellProfiler-compatible font engine local to its native module."""
+
+    @property
+    def qualified_module_name(self) -> str:
+        return "openhcs.processing.backends.cellprofiler._font_raster_native"
+
+    def prepare_build_sources(self, build_root: Path) -> None:
+        project_root = Path(__file__).resolve().parent
+        helper = project_root / "scripts/build_freetype_sources.py"
+        vendor = project_root / "vendor/freetype-2.6.1"
+        declarations = runpy.run_path(str(helper))
+        self.sources.append(str(Path(*self.qualified_module_name.split(".")).with_name("_font_raster.c")))
+        self.sources.extend(
+            Path(source).relative_to(project_root).as_posix()
+            for source in declarations["freetype_sources"](vendor)
+        )
+        self.include_dirs.append(str(vendor / "include"))
+        self.define_macros.append(("FT2_BUILD_LIBRARY", None))
+        self.depends.extend([str(helper), *map(str, vendor.rglob("*.h"))])
+        if os.name != "nt":
+            self.extra_compile_args.append("-fvisibility=hidden")
+
+
+class BuildNativeExtensions(_build_ext):
+    """Prepare declared native sources without executing runtime compilation."""
+
+    def build_extension(self, extension):
+        extension.prepare_build_sources(Path(self.build_temp))
+        super().build_extension(extension)
+
+
 setup(
     ext_modules=OpenHCSNativeExtension.declared_extensions(),
     cmdclass={
+        "build_ext": BuildNativeExtensions,
         "build_py": BuildPyWithMcpKnowledge,
         "sdist": SdistWithMcpKnowledge,
     },

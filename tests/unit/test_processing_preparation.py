@@ -168,11 +168,9 @@ def test_cache_batch_deduplicates_modules_before_discovery(
         "openhcs.core.processing_preparation.multiprocessing.get_all_start_methods",
         lambda: ["fork"],
     )
-    PreparationCacheBatch.from_callables((process, process)).populate_child_caches(max_workers=2)
-    # Serial admission does not discover cache families eagerly.
-    if len(os.sched_getaffinity(0)) < 2:
-        assert not calls
-        return
+    PreparationCacheBatch.from_callables((process, process)).populate_child_caches(
+        max_workers=2
+    )
     assert calls == [declared_module.__name__]
 
 
@@ -197,19 +195,24 @@ def test_new_operation_inherits_readiness_without_a_scheduler_roster(declared_mo
 
 
 @pytest.mark.skipif(
-    "fork" not in multiprocessing.get_all_start_methods() or len(os.sched_getaffinity(0)) < 2,
-    reason="two admitted fork slots required",
+    "fork" not in multiprocessing.get_all_start_methods(),
+    reason="fork required",
 )
+@pytest.mark.parametrize("count", [1, 2])
 def test_new_cache_operation_runs_in_children_and_still_prepares_parent(
-    declared_module, tmp_path
+    declared_module, tmp_path, count
 ):
     operations = tuple(
-        AdditionalChildCachePreparation(name, tmp_path) for name in ("first", "second")
+        AdditionalChildCachePreparation(name, tmp_path)
+        for name in ("first", "second")[:count]
     )
-    PreparationCacheBatch(operations).populate_child_caches(max_workers=2)
+    PreparationCacheBatch(operations).populate_child_caches(max_workers=1)
     assert all(
         int((tmp_path / operation.name).read_text()) != os.getpid()
         for operation in operations
+    )
+    assert (
+        len({(tmp_path / operation.name).read_text() for operation in operations}) == 1
     )
     for operation in operations:
         operation.prepare()
@@ -256,7 +259,9 @@ def test_registry_startup_includes_declared_raw_owner_in_another_module(
 ):
     from types import SimpleNamespace
 
-    from openhcs.processing.backends.lib_registry.registry_service import RegistryService
+    from openhcs.processing.backends.lib_registry.registry_service import (
+        RegistryService,
+    )
 
     raw_module = ModuleType("_openhcs_raw_preparation_test")
     monkeypatch.setitem(sys.modules, raw_module.__name__, raw_module)
@@ -264,33 +269,45 @@ def test_registry_startup_includes_declared_raw_owner_in_another_module(
     raw = declare_process(raw_module)
     events = []
     wrapper.__dict__[FunctionContractAttribute.raw_processing_function] = raw
-    wrapper.__dict__[FunctionContractAttribute.processing_prepare] = lambda: events.append("wrapper")
-    raw.__dict__[FunctionContractAttribute.processing_prepare] = lambda: events.append("raw")
+    wrapper.__dict__[FunctionContractAttribute.processing_prepare] = (
+        lambda: events.append("wrapper")
+    )
+    raw.__dict__[FunctionContractAttribute.processing_prepare] = lambda: events.append(
+        "raw"
+    )
     monkeypatch.setattr(
         RegistryService, "_metadata_cache", {"wrapper": SimpleNamespace(func=wrapper)}
     )
     monkeypatch.setattr(
-        PreparationCacheBatch, "populate_child_caches",
-        lambda self, **kwargs: events.append(tuple(item.module_name for item in self.preparations)),
+        PreparationCacheBatch,
+        "populate_child_caches",
+        lambda self, **kwargs: events.append(
+            tuple(item.module_name for item in self.preparations)
+        ),
     )
 
     RegistryService.prepare_in_current_process()
     RegistryService.prepare_in_current_process()
-    compiler_target = CallableContract.from_callable(wrapper).resolve_canonical_raw_callable()
+    compiler_target = CallableContract.from_callable(
+        wrapper
+    ).resolve_canonical_raw_callable()
     assert compiler_target is raw
     prepare_processing_callable(compiler_target)
 
     assert events == [
-        (declared_module.__name__, raw_module.__name__), "wrapper", "raw",
+        (declared_module.__name__, raw_module.__name__),
+        "wrapper",
+        "raw",
         (declared_module.__name__, raw_module.__name__),
     ]
 
 
 @pytest.mark.skipif(
-    "fork" not in multiprocessing.get_all_start_methods() or len(os.sched_getaffinity(0)) < 2,
-    reason="two admitted fork slots required",
+    "fork" not in multiprocessing.get_all_start_methods(),
+    reason="fork required",
 )
-def test_cancelling_cache_batch_reaps_its_live_cache_workers(tmp_path):
+@pytest.mark.parametrize("budget", [1, 2])
+def test_cancelling_cache_batch_reaps_its_live_cache_workers(tmp_path, budget):
     """SIGTERM must unwind the owned worker scope, without leaving descendants."""
 
     script = textwrap.dedent("""
@@ -316,10 +333,10 @@ def test_cancelling_cache_batch_reaps_its_live_cache_workers(tmp_path):
         def cancel(signum, frame):
             raise CancelledError
         signal.signal(signal.SIGTERM, cancel)
-        batch.populate_child_caches(max_workers=2)
+        batch.populate_child_caches(max_workers=int(sys.argv[2]))
     """)
     process = subprocess.Popen(
-        (sys.executable, "-c", script, str(tmp_path)),
+        (sys.executable, "-c", script, str(tmp_path), str(budget)),
         cwd=Path(__file__).parents[2],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -327,18 +344,23 @@ def test_cancelling_cache_batch_reaps_its_live_cache_workers(tmp_path):
     )
     try:
         deadline = time.monotonic() + 15
-        while not all((tmp_path / name).exists() for name in ("first", "second")):
+        names = (
+            ("first", "second")
+            if budget > 1 and len(os.sched_getaffinity(0)) > 1
+            else ("first",)
+        )
+        while not all((tmp_path / name).exists() for name in names):
             assert process.poll() is None, process.communicate()
             assert time.monotonic() < deadline, "cache workers did not start"
             time.sleep(0.02)
-        worker_pids = tuple(
-            int((tmp_path / name).read_text()) for name in ("first", "second")
-        )
+        worker_pids = tuple(int((tmp_path / name).read_text()) for name in names)
         process.send_signal(signal.SIGTERM)
         _, stderr = process.communicate(timeout=5)
         assert process.returncode != 0
         assert "CancelledError" in stderr
         assert all(not psutil.pid_exists(pid) for pid in worker_pids)
+        if names == ("first",):
+            assert not (tmp_path / "second").exists()
     finally:
         if process.poll() is None:
             process.kill()
@@ -346,7 +368,8 @@ def test_cancelling_cache_batch_reaps_its_live_cache_workers(tmp_path):
 
 
 @pytest.mark.skipif(
-    "fork" not in multiprocessing.get_all_start_methods() or len(os.sched_getaffinity(0)) < 4,
+    "fork" not in multiprocessing.get_all_start_methods()
+    or len(os.sched_getaffinity(0)) < 4,
     reason="four admitted fork slots required",
 )
 def test_child_slot_refills_before_other_initial_jobs_finish(tmp_path):
@@ -418,7 +441,7 @@ def test_child_slot_refills_before_other_initial_jobs_finish(tmp_path):
 def test_completed_worker_release_is_idempotent(tmp_path):
     worker = PreparationCacheWorker.start(
         multiprocessing.get_context("fork"),
-        AdditionalChildCachePreparation("completed", tmp_path),
+        (AdditionalChildCachePreparation("completed", tmp_path),),
     )
     pid = worker.process.pid
     try:
@@ -433,7 +456,8 @@ def test_completed_worker_release_is_idempotent(tmp_path):
 
 
 @pytest.mark.skipif(
-    "fork" not in multiprocessing.get_all_start_methods() or len(os.sched_getaffinity(0)) < 2,
+    "fork" not in multiprocessing.get_all_start_methods()
+    or len(os.sched_getaffinity(0)) < 2,
     reason="two admitted fork slots required",
 )
 def test_cache_progress_reports_reaped_workers_without_marking_parent_ready(tmp_path):
@@ -453,7 +477,8 @@ def test_cache_progress_reports_reaped_workers_without_marking_parent_ready(tmp_
 
 
 @pytest.mark.skipif(
-    "fork" not in multiprocessing.get_all_start_methods() or len(os.sched_getaffinity(0)) < 2,
+    "fork" not in multiprocessing.get_all_start_methods()
+    or len(os.sched_getaffinity(0)) < 2,
     reason="two admitted fork slots required",
 )
 def test_failure_in_refilled_slot_reaps_all_owned_workers(tmp_path, declared_module):

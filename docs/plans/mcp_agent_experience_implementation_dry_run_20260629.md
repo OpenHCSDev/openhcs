@@ -33,12 +33,11 @@ show("VirtualWorkspaceSourceProjection methods", tuple(name for name in ("pipeli
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.source_bindings import CompiledSourceUniversePlan
 from openhcs.core.source_load_plan import SourceLoadPlan
-from openhcs.core.source_binding_selection import SourceUniverseRequest, SourceUniverseStrategy
+from openhcs.core.source_binding_selection import SourceUniverseRequest
 show("CompiledStepPlan source/artifact fields", tuple(f.name for f in fields(CompiledStepPlan) if f.name.startswith("source_") or f.name.startswith("artifact_")))
 show("CompiledSourceUniversePlan fields", tuple(f.name for f in fields(CompiledSourceUniversePlan)))
 show("SourceLoadPlan fields", tuple(f.name for f in fields(SourceLoadPlan)))
 show("SourceUniverseRequest types", tuple(t.__name__ for t in SourceUniverseRequest.registered_request_types()))
-show("SourceUniverseStrategy types", tuple(t.__name__ for t in SourceUniverseStrategy.registered_strategy_types()))
 
 from openhcs.core.artifacts import ArtifactSidecarRole, ArtifactSpec, ArtifactInputPlan, ArtifactOutputPlan
 show("ArtifactSidecarRole values", tuple(role.value for role in ArtifactSidecarRole))
@@ -105,10 +104,11 @@ Artifact/source coverage:
   richer source-load semantics until the compiler owns them.
 - `SourceUniverseRequest.registered_request_types()` returns
   `StepInputSourceUniverseRequest` and `PipelineStartSourceUniverseRequest`.
-- `SourceUniverseStrategy.registered_strategy_types()` returns six concrete
+- The historical independent source-universe strategy registry returned six concrete
   strategies covering current pattern, virtual workspace, physical axis,
   axis-scoped pipeline start, virtual workspace pipeline start, and physical
-  pipeline start.
+  pipeline start. These cases now belong directly to the registered request
+  owners through `source_universe()`.
 
 Runtime sidecars:
 

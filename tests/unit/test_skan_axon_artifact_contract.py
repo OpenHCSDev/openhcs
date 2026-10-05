@@ -51,7 +51,7 @@ def test_skan_visualization_contract_preserves_exact_main_flow_stack() -> None:
     invocation = next(
         normalize_function_pattern(skan_axon_skeletonize_and_analyze).iter_items()
     )
-    provider = MainFlowArtifactContractProvider.provider_for_session(None)
+    provider = MainFlowArtifactContractProvider.provider_for_pipeline(None)
 
     assert provider is not None
     plan = provider(invocation, context)

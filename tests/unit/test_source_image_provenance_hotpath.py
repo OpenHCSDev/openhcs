@@ -14,7 +14,7 @@ def test_empty_explicit_provenance_reuses_authoritative_value() -> None:
     )
     fields = SourceImageProvenanceFields(source_provenance=retained)
 
-    fields.absorb_explicit_source_provenance(SourceImageProvenance())
+    fields.absorb_explicit_source_provenance((None, None, None, ()))
 
     assert fields.source_provenance is retained
 
@@ -30,7 +30,9 @@ def test_populated_explicit_provenance_preserves_merge_precedence() -> None:
     )
     fields = SourceImageProvenanceFields(source_provenance=fallback)
 
-    fields.absorb_explicit_source_provenance(explicit)
+    fields.absorb_explicit_source_provenance(
+        (None, {"channel": "2"}, None, ("Explicit",))
+    )
 
     assert fields.source_provenance == SourceImageProvenance(
         source_path="/input/A01_s001_w1.tif",
