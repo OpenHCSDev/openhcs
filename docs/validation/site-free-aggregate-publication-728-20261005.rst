@@ -2,9 +2,9 @@ Site-free acquired aggregate publication: receiving checkpoint
 ============================================================
 
 Singer owns issue728's aggregate publication and compiled-table relation.
-Base: main91dc36440ad3ab95673d29a2ca1cf017654468c8. This is an initial
-source checkpoint. The first production scope change below is implemented but
-not yet source-tested or installed-qualified.
+Base: main91dc36440ad3ab95673d29a2ca1cf017654468c8. Both production families
+below are implemented. Focused source controls pass; ordinary whole-installed
+default-publication acceptance remains pending.
 The previous task-transport branch4ab5096 is published and retained; the
 same isolated checkout is reused without changing eight foreign gitlinks or
 untracked evidence. No scientific input, active installation or runtime changes.
@@ -18,7 +18,7 @@ The complete parent receipt is retained at::
   figure-collection-20261004/P001-FRESH09-AGGREGATE-PUBLICATION-DEFECT.rst
 
 Original6022 native log1072--1103 records default finalization through
-ArtifactMaterializationTargetPlan, ArtifactOutputBatch._output_fields and
+ArtifactMaterializationTargetPlan, ViewerStreamBackendCallKwargs._output_fields and
 StreamViewerComponentMetadataProjector.project_required rejecting a site-free
 acquired mosaic. Independent candidate01t02 numerical completion records
 compiled aggregate table expectations missing site/source_image_name fields.
@@ -48,7 +48,8 @@ Required relation and acceptance
 An acquired aggregate retains an honest source frame, contributor provenance,
 calibration and applicable component domains without pretending to be a single
 acquired SITE. The original materialization/display owners must consume that
-relation, and original table schema/row owners must agree about nullable fields.
+relation. Table validation must use each original producer's own saved-output
+address and schema, not apply a preceding field record to an aggregate CSV.
 Genuinely incomplete acquired planes and strict final publication remain errors.
 No kind/string switch, second registry, metadata mirror, filename inference,
 alias, alternate codec, weakened guard or timeout increase is permitted.
@@ -73,15 +74,31 @@ consistently to single and grouped batches, retaining item metadata, producer,
 transport and display modes. The previous unscoped materialization decision is
 replaced; StreamViewerComponentMetadataProjector.project_required is unchanged.
 
-The table diagnosis is narrower than a dropped-column claim. Existing
-matching_table_outputs uses artifact-name/axis filename matching without the
+The table diagnosis is narrower than a dropped-column claim. The replaced
+matching_table_outputs used artifact-name/axis filename matching without the
 exact producer location; a field record can therefore be checked against a
 later aggregate's same-name CSV. The original report repeats aggregate header
 failures nine times. StepExecutionObservation already owns typed
-materialized_locations_by_address; RuntimeContextObservation currently loses
-that address relation while retaining flat export paths. The complete transport
-and validation family is being traced, with Dewey asked about active shared
-orchestrator claims. No replacement store or filename fallback will be added.
+materialized_locations_by_address. RuntimeContextObservation now carries that
+original StepExecutionObservation instead of copying its export paths and
+analysis inputs while dropping its address relation. Both static/sequential
+worker paths and compiled plate execution use StepExecutionObservation.combine;
+analysis consolidation reads that same owner. Dewey explicitly reports no
+overlapping orchestrator source claim.
+
+RuntimeExportObservation carries the same original observation. Its exact
+record-to-path projection delegates to StepExecutionObservation.paths_for(),
+which uses RuntimeArtifactAddress.from_record(). Final table validation and
+artifact-scoped equivalence use that relation. The free filename matchers are
+deleted, with no fallback or alias. File-only observations remain valid file
+inventories but cannot establish table ownership. Existing schema, row-count
+and missing-export guards remain unchanged; no nullable-column waiver was added.
+
+Applicable catalog entries: BOUND-8 (owned address relation flattened at the
+worker boundary), BOUND-2 (bypassed StepExecutionObservation), IDEN-6 (filename
+matching instead of producer address), and IMPL-12 (duplicated output folding).
+The existing ancestor owns both projection algorithms; no new production type,
+registry, codec, copied procedure or ornamental inheritance was introduced.
 
 Existing refactor-audit parser invocation and byte-exact AST output are retained
 at engineering728/source01/family.jsonl and family.stderr under the issue-batch
@@ -91,6 +108,53 @@ RSS,0swap. This is source evidence, not global R1 or behavioral acceptance.
 Resource readback showed13.5GiB available; existing swap/disk warnings were not
 turned into invented memory caps. No imports of OpenHCS or scientific execution.
 
-Remaining: finish exact typed export-address transport/consumer deletion;
-qualify both source families with an independent declaration and strict negative
-controls; then tiny ordinary default-publication installed acceptance.
+The second original-parser receipt is source01/export-family.jsonl plus stderr:
+all701 production/705 test modules parsed,58/80 selected, zero omissions;
+terminal0,22.03s,550156KiB peak RSS,0swap. Complete source-family ASTs and
+semantic reads cover the original observation, writer-address creation, both
+execution paths, consolidation, final validation and equivalence consumers.
+No authenticated global R1 proof is claimed.
+
+Source qualification and preserved first failures
+------------------------------------------------
+
+All raw outputs below are retained under
+/home/ts/wt/openhcs-issue-batch-20260929/engineering728/.
+Checks reuse engineering620/source-controls01.py, its authenticated original
+engineering599 source-runtime dependencies and the existing paired Python/native
+binary. No installation, download, catalog, server or viewer was launched.
+
+source-controls01: collection failed because the original importlib-mode runner
+does not put tests/unit on the module search path. Its original stdout/stderr
+are preserved. Explicitly selecting the existing unit fixture path corrected
+only the launch environment, not product imports or algorithms.
+
+source-controls02:37PASS/2FAIL. The one/equal contributor fixtures unintentionally
+retained a valid common scalar SITE; the original provenance owner correctly
+restored it. They now declare genuinely absent scalar identity on the existing
+typed contributor carrier. This is fixture correction, not weaker assertions.
+Peak314624KiB,5.10s,0swap.
+
+source-controls03:310PASS/4FAIL/1ERROR. All new source-scope controls pass,
+including mixed acquired/reduced batches, both kwargs/batch paths, zero/one/equal
+and incomplete contributor negatives, and present scalar override. The broader
+related family exposed one old equivalence fixture that relied on filename
+ownership; it now declares its exact writer output address. Three unrelated
+server fixtures hit the borrowed dependency API: two progress-queue assertions
+and missing ObjectState.resolve_saved_object. The --noconftest runner also did
+not load the original viewer ACK fixture. These originals remain visible, not
+reported as whole-family passing. Peak482948KiB,19.29s,0swap.
+
+source-controls04:10PASS,3.52s pytest time. The independent reduced-field
+declaration composes a real cooperative ProjectionAudit hook through C3 MRO;
+both before/after hooks execute through ImageArtifactType contextualization and
+the unchanged generic stream consumer. No generic consumer edit adds this case.
+Same-named field and aggregate tables retain their exact distinct producer paths
+through ordinary pickle transport. Missing address cannot fall back to a neighbor
+filename; correct address still rejects missing site/source_image_name columns.
+The migrated equivalence fixture excludes the auxiliary CSV without name guesses.
+
+Remaining: final changed-owner census/deletion receipt, and an ordinary tiny
+whole-installed multisite default-publication journey. Planck's independent734
+spreadsheet/source-column qualification is not held behind this receiving gap.
+The three active scientific bundles and their original failures remain untouched.

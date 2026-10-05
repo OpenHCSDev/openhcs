@@ -1912,8 +1912,7 @@ def test_completed_observation_projects_tables_before_worker_payload_release(
         context_key="A01", context=context,
         records=context.runtime_value_store.observed_values,
         runtime_observation_mode=observation_mode,
-        runtime_export_paths=step_observation.runtime_export_paths,
-        analysis_inputs=step_observation.analysis_inputs,
+        outputs=step_observation,
     )
     context.runtime_value_store.clear()
     del pixels
@@ -1923,11 +1922,11 @@ def test_completed_observation_projects_tables_before_worker_payload_release(
     assert len(observation.records) == (
         2 if observation_mode is RuntimeObservationMode.MERGE_INTO_PARENT else 0
     )
-    assert len(observation.runtime_export_paths) == 1
-    assert observation.runtime_export_paths[0].suffix == ".csv"
-    assert observation.analysis_inputs is not None
-    assert observation.analysis_inputs.destination.backend == "disk"
-    assert observation.analysis_inputs.destination.images_dir == "/images"
+    assert len(observation.outputs.runtime_export_paths) == 1
+    assert observation.outputs.runtime_export_paths[0].suffix == ".csv"
+    assert observation.outputs.analysis_inputs is not None
+    assert observation.outputs.analysis_inputs.destination.backend == "disk"
+    assert observation.outputs.analysis_inputs.destination.images_dir == "/images"
     execution_observation = RuntimeExecutionObservation(contexts=(observation,))
     transported = pickle.loads(pickle.dumps(execution_observation))
     consolidated = RuntimeAnalysisConsolidationInputs.from_observations(
@@ -1939,7 +1938,7 @@ def test_completed_observation_projects_tables_before_worker_payload_release(
     assert outputs[0].well_id == "A01"
     assert "cell_count" in outputs[0].csv_content
     assert "2" in outputs[0].csv_content
-    assert outputs[0].path == observation.runtime_export_paths[0]
+    assert outputs[0].path == observation.outputs.runtime_export_paths[0]
     with pytest.raises(KeyError, match="unknown compiled context"):
         RuntimeAnalysisConsolidationInputs.from_observations({}, (transported,))
 

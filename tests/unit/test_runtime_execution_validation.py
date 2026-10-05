@@ -64,6 +64,7 @@ from openhcs.core.runtime_object_labels import (
     ObjectLabelVariantData,
 )
 from openhcs.core.runtime_tabular_values import FieldSpec
+from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.processing.materialization import (
@@ -254,7 +255,7 @@ def test_zmq_observation_exports_exact_compiler_owned_artifacts(
                 RuntimeContextObservation(
                     context_key="A01",
                     records=(),
-                    runtime_export_paths=(contracted_output,),
+                    outputs=StepExecutionObservation({}, (contracted_output,)),
                 ),
             )
         ),
@@ -538,7 +539,7 @@ def test_runtime_execution_observation_reads_plate_export_from_exact_owner(
                 RuntimeContextObservation(
                     context_key="A01",
                     records=(),
-                    runtime_export_paths=(contracted_output,),
+                    outputs=StepExecutionObservation({}, (contracted_output,)),
                 ),
             )
         ),
