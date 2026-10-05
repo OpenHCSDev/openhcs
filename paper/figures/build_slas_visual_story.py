@@ -280,22 +280,24 @@ def task_only_story():
     h001, bbbc039 = load_evaluations(ROOT)
     with plt.rc_context({"font.size": 14, "axes.titlesize": 15,
                          "axes.spines.top": False, "axes.spines.right": False}):
-        sheet = FigureSheet("task_only_visual", "", 9.0)
+        sheet = FigureSheet("task_only_visual", "", 8.2)
         for path in (H001_SOURCE, BBBC039_SOURCE,
                      Path("paper/figures/build_slas_task_only.py"),
                      Path("figure-collection-20261004/H001-FRESH586-SCORED-NATIVE-REVIEW.rst")):
             sheet.source(ROOT / path)
-        sheet.text(3, 98, "Autonomous review: local repair and complete coverage",
+        sheet.text(3, 98, "Autonomous segmentation: repair and field coverage",
                    size=18, weight="bold", va="top")
-        sheet.text(3, 93, "A  H001: a false split repaired without reference feedback",
+        sheet.text(3, 93, "A  H001: an elongated-body split repaired",
                    size=15, weight="bold")
-        for x, stage, label in ((3, "raw", "Raw"), (35, "first", "First, a01"),
-                                (67, "final", "Final, a04")):
-            sheet.text(x, 88, label, size=14)
+        for x, stage, label in ((3, "raw", "Raw"), (35, "first", "First"),
+                                (67, "final", "Final")):
+            sheet.text(x, 89, label, size=14)
             sheet.source_image(
                 OUTPUT / "h001_scored_sources" / f"detail_{stage}.png",
-                (x, 66, 29, 20), crop=(297, 28, 1037, 492),
+                (x, 64, 30, 24), crop=(297, 28, 1037, 492),
             )
+        sheet.text(50, 64, "Own image review; no reference feedback",
+                   size=14, ha="center", color=MUTED)
         axes = (sheet.figure.add_axes((.09, .37, .35, .23)),
                 sheet.figure.add_axes((.60, .37, .35, .23)),
                 sheet.figure.add_axes((.09, .08, .86, .19)))
