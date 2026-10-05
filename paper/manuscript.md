@@ -275,6 +275,15 @@ result. Haze extent, an upper-edge possible merge and crowded actin boundaries
 remained uncertain; the repeat supports self-directed repair, not improved
 first-attempt accuracy (Supplementary Data 8).
 
+A further independent author retained its initial scientific settings after
+measuring nuclear texture, neighbour spacing and weak actin support. Its
+55 nuclear candidates and 53 expanded associated regions had useful ordinary-body
+coverage in independent matched-channel review; two unsupported regions remained
+seed-sized. Transport and source-binding repairs were required, but did not
+change the segmentation. This is a useful first-method outcome, not a
+manual-reference accuracy score or evidence that every crowded boundary is
+correct (Supplementary Data 8).
+
 Retinal authors used measured background and weak-body support to select
 smoothing, background subtraction and foreground admission. Earlier repeats
 retained useful soma detections but uncertain ring-shaped partitions and weak

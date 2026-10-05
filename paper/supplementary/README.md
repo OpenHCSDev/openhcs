@@ -1116,7 +1116,18 @@ biological cell census. Both owned processes were independently absent after
 typed closure; client exit 2 is retained separately. Original failed attempts
 and the operational staging deviation remain in the author's report.
 
-The report also retains a fresh BBBC007 repeat across all 16 DNA/actin pairs.
+A later independent paired-field author retained its first scientific method:
+55 nuclear candidates, 53 expanded actin-associated regions and two seed-only
+regions. Independent matched-channel review supports useful ordinary-body
+localisation and selective region growth, while crowded boundaries and an
+elongated nuclear identity remain uncertain. Transport and source-binding
+repairs did not change the segmentation masks. The
+[final image review](../../figure-collection-20261004/H003-FRESH16-INDEPENDENT-FINAL-REVIEW.rst)
+retains twelve original raw/result/combined captures and the independently
+verified 1,083-file freeze. This is a first-method result after technical repair,
+not a manual-reference accuracy estimate.
+
+The fresh BBBC007 repeat covered all 16 DNA/actin pairs.
 Its final 1,335 primary and secondary label identities reconcile, but dense
 bright nuclei remain undetected. The author rejected population-level use;
 independent post-freeze image review confirmed the missed cluster. This is
