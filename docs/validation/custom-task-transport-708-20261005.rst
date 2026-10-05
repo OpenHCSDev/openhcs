@@ -26,13 +26,15 @@ function or publish another namespace alias. Prepared runtime contracts and
 their ABI stay unchanged in the native parent; process-local executable caches
 must not become task transport authority.
 
-The determining task trace is multiprocessing.queues._feed ->
+At the initial draft checkpoint, the determining task trace was
+multiprocessing.queues._feed ->
 ForkingPickler.dumps -> PicklingError for worker_bootstrap_probe_708; the earlier
 bootstrap reduction.dump(process_obj) is absent. Existing transport normalization
 handles raw_processing_function only when already a FunctionReference; its raw
 callable branch and the original reference metadata projection need one coherent
-owner treatment. This is a source-backed reachable boundary, not yet a completed
-causal object-graph proof or a qualified production fix.
+owner treatment. That checkpoint was source-backed but not yet a qualified fix.
+The implemented source/process evidence below supersedes that readiness status;
+the original installed negative is unchanged.
 
 Review and qualification
 ------------------------
@@ -137,3 +139,25 @@ untouched. Whole installed public receiving remains Singer-owned: a fresh ordina
 candidate must run two axes/two workers, verify persisted full-array source+1,
 first terminal STATUS and successful OUTCOMES, then close its exact runtime.
 Planck/Dewey own ordinary package/lane handoff. Receiving09 stays immutable FAILED.
+
+Published structural evidence
+-----------------------------
+
+Original R0-01 uses the authoritative debt_census.py / Repository / Census /
+Measure on both actual production deltas, f058eac760fc164a724b758018516758606f2802
+to1e0de982cd9ece3ec409175643919b16fc9f3492. Zero parse omissions, no positive
+screening measures: foreign_absence_probe-1, none_identity-1, isinstance_call-1.
+Code-lines+8 is recorded explicitly (shared owner methods and their documentation);
+it is not represented as zero growth or a global cleanliness proof.
+After-source census:701 production/705 test modules,117/168 related ASTs, zero
+parse omissions. Actual source/process/control provenance stays pinned at1e0;
+this later receipt/archive publication does not change production.
+
+Byte-exact controls01/02/03 stdout/stderr, original partial census, completed
+before/after and dependency ASTs, R0 and qualified source/test files are archived
+at docs/validation/custom-task-transport-708-20261005.tar.gz (24985993bytes),
+SHA256 de9919705bf54c0926b581b4145d11be312aa19f109fe77a7a10ea5313267e22.
+Controls03 terminal0:9.08s wall,362832KiB process maximum RSS, zero swaps;
+this is not a combined cgroup memory measurement. Observed worker3058583 is
+absent after the original executor context joined. No receiving09 journal,
+scientific source, saved output or UNKNOWN input was overwritten or deleted.
