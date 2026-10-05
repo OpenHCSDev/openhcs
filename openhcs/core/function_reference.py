@@ -321,7 +321,16 @@ class FunctionReferenceTransportAuthority:
         """Return compiler transport metadata declared by the callable."""
         from openhcs.core.callable_contract import CallableContract
 
-        metadata = CallableContract.from_callable(func).metadata
+        return cls.reference_metadata(CallableContract.from_callable(func).metadata)
+
+    @classmethod
+    def reference_metadata(cls, metadata: CallableMetadata) -> CallableMetadata:
+        """Reference captured compiler metadata without recapturing its ABI.
+
+        Compiled invocations can carry metadata captured from a resolved runtime
+        wrapper, rather than metadata constructed with a FunctionReference.
+        Both use the same raw-callable declaration owner.
+        """
         raw_processing_function = metadata.raw_processing_function
         if not callable(raw_processing_function):
             return metadata

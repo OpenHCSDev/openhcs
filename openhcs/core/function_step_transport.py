@@ -8,7 +8,7 @@ from types import ModuleType
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from openhcs.core.callable_contract import CallableContract
+from openhcs.core.callable_contract import CallableContract, CallableMetadata
 from openhcs.core.function_patterns import (
     CompiledFunctionGroup,
     CompiledFunctionInvocation,
@@ -18,6 +18,7 @@ from openhcs.core.function_patterns import (
 )
 from openhcs.core.function_reference import (
     FunctionReference,
+    FunctionReferenceTransportAuthority,
 )
 from openhcs.core.pipeline_document_fields import PipelineDocumentField
 from openhcs.core.steps.function_step import FunctionStep
@@ -173,19 +174,28 @@ class FunctionStepTransportAuthority:
         cls,
         reference: FunctionReference,
     ) -> FunctionReference:
-        raw_processing_function = reference.metadata.raw_processing_function
+        metadata = cls.normalize_callable_metadata(reference.metadata)
+        if metadata is reference.metadata:
+            return reference
+        return replace(reference, metadata=metadata)
+
+    @classmethod
+    def normalize_callable_metadata(cls, metadata: CallableMetadata) -> CallableMetadata:
+        """Derive declaration-only transport from one captured metadata owner."""
+        metadata = FunctionReferenceTransportAuthority.reference_metadata(metadata)
+        raw_processing_function = metadata.raw_processing_function
         normalized_raw = (
             cls.normalize_function_reference(raw_processing_function)
             if isinstance(raw_processing_function, FunctionReference)
             else raw_processing_function
         )
         raw_is_normalized = normalized_raw is raw_processing_function
-        if reference.metadata.prepare is None and raw_is_normalized:
-            return reference
-        metadata = reference.metadata.without_prepare()
+        if metadata.prepare is None and raw_is_normalized:
+            return metadata
+        metadata = metadata.without_prepare()
         if not raw_is_normalized:
             metadata = metadata.with_raw_processing_function(normalized_raw)
-        return replace(reference, metadata=metadata)
+        return metadata
 
     @classmethod
     def normalize_compiled_pattern(
@@ -234,20 +244,12 @@ class FunctionStepTransportAuthority:
         contract: CallableContract,
     ) -> CallableContract:
         normalized_func = cls.normalize_function_spec(contract.func)
-        normalized_raw = (
-            cls.normalize_function_reference(contract.raw_processing_function)
-            if isinstance(contract.raw_processing_function, FunctionReference)
-            else contract.raw_processing_function
-        )
+        metadata = cls.normalize_callable_metadata(contract.metadata)
         if (
             normalized_func is contract.func
-            and normalized_raw is contract.raw_processing_function
-            and contract.metadata.prepare is None
+            and metadata is contract.metadata
         ):
             return contract
-        metadata = contract.metadata.without_prepare()
-        if normalized_raw is not contract.raw_processing_function:
-            metadata = metadata.with_raw_processing_function(normalized_raw)
         return replace(
             contract,
             func=normalized_func,
