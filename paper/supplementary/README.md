@@ -914,6 +914,15 @@ autonomous failure detection, not successful repair or an instance-accuracy
 estimate. The [independent review](../../docs/validation/bbbc007-fresh651-independent-review-20261004.rst)
 retains the original evidence identities and qualified verification scope.
 
+A later independent full-field repeat diagnosed broad admitted haze and
+size-filtered merged basins, then recovered several missing nuclear anchors
+without losing the inspected faint and textured controls. Crowded-region misses
+remained. Its 1,363 paired label identities and 81 seed-sized secondary areas
+are candidate-output properties, not biological accuracy. The
+[outcome record](task_only_analysis/bbbc007-fresh08-outcome.json) retains the
+815 independently checked artifact entries, five journal prefixes, pipeline
+identity and qualified local gains. No reference score was used in this repeat.
+
 A subsequent fresh paired-field trial separated a crowded cluster and a genuine
 pair, but its last marker-smoothing change retained a dim-neighbour merge and
 introduced an apparent isolated-body split. The author caught the regression

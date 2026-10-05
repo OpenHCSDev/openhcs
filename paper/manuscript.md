@@ -302,6 +302,15 @@ did not recover that cluster. The author rejected population-level use rather
 than treating consistent tables as accurate detection; independent post-freeze
 image review confirmed the missing cluster (Supplementary Data 8).
 
+A later independent author processed the same 16 released pairs and traced
+crowded-region losses to broad foreground support, sparse shape markers and
+size-filtered merged basins. Its threshold-method repair recovered several
+previously missed nuclear anchors while retaining inspected dim and textured
+bodies. Clear crowded-region misses remained. The final 1,363 nuclear and
+associated cell-label identities therefore provide reproducible candidate
+outputs and partial autonomous recovery, not a validated population count;
+81 secondary objects remained seed-sized (Supplementary Data 8).
+
 A subsequent fresh paired-field author separated a crowded cluster and a
 genuine close pair after inspecting its marker and partition stages. Reducing
 marker smoothing in the last repair still failed to separate a dim neighbour
