@@ -12,6 +12,7 @@ import argparse
 import asyncio
 import gc
 import json
+import math
 import os
 import sys
 import tempfile
@@ -73,17 +74,6 @@ class DiagnosticSourceIdentity:
             raise RuntimeError("Diagnostic child imported a different OpenHCS source")
 
 
-def require_ram_headroom() -> None:
-    """Refuse further requests under the batch's 8 GiB available-RAM floor."""
-    for line in Path("/proc/meminfo").read_text().splitlines():
-        if line.startswith("MemAvailable:"):
-            available_kib = int(line.split()[1])
-            if available_kib < 8 * 1024**2:
-                raise RuntimeError(f"Available RAM below 8 GiB: {available_kib} KiB")
-            return
-    raise RuntimeError("Linux MemAvailable accounting is unavailable")
-
-
 @dataclass(frozen=True)
 class RetentionMetric:
     """A sample-field declaration owning its projection and slope calculation."""
@@ -100,10 +90,13 @@ class RetentionMetric:
             (index - center) * (value - mean) for index, value in enumerate(values)
         ) / sum((index - center) ** 2 for index in range(len(values)))
 
+    def change(self, before: ProcessMemoryReceipt, after: ProcessMemoryReceipt) -> int:
+        return self.project(after) - self.project(before)
+
 
 @dataclass(frozen=True)
 class ProcessMemoryReceipt:
-    """Linux process accounting, not host swap or execution-tree accounting."""
+    """Process accounting plus contemporaneous host telemetry, not a quota."""
 
     pid: int
     monotonic_seconds: float
@@ -124,6 +117,11 @@ class ProcessMemoryReceipt:
     history_snapshots: int
     imported_source_paths: tuple[str, ...]
     source_identity: DiagnosticSourceIdentity
+    host_mem_available_kib: int
+    host_swap_used_kib: int
+    host_full_psi_avg10: float
+    host_full_psi_avg60: float
+    host_full_psi_avg300: float
 
     @classmethod
     def from_payload(cls, payload: Mapping[str, object]) -> ProcessMemoryReceipt:
@@ -143,6 +141,18 @@ class ProcessMemoryReceipt:
         }
 
     @classmethod
+    def retention_changes(
+        cls, before: ProcessMemoryReceipt, after: ProcessMemoryReceipt
+    ) -> dict[str, int]:
+        """GC sensitivity uses the same declaration-owned metrics as retention."""
+        return {
+            name: metric.change(before, after)
+            for name, annotation in get_type_hints(cls, include_extras=True).items()
+            for metric in get_args(annotation)[1:]
+            if isinstance(metric, RetentionMetric)
+        }
+
+    @classmethod
     def capture(cls, *, collect: bool) -> ProcessMemoryReceipt:
         from arraybridge import MemoryType
 
@@ -154,6 +164,16 @@ class ProcessMemoryReceipt:
             name, separator, value = line.partition(":")
             if separator:
                 accounting[name] = int(value.split()[0])
+        host = {
+            name: int(value.split()[0])
+            for line in Path("/proc/meminfo").read_text().splitlines()
+            for name, value in (line.split(":", 1),)
+        }
+        full_pressure = next(
+            line for line in Path("/proc/pressure/memory").read_text().splitlines()
+            if line.startswith("full ")
+        )
+        pressure = dict(part.split("=", 1) for part in full_pressure.split()[1:])
         libraries = tuple(
             sorted(
                 {
@@ -202,6 +222,11 @@ class ProcessMemoryReceipt:
                 if name in modules
             ),
             source_identity=DiagnosticSourceIdentity.capture(),
+            host_mem_available_kib=host["MemAvailable"],
+            host_swap_used_kib=host["SwapTotal"] - host["SwapFree"],
+            host_full_psi_avg10=float(pressure["avg10"]),
+            host_full_psi_avg60=float(pressure["avg60"]),
+            host_full_psi_avg300=float(pressure["avg300"]),
         )
 
 
@@ -222,19 +247,30 @@ class DiagnosticFailure:
 class MemoryDiagnosticReport:
     rounds: int
     request_sequence: tuple[McpDevToolCall, ...]
+    round_interval_seconds: float = 0.0
+    gc_at_end: bool = False
     events: list[MemorySampleEvent] = field(default_factory=list)
     health: McpServerHealthResult | None = None
     post_warmup_slopes_kib_per_round: dict[str, float] = field(default_factory=dict)
+    post_gc_change_kib: dict[str, int] = field(default_factory=dict)
     failure: DiagnosticFailure | None = None
     server_stderr_tail: str | None = None
     scope: str = (
         "one disposable real MCP process; no execution tree or host tmpfs attribution"
     )
     interpretation: str = (
-        "Slopes describe the recorded bounded request sequence only. Growth is not proof of a leak; "
+        "Slopes describe natural, pre-GC repeated-round samples only; optional final GC change "
+        "is separate sensitivity evidence, not the retention slope. Host telemetry is observational, "
+        "not admission or an automatic stop. Growth is not proof of a leak; "
         "flatness does not exonerate untested catalog, compile, custom-source, execution, JVM or GPU paths. "
         "Compare import/library/cache counts and repeat longer before attributing retention."
     )
+
+    def __post_init__(self) -> None:
+        if self.rounds < 2:
+            raise ValueError("A retention slope requires at least two repeated rounds.")
+        if not math.isfinite(self.round_interval_seconds) or self.round_interval_seconds < 0:
+            raise ValueError("Round interval must be finite and nonnegative.")
 
     def write(self, output: Path) -> None:
         output.write_text(json.dumps(asdict(self), indent=2) + "\n")
@@ -253,10 +289,13 @@ class MemoryDiagnosticMcpClient:
     session: McpDevStdioSession
     timeout_seconds: float
 
+    def __post_init__(self) -> None:
+        if not math.isfinite(self.timeout_seconds) or self.timeout_seconds <= 0:
+            raise ValueError("Per-call timeout must be finite and positive.")
+
     async def call(self, name: str, arguments: dict) -> McpDevToolResult:
         from openhcs.mcp.dev_client_core import McpDevToolResult
 
-        require_ram_headroom()
         wire = await self.session.call_tool(
             name, arguments, timeout_seconds=self.timeout_seconds
         )
@@ -280,8 +319,6 @@ class MemoryDiagnosticMcpClient:
         receipt.source_identity.require_authority(
             OpenHCSRuntimeImportAuthority.current()
         )
-        if receipt.rss_kib > 2 * 1024**2:
-            raise RuntimeError("Diagnostic MCP process exceeded its 2 GiB RSS budget")
         return receipt
 
 
@@ -329,6 +366,8 @@ async def diagnose(
     surface_profile: LocalCapabilitySurfaceProfile,
     scratch_root: Path = SCRATCH_ROOT,
     sequence_path: Path | None = None,
+    round_interval_seconds: float = 0.0,
+    gc_at_end: bool = False,
 ) -> MemoryDiagnosticReport:
     from openhcs.agent.capabilities import agent_capabilities
     from openhcs.mcp.dev_client_core import (
@@ -351,12 +390,14 @@ async def diagnose(
         )
     )
 
-    report = MemoryDiagnosticReport(rounds=rounds, request_sequence=sequence)
+    report = MemoryDiagnosticReport(
+        rounds=rounds, request_sequence=sequence,
+        round_interval_seconds=round_interval_seconds, gc_at_end=gc_at_end,
+    )
     output.parent.mkdir(parents=True, exist_ok=True)
 
     # stderr is bounded to this owned temporary stream; it is never copied into
     # a shared environment or another process's log.
-    require_ram_headroom()
     scratch_root.mkdir(parents=True, exist_ok=True)
     with (
         tempfile.TemporaryDirectory(prefix="mcp-", dir=scratch_root) as scratch,
@@ -369,8 +410,8 @@ async def diagnose(
         )
         try:
             async with McpDevStdioSession(spec, stderr) as session:
-                await session.initialize(timeout_seconds=timeout)
                 client = MemoryDiagnosticMcpClient(session, timeout)
+                await session.initialize(timeout_seconds=client.timeout_seconds)
                 health = await client.health()
                 report.health = health
                 if (
@@ -389,26 +430,33 @@ async def diagnose(
                     report.record(label, collect, receipt, output)
                     return receipt
 
-                await sample("baseline", True)
+                await sample("baseline", False)
                 # These are read-only discovery calls. The first round includes
                 # warm-up; subsequent rounds isolate repeated-request retention.
                 for request in sequence:
                     request.require_surface_profile(spec.surface_profile)
                 repeated: list[ProcessMemoryReceipt] = []
                 for round_index in range(rounds + 1):
+                    if round_index:
+                        await asyncio.sleep(report.round_interval_seconds)
                     for request in sequence:
                         await sample(
                             f"round-{round_index}/before/{request.name}", False
                         )
                         await client.call(request.name, request.arguments)
                         await sample(f"round-{round_index}/after/{request.name}", False)
-                        await sample(f"round-{round_index}/gc/{request.name}", True)
-                    end = await sample(f"round-{round_index}/end", True)
+                    end = await sample(f"round-{round_index}/end", False)
                     if round_index:
                         repeated.append(end)
                 report.post_warmup_slopes_kib_per_round = (
                     ProcessMemoryReceipt.retention_slopes(repeated)
                 )
+                report.write(output)
+                if report.gc_at_end:
+                    after_gc = await sample("final/gc", True)
+                    report.post_gc_change_kib = ProcessMemoryReceipt.retention_changes(
+                        repeated[-1], after_gc
+                    )
         except BaseException as error:
             report.failure = DiagnosticFailure(type(error).__name__, str(error))
             stderr.seek(0, 2)
@@ -435,6 +483,8 @@ def main() -> None:
     )
     parser.add_argument("--rounds", type=int, default=4)
     parser.add_argument("--timeout", type=float, default=30)
+    parser.add_argument("--round-interval-seconds", type=float, default=0.0)
+    parser.add_argument("--gc-at-end", action="store_true")
     parser.add_argument("--output", type=Path, default=Path("mcp-memory-receipt.json"))
     parser.add_argument("--scratch-root", type=Path, default=SCRATCH_ROOT)
     parser.add_argument(
@@ -459,19 +509,16 @@ def main() -> None:
     if args.server:
         serve(surface_profile)
         return
-    if not 2 <= args.rounds <= 10 or not 0 < args.timeout <= 60:
-        parser.error("rounds must be 2..10 and timeout must be >0..60 seconds")
     report = asyncio.run(
-        asyncio.wait_for(
-            diagnose(
+        diagnose(
                 args.rounds,
                 args.timeout,
                 args.output,
                 surface_profile=surface_profile,
                 scratch_root=args.scratch_root,
                 sequence_path=args.sequence_json,
-            ),
-            timeout=180,
+                round_interval_seconds=args.round_interval_seconds,
+                gc_at_end=args.gc_at_end,
         )
     )
     print(

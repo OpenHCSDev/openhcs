@@ -44,8 +44,8 @@ admission and exact PID-plus-creation-time process ownership; an uncertain tool
 outcome is not permission to retry, replace a process or replay science.
 
 Run receiving lanes serially after their actual resource/desktop owner hands off
-the slot. Preserve the original memory, CPU and swap bounds; do not raise a cap
-to obtain a pass. Keep startup/import/library preparation separate from repeated
+the slot. Observe actual host headroom, pressure and process usage; do not impose
+invented memory or swap caps. Keep startup/import/library preparation separate from repeated
 request growth and image/export work. Cleanup affects only identity-proved owned
 processes and disposable generated inputs after retaining final evidence.
 
@@ -64,7 +64,9 @@ The existing sampler is
 `MemoryDiagnosticMcpClient` owns typed tool results and samples. Extend these
 owners rather than adding a second launcher, observer, memory schema or loop.
 
-The current CLI has a 180-second overall limit and 2..10 repeat rounds.
+The diagnostic now records host availability, swap usage and full PSI alongside
+process accounting, without an 8-GiB admission floor or a 2-GiB process veto.
+Finite caller-selected rounds and cadence replace the 180-second overall quota.
 `read_request_sequence` admits only declared read-only calls; artifact-plan
 inspection and custom registration cannot be smuggled through it. A current
 short diagnostic command, after normal installed-source admission, is:
@@ -72,18 +74,18 @@ short diagnostic command, after normal installed-source admission, is:
 ```sh
 "$RECEIVING_PYTHON" -m openhcs.mcp.memory_diagnostic --source-identity
 "$RECEIVING_PYTHON" -m openhcs.mcp.memory_diagnostic \
-  --rounds 10 --timeout 30 --sequence-json "$READ_ONLY_SEQUENCE" \
+  --rounds 10 --round-interval-seconds 5 --timeout 30 \
+  --sequence-json "$READ_ONLY_SEQUENCE" \
   --scratch-root "$RECEIVING_ROOT/mcp-scratch" \
   --output "$RECEIVING_ROOT/read-only-memory.json"
 ```
 
 These commands do not provide the missing long-duration acceptance. Before that
-run, make the existing diagnostic's duration/cadence and retained event budget
-explicit on its current owner, keeping finite total duration and sample bounds.
+run, select finite rounds/cadence appropriate to actual resource observations.
 Use one continuing child for at least the original 38-minute observation window,
 with separate import/warmup, repeated operations and idle-release phases. The
 current per-call deadlines stay bounded; elapsed duration is not an increased
-tool timeout. Persist typed samples before a failure/ceiling terminates the run.
+tool timeout. Persist typed samples before any failed operation terminates the run.
 
 For declared mutations, use the existing client's normal public tool-call path
 with explicit admission of the owned synthetic source and destinations; retain
@@ -97,7 +99,9 @@ receipt remains unchanged and is not replayed.
 
 Sample MCP RSS/PSS/private dirty/swap, threads/modules, declared catalog/custom
 state and ObjectState snapshots before/after operations. Record natural release
-and optional GC observations separately; never restart the measured child or
+and optional final `--gc-at-end` observations separately. Natural end-of-round
+samples determine slopes; the final GC delta is separate sensitivity evidence.
+Never restart the measured child or
 force collection to present a flat natural trace. Attribute any owned native
 worker/viewer/JVM separately through its actual process incarnation. The saved
 short #575 native job need not be rerun to pad this MCP acceptance.
