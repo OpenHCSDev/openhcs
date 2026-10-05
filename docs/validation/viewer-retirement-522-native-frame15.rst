@@ -45,6 +45,12 @@ within-plane world position and native spatial calibration, not just former
 ordinals. An out-of-route or removed member does not invent a surviving identity;
 mounted native bounds still own clipping.
 
+The original pinned R0 on1cf90c9c is retained as frame-r0-15: it detects four
+additional raw transform-key reads. Those reads are replaced through Napari's
+existing Affine owner, constructed from the original admitted native kwargs.
+Its inverse, sliced forward transform and typed scale/translate own coordinate
+conversion; no raw transform codec or copied inverse arithmetic remains.
+
 ``NapariLayerDisplayPipeline.reconcile_mounted_axis_projections`` now prepares
 that one detached batch frame for domain changes too, not only slot insertion.
 Both rematerialized handlers and shape-neutral translation updates restore the
