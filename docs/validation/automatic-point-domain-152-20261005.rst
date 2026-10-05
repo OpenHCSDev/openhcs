@@ -57,10 +57,25 @@ replaces the incomplete SimpleNamespace, no production identity fallback.
 Exact logs/times are retained in the existing issue-batch engineering494 root:
 POINT-DOMAIN-CONTROLS01.log/.time and POINT-DOMAIN-CONTROLS02.log/.time.
 
-Finish the original fixture family migration for the prepare-then-save batch
-contract, then batch focused materialization/stream/domain controls. Legacy
-fixtures returning only a SimpleNamespace(save=...) need the actual batch
-contract; they are not product fallbacks. Public automatic producer settlement
+The28 legacy prepare spies were migrated to observe the original backend-kwargs
+owner after actual rendering, without replacing its batch or saver. Empty-label
+metadata-only fixtures now contain tiny real labels and use their declared
+min_area0; metadata/domain assertions remain. The RGB fixture now explicitly
+declares its output-image source address rather than relying on a fake save to
+invent a scalar channel from three source inputs. No production RGB fallback
+was added.
+
+Original FAMILY03 retained201PASS/10FAIL; nine cases observed no ROI because
+their old fixtures were empty, and one had the undeclared RGB scalar source.
+FAMILY04 is210PASS/1FAIL. The remaining original payload-scope volume-label
+control expects a represented Z domain. ROIMaterializationPlaneMetadataAuthority
+does not put that geometry domain on the rendered output when there is no
+pixel plane_axis, so the new output-derived request exposes that existing
+producer distinction. Its Z assertion is preserved; this is NOT full-family
+acceptance or a reason to fake a pixel axis. Point-domain controls remain PASS.
+The label domain needs the original ROI geometry owner follow-through.
+
+Public automatic producer settlement
 and same-viewer archive reopen with fractional-Z/calibration/features still
 require an original released engineering route. No runtime has been launched
 for this source checkpoint.
