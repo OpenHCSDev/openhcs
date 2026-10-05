@@ -17,7 +17,7 @@ The sole production caller of _identify_neurites_cellprofiler is this shared
 analyze method. The helper computes enhanced response once, adaptive candidate
 support, optional seeded-component retention and raw-unit local response, then
 intersects candidate support with the local-response gate before skeletonizing.
-It currently returns only combined mask, skeleton and response. Original enhanced
+Before this change it returned only combined mask, skeleton and response. Original enhanced
 and independent support values disappear at that return boundary.
 
 Existing _neurite_qa_checkpoint_output declares source-identifiable on-demand
@@ -118,7 +118,7 @@ checks, not actual installed native acceptance. No scientific author was given
 these controls or updated instructions. The new receiving packet reuses the
 existing public541 acquisition generator and normal launch/lifecycle owners.
 
-Acceptance remains ordinary installed native MCP
-float checkpoint persistence/reopen, exact source/channel/axis identity and
-matched raw/response/admitted views. Installed receiving needs the existing
-whole-candidate builder/lane handoff, not a frozen scientific bundle hotpatch.
+Ordinary installed native acceptance completed on receiving20. See
+neurite-admission890/LIVE-ACCEPTANCE01.rst and the byte-exact public archive.
+Source and native scope are now qualified; this is engineering observability,
+not biological tracing completeness or an active scientific bundle update.

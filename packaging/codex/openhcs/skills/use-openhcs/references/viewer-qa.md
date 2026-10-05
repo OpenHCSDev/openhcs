@@ -128,6 +128,30 @@ changed during capture, re-establish state and recapture the matched set before
 comparison. Repeat at necessary field, context and object scales; no single
 view is an acceptance witness.
 
+### Retain capture-time state custody
+
+When freezing QA, associate each PNG path/hash with its own snapshot response
+and the original applied navigation, isolation and presentation receipts for
+that capture. Do not attach the last full-state read to later captures after
+the viewport, visibility or contrast changed. A filename or requested window
+does not prove application; an applied viewport acknowledgement proves only
+the fields it returns, not complete capture-time visibility or contrast.
+Retain rejected controls and their captures as failed/provisional QA, distinct
+from corrected captures; never overwrite or relabel them. If the original
+receipts do not establish a field, mark it unverified rather than reconstructing
+it from an unrelated state or taking a new capture to rewrite frozen history.
+
+### Positive support versus instance separation
+
+A saturated single-colour display of all positive label IDs shows foreground
+support, not instance separation: touching instances can appear continuous
+because their interface is hidden. Use this display to review admission.
+Before claiming separation, inspect categorical instance IDs or per-ID outlines
+at the same native coordinates and read back the actual layer presentation.
+Tables and integer-ID profiles can corroborate identity, but do not replace
+visible dividing-boundary evidence. Retain useful localisation or admission
+evidence at that scope when full boundary separation remains unassessed.
+
 ### Points and centres
 
 Point results need the same three-view comparison; selected raw-plus-points

@@ -447,6 +447,21 @@ conditions. An attractive merged figure is not evidence of equal exposure or
 linear quantitative response. Segmentation error can select brighter cells
 preferentially and bias intensity even when total counts appear plausible.
 
+For compartment ratios or other eligibility-filtered endpoints, inspect the
+measurement population before the first aggregate interpretation. Keep object
+IDs and exclusion reasons, distinguish absent or unsupported compartments from
+measured zero, and report contributing objects alongside all detected objects
+per field/well. Check that exported means/medians use the declared eligible
+rows; a valid nullable table alone does not establish biological validity.
+If compartment admission depends on the reporter being measured, compare
+eligibility coverage and excluded raw-supported objects across dim/bright
+regions and conditions. Different coverage can select different populations,
+so retain useful conditional endpoints without presenting them as unbiased
+all-cell averages. Where the task needs that broader claim, investigate the
+supported detection/compartment model rather than merely relaxing exclusions
+or imputing zeros. There is no universal required eligibility fraction:
+justify the population and remaining uncertainty for the actual measurement.
+
 ## Dimensionality and calibrated quantities
 
 Distinguish 2-D plane measurements, projected measurements and true 3-D objects.
