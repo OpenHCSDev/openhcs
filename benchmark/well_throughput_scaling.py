@@ -2402,7 +2402,10 @@ def run_case_well_throughput(
     execution_client: ZMQExecutionClient | None = None,
     timing_observer: _ZMQProgressTimingObserver | None = None,
 ) -> WellThroughputResult:
-    """Run one converted cppipe over synthetic wells in a single OpenHCS execution."""
+    """Time public compilation/execution, including outcome delivery.
+
+    Benchmark diagnostics and memory-observer lifecycle are outside the clock.
+    """
     if (execution_client is None) != (timing_observer is None):
         raise ValueError(
             "A reused execution client and its progress observer must be supplied together."
@@ -2504,7 +2507,6 @@ def run_case_well_throughput(
     prepare_seconds = 0.0
     execute_seconds = 0.0
     successful_wells = 0
-    started_at = time.perf_counter()
     with MemoryMetric(
         interval_seconds=0.05,
         include_children=True,
@@ -2513,6 +2515,7 @@ def run_case_well_throughput(
             ChildProcessTerminator() if max_memory_mb is not None else None
         ),
     ) as memory_metric:
+        started_at = time.perf_counter()
         try:
             try:
                 if execution_client is None:
@@ -2548,9 +2551,10 @@ def run_case_well_throughput(
                 execute_seconds = _required_phase_seconds(
                     phase_timing, BenchmarkPhase.SERVER_PIPELINE_JOB
                 )
-            except KeyboardInterrupt:
-                peak_memory_mb = memory_metric.get_result()
                 total_seconds = time.perf_counter() - started_at
+            except KeyboardInterrupt:
+                total_seconds = time.perf_counter() - started_at
+                peak_memory_mb = memory_metric.get_result()
                 if memory_metric.limit_exceeded and max_memory_mb is not None:
                     return WellThroughputResult.memory_limited(
                         case_name=case_name,
@@ -2570,8 +2574,8 @@ def run_case_well_throughput(
                     )
                 raise
             except Exception as exc:
-                peak_memory_mb = memory_metric.get_result()
                 total_seconds = time.perf_counter() - started_at
+                peak_memory_mb = memory_metric.get_result()
                 if memory_metric.limit_exceeded and max_memory_mb is not None:
                     return WellThroughputResult.memory_limited(
                         case_name=case_name,
@@ -2610,7 +2614,6 @@ def run_case_well_throughput(
             )
     peak_memory_mb = memory_metric.get_result()
 
-    total_seconds = time.perf_counter() - started_at
     if memory_metric.limit_exceeded and max_memory_mb is not None:
         return WellThroughputResult.memory_limited(
             case_name=case_name,

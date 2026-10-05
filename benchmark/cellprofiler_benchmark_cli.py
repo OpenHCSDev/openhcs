@@ -381,7 +381,9 @@ class RunWellThroughputCommand(BenchmarkCliCommand):
             default=True,
             help=(
                 "Keep one ready client-owned server across observations (default). "
-                "Pipeline total_seconds excludes server startup and shutdown. "
+                "Pipeline total_seconds includes outcome delivery and excludes "
+                "server startup/shutdown, benchmark diagnostics, and RSS "
+                "observer setup/teardown. "
                 "Use --no-reuse-execution-server for cold-server diagnostics."
             ),
         )
