@@ -44,6 +44,7 @@ from openhcs.core.pipeline.function_contracts import (
     composed_image_payload,
     object_label_input_execution_mode,
     required_variable_components,
+    resolved_callable_parameter,
     runtime_bound_parameters,
     special_inputs,
 )
@@ -166,6 +167,9 @@ from openhcs.interop.cellprofiler.runtime.artifact_binding import (
 
 if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
+    from openhcs.interop.cellprofiler.runtime.output_record_request import (
+        CellProfilerOutputRecordRequest,
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -323,10 +327,32 @@ class ColocalizationSourcePairFeatureRelation(RuntimeMeasurementFeatureRelation)
         return self.absorbed_field_name or source_feature.value
 
 
-class MeasureColocalizationObjectMeasurementRowPolicy(
+class MeasureColocalizationMeasurementRowPolicy(
     DenseColumnarObjectMeasurementRowsMixin, CellProfilerObjectMeasurementRowPolicy
 ):
-    """Expand composed source stacks into source-pair object measurements."""
+    """Project image and object results to declared source-pair features."""
+
+    @classmethod
+    def complete_table_measurement_rows(
+        cls, request: CellProfilerOutputRecordRequest, rows: ColumnarRows
+    ) -> ColumnarRows:
+        """Record image results through the same declared source-pair features."""
+        func = request.callable_contract.resolve_canonical_raw_callable()
+        source_names = request.source.source_aliases
+        channel_indexes = tuple(
+            int(request.kwargs.get(name, resolved_callable_parameter(func, name).default))
+            for name in ("channel_1", "channel_2")
+        )
+        first_index, second_index = channel_indexes
+        source_pair = CellProfilerSourceImagePair.from_parts(
+            first_index=first_index,
+            second_index=second_index,
+            first_name=source_names[first_index],
+            second_name=source_names[second_index],
+        )
+        return cls.project_source_pair_columnar_rows(
+            rows, source_pair, metric_kwargs=request.kwargs
+        )
 
     def invocations(
         self,
@@ -497,7 +523,7 @@ class CostesMethod(Enum):
 class MeasureColocalizationModule(
     LabelsObjectInputPolicy,
     NoObjectNameMeasurementRecordMixin,
-    MeasureColocalizationObjectMeasurementRowPolicy,
+    MeasureColocalizationMeasurementRowPolicy,
     PerObjectMeasurementExecutionModule,
     SourceQualifiedMeasurementFeatureModule,
     ScopedMeasurementModule,
