@@ -45,7 +45,31 @@ module-to-post-run and complete invocation intervals, and OpenHCS execution,
 compilation and complete client-operation intervals. Multiwell native prices
 are measured batches, never extrapolated singleton timings.
 
-Local receiving: 134 focused existing export/matched controls pass, including
-actual two-axis spreadsheet materialization and scoped SQLite relationship
-comparison. Public two-assignment qualification is pending; this document
-claims no throughput result or minimum speedup.
+Receiving: 134 focused existing export/matched controls pass, including actual
+two-axis spreadsheet materialization and scoped SQLite relationship comparison.
+The ordinary Example3 qualification now passes one complete warm-up and one
+measured batch: both native assignments process one image set, OpenHCS executes
+both axes, and all four declared images match exactly with complete inventories.
+This recipe has no measurement export; it does not establish public multiwell
+CSV/SQLite parity for other recipes. [receiving.json](receiving.json) retains
+the precise scope, source, guards and raw evidence hashes.
+
+The single measured native batch takes 1.271224 s from first module through
+final post-run and 1.350442 s for the complete invocation. OpenHCS takes
+0.358190 s execution, 0.161058 s compilation and 0.653026 s for the complete
+client compile/execute operation. Server/catalog startup is excluded. This is
+infrastructure qualification, not the final three-repeat matrix or a minimum
+speedup claim. The native first-module interval also includes setup between
+assignments; keep that scope visible when reporting it.
+
+The first launch failed before native/candidate execution because the new
+caller passed a plain list instead of the existing well-filter configuration.
+That failure is retained. The successful raw report initially overwrote the
+compile submit/wait durations while grouping duplicate phase names. Corrected
+totals aggregate all original immutable receipt intervals through
+`PhaseTimingRecord.seconds_by_phase`; saved raw evidence is not rewritten.
+
+The native subprocess now honors the selected manifest's existing
+`CellProfilerRunRequest.timeout_seconds`. A declared budget covers each actual
+warm-up/measured invocation and repeated assignment; `None` remains unlimited.
+The unrelated hardcoded 900-second fallback is removed.

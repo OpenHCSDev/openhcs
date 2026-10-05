@@ -44,6 +44,7 @@ from benchmark.openhcs_measured_run import (
 )
 from benchmark.timing import (
     BenchmarkPhase,
+    PhaseTimingRecord,
     PhaseTimingTrace,
     additive_phase_total_seconds,
     completed_server_execution_seconds,
@@ -389,6 +390,7 @@ def _invoke_native_worker(
     evidence_prefix: Path,
     project_root: Path,
     repetitions: int,
+    timeout_seconds: float | None,
 ) -> dict[str, object]:
     temporary_root = evidence_prefix.with_name(evidence_prefix.name + "_tmp")
     temporary_root.mkdir(parents=True, exist_ok=False)
@@ -417,9 +419,13 @@ def _invoke_native_worker(
             stdout=stdout,
             stderr=stderr,
             text=True,
-            timeout=900
-            * (repetitions + 1)
-            * max(1, len(request.get("assignment_output_subdirectories", ()))),
+            timeout=(
+                None
+                if timeout_seconds is None
+                else timeout_seconds
+                * (repetitions + 1)
+                * max(1, len(request.get("assignment_output_subdirectories", ())))
+            ),
             check=False,
         )
     process.check_returncode()
@@ -682,7 +688,7 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
         ),
         first_image_set=None,
         last_image_set=None,
-        timeout_seconds=None,
+        timeout_seconds=case.cellprofiler_timeout_seconds,
         metrics=(),
         global_config=native_global_config,
     )
@@ -697,7 +703,7 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
         _replicate_source_binding_workspace_wells(
             prepared.materialization.metadata_path,
             wells,
-            source_well_filter=WellFilterConfig(well_filter=list(source_wells)),
+            source_well_filter=native_global_config.well_filter_config,
         )
     provenance["native_input_inventory"] = _source_input_inventory(
         native_domain.input_dir
@@ -727,6 +733,7 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
         evidence_prefix=root / "native",
         project_root=project_root,
         repetitions=args.repetitions,
+        timeout_seconds=native_request.timeout_seconds,
     )
     (root / "native_report.json").write_text(json.dumps(native_report, indent=2))
     native_image_set_counts = {
@@ -818,6 +825,7 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
                         evidence_prefix=root / "native_shards" / str(item[0]),
                         project_root=project_root,
                         repetitions=args.repetitions,
+                        timeout_seconds=native_request.timeout_seconds,
                     ),
                     enumerate(request_paths),
                 )
@@ -1129,10 +1137,9 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
             image for comparison in comparisons for image in comparison[5].images
         )
         native_exports = RuntimeExportObservation.from_output_roots((native_root,))
-        phase_seconds = {
-            timing.phase.name: timing.seconds
-            for timing in completed.receipt.phase_timings
-        }
+        phase_seconds = PhaseTimingRecord.seconds_by_phase(
+            completed.receipt.phase_timings
+        )
         result = {
             "repetition": repetition,
             "execution_id": completed.execution_id,
