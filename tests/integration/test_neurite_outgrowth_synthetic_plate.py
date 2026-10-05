@@ -465,10 +465,10 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
                 assert isinstance(branch_roi.shapes[0], PolylineShape)
                 assert branch_roi.metadata["label"] == 1
                 assert branch_roi.metadata["neuron_label"] == 1
-                assert branch_roi.metadata["branch_distance_um"] > 0
-                assert branch_roi.metadata["euclidean_distance_um"] > 0
+                assert branch_roi.metadata["branch_distance"] > 0
+                assert branch_roi.metadata["euclidean_distance"] > 0
                 assert branch_roi.metadata["tortuosity"] >= 1.0
-                assert branch_roi.metadata["distance_from_soma_um"] >= 0
+                assert branch_roi.metadata["distance_from_soma"] >= 0
                 assert "branch_type" in branch_roi.metadata
 
         summaries = sorted(

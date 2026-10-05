@@ -57,9 +57,9 @@ class ProjectionAudit:
         self.projection_events = []
         super().__init__(**kwargs)
 
-    def contextualized_source_provenance(self, provenance):
+    def contextualized_source_metadata(self, metadata):
         self.projection_events.append("before")
-        result = super().contextualized_source_provenance(provenance)
+        result = super().contextualized_source_metadata(metadata)
         self.projection_events.append("after")
         return result
 
@@ -93,7 +93,7 @@ def graph_and_plan(*, plane, graph_type=SpatialGraph, extra_features=None):
         name="declared_graph",
         nodes=nodes,
         edges=edges,
-        coordinate_spacing=(1.3556, 1.3556),
+        coordinate_spacing=SourceVoxelSpacing((1.3556, 1.3556)),
         source_plane_index=plane,
     )
     neurons = ArtifactSpec.output("neurons", ObjectLabelsArtifactType)
@@ -129,7 +129,7 @@ def contextualize(graph, plan):
             ),
         ),
         source_image_names=("nuclear", "body"),
-        source_voxel_spacing=SourceVoxelSpacing(graph.coordinate_spacing),
+        source_voxel_spacing=graph.coordinate_spacing,
     )
     source = metadata.payload_with(np.zeros((2, 16, 16), dtype=np.uint8))
     result = (ImageArtifactType if plan is None else plan.artifact_type).contextualize_output(
@@ -178,7 +178,7 @@ def test_declared_source_plane_survives_graph_writer_zip_and_subject_features(
         == ("/engineering/nuclear.tif", "/engineering/body.tif")[plane]
     )
     assert metadata.source_component_metadata["channel"] == plane + 1
-    assert metadata.source_voxel_spacing == SourceVoxelSpacing(graph.coordinate_spacing)
+    assert metadata.source_voxel_spacing == graph.source_voxel_spacing
     assert metadata.plane_axis is None
     assert metadata.source_spatial_domain == output.metadata.source_spatial_domain
     assert path.name == "misleading_w99_z999.graph.roi.zip"
