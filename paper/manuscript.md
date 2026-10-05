@@ -254,6 +254,13 @@ intersection over union at least 0.5. Scores were not supplied to the authors.
 Supplementary Data 8 retains per-field results, source identities and
 first-to-final comparisons within their actual coverage.
 
+Across the 197 fields with annotated nuclei, median field F1 was 0.919,
+0.917 and 0.916 for the Figure 5 author and repeats A and B, respectively.
+Seven, eight and seven of these fields had F1 below 0.80. Predictions in the
+three annotation-empty fields varied more strongly: 37, 218 and zero,
+respectively. Similar pooled scores therefore coexisted with different
+behavior on these negative-reference fields.
+
 The Supplementary Figure 20 repeat improved 61 field scores, reduced 123 and
 left 16 unchanged relative to the Figure 5 run; 314 additional misses accounted
 for most of its lower pooled F1. The subsequent repeat reached field F1 at
