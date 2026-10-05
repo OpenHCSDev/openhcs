@@ -232,7 +232,12 @@ did not improve overall reference agreement. Another repeat completed all
 200 fields across two execution phases with unchanged scientific parameters;
 its regional review retained useful detections and unresolved splits or merges,
 but no reference score was obtained. Execution coverage and segmentation
-quality are reported separately (Supplementary Data 8).
+quality are reported separately (Supplementary Data 8). A further independent
+author completed all 200 fields and achieved precision 0.946, recall 0.856 and
+pooled F1 0.898 against the same references. Compared with the earlier complete
+run, 61 field scores improved, 123 decreased and 16 were unchanged. The repeat
+retained useful agreement but did not improve overall accuracy; 314 additional
+misses accounted for most of the reduction (Supplementary Figure 20).
 
 ### Image review supports local repair with regression controls
 
@@ -321,6 +326,19 @@ processed a nine-field mosaic with shared channel fits and paths across sampled
 joins, but incomplete nuclear and soma detection limited its morphology
 measurements. That assisted continuation is distinct from fresh autonomous
 authoring.
+
+A fresh, treatment-aware translocation author completed all 96 BBBC013 wells
+using scientific settings chosen from six development wells and frozen before
+the remaining 90 were opened. Its measured first candidate retained ordinary
+nuclei and separated inspected close pairs. Fixed ten-pixel expansions supplied
+local cytoplasmic measurement regions, not validated whole-cell boundaries.
+The resulting negative/positive control mean GFP ratios were 1.05/7.40 for
+Wortmannin (Z-prime 0.747) and 1.26/7.33 for LY294002 (Z-prime 0.493), with
+four wells per control group. Independent recalculation from all 96 well tables
+reproduced the dose summaries and assay statistics. This fresh-context repeat
+supports recovery of the assay response, not exhaustive segmentation accuracy
+or unseen-dataset generalisation; it is distinct from the prospective experiment
+above (Supplementary Data 8).
 
 Together, the task-only trials demonstrate useful initial choices, local
 recovery and self-diagnosis without reference-score feedback. Their quantitative

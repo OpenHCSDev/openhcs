@@ -315,6 +315,76 @@ def task_only_story():
         sheet.save()
 
 
+def bbbc039_repeat():
+    """Compare independent frozen authors using their existing score receipts."""
+    from build_slas_task_only import BBBC039_SOURCE
+
+    earlier_path = ROOT / BBBC039_SOURCE
+    repeat_path = ROOT / "figure-collection-20261004/bbbc039-fresh10coverage-postfreeze-evaluation.json"
+    earlier = json.loads(earlier_path.read_text())
+    repeat = json.loads(repeat_path.read_text())
+    if digest(earlier_path) != repeat["comparison612"]["report_sha256"]:
+        raise ValueError("Repeat comparison must use the exact earlier receipt")
+    key = lambda row: (row["source_set_id"], row["channel"], row["partition"])
+    previous = {key(row): row for row in earlier["instance_metrics"]}
+    current = {key(row): row for row in repeat["instance_metrics"]}
+    if len(previous) != 200 or previous.keys() != current.keys():
+        raise ValueError("Independent repeat requires the same 200 field identities")
+    if repeat["match_iou"] != earlier["match_iou"] or repeat["match_iou"] != .5:
+        raise ValueError("Independent repeat requires the same IoU matching rule")
+    for identity, row in current.items():
+        if row["reference_count"] != previous[identity]["reference_count"]:
+            raise ValueError("Reference population changed between authors")
+
+    with plt.rc_context({"font.size": 14, "axes.titlesize": 15,
+                         "axes.spines.top": False, "axes.spines.right": False}):
+        sheet = FigureSheet("bbbc039_independent_repeat", "", 4.9)
+        sheet.source(earlier_path)
+        sheet.source(repeat_path)
+        sheet.text(3, 98, "Independent authors: agreement across the same 200 fields",
+                   size=18, weight="bold", va="top")
+        scatter = sheet.figure.add_axes((.09, .27, .35, .55))
+        pooled = sheet.figure.add_axes((.61, .27, .35, .55))
+        for empty, color, label in (
+            (False, BLUE, "Annotated fields"),
+            (True, ORANGE, "Annotation-empty fields (n=3)"),
+        ):
+            rows = [row for row in current.values()
+                    if (row["reference_count"] == 0) == empty]
+            scatter.scatter([100 * previous[key(row)]["f1"] for row in rows],
+                            [100 * row["f1"] for row in rows],
+                            s=24, alpha=.75, color=color, label=label, zorder=3)
+        scatter.plot((0, 100), (0, 100), "--", color=MUTED, linewidth=1)
+        scatter.set(title="A  Paired field scores", xlabel="Earlier author F1 (%)",
+                    ylabel="Independent repeat F1 (%)", xlim=(-3, 103), ylim=(-3, 103))
+        scatter.set_aspect("equal", adjustable="box")
+        for offset, record, color, label in (
+            (-.18, earlier, BLUE, "Earlier author"),
+            (.18, repeat, TEAL, "Independent repeat"),
+        ):
+            values = [100 * record["summary"][name]
+                      for name in ("precision", "recall", "micro_f1")]
+            bars = pooled.bar([index + offset for index in range(3)], values,
+                              width=.34, color=color, label=label)
+            pooled.bar_label(bars, labels=[f"{value:.2f}" for value in values],
+                             padding=3, fontsize=12, rotation=90)
+        pooled.set(title="B  Pooled object agreement", ylabel="Agreement (%)",
+                   xticks=(0, 1, 2), xticklabels=("Precision", "Recall", "F1"),
+                   ylim=(0, 112), yticks=(0, 20, 40, 60, 80, 100))
+        pooled.legend(frameon=False, fontsize=11, loc="upper center",
+                      bbox_to_anchor=(.5, -.24), ncol=2)
+        for axis in (scatter, pooled):
+            axis.grid(color="#d9e0e5", linewidth=.6)
+            axis.set_axisbelow(True)
+        counts = repeat["distribution"]
+        sheet.text(50, 4,
+                   f"{counts['improved_vs612']} fields improved; "
+                   f"{counts['regressed_vs612']} lower; "
+                   f"{counts['unchanged_vs612']} unchanged",
+                   size=14, ha="center", color=MUTED)
+        sheet.save()
+
+
 def h004_junction():
     """Retained neurite support repair, separate from crossing ownership."""
     sheet = FigureSheet("h004_junction_native", "", 6.3)

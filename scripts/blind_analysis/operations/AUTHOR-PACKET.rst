@@ -34,16 +34,25 @@ Never replay UNKNOWN/interrupted operations. No installation, download,
 environment/provider/model change, new agent or restart.
 Read current registered input contracts before supplying arguments.
 
-Before EACH action choose a UNIQUE observation name AND an explicit admission
-mode from its actual resource effects. Inspect the registered capability's
+Observe actual resources before starting a coherent bounded read/QA burst on
+your recorded live client. Choose a UNIQUE observation name and an explicit
+mode from the work's actual resource effects. Inspect registered capability
 read_only/mutating/side_effects declarations, request size, simultaneous buffers
 and destination space; read-only does not imply cheap. For bounded status,
-observation, small QA or owned cleanup on your recorded live client use::
+observation, small captures/display changes or exact owned cleanup use::
 
   bash "$FLEET_OPERATIONS/resource-check.sh" "$FLEET_ROOT" "$FLEET_SLOT" UNIQUE_PHASE ongoing
 
-For new or large allocations, including full-frame scientific execution,
-materializing a large array or a full export, size the actual work and use::
+After reading that observation, complete related small state reads, display
+changes and matched QA captures without another resource check before each
+command. Recheck when pressure/headroom or the work's size changes, another
+allocation starts, or a resource/write failure appears. A burst is not a cached
+grant: every tool keeps its ordinary path, revision and incarnation checks.
+Do not add a timer, polling loop, cached permission or second admission owner.
+
+Before cold native startup or new/large allocations, including full-frame
+scientific execution, materializing a large array or a full export, size the
+actual incremental work and take a fresh observation using::
 
   bash "$FLEET_OPERATIONS/resource-check.sh" "$FLEET_ROOT" "$FLEET_SLOT" UNIQUE_PHASE full
 

@@ -1,0 +1,98 @@
+{
+  "status": "QUALIFIED_PASS",
+  "source_head": "3a961d1873411525611415b8075ffad19bc2aec3",
+  "compile_seconds": 0.2550678253173828,
+  "execute_seconds": 3.434164524078369,
+  "total_seconds": 3.7827842039987445,
+  "native_narrow_seconds": 8.91320256376639,
+  "native_full_seconds": 9.083003505598754,
+  "execution_speedup": 2.595450072724293,
+  "total_speedup": 2.40114239030532,
+  "science_sha256": "56453e4be49f353bdd1799d575817174cf19d7890539014a6f74b66f3e3a77ba",
+  "science": {
+    "measurements": "PASS",
+    "relationships": "PASS",
+    "images": "EXACT_PASS",
+    "complete_inventory": "PASS",
+    "logical_images": [
+      21,
+      21
+    ],
+    "physical_images": [
+      21,
+      21
+    ],
+    "participating_table_rows": [
+      [
+        65,
+        21
+      ],
+      [
+        65,
+        21
+      ]
+    ]
+  },
+  "limitations": "One current production observation vs authenticated retained fresh native observation. Server/JVM/catalog/kernel startup excluded. Delta vs prior OpenHCS observation includes intervening main changes; not patch-isolated attribution.",
+  "ordinary_receipt_sha256": "dee46e4aa047283335d5f461bc4bc3af285b1135f8d693305a5be824c10bad8e",
+  "native_report_sha256": "bac48208c6c5ca23c02f64cdd33c8ba6df42fd94a6ca1da50f3134f0550e6b4d",
+  "native_source_head_at_capture": "76ade54345b74e76db8577ab4cca587ce7199ca6",
+  "native_image_sets": 21,
+  "input_sha256": {
+    "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleTrackObjects/images/Sequence1/DrosophilaEmbryo_GFPHistone_0000.tif": "dc8ee9164e2886baf41913e5ecdfdb7281e33612b97b33318341ca2b1da09922",
+    "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleTrackObjects/images/Sequence1/DrosophilaEmbryo_GFPHistone_0001.tif": "299e7ddf8ba39605e0495ffb0486ce3b387146a8f93b23adaeee6cf5a03e3100",
+    "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleTrackObjects/images/Sequence1/DrosophilaEmbryo_GFPHistone_0002.tif": "1b0027bc52faf17e1e5ec2b5b51c2e2b2bac8bd11a4b70c94050cc8a0145a5dd",
+    "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleTrackObjects/images/Sequence1/DrosophilaEmbryo_GFPHistone_0003.tif": "1b0027bc52faf17e1e5ec2b5b51c2e2b2bac8bd11a4b70c94050cc8a0145a5dd",
+    "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleTrackObjects/images/Sequence1/DrosophilaEmbryo_GFPHistone_0004.tif": "57c28ea5232a64bd92b6065f2e5e77eb7394a7a13dba9be5522428dee03fcbfa",
+    "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleTrackObjects/images/Sequence1/DrosophilaEmbryo_GFPHistone_0005.tif": "c211756813182c994a3f00f9f43abfe0c6dc7154771c97f06f6cf289b0add983",
+    "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleTrackObjects/images/Sequence1/DrosophilaEmbryo_GFPHistone_0006.tif": "c211756813182c994a3f00f9f43abfe0c6dc7154771c97f06f6cf289b0add983",
+    "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleTrackObjects/images/Sequence1/DrosophilaEmbryo_GFPHistone_0007.tif": "e9f2a93662b4f30e6f9d0d45e664bfbcb2067b83e5b5f62239a06acfa73d38e2",
+    "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleTrackObjects/images/Sequence1/DrosophilaEmbryo_GFPHistone_0008.tif": "be8dd4918878611a8df7717a55489a989eb9e2d1426a84e6c761fac3049c92ed",
+    "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleTrackObjects/images/Sequence1/DrosophilaEmbryo_GFPHistone_0009.tif": "be8dd4918878611a8df7717a55489a989eb9e2d1426a84e6c761fac3049c92ed",
+    "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleTrackObjects/images/Sequence1/DrosophilaEmbryo_GFPHistone_0010.tif": "178dd3d8dea92994607d013d0290a96d764377701c5acf935bcbfb03ec3bd195",
+    "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleTrackObjects/images/Sequence1/DrosophilaEmbryo_GFPHistone_0011.tif": "5c35a8daec648d3a532499a3d149fd7fcf8e8365acfbe157e778f68769862926",
+    "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleTrackObjects/images/Sequence1/DrosophilaEmbryo_GFPHistone_0012.tif": "5c35a8daec648d3a532499a3d149fd7fcf8e8365acfbe157e778f68769862926",
+    "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleTrackObjects/images/Sequence1/DrosophilaEmbryo_GFPHistone_0013.tif": "422fe4de42591144de294016426a976c6ff525e8d2774124ccbced8b11849d15",
+    "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleTrackObjects/images/Sequence1/DrosophilaEmbryo_GFPHistone_0014.tif": "e3403abfacb8a347bb877b4a48f39c385f2169daac810197fb3d4c1b80ae2407",
+    "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleTrackObjects/images/Sequence1/DrosophilaEmbryo_GFPHistone_0015.tif": "e3403abfacb8a347bb877b4a48f39c385f2169daac810197fb3d4c1b80ae2407",
+    "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleTrackObjects/images/Sequence1/DrosophilaEmbryo_GFPHistone_0016.tif": "390a1765ec69d560e0b894c18cd5f1fe803243f24497a0ee6799bb165144f849",
+    "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleTrackObjects/images/Sequence1/DrosophilaEmbryo_GFPHistone_0017.tif": "e5e0abb57d3f1d2938d139f8f5e3261a6d72a04c8f1f135e44b7df190841450c",
+    "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleTrackObjects/images/Sequence1/DrosophilaEmbryo_GFPHistone_0018.tif": "e5e0abb57d3f1d2938d139f8f5e3261a6d72a04c8f1f135e44b7df190841450c",
+    "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleTrackObjects/images/Sequence1/DrosophilaEmbryo_GFPHistone_0019.tif": "8d249b61aa65c8163cb129366e7696f882b4c4446f3b2d0ac168b2afd02a7d25",
+    "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleTrackObjects/images/Sequence1/DrosophilaEmbryo_GFPHistone_0020.tif": "f94235beb2e7992aa3f55fddb5baa3d81a549d3f26aa516d2650aaa4a3eb93a6"
+  },
+  "ordinary_row": {
+    "case_name": "ExampleTrackObjects",
+    "mode_name": "1w_1t",
+    "worker_count": "1",
+    "well_count": "1",
+    "compile_seconds": "0.2550678253173828",
+    "prepare_seconds": "0.0",
+    "execute_seconds": "3.434164524078369",
+    "total_seconds": "3.7827842039987445",
+    "wells_per_second": "0.2911916400593449",
+    "successful_wells": "1",
+    "native_single_sample_execution_seconds": "",
+    "projected_native_execution_seconds": "",
+    "projected_execution_speedup": "",
+    "peak_memory_mb": "1812.8515625",
+    "status": "success",
+    "memory_limit_mb": "",
+    "error_message": "",
+    "execution_route": "ordinary-zmq-outcomes-v1",
+    "server_lifecycle": "reused-per-sweep",
+    "run_input_sha256": "19d49daf3abbd1a62bcc9627ec21761a80e80d0ccbbb6d0985758fa54f86f5af"
+  },
+  "validation": {
+    "ordinary_session": 80999,
+    "science_session": 51283,
+    "return_codes": [
+      0,
+      0
+    ],
+    "source_input_native_helpers_eight_dependencies_four_native_abis": "PASS",
+    "owned_processes_absent": 3,
+    "leases": "RELEASED",
+    "post_qualification_main_sync": "1263e2bd: documentation-only delta; qualified runtime bytes unchanged"
+  }
+}
