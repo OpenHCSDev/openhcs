@@ -1,0 +1,178 @@
+"""Native batch measurement records shared without importing OpenHCS.
+
+The native worker imports this adjacent module directly under Python 3.9;
+OpenHCS consumers import the same owners through the benchmark package.
+"""
+
+from __future__ import annotations
+
+import math
+from dataclasses import dataclass, replace
+from pathlib import Path
+from typing import Mapping, Optional
+
+
+@dataclass(frozen=True)
+class NativeBatchRequest:
+    pipeline_path: str
+    input_dir: str
+    output_root: str
+    expected_image_sets: Optional[int]
+    repetitions: int
+    file_list_path: Optional[str] = None
+    first_image_set: int = 1
+    last_image_set: Optional[int] = None
+    report_path: Optional[str] = None
+    start_barrier_root: Optional[str] = None
+    start_barrier_job_count: int = 1
+    start_barrier_job_index: int = 0
+    assignment_output_subdirectories: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        assignments = tuple(self.assignment_output_subdirectories)
+        if len(assignments) != len({Path(assignment) for assignment in assignments}):
+            raise ValueError("Native assignment output directories must be unique")
+        for assignment in assignments:
+            path = Path(assignment)
+            if not path.parts or path.is_absolute() or ".." in path.parts:
+                raise ValueError(
+                    "Native assignments require relative output directories"
+                )
+        object.__setattr__(self, "assignment_output_subdirectories", assignments)
+
+    def require_same_workload(self, current: NativeBatchRequest) -> None:
+        """Compare every workload field; driver validates the physical path roles."""
+        same_roles = replace(
+            current,
+            pipeline_path=self.pipeline_path,
+            input_dir=self.input_dir,
+            output_root=self.output_root,
+            file_list_path=self.file_list_path,
+            report_path=self.report_path,
+        )
+        if same_roles != self:
+            raise RuntimeError("Retained native request workload differs.")
+
+
+@dataclass(frozen=True)
+class NativeBatchObservation:
+    repetition: int
+    output_root: str
+    image_set_count: int
+    invocation_seconds: float
+    pre_first_module_seconds: float
+    first_module_through_post_run_seconds: float
+    invocation_started_monotonic_seconds: float
+    first_module_started_monotonic_seconds: float
+    completed_monotonic_seconds: float
+    assignment_image_set_counts: tuple[tuple[str, int], ...]
+
+
+@dataclass(frozen=True)
+class NativeBatchEnvironment:
+    python_executable: str
+    python_version: str
+    cellprofiler_version: str
+    cellprofiler_core_version: str
+    numpy_version: str
+    scipy_version: str
+    temporary_root: str
+
+    @classmethod
+    def capture(cls) -> NativeBatchEnvironment:
+        """Capture the declared native environment for both producer and probe."""
+        import platform
+        import sys
+        import tempfile
+        import cellprofiler
+        import cellprofiler_core
+        import numpy
+        import scipy
+
+        return cls(
+            python_executable=sys.executable,
+            python_version=platform.python_version(),
+            cellprofiler_version=cellprofiler.__version__,
+            cellprofiler_core_version=cellprofiler_core.__version__,
+            numpy_version=numpy.__version__,
+            scipy_version=scipy.__version__,
+            temporary_root=tempfile.gettempdir(),
+        )
+
+    def require_equivalent(self, current: NativeBatchEnvironment) -> None:
+        """Per-case temporary scratch paths are outside the declared benchmark scope."""
+        if replace(current, temporary_root=self.temporary_root) != self:
+            raise RuntimeError("Retained native declared environment differs.")
+
+
+@dataclass(frozen=True)
+class NativeBatchReport:
+    startup_seconds: float
+    environment: NativeBatchEnvironment
+    request: NativeBatchRequest
+    observations: tuple[NativeBatchObservation, ...]
+
+    @classmethod
+    def from_payload(cls, payload: Mapping[str, object]) -> NativeBatchReport:
+        return cls(
+            startup_seconds=payload["startup_seconds"],
+            environment=NativeBatchEnvironment(**payload["environment"]),
+            request=NativeBatchRequest(**payload["request"]),
+            observations=tuple(
+                NativeBatchObservation(**row) for row in payload["observations"]
+            ),
+        )
+
+    def require_complete(self, repetitions: int) -> None:
+        """Require whole original runs with actual additive monotonic clocks."""
+        if repetitions < 1 or self.request.repetitions != repetitions:
+            raise RuntimeError("Retained native request repetition count differs.")
+        if tuple(row.repetition for row in self.observations) != tuple(
+            range(-1, repetitions)
+        ):
+            raise RuntimeError(
+                "Retained native repetitions are incomplete or reordered."
+            )
+        output_root = Path(self.request.output_root)
+        previous_completed = None
+        for row in self.observations:
+            invocation = row.invocation_started_monotonic_seconds
+            first_module = row.first_module_started_monotonic_seconds
+            completed = row.completed_monotonic_seconds
+            if (
+                not all(
+                    math.isfinite(value)
+                    for value in (invocation, first_module, completed)
+                )
+                or not invocation <= first_module < completed
+                or (previous_completed is not None and invocation < previous_completed)
+            ):
+                raise RuntimeError("Retained native clock boundaries are invalid.")
+            for value, expected in (
+                (row.invocation_seconds, completed - invocation),
+                (row.pre_first_module_seconds, first_module - invocation),
+                (row.first_module_through_post_run_seconds, completed - first_module),
+            ):
+                if not math.isclose(value, expected, rel_tol=0.0, abs_tol=1e-9):
+                    raise RuntimeError(
+                        "Retained native duration disagrees with its clock."
+                    )
+            run_root = Path(row.output_root)
+            if run_root != output_root / str(row.repetition):
+                raise RuntimeError(
+                    "Retained native output root differs from its request."
+                )
+            if not any(path.is_file() for path in run_root.rglob("*")):
+                raise RuntimeError(
+                    "Retained native observation has no physical outputs."
+                )
+            assignments = row.assignment_image_set_counts
+            if (
+                row.image_set_count < 1
+                or tuple(item[0] for item in assignments)
+                != (self.request.assignment_output_subdirectories or ("",))
+                or any(item[1] < 1 for item in assignments)
+                or sum(item[1] for item in assignments) != row.image_set_count
+            ):
+                raise RuntimeError("Retained native assignment coverage is invalid.")
+            previous_completed = completed
