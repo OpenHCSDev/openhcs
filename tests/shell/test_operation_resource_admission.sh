@@ -186,8 +186,35 @@ printf 'MemAvailable: 16454287 kB\n' > "$scratch/host/meminfo"
 sha256sum "$runtime/resources-original_review".* > "$scratch/original-receipt.sha256"
 run 1 ongoing original_review
 sha256sum --check --quiet "$scratch/original-receipt.sha256"
-printf '1\n' > "$runtime/first-mcp-started.epoch"
-run 1 ongoing expired_clock
+# Exact original BB13 close-refusal timing, through the original mode owner.
+# Host clock is controlled; no real client/native or expired request is replayed.
+export CONTROLLED_NOW=10000
+printf '5498\n' > "$runtime/first-mcp-started.epoch"
+run 0 ongoing expired_owned_cleanup
+rg -q 'Deadline elapsed=4502 allowed=4500 seconds; mode=ongoing policy=warning' "$runtime/resources-expired_owned_cleanup.deadline"
+rg -q 'Scientific interval expired:' "$runtime/resources-expired_owned_cleanup.deadline"
+rg -q 'Existing recorded client' "$scratch/expired_owned_cleanup.log"
+run 1 full expired_scientific_dispatch
+run 1 replacement expired_client_startup
+run 1 bootstrap expired_helper_startup
+run 0 ledger expired_ledger
+rg -q 'Ledger-only PASS; not SCI admission' "$scratch/expired_ledger.log"
+export CONTROLLED_MCP_ACTIVE=0
+run 1 ongoing expired_dead_client
+unset CONTROLLED_MCP_ACTIVE
+# Warn does not disable the ordinary physical-space validation.
+export CONTROLLED_HOME_BYTES=0
+run 78 ongoing expired_exhausted_destination
+export CONTROLLED_HOME_BYTES=8353711390
+printf '5500\n' > "$runtime/first-mcp-started.epoch"
+run 1 full deadline_exact_boundary
+printf '5501\n' > "$runtime/first-mcp-started.epoch"
+run 0 full deadline_one_second_remaining
+(cd "$scratch/run"; sha256sum --check --quiet READY-FREEZE.sha256)
+printf '5498\n' > "$runtime/first-mcp-started.epoch"
+sha256sum "$runtime/first-mcp-started.epoch" "$runtime/resources-expired_owned_cleanup.deadline" > "$scratch/expired-custody.sha256"
+run 1 ongoing expired_owned_cleanup
+sha256sum --check --quiet "$scratch/expired-custody.sha256"
 (cd "$scratch/run"; sha256sum --check --quiet READY-FREEZE.sha256)
 sha256sum --check --quiet "$scratch/client-journals.sha256"
-printf 'PASS original immutable run, deadline, receipt uniqueness and no client/native custody preserved\n'
+printf 'PASS original immutable run, scientific deadline, expired settlement, receipt uniqueness and no client/native custody preserved\n'

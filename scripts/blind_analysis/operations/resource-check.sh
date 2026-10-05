@@ -12,22 +12,26 @@ mode=${4:?explicit operation mode: ongoing, full, replacement, bootstrap or ledg
 # Desktop reserve describes future growth admission. Below-reserve
 # ongoing observations must still be able to resolve jobs and release buffers.
 case "$mode" in
-  ongoing) memory_policy=warning; disk_policy=warning ;;
-  full|replacement|bootstrap) memory_policy=reject; disk_policy=reject ;;
-  ledger) memory_policy=ledger; disk_policy=warning ;;
+  ongoing) memory_policy=warning; disk_policy=warning; deadline_policy=warning ;;
+  full|replacement|bootstrap) memory_policy=reject; disk_policy=reject; deadline_policy=reject ;;
+  ledger) memory_policy=ledger; disk_policy=warning; deadline_policy=warning ;;
   *) exit 64 ;;
 esac
 runtime="$FLEET_WORKSPACE/output/runtime"
 mkdir -p "$runtime"
+receipt="$runtime/resources-$phase"
+test ! -e "$receipt.output"
+test ! -e "$receipt.deadline"
 if [[ -e "$runtime/first-mcp-started.epoch" ]]; then
   started=$(<"$runtime/first-mcp-started.epoch")
   minutes=$(jq -er '.task_minutes_from_first_mcp_start' "$FLEET_RUN_ROOT/program.json")
   elapsed=$(($(date -u +%s)-started))
-  printf 'Deadline elapsed=%s allowed=%s seconds\n' "$elapsed" "$((minutes*60))"
-  test "$elapsed" -lt "$((minutes*60))"
+  printf 'Deadline elapsed=%s allowed=%s seconds; mode=%s policy=%s\n' "$elapsed" "$((minutes*60))" "$mode" "$deadline_policy" | tee "$receipt.deadline"
+  if [[ "$elapsed" -ge "$((minutes*60))" ]]; then
+    printf 'Scientific interval expired: no new scientific work or process startup. Existing-client observation, evidence freeze and exact owned cleanup remain permitted; ledger is not dispatch permission.\n' | tee -a "$receipt.deadline"
+    [[ "$deadline_policy" != reject ]]
+  fi
 fi
-receipt="$runtime/resources-$phase"
-test ! -e "$receipt.output"
 # Ongoing means an already recorded live client, not permission to bootstrap
 # another process. The existing recorder owns this incarnation and its clock.
 if [[ "$mode" == ongoing ]]; then fleet_require_live_client; fi
