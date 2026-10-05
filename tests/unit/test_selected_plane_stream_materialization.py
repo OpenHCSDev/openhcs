@@ -40,7 +40,7 @@ from openhcs.core.runtime_plane_projection import (
 )
 from openhcs.core.runtime_spatial_graph import SpatialGraph, SpatialGraphNode
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
 
 from openhcs.core.steps.function_artifact_materialization import (
     PersistentArtifactMaterializationTargetPlan,
@@ -248,10 +248,11 @@ def test_all_public_declared_outputs_persist_with_selected_qa_streams(
         image=source, labels=labels, plane_projection=projection
     ).payload()
     summary = NeuriteOutgrowthSummary(
-        **{field.name: 0 for field in fields(NeuriteOutgrowthSummary)}
+        **{field.name: 0 for field in fields(NeuriteOutgrowthSummary) if field.name != "coordinate_unit"},
+        coordinate_unit=SourceVoxelSpacingUnit.MICROMETERS,
     )
     cell = NeuriteOutgrowthCellResult(
-        1, 1, 0.0, 0, 0.0, 0.0, 0.0, 0, 0.0, 1.0, 0.0, False
+        1, 1, SourceVoxelSpacingUnit.MICROMETERS, 0.0, 0, 0.0, 0.0, 0.0, 0, 0.0, 1.0, 0.0, False
     )
     selected = ImageArtifactType.contextualize_output(
         source,

@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import Enum, StrEnum
 from functools import lru_cache
 from math import isfinite
 from pathlib import Path
@@ -841,7 +841,7 @@ class SourceFilterPathMetadata:
         )
 
 
-class SourceVoxelSpacingUnit(Enum):
+class SourceVoxelSpacingUnit(StrEnum):
     """Coordinate units own their projection into physical scalar calibration."""
 
     native_unit: str
@@ -862,7 +862,7 @@ class SourceVoxelSpacingUnit(Enum):
         native_unit: str,
         physical_coordinates: Callable[["SourceVoxelSpacing"], tuple[float, ...] | None],
     ):
-        member = object.__new__(cls)
+        member = str.__new__(cls, name)
         member._value_ = name
         member._physical_projection = physical_projection
         member.native_unit = native_unit
