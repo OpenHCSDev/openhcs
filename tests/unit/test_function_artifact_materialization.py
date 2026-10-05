@@ -499,6 +499,7 @@ def _context(filemanager):
     context = ContextStub()
     context.filemanager = filemanager
     context.runtime_value_store = RuntimeValueStore()
+    context.runtime_step_outputs = None
     context.microscope_handler = MicroscopeHandlerStub(
         parser=FilenameParserStub(),
         metadata_handler=MetadataHandlerStub(
@@ -686,7 +687,6 @@ def test_slice_aligned_object_label_arrays_preserve_source_slice_metadata():
     assert runtime_value.data.dimensions == ()
     assert runtime_value.data.source_image_name is None
     assert runtime_value.materialization_payload() is runtime_value.data
-    assert output_plan.materialization_payload(runtime_value) is runtime_value.data
     assert runtime_value.data.source_image_provenance_planes.paths == (
         "/input/A02_s001_w1_z001_t001.tif",
         "/input/A02_s002_w1_z001_t001.tif",
@@ -810,7 +810,6 @@ def test_object_label_payload_stack_preserves_source_slice_metadata():
     assert runtime_value.data.dimensions == ()
     assert runtime_value.data.source_image_name is None
     assert runtime_value.materialization_payload() is runtime_value.data
-    assert output_plan.materialization_payload(runtime_value) is runtime_value.data
     assert runtime_value.data.source_image_provenance_planes.paths == (
         "/input/A02_s001_w1_z001_t001.tif",
         "/input/A02_s002_w1_z001_t001.tif",
@@ -4050,6 +4049,9 @@ def test_materialization_identity_replaces_provenance_not_payload_layout() -> No
 
     metadata = output_plan.materialization_metadata(value)
 
+    pixel_metadata = image_payload_metadata(value.materialization_payload())
+    assert pixel_metadata.source_path == "/derived/nuclei-rgb.tif"
+    assert pixel_metadata.source_image_names == ("SavedNuclei",)
     assert metadata.source_path == "/input/A01_s001_w2_z001_t001.tif"
     assert metadata.source_image_names == ("OrigDNA",)
     assert metadata.source_channel_axis == 3
@@ -4077,6 +4079,18 @@ def test_compiled_z_axis_reaches_source_named_image_materialization() -> None:
     )
     selected_payload = ImagePayloadMetadata(
         source_image_names=(selected_image.name,),
+        source_path="/derived/A01_s001_w2_z001_t001.tif",
+        source_component_metadata={
+            "well": "A01", "site": "1", "channel": "2",
+            "timepoint": "1",
+        },
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=tuple(f"/derived/A01_s001_w2_z00{z}_t001.tif" for z in (1, 2)),
+            component_metadata=tuple(
+                {"well": "A01", "site": "1", "channel": "2",
+                 "z_index": str(z), "timepoint": "1"} for z in (1, 2)
+            ),
+        ),
     ).payload_with(np.ones((2, 5, 7), dtype=np.uint16), None)
     saved_payload = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         selected_payload,

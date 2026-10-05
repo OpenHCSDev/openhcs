@@ -898,7 +898,7 @@ class RuntimeArtifactMaterialization:
                 f"Artifact output {output_plan.name!r} declares unsupported "
                 f"materialization {type(spec).__name__}."
             )
-        data = output_plan.materialization_payload(record)
+        data = record.materialization_payload()
         emits_projected_planes = spec.emits_variable_component_planes(data)
         if (
             output_plan.materialization_uses_source_identity_filename()
@@ -968,6 +968,19 @@ class RuntimeArtifactMaterialization:
                 if source_filename is None
                 else cls.source_identity_for_path(context, source_filename)
             )
+        if (
+            output_plan.materialization_source() is not None
+            and output_plan.materialization_source()
+            != output_plan.source_context_source()
+        ):
+            metadata = cls.record_metadata_with_runtime_scope(
+                record,
+                cls.record_payload_metadata(record),
+                context.microscope_handler.parser,
+            )
+            source_identity = metadata.source_provenance.scalar_source_identity
+            if not source_identity.addressable:
+                source_identity = None
         return cls(
             output_plan=output_plan,
             spec=spec,
