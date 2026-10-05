@@ -22,6 +22,7 @@ from polystore.streaming.identity import (
     FixedStreamProducerIdentityKind,
     StreamProducerIdentity,
 )
+from polystore.streaming_constants import StreamingDataType
 from polystore.streaming.viewer_transport import (
     BatchViewerStreamSourceMetadata,
     ViewerDisplayConfigABC,
@@ -56,7 +57,14 @@ from openhcs.core.runtime_measurements import (
 )
 from openhcs.core.roi_point_metadata import ROIFractionalZ
 from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata, ROIPlaneMetadata
-from openhcs.runtime.viewer_component_system import ViewerLayerAxisProjection
+from openhcs.runtime.viewer_component_system import (
+    ViewerComponentValueDomainPayload,
+    ViewerLayerAxisProjection,
+)
+from openhcs.runtime.napari_streaming_handlers import (
+    NapariStreamLayerAddress,
+    NapariStreamLayerItem,
+)
 from openhcs.core.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,
 )
@@ -833,32 +841,30 @@ def test_point_roi_materialization_native_reopen_preserves_fractional_z(
         routed_component_values={"z_index": z_values},
         axis_offsets=(0,),
     )
-    from openhcs.runtime.napari_streaming_handlers import (
-        NapariStreamLayerAddress, NapariStreamLayerItem,
+    item = NapariStreamLayerItem(
+        data=NapariROIConverter.rois_to_shapes(rois),
+        producer=StreamProducerIdentity.pipeline_output(
+            output_kind="artifact", output_key="centres",
+            projection_key="centres", step_name="Synthetic Centres",
+            pipeline_position=0, step_scope_id="synthetic-centres",
+        ),
+        address=NapariStreamLayerAddress(
+            components=source_domain[0], path=archive,
+            stream_layer_data_type=StreamingDataType.POINTS,
+        ),
+        image_metadata=metadata,
+        plane_component_domain=ViewerComponentValueDomainPayload.from_wire_mapping(
+            {"z_index": z_values}, context="materialized point source domain",
+        ),
     )
-    from openhcs.runtime.viewer_component_system import ViewerComponentValueDomainPayload
-    from polystore.streaming_constants import StreamingDataType
-
-    points, properties = viewer_server._build_nd_points(
-        [
-            NapariStreamLayerItem(
-                data=NapariROIConverter.rois_to_shapes(rois),
-                producer=StreamProducerIdentity.fixed_output(
-                    FixedStreamProducerIdentityKind.MANUAL, "point_reopen",
-                ),
-                address=NapariStreamLayerAddress(
-                    source_domain[0], archive, StreamingDataType.POINTS,
-                ),
-                image_metadata=metadata,
-                plane_component_domain=ViewerComponentValueDomainPayload(()),
-            )
-        ],
-        projection,
-    )
+    points, properties = viewer_server._build_nd_points([item], projection)
     assert points.tolist() == [[2.375, 1.25, 3.5]]
     assert properties["label"] == [7]
     assert properties["object_label"] == [7]
     assert properties["response"] == [4.75]
+    assert properties[NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE] == [
+        item.element_identity(0)
+    ]
     from napari.layers import Points
 
     native_layer = Points(points, properties=properties)

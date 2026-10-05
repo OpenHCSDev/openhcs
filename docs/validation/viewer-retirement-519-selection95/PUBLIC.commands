@@ -1,0 +1,60 @@
+# SOURCE-ONLY, parent retained shell only; NOT an automatic batch.
+# NOT DISPATCH-READY: grouped publication prerequisite/Root435 risk in RECEIVING.rst.
+# Runtime markers are replaced from current public replies, NEVER old handles.
+call openhcs_health_check --arguments '{}' --json
+call openhcs_get_authoring_context --arguments '{"kind":"first_use"}' --json
+call openhcs_get_authoring_context --arguments '{"kind":"headless_execution"}' --json
+call openhcs_get_authoring_context --arguments '{"kind":"viewer_review"}' --json
+tools --contains openhcs_register_custom_function --json
+tools --contains openhcs_create_orchestrator_session_from_pipeline_source --json
+tools --contains openhcs_submit_compile --json
+tools --contains openhcs_submit_pipeline_execution --json
+tools --contains openhcs_get_execution_status --json
+tools --contains openhcs_query_plate_files --json
+tools --contains openhcs_stream_plate_files_to_viewer --json
+tools --contains openhcs_retire_viewer_window_layers --json
+tools --contains openhcs_navigate_viewer_window --json
+tools --contains openhcs_get_viewer_window_payloads --json
+call openhcs_start_owned_runtime --arguments '{"host":"127.0.0.1","port":6014,"transport_mode":"tcp","persistent":true}' --json
+# Observe SAME original returned native handle to READY, no start retry.
+call openhcs_observe_owned_runtime --arguments '{"handle":<COMPLETE_NEW_NATIVE_HANDLE>}' --json
+call openhcs_start_function_catalog_preparation --arguments '{"host":"127.0.0.1","port":6014,"transport_mode":"tcp","persistent":true}' --json
+# Observe original returned catalog preparation, then register actual file bytes.
+call openhcs_register_custom_function --arguments '{"source_code":<JSON_STRING_OF_fixture_522.py_BYTES>,"function_name":"point_shape_volume_fixture_522","storage_dir":<NEW_NATIVE_launch_plan.storage_dir>,"persist":true,"host":"127.0.0.1","port":6014,"transport_mode":"tcp","persistent":true}' --json
+# Describe actual returned canonical ID; stable import must match pipeline.py.
+call openhcs_create_config --arguments '{"config_type":"global","values":{"num_workers":1,"use_threading":true,"microscope":"source_bindings","materialize_runtime_artifacts":true}}' --json
+call openhcs_inspect_pipeline_source_artifact_plan --arguments '{"plate_path":"/home/ts/wt/openhcs-issue-batch-20260929/engineering494/standalone95-selection40/endpoints","pipeline_source":<JSON_STRING_OF_pipeline.py_BYTES>,"global_config_id":<RETURNED_CONFIG_ID>}' --json
+# Reflect current query schema; query source workspace returned by original projector.
+call openhcs_query_plate_files --arguments '{"plate_path":<RETURNED_MIDDLE_WORKSPACE>,"kind":"image","limit":4}' --json
+call openhcs_stream_plate_files_to_viewer --arguments '{"plate_path":<RETURNED_MIDDLE_WORKSPACE>,"file_paths":<EXACT_PUBLIC_A02_IMAGE_PATHS>,"kind":"image","host":"127.0.0.1","port":6015,"transport_mode":"tcp","persistent":true,"fresh_viewer":false}' --json
+viewer-state --port 6015 --host 127.0.0.1 --transport-mode tcp --json
+call openhcs_create_orchestrator_session_from_pipeline_source --arguments '{"plate_path":"/home/ts/wt/openhcs-issue-batch-20260929/engineering494/standalone95-selection40/endpoints","pipeline_source":<JSON_STRING_OF_pipeline.py_BYTES>,"global_config_id":<RETURNED_CONFIG_ID>,"host":"127.0.0.1","port":6014,"transport_mode":"tcp","persistent":true}' --json
+# Compile/execute/observe use original reflected schemas and returned IDs.
+call openhcs_submit_compile --arguments '{"session_id":<RETURNED_SESSION_ID>,"wait":false}' --json
+call openhcs_get_execution_status --arguments '{"job_id":<ORIGINAL_COMPILE_JOB_ID>}' --json
+# Only when that compile is terminal COMPLETE with the original artifact:
+call openhcs_submit_pipeline_execution --arguments '{"session_id":<RETURNED_SESSION_ID>,"compile_artifact_id":<ORIGINAL_COMPILE_ARTIFACT_ID>,"wait":false,"runtime_observation_export_path":"/home/ts/wt/openhcs-issue-batch-20260929/engineering494/standalone95-selection40/runtime/VALUES","runtime_observation_export_scope":"values"}' --json
+call openhcs_get_execution_status --arguments '{"job_id":<ORIGINAL_EXECUTION_JOB_ID>}' --json
+# Observe ONE execution through terminal including automatic viewer settlement.
+# Never dispatch another pipeline on an error/UNKNOWN or fabricate a stream receipt.
+viewer-state --port 6015 --host 127.0.0.1 --transport-mode tcp --json
+call openhcs_get_viewer_window_payloads --arguments '{"host":"127.0.0.1","port":6015,"transport_mode":"tcp","route_key":<CURRENT_POINTS_ROUTE>,"include_array_values":false,"include_shape_payloads":true,"max_shape_payloads":8}' --json
+call openhcs_get_viewer_window_payloads --arguments '{"host":"127.0.0.1","port":6015,"transport_mode":"tcp","route_key":<CURRENT_SHAPES_ROUTE>,"include_array_values":false,"include_shape_payloads":true,"max_shape_payloads":8}' --json
+call openhcs_navigate_viewer_window --arguments '{"host":"127.0.0.1","port":6015,"transport_mode":"tcp","route_key":<CURRENT_POINTS_ROUTE>,"data_index":<ACTUAL_A03_POINT_MEMBER>,"visible":true,"selected":true}' --json
+call openhcs_navigate_viewer_window --arguments '{"host":"127.0.0.1","port":6015,"transport_mode":"tcp","route_key":<CURRENT_SHAPES_ROUTE>,"data_index":<ACTUAL_A03_SHAPE_MEMBER>,"visible":true,"selected":true}' --json
+# Record BOTH selected sets/source association after original earlier work settles.
+# Matched triples before/after use original public visibility/viewport/intensity
+# commands with selected:null/no data_index; exact axes/camera from current replies.
+call openhcs_set_viewer_native_window --arguments '{"host":"127.0.0.1","port":6015,"transport_mode":"tcp","presentation":{}}' --json
+call openhcs_viewer_snapshot_window --arguments '{"host":"127.0.0.1","port":6015,"transport_mode":"tcp","output_dir_path":<NEW_CASE_QA_STAGE>,"capture_scope":"window"}' --json
+# Require BEFORE well extent3 in BOTH geometry survivors and complete member proof.
+call openhcs_retire_viewer_window_layers --arguments '{"host":"127.0.0.1","port":6015,"transport_mode":"tcp","expected_producers":<CURRENT_A02_RAW_ROUTE_TO_COMPLETE_NINE_FIELD_PRODUCERS>}' --json
+# No reselection: read native indices/domain and original source/payloads FIRST.
+viewer-state --port 6015 --host 127.0.0.1 --transport-mode tcp --json
+# Require BOTH extent2 + same source member/group; 12 matched captures total.
+# State/payload/source identity + actual native selected geometry, not indices alone.
+# Stop at first definitive contradiction/UNKNOWN; preserve complete raw journals.
+call openhcs_close_viewer_window --arguments '{"host":"127.0.0.1","port":6015,"transport_mode":"tcp","confirmed":true}' --json
+call openhcs_close_owned_runtime --arguments '{"handle":<COMPLETE_ORIGINAL_NEW_NATIVE_HANDLE>}' --json
+# Verify ACK/process identity+exit/ports gone; normal retained shell terminal.
+exit

@@ -16,7 +16,7 @@ import threading
 import weakref
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Hashable, Iterable, Mapping
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass, field, replace
 from enum import Enum
 from functools import partial
@@ -148,7 +148,7 @@ from openhcs.runtime.viewer_controls import (
     ViewerPolylineControlOptions,
     ViewerRegionControlOptions,
     ViewerRoutedImageControlOptions,
-    ViewerFractionalZPointCoordinateAuthority,
+    ViewerPointCoordinateAuthority,
     ViewerIntensityWindowControlOptions,
     ViewerNativeDimensions,
     ViewerResultElementCoordinateAuthority,
@@ -1830,6 +1830,25 @@ class NapariRematerializationRequest(NapariLayerDisplayRequest):
             != self.original_presentation.aligned_component_shape()
         )
 
+    @contextmanager
+    def preserve_native_presentation(self):
+        """Only changed geometry/coordinates need remount selection admission.
+
+        Untouched routes may legitimately hold hidden, off-slice native rows.
+        Their unchanged membership is not a new rematerialized selection.
+        """
+        if (
+            self.requires_rematerialization
+            or self.presentation.projection != self.original_presentation.projection
+        ):
+            handler = NapariLayerDisplayHandler.for_data_type(
+                self.items[0].address.stream_layer_data_type,
+            )
+            with handler.preserve_native_presentation(self):
+                yield
+        else:
+            yield
+
     def restore_native_frame(self) -> None:
         """Apply the one batch snapshot before native selection eligibility."""
         dims = self.pipeline.server.viewer.dims
@@ -1872,6 +1891,9 @@ class NapariLayerDisplayHandler(
     """Executable display handler for one Napari stream data type."""
 
     title_suffix: ClassVar[str] = ""
+    result_coordinate_authority: ClassVar[type[ViewerResultElementCoordinateAuthority]] = (
+        ViewerResultElementCoordinateAuthority
+    )
 
     @contextmanager
     def preserve_native_presentation(self, request: NapariLayerDisplayRequest):
@@ -1885,9 +1907,21 @@ class NapariLayerDisplayHandler(
         layer.visible, layer.opacity, layer.blending = visible, opacity, blending
 
     def rematerialize(self, request: NapariRematerializationRequest) -> None:
-        with self.preserve_native_presentation(request):
-            self.handle(request)
-            request.restore_native_frame()
+        self.handle(request)
+        request.restore_native_frame()
+
+    @classmethod
+    @contextmanager
+    def preserve_native_presentations(cls, requests: Sequence[NapariRematerializationRequest]):
+        """Capture every survivor before a peer can change its native slice.
+
+        Retention remains on the declared handler's cooperative capabilities;
+        all restores run after the shared frame and every layer are reconciled.
+        """
+        with ExitStack() as retention:
+            for request in requests:
+                retention.enter_context(request.preserve_native_presentation())
+            yield
 
     def geometric_component_values(
         self,
@@ -2206,6 +2240,9 @@ class NapariPointsLayerDisplayHandler(
 
     streaming_data_type: ClassVar[StreamingDataType] = StreamingDataType.POINTS
     title_suffix: ClassVar[str] = "points"
+    result_coordinate_authority: ClassVar[type[ViewerResultElementCoordinateAuthority]] = (
+        ViewerPointCoordinateAuthority
+    )
 
     def geometric_component_values(
         self,
@@ -2430,37 +2467,37 @@ class NapariLayerDisplayPipeline:
 
         if not apply or not requests:
             return
-        if any(request.requires_rematerialization for request in requests):
-            # Capture once, before any peer changes native rank. The original
-            # label/selection resolver owns which source frame is current.
-            current_route = self.dimension_label_overlay.route_resolver.resolve().route_key
-            basis = next(
-                (request for request in requests if request.presentation.route_key == current_route),
-                requests[0],
+        # Capture once, before any peer changes native rank or component domain.
+        # The original label/selection resolver owns the current source frame.
+        current_route = self.dimension_label_overlay.route_resolver.resolve().route_key
+        basis = next(
+            (request for request in requests if request.presentation.route_key == current_route),
+            requests[0],
+        )
+        native_frame = self.server.viewer.dims.copy()
+        with basis.original_presentation.preserve_native_axes(
+            native_frame, basis.presentation, basis.items,
+        ):
+            native_frame.ndim = max(native_frame.ndim, len(basis.presentation.axis_labels))
+            offset = native_frame.ndim - len(basis.presentation.axis_labels)
+            native_frame.axis_labels = (
+                *native_frame.axis_labels[:offset], *basis.presentation.axis_labels,
             )
-            native_frame = self.server.viewer.dims.copy()
-            if basis.slots_changed:
-                with basis.original_presentation.preserve_native_axes(
-                    native_frame, basis.presentation, basis.items,
-                ):
-                    native_frame.ndim = max(native_frame.ndim, len(basis.presentation.axis_labels))
-                    offset = native_frame.ndim - len(basis.presentation.axis_labels)
-                    native_frame.axis_labels = (
-                        *native_frame.axis_labels[:offset], *basis.presentation.axis_labels,
-                    )
-            requests = [replace(request, native_frame=native_frame) for request in requests]
+        requests = [replace(request, native_frame=native_frame) for request in requests]
 
-        for request in requests:
-            if request.requires_rematerialization:
-                NapariLayerDisplayHandler.for_data_type(
-                    request.items[0].address.stream_layer_data_type
-                ).rematerialize(request)
-            else:
-                layer = self.server.layer_route_state.layer(request.presentation.route_key)
-                layer.translate = request.presentation.spatial_layer_kwargs(
-                    request.items, request.presentation.payload_axis_labels,
-                )["translate"]
-                request.publish()
+        with NapariLayerDisplayHandler.preserve_native_presentations(requests):
+            for request in requests:
+                if request.requires_rematerialization:
+                    NapariLayerDisplayHandler.for_data_type(
+                        request.items[0].address.stream_layer_data_type
+                    ).rematerialize(request)
+                else:
+                    layer = self.server.layer_route_state.layer(request.presentation.route_key)
+                    layer.translate = request.presentation.spatial_layer_kwargs(
+                        request.items, request.presentation.payload_axis_labels,
+                    )["translate"]
+                    request.publish()
+                    request.restore_native_frame()
 
     def schedule_layer_update(
         self,
@@ -5804,14 +5841,16 @@ class NapariNavigationControlMessageAction(NapariMountedRouteControlMessageActio
             if displayed_axis_indices is None
             else displayed_axis_indices
         )
-        coordinate_authority = (
-            ViewerFractionalZPointCoordinateAuthority
-            if isinstance(layer, napari.layers.Points)
-            else ViewerResultElementCoordinateAuthority
-        )
+        items = server.component_groups.existing_items_for(route_key)
+        if not items:
+            raise ValueError("Result selection requires its original routed source items.")
+        coordinate_authority = NapariLayerDisplayHandler.for_data_type(
+            items[0].address.stream_layer_data_type,
+        ).result_coordinate_authority
         return coordinate_authority.axis_indices(
             coordinates=cast(Sequence[object], coordinates),
             axis_labels=dimension_state.axis_labels,
+            spatial_axis_labels=presentation.spatial_axis_labels,
             displayed_axis_indices=tuple(
                 local_axis
                 for local_axis, viewer_axis in enumerate(dimensions)
