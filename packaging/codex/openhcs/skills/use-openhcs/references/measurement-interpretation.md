@@ -385,6 +385,20 @@ can double-normalise a processed image. CP threshold bounds declared in `0..1`
 are normalised processing units, not an invitation to substitute the observed
 raw maximum. Do not generalise those bounds to other callable contracts.
 
+**Worked clamp contrast:** a regional floor separates sampled noise from one
+dim positive, but weaker raw-supported positives elsewhere overlap that noise
+range on the consumed alias. Lowering a threshold correction factor recovers
+one connector while those weaker objects remain absent. If the declared callable
+multiplies its estimated threshold by the correction factor **then clamps** to
+the lower bound, an unchanged floor can prevent testing the weaker regime at all.
+Compare effective cutoffs and threshold support at distributed weak positives
+and nuisance controls in current-alias units; raw measurements require the
+verified conversion rather than direct reuse. Where their distributions overlap,
+reconsider the admission model or justified preprocessing, or qualify sensitivity
+limits—not automatically lower every floor. A measured floor can remain useful
+for specificity; recovering one above-floor connector does not validate its
+sensitivity elsewhere.
+
 If conversion is justified, retain acquisition source/provenance and compose
 a distinct processing alias through the existing registered intensity
 owner, such as registry ID `openhcs:cellprofiler_rescale_intensity` (Python
