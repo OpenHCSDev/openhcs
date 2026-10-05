@@ -334,7 +334,7 @@ ordinary-body repairs and the unresolved global count separately.
 
 ![Matched native raw, first and final H001 views.](../figures/slas/h001_scored_native.png){width=5.3in}
 
-\(A) Overview of the same bright-object field used in Figure 5A. (B) An elongated
+\(A) Overview of the same bright-object field scored in Figure 5B. (B) An elongated
 body represented by two first-attempt labels becomes one in the final candidate.
 Both rows show raw, first and final views from the same unguided author, not the
 separate assisted H001 development example. Raw display windows are 8–152 (A)
