@@ -762,6 +762,13 @@ def test_retirement_retains_survivor_source_members_without_late_navigation(
     old = receiver.layer_route_state.layer(route)
     receiver.viewer.layers.selection.active = old
     if selected:
+        # A row selection follows its source frame before touching native
+        # selected_data; the preceding middle image may leave A02 displayed.
+        navigation = NapariNavigationControlMessageAction()
+        prepared = navigation.prepare(receiver, ViewerNavigationControlOptions(
+            route_key=route, data_index=0, visible=True, selected=True,
+        ))
+        navigation.apply_prepared(receiver, prepared)
         old.selected_data = {0, 1}
     # The public retirement boundary follows earlier accepted selection work.
     # Its original zero-delay navigation must settle before choosing visibility.
