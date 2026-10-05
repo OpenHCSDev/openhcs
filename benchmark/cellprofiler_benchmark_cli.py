@@ -782,6 +782,49 @@ class PlotBenchmarkCommand(BenchmarkCliCommand):
         return 0
 
 
+class PlotMeasuredBenchmarkCommand(BenchmarkCliCommand):
+    """Plot qualified matched summaries with measured native time per mode."""
+
+    command_name = "plot-measured"
+    help_text = "Plot measured CP/OH execution or total batch comparisons."
+    sort_order = 32
+
+    def configure(
+        self, subparsers: argparse._SubParsersAction
+    ) -> argparse.ArgumentParser:
+        parser = self._parser(subparsers)
+        parser.add_argument(
+            "--summary-source",
+            action="append",
+            required=True,
+            help="MODE_LABEL=qualified_summary.csv; repeat for measured well/worker modes.",
+        )
+        parser.add_argument("--scope", choices=("execution", "total"), required=True)
+        parser.add_argument("--output-dir", type=Path, required=True)
+        return parser
+
+    def run(self, args: argparse.Namespace) -> int:
+        configure_headless_cpu_benchmark_runtime(args.log_level)
+        from benchmark.reports.cppipe_figures import (
+            MeasuredBatchSummarySource,
+            generate_measured_batch_figures,
+            parse_summary_source,
+        )
+
+        sources = tuple(parse_summary_source(value) for value in args.summary_source)
+        outputs = generate_measured_batch_figures(
+            tuple(
+                MeasuredBatchSummarySource(source.label, source.path)
+                for source in sources
+            ),
+            scope=args.scope,
+            output_dir=args.output_dir,
+        )
+        print(f"figures={args.output_dir}")
+        print(f"outputs={len(outputs)}")
+        return 0
+
+
 class PlotWellThroughputPresentationCommand(BenchmarkCliCommand):
     """Plot the official30 parity/core/wells-per-core presentation pack."""
 
