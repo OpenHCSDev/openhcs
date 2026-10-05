@@ -371,7 +371,11 @@ background controls, recovered the process while preserving bright trunks,
 and corrected wrong-channel photometry by checking exported values against
 raw pixels. Both retained eight nuclear objects. Discontinuous paths and
 uncertain crossings prevented complete outgrowth and per-neuron topology
-measurements. A separate retained-context personal-neurite continuation
+measurements. A later frozen continuation retained eight supported soma
+candidates, agreeing in count with the eight manually traced entries for the
+same public image [@NeuronCytoII]. This aggregate agreement was assessed after
+freezing; spatial cell correspondence and complete arbor length were not scored.
+A separate retained-context personal-neurite continuation
 processed a nine-field mosaic with shared channel fits and paths across sampled
 joins, but incomplete nuclear and soma detection limited its morphology
 measurements. That assisted continuation is distinct from fresh autonomous
