@@ -33,7 +33,7 @@ The nine main figures show the shared workflow, matching UI/code/MCP authoring,
 the recorded agent analysis, CellProfiler translation, benchmark results and
 viewer inspection, followed by task-only first/final analysis and full-corpus
 coverage and native views of autonomous local repair and fresh retinal detection.
-Twelve supplementary figures explain runtime composition,
+Fourteen supplementary figures explain runtime composition,
 process boundaries, compiler preparation, connected outputs and custom functions.
 They also report historical timing observations and three prospective
 agent-authored assays on held-out public data. The two newer native-view figures
@@ -42,6 +42,8 @@ same-context volumetric development example; neither substitutes for reference
 evaluation. Two further native-view figures retain retinal soma development
 and a local BBBC013 nuclear repair with unresolved compartment ownership;
 these same-author development examples are separate from autonomous scores.
+The final two figures show a fresh nuclear core/boundary repair and residual
+crowded-region uncertainty in the independent retinal result shown in Figure 9.
 
 [Supplementary Data 8](supplementary/task_only_analysis.md) retains the newer
 task-only authoring results separately from those prospective held-out assays.

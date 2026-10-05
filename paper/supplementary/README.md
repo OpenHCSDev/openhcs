@@ -267,6 +267,29 @@ Source: BBBC007v1 A02, Sabatini laboratory, Whitehead Institute; CC0.
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
+## Supplementary Figure 14. Remaining crowded-region uncertainty in the retinal result
+
+![Matched northeast raw, label-only and outline views from the final retinal candidate.](../figures/slas/retinal_fresh09_detail.png){width=6in}
+
+The same final candidate shown in main Figure 9 retains uncertain object
+partitions in a different region. The upper elongated footprint spans vertically
+adjacent fluorescence bodies; the lower-right lobed region has uncertain
+identity and boundary extent. These local observations separate useful
+body detection from a complete cell census. The three panels retain the same
+native camera and crop. Grayscale labels are dark in the original native
+display; darkness does not indicate absent numerical labels. Raw RBPMS uses
+window 0–63, gamma 1. The outline background uses the frozen pipeline's
+intensity stretch and display range 0–63/255, as in main Figure 9. Original
+screenshots were clipped/scaled without pixel retouching. This is regional
+visual evidence, not a manual-reference error rate. Source: user-provided
+retinal whole mount R0010. The [shared native source proof](task_only_analysis/retinal-fresh09-native-source-proof.json)
+retains capture hashes, display choices and crop coordinates for both figures;
+Supplementary Data 8 records the independently checked tables and final scope.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
 ## Supplementary Data 1. CellProfiler workflow comparison
 
 This supplement indexes source tables and evaluation records. Figure scripts

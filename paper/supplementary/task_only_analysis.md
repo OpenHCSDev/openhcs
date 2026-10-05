@@ -335,8 +335,10 @@ scientific execution. The [fresh retinal outcome record](task_only_analysis/reti
 binds original source, freeze, report and diagnostic identities. This trial is
 distinct from the assisted retinal continuation in Supplementary Figure 11;
 no new scientific execution, reference scoring or image transformation was
-used to prepare this account. Main Figure 9 uses the corrected whole-field and
-southwest raw/combined captures, not the earlier misnamed overview captures.
+used to prepare this account. The earlier Figure 9 presentation used the
+corrected whole-field and southwest raw/combined captures, not the earlier
+misnamed overview captures. Those predecessor captures remain retained;
+the current main figure shows the separate 102-instance repeat described below.
 Its [native source proof](task_only_analysis/retinal-fresh-native-source-proof.json)
 retains original PNG hashes, camera coordinates and exact geometric crops.
 Whole-field crops are [566,41,415,415] and southwest crops [413,28,837,442]
@@ -773,8 +775,15 @@ and visual acceptance. No manual retinal count or mask score was obtained.
 The [independent final review](../../figure-collection-20261004/R0010-C10-INDEPENDENT-LOCAL-REPAIR-REVIEW.rst)
 and [intermediate tradeoff](../../figure-collection-20261004/R0010-C08-REGIONAL-TRADEOFF-REVIEW.rst)
 retain original capture identities, table checks and lifecycle qualifications.
-Figure9 continues to show its distinct109-instance predecessor; it has not
-been relabelled as this102-instance repeat.
+Main Figure 9 now shows this final candidate's whole field, northwest pair
+and southeast continuous envelope. Its [native source proof](task_only_analysis/retinal-fresh09-native-source-proof.json)
+binds six unchanged original PNGs, the frozen pipeline, native camera settings
+and exact geometric crops. Raw views use window 0–63 and gamma 1. The outline
+background uses the pipeline's source-intensity stretch followed by the manual
+display range 0–63/255, so it is brighter than the native raw presentation;
+same-coordinate matching does not imply identical photometry. Neither display
+changes the frozen labels or supplies a reference score. The preceding
+109-instance trial retains its separate source proof and original captures.
 
 ## Scope and retained evidence
 

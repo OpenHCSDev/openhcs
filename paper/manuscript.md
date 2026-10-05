@@ -290,20 +290,21 @@ associated-region geometry were therefore assessed separately, retaining the
 useful nuclear result without treating every linked region as a validated
 cell boundary (Supplementary Data 8).
 
-A fresh retinal author independently revised its foreground model after measuring background admission and weak-body support. Smoothing followed by broad-background subtraction improved local signal discrimination, and the completed final pipeline exported 109 detector instances (Figure 9). Distributed review still found partial faint-body recovery and uncertain ring-shaped partitions; a saved response below the cutoff localized one plausible miss to foreground admission rather than watershed. This is evidence of autonomous diagnosis and useful candidate output, not a validated retinal ganglion-cell count (Supplementary Data 8).
+A fresh retinal author independently revised its foreground model after measuring background admission and weak-body support. Smoothing followed by broad-background subtraction improved local signal discrimination, and the completed final pipeline exported 109 detector instances. Distributed review still found partial faint-body recovery and uncertain ring-shaped partitions; a saved response below the cutoff localized one plausible miss to foreground admission rather than watershed. This is evidence of autonomous diagnosis and useful candidate output, not a validated retinal ganglion-cell count (Supplementary Data 8).
 
 A subsequent independent retinal author retained separation of a conspicuous bright pair and repaired an additional body split by increasing marker smoothing. Its final pipeline produced 118 detector instances. Distributed review still showed excess partitions and uncertain weak-body admission, so the useful local segmentation gains were reported separately from the unresolved whole-field count. No manual-reference accuracy was measured; this repeat illustrates partial autonomous success rather than either a complete cell census or a wholly unusable analysis (Supplementary Data 8).
 
 The latest independent retinal repeat recovered a continuous soma envelope
-while retaining a genuine neighbouring pair in another region. An intermediate
+while retaining a genuine neighbouring pair in another region (Figure 9). An intermediate
 repair had merged that pair; the author detected the regression and revised
 marker suppression before freezing its final 102-instance output. Matched
 native views confirmed both local gains in the same candidate. Diffuse and
 lobed regions retained uncertain identities and boundaries, assessed separately
 from the clearer body detections. The author therefore repaired one body while
 checking that a genuine pair remained separate. The evidence supports these
-local detections and repairs; manual-reference accuracy remains unmeasured
-(Supplementary Data 8).
+local detections and repairs; manual-reference accuracy remains unmeasured.
+Supplementary Figure 14 shows the remaining crowded-region uncertainty
+alongside the corresponding raw image and labels (Supplementary Data 8).
 
 A fresh whole-volume nucleus-centre trial matched all 15 manual reference
 centres at the predeclared 30-voxel tolerance, with 10 unmatched predictions;
@@ -388,11 +389,11 @@ success (Supplementary Data 8).
 
 \(A) Matched raw DNA and first/final overlays show separation of a joined pair; diffuse support remains in the lower region. A compact neighbour stays separate. (B) Final raw, result-only and combined views retain a faint merge. This fresh-context author revised its own pipeline without reference feedback. The first complete prediction follows technical repair; these local witnesses do not establish exhaustive accuracy or validated actin boundaries. DNA windows are 0–255 (A) and 0–151 (B), gamma 1, final ROI opacity 0.7. Colours are not cross-candidate identities. Original screenshots are clipped/scaled without pixel retouching; physical calibration is unverified. Supplementary Data 8 retains exact capture and crop identities. Source: BBBC007v1 A02, Sabatini laboratory, Whitehead Institute; CC0.
 
-### Figure 9. Autonomous retinal detection in noisy raw images
+### Figure 9. Autonomous retinal repair preserves a neighbouring pair
 
-![Matched whole-field and local retinal raw images and final detector overlays.](figures/slas/retinal_fresh_native.png){width=6in}
+![Matched whole-field and regional retinal raw images and final outlines.](figures/slas/retinal_fresh_native.png){width=6in}
 
-\(A) The whole released field and final detector overlay retain the heterogeneous raw background. (B) Matched southwest views show labelled bodies alongside faint unresolved structures. This fresh-context author used the task brief, MCP and packaged skill without earlier retinal outputs or reference feedback. The final execution exported 109 detector instances, including 8 border instances; the 110 contour members are not another cell count. A bounded soma-like region in B had response maximum 0.0195047 below the 0.02 cutoff and no retained support, locating its loss before watershed without resolving its biological class. No manual-reference accuracy is reported. Both raw pairs use RBPMS AF647 channel 1, window 0–70 and gamma 1. Original screenshots are clipped/scaled without pixel retouching; colours denote instances, not a biological certainty class. Physical calibration is unverified. Source: user-provided retinal whole mount R0010; exact original captures and coordinates are retained in Supplementary Data 8.
+\(A) Whole-field detections against heterogeneous background. (B) Northwest neighbours remain separate. (C) A southeast envelope has one footprint after repair of an earlier partition. The independent author caught a regression that merged the pair and retained both local gains in its final 102-instance candidate, using only the task brief, MCP and packaged skill. Diffuse regions remain uncertain (Supplementary Figure 14); no manual-reference accuracy is reported. Raw RBPMS AF647 uses window 0–63, gamma 1. Outline backgrounds use the frozen intensity stretch and display range 0–63/255, so brightness differs despite matched positions. Original screenshots are clipped/scaled without pixel retouching. Source: user-provided retinal whole mount R0010; physical calibration is unverified. Supplementary Data 8 retains exact captures, settings and coordinates.
 
 ## Discussion
 
