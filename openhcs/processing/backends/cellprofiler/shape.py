@@ -51,6 +51,8 @@ from openhcs.processing.backends.cellprofiler.zernike import (
 from openhcs.core.runtime_object_labels import ObjectLabelVariantData
 
 if TYPE_CHECKING:
+    from openhcs.interop.cellprofiler.module_settings import BoundModuleSettings
+    from openhcs.interop.cellprofiler.parser import ModuleBlock
     from openhcs.interop.cellprofiler.runtime.invocation import (
         CellProfilerMeasurementImage,
     )
@@ -413,6 +415,21 @@ class MeasureObjectSizeShapeModule(
             parse_cellprofiler_bool,
         ),
     )
+
+    @classmethod
+    def postprocess_bound_settings(
+        cls, module: "ModuleBlock", bound: "BoundModuleSettings"
+    ) -> "BoundModuleSettings":
+        """Retain the native upgrade default for pre-toggle shape modules."""
+        bound = super().postprocess_bound_settings(module, bound)
+        revision = module.variable_revision_number
+        if (
+            revision is not None
+            and revision <= 2
+            and "calculate_advanced" not in bound.kwargs
+        ):
+            return bound.with_kwargs({"calculate_advanced": False})
+        return bound
 
 
 from abc import ABC, abstractmethod

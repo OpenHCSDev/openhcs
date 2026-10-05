@@ -3,10 +3,14 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from pathlib import Path
+import inspect
 
 import numpy as np
 import pytest
 import skimage.measure
+from openhcs.interop.cellprofiler.parser import ModuleBlock, ModuleSetting
+from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
 
 from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
@@ -32,6 +36,27 @@ from openhcs.processing.backends.cellprofiler.shape import (
 @pytest.fixture(scope="module", autouse=True)
 def prepared_shape_backends() -> None:
     ShapeMeasurementBackendStrategy.prepare_registered_family()
+
+
+@pytest.mark.parametrize(
+    ("revision", "advanced", "expected"),
+    ((1, None, False), (2, None, False), (1, "Yes", True), (3, "Yes", True), (3, "No", False)),
+)
+def test_shape_module_retains_native_legacy_advanced_default(
+    revision: int, advanced: str | None, expected: bool,
+) -> None:
+    settings = [ModuleSetting("Select objects to measure", "Nuclei")]
+    if advanced is not None:
+        settings.append(ModuleSetting("Calculate the advanced features?", advanced))
+    module = ModuleBlock(
+        "MeasureObjectSizeShape", 1, setting_records=settings,
+        metadata={"variable_revision_number": revision},
+    )
+    bound = MeasureObjectSizeShapeModule.bind_settings(
+        module, binder=SettingsBinder(source_root=Path(".")),
+    )
+    assert bound.kwargs["calculate_advanced"] is expected
+    assert inspect.signature(measure_object_size_shape).parameters["calculate_advanced"].default is True
 
 
 def _assert_rows_strict(
