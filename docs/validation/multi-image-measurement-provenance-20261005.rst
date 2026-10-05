@@ -77,6 +77,42 @@ on the same objects, retain their distinct numeric photometry, and export both
 typed source identities independently of input order. It will use a separate
 recorded ordinary engineering case, never replay the closed receiving11 case.
 
-Current checkpoint is source investigation only: implementation and focused
-source qualification remain; installed/public qualification is separate. No
-build, environment, native process or scientific operation was started.
+Working owner fix and first qualification
+----------------------------------------
+
+Planck explicitly released invocation.py, module_execution.py and
+object_measurement_row_policies.py from his claims; his automatic Points/saved
+label producer work is disjoint. The implementation is on the existing
+CellProfilerSourceIdentityMixin ancestor. Its aligned_source_metadata uses the
+existing source_provenances hook to retain the nominal runtime-slice axis, and
+the original SourceImageProvenance bundle/contributor/stack operations to retain
+each measured image at each slice. Metadata construction is shared with the
+existing composed-source path. The per-object executor consumes that owner.
+The row policy's source-name-based composition decision and the executor's
+old flattened-source/fallback path are deleted, not retained as compatibility.
+No core provenance store, artifact exporter or request codec was added.
+
+The ancestor is already composed with runtime image execution and measurement
+alignment through CellProfilerMeasurementImage's real multiple inheritance.
+A new nominal source subtype exercises its source_provenances hook with
+cooperative super(), and a third source works without generic consumer edits.
+The new cases do not add a concrete module/type switch.
+
+Focused source controls used the original engineering620/source-controls01.py
+bootstrap, existing paired interpreter, read-only source dependencies and the
+already compiled native tabular ABI. No build, installation, native server,
+viewer, provider or scientific input was used. Actual registered
+MeasureObjectIntensity execution with synthetic source artifacts covers both
+image orders, one/two/three images, one/two runtime slices, distinct uint16
+photometry, exact represented paths/Z identities and retained pixel-size
+metadata. Existing source pixel selection and row-plane projection controls
+passed; empty/unequal aligned source axes reject. Original logs::
+
+  /home/ts/wt/openhcs-issue-batch-20260929/engineering-multi-image-measurement-20261005/controls01.stdout
+  /home/ts/wt/openhcs-issue-batch-20260929/engineering-multi-image-measurement-20261005/controls01.stderr
+
+Terminal0: 23 passed, 400 deselected, 22.95s whole wrapper, peak474388KiB,
+swaps0. Plugin-free pytest reports its two existing unused asyncio configuration
+warnings; originals are retained. Source tests are not installed/public proof.
+After-owner AST and original R0 remain to be recorded before source delivery.
+Ordinary installed/public acceptance remains separate and is not a PR732 gate.
