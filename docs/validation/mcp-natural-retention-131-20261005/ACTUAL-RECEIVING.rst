@@ -22,8 +22,9 @@ Source and ownership
 --------------------
 
 Production pin: 283c2378a, following initial checkpoint bcde628d0. Latest main
-49322f10b was normally integrated afterward; neither the diagnostic module nor
-its inherited launch module changed. The installed target is honestly pinned to
+49322f10b was normally integrated afterward, then main4d7f18858 (paper/review
+changes only); neither the diagnostic module nor its inherited launch module
+changed. The installed target is honestly pinned to
 283c2378a, not relabelled as later main. Foreign gitlinks/keepers were untouched.
 
 Existing audit Package/Repository AST: 710 MCP/runtime/unit modules, zero parse
