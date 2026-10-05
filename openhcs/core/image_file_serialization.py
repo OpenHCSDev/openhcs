@@ -667,10 +667,15 @@ class NumericImagePayloadUint8Strategy(ImagePayloadUint8Strategy):
 
     def prepare(self, array: np.ndarray) -> np.ndarray:
         values = _uint8_conversion_values(array)
-        if _is_unit_interval(values):
-            values = values * _scale_value(values, 255.0)
-        sanitized = np.nan_to_num(values, nan=0.0, posinf=255.0, neginf=0.0)
-        return np.rint(np.clip(sanitized, 0.0, 255.0)).astype(np.uint8)
+        scale = _is_unit_interval(values)
+        # Own the working pixels before reusing them through each conversion phase.
+        working = values.copy(order="K") if values.dtype == array.dtype else values
+        if scale:
+            np.multiply(working, _scale_value(working, 255.0), out=working)
+        np.nan_to_num(working, copy=False, nan=0.0, posinf=255.0, neginf=0.0)
+        np.clip(working, 0.0, 255.0, out=working)
+        np.rint(working, out=working)
+        return working.astype(np.uint8)
 
 
 def image_file_source_metadata(path: Path | None) -> ImageFileSourceMetadata:

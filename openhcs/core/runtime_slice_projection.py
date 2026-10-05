@@ -16,7 +16,7 @@ from metaclass_registry import AutoRegisterMeta
 
 from openhcs.constants.constants import VariableComponents
 from openhcs.core.aligned_image_payload import (
-    AlignedImageStack,
+    ImagePayloadSliceStack,
     AlignedImageStackKwargResolver,
     ImageOutputBundle,
 )
@@ -81,7 +81,7 @@ RuntimeProjectionData: TypeAlias = (
     | SparseIJVLabelRows
     | ObjectLabelSet
     | ObjectLabelPayload
-    | AlignedImageStack
+    | ImagePayloadSliceStack
     | RuntimeSliceAlignedValueSet
     | RuntimeSliceProjectableValue
     | RuntimePlaneAxisValueProjection
@@ -573,10 +573,10 @@ class ImagePayloadRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStrategy)
         )
 
 
-class AlignedImageStackRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStrategy):
-    """Project an aligned image stack through its declared outer or inner axis."""
+class ImagePayloadSliceStackRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStrategy):
+    """Project either stack composition through its declared outer or inner axis."""
 
-    value_type = AlignedImageStack
+    value_type = ImagePayloadSliceStack
 
     def resolve_aligned_kwarg(
         self,
@@ -584,22 +584,19 @@ class AlignedImageStackRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStra
         resolver: AlignedImageStackKwargResolver,
     ) -> Any:
         return resolver.resolve(
-            value.aligned_slice(
-                resolver.projection_axis.require_plane_index(),
-                resolver.projection_axis.axis_size,
-            )
+            self.value_for_slice(value, resolver.projection_axis)
         )
 
     def full_stack_value(self, value: RuntimeProjectionData) -> RuntimeProjectionData:
-        return cast(AlignedImageStack, value).compose()
+        return cast(ImagePayloadSliceStack, value).compose()
 
     def value_for_slice(
         self,
         value: RuntimeProjectionData,
         context: RuntimePlaneAxisValueProjection,
     ) -> RuntimeProjectionData:
-        aligned = cast(AlignedImageStack, value)
-        if context.axis is RuntimePlaneAxis.RUNTIME_SLICE:
+        aligned = cast(ImagePayloadSliceStack, value)
+        if context.axis is aligned.composition_metadata_mode.plane_axis:
             return aligned.aligned_slice(
                 context.require_plane_index(),
                 context.axis_size,
@@ -623,11 +620,11 @@ class AlignedImageStackRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStra
         self,
         value: RuntimeProjectionData,
     ) -> int | None:
-        return len(cast(AlignedImageStack, value).slices)
+        return cast(ImagePayloadSliceStack, value).runtime_slice_count
 
 
 class ImageOutputBundleRuntimeSliceProjectionStrategy(
-    AlignedImageStackRuntimeSliceProjectionStrategy
+    ImagePayloadSliceStackRuntimeSliceProjectionStrategy
 ):
     """Project each named output through its shared declared runtime axis."""
 
@@ -967,17 +964,13 @@ class ObjectLabelValueRuntimeSliceProjectionStrategy(
                 "Object-label source provenance must be absent or exactly match "
                 f"the declared plane axis: {source_plane_count} != {context.axis_size}."
             )
-        dense_labels = object_label_dense_array(labels)
         context.validate_shape(
-            dense_labels.shape,
+            labels.shape,
             value_name="Object-label payload",
         )
         plane_index = context.require_plane_index()
-        context.validate_plane_index(plane_index, dense_labels.shape)
-        return labels.with_source_plane_measurement_labels(
-            dense_labels[plane_index],
-            plane_index,
-        )
+        context.validate_plane_index(plane_index, labels.shape)
+        return labels.project_source_plane(plane_index)
 
 
 class SequenceRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStrategy):

@@ -44,6 +44,7 @@ if TYPE_CHECKING:
         RuntimeMeasurementFeatureOwner,
     )
     from openhcs.core.runtime_stores import StoredRuntimeValue
+    from openhcs.core.equivalence.policy import RuntimeMeasurementDialect
     from openhcs.core.source_projection import OpenHCSPlaneAddress
     from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
     from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValueSet
@@ -818,6 +819,7 @@ class ImageArtifactType(ArtifactType):
     ) -> object:
         """Apply the declared image identity without discarding payload context."""
 
+        from openhcs.core.aligned_image_payload import ImagePayloadSliceStack
         from openhcs.core.runtime_image_values import (
             image_payload_data,
             image_payload_mask,
@@ -837,6 +839,10 @@ class ImageArtifactType(ArtifactType):
                 image_payload_mask(payload),
             )
 
+        if isinstance(value, ImagePayloadSliceStack):
+            return value.with_slices(
+                tuple(named_payload(payload) for payload in value.slices)
+            )
         if isinstance(value, RuntimeSliceAlignedValueSet):
             return RuntimeSliceAlignedValues(
                 tuple(
@@ -1204,11 +1210,29 @@ class ObjectLabelsArtifactType(ArtifactType):
         return value.data
 
 
-class MeasurementsArtifactType(ArtifactType):
+class MeasurementBearingArtifactType(ArtifactType):
+    """Artifact whose current payload exposes native measurement tables."""
+
+    @classmethod
+    @abstractmethod
+    def measurement_tables(
+        cls, value: "RuntimeValue", dialect: "RuntimeMeasurementDialect"
+    ) -> tuple["MeasurementTable", ...]:
+        """Derive table views without publishing a second artifact authority."""
+
+
+class MeasurementsArtifactType(MeasurementBearingArtifactType):
     """Measurement-table artifact type."""
 
     value = "measurements"
     payload_shape = ArtifactPayloadShape.TABLE
+
+    @classmethod
+    def measurement_tables(
+        cls, value: "RuntimeValue", dialect: "RuntimeMeasurementDialect"
+    ) -> tuple["MeasurementTable", ...]:
+        del dialect
+        return (cast("MeasurementTable", value.data),)
 
     @staticmethod
     def _declared_subject(output_plan: ArtifactOutputPlan | None) -> MeasurementSubject:
@@ -1511,12 +1535,82 @@ class TableArtifactType(ArtifactType):
     payload_shape = ArtifactPayloadShape.TABLE
 
 
-class SpatialGridArtifactType(ArtifactType):
+class SpatialGridArtifactType(MeasurementBearingArtifactType):
     """Spatial-grid mapping artifact type."""
 
     value = "spatial_grid"
+    carries_source_image_context = True
     payload_shape = ArtifactPayloadShape.MAPPING
     payload_description = "spatial grid mapping"
+
+    @classmethod
+    def measurement_tables(
+        cls, value: "RuntimeValue", dialect: "RuntimeMeasurementDialect"
+    ) -> tuple["MeasurementTable", ...]:
+        from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValueSet
+        from openhcs.core.runtime_spatial_grid import SpatialGrid
+
+        if isinstance(value.data, RuntimeSliceAlignedValueSet):
+            return tuple(
+                cast(SpatialGrid, value.data.value_for_slice(index)).measurement_table(
+                    dialect, (index,)
+                )
+                for index in range(value.data.slice_count)
+            )
+        return (cast(SpatialGrid, value.data).measurement_table(dialect),)
+
+    @classmethod
+    def contextualize_output(
+        cls,
+        source_payload: object,
+        output_value: object,
+        output_plan: "ArtifactOutputPlan | None",
+        plane_projection: "RuntimePlaneAxisValueProjection | None",
+    ) -> object:
+        from openhcs.core.runtime_image_values import image_payload_metadata
+        from openhcs.core.runtime_slice_alignment import (
+            RuntimeSliceAlignedValueSet,
+            RuntimeSliceAlignedValues,
+        )
+        from openhcs.core.runtime_spatial_grid import SpatialGrid
+
+        if isinstance(output_value, RuntimeSliceAlignedValueSet):
+            if (
+                plane_projection is None
+                or plane_projection.axis_size != output_value.slice_count
+            ):
+                raise ValueError(
+                    "Runtime-slice-aligned spatial grids require an exact source plane projection."
+                )
+            return RuntimeSliceAlignedValues(
+                tuple(
+                    cls.contextualize_output(
+                        source_payload,
+                        output_value.value_for_slice(index),
+                        output_plan,
+                        None,
+                    ).replace_fields(slice_index=index)
+                    for index in range(output_value.slice_count)
+                )
+            )
+        grid = cast(SpatialGrid, output_value)
+        return grid.replace_fields(
+            source_provenance=grid.source_provenance.with_missing_from(
+                image_payload_metadata(source_payload).source_provenance
+            )
+        )
+
+    @classmethod
+    def contextualize_output_from_projector(
+        cls,
+        source_payload: object,
+        output_value: object,
+        output_plan: "ArtifactOutputPlan | None",
+        plane_projector: "RuntimePlaneAxisProjector | None",
+    ) -> object:
+        return cls.contextualize_projected_output(
+            source_payload, output_value, output_plan, plane_projector
+        )
 
     @classmethod
     def runtime_parameter_types(cls) -> tuple[type, ...]:
@@ -1621,16 +1715,30 @@ class SpatialGridArtifactType(ArtifactType):
     def materialization_payload(cls, value: "RuntimeValue") -> object:
         from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValueSet
         from openhcs.core.runtime_spatial_grid import SpatialGrid
+        from openhcs.serialization.json import to_jsonable
 
-        if isinstance(value.data, RuntimeSliceAlignedValueSet):
-            return tuple(
-                cast(
-                    SpatialGrid,
-                    value.data.value_for_slice(slice_index),
-                ).as_mapping()
-                for slice_index in range(value.data.slice_count)
+        grids = (
+            tuple(
+                value.data.value_for_slice(index)
+                for index in range(value.data.slice_count)
             )
-        return cast(SpatialGrid, value.data).as_mapping()
+            if isinstance(value.data, RuntimeSliceAlignedValueSet)
+            else (value.data,)
+        )
+        mappings = tuple(
+            {
+                **cast(SpatialGrid, grid).as_mapping(),
+                "source_provenance": to_jsonable(
+                    cast(SpatialGrid, grid).source_provenance
+                ),
+            }
+            for grid in grids
+        )
+        return (
+            mappings
+            if isinstance(value.data, RuntimeSliceAlignedValueSet)
+            else mappings[0]
+        )
 
 
 class SpatialGraphArtifactType(ArtifactType):

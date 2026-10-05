@@ -20,6 +20,7 @@ from openhcs.core.artifacts import (
     ArtifactSpecCollection,
     ImageArtifactType,
     MeasurementsArtifactType,
+    SpatialGridArtifactType,
     RelationshipsArtifactType,
     SpecialArtifactType,
 )
@@ -56,6 +57,7 @@ from openhcs.core.runtime_relationships import (
 )
 from openhcs.core.source_image_provenance import (
     SourceImageProvenancePlanes,
+    SourceImageProvenance,
     RuntimeSourceImageProvenancePlane,
     SourceImageProvenanceContributor,
     SourceImageIdentity,
@@ -1846,3 +1848,92 @@ def _relationship_record(name: str, *, axis_id: str) -> StoredRuntimeValue:
                materialization_source_metadata=value.materialization_source_metadata,
                location=RuntimeArtifactLocation(path=output_plan.path, backend="memory"),
            )
+
+
+@pytest.mark.parametrize("cycle_aligned", (False, True))
+def test_spatial_grid_geometry_is_exported_for_exact_source_cycles(
+    cycle_aligned: bool,
+) -> None:
+    from openhcs.core.runtime_spatial_grid import SpatialGrid, SpatialGridAxis
+    from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
+    from openhcs.core.runtime_artifact_queries import (
+        RuntimeArtifactQueryContext,
+        runtime_measurement_tables,
+    )
+    from openhcs.core.runtime_stores import RuntimeValueStore
+
+    provenance = SourceImageProvenance(
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=("/inputs/site2.tif", "/inputs/site1.tif"),
+            component_metadata=({"site": "2"}, {"site": "1"}),
+        ),
+    )
+    grid = SpatialGrid(
+        name="Grid",
+        rows=8,
+        columns=12,
+        x_spacing=102.5,
+        y_spacing=103.25,
+        x_origin=71,
+        y_origin=57,
+        source_provenance=provenance,
+    )
+    data = (
+        RuntimeSliceAlignedValues(
+            (
+                grid,
+                grid.replace_fields(
+                    column_axis=SpatialGridAxis(spacing=102.5, origin=72).normalized(
+                        12, "column_axis"
+                    )
+                ),
+            )
+        )
+        if cycle_aligned
+        else grid
+    )
+    plan = ArtifactOutputPlan(
+        name="Grid", path="/memory/Grid.pkl", artifact_type=SpatialGridArtifactType
+    )
+    value = RuntimeValue.normalize(plan, data, axis_id="A01")
+    store = RuntimeValueStore()
+    record = store.record(value, path=plan.path, backend="memory")
+    batch = RuntimeArtifactBatch(
+        input_specs=(ArtifactSpec.input("Grid", SpatialGridArtifactType),),
+        records_by_axis={"A01": (record,)},
+        source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
+    )
+    bundle = export_to_spreadsheet(
+        delimiter=SpreadsheetDelimiter.COMMA,
+        add_filename_prefix=False,
+        artifact_batch=batch,
+        file_selections=(SpreadsheetFileSelection(("Image",), "Image.csv"),),
+    )
+    rows = tuple(csv.DictReader(io.StringIO(bundle["Image.csv"])))
+    assert [row["image_number"] for row in rows] == ["1", "2"]
+    assert [float(row["DefinedGrid_Grid_XLocationOfLowestXSpot"]) for row in rows] == [
+        71,
+        72 if cycle_aligned else 71,
+    ]
+    for row in rows:
+        assert float(row["DefinedGrid_Grid_Columns"]) == 12
+        assert float(row["DefinedGrid_Grid_Rows"]) == 8
+        assert float(row["DefinedGrid_Grid_XSpacing"]) == 102.5
+        assert float(row["DefinedGrid_Grid_YLocationOfLowestYSpot"]) == 57
+        assert float(row["DefinedGrid_Grid_YSpacing"]) == 103.25
+    context = RuntimeArtifactQueryContext(store, "A01")
+    assert runtime_measurement_tables(context)
+    grid.column_axis = SpatialGridAxis(spacing=102.5, origin=73).normalized(
+        12, "column_axis"
+    )
+    assert all(
+        float(row["spatial_grid_grid_x_origin"]) == 73
+        for row in runtime_measurement_tables(context)[0].iter_row_mappings()
+    )
+    materialized = SpatialGridArtifactType.materialization_payload(value)
+    restored = SpatialGridArtifactType.normalize_runtime_payload("Grid", materialized)
+    restored_grid = restored.value_for_slice(0) if cycle_aligned else restored
+    assert (
+        restored_grid.source_provenance.equality_identity
+        == grid.source_provenance.equality_identity
+    )
