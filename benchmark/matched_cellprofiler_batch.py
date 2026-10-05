@@ -28,6 +28,8 @@ from benchmark.adapters.cellprofiler import (
     CellProfilerRunRequest,
     HeadlessCellProfilerPipelinePolicy,
     NativeCellProfilerInputDomainStrategy,
+    NativeCellProfilerSelectedSourceUniverse,
+    NativeCellProfilerSourcePlacement,
 )
 from benchmark.adapters.cppipe_source import CPPipeSourceRequest, resolve_cppipe_source
 from benchmark.adapters.openhcs import _strict_cellprofiler_runtime_equivalence_policy
@@ -186,20 +188,24 @@ def _output_inventory(root: Path, files: frozenset[Path]) -> tuple[dict[str, str
     )
 
 
-def _source_input_inventory(input_dir: Path) -> tuple[dict[str, object], ...]:
-    """Hash the staged native image and metadata inputs, following symlinks."""
+def _source_input_inventory(
+    source_universe: NativeCellProfilerSelectedSourceUniverse,
+) -> tuple[dict[str, object], ...]:
+    """Hash the selected native source universe, following symlinks."""
 
-    files = tuple(sorted(path for path in input_dir.rglob("*") if path.is_file()))
-    if not files:
-        raise ValueError("Native selected-source workspace contains no input files.")
+    placements = tuple(
+        sorted(source_universe.placements, key=lambda placement: placement.relative_path)
+    )
+    if not placements:
+        raise ValueError("Native selected-source universe contains no input files.")
     return tuple(
         {
-            "path": str(path.relative_to(input_dir)),
-            "source_path": str(path.resolve()),
-            "size_bytes": path.stat().st_size,
-            "sha256": sha256_file(path),
+            "path": str(placement.relative_path),
+            "source_path": str(placement.source_path.resolve()),
+            "size_bytes": placement.source_path.stat().st_size,
+            "sha256": sha256_file(placement.source_path),
         }
-        for path in files
+        for placement in placements
     )
 
 
@@ -525,9 +531,14 @@ def _reuse_native_report(
     ):
         raise RuntimeError("Retained native ordered source file list differs.")
     current_inventory = json.loads(json.dumps(provenance["native_input_inventory"]))
-    original_inventory = json.loads(
-        json.dumps(_source_input_inventory(Path(request.input_dir)))
+    original_source_universe = NativeCellProfilerSelectedSourceUniverse(
+        tuple(Path(row["source_path"]) for row in origin["native_input_inventory"]),
+        placements=tuple(
+            NativeCellProfilerSourcePlacement(Path(row["source_path"]), Path(row["path"]))
+            for row in origin["native_input_inventory"]
+        ),
     )
+    original_inventory = json.loads(json.dumps(_source_input_inventory(original_source_universe)))
     if (
         original_inventory != origin["native_input_inventory"]
         or original_inventory != current_inventory
@@ -885,7 +896,7 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
             source_well_filter=native_global_config.well_filter_config,
         )
     provenance["native_input_inventory"] = _source_input_inventory(
-        native_domain.input_dir
+        native_domain.source_universe
     )
     (root / "pilot_provenance.json").write_text(json.dumps(provenance, indent=2))
     native_payload = {
@@ -1443,7 +1454,7 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
                 f"{result}"
             )
 
-    final_input_inventory = _source_input_inventory(native_domain.input_dir)
+    final_input_inventory = _source_input_inventory(native_domain.source_universe)
     if final_input_inventory != provenance["native_input_inventory"]:
         raise RuntimeError("Native source images or metadata changed during pilot.")
     _require_native_reference_unchanged(provenance)
