@@ -42,8 +42,16 @@ from benchmark.openhcs_measured_run import (
     _ZMQProgressTimingObserver,
     execute_measured_openhcs_pipeline_on_client,
 )
-from benchmark.timing import PhaseTimingTrace, completed_server_execution_seconds
+from benchmark.timing import (
+    BenchmarkPhase,
+    PhaseTimingRecord,
+    PhaseTimingTrace,
+    additive_phase_total_seconds,
+    completed_server_execution_seconds,
+)
 from benchmark.well_throughput_scaling import (
+    _replicate_source_binding_workspace_wells,
+    _synthetic_well_ids,
     _write_progress_diagnostics,
     well_throughput_start_method_from_manifest,
 )
@@ -62,9 +70,15 @@ from openhcs.core.config import (
 )
 from openhcs.core.equivalence.comparison import runtime_image_differences
 from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot
-from openhcs.core.equivalence.report import RuntimeEquivalenceReport
+from openhcs.core.equivalence.report import (
+    RuntimeEquivalenceDifference,
+    RuntimeEquivalenceReport,
+)
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
-from openhcs.core.equivalence.policy import normalize_runtime_identifier
+from openhcs.core.equivalence.policy import (
+    RuntimeEquivalencePolicy,
+    normalize_runtime_identifier,
+)
 from openhcs.core.input_workspace import InputWorkspacePreparationRequest
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.core.progress.types import ProgressEvent, ProgressPhase
@@ -75,6 +89,7 @@ from openhcs.core.runtime_equivalence import (
 )
 from openhcs.core.source_matching import source_component_metadata_value
 from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
+from openhcs.core.source_projection import OpenHCSPlaneAddress
 from openhcs.interop.cellprofiler.plate_workspace import (
     prepare_cellprofiler_input_workspace,
 )
@@ -107,6 +122,11 @@ def _parser() -> argparse.ArgumentParser:
         dest="requested_wells",
         action="append",
         help="Select one declared source well; repeat for an explicit sample.",
+    )
+    parser.add_argument(
+        "--repeat-assignments",
+        type=int,
+        help="Repeat one selected source well as independent matched assignments.",
     )
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--repetitions", type=int, default=1)
@@ -277,6 +297,78 @@ def _require_compared_output_inventory(
         )
 
 
+def _saved_output_equivalence(
+    native_root: Path,
+    candidate_exports: RuntimeExportObservation,
+    *,
+    policy: RuntimeEquivalencePolicy,
+    source_workspaces: tuple[Path, ...] = (),
+    image_set_policy: SourceImageSetIdentityPolicy = SourceImageSetIdentityPolicy(),
+    execution_axis_id: str | None = None,
+    actual_candidate_files: frozenset[Path] | None = None,
+    candidate_managed_files: frozenset[Path] = frozenset(),
+) -> tuple[
+    RuntimeEquivalenceReport,
+    RuntimeEquivalenceReport,
+    tuple[RuntimeEquivalenceDifference, ...],
+    RuntimeExportObservation,
+    RuntimeOutputSnapshot,
+    RuntimeOutputSnapshot,
+]:
+    """Consume complete saved schemas, values, correlations and file inventories."""
+    database_report = cellprofiler_database_export_equivalence(
+        native_root,
+        candidate_exports,
+        policy=policy,
+        execution_axis_id=execution_axis_id,
+    )
+    native_exports = RuntimeExportObservation.from_output_roots((native_root,))
+    native_snapshot = RuntimeOutputSnapshot.from_export_observation(native_exports)
+    candidate_snapshot = RuntimeOutputSnapshot.from_export_observation(
+        candidate_exports,
+        source_workspaces=source_workspaces,
+        image_set_policy=image_set_policy,
+        execution_axis_id=execution_axis_id,
+        measurement_dialect=policy.measurement_dialect,
+    )
+    csv_report = runtime_measurement_equivalence(
+        RuntimeMeasurementSnapshot.from_output_snapshot(native_snapshot, policy=policy),
+        RuntimeMeasurementSnapshot.from_output_snapshot(
+            candidate_snapshot, policy=policy
+        ),
+        policy=policy,
+    )
+    image_differences = runtime_image_differences(
+        native_snapshot.images,
+        candidate_snapshot.images,
+        policy,
+    )
+    _require_compared_output_inventory(
+        reference_files=frozenset(
+            path for path in native_root.rglob("*") if path.is_file()
+        ),
+        candidate_files=(
+            frozenset(candidate_exports.output_files)
+            if actual_candidate_files is None
+            else actual_candidate_files
+        ),
+        reference_exports=native_exports,
+        candidate_exports=candidate_exports,
+        reference_snapshot=native_snapshot,
+        candidate_snapshot=candidate_snapshot,
+        candidate_managed_files=candidate_managed_files,
+        compared_file_report=database_report,
+    )
+    return (
+        database_report,
+        csv_report,
+        image_differences,
+        native_exports,
+        native_snapshot,
+        candidate_snapshot,
+    )
+
+
 def _native_python_executable(path: Path, project_root: Path) -> Path:
     """Keep the virtual-environment entrypoint, not its base-interpreter target."""
 
@@ -298,6 +390,7 @@ def _invoke_native_worker(
     evidence_prefix: Path,
     project_root: Path,
     repetitions: int,
+    timeout_seconds: float | None,
 ) -> dict[str, object]:
     temporary_root = evidence_prefix.with_name(evidence_prefix.name + "_tmp")
     temporary_root.mkdir(parents=True, exist_ok=False)
@@ -326,7 +419,13 @@ def _invoke_native_worker(
             stdout=stdout,
             stderr=stderr,
             text=True,
-            timeout=900 * (repetitions + 1),
+            timeout=(
+                None
+                if timeout_seconds is None
+                else timeout_seconds
+                * (repetitions + 1)
+                * max(1, len(request.get("assignment_output_subdirectories", ())))
+            ),
             check=False,
         )
     process.check_returncode()
@@ -450,6 +549,8 @@ def main(argv: list[str] | None = None) -> int:
         raise ValueError(
             "Native and OpenHCS worker counts must match in a concurrency pilot."
         )
+    if args.repeat_assignments is not None and args.repeat_assignments < 1:
+        raise ValueError("Repeated assignment count must be positive.")
     cases = load_comparison_cases(args.manifest.expanduser().resolve())
     selected_cases = tuple(
         case for case in cases if args.all_cases or case.name == args.case
@@ -518,7 +619,21 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
         well_count=args.well_count,
         requested_wells=tuple(args.requested_wells or ()),
     )
+    source_wells = wells
+    if args.repeat_assignments is not None:
+        if len(source_wells) != 1:
+            raise ValueError(
+                "Repeated assignments require exactly one selected source well."
+            )
+        wells = _synthetic_well_ids(args.repeat_assignments)
+    assignment_directories = (
+        tuple(OpenHCSPlaneAddress.component_token(well) for well in wells)
+        if args.repeat_assignments is not None and len(wells) > 1
+        else ()
+    )
     well_count = len(wells)
+    if args.openhcs_workers > well_count:
+        raise ValueError("OpenHCS workers cannot exceed the selected assignment count.")
     if well_count % args.native_jobs:
         raise ValueError(
             "Native jobs must partition the selected wells evenly in a "
@@ -527,6 +642,12 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
     provenance = {
         "case": case.name,
         "wells": wells,
+        "selected_source_wells": source_wells,
+        "assignment_scope": (
+            "independent repeated source assignments"
+            if args.repeat_assignments is not None
+            else "genuine source wells"
+        ),
         "manifest_sha256": sha256_file(manifest),
         "cppipe_sha256": sha256_file(case.cppipe_path),
         "driver_sha256": sha256_file(Path(__file__)),
@@ -555,7 +676,7 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
 
     native_preparation = root / "native_preparation"
     native_global_config = _global_config(
-        root / "native", wells, start_method=start_method
+        root / "native", source_wells, start_method=start_method
     )
     native_request = CellProfilerRunRequest(
         dataset_path=case.dataset_path,
@@ -567,7 +688,7 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
         ),
         first_image_set=None,
         last_image_set=None,
-        timeout_seconds=None,
+        timeout_seconds=case.cellprofiler_timeout_seconds,
         metrics=(),
         global_config=native_global_config,
     )
@@ -578,6 +699,12 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
     native_domain = NativeCellProfilerInputDomainStrategy.select_for(
         native_request, source
     ).prepare(native_request, source, execution_cppipe)
+    if args.repeat_assignments is not None:
+        _replicate_source_binding_workspace_wells(
+            prepared.materialization.metadata_path,
+            wells,
+            source_well_filter=native_global_config.well_filter_config,
+        )
     provenance["native_input_inventory"] = _source_input_inventory(
         native_domain.input_dir
     )
@@ -593,6 +720,7 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
         "output_root": str(root / "native"),
         "expected_image_sets": None,
         "repetitions": args.repetitions,
+        "assignment_output_subdirectories": assignment_directories,
     }
     native_request_path = root / "native_request.json"
     native_request_path.write_text(json.dumps(native_payload, indent=2))
@@ -605,6 +733,7 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
         evidence_prefix=root / "native",
         project_root=project_root,
         repetitions=args.repetitions,
+        timeout_seconds=native_request.timeout_seconds,
     )
     (root / "native_report.json").write_text(json.dumps(native_report, indent=2))
     native_image_set_counts = {
@@ -613,6 +742,28 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
     if len(native_image_set_counts) != 1:
         raise RuntimeError("Native whole-batch image-set count changed between runs.")
     (native_image_set_count,) = native_image_set_counts
+    if args.repeat_assignments is not None:
+        expected_directories = assignment_directories or ("",)
+        observed_domains = tuple(
+            tuple(
+                (str(directory), int(count))
+                for directory, count in observation["assignment_image_set_counts"]
+            )
+            for observation in native_report["observations"]
+        )
+        if (
+            any(
+                tuple(directory for directory, _ in domain) != expected_directories
+                for domain in observed_domains
+            )
+            or len(set(observed_domains)) != 1
+            or any(count < 1 for _, count in observed_domains[0])
+            or len({count for _, count in observed_domains[0]}) != 1
+            or sum(count for _, count in observed_domains[0]) != native_image_set_count
+        ):
+            raise RuntimeError(
+                "Native repeated assignments must retain complete identical input domains."
+            )
     if native_image_set_count < args.native_jobs or (
         native_image_set_count % args.native_jobs
     ):
@@ -637,8 +788,25 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
                 **native_payload,
                 "output_root": str(root / "native_shards" / str(index)),
                 "expected_image_sets": partition_size,
-                "first_image_set": index * partition_size + 1,
-                "last_image_set": (index + 1) * partition_size,
+                "first_image_set": (
+                    1
+                    if args.repeat_assignments is not None
+                    else index * partition_size + 1
+                ),
+                "last_image_set": (
+                    None
+                    if args.repeat_assignments is not None
+                    else (index + 1) * partition_size
+                ),
+                "assignment_output_subdirectories": (
+                    assignment_directories[
+                        index
+                        * (well_count // args.native_jobs) : (index + 1)
+                        * (well_count // args.native_jobs)
+                    ]
+                    if args.repeat_assignments is not None
+                    else ()
+                ),
                 "start_barrier_root": str(root / "native_shards" / "start_barrier"),
                 "start_barrier_job_count": args.native_jobs,
                 "start_barrier_job_index": index,
@@ -657,6 +825,7 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
                         evidence_prefix=root / "native_shards" / str(item[0]),
                         project_root=project_root,
                         repetitions=args.repetitions,
+                        timeout_seconds=native_request.timeout_seconds,
                     ),
                     enumerate(request_paths),
                 )
@@ -670,11 +839,57 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
                 root / "native_shards" / str(index) / str(repetition)
                 for index in range(args.native_jobs)
             )
-            comparison = cellprofiler_native_shard_equivalence(
-                root / "native" / str(repetition),
-                shard_roots,
-                policy=policy,
-            )
+            if args.repeat_assignments is None:
+                comparison = cellprofiler_native_shard_equivalence(
+                    root / "native" / str(repetition),
+                    shard_roots,
+                    policy=policy,
+                )
+            else:
+                reports = []
+                covered_files = set()
+                for directory in assignment_directories:
+                    assignment_roots = tuple(
+                        shard_root / directory
+                        for shard_root in shard_roots
+                        if (shard_root / directory).is_dir()
+                    )
+                    if len(assignment_roots) != 1:
+                        raise RuntimeError(
+                            "Native workers must own each repeated assignment exactly once."
+                        )
+                    assignment_exports = RuntimeExportObservation.from_output_root(
+                        assignment_roots[0]
+                    )
+                    db, csv, images, _, _, _ = _saved_output_equivalence(
+                        root / "native" / str(repetition) / directory,
+                        assignment_exports,
+                        policy=policy,
+                    )
+                    reports.extend((db, csv, RuntimeEquivalenceReport(images)))
+                    covered_files.update(assignment_exports.output_files)
+                actual_files = frozenset(
+                    path
+                    for shard_root in shard_roots
+                    for path in shard_root.rglob("*")
+                    if path.is_file()
+                )
+                if covered_files != actual_files:
+                    raise RuntimeError(
+                        "Native assignment comparison leaves unowned output files."
+                    )
+                comparison = RuntimeEquivalenceReport(
+                    tuple(
+                        difference
+                        for report in reports
+                        for difference in report.differences
+                    ),
+                    frozenset(
+                        path
+                        for report in reports
+                        for path in report.compared_output_files
+                    ),
+                )
             observations_for_repetition = tuple(
                 report["observations"][repetition + 1] for report in shard_reports
             )
@@ -833,34 +1048,6 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
             else RuntimeExportObservation.from_output_roots(completed.output_roots)
         )
         native_root = root / "native" / str(repetition)
-        database_report = cellprofiler_database_export_equivalence(
-            native_root, candidate_exports, policy=policy
-        )
-        native_exports = RuntimeExportObservation.from_output_roots((native_root,))
-        native_snapshot = RuntimeOutputSnapshot.from_export_observation(
-            native_exports
-        )
-        candidate_snapshot = RuntimeOutputSnapshot.from_export_observation(
-            candidate_exports,
-            source_workspaces=completed.output_roots,
-            image_set_policy=SourceImageSetIdentityPolicy.from_pipeline_config(
-                pipeline_config
-            ),
-        )
-        csv_report = runtime_measurement_equivalence(
-            RuntimeMeasurementSnapshot.from_output_snapshot(
-                native_snapshot, policy=policy
-            ),
-            RuntimeMeasurementSnapshot.from_output_snapshot(
-                candidate_snapshot, policy=policy
-            ),
-            policy=policy,
-        )
-        native_images = native_snapshot.images
-        candidate_images = candidate_snapshot.images
-        image_differences = runtime_image_differences(
-            native_images, candidate_images, policy
-        )
         declared_output_files = (
             frozenset(Path(path) for path in owned_exports.output_files)
             if owned_exports is not None
@@ -880,15 +1067,78 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
             for output_root in completed.output_roots
             for path in METADATA_CONFIG.managed_paths(output_root)
         )
-        _require_compared_output_inventory(
-            reference_files=native_output_files,
-            candidate_files=actual_output_files,
-            reference_exports=native_exports,
-            candidate_exports=candidate_exports,
-            reference_snapshot=native_snapshot,
-            candidate_snapshot=candidate_snapshot,
-            candidate_managed_files=managed_output_files,
-            compared_file_report=database_report,
+        image_set_policy = SourceImageSetIdentityPolicy.from_pipeline_config(
+            pipeline_config
+        )
+        if args.repeat_assignments is None:
+            comparisons = (
+                _saved_output_equivalence(
+                    native_root,
+                    candidate_exports,
+                    policy=policy,
+                    source_workspaces=completed.output_roots,
+                    image_set_policy=image_set_policy,
+                    actual_candidate_files=actual_output_files,
+                    candidate_managed_files=managed_output_files,
+                ),
+            )
+        else:
+            assignment_exports = tuple(
+                candidate_exports.for_execution_axis(well) for well in wells
+            )
+            if frozenset(
+                path for exports in assignment_exports for path in exports.output_files
+            ) != frozenset(candidate_exports.output_files):
+                raise RuntimeError(
+                    "Assignment comparison does not cover every declared output file."
+                )
+            comparisons = tuple(
+                _saved_output_equivalence(
+                    native_root / (directory if assignment_directories else ""),
+                    exports,
+                    policy=policy,
+                    source_workspaces=completed.output_roots,
+                    image_set_policy=image_set_policy,
+                    execution_axis_id=well,
+                )
+                for well, directory, exports in zip(
+                    wells,
+                    assignment_directories or ("",),
+                    assignment_exports,
+                    strict=True,
+                )
+            )
+        database_report = RuntimeEquivalenceReport(
+            tuple(
+                difference
+                for comparison in comparisons
+                for difference in comparison[0].differences
+            ),
+            frozenset(
+                path
+                for comparison in comparisons
+                for path in comparison[0].compared_output_files
+            ),
+        )
+        csv_report = RuntimeEquivalenceReport(
+            tuple(
+                difference
+                for comparison in comparisons
+                for difference in comparison[1].differences
+            ),
+        )
+        image_differences = tuple(
+            difference for comparison in comparisons for difference in comparison[2]
+        )
+        native_images = tuple(
+            image for comparison in comparisons for image in comparison[4].images
+        )
+        candidate_images = tuple(
+            image for comparison in comparisons for image in comparison[5].images
+        )
+        native_exports = RuntimeExportObservation.from_output_roots((native_root,))
+        phase_seconds = PhaseTimingRecord.seconds_by_phase(
+            completed.receipt.phase_timings
         )
         result = {
             "repetition": repetition,
@@ -897,11 +1147,18 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
             "endpoint_pid": completed.endpoint_provenance.endpoint_pid,
             "axis_count": completed.axis_count,
             "observation_scope": export_scope.value,
+            "assignment_scope": provenance["assignment_scope"],
+            "compared_assignments": (
+                wells if args.repeat_assignments is not None else ()
+            ),
             **worker_evidence,
             "server_job_started_at_epoch_seconds": record.start_time,
             "first_axis_started_at_epoch_seconds": first_axis_started_at,
             "server_job_completed_at_epoch_seconds": record.end_time,
             "server_job_seconds": server_job_seconds,
+            "execution_seconds": phase_seconds[BenchmarkPhase.EXECUTE_OPENHCS.name],
+            "compile_seconds": phase_seconds[BenchmarkPhase.COMPILE_OPENHCS.name],
+            "total_seconds": additive_phase_total_seconds(phase_seconds),
             "first_axis_through_server_completion_seconds": (
                 record.end_time - first_axis_started_at
             ),
@@ -996,9 +1253,10 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
         "native_shard_equivalence": shard_equivalence,
         "candidate": observations,
         "timing_claim": (
-            "none: process counts, overlap, and source-owned intervals are "
-            "retained, but first-module/first-axis boundary equivalence and "
-            "repeated throughput remain under review"
+            "Observed complete selected batches: native first-module through post-run "
+            "and full invocation are separate; OpenHCS worker execution and complete "
+            "client operation are separate. Repeated assignments are independently "
+            "executed source copies, not projected timings or additional genuine wells."
         ),
     }
     (root / "report.json").write_text(json.dumps(report, indent=2))

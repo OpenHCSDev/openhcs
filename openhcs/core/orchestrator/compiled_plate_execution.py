@@ -465,13 +465,16 @@ def execute_plate_scoped_steps(
             compiled_contexts,
             step_index,
         )
-        with _PlateStepProgressHeartbeat(
-            progress_queue=progress_queue,
-            progress_context=progress_context,
-            step_index=step_index,
-            step_name=owner_plan.step_name,
-            total_steps=total_steps,
-            interval_seconds=heartbeat_interval_seconds,
+        with (
+            owner_context.runtime_step_scope(),
+            _PlateStepProgressHeartbeat(
+                progress_queue=progress_queue,
+                progress_context=progress_context,
+                step_index=step_index,
+                step_name=owner_plan.step_name,
+                total_steps=total_steps,
+                interval_seconds=heartbeat_interval_seconds,
+            ),
         ):
             owner_invocations = (
                 owner_plan.compiled_function_pattern.default_group.invocations

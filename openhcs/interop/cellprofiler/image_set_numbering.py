@@ -4,6 +4,12 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import Sequence
+from pathlib import Path
+from types import MappingProxyType
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from openhcs.core.context.processing_context import ProcessingContext
 from dataclasses import dataclass, field
 
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
@@ -30,6 +36,33 @@ class CellProfilerImageSetNumbering:
         default_factory=OrderedDict,
         init=False,
     )
+
+    def observe_export_paths(
+        self,
+        context: "ProcessingContext",
+        paths: Sequence[str],
+    ) -> None:
+        """Bind actual exporter numbering to its relative bundle paths."""
+        from openhcs.core.steps.abstract import StepExecutionObservation
+
+        # Direct rendering has no active execution observer. Actual FunctionSteps
+        # retain their derived export ownership until materialization completes.
+        if context.runtime_step_outputs is None:
+            return
+        numbers: dict[str, list[int]] = {}
+        for (axis_id, _source_identity), number in self._numbers.items():
+            numbers.setdefault(axis_id, []).append(number)
+        by_axis = MappingProxyType(
+            {axis_id: tuple(values) for axis_id, values in numbers.items()}
+        )
+        context.record_runtime_step_outputs(
+            StepExecutionObservation(
+                MappingProxyType({}),
+                image_numbers_by_export_path=MappingProxyType(
+                    {Path(path): by_axis for path in paths}
+                ),
+            )
+        )
 
     def for_source_slices(
         self,

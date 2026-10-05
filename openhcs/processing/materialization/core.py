@@ -291,6 +291,7 @@ class Output:
     content: MaterializationValue
     metadata: ImagePayloadMetadata | None = None
     variable_components: tuple[AllComponents, ...] = ()
+    image_numbers_by_axis: Mapping[str, tuple[int, ...]] | None = None
 
     @classmethod
     def from_metadata(
@@ -470,8 +471,18 @@ class Utf8TextOutput(Output):
     content: bytes
 
     @classmethod
-    def from_text(cls, *, path: str, content: str) -> Utf8TextOutput:
-        return cls(path=path, content=content.encode("utf-8"))
+    def from_text(
+        cls,
+        *,
+        path: str,
+        content: str,
+        image_numbers_by_axis: Mapping[str, tuple[int, ...]] | None = None,
+    ) -> Utf8TextOutput:
+        return cls(
+            path=path,
+            content=content.encode("utf-8"),
+            image_numbers_by_axis=image_numbers_by_axis,
+        )
 
     @property
     def viewer_stream_requires_source_metadata(self) -> bool:
@@ -2772,6 +2783,9 @@ def _file_bundle_outputs(
 
     outputs: list[Output] = []
     normalized_paths: set[PurePosixPath] = set()
+    step_outputs = (
+        context.context.runtime_step_outputs if context.context is not None else None
+    )
     for relative_value, content in data.items():
         relative_path = _normalized_relative_materialization_path(relative_value)
         if relative_path in normalized_paths:
@@ -2783,13 +2797,23 @@ def _file_bundle_outputs(
             context.base_path,
             relative_path,
         )
+        image_numbers = (
+            step_outputs.image_numbers_by_export_path.get(Path(relative_value))
+            if step_outputs is not None
+            else None
+        )
         if isinstance(content, str):
             output = Utf8TextOutput.from_text(
                 path=output_path,
                 content=content,
+                image_numbers_by_axis=image_numbers,
             )
         elif isinstance(content, bytes):
-            output = Output(path=output_path, content=content)
+            output = Output(
+                path=output_path,
+                content=content,
+                image_numbers_by_axis=image_numbers,
+            )
         else:
             raise TypeError("File bundle values must be str or bytes.")
         outputs.append(output)

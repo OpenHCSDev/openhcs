@@ -1241,4 +1241,11 @@ class MaterializedRuntimeArtifact(SavedMaterializationOutputs):
             MappingProxyType({address: locations}),
             paths,
             RuntimeAnalysisConsolidationInputs.from_saved_outputs(context, plan, self),
+            MappingProxyType(
+                {
+                    Path(output.path): output.image_numbers_by_axis
+                    for output in outputs
+                    if output.image_numbers_by_axis is not None
+                }
+            ),
         )

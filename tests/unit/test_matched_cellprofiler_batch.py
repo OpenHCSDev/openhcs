@@ -320,8 +320,16 @@ def test_native_python_keeps_virtual_environment_symlink(tmp_path: Path) -> None
     assert selected != selected.resolve()
 
 
+@pytest.mark.parametrize(
+    ("timeout_seconds", "assignments", "expected_timeout"),
+    ((None, (), None), (1800, (), 3600), (1800, ("W001", "W002"), 7200)),
+)
 def test_native_worker_receives_an_owned_temporary_root(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    timeout_seconds: float | None,
+    assignments: tuple[str, ...],
+    expected_timeout: float | None,
 ) -> None:
     invocation: dict[str, object] = {}
 
@@ -336,7 +344,9 @@ def test_native_worker_receives_an_owned_temporary_root(
     monkeypatch.setattr(matched_batch.subprocess, "run", fake_run)
     evidence_prefix = tmp_path / "native"
     request_path = tmp_path / "request.json"
-    request_path.write_text("{}")
+    request_path.write_text(
+        json.dumps({"assignment_output_subdirectories": assignments})
+    )
 
     assert (
         _invoke_native_worker(
@@ -346,12 +356,14 @@ def test_native_worker_receives_an_owned_temporary_root(
             evidence_prefix=evidence_prefix,
             project_root=tmp_path,
             repetitions=1,
+            timeout_seconds=timeout_seconds,
         )
         == {}
     )
     temporary_root = tmp_path / "native_tmp"
     assert temporary_root.is_dir()
     assert "capture_output" not in invocation
+    assert invocation["timeout"] == expected_timeout
     assert json.loads(request_path.read_text())["report_path"] == str(
         tmp_path / "native_report.json"
     )

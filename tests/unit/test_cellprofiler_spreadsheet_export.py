@@ -25,6 +25,7 @@ from openhcs.core.artifacts import (
     SpecialArtifactType,
 )
 from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
+from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import FunctionInvocationKey
 from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
 from openhcs.core.pipeline.artifact_planning import artifact_producers_for_outputs
@@ -99,8 +100,8 @@ from openhcs.processing.materialization import (
     MaterializationSpec,
     WriteMode,
     materialize,
+    materialization_outputs,
 )
-
 
 def test_export_to_spreadsheet_declares_exact_plate_callable_abi() -> None:
     contract = CallableContract.from_callable(export_to_spreadsheet)
@@ -555,33 +556,47 @@ def test_export_to_spreadsheet_bundle_uses_generic_file_materialization() -> Non
     batch = RuntimeArtifactBatch(
         input_specs=(ArtifactSpec.input("measurements", MeasurementsArtifactType),),
         records_by_axis={
-            "A01": (
+            axis: (
                 _measurement_record(
                     "measurements",
-                    axis_id="A01",
+                    axis_id=axis,
                     subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
-                    rows=({"slice_index": 0, "Count": 3},),
+                    rows=({"slice_index": 0, "Count": count},),
                 ),
             )
+            for axis, count in (("A01", 3), ("A02", 7))
         },
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
     )
-    bundle = export_to_spreadsheet(
-        add_filename_prefix=False,
-        artifact_batch=batch,
-    )
     filemanager = FileManager({"memory": MemoryStorageBackend()})
-
-    primary_path = materialize(
-        MaterializationSpec(FileBundleOptions()),
-        data=bundle,
-        path="/analysis/ExportToSpreadsheet_1_files.pkl",
-        filemanager=filemanager,
-        backends=("memory",),
-    )
-
+    context = ProcessingContext(filemanager=filemanager)
+    with context.runtime_step_scope():
+        bundle = export_to_spreadsheet(
+            add_filename_prefix=False,
+            artifact_batch=batch,
+            context=context,
+        )
+        outputs = materialization_outputs(
+            MaterializationSpec(FileBundleOptions()),
+            data=bundle,
+            path="/analysis/ExportToSpreadsheet_1_files.pkl",
+            filemanager=filemanager,
+            context=context,
+        )
+        assert len(outputs) == 1
+        assert outputs[0].path == "/analysis/Image.csv"
+        assert outputs[0].image_numbers_by_axis == {"A01": (1,), "A02": (2,)}
+        primary_path = materialize(
+            MaterializationSpec(FileBundleOptions()),
+            data=bundle,
+            path="/analysis/ExportToSpreadsheet_1_files.pkl",
+            filemanager=filemanager,
+            backends=("memory",),
+            context=context,
+        )
+    assert context.runtime_step_outputs is None
     assert primary_path == "/analysis/Image.csv"
-    assert filemanager.load(primary_path, "memory") == (b"image_number,Count\n1,3\n")
+    assert filemanager.load(primary_path, "memory") == b"image_number,Count\n1,3\n2,7\n"
 
 
 def test_export_to_spreadsheet_rejects_append_order_slice_synthesis() -> None:

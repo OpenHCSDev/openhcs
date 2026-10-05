@@ -6,7 +6,7 @@ import csv
 import io
 import json
 import time
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 from enum import StrEnum, auto
@@ -111,6 +111,15 @@ class PhaseTimingRecord:
     phase: BenchmarkPhase
     seconds: float
     cached: bool = False
+
+    @staticmethod
+    def seconds_by_phase(records: Iterable["PhaseTimingRecord"]) -> dict[str, float]:
+        """Aggregate every observed interval, including repeated submit/wait phases."""
+        seconds: dict[str, float] = {}
+        for record in records:
+            phase_name = record.phase.name
+            seconds[phase_name] = seconds.get(phase_name, 0.0) + record.seconds
+        return seconds
 
     def as_payload(self) -> dict[str, object]:
         """Return a JSON/CSV-stable record payload."""
