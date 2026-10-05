@@ -470,3 +470,65 @@ immediate pre/post camera retained. Canvas428->426 pixels and the occluded befor
 outline preclude a fixed-canvas/pixel-identical renderer comparison. These limits
 do not block the working retirement workflow or justify another source patch.
 All originals are closed and sealed; no new client or uncertain operation replay.
+
+Final graph owner/source-family qualification
+-------------------------------------------
+
+Production64d65596b deletes the extra constructor type check introduced by the
+first checkpoint. The declared SourceVoxelSpacing field and original codec own
+nominal input; SpatialGraph consumes its values directly. A tuple still fails
+instead of being silently coerced to micrometers. This is not removal of the
+physical export/admission guard. Original R0-11's +1 isinstance is retained;
+the corrected five-production-path R0-16 has every measured count delta0,
+code lines+15. No positive delta is omitted or waived.
+
+Complete after-source-family16 uses the same original Package caller, parses
+702 OpenHCS/12 python-introspect/6 metaclass-registry/17 arraybridge modules,
+zero omissions at64d65596b. Terminal0,14.38s/214296KiB RSS/process swaps0.
+JSONL SHA25642b6e572f57821b13bbf76e01fa16af1721142a0ccabe10656844b3b37e266e0.
+Complete declaration/read/write/import/MRO consumer ASTs are retained, not a
+new scanner or a global R1 claim.
+
+Expanded final-source graph-unit-controls13 has95PASS and ONE fixture-setup
+error: viewer_ack_return_route is disabled by the original runner's noconftest.
+No assertion failed. Controls12 is the earlier known collection error because
+the cross-test helper path was absent. Explicitly loading the original conftest
+in14 is a known pre-collection refusal: repeated source-dependency bootstrap
+rejects the read-only matched PolyStore backing, which this foreign source WT
+does not provide. No bootstrap guard, test input or assertion was weakened;
+these originals remain, and the single public-streaming fixture is unqualified
+in this source bootstrap. It needs the ordinary matching whole dependency/source
+environment, not an invented acknowledgement or a selective product overlay.
+
+Independent controls15 has6PASS/76deselected, terminal0,11.33s/378620KiB RSS,
+process swaps0: the actual compact physical recipe through independent settings
+MI/cooperative hooks, rooted feature-bearing graph, source-plane provenance,
+cycle breaking, detached component integrity and colliding endpoint identity.
+Together13/15 confirm101 distinct passing controls, not102 or a green whole
+suite. Two original pytest config warnings remain. No native server or actual
+viewer was started. Shared historical cgroup peaks are not process consumption.
+
+The next registered-input owner is already available: RuntimeAdapterRequest
+carries the original source_payload before array conversion. The existing
+runtime_adapter mechanism injects nominal ImagePayloadMetadata for registered
+acquisition_tile_positions; source_metadata_by_payload/for_source_plane own
+ordered per-plane spacing/provenance. The neurite continuation can consume
+that original source contract rather than introducing a plate calibration
+mirror or falsely treating RELATIVE as physical. Physical analysis must still
+admit actual common isotropic micrometer spacing; pixel analysis must explicitly
+declare its metric and matching settings/rows/graph/export projection.
+
+No remaining Root394 release or external acknowledgement blocks this work.
+Remaining implementation is the unit-correct registered analysis/row/export
+family stated above, not cleanup. Public #522 source-owner disposition is posted
+at comment6000052680; #522 is mergedcc94228ce3, not awaiting vertex-array proof.
+
+Complete final graph checkpoint/archive:
+neurite-graph-unit-final-20261005.tar.gz, SHA256
+3d37aebb2ad3aebc4b233ed988575e702e1982c32edfb5944994584f63cff685.
+Contains all five production paths, migrated graph consumer tests, original
+known negatives09/12/13/14, both positive source shards, original positive
+R0-11 plus corrected R0-16 and full after-source ASTs11/16/caller. The earlier
+checkpoint archive remains immutable. Current final source production is64d65596b;
+subsequent receipt changes do not imply another tested production version.
+All owned source-check handles are terminal, no provider/native/viewer started.
