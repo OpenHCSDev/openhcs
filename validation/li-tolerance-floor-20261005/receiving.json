@@ -1,5 +1,5 @@
 {
-  "status": "SAVED_CONSUMER_PASS",
+  "status": "ORDINARY_NATIVE_PARITY_PASS_END_TO_END_GAIN_UNPROVEN",
   "base_revision": "76ade54345b74e76db8577ab4cca587ce7199ca6",
   "production_threshold_source_sha256": "c98d087a31720d16befa5299b0cdce370efcb3e40f29c4e620a4dc8b4a1d4814",
   "receiving_scope": "Authentic separate-process imports, retained original Closing oracle and actual Resize/Threshold settings; untimed production receiving. Original intermediate input was reconstructed from the saved causal branch, not a new pre-call capture.",
@@ -23,13 +23,43 @@
     "prototype": 0.021163
   },
   "private_full_no_witness_scan_seconds": 0.007233206648379564,
-  "ordinary_pipeline_gain": "NOT_YET_QUALIFIED",
+  "ordinary_pipeline_gain": "NOT_DEMONSTRATED; draft retained, no merge or speedup claim",
   "native_build_custody": "Prior saved Threshold receiving arms had unrelated median/tabular/granularity binary differences, not consumed by this branch. Before ordinary qualification, all three candidate native build artifacts were aligned byte-for-byte to the qualified main build at the same source revision.",
   "artifacts": {
     "production_receiving.py": "4f50772ce18580544a2ca4304a1a66b9b1653132e899d808460b687e416eadb2",
     "production-baseline/receiving.json": "a05c57eb822ca97ab22bac37a85578fc1c8820a112e62409550d3a3ea5c3285f",
     "production-candidate/receiving.json": "402307f887ed089a72c872b6341a28ec09eb15ed608cbb501a9e9c23e26baf80",
     "decision.json": "3b128d86bc55096c556846d9a2448f12db63200d26736e5015072846da110a3c",
-    "native-build-alignment.json": "c1f4df835b5fd61d666519201fe0a66518a11c37123da45f3d19d0ef79c137cd"
+    "native-build-alignment.json": "c1f4df835b5fd61d666519201fe0a66518a11c37123da45f3d19d0ef79c137cd",
+    "li-tolerance-floor-original3d-ordinary-v1/matched-first-job-analysis.json": "bcfbf44864b445152041f842fd50e4b240d150b52b7a7b2d377f1e87f67a770c",
+    "li-tolerance-floor-original3d-ordinary-v1/strict-science-3d.json": "ed04a350e61221c72e45a64d9dfdca999ba18cdcf9cbe7b10b8e6e269d4c6a9c",
+    "li-tolerance-matched-first-job-baseline-v1/strict-science-3d.json": "641cc7caff987288390f76b9ccdef6c3b9da59d08b895edbe0b3f6f60c49bf63"
+  },
+  "ordinary_receiving": {
+    "scope": "One first-job original3D observation per arm, server/catalog/kernel startup excluded; exact images and labels, full CP measurement inventory and existing tolerances. No repeated unchanged candidate run.",
+    "candidate_revision": "5aae765ddc9e49aeaf7b6e000863964c5847dc4b",
+    "baseline_revision": "76ade54345b74e76db8577ab4cca587ce7199ca6",
+    "baseline": {
+      "arm": "baseline",
+      "compile": 0.5776784420013428,
+      "execute": 4.105616092681885,
+      "total": 4.849395316559821,
+      "contracts_disjoint_union": 2.1570099999999996,
+      "outside_contracts": 1.9486060926818851,
+      "threshold_global_raw": 0.14585800000000002
+    },
+    "candidate": {
+      "arm": "candidate",
+      "compile": 0.8348813056945801,
+      "execute": 4.184050798416138,
+      "total": 5.187820333056152,
+      "contracts_disjoint_union": 2.0978149999999998,
+      "outside_contracts": 2.086235798416138,
+      "threshold_global_raw": 0.06767600000000001
+    },
+    "raw_threshold_saved_seconds": 0.078182,
+    "execution_delta_seconds": 0.07843470573425293,
+    "total_delta_seconds": 0.3384250164963305,
+    "decision": "Raw threshold phase is cheaper, but complete execution and total were slower in the matched single observations. Do not promote this as an end-to-end improvement; prioritize structural metadata cohort reconstruction."
   }
 }
