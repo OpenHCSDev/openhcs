@@ -1006,20 +1006,23 @@ class CPATableRowProjection:
 
         if self.context is None:
             return
+        channel_aliases = frozenset(channel.alias for channel in image_channels)
+        source_bindings = tuple(
+            binding
+            for binding in source_binding_plan.binding_declarations
+            if binding.alias in channel_aliases
+            and binding.artifact_kind is ImageArtifactType
+        )
+        if not source_bindings:
+            return
         workspace = VirtualWorkspaceSourceProjectionAuthority.from_context(
             self.context,
             cache=self.context.runtime_source_workspace_projection_cache,
         ).projection_if_available()
         if workspace is None:
             return
-        channel_aliases = frozenset(channel.alias for channel in image_channels)
         scope = RuntimeExecutionAxisScope(axis_id)
-        for binding in source_binding_plan.binding_declarations:
-            if (
-                binding.alias not in channel_aliases
-                or binding.artifact_kind is not ImageArtifactType
-            ):
-                continue
+        for binding in source_bindings:
             for path, projection in workspace.source_occurrences_for_binding(
                 binding, axis_id=axis_id
             ):
