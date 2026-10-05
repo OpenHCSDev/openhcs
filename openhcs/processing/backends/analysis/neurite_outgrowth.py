@@ -57,6 +57,7 @@ from openhcs.core.runtime_spatial_graph import (
     SpatialGraphEdge,
     SpatialGraphNode,
 )
+from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.processing.materialization import (
     CsvOptions,
     ImageFileOptions,
@@ -2967,7 +2968,7 @@ def _build_neurite_morphology_graph(
         name=NEURITE_MORPHOLOGY_OUTPUT.name,
         nodes=tuple(graph_nodes),
         edges=tuple(graph_edges),
-        coordinate_spacing=(pixel_size_um, pixel_size_um),
+        coordinate_spacing=SourceVoxelSpacing((pixel_size_um, pixel_size_um)),
     )
     graph.require_directed_forest()
     return graph

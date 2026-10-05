@@ -263,7 +263,7 @@ def test_all_public_declared_outputs_persist_with_selected_qa_streams(
         name="neurite_morphology",
         nodes=(SpatialGraphNode(1, (3, 4), features=(("label", 1),)),),
         edges=(),
-        coordinate_spacing=(1.3556, 1.3556),
+        coordinate_spacing=SourceVoxelSpacing((1.3556, 1.3556)),
         source_plane_index=1,
         source_provenance=image_payload_metadata(selected).source_provenance,
     )

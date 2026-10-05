@@ -24,6 +24,7 @@ from openhcs.core.runtime_object_labels import (
     object_label_dense_array,
 )
 from openhcs.core.runtime_spatial_graph import SpatialGraph
+from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
     CELLPROFILER_NEURITE_ENGINE_PROFILE,
     NEURITE_OBJECT_LABEL_MATERIALIZATION,
@@ -856,7 +857,7 @@ def test_neurite_morphology_is_soma_rooted_feature_bearing_forest():
     assert isinstance(morphology, SpatialGraph)
     morphology.require_directed_forest()
     assert morphology.name == "neurite_morphology"
-    assert morphology.coordinate_spacing == (1.0, 1.0)
+    assert morphology.coordinate_spacing == SourceVoxelSpacing((1.0, 1.0))
     assert len(morphology.roots()) == 1
     assert len(morphology.edges) == len(morphology.nodes) - len(morphology.roots())
     assert morphology.roots()[0].feature_mapping() == {

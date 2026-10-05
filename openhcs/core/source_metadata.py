@@ -850,23 +850,31 @@ class SourceVoxelSpacingUnit(Enum):
         "micrometers",
         lambda spacing: spacing.isotropic_xy_spacing,
         "micrometer",
+        lambda spacing: spacing.values_zyx,
     )
-    RELATIVE = "relative", lambda spacing: None, "dimensionless"
+    RELATIVE = "relative", lambda spacing: None, "dimensionless", lambda spacing: None
+    PIXELS = "pixels", lambda spacing: None, "pixel", lambda spacing: None
 
     def __new__(
         cls,
         name: str,
         physical_projection: Callable[["SourceVoxelSpacing"], float | None],
         native_unit: str,
+        physical_coordinates: Callable[["SourceVoxelSpacing"], tuple[float, ...] | None],
     ):
         member = object.__new__(cls)
         member._value_ = name
         member._physical_projection = physical_projection
         member.native_unit = native_unit
+        member._physical_coordinates = physical_coordinates
         return member
 
     def physical_pixel_size(self, spacing: "SourceVoxelSpacing") -> float | None:
         return self._physical_projection(spacing)
+
+    def physical_coordinates(self, spacing: "SourceVoxelSpacing") -> tuple[float, ...] | None:
+        """Project coordinates only when this declaration establishes physical units."""
+        return self._physical_coordinates(spacing)
 
 
 @dataclass(frozen=True, slots=True)
@@ -889,6 +897,8 @@ class SourceVoxelSpacing:
     coordinate ratios, including CellProfiler spacing normalized by Y. Relative
     spacing and legacy spacing metadata without recorded units do not provide
     physical scalar calibration. An empty values tuple leaves spacing unspecified.
+    PIXELS explicitly measures source-pixel coordinates; it does not establish
+    physical calibration or authorize physical coordinate exports.
     """
 
     def __post_init__(self) -> None:
@@ -1003,6 +1013,16 @@ class SourceVoxelSpacing:
                 "cannot provide this artifact."
             )
         return value
+
+    def require_physical_coordinates(self) -> tuple[float, ...]:
+        """Admit physical exports without treating pixel or relative units as micrometers."""
+        coordinates = self.unit.physical_coordinates(self)
+        if not coordinates:
+            raise ValueError(
+                "Physical coordinate export requires explicit micrometer spacing; "
+                "pixel and relative analysis coordinates cannot provide it."
+            )
+        return coordinates
 
     @classmethod
     def resolve_physical_pixel_size(

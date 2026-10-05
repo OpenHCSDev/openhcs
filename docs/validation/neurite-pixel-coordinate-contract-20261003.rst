@@ -4,10 +4,10 @@ Integrated rooted neurite analysis: missing pixel-unit contract
 Status and ownership
 --------------------
 
-Singer owns the analysis declaration/unit boundary investigation and fix.
-Root394 retains shared source metadata, runtime graph and materialization files;
-no shared production hunk has been released for this task. Parent owns future
-installed/public acceptance. No scientific author contact or live operation.
+Singer owns the analysis declaration/unit boundary implementation. The original
+Root394 exclusive claim below is historical:394 is merged and no current unit
+owner overlap was found. Singer now owns the narrow spacing/graph/export seam.
+Parent owns future installed/public acceptance. No scientific author contact.
 Existing isolated checkout reused, mainf910830954646b4c38c6ff46ec0a2f78b1d3addb;
 522 and539 published branches/evidence are retained without further mutation.
 Foreign gitlinks/untracked validation work remain unchanged.
@@ -390,3 +390,83 @@ export consumers must use the same declared coordinate contract and shared
 analysis implementation. The original physical negative remains required.
 No541 production edit, test, package/runtime action or scientific feedback is
 claimed by this continuation checkpoint; semantic consumer review is active.
+
+Working typed graph/export checkpoint, 2026-10-05
+------------------------------------------------
+
+This is an implemented source checkpoint, NOT a freeze-ready registered pixel
+analysis route. The production delta adds PIXELS to the original
+SourceVoxelSpacingUnit declaration. Its member-owned physical projections return
+no calibration; SourceVoxelSpacing.require_physical_coordinates rejects pixel
+and relative SWC exports. Physical anisotropic coordinate export remains valid;
+the existing physical scalar calibration guard remains unchanged.
+
+SpatialGraph now composes SourceImageProvenanceFields and SourceVoxelSpacingFields
+with NamedArtifactPayload. Its required coordinate_spacing is the original
+SourceVoxelSpacing value, expressing the analysis metric. Inherited acquisition
+spacing remains a distinct fact. Graph contextualized_source_metadata owns the
+one source-plane/provenance/calibration binding recipe; the artifact consumer's
+copied projection/replacement is deleted. All current production and test graph
+constructors use the nominal spacing. The old provenance-only hook is deleted;
+no tuple compatibility reader, unit mirror or alternate graph writer exists.
+Historical frozen receiving drivers remain unchanged, not current consumers.
+
+The existing graph ROI writer uses inherited acquisition calibration rather than
+reinterpreting analysis spacing as micrometers. SWC uses the analysis owner's
+physical admission. The physical neurite producer explicitly declares its actual
+micrometer metric. Source coordinates, graph node/edge identity and geometry are
+unchanged. Independent ProjectionAudit capability executes the cooperative graph
+hook through super; no generic artifact/writer edit is needed for that case.
+
+Original graph-unit-controls09 ended before collection, terminal2: the borrowed
+foreign PolyStore checkout lacks TiffPhotometric. The unchanged original runner
+then used the qualified receiving16 read-only PolyStore backing and startup API,
+without any install or foreign source edit. Distinct graph-unit-controls10 passed
+27 controls, terminal0,3.83s/250072KiB maxRSS/process swaps0. These exercise original
+graph/SWC/ROI behavior, both nonphysical export negatives, pixel analysis with
+physical acquisition calibration preserved in the real ROI archive, source
+projection and the independent cooperative hook. Two existing pytest config
+warnings remain. Original failure and complete output are preserved.
+
+Source evidence preceding this owner batch is complete source-family08 above,
+not global NRA/R1. After-source family and five-path original R0 are the next
+source qualification; no inherited512MiB cap has been imposed. Applicable current
+catalog patterns are IDEN-1 (two distinct metrics), BOUND-2 (existing spacing and
+metadata owner), IMPL-2 (unit member behavior) and IMPL-12 (deleted projection
+recipe). The historical archive's BOUND-8 references are not current catalogue IDs.
+
+Exact controls/logs live under the existing engineering-neurite-units-20261003
+receipt root: graph-unit-controls09.stdout/stderr and
+graph-unit-controls10.stdout/stderr. No original negative was overwritten or
+replayed. No wheel, installed pipeline, native/viewer or biological claim.
+
+Remaining implementation is explicit: registered neurite analysis still requests
+the physical pixel_size artifact and emits physical-only row/edge headings. Its
+default materialization includes physical SWC. These input/provider, row schema,
+metric computation and export declarations must be closed together before an
+uncalibrated compiled pixel route is supported. This checkpoint does not bypass
+that guard with1.0 or claim a pixel route through direct function invocation.
+
+Independent522 source-owner rendering disposition
+------------------------------------------------
+
+Read exact OWNER-PUBLIC-ACCEPTANCE16.rst and original Napari Shapes code at the
+existing paired dependency root. Shapes._outline_shapes constructs a separate
+selection outline from edge centers plus normalized_scale_factor times highlight
+width times edge offsets. VispyShapesLayer._on_highlight_change renders those
+triangles into shape_highlights, separately from shape_faces. Selected geometry
+therefore has a presentation overlay that disappears when deselected.
+
+The retained three native PNGs and ordinary presentation-only deselection show
+that separation: the compact polygon remains aligned while the yellow highlight
+disappears, without source-row reselection or retirement replay. A concrete data
+geometry/remount regression is not demonstrated. The expected selected-overlay
+explanation is source-backed; the exact star silhouette is not an assertion of
+unchanged native vertex arrays, which the public contract does not expose.
+
+Accept the installed-live contract demonstrated by receiving16: extent3->2,
+A03 ordinal2->1, Points selected_data[1] and Shapes[3] retained, source/frame and
+immediate pre/post camera retained. Canvas428->426 pixels and the occluded before
+outline preclude a fixed-canvas/pixel-identical renderer comparison. These limits
+do not block the working retirement workflow or justify another source patch.
+All originals are closed and sealed; no new client or uncertain operation replay.
