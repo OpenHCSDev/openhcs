@@ -41,3 +41,36 @@ final artifact/journal custody require their separate evidence. General
 lesson: lower marker suppression must be judged against intact-body and
 genuine-pair controls, not by whether it increases the instance count.
 The numerical settings above describe this run, not a transferable default.
+
+Post-freeze follow-up
+--------------------
+
+The parent subsequently read the completed author report and freeze/cleanup
+records, and opened nine further native captures: FIRST northwest and FIRST
+and final northeast full-window triplets. Fifteen original captures have
+therefore been personally reviewed, not all forty-nine. Ordinary footprints
+remain useful across the inspected regions; the northeast suspect merge
+remains unchanged by the repair. The southeast false split remains the
+decisive observed regression. This does not adjudicate every object.
+
+All 95 frozen artifact sizes and hashes match (12,833,364 bytes total).
+All 49 QA capture hashes match, as do the exact scientific journal prefix
+and both complete inner journals recorded in cleanup.json. Original MCP
+PID 1838748, native PID 1845453 and viewer PID 1853878 are absent. The client
+exit code remains 2. Outer harness sealing is a separately owned step.
+
+A capture-state extraction defect is preserved, not silently repaired in
+the original freeze: qa-manifest.json attaches the same stale southeast
+viewport to FIRST northwest, northeast and southeast captures. The author's
+freeze_handoff.py chooses only the last get-viewer-state response and omits
+the newer viewport acknowledgements. This makes those manifest camera and
+visibility claims unreliable; matching PNG hashes do not repair them.
+
+The original recorded set-viewer-viewport acknowledgements immediately
+before the corresponding raw captures report observed/applied true, no
+errors, zoom 4 and centres (0,65,65), (0,65,190) and (0,190,185), respectively.
+These agree with the visually different regions. They establish recorded
+viewport application, not a complete capture-time visibility readback.
+The frozen manifest remains intact. Its owner is assigned a qualified
+correction from original receipts, without replaying scientific execution
+or manufacturing new capture evidence.
