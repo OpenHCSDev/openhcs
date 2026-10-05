@@ -79,13 +79,15 @@ time/resource bound or an irreducible blocker. There is no arbitrary candidate
 count limit. Rejecting a candidate does not by itself end the task. Technical
 completion or counts alone do not establish biological acceptance.
 
-The75min scientific interval begins at YOUR recorded first MCP startup. Plan
-cleanup within it, but expiry must not prevent settlement: stop new scientific
-work and use ongoing only to observe already-dispatched work, preserve its
-evidence/freeze and close exact owned handles. Expiry is recorded as a warning
-for those operations, not permission for another candidate, parameter trial,
-client or cold process. New scientific dispatch uses full and remains refused
-after expiry. Keep the original clock and overrun; do not replay UNKNOWN inputs.
+Read ``task_minutes_from_first_mcp_start`` in YOUR immutable run declaration.
+A positive value declares an interval beginning at YOUR recorded first MCP
+startup; null means no imposed scientific cutoff. Continue measured work and
+retain useful checkpoints when no interval was declared. Do not substitute a
+75-minute limit from an earlier phase or copied history. If an interval was
+explicitly declared, plan cleanup within it; expiry stops new scientific work
+but permits ongoing observation of dispatched work, evidence preservation and
+exact owned cleanup. Keep the actual first-start clock and any overrun; expiry
+never authorizes replaying UNKNOWN inputs or resetting the original interval.
 Source, pipelines, saved author history, journals and handoff records stay in
 YOUR HOME workspace/output. Put large generated images, tables, intermediate
 arrays and QA payloads directly under the exported FLEET_ARTIFACT_ROOT; MCP
