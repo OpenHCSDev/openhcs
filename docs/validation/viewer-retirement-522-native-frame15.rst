@@ -85,7 +85,49 @@ feature-owned source selection. Singleton routes exercise translation without
 native replacement. The one remaining failure counted cooperative-hook calls
 from fixture construction as if they belonged to retirement; its counter is
 now reset immediately before the original retirement, retaining its exact
-four-call assertion. This fixture correction still needs its focused check.
+four-call assertion. Its terminal focused result is recorded below.
+
+Terminal source checkpoint
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Production4b44e19ff8338ec96e7846dc84113e327939aa92 carries the complete correction.
+Frame-controls15-03 checked the corrected cooperative fixture:1PASS/52deselected.
+Frame-controls15-04 checked the Affine conversion and affected calibrated/native
+families:16PASS/200deselected in4.26s. Frame-controls15-05 has all53 real-Qt
+controls PASS in12.97s (whole process19.80s,545412KiB maxRSS, process swaps0).
+
+The exact original15 BEFORE state also includes an unrelated hidden A01 saved
+Points route with retained row0 outside the focused A03 slice. Unchanged geometry
+is not newly rematerialized selection: the original request now owns that
+retention decision in its context, rather than a foreign negative predicate in
+the generic handler. Changed/remounted and translation-only survivors enter
+their existing declared capability; untouched routes are not re-admitted or
+erased. The competing computed predicate/consumer branch is deleted.
+
+The new four last-source controls include that untouched hidden route alongside
+simultaneous Points/Shapes. They cover joined extent3-to2 replacement and
+singleton translation, both source-row orders, exact source-member features,
+non-unit Z/XY calibration, native frame/order/camera, no later navigation and
+unchanged unrelated selection. Final request-owned lifecycle controls15-06:
+6PASS/47deselected in2.40s. The independent declared Points/image capabilities
+execute cooperative enter/exit hooks without generic consumer edits.
+
+Final existing audit caller parses702 production,706 tests and408 dependencies,
+zero failures; selected73/58/53. It includes the original native Affine and
+updated request/batch contexts, with declarations, writes, imports and MRO. The
+earlier global NRA/R1 OOM is not converted to a clean claim. Original pinned
+R0 is terminal0 against mainb461b488 over ALL THREE current changed production
+paths: streaming handlers, viewer server and viewer controls. Every positive
+delta is empty; raw StringSubscript decreases2. The intermediate full-PR R0's
+foreign absence-probe growth1 is preserved and fixed at the existing request
+owner, not offset or waived.
+
+Byte-exact source/tool/logs, original public partial-failure state and closure
+receipts are published in
+``docs/validation/viewer-retirement-native-frame15-20261005.tar.gz``;
+SHA2566385ef7604fe5fa50f06114511cf5a29bd3362111b59d277ff1ef05a39a82481.
+Original loose validation inputs remain preserved. No cleanup, package build,
+install, public client or native launch occurred during this repair.
 
 These are source/real-Qt model controls, not installed public proof. A fresh
 ordinary whole installed public case must pass once on Dewey's released lane;
