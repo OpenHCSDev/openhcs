@@ -16,7 +16,7 @@ import threading
 import weakref
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Hashable, Iterable, Mapping
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass, field, replace
 from enum import Enum
 from functools import partial
@@ -1888,9 +1888,22 @@ class NapariLayerDisplayHandler(
         layer.visible, layer.opacity, layer.blending = visible, opacity, blending
 
     def rematerialize(self, request: NapariRematerializationRequest) -> None:
-        with self.preserve_native_presentation(request):
-            self.handle(request)
-            request.restore_native_frame()
+        self.handle(request)
+        request.restore_native_frame()
+
+    @classmethod
+    @contextmanager
+    def preserve_native_presentations(cls, requests: Sequence[NapariRematerializationRequest]):
+        """Capture every survivor before a peer can change its native slice.
+
+        Retention remains on the declared handler's cooperative capabilities;
+        all restores run after the shared frame and every layer are reconciled.
+        """
+        with ExitStack() as retention:
+            for request in requests:
+                handler = cls.for_data_type(request.items[0].address.stream_layer_data_type)
+                retention.enter_context(handler.preserve_native_presentation(request))
+            yield
 
     def geometric_component_values(
         self,
@@ -2454,18 +2467,19 @@ class NapariLayerDisplayPipeline:
             )
         requests = [replace(request, native_frame=native_frame) for request in requests]
 
-        for request in requests:
-            if request.requires_rematerialization:
-                NapariLayerDisplayHandler.for_data_type(
-                    request.items[0].address.stream_layer_data_type
-                ).rematerialize(request)
-            else:
-                layer = self.server.layer_route_state.layer(request.presentation.route_key)
-                layer.translate = request.presentation.spatial_layer_kwargs(
-                    request.items, request.presentation.payload_axis_labels,
-                )["translate"]
-                request.publish()
-                request.restore_native_frame()
+        with NapariLayerDisplayHandler.preserve_native_presentations(requests):
+            for request in requests:
+                if request.requires_rematerialization:
+                    NapariLayerDisplayHandler.for_data_type(
+                        request.items[0].address.stream_layer_data_type
+                    ).rematerialize(request)
+                else:
+                    layer = self.server.layer_route_state.layer(request.presentation.route_key)
+                    layer.translate = request.presentation.spatial_layer_kwargs(
+                        request.items, request.presentation.payload_axis_labels,
+                    )["translate"]
+                    request.publish()
+                    request.restore_native_frame()
 
     def schedule_layer_update(
         self,

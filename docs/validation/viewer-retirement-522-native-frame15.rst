@@ -48,7 +48,12 @@ mounted native bounds still own clipping.
 ``NapariLayerDisplayPipeline.reconcile_mounted_axis_projections`` now prepares
 that one detached batch frame for domain changes too, not only slot insertion.
 Both rematerialized handlers and shape-neutral translation updates restore the
-same frame. The original selectable capability's cooperative MRO still checks
+same frame. The existing handler ancestor now opens all declared cooperative
+presentation contexts through ExitStack before any peer changes its slice.
+It closes those contexts only after every survivor has its new geometry and
+shared source frame. Per-handler late capture is deleted: an earlier raw remount
+must not clear a later Shapes selection before it can be retained.
+The original selectable capability's cooperative MRO still checks
 displayed membership after frame restoration; the strict off-slice guard is not
 weakened. No new selection store, camera owner, registry, or layer-kind dispatch.
 
@@ -61,10 +66,24 @@ modules. It includes declarations, imports, reads/writes, dispatch and MRO sites
 retained source evidence. This is not a global NRA/R1 clean claim: its historical
 OOM remains a limitation.
 
-This working source checkpoint is not yet behavior-qualified. Final real-Qt
-controls must exercise simultaneous raw/Points/Shapes survivors at the last
-source member through extent3 to2, source-row reorder, calibration/camera/order,
-and independent cooperative hooks. Then a fresh ordinary whole installed public
-case must pass once on Dewey's released lane; original15 cannot be replayed.
+The first coherent source batch is retained as frame-controls15-01:45PASS/8FAIL.
+It exposed the peer-before-selection-capture defect above, plus four old fixture
+assumptions that A01 stayed current after expansion. Those fixtures now select
+their declared A01 source frame through original navigation before assigning its
+native members; no guard or assertion is weakened.
+
+Frame-controls15-02 has52PASS/1FAIL in13.31s. All four new joined/singleton and
+row-reorder variants pass simultaneous raw/Points/Shapes retention at A03/Z2
+through extent3 to2, with non-unit Z2um spacing, XY.65, camera/order and exact
+feature-owned source selection. Singleton routes exercise translation without
+native replacement. The one remaining failure counted cooperative-hook calls
+from fixture construction as if they belonged to retirement; its counter is
+now reset immediately before the original retirement, retaining its exact
+four-call assertion. This fixture correction still needs its focused check.
+
+These are source/real-Qt model controls, not installed public proof. A fresh
+ordinary whole installed public case must pass once on Dewey's released lane;
+original15 cannot be replayed. Original time/RSS logs are retained separately;
+bootstrap cgroup peaks belong to the shared common slice, not this test process.
 541's typed pixel-unit route follows this repair checkpoint. Closed394 is no
 longer an exclusive source ownership dependency.

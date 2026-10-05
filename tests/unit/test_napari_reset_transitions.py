@@ -113,6 +113,7 @@ def enqueue(
     display_config=None,
     channel=1,
     channels=None,
+    voxel_spacing=None,
 ):
     config = display_config or NapariDisplayConfig(
         well_mode=NapariDimensionMode.STACK,
@@ -151,7 +152,7 @@ def enqueue(
             data_type,
         ),
         image_metadata=ImagePayloadMetadata(
-            source_voxel_spacing=SourceVoxelSpacing((spacing, spacing))
+            source_voxel_spacing=SourceVoxelSpacing(voxel_spacing or (spacing, spacing))
         ),
         plane_component_domain=ViewerComponentValueDomainPayload(()),
         display_config=config,
@@ -714,6 +715,9 @@ def test_retirement_prunes_multiple_survivors_with_cooperative_presentation_hook
         originals[route] = receiver.component_groups.existing_items_for(route)
     receiver.viewer.camera.center = (0, 1, 1)
     receiver.viewer.camera.zoom = 31
+    # Earlier domain reconciliation also exercises the declared capability.
+    # Measure this retirement batch independently, not its fixture construction.
+    calls.clear()
     result = ViewerWindowService(QueuedRetirementGateway(receiver)).presentation(retirement_request(receiver, middle))
     assert result.applied and not result.errors
     assert len(calls) == 4
@@ -761,6 +765,12 @@ def test_retirement_retains_survivor_source_members_without_late_navigation(
     old = receiver.layer_route_state.layer(route)
     receiver.viewer.layers.selection.active = old
     if selected:
+        # Domain expansion now retains the actual source frame. This fixture
+        # explicitly selects A01 members, so choose A01 before native assignment.
+        prepared = NapariNavigationControlMessageAction().prepare(
+            receiver, ViewerNavigationControlOptions(route_key=route, data_index=0),
+        )
+        receiver.viewer.dims.current_step = prepared.viewer_step
         old.selected_data = {0, 1}
     # The public retirement boundary follows earlier accepted selection work.
     # Its original zero-delay navigation must settle before choosing visibility.
@@ -837,6 +847,100 @@ def test_new_selectable_capability_executes_cooperative_retention_hooks(receiver
     assert calls == ["enter", "exit"]
     assert native.selected_data == {1} and native.opacity == 0.2
     assert issubclass(NewDeclaredPointsHandler, NapariSelectablePresentationRetention)
+
+
+@pytest.mark.parametrize("joined", [False, True])
+@pytest.mark.parametrize("reorder", [False, True])
+def test_last_source_frame_retains_points_and_shapes_during_domain_pruning(
+    receiver, joined, reorder,
+):
+    """Original installed15: both selected families at A03/Z2, not first-well QA."""
+    spacing = (2.0, 0.65, 0.65)
+    middle, update = enqueue(
+        receiver, np.ones((5, 7)), well="A02", producer="middle",
+        z_index=0, voxel_spacing=spacing,
+    )
+    advance_in_qt(receiver, middle, update)
+    for well in ("A01", "A03"):
+        for z in range(4):
+            raw, update = enqueue(
+                receiver, np.ones((5, 7)), well=well, producer="source-volume",
+                domain=["A01", "A03"], z_domain=list(range(4)), z_index=z,
+                voxel_spacing=spacing,
+            )
+    advance_in_qt(receiver, raw, update)
+    routes = []
+    for data_type, name in ((StreamingDataType.POINTS, "centres"),
+                            (StreamingDataType.SHAPES, "outlines")):
+        for well in (("A01", "A03") if joined else ("A03",)):
+            payload = (
+                [{"type": "points", "coordinates": [[1.5, 2.5]],
+                  "metadata": {"label": 7, ROIFractionalZ.FIELD: 1.5}}]
+                if data_type is StreamingDataType.POINTS else
+                [{"type": "polygon", "coordinates": [[1, 2], [1, 3], [2, 3], [2, 2]],
+                  "metadata": {"label": 7}}]
+            )
+            route, update = enqueue(
+                receiver, payload, well=well, producer=name, data_type=data_type,
+                domain=["A01", "A03"] if joined else ["A03"],
+                z_domain=list(range(4)), z_index=0 if data_type is StreamingDataType.POINTS else 2,
+                voxel_spacing=spacing,
+            )
+        advance_in_qt(receiver, route, update)
+        routes.append(route)
+    viewer = receiver.viewer
+    shapes = receiver.layer_route_state.layer(routes[1])
+    presentation = receiver.layer_route_state.dimension_state_for(routes[1]).presentation
+    step = list(viewer.dims.current_step)
+    step[presentation.axis_labels.index("well")] = 2
+    step[presentation.axis_labels.index("z_index")] = 2
+    viewer.dims.current_step = tuple(step)
+    viewer.layers.selection.active = shapes
+    retained = {}
+    feature = NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE
+    for route in routes:
+        layer = receiver.layer_route_state.layer(route)
+        selected = len(layer.data) - 1
+        assert selected in layer._indices_view
+        layer.selected_data = {selected}
+        retained[route] = (layer, layer.features.iloc[selected][feature])
+    QApplication.instance().processEvents()
+    assert viewer.dims.current_step[presentation.axis_labels.index("well")] == 2
+    for route in routes:
+        if reorder:
+            receiver.component_groups.existing_items_for(route).reverse()
+    viewer.camera.center, viewer.camera.zoom = (0, 1.3, 1.95), 31
+    frame = viewer.dims.point
+    order = viewer.dims.order
+    result = ViewerWindowService(QueuedRetirementGateway(receiver)).presentation(
+        retirement_request(receiver, middle)
+    )
+    assert result.applied and not result.errors
+    assert middle not in receiver.layer_route_state.layers
+    assert receiver.layer_route_state.layer(raw).data.shape[-3:] == (2, 5, 7)
+    for route, (old, identity) in retained.items():
+        native = receiver.layer_route_state.layer(route)
+        assert (native is not old) is joined
+        assert set(native.features.iloc[list(native.selected_data)][feature]) == {identity}
+        assert set(native.selected_data) <= set(native._indices_view)
+        state = receiver.layer_route_state.dimension_state_for(route)
+        assert state.presentation.projection.component_values["well"] == (
+            ["A01", "A03"] if joined else ["A03"]
+        )
+        assert tuple(native.scale[-2:]) == (0.65, 0.65)
+        assert native.scale[presentation.axis_labels.index("z_index")] == 2
+    assert viewer.layers.selection.active is receiver.layer_route_state.layer(routes[1])
+    expected = list(frame)
+    expected[presentation.axis_labels.index("well")] = 1
+    np.testing.assert_allclose(viewer.dims.point, expected)
+    assert viewer.dims.order == order
+    assert viewer.camera.zoom == 31
+    np.testing.assert_allclose(viewer.camera.center, (0, 1.3, 1.95))
+    QApplication.instance().processEvents()
+    np.testing.assert_allclose(viewer.dims.point, expected)
+    for route, (_, identity) in retained.items():
+        layer = receiver.layer_route_state.layer(route)
+        assert set(layer.features.iloc[list(layer.selected_data)][feature]) == {identity}
 
 
 def test_controller_remount_retains_linked_subject_members_and_binding(receiver):
