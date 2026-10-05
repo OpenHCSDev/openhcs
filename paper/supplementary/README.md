@@ -244,6 +244,29 @@ OpenHCS-derived overlays, native display windows and screenshot cropping/scaling
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
+## Supplementary Figure 13. Final local evidence from autonomous core/boundary repair
+
+![Matched native DNA, actin, seeded territories and combined ROI views from the final paired-channel repeat.](../figures/slas/h003_fresh656_native.png){width=6in}
+
+Matched final views from the fresh, uncoached H003 repeat show DNA (A), actin
+(B), seeded territories (C), and DNA with nuclear and territory outlines (D).
+The crop includes three nuclei recovered by separating core detection from
+boundary growth; their preceding loss is recorded in Supplementary Data 8.
+Nuclear recovery is useful despite uncertain crowded territory interfaces.
+Raw panels remain separate because filled overlays obscure fluorescence.
+Windows are 0–255 for DNA and 0–60 for actin, gamma 1; label colours are not
+fluorescence. Original captures were cropped/scaled without pixel retouching,
+and physical calibration is unverified. The
+[source proof](../figures/slas/h003_fresh656_sources/source-proof.json) and
+[outcome record](task_only_analysis/h003-fresh656-local-repair.json) retain
+capture identities, the frozen pipeline and distributed review beyond this crop.
+
+Source: BBBC007v1 A02, Sabatini laboratory, Whitehead Institute; CC0.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
 ## Supplementary Data 1. CellProfiler workflow comparison
 
 This supplement indexes source tables and evaluation records. Figure scripts

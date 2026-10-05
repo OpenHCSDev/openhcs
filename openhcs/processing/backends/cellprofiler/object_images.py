@@ -5,10 +5,12 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
+from functools import lru_cache
 from typing import Annotated, ClassVar
 
 from metaclass_registry import AutoRegisterMeta
 import numpy as np
+from numba import njit
 
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
@@ -22,6 +24,7 @@ from openhcs.core.pipeline.function_contracts import (
     special_inputs,
 )
 from openhcs.core.public_api import public_names_from_objects
+from openhcs.core.processing_preparation import PersistentNumbaKernelPreparation
 from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
@@ -108,6 +111,7 @@ class ObjectConversionStats(MeasurementFeatureRecord):
 
 class ImageModeRenderer(
     EnumKeyedStrategyMixin[ImageMode],
+    PersistentNumbaKernelPreparation,
     ABC,
     metaclass=AutoRegisterMeta,
 ):
@@ -115,6 +119,15 @@ class ImageModeRenderer(
 
     __enum_member_attr__ = "image_mode"
     image_mode: ClassVar[ImageMode | None] = None
+
+    @classmethod
+    def prepare_registered_family(cls) -> None:
+        for renderer in cls.registered_strategy_types():
+            renderer.prepare_rendering()
+
+    @classmethod
+    def prepare_rendering(cls) -> None:
+        """Prepare computational kernels required by this rendering mode."""
 
     @abstractmethod
     def render(self, labels: np.ndarray, *, colormap_value: str) -> np.ndarray:
@@ -145,13 +158,118 @@ class ColorImageModeRenderer(ImageModeRenderer):
 
     def render(self, labels: np.ndarray, *, colormap_value: str) -> np.ndarray:
         max_label = labels.max()
-        colors = object_label_colormap(colormap_value, max_label)
+        colors = self.palette(colormap_value, max_label)
         pixel_data = colors[labels]
         return (
             np.float32(0.299) * pixel_data[..., 0]
             + np.float32(0.587) * pixel_data[..., 1]
             + np.float32(0.114) * pixel_data[..., 2]
         ).astype(np.float32, copy=False)
+
+    @staticmethod
+    def palette(colormap_name: str, num_labels: int) -> np.ndarray:
+        """Return label-indexed colors with an explicit black background row."""
+        from matplotlib import colormaps
+
+        cmap = colormaps.get_cmap(colormap_name)
+        colors = np.zeros((num_labels + 1, 3), dtype=np.float32)
+        for index in range(1, num_labels + 1):
+            colors[index] = cmap(index / max(num_labels, 1))[:3]
+        return colors
+
+    @classmethod
+    @lru_cache(maxsize=256)
+    def blend_palette(cls, colormap_name: str, num_labels: int) -> np.ndarray:
+        """Retain the positive-label palette for repeated indexed blending."""
+        return cls.palette(colormap_name, max(num_labels, 0))[1:]
+
+    @classmethod
+    def blend_image(
+        cls,
+        grayscale: np.ndarray,
+        labels: np.ndarray,
+        *,
+        opacity: float,
+        max_label: int | None,
+        seed: int | None,
+        colormap_value: str,
+    ) -> np.ndarray:
+        """Blend indexed label colors into one grayscale plane or volume."""
+        if grayscale.shape != labels.shape:
+            raise ValueError(
+                "Indexed label colors and grayscale pixels must exactly match; "
+                f"got {grayscale.shape!r} and {labels.shape!r}."
+            )
+        if labels.ndim not in (2, 3):
+            raise ValueError(
+                "Indexed color blending requires 2-D or 3-D object labels, got "
+                f"shape {labels.shape!r}."
+            )
+        is_plane = labels.ndim == 2
+        if is_plane:
+            grayscale = grayscale[None, ...]
+            labels = labels[None, ...]
+        normalized = np.empty(grayscale.shape, dtype=np.float32)
+        for index, plane in enumerate(grayscale):
+            maximum = plane.max()
+            normalized[index] = plane / maximum if maximum > 1.0 else plane
+        label_count = int(labels.max()) if max_label is None else int(max_label)
+        if seed is not None:
+            np.random.seed(seed)
+        colors = cls.blend_palette(colormap_value, label_count)
+        if seed is not None and len(grayscale) > 1:
+            # Each later plane historically reset the seed before its palette hit.
+            np.random.seed(seed)
+        weight_dtype = np.result_type(np.empty((0,), dtype=np.float32), opacity)
+        output = _blend_label_colors(
+            normalized,
+            np.ascontiguousarray(labels, dtype=np.int32),
+            colors,
+            weight_dtype.type(1.0 - opacity),
+            weight_dtype.type(opacity),
+        )
+        return output[0] if is_plane else output
+
+    @classmethod
+    def prepare_rendering(cls) -> None:
+        image = np.zeros((1, 2, 2), dtype=np.float32)
+        labels = np.ones(image.shape, dtype=np.int32)
+        for readonly in (False, True):
+            labels.setflags(write=not readonly)
+            for opacity in (0.3, np.float64(0.3)):
+                cls.blend_image(
+                    image,
+                    labels,
+                    opacity=opacity,
+                    max_label=1,
+                    seed=None,
+                    colormap_value="jet",
+                )
+
+
+@njit(cache=True)
+def _blend_label_colors(grayscale, labels, colors, background_weight, color_weight):
+    """Write final RGB pixels without foreground gathers or blend temporaries."""
+    output = np.empty((*grayscale.shape, 3), dtype=np.float32)
+    for z in range(grayscale.shape[0]):
+        for y in range(grayscale.shape[1]):
+            for x in range(grayscale.shape[2]):
+                gray = grayscale[z, y, x]
+                label = labels[z, y, x]
+                for channel in range(3):
+                    value = gray
+                    if label > 0 and colors.shape[0] > 0:
+                        color_index = (label - 1) % colors.shape[0]
+                        value = (
+                            background_weight * gray
+                            + color_weight * colors[color_index, channel]
+                        )
+                    if value < 0.0:
+                        value = 0.0
+                    if value > 1.0:
+                        value = 1.0
+                    output[z, y, x, channel] = value
+    return output
 
 
 class Uint16ImageModeRenderer(ImageModeRenderer):
@@ -167,17 +285,6 @@ class Uint16ImageModeRenderer(ImageModeRenderer):
                 f"range 0..65535, got {minimum}..{maximum}."
             )
         return labels.astype(np.uint16, copy=False)
-
-
-def object_label_colormap(colormap_name: str, num_labels: int) -> np.ndarray:
-    """Generate colors for object labels using a matplotlib colormap."""
-    from matplotlib import colormaps
-
-    cmap = colormaps.get_cmap(colormap_name)
-    colors = np.zeros((num_labels + 1, 3), dtype=np.float32)
-    for index in range(1, num_labels + 1):
-        colors[index] = cmap(index / max(num_labels, 1))[:3]
-    return colors
 
 
 @numpy_decorator(contract=ProcessingContract.PURE_2D)
@@ -325,5 +432,4 @@ __all__ = public_names_from_objects(
     Uint16ImageModeRenderer,
     convert_image_to_objects,
     convert_objects_to_image,
-    object_label_colormap,
 )

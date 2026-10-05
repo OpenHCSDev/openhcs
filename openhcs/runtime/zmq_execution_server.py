@@ -23,6 +23,7 @@ from zmqruntime.startup import EndpointStartupStatusCallback
 
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from objectstate.object_state import ObjectState
+from objectstate.object_state_registry import ObjectStateRegistry
 from openhcs.core.config_document import ConfigDocumentAuthority
 from openhcs.core.orchestrator.cancellation import ExecutionCancelledError
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
@@ -544,9 +545,14 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
                 request_context.compile_artifact_id,
             )
             self._ensure_request_global_config_context(request_context)
-            resolved_config = ObjectState(
-                request_context.pipeline_config
-            ).to_saved_resolved_object()
+            resolved_config, _ = ObjectState.resolve_saved_object(
+                request_context.pipeline_config,
+                ancestor_objects_with_scopes=(
+                    ObjectStateRegistry.get_ancestor_objects_with_scopes(
+                        None, use_saved=True
+                    )
+                ),
+            )
             orchestrator = self._initialize_orchestrator(
                 request_context.execution_id,
                 plate_path_str,
