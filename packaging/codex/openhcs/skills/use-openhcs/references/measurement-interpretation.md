@@ -196,6 +196,29 @@ units, not body diameter or screenshot spacing. Propose smoothing, prominence
 or exclusion from the measured nuisance-versus-neighbour landscape, rather than
 assuming a switch to shape seeds establishes one marker per body.
 
+Worked crowded-haze contrast: distinct compact raw bodies can sit inside one
+broad admitted foreground region. Its distance transform measures distance to
+the region's background, not to each raw body's boundary. A broad plateau or
+bridge can therefore dominate shape markers even when the raw diameters and
+entered separation look reasonable. In the first bounded candidate, compare
+the actual support and landscape at the crowded bodies with an isolated body
+and a faint positive. A distance peak spanning several raw bodies, or much
+larger than their supported radii, is evidence against treating that landscape
+as a body-scale measurement. Follow support, emitted markers, unfiltered basins
+and retained labels: maximum-size rejection can hide a large merged basin and
+make the final image look like absent signal.
+
+If diffuse foreground causes the mismatch, test a justified admission or
+background-correction change through the
+[foreground diagnostics](segmentation-diagnostics.md#foreground-before-unclumping)
+before increasing suppression or simply relaxing the size limit. Local
+thresholding alone may retain the same haze; choose its model from measured
+regional classes, not the word adaptive. Keep the faint positive and regional
+nuisance controls, and judge recovered individual bodies rather than increased
+counts or changed secondary-cell partitions. This contrast motivates an early
+diagnostic, not a fixed threshold method, window size or requirement to perfectly
+separate every crowded object before retaining useful detections elsewhere.
+
 Competition scope is another part of that proposal: where a peak finder
 competes per label, a binary support label groups all foreground together,
 whereas distinct connected-component labels can restrict competition locally.
