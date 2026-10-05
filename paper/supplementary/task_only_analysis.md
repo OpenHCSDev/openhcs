@@ -1131,6 +1131,35 @@ border supports retained partial-object uncertainty. These observations support
 useful autonomous localisation; neither exhaustive biological counting accuracy
 nor segmentation boundary accuracy was measured.
 
+After the original author exited and its viewer/runtime closed, the existing
+point-centre evaluator compared the unchanged final Z/Y/X coordinates with
+15 manual annotations. It used the previously declared 30-voxel primary
+distance and 10/20/40-voxel sensitivity distances for Euclidean one-to-one
+matching. No rounding, coordinate rescaling or threshold adjustment was used.
+
+| Matching distance (unscaled voxels) | Matched annotations / 15 | Unmatched predictions / 26 | Mean matched error (voxels) | Maximum matched error (voxels) |
+|---|---:|---:|---:|---:|
+| 10 | 14 | 12 | 4.39 | 7.07 |
+| 20 | 15 | 11 | 4.80 | 10.46 |
+| 30 (primary) | 15 | 11 | 4.80 | 10.46 |
+| 40 | 15 | 11 | 4.80 | 10.46 |
+
+Annotation coverage has not been established as exhaustive. The 11 unmatched
+predictions at the primary distance are therefore not demonstrated false
+biological detections, and reference-relative precision/F1 do not establish
+whole-volume detection accuracy. At 30 voxels one reference point had multiple
+candidate neighbours; at 20 voxels none did, while the matching remained
+one-to-one at both distances. Distances use unscaled voxels rather than
+calibrated physical units. An earlier independent author also matched 15/15
+at 30 voxels and 14/15 at 10 voxels; this result reproduces that annotated-centre
+recall rather than demonstrating improved recall. No scores were returned to
+the author or other active blind authors.
+
+The [evaluation receipt](task_only_analysis/h002-fresh15-postfreeze-evaluation.json)
+records exact scorer, reference and prediction hashes, coordinate columns and
+all four evaluations. The [postfreeze comparison](../../figure-collection-20261004/H002-FRESH15-POSTFREEZE-LOCALISATION.rst)
+records its independent execution and reproduction procedure.
+
 The final pipeline SHA-256 is
 `41dc592d5cfa21e9cfa2ff0242626051363bc6ddede401d5e1e4bf9201d51d44`;
 the registered custom callable SHA-256 is
@@ -1143,7 +1172,7 @@ The complete 208-file payload hash check passed. All 26 native Points rows
 were reconciled by the original author with persisted coordinates, labels and
 voxel counts. Final execution and exact viewer/runtime closure are verified
 separately from the retained client exit code of 2. No physical calibration or
-new reference score is inferred.
+segmentation-boundary score is inferred from the centre comparison.
 
 ### Programme-wide evidence scope
 

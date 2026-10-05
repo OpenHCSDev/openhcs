@@ -1075,8 +1075,14 @@ around a lobed chromatin complex and partial border supports. The
 [independent review](../../figure-collection-20261004/H002-FRESH15-INDEPENDENT-CENTRES-REVIEW.rst)
 identifies all twelve reviewed captures. The [detailed outcome](task_only_analysis.md#h002-fresh15-measurement-first-volumetric-centres)
 retains the final pipeline and custom-callable hashes, the 208-file payload
-verification and technical rerun history. Reference accuracy and an exhaustive
-biological count remain unmeasured.
+verification and technical rerun history. Postfreeze one-to-one comparison
+matched all 15 manual centres within the predeclared 30-voxel distance, with
+mean localisation error 4.80 voxels; 14 matched within 10 voxels. Eleven of
+the 26 predictions were unmatched to the annotations, whose coverage was not
+established as exhaustive. This measures annotated-centre localisation rather
+than a whole-volume census or boundary accuracy. The
+[evaluation receipt](task_only_analysis/h002-fresh15-postfreeze-evaluation.json)
+retains all four distance thresholds and exact input identities.
 
 A fresh-context paired DNA/actin author also retained 55 nuclei and 55
 source-linked actin territories after repairing a local nuclear merge. A
