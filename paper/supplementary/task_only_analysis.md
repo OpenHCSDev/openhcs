@@ -861,6 +861,24 @@ These paths identify retained evidence rather than a portable archive. At the
 independent checkpoint runtime cleanup was pending; biological output completion
 does not imply sealed outer journals or verified runtime retirement.
 
+### H003 fresh10: nuclear recovery and selective body admission
+
+A separate task-only author corrected internal-texture splits, then detected
+and repaired a bright/dim neighbour merge. Subsequent shape-marker revisions
+recovered dense-region nuclei lost when oversized merged basins were filtered.
+The final output contains 55 nuclear instances and 53 admitted actin-associated
+regions; two weak associated regions remain separately reported rather than
+silently removed from the nuclear result. Integer-mask readback distinguishes
+the final pair even where adjacent label colours look similar.
+
+The [independent native review](../../figure-collection-20261004/H003-FRESH10-INDEPENDENT-RECOVERY-REVIEW.rst)
+and [source proof](task_only_analysis/h003-fresh10-source-proof.json) retain
+original matched raw/result/outline witnesses, frozen source identity and
+claim-specific qualifications. Useful nuclear localisation and local recovery
+are supported; crowded actin boundaries and an elongated nuclear identity remain
+uncertain. No manual-reference accuracy or exhaustive biological count is claimed.
+These are the author's own revisions, not externally corrected analysis.
+
 ### H002 fresh10: ordinary-body repair and unresolved cluster identity
 
 The independent task-only author `H002_FRESH10_89` analysed the complete

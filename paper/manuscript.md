@@ -247,7 +247,11 @@ its method. Boundary revision reduced assigned actin area from 55,903 to
 52,787 pixels while preserving 55 instances. A nucleus with unsupported actin
 extent and uncertain crowded interfaces remained. These trials demonstrate
 useful nuclear recovery and boundary revision, assessed independently of
-whether each linked territory represents a physical cell.
+whether each linked territory represents a physical cell. Another independent
+author corrected texture-driven splits and a bright/dim merge, recovering
+55 nuclear instances while withholding two weak actin regions from its
+53-region body result. Crowded boundaries remained uncertain (Supplementary
+Data 8).
 
 Retinal authors used measured background and weak-body support to select
 smoothing, background subtraction and foreground admission. Earlier repeats
