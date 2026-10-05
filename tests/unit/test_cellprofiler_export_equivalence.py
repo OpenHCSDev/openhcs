@@ -887,3 +887,38 @@ def test_database_column_declarations_own_export_and_equivalence_names() -> None
         normalize_runtime_identifier(family.field_prefix).rstrip("_") + "_"
         for family in CellProfilerImageStructuralFieldFamily
     )
+
+
+def test_database_measurements_keep_complete_relationship_cohort(tmp_path: Path) -> None:
+    import pytest
+
+    from benchmark.cellprofiler_export_equivalence import _sqlite_database_differences
+
+    subjects = {
+        "Per_Parents": MeasurementSubject(MeasurementScope.OBJECT, "Parents"),
+        "Per_Children": MeasurementSubject(MeasurementScope.OBJECT, "Children"),
+    }
+    reference, candidate = (tmp_path / name for name in ("reference.db", "candidate.db"))
+    for path, value in ((reference, 1.5), (candidate, 1.5 + 1e-13)):
+        with sqlite3.connect(path) as connection:
+            connection.execute(
+                "CREATE TABLE Per_Parents (ImageNumber INTEGER, "
+                "Parents_Number_Object_Number INTEGER, Parents_Children_Children_Count INTEGER, "
+                "Parents_AreaShape_Area REAL)"
+            )
+            connection.execute("INSERT INTO Per_Parents VALUES (1, 7, 1, ?)", (value,))
+            connection.execute(
+                "CREATE TABLE Per_Children (ImageNumber INTEGER, "
+                "Children_Number_Object_Number INTEGER, Children_Parent_Parents INTEGER)"
+            )
+            connection.execute("INSERT INTO Per_Children VALUES (1, 11, 7)")
+    policy = cellprofiler_runtime_equivalence_policy()
+    assert not _sqlite_database_differences(
+        reference, candidate, subjects, subjects, policy
+    )
+    # Equal byte content does not excuse a scientifically invalid relationship.
+    for path in (reference, candidate):
+        with sqlite3.connect(path) as connection:
+            connection.execute("UPDATE Per_Children SET Children_Parent_Parents = 8")
+    with pytest.raises(ValueError, match="absent parent endpoint"):
+        _sqlite_database_differences(reference, candidate, subjects, subjects, policy)
