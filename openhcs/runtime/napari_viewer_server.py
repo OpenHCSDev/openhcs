@@ -148,7 +148,7 @@ from openhcs.runtime.viewer_controls import (
     ViewerPolylineControlOptions,
     ViewerRegionControlOptions,
     ViewerRoutedImageControlOptions,
-    ViewerFractionalZPointCoordinateAuthority,
+    ViewerPointCoordinateAuthority,
     ViewerIntensityWindowControlOptions,
     ViewerNativeDimensions,
     ViewerResultElementCoordinateAuthority,
@@ -1872,6 +1872,9 @@ class NapariLayerDisplayHandler(
     """Executable display handler for one Napari stream data type."""
 
     title_suffix: ClassVar[str] = ""
+    result_coordinate_authority: ClassVar[type[ViewerResultElementCoordinateAuthority]] = (
+        ViewerResultElementCoordinateAuthority
+    )
 
     @contextmanager
     def preserve_native_presentation(self, request: NapariLayerDisplayRequest):
@@ -2206,6 +2209,9 @@ class NapariPointsLayerDisplayHandler(
 
     streaming_data_type: ClassVar[StreamingDataType] = StreamingDataType.POINTS
     title_suffix: ClassVar[str] = "points"
+    result_coordinate_authority: ClassVar[type[ViewerResultElementCoordinateAuthority]] = (
+        ViewerPointCoordinateAuthority
+    )
 
     def geometric_component_values(
         self,
@@ -5804,14 +5810,16 @@ class NapariNavigationControlMessageAction(NapariMountedRouteControlMessageActio
             if displayed_axis_indices is None
             else displayed_axis_indices
         )
-        coordinate_authority = (
-            ViewerFractionalZPointCoordinateAuthority
-            if isinstance(layer, napari.layers.Points)
-            else ViewerResultElementCoordinateAuthority
-        )
+        items = server.component_groups.existing_items_for(route_key)
+        if not items:
+            raise ValueError("Result selection requires its original routed source items.")
+        coordinate_authority = NapariLayerDisplayHandler.for_data_type(
+            items[0].address.stream_layer_data_type,
+        ).result_coordinate_authority
         return coordinate_authority.axis_indices(
             coordinates=cast(Sequence[object], coordinates),
             axis_labels=dimension_state.axis_labels,
+            spatial_axis_labels=presentation.spatial_axis_labels,
             displayed_axis_indices=tuple(
                 local_axis
                 for local_axis, viewer_axis in enumerate(dimensions)
