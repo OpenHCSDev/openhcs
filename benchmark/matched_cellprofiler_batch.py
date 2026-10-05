@@ -402,16 +402,13 @@ def _invoke_native_worker(
     repetitions: int,
     timeout_seconds: float | None,
 ) -> dict[str, object]:
-    temporary_root = evidence_prefix.with_name(evidence_prefix.name + "_tmp")
-    temporary_root.mkdir(parents=True, exist_ok=False)
-    native_environment = os.environ.copy()
-    native_environment.update(
-        {name: str(temporary_root) for name in ("TMPDIR", "TMP", "TEMP")}
-    )
+    request = json.loads(request_path.read_text())
+    batch_request = NativeBatchRequest(**request)
+    batch_request.temporary_root.mkdir(parents=True, exist_ok=False)
+    native_environment = batch_request.worker_environment()
     report_path = evidence_prefix.with_name(
         evidence_prefix.name + "_report.json"
     ).resolve()
-    request = json.loads(request_path.read_text())
     request["report_path"] = str(report_path)
     request_path.write_text(json.dumps(request, indent=2) + "\n")
     with (
@@ -445,10 +442,13 @@ def _invoke_native_worker(
 def _probe_native_environment(
     native_python: Path,
     native_worker: Path,
+    request: NativeBatchRequest,
 ) -> NativeBatchEnvironment:
     """Consume the native report owner's capture without Java or pipeline execution."""
+    request.temporary_root.mkdir(parents=True, exist_ok=True)
     result = subprocess.run(
         (str(native_python), str(native_worker), "--environment"),
+        env=request.worker_environment(),
         capture_output=True,
         text=True,
         check=True,
@@ -491,7 +491,8 @@ def _reuse_native_report(
     original_request = NativeBatchRequest(**json.loads(request_path.read_text()))
     if request != original_request:
         raise RuntimeError("Retained native report differs from its original request.")
-    request.require_same_workload(NativeBatchRequest(**native_payload))
+    planned_request = NativeBatchRequest(**native_payload)
+    request.require_same_workload(planned_request)
     for key in (
         "case",
         "wells",
@@ -533,7 +534,7 @@ def _reuse_native_report(
     ):
         raise RuntimeError("Retained native source images or metadata differ.")
     typed_report.environment.require_equivalent(
-        _probe_native_environment(native_python, native_worker)
+        _probe_native_environment(native_python, native_worker, planned_request)
     )
     typed_report.require_complete(int(native_payload["repetitions"]))
     if any(
