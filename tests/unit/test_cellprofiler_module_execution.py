@@ -24,6 +24,7 @@ from openhcs.constants.constants import (
 from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
     AlignedImageStack,
+    ProducedImageStack,
     ImageOutputBundle,
     ImagePayloadBundleContext,
     ImagePayloadExecutionMode,
@@ -12523,11 +12524,45 @@ def test_object_only_measurement_carrier_preserves_aligned_stack() -> None:
         source_aliases=(),
         payload=payload,
         reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+        execution_mode=ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK,
     )
 
     assert carrier.payload is payload
     assert isinstance(carrier.payload, AlignedImageStack)
     assert len(carrier.payload.slices) == 2
+
+
+@pytest.mark.parametrize(
+    "execution_mode",
+    (ImagePayloadExecutionMode.NATURAL, ImagePayloadExecutionMode.FULL_STACK),
+)
+def test_literal_measurement_stack_preserves_pixels_in_object_reference_domain(
+    execution_mode: ImagePayloadExecutionMode,
+) -> None:
+    pixels = np.arange(20, dtype=np.float32).reshape(4, 5) / 20
+    mask = np.ones(pixels.shape, dtype=bool)
+    mask[0, 0] = False
+    metadata = ImagePayloadMetadata(
+        source_path="/inputs/source.tif",
+        source_spatial_domain=SourceSpatialDomain(source_shape_yx=pixels.shape),
+    )
+    stack = ProducedImageStack(
+        (metadata.payload_with(pixels, mask),),
+        memory_type="numpy", plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+    )
+    labels = ObjectLabelPayload(
+        variant_data=ObjectLabelVariantData(labels=np.ones(pixels.shape, dtype=np.int32)),
+    )
+    carrier = CellProfilerMeasurementImage(
+        source_image_name="Source", payload=stack,
+        reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+        execution_mode=execution_mode,
+    )
+    prepared = carrier.prepare_object_labels(labels)
+    np.testing.assert_array_equal(image_payload_data(prepared.aligned_image), pixels)
+    np.testing.assert_array_equal(image_payload_mask(prepared.aligned_image), mask)
+    assert image_payload_metadata(prepared.aligned_image).source_path == metadata.source_path
+    np.testing.assert_array_equal(prepared.measurement_labels, labels.labels)
 
 
 def test_filterobjects_binds_selection_measurement_values_to_label_slices() -> None:
