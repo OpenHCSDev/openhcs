@@ -92,6 +92,17 @@ views; judge new faint misses by the
 [distributed, claim-scoped quality criteria](analysis-strategy.md#scope-conclusions-to-the-evidence),
 not by count agreement or a requirement of zero errors.
 
+A residual check inherits its own admission criteria. Zero unlabelled
+**strong** components does not establish completeness for faint bodies excluded
+by that intensity/area rule. Retain an independently identified weak positive
+under a faint-preserving raw window; another aligned channel can support its
+presence without defining its boundary. Trace that witness through the stages
+above even when the strong-residual summary is clean. If its support breaks
+into undersized pieces, distinguish fragmented admission from genuine small
+debris before relaxing size exclusion. Keep useful strong-body detections and
+their measurements, while qualifying the missed population and affected
+body-dependent quantities rather than calling every measurement invalid.
+
 A below-minimum label can be the tiny bright island left by threshold shrinkage
 inside a much broader dim raw body, not genuine small debris. Compare independently
 measured raw chords/extent with admitted support and unfiltered geometry before
