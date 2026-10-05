@@ -269,7 +269,7 @@ during its first repair. The final 54 nuclear instances and associated actin
 territories retained one no-growth candidate and uncertain crowded cell-body
 divisions. Nuclear recovery therefore succeeded locally even where cell-body
 interpretation remained unresolved; no manual-reference accuracy score was
-calculated for this repeat (Supplementary Data 8).
+calculated for this repeat (Supplementary Figure 13; Supplementary Data 8).
 
 A fresh retinal author independently revised its foreground model after measuring background admission and weak-body support. Smoothing followed by broad-background subtraction improved local signal discrimination, and the completed final pipeline exported 109 detector instances (Figure 9). Distributed review still found partial faint-body recovery and uncertain ring-shaped partitions; a saved response below the cutoff localized one plausible miss to foreground admission rather than watershed. This is evidence of autonomous diagnosis and useful candidate output, not a validated retinal ganglion-cell count (Supplementary Data 8).
 
