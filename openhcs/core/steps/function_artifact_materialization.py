@@ -657,15 +657,9 @@ class RuntimeArtifactMaterialization:
             )
             if source_identity is not None and not source_identity.addressable:
                 source_identity = None
-            if artifact_path is not None and (
-                dict_key is not None
-                or cls.source_identity_for_path(context, artifact_path) is not None
-            ):
-                return (
-                    f"{Path(artifact_path).stem}.roi.zip",
-                    source_identity,
-                    None,
-                )
+            # The in-memory location is shared by records with distinct runtime
+            # scopes. Only the admitted record, not that location's filename,
+            # establishes which persistent occurrence is being published.
             return cls._aggregate_identity(
                 output_key,
                 plan,

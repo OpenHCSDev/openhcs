@@ -119,10 +119,12 @@ from openhcs.core.runtime_spatial_grid import (
     SpatialGrid,
 )
 from openhcs.core.runtime_stores import (
+    RuntimeArtifactAddress,
     RuntimeArtifactLocation,
     RuntimeValueStore,
     StoredRuntimeValue,
 )
+from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.runtime_tabular_values import (
     ColumnarRows,
 )
@@ -1513,7 +1515,7 @@ def test_runtime_output_snapshot_from_artifact_execution_ignores_auxiliary_table
         encoding="utf-8",
     )
     store = RuntimeValueStore()
-    store.record(
+    record = store.record(
         RuntimeValue(
             key=ArtifactKey(
                 name="Measurements",
@@ -1533,7 +1535,19 @@ def test_runtime_output_snapshot_from_artifact_execution_ignores_auxiliary_table
         runtime_records_by_axis(
             {"A01": SimpleNamespace(runtime_value_store=store, step_plans={})}
         ),
-        RuntimeExportObservation.from_output_root(output_root),
+        RuntimeExportObservation.from_output_root(
+            output_root,
+            outputs=StepExecutionObservation(
+                {
+                    RuntimeArtifactAddress.from_record(record): (
+                        RuntimeArtifactLocation(
+                            str(output_root / "A01_Measurements_step1.csv"), "disk"
+                        ),
+                    ),
+                },
+                (output_root / "A01_Measurements_step1.csv",),
+            ),
+        ),
     )
 
     snapshot = RuntimeOutputSnapshot.from_artifact_execution_observation(observation)

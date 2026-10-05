@@ -575,17 +575,9 @@ def execute_plate_scoped_steps(
                 context_key=context_key,
                 context=context,
                 records=records,
-                runtime_export_paths=tuple(
-                    dict.fromkeys(
-                        path
-                        for item in observations_by_context[context_key]
-                        for path in item.runtime_export_paths
-                    )
-                ),
                 runtime_observation_mode=RuntimeObservationMode.MERGE_INTO_PARENT,
-                analysis_inputs=RuntimeAnalysisConsolidationInputs.combine(
-                    item.analysis_inputs
-                    for item in observations_by_context[context_key]
+                outputs=StepExecutionObservation.combine(
+                    observations_by_context[context_key]
                 ),
             )
             for context_key, context in compiled_contexts.items()
