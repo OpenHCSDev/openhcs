@@ -52,7 +52,9 @@
     "native_full_over_ordinary_execute": 2.6252837245003966,
     "two_times_full_total_budget_seconds": 0.3477610381087288,
     "remaining_total_cut_seconds": 0.21813464595470577,
-    "two_times_total_target_met": false
+    "two_times_total_target_met": false,
+    "native_module_over_ordinary_execute": 2.366479501283403,
+    "primary_fair_comparison": "first_module_through_post_run native execution / OpenHCS execute; full invocation / OpenHCS total separately"
   },
   "science": {
     "status": "PASS",
