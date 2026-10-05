@@ -714,6 +714,9 @@ def test_admitted_request_config_survives_next_live_global_context(
     from openhcs.core.orchestrator import orchestrator as orchestrator_module
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
     from openhcs.core.pipeline.compiler import AxisCompilationRequest
+    from openhcs.core.pipeline.materialization_flag_planner import (
+        MaterializationFlagPlanner,
+    )
 
     authored = PipelineConfig(microscope=Microscope.OPENHCS)
     ensure_global_config_context(
@@ -746,6 +749,13 @@ def test_admitted_request_config_survives_next_live_global_context(
         pipeline=SimpleNamespace(), path_resolver=SimpleNamespace(),
         global_step_axis_filters={}, enable_visualizer_override=False,
         source_projections_by_axis={},
+        materialization_planner=MaterializationFlagPlanner(
+            pipeline_config=admitted,
+            microscope_handler=orchestrator.microscope_handler,
+            filemanager=orchestrator.filemanager,
+            input_dir=orchestrator.input_dir,
+            available_axis_values=("A01",),
+        ),
         is_zmq_execution=True,
     )
     context = request.context_for("A01")
