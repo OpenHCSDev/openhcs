@@ -69,7 +69,7 @@ from openhcs.core.source_image_provenance import (
     SourceImageProvenance,
 )
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
-from openhcs.core.source_metadata import SourceMetadataFields, SourceMetadataScalar
+from openhcs.core.source_metadata import SourceMetadataScalar
 from openhcs.core.source_workspace_projection import (
     VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjectionAuthority,
@@ -87,7 +87,6 @@ from .measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,
 )
 from .module_declarations import CellProfilerModule
-from .source_metadata import CellProfilerSourceMetadataField
 
 
 class CellProfilerObjectTableMode(str, Enum):
@@ -920,11 +919,8 @@ class CPATableRowProjection:
             values: dict[str, Any] = {}
             source_path = self._resolved_source_path(plane_provenance.source_path)
             if source_path is not None:
-                values[self.dialect.source_image_path_field(source_image_name).name] = (
-                    str(source_path.parent)
-                )
-                values[self.dialect.source_image_file_field(source_image_name).name] = (
-                    source_path.name
+                values.update(
+                    self.dialect.source_image_file_values(source_path, source_image_name)
                 )
                 if source_path.is_file():
                     values.update(
@@ -948,14 +944,9 @@ class CPATableRowProjection:
                 field_name: value
                 for field_name, value in self.dialect.source_metadata_defaults().items()
             }
-            if source_path is not None:
-                metadata_items[
-                    CellProfilerSourceMetadataField.FILE_LOCATION.field_name
-                ] = source_path.as_uri()
-            if component_metadata is not None:
-                metadata_items.update(
-                    SourceMetadataFields.original_items(component_metadata)
-                )
+            metadata_items.update(
+                self.dialect.source_metadata_values(component_metadata, source_path)
+            )
             image_number = self.image_set_numbering.for_source_slice(
                 scope=scope,
                 provenance=provenance,
