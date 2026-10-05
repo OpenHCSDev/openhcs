@@ -81,6 +81,7 @@ from openhcs.core.steps.function_output_identity import (
 )
 from openhcs.core.steps.stream_component_semantics import (
     StreamImagePayloadMetadataProjector,
+    StreamSourceComponentMetadataItems,
     StreamViewerComponentMetadataProjector,
     StreamScopedDisplayConfig,
 )
@@ -318,6 +319,24 @@ class Output:
         return self.source_identity.component_metadata
 
     @property
+    def viewer_source_identity(self) -> SourceImageIdentity | None:
+        """Return the address of this rendered stream item, not its domain."""
+        return self.source_identity
+
+    def stream_source_metadata_items(
+        self, fallback_source_identity: SourceImageIdentity | None,
+    ) -> StreamSourceComponentMetadataItems:
+        """Observe sources from the actual rendered output's declared planes."""
+        if self.metadata is not None:
+            return StreamSourceComponentMetadataItems.from_image_metadata(
+                self.metadata, fallback_source_identity=fallback_source_identity,
+            )
+        return StreamSourceComponentMetadataItems.from_values(
+            (fallback_source_identity.component_metadata
+             if fallback_source_identity is not None else None,)
+        )
+
+    @property
     def viewer_stream_requires_source_metadata(self) -> bool:
         return True
 
@@ -368,6 +387,39 @@ class Output:
         return replace(
             self,
             variable_components=ComponentSet.coerce(variable_components).as_tuple(),
+        )
+
+
+@dataclass(frozen=True)
+class PointROIOutput(Output):
+    """A point archive's represented source domain is geometric, not pixel planes."""
+
+    @property
+    def source_component_domain(self) -> tuple[SourceComponentMetadata, ...]:
+        from openhcs.core.roi_point_metadata import ROIFractionalZ
+
+        if self.metadata is None:
+            raise ValueError("Point ROI output requires exact source metadata.")
+        domain = ROIFractionalZ.source_component_domain(self.content, self.metadata)
+        if domain is None:
+            raise ValueError("Point ROI output requires fractional-Z metadata.")
+        return domain
+
+    @property
+    def viewer_source_identity(self) -> SourceImageIdentity:
+        identity = self.source_identity
+        return SourceImageIdentity(
+            path=identity.path if identity is not None else None,
+            component_metadata=self.source_component_domain[0],
+        )
+
+    def stream_source_metadata_items(
+        self, fallback_source_identity: SourceImageIdentity | None,
+    ) -> StreamSourceComponentMetadataItems:
+        # A filename/scalar fallback cannot replace the validated geometric domain.
+        del fallback_source_identity
+        return StreamSourceComponentMetadataItems.from_values(
+            self.source_component_domain,
         )
 
 
@@ -1726,7 +1778,7 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
         dict[str, ViewerWireValue],
         ViewerDisplayConfigABC,
     ] | None:
-        source_identity = output.source_identity
+        source_identity = output.viewer_source_identity
         if source_identity is not None:
             source_identity = source_identity.with_parsed_path_components(
                 self.values.stream_request.source.identity.microscope_handler.parser
@@ -3402,14 +3454,14 @@ def _write_point_roi_zip(
     if not rois:
         raise ValueError("Point ROI ZIP requires at least one measured object.")
     metadata = ImagePayloadMetadata(source_provenance=provenance)
-    ROIFractionalZ.source_component_domain(rois, metadata)
-    return [
-        Output(
-            path=ctx.paths(options).primary_output_path(options),
-            content=ROIArchiveSourceMetadata.bind(rois, metadata),
-            metadata=metadata,
-        )
-    ]
+    output = PointROIOutput(
+        path=ctx.paths(options).primary_output_path(options),
+        content=ROIArchiveSourceMetadata.bind(rois, metadata),
+        metadata=metadata,
+    )
+    # Admit the domain before any persistence or publication uses this output.
+    output.source_component_domain
+    return [output]
 
 
 @writer_for(

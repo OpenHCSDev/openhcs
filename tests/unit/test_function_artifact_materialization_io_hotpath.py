@@ -120,6 +120,7 @@ def test_persistent_only_backend_kwargs_skip_stream_payload_projection(
     target = PersistentArtifactMaterializationTargetPlan("disk")
     kwargs = target.backend_kwargs(
         materialization=materialization,
+        outputs=(Output(path="/images/SavedImage.tif", content=payload),),
         persistent_backend_kwargs={"disk": RawBackendKwargs()},
         streaming_viewer_surfaces=streaming_viewer_surfaces,
         fallback_source_identity=None,

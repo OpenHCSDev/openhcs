@@ -1119,7 +1119,8 @@ def test_materialize_artifact_outputs_uses_declared_measurement_csv_spec(
     assert path == "/analysis/A01_measurements_step7.roi.zip"
 
 
-def test_runtime_artifact_plan_materializes_3d_point_measurements():
+@pytest.mark.parametrize("source_z_origin", (0, 10))
+def test_runtime_artifact_plan_materializes_3d_point_measurements(source_z_origin):
     features = ObjectCoreMeasurementFeature
     output_plan = ArtifactOutputPlan(
         name="nuclei_centres",
@@ -1159,7 +1160,7 @@ def test_runtime_artifact_plan_materializes_3d_point_measurements():
             paths=(source_path,) * 4,
             component_metadata=tuple(
                 {"well": "A01", "site": 1, "channel": 1, "z_index": z, "timepoint": 1}
-                for z in range(4)
+                for z in range(source_z_origin, source_z_origin + 4)
             ),
         ),
         subject=MeasurementSubject(MeasurementScope.OBJECT, "nuclei", "object_label"),
@@ -1181,6 +1182,31 @@ def test_runtime_artifact_plan_materializes_3d_point_measurements():
     assert result.content[0].metadata["response"] == 4.75
     assert ROIFractionalZ.decode(result.content[0].metadata) == ROIFractionalZ(2.375)
     assert ROIArchiveSourceMetadata.decode(result.content).source_path == source_path
+
+    # The measurement table has no pixel-plane axis. Its rendered point archive
+    # nevertheless owns every represented Z plane, not only its scalar address.
+    assert result.metadata.plane_axis is None
+    domain = materialization.stream_source_metadata_items((result,), None)
+    assert [item["z_index"] for item in domain.values] == list(
+        range(source_z_origin, source_z_origin + 4)
+    )
+    assert result.viewer_source_identity.component_metadata["z_index"] == source_z_origin
+    config = streaming_config_stub()
+    plan = _plan(
+        output_plan,
+        variable_components=(VariableComponents.Z_INDEX,),
+        streaming_configs={"napari_stream": config},
+    )
+    [saved] = StreamingOnlyArtifactMaterializationTargetPlan().materialize_outputs(
+        context.filemanager, plan, context,
+    )
+    [streamed] = saved.outputs_for_backend("napari_stream")
+    assert streamed.content[0].metadata[ROIFractionalZ.FIELD] == 2.375
+    request = context.filemanager.saved[-1][3]["stream_request"]
+    assert "z_index" in request.display_config.COMPONENT_ORDER
+    assert request.source.metadata.component_metadata_for_item(streamed.path, 0)["z_index"] == source_z_origin
+    z_domain = request.message_extra["component_value_domain"]
+    assert z_domain["z_index"] == list(range(source_z_origin, source_z_origin + 4))
 
 
 def test_multi_plane_measurement_materialization_uses_aggregate_artifact_name():

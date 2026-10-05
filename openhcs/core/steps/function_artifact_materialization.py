@@ -57,6 +57,7 @@ from openhcs.core.steps.stream_component_semantics import (
 from openhcs.core.streaming_config_factory import StreamingViewerSurface
 from openhcs.processing.materialization.core import (
     BackendKwargs,
+    BackendKwargsAuthority,
     MaterializationSpec,
     MaterializationValue,
     Output,
@@ -169,8 +170,19 @@ class ArtifactMaterializationTargetPlan(ABC, metaclass=AutoRegisterMeta):
                 str(materialization.base_path),
                 filemanager,
                 backends,
-                self.backend_kwargs(
+                {},
+                context=context,
+                artifact_source_identity=materialization.source_identity,
+                artifact_filename_identity=materialization.filename_source_identity,
+                variable_components=materialization.output_plan.variable_components,
+                pipeline_position=plan.pipeline_position,
+                output_plan=materialization.output_plan,
+            )
+            batch = replace(batch, context=replace(
+                batch.context,
+                backend_kwargs=BackendKwargsAuthority.normalize(self.backend_kwargs(
                     materialization=materialization,
+                    outputs=batch.outputs,
                     persistent_backend_kwargs=persistent_backend_kwargs,
                     streaming_viewer_surfaces=streaming_viewer_surfaces,
                     fallback_source_identity=(
@@ -184,15 +196,9 @@ class ArtifactMaterializationTargetPlan(ABC, metaclass=AutoRegisterMeta):
                     context=context,
                     filemanager=filemanager,
                     images_dir=images_dir,
-                    stream_output_paths=stream_output_paths,
-                ),
-                context=context,
-                artifact_source_identity=materialization.source_identity,
-                artifact_filename_identity=materialization.filename_source_identity,
-                variable_components=materialization.output_plan.variable_components,
-                pipeline_position=plan.pipeline_position,
-                output_plan=materialization.output_plan,
-            )
+                    stream_output_paths=tuple(output.path for output in batch.outputs),
+                )),
+            ))
             saved_materializations.append(
                 MaterializedRuntimeArtifact(
                     outputs_by_backend=MappingProxyType(
@@ -251,6 +257,7 @@ class ArtifactMaterializationTargetPlan(ABC, metaclass=AutoRegisterMeta):
         self,
         *,
         materialization: "RuntimeArtifactMaterialization",
+        outputs: tuple[Output, ...],
         persistent_backend_kwargs: BackendKwargs,
         streaming_viewer_surfaces: Mapping[str, StreamingViewerSurface],
         fallback_source_identity: SourceImageIdentity | None,
@@ -297,11 +304,14 @@ class ArtifactMaterializationTargetPlan(ABC, metaclass=AutoRegisterMeta):
         if not streamable_viewer_surfaces:
             return result
 
-        source_metadata_items = materialization.stream_source_metadata_items(
-            fallback_source_identity
-        )
         producer = ViewerStreamProducer.from_identity(producer_identity)
         for backend, viewer_surface in streamable_viewer_surfaces.items():
+            backend_instance = filemanager._get_backend(backend)
+            source_metadata_items = materialization.stream_source_metadata_items(
+                tuple(output for output in outputs
+                      if backend_instance.accepts_payload(output.content, output.path)),
+                fallback_source_identity,
+            )
             stream_backend_kwargs = StreamComponentMessageExtraAuthority.from_context(
                 viewer_surface,
                 context=context,
@@ -510,32 +520,19 @@ class RuntimeArtifactMaterialization:
 
     def stream_source_metadata_items(
         self,
+        outputs: tuple[Output, ...],
         fallback_source_identity: SourceImageIdentity | None,
     ) -> StreamSourceComponentMetadataItems:
         """Project this occurrence's sources at the streaming request boundary."""
         fallback_source_identity = (
             fallback_source_identity or self.payload_source_identity(self.data)
         )
-        metadata = image_payload_metadata(self.data)
-        if metadata.plane_axis is not None:
-            return StreamSourceComponentMetadataItems.from_image_metadata(
-                metadata,
-                fallback_source_identity=fallback_source_identity,
-            )
-        emitted_identities = self.spec.emitted_source_identities(self.data)
-        if emitted_identities:
-            return StreamSourceComponentMetadataItems.from_source_identities(
-                emitted_identities,
-                fallback_source_identity=fallback_source_identity,
-            )
         return StreamSourceComponentMetadataItems.from_values(
-            (
-                (
-                    fallback_source_identity.component_metadata
-                    if fallback_source_identity is not None
-                    else None
-                ),
-            )
+            metadata
+            for output in outputs
+            for metadata in output.stream_source_metadata_items(
+                fallback_source_identity,
+            ).values
         )
 
     @staticmethod
