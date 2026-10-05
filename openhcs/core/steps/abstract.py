@@ -56,6 +56,9 @@ class StepExecutionObservation:
 
     runtime_export_paths: tuple[Path, ...] = field(default_factory=tuple)
     analysis_inputs: "RuntimeAnalysisConsolidationInputs | None" = None
+    image_numbers_by_export_path: Mapping[Path, Mapping[str, tuple[int, ...]]] = field(
+        default_factory=dict
+    )
 
     @classmethod
     def empty(cls) -> "StepExecutionObservation":
@@ -80,6 +83,7 @@ class StepExecutionObservation:
         locations = {}
         paths = []
         analysis_inputs = []
+        image_numbers = {}
         for observation in observations:
             for (
                 address,
@@ -90,9 +94,17 @@ class StepExecutionObservation:
                 )
             paths.extend(observation.runtime_export_paths)
             analysis_inputs.append(observation.analysis_inputs)
+            for path, numbers in observation.image_numbers_by_export_path.items():
+                if path in image_numbers and image_numbers[path] != numbers:
+                    raise ValueError(
+                        f"Export {path} has conflicting execution image-number owners."
+                    )
+                image_numbers[path] = numbers
         return cls(
-            MappingProxyType(locations), tuple(dict.fromkeys(paths)),
+            MappingProxyType(locations),
+            tuple(dict.fromkeys(paths)),
             RuntimeAnalysisConsolidationInputs.combine(analysis_inputs),
+            MappingProxyType(image_numbers),
         )
 
 

@@ -264,6 +264,12 @@ class RuntimeImageNumberOffset:
                 key: self.normalized_reference_value(field_name, nested_value)
                 for key, nested_value in value.items()
             }
+        return self.normalized_image_number(value)
+
+    def normalized_image_number(self, value: object) -> object:
+        """Project a schema-declared external image number into the local domain."""
+        if self.value == 0:
+            return value
         numeric_value = runtime_numeric_text_value(str(value))
         if numeric_value is None:
             return value

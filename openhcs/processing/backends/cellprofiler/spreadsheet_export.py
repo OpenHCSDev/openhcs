@@ -23,6 +23,7 @@ from openhcs.core.artifacts import (
     SpecialArtifactType,
 )
 from openhcs.core.callable_contract import FunctionStepExecutionScope
+from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.equivalence import (
     measurement_qualifier_field_names,
 )
@@ -352,6 +353,7 @@ def render_spreadsheet_bundle(
     ),
     add_filename_prefix: bool = True,
     filename_prefix: str = "MyExpt_",
+    context: ProcessingContext | None = None,
 ) -> dict[str, str | bytes]:
     """Render exactly the measurement records selected by ``artifact_batch``."""
 
@@ -447,6 +449,8 @@ def render_spreadsheet_bundle(
                 delimiter=delimiter,
                 nan_representation=nan_representation,
             )
+    if context is not None:
+        image_numbers.observe_export_paths(context, tuple(bundle))
     return bundle
 
 
@@ -1052,6 +1056,7 @@ def export_to_spreadsheet(
     add_filename_prefix: bool = True,
     filename_prefix: str = "MyExpt_",
     artifact_batch: RuntimeArtifactBatch,
+    context: ProcessingContext | None = None,
 ) -> dict[str, str | bytes]:
     """Render one plate's exact contract-selected spreadsheet file bundle.
 
@@ -1069,6 +1074,7 @@ def export_to_spreadsheet(
 
     return render_spreadsheet_bundle(
         artifact_batch,
+        context=context,
         delimiter=delimiter,
         add_image_metadata=add_image_metadata,
         add_image_file_names=add_image_file_names,

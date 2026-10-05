@@ -13,6 +13,10 @@ from metaclass_registry import AutoRegisterMeta
 
 from openhcs.core.equivalence.images import RuntimeImageSnapshot
 from openhcs.core.equivalence.policy import normalize_runtime_identifier
+from openhcs.core.equivalence.policy import (
+    DEFAULT_RUNTIME_MEASUREMENT_DIALECT,
+    RuntimeMeasurementDialect,
+)
 from openhcs.core.equivalence.tables import RuntimeTableSnapshot
 from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.core.runtime_execution_validation import (
@@ -44,15 +48,51 @@ class RuntimeOutputSnapshot:
         *,
         source_workspaces: tuple[Path, ...] = (),
         image_set_policy: SourceImageSetIdentityPolicy = SourceImageSetIdentityPolicy(),
+        execution_axis_id: str | None = None,
+        measurement_dialect: RuntimeMeasurementDialect = DEFAULT_RUNTIME_MEASUREMENT_DIALECT,
     ) -> "RuntimeOutputSnapshot":
         """Build a semantic output snapshot from observed runtime exports."""
-        return cls(
-            tables=RuntimeTableNamespaceAdapter.normalize(
-                tuple(
-                    RuntimeTableSnapshot.from_csv(path)
-                    for path in observation.table_outputs
+        tables = RuntimeTableNamespaceAdapter.normalize(
+            tuple(
+                RuntimeTableSnapshot.from_csv(path)
+                for path in observation.table_outputs
+            )
+        )
+        if execution_axis_id is not None:
+            for path in observation.table_outputs:
+                if path not in observation.outputs.image_numbers_by_export_path:
+                    continue
+                numbers = observation.outputs.image_numbers_by_export_path[path][
+                    execution_axis_id
+                ]
+                if tuple(sorted(numbers)) != tuple(
+                    range(min(numbers), max(numbers) + 1)
+                ):
+                    raise ValueError(
+                        "Comparison requires an exporter-admitted contiguous local image domain."
+                    )
+            tables = tuple(
+                (
+                    table.for_image_numbers(
+                        observation.outputs.image_numbers_by_export_path[table.path][
+                            execution_axis_id
+                        ],
+                        dialect=measurement_dialect,
+                        image_number_domain=tuple(
+                            number
+                            for numbers in observation.outputs.image_numbers_by_export_path[
+                                table.path
+                            ].values()
+                            for number in numbers
+                        ),
+                    )
+                    if table.path in observation.outputs.image_numbers_by_export_path
+                    else table
                 )
-            ),
+                for table in tables
+            )
+        return cls(
+            tables=tables,
             images=cls.image_snapshots(
                 observation.image_outputs,
                 source_workspaces=source_workspaces,

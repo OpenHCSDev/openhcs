@@ -949,4 +949,6 @@ def export_to_database(
         if file_name in bundle:
             raise ValueError(f"ExportToDatabase emits duplicate file {file_name!r}.")
         bundle[file_name] = text
+    if projection.image_set_numbering is not None:
+        projection.image_set_numbering.observe_export_paths(context, tuple(bundle))
     return bundle

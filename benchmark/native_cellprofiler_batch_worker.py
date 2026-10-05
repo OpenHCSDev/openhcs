@@ -49,6 +49,19 @@ class NativeBatchRequest:
     start_barrier_root: Optional[str] = None
     start_barrier_job_count: int = 1
     start_barrier_job_index: int = 0
+    assignment_output_subdirectories: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        assignments = tuple(self.assignment_output_subdirectories)
+        if len(assignments) != len({Path(assignment) for assignment in assignments}):
+            raise ValueError("Native assignment output directories must be unique")
+        for assignment in assignments:
+            path = Path(assignment)
+            if not path.parts or path.is_absolute() or ".." in path.parts:
+                raise ValueError(
+                    "Native assignments require relative output directories"
+                )
+        object.__setattr__(self, "assignment_output_subdirectories", assignments)
 
 
 @dataclass
@@ -74,6 +87,7 @@ class NativeBatchObservation:
     invocation_started_monotonic_seconds: float
     first_module_started_monotonic_seconds: float
     completed_monotonic_seconds: float
+    assignment_image_set_counts: tuple[tuple[str, int], ...]
 
 
 @dataclass(frozen=True)
@@ -143,41 +157,52 @@ def main() -> None:
             invocation_started = time.perf_counter()
             output_root = Path(request.output_root) / str(repetition)
             output_root.mkdir(parents=True, exist_ok=False)
-            set_default_output_directory(str(output_root))
-            measurements = Measurements(image_set_start=request.first_image_set)
-            measurements.is_first_image = True
             clock = NativeBatchClock(invocation_started)
-            try:
-                for measurements in pipeline.run_with_yield(
-                    image_set_start=request.first_image_set,
-                    image_set_end=request.last_image_set,
-                    run_in_background=False,
-                    status_callback=clock.before_module,
-                    initial_measurements=measurements,
-                ):
-                    pass
-                status = measurements.get_experiment_measurement(EXIT_STATUS)
-                if status != "Complete":
-                    raise RuntimeError(
-                        "Native CellProfiler batch did not complete: " + str(status)
-                    )
-                if clock.image_set_count < 1 or (
-                    request.expected_image_sets is not None
-                    and clock.image_set_count != request.expected_image_sets
-                ):
-                    raise RuntimeError(
-                        "Native image-set count differs from requested workload"
-                    )
-                if clock.first_module_started is None:
-                    raise RuntimeError("Native batch executed no analysis modules")
-            finally:
-                measurements.close()
+            image_set_count = 0
+            assignment_counts = []
+            for assignment in request.assignment_output_subdirectories or ("",):
+                assignment_root = output_root / assignment
+                assignment_root.mkdir(parents=True, exist_ok=True)
+                set_default_output_directory(str(assignment_root))
+                measurements = Measurements(image_set_start=request.first_image_set)
+                measurements.is_first_image = True
+                clock.image_set_count = 0
+                try:
+                    for measurements in pipeline.run_with_yield(
+                        image_set_start=request.first_image_set,
+                        image_set_end=request.last_image_set,
+                        run_in_background=False,
+                        status_callback=clock.before_module,
+                        initial_measurements=measurements,
+                    ):
+                        pass
+                    status = measurements.get_experiment_measurement(EXIT_STATUS)
+                    if status != "Complete":
+                        raise RuntimeError(
+                            "Native CellProfiler assignment did not complete: "
+                            + str(status)
+                        )
+                    if clock.image_set_count < 1 or clock.first_module_started is None:
+                        raise RuntimeError(
+                            "Native assignment executed no analysis modules"
+                        )
+                    image_set_count += clock.image_set_count
+                    assignment_counts.append((assignment, clock.image_set_count))
+                finally:
+                    measurements.close()
+            if (
+                request.expected_image_sets is not None
+                and image_set_count != request.expected_image_sets
+            ):
+                raise RuntimeError(
+                    "Native image-set count differs from requested workload"
+                )
             completed = time.perf_counter()
             observations.append(
                 NativeBatchObservation(
                     repetition=repetition,
                     output_root=str(output_root),
-                    image_set_count=clock.image_set_count,
+                    image_set_count=image_set_count,
                     invocation_seconds=completed - clock.invocation_started,
                     pre_first_module_seconds=clock.first_module_started
                     - clock.invocation_started,
@@ -186,6 +211,7 @@ def main() -> None:
                     invocation_started_monotonic_seconds=clock.invocation_started,
                     first_module_started_monotonic_seconds=clock.first_module_started,
                     completed_monotonic_seconds=completed,
+                    assignment_image_set_counts=tuple(assignment_counts),
                 )
             )
         report = asdict(

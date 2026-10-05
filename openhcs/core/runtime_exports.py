@@ -186,6 +186,22 @@ class RuntimeExportObservation:
             outputs=outputs,
         )
 
+    def for_execution_axis(self, axis_id: str) -> "RuntimeExportObservation":
+        """Select files from actual artifact scope or exporter-owned numbering."""
+        scoped_paths = {
+            Path(location.path)
+            for address, locations in self.outputs.materialized_locations_by_address.items()
+            if address.key.scope.axis_id == axis_id
+            for location in locations
+        }
+        numbered = self.outputs.image_numbers_by_export_path
+        paths = tuple(
+            path
+            for path in self.output_files
+            if (axis_id in numbered[path] if path in numbered else path in scoped_paths)
+        )
+        return type(self).from_output_paths(paths, outputs=self.outputs)
+
     def __post_init__(self) -> None:
         object.__setattr__(self, "table_outputs", tuple(self.table_outputs))
         object.__setattr__(self, "image_outputs", tuple(self.image_outputs))

@@ -22,6 +22,7 @@ from openhcs.core.equivalence.report import (
     RuntimeEquivalenceReport,
 )
 from openhcs.core.equivalence.tables import RuntimeTableSnapshot
+from openhcs.core.equivalence.measurement_rows import RuntimeImageNumberOffset
 from openhcs.core.runtime_equivalence import (
     RuntimeMeasurementSnapshot,
     runtime_measurement_equivalence,
@@ -50,6 +51,7 @@ def cellprofiler_database_export_equivalence(
     candidate_exports: RuntimeExportObservation,
     *,
     policy: RuntimeEquivalencePolicy,
+    execution_axis_id: str | None = None,
 ) -> RuntimeEquivalenceReport:
     """Compare SQLite databases and CPA properties emitted by CellProfiler."""
 
@@ -71,6 +73,12 @@ def cellprofiler_database_export_equivalence(
             _declared_sqlite_table_subjects(reference_properties),
             _declared_sqlite_table_subjects(candidate_properties),
             policy,
+            candidate_image_numbers_by_path=(
+                None
+                if execution_axis_id is None
+                else candidate_exports.outputs.image_numbers_by_export_path
+            ),
+            execution_axis_id=execution_axis_id,
         ),
         _workspace_export_equivalence(reference_workspaces, candidate_workspaces),
         _properties_export_equivalence(reference_properties, candidate_properties),
@@ -306,6 +314,11 @@ def _sqlite_export_equivalence(
     reference_subjects: Mapping[str, Mapping[str, MeasurementSubject]],
     candidate_subjects: Mapping[str, Mapping[str, MeasurementSubject]],
     policy: RuntimeEquivalencePolicy,
+    *,
+    candidate_image_numbers_by_path: (
+        Mapping[Path, Mapping[str, tuple[int, ...]]] | None
+    ) = None,
+    execution_axis_id: str | None = None,
 ) -> RuntimeEquivalenceReport:
     differences, reference_by_name, candidate_by_name = _named_output_differences(
         reference_paths,
@@ -321,6 +334,24 @@ def _sqlite_export_equivalence(
                 reference_subjects.get(name, {}),
                 candidate_subjects.get(name, {}),
                 policy,
+                candidate_image_numbers=(
+                    None
+                    if candidate_image_numbers_by_path is None
+                    else candidate_image_numbers_by_path[candidate_by_name[name]][
+                        execution_axis_id
+                    ]
+                ),
+                candidate_image_number_domain=(
+                    None
+                    if candidate_image_numbers_by_path is None
+                    else tuple(
+                        number
+                        for numbers in candidate_image_numbers_by_path[
+                            candidate_by_name[name]
+                        ].values()
+                        for number in numbers
+                    )
+                ),
             )
         )
         compared_paths.update((reference_by_name[name], candidate_by_name[name]))
@@ -333,9 +364,40 @@ def _sqlite_database_differences(
     reference_subjects: Mapping[str, MeasurementSubject],
     candidate_subjects: Mapping[str, MeasurementSubject],
     policy: RuntimeEquivalencePolicy,
+    *,
+    candidate_image_numbers: tuple[int, ...] | None = None,
+    candidate_image_number_domain: tuple[int, ...] | None = None,
 ) -> tuple[RuntimeEquivalenceDifference, ...]:
     reference_tables = _sqlite_tables(reference_path, reference_subjects, policy)
     candidate_tables = _sqlite_tables(candidate_path, candidate_subjects, policy)
+    if candidate_image_numbers is not None:
+        if tuple(sorted(candidate_image_numbers)) != tuple(
+            range(min(candidate_image_numbers), max(candidate_image_numbers) + 1)
+        ):
+            raise ValueError(
+                "Comparison requires an exporter-admitted contiguous local image domain."
+            )
+        candidate_offset = RuntimeImageNumberOffset.from_table_rows(
+            ("image_number",),
+            tuple((str(number),) for number in candidate_image_numbers),
+        )
+        candidate_tables = {
+            name: (
+                schema,
+                table.for_image_numbers(
+                    candidate_image_numbers,
+                    dialect=policy.measurement_dialect,
+                    image_identity_fields=CellProfilerRelationshipProjectionName.image_identity_fields(
+                        name
+                    ),
+                    image_number_domain=candidate_image_number_domain,
+                    image_number_offset=(
+                        candidate_offset if name not in candidate_subjects else None
+                    ),
+                ),
+            )
+            for name, (schema, table) in candidate_tables.items()
+        }
     differences: list[RuntimeEquivalenceDifference] = []
     reference_names = set(reference_tables)
     candidate_names = set(candidate_tables)

@@ -132,6 +132,13 @@ class CellProfilerRelationshipProjectionName(str, Enum):
     ROWS = "Per_Relationships"
     VIEW = "Per_RelationshipsView"
 
+    @classmethod
+    def image_identity_fields(cls, table_name: str) -> tuple[str, ...] | None:
+        """Declare the two image endpoints of CellProfiler's saved edge tables."""
+        if table_name not in (cls.ROWS.value, cls.VIEW.value):
+            return None
+        return tuple(f"image_number{endpoint}" for endpoint in (1, 2))
+
 
 class CPAPropertyName(str, Enum):
     """Canonical static keys in a CellProfiler Analyst properties export."""
@@ -534,6 +541,7 @@ class CellProfilerAnalystProjection:
     relationship_tables: tuple[CPARelationshipTable, ...]
     experiment_table: CellProfilerProjectedTable
     image_channels: tuple[CPAImageChannelSpec, ...] = ()
+    image_set_numbering: CellProfilerImageSetNumbering | None = None
 
     def database_column_names(
         self,
@@ -1424,6 +1432,7 @@ class CellProfilerAnalystProjectionBuilder:
                 ),
             ),
             image_channels=tuple(image_channels),
+            image_set_numbering=row_projection.image_set_numbering,
         )
 
     def _collect_measurements(
