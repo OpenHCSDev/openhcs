@@ -40,7 +40,36 @@ started at b1e720f5e; all foreign gitlinks and cold validation history remain.
 Qualification
 -------------
 
-Pending focused declared-input constraints, source/projected knowledge section
-retrieval, packaged route availability and isolated managed sync. Original
-failed inputs remain in their science journals, untouched. Future normal
-bundles only; no live author skill replacement and no autonomous-gain claim.
+Qualification03 terminal0: 2.51s, 243932KiB peakRSS, swaps0. Existing paired
+interpreter and immutable receiving20 installed code were read-only backing;
+all five relevant source/installed owner files were verified byte-identical.
+No build, installation, native/viewer/catalog launch or scientific operation.
+
+Six existing input-context relation controls passed: valid image/label/graph
+targets preserve context without regrouping/broadcast; output-image and
+label-source references reject; output/contextless targets reject. The actual
+RST fragment was parsed by the existing docs validator and executed against
+those owners; its source context reference is exact and grouping/broadcast
+relations remain empty.
+
+The existing build_mcp_knowledge_assets projector copied 90 declared paths.
+KnowledgeBaseService returned the same subsection from canonical source and
+projected package trees: 3167 characters at max_chars4000, truncated=false.
+Original AgentSkillBundle/sync_skills installed one declared skill containing
+13 files into an isolated disposable destination, verified byte equality and
+second-sync unchanged. Skill-creator quick_validate returned Skill is valid.
+Changed production/docs diff check passed. No full-repository audit or actual
+new installed MCP/biological gain is claimed by this docs-only qualification.
+
+Qualification01 retained a checker assertion incorrectly treating 13 resource
+files as 13 skill roots. Qualification02 retained a checker path error treating
+the plugin manifest as a skill-relative file. The corrected checker derives
+roots/files from AgentSkillBundle; no product code or assertion contract was
+weakened. All six original stdout/stderr logs are archived byte-exact in
+qualification-logs.tar.gz. Scratch knowledge/managed trees are disposable once
+borrower checks permit; original science journals are not disposable.
+
+Parent subsequently reported H003 raw-channel measurement success. This is
+later than the historical audit-time execution-unverified checkpoint above,
+not evidence that these unpublished docs repaired a live author. Both live
+author sources and skills remain untouched. Future normal bundles only.
