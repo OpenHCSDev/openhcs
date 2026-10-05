@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
 from enum import Enum
-from functools import lru_cache
+from functools import lru_cache, partial
 from types import MappingProxyType
 from typing import Annotated, ClassVar, get_args, get_origin, get_type_hints
 
@@ -648,12 +648,13 @@ class RuntimeMeasurementDialect:
         """Return static and provider-supplied measurement category prefixes."""
         return _resolved_category_prefixes(runtime_measurement_dialect_cache_id(self))
 
+    @property
     def projected_feature_name(
-        self, feature_name: str, qualifier_values: tuple[tuple[str, object], ...]
-    ) -> str:
-        """Render a producer feature using this declaration's qualifier grammar."""
-        return self._projected_feature_name(
-            runtime_measurement_dialect_cache_id(self), feature_name, qualifier_values
+        self,
+    ) -> Callable[[str, tuple[tuple[str, object], ...]], str]:
+        """Bind this declaration's grammar for one producer admission."""
+        return partial(
+            self._projected_feature_name, runtime_measurement_dialect_cache_id(self)
         )
 
     @staticmethod
