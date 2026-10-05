@@ -44,7 +44,6 @@ from openhcs.core.source_metadata import SourceVoxelSpacing
 
 from openhcs.core.steps.function_artifact_materialization import (
     PersistentArtifactMaterializationTargetPlan,
-    materialize_artifact_outputs,
     runtime_artifact_materializations,
 )
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
@@ -336,12 +335,7 @@ def test_all_public_declared_outputs_persist_with_selected_qa_streams(
 
     monkeypatch.setattr(filemanager, "save_batch", capture_stream)
     try:
-        materialize_artifact_outputs(
-            filemanager,
-            plan,
-            PersistentArtifactMaterializationTargetPlan("disk"),
-            context,
-        )
+        PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(filemanager, plan, context)
         materializations = runtime_artifact_materializations(plan, context)
         assert {item.output_plan.name for item in materializations} == set(
             specs.names()

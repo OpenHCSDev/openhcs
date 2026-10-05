@@ -27,6 +27,13 @@ $funding[0] as $original
 | .reviewed_source_merge = $source_head
 | .required_skill_merge = $source_head
 | .qualification_receipt = $new.package_qualification
+| .task_minutes_from_first_mcp_start = $new.task_minutes_from_first_mcp_start
+| if .task_minutes_from_first_mcp_start == null then .
+  elif (.task_minutes_from_first_mcp_start|type)=="number" then
+    if .task_minutes_from_first_mcp_start > 0 and
+       .task_minutes_from_first_mcp_start == (.task_minutes_from_first_mcp_start|floor)
+    then . else error("scientific interval must be null or positive integer minutes") end
+  else error("scientific interval must be null or positive integer minutes") end
 | if ($new.resource_policy|type)!="object"
   then error("missing resource policy") else . end
 | .proposed_resource_envelope += $original.proposed_resource_envelope + $new.resource_policy
@@ -38,7 +45,8 @@ $funding[0] as $original
       .proposed_resource_envelope.swap_max_bytes,
       .proposed_resource_envelope.helpers_scope_grouping,
       .proposed_resource_envelope.approval)
-| del(.proposed_resource_envelope.total_output_and_scratch_mib)
+| del(.proposed_resource_envelope.total_output_and_scratch_mib,
+      .proposed_resource_envelope.full_memory_psi_max_percent)
 | .authors = $original.authors
 | .authors |= map(
     . as $member

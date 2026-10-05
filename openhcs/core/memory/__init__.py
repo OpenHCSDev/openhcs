@@ -7,7 +7,7 @@ OpenHCS adds only runtime composition helpers and callable metadata adapters.
 from collections.abc import Sequence
 from typing import Any
 
-import numpy as np
+from arraybridge import ArrayGeometry
 
 # Re-export from arraybridge
 from arraybridge import (
@@ -54,34 +54,32 @@ def stack_runtime_slices(
     slice_values = tuple(slices)
     if not slice_values:
         raise ValueError("Runtime-slice stacking requires at least one slice.")
-    numpy_slices = tuple(
-        np.asarray(
-            value
-            if detect_memory_type(value) == MEMORY_TYPE_NUMPY
-            else convert_memory(
-                data=value,
-                source_type=detect_memory_type(value),
-                target_type=MEMORY_TYPE_NUMPY,
-                gpu_id=gpu_id,
-            )
-        )
+    target = MemoryType(memory_type)
+    prepared_slices = [
+        MemoryType(detect_memory_type(value)).convert_to(value, target, gpu_id)
         for value in slice_values
+    ]
+    runtime_slice_stack_geometry(prepared_slices)
+    return target.stack_arrays(prepared_slices, gpu_id)
+
+
+def runtime_slice_stack_geometry(slices: Sequence[Any]) -> ArrayGeometry:
+    """Validate the geometry shared by deferred and concrete slice stacks."""
+    from openhcs.core.runtime_array_values import RuntimeArrayPayload
+
+    shapes = tuple(
+        tuple(value.shape) if isinstance(value, RuntimeArrayPayload)
+        else ArrayGeometry.require_from_value(value).shape
+        for value in slices
     )
-    shapes = tuple(tuple(value.shape) for value in numpy_slices)
+    if not shapes:
+        raise ValueError("Runtime-slice stacking requires at least one slice.")
     if any(shape != shapes[0] for shape in shapes[1:]):
         raise ValueError(
             "Runtime slices must have one exact shape before stacking; "
             f"got {shapes!r}."
         )
-    stacked = np.stack(numpy_slices, axis=0)
-    if memory_type == MEMORY_TYPE_NUMPY:
-        return stacked
-    return convert_memory(
-        data=stacked,
-        source_type=MEMORY_TYPE_NUMPY,
-        target_type=memory_type,
-        gpu_id=gpu_id,
-    )
+    return ArrayGeometry((len(shapes), *shapes[0]))
 
 
 def unstack_runtime_slices(
@@ -93,16 +91,8 @@ def unstack_runtime_slices(
 ) -> tuple[Any, ...]:
     """Split an explicitly declared leading runtime-slice axis."""
 
-    source_type = detect_memory_type(stack)
-    converted = (
-        stack
-        if source_type == memory_type
-        else convert_memory(
-            data=stack,
-            source_type=source_type,
-            target_type=memory_type,
-            gpu_id=gpu_id,
-        )
+    converted = MemoryType(detect_memory_type(stack)).convert_to(
+        stack, MemoryType(memory_type), gpu_id
     )
     shape = tuple(int(value) for value in converted.shape)
     if not shape:

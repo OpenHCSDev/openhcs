@@ -1,4 +1,10 @@
-"""Peak process-tree memory usage metric."""
+"""Peak process-tree memory usage metric.
+
+Sampler shutdown wakes its inter-sample wait. Benchmark wall clocks that include
+metric teardown therefore no longer wait out an unused sampling interval. This
+changes observer overhead, not pipeline computation; comparative gains require
+fresh paired native and OpenHCS measurements under the same sampler policy.
+"""
 
 from collections.abc import Callable
 import _thread
@@ -39,7 +45,8 @@ class MemoryMetric(MetricCollector):
         self.on_limit_exceeded = on_limit_exceeded
         self.limit_callback_interval_seconds = limit_callback_interval_seconds
         self.interrupt_main_on_limit = interrupt_main_on_limit
-        self._running = False
+        self._stop_event = threading.Event()
+        self._stop_event.set()
         self._peak_rss = 0
         self._thread: threading.Thread | None = None
         self._process = psutil.Process()
@@ -56,14 +63,14 @@ class MemoryMetric(MetricCollector):
         self._sampling_error = None
         self._limit_exceeded = False
         self._last_limit_callback_at = None
-        self._running = True
+        self._stop_event.clear()
         self._started = True
         self._thread = threading.Thread(target=self._sample_loop, daemon=True)
         self._thread.start()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
-        self._running = False
+        self._stop_event.set()
         if self._thread is not None:
             try:
                 self._thread.join(timeout=1.0)
@@ -72,13 +79,13 @@ class MemoryMetric(MetricCollector):
                     raise
 
     def _sample_loop(self) -> None:
-        while self._running:
+        while not self._stop_event.is_set():
             rss, children = self._sample_process_tree_rss()
             if rss > self._peak_rss:
                 self._peak_rss = rss
             if self.max_memory_bytes is not None and rss > self.max_memory_bytes:
                 self._enforce_limit(rss, children)
-            time.sleep(self.interval)
+            self._stop_event.wait(self.interval)
 
     def _enforce_limit(self, rss: int, children: tuple[psutil.Process, ...]) -> None:
         first_exceedance = not self._limit_exceeded
@@ -100,7 +107,7 @@ class MemoryMetric(MetricCollector):
             rss = self._process.memory_info().rss
         except psutil.NoSuchProcess as exc:
             self._sampling_error = exc
-            self._running = False
+            self._stop_event.set()
             return self._peak_rss, ()
         if not self.include_children:
             return rss, ()
@@ -108,7 +115,7 @@ class MemoryMetric(MetricCollector):
             children = self._process_identity.descendants()
         except psutil.NoSuchProcess as exc:
             self._sampling_error = exc
-            self._running = False
+            self._stop_event.set()
             return rss, ()
         for child in children:
             try:

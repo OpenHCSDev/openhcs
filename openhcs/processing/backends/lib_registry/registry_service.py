@@ -14,7 +14,6 @@ import tempfile
 import threading
 from collections.abc import Callable
 from concurrent.futures import CancelledError
-from dataclasses import is_dataclass
 from typing import TYPE_CHECKING, Dict, Optional
 
 from arraybridge import MemoryType
@@ -168,13 +167,11 @@ class RegistryService:
         for func in callables:
             CallableProjection.from_callable(func).warm_canonical_signature()
         emit_status("Preparing registered configuration source declarations")
-        for declaration in dict.fromkeys(
+        SignatureAnalyzer.prepare_dataclass_declarations(
             declaration
             for pair in LazyDataclassFactory.registered_type_pairs()
             for declaration in pair
-            if is_dataclass(declaration)
-        ):
-            SignatureAnalyzer.prepare_dataclass_declaration(declaration)
+        )
         emit_status(f"Registered kernels ready ({len(callables)} callables)")
         emit_status(f"Function catalog ready ({len(cls._metadata_cache)} callables)")
         return cls._metadata_cache

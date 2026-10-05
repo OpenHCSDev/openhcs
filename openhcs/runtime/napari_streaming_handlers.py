@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, ClassVar, TypeAlias
 
 import numpy as np
 from napari.layers.shapes._shapes_constants import ShapeType
+from napari.utils.transforms import Affine
 from polystore.streaming.identity import StreamProducerIdentity
 from polystore.streaming_constants import StreamingDataType
 from zmqruntime.viewer_protocol import ViewerComponentMode, ViewerWireField
@@ -22,7 +23,7 @@ from zmqruntime.viewer_protocol import ViewerComponentMode, ViewerWireField
 from openhcs.constants import AllComponents
 from openhcs.core.artifacts import ObjectArtifactSubjectBinding
 from openhcs.core.config import NapariDisplayConfig
-from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
+from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata, ROIPlaneMetadata
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
 )
@@ -33,6 +34,7 @@ from openhcs.runtime.viewer_component_system import (
     ComponentValues,
     ViewerComponentAxisSemantics,
     ViewerComponentLayout,
+    ViewerComponentCoordinateAuthority,
     ViewerComponentValueDomainPayload,
     ViewerRouteComponentValueTracker,
     ViewerLayerAxisProjection,
@@ -632,7 +634,7 @@ class NapariAggregateAxisBindingSet:
     ) -> ComponentMap:
         if not self.bindings:
             return dict(item.address.components)
-        plane_indices = NapariShapePlaneMetadata(shape_dict).indices()
+        plane_indices = ROIPlaneMetadata.from_shape_payload(shape_dict).indices()
         return self.item_component_values(item, plane_indices)
 
 
@@ -791,61 +793,10 @@ class NapariAggregateAxisBindingAuthority:
     def _shape_aggregate_extents(data: LayerData) -> tuple[int, ...]:
         if not isinstance(data, Sequence) or isinstance(data, (str, bytes)):
             return ()
-        shapes: list[tuple[int, ...]] = []
-        missing_plane_metadata = 0
-        for shape_dict in data:
-            if not isinstance(shape_dict, Mapping):
-                continue
-            plane_metadata = NapariShapePlaneMetadata(shape_dict)
-            if plane_metadata.has_plane_metadata():
-                shapes.append(plane_metadata.shape())
-            else:
-                missing_plane_metadata += 1
-        if not shapes:
-            return ()
-        if missing_plane_metadata:
-            raise ValueError(
-                "Napari shape payload mixes plane-indexed and unindexed shapes; "
-                "all shapes in an aggregate stack route must carry plane metadata."
-            )
-        first = shapes[0]
-        if any(shape != first for shape in shapes):
-            raise ValueError(
-                "Napari shape payload has inconsistent plane_shape metadata: "
-                f"{shapes!r}."
-            )
-        return first
-
-
-@dataclass(frozen=True, slots=True)
-class NapariShapePlaneMetadata:
-    """Plane-index metadata carried by one serialized ROI shape."""
-
-    shape_dict: ShapePayloadMap
-
-    @property
-    def metadata(self) -> Mapping[str, ShapePayloadValue]:
-        metadata = self.shape_dict.get("metadata")
-        if not isinstance(metadata, Mapping):
-            return {}
-        return metadata
-
-    def has_plane_metadata(self) -> bool:
-        return "plane_indices" in self.metadata and "plane_shape" in self.metadata
-
-    def indices(self) -> tuple[int, ...]:
-        return self._tuple_field("plane_indices")
-
-    def shape(self) -> tuple[int, ...]:
-        return self._tuple_field("plane_shape")
-
-    def _tuple_field(self, field: str) -> tuple[int, ...]:
-        value = self.metadata.get(field)
-        if not isinstance(value, Sequence) or isinstance(value, (str, bytes)):
-            raise ValueError(
-                f"Napari shape plane metadata field {field!r} must be a sequence."
-            )
-        return tuple(int(item) for item in value)
+        return ROIPlaneMetadata.common_shape(tuple(
+            ROIPlaneMetadata.from_shape_payload(shape_dict).metadata
+            for shape_dict in data if isinstance(shape_dict, Mapping)
+        ))
 
 
 NapariLayerCreator: TypeAlias = Callable[
@@ -1420,7 +1371,7 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
         self, dims, replacement: "NapariAxisPresentation",
         items: Sequence[NapariStreamLayerItem],
     ):
-        """Carry actual native world positions/order through semantic slot insertion.
+        """Carry source positions/order through semantic slot or domain changes.
 
         This is a transient presentation snapshot, not a second component domain.
         Values come from native Dims and names from the original presentations.
@@ -1431,6 +1382,8 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
         points = {name: dims.point[axis] for axis, name in names.items()}
         ranges = {name: dims.range[axis] for axis, name in names.items()}
         order = tuple(names[axis] for axis in dims.order if axis in names)
+        original_transform = Affine(**self.spatial_layer_kwargs(items, self.payload_axis_labels))
+        local_points = original_transform.inverse(tuple(points[name] for name in self.axis_labels))
         yield
         target_dimensions = replacement.viewer_dimension_indices(dims.ndim)
         target_axes = dict(zip(replacement.axis_labels, target_dimensions, strict=True))
@@ -1439,7 +1392,39 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
         for name, value in points.items():
             point[target_axes[name]] = value
             native_ranges[target_axes[name]] = ranges[name]
-        transform = replacement.spatial_layer_kwargs(items, replacement.payload_axis_labels)
+        transform = Affine(**replacement.spatial_layer_kwargs(items, replacement.payload_axis_labels))
+        original_values = self.projection.component_values | self.projection.scalar_component_values
+        replacement_values = (
+            replacement.projection.component_values | replacement.projection.scalar_component_values
+        )
+        for name, values in original_values.items():
+            if name not in points or name not in replacement_values:
+                continue
+            original_axis = self.axis_labels.index(name)
+            local_point = local_points[original_axis]
+            source_index = round(local_point)
+            # An out-of-route frame or a retired source has no surviving identity
+            # to retain. Native mounted-layer bounds still own its clipping.
+            if not 0 <= source_index < len(values):
+                continue
+            source_value = values[source_index]
+            if source_value not in replacement_values[name]:
+                continue
+            index = ViewerComponentCoordinateAuthority.value_index(
+                value=source_value, component_values=replacement_values,
+                component=name, context="rematerialized native source frame",
+            )
+            axis = replacement.axis_labels.index(name)
+            scale = transform.scale[axis]
+            translate = transform.translate[axis]
+            # Preserve within-plane world position too; source geometry is not
+            # rounded when a component changes its shared-domain ordinal.
+            point[target_axes[name]] = transform.set_slice((axis,))(
+                (index + local_point - source_index,)
+            )[0]
+            native_ranges[target_axes[name]] = (
+                translate, translate + (len(replacement_values[name]) - 1) * scale, scale,
+            )
         for name in replacement.display_axis_components:
             if name in points:
                 continue
@@ -1451,9 +1436,9 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
             axis = replacement.axis_labels.index(name)
             # This newly inserted singleton's source-local index is zero.
             # The original transform already contains its shared-domain offset.
-            point[target_axes[name]] = transform["translate"][axis]
+            point[target_axes[name]] = transform.translate[axis]
             native_ranges[target_axes[name]] = (
-                point[target_axes[name]], point[target_axes[name]], transform["scale"][axis],
+                point[target_axes[name]], point[target_axes[name]], transform.scale[axis],
             )
         # Dims clips points to its ranges. Remap the detached snapshot's bounds
         # first; the live viewer's bounds remain owned by its mounted layers.

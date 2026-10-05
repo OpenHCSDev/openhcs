@@ -182,27 +182,10 @@ def test_dead_output_liveness_does_not_choose_image_measurement_execution_mode(
     ]
 
 
-def test_active_outputs_do_not_restore_declaration_occurrences_from_one_plan(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_active_outputs_do_not_restore_declaration_occurrences_from_one_plan() -> None:
     measurements = ArtifactSpec.output("Measurements", MeasurementsArtifactType)
-    executor = _image_measurement_executor((measurements, measurements))
-    runtime = _runtime_with_outputs(executor.callable_contract, measurements)
-    observed: list[tuple[ArtifactOutputPlan, ...]] = []
-
-    def run_per_image(_self, **request):
-        observed.append(request["active_output_plans"])
-        return request["image"]
-
-    monkeypatch.setattr(
-        CellProfilerModuleExecutor,
-        "_run_per_image_measurement",
-        run_per_image,
-    )
-
-    executor(np.zeros((2, 2), dtype=np.float32), cellprofiler_runtime=runtime)
-
-    assert observed == [tuple(runtime.request.artifact_outputs.values())]
+    with pytest.raises(ValueError, match="duplicate artifact ref"):
+        _image_measurement_executor((measurements, measurements))
 
 
 def test_active_outputs_consume_compiled_plans_without_declaration_rematching() -> None:

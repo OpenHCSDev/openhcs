@@ -1,0 +1,122 @@
+{
+  "status": "PASS",
+  "source_head": "a9429c9e402b6ec62f9f608d18558ddf0fbf64f4",
+  "case": "ExampleVitra",
+  "well": "A01",
+  "workers": 1,
+  "worker_start_method": "fork (actual one-worker inline execution)",
+  "observer": "internal profiling OFF",
+  "dependency_versions": {
+    "python-introspect": "0.2.0",
+    "objectstate": "1.3.1"
+  },
+  "native_scope": "Retained same-acquisition native warmup+3 measured repetitions; no new native runs",
+  "execution_clock": "OpenHCS completed SERVER_PIPELINE_JOB; CP first-module-through-post-run",
+  "total_clock": "OpenHCS additive recorded SUBMIT+WAIT tool phases excluding startup/validation; CP full invocation",
+  "measured_n": 3,
+  "warmup_excluded_from_medians": true,
+  "rows": [
+    {
+      "repetition": -1,
+      "native_execution_seconds": 3.5421713911928236,
+      "native_full_invocation_seconds": 4.3332982189022005,
+      "openhcs_execution_seconds": 1.4058761596679688,
+      "openhcs_recorded_submission_wait_total_seconds": 1.70491992123425,
+      "openhcs_compile_seconds": 0.19504070281982422,
+      "phase_seconds": {
+        "SUBMIT_OPENHCS": 0.09559410205110908,
+        "WAIT_OPENHCS": 1.609325819183141,
+        "SERVER_COMPILATION_JOB": 0.19504070281982422,
+        "SERVER_PIPELINE_JOB": 1.4058761596679688,
+        "COMPILE_OPENHCS": 0.16529631614685059,
+        "EXECUTE_OPENHCS": 1.1975250244140625,
+        "VALIDATE_RUNTIME": 7.82497227191925e-06
+      },
+      "science": "PASS",
+      "logical_images": 1,
+      "nonempty_output_files": 5,
+      "receipt_sha256": "01c99e79759b3f3da5894d57bda918237f3b2c7c1eeb7789cf8ebe5636557569"
+    },
+    {
+      "repetition": 0,
+      "native_execution_seconds": 3.023028246127069,
+      "native_full_invocation_seconds": 3.262549485079944,
+      "openhcs_execution_seconds": 1.3964769840240479,
+      "openhcs_recorded_submission_wait_total_seconds": 1.6353960507549345,
+      "openhcs_compile_seconds": 0.16204166412353516,
+      "phase_seconds": {
+        "SUBMIT_OPENHCS": 0.07505977107211947,
+        "WAIT_OPENHCS": 1.560336279682815,
+        "SERVER_COMPILATION_JOB": 0.16204166412353516,
+        "SERVER_PIPELINE_JOB": 1.3964769840240479,
+        "COMPILE_OPENHCS": 0.1534252166748047,
+        "EXECUTE_OPENHCS": 1.1943457126617432,
+        "VALIDATE_RUNTIME": 8.165370672941208e-06
+      },
+      "science": "PASS",
+      "logical_images": 1,
+      "nonempty_output_files": 5,
+      "receipt_sha256": "8b6bb2cf8b3ed28de4f94063be8e0404ac0e620a9e080c5186ee68e993eda27f"
+    },
+    {
+      "repetition": 1,
+      "native_execution_seconds": 2.6716989101842046,
+      "native_full_invocation_seconds": 2.84949220623821,
+      "openhcs_execution_seconds": 1.1674973964691162,
+      "openhcs_recorded_submission_wait_total_seconds": 1.4346102699637413,
+      "openhcs_compile_seconds": 0.16991734504699707,
+      "phase_seconds": {
+        "SUBMIT_OPENHCS": 0.08696271711960435,
+        "WAIT_OPENHCS": 1.347647552844137,
+        "SERVER_COMPILATION_JOB": 0.16991734504699707,
+        "SERVER_PIPELINE_JOB": 1.1674973964691162,
+        "COMPILE_OPENHCS": 0.15999054908752441,
+        "EXECUTE_OPENHCS": 0.975440263748169,
+        "VALIDATE_RUNTIME": 5.630776286125183e-06
+      },
+      "science": "PASS",
+      "logical_images": 1,
+      "nonempty_output_files": 5,
+      "receipt_sha256": "12aef99ea4db9d4a1f3e51ddc8c8fde88f09cbc136479cd8bed6c2af043e348e"
+    },
+    {
+      "repetition": 2,
+      "native_execution_seconds": 2.7805408630520105,
+      "native_full_invocation_seconds": 2.950235340744257,
+      "openhcs_execution_seconds": 1.0889465808868408,
+      "openhcs_recorded_submission_wait_total_seconds": 1.3382520796731114,
+      "openhcs_compile_seconds": 0.15611934661865234,
+      "phase_seconds": {
+        "SUBMIT_OPENHCS": 0.0881909909658134,
+        "WAIT_OPENHCS": 1.250061088707298,
+        "SERVER_COMPILATION_JOB": 0.15611934661865234,
+        "SERVER_PIPELINE_JOB": 1.0889465808868408,
+        "COMPILE_OPENHCS": 0.14637970924377441,
+        "EXECUTE_OPENHCS": 0.8885362148284912,
+        "VALIDATE_RUNTIME": 6.521586328744888e-06
+      },
+      "science": "PASS",
+      "logical_images": 1,
+      "nonempty_output_files": 5,
+      "receipt_sha256": "c5a10f1dff439f62c9ef06488d0e79927d7e782e0dcc8414034cd6391d876afc"
+    }
+  ],
+  "medians": {
+    "native_execution_seconds": 2.7805408630520105,
+    "native_full_invocation_seconds": 2.950235340744257,
+    "openhcs_execution_seconds": 1.1674973964691162,
+    "openhcs_recorded_submission_wait_total_seconds": 1.4346102699637413,
+    "openhcs_compile_seconds": 0.16204166412353516,
+    "execution_speedup": 2.3816248939494438,
+    "full_invocation_to_recorded_total_ratio": 2.056471644259749
+  },
+  "science": "All4 corresponding measurement/image/database/inventory comparisons PASS; nonvacuity required by matched driver",
+  "guards": "source/input/dependency/fourABI/helper PASS; all3 owned PIDs absent",
+  "baseline_red": "current-matched-vitra-wound-median-v1 missing Cells feature preserved",
+  "controls": {
+    "focused": 42,
+    "additional_declaration": 84,
+    "preexisting_unrelated_failure": "test_measurement_output_separates_provenance_from_invocation_group_scope expects image lineage; current unchanged producer uses explicitly declared object group lineage"
+  },
+  "claim_limits": "Correctness repair. New candidate source includes OS1.3.1; no isolated patch speedup or global Official30 headline claim."
+}

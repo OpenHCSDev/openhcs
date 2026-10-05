@@ -937,7 +937,7 @@ def test_forward_artifact_state_has_one_nominal_owner() -> None:
         if isinstance(node, ast.ClassDef)
         and node.name == "CellProfilerInvocationContractProviderFactory"
     )
-    provider_method = _method(factory, "provider_for_session")
+    provider_method = _method(factory, "provider_for_pipeline")
     calls = {
         _dotted_name(node.func)
         for node in ast.walk(provider_method)

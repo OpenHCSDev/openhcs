@@ -15,6 +15,7 @@ from polystore.streaming.identity import (
     FixedStreamProducerIdentityKind,
     StreamProducerIdentity,
 )
+from polystore.streaming_constants import StreamingDataType
 from polystore.streaming.viewer_transport import ViewerStreamKwarg, ViewerStreamProducer
 from polystore.virtual_workspace import SourcePixelRef
 from polystore.zmq_config import POLYSTORE_ZMQ_CONFIG
@@ -65,6 +66,10 @@ from openhcs.core.viewer_streaming_service import (
 )
 from openhcs.runtime.fiji_stream_visualizer import FijiStreamVisualizer
 from openhcs.runtime.napari_stream_visualizer import NapariStreamVisualizer
+from openhcs.runtime.napari_streaming_handlers import (
+    NapariStreamLayerAddress,
+    NapariStreamLayerItem,
+)
 from openhcs.runtime.viewer_protocol import (
     DetachedViewerLaunchFailure,
     DetachedViewerServerEntrypointSpec,
@@ -1068,11 +1073,16 @@ def test_3d_point_archive_reopens_with_native_z_domain_and_features(tmp_path):
         entries=domain.entries,
         layout=ViewerObjectDisplayConfigInput(config).layout(),
     )
-    item = SimpleNamespace(
-        address=SimpleNamespace(
-            components=stream.source.metadata.metadata_by_path[archive]
+    item = NapariStreamLayerItem(
+        address=NapariStreamLayerAddress(
+            components=stream.source.metadata.metadata_by_path[archive],
+            path=archive,
+            stream_layer_data_type=StreamingDataType.POINTS,
         ),
+        producer=stream.producer.identities[0],
         data=NapariROIConverter.rois_to_shapes(data[0]),
+        image_metadata=reopened_source,
+        plane_component_domain=domain,
     )
     request = ViewerLayerAxisProjectionRequestAuthority.from_component_axis_semantics(
         route_key="centres",
@@ -1089,6 +1099,9 @@ def test_3d_point_archive_reopens_with_native_z_domain_and_features(tmp_path):
     points, properties = _build_nd_points([item], projection)
     assert points[0, projection.projected_axis_components.index("z_index")] == 2.375
     assert properties["response"] == [4.75]
+    assert properties[NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE] == [
+        item.element_identity(0)
+    ]
 
 
 def test_explicit_native_reopening_rejects_an_external_roi_without_source(tmp_path):

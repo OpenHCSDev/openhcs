@@ -1,0 +1,186 @@
+{
+  "status": "SAVED_FRONTIER_PASS_PIPELINE_PENDING",
+  "scope": "One original whole21-plane NumericImagePayloadUint8Strategy.prepare versus two-pass typed prototype; excludes reconstruction, imports/JIT compilation, PNG encoding, and full SaveImages callable. No pipeline timing claim.",
+  "input": {
+    "shape": [
+      21,
+      264,
+      1626,
+      3
+    ],
+    "dtype": "float32",
+    "values": 27043632,
+    "bytes": 108174528,
+    "file_sha256": "38f133fb46993f6f0fd799c49e6d090adc990ddca037f8c7a61b25a803fda34e",
+    "reconstruction_sha256": "f1038cf7f04fa3cb15c82b91dbab92db9e12eeab5f523ff48d08c0d0f9429e62",
+    "authenticated_native_pngs": 21
+  },
+  "private_pair": {
+    "baseline": {
+      "wall_seconds": 0.5334144826047122,
+      "thread_cpu_seconds": 0.5310745460000001,
+      "user_seconds": 0.11242200000000002,
+      "system_seconds": 0.41919799999999996,
+      "minor_faults": 77547,
+      "major_faults": 0
+    },
+    "candidate": {
+      "wall_seconds": 0.12119674263522029,
+      "thread_cpu_seconds": 0.12072130299999984,
+      "user_seconds": 0.11900699999999997,
+      "system_seconds": 0.0017289999999999806,
+      "minor_faults": 471,
+      "major_faults": 0
+    },
+    "saved_seconds": 0.41221773996949196,
+    "output_sha256": "834b0b6133dd89d352782aa790d0c837d8e2fecdfe4e2c41efce4a6ce72ae276",
+    "guards": "PASS"
+  },
+  "production_receiving": {
+    "status": "PASS",
+    "scope": "Untimed actual SaveImages module preparation, four flat signatures, generic layout and extension contract, authentic whole Track SaveImagesBitDepth conversion, all21 PNG pixels; no pipeline clocks",
+    "registry_owners": [
+      "ImagePayloadUint8Strategy",
+      "CellProfilerModule"
+    ],
+    "ready_signatures": [
+      "(Array(float32, 1, 'C', False, aligned=True), Array(uint8, 1, 'C', False, aligned=True), float32)",
+      "(Array(float32, 1, 'C', True, aligned=True), Array(uint8, 1, 'C', False, aligned=True), float32)",
+      "(Array(float64, 1, 'C', False, aligned=True), Array(uint8, 1, 'C', False, aligned=True), float64)",
+      "(Array(float64, 1, 'C', True, aligned=True), Array(uint8, 1, 'C', False, aligned=True), float64)"
+    ],
+    "signatures_after": [
+      "(Array(float32, 1, 'C', False, aligned=True), Array(uint8, 1, 'C', False, aligned=True), float32)",
+      "(Array(float32, 1, 'C', True, aligned=True), Array(uint8, 1, 'C', False, aligned=True), float32)",
+      "(Array(float64, 1, 'C', False, aligned=True), Array(uint8, 1, 'C', False, aligned=True), float64)",
+      "(Array(float64, 1, 'C', True, aligned=True), Array(uint8, 1, 'C', False, aligned=True), float64)"
+    ],
+    "layout_checks": [
+      {
+        "dtype": "float32",
+        "case": "scalar",
+        "shape": []
+      },
+      {
+        "dtype": "float32",
+        "case": "empty",
+        "shape": [
+          2,
+          0,
+          3
+        ]
+      },
+      {
+        "dtype": "float32",
+        "case": "fortran",
+        "shape": [
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "dtype": "float32",
+        "case": "permuted-strided",
+        "shape": [
+          3,
+          4,
+          5
+        ]
+      },
+      {
+        "dtype": ">f4",
+        "case": "non-native-byteorder",
+        "shape": [
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "dtype": "float32",
+        "case": "readonly",
+        "shape": [
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "dtype": "float64",
+        "case": "scalar",
+        "shape": []
+      },
+      {
+        "dtype": "float64",
+        "case": "empty",
+        "shape": [
+          2,
+          0,
+          3
+        ]
+      },
+      {
+        "dtype": "float64",
+        "case": "fortran",
+        "shape": [
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "dtype": "float64",
+        "case": "permuted-strided",
+        "shape": [
+          3,
+          4,
+          5
+        ]
+      },
+      {
+        "dtype": ">f8",
+        "case": "non-native-byteorder",
+        "shape": [
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "dtype": "float64",
+        "case": "readonly",
+        "shape": [
+          4,
+          5,
+          6
+        ]
+      }
+    ],
+    "exact_pixels": 27043632,
+    "oracle_images": 21,
+    "output_sha256": "834b0b6133dd89d352782aa790d0c837d8e2fecdfe4e2c41efce4a6ce72ae276"
+  },
+  "production_sources": {
+    "openhcs/core/image_file_serialization.py": "bfa8998f362fc51c85a8491f97edb076b34ebbba4f509861b544b8f3b3db0e3a",
+    "openhcs/core/image_quantization_numba.py": "28bbc4a24e533de4b1197ea607ad3995335541b19fa91c5fa80b2d27e6a4f9b9",
+    "openhcs/processing/backends/cellprofiler/save_images.py": "a7848b2bf0382f48340630bad67a0e04f9eea4a1c6a9ac839fcfa4a71c917e8b"
+  },
+  "focused_existing_controls": {
+    "passed": 71,
+    "seconds": 3.38,
+    "scope": "Image file serialization, SaveImages conversion/materialization, existing ordered preparation and raw-owner catalog tests"
+  },
+  "extension_controls": {
+    "public_payload_numpy_admission": "ndarray subclass stripped before dtype dispatch, unchanged",
+    "direct_generic_strategy": "Original NumericImagePayloadUint8Strategy.prepare invokes ndarray hooks, unchanged",
+    "nominal_dtype_extension": "Custom singular np.float32 registration replaces built-in leaf via existing numpy.float32 registry key"
+  },
+  "limits": [
+    "One sequential private pair; allocator/order may affect the observation.",
+    "Prototype pair excludes reconstruction, imports and JIT preparation, encoding, and the enclosing callable.",
+    "Final flat production kernel received exact authentic pixels untimed; private prototype had a multidimensional kernel ABI.",
+    "No whole-pipeline gain or current CellProfiler ratio established by these receipts.",
+    "Existing generic NumPy strategy retained for physically distinct unsupported floating precision, integer, and complex conversion semantics."
+  ]
+}

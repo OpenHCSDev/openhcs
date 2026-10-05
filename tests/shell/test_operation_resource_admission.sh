@@ -67,11 +67,12 @@ mv "$scratch/funding-with-closed-path.json" "$scratch/funding/program.json"
 run 0 ongoing closed_paths_not_inventoried
 runtime="$scratch/run/A/author-workspace/output/runtime"
 rg -q 'avg10=4.82 avg60=1.09 avg300=0.23' "$runtime/resources-original_review.psi"
-rg -q 'Pressure warning:' "$runtime/resources-original_review.psi"
+rg -q 'no numeric PSI admission cutoff' "$runtime/resources-original_review.psi-policy"
+! jq -e '.proposed_resource_envelope | has("full_memory_psi_max_percent")' "$scratch/funding/program.json" >/dev/null
 rg -q 'measuredCharge=1610612736 measuredSwap=0' "$runtime/resources-original_review.ram-scopes"
 rg -q 'observed=1 unavailable=0' "$runtime/resources-original_review.ram-scopes"
-run 77 full growth_rejected
-run 77 replacement replacement_rejected
+run 0 full pressure_not_numeric_ceiling
+run 0 replacement small_receiving_not_stale_pressure_veto
 printf 'MemAvailable: 4718592 kB\n' > "$scratch/host/meminfo"
 run 0 ongoing no_invented_future_ram_reservation
 printf 'MemAvailable: 1048576 kB\n' > "$scratch/host/meminfo"
@@ -161,6 +162,7 @@ jq -n --arg root "$scratch" '{phase:"headless-control",
 }' > "$scratch/admin-run/successor-declaration.json"
 printf '{"target":"/controlled/no-install","source_head":"controlled"}\n' > "$scratch/qualification.json"
 bash "$operations/project-program.sh" prepare "$scratch/funding" "$scratch/admin-run" "$scratch/qualification.json"
+! jq -e '.proposed_resource_envelope | has("full_memory_psi_max_percent")' "$scratch/admin-run/program.json" >/dev/null
 (cd "$scratch/admin-run"; sha256sum program.json successor-declaration.json > READY-FREEZE.sha256)
 FLEET_PARENT_RELEASED=1 bash "$operations/project-program.sh" publish "$scratch/funding" "$scratch/admin-run" \
   "$(sha256sum "$scratch/funding/program.json" | cut -d' ' -f1)"
@@ -184,8 +186,45 @@ printf 'MemAvailable: 16454287 kB\n' > "$scratch/host/meminfo"
 sha256sum "$runtime/resources-original_review".* > "$scratch/original-receipt.sha256"
 run 1 ongoing original_review
 sha256sum --check --quiet "$scratch/original-receipt.sha256"
-printf '1\n' > "$runtime/first-mcp-started.epoch"
-run 1 ongoing expired_clock
+# Exact original BB13 close-refusal timing, through the original mode owner.
+# Host clock is controlled; no real client/native or expired request is replayed.
+export CONTROLLED_NOW=10000
+printf '5498\n' > "$runtime/first-mcp-started.epoch"
+run 0 ongoing expired_owned_cleanup
+rg -q 'Deadline elapsed=4502 allowed=4500 seconds; mode=ongoing policy=warning' "$runtime/resources-expired_owned_cleanup.deadline"
+rg -q 'Scientific interval expired:' "$runtime/resources-expired_owned_cleanup.deadline"
+rg -q 'Existing recorded client' "$scratch/expired_owned_cleanup.log"
+run 1 full expired_scientific_dispatch
+run 1 replacement expired_client_startup
+run 1 bootstrap expired_helper_startup
+run 0 ledger expired_ledger
+rg -q 'Ledger-only PASS; not SCI admission' "$scratch/expired_ledger.log"
+export CONTROLLED_MCP_ACTIVE=0
+run 1 ongoing expired_dead_client
+unset CONTROLLED_MCP_ACTIVE
+# Warn does not disable the ordinary physical-space validation.
+export CONTROLLED_HOME_BYTES=0
+run 78 ongoing expired_exhausted_destination
+export CONTROLLED_HOME_BYTES=8353711390
+printf '5500\n' > "$runtime/first-mcp-started.epoch"
+run 1 full deadline_exact_boundary
+printf '5501\n' > "$runtime/first-mcp-started.epoch"
+run 0 full deadline_one_second_remaining
+# The future admin run came through the SAME successor projector with no
+# declared interval. Preserve the old expired run and its unchanged clock.
+printf '1\n' > "$admin_runtime/first-mcp-started.epoch"
+run 0 full undeclared_interval_continues ADMIN
+rg -q 'Recorded elapsed=9999 seconds; scientific interval undeclared; mode=full' \
+  "$admin_runtime/resources-undeclared_interval_continues.deadline"
+jq -e '.task_minutes_from_first_mcp_start==null' "$scratch/admin-run/program.json" >/dev/null
+jq -e '.task_minutes_from_first_mcp_start==75' "$scratch/run/program.json" >/dev/null
+printf '5498\n' > "$runtime/first-mcp-started.epoch"
+run 1 full original_expiry_still_owned
+(cd "$scratch/run"; sha256sum --check --quiet READY-FREEZE.sha256)
+printf '5498\n' > "$runtime/first-mcp-started.epoch"
+sha256sum "$runtime/first-mcp-started.epoch" "$runtime/resources-expired_owned_cleanup.deadline" > "$scratch/expired-custody.sha256"
+run 1 ongoing expired_owned_cleanup
+sha256sum --check --quiet "$scratch/expired-custody.sha256"
 (cd "$scratch/run"; sha256sum --check --quiet READY-FREEZE.sha256)
 sha256sum --check --quiet "$scratch/client-journals.sha256"
-printf 'PASS original immutable run, deadline, receipt uniqueness and no client/native custody preserved\n'
+printf 'PASS original immutable run, scientific deadline, expired settlement, receipt uniqueness and no client/native custody preserved\n'

@@ -1,0 +1,113 @@
+{
+  "source_sha256": {
+    "paper/supplementary/task_only_analysis/h001-fresh586-postfreeze-evaluation.json": "b0f70a14a4fe97cd5b6c9da9fb6363006ae2471aab5c2bc507bf1bdb32fa8789",
+    "paper/supplementary/task_only_analysis/bbbc039-fresh612-postfreeze-evaluation.json": "b491df2f50f0f9a3b1d1f72c940f1a0103c0c74764c4c80852f456da2d1702b2"
+  },
+  "generator_sha256": "8bccdc54360edfc8bfadd304f217e818f8b6adda0b401cace5075db7149e6b89",
+  "output_sha256": {
+    "task_only_analysis.png": "610b65757672697f339766dcf5a5285d15dd76672892eb3f910bccd078e38317",
+    "task_only_analysis.pdf": "e0672eee21548e1e8c3a2afe8ee39fdaec22be036ec8d4350f03dd620bac63a3",
+    "task_only_analysis.svg": "024dcd0f3bbadaf5ae982673442143075a74ef998b7e40a5cfe15f8392c92950",
+    "task_only_analysis_plot_data.csv": "727a00bcf17e9f23b55ea3f02c786bc206b6a2db0c4773c9a3a779530c8b36df"
+  },
+  "panels": {
+    "A": {
+      "author_run": "H001_FRESH586_96",
+      "attempts": [
+        "a01",
+        "a04"
+      ],
+      "reference": "notebook-derived computational primary; not manual annotations",
+      "f1": [
+        0.9291338582677166,
+        0.944
+      ],
+      "shape": [
+        254,
+        256
+      ]
+    },
+    "B": {
+      "reference": "independent BBBC039 annotations",
+      "paired_source_keys": [
+        [
+          "20585_F14_7",
+          "DNA"
+        ],
+        [
+          "20586_A06_6",
+          "DNA"
+        ],
+        [
+          "20630_A02_1",
+          "DNA"
+        ]
+      ],
+      "pooled_f1": {
+        "first": 0.9075043630017452,
+        "final": 0.9335604770017035
+      }
+    },
+    "C": {
+      "fields": 200,
+      "pooled_f1": 0.9062244695179845,
+      "histogram_edges_percent": [
+        0.0,
+        10.0,
+        20.0,
+        30.0,
+        40.0,
+        50.0,
+        60.0,
+        70.0,
+        80.0,
+        90.0,
+        100.0
+      ],
+      "annotated_counts": [
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        3,
+        2,
+        55,
+        135
+      ],
+      "annotation_empty_counts": [
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "annotation_empty_source_ids": [
+        "20586_L10_6",
+        "20592_F13_7",
+        "20626_L01_2"
+      ]
+    }
+  },
+  "scope": "Retained postfreeze task-only trials; no new scoring, pipeline execution or author feedback.",
+  "limits": [
+    "No first-200 score exists; the paired comparison is limited to the original three fields.",
+    "Full-200 final coverage includes development fields and the complete low-score tail.",
+    "First refers to the retained initial completed candidate, not first technical execution success.",
+    "Neither reference agreement nor within-run improvement isolates a causal skill effect."
+  ],
+  "rendering": {
+    "matplotlib": "3.11.2",
+    "figure_inches": [
+      8.2,
+      7.1
+    ],
+    "png_dpi": 300
+  }
+}

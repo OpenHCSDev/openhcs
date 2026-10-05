@@ -120,12 +120,13 @@ def test_relationship_module_number_is_derived_after_public_transport() -> None:
         global_config=GlobalPipelineConfig(),
         pipeline=ResolvedPipelineDefinition(
             steps=(snapshot,),
-            step_state_map={0: SimpleNamespace(scope_id="plate::functionstep_0")},
+            step_scope_ids={0: "plate::functionstep_0"},
+            step_provenance={0: {}},
         ),
     )
 
-    provider = CellProfilerInvocationContractProviderFactory.provider_for_session(
-        session
+    provider = CellProfilerInvocationContractProviderFactory.provider_for_pipeline(
+        session.pipeline
     )
 
     assert provider is not None
@@ -158,11 +159,12 @@ def _compiled_neighbor_invocation():
         global_config=GlobalPipelineConfig(),
         pipeline=ResolvedPipelineDefinition(
             steps=(snapshot,),
-            step_state_map={0: SimpleNamespace(scope_id="plate::functionstep_0")},
+            step_scope_ids={0: "plate::functionstep_0"},
+            step_provenance={0: {}},
         ),
     )
-    provider = CellProfilerInvocationContractProviderFactory.provider_for_session(
-        session
+    provider = CellProfilerInvocationContractProviderFactory.provider_for_pipeline(
+        session.pipeline
     )
     assert provider is not None
     step_context = ArtifactDeclarationStepContext(
@@ -380,12 +382,15 @@ def test_compiler_numbers_neighbor_invocation_equivalence_only_within_each_step(
         global_config=GlobalPipelineConfig(),
         pipeline=ResolvedPipelineDefinition(
             steps=snapshots,
-            step_state_map={index: object() for index in range(len(steps))},
+            step_scope_ids={
+                index: f"plate::step_{index}" for index in range(len(steps))
+            },
+            step_provenance={index: {} for index in range(len(steps))},
         ),
     )
 
-    provider = CellProfilerInvocationContractProviderFactory.provider_for_session(
-        session
+    provider = CellProfilerInvocationContractProviderFactory.provider_for_pipeline(
+        session.pipeline
     )
 
     assert provider is not None
@@ -522,11 +527,14 @@ def test_public_numbering_reconstructs_advanced_repeated_and_distinct_modules() 
         global_config=GlobalPipelineConfig(),
         pipeline=ResolvedPipelineDefinition(
             steps=snapshots,
-            step_state_map={index: object() for index in range(len(steps))},
+            step_scope_ids={
+                index: f"plate::step_{index}" for index in range(len(steps))
+            },
+            step_provenance={index: {} for index in range(len(steps))},
         ),
     )
-    provider = CellProfilerInvocationContractProviderFactory.provider_for_session(
-        session
+    provider = CellProfilerInvocationContractProviderFactory.provider_for_pipeline(
+        session.pipeline
     )
 
     assert provider is not None

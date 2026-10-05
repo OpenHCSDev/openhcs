@@ -645,10 +645,63 @@ def test_library_registry_discovery_is_stable_across_fresh_worker_processes(
     assert tuple((tmp_path / "cache" / "metaclass-registry").glob("*.json"))
 
 
-def test_cpu_only_registry_inventory_does_not_import_gpu_runtimes(
+def test_registered_metadata_preparation_discovers_measurements_before_lookup(
     tmp_path: Path,
 ) -> None:
-    """Catalog inventory honors memory declarations before runtime imports."""
+    """Warm discovery once while later plugin declarations remain visible."""
+    environment = os.environ.copy()
+    environment.update(
+        OPENHCS_CPU_ONLY="true",
+        XDG_CACHE_HOME=str(tmp_path / "cache"),
+        XDG_DATA_HOME=str(tmp_path / "data"),
+    )
+    script = textwrap.dedent("""
+        from openhcs.core.processing_preparation import CallablePreparation, RegistryFamilyPreparation
+        from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
+        from openhcs.processing.backends.cellprofiler.thresholding import threshold
+
+        assert not CellProfilerModule.__registry__._discovered
+        operations = tuple(
+            operation
+            for source in CallablePreparation.from_callable(threshold).cache_sources()
+            for operation in source.cache_operations()
+        )
+        preparation = next(
+            operation for operation in operations
+            if isinstance(operation, RegistryFamilyPreparation)
+            and operation.family is CellProfilerModule
+        )
+        preparation.prepare()
+        assert CellProfilerModule.__registry__._discovered
+        declarations = tuple(CellProfilerModule.__registry__.values())
+        assert declarations
+        prefixes = CellProfilerModule.measurement_category_prefix_declarations()
+        assert prefixes
+        preparation.prepare()
+        assert tuple(CellProfilerModule.__registry__.values()) == declarations
+
+        class WarmupPlugin(CellProfilerModule):
+            module_name = "WarmupPlugin"
+            measurement_category_prefixes = (("warmup_plugin",),)
+
+        assert CellProfilerModule.__registry__["WarmupPlugin"] is WarmupPlugin
+        assert ("warmup_plugin",) in CellProfilerModule.measurement_category_prefix_declarations()
+    """)
+    completed = subprocess.run(
+        (sys.executable, "-c", script),
+        cwd=Path(__file__).parents[2],
+        env=environment,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert completed.returncode == 0, completed.stderr
+
+
+def test_cpu_only_registry_inventory_preserves_cpu_dependency_policy(
+    tmp_path: Path,
+) -> None:
+    """Inventory avoids accelerator imports; admitted CPU solvers keep CPU devices."""
 
     repository_root = Path(__file__).parents[2]
     environment = os.environ.copy()
@@ -661,6 +714,7 @@ def test_cpu_only_registry_inventory_does_not_import_gpu_runtimes(
     )
     script = textwrap.dedent("""
         import json
+        import os
         import sys
 
         from openhcs.processing.backends.lib_registry.openhcs_registry import (
@@ -670,15 +724,32 @@ def test_cpu_only_registry_inventory_does_not_import_gpu_runtimes(
             RegistryService,
         )
 
+        framework_names = ("cupy", "torch", "tensorflow", "jax", "pyclesperanto")
         instances = RegistryService._available_registry_instances()
+        inventory_gpu_modules = tuple(
+            name
+            for name in framework_names
+            if name in sys.modules
+        )
         OpenHCSRegistry().get_modules_to_scan()
         gpu_modules = tuple(
             name
-            for name in ("cupy", "torch", "tensorflow", "jax", "pyclesperanto")
+            for name in framework_names
             if name in sys.modules
         )
+        from openhcs.utils.environment import OpenHCSProcessEnvironment
+
+        # NumPy-transport solvers can use JAX internally. The package's actual
+        # CPU policy must select its CPU backend before dependency admission.
+        jax_platforms = (
+            [] if "jax" not in sys.modules
+            else [device.platform for device in sys.modules["jax"].devices()]
+        )
         print(json.dumps({
+            "inventory_gpu_modules": inventory_gpu_modules,
             "gpu_modules": gpu_modules,
+            "jax_requested_platforms": os.environ[OpenHCSProcessEnvironment.jax_platforms_key],
+            "jax_device_platforms": jax_platforms,
             "registries": [instance.library_name for instance in instances],
         }))
         """)
@@ -695,7 +766,11 @@ def test_cpu_only_registry_inventory_does_not_import_gpu_runtimes(
 
     assert completed.returncode == 0, completed.stderr
     result = json.loads(completed.stdout)
-    assert result["gpu_modules"] == []
+    assert result["inventory_gpu_modules"] == []
+    assert set(result["gpu_modules"]).issubset({"jax"})
+    assert result["jax_requested_platforms"] == "cpu"
+    assert all(platform == "cpu" for platform in result["jax_device_platforms"])
+    assert bool(result["jax_device_platforms"]) == ("jax" in result["gpu_modules"])
     assert set(result["registries"]) == {"openhcs", "skimage"}
 
 

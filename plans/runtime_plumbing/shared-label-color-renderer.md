@@ -1,0 +1,17 @@
+# Shared label-color rendering acceptance
+
+The existing ImageModeRenderer owns rendering-mode selection; ColorImageModeRenderer owns the indexed-label palette and RGB blending capability. GrayToColorSchemeRunner composes unrelated channel weights, and memory backend provider keys do not select rendering modes.
+
+OverlayObjects currently rebuilds RGB planes, foreground gathers and blend terms, then stacks a volume. Consolidate palette generation and indexed RGB blending on ColorImageModeRenderer, preserving plane-local maximum normalization and exact float32 arithmetic. Remove the old private plane-renderer and palette after migrating actual consumers. Keep public image metadata/mask output projection on its existing owner.
+
+Registry preparation must derive registered renderer declarations through ImageModeRenderer, using existing persistent Numba preparation before READY. No runtime readiness fallback or parallel kernel roster.
+
+Retained evidence: label-color-renderer-replay-v1 contains original CPPipe-bound RescaleDNA/RescaleMemb input frontiers and current science-qualified Nuclei/Cells labels. A single private pair gave 79.725→13.423ms and 156.935→14.456ms with identical RGB bytes and unchanged inputs. This establishes only a numerical prototype: no whole-pipeline gain or original runtime metadata identity claim.
+
+Production gates: saved original pixel frontiers; existing mismatched-geometry and volume-context controls; Color-mode luminance and palette consumers; readonly labels and scalar opacity precision; registry preparation followed by no new runtime signatures. Preserve NaN/infinity, negative labels, modulo bounds, zero palettes, independent buffers, source channel projection and masks. Whole-pipeline/science acceptance will be combined with other qualified work rather than repeated here.
+
+Implemented receiving: the actual OverlayObjects consumer selects the existing COLOR renderer, so normal module registry discovery prepares ImageModeRenderer automatically. Family preparation derives registered modes; COLOR warms writable/readonly int32 labels and Python/strong-float64 coefficient domains. No operation hook, runtime readiness branch, manual dispatch registry or alternate pixel authority was added. ConvertObjectsToImage luminance and overlapping-worm palette consumers use the same palette owner.
+
+Untimed production receiving preserved exact saved Nuclei/Cells RGB bytes and unchanged inputs, passed 30 dtype/opacity/channel/plane-boundary controls, and observed no new signatures after normal CallablePreparation. Six meaningful existing geometry/volume/Color/uint16/worm/registry controls passed. Retained initial receiving RED was a private RGB metadata fixture keyword error; production code was unchanged for its correction. End-to-end performance and native comparison remain pending coupled acceptance.
+
+Review preserved the original indexed-blend palette cache by moving it onto ColorImageModeRenderer, retaining a separate fresh palette admission for ConvertObjectsToImage and worms. Twelve first/subsequent custom stochastic Matplotlib palette cases preserve exact RGB and global NumPy RNG state for seeded/unseeded planes, singleton volumes and multiple-plane volumes. No geometry forwarding was added: the original CellProfilerPlaneGeometry label owner strictly required exact domains already, matching the shared renderer's shape admission. Shared renderer errors now describe indexed color blending rather than a particular caller.

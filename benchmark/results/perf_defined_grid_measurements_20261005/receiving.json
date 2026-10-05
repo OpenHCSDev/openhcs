@@ -1,0 +1,100 @@
+{
+  "priced_source_head": "24d0c4e03b6d29f5f3ba1cfaca21843af534dcb7",
+  "issue": 758,
+  "pull_request": 760,
+  "scope": "Parity repair; one ordinary observation per case, existing retained fresh native. No performance improvement established. Server startup/registry warming excluded.",
+  "packet": "/home/ts/.local/state/openhcs-maintenance/20261005/grid-measurement-production-receiving-v2",
+  "guards": {
+    "returncode": 0,
+    "source_input_dependency_guards": "PASS"
+  },
+  "scientific_policy": "Existing native measurement tolerances; exact exported image pixels; complete inventories and relationship correlations; nonempty participating tables.",
+  "cases": [
+    {
+      "case": "ExampleVitra",
+      "ordinary": {
+        "case_name": "ExampleVitra",
+        "mode_name": "1w_1t",
+        "worker_count": "1",
+        "well_count": "1",
+        "compile_seconds": "0.6453783512115479",
+        "prepare_seconds": "0.0",
+        "execute_seconds": "1.2272617816925049",
+        "total_seconds": "1.9730895711109042",
+        "wells_per_second": "0.8148220819040821",
+        "successful_wells": "1",
+        "native_single_sample_execution_seconds": "",
+        "projected_native_execution_seconds": "",
+        "projected_execution_speedup": "",
+        "peak_memory_mb": "1436.3515625",
+        "status": "success",
+        "memory_limit_mb": "",
+        "error_message": "",
+        "execution_route": "ordinary-zmq-outcomes-v1",
+        "server_lifecycle": "reused-per-sweep",
+        "run_input_sha256": "1832287fbd44b67204ff7720a0b5e098a8f6c1fd21ef4e888e977830d6f23f70"
+      },
+      "native_measured_observation": {
+        "repetition": 0,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261004/current-broader-frontier-ordinary-v1/native/ExampleVitra/outputs/0",
+        "image_set_count": 1,
+        "invocation_seconds": 2.9668581392616034,
+        "pre_first_module_seconds": 0.18851620005443692,
+        "first_module_through_post_run_seconds": 2.7783419392071664,
+        "invocation_started_monotonic_seconds": 3969305.140271478,
+        "first_module_started_monotonic_seconds": 3969305.328787678,
+        "completed_monotonic_seconds": 3969308.107129617
+      },
+      "science": "PASS"
+    },
+    {
+      "case": "ExampleYeastPatches",
+      "ordinary": {
+        "case_name": "ExampleYeastPatches",
+        "mode_name": "1w_1t",
+        "worker_count": "1",
+        "well_count": "1",
+        "compile_seconds": "0.2688271999359131",
+        "prepare_seconds": "0.0",
+        "execute_seconds": "2.2942466735839844",
+        "total_seconds": "2.682890815194696",
+        "wells_per_second": "0.43587292138810785",
+        "successful_wells": "1",
+        "native_single_sample_execution_seconds": "",
+        "projected_native_execution_seconds": "",
+        "projected_execution_speedup": "",
+        "peak_memory_mb": "1517.890625",
+        "status": "success",
+        "memory_limit_mb": "",
+        "error_message": "",
+        "execution_route": "ordinary-zmq-outcomes-v1",
+        "server_lifecycle": "reused-per-sweep",
+        "run_input_sha256": "1832287fbd44b67204ff7720a0b5e098a8f6c1fd21ef4e888e977830d6f23f70"
+      },
+      "native_measured_observation": {
+        "repetition": 0,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261004/current-broader-frontier-ordinary-v1/native/ExampleYeastPatches/outputs/0",
+        "image_set_count": 1,
+        "invocation_seconds": 4.791621568147093,
+        "pre_first_module_seconds": 0.09398397896438837,
+        "first_module_through_post_run_seconds": 4.697637589182705,
+        "invocation_started_monotonic_seconds": 3969294.702071554,
+        "first_module_started_monotonic_seconds": 3969294.796055533,
+        "completed_monotonic_seconds": 3969299.493693122
+      },
+      "science": "PASS"
+    }
+  ],
+  "retained_failures": [
+    "/home/ts/.local/state/openhcs-maintenance/20261005/grid-measurement-production-receiving-v1",
+    "/home/ts/.local/state/openhcs-maintenance/20261004/current-broader-frontier-ordinary-v1/strict-science-ExampleYeastPatches-first-red.json"
+  ],
+  "custody_sha256": {
+    "strict-science.json": "14c27659a9310d58898d13258c51821705511624df027b29095c058aa8d21d37",
+    "inputs.json": "214bfec88abba3ffcf7d97b90b90ddecd7330c690aa849c4d72acb1a78c9c8bd",
+    "selected-sidecars.json": "8aa139de1c78292a8b9590b94bd40c0c9300b598cc27eccd97048fa0966c4104",
+    "candidate/source-before.json": "72a80037a9a2a38eb0d81005b04b4189eb52c655eeb064f85c95a208d4ddc32e",
+    "candidate/source-after.json": "72a80037a9a2a38eb0d81005b04b4189eb52c655eeb064f85c95a208d4ddc32e",
+    "candidate/terminal.json": "03e276a2c304fe70cc3bb6c772cc760b1ea86cd18c0b0d0a6f6e6bd2012187ac"
+  }
+}

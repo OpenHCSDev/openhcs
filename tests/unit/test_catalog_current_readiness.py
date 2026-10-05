@@ -71,6 +71,15 @@ def test_both_public_views_are_warm(catalog, monkeypatch):
     service, _, _ = catalog
     calls = []
     original = service._entry
+    from openhcs.agent.services.function_catalog_service import PARAMETER_DOCUMENTATION_POLICY
+    parameter_calls = []
+    original_parameters = PARAMETER_DOCUMENTATION_POLICY.parameter_specs
+
+    def parameter_specs(*args, **kwargs):
+        parameter_calls.append(args[0])
+        return original_parameters(*args, **kwargs)
+
+    monkeypatch.setattr(PARAMETER_DOCUMENTATION_POLICY, "parameter_specs", parameter_specs)
 
     def entry(*args, **kwargs):
         calls.append(args[2:4])
@@ -80,13 +89,15 @@ def test_both_public_views_are_warm(catalog, monkeypatch):
     assert not service.projections_current()
     service.prepare_projections()
     assert service.projections_current()
-    assert len(calls) == 2
+    assert len(calls) == 1
     for compact in (False, True, False, True):
         page = service.catalog(compact_signatures=compact)
         assert service.search(query="declaration", compact_signatures=compact).items == page.items
         service.require_revision(page.revision)
-    assert len(calls) == 2
+    assert len(calls) == 1
+    assert parameter_calls == [declaration]
     assert service.get("probe:declaration").entry.name == "declaration"
+    assert parameter_calls == [declaration, declaration]
     assert service.reference("probe:declaration") is not None
 
 
@@ -216,25 +227,19 @@ def test_midprojection_change_rebuilds_both_views_before_ready(
 
     current = RegistryService._metadata_cache["probe:declaration"]
     assert (current, SignatureView.FULL) in calls
-    assert (current, SignatureView.COMPACT) in calls
-    assert all(
-        projection.metadata is current
-        for view in service._projections.values()
-        for projection in view
-    )
+    assert all(projection.metadata is current for projection in service._projections)
+    for compact in (False, True):
+        assert service.catalog(compact_signatures=compact).items
     preparation.cancel_and_join()
 
 
 def test_cancel_during_last_entry_cancels_future_without_ready(catalog, monkeypatch):
     service, _, _ = catalog
-    from openhcs.agent.services.function_catalog_service import SignatureView
-
     original = service._entry
 
     def cancelling_entry(*args, **kwargs):
         result = original(*args, **kwargs)
-        if args[2] is SignatureView.COMPACT:
-            preparation._cancellation.cancel()
+        preparation._cancellation.cancel()
         return result
 
     monkeypatch.setattr(service, "_entry", cancelling_entry)
@@ -250,8 +255,6 @@ def test_cancel_during_last_entry_cancels_future_without_ready(catalog, monkeypa
 
 def test_overlapping_projection_cannot_commit_old_view_into_new_metadata(catalog, monkeypatch):
     service, _, _ = catalog
-    from openhcs.agent.services.function_catalog_service import SignatureView
-
     changed = Event()
     original = service._entry
     old = RegistryService._metadata_cache["probe:declaration"]
@@ -272,12 +275,9 @@ def test_overlapping_projection_cannot_commit_old_view_into_new_metadata(catalog
     preparation.ensure_started().result(timeout=2)
     assert preparation.observe(handle()).outcome is Outcome.READY
     assert service.projections_current()
-    assert all(
-        projection.metadata is current
-        for view in service._projections.values()
-        for projection in view
-    )
-    assert {key[0] for key in service._projections} == set(SignatureView)
+    assert all(projection.metadata is current for projection in service._projections)
+    for compact in (False, True):
+        assert service.catalog(compact_signatures=compact).items[0].summary == declaration.__doc__
     preparation.cancel_and_join()
 
 

@@ -35,15 +35,14 @@ from openhcs.core.function_patterns import (
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
 from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
 from openhcs.core.runtime_adapters import RuntimeAdapterRequest, runtime_adapter
-from openhcs.core.runtime_output_matching import RuntimeReturnedOutputMatcher
 from openhcs.core.step_dependencies import (
     StepInputDependency,
     StepInputDependencyKind,
 )
 from openhcs.core.steps.function_artifact_materialization import (
-    AnalysisOutputDescriptorAuthority,
+    RuntimeArtifactMaterialization,
 )
-from openhcs.core.steps.function_runtime import ComponentArtifactPlans
+from openhcs.core.steps.function_runtime import PatternGroupExecutionScope
 
 
 def noop(image):
@@ -154,7 +153,7 @@ def test_compiled_step_plan_owns_gpu_memory_classification() -> None:
     assert compiled_plan.device_id_for("cupy") == 2
 
 
-def test_compiled_step_plan_includes_invocation_execution_memory() -> None:
+def test_compiled_step_plan_includes_invocation_execution_memory(monkeypatch) -> None:
     def numpy_boundary_with_torch_execution(image):
         return image
 
@@ -172,6 +171,31 @@ def test_compiled_step_plan_includes_invocation_execution_memory() -> None:
 
     assert compiled_plan.gpu_memory_types == frozenset({MemoryType.TORCH})
     assert compiled_plan.device_id_for("torch") == 4
+    from contextlib import contextmanager
+    from openhcs.core.pipeline.framework_device_assignment import (
+        assign_framework_devices,
+    )
+
+    monkeypatch.setattr(
+        "openhcs.core.pipeline.framework_device_assignment.resolve_framework_devices",
+        lambda _required: compiled_plan.device_assignment,
+    )
+    assign_framework_devices({0: compiled_plan})
+    (placed_invocation,) = tuple(
+        compiled_plan.compiled_function_pattern.iter_invocations()
+    )
+    assert placed_invocation.input_device_id is None
+    assert placed_invocation.execution_device_id == 4
+    entered = []
+
+    @contextmanager
+    def recorded_scope(memory_type, device_id):
+        entered.append((memory_type, device_id))
+        yield
+
+    monkeypatch.setattr(MemoryType, "device_scope", recorded_scope)
+    with placed_invocation.execution_device_scope():
+        assert entered == [(MemoryType.TORCH, 4)]
 
 
 def test_compiled_step_plan_includes_intermediate_invocation_memory() -> None:
@@ -368,11 +392,11 @@ def test_build_analysis_filename_falls_back_to_axis_and_pipeline_position_withou
     plan = context.step_plans[2].require_function_execution_ready()
 
     assert (
-        AnalysisOutputDescriptorAuthority.build(
+        RuntimeArtifactMaterialization._analysis_identity(
             "measurements",
             plan,
             context=context,
-        ).filename
+        )[0]
         == "A01_measurements_step7.roi.zip"
     )
 
@@ -392,7 +416,7 @@ def test_component_artifact_plan_selection_merges_global_and_group_outputs():
         paths_by_group={"A01": "/tmp/measurements/A01"},
     )
 
-    selected = ComponentArtifactPlans._select_output_plans_for_component(
+    selected = PatternGroupExecutionScope._select_output_plans_for_component(
         {
             global_output.ref(): global_output,
             grouped_output.ref(): grouped_output,
@@ -417,7 +441,7 @@ def test_component_artifact_plan_selection_omits_unscoped_outputs_for_missing_gr
         paths_by_group={"3": "/tmp/objects_w3"},
     )
 
-    selected = ComponentArtifactPlans._select_output_plans_for_component(
+    selected = PatternGroupExecutionScope._select_output_plans_for_component(
         {output.ref(): output},
         ComponentGroupScope(("1", "3"), component=AllComponents.CHANNEL),
         "1",
@@ -440,7 +464,7 @@ def test_default_invocation_keeps_compiled_grouped_output_plan():
         },
     )
 
-    selected = ComponentArtifactPlans._select_output_plans_for_component(
+    selected = PatternGroupExecutionScope._select_output_plans_for_component(
         {grouped_output.ref(): grouped_output},
         ComponentGroupScope.ungrouped(),
         None,
@@ -494,19 +518,17 @@ def test_invocation_output_selection_omits_inactive_component_outputs():
     invocation, channel_one, _channel_two = _cross_channel_output_invocation()
     channel_one = channel_one.for_group("1")
 
-    selected = ComponentArtifactPlans(
-        inputs={},
-        outputs={channel_one.ref(): channel_one},
-    ).select_for_invocation(
-        invocation,
-        execution_scope=ComponentGroupScope.from_raw(
-            ("1", "2"),
-            component=AllComponents.CHANNEL,
+    selected_outputs = invocation.select_outputs(
+        {channel_one.ref(): channel_one},
+        compiled_output_plans=invocation.output_plans_for_component(
+            ComponentGroupScope.from_raw(
+                ("1", "2"), component=AllComponents.CHANNEL,
+            ),
+            "1",
         ),
-        component_key="1",
     )
 
-    assert selected.outputs == {channel_one.ref(): channel_one}
+    assert selected_outputs == {channel_one.ref(): channel_one}
 
 
 def test_compiler_handoff_preserves_exact_same_name_output_types():
@@ -549,10 +571,9 @@ def test_compiler_handoff_preserves_exact_same_name_output_types():
     )
     image_value = object()
     labels_value = object()
-    _returned, matched = RuntimeReturnedOutputMatcher(
-        callable_contract=invocation.contract,
-        returned_output=(image_value, labels_value),
-    ).resolve_plan_values(tuple(selected.values()))
+    _returned, matched = invocation.contract.resolve_returned_plan_values(
+        (image_value, labels_value), tuple(selected.values())
+    )
 
     assert selected == {
         image_spec.ref(): image_plan,
@@ -685,54 +706,52 @@ def test_invocation_component_selection_projects_relation_owned_inputs():
     )
     active_output = output_plans[channel_one_output.ref()].for_group("1")
 
-    selected = ComponentArtifactPlans(
-        inputs=input_plans,
-        outputs={active_output.ref(): active_output},
-    ).select_for_invocation(
-        invocation,
-        execution_scope=execution_scope,
-        component_key="1",
+    selected_inputs = invocation.select_inputs(
+        input_plans,
+        active_output_plans=invocation.output_plans_for_component(execution_scope, "1"),
+    )
+    selected_outputs = invocation.select_outputs(
+        {active_output.ref(): active_output},
+        compiled_output_plans=invocation.output_plans_for_component(execution_scope, "1"),
     )
 
-    assert tuple(edge.spec for edge in selected.inputs.values()) == (
+    assert tuple(edge.spec for edge in selected_inputs.values()) == (
         channel_one_input,
         channel_one_illumination,
         shared_object_input,
     )
-    assert selected.outputs == {active_output.ref(): active_output}
+    assert selected_outputs == {active_output.ref(): active_output}
 
     second_active_output = output_plans[channel_two_output.ref()].for_group("2")
-    second_selected = ComponentArtifactPlans(
-        inputs=input_plans,
-        outputs={second_active_output.ref(): second_active_output},
-    ).select_for_invocation(
-        invocation,
-        execution_scope=execution_scope,
-        component_key="2",
+    second_selected_inputs = invocation.select_inputs(
+        input_plans,
+        active_output_plans=invocation.output_plans_for_component(execution_scope, "2"),
+    )
+    second_selected_outputs = invocation.select_outputs(
+        {second_active_output.ref(): second_active_output},
+        compiled_output_plans=invocation.output_plans_for_component(execution_scope, "2"),
     )
 
-    assert tuple(edge.spec for edge in second_selected.inputs.values()) == (
+    assert tuple(edge.spec for edge in second_selected_inputs.values()) == (
         channel_two_input,
         channel_two_illumination,
         shared_object_input,
     )
-    assert second_selected.outputs == {second_active_output.ref(): second_active_output}
+    assert second_selected_outputs == {second_active_output.ref(): second_active_output}
 
 
 def test_invocation_output_selection_rejects_missing_active_component_output():
     invocation, _channel_one, _channel_two = _cross_channel_output_invocation()
 
     with pytest.raises(ValueError, match="channel_one.*unavailable"):
-        ComponentArtifactPlans(
-            inputs={},
-            outputs={},
-        ).select_for_invocation(
-            invocation,
-            execution_scope=ComponentGroupScope.from_raw(
-                ("1", "2"),
-                component=AllComponents.CHANNEL,
+        invocation.select_outputs(
+            {},
+            compiled_output_plans=invocation.output_plans_for_component(
+                ComponentGroupScope.from_raw(
+                    ("1", "2"), component=AllComponents.CHANNEL,
+                ),
+                "1",
             ),
-            component_key="1",
         )
 
 
@@ -748,16 +767,14 @@ def test_invocation_output_selection_rejects_active_projection_drift():
     )
 
     with pytest.raises(ValueError, match="runtime projection.*compiled owner"):
-        ComponentArtifactPlans(
-            inputs={},
-            outputs={drifted_channel_one.ref(): drifted_channel_one},
-        ).select_for_invocation(
-            invocation,
-            execution_scope=ComponentGroupScope.from_raw(
-                ("1", "2"),
-                component=AllComponents.CHANNEL,
+        invocation.select_outputs(
+            {drifted_channel_one.ref(): drifted_channel_one},
+            compiled_output_plans=invocation.output_plans_for_component(
+                ComponentGroupScope.from_raw(
+                    ("1", "2"), component=AllComponents.CHANNEL,
+                ),
+                "1",
             ),
-            component_key="1",
         )
 
 
@@ -810,13 +827,9 @@ def test_adapter_invocation_preserves_component_selected_artifact_inputs():
     )
     invocation = invocation.with_artifact_input_edges((edge,))
 
-    selected = ComponentArtifactPlans(
-        inputs={first_input.ref(): first_input},
-        outputs={},
-    ).select_for_invocation(
-        invocation,
-        execution_scope=scope,
-        component_key="1",
+    selected_inputs = invocation.select_inputs(
+        {first_input.ref(): first_input},
+        active_output_plans=invocation.output_plans_for_component(scope, "1"),
     )
 
-    assert selected.inputs == {edge.key: edge}
+    assert selected_inputs == {edge.key: edge}

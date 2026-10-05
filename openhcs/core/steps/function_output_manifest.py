@@ -14,7 +14,6 @@ from openhcs.core.source_path_identity import (
     source_path_relative_to,
 )
 from openhcs.core.artifacts import ArtifactOutputPlan, ArtifactType, ImageArtifactType
-from openhcs.core.callable_contract import ImagePayloadConsumption
 from openhcs.core.aligned_image_payload import AlignedImageSliceContext
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.path_pattern_matching import PathPatternTemplateMatcher
@@ -24,7 +23,7 @@ from openhcs.core.runtime_image_values import (
     image_payload_metadata,
 )
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
-from openhcs.core.source_metadata import SourceMetadataValue
+from openhcs.core.source_metadata import DurableSourceMetadata, SourceMetadataValue
 
 from openhcs.core.step_dependencies import StepInputDependencyKind
 from openhcs.core.steps.function_output_identity import (
@@ -57,6 +56,16 @@ class ProducedOutputSemantics(FunctionOutputIdentity):
     relative_output_path: str
     image_metadata: ImagePayloadMetadata | None = None
     main_flow_plane_axis: RuntimePlaneAxis | None = RuntimePlaneAxis.RUNTIME_SLICE
+
+    def published(self) -> "ProducedOutputSemantics":
+        """Fix the saved slot while retaining live provenance and storage aliases."""
+        if isinstance(self.component_values, DurableSourceMetadata):
+            return self
+        return replace(
+            self,
+            component_values=DurableSourceMetadata.from_mapping(self.component_values),
+            filename_component_values=self.filename_values,
+        )
 
     def path_tokens(self, parser: FilenameParser) -> frozenset[str]:
         """Expose this occurrence's exact storage and unqualified address aliases."""
@@ -258,17 +267,20 @@ class ProducedOutputSemantics(FunctionOutputIdentity):
 class StepOutputManifestStore:
     """Execution-local main-flow output lineage for shared VFS directories."""
 
-    records_by_key: dict[StepOutputManifestKey, tuple[ProducedOutputSemantics, ...]] = (
-        field(default_factory=dict)
-    )
-    records_revision: int = 0
-    selected_records_by_plan: dict[
-        tuple[int, int],
-        tuple[ProducedOutputSemantics, ...] | None,
+    records_by_key: dict[
+        StepOutputManifestKey,
+        dict[
+            tuple[str, str, str | None, tuple[tuple[str, str | int], ...]],
+            ProducedOutputSemantics,
+        ],
     ] = field(default_factory=dict)
-    filtered_paths_by_plan: dict[
-        tuple[int, int, tuple[str, ...], int],
-        tuple[str, ...],
+    own_output_counts: dict[StepOutputManifestKey, int] = field(default_factory=dict)
+    selected_records_by_source: dict[
+        StepOutputManifestKey,
+        dict[
+            tuple[frozenset[tuple[str, str, str | None]], bool],
+            tuple[ProducedOutputSemantics, ...],
+        ],
     ] = field(default_factory=dict)
 
     def begin_step(
@@ -279,8 +291,17 @@ class StepOutputManifestStore:
         key = self.key_for_producer(plan)
         if key is None:
             return
-        self.records_by_key[key] = tuple(input_records)
-        self._invalidate_record_selection_caches()
+        records = {
+            published.main_flow_address: published
+            for record in input_records
+            for published in (record.published(),)
+        }
+        self.records_by_key[key] = records
+        self.own_output_counts[key] = sum(
+            record.producer_identity.step_scope_id == key.step_scope_id
+            for record in records.values()
+        )
+        self._invalidate_record_selection_caches(key)
 
     def record_outputs(
         self,
@@ -292,40 +313,32 @@ class StepOutputManifestStore:
         key = self.key_for_producer(plan)
         if key is None:
             return
-        existing = self.records_for_key(key)
-        current_outputs = tuple(output_records)
-        has_current_step_output = any(
-            record.producer_identity.step_scope_id == plan.step_scope_id
-            for record in existing
-        )
-        if existing and current_outputs and not has_current_step_output:
-            inherited_addresses = frozenset(
-                record.main_flow_address for record in existing
-            )
-            output_addresses = frozenset(
-                record.main_flow_address for record in current_outputs
-            )
+        if not output_records:
+            return
+        records = self.records_by_key.setdefault(key, {})
+        current_outputs = tuple(record.published() for record in output_records)
+        own_output_count = self.own_output_counts.get(key, 0)
+        if records and not own_output_count:
             if (
                 collapsed_input_domain
-                or any(
-                    invocation.contract.image_payload_consumption
-                    is ImagePayloadConsumption.COMPOSED
-                    for invocation in plan.compiled_function_pattern.iter_invocations()
-                )
-                or plan.compiled_function_pattern.is_grouped
-                or not output_addresses.issubset(inherited_addresses)
+                or plan.compiled_function_pattern.replaces_inherited_main_flow_domain
+                or any(record.main_flow_address not in records for record in current_outputs)
             ):
-                existing = ()
-        records_by_address = {
-            record.main_flow_address: record for record in (*existing, *current_outputs)
-        }
-        self.records_by_key[key] = tuple(records_by_address.values())
-        self._invalidate_record_selection_caches()
+                records.clear()
+        for record in current_outputs:
+            address = record.main_flow_address
+            previous = records.get(address)
+            if previous is not None:
+                own_output_count -= (
+                    previous.producer_identity.step_scope_id == key.step_scope_id
+                )
+            records[address] = record
+            own_output_count += record.producer_identity.step_scope_id == key.step_scope_id
+        self.own_output_counts[key] = own_output_count
+        self._invalidate_record_selection_caches(key)
 
-    def _invalidate_record_selection_caches(self) -> None:
-        self.records_revision += 1
-        self.selected_records_by_plan.clear()
-        self.filtered_paths_by_plan.clear()
+    def _invalidate_record_selection_caches(self, key: StepOutputManifestKey) -> None:
+        self.selected_records_by_source.pop(key, None)
 
     def producer_records_for(
         self,
@@ -409,7 +422,8 @@ class StepOutputManifestStore:
     ) -> tuple[ProducedOutputSemantics, ...]:
         """Select image occurrences directly from this step's current producer cohort."""
         return tuple(
-            record for record in self.produced_records_for(plan)
+            record
+            for record in self.produced_records_for(plan)
             if record.is_image_payload
         )
 
@@ -440,12 +454,15 @@ class StepOutputManifestStore:
         return None if index is None else index.records_for_paths(paths)
 
     def producer_record_index_for(
-        self, plan: CompiledStepPlan, parser: FilenameParser,
+        self,
+        plan: CompiledStepPlan,
+        parser: FilenameParser,
     ) -> ProducedPathRecordIndex | None:
         """Admit one current producer cohort with its correlated address aliases."""
-        records = self._selected_unique_producer_records_for(plan)
+        records = self._selected_unique_producer_records_for(plan, path_ordered=True)
         return (
-            None if records is None
+            None
+            if records is None
             else ProducedPathRecordIndex.from_records(records, parser)
         )
 
@@ -455,44 +472,40 @@ class StepOutputManifestStore:
         paths: Sequence[str],
         parser: FilenameParser,
     ) -> list[str]:
-        cache_key = (
-            self.records_revision,
-            id(plan),
-            tuple(str(path) for path in paths),
-            id(parser),
-        )
-        cached = self.filtered_paths_by_plan.get(cache_key)
-        if cached is not None:
-            return list(cached)
-
         index = self.producer_record_index_for(plan, parser)
         if index is None:
             return list(paths)
         selected = [path for path in paths if index.contains(path)]
         if selected:
-            self.filtered_paths_by_plan[cache_key] = tuple(selected)
             return selected
         if paths:
             raise NoStepOutputManifestMatch
-        self.filtered_paths_by_plan[cache_key] = ()
         return []
 
     def _selected_unique_producer_records_for(
         self,
         plan: CompiledStepPlan,
+        *,
+        path_ordered: bool = False,
     ) -> tuple[ProducedOutputSemantics, ...] | None:
-        cache_key = (self.records_revision, id(plan))
-        if cache_key in self.selected_records_by_plan:
-            return self.selected_records_by_plan[cache_key]
-
-        producer_records = self.producer_records_for(plan)
-        if producer_records is None:
-            self.selected_records_by_plan[cache_key] = None
+        producer_key = self._main_input_producer_key(plan)
+        if producer_key is None:
             return None
-        selected = self._select_requested_producer_records(plan, producer_records)
-        selected = self._unique_output_path_records(selected)
-        self.selected_records_by_plan[cache_key] = selected
-        return selected
+        requested = self._requested_producer_outputs(plan)
+        selections = self.selected_records_by_source.setdefault(producer_key, {})
+        insertion_key = (requested, False)
+        if insertion_key not in selections:
+            producer_records = self.records_for_key(producer_key)
+            selected = self._select_requested_producer_records(requested, producer_records)
+            selections[insertion_key] = self._unique_output_path_records(selected)
+        if not path_ordered:
+            return selections[insertion_key]
+        path_key = (requested, True)
+        if path_key not in selections:
+            selections[path_key] = tuple(
+                sorted(selections[insertion_key], key=lambda record: record.output_path)
+            )
+        return selections[path_key]
 
     @staticmethod
     def _unique_output_path_records(
@@ -501,7 +514,10 @@ class StepOutputManifestStore:
         records_by_path: dict[str, ProducedOutputSemantics] = {}
         for record in records:
             existing = records_by_path.get(record.output_path)
-            if existing is not None and existing.main_flow_plane_axis is not record.main_flow_plane_axis:
+            if (
+                existing is not None
+                and existing.main_flow_plane_axis is not record.main_flow_plane_axis
+            ):
                 raise ValueError(
                     "One produced output path cannot declare conflicting main-flow image axes: "
                     f"{record.output_path!r}."
@@ -511,10 +527,9 @@ class StepOutputManifestStore:
 
     def _select_requested_producer_records(
         self,
-        plan: CompiledStepPlan,
+        requested: frozenset[tuple[str, str, str | None]],
         producer_records: Sequence[ProducedOutputSemantics],
     ) -> tuple[ProducedOutputSemantics, ...]:
-        requested = self._requested_producer_outputs(plan)
         if not requested:
             return tuple(producer_records)
         selected = tuple(
@@ -576,9 +591,7 @@ class StepOutputManifestStore:
         self,
         key: StepOutputManifestKey,
     ) -> tuple[ProducedOutputSemantics, ...]:
-        if key not in self.records_by_key:
-            return ()
-        return self.records_by_key[key]
+        return tuple(self.records_by_key.get(key, {}).values())
 
     @staticmethod
     def key_for_producer(
@@ -648,11 +661,13 @@ class ProducedPathRecordIndex:
         return next(self.matching_tokens(path), None) is not None
 
     def matching_records(self, path: str) -> tuple[ProducedOutputSemantics, ...]:
-        indices = sorted({
-            index
-            for token in self.matching_tokens(path)
-            for index in self.record_indices_by_token[token]
-        })
+        indices = sorted(
+            {
+                index
+                for token in self.matching_tokens(path)
+                for index in self.record_indices_by_token[token]
+            }
+        )
         return tuple(self.records[index] for index in indices)
 
     def record_for_path(self, path: str) -> ProducedOutputSemantics:
@@ -666,12 +681,14 @@ class ProducedPathRecordIndex:
         return records[0]
 
     def records_for_paths(
-        self, paths: Sequence[str],
+        self,
+        paths: Sequence[str],
     ) -> tuple[ProducedOutputSemantics, ...]:
         return tuple(self.record_for_path(path) for path in paths)
 
     def validate_input_records(
-        self, records: Sequence[ProducedOutputSemantics],
+        self,
+        records: Sequence[ProducedOutputSemantics],
     ) -> None:
         """Validate address cardinality while retaining the already-selected cohort."""
         for record in records:

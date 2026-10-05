@@ -56,7 +56,6 @@ from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPol
 from openhcs.core.runtime_adapters import runtime_adapter
 from openhcs.core.runtime_object_labels import ObjectLabelValue
 from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
-from openhcs.core.steps.function_runtime import ComponentArtifactPlans
 from openhcs.processing.materialization import csv_only
 
 
@@ -779,23 +778,23 @@ def test_component_projection_uses_compiled_per_group_source_lineage() -> None:
         )
         for edge in invocation.artifact_input_edges
     ))
-    artifacts = ComponentArtifactPlans(
-        inputs=storage_plans, outputs={plan.ref(): plan for plan in green_outputs},
+    selected_inputs = stored_invocation.select_inputs(
+        storage_plans, active_output_plans=green_outputs,
     )
-    selected = artifacts.select_for_invocation(
-        stored_invocation, execution_scope=execution_scope, component_key="2",
+    selected_outputs = stored_invocation.select_outputs(
+        {plan.ref(): plan for plan in green_outputs},
+        compiled_output_plans=green_outputs,
     )
-    assert selected is not None
-    assert tuple(key.input_index for key in selected.inputs) == (1,)
-    assert tuple(selected.outputs.values()) == green_outputs
+    assert tuple(key.input_index for key in selected_inputs) == (1,)
+    assert tuple(selected_outputs.values()) == green_outputs
     assert stored_invocation.artifact_output_plans == (output_plan,)
 
     # Sparse admission still validates the complete compiled producer owner at
     # this epoch, including a producer whose output lineage is inactive here.
     storage_plans.pop(blue.ref())
     with pytest.raises(ValueError, match="input plan.*unavailable"):
-        artifacts.select_for_invocation(
-            stored_invocation, execution_scope=execution_scope, component_key="2",
+        stored_invocation.select_inputs(
+            storage_plans, active_output_plans=green_outputs,
         )
 
 
@@ -949,6 +948,27 @@ def test_artifact_only_group_preserves_empty_explicit_main_flow_refs() -> None:
     compiled = compile_function_pattern(consume, {}, {})
 
     assert compiled.default_group.main_flow_input_refs == ()
+    from openhcs.core.compiled_step_plan import CompiledStepPlan
+    from openhcs.core.pipeline.framework_device_assignment import (
+        assign_framework_devices,
+    )
+
+    plan = CompiledStepPlan(
+        step_index=0,
+        step_name="consume",
+        step_type="FunctionStep",
+        axis_id="A01",
+        compiled_function_pattern=compiled,
+    )
+    assign_framework_devices({0: plan})
+    (placed,) = tuple(plan.compiled_function_pattern.iter_invocations())
+    assert placed.input_memory_type is None
+    assert placed.output_memory_type is None
+    assert placed.input_device_id is None
+    assert (
+        placed.artifact_input_edges
+        == compiled.default_group.invocations[0].artifact_input_edges
+    )
 
 
 def test_special_input_edges_use_nominal_artifact_payload_types() -> None:
@@ -1075,13 +1095,8 @@ def test_adapter_managed_invocation_rejects_partial_component_inputs():
         second_spec,
     )
     with pytest.raises(ValueError, match="input plan.*unavailable"):
-        ComponentArtifactPlans(
-            inputs={first_plan.ref(): first_plan},
-            outputs={},
-        ).select_for_invocation(
-            invocation,
-            execution_scope=ComponentGroupScope.ungrouped(),
-            component_key=None,
+        invocation.select_inputs(
+            {first_plan.ref(): first_plan},
         )
 
 
@@ -1192,16 +1207,9 @@ def test_adapter_managed_invocation_rejects_cross_component_input_loss():
             ),
         )
     )
-    scoped_artifacts = ComponentArtifactPlans(
-        inputs={current_channel_plan.ref(): current_channel_plan.for_group("1")},
-        outputs={},
-    )
-
     with pytest.raises(ValueError, match="input plan.*unavailable"):
-        scoped_artifacts.select_for_invocation(
-            invocation,
-            execution_scope=ComponentGroupScope.ungrouped(),
-            component_key=None,
+        invocation.select_inputs(
+            {current_channel_plan.ref(): current_channel_plan.for_group("1")},
         )
 
 
@@ -1691,6 +1699,14 @@ def test_compile_function_pattern_moves_runtime_config_kwargs_to_bindings():
     binding = invocation.runtime_parameter_bindings[0]
     assert binding.parameter_name == DtypeConversionConfig.require_parameter_name()
     assert binding.value is explicit_config
+    assert dict(invocation.runtime_kwargs) == {
+        "sigma": 2,
+        "dtype_config": explicit_config,
+    }
+    first_call_kwargs = dict(invocation.runtime_kwargs)
+    first_call_kwargs["sigma"] = 3
+    assert dict(invocation.runtime_kwargs)["sigma"] == 2
+    assert invocation.kwargs_dict == {"sigma": 2}
 
 
 def test_compile_function_pattern_keeps_undeclared_runtime_config_kwargs_user_owned():

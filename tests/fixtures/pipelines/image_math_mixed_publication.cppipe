@@ -1,0 +1,29 @@
+CellProfiler Pipeline: https://cellprofiler.org
+NamesAndTypes:[module_num:1|enabled:True]
+    Image set matching method:Metadata
+    Match metadata:[{'Gray': 'well', 'Color': 'well'}, {'Gray': 'site', 'Color': 'site'}, {'Gray': 'z_index', 'Color': 'z_index'}, {'Gray': 'timepoint', 'Color': 'timepoint'}]
+    Assignments count:2
+    Select the image type:Grayscale image
+    Name to assign these images:Gray
+    Select the rule criteria:and (file does contain "Gray")
+    Select the image type:Grayscale image
+    Name to assign these images:Color
+    Select the rule criteria:and (file does contain "Color")
+ImageMath:[module_num:2|enabled:True]
+    Operation:None
+    Select the first image:Gray
+    Name the output image:GrayIndependent
+ImageMath:[module_num:3|enabled:True]
+    Operation:None
+    Select the first image:Color
+    Name the output image:ColorIndependent
+ImageMath:[module_num:4|enabled:True]
+    Operation:Average
+    Select the first image:Gray
+    Select the second image:Color
+    Name the output image:Forward
+ImageMath:[module_num:5|enabled:True]
+    Operation:Average
+    Select the first image:Color
+    Select the second image:Gray
+    Name the output image:Reverse

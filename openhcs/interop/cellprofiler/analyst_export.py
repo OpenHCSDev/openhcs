@@ -13,11 +13,12 @@ from openhcs.interop.cellprofiler.workspace_export import (
 
 from base64 import b64encode
 from collections import defaultdict
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, replace
 from enum import Enum
 from hashlib import md5
 from io import BytesIO
+from itertools import chain
 from numbers import Integral, Real
 from pathlib import Path
 import sqlite3
@@ -30,7 +31,7 @@ from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactSpec,
     ImageArtifactType,
-    MeasurementsArtifactType,
+    MeasurementBearingArtifactType,
     RelationshipsArtifactType,
 )
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
@@ -40,6 +41,7 @@ from openhcs.core.measurement_row_materialization import (
     WideMeasurementRowAccumulator,
 )
 from openhcs.core.equivalence import measurement_qualifier_field_names
+from openhcs.core.equivalence.relationships import RuntimeScopedMeasurementTable
 from openhcs.core.runtime_tabular_values import (
     FieldSpec,
 )
@@ -69,7 +71,7 @@ from openhcs.core.source_image_provenance import (
     SourceImageProvenance,
 )
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
-from openhcs.core.source_metadata import SourceMetadataFields, SourceMetadataScalar
+from openhcs.core.source_metadata import SourceMetadataScalar
 from openhcs.core.source_workspace_projection import (
     VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjectionAuthority,
@@ -87,7 +89,6 @@ from .measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,
 )
 from .module_declarations import CellProfilerModule
-from .source_metadata import CellProfilerSourceMetadataField
 
 
 class CellProfilerObjectTableMode(str, Enum):
@@ -633,19 +634,49 @@ class CPATableRowProjection:
     image_set_numbering: CellProfilerImageSetNumbering
     context: ProcessingContext | None = None
 
-    def measurement_rows_by_subject(
+    def measurement_projections(
         self,
         table: MeasurementTable,
         *,
         scope: RuntimeExecutionAxisScope | None,
-    ) -> Mapping[
-        MeasurementSubject,
-        tuple[Mapping[str, Any], ...],
+    ) -> Iterator[
+        tuple[MeasurementSubject, tuple[Mapping[str, Any], ...], tuple[FieldSpec, ...]]
     ]:
-        projected_rows = table.rows
-        field_projection_cache: dict[
-            tuple[MeasurementSubject, str], FieldSpec | None
+        """Admit correlated rows and field declarations in one table epoch."""
+        admitted_fields: dict[tuple[MeasurementSubject, str], FieldSpec | None] = {}
+        subject_rows = self._measurement_subject_rows(table, scope=scope)
+        first_subject_rows = next(subject_rows, (table.subject, ()))
+        owner = table.measurement_feature_owner
+        project_database_field = (
+            owner.database_measurement_field_projection()
+            if owner is not None and issubclass(owner, CellProfilerModule)
+            else None
+        )
+        rows_by_subject: dict[
+            MeasurementSubject, tuple[Mapping[str, Any], ...]
         ] = {}
+        for subject, source_rows in chain((first_subject_rows,), subject_rows):
+            rows_by_subject[subject] = tuple(
+                self._project_runtime_row(
+                    table, row, subject=subject,
+                    field_projection_cache=admitted_fields,
+                    project_database_field=project_database_field,
+                )
+                for row in source_rows
+            )
+        for subject, rows in rows_by_subject.items():
+            yield subject, rows, self._measurement_columns(
+                table, rows, subject=subject, field_projection_cache=admitted_fields,
+                project_database_field=project_database_field,
+            )
+
+    def _measurement_subject_rows(
+        self,
+        table: MeasurementTable,
+        *,
+        scope: RuntimeExecutionAxisScope | None,
+    ) -> Iterator[tuple[MeasurementSubject, Sequence[Mapping[str, Any]]]]:
+        projected_rows = table.rows
         if table.subject.scope is not MeasurementScope.EXPERIMENT:
             if scope is None:
                 raise ValueError(
@@ -662,17 +693,8 @@ class CPATableRowProjection:
             and measurement_table_row_layout_from_fields(table.rows.fields)
             is MeasurementTableRowLayout.WIDE
         ):
-            return {
-                table.subject: tuple(
-                    self._project_runtime_row(
-                        table,
-                        row,
-                        subject=table.subject,
-                        field_projection_cache=field_projection_cache,
-                    )
-                    for row in projected_rows
-                )
-            }
+            yield table.subject, projected_rows
+            return
         accumulator = WideMeasurementRowAccumulator(
             CELLPROFILER_MEASUREMENT_DIALECT.row_identity_contract
         )
@@ -689,33 +711,22 @@ class CPATableRowProjection:
         )
         object_subjects = accumulator.object_subjects()
         object_subject_set = frozenset(object_subjects)
-        rows_by_subject: dict[
-            MeasurementSubject,
-            tuple[Mapping[str, Any], ...],
-        ] = {}
         for subject_name, subject_rows in accumulator.row_mappings_by_subject().items():
             subject = (
                 MeasurementSubject(MeasurementScope.OBJECT, subject_name)
                 if subject_name in object_subject_set
                 else MeasurementSubject(table.subject.scope, subject_name)
             )
-            rows_by_subject[subject] = tuple(
-                self._project_runtime_row(
-                    table,
-                    row,
-                    subject=subject,
-                    field_projection_cache=field_projection_cache,
-                )
-                for row in subject_rows
-            )
-        return rows_by_subject
+            yield subject, subject_rows
 
-    def measurement_columns(
+    def _measurement_columns(
         self,
         table: MeasurementTable,
         rows: Sequence[Mapping[str, Any]],
         *,
         subject: MeasurementSubject,
+        field_projection_cache: dict[tuple[MeasurementSubject, str], FieldSpec | None],
+        project_database_field: Callable[[FieldSpec], FieldSpec] | None,
     ) -> tuple[FieldSpec, ...]:
         """Project declared table fields while retaining row-owned feature names."""
 
@@ -733,10 +744,12 @@ class CPATableRowProjection:
             projected
             for field in table.rows.fields
             for projected in (
-                self._project_measurement_field(
+                self._admitted_measurement_field(
                     table,
                     field.name,
                     subject=subject,
+                    field_projection_cache=field_projection_cache,
+                    project_database_field=project_database_field,
                 ),
             )
             if projected is not None
@@ -779,12 +792,30 @@ class CPATableRowProjection:
             context=f"CPA table {table.name!r} fields",
         )
 
+    def _admitted_measurement_field(
+        self,
+        table: MeasurementTable,
+        field_name: str,
+        *,
+        subject: MeasurementSubject,
+        field_projection_cache: dict[tuple[MeasurementSubject, str], FieldSpec | None],
+        project_database_field: Callable[[FieldSpec], FieldSpec] | None,
+    ) -> FieldSpec | None:
+        key = (subject, field_name)
+        if key not in field_projection_cache:
+            field_projection_cache[key] = self._project_measurement_field(
+                table, field_name, subject=subject,
+                project_database_field=project_database_field,
+            )
+        return field_projection_cache[key]
+
     def _project_measurement_field(
         self,
         table: MeasurementTable,
         field_name: str,
         *,
         subject: MeasurementSubject,
+        project_database_field: Callable[[FieldSpec], FieldSpec] | None,
     ) -> FieldSpec | None:
         normalized_field_name = normalize_runtime_identifier(field_name)
         row_identity = CELLPROFILER_MEASUREMENT_DIALECT.row_identity_contract
@@ -825,9 +856,8 @@ class CPATableRowProjection:
             dtype=source_field.dtype,
             required=source_field.required,
         )
-        owner = table.measurement_feature_owner
-        if owner is not None and issubclass(owner, CellProfilerModule):
-            projected_field = owner.database_measurement_field(projected_field)
+        if project_database_field is not None:
+            projected_field = project_database_field(projected_field)
         return self.dialect.measurement_field(
             subject,
             projected_field,
@@ -840,17 +870,20 @@ class CPATableRowProjection:
         *,
         subject: MeasurementSubject,
         field_projection_cache: dict[tuple[MeasurementSubject, str], FieldSpec | None],
+        project_database_field: Callable[[FieldSpec], FieldSpec] | None,
     ) -> Mapping[str, Any]:
         projected_row: dict[str, Any] = {}
         for field_name, value in row.items():
-            cache_key = (subject, field_name)
-            if cache_key not in field_projection_cache:
-                field_projection_cache[cache_key] = self._project_measurement_field(
-                    table,
-                    field_name,
-                    subject=subject,
+            key = (subject, field_name)
+            field_spec = (
+                field_projection_cache[key]
+                if key in field_projection_cache
+                else self._admitted_measurement_field(
+                    table, field_name, subject=subject,
+                    field_projection_cache=field_projection_cache,
+                    project_database_field=project_database_field,
                 )
-            field_spec = field_projection_cache[cache_key]
+            )
             if field_spec is None:
                 continue
             if field_spec.name in projected_row:
@@ -920,11 +953,8 @@ class CPATableRowProjection:
             values: dict[str, Any] = {}
             source_path = self._resolved_source_path(plane_provenance.source_path)
             if source_path is not None:
-                values[self.dialect.source_image_path_field(source_image_name).name] = (
-                    str(source_path.parent)
-                )
-                values[self.dialect.source_image_file_field(source_image_name).name] = (
-                    source_path.name
+                values.update(
+                    self.dialect.source_image_file_values(source_path, source_image_name)
                 )
                 if source_path.is_file():
                     values.update(
@@ -948,14 +978,9 @@ class CPATableRowProjection:
                 field_name: value
                 for field_name, value in self.dialect.source_metadata_defaults().items()
             }
-            if source_path is not None:
-                metadata_items[
-                    CellProfilerSourceMetadataField.FILE_LOCATION.field_name
-                ] = source_path.as_uri()
-            if component_metadata is not None:
-                metadata_items.update(
-                    SourceMetadataFields.original_items(component_metadata)
-                )
+            metadata_items.update(
+                self.dialect.source_metadata_values(component_metadata, source_path)
+            )
             image_number = self.image_set_numbering.for_source_slice(
                 scope=scope,
                 provenance=provenance,
@@ -1014,20 +1039,23 @@ class CPATableRowProjection:
 
         if self.context is None:
             return
+        channel_aliases = frozenset(channel.alias for channel in image_channels)
+        source_bindings = tuple(
+            binding
+            for binding in source_binding_plan.binding_declarations
+            if binding.alias in channel_aliases
+            and binding.artifact_kind is ImageArtifactType
+        )
+        if not source_bindings:
+            return
         workspace = VirtualWorkspaceSourceProjectionAuthority.from_context(
             self.context,
             cache=self.context.runtime_source_workspace_projection_cache,
         ).projection_if_available()
         if workspace is None:
             return
-        channel_aliases = frozenset(channel.alias for channel in image_channels)
         scope = RuntimeExecutionAxisScope(axis_id)
-        for binding in source_binding_plan.binding_declarations:
-            if (
-                binding.alias not in channel_aliases
-                or binding.artifact_kind is not ImageArtifactType
-            ):
-                continue
+        for binding in source_bindings:
             for path, projection in workspace.source_occurrences_for_binding(
                 binding, axis_id=axis_id
             ):
@@ -1232,12 +1260,32 @@ class CellProfilerAnalystProjectionBuilder:
             tuple[str, str, str, int | None],
         ] = {}
 
-        measurement_records = artifact_batch.records_of_type(MeasurementsArtifactType)
+        measurement_inputs = frozenset(
+            (spec.name, spec.artifact_type)
+            for spec in artifact_batch.input_specs
+            if issubclass(spec.artifact_type, MeasurementBearingArtifactType)
+        )
+        measurement_tables = {
+            axis_id: tuple(
+                RuntimeScopedMeasurementTable(
+                    table,
+                    record_identity=record.location.path,
+                    execution_scope=record.key.scope,
+                )
+                for record in records
+                if (record.key.name, record.key.artifact_type) in measurement_inputs
+                for table in record.key.artifact_type.measurement_tables(
+                    record,
+                    CELLPROFILER_MEASUREMENT_DIALECT,
+                )
+            )
+            for axis_id, records in artifact_batch.records_by_axis.items()
+        }
         image_records = artifact_batch.records_of_type(ImageArtifactType)
         relationship_records = artifact_batch.records_of_type(RelationshipsArtifactType)
         for axis_id in artifact_batch.records_by_axis:
             image_columns, experiment_columns = self._collect_measurements(
-                records=measurement_records[axis_id],
+                tables=measurement_tables[axis_id],
                 row_projection=row_projection,
                 image_rows_by_number=image_rows_by_number,
                 image_columns=image_columns,
@@ -1247,7 +1295,7 @@ class CellProfilerAnalystProjectionBuilder:
                 object_columns_by_subject=object_columns_by_subject,
             )
             self._collect_measurement_provenance(
-                records=measurement_records[axis_id],
+                tables=measurement_tables[axis_id],
                 image_channels=image_channels,
                 settings=settings,
                 row_projection=row_projection,
@@ -1284,9 +1332,9 @@ class CellProfilerAnalystProjectionBuilder:
                     ),
                 )
         all_measurement_tables = tuple(
-            cast(MeasurementTable, record.data)
-            for records in measurement_records.values()
-            for record in records
+            scoped_table.table
+            for tables in measurement_tables.values()
+            for scoped_table in tables
         )
         for table in CellProfilerModule.derive_experiment_measurement_tables(
             all_measurement_tables
@@ -1381,7 +1429,7 @@ class CellProfilerAnalystProjectionBuilder:
     def _collect_measurements(
         self,
         *,
-        records: Sequence[StoredRuntimeValue],
+        tables: Sequence[RuntimeScopedMeasurementTable],
         row_projection: CPATableRowProjection,
         image_rows_by_number: dict[int, dict[str, Any]],
         object_rows_by_subject: dict[
@@ -1396,11 +1444,11 @@ class CellProfilerAnalystProjectionBuilder:
             tuple[FieldSpec, ...],
         ],
     ) -> tuple[tuple[FieldSpec, ...], tuple[FieldSpec, ...]]:
-        for record in records:
-            table = cast(MeasurementTable, record.data)
+        for scoped_table in tables:
+            table = scoped_table.table
             image_columns, experiment_columns = self._collect_measurement_table(
                 table=table,
-                scope=record.key.scope,
+                scope=scoped_table.execution_scope,
                 row_projection=row_projection,
                 image_rows_by_number=image_rows_by_number,
                 image_columns=image_columns,
@@ -1436,18 +1484,9 @@ class CellProfilerAnalystProjectionBuilder:
             MeasurementScope.EXPERIMENT,
         }:
             return image_columns, experiment_columns
-        rows_by_subject = row_projection.measurement_rows_by_subject(
-            table,
-            scope=scope,
-        )
-        if not rows_by_subject:
-            rows_by_subject = {table.subject: ()}
-        for subject, rows in rows_by_subject.items():
-            columns = row_projection.measurement_columns(
-                table,
-                rows,
-                subject=subject,
-            )
+        for subject, rows, columns in row_projection.measurement_projections(
+            table, scope=scope,
+        ):
             if subject.scope is MeasurementScope.IMAGE:
                 image_table_name = row_projection.dialect.image_table_name()
                 image_columns = FieldSpec.merge_exact(
@@ -1578,7 +1617,7 @@ class CellProfilerAnalystProjectionBuilder:
     @staticmethod
     def _collect_measurement_provenance(
         *,
-        records: Sequence[StoredRuntimeValue],
+        tables: Sequence[RuntimeScopedMeasurementTable],
         image_channels: Sequence[CPAImageChannelSpec],
         settings: CellProfilerDatabaseExportSettings,
         row_projection: CPATableRowProjection,
@@ -1589,8 +1628,8 @@ class CellProfilerAnalystProjectionBuilder:
         ],
     ) -> None:
         channel_aliases = frozenset(channel.alias for channel in image_channels)
-        for record in records:
-            table = cast(MeasurementTable, record.data)
+        for scoped_table in tables:
+            table = scoped_table.table
             provenance = table.source_provenance
             for source_image_name in provenance.represented_source_image_names:
                 if source_image_name not in channel_aliases:
@@ -1603,7 +1642,7 @@ class CellProfilerAnalystProjectionBuilder:
                 )
                 row_projection.collect_image_provenance(
                     selected_provenance,
-                    scope=record.key.scope,
+                    scope=scoped_table.execution_scope,
                     source_image_name=source_image_name,
                     image_rows_by_number=image_rows_by_number,
                     source_metadata_by_image_number=source_metadata_by_image_number,

@@ -34,16 +34,25 @@ Never replay UNKNOWN/interrupted operations. No installation, download,
 environment/provider/model change, new agent or restart.
 Read current registered input contracts before supplying arguments.
 
-Before EACH action choose a UNIQUE observation name AND an explicit admission
-mode from its actual resource effects. Inspect the registered capability's
+Observe actual resources before starting a coherent bounded read/QA burst on
+your recorded live client. Choose a UNIQUE observation name and an explicit
+mode from the work's actual resource effects. Inspect registered capability
 read_only/mutating/side_effects declarations, request size, simultaneous buffers
 and destination space; read-only does not imply cheap. For bounded status,
-observation, small QA or owned cleanup on your recorded live client use::
+observation, small captures/display changes or exact owned cleanup use::
 
   bash "$FLEET_OPERATIONS/resource-check.sh" "$FLEET_ROOT" "$FLEET_SLOT" UNIQUE_PHASE ongoing
 
-For new or large allocations, including full-frame scientific execution,
-materializing a large array or a full export, size the actual work and use::
+After reading that observation, complete related small state reads, display
+changes and matched QA captures without another resource check before each
+command. Recheck when pressure/headroom or the work's size changes, another
+allocation starts, or a resource/write failure appears. A burst is not a cached
+grant: every tool keeps its ordinary path, revision and incarnation checks.
+Do not add a timer, polling loop, cached permission or second admission owner.
+
+Before cold native startup or new/large allocations, including full-frame
+scientific execution, materializing a large array or a full export, size the
+actual incremental work and take a fresh observation using::
 
   bash "$FLEET_OPERATIONS/resource-check.sh" "$FLEET_ROOT" "$FLEET_SLOT" UNIQUE_PHASE full
 
@@ -53,7 +62,8 @@ implicit mode or tool-name exception list.
 
 Read its actual result before dispatch. The current funding owner owns membership and reservations;
 your immutable run declaration owns source, paths, CPU, deadline and output permissions;
-use one numerical worker/thread. RAM is observed on the host and process family,
+use its declared numerical worker/thread settings, sizing buffers to actual
+host headroom. RAM is observed on the host and process family,
 not restricted by an invented per-author or fleet memory ceiling. Host helper severity is diagnostic,
 not a second admission gate. Failed admission means no SCI. Hold the proposal
 and failed receipt; at a later operational checkpoint make a new named check
@@ -69,12 +79,25 @@ new allocation fits. Startup and large allocation admission still protect
 desktop disk/RAM and measured pressure. Never replay an uncertain input or
 automatically freeze/kill the run merely because ongoing telemetry warns.
 
+There is no numeric PSI admission cutoff. Interpret the actual recent10/60
+pressure, host availability and family usage together; plan additional buffers
+and reduce parallelism or defer cold/heavy work when real pressure warrants it.
+A valid observation is not proof that a large allocation fits.
+
 Iterate on your OWN measured/visible QA failures until acceptance, the actual
 time/resource bound or an irreducible blocker. There is no arbitrary candidate
 count limit. Rejecting a candidate does not by itself end the task. Technical
 completion or counts alone do not establish biological acceptance.
 
-The75min bound begins at YOUR recorded first MCP startup and includes cleanup.
+Read ``task_minutes_from_first_mcp_start`` in YOUR immutable run declaration.
+A positive value declares an interval beginning at YOUR recorded first MCP
+startup; null means no imposed scientific cutoff. Continue measured work and
+retain useful checkpoints when no interval was declared. Do not substitute a
+75-minute limit from an earlier phase or copied history. If an interval was
+explicitly declared, plan cleanup within it; expiry stops new scientific work
+but permits ongoing observation of dispatched work, evidence preservation and
+exact owned cleanup. Keep the actual first-start clock and any overrun; expiry
+never authorizes replaying UNKNOWN inputs or resetting the original interval.
 Source, pipelines, saved author history, journals and handoff records stay in
 YOUR HOME workspace/output. Put large generated images, tables, intermediate
 arrays and QA payloads directly under the exported FLEET_ARTIFACT_ROOT; MCP
@@ -82,8 +105,15 @@ scratch is FLEET_SCRATCH on that same declared filesystem. If those paths equal
 the original output, the run has no separate destination declaration.
 Use ordinary registered output declarations: PathPlanningConfig.global_output_folder
 chooses the output-plate parent, and artifact/checkpoint destinations must remain
-within that compiled output plate's normal contract. Do not create symlinks to
-bypass path policy, change source/input paths, or put author history on HDD.
+within that compiled output plate's normal contract. Keep the released original
+input inventory and bytes unchanged. If a registered microscope needs a writable
+plate workspace for metadata or cache files, use its supported workspace route
+or stage byte-identical copies of the released raw files under your declared
+writable FLEET_ARTIFACT_ROOT. Record the original/staged paths and matching raw
+hashes; use that owned workspace through ordinary MCP admission and path policy.
+This permits operational staging, not new data, scientific preprocessing, heldout
+access or a change to the acquisition. Do not delete shared locks, make original
+inputs writable, create symlinks to bypass path policy, or put author history on HDD.
 Freeze canonical payload paths and hashes in the HOME handoff rather than copying
 all payloads back into a second final tree. The guard reports actual free space
 on the declared destination; size writes against that filesystem.

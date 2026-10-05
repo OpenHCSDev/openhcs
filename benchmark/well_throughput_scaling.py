@@ -592,7 +592,9 @@ class WellThroughputPresentationReport:
                     *module_coverage_figure_lines,
                     "",
                     "Interpretation notes:",
-                    "- The `1 core` point is same-process, single-well execution latency.",
+                    "- Execution speedups compare native CellProfiler execution with OpenHCS execution; compilation and server startup are excluded.",
+                    "- The source CSV records the OpenHCS execution route; all plotted rows must use the same route.",
+                    "- Native multi-well execution is projected from the single-sample baseline times the well count, not measured batch wall time. These figures do not report total-time speedup.",
                     "- The `2/3/4 cores` points are native OpenHCS multiprocessing throughput runs over replicated wells.",
                     "- Very small pipelines can look non-monotonic in `02_core_scaling_by_pipeline_plus_average_speedup.*` because fixed fork/work-queue/file overhead is not amortized at low well counts.",
                     "- Use `05_speedup_summary_by_core_and_wells_per_core.*` to assess throughput scaling as queue depth increases.",
@@ -867,7 +869,7 @@ class WellThroughputPresentationReport:
                         axis.text(
                             len(panel) - 0.15,
                             SPEEDUP_TARGET * 1.05,
-                            "4x target",
+                            f"{SPEEDUP_TARGET:g}x target",
                             color=FIGURE_STYLE.target_color,
                             ha="right",
                             va="bottom",
@@ -2402,7 +2404,10 @@ def run_case_well_throughput(
     execution_client: ZMQExecutionClient | None = None,
     timing_observer: _ZMQProgressTimingObserver | None = None,
 ) -> WellThroughputResult:
-    """Run one converted cppipe over synthetic wells in a single OpenHCS execution."""
+    """Time public compilation/execution, including outcome delivery.
+
+    Benchmark diagnostics and memory-observer lifecycle are outside the clock.
+    """
     if (execution_client is None) != (timing_observer is None):
         raise ValueError(
             "A reused execution client and its progress observer must be supplied together."
@@ -2504,7 +2509,6 @@ def run_case_well_throughput(
     prepare_seconds = 0.0
     execute_seconds = 0.0
     successful_wells = 0
-    started_at = time.perf_counter()
     with MemoryMetric(
         interval_seconds=0.05,
         include_children=True,
@@ -2513,6 +2517,7 @@ def run_case_well_throughput(
             ChildProcessTerminator() if max_memory_mb is not None else None
         ),
     ) as memory_metric:
+        started_at = time.perf_counter()
         try:
             try:
                 if execution_client is None:
@@ -2548,9 +2553,10 @@ def run_case_well_throughput(
                 execute_seconds = _required_phase_seconds(
                     phase_timing, BenchmarkPhase.SERVER_PIPELINE_JOB
                 )
-            except KeyboardInterrupt:
-                peak_memory_mb = memory_metric.get_result()
                 total_seconds = time.perf_counter() - started_at
+            except KeyboardInterrupt:
+                total_seconds = time.perf_counter() - started_at
+                peak_memory_mb = memory_metric.get_result()
                 if memory_metric.limit_exceeded and max_memory_mb is not None:
                     return WellThroughputResult.memory_limited(
                         case_name=case_name,
@@ -2570,8 +2576,8 @@ def run_case_well_throughput(
                     )
                 raise
             except Exception as exc:
-                peak_memory_mb = memory_metric.get_result()
                 total_seconds = time.perf_counter() - started_at
+                peak_memory_mb = memory_metric.get_result()
                 if memory_metric.limit_exceeded and max_memory_mb is not None:
                     return WellThroughputResult.memory_limited(
                         case_name=case_name,
@@ -2610,7 +2616,6 @@ def run_case_well_throughput(
             )
     peak_memory_mb = memory_metric.get_result()
 
-    total_seconds = time.perf_counter() - started_at
     if memory_metric.limit_exceeded and max_memory_mb is not None:
         return WellThroughputResult.memory_limited(
             case_name=case_name,

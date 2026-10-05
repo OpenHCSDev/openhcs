@@ -1,0 +1,18 @@
+{
+  "scope": "Final-only native XY/XZ/YZ witnesses from independent H002_FRESH10_89, with useful ordinary-body detection and unresolved cluster identity.",
+  "output_sha256": {
+    "h002_fresh10_native.svg": "f4fce393880749f233c8e25c2e4db600a2310be044972abed20469271bc25134",
+    "h002_fresh10_native.png": "5d5ecaa7575ee07ff51a5e918fd82826b309516869ca4cc21fede210a1cb0c97",
+    "h002_fresh10_final_bright_yz_x54_combined.png": "4939179dbc271265aff52d28a0dd17ca57e1eb5624878fc21fa865a29bf28c6b",
+    "h002_fresh10_final_bright_yz_x54_raw.png": "d01795ac3cb575f70fbc2d8c709773f111f0f0430c0419d211f538bd39ce503f",
+    "h002_fresh10_final_circle_combined.png": "c12f7a9ebbdcc9c4ce84dc0a60c35ee186f8792392f34ce86319163edc0997a4",
+    "h002_fresh10_final_circle_raw.png": "57ff7714200d6e811eb11b73b06ab30df8b1acb20f05d6e3c62e17b1dbea2aca",
+    "h002_fresh10_final_xz_y157_combined.png": "0ad8616b07463281f28bbeb5ede920e8a7da09834ca715e955b491419d92bb06",
+    "h002_fresh10_final_xz_y157_raw.png": "2a85f5c9835bc322f1bef4ce06b70b4f788752de8d00da43e33a770fff762f87"
+  },
+  "source_sha256": {
+    "paper/supplementary/task_only_analysis/h002-fresh10-native-source-proof.json": "a5c4139c13177abeb32252586466652c7f039077b91030162cb2febea7ee68cb"
+  },
+  "rendering": "Six byte-identical original screenshots clipped/scaled by native SVG/rsvg-convert; no scientific execution or pixel retouching. Selected points retain original yellow rings.",
+  "limits": "Final-only local body-centre support, not a longitudinal repair panel, biological count, held-out accuracy or calibrated physical geometry. Slice-local point visibility does not imply missed bodies on that section."
+}

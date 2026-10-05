@@ -15,6 +15,7 @@ description: Operate local OpenHCS microscopy workflows through the bundled MCP 
    When the task is unfamiliar or raw morphology conflicts with an example, follow [pre-first-authorship learning retrieval](references/analysis-learning.md#retrieve-before-first-authorship-and-retries) (`openhcs_analysis_learning`) before choosing its method. Retrieve an applicable conditional lesson through existing knowledge search; benchmark defaults alone do not resolve contradictory raw evidence.
    Before authoring, retain the example-selection record described in [the autonomous analysis strategy](references/analysis-strategy.md) (`openhcs_autonomous_analysis_strategy`); reading this instruction is not evidence of retrieving a pipeline. Use its development/evaluation distinction: preserve failed checkpoints and continue authorised development through corrections; a corrected result is not an autonomous pass. For an unfamiliar assay or an unresolved biological failure, use that guide's task-specific routes to image interpretation, preprocessing, segmentation diagnostics, measurements and recipe/error learning. Retrieve only the relevant guide; infer a provisional strategy from acquisition and matched raw channels before asking the user for missing information. These guides adapt Agentic-J's domain knowledge, not its Fiji command strings or model defaults.
 6. Inspect real plate data and registered function declarations before authoring. If the microscope is unsupported, set `PipelineConfig.source_bindings_config` with `LazySourceBindingsConfig` from `openhcs.core.config` to filter files, extract metadata, name semantic sources, and project a virtual workspace; make each consuming `FunctionStep` select those aliases through its step-local source bindings. Never parse filenames inside processing functions. Reflect `global` or `pipeline` configuration with `openhcs_describe_config_schema` before setting non-obvious fields. Keep filesystem operations inside configured read and write roots.
+   When importing an external metadata table, retrieve `openhcs_image_sources#joining-an-external-metadata-table` before declaring its join keys; plane-specific metadata and logical source-set metadata have different scopes.
 7. Validate and compile before execution. Do not infer that source code, UI state, or an earlier validation result implies a current compiled plan.
 8. Start read-only. Continue routine bounded work within existing task authorisation without asking again for each edit, execution or viewer action. Follow **Task authorization** in `openhcs_architecture_quick_start` for actions outside that authority; capability-registry metadata, path policy, declared confirmations and fresh revision/request tokens still apply.
 9. Preserve the active ownership route. Discover the GUI bridge before UI tools and apply code/state changes with current tokens. Use headless tools only when their workflow group is exposed. Treat structured errors and recovery hints as authoritative; never bypass path policy, stale-process checks, compile requirements, or bridge authentication.
@@ -40,11 +41,21 @@ or reporting counts. Use the live contexts' typed evidence contracts and the
 procedure's capture details, not a previous conversation or separate assay
 skill. Follow the earliest failed stage through one bounded diagnostic and
 recheck a regression control.
-Before choosing size, separation, smoothing, background or shape parameters,
-read [the empirical feature-measurement procedure](references/measurement-interpretation.md)
-(`openhcs_measurement_interpretation`). Measure representative raw features at
-native coordinates through exposed MCP contracts, retain uncertainty and units,
-and record how each observation supports the chosen callable parameter.
+Before the FIRST segmentation method/parameter proposal, follow
+[the task router](references/analysis-strategy.md#match-the-strategy-to-the-failure)
+(`openhcs_autonomous_analysis_strategy`): connect
+[foreground/nuisance admission](references/segmentation-diagnostics.md#compare-body-admission-models)
+(`openhcs_segmentation_diagnostics`) AND
+[the chosen marker landscape](references/measurement-interpretation.md#choose-the-marker-landscape-before-the-first-candidate)
+(`openhcs_measurement_interpretation`), where those stages apply. Do not stop at
+body admission or wait for a split to retrieve marker reasoning. Use the
+[empirical measurement procedure](references/measurement-interpretation.md#measure-feature-scales-before-choosing-parameters)
+to relate distributed positives and nuisance-only controls to the actual consumed
+alias/response and its units, including
+[available whole no-object fields before widening](references/measurement-interpretation.md#include-no-object-fields-before-widening),
+and within-body maxima versus a genuine pair to
+the proposed landscape. Keep method/parameter rationale in the trial, not a
+borrowed default justified only by raw diameter.
 When an image defect motivates analytical preprocessing, read
 [the preprocessing decision guide](references/image-preprocessing.md), also
 retrievable as `openhcs_image_preprocessing`, before changing the pipeline.

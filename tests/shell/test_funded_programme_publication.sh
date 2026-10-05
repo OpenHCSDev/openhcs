@@ -42,6 +42,30 @@ jq -e --arg root "$scratch" '(.funded_members|map(.slot))==["A","INDEPENDENT_C"]
   (.authors|map(.slot))==["INDEPENDENT_C"] and
   .retained_output_roots==[($root+"/old-b/B/author-workspace/output")]' "$scratch/next/program.json" >/dev/null
 printf 'PASS original projection: independent declaration replaces retired membership and retains FULL output once\n'
+jq -e '.task_minutes_from_first_mcp_start==null' "$scratch/next/program.json" >/dev/null
+jq -e '.task_minutes_from_first_mcp_start==75' "$scratch/old-a/program.json" >/dev/null
+for interval_case in explicit zero negative fractional string; do
+  mkdir "$scratch/interval-$interval_case"
+  case "$interval_case" in
+    explicit) interval='30' ;;
+    zero) interval='0' ;;
+    negative) interval='-1' ;;
+    fractional) interval='1.5' ;;
+    string) interval='"75"' ;;
+  esac
+  jq --argjson interval "$interval" '.task_minutes_from_first_mcp_start=$interval' \
+    "$scratch/next/successor-declaration.json" > "$scratch/interval-$interval_case/successor-declaration.json"
+  set +e
+  bash "$owner" prepare "$scratch/funding" "$scratch/interval-$interval_case" "$scratch/qualification.json" \
+    > "$scratch/interval-$interval_case.log" 2>&1
+  status=$?
+  set -e
+  if [[ "$interval_case" == explicit ]]; then
+    test "$status" = 0
+    jq -e '.task_minutes_from_first_mcp_start==30' "$scratch/interval-explicit/program.json" >/dev/null
+  else test "$status" != 0; fi
+done
+printf 'PASS future interval comes only from its declaration; historical 75 unchanged and invalid values rejected\n'
 
 # No parent file: the explicit original publisher invocation owns the grant.
 (cd "$scratch/next"; sha256sum program.json successor-declaration.json > READY-FREEZE.sha256)
@@ -71,6 +95,9 @@ jq -e 'all(.authors[]; keys==["run_owner_root","slot"]) and
 test "$(sha256sum "$scratch/next/publication-before.json" | cut -d' ' -f1)" = "$expected"
 jq -e --arg root "$scratch" '.authors[0].run_owner_root==($root+"/old-a") and (.authors|length)==2' "$scratch/funding/program.json" >/dev/null
 printf 'PASS one current programme atomically transitions roster+history; continuing run identity unchanged\n'
+jq -e '.proposed_resource_envelope.full_memory_psi_max_percent==100' "$scratch/funding/program.json" >/dev/null
+! jq -e '.proposed_resource_envelope | has("full_memory_psi_max_percent")' "$scratch/next/program.json" >/dev/null
+printf 'PASS sealed continuing reader retains original FUND field; new run does not declare it\n'
 set +e
 FLEET_PARENT_RELEASED=1 bash "$owner" publish "$scratch/funding" "$scratch/next" "$expected"
 status=$?
@@ -231,6 +258,7 @@ status=$?
 set -e
 test "$status" != 0
 printf 'PASS one continuing author sees current retirement without run/permission/clock edits; removed author loses funding\n'
+jq -e '.proposed_resource_envelope.full_memory_psi_max_percent==100' "$scratch/funding/program.json" >/dev/null
 
 # Actual recorder/guard/slot/client; only external X/systemctl/exec controlled.
 printf 'Controlled helper terminal custody, not production authority.\n' > "$scratch/helper-terminal.rst"
@@ -294,9 +322,11 @@ bash "$owner" prepare "$scratch/funding" "$scratch/last-retirement" "$scratch/qu
 (cd "$scratch/last-retirement"; sha256sum program.json successor-declaration.json "$scratch/terminal-a.rst" > READY-FREEZE.sha256)
 env -u FLEET_PARENT_RELEASED bash "$owner" publish "$scratch/funding" "$scratch/last-retirement" "$expected"
 jq -e '(.authors|length)==0 and (.retained_output_roots|length)==3' "$scratch/funding/program.json" >/dev/null
+! jq -e '.proposed_resource_envelope | has("full_memory_psi_max_percent")' "$scratch/funding/program.json" >/dev/null
 (cd "$scratch/old-a"; sha256sum --check --quiet READY-FREEZE.sha256)
 sha256sum --check --quiet "$scratch/retained-startup.sha256"
 printf 'PASS last terminal writer releases all future growth; complete output and original run/journals remain\n'
+printf 'PASS final sealed reader retirement removes its shared contract automatically\n'
 
 # Optional real mounted-destination control. This is a declaration consumed by
 # the unchanged original prepare/publish/launcher/ledger route, not a client.

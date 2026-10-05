@@ -50,10 +50,13 @@ from openhcs.core.xdg_paths import get_openhcs_cache_dir
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 
 if TYPE_CHECKING:
+    from openhcs.core.callable_contract import CallableContract
     from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+    from openhcs.core.step_dependencies import StepInputDependency
     from openhcs.core.runtime_array_values import RuntimeArrayData
     from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
     from openhcs.core.runtime_image_values import ImagePayloadMetadata
+    from openhcs.core.source_image_provenance import SourceImageProvenance
 
 SOURCE_ALIAS_PART_SEPARATOR = "__"
 SOURCE_BINDING_ALIAS_METADATA_FIELD = "source_alias"
@@ -691,6 +694,46 @@ class SourceSelector:
 
         return any(source_filters_match(path, self.filters) for path in identities)
 
+    def metadata_candidates_match(
+        self,
+        candidates: Iterable[SourceMetadataMapping],
+    ) -> bool:
+        """Match declared coordinates in store or current-payload metadata."""
+        from openhcs.core.source_matching import (
+            semantic_source_metadata_value,
+            source_component_metadata_values,
+            source_metadata_values_equal,
+        )
+
+        candidates = tuple(candidates)
+        return all(
+            any(
+                source_metadata_values_equal(value, selector.value)
+                for metadata in candidates
+                for value in source_component_metadata_values(metadata, selector.component)
+            )
+            for selector in self.components
+        ) and all(
+            any(
+                value is not None and source_metadata_values_equal(value, selector.value)
+                for metadata in candidates
+                for value in (semantic_source_metadata_value(metadata, selector.field),)
+            )
+            for selector in self.metadata
+        )
+
+    def matches_provenance(self, provenance: SourceImageProvenance) -> bool:
+        """Apply the same selectors to identities carried by current pixels."""
+        identities = provenance.represented_source_identities
+        return (
+            (not self.filters or self.path_filters_match(
+                tuple(identity.path for identity in identities if identity.path is not None)
+            ))
+            and self.metadata_candidates_match(
+                tuple(identity.component_metadata or {} for identity in identities)
+            )
+        )
+
 
 def source_alias_measurement_names(alias: str) -> tuple[str, ...]:
     """Return measurement source-name tokens represented by a source alias."""
@@ -850,7 +893,8 @@ class NamedSourceBinding(SourceAssignmentBase):
     """Name selected image planes and their optional component identity.
 
     ``alias`` is the source name presented to pipeline functions and user
-    interfaces. The selected planes retain their exact store-backed pixel identity.
+    interfaces. ``origin`` selects current-step pixels or original store pixels;
+    both retain their declared acquisition provenance.
     ``component_identity`` authoritatively assigns biological coordinates after
     selector resolution, replacing coordinates merely inferred by a source store.
     """
@@ -1077,6 +1121,39 @@ class NamedSourceBinding(SourceAssignmentBase):
         metadata = metadata.replace_fields(source_channel_axis=source_channel_axis)
         return metadata.payload_with(data, image_payload_mask(payload))
 
+    def project_step_input_payload(self, payload: RuntimeArrayData) -> RuntimeArrayData:
+        """Select current pixels by provenance, then assign this binding's name.
+
+        An existing alias selects its represented current planes before applying
+        selectors. A new alias names the selector's current-plane selection.
+        Neither case reloads original pixels.
+        """
+        from openhcs.core.runtime_image_values import image_payload_metadata
+
+        metadata = image_payload_metadata(payload)
+        provenance = metadata.source_provenance
+        if not provenance.has_values:
+            raise ValueError(f"STEP_INPUT binding {self.alias!r} requires source provenance.")
+
+        if not provenance.source_plane_count:
+            if not self.selector.matches_provenance(provenance):
+                raise ValueError(f"STEP_INPUT binding {self.alias!r} selects no current planes.")
+            selected = payload
+        else:
+            named_planes = provenance.source_plane_selection(self.alias)
+            candidate_planes = (
+                range(provenance.source_plane_count)
+                if named_planes is None else named_planes
+            )
+            selection = tuple(
+                index for index in candidate_planes
+                if self.selector.matches_provenance(provenance.for_source_plane(index))
+            )
+            if not selection:
+                raise ValueError(f"STEP_INPUT binding {self.alias!r} selects no current planes.")
+            selected = metadata.project_source_planes(payload, selection)
+        return self.apply_loaded_payload(selected, source_context=None)
+
     @staticmethod
     def _monochrome_source_data(
         data: RuntimeArrayData,
@@ -1113,21 +1190,9 @@ class NamedSourceBinding(SourceAssignmentBase):
     ) -> tuple[str, ...]:
         """Return declared or workspace-realized values for one component axis."""
 
-        identity_values = tuple(
-            selector.value
-            for selector in self.component_identity
-            if selector.component is component
-        )
-        if identity_values:
-            return identity_values
-
-        selector_values = tuple(
-            selector.value
-            for selector in self.selector.components
-            if selector.component is component
-        )
-        if selector_values:
-            return selector_values
+        declared_values = self._declared_component_values(component)
+        if declared_values:
+            return declared_values
 
         if realized_source_metadata is None:
             return ()
@@ -1140,6 +1205,49 @@ class NamedSourceBinding(SourceAssignmentBase):
                 continue
             values.extend(source_component_metadata_values(metadata, component))
         return tuple(dict.fromkeys(values))
+
+    def _declared_component_values(
+        self, component: AllComponents
+    ) -> tuple[str, ...]:
+        """Resolve exact identity values before selector-derived coordinates."""
+        for declarations in (self.component_identity, self.selector.components):
+            values = tuple(
+                selector.value
+                for selector in declarations
+                if selector.component is component
+            )
+            if values:
+                return values
+        return ()
+
+    def component_domains(
+        self,
+        *,
+        realized_source_metadata: Iterable[SourceMetadataMapping] | None = None,
+    ) -> Mapping[AllComponents, tuple[str, ...]]:
+        """Admit all component domains from the same matched source records."""
+        domains = {
+            component: values
+            for component in AllComponents
+            for values in (self._declared_component_values(component),)
+            if values
+        }
+        if realized_source_metadata is None or len(domains) == len(AllComponents):
+            return domains
+        realized: dict[AllComponents, list[str]] = {}
+        for metadata in realized_source_metadata:
+            if not self.matches_realized_source_metadata(metadata):
+                continue
+            for component, values in SourceMetadataFields.component_domains(
+                metadata
+            ).items():
+                if component not in domains:
+                    realized.setdefault(component, []).extend(values)
+        domains.update(
+            (component, tuple(dict.fromkeys(values)))
+            for component, values in realized.items()
+        )
+        return domains
 
     def matches_realized_source_metadata(
         self,
@@ -1156,27 +1264,7 @@ class NamedSourceBinding(SourceAssignmentBase):
         if normalized_alias is not None:
             return str(normalized_alias) == self.alias
 
-        from openhcs.core.source_matching import (
-            semantic_source_metadata_value,
-            source_component_metadata_values,
-            source_metadata_values_equal,
-        )
-
-        return all(
-            any(
-                source_metadata_values_equal(value, selector.value)
-                for value in source_component_metadata_values(
-                    metadata,
-                    selector.component,
-                )
-            )
-            for selector in self.selector.components
-        ) and all(
-            (value := semantic_source_metadata_value(metadata, selector.field))
-            is not None
-            and source_metadata_values_equal(value, selector.value)
-            for selector in self.selector.metadata
-        )
+        return self.selector.metadata_candidates_match((metadata,))
 
     def input_plan(
         self,
@@ -2065,31 +2153,25 @@ class SourceBindingsConfig(SourceBindingDeclarationsMixin, _SourceBindingPlanBas
         if realized_source_metadata is None:
             return declared_fields
 
+        return self.metadata_fields_for_literal_types(
+            SourceMetadataFields.literal_field_types(realized_source_metadata)
+        )
+
+    def metadata_fields_for_literal_types(
+        self, field_types: Mapping[str, type[object] | None]
+    ) -> tuple[FieldSpec, ...]:
+        """Overlay this declaration on one admitted cohort's literal schema."""
+        declared_fields = tuple(self.metadata_fields or ())
         excluded_names = frozenset(
             join.imported_metadata_field
             for table in self.imported_metadata_tables
             for join in table.joins
         )
         declared_names = frozenset(field.name for field in declared_fields)
-        values_by_name: dict[str, list[SourceMetadataScalar]] = {}
-        for metadata in realized_source_metadata:
-            for field_name, value in SourceMetadataFields.original_items(metadata):
-                if (
-                    field_name not in declared_names
-                    and field_name not in excluded_names
-                ):
-                    values_by_name.setdefault(field_name, []).append(value)
-
         realized_fields = tuple(
-            FieldSpec(
-                field_name,
-                next(iter(value_types)) if len(value_types) == 1 else None,
-                required=False,
-            )
-            for field_name, values in values_by_name.items()
-            for value_types in (
-                frozenset(type(value) for value in values if value is not None),
-            )
+            FieldSpec(name, dtype, required=False)
+            for name, dtype in field_types.items()
+            if name not in declared_names and name not in excluded_names
         )
         return FieldSpec.merge_exact(
             (declared_fields, realized_fields),
@@ -2141,17 +2223,17 @@ class StepSourceBindingsConfig(
 
 
 def source_binding_group_keys_for_group_by(
-    source_bindings: StepSourceBindingsConfig,
+    source_bindings: SourceBindingDeclarationsMixin,
     group_by: GroupBy,
     *,
     realized_source_metadata: Iterable[SourceMetadataMapping] | None = None,
 ) -> tuple[str, ...]:
     """Return ordered binding component values for the grouping component."""
 
-    if not isinstance(source_bindings, StepSourceBindingsConfig):
+    if not isinstance(source_bindings, SourceBindingDeclarationsMixin):
         raise TypeError(
             "source_binding_group_keys_for_group_by requires "
-            f"StepSourceBindingsConfig, got {type(source_bindings).__name__}."
+            f"SourceBindingDeclarationsMixin, got {type(source_bindings).__name__}."
         )
     resolved_group_by = group_by if isinstance(group_by, GroupBy) else GroupBy(group_by)
     if resolved_group_by.value is None:
@@ -2226,6 +2308,7 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
         cls,
         config: StepSourceBindingsConfig,
         *,
+        selected_bindings: tuple[NamedSourceBinding, ...] | None = None,
         realized_source_metadata: Iterable[SourceMetadataMapping] | None = None,
     ) -> CompiledSourceBindingPlan:
         if not isinstance(config, StepSourceBindingsConfig):
@@ -2234,7 +2317,10 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
                 f"StepSourceBindingsConfig, got {type(config).__name__}."
             )
         return cls(
-            bindings=config.binding_declarations,
+            bindings=(
+                config.binding_declarations
+                if selected_bindings is None else selected_bindings
+            ),
             metadata_rules=config.metadata_rule_declarations,
             match_plan=config.match_plan,
             metadata_fields=config.metadata_fields_for_realized_source_metadata(
@@ -2243,6 +2329,41 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
             source_stack_components=config.source_stack_components,
             source_spatial_domain=config.source_spatial_domain,
         )
+
+    @classmethod
+    def from_contracts(
+        cls,
+        config: StepSourceBindingsConfig,
+        contracts: Iterable[CallableContract],
+        main_input_dependency: StepInputDependency,
+        available_artifacts: ArtifactSpecCollection,
+    ) -> CompiledSourceBindingPlan:
+        """Admit exact source routing at the declaration's compilation epoch."""
+        contracts = tuple(contracts)
+        implicit_specs = (
+            tuple(binding.input_spec() for binding in config.primary_plane_bindings)
+            if main_input_dependency.uses_pipeline_start_anchors()
+            and any(contract.accepts_implicit_main_flow_input for contract in contracts)
+            else ()
+        )
+        source_specs = tuple(dict.fromkeys((
+            *implicit_specs,
+            *(
+                spec
+                for contract in contracts
+                for spec in contract.artifact_inputs
+                if config.declares_artifact_ref(spec.ref())
+                or available_artifacts.by_name_and_artifact_type(
+                    spec.name, spec.artifact_type
+                ) is not None
+            ),
+        )))
+        if not source_specs:
+            return cls.empty()
+        bindings = config.bindings_for_artifact_specs(source_specs, available_artifacts)
+        if not bindings:
+            return cls.empty()
+        return cls.from_config(config, selected_bindings=bindings)
 
     def __post_init__(self) -> None:
         bindings = normalize_source_binding_values(

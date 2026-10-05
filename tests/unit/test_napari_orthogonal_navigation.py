@@ -212,6 +212,7 @@ def test_hidden_indices_use_actual_displayed_dimensions(displayed, expected):
             coordinates=(1, 2, 4, 7),
             axis_labels=("channel", "z_index", "y", "x"),
             displayed_axis_indices=displayed,
+            spatial_axis_labels=("z_index", "y", "x"),
         )
         == expected
     )
@@ -222,12 +223,14 @@ def test_displayed_z_may_be_fractional_and_span_slices_but_hidden_y_must_not():
         coordinates=((1, 2.25, 4, 7), (1, 3.5, 4, 8)),
         axis_labels=("channel", "z_index", "y", "x"),
         displayed_axis_indices=(1, 3),
+        spatial_axis_labels=("z_index", "y", "x"),
     ) == {"channel": 1, "y": 4}
     with pytest.raises(ValueError, match="spans multiple 'y'"):
         ViewerResultElementCoordinateAuthority.axis_indices(
             coordinates=((1, 2.25, 4, 7), (1, 3.5, 5, 8)),
             axis_labels=("channel", "z_index", "y", "x"),
             displayed_axis_indices=(1, 3),
+            spatial_axis_labels=("z_index", "y", "x"),
         )
 
 

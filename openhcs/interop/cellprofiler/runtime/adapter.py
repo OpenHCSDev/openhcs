@@ -317,7 +317,9 @@ class CellProfilerRuntimeAdapter(RuntimePlaneAxisProjector):
             (),
         )
         if runtime_projection is None or runtime_projection.plane_index is None:
-            return projected
+            return cast(
+                RuntimeArrayData, RuntimeSliceProjection.full_stack_value(projected),
+            )
         return cast(
             RuntimeArrayData,
             RuntimeSliceProjection.value_for_slice(projected, runtime_projection),

@@ -6,13 +6,23 @@ from collections.abc import (
     Mapping,
     Sequence,
 )
-from dataclasses import dataclass, replace
-from typing import Any, Self
+from dataclasses import dataclass
+from typing import Any, Self, TYPE_CHECKING
 
 import numpy as np
 
 from openhcs.core.artifacts import NamedArtifactPayload
 from openhcs.core.source_spatial_domain import SpatialShapeYX
+from openhcs.core.source_image_provenance import (
+    SourceImageProvenance,
+    SourceImageProvenanceFields,
+    SourceImageProvenancePlanes,
+    SourceComponentMetadata,
+)
+
+if TYPE_CHECKING:
+    from openhcs.core.equivalence.policy import RuntimeMeasurementDialect
+    from openhcs.core.runtime_measurements import MeasurementTable
 
 from enum import Enum
 from openhcs.core.alias_property import AliasProperty
@@ -69,7 +79,7 @@ class SpatialGridOrigin(str, Enum):
 
 
 @dataclass(slots=True, init=False)
-class SpatialGrid(NamedArtifactPayload):
+class SpatialGrid(SourceImageProvenanceFields, NamedArtifactPayload):
     """Native OpenHCS rectangular spatial grid definition."""
 
     name: str
@@ -106,7 +116,26 @@ class SpatialGrid(NamedArtifactPayload):
         row_axis: SpatialGridAxis | None = None,
         spot_table: tuple[tuple[int, ...], ...] | None = None,
         source_spatial_shape_yx: tuple[int, int] | None = None,
+        source_provenance: SourceImageProvenance | None = None,
+        source_path: str | None = None,
+        source_component_metadata: SourceComponentMetadata | None = None,
+        source_image_provenance_planes: SourceImageProvenancePlanes | None = None,
+        source_image_names: tuple[str, ...] = (),
     ) -> None:
+        self.source_provenance = (
+            source_provenance
+            if source_provenance is not None
+            else SourceImageProvenance()
+        )
+        self.absorb_explicit_source_provenance(
+            (
+                source_path,
+                source_component_metadata,
+                source_image_provenance_planes,
+                source_image_names,
+            )
+        )
+        self.normalize_source_provenance_fields()
         self.name = name
         self.rows = int(rows)
         self.columns = int(columns)
@@ -224,6 +253,9 @@ class SpatialGrid(NamedArtifactPayload):
                 if raw_spot_table is None
                 else tuple(tuple(int(item) for item in row) for row in raw_spot_table)
             ),
+            source_provenance=SourceImageProvenance.from_mapping(
+                data.get("source_provenance", {})
+            ),
             source_spatial_shape_yx=(
                 None
                 if (
@@ -292,7 +324,64 @@ class SpatialGrid(NamedArtifactPayload):
 
     def with_name(self, name: str) -> Self:
         """Return the same grid under a different artifact name."""
-        return replace(self, name=name)
+        return self.replace_fields(name=name)
+
+    def measurement_table(
+        self,
+        dialect: "RuntimeMeasurementDialect",
+        slice_indices: tuple[int, ...] | None = None,
+    ) -> "MeasurementTable":
+        """Expose this grid's current geometry as image measurements."""
+        from openhcs.core.measurement_row_materialization import (
+            MeasurementSparseColumnarRows,
+        )
+        from openhcs.core.runtime_measurements import (
+            MeasurementTable,
+            MeasurementScope,
+            MeasurementSubject,
+            MeasurementRowAxisField,
+        )
+        from openhcs.core.runtime_tabular_values import FieldSpec
+
+        row = {
+            dialect.spatial_grid_measurement_feature_name(self.name, field): value
+            for field, value in self.measurement_values().items()
+        }
+        indices = (
+            slice_indices
+            if slice_indices is not None
+            else (
+                tuple(range(self.source_provenance.source_plane_count))
+                or (self.slice_index,)
+            )
+        )
+        rows = tuple(
+            {MeasurementRowAxisField.SLICE_INDEX.value: index, **row}
+            for index in indices
+        )
+        return MeasurementTable(
+            name=self.name,
+            rows=MeasurementSparseColumnarRows.from_rows(
+                rows,
+                fields=(
+                    FieldSpec(MeasurementRowAxisField.SLICE_INDEX.value, int),
+                    *(FieldSpec(name, type(value)) for name, value in row.items()),
+                ),
+            ),
+            subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            source_provenance=self.source_provenance,
+        )
+
+    def measurement_values(self) -> dict[str, int | float]:
+        """Return the geometry fields represented by this grid's measurements."""
+        return {
+            "columns": self.columns,
+            "rows": self.rows,
+            "x_origin": self.x_origin,
+            "x_spacing": self.x_spacing,
+            "y_origin": self.y_origin,
+            "y_spacing": self.y_spacing,
+        }
 
     def derived_spot_table(self) -> tuple[tuple[int, ...], ...]:
         """Return the object-number topology declared by this grid."""

@@ -190,9 +190,15 @@ contract is exposed:
 2. Read fresh, unfiltered viewer state on the same viewer incarnation. Choose
    only explicitly superseded routes; retain the current matched candidate,
    raw/source domain and reference routes still needed for the next comparison.
+   Select only entries with `mounted=true` and a nonempty `producer_identities`
+   array. State can also list declared, unmounted routes with empty arrays;
+   omit those placeholders from the retirement mapping, rather than sending
+   `[]` or inventing an identity for them.
    Build `expected_producers` by mapping each chosen **exact `route_key`** to
    its **complete `producer_identities` array** from that readback, including
-   `invocation_key`. Do not shorten, fabricate or substitute identities from a
+   `invocation_key`; preserve `null` when that is the returned value. It is a
+   valid optional identity field, not a missing producer. Do not shorten,
+   fabricate or substitute identities from a
    previous candidate, title or port. The receiving owner checks the whole set
    before removal; a changed producer requires a fresh disposition/readback,
    not a weaker identity check.

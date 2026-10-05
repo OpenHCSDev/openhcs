@@ -43,6 +43,10 @@ if TYPE_CHECKING:
         MeasurementTable,
         RuntimeMeasurementFeatureOwner,
     )
+    from openhcs.core.runtime_stores import StoredRuntimeValue
+    from openhcs.core.equivalence.policy import RuntimeMeasurementDialect
+    from openhcs.core.source_projection import OpenHCSPlaneAddress
+    from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
     from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValueSet
 
 
@@ -430,6 +434,70 @@ class ArtifactType(ABC, metaclass=AutoRegisterMeta):
 
         return cls.participates_in_main_flow_output and sidecar_role is None
 
+    @classmethod
+    def reduce_materialization_records(
+        cls,
+        *,
+        records: tuple[StoredRuntimeValue, ...],
+        output_plan: ArtifactOutputPlan,
+    ) -> tuple[StoredRuntimeValue, ...]:
+        """Reduce records across every compiled group of one artifact output."""
+
+        del output_plan
+        return records
+
+    @classmethod
+    def reduce_materialization_scopes(
+        cls,
+        *,
+        records: tuple[StoredRuntimeValue, ...],
+        output_plan: ArtifactOutputPlan,
+        group_key: str | None,
+    ) -> tuple[StoredRuntimeValue, ...]:
+        """Partition records by exact scope before artifact-specific reduction."""
+
+        records_by_scope: dict[
+            RuntimeExecutionAxisScope,
+            list[StoredRuntimeValue],
+        ] = {}
+        for record in records:
+            records_by_scope.setdefault(record.key.scope, []).append(record)
+        return tuple(
+            reduced_record
+            for scoped_records in records_by_scope.values()
+            for reduced_record in cls.reduce_materialization_scope(
+                records=tuple(scoped_records),
+                output_plan=output_plan,
+                group_key=group_key,
+            )
+        )
+
+    @classmethod
+    def reduce_materialization_scope(
+        cls,
+        *,
+        records: tuple[StoredRuntimeValue, ...],
+        output_plan: ArtifactOutputPlan,
+        group_key: str | None,
+    ) -> tuple[StoredRuntimeValue, ...]:
+        del output_plan, group_key
+        if len(records) <= 1:
+            return records
+        record_locations = tuple(
+            (
+                record.key.semantic_id,
+                record.location.path,
+            )
+            for record in records
+        )
+        raise RuntimeError(
+            f"Ambiguous RuntimeValueStore records for planned artifact "
+            f"materialization '{records[0].key.name}' "
+            f"({records[0].key.artifact_type.value}) on axis "
+            f"'{records[0].key.scope.axis_id}' group "
+            f"{records[0].key.scope.value_text!r}: {record_locations!r}."
+        )
+
 
 ArtifactTypeValue = type[ArtifactType] | str
 
@@ -751,6 +819,7 @@ class ImageArtifactType(ArtifactType):
     ) -> object:
         """Apply the declared image identity without discarding payload context."""
 
+        from openhcs.core.aligned_image_payload import ImagePayloadSliceStack
         from openhcs.core.runtime_image_values import (
             image_payload_data,
             image_payload_mask,
@@ -770,6 +839,10 @@ class ImageArtifactType(ArtifactType):
                 image_payload_mask(payload),
             )
 
+        if isinstance(value, ImagePayloadSliceStack):
+            return value.with_slices(
+                tuple(named_payload(payload) for payload in value.slices)
+            )
         if isinstance(value, RuntimeSliceAlignedValueSet):
             return RuntimeSliceAlignedValues(
                 tuple(
@@ -814,7 +887,9 @@ class ImageArtifactType(ArtifactType):
             payloads = tuple(value.data for value in values)
             arrays = tuple(image_payload_data(payload) for payload in payloads)
             return stack_image_payloads(
-                payloads, memory_type=detect_memory_type(arrays[0]), device_id=0,
+                payloads,
+                memory_type=detect_memory_type(arrays[0]),
+                device_id=0,
                 metadata_mode=ImagePayloadMetadataCompositionMode.for_plane_axis(
                     RuntimePlaneAxis.RUNTIME_SLICE
                 ),
@@ -848,6 +923,110 @@ class ImageArtifactType(ArtifactType):
         return RuntimeSliceProjection.value_for_slice(
             value,
             projection.selected_plane(0),
+        )
+
+    @classmethod
+    def reduce_materialization_records(
+        cls,
+        *,
+        records: tuple[StoredRuntimeValue, ...],
+        output_plan: ArtifactOutputPlan,
+    ) -> tuple[StoredRuntimeValue, ...]:
+        from openhcs.core.runtime_image_values import image_payload_metadata
+        from openhcs.core.source_projection import OpenHCSPlaneAddress
+
+        if not output_plan.materialization_uses_source_identity_filename():
+            return records
+
+        addressed_records: list[
+            tuple[StoredRuntimeValue, OpenHCSPlaneAddress | None]
+        ] = []
+        records_by_address: dict[
+            OpenHCSPlaneAddress,
+            list[StoredRuntimeValue],
+        ] = {}
+        for record in records:
+            payload = output_plan.materialization_payload(record)
+            metadata = image_payload_metadata(payload)
+            address = OpenHCSPlaneAddress.from_complete_source_metadata(
+                metadata.source_component_metadata
+            )
+            addressed_records.append((record, address))
+            if address is not None:
+                records_by_address.setdefault(address, []).append(record)
+
+        reduced_records: list[StoredRuntimeValue] = []
+        emitted_addresses: set[OpenHCSPlaneAddress] = set()
+        for record, address in addressed_records:
+            if address is None:
+                reduced_records.append(record)
+                continue
+            if address in emitted_addresses:
+                continue
+            emitted_addresses.add(address)
+            reduced_records.append(
+                cls._materialization_record_for_scalar_address(
+                    output_plan,
+                    address,
+                    tuple(records_by_address[address]),
+                )
+            )
+        return tuple(reduced_records)
+
+    @classmethod
+    def _materialization_record_for_scalar_address(
+        cls,
+        output_plan: ArtifactOutputPlan,
+        address: OpenHCSPlaneAddress,
+        records: tuple[StoredRuntimeValue, ...],
+    ) -> StoredRuntimeValue:
+        if len(records) == 1:
+            return records[0]
+
+        owner_records = tuple(
+            record
+            for record in records
+            if all(
+                address.value_for(component) == value
+                for component, value in record.key.scope.source_component_values
+            )
+        )
+        if len(owner_records) != 1:
+            raise ValueError(
+                "Scalar image materialization requires one execution scope matching "
+                f"source address {address!r} for artifact {output_plan.name!r}; "
+                f"found {len(owner_records)} among "
+                f"{tuple(record.key.scope for record in records)!r}."
+            )
+
+        owner_record = owner_records[0]
+        owner_payload = output_plan.materialization_payload(owner_record)
+        for record in records:
+            payload = output_plan.materialization_payload(record)
+            if not cls._materialization_payloads_are_equivalent(owner_payload, payload):
+                raise ValueError(
+                    "Conflicting scalar image materialization payloads for source "
+                    f"address {address!r} and artifact {output_plan.name!r}: "
+                    f"{owner_record.key.scope!r} != {record.key.scope!r}."
+                )
+        return owner_record
+
+    @staticmethod
+    def _materialization_payloads_are_equivalent(left: object, right: object) -> bool:
+        import numpy as np
+        from openhcs.core.runtime_image_values import (
+            image_payload_data,
+            image_payload_metadata,
+        )
+
+        left_metadata = image_payload_metadata(left)
+        right_metadata = image_payload_metadata(right)
+        if left_metadata != right_metadata:
+            return False
+        left_data = np.asarray(image_payload_data(left))
+        right_data = np.asarray(image_payload_data(right))
+        return left_data.dtype == right_data.dtype and np.array_equal(
+            left_data, right_data, equal_nan=True
         )
 
 
@@ -1031,11 +1210,29 @@ class ObjectLabelsArtifactType(ArtifactType):
         return value.data
 
 
-class MeasurementsArtifactType(ArtifactType):
+class MeasurementBearingArtifactType(ArtifactType):
+    """Artifact whose current payload exposes native measurement tables."""
+
+    @classmethod
+    @abstractmethod
+    def measurement_tables(
+        cls, value: "RuntimeValue", dialect: "RuntimeMeasurementDialect"
+    ) -> tuple["MeasurementTable", ...]:
+        """Derive table views without publishing a second artifact authority."""
+
+
+class MeasurementsArtifactType(MeasurementBearingArtifactType):
     """Measurement-table artifact type."""
 
     value = "measurements"
     payload_shape = ArtifactPayloadShape.TABLE
+
+    @classmethod
+    def measurement_tables(
+        cls, value: "RuntimeValue", dialect: "RuntimeMeasurementDialect"
+    ) -> tuple["MeasurementTable", ...]:
+        del dialect
+        return (cast("MeasurementTable", value.data),)
 
     @staticmethod
     def _declared_subject(output_plan: ArtifactOutputPlan | None) -> MeasurementSubject:
@@ -1254,6 +1451,44 @@ class MeasurementsArtifactType(ArtifactType):
             or len(provenance.represented_source_identities) > 1
         )
 
+    @classmethod
+    def reduce_materialization_scope(
+        cls,
+        *,
+        records: tuple[StoredRuntimeValue, ...],
+        output_plan: ArtifactOutputPlan,
+        group_key: str | None,
+    ) -> tuple[StoredRuntimeValue, ...]:
+        from openhcs.constants.constants import Backend
+        from openhcs.core.runtime_artifact_values import RuntimeValue
+        from openhcs.core.runtime_measurements import MeasurementTable
+        from openhcs.core.runtime_stores import (
+            RuntimeArtifactLocation,
+            StoredRuntimeValue,
+        )
+
+        if len(records) <= 1:
+            return records
+        group_plan = output_plan.for_group(group_key)
+        tables = tuple(cast(MeasurementTable, record.data) for record in records)
+        table = MeasurementTable.join_artifact(output_plan.name, tables)
+        value = RuntimeValue.normalize_for_execution_scope(
+            group_plan,
+            table,
+            execution_scope=records[0].key.scope,
+        )
+        return (
+            StoredRuntimeValue(
+                key=value.key,
+                data=value.data,
+                materialization_source_metadata=value.materialization_source_metadata,
+                location=RuntimeArtifactLocation(
+                    path=group_plan.path,
+                    backend=Backend.MEMORY.value,
+                ),
+            ),
+        )
+
 
 class ObjectLineageArtifactType(ArtifactType):
     """Internal directed object lineage used to project object measurements."""
@@ -1300,12 +1535,82 @@ class TableArtifactType(ArtifactType):
     payload_shape = ArtifactPayloadShape.TABLE
 
 
-class SpatialGridArtifactType(ArtifactType):
+class SpatialGridArtifactType(MeasurementBearingArtifactType):
     """Spatial-grid mapping artifact type."""
 
     value = "spatial_grid"
+    carries_source_image_context = True
     payload_shape = ArtifactPayloadShape.MAPPING
     payload_description = "spatial grid mapping"
+
+    @classmethod
+    def measurement_tables(
+        cls, value: "RuntimeValue", dialect: "RuntimeMeasurementDialect"
+    ) -> tuple["MeasurementTable", ...]:
+        from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValueSet
+        from openhcs.core.runtime_spatial_grid import SpatialGrid
+
+        if isinstance(value.data, RuntimeSliceAlignedValueSet):
+            return tuple(
+                cast(SpatialGrid, value.data.value_for_slice(index)).measurement_table(
+                    dialect, (index,)
+                )
+                for index in range(value.data.slice_count)
+            )
+        return (cast(SpatialGrid, value.data).measurement_table(dialect),)
+
+    @classmethod
+    def contextualize_output(
+        cls,
+        source_payload: object,
+        output_value: object,
+        output_plan: "ArtifactOutputPlan | None",
+        plane_projection: "RuntimePlaneAxisValueProjection | None",
+    ) -> object:
+        from openhcs.core.runtime_image_values import image_payload_metadata
+        from openhcs.core.runtime_slice_alignment import (
+            RuntimeSliceAlignedValueSet,
+            RuntimeSliceAlignedValues,
+        )
+        from openhcs.core.runtime_spatial_grid import SpatialGrid
+
+        if isinstance(output_value, RuntimeSliceAlignedValueSet):
+            if (
+                plane_projection is None
+                or plane_projection.axis_size != output_value.slice_count
+            ):
+                raise ValueError(
+                    "Runtime-slice-aligned spatial grids require an exact source plane projection."
+                )
+            return RuntimeSliceAlignedValues(
+                tuple(
+                    cls.contextualize_output(
+                        source_payload,
+                        output_value.value_for_slice(index),
+                        output_plan,
+                        None,
+                    ).replace_fields(slice_index=index)
+                    for index in range(output_value.slice_count)
+                )
+            )
+        grid = cast(SpatialGrid, output_value)
+        return grid.replace_fields(
+            source_provenance=grid.source_provenance.with_missing_from(
+                image_payload_metadata(source_payload).source_provenance
+            )
+        )
+
+    @classmethod
+    def contextualize_output_from_projector(
+        cls,
+        source_payload: object,
+        output_value: object,
+        output_plan: "ArtifactOutputPlan | None",
+        plane_projector: "RuntimePlaneAxisProjector | None",
+    ) -> object:
+        return cls.contextualize_projected_output(
+            source_payload, output_value, output_plan, plane_projector
+        )
 
     @classmethod
     def runtime_parameter_types(cls) -> tuple[type, ...]:
@@ -1410,16 +1715,30 @@ class SpatialGridArtifactType(ArtifactType):
     def materialization_payload(cls, value: "RuntimeValue") -> object:
         from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValueSet
         from openhcs.core.runtime_spatial_grid import SpatialGrid
+        from openhcs.serialization.json import to_jsonable
 
-        if isinstance(value.data, RuntimeSliceAlignedValueSet):
-            return tuple(
-                cast(
-                    SpatialGrid,
-                    value.data.value_for_slice(slice_index),
-                ).as_mapping()
-                for slice_index in range(value.data.slice_count)
+        grids = (
+            tuple(
+                value.data.value_for_slice(index)
+                for index in range(value.data.slice_count)
             )
-        return cast(SpatialGrid, value.data).as_mapping()
+            if isinstance(value.data, RuntimeSliceAlignedValueSet)
+            else (value.data,)
+        )
+        mappings = tuple(
+            {
+                **cast(SpatialGrid, grid).as_mapping(),
+                "source_provenance": to_jsonable(
+                    cast(SpatialGrid, grid).source_provenance
+                ),
+            }
+            for grid in grids
+        )
+        return (
+            mappings
+            if isinstance(value.data, RuntimeSliceAlignedValueSet)
+            else mappings[0]
+        )
 
 
 class SpatialGraphArtifactType(ArtifactType):

@@ -1,0 +1,62 @@
+{
+  "issue": 742,
+  "pull_request": 743,
+  "date": "2026-10-05",
+  "state": "PUBLIC_TWO_ORDER_PASS",
+  "qualified_source_head": "960cb7172d0f39217f28ea6f1ce021eb836efc3b",
+  "base_main": "801e25cf4b78c620bcc5eddc1f959f9ca28059ce",
+  "production_sha256": {
+    "openhcs/interop/cellprofiler/runtime/invocation.py": "482fda98bd62a5c00e45add86356fc03ae480914f6b1106f8ef8d4b561c65544",
+    "openhcs/interop/cellprofiler/runtime/module_execution.py": "145d11424973ddae27ce080a703910b2521767e425a519ae645e95de2250cc18",
+    "openhcs/interop/cellprofiler/runtime/object_measurement_row_policies.py": "32fda0c37122238655bd65a8f0a0f01220aebc5813b33a73baea756ff2119ece"
+  },
+  "existing_focused_controls": {
+    "passed": 23,
+    "receipt": "multi-image-measurement-current-main-receiving-v1/receiving.json"
+  },
+  "fixture": {
+    "kind": "new distinct acquisition; not equivalent to missing original fixture",
+    "recipe": "existing test_multi_image_photometry_consumes_each_named_current_source: uint8(4,5), Mask all255, Process all0 except [1,2]=221, Nuclear all0 except [2,3]=255",
+    "tiff_hashes": {
+      "acquisition/Nuclear.tif": "d89f17e485879cddb99cda3d902854cec59320eae79babee7f08b5de68f2c792",
+      "acquisition/Mask.tif": "ee586c382de6487966d5ac48d19002dc27074a896a3ea657d7c9531b65d5075b",
+      "acquisition/Process.tif": "4df62137f0852f78ec848eb810b707a5362f20d6a39bf0c76a553bd415c28451"
+    },
+    "frozen_before_public_import": true
+  },
+  "public_jobs": {
+    "forward": "d4d9edb6-6983-4e57-99ff-bd6577630862",
+    "reverse": "c9c1dc39-34fa-46bc-9230-08a5c8d69c75"
+  },
+  "assertions": {
+    "job_status": "both COMPLETE; A01 success",
+    "native_table": "both selected images on one shared runtime slice, slice_index0",
+    "contributors": "Mask,Process,Nuclear exact typed paths/aliases/components and physical filter paths",
+    "calibration": "relative1,1",
+    "csv": "one Image and one Cells row per order; numeric and source association order invariant",
+    "numeric_tolerance": 1e-06,
+    "analytic": {
+      "ProcessIntegratedIntensity": 0.8666666666666667,
+      "ProcessMeanIntensity": 0.043333333333333335,
+      "ProcessMaxIntensity": 0.8666666666666667,
+      "NuclearIntegratedIntensity": 1,
+      "NuclearMeanIntensity": 0.05,
+      "NuclearMaxIntensity": 1
+    }
+  },
+  "guard_release": {
+    "source_inputs_eight_dependencies": "PASS",
+    "owned_server_absent": true,
+    "ports_empty": true,
+    "official_lease_released": true
+  },
+  "retained_red": {
+    "original_acquisition": "missing; original preflight preserved, no equivalence claimed",
+    "prelaunch_attempt": "private XDG-derived lease parent missing; no endpoint/jobs created",
+    "original_checker": "mapping-key membership instead of declared path values; corrected with SourceMetadataFields.source_filter_paths on SAME completed outputs"
+  },
+  "public_job_reruns": 0,
+  "performance_claim": false,
+  "evidence_root": "/home/ts/.local/state/openhcs-maintenance/20261005/multi-image-measurement-public-current-v1/new-20-pixel-v1",
+  "checker_sha256": "a008cbeb297f76ab380a37c32c44a746077c3cfc531d4f27a2a0c0a929920b60"
+}

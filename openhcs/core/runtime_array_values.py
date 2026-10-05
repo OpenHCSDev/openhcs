@@ -43,6 +43,11 @@ class RuntimeArrayPayload(ArrayPayload, ABC):
     @abstractmethod
     def shape(self) -> Any: ...
 
+    @property
+    def dtype(self) -> Any:
+        """Return the array dtype; structured owners may derive it before realization."""
+        return self.array_payload_data().dtype
+
     @abstractmethod
     def array_payload_data(self) -> Any: ...
 

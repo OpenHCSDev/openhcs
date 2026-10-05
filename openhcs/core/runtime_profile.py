@@ -2,14 +2,29 @@
 
 from __future__ import annotations
 
+from contextlib import contextmanager
+from contextvars import ContextVar
+from copy import deepcopy
 from dataclasses import dataclass
 import logging
 import os
 import time
-from typing import Any
+from enum import Enum
+from collections.abc import Iterator, Mapping
+from typing import ClassVar
 
 PROFILE_RUNTIME_ENV = "OPENHCS_PROFILE_FUNCTION_RUNTIME"
 PROFILE_RUNTIME_PATH_ENV = "OPENHCS_PROFILE_FUNCTION_RUNTIME_PATH"
+RuntimeProfileFieldValue = (
+    str
+    | int
+    | float
+    | bool
+    | Enum
+    | None
+    | tuple["RuntimeProfileFieldValue", ...]
+    | Mapping[str, "RuntimeProfileFieldValue"]
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -34,11 +49,70 @@ class RuntimeProfileTimer:
 
 
 class RuntimeProfileLogger:
-    """Environment-gated writer for runtime profile events."""
+    """Own detached profile records for one worker run, then emit them once."""
+
+    _active: ClassVar[ContextVar[RuntimeProfileLogger | None]] = ContextVar(
+        "openhcs_runtime_profile", default=None
+    )
+
+    def __init__(self, **fields: RuntimeProfileFieldValue) -> None:
+        self.output_path = os.environ.get(PROFILE_RUNTIME_PATH_ENV)
+        self._fields = tuple(deepcopy(fields).items())
+        self._records: list[
+            tuple[
+                logging.Logger,
+                str,
+                float,
+                tuple[tuple[str, RuntimeProfileFieldValue], ...],
+            ]
+        ] = []
 
     @staticmethod
     def enabled() -> bool:
         return os.environ.get(PROFILE_RUNTIME_ENV, "").lower() in {"1", "true", "yes"}
+
+    @classmethod
+    @contextmanager
+    def run(cls, **fields: RuntimeProfileFieldValue) -> Iterator[None]:
+        """Bind fresh worker-local ownership, including after fork or cancellation."""
+        profile = cls(**fields) if cls.enabled() else None
+        token = cls._active.set(profile)
+        failure: BaseException | None = None
+        try:
+            yield
+        except BaseException as error:
+            failure = error
+            raise
+        finally:
+            cls._active.reset(token)
+            if profile is not None:
+                try:
+                    profile.flush()
+                except Exception as error:
+                    if failure is None:
+                        raise
+                    failure.add_note(f"Runtime profile flush failed: {error}")
+
+    def flush(self) -> None:
+        """Format after execution and append the completed run in one write."""
+        records, self._records = self._records, []
+        if not records:
+            return
+        started_at = time.perf_counter()
+        lines = []
+        for logger, label, seconds, fields in records:
+            field_text = " ".join(f"{key}={value}" for key, value in fields)
+            line = f"RUNTIME_PROFILE {label} {seconds:.6f}s {field_text}"
+            logger.info("%s", line)
+            lines.append(line)
+        if self.output_path is not None:
+            with open(self.output_path, "a", encoding="utf-8") as handle:
+                handle.write("\n".join(lines) + "\n")
+        logging.getLogger(__name__).info(
+            "RUNTIME_PROFILE_FLUSH %.6fs records=%d",
+            time.perf_counter() - started_at,
+            len(records),
+        )
 
     @classmethod
     def log(
@@ -46,15 +120,14 @@ class RuntimeProfileLogger:
         logger: logging.Logger,
         label: str,
         seconds: float,
-        **fields: Any,
+        **fields: RuntimeProfileFieldValue,
     ) -> None:
-        if not cls.enabled():
+        profile = cls._active.get()
+        if profile is None:
             return
-        field_text = " ".join(f"{key}={value}" for key, value in fields.items())
-        logger.info("RUNTIME_PROFILE %s %.6fs %s", label, seconds, field_text)
-        if profile_path := os.environ.get(PROFILE_RUNTIME_PATH_ENV):
-            with open(profile_path, "a", encoding="utf-8") as handle:
-                handle.write(f"RUNTIME_PROFILE {label} {seconds:.6f}s {field_text}\n")
+        profile._records.append(
+            (logger, label, seconds, profile._fields + tuple(deepcopy(fields).items()))
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,5 +139,5 @@ class RuntimeProfiler:
     def enabled(self) -> bool:
         return RuntimeProfileLogger.enabled()
 
-    def log(self, label: str, seconds: float, **fields: object) -> None:
+    def log(self, label: str, seconds: float, **fields: RuntimeProfileFieldValue) -> None:
         RuntimeProfileLogger.log(self.logger, label, seconds, **fields)

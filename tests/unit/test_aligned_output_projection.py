@@ -4,6 +4,9 @@ import numpy as np
 import pytest
 
 from openhcs.core import aligned_image_payload
+from openhcs.core.compiled_step_plan import CompiledStepPlan
+from openhcs.core.context.processing_context import ProcessingContext
+from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
     AlignedImageStack,
@@ -17,7 +20,7 @@ from openhcs.core.runtime_image_values import (
     image_payload_metadata,
 )
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
-from openhcs.core.steps.function_runtime import PatternGroupRuntime
+from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest
 
 
 def test_runtime_projects_mixed_output_planes_once_with_their_contexts(monkeypatch):
@@ -42,15 +45,15 @@ def test_runtime_projects_mixed_output_planes_once_with_their_contexts(monkeypat
         return original(payload)
 
     monkeypatch.setattr(aligned_image_payload, "payload_slices_for_alignment", counted)
-    runtime = PatternGroupRuntime(
-        SimpleNamespace(
-            pattern_group_info="generic-output-projection",
-            execution_plan=SimpleNamespace(
-                output_memory_type=MemoryType.NUMPY,
-                device_id_for=lambda _memory_type: None,
+    runtime = PatternGroupExecutionRequest(pattern_group_info="generic-output-projection",
+            execution_plan=CompiledStepPlan(
+                step_index=0, step_name="output-projection", step_type="FunctionStep",
+                axis_id="A01", output_memory_type=MemoryType.NUMPY,
             ),
-        )
-    )
+            context=ProcessingContext(axis_id="A01"),
+            compiled_group=compile_function_pattern(lambda image: image, {}, {}).default_group,
+            component_index=0,
+            component_count=1)
     result = runtime._project_output_slices(bundle, [])
 
     assert len(calls) == 2

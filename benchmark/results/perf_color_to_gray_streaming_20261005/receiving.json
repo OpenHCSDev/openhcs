@@ -1,0 +1,86 @@
+{
+  "issue": 755,
+  "pull_request": 757,
+  "production_change": "Existing combine_color_to_gray owner streams promoted channel products through one result-sized scratch instead of two full color cubes; actual contiguous single-pixel reduction preserves NumPy summation order. No runtime source-capture patch, new kernel, cache or preparation roster.",
+  "timing": {
+    "baseline_head": "49345fee31d64bd60f8fe044e250a971df5843d3",
+    "candidate_head": "3de06e46360f14697e3044b69d88b3afede3e8bf",
+    "cases": [
+      {
+        "case": "ExampleSpeckles",
+        "baseline_compile_seconds": 0.20961761474609375,
+        "candidate_compile_seconds": 0.20796775817871094,
+        "baseline_execute_seconds": 0.5944192409515381,
+        "candidate_execute_seconds": 0.5538945198059082,
+        "baseline_total_seconds": 0.8873613220639527,
+        "candidate_total_seconds": 0.8427626970224082,
+        "execute_seconds_saved": 0.04052472114562988,
+        "total_seconds_saved": 0.04459862504154444,
+        "native_fullrun_seconds": 2.014032178092748,
+        "native_modules_through_postrun_seconds": 1.9121274552308023,
+        "candidate_total_speedup": 2.3897974900984456,
+        "candidate_execution_speedup": 3.452150882266964,
+        "science": "PASS"
+      },
+      {
+        "case": "ExampleVitra",
+        "baseline_compile_seconds": 0.17929625511169434,
+        "candidate_compile_seconds": 0.17755413055419922,
+        "baseline_execute_seconds": 1.2054054737091064,
+        "candidate_execute_seconds": 1.4825894832611084,
+        "baseline_total_seconds": 1.4709449387155473,
+        "candidate_total_seconds": 1.7463750699535012,
+        "execute_seconds_saved": -0.27718400955200195,
+        "total_seconds_saved": -0.2754301312379539,
+        "native_fullrun_seconds": 2.9668581392616034,
+        "native_modules_through_postrun_seconds": 2.7783419392071664,
+        "candidate_total_speedup": 1.6988665208903828,
+        "candidate_execution_speedup": 1.873979257626944,
+        "science": "PASS"
+      },
+      {
+        "case": "ExampleWoundHealing",
+        "baseline_compile_seconds": 0.09375452995300293,
+        "candidate_compile_seconds": 0.09175872802734375,
+        "baseline_execute_seconds": 2.5663323402404785,
+        "candidate_execute_seconds": 2.377394914627075,
+        "baseline_total_seconds": 2.718420490156859,
+        "candidate_total_seconds": 2.5342179439030588,
+        "execute_seconds_saved": 0.18893742561340332,
+        "total_seconds_saved": 0.1842025462538004,
+        "native_fullrun_seconds": 3.8183068688958883,
+        "native_modules_through_postrun_seconds": 3.7158190980553627,
+        "candidate_total_speedup": 1.506700273384991,
+        "candidate_execution_speedup": 1.562979324635359,
+        "science": "PASS"
+      }
+    ],
+    "scope": "One ordinary observation per case/arm; current prewarmed ZMQ READY before clocks; 1w1t CPU5; same shared dependencies. Baseline/fresh warmed native reports retained from immediately preceding broader frontier. No repeat/variability estimate. Complete scientific export parity and exact exported images PASS both arms.",
+    "negative_control": "Vitra has no ColorToGray invocation; total rose275.430ms, with SaveImages function call +248.724ms. This is retained, not attributed causally to math patch. Speckles unchanged path total fell44.599ms.",
+    "source_capture_route": "Rejected: corrected saved2JPEG sourceowner replay reduced4reads to2 but complete boundary142.700->268.729ms, 126.030ms worse. No production sourcecapture change."
+  },
+  "ordinary_packet": "/home/ts/.local/state/openhcs-maintenance/20261005/wound-streamed-source-capture-ordinary-v1",
+  "native_and_baseline_packet": "/home/ts/.local/state/openhcs-maintenance/20261004/current-broader-frontier-ordinary-v1",
+  "artifact_sha256": {
+    "/home/ts/.local/state/openhcs-maintenance/20261005/wound-streamed-source-capture-ordinary-v1/run.py": "58b12c9456064133c8edab442011157c436d005b57f01e9fc923901924183024",
+    "/home/ts/.local/state/openhcs-maintenance/20261005/wound-streamed-source-capture-ordinary-v1/compare.py": "6e3cbedbded23fc76a8c2716fc2249f30e113a159bb10e243712036523fa153c",
+    "/home/ts/.local/state/openhcs-maintenance/20261005/wound-streamed-source-capture-ordinary-v1/timing-summary.json": "98e7fa95cfcbf387d54602ac55d4a2a7d6659bfc71cb5301e69696f7f265aca2",
+    "/home/ts/.local/state/openhcs-maintenance/20261005/wound-streamed-source-capture-ordinary-v1/candidate-profile.json": "cf122a5494074d16ff55afe251f597cea2a2b0a69ec1c17df2d47bfacacde06f",
+    "/home/ts/.local/state/openhcs-maintenance/20261005/wound-streamed-source-capture-ordinary-v1/strict-science.json": "dc17ceae3fb45eebe2b5087308fcceaf819a12a6f0d69ca9a1b6f11efcde8783",
+    "/home/ts/.local/state/openhcs-maintenance/20261005/wound-streamed-source-capture-ordinary-v1/candidate/source-before.json": "8c859033eb8a5a0deb3b4abdd982c48bf79fc23acd653fb85a304e3164d136c3",
+    "/home/ts/.local/state/openhcs-maintenance/20261005/wound-streamed-source-capture-ordinary-v1/candidate/source-after.json": "8c859033eb8a5a0deb3b4abdd982c48bf79fc23acd653fb85a304e3164d136c3",
+    "/home/ts/.local/state/openhcs-maintenance/20261005/wound-streamed-source-capture-ordinary-v1/candidate/terminal.json": "03e276a2c304fe70cc3bb6c772cc760b1ea86cd18c0b0d0a6f6e6bd2012187ac",
+    "/home/ts/.local/state/openhcs-maintenance/20261005/wound-streamed-source-capture-ordinary-v1/candidate/ordinary/well_throughput.csv": "9703bbad905cefe42a2042255fcc5aed2ba4826252665e0322478a5e5e0441e7"
+  },
+  "local_feasibility_packet": "/home/ts/.local/state/openhcs-maintenance/20261005/color-to-gray-streaming-prototype-v1",
+  "source_capture_rejected_packet": "/home/ts/.local/state/openhcs-maintenance/20261005/wound-source-capture-owner-replay-v2",
+  "science": "Three fresh candidate production outputs against retained qualified warmed native exports: existing CP measurement tolerances, exact exported image pixels, all output inventory accounted for, relationships and nonempty tables PASS.",
+  "receiving_source_guards": "Imported candidate origin verified; clean code/head and every runtime source/shared dependency/input/selected-sidecar pre/post guard PASS.",
+  "latest_main_sync": {
+    "main": "716e685e0",
+    "receiving_branch_head": "fd41e2f6d2de0165e647abf75aa8bd98e7fa8964",
+    "runtime_sources_unchanged_since_priced_candidate": true,
+    "reason": "Intervening main commits change paper/diagnostic docs; every priced openhcs/benchmark/scripts source and pyproject SHA reverified after merge."
+  },
+  "limitations": "One ordinary observation per case/arm; no statistical variation bound. Allocation sizes are analytical, not RSS savings. Vitra negative control retained and assigned SaveImages investigation; no claim that the color patch caused its slowdown."
+}

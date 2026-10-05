@@ -1,0 +1,43 @@
+{
+  "state": "TERMINAL_PASS_PARITY_NO_END_TO_END_GAIN_ESTABLISHED",
+  "source_head": "8bb40a7463b6a2467639f3fec1a010e46792c073",
+  "candidate_scope": "source_metadata.py only; owned no-op component support and ordered literal namespace",
+  "ordinary": {
+    "baseline": {
+      "ExampleIlluminationCorrection_Example3": {
+        "compile_seconds": 0.23293828964233398,
+        "execute_seconds": 0.2601172924041748,
+        "total_seconds": 0.5862254430539906
+      },
+      "cp_tutorial_3d_monolayer": {
+        "compile_seconds": 0.5136797428131104,
+        "execute_seconds": 3.7792391777038574,
+        "total_seconds": 4.465305561665446
+      }
+    },
+    "candidate": {
+      "ExampleIlluminationCorrection_Example3": {
+        "compile_seconds": 0.23083734512329102,
+        "execute_seconds": 0.25908708572387695,
+        "total_seconds": 0.5919077293947339
+      },
+      "cp_tutorial_3d_monolayer": {
+        "compile_seconds": 0.5079293251037598,
+        "execute_seconds": 4.038333892822266,
+        "total_seconds": 4.701046504080296
+      }
+    }
+  },
+  "science": "4/4 strict comparisons PASS against retained qualified native, matching existing authoritative headless pipeline patches",
+  "limits": [
+    "One ordinary pair, not a variability estimate or causal regression attribution.",
+    "Server/registry/kernel startup excluded.",
+    "Candidate 3D processing-contract union rose about289ms while server execution rose259ms; no end-to-end improvement observed.",
+    "13-cohort metadata-only replay saves10.270ms; no extrapolation to entire pipeline."
+  ],
+  "post_receiving_main_sync": {
+    "base": "2bd9fa473",
+    "change": "Spreadsheet source-provenance export fix #734; no source_metadata.py changes",
+    "validation": "44 existing spreadsheet export controls PASS after merge; no repeated pipeline observation"
+  }
+}

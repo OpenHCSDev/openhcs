@@ -136,7 +136,7 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
         StepSourceBindingsConfig,
     )
     from openhcs.core.source_image_provenance import SourceImageProvenance
-    from openhcs.core.steps.function_outputs import OpenHCSMetadataWriter
+    from openhcs.core.steps.function_outputs import OpenHCSMetadataTarget
     from openhcs.core.steps.function_step import FunctionStep
     from openhcs.core.virtual_workspace_metadata import (
         FIELDS,
@@ -364,7 +364,7 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
     primary_plan = context.step_plans[0]
     assert primary_plan.write_backend == "memory"
     assert primary_plan.materialized_output is None
-    OpenHCSMetadataWriter.finalize_completed_plate(bundle.runtime_contexts)
+    OpenHCSMetadataTarget.finalize_completed_plate(bundle.runtime_contexts)
     metadata_path = METADATA_CONFIG.metadata_path(primary_plan.output_plate_root)
     metadata_document = json.loads(metadata_path.read_text())
     persisted_source_provenance = SourceImageProvenance.from_mapping(

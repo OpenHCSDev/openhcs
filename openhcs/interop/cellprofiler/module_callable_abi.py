@@ -130,7 +130,7 @@ class CellProfilerModuleCallableABI:
         """Return the default image-output source payload."""
 
         del cls
-        return request.declared_source_payload()
+        return request.output_source_payload()
 
     @classmethod
     def output_value(
@@ -157,7 +157,7 @@ class CellProfilerModuleCallableABI:
         source_payload = replace(
             request,
             current_image=request.source.payload,
-        ).declared_source_payload()
+        ).output_source_payload()
         return CellProfilerObjectLabelOutputSourceContext(
             source_payload,
             source_payload,
@@ -190,14 +190,14 @@ class CellProfilerModuleCallableABI:
     ) -> tuple[ArtifactSpec, ...]:
         """Return the inputs whose component scope owns one invocation."""
 
-        primary_images = cls.primary_image_inputs(contract, declared_inputs)
-        if primary_images:
-            return primary_images
         object_inputs = ArtifactSpecCollection(declared_inputs).of_artifact_type(
             ObjectLabelsArtifactType
         )
         if cls.executes_per_object_measurements(object_inputs):
             return object_inputs
+        primary_images = cls.primary_image_inputs(contract, declared_inputs)
+        if primary_images:
+            return primary_images
         return tuple(
             artifact_input
             for artifact_input in declared_inputs

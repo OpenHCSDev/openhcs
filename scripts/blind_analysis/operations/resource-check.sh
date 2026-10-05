@@ -9,25 +9,37 @@ phase=${3:?unique observation}
 case "$phase" in ''|*[!a-zA-Z0-9_-]*) exit 64;; esac
 mode=${4:?explicit operation mode: ongoing, full, replacement, bootstrap or ledger}
 # Growth qualification is not a universal stop for a bounded continuation.
-# Desktop reserve and PSI describe future growth admission. Below-reserve
+# Desktop reserve describes future growth admission. Below-reserve
 # ongoing observations must still be able to resolve jobs and release buffers.
 case "$mode" in
-  ongoing) pressure_policy=warning; disk_policy=warning ;;
-  full|replacement|bootstrap) pressure_policy=reject; disk_policy=reject ;;
-  ledger) pressure_policy=ledger; disk_policy=warning ;;
+  ongoing) memory_policy=warning; disk_policy=warning; deadline_policy=warning ;;
+  full|replacement|bootstrap) memory_policy=reject; disk_policy=reject; deadline_policy=reject ;;
+  ledger) memory_policy=ledger; disk_policy=warning; deadline_policy=warning ;;
   *) exit 64 ;;
 esac
 runtime="$FLEET_WORKSPACE/output/runtime"
 mkdir -p "$runtime"
-if [[ -e "$runtime/first-mcp-started.epoch" ]]; then
-  started=$(<"$runtime/first-mcp-started.epoch")
-  minutes=$(jq -er '.task_minutes_from_first_mcp_start' "$FLEET_RUN_ROOT/program.json")
-  elapsed=$(($(date -u +%s)-started))
-  printf 'Deadline elapsed=%s allowed=%s seconds\n' "$elapsed" "$((minutes*60))"
-  test "$elapsed" -lt "$((minutes*60))"
-fi
 receipt="$runtime/resources-$phase"
 test ! -e "$receipt.output"
+test ! -e "$receipt.deadline"
+if [[ -e "$runtime/first-mcp-started.epoch" ]]; then
+  started=$(<"$runtime/first-mcp-started.epoch")
+  minutes=$(jq -cr '.task_minutes_from_first_mcp_start |
+    if . == null then null
+    elif type=="number" then
+      if .>0 and .==floor then . else error("invalid declared scientific interval") end
+    else error("invalid declared scientific interval") end' "$FLEET_RUN_ROOT/program.json")
+  elapsed=$(($(date -u +%s)-started))
+  if [[ "$minutes" == null ]]; then
+    printf 'Recorded elapsed=%s seconds; scientific interval undeclared; mode=%s. Preserve checkpoints and continue through measured resource admission.\n' "$elapsed" "$mode" | tee "$receipt.deadline"
+  else
+    printf 'Deadline elapsed=%s allowed=%s seconds; mode=%s policy=%s\n' "$elapsed" "$((minutes*60))" "$mode" "$deadline_policy" | tee "$receipt.deadline"
+    if [[ "$elapsed" -ge "$((minutes*60))" ]]; then
+      printf 'Scientific interval expired: no new scientific work or process startup. Existing-client observation, evidence freeze and exact owned cleanup remain permitted; ledger is not dispatch permission.\n' | tee -a "$receipt.deadline"
+      [[ "$deadline_policy" != reject ]]
+    fi
+  fi
+fi
 # Ongoing means an already recorded live client, not permission to bootstrap
 # another process. The existing recorder owns this incarnation and its clock.
 if [[ "$mode" == ongoing ]]; then fleet_require_live_client; fi
@@ -140,8 +152,7 @@ printf 'Family snapshot RSS=%sKiB PSS=%sKiB observed=%s unavailable=%s (not an a
 if [[ "$mode" == replacement || "$mode" == bootstrap ]]; then
   if [[ "$mode" == bootstrap ]]; then fleet_require_bootstrap_custody; else fleet_require_helpers; fi
 fi
-psi_max=$(jq -er '.proposed_resource_envelope.full_memory_psi_max_percent | select(type=="number" and .>=0 and .<=100)' <<< "$FLEET_PROGRAM")
-awk -v floor="$floor" -v policy="$pressure_policy" '
+awk -v floor="$floor" -v policy="$memory_policy" '
   /^MemAvailable:/ {
     if(seen++ || NF!=3 || $2 !~ /^[0-9]+$/ || $3!="kB") invalid=1
     else {
@@ -160,8 +171,8 @@ awk -v floor="$floor" -v policy="$pressure_policy" '
     if(below && policy=="reject") exit 76
   }
 ' /proc/meminfo | tee "$receipt.ram"
-printf 'Pressure admission mode=%s policy=%s limit=%s%%; measured desktop headroom and all windows retained\n' "$mode" "$pressure_policy" "$psi_max" | tee "$receipt.psi-policy"
-awk -v limit="$psi_max" -v policy="$pressure_policy" '
+printf 'Pressure observation mode=%s; no numeric PSI admission cutoff. Assess recent10/60 windows with host availability, family RSS/PSS and actual incremental buffers; reduce workers or defer expansion when real pressure warrants it. Admission PASS is not an allocation guarantee.\n' "$mode" | tee "$receipt.psi-policy"
+awk '
   BEGIN {count=split("avg10 avg60 avg300", required, " ")}
   /^full / {
     print
@@ -169,16 +180,13 @@ awk -v limit="$psi_max" -v policy="$pressure_policy" '
       split($i, field, "=")
       for(j=1;j<=count;j++) if(field[1]==required[j]) {
         if(seen[field[1]]++ || field[2] !~ /^[0-9]+([.][0-9]+)?$/) invalid=1
-        else if(field[2]+0>limit) {
-          printf "Pressure %s: full %s=%s exceeds declared %s%%\n", policy, field[1], field[2], limit
-          exceeded=1
-        }
+        else if(field[2]+0>100) invalid=1
       }
     }
   }
   END {
     for(j=1;j<=count;j++) if(seen[required[j]]!=1) invalid=1
-    if(invalid || (exceeded && policy=="reject")) exit 77
+    if(invalid) exit 77
   }
 ' /proc/pressure/memory | tee "$receipt.psi"
 printf 'Admission PASS\n'

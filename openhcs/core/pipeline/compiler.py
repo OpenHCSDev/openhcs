@@ -1,43 +1,7 @@
-"""
-Pipeline module for OpenHCS.
+"""Compile saved pipeline declarations without creating editor lifecycles.
 
-This module provides core pipeline compilation components for OpenHCS.
-The PipelineCompiler is responsible for preparing step_plans within a ProcessingContext.
-
-CONFIGURATION ACCESS PATTERN:
-============================
-The compiler resolves ObjectState once and replaces the submitted pipeline with
-the resolved steps retained by ResolvedPipelineDefinition:
-
-CORRECT:
-    # Steps are registered in ObjectState with parent hierarchy: step → orchestrator → global
-    step_state = ObjectState(object_instance=step, scope_id=scope_id, parent_state=orch_state)
-    ObjectStateRegistry.register(step_state)
-
-    resolved_step = step_state.to_saved_resolved_object()
-    var_comps = resolved_step.processing_config.variable_components
-
-✅ CORRECT (LIVE VALUES FOR UI):
-    # For UI: use get_resolved_value() to get current values with unsaved edits
-    current_value = step_state.get_resolved_value(field_path)
-
-REMOVED:
-    with config_context(orchestrator.pipeline_config):  # REMOVED
-        resolved_step = resolve_lazy_configurations_for_serialization(step)  # REMOVED
-
-    # Using .parameters.get() doesn't get inheritance
-    current_value = step_state.parameters.get(field_path)  # WRONG - no inheritance
-
-    Compiler consumers must read semantics from the resolved step, not rebuild a
-    projection from ObjectState.
-
-WHY:
-- ObjectState.to_saved_resolved_object() provides the resolved compiler step
-- ResolvedPipelineDefinition owns ordered resolved steps and their registered ObjectStates
-- get_resolved_value() provides live state with unsaved edits (for UI)
-- parameters.get() returns raw local value only, NO inheritance
-- No cross-step pollution - each step only sees its own config hierarchy
-- isinstance checks are the only type checking pattern (no hasattr)
+ObjectState owns saved inheritance and provenance resolution. The resolved
+pipeline retains those admission facts; live UI states remain in their registry.
 """
 
 from __future__ import annotations
@@ -98,6 +62,7 @@ from openhcs.core.pipeline.compilation_session import (
     ResolvedPipelineDefinition,
     resolve_declared_dataclass_paths,
 )
+from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.pipeline.materialization_flag_planner import (
     MaterializationFlagPlanner,
 )
@@ -113,13 +78,7 @@ from openhcs.core.pipeline.path_planner import (
     PipelinePathPlanner,
 )
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
-from openhcs.core.source_workspace_projection import (
-    VirtualWorkspaceSourceProjectionAuthority,
-)
 from openhcs.core.source_load_plan import SourceLoadPlan
-from openhcs.core.invocation_artifacts import (
-    PipelineInvocationContractProviderAuthority,
-)
 from openhcs.core.pipeline.framework_device_assignment import (
     assign_framework_devices,
 )
@@ -161,7 +120,7 @@ def _compiler_step_scope_id(
     step: "AbstractStep",
     step_index: int,
 ) -> str:
-    """Build a compiler ObjectState scope id that preserves stable step tokens."""
+    """Build a compiler scope id that preserves stable step tokens."""
     return f"{compilation_scope}::{_step_scope_token(step, step_index)}"
 
 
@@ -169,7 +128,7 @@ def _compiler_pipeline_scope_id(
     plate_path_str: str,
     pipeline_definition: Sequence["AbstractStep"],
 ) -> str:
-    """Build the compiler-owned ObjectState root for one submitted pipeline."""
+    """Build the compiler declaration scope for one submitted pipeline."""
     return f"{plate_path_str}::pipeline::submission_{id(pipeline_definition):x}"
 
 
@@ -194,6 +153,8 @@ class AxisCompilationRequest:
     pipeline: ResolvedPipelineDefinition
     path_resolver: CompilationPathResolver
     global_step_axis_filters: StepAxisFilterMap
+    source_projections_by_axis: Mapping[str, VirtualWorkspaceSourceProjection]
+    materialization_planner: MaterializationFlagPlanner
     enable_visualizer_override: bool
     is_zmq_execution: bool
 
@@ -234,6 +195,7 @@ class PipelineCompiler:
         pipeline: ResolvedPipelineDefinition,
         orchestrator,
         global_config: "GlobalPipelineConfig",
+        source_workspace_projection: VirtualWorkspaceSourceProjection,
         metadata_writer: bool = False,
         plate_path: Optional[Path] = None,
         path_resolver: CompilationPathResolver | None = None,
@@ -247,7 +209,7 @@ class PipelineCompiler:
 
         Args:
             context: ProcessingContext to initialize step plans for
-            pipeline: Ordered resolved steps and their registered ObjectStates
+            pipeline: Ordered resolved steps with saved provenance and scope identities
             orchestrator: Orchestrator instance for well filter resolution
             metadata_writer: If True, this well is responsible for creating OpenHCS metadata files
             plate_path: Path to plate root for zarr conversion detection
@@ -264,11 +226,7 @@ class PipelineCompiler:
             pipeline=pipeline,
             orchestrator=orchestrator,
             global_config=global_config,
-            source_workspace_projection=(
-                orchestrator.source_workspace_projection().filtered_by_axis(
-                    axis_id=context.axis_id,
-                )
-            ),
+            source_workspace_projection=source_workspace_projection,
             metadata_writer=metadata_writer,
             plate_path=plate_path,
             path_resolver=path_resolver,
@@ -292,41 +250,6 @@ class PipelineCompiler:
             )
         if context.step_plans is None:
             context.step_plans = {}
-
-    @staticmethod
-    def _register_object_state(
-        object_instance,
-        scope_id: str,
-        parent_state: Optional["ObjectState"],
-    ) -> "ObjectState":
-        """Create and register an ObjectState with the compiler's step policy."""
-        state = ObjectState(
-            object_instance=object_instance,
-            scope_id=scope_id,
-            parent_state=parent_state,
-        )
-        ObjectStateRegistry.register(state, _skip_snapshot=True)
-        return state
-
-    @staticmethod
-    def _get_or_register_object_state(
-        scope_id: str,
-        object_instance,
-        parent_state: Optional["ObjectState"],
-        *,
-        force_fresh: bool = False,
-    ) -> "ObjectState":
-        """Return an existing ObjectState unless a fresh compiler state is required."""
-        state = None
-        if not force_fresh:
-            state = ObjectStateRegistry.get_by_scope(scope_id)
-        if state is not None:
-            return state
-        return PipelineCompiler._register_object_state(
-            object_instance,
-            scope_id,
-            parent_state,
-        )
 
     @staticmethod
     def _missing_plan_fields(
@@ -398,14 +321,7 @@ class PipelineCompiler:
     def _plan_context_paths(
         session: CompilationSession,
     ) -> None:
-        PipelinePathPlanner.prepare_pipeline_paths(
-            session,
-            invocation_contract_provider=(
-                PipelineInvocationContractProviderAuthority.provider_for_session(
-                    session
-                )
-            ),
-        )
+        PipelinePathPlanner.prepare_pipeline_paths(session)
 
     @staticmethod
     def _supplement_step_plans(session: CompilationSession) -> None:
@@ -427,14 +343,14 @@ class PipelineCompiler:
                 continue
 
             current_plan = session.plans[step_index]
-            current_plan.step_scope_id = session.pipeline.step_state_map[
-                step_index
-            ].scope_id
+            current_plan.step_scope_id = session.pipeline.step_scope_ids[step_index]
             current_plan.step_name = step.name
             current_plan.step_type = type(step).__name__
             current_plan.axis_id = session.axis_id
             current_plan.create_openhcs_metadata = session.metadata_writer
-            current_plan.variable_components = step.processing_config.variable_components
+            current_plan.variable_components = (
+                step.processing_config.variable_components
+            )
             current_plan.group_by = PathPlannerExecutionGroups.normalized_group_by(
                 step,
             )
@@ -614,7 +530,10 @@ class PipelineCompiler:
                 step_plan.zarr_config = None
 
     @staticmethod
-    def plan_materialization_flags(session: CompilationSession) -> None:
+    def plan_materialization_flags(
+        session: CompilationSession,
+        materialization_planner: MaterializationFlagPlanner,
+    ) -> None:
         """
         Plans and injects materialization flags into context.step_plans
         by calling MaterializationFlagPlanner.
@@ -630,18 +549,7 @@ class PipelineCompiler:
             )
             return
 
-        # MaterializationFlagPlanner.prepare_pipeline_flags now takes context and pipeline_definition
-        # and modifies context.step_plans in-place.
-        # CRITICAL: Pass merged config (not raw pipeline_config) for proper global config inheritance
-        MaterializationFlagPlanner.prepare_pipeline_flags(
-            context,
-            session.pipeline.steps,
-            session.orchestrator.plate_path,
-            session.global_config,  # Use merged config instead of raw pipeline_config
-            available_axis_values=session.orchestrator.get_component_keys(
-                get_multiprocessing_axis()
-            ),
-        )
+        materialization_planner.prepare_pipeline_flags(context, session.pipeline.steps)
 
         # Post-check (optional, but good for ensuring contracts are met by the planner)
         for step_index, step in enumerate(session.pipeline.steps):
@@ -663,11 +571,14 @@ class PipelineCompiler:
                     f"Materialization flag planning incomplete for step {step.name} (index: {step_index}). "
                     f"Missing required keys: {missing_keys}."
                 )
-        PipelineCompiler._compile_runtime_artifact_materialization_plans(session)
+        PipelineCompiler._compile_runtime_artifact_materialization_plans(
+            session, materialization_planner,
+        )
 
     @staticmethod
     def _compile_runtime_artifact_materialization_plans(
         session: CompilationSession,
+        materialization_planner: MaterializationFlagPlanner,
     ) -> None:
         globally_enabled = bool(session.global_config.materialize_runtime_artifacts)
         persistent_backend = None
@@ -684,9 +595,8 @@ class PipelineCompiler:
 
         if persistent_step_indexes:
             persistent_backend = (
-                MaterializationFlagPlanner._resolve_materialization_backend(
-                    session.context,
-                    session.global_config.vfs_config,
+                materialization_planner.resolve_backend(
+                    session.global_config.vfs_config.materialization_backend,
                 )
             )
         for step_index, step_plan in session.plans.items():
@@ -866,26 +776,6 @@ class PipelineCompiler:
                     f"Memory validation must set {missing_fields} for FunctionStep {step_plan.step_name} (index: {step_index})."
                 )
 
-        # Apply memory type override: Any step with disk output must use numpy for disk writing
-        for step_index, step in enumerate(session.pipeline.steps):
-            if isinstance(step, FunctionStep):
-                if step_index in context.step_plans:
-                    step_plan = context.step_plans[step_index]
-                    compiled_pattern = step_plan.compiled_function_pattern
-                    if (
-                        compiled_pattern is not None
-                        and compiled_pattern.execution_scope
-                        is FunctionStepExecutionScope.PLATE
-                    ):
-                        continue
-                    write_backend = step_plan.write_backend
-
-                    if write_backend == "disk":
-                        logger.debug(
-                            f"Step {session.pipeline.steps[step_index].name} has disk output, overriding output_memory_type to numpy"
-                        )
-                        step_plan.output_memory_type = "numpy"
-
     @staticmethod
     def assign_framework_device_resources(session: CompilationSession) -> None:
         """Resolve each step's declaration-derived framework device footprint."""
@@ -934,14 +824,13 @@ class PipelineCompiler:
         """
         Resolve all lazy dataclass instances in step plans to their base configurations.
 
-        This method uses ObjectState for resolution.
-        All configs are already resolved via ObjectState.to_object() during compilation.
+        All configs are already admitted by saved declaration resolution.
         This method now just ensures step plans reference the resolved configs.
 
         Args:
             session: Axis-scoped compiler session.
         """
-        # Configs are already resolved via ObjectState.to_object() in initialize_step_plans_for_context
+        # Configs are already resolved in the saved pipeline declaration.
         # No additional resolution needed - step plans already contain resolved configs
         logger.debug(
             f"Step plans already resolved via ObjectState for {len(session.pipeline.steps)} steps"
@@ -1046,135 +935,50 @@ class PipelineCompiler:
         )
 
     @staticmethod
-    def _register_and_resolve_pipeline_once(
+    def _resolve_pipeline_once(
         orchestrator,
         pipeline_definition: List[AbstractStep],
-        *,
-        is_zmq_execution: bool,
-    ) -> tuple[str, "ObjectState", ResolvedPipelineDefinition]:
-        # Compile from the submitted pipeline definition, not from any stale UI
-        # ObjectState that may point at post-compile stripped step shells.
-        force_fresh = True
-        global_config_state = PipelineCompiler._compile_global_config_state(
-            force_fresh=force_fresh
-        )
-        plate_path_str = str(orchestrator.plate_path)
-        compiler_scope_id = _compiler_pipeline_scope_id(
-            plate_path_str,
-            pipeline_definition,
-        )
-        pipeline_config_state = ObjectStateRegistry.get_by_scope(compiler_scope_id)
-        if orchestrator.pipeline_config is not None:
-            pipeline_config_state = PipelineCompiler._get_or_register_object_state(
-                compiler_scope_id,
-                orchestrator.pipeline_config,
-                global_config_state,
-                force_fresh=force_fresh,
-            )
-        if pipeline_config_state is None:
-            raise RuntimeError(
-                "Missing ObjectState for plate; cannot resolve pipeline config."
-            )
-        step_state_map = PipelineCompiler._register_pipeline_step_states(
-            pipeline_definition,
-            compiler_scope_id,
-            pipeline_config_state,
-            force_fresh=force_fresh,
-        )
-        PipelineCompiler._replace_pipeline_with_resolved_steps(
-            pipeline_definition,
-            step_state_map,
-        )
-        _refresh_function_objects_in_steps(pipeline_definition)
-        logger.debug(
-            "Refreshed function objects in %s steps (converted to FunctionReference)",
-            len(pipeline_definition),
-        )
-
-        pipeline = PipelineCompiler._filter_enabled_steps(
-            pipeline_definition,
-            step_state_map,
-        )
-        return (
-            compiler_scope_id,
-            pipeline_config_state,
-            pipeline,
-        )
-
-    @staticmethod
-    def _compile_global_config_state(*, force_fresh: bool) -> "ObjectState" | None:
-        from objectstate import get_current_global_config
-        from openhcs.core.config import GlobalPipelineConfig
-
-        global_config_state = ObjectStateRegistry.get_by_scope("")
-        if force_fresh or global_config_state is None:
-            global_config = get_current_global_config(
-                GlobalPipelineConfig,
-                use_live=False,
-            )
-            if global_config:
-                global_config_state = PipelineCompiler._register_object_state(
-                    global_config,
-                    "",
-                    None,
-                )
-                logger.debug("Registered global config at scope ''")
-        return global_config_state
-
-    @staticmethod
-    def _register_pipeline_step_states(
-        pipeline_definition: Sequence[AbstractStep],
-        compiler_scope_id: str,
-        pipeline_config_state: "ObjectState",
-        *,
-        force_fresh: bool,
-    ) -> Dict[int, "ObjectState"]:
-        step_state_map: Dict[int, "ObjectState"] = {}
-        for step_index, step in enumerate(pipeline_definition):
-            step_scope_id = _compiler_step_scope_id(
-                compiler_scope_id,
-                step,
-                step_index,
-            )
-            step_state_map[step_index] = PipelineCompiler._get_or_register_object_state(
-                step_scope_id,
-                step,
-                pipeline_config_state,
-                force_fresh=force_fresh,
-            )
-        return step_state_map
-
-    @staticmethod
-    def _replace_pipeline_with_resolved_steps(
-        pipeline_definition: List[AbstractStep],
-        step_state_map: Mapping[int, "ObjectState"],
-    ) -> None:
-        pipeline_definition.clear()
-        pipeline_definition.extend(
-            step_state.to_saved_resolved_object()
-            for step_state in step_state_map.values()
-        )
-        logger.debug(
-            "Resolved %s steps once per pipeline (replaced original list in-place)",
-            len(pipeline_definition),
-        )
-
-    @staticmethod
-    def _filter_enabled_steps(
-        pipeline_definition: List[AbstractStep],
-        step_state_map: Mapping[int, "ObjectState"],
     ) -> ResolvedPipelineDefinition:
-        enabled_pairs = [
-            (step, step_state_map[index])
-            for index, step in enumerate(pipeline_definition)
-            if step.enabled
+        """Admit submitted saved declarations without registering editor states."""
+        if orchestrator.pipeline_config is None:
+            raise RuntimeError("Missing pipeline config; cannot resolve pipeline.")
+        compiler_scope = _compiler_pipeline_scope_id(
+            str(orchestrator.plate_path), pipeline_definition
+        )
+        ancestors = (
+            *ObjectStateRegistry.get_ancestor_objects_with_scopes(
+                compiler_scope, use_saved=True
+            ),
+            (compiler_scope, orchestrator.pipeline_config),
+        )
+        resolved_steps = []
+        step_scopes = {}
+        step_provenance = {}
+        for index, step in enumerate(pipeline_definition):
+            scope = _compiler_step_scope_id(compiler_scope, step, index)
+            resolved_step, provenance = ObjectState.resolve_saved_object(
+                step, scope_id=scope, ancestor_objects_with_scopes=ancestors
+            )
+            resolved_steps.append(resolved_step)
+            step_scopes[index] = scope
+            step_provenance[index] = provenance
+        pipeline_definition[:] = resolved_steps
+        _refresh_function_objects_in_steps(pipeline_definition)
+        enabled_indices = [
+            index for index, step in enumerate(pipeline_definition) if step.enabled
         ]
-        pipeline_definition.clear()
-        pipeline_definition.extend(step for step, _state in enabled_pairs)
+        pipeline_definition[:] = [
+            pipeline_definition[index] for index in enabled_indices
+        ]
         return ResolvedPipelineDefinition(
             steps=pipeline_definition,
-            step_state_map={
-                index: state for index, (_step, state) in enumerate(enabled_pairs)
+            step_scope_ids={
+                index: step_scopes[original_index]
+                for index, original_index in enumerate(enabled_indices)
+            },
+            step_provenance={
+                index: step_provenance[original_index]
+                for index, original_index in enumerate(enabled_indices)
             },
         )
 
@@ -1199,6 +1003,8 @@ class PipelineCompiler:
         request: AxisCompilationRequest,
         axis_values: Sequence[str],
     ) -> Dict[str, ProcessingContext]:
+        # The final declaration admits providers before any axis-specific work.
+        request.pipeline.invocation_contract_provider
         compiled_contexts: Dict[str, ProcessingContext] = {}
         responsible_axis_value = sorted(axis_values)[0]
         total_axis_values = len(axis_values)
@@ -1249,6 +1055,7 @@ class PipelineCompiler:
             )
         context = PipelineCompiler._compile_single_axis_context(
             session,
+            materialization_planner=request.materialization_planner,
             enable_visualizer_override=request.enable_visualizer_override,
         )
         return {axis_id: context}
@@ -1264,6 +1071,7 @@ class PipelineCompiler:
             request.pipeline,
             request.orchestrator,
             request.global_config,
+            request.source_projections_by_axis[context.axis_id],
             metadata_writer=metadata_writer,
             plate_path=request.orchestrator.plate_path,
             path_resolver=request.path_resolver,
@@ -1291,7 +1099,9 @@ class PipelineCompiler:
                 metadata_writer,
             )
             PipelineCompiler.declare_zarr_stores(session)
-            PipelineCompiler.plan_materialization_flags(session)
+            PipelineCompiler.plan_materialization_flags(
+                session, request.materialization_planner,
+            )
             PipelineCompiler._run_post_plan_compile_stages(
                 session,
                 enable_visualizer_override=request.enable_visualizer_override,
@@ -1304,12 +1114,13 @@ class PipelineCompiler:
     def _compile_single_axis_context(
         session: CompilationSession,
         *,
+        materialization_planner: MaterializationFlagPlanner,
         enable_visualizer_override: bool,
     ) -> ProcessingContext:
         """Finish a nonsequential axis using its validated initial plan."""
         context = session.context
         PipelineCompiler.declare_zarr_stores(session)
-        PipelineCompiler.plan_materialization_flags(session)
+        PipelineCompiler.plan_materialization_flags(session, materialization_planner)
         PipelineCompiler._run_post_plan_compile_stages(
             session,
             enable_visualizer_override=enable_visualizer_override,
@@ -1336,14 +1147,9 @@ class PipelineCompiler:
 
     @staticmethod
     def validate_source_workspace_projection(session: CompilationSession) -> None:
-        """Validate source-workspace metadata before runtime image loading."""
+        """Validate the exact admitted source epoch used by this axis's plans."""
 
-        projection = VirtualWorkspaceSourceProjectionAuthority.from_context(
-            session.context,
-            cache=session.context.runtime_source_workspace_projection_cache,
-        ).projection_if_available()
-        if projection is None:
-            return
+        projection = session.source_workspace_projection
         projection.validate_runtime_metadata_projection(axis_id=session.axis_id)
 
     @staticmethod
@@ -1676,14 +1482,9 @@ class PipelineCompiler:
         orchestrator,
         pipeline_definition: List[AbstractStep],
         compiled_contexts: Mapping[str, ProcessingContext],
-        compiler_scope_id: str,
         effective_config: GlobalPipelineConfig,
     ) -> None:
         PipelineCompiler._log_path_planning_summary(compiled_contexts)
-        PipelineCompiler._cleanup_compilation_object_states(
-            orchestrator,
-            compiler_scope_id,
-        )
         logger.info("Stripping attributes from pipeline definition steps.")
         StepAttributeStripper.strip_step_attributes(pipeline_definition, {})
         orchestrator._state = OrchestratorState.COMPILED
@@ -1715,25 +1516,6 @@ class PipelineCompiler:
                     step_name,
                     plan.materialized_output.output_dir,
                 )
-
-    @staticmethod
-    def _cleanup_compilation_object_states(
-        orchestrator,
-        compiler_scope_id: str | None = None,
-    ) -> None:
-        orch_scope_id = (
-            compiler_scope_id
-            if compiler_scope_id is not None
-            else f"{orchestrator.plate_path}::orchestrator"
-        )
-        ObjectStateRegistry.unregister_scope_and_descendants(
-            orch_scope_id,
-            _skip_snapshot=True,
-        )
-        logger.debug(
-            "Cleaned up compilation ObjectStates for scope: %s",
-            orch_scope_id,
-        )
 
     @staticmethod
     def _calculate_worker_assignments(
@@ -1778,15 +1560,13 @@ class PipelineCompiler:
             axis_filter: Optional list of axis values to process. If None, processes all found axis values.
             enable_visualizer_override: If True, all steps in all compiled contexts
                                         will have their 'visualize' flag set to True.
-            is_zmq_execution: If True, compiler-created ObjectStates will be unregistered
-                              after resolution to free RAM (for ZMQ server mode).
+            is_zmq_execution: Use the execution server's worker runtime policy.
 
         Returns:
             The compiler-owned bundle containing compiled contexts, worker
             assignments, runtime policy, and the stateless pipeline definition.
         """
         PipelineCompiler._validate_compile_request(orchestrator, pipeline_definition)
-        compiler_scope_id: str | None = None
         try:
             effective_config = (
                 orchestrator.get_effective_config()
@@ -1815,20 +1595,12 @@ class PipelineCompiler:
                 f"Starting compilation for axis values: {', '.join(axis_values_to_process)}"
             )
 
-            compiler_scope_id, _pipeline_config_state, pipeline_inputs = (
-                PipelineCompiler._register_and_resolve_pipeline_once(
-                    orchestrator,
-                    pipeline_definition,
-                    is_zmq_execution=is_zmq_execution,
-                )
+            pipeline_inputs = PipelineCompiler._resolve_pipeline_once(
+                orchestrator, pipeline_definition
             )
             if not pipeline_definition:
                 logger.warning(
                     "All steps were disabled. Pipeline is empty after filtering."
-                )
-                PipelineCompiler._cleanup_compilation_object_states(
-                    orchestrator,
-                    compiler_scope_id,
                 )
                 return CompiledExecutionBundle.from_runtime_contexts(
                     pipeline_definition=pipeline_definition,
@@ -1879,6 +1651,20 @@ class PipelineCompiler:
                 pipeline=pipeline_inputs,
                 path_resolver=path_resolver,
                 global_step_axis_filters=global_step_axis_filters,
+                materialization_planner=MaterializationFlagPlanner(
+                    pipeline_config=effective_config,
+                    microscope_handler=orchestrator.microscope_handler,
+                    filemanager=orchestrator.filemanager,
+                    input_dir=orchestrator.input_dir,
+                    available_axis_values=orchestrator.get_component_keys(
+                        get_multiprocessing_axis()
+                    ),
+                ),
+                source_projections_by_axis=(
+                    orchestrator.source_workspace_projection().partition_by_axes(
+                        axis_values_to_process
+                    )
+                ),
                 enable_visualizer_override=enable_visualizer_override,
                 is_zmq_execution=is_zmq_execution,
             )
@@ -1886,11 +1672,6 @@ class PipelineCompiler:
                 axis_request,
                 axis_values_to_process,
             )
-            from openhcs.core.steps.function_runtime import (
-                prepare_compiled_context_callables,
-            )
-
-            prepare_compiled_context_callables(compiled_contexts, max_workers=num_workers)
             worker_assignments = PipelineCompiler._calculate_worker_assignments(
                 list(compiled_contexts.keys()),
                 num_workers,
@@ -1906,7 +1687,6 @@ class PipelineCompiler:
                 orchestrator,
                 pipeline_definition,
                 compiled_contexts,
-                compiler_scope_id,
                 effective_config,
             )
             execution_bundle = CompiledExecutionBundle.from_runtime_contexts(
@@ -1921,11 +1701,6 @@ class PipelineCompiler:
             )
             return execution_bundle
         except Exception as e:
-            if compiler_scope_id is not None:
-                PipelineCompiler._cleanup_compilation_object_states(
-                    orchestrator,
-                    compiler_scope_id,
-                )
             orchestrator._state = OrchestratorState.COMPILE_FAILED
             logger.error(f"Failed to compile pipelines: {e}")
             raise
@@ -1969,7 +1744,7 @@ def _resolve_step_axis_filters(
     It processes ALL WellFilterConfig instances (materialization, streaming, etc.) uniformly.
 
     Args:
-        pipeline: Resolved steps and ObjectState owners retaining inherited-field provenance
+        pipeline: Resolved steps and their same-epoch saved-field provenance
         context: Processing context for the current axis value
         orchestrator: Orchestrator instance with access to available axis values
     """
@@ -1983,11 +1758,12 @@ def _resolve_step_axis_filters(
 
     for step_index, step in enumerate(pipeline.steps):
         step_filters: dict[type[WellFilterConfig], StepAxisFilterResolution] = {}
-        step_state = pipeline.step_state_map[step_index]
         for field_name, config in vars(step).items():
             if not isinstance(config, WellFilterConfig) or config.well_filter is None:
                 continue
-            provenance = step_state.get_provenance(f"{field_name}.well_filter")
+            provenance = pipeline.step_provenance[step_index].get(
+                f"{field_name}.well_filter"
+            )
             source_type = provenance[1] if provenance is not None else None
             if not config.accepts_well_filter_provenance(source_type):
                 logger.debug(

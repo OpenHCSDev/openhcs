@@ -1,0 +1,24 @@
+{
+  "trial": "H003_POSTPAUSE_88",
+  "source_root": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output",
+  "evidence_tier": "fresh_context_authoring_on_released_field_within_run_repair_no_reference_feedback",
+  "source_shape_yx": [400, 400],
+  "first_completed_paired_counts": {"nuclei": 54, "actin_territories": 54},
+  "final_counts": {"nuclei": 55, "actin_territories": 55},
+  "validated_biological_count": null,
+  "reference_accuracy_score": null,
+  "final_median_area_pixels_squared": {"nuclei": 370, "actin_territories": 907},
+  "no_growth_territory_ids": [3],
+  "edge_bounding_box_counts": {"nuclei": 12, "actin_territories": 17},
+  "final_matched_native_captures": 54,
+  "verified_frozen_artifacts": 148,
+  "recorded_client_exit_code": 2,
+  "owned_native_and_viewer_closure_verified": true,
+  "source_sha256": {
+    "FREEZE.json": "85322769447c1bf254c8578ab93f9550ad4eff7f83121ff5ce8e1dc685ea1f7a",
+    "final_pipeline.py": "d618e9a1a7270760cd048bab74371d0ba765fd2df63ed3e650f7cba394450cda",
+    "final_custom_detector.py": "572365d109179769443af8b5e50db7f8d49fdd2e2eb7fd0586d186081d255285",
+    "final_evidence.json": "cff6471888a3aa77ee31f019d11a7a68b099f58d8e537c898bbefd42849c925d"
+  },
+  "qualification": "All 148 complete artifact hashes checked against the original freeze, separately from active-journal prefixes. Exact owned processes and listeners independently absent after typed closure. Counts and areas retain algorithmic scope; a local repair does not establish a global error rate, physical calibration or pixelwise containment. No scientific rerun."
+}

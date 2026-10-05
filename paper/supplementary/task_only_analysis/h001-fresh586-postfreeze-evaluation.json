@@ -1,0 +1,122 @@
+{
+  "evaluated_at_utc": "2026-10-04T06:10:55Z",
+  "scope": "Coordinator-only computational agreement with the predeclared notebook primary reference; not manually annotated biological accuracy or generalization",
+  "author_model": "gpt-6.1-sol",
+  "author_run": "H001_FRESH586_96",
+  "author_scientific_freeze_utc": "2026-10-04T05:51:25.756471+00:00",
+  "author_disposition": "ACCEPT_WITH_QUALIFICATIONS",
+  "evaluation_feedback_supplied_to_author": false,
+  "freeze_sha256": "8ec9a8b617b2ad5a65eb29764d217a41e3a707ebdcdf3efab0dfcb2608bf6d37",
+  "frozen_manifest_sha256": "f6d7be75a96265ef88b17ebaf23469f716b000577c21f5d3946577f3c3ae9689",
+  "prediction_root": "/home/ts/wt/openhcs-issue-batch-20260929/next-h001-fresh96-guide586-20261004/H001_FRESH586_96/author-workspace/output/final",
+  "reference_path": "/home/ts/.local/share/openhcs-blind-evaluation/haase_otsu_20260927/blobs_labels_skimage.tif",
+  "reference_sha256": "f051ee7663f34fa9093e0d62afd409524408c9074582f95320a605c932245cb0",
+  "scorer_path": "/home/ts/code/projects/openhcs/benchmark/score_instance_labels.py",
+  "scorer_sha256": "19576ade67dd1a00775bd780cbcdee9d4c9d7a136c25e54bf1bdc282c764f97d",
+  "interpreter": "/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/bin/python",
+  "invocation": "python -B SCORER --reference REFERENCE --prediction PREDICTION",
+  "matching": "Existing scorer maximum-total-IoU one-to-one assignment, then accept matched IoU >= 0.5; label IDs ignored",
+  "previous_run_comparison": {
+    "author_run": "H001_FRESH10_96",
+    "prediction_root": "/home/ts/wt/openhcs-issue-batch-20260929/next-public039-h001-uncapped10-20261004/H001_FRESH10_96/author-workspace/output",
+    "scientific_freeze_utc": "2026-10-04T04:43:19.173083+00:00",
+    "freeze_relative_path": "final/freeze.json",
+    "freeze_sha256": "4f0a3c4642b86f226f8581339f99db651a6f147cff302a1b95238869d01392a8",
+    "frozen_attempt_manifest_relative_path": "verification/attempts-at-freeze-manifest.json",
+    "frozen_attempt_manifest_sha256": "62482c565b8ca5c2b4a1d8eefdcdcce8cbc15ced2eacb92f02c6241ffa0d9751",
+    "all_frozen_attempt_hashes_verified": true,
+    "comparison_scope": "Same image and primary reference, separate fresh authors using different bundles and authored settings; not a randomized skill-effect experiment",
+    "attempts": [
+      {
+        "attempt": "a01",
+        "prediction_relative_path": "trials/attempt01/staged_input_attempt01/results/image.tif_w1_BrightObjects_step1.labels.tif",
+        "prediction_sha256": "75111d5e78cf028a07048c79ff7176da467b456cdb3d9323765e19de9321f2d5",
+        "scorer_exit_code": 0,
+        "score": {
+          "false_negative_objects": 12,
+          "false_positive_objects": 50,
+          "foreground_iou": 0.9784898645658139,
+          "foreground_xor_pixels": 486,
+          "matches_at_iou_0_5": 52,
+          "mean_matched_area_error_pixels": 71.0,
+          "mean_matched_iou": 0.8295062244230024,
+          "partition_exact_up_to_label_ids": false,
+          "predicted_objects": 102,
+          "reference_objects": 64,
+          "shape": [254, 256]
+        },
+        "derived_precision": 0.5098039215686274,
+        "derived_recall": 0.8125,
+        "derived_f1": 0.6265060240963856
+      },
+      {
+        "attempt": "a04",
+        "prediction_relative_path": "trials/attempt04/staged_input_attempt04/results/image.tif_w1_BrightObjects_step1.labels.tif",
+        "prediction_sha256": "19ff586a19865642888b60d5e1d8a903829b65c793d0731d8135ef35d08035d3",
+        "scorer_exit_code": 0,
+        "score": {
+          "false_negative_objects": 6,
+          "false_positive_objects": 5,
+          "foreground_iou": 0.9784898645658139,
+          "foreground_xor_pixels": 486,
+          "matches_at_iou_0_5": 58,
+          "mean_matched_area_error_pixels": 24.051724137931036,
+          "mean_matched_iou": 0.9513803315180975,
+          "partition_exact_up_to_label_ids": false,
+          "predicted_objects": 63,
+          "reference_objects": 64,
+          "shape": [254, 256]
+        },
+        "derived_precision": 0.9206349206349206,
+        "derived_recall": 0.90625,
+        "derived_f1": 0.9133858267716536
+      }
+    ]
+  },
+  "attempts": [
+    {
+      "attempt": "a01",
+      "prediction_relative_path": "attempts/a01/input_stage_a01/results/image.tif_BrightObjects_step1.labels.tif",
+      "prediction_sha256": "228c8a684ea6768dd864355defa900434a21ca66c407670d6a742a5b90dccdfb",
+      "scorer_exit_code": 0,
+      "score": {
+        "false_negative_objects": 5,
+        "false_positive_objects": 4,
+        "foreground_iou": 0.9819309123117803,
+        "foreground_xor_pixels": 408,
+        "matches_at_iou_0_5": 59,
+        "mean_matched_area_error_pixels": 22.271186440677965,
+        "mean_matched_iou": 0.9566164350713676,
+        "partition_exact_up_to_label_ids": false,
+        "predicted_objects": 63,
+        "reference_objects": 64,
+        "shape": [254, 256]
+      },
+      "derived_precision": 0.9365079365079365,
+      "derived_recall": 0.921875,
+      "derived_f1": 0.9291338582677166
+    },
+    {
+      "attempt": "a04",
+      "prediction_relative_path": "instance_labels.tif",
+      "prediction_sha256": "6131cc1566bec4330957aac6e234791c2279ef393312ef4a4c2ee44a9a308fed",
+      "scorer_exit_code": 0,
+      "score": {
+        "false_negative_objects": 5,
+        "false_positive_objects": 2,
+        "foreground_iou": 0.9819309123117803,
+        "foreground_xor_pixels": 408,
+        "matches_at_iou_0_5": 59,
+        "mean_matched_area_error_pixels": 14.016949152542374,
+        "mean_matched_iou": 0.9696291279102824,
+        "partition_exact_up_to_label_ids": false,
+        "predicted_objects": 61,
+        "reference_objects": 64,
+        "shape": [254, 256]
+      },
+      "derived_precision": 0.9672131147540983,
+      "derived_recall": 0.921875,
+      "derived_f1": 0.944
+    }
+  ]
+}

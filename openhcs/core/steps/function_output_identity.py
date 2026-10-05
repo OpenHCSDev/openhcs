@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 import re
-from typing import TYPE_CHECKING, ClassVar, Mapping, Sequence, TypeAlias
+from typing import ClassVar, Mapping, Sequence, TypeAlias
 
 from openhcs.core.source_path_identity import source_path_identity
 from openhcs.constants.constants import AllComponents, VariableComponents
@@ -29,9 +29,6 @@ from openhcs.core.source_matching import (
 )
 from openhcs.core.source_projection import OpenHCSPlaneAddress
 from openhcs.microscopes.microscope_interfaces import FilenameParser
-
-if TYPE_CHECKING:
-    from openhcs.core.context.processing_context import ProcessingContext
 
 ParsedFilenameValue: TypeAlias = str | int | float | bool | None
 FunctionOutputComponentValue: TypeAlias = str | int
@@ -122,6 +119,36 @@ class FunctionOutputIdentity:
     )
     filename_qualifier: str | None = field(default=None, kw_only=True)
 
+    @staticmethod
+    def validate_output_paths(
+        output_paths: Sequence[str],
+        *,
+        input_paths: Sequence[str],
+        step_name: str,
+        pattern_repr: str,
+        identities: Sequence[FunctionOutputIdentity] = (),
+    ) -> None:
+        """Reject filename collisions before publishing a resolved output batch."""
+        counts: dict[str, int] = {}
+        for path in output_paths:
+            counts[path] = counts.get(path, 0) + 1
+        duplicates = tuple(path for path, count in counts.items() if count > 1)
+        if not duplicates:
+            return
+        details = tuple(
+            f"#{index}: input={input_paths[index] if index < len(input_paths) else None!r}, "
+            f"output={output_paths[index]!r}, "
+            f"identity={dict(identity.component_values)!r}, "
+            f"filename_identity={dict(identity.filename_values)!r}, "
+            f"source={identity.source!r}"
+            for index, identity in enumerate(identities)
+        )
+        raise ValueError(
+            f"Step {step_name!r} produced duplicate output path(s) "
+            f"for pattern {pattern_repr}: {duplicates!r}. Input files: "
+            f"{tuple(input_paths)!r}. Output identity details: {details!r}."
+        )
+
     @property
     def filename_values(self) -> FunctionOutputComponentValues:
         """Storage coordinates, distinct from collapsed semantic components."""
@@ -143,15 +170,16 @@ class FunctionOutputIdentity:
         self,
         source_metadata: SourceComponentMetadata | None = None,
     ) -> SourceComponentMetadata:
-        """Return parser-compatible component metadata for this output identity."""
+        """Project semantic coordinates without rewriting acquisition file facts.
+
+        The output's storage extension belongs to filename_component_metadata;
+        it is not a new fact about the source carried by an image payload.
+        """
         metadata = source_metadata if source_metadata is not None else {}
         return SourceMetadataFields.with_fields(
             SourceMetadataFields.composition_snapshot(metadata),
             self.component_values,
             components=source_component_metadata_items(self.component_values),
-            after_components=(
-                {"extension": self.extension} if self.extension is not None else None
-            ),
         )
 
     def filename_component_metadata(self) -> SourceComponentMetadata:
@@ -164,14 +192,17 @@ class FunctionOutputIdentity:
     def with_filename_qualifier(self, qualifier: str) -> "FunctionOutputIdentity":
         """Return this identity qualified by a declared output surface name."""
         return replace(
-            self, filename_qualifier=self._normalize_filename_qualifier(qualifier),
+            self,
+            filename_qualifier=self._normalize_filename_qualifier(qualifier),
         )
 
     def without_filename_qualifier(self) -> "FunctionOutputIdentity":
         """Return this identity without its output-surface filename qualifier."""
         return replace(self, filename_qualifier=None)
 
-    _unsafe_qualifier_pattern: ClassVar[re.Pattern[str]] = re.compile(r"[^A-Za-z0-9_.-]+")
+    _unsafe_qualifier_pattern: ClassVar[re.Pattern[str]] = re.compile(
+        r"[^A-Za-z0-9_.-]+"
+    )
 
     @classmethod
     def _normalize_filename_qualifier(cls, value: str) -> str:
@@ -184,7 +215,8 @@ class FunctionOutputIdentity:
     def path_for_request(self, request: FunctionOutputPathRequest) -> Path:
         """Construct this identity's path in the request's output directory."""
         return Path(request.output_dir) / self.cached_filename(
-            request.parser, request.identity_cache,
+            request.parser,
+            request.identity_cache,
         )
 
     @classmethod
@@ -213,7 +245,9 @@ class FunctionOutputIdentity:
             bound = parser.bind_component_values(component_values, extension=extension)
             filename = parser.construct_filename(bound)
             return self._qualified_filename(
-                filename, self.filename_qualifier, extension=bound.extension,
+                filename,
+                self.filename_qualifier,
+                extension=bound.extension,
             )
         except MissingFilenameComponentError as exc:
             raise IncompleteFunctionOutputFilenameIdentityError(
@@ -238,15 +272,22 @@ class FunctionOutputIdentity:
 
     @staticmethod
     def _qualified_filename(
-        filename: str, qualifier: str | None, *, extension: str,
+        filename: str,
+        qualifier: str | None,
+        *,
+        extension: str,
     ) -> str:
         if qualifier is None:
             return filename
         if not filename.endswith(extension):
-            raise ValueError("Constructed filename does not retain its declared extension.")
+            raise ValueError(
+                "Constructed filename does not retain its declared extension."
+            )
         return f"{filename[:-len(extension)]}_{qualifier}{extension}"
 
-    def _filename_cache_key(self, parser: FilenameParser) -> FunctionOutputFilenameCacheKey:
+    def _filename_cache_key(
+        self, parser: FilenameParser
+    ) -> FunctionOutputFilenameCacheKey:
         return FunctionOutputFilenameCacheKey(
             parser_id=id(parser),
             component_values=tuple(
@@ -304,7 +345,9 @@ class FunctionOutputIdentity:
         extension = cls._extension_from_metadata(metadata)
         if extension is not None:
             return extension
-        return cls._extension_from_path(path, parser=parser, identity_cache=identity_cache)
+        return cls._extension_from_path(
+            path, parser=parser, identity_cache=identity_cache
+        )
 
     @staticmethod
     def _extension_from_raw(raw_extension: ParsedFilenameValue) -> str | None:
@@ -323,7 +366,9 @@ class FunctionOutputIdentity:
         if metadata is None:
             return {}
         return {
-            component.value: SourceMetadataFields.canonical_component_value(component, value)
+            component.value: SourceMetadataFields.canonical_component_value(
+                component, value
+            )
             for component, value in source_component_metadata_items(metadata)
         }
 
@@ -333,7 +378,9 @@ class FunctionOutputIdentity:
         parsed: FilenameParseResult,
     ) -> dict[str, FunctionOutputComponentValue]:
         return {
-            str(component.value): SourceMetadataFields.canonical_component_value(component, value)
+            str(component.value): SourceMetadataFields.canonical_component_value(
+                component, value
+            )
             for component, value in parsed.declared_values()
             if value is not None
         }
@@ -482,8 +529,10 @@ class FunctionOutputIdentity:
         identity = cls._identity_from_metadata(
             metadata.source_component_metadata,
             extension=cls._extension_from_source(
-                metadata.source_component_metadata, metadata.source_path,
-                parser=parser, identity_cache=identity_cache,
+                metadata.source_component_metadata,
+                metadata.source_path,
+                parser=parser,
+                identity_cache=identity_cache,
             ),
             source="payload component metadata",
         )
@@ -537,8 +586,10 @@ class FunctionOutputIdentity:
             identity = cls._identity_from_metadata(
                 source_identity.component_metadata,
                 extension=cls._extension_from_source(
-                    source_identity.component_metadata, source_identity.path,
-                    parser=parser, identity_cache=identity_cache,
+                    source_identity.component_metadata,
+                    source_identity.path,
+                    parser=parser,
+                    identity_cache=identity_cache,
                 ),
                 source="single represented payload source metadata",
             )
@@ -596,8 +647,10 @@ class FunctionOutputIdentity:
         identity = cls._identity_from_metadata(
             metadata.source_component_metadata,
             extension=cls._extension_from_source(
-                metadata.source_component_metadata, metadata.source_path,
-                parser=parser, identity_cache=identity_cache,
+                metadata.source_component_metadata,
+                metadata.source_path,
+                parser=parser,
+                identity_cache=identity_cache,
             ),
             source="payload component metadata",
         )
@@ -719,9 +772,7 @@ class FunctionOutputIdentity:
         if parsed is None:
             return None
         return FunctionOutputIdentity(
-            component_values=cls.component_values_from_parsed(
-                parsed
-            ),
+            component_values=cls.component_values_from_parsed(parsed),
             extension=parsed.extension,
             source=source,
         )
@@ -796,8 +847,10 @@ class FunctionOutputIdentity:
         identity = cls._identity_from_metadata(
             source_identity.component_metadata,
             extension=cls._extension_from_source(
-                source_identity.component_metadata, source_identity.path,
-                parser=parser, identity_cache=identity_cache,
+                source_identity.component_metadata,
+                source_identity.path,
+                parser=parser,
+                identity_cache=identity_cache,
             ),
             source=f"represented source identity {identity_index} metadata",
         )
@@ -1017,9 +1070,7 @@ class FunctionOutputIdentity:
         extension: str | None,
         source: str,
     ) -> FunctionOutputIdentity | None:
-        component_values = (
-            cls._component_values_from_source_metadata(metadata)
-        )
+        component_values = cls._component_values_from_source_metadata(metadata)
         if not component_values:
             return None
         return FunctionOutputIdentity(
@@ -1027,30 +1078,3 @@ class FunctionOutputIdentity:
             extension=extension,
             source=source,
         )
-
-
-@dataclass(frozen=True, slots=True)
-class FunctionOutputParserContext:
-    """Parser-facing microscope context for FunctionStep output finalization."""
-
-    parser: FilenameParser
-    microscope_type: str
-
-    @classmethod
-    def from_processing_context(
-        cls,
-        context: "ProcessingContext",
-    ) -> "FunctionOutputParserContext":
-        handler = context.microscope_handler
-        return cls(
-            parser=handler.parser,
-            microscope_type=handler.microscope_type,
-        )
-
-    @property
-    def parser_name(self) -> str:
-        return self.parser.__class__.__name__
-
-    def parse_path_metadata(self, path: str | Path) -> SourceComponentMetadata | None:
-        parsed = self.parser.parse_filename(source_path_identity(str(path)).name)
-        return None if parsed is None else parsed.wire_mapping()

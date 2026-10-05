@@ -39,7 +39,6 @@ from openhcs.runtime.viewer_component_system import (
 )
 from openhcs.core.steps.function_artifact_materialization import (
     PersistentArtifactMaterializationTargetPlan,
-    materialize_artifact_outputs,
 )
 from polystore.napari_stream import NapariStreamingBackend
 from polystore.base import ensure_storage_registry, storage_registry
@@ -147,9 +146,7 @@ def _automatic_label_tiff(component, mode, return_route, monkeypatch, tmp_path):
         streaming_configs={"napari_stream": ComponentDisplayConfig(component, mode)},
         variable_components=(VariableComponents(component.value),),
     ), analysis_results_dir=str(tmp_path / "analysis"), output_dir=tmp_path / "images")
-    materialize_artifact_outputs(
-        filemanager, plan, PersistentArtifactMaterializationTargetPlan("disk"), context,
-    )
+    PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(filemanager, plan, context)
     assert len(disk_outputs) == 1
     import tifffile
 

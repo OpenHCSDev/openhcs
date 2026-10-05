@@ -1,0 +1,33 @@
+{
+  "trial": "BBBC013_DEV89",
+  "scope": "separate retained-context same-author development, not fresh autonomous success",
+  "original_root": "/home/ts/wt/openhcs-issue-batch-20260929/next-bbbc013-development89-after651-20261004/BBBC013_DEV89/author-workspace/output",
+  "disposition": "qualified measurement data; full biological and plate-statistics acceptance withheld",
+  "source_sets": 96,
+  "raw_planes": 192,
+  "cell_rows": 17340,
+  "defined_ratios": 14049,
+  "defined_non_edge_cohort": 13359,
+  "defined_edge_excluded": 690,
+  "undefined_zero_growth": 3291,
+  "missing_source_sets": [],
+  "extra_source_sets": [],
+  "diagnostic_wells": {
+    "A01": {"unchanged_nuclei": 303, "zero_growth_before_after": [104,57], "cohort_before_after": [190,232]},
+    "C06": {"unchanged_nuclei": 177, "zero_growth_before_after": [63,32], "cohort_before_after": [109,136]},
+    "E06": {"unchanged_nuclei": 148, "zero_growth_before_after": [29,22], "cohort_before_after": [111,117]}
+  },
+  "independent_sha_verification": {"scientific_artifacts": 2251, "source_entries": 6, "exit_codes": [0,0]},
+  "original_record_sha256": {
+    "REPORT.md": "ab364606940d81fdfaf2fcd25a4201a291dd1a8f186168fcc960e2e7dbe683a7",
+    "handoff.json": "aaace80c532085d7ff0605b3d2394de9ccf9be4932703957675ac2043e551ca1",
+    "artifact-inventory.json": "6b47356f858b18565e0c643691728b5f548f74fa75cdd5deffffde5c9a927f85",
+    "coverage.json": "f2dd83f94e446844d057ee4182e6cbf28fd1bd3fd86d2379893ee52f9403cd78",
+    "diagnostic-comparison.json": "60c369f86b0728b818e245c9d07b717c1117eb9782d3a5a1aa6bddd2d92ef093",
+    "pipeline.py": "489dd102db11ca6ff11d9c0e144e576c31d3dee554b1cbc5cb63dc883c62cb4c"
+  },
+  "absent_outputs": ["assay_statistics", "dose_response_table"],
+  "recorded_client_exit_code": 2,
+  "reference_score_claimed": false,
+  "limitations": ["unverified physical calibration", "signal-dependent missingness", "uncertain compartment boundaries", "native CSV export is not plate-statistics acceptance"]
+}

@@ -33,8 +33,9 @@ from openhcs.core.source_image_provenance import (
 )
 from openhcs.core.source_projection import SourceProjectionMetadataSerializer
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
+from openhcs.core.steps.function_artifact_materialization import ArtifactMaterializationTargetPlan
 from openhcs.core.steps.function_outputs import (
-    PrimaryImageMetadataTarget, RuntimeArtifactMaterializationAuthority,
+    PrimaryImageMetadataTarget,
 )
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
 
@@ -262,7 +263,7 @@ def test_saved_roles_publish_once_per_persisted_occurrence(tmp_path, scenario, a
             ),
             identity=output_identity,
         )
-    saved = RuntimeArtifactMaterializationAuthority.materialize(context, plan)
+    saved = ArtifactMaterializationTargetPlan.materialize(context, plan)
     assert len(saved) == len(roles)
     target = replace(PrimaryImageMetadataTarget.from_plan(plan), artifact_materializations=saved)
     records = target.produced_records(context, plan)

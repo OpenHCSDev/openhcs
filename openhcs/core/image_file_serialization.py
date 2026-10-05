@@ -3,17 +3,20 @@
 from __future__ import annotations
 
 import logging
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from dataclasses import dataclass, replace
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Callable, ClassVar, Sequence
+from typing import TYPE_CHECKING, Any, Callable, ClassVar, Sequence
 
 import numpy as np
+from arraybridge import MemoryType, detect_memory_type
 from metaclass_registry import AutoRegisterMeta
 from polystore.config import TiffConfig, TiffPhotometric, TiffPlanarConfig
 
 from openhcs.constants.constants import FileFormat
+from openhcs.core.callable_contract import CompilerPreparedAutoRegisterFamily
+from openhcs.core.image_quantization_numba import quantize_image_uint8
 from openhcs.core.registry_strategies import NominalTypeStrategyFamilyMixin
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
@@ -21,6 +24,9 @@ from openhcs.core.runtime_image_values import (
     image_payload_data,
     image_payload_metadata,
 )
+
+if TYPE_CHECKING:
+    from openhcs.core.processing_preparation import PreparationOperation
 
 logger = logging.getLogger(__name__)
 
@@ -209,7 +215,7 @@ class ImageFileRevision:
         )
 
 
-class ImageFileFormat(ABC, metaclass=AutoRegisterMeta):
+class ImageFileFormat(CompilerPreparedAutoRegisterFamily, metaclass=AutoRegisterMeta):
     """Nominal owner of image-file source and serialization semantics."""
 
     __registry_key__ = "format_key"
@@ -217,6 +223,16 @@ class ImageFileFormat(ABC, metaclass=AutoRegisterMeta):
     format_key: ClassVar[str | None] = None
     suffixes: ClassVar[tuple[str, ...]] = ()
     browser_file_format: ClassVar[FileFormat] = FileFormat.TIFF
+
+    @classmethod
+    def cache_preparation_operations(cls) -> tuple[PreparationOperation, ...]:
+        """Derive serialization substrates from the pixel-conversion owner."""
+        return ImagePayloadUint8Strategy.cache_preparation_operations()
+
+    @classmethod
+    def prepare_registered_family(cls) -> None:
+        for operation in cls.cache_preparation_operations():
+            operation.prepare()
 
     @classmethod
     def matches_path(cls, path: str | Path) -> bool:
@@ -249,9 +265,16 @@ class ImageFileFormat(ABC, metaclass=AutoRegisterMeta):
             f"No image serialization format is registered for suffix {suffix!r}."
         )
 
-    @abstractmethod
     def prepare(self, payload: Any) -> Any:
-        """Return a payload suitable for this file format."""
+        """Project runtime pixels onto the host before format-specific encoding."""
+        pixels = image_payload_data(payload)
+        host_pixels = MemoryType(detect_memory_type(pixels)).to_numpy(pixels)
+        host_payload = image_payload_metadata(payload).payload_with(host_pixels)
+        return self.prepare_host_payload(host_payload)
+
+    @abstractmethod
+    def prepare_host_payload(self, payload: Any) -> Any:
+        """Encode host pixels while respecting this format's image semantics."""
 
     def storage_config(
         self, payload: Any, configured: TiffConfig | None
@@ -413,7 +436,7 @@ class NumpyImageFileFormat(ImageFileFormat):
         del source_dtype
         return True
 
-    def prepare(self, payload: Any) -> Any:
+    def prepare_host_payload(self, payload: Any) -> Any:
         return image_payload_data(payload)
 
     def read(self, path: str | Path) -> np.ndarray:
@@ -448,18 +471,23 @@ class TiffImageFileFormat(ImageFileFormat):
         del source_dtype
         return True
 
-    def prepare(self, payload: Any) -> Any:
+    def prepare_host_payload(self, payload: Any) -> Any:
         return image_payload_data(payload)
 
     def storage_config(
         self, payload: Any, configured: TiffConfig | None
     ) -> TiffConfig | None:
         metadata = image_payload_metadata(payload)
-        if not metadata.persists_whole_image():
+        if metadata.persists_whole_image():
+            axes = list("ZYX")
+        elif metadata.plane_axis is not None:
+            # Q is a container frame, not a guessed physical Z/channel axis.
+            # Its exact OpenHCS component domain remains in source projection.
+            axes = list("QYX")
+        else:
             return configured
         data = image_payload_data(payload)
         channel_axis = metadata.normalized_source_channel_axis(data)
-        axes = list("ZYX")
         planarconfig = None
         photometric = TiffPhotometric.MINISBLACK
         if channel_axis is not None:
@@ -478,7 +506,7 @@ class TiffImageFileFormat(ImageFileFormat):
             photometric = TiffPhotometric.RGB
         if len(axes) != data.ndim:
             raise ValueError(
-                "Intrinsic TIFF pixels must retain exactly their declared Z/Y/X and channel axes."
+                "TIFF pixels must retain exactly their declared plane, Y/X and channel axes."
             )
         return replace(
             configured if configured is not None else TiffConfig(),
@@ -568,7 +596,7 @@ class EightBitRasterImageFileFormat(ImageFileFormat):
     format_key = None
     suffixes = ()
 
-    def prepare(self, payload: Any) -> Any:
+    def prepare_host_payload(self, payload: Any) -> Any:
         return image_payload_as_uint8(require_single_image_payload(payload))
 
     def preserves_pixel_values(self, source_dtype: Any) -> bool:
@@ -604,7 +632,7 @@ class PngImageFileFormat(ImageFileFormat):
     format_key = "png"
     suffixes = (".png",)
 
-    def prepare(self, payload: Any) -> Any:
+    def prepare_host_payload(self, payload: Any) -> Any:
         array = require_single_image_payload(payload)
         if array.dtype == np.uint8 or array.dtype == np.uint16:
             return array
@@ -616,10 +644,19 @@ class PngImageFileFormat(ImageFileFormat):
 
 class ImagePayloadUint8Strategy(
     NominalTypeStrategyFamilyMixin,
-    ABC,
+    CompilerPreparedAutoRegisterFamily,
     metaclass=AutoRegisterMeta,
 ):
     """Nominal family for dtype-specific uint8 image conversion."""
+
+    @classmethod
+    def prepare_registered_family(cls) -> None:
+        for strategy in cls.registered_strategy_types():
+            strategy.prepare_substrate()
+
+    @classmethod
+    def prepare_substrate(cls) -> None:
+        """Native NumPy conversions require no compiled numerical substrate."""
 
     @classmethod
     def for_dtype(cls, dtype: Any) -> "ImagePayloadUint8Strategy":
@@ -659,10 +696,53 @@ class NumericImagePayloadUint8Strategy(ImagePayloadUint8Strategy):
 
     def prepare(self, array: np.ndarray) -> np.ndarray:
         values = _uint8_conversion_values(array)
-        if _is_unit_interval(values):
-            values = values * _scale_value(values, 255.0)
-        sanitized = np.nan_to_num(values, nan=0.0, posinf=255.0, neginf=0.0)
-        return np.rint(np.clip(sanitized, 0.0, 255.0)).astype(np.uint8)
+        scale = _is_unit_interval(values)
+        # Own the working pixels before reusing them through each conversion phase.
+        working = values.copy(order="K") if values.dtype == array.dtype else values
+        if scale:
+            np.multiply(working, _scale_value(working, 255.0), out=working)
+        np.nan_to_num(working, copy=False, nan=0.0, posinf=255.0, neginf=0.0)
+        np.clip(working, 0.0, 255.0, out=working)
+        np.rint(working, out=working)
+        return working.astype(np.uint8)
+
+
+class CompiledFloatImagePayloadUint8Strategy(NumericImagePayloadUint8Strategy):
+    """Quantize plain NumPy pixels without floating working-pixel copies.
+
+    The public payload conversion admits NumPy pixels with ``np.asarray``.
+    Direct ``NumericImagePayloadUint8Strategy.prepare`` calls retain their NumPy
+    hook behavior. Dtype-specific extensions replace the corresponding leaf in
+    the existing nominal registry.
+    """
+
+    value_type = None
+    value_type_label = None
+
+    @classmethod
+    def prepare_substrate(cls) -> None:
+        scalar_type = cls.value_type
+        for writeable in (True, False):
+            values = np.asarray((0.0, 0.5, 1.0), dtype=scalar_type)
+            values.flags.writeable = writeable
+            quantize_image_uint8(
+                values, np.empty(values.shape, dtype=np.uint8), scalar_type(255.0)
+            )
+
+    def prepare(self, array: np.ndarray) -> np.ndarray:
+        # Normalize byte order only when demanded by the typed kernel ABI.
+        values = np.asarray(array, dtype=array.dtype.type).ravel(order="K")
+        output = np.empty_like(array, dtype=np.uint8, order="K")
+        quantize_image_uint8(values, output.ravel(order="K"), array.dtype.type(255.0))
+        return output
+
+
+class Float32ImagePayloadUint8Strategy(CompiledFloatImagePayloadUint8Strategy):
+    value_type = np.float32
+
+
+class Float64ImagePayloadUint8Strategy(CompiledFloatImagePayloadUint8Strategy):
+    value_type = np.float64
 
 
 def image_file_source_metadata(path: Path | None) -> ImageFileSourceMetadata:

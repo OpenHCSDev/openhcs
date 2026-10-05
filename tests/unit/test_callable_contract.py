@@ -1,6 +1,8 @@
 import pickle
 import sys
+from dataclasses import field, make_dataclass
 from enum import Enum
+from inspect import Parameter, signature
 from types import MappingProxyType, ModuleType
 
 import pytest
@@ -28,6 +30,7 @@ from openhcs.core.callable_contract import (
     runtime_image_execution_mode,
 )
 from openhcs.core.config import LazyDtypeConfig
+import openhcs.core.config as config_module
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.function_reference import (
@@ -37,6 +40,7 @@ from openhcs.core.function_reference import (
 )
 from openhcs.core.function_patterns import normalize_function_pattern
 from openhcs.core.memory.decorators import numpy
+from openhcs.core.pipeline.artifact_planning import extract_artifact_declarations
 from openhcs.core.pipeline.function_contracts import (
     required_variable_components,
     runtime_bound_parameters,
@@ -292,17 +296,62 @@ def test_callable_contract_still_rejects_injected_runtime_values() -> None:
         contract.validate_public_kwargs({"slice_index": 3})
 
 
-def test_callable_contract_reads_wrapper_declared_config_parameters() -> None:
+def test_callable_contract_reads_wrapper_declared_config_parameters(monkeypatch) -> None:
     @numpy(contract=ProcessingContract.PURE_3D)
     def process(image):
         return image
 
     contract = CallableContract.from_callable(process)
+    declared_parameter = contract.canonical_signature.parameters["dtype_config"]
+    assert isinstance(signature(process).parameters["dtype_config"].default, LazyDtypeConfig)
+
+    def forbidden_config_value(*args, **kwargs):
+        raise AssertionError("Config schema discovery constructed a value")
+
+    monkeypatch.setattr(LazyDtypeConfig, "__init__", forbidden_config_value)
 
     assert contract.config_bound_parameter_names == ("dtype_config",)
     assert contract.runtime_owned_parameter_names == frozenset({"dtype_config"})
+    assert contract.overridable_runtime_parameter_names == frozenset({"dtype_config"})
+    assert contract.validate_public_kwargs({}) == ()
     (parameter,) = contract.config_bound_parameters
     assert parameter.annotation is LazyDtypeConfig
+    assert parameter.default is declared_parameter.default
+
+    graph = extract_artifact_declarations(process)
+    parameters = graph.config_parameters_for_step("process")
+    assert tuple(parameter.name for parameter in parameters) == ("dtype_config",)
+
+    def forbidden_signature_read(owner):
+        raise AssertionError("Axis binding repeated admitted config schema discovery")
+
+    monkeypatch.setattr(
+        CallableContract, "config_bound_parameters", property(forbidden_signature_read)
+    )
+    assert graph.config_parameters_for_step("process") is parameters
+
+
+def test_config_parameter_schema_refreshes_from_replaced_pipeline_declaration(monkeypatch):
+    def forbidden_default():
+        raise AssertionError("Config field discovery evaluated a default factory")
+
+    original_default = object()
+    parameter = Parameter(
+        "custom_config", Parameter.KEYWORD_ONLY,
+        annotation=LazyDtypeConfig, default=original_default,
+    )
+    for declared_type, admitted in ((LazyDtypeConfig, True), (int, False)):
+        replacement = make_dataclass(
+            "PipelineConfig",
+            [("custom_config", declared_type, field(default_factory=forbidden_default))],
+        )
+        monkeypatch.setattr(config_module, "PipelineConfig", replacement)
+        resolved = config_module.runtime_config_parameter(parameter)
+        if admitted:
+            assert resolved is parameter
+            assert resolved.default is original_default
+        else:
+            assert resolved is None
 
 
 def test_callable_contract_preserves_arraybridge_execution_declaration() -> None:

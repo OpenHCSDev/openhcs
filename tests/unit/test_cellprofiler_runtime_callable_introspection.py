@@ -71,7 +71,11 @@ def _compilation_session_for_steps(
         orchestrator=SimpleNamespace(pipeline_config=PipelineConfig()),
         global_config=GlobalPipelineConfig(),
         pipeline=ResolvedPipelineDefinition(
-            steps=steps, step_state_map={index: object() for index in range(len(steps))}
+            steps=steps,
+            step_scope_ids={
+                index: f"plate::step_{index}" for index in range(len(steps))
+            },
+            step_provenance={index: {} for index in range(len(steps))},
         ),
     )
 
@@ -184,7 +188,7 @@ def test_step_invocation_contract_provider_validates_public_cellprofiler_config(
         ValueError,
         match="unknown object_labels artifact 'Objects1'",
     ):
-        CellProfilerInvocationContractProviderFactory.provider_for_session(session)
+        CellProfilerInvocationContractProviderFactory.provider_for_pipeline(session.pipeline)
 
 
 def test_public_compile_time_provider_binds_cellprofiler_runtime_from_step_declarations():
@@ -210,8 +214,8 @@ def test_public_compile_time_provider_binds_cellprofiler_runtime_from_step_decla
         source_bindings=source_bindings,
     )
     session = _compilation_session_for_steps([step])
-    provider = CellProfilerInvocationContractProviderFactory.provider_for_session(
-        session
+    provider = CellProfilerInvocationContractProviderFactory.provider_for_pipeline(
+        session.pipeline
     )
     assert provider is not None
     step_context = ArtifactDeclarationStepContext(
@@ -279,8 +283,8 @@ def test_adapter_free_cellprofiler_module_keeps_raw_runtime_callable() -> None:
         ),
         source_bindings=source_bindings,
     )
-    provider = CellProfilerInvocationContractProviderFactory.provider_for_session(
-        _compilation_session_for_steps([step])
+    provider = CellProfilerInvocationContractProviderFactory.provider_for_pipeline(
+        _compilation_session_for_steps([step]).pipeline
     )
     assert provider is not None
     invocation = next(normalize_function_pattern(step.func).iter_items())
@@ -349,8 +353,8 @@ def test_public_compile_time_provider_uses_step_order_for_repeated_modules():
     ]
     FunctionReferenceTransportAuthority.reference_pipeline_in_place(steps)
     session = _compilation_session_for_steps(steps)
-    provider = CellProfilerInvocationContractProviderFactory.provider_for_session(
-        session
+    provider = CellProfilerInvocationContractProviderFactory.provider_for_pipeline(
+        session.pipeline
     )
     assert provider is not None
     step_context = ArtifactDeclarationStepContext(
@@ -397,8 +401,8 @@ def test_cellprofiler_compile_time_contract_provider_derives_single_source_input
     )
     session = _compilation_session_for_steps([step])
 
-    provider = CellProfilerInvocationContractProviderFactory.provider_for_session(
-        session
+    provider = CellProfilerInvocationContractProviderFactory.provider_for_pipeline(
+        session.pipeline
     )
 
     assert provider is not None
@@ -446,8 +450,8 @@ def test_cellprofiler_compile_time_contract_provider_scopes_grouped_source_bindi
     )
     session = _compilation_session_for_steps([step])
 
-    provider = CellProfilerInvocationContractProviderFactory.provider_for_session(
-        session
+    provider = CellProfilerInvocationContractProviderFactory.provider_for_pipeline(
+        session.pipeline
     )
 
     assert provider is not None
@@ -506,8 +510,8 @@ def test_compile_time_provider_derives_group_contracts_from_public_pattern_after
         module.pipeline_steps
     )
     session = _compilation_session_for_steps(module.pipeline_steps)
-    provider = CellProfilerInvocationContractProviderFactory.provider_for_session(
-        session
+    provider = CellProfilerInvocationContractProviderFactory.provider_for_pipeline(
+        session.pipeline
     )
 
     assert provider is not None

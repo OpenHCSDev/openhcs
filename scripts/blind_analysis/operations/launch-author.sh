@@ -6,18 +6,12 @@ cli=$(jq -er '.cli' "$FLEET_RUN_ROOT/program.json")
 skill="$FLEET_INSTALL/openhcs/agent/resources/knowledge/packaging/codex/openhcs/skills/use-openhcs"
 # Native context is declared once on the immutable member. A retained child
 # must already exist in this run's isolated native session namespace.
-history_projection_json=$(jq -ce --arg slot "$FLEET_SLOT" '
-  [.authors[] | select(.slot==$slot)] |
-  if length!=1 then error("ambiguous author context") else .[0] end |
-  if .fresh_history==true and .native_thread_id==null then {argv:[],roots:[]}
-  elif .fresh_history==false and (.native_thread_id|type)=="string"
-       and (.native_thread_id|length)>0 then
-    {argv:["resume",.native_thread_id],roots:[.writer_handoff[] |
-      .program_root+"/"+.slot+"/author-workspace/output/native-sessions"]}
-  else error("inconsistent author context declaration") end
-' "$FLEET_RUN_ROOT/program.json")
+history_projection_json=$(fleet_author_context)
 mapfile -t history_argv < <(jq -r '.argv[]' <<< "$history_projection_json")
 history_mount_argv=()
+while IFS= read -r ancestor_output; do
+  history_mount_argv+=(--ro-bind "$ancestor_output" "$ancestor_output")
+done < <(jq -r '.read_roots[]' <<< "$history_projection_json")
 # Paginated native children retain ancestor rollouts at the canonical sessions
 # path. Their immutable writer owners supply the files; Codex owns decoding.
 while IFS= read -r ancestor_root; do
@@ -26,15 +20,15 @@ while IFS= read -r ancestor_root; do
     history_mount_argv+=(--ro-bind "$ancestor" "$ancestor")
     history_mount_argv+=(--ro-bind "$ancestor" "/home/ts/.codex/sessions/${ancestor#"$ancestor_root"/}")
   done < <(find "$ancestor_root" -type f -name 'rollout-*.jsonl' -size +0c -print0)
-done < <(jq -r '.roots[]' <<< "$history_projection_json")
+done < <(jq -r '.history_roots[]' <<< "$history_projection_json")
 if [[ "${3:-}" == --preflight ]]; then
   printf 'root=%s slot=%s cwd=%s config=%s skill=%s cli=%s unit=%s history_args=%s\n' "$FLEET_ROOT" "$FLEET_SLOT" "$FLEET_WORKSPACE" "$config" "$skill" "$cli" "$FLEET_UNIT-author" "$(jq -c '.argv' <<< "$history_projection_json")"
   printf 'model=%s provider=%s effort=%s cpu=%s display=%s native=%s viewer=%s session-bind=%s\n' "$(jq -er '.model' "$FLEET_RUN_ROOT/program.json")" "$(jq -er '.model_provider' "$FLEET_RUN_ROOT/program.json")" "$(jq -er '.reasoning_effort' "$FLEET_RUN_ROOT/program.json")" "$FLEET_CPU" "$FLEET_DISPLAY" "$FLEET_NATIVE" "$FLEET_VIEWER" "$FLEET_WORKSPACE/output/native-sessions"
   printf 'readonly_history_args='; printf '%q ' "${history_mount_argv[@]}"; printf '\n'
+  printf 'readonly_ancestry_outputs=%s\n' "$(jq -c '.read_roots' <<< "$history_projection_json")"
   printf 'input=%s read=%s:%s:%s:%s write=%s:%s scratch=%s workers=%s\n' "$FLEET_INPUT" "$FLEET_INPUT" "$FLEET_WORKSPACE/output" "$FLEET_ARTIFACT_ROOT" "$FLEET_INSTALL/openhcs/agent/resources/knowledge" "$FLEET_WORKSPACE/output" "$FLEET_ARTIFACT_ROOT" "$FLEET_SCRATCH" "$(jq -er '.proposed_resource_envelope.science_workers_per_author' "$FLEET_RUN_ROOT/program.json")"
   exit
 fi
-fleet_require_writer_release
 # A scientific brief grants an author turn; engineering permissions have none.
 jq -e --arg slot "$FLEET_SLOT" '.authors[] | select(.slot==$slot) |
   .brief | type=="string" and length>0' "$FLEET_RUN_ROOT/program.json" >/dev/null

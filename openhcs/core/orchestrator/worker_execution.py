@@ -23,9 +23,7 @@ from openhcs.core.callable_contract import FunctionStepExecutionScope
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.native_threading import configure_native_thread_count
-from openhcs.core.orchestrator.analysis_consolidation import (
-    RuntimeAnalysisConsolidationInputs,
-)
+from openhcs.core.runtime_profile import RuntimeProfileLogger
 from openhcs.core.orchestrator.execution_result import (
     ExecutionResult,
     RuntimeContextObservation,
@@ -44,7 +42,7 @@ from openhcs.core.orchestrator.worker_lanes import (
 )
 from openhcs.core.orchestrator.worker_profiling import CProfileWorkerProfilingPolicy
 from openhcs.core.progress import emit, ProgressPhase, ProgressStatus
-from openhcs.core.progress import ProgressExecutionContext, ProgressQueue
+from openhcs.core.progress import ProgressQueue
 from openhcs.core.progress.live_measurements import (
     live_measurement_context_for_records,
 )
@@ -306,12 +304,10 @@ class WorkerExecutorFactory:
         *,
         log_file_base: str | None,
         progress_queue: ProgressQueue,
-        progress_context: ProgressExecutionContext,
         cancellation: ExecutionCancellationSignal,
     ) -> None:
         self._log_file_base = log_file_base
         self._progress_queue = progress_queue
-        self._progress_context = progress_context
         self._cancellation = cancellation
 
     def create(
@@ -372,7 +368,6 @@ class WorkerExecutorFactory:
             initargs=(
                 self._log_file_base,
                 self._progress_queue,
-                self._progress_context,
             ),
         )
 
@@ -405,7 +400,6 @@ def _configure_worker_logging(log_file_base: str) -> None:
 def _configure_worker_process(
     log_file_base: str | None,
     progress_queue: ProgressQueue | None = None,
-    progress_context: ProgressExecutionContext | None = None,
 ) -> None:
     """Prepare process-local registries, logging, and progress transport."""
 
@@ -433,7 +427,7 @@ def _configure_worker_process(
 
     configure_native_thread_count(1)
 
-    if progress_queue is not None and progress_context is not None:
+    if progress_queue is not None:
         from openhcs.core.progress import set_progress_queue
 
         set_progress_queue(progress_queue)
@@ -809,19 +803,13 @@ def _execute_axis_with_sequential_combinations(
             observed_records = runtime_store.observed_values_after(
                 execution_observation_cursor
             )
-            runtime_export_paths = tuple(
-                path
-                for observation in result.runtime_observation.contexts
-                for path in observation.runtime_export_paths
-            )
             observation = RuntimeContextObservation.from_context(
                 context_key=context_key,
                 context=frozen_context,
                 records=observed_records,
                 runtime_observation_mode=runtime_observation_mode,
-                runtime_export_paths=runtime_export_paths,
-                analysis_inputs=RuntimeAnalysisConsolidationInputs.combine(
-                    item.analysis_inputs for item in result.runtime_observation.contexts
+                outputs=StepExecutionObservation.combine(
+                    item.outputs for item in result.runtime_observation.contexts
                 ),
             )
         finally:
@@ -833,8 +821,8 @@ def _execute_axis_with_sequential_combinations(
             frozen_context.runtime_value_store.clear()
         if (
             observation.records
-            or observation.runtime_export_paths
-            or observation.analysis_inputs
+            or observation.outputs.runtime_export_paths
+            or observation.outputs.analysis_inputs
         ):
             runtime_observations.append(observation)
         del observed_records
@@ -960,8 +948,7 @@ def _execute_single_axis_static(
     frozen_context.bind_execution_runtime(lane_context)
     lane_context.install_debug_sink(frozen_context)
     runtime_value_store = frozen_context.runtime_value_store
-    runtime_export_paths = []
-    analysis_inputs = []
+    step_observations = []
 
     for step_index, step in enumerate(pipeline_definition):
         if cancellation is not None:
@@ -996,8 +983,7 @@ def _execute_single_axis_static(
                     observed_records,
                     materialized_locations_by_address=reused_outputs.materialized_locations_by_address,
                 )
-                runtime_export_paths.extend(reused_outputs.runtime_export_paths)
-                analysis_inputs.append(reused_outputs.analysis_inputs)
+                step_observations.append(reused_outputs)
                 emit(
                     execution_id=lane_context.execution_id,
                     plate_id=lane_context.plate_id,
@@ -1031,8 +1017,7 @@ def _execute_single_axis_static(
 
         observation_cursor = runtime_value_store.observation_cursor()
         step_observation = step.process(frozen_context, step_index)
-        runtime_export_paths.extend(step_observation.runtime_export_paths)
-        analysis_inputs.append(step_observation.analysis_inputs)
+        step_observations.append(step_observation)
         observed_records = runtime_value_store.observed_values_after(observation_cursor)
         runtime_progress_context = _runtime_observation_progress_context(
             observed_records,
@@ -1066,8 +1051,7 @@ def _execute_single_axis_static(
                 RuntimeContextObservation(
                     context_key=context_key,
                     records=(),
-                    runtime_export_paths=tuple(dict.fromkeys(runtime_export_paths)),
-                    analysis_inputs=RuntimeAnalysisConsolidationInputs.combine(analysis_inputs),
+                    outputs=StepExecutionObservation.combine(step_observations),
                 ),
             )
         ),
@@ -1084,19 +1068,24 @@ def execute_worker_lane(
 ) -> Dict[str, ExecutionResult]:
     """Execute a deterministic worker lane: wells sequentially within one slot."""
 
-    lane_results: Dict[str, ExecutionResult] = {}
-    for axis_id, axis_contexts in lane_axis_contexts:
-        if cancellation is not None:
-            cancellation.raise_if_requested(f"before axis {axis_id}")
-        lane_results[axis_id] = _execute_axis_with_sequential_combinations(
-            pipeline_definition=pipeline_definition,
-            axis_contexts=axis_contexts,
-            lane_context=lane_context,
-            runtime_observation_mode=runtime_observation_mode,
-            cancellation=cancellation,
-            release_axis_resources=release_axis_resources,
-        )
-    return lane_results
+    with RuntimeProfileLogger.run(
+        execution_id=lane_context.execution_id,
+        worker_slot=lane_context.worker_slot,
+        owned_wells=tuple(lane_context.owned_wells),
+    ):
+        lane_results: Dict[str, ExecutionResult] = {}
+        for axis_id, axis_contexts in lane_axis_contexts:
+            if cancellation is not None:
+                cancellation.raise_if_requested(f"before axis {axis_id}")
+            lane_results[axis_id] = _execute_axis_with_sequential_combinations(
+                pipeline_definition=pipeline_definition,
+                axis_contexts=axis_contexts,
+                lane_context=lane_context,
+                runtime_observation_mode=runtime_observation_mode,
+                cancellation=cancellation,
+                release_axis_resources=release_axis_resources,
+            )
+        return lane_results
 
 
 def _execute_fork_inherited_worker_lane_static(

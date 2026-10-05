@@ -203,6 +203,20 @@ labels or traces; follow the linked measurement-image guidance. NLM reduces
 noise; it does not estimate a shading field or justify a globally tuned threshold
 on uneven illumination.
 
+## Weak rims and morphological gap repair
+
+For a supported body whose rim is broken, closing is one hypothesis, not an
+automatic way to obtain a cell envelope. Measure the within-body gap AND the
+smallest supported gap between genuine neighbouring bodies on the consumed
+response. A footprint smaller than the body radius can still bridge neighbours;
+cell diameter alone does not justify its scale. Inspect the actual grayscale
+or binary operation and its threshold order: their effects are not equivalent.
+Compare foreground connectivity, markers and final labels at the broken rim
+and the close pair. If the rim improves but the pair joins, retain that failed
+trial and compare a smaller footprint or the unclosed support. Inspect
+marker/partition behavior or another evidenced admission model rather than
+assuming more closing is needed.
+
 ## Local contrast and local thresholds
 
 CLAHE can reveal local structure but can also amplify noise and alter intensity
@@ -239,6 +253,21 @@ For faint structures connected to clear positives, consider high-confidence
 seeds grown within a lower-threshold support mask (hysteresis/reconstruction).
 This can retain supported weak structure but can also connect into background;
 inspect endpoints, crossings and nearby disconnected debris on raw pixels.
+Measure the response along the intended continuous path, including weak troughs,
+not only its peaks. A threshold below every sampled peak can still erase the
+connections between them. Compare those troughs with near-track nuisance and
+far-background profiles in the same response units. Where this evidence supports
+it, separate strong-seed admission from lower-threshold connected support;
+inspect the retained mask before thinning and recheck faint endpoints and false
+bridges. Two thresholds do not establish crossing ownership or guarantee that
+weak paths remain distinguishable from noise.
+
+If discovery finds no contract-compatible hysteresis/reconstruction callable,
+follow [custom-function authoring](custom-function-authoring.md) on the intended
+process owner. A typed registered operation using an appropriate existing
+implementation is a normal pipeline step, not permission to process saved images
+outside MCP. A negative search alone does not make the recipe unavailable;
+check the proposed operation's actual axes, dtype, units and artifact flow.
 
 ## Discover compatible OpenHCS implementations
 

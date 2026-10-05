@@ -1,6 +1,7 @@
 # Diagnose microscopy segmentation by stage
 
-Use this guide after identifying the raw target and the first failed stage.
+Use this guide after identifying the raw target, before proposing foreground
+admission or when locating the first failed stage.
 Retain the foreground, marker, label or secondary-growth artifact needed to
 distinguish hypotheses. Use the canonical viewer contexts and [viewer QA procedure](viewer-qa.md) for matched
 raw-only/result-only/combined review. Never change several unrelated parameters
@@ -111,6 +112,56 @@ method. Prominence/H-maxima depends on the landscape's numeric units; a toleranc
 from an 8-bit intensity example is not a calibrated distance-map setting.
 Compare both crops after the change, not just the repaired split.
 
+### Ring fragmentation: disconnected support or too many markers?
+
+For complementary crescents inside one raw-supported body, compare the admitted
+foreground components with the markers and unfiltered labels at those same
+coordinates. Several markers dividing one connected support component suggest
+an unclumping problem. Separate support components divided by a missing dim rim
+or interior suggest an admission/connectivity problem instead. In a masked
+watershed, suppressing a marker cannot restore excluded pixels or connect those
+components; one fragment may simply disappear. Hole filling likewise cannot
+close an open ring whose gap remains connected to background.
+
+Choose the next operation from that distinction, using the actual consumed
+support rather than label colours or a smaller total. If raw continuity justifies
+testing local admission, reconstruction or closing, measure the missing gap
+and retain a genuine neighbouring pair and nuisance-only patch as controls:
+joining fragments can also bridge different bodies. Do not fill every ring or
+assume a nuclear anchor proves its body class. Keep supported localisation
+separate from full-envelope area or intensity when extent remains uncertain.
+
+### A stronger prominence leaves the same false split
+
+Compare the actual marker components and coordinates, not just parameter
+values or total counts. If a prominence change leaves them unchanged, inspect
+the declared neighbourhood used to find regional maxima and the connectivity
+used to label those maxima into markers. One plateau connected under the first
+operation can become several markers under the second. This is distinct from
+several genuine peaks or a foreground bridge between different bodies.
+
+Where that mismatch is demonstrated, test compatible maxima-component
+connectivity while retaining foreground and watershed semantics; those stages
+need not all use the same neighbourhood. Recheck the continuous-body witness
+through Z where present, a genuine close pair and distributed support. Do not
+prescribe full connectivity universally or infer successful body separation
+from fewer markers alone. A repair can remove one duplicate while another
+landscape or support failure remains. Preserve that partial improvement and
+diagnose the remaining split rather than discarding it or repeating an
+ineffective suppression change.
+
+If duplicate landmarks remain inside a supported continuous body after that
+repair, compare their per-axis spacing with a genuine neighbour pair on the
+actual consumed landscape. Where the reflected extractor supports it, test
+component-local, axis-aware exclusion or body association from those measured
+scales, declaring its metric and physical or voxel-index units. Preserve
+foreground and unrelated marker settings so the changed stage is identifiable.
+Component membership is not biological identity: touching neighbours can share
+support, and an exclusion that removes internal peaks can merge a real pair,
+including through Z. Recheck representative locations and isolated, close-pair,
+border and multi-lobed controls; retain local improvements while qualifying
+unresolved identity, rather than choosing a radius or count universally.
+
 For point-only counts of extended objects, maxima are candidate landmarks, not
 automatically distinct bodies. Track candidate multiplicity within each sampled
 raw body across the axes present; in 3-D, inspect through Z and orthogonal views,
@@ -174,6 +225,44 @@ operation or pruning short branches can repair one crop and remove genuine
 biology elsewhere; retain a faint-path regression control.
 
 ### Separate support recovery from rooted graph validity
+
+If a raw-supported junction disappears from a ridge-enhanced candidate, compare
+the raw pixels, enhanced response and admitted mask at that junction and an
+ordinary path. More permissive thresholding cannot recover pixels absent from
+the response. Where measured source/background separation supports it and the
+registry exposes the required operations, test combining enhanced support with
+a separately justified strong raw-signal mask. Keep processing units explicit;
+do not copy a raw threshold from another image. Inspect isolated bright puncta,
+near-track halos, false bridges and a faint-path control after the union. Apply
+the same soma-exclusion and graph stages when comparing candidates, so added
+support is not confused with a simultaneous loop-removal repair. Recovered
+junction pixels establish local support, not anatomical connectivity, crossing
+ownership or complete neurite length; retain any remaining gaps separately.
+
+Where the declared detector uses optional strong-seed/component retention,
+permissive admission is not the last support gate. A connected candidate can
+be discarded in full if it contains no qualifying seed, even when raw evidence
+supports that faint structure. Reflect the actual retention and connectivity
+contract: lowering candidate admission alone does not guarantee retention.
+Conversely, retention cannot fill gaps already absent from candidate support.
+
+Compare permissive support, strong seeds and retained support at the same raw
+path, then inspect any subsequent local-response gate and rooted result in the
+declared order. Use exposed intermediates or one bounded diagnostic through
+the existing authoring route; a final intersected mask alone cannot identify
+which earlier gate removed a component. Distinguish missing candidate pixels,
+an admitted but seedless component, later pixelwise rejection and failed rooting
+before choosing the next change. A seed-gate comparison is a diagnostic, not a
+universal instruction to disable seeds or relax every threshold.
+
+Keep a faint positive, an ordinary supported path, far-empty background AND
+near-track nuisance controls across that comparison. Quiet distant background
+does not establish specificity beside bright tracks: local texture, halos or
+fragments may be admitted there. Inspect their raw support and any new bridges,
+not just additional mask area. Recovering disconnected pieces is not recovery
+of the missing continuous path, and an unrooted piece is not automatically
+debris. Retain the useful local recovery and its remaining support/ownership
+limits under the existing claim-scoped criteria.
 
 A faint-path admission repair can improve the mask and skeleton without
 establishing a soma-rooted, per-cell graph. Inspect recovered weak paths together

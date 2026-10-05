@@ -1,0 +1,14 @@
+{
+  "scope": "Selected native first/final review of H001_FRESH586_96, the frozen task-only run underlying Figure 7A; local repair, regression control and cohort limitation, not exhaustive biological accuracy.",
+  "output_sha256": {
+    "h001_native_repair.png": "6dbec28f78d65a58099c053038283475301df0bcca38748ac754c5099a6bf242",
+    "h001_native_repair.svg": "f4f872c6ae92dd8da3294ca2eb802427643a4ec9495bb64ba3bd8feaf3fe6cf8"
+  },
+  "source_sha256": {
+    "paper/supplementary/task_only_analysis/h001-native-source-proof.json": "7d3f07df264bbab22f05ac895c99bc25a5c872840aaca972aeb0dc09cb6a7f79",
+    "paper/supplementary/task_only_analysis/h001-native-render-receipt.json": "f97a69ea7aaaf6f01db3ae40fd45ced346829680b6e1cd4114681fd158dfc94f"
+  },
+  "rendering": "Twelve unchanged original PNG byte streams embedded in portable SVG; matched clipping within each comparison. No scientific-array operation, new contrast transform, palette remapping, reference panel or scoring. Whole-field and upper-right raw screenshots are byte-identical between attempts.",
+  "attribution": "Robert Haase and BioImageAnalysisNotebooks contributors, docs/29_algorithm_validation/blobs.tif at 68845a1afaf53bf601958a3fa7d86f3cf8a43219; CC BY 4.0. Adaptations are OpenHCS-derived ROI overlays, display windows and screenshot clipping/scaling.",
+  "limits": "Candidate colours are not cross-attempt identities. The small focus is excluded from the defined size-selected cohort, not an established biological error. Selected witnesses do not replace whole-image computational-reference evaluation or establish manual biological truth. No verified physical calibration or skill-only causal claim."
+}

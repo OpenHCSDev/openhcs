@@ -22,6 +22,7 @@ from openhcs.core.source_bindings import (
     SourceBindingMatchMethod,
     SourceBindingMatchPlan,
     SourceSetRole,
+    SourceProjectionRole,
 )
 from openhcs.core.source_image_provenance import (
     SourceImageIdentity,
@@ -53,13 +54,25 @@ from openhcs.core.source_path_identity import (
     source_paths_equal,
 )
 from openhcs.core.source_projection import SourceProjection
-from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
+from openhcs.core.source_workspace_projection import (
+    VirtualWorkspacePathLookup,
+    VirtualWorkspaceSourceProjection,
+    VirtualWorkspaceSourceProjectionAuthority,
+)
+from openhcs.core.aligned_image_payload import stack_image_payloads
+from openhcs.core.runtime_image_values import (
+    ImagePayloadMetadataCompositionMode,
+    image_payload_metadata,
+)
+from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.steps.function_io import get_all_image_paths
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 
 if TYPE_CHECKING:
+    from openhcs.core.runtime_adapters import RuntimeAdapterRequest
+    from openhcs.core.runtime_source_binding_cache import RuntimeSourceResolutionSnapshot
     from polystore.filemanager import FileManager
     from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.microscopes.microscope_interfaces import FilenameParser
@@ -179,6 +192,7 @@ class SourcePatternResolutionContext:
     source_projections_by_virtual_path: Mapping[str, SourceProjection] = field(
         default_factory=dict
     )
+    resolution_snapshot: RuntimeSourceResolutionSnapshot | None = None
 
     @classmethod
     def from_sources(
@@ -260,6 +274,10 @@ class SourcePatternResolutionContext:
         self,
         pattern: SourceCandidatePath,
     ) -> SourceCandidatePathResolution:
+        if self.resolution_snapshot is not None:
+            admitted = self.resolution_snapshot.path_resolutions.get(pattern)
+            if admitted is not None:
+                return admitted
         keys = _cached_source_candidate_pattern_keys(pattern)
         exact_virtual_path = next(
             (key for key in keys if key in self.source_paths_by_virtual_path),
@@ -543,33 +561,7 @@ class SourceBindingCandidateMatcher:
         if not selector.components and not selector.metadata:
             return True
 
-        metadata_candidates = source_context.candidate_metadata(candidate)
-        for component_selector in selector.components:
-            if not any(
-                source_metadata_values_equal(value, str(component_selector.value))
-                for metadata in metadata_candidates
-                for value in source_component_metadata_values(
-                    metadata,
-                    component_selector.component,
-                )
-            ):
-                return False
-
-        for metadata_selector in selector.metadata:
-            if not any(
-                value is not None
-                and source_metadata_values_equal(value, metadata_selector.value)
-                for metadata in metadata_candidates
-                for value in (
-                    semantic_source_metadata_value(
-                        metadata,
-                        metadata_selector.field,
-                    ),
-                )
-            ):
-                return False
-
-        return True
+        return selector.metadata_candidates_match(source_context.candidate_metadata(candidate))
 
     @classmethod
     def compatible_candidates(
@@ -1138,6 +1130,11 @@ class SourceIdentityResolutionContext(SourcePatternResolutionContext):
     ) -> tuple[tuple[SourceCandidatePath, ...], ...]:
         """Resolve a batch without rescanning unrelated paths for each identity."""
 
+        if self.resolution_snapshot is not None:
+            return self.resolution_snapshot.matching_candidates_for_source_identities(
+                identities, candidates,
+            )
+
         candidates = self.declared_positions_for_candidates(candidates)
         candidates_by_path: dict[str, list[SourceCandidatePath]] = {}
         for candidate in candidates:
@@ -1200,6 +1197,7 @@ class SourceBindingMatchedImageSet(SourceIdentityResolutionContext):
             source_projections_by_virtual_path=(
                 source_context.source_projections_by_virtual_path
             ),
+            resolution_snapshot=source_context.resolution_snapshot,
             bindings=tuple(bindings),
             match_plan=match_plan,
             identity_policy=identity_policy,
@@ -1582,9 +1580,6 @@ class SourceUniverseRuntimeState:
     """Resolved source universes assembled from the registered request family."""
 
     load_universe: SourceFileUniverse | None = None
-    step_input_source_paths: Mapping[str, str] = field(
-        default_factory=lambda: MappingProxyType({})
-    )
     source_metadata_by_path: Mapping[str, SourceMetadataMapping] = field(
         default_factory=lambda: MappingProxyType({})
     )
@@ -1654,6 +1649,131 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
             source_backend=source_backend,
             source_projection=source_projection,
         )
+
+    @classmethod
+    def source_artifact_payload(
+        cls, request: RuntimeAdapterRequest, binding: NamedSourceBinding,
+    ) -> object:
+        """Resolve original source pixels in this origin's workspace universe."""
+
+        ref = binding.input_spec().ref()
+        source_payload = request.source_payload
+        source_provenance = (
+            None
+            if source_payload is None
+            else image_payload_metadata(source_payload).source_provenance
+        )
+        if source_provenance is not None and not source_provenance.has_values:
+            raise ValueError(
+                f"Source-bound artifact {ref!r} requires main-flow source provenance."
+            )
+
+        cache = request.context.runtime_source_workspace_projection_cache
+        projection = VirtualWorkspaceSourceProjectionAuthority.from_context(
+            request.context,
+            cache=cache,
+        ).projection_if_available()
+        if projection is None:
+            raise ValueError(
+                f"Source-bound artifact {ref!r} requires a virtual-workspace "
+                "source projection."
+            )
+        projection = cache.filtered_by_axis(
+            projection,
+            axis_id=request.axis_scope.axis_id,
+        )
+        source_context = (
+            request.context.runtime_source_binding_context_cache.source_pattern_context(
+                parser=request.context.microscope_handler.parser,
+                projection=projection,
+                metadata_rules=request.source_binding_plan.metadata_rules,
+            )
+        )
+        matched_set = SourceBindingMatchedImageSet.from_plan(
+            bindings=request.source_binding_plan.binding_declarations,
+            match_plan=request.source_binding_plan.match_plan,
+            source_context=source_context,
+            identity_policy=request.context.source_image_set_identity_policy,
+        )
+        source_universe = tuple(
+            dict.fromkeys(
+                source_path
+                for declared_binding in request.source_binding_plan.binding_declarations
+                for source_path in projection.files_for_projection_role(
+                    declared_binding.projection_role,
+                    axis_id=request.axis_scope.axis_id,
+                )
+            )
+        )
+        members = matched_set.members_for_binding(
+            binding,
+            anchor_provenance=(
+                source_provenance
+                if source_provenance is not None
+                else SourceImageProvenance()
+            ),
+            source_universe=source_universe,
+        )
+        if not members:
+            raise ValueError(
+                f"Source-bound artifact {ref!r} resolved no workspace members."
+            )
+
+        payloads = request.context.filemanager.load_batch(
+            list(members),
+            Backend.VIRTUAL_WORKSPACE.value,
+        )
+        if len(payloads) != len(members):
+            raise ValueError(
+                f"Source-bound artifact {ref!r} loaded {len(payloads)} payloads "
+                f"for {len(members)} workspace members."
+            )
+        projected_payloads = []
+        for member, payload in zip(members, payloads, strict=True):
+            lookup = VirtualWorkspacePathLookup.from_paths(member, member)
+            source_projection = projection.require_source_projection_for(lookup)
+            if not source_projection.matches_binding(binding):
+                raise ValueError(
+                    f"Workspace projection for {member!r} does not match compiled "
+                    f"source artifact {ref!r}."
+                )
+            projected = projection.project_payload(lookup, payload)
+            projected_payloads.append(
+                binding.apply_loaded_payload(
+                    projected,
+                    ImagePayloadSourceMetadataContext(
+                        SourceImageIdentity(
+                            projection.logical_path_for(lookup),
+                            projection.source_metadata_for(lookup),
+                        ),
+                        source_projection.ref.backend,
+                        request.context.filemanager,
+                        source_projection.ref.backend_address,
+                    ),
+                )
+            )
+        payload = (
+            projected_payloads[0]
+            if len(projected_payloads) == 1
+            and image_payload_metadata(projected_payloads[0]).persists_whole_image()
+            else stack_image_payloads(
+                projected_payloads,
+                metadata_mode=ImagePayloadMetadataCompositionMode.for_plane_axis(
+                    RuntimePlaneAxis.RUNTIME_SLICE
+                ),
+            )
+        )
+        metadata = image_payload_metadata(payload)
+        domain = request.source_binding_plan.source_spatial_domain.admit_source_cohort(
+            metadata.source_spatial_domain,
+            depth=len(members),
+        )
+        return metadata.replace_fields(source_spatial_domain=domain).attach_to(payload)
+
+    @classmethod
+    def for_binding(cls, binding: NamedSourceBinding) -> type[SourceUniverseRequest]:
+        """Select the already registered owner of a binding's origin."""
+        return cls.__registry__[binding.origin.value]
 
     def runtime_universe_state(self) -> SourceUniverseRuntimeState:
         """Return cached source-universe state for this request."""
@@ -1751,12 +1871,6 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
         return self.plan.source_universe_plan.uses_pipeline_start_binding_origin
 
     @property
-    def step_input_source_paths(self) -> Mapping[str, str]:
-        if self.source_projection is None:
-            return MappingProxyType({})
-        return self.source_context().source_paths_by_virtual_path
-
-    @property
     def source_metadata_by_path(self) -> Mapping[str, SourceMetadataMapping]:
         projection = self.source_projection
         if projection is None:
@@ -1814,6 +1928,17 @@ class StepInputSourceUniverseRequest(SourceUniverseRequest):
 
     universe_request_kind = "step_input"
 
+    @classmethod
+    def source_artifact_payload(
+        cls, request: RuntimeAdapterRequest, binding: NamedSourceBinding,
+    ) -> object:
+        """Resolve primary planes from current pixels; companions from source."""
+        if binding.projection_role is SourceProjectionRole.SOURCE_ARTIFACT:
+            return SourceUniverseRequest.source_artifact_payload(request, binding)
+        if request.source_payload is None:
+            raise ValueError(f"STEP_INPUT binding {binding.alias!r} requires current pixels.")
+        return binding.project_step_input_payload(request.source_payload)
+
     def source_universe(self) -> SourceFileUniverse:
         """Expand source selectors; otherwise retain the selected pattern files."""
         if not self.requires_step_input_selector_resolution:
@@ -1828,7 +1953,6 @@ class StepInputSourceUniverseRequest(SourceUniverseRequest):
         state = replace(
             state,
             load_universe=state.load_universe or universe,
-            step_input_source_paths=self.step_input_source_paths,
         )
         return SourceUniverseRequest.contribute_runtime_state(self, state, universe)
 

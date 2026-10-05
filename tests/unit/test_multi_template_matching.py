@@ -18,7 +18,6 @@ from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.pipeline.materialization_flag_planner import (
     MaterializationFlagPlanner,
 )
-from openhcs.core.runtime_output_matching import RuntimeReturnedOutputMatcher
 from openhcs.processing.backends.analysis import multi_template_matching
 from openhcs.processing.backends.analysis.multi_template_matching import (
     OpenCVTemplateMatchMethod,
@@ -148,7 +147,7 @@ def test_template_crop_declares_changed_image_flow_and_materialization(
     [image_spec] = contract.main_flow_outputs
     assert image_spec.artifact_type is ImageArtifactType
     assert not image_spec.materialization.uses_source_identity_filename()
-    matched = RuntimeReturnedOutputMatcher(contract, result).resolve()
+    matched = contract.resolve_returned_output(result)
     np.testing.assert_array_equal(matched[image_spec.ref()], template[None, ...])
     plans = {
         spec.ref(): ArtifactOutputPlan(

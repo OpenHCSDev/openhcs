@@ -79,9 +79,11 @@ from openhcs.core.runtime_stores import (
 )
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
 from openhcs.core.steps.abstract import AbstractStep, StepExecutionObservation
+from openhcs.core.steps.function_artifact_materialization import (
+    ArtifactMaterializationTargetPlan,
+)
 from openhcs.core.steps.function_outputs import (
-    OpenHCSMetadataWriter,
-    RuntimeArtifactMaterializationAuthority,
+    OpenHCSMetadataTarget,
 )
 
 if TYPE_CHECKING:
@@ -218,7 +220,6 @@ def execute_compiled_plate_request(
         executor_resources = WorkerExecutorFactory(
             log_file_base=request.log_file_base,
             progress_queue=validated.progress_queue,
-            progress_context=validated,
             cancellation=cancellation,
         ).create(
             runtime_environment=validated.runtime_environment,
@@ -272,7 +273,7 @@ def execute_compiled_plate_request(
                 execution_results,
                 plate_runtime_observation=plate_runtime_observation,
             )
-            OpenHCSMetadataWriter.finalize_completed_plate(
+            OpenHCSMetadataTarget.finalize_completed_plate(
                 validated.compiled_contexts,
             )
             viewer_states_by_port = settle_viewer_state(
@@ -537,11 +538,11 @@ def execute_plate_scoped_steps(
                 )
                 records_by_axis = _records_with_output(records_by_axis, record)
 
-            materializations = RuntimeArtifactMaterializationAuthority.materialize(
+            materializations = ArtifactMaterializationTargetPlan.materialize(
                 owner_context,
                 owner_plan.require_function_execution_ready(),
             )
-            OpenHCSMetadataWriter.write(
+            OpenHCSMetadataTarget.write_for_step(
                 owner_context,
                 owner_plan.require_function_execution_ready(),
                 artifact_materializations=materializations,
@@ -553,7 +554,8 @@ def execute_plate_scoped_steps(
             )
             observations_by_context[owner_context_key].append(
                 StepExecutionObservation.combine(
-                    item.observation(owner_plan, owner_context) for item in materializations
+                    item.observation(owner_plan, owner_context)
+                    for item in materializations
                 )
             )
         _emit_execution_progress(
@@ -573,15 +575,9 @@ def execute_plate_scoped_steps(
                 context_key=context_key,
                 context=context,
                 records=records,
-                runtime_export_paths=tuple(
-                    dict.fromkeys(
-                        path for item in observations_by_context[context_key]
-                        for path in item.runtime_export_paths
-                    )
-                ),
                 runtime_observation_mode=RuntimeObservationMode.MERGE_INTO_PARENT,
-                analysis_inputs=RuntimeAnalysisConsolidationInputs.combine(
-                    item.analysis_inputs for item in observations_by_context[context_key]
+                outputs=StepExecutionObservation.combine(
+                    observations_by_context[context_key]
                 ),
             )
             for context_key, context in compiled_contexts.items()

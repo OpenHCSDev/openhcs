@@ -62,7 +62,9 @@ from python_introspect import (
 )
 
 from openhcs.constants import MemoryType
-from openhcs.core.aligned_image_payload import AlignedImageStack
+from openhcs.core.aligned_image_payload import (
+    AlignedImageStack, ImagePayloadSliceStack, ProducedImageStack,
+)
 from openhcs.core.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     MeasurementRowsAxisProjection,
@@ -79,6 +81,7 @@ from openhcs.core.runtime_batch_contracts import (
     runtime_batch_executors_from_callable,
 )
 from openhcs.core.runtime_image_values import (
+    ImagePayloadMetadataCarrier,
     ImageMetadataPayload,
     ImagePayloadMetadata,
     ImagePayloadMetadataCompositionMode,
@@ -558,6 +561,27 @@ class ImagePayloadPure2DInputSlicer(Pure2DInputSlicer):
         )
 
 
+class ProducedImageStackPure2DInputSlicer(ImagePayloadPure2DInputSlicer):
+    """Project literal image leaves through their existing declared axis owner."""
+
+    value_type = ProducedImageStack
+
+    def slice_value(self, value: ProducedImageStack, memory_type: str) -> tuple[Any, ...]:
+        del memory_type
+        return tuple(
+            RuntimeSliceProjection.value_for_slice(
+                value,
+                RuntimePlaneAxisValueProjection.from_selected_plane(
+                    axis=value.plane_axis,
+                    source_aliases=value.metadata.source_image_names,
+                    plane_index=index,
+                    axis_size=len(value.slices),
+                ),
+            )
+            for index in range(len(value.slices))
+        )
+
+
 class MaskedImagePayloadPure2DInputSlicer(ImagePayloadPure2DInputSlicer):
     """Register masked image payloads for PURE_2D input slicing."""
 
@@ -740,6 +764,8 @@ class RuntimeArrayPure2DAuxiliaryOutputAggregator(Pure2DAuxiliaryOutputAggregato
         )
 
     def type_distance(self, values: list[Any]) -> int:
+        if super().supports(values):
+            return super().type_distance(values)
         if self.owns_mixed_values(values):
             return 0
         return super().type_distance(values)
@@ -770,7 +796,7 @@ class ImagePayloadPure2DAuxiliaryOutputAggregator(
 ):
     """Stack image payload slices and reattach composed runtime image context."""
 
-    value_type = None
+    value_type = ImagePayloadMetadataCarrier
     include_in_family = True
 
     def _accepts_mixed_value(self, value: Any) -> bool:
@@ -786,23 +812,9 @@ class ImagePayloadPure2DAuxiliaryOutputAggregator(
         *,
         plane_axis: RuntimePlaneAxis,
     ) -> Any:
-        data_values = [image_payload_data(value) for value in values]
-        data = stack_runtime_slices(data_values, memory_type, 0)
-        masks = [image_payload_mask(value) for value in values]
-        present_masks = [mask for mask in masks if mask is not None]
-        if present_masks and len(present_masks) != len(masks):
-            raise ValueError(
-                "Cannot aggregate a mix of masked and unmasked image payloads."
-            )
-        mask = (
-            None
-            if not present_masks
-            else stack_runtime_slices(present_masks, memory_type, 0)
+        return ImagePayloadSliceStack.from_output_slices(
+            values, memory_type=memory_type, plane_axis=plane_axis,
         )
-        return ImagePayloadMetadata.compose(
-            tuple(values),
-            mode=ImagePayloadMetadataCompositionMode.for_plane_axis(plane_axis),
-        ).payload_with(data, mask)
 
 
 class MaskedImagePayloadPure2DAuxiliaryOutputAggregator(
@@ -866,8 +878,8 @@ class NumPyPure2DAuxiliaryOutputAggregator(Pure2DAuxiliaryOutputAggregator):
         *,
         plane_axis: RuntimePlaneAxis,
     ) -> Any:
-        return ImagePayloadMetadata(plane_axis=plane_axis).payload_with(
-            stack_runtime_slices(values, memory_type, 0)
+        return ImagePayloadSliceStack.from_output_slices(
+            values, memory_type=memory_type, plane_axis=plane_axis,
         )
 
 
@@ -1578,6 +1590,9 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
             if normalized_parameter is None:
                 public_original_parameters.append(parameter)
                 continue
+            normalized_parameter = normalized_parameter.replace(
+                default=normalized_parameter.annotation(),
+            )
             runtime_config_parameters.append(normalized_parameter)
             public_original_parameters.append(normalized_parameter)
         public_original_parameters = tuple(public_original_parameters)

@@ -52,7 +52,6 @@ from openhcs.core.runtime_object_labels import (
 )
 from openhcs.core.runtime_output_matching import (
     RuntimeMatchedOutput,
-    RuntimeReturnedOutputMatcher,
 )
 from openhcs.core.runtime_profile import RuntimeProfileTimer
 from openhcs.core.runtime_measurements import (
@@ -413,7 +412,6 @@ class CellProfilerModuleExecutor:
         phase_profile = RuntimeProfileTimer.start()
         declared_only_outputs = CellProfilerOutputRecorder.record_module_outputs(
             callable_contract=self.callable_contract,
-            active_input_edges=tuple(adapter.request.artifact_inputs.values()),
             adapter=adapter,
             returned_values=returned_values,
             matched_outputs=matched_outputs,
@@ -485,10 +483,10 @@ class CellProfilerModuleExecutor:
     ]:
         """Resolve the callable ABI against this invocation's selected plans."""
 
-        return RuntimeReturnedOutputMatcher(
-            callable_contract=self.callable_contract,
-            returned_output=raw_output,
-        ).resolve_plan_values(tuple(adapter.request.artifact_outputs.values()))
+        return self.callable_contract.resolve_returned_plan_values(
+            raw_output,
+            tuple(adapter.request.artifact_outputs.values()),
+        )
 
     def _replacement_main_flow_output(
         self,
@@ -1002,18 +1000,9 @@ class CellProfilerModuleExecutor:
         combined_source_image_name = measurement_row_policy.table_source_image_name(
             measurement_images, source_image_name
         )
-        combined_source_metadata = (
-            CellProfilerMeasurementImage.composed_source_metadata(
-                measurement_images,
-                mode=measurement_row_policy.source_metadata_composition_mode(
-                    measurement_images
-                ),
-            )
+        combined_source_metadata = CellProfilerMeasurementImage.aligned_source_metadata(
+            measurement_images
         )
-        if combined_source_metadata is None:
-            combined_source_metadata = image_payload_metadata(
-                CellProfilerMeasurementImage.shared_source_payload(measurement_images)
-            )
         if profile_enabled:
             record_started_at = time.perf_counter()
         table_groups = tuple(
@@ -1266,6 +1255,8 @@ class CellProfilerModuleExecutor:
         module_type: type[CellProfilerModule],
         active_input_specs: tuple[ArtifactSpec, ...],
     ) -> "CellProfilerImageRequest":
+        binding_request = adapter.request
+        input_edges = tuple(binding_request.artifact_inputs.values())
         input_binding = RuntimeInputBindingRequest(
             adapter=adapter,
             kwargs={},
@@ -1311,6 +1302,8 @@ class CellProfilerModuleExecutor:
                     ),
                 )
             return CellProfilerImageRequest(
+                input_binding_request=binding_request,
+                input_edges=input_edges,
                 payload=current_image_payload,
                 source_image_name=self._input_source_image_name(
                     adapter,
@@ -1332,8 +1325,11 @@ class CellProfilerModuleExecutor:
             ImageArtifactType
         )
         input_binding = replace(input_binding, current_image=current_runtime_payload)
+        primary_input_edges = []
         for spec in image_inputs:
-            value = input_binding.artifact_value_for_spec(spec)
+            edge = input_binding.input_edge_for_spec(spec)
+            value = input_binding.artifact_value(edge)
+            primary_input_edges.append(edge)
             payload = image_strategy.runtime_input_value(spec, value)
             payloads.append(payload)
             source_names.append(
@@ -1369,6 +1365,19 @@ class CellProfilerModuleExecutor:
             ),
         )
         return CellProfilerImageRequest(
+            input_binding_request=binding_request,
+            input_edges=input_edges,
+            primary_input_edges=tuple(primary_input_edges),
+            # Dense composition discards per-input masks and calibration. Retain
+            # only those contexts; natural/named payloads already own their inputs.
+            primary_input_payloads=(
+                ()
+                if (
+                    isinstance(composition.payload, ImageOutputBundle)
+                    or (len(payloads) == 1 and composition.payload is payloads[0])
+                )
+                else tuple(payloads)
+            ),
             payload=composition.payload,
             source_image_name=self._primary_image_source_name_from_sources(
                 image_inputs, tuple(source_names)

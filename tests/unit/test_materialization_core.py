@@ -22,6 +22,7 @@ from polystore.streaming.identity import (
     FixedStreamProducerIdentityKind,
     StreamProducerIdentity,
 )
+from polystore.streaming_constants import StreamingDataType
 from polystore.streaming.viewer_transport import (
     BatchViewerStreamSourceMetadata,
     ViewerDisplayConfigABC,
@@ -55,8 +56,15 @@ from openhcs.core.runtime_measurements import (
     ObjectCoreMeasurementFeature,
 )
 from openhcs.core.roi_point_metadata import ROIFractionalZ
-from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
-from openhcs.runtime.viewer_component_system import ViewerLayerAxisProjection
+from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata, ROIPlaneMetadata
+from openhcs.runtime.viewer_component_system import (
+    ViewerComponentValueDomainPayload,
+    ViewerLayerAxisProjection,
+)
+from openhcs.runtime.napari_streaming_handlers import (
+    NapariStreamLayerAddress,
+    NapariStreamLayerItem,
+)
 from openhcs.core.runtime_object_label_building import (
     SourceImageObjectLabelBuildRequest,
 )
@@ -833,23 +841,130 @@ def test_point_roi_materialization_native_reopen_preserves_fractional_z(
         routed_component_values={"z_index": z_values},
         axis_offsets=(0,),
     )
-    points, properties = viewer_server._build_nd_points(
-        [
-            SimpleNamespace(
-                data=NapariROIConverter.rois_to_shapes(rois),
-                address=SimpleNamespace(components=source_domain[0]),
-            )
-        ],
-        projection,
+    item = NapariStreamLayerItem(
+        data=NapariROIConverter.rois_to_shapes(rois),
+        producer=StreamProducerIdentity.pipeline_output(
+            output_kind="artifact", output_key="centres",
+            projection_key="centres", step_name="Synthetic Centres",
+            pipeline_position=0, step_scope_id="synthetic-centres",
+        ),
+        address=NapariStreamLayerAddress(
+            components=source_domain[0], path=archive,
+            stream_layer_data_type=StreamingDataType.POINTS,
+        ),
+        image_metadata=metadata,
+        plane_component_domain=ViewerComponentValueDomainPayload.from_wire_mapping(
+            {"z_index": z_values}, context="materialized point source domain",
+        ),
     )
+    points, properties = viewer_server._build_nd_points([item], projection)
     assert points.tolist() == [[2.375, 1.25, 3.5]]
     assert properties["label"] == [7]
     assert properties["object_label"] == [7]
     assert properties["response"] == [4.75]
+    assert properties[NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE] == [
+        item.element_identity(0)
+    ]
     from napari.layers import Points
 
     native_layer = Points(points, properties=properties)
     assert native_layer.features.loc[0, "response"] == 4.75
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("source_z_origin", (0, 10))
+@pytest.mark.parametrize("variable_components", ((), (VariableComponents.Z_INDEX,)))
+def test_payload_label_roi_reopen_preserves_geometric_plane_domain(
+    tmp_path, source_z_origin, variable_components,
+):
+    labels = np.zeros((4, 5, 7), dtype=np.int32)
+    labels[0, 1:4, 2:5] = 7
+    labels[2, 1:4, 2:5] = 7
+    payload = ObjectLabelPayload(
+        variant_data=ObjectLabelVariantData(labels=labels),
+        domain=ObjectLabelDomain(scope=ObjectLabelDomainScope.PAYLOAD),
+        plane_axis=None,
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=("/source/volume.ome.tif",) * 4,
+            component_metadata=tuple(
+                {"well": "A01", "site": 1, "channel": 1, "z_index": z, "timepoint": 1}
+                for z in range(source_z_origin, source_z_origin + 4)
+            ),
+        ),
+        source_spatial_domain=SourceSpatialDomain(source_shape_yx=(5, 7)),
+        parent_image_source_voxel_spacing=SourceVoxelSpacing((2.0, 0.65, 0.65)),
+    )
+    archive = materialize(
+        MaterializationSpec(ROIOptions(min_area=0)),
+        data=payload, path=str(tmp_path / "volume"),
+        filemanager=FileManager({"disk": DiskStorageBackend()}),
+        backends=["disk"], variable_components=variable_components,
+    )
+    rois = load_rois_from_zip(Path(archive))
+    metadata = ROIArchiveSourceMetadata.decode(rois)
+    assert payload.plane_axis is None
+    assert metadata.plane_axis is (
+        RuntimePlaneAxis.RUNTIME_SLICE if variable_components else None
+    )
+    assert metadata.source_voxel_spacing.values_zyx == (2.0, 0.65, 0.65)
+    domain = ROIArchiveSourceMetadata.source_component_domain(rois, metadata)
+    z_values = tuple(range(source_z_origin, source_z_origin + 4))
+    assert tuple(plane["z_index"] for plane in domain) == z_values
+    assert [ROIPlaneMetadata(roi.metadata).indices() for roi in rois] == [(0,), (2,)]
+    fields = ROIArchiveSourceMetadata.stream_item_fields(rois, metadata, {})
+    assert fields[ViewerWireField.PLANE_COMPONENT_VALUES.value] == {
+        "z_index": tuple(str(value) for value in z_values),
+    }
+    # This geometric-domain projection never invents an image-plane field.
+    assert ViewerWireField.PLANE_AXIS.value not in fields
+    from openhcs.runtime.napari_streaming_handlers import (
+        NapariAggregateAxisBinding, NapariAggregateAxisBindingSet,
+        NapariShapeLayerPayload, NapariStreamLayerAddress, NapariStreamLayerItem,
+    )
+    from openhcs.runtime.viewer_component_system import ViewerComponentValueDomainPayload
+    from polystore.streaming_constants import StreamingDataType
+    plane_domain = ViewerComponentValueDomainPayload.from_wire_mapping(
+        fields[ViewerWireField.PLANE_COMPONENT_VALUES.value], context="saved label ROI",
+    )
+    assert plane_domain.to_wire_mapping() == {"z_index": list(z_values)}
+
+    native = NapariShapeLayerPayload.build(
+        layer_items=[NapariStreamLayerItem(
+            data=NapariROIConverter.rois_to_shapes(rois),
+            producer=StreamProducerIdentity.fixed_output(
+                FixedStreamProducerIdentityKind.MANUAL, "volume_reopen",
+            ),
+            address=NapariStreamLayerAddress(domain[0], archive, StreamingDataType.SHAPES),
+            image_metadata=metadata,
+            plane_component_domain=plane_domain,
+        )],
+        axis_projection=ViewerLayerAxisProjection(
+            projected_axis_components=("z_index",),
+            component_values={"z_index": list(z_values)},
+            routed_component_values={"z_index": list(z_values)}, axis_offsets=(0,),
+        ),
+        aggregate_axis_bindings=NapariAggregateAxisBindingSet((
+            NapariAggregateAxisBinding("z_index", 0, z_values),
+        )),
+    )
+    assert native.ndim == 3
+    assert [np.unique(shape[:, 0]).tolist() for shape in native.data] == [[0], [2]]
+    assert native.features["label"] == [7, 7]
+    from napari.layers import Shapes
+    layer = Shapes(native.data, shape_type=native.shape_types, features=native.features)
+    assert layer.ndim == 3
+    assert layer.features["label"].tolist() == [7, 7]
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("metadata", (
+    {"plane_indices": (4,), "plane_shape": (4,)},
+    {"plane_indices": (0,)},
+    {"plane_indices": (0, 1), "plane_shape": (4,)},
+))
+def test_roi_geometric_plane_metadata_rejects_invalid_projection(metadata):
+    with pytest.raises(ValueError):
+        ROIPlaneMetadata.common_shape((metadata,))
 
 
 @pytest.mark.unit

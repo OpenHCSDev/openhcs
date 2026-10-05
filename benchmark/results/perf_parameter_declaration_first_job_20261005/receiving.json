@@ -1,0 +1,62 @@
+{
+  "status": "PASS",
+  "cases": [
+    {
+      "case": "Illum3",
+      "steps": 10,
+      "first_job": true,
+      "baseline_wall": 0.12932004407048225,
+      "candidate_wall": 0.0827655210159719,
+      "saved_wall": 0.046554523054510355,
+      "baseline_config": 0.06032362300902605,
+      "candidate_config": 0.012376047670841217,
+      "baseline_steps": 0.0689964210614562,
+      "candidate_steps": 0.07038947334513068,
+      "typed_values_provenance_source_ancestor_scopes": "PASS"
+    },
+    {
+      "case": "Original3D",
+      "steps": 31,
+      "first_job": false,
+      "baseline_wall": 0.23126327898353338,
+      "candidate_wall": 0.23596614226698875,
+      "saved_wall": -0.004702863283455372,
+      "baseline_config": 0.012254599947482347,
+      "candidate_config": 0.007936440873891115,
+      "baseline_steps": 0.21900867903605103,
+      "candidate_steps": 0.22802970139309764,
+      "typed_values_provenance_source_ancestor_scopes": "PASS"
+    }
+  ],
+  "limits": [
+    "Saved PipelineConfig + ordered step admission only. Normal catalogue preparation, document parsing, orchestrator initialization, final graph/provider admission and execution excluded.",
+    "Illum3 is first-job cold admission; Original3D follows Illum in same process and is not an independent cold-first-job claim.",
+    "Fresh process per arm; ONE pair, no ordinary compiler/total or scientific runtime speedup claim.",
+    "Source-only held candidate versions; no canonical dependency installation, publication or changed factory cache epoch."
+  ],
+  "scope": "First-job saved declaration admission, not full compilation or execution.",
+  "source": {
+    "openhcs_measured": "85022a1e4e6528d5dc0c7a7fdd0b8ad71f09ac4a",
+    "baseline_consumers_projected_from": "f13798834db7e6857b1927e3edb4ad84a34dac72",
+    "python_introspect": "2ab81400bff025beeae6bcddc6157b7f1f7b8ad6",
+    "objectstate": "7bdbcfc8ce215fbe2530155b28b17f6fba744ae5",
+    "receiving_main": "b461b4885"
+  },
+  "production_order": "Normal catalogue READY, submitted global-config parsing, pipeline document parsing, ensure_global_config_context, authored PipelineConfig saved resolution once, then all saved steps against actual Registry ancestors and authored PipelineConfig.",
+  "semantic_gate": "41 saved steps: exact typed values, complete canonical callable source, callable identity, provenance with only actual process-local pipeline ancestor scope association projected symbolically; one existing factory/constructor/error-epoch test PASS.",
+  "guards": "All source/input/helper/eight-dependency files and four native ABIs unchanged across both arms; owned processes absent.",
+  "failed_setup_attempts_retained": [
+    "Initial standard pickle of decorated callable failed AFTER both priced admissions; computed timings were not persisted and no candidate was launched.",
+    "Unprepared dry source lookup requested a persistent catalogue child whose baseline source projection was not inheritable; failure retained.",
+    "Restored bound preparation methods differ in instance identity; corrected comparison uses canonical callable source/resolution.",
+    "Independent-process provenance has production id(pipeline_steps) suffix; comparison preserves the exact declared ancestor association rather than demanding matching process addresses."
+  ],
+  "previous_evidence": "The held 20261004 ordinary Illum-first compiler observation improved about45.5ms; second-case3D compiler change was0.17ms. Old261ms isolated3D estimate is not a whole-compiler saving and is not transferred by this replay.",
+  "availability": "Private exact PythonIntrospect0.2.0/ObjectState1.3.0 wheels only. No upstream tag/PyPI release/shared installation. Existing editor/help/default-reset controls remain applicable; this replay adds only actual first-job admission and the existing factory/error control.",
+  "evidence": {
+    "packet": "/home/ts/.local/state/openhcs-maintenance/20261005/parameter-owner-first-job-admission-v1",
+    "decision_sha256": "df538937e33967bd15ed8e176ddbe4db1a563c8d0e1461f4dbf9a61bb6349fb7",
+    "wheel_manifest_sha256": "0b981ef14f287fbee14bfc848b1f936dcb00640dd87fc67ebfb3e16d44798471"
+  },
+  "current_main_delta": "Merged PR748 automatic-point/ROI/materialization/streaming plus PR816 native-library preparation and documentation into existing OH727 branch after the pair. No first-job admission clock on that new main is claimed. Current ordinary consumer/SCI receiving pending."
+}

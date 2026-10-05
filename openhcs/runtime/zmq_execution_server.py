@@ -14,6 +14,7 @@ from zmqruntime.config import TransportMode
 from zmqruntime.execution import ExecutionServer
 from zmqruntime.messages import (
     ExecuteRequest,
+    ExecutionRecord,
     ExecutionStatus,
     MessageFields,
     StatusRequest,
@@ -22,6 +23,7 @@ from zmqruntime.startup import EndpointStartupStatusCallback
 
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
 from objectstate.object_state import ObjectState
+from objectstate.object_state_registry import ObjectStateRegistry
 from openhcs.core.config_document import ConfigDocumentAuthority
 from openhcs.core.orchestrator.cancellation import ExecutionCancelledError
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
@@ -368,24 +370,16 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
             execution_payload=execution_payload,
         )
 
-    def run_execution(self, execution_id, request, record):
-        """Run an execution and enrich results_summary with output plate path.
-
-        The base zmqruntime ExecutionServer only populates well_count/wells in
-        results_summary. OpenHCS needs the final output plate root (computed by
-        path planning during compilation) so the UI can optionally auto-add it
-        as a new orchestrator in Plate Manager.
-        """
-        super().run_execution(execution_id, request, record)
-
+    def finalize_execution_record(self, record: ExecutionRecord) -> None:
+        """Attach OpenHCS summary fields before terminal status is published."""
         try:
             self._attach_results_summary_extras(
-                execution_id=execution_id, record=record
+                execution_id=record.execution_id, record=record
             )
         except Exception as e:
             logger.warning(
                 "[%s] Failed to attach output_plate_root to results_summary: %s",
-                execution_id,
+                record.execution_id,
                 e,
             )
 
@@ -551,9 +545,14 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
                 request_context.compile_artifact_id,
             )
             self._ensure_request_global_config_context(request_context)
-            resolved_config = ObjectState(
-                request_context.pipeline_config
-            ).to_saved_resolved_object()
+            resolved_config, _ = ObjectState.resolve_saved_object(
+                request_context.pipeline_config,
+                ancestor_objects_with_scopes=(
+                    ObjectStateRegistry.get_ancestor_objects_with_scopes(
+                        None, use_saved=True
+                    )
+                ),
+            )
             orchestrator = self._initialize_orchestrator(
                 request_context.execution_id,
                 plate_path_str,

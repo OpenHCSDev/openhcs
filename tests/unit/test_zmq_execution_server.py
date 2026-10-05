@@ -8,7 +8,12 @@ from types import ModuleType, SimpleNamespace
 import pytest
 from objectstate import get_current_global_config
 from zmqruntime.execution import ExecutionServer
-from zmqruntime.messages import ExecutionRecord, ExecutionStatus, MessageFields
+from zmqruntime.messages import (
+    ExecuteRequest,
+    ExecutionRecord,
+    ExecutionStatus,
+    MessageFields,
+)
 
 import openhcs.runtime.zmq_execution_server as zmq_execution_server_module
 from openhcs.constants.constants import GroupBy
@@ -18,6 +23,7 @@ from openhcs.core.config import (
     ProcessingConfig,
 )
 from openhcs.core.execution_state import ExecutionOutputPlateSummary
+from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.orchestrator.compiled_plate_execution import (
     CompiledPlateExecutionResults,
 )
@@ -91,6 +97,59 @@ def test_zmq_execution_context_seeds_saved_global_config_for_compilation() -> No
     )
     assert saved_global_config is global_config
     assert saved_global_config.processing_config.group_by is GroupBy.CHANNEL
+
+
+@pytest.mark.parametrize("invalid_output_metadata", (False, True))
+def test_terminal_notification_contains_openhcs_summary_before_cleanup(
+    monkeypatch, caplog, invalid_output_metadata
+) -> None:
+    server = ZMQExecutionServer(port=5555)
+    monkeypatch.setattr(
+        server, "execute_task", lambda _execution_id, _request: {"W001": None}
+    )
+    monkeypatch.setattr(server, "_kill_worker_processes", lambda: 0)
+    record = ExecutionRecord(
+        execution_id="exec-finalized",
+        plate_id="/tmp/plate",
+        client_address=None,
+        status=ExecutionStatus.QUEUED.value,
+    )
+    record.set_extra("orchestrator", object())
+    output_plate = ExecutionOutputPlateSummary(
+        output_plate_root="/tmp/output",
+        auto_add_output_plate_to_plate_manager=True,
+    )
+    record.set_extra(
+        ExecutionOutputPlateSummary.EXECUTION_RECORD_KEY,
+        "invalid" if invalid_output_metadata else output_plate,
+    )
+    record.set_extra("runtime_observation_export_path", "/tmp/outcomes.json")
+    record.set_extra("runtime_observation_export_scope", "outcomes")
+    server._lifecycle.enqueue(record)
+
+    server.run_execution(
+        record.execution_id,
+        ExecuteRequest(plate_id=record.plate_id, pipeline_code="pass"),
+        record,
+    )
+
+    terminal = server.progress_queue.get_nowait()[MessageFields.EXECUTION]
+    assert terminal[MessageFields.STATUS] == ExecutionStatus.COMPLETE.value
+    assert terminal[MessageFields.START_TIME] is not None
+    assert terminal[MessageFields.END_TIME] is not None
+    summary = terminal[MessageFields.RESULTS_SUMMARY]
+    assert summary[MessageFields.WELL_COUNT] == 1
+    assert summary[MessageFields.WELLS] == ["W001"]
+    if invalid_output_metadata:
+        assert "Failed to attach output_plate_root" in caplog.text
+        assert "output_plate_root" not in summary
+    else:
+        for name, value in output_plate.results_summary_fields().items():
+            assert summary[name] == value
+        assert summary["runtime_observation_export_path"] == "/tmp/outcomes.json"
+        assert summary["runtime_observation_export_scope"] == "outcomes"
+    assert terminal[MessageFields.RESULTS_SUMMARY] == record.results_summary
+    assert record.get_extra("orchestrator") is None
 
 
 @pytest.mark.parametrize(
@@ -206,7 +265,7 @@ def test_server_exports_outcomes_without_projecting_compiled_values(
                             RuntimeContextObservation(
                                 "context",
                                 (),
-                                runtime_export_paths=(declared_output,),
+                                outputs=StepExecutionObservation({}, (declared_output,)),
                             ),
                         )
                     ),
