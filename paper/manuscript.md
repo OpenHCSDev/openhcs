@@ -232,7 +232,12 @@ did not improve overall reference agreement. Another repeat completed all
 200 fields across two execution phases with unchanged scientific parameters;
 its regional review retained useful detections and unresolved splits or merges,
 but no reference score was obtained. Execution coverage and segmentation
-quality are reported separately (Supplementary Data 8).
+quality are reported separately (Supplementary Data 8). A further independent
+author completed all 200 fields and achieved precision 0.946, recall 0.856 and
+pooled F1 0.898 against the same references. Compared with the earlier complete
+run, 61 field scores improved, 123 decreased and 16 were unchanged. The repeat
+retained useful agreement but did not improve overall accuracy; 314 additional
+misses accounted for most of the reduction (Supplementary Figure 20).
 
 ### Image review supports local repair with regression controls
 

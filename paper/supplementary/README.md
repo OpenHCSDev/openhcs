@@ -376,6 +376,30 @@ Data 8 links the retained pipelines and independent source review.
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
+## Supplementary Figure 20. Independent BBBC039 authors on the same 200 fields
+
+![Paired field F1 and pooled precision, recall and F1 for two independent authors.](../figures/slas/bbbc039_independent_repeat.png){width=6in}
+
+\(A) Each point compares final object F1 on the same field for the earlier
+author and an independent repeat. The dashed line marks equal scores. All
+200 fields are included; the three annotation-empty fields coincide at the
+origin. (B) Pooled precision, recall and F1 against the same 23,615 reference
+instances, using intersection over union at least 0.5. The repeat matched
+20,207 objects with 1,164 excess predictions and 3,408 misses; the earlier
+author matched 20,521 with 1,153 excess predictions and 3,094 misses.
+The repeat's F1 was 0.898 versus 0.906 earlier. Its field F1 reached at least
+0.90 in 133 fields, while eleven remained below 0.80. Each author used its own
+method and settings; this is not a controlled test of a skill change, a paired
+first/final repair, or unseen-image generalization. Reference answers were used
+only for postfreeze scoring and were not supplied to either author. Exact
+field scores, reference hashes and original lifecycle records are retained in
+the [repeat evaluation](../../figure-collection-20261004/bbbc039-fresh10coverage-postfreeze-evaluation.json)
+and Supplementary Data 8.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
 ## Supplementary Table 1. Reusable libraries and their roles
 
 | Library | Role in OpenHCS |

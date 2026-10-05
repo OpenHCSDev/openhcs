@@ -861,6 +861,27 @@ These paths identify retained evidence rather than a portable archive. At the
 independent checkpoint runtime cleanup was pending; biological output completion
 does not imply sealed outer journals or verified runtime retirement.
 
+### BBBC039 fresh10: complete independent repeat
+
+The independent `BBBC039_FRESH10_COVERAGE_96` author completed all 200 fields
+with 21,371 predicted instances. Parent-only postfreeze scoring matched
+20,207 of 23,615 reference objects: precision 0.9455, recall 0.8557 and pooled
+F1 0.8984. The earlier complete author scored 0.9062 on exactly the same field
+keys, reference hashes and IoU0.5 matching implementation. The repeat incurred
+314 additional misses and eleven additional excess predictions. Across fields,
+61 F1 scores improved, 123 decreased and sixteen were unchanged; 133 reached
+at least 0.90 and eleven remained below 0.80.
+
+The author retained its original primary scientific method after rejecting
+three development repairs. Its complete-corpus result is not a best-of score
+from those repairs or a first-200 comparison. The repeat shows substantial
+agreement with a remaining difficult-field tail, rather than a causal skill
+improvement. Supplementary Figure 20 displays all paired field scores and the
+pooled detection tradeoff. The [evaluation receipt](../../figure-collection-20261004/bbbc039-fresh10coverage-postfreeze-evaluation.json)
+and [original scoring account](../../figure-collection-20261004/BBBC039-FRESH10-FULL200-SCORE.rst)
+retain unchanged frozen payloads, references, original failures and lifecycle
+dispositions. No reference-score feedback was given to the author.
+
 ### H003 fresh10: nuclear recovery and selective body admission
 
 A separate task-only author corrected internal-texture splits, then detected
