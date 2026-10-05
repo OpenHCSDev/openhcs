@@ -1124,8 +1124,9 @@ class NamedSourceBinding(SourceAssignmentBase):
     def project_step_input_payload(self, payload: RuntimeArrayData) -> RuntimeArrayData:
         """Select current pixels by provenance, then assign this binding's name.
 
-        The requested alias names the selection; it need not be an alias on the
-        input carrier. Provenance coordinates select planes, not original pixels.
+        An existing alias selects its represented current planes before applying
+        selectors. A new alias names the selector's current-plane selection.
+        Neither case reloads original pixels.
         """
         from openhcs.core.runtime_image_values import image_payload_metadata
 
@@ -1139,8 +1140,13 @@ class NamedSourceBinding(SourceAssignmentBase):
                 raise ValueError(f"STEP_INPUT binding {self.alias!r} selects no current planes.")
             selected = payload
         else:
+            named_planes = provenance.source_plane_selection(self.alias)
+            candidate_planes = (
+                range(provenance.source_plane_count)
+                if named_planes is None else named_planes
+            )
             selection = tuple(
-                index for index in range(provenance.source_plane_count)
+                index for index in candidate_planes
                 if self.selector.matches_provenance(provenance.for_source_plane(index))
             )
             if not selection:
