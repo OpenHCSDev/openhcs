@@ -44,6 +44,7 @@ from openhcs.interop.cellprofiler.runtime.primary_image_input_policies import (
 )
 from openhcs.interop.cellprofiler.runtime.object_input_policies import (
     LabelsObjectInputPolicy,
+    ObjectLabelsInputBindingMixin,
 )
 from openhcs.interop.cellprofiler.runtime.output_contexts import (
     InputObjectLabelWithoutParentImageOutputSourceContextPolicyMixin,
@@ -200,6 +201,8 @@ class ObjectLineageTransformModule(ObjectLineageTransformContractModule):
 
 
 class CombineobjectsModule(
+    ObjectLabelsInputBindingMixin,
+    ObjectLabelDrivenPrimaryImageInputPolicy,
     PlaneRuntimeArtifactModule,
     ObjectArtifactInputModule,
     MeasurementArtifactOutputModule,
@@ -218,6 +221,11 @@ class CombineobjectsModule(
         ObjectLabelsArtifactType,
         runtime_parameter_name="object_labels",
     )
+
+    @classmethod
+    def primary_image_domain_input_binding(cls) -> SettingToKeywordBinding:
+        return cls.first_objects_binding
+
     output_objects_binding = SettingToKeywordBinding.output(
         output_objects_setting,
         ObjectLabelsArtifactType,

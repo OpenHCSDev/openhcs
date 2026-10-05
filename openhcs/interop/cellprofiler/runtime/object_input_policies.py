@@ -20,6 +20,7 @@ from openhcs.interop.cellprofiler.module_measurement_features import (
 from collections.abc import Callable
 from openhcs.core.steps.function_runtime import (
     RuntimeCallableArgument,
+    RuntimeCallableKwargs,
     RuntimeFunctionOutput,
 )
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
@@ -243,3 +244,19 @@ class ObjectLabelsInputBindingMixin(CellProfilerObjectInputPolicyMixin):
             request.label_argument_for(spec, parameter_name) for spec in object_inputs
         )
         return bound
+
+    @classmethod
+    def primary_image_domain_specs(
+        cls, domain_inputs: tuple[ArtifactSpec, ...],
+    ) -> tuple[ArtifactSpec, ...]:
+        """The first ordered object input owns the correlated tuple's domain."""
+        if not domain_inputs:
+            raise ValueError(f"{cls.__name__} requires a primary object input.")
+        return domain_inputs[:1]
+
+    @classmethod
+    def primary_image_domain_value(
+        cls, runtime_kwargs: RuntimeCallableKwargs,
+    ) -> ObjectLabelValue:
+        """Use the primary labels while keeping the tuple's other inputs bound."""
+        return runtime_kwargs[ObjectLabelsRuntimeParameter.require_parameter_name()][0]

@@ -45,6 +45,12 @@ from openhcs.interop.cellprofiler.module_artifact_declarations import (
     ObjectArtifactOutputModule,
 )
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
+from openhcs.interop.cellprofiler.runtime.object_input_policies import (
+    LabelsObjectInputPolicy,
+)
+from openhcs.interop.cellprofiler.runtime.primary_image_input_policies import (
+    ObjectLabelDrivenPrimaryImageInputPolicy,
+)
 from openhcs.interop.cellprofiler.runtime.measurement_recording import (
     MeasurementFeatureRecord,
 )
@@ -74,6 +80,8 @@ class ImageMode(Enum):
 
 
 class ConvertObjectsToImageModule(
+    ObjectLabelDrivenPrimaryImageInputPolicy,
+    LabelsObjectInputPolicy,
     ObjectArtifactInputModule,
     CellProfilerModule,
 ):
@@ -83,12 +91,13 @@ class ConvertObjectsToImageModule(
     confidence = 1.0
     input_objects_setting = SettingNameFamily("Select the input objects")
     output_image_setting = SettingNameFamily("Name the output image")
+    input_objects_binding = SettingToKeywordBinding.input(
+        input_objects_setting,
+        ObjectLabelsArtifactType,
+        runtime_parameter_name="labels",
+    )
     setting_bindings = (
-        SettingToKeywordBinding.input(
-            input_objects_setting,
-            ObjectLabelsArtifactType,
-            runtime_parameter_name="labels",
-        ),
+        input_objects_binding,
         SettingToKeywordBinding.output(output_image_setting, ImageArtifactType),
         SettingToKeywordBinding(
             "Select the color format",

@@ -12751,10 +12751,13 @@ def test_literal_measurement_stack_preserves_pixels_in_object_reference_domain(
     np.testing.assert_array_equal(prepared.measurement_labels, labels.labels)
 
 
-def test_filterobjects_binds_selection_measurement_values_to_label_slices() -> None:
+@pytest.mark.parametrize("carrier_axis", tuple(RuntimePlaneAxis))
+def test_filterobjects_binds_selection_measurement_values_to_label_slices(
+    carrier_axis,
+) -> None:
     image = ImagePayloadMetadata(
-        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
-    ).payload_with(np.zeros((2, 6, 6), dtype=np.float32), None)
+        plane_axis=carrier_axis,
+    ).payload_with(np.zeros((3, 6, 6), dtype=np.float32), None)
     children = np.zeros((2, 6, 6), dtype=np.int32)
     children[:, 0:2, 0:2] = 1
     children[:, 3:5, 3:5] = 2
@@ -12830,8 +12833,12 @@ def test_filterobjects_binds_selection_measurement_values_to_label_slices() -> N
         ),
         measurements,
     )
-    cells_spec = ArtifactSpec.input("Cells", ObjectLabelsArtifactType)
-    tiles_spec = ArtifactSpec.input("Tiles", ObjectLabelsArtifactType)
+    cells_spec = ArtifactSpec.input(
+        "Cells", ObjectLabelsArtifactType, parameter_name="object_labels"
+    )
+    tiles_spec = ArtifactSpec.input(
+        "Tiles", ObjectLabelsArtifactType, parameter_name="enclosing_object_labels"
+    )
     measurement_input_spec = ArtifactSpec.input(
         measurements.name,
         MeasurementsArtifactType,
