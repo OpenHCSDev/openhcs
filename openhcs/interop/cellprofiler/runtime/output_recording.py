@@ -30,6 +30,7 @@ from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
     ImageOutputBundle,
 )
+from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.runtime_image_values import (
     image_payload_data,
     image_payload_mask,
@@ -296,7 +297,7 @@ class ImageOutputRecorder(CellProfilerOutputRecorder):
     def raw_runtime_input_value(
         self, spec: ArtifactSpec, value: RuntimeCallableArgument
     ) -> RuntimeCallableArgument:
-        payload = value
+        payload = RuntimeSliceProjection.full_stack_value(value)
         metadata = image_payload_metadata(payload)
         metadata = metadata.with_source_provenance(
             metadata.source_provenance.with_derived_source_image_names(

@@ -584,10 +584,7 @@ class AlignedImageStackRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStra
         resolver: AlignedImageStackKwargResolver,
     ) -> Any:
         return resolver.resolve(
-            value.aligned_slice(
-                resolver.projection_axis.require_plane_index(),
-                resolver.projection_axis.axis_size,
-            )
+            self.value_for_slice(value, resolver.projection_axis)
         )
 
     def full_stack_value(self, value: RuntimeProjectionData) -> RuntimeProjectionData:
@@ -599,7 +596,7 @@ class AlignedImageStackRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStra
         context: RuntimePlaneAxisValueProjection,
     ) -> RuntimeProjectionData:
         aligned = cast(AlignedImageStack, value)
-        if context.axis is RuntimePlaneAxis.RUNTIME_SLICE:
+        if context.axis is aligned.composition_metadata_mode.plane_axis:
             return aligned.aligned_slice(
                 context.require_plane_index(),
                 context.axis_size,
@@ -623,7 +620,7 @@ class AlignedImageStackRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStra
         self,
         value: RuntimeProjectionData,
     ) -> int | None:
-        return len(cast(AlignedImageStack, value).slices)
+        return cast(AlignedImageStack, value).runtime_slice_count
 
 
 class ImageOutputBundleRuntimeSliceProjectionStrategy(

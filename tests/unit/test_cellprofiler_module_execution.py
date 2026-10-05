@@ -7992,6 +7992,8 @@ def test_cellprofiler_auxiliary_payload_stack_preserves_metadata() -> None:
         "numpy",
     )
 
+    assert isinstance(stacked, AlignedImageStack)
+    stacked = RuntimeSliceProjection.full_stack_value(stacked)
     assert isinstance(stacked, ImageMetadataPayload)
     assert image_payload_data(stacked).shape == (2, 1, 4, 5)
     assert (
@@ -8006,6 +8008,7 @@ def test_cellprofiler_image_aggregation_uses_nominal_image_payload_type() -> Non
         MemoryType.NUMPY.value,
     )
 
+    aggregated = RuntimeSliceProjection.full_stack_value(aggregated)
     assert image_payload_data(aggregated).shape == (1, 4, 5)
     assert image_payload_metadata(aggregated).plane_axis is (
         RuntimePlaneAxis.RUNTIME_SLICE
@@ -8036,11 +8039,11 @@ def test_cellprofiler_aligned_main_output_aggregation_transposes_surfaces() -> N
     assert isinstance(aggregated, AlignedImageStack)
     assert len(aggregated.slices) == 2
     np.testing.assert_array_equal(
-        image_payload_data(aggregated.slices[0])[:, 0, 0],
+        image_payload_data(RuntimeSliceProjection.full_stack_value(aggregated.slices[0]))[:, 0, 0],
         np.asarray((1.0, 2.0)),
     )
     np.testing.assert_array_equal(
-        image_payload_data(aggregated.slices[1])[:, 0, 0],
+        image_payload_data(RuntimeSliceProjection.full_stack_value(aggregated.slices[1]))[:, 0, 0],
         np.asarray((10.0, 20.0)),
     )
 
