@@ -356,6 +356,13 @@ isolated mottled nucleus while a dim neighbour stayed joined. It identified
 both failures in its final review. These cases show useful stage-specific
 diagnosis and partial recovery, with inconsistent completion of the repair.
 
+A separate retinal author smoothed fragmented body outlines while preserving
+an inspected bright neighbouring pair (Supplementary Figure 22). The matched
+raw captures were byte-identical before and after repair, separating the
+visible mask change from display changes. Possible splitting at the source
+border and incomplete weak-body coverage remained. This retained-run repair
+supports improved local geometry rather than a manual-count accuracy estimate.
+
 Public neurite-field authors recovered clear process segments while weak
 paths and ambiguous crossings remained difficult. One corrected false nuclear
 splits and traced a segment to the boundary but admitted nearby fragments.
