@@ -16,8 +16,10 @@ from openhcs.runtime.zmq_progress import (
     ZMQCompileProgressHeartbeat,
     ZMQProgressEmitter,
 )
+from openhcs.runtime.zmq_execution_signature import OpenHCSExecutionConfigBundle
 
 if TYPE_CHECKING:
+    from openhcs.core.config import GlobalPipelineConfig
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 
 
@@ -73,6 +75,7 @@ class ZMQCompilationRequest:
     plate_id: str
     pipeline_steps: list[AbstractStep]
     orchestrator: "PipelineOrchestrator"
+    resolved_config: GlobalPipelineConfig
     wells: list[str]
     compile_artifact_id: str | None
     compilation_signature: str
@@ -101,25 +104,11 @@ class ZMQCompilationRequest:
             if self.retain_compile_artifact
             else self.compilation_signature
         )
-        artifact_signature = artifact.signature_for_retain_policy(
-            self.retain_compile_artifact
+        artifact.require_compatible_request(
+            plate_id=self.plate_id,
+            signature=expected_signature,
+            retain_compile_artifact=self.retain_compile_artifact,
         )
-        if artifact_signature != expected_signature:
-            logger.error(
-                "[%s] Compile artifact signature mismatch: artifact_id=%s artifact_sig=%s request_sig=%s",
-                self.execution_id,
-                self.compile_artifact_id,
-                artifact_signature[:12],
-                expected_signature[:12],
-            )
-            raise ValueError(
-                f"Compile artifact '{self.compile_artifact_id}' does not match execution request"
-            )
-        if artifact.plate_id != str(self.plate_id):
-            raise ValueError(
-                f"Compile artifact '{self.compile_artifact_id}' is for plate "
-                f"{artifact.plate_id}, not {self.plate_id}"
-            )
 
         execution_bundle = artifact.compilation.execution_bundle
         compiled_contexts = execution_bundle.runtime_contexts
@@ -166,6 +155,7 @@ class ZMQCompilationRequest:
                     well_filter=self.wells,
                     is_zmq_execution=True,
                     debug_execution_policy=self.debug_execution_policy,
+                    resolved_config=self.resolved_config,
                 )
         finally:
             set_progress_queue(None)
@@ -224,9 +214,28 @@ class ZMQCompileArtifactRecord:
     compilation_signature: str
     debug_replay_signature: str
     compilation: ZMQCompilationResult
+    configs: OpenHCSExecutionConfigBundle
     created_at: float = field(default_factory=time.time)
 
     def signature_for_retain_policy(self, retain_compile_artifact: bool) -> str:
         if retain_compile_artifact:
             return self.debug_replay_signature
         return self.compilation_signature
+
+    def require_compatible_request(
+        self,
+        *,
+        plate_id: str,
+        signature: str,
+        retain_compile_artifact: bool,
+    ) -> None:
+        """Admit the exact compiled declaration before evaluating or preparing work."""
+        if self.signature_for_retain_policy(retain_compile_artifact) != signature:
+            raise ValueError(
+                f"Compile artifact '{self.execution_id}' does not match execution request"
+            )
+        if self.plate_id != str(plate_id):
+            raise ValueError(
+                f"Compile artifact '{self.execution_id}' is for plate "
+                f"{self.plate_id}, not {plate_id}"
+            )

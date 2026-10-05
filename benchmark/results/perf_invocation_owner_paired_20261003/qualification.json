@@ -1,0 +1,64 @@
+{
+  "status": "PASS",
+  "source_head": "c59eaa55fe3d3e49f3ecb727a14a91e56e2957f6",
+  "source": "/var/tmp/openhcs-owner-benchmark-c59eaa55f",
+  "source_clean": true,
+  "source_freeze": {
+    "path": "/home/ts/.local/state/openhcs-maintenance/20261003/invocation-owner-c59-paired-v2/source-freeze.json",
+    "sha256": "71d4df68c1755f372b4096c468dddc4c03acf60e538e64c63a1272aef61b606f"
+  },
+  "science": {
+    "path": "/home/ts/.local/state/openhcs-maintenance/20261003/invocation-owner-c59-paired-v2/strict-science.json",
+    "sha256": "08710272d7e7cbb14d6d12ab184532573267c777b68d86bfddd3d226a4270e3b",
+    "comparisons": 8,
+    "gate": "Existing strict runtime measurement/image/correlation/inventory authorities; exact3D images, originalCPnumericpolicy,nonvacuousCSVdomain."
+  },
+  "timing_summary": {
+    "path": "/home/ts/.local/state/openhcs-maintenance/20261003/invocation-owner-c59-paired-v2/timing_summary.json",
+    "sha256": "2b8caa5b22cc877f1c77a7ab882d6fdd18dc2efec7c6727a032d87093cc46ede"
+  },
+  "custody_archive": {
+    "manifest": "/home/ts/.local/state/openhcs-maintenance/20261003/invocation-owner-c59-paired-v2-preparation/scientific-custody-archive-v1.json",
+    "manifest_sha256": "fca4765c1bc339f707010d31a9acb145e04b18927a2a1928eed3292277ae5ec2",
+    "path": "/home/ts/.local/state/openhcs-maintenance/20261003/invocation-owner-c59-paired-v2.scientific-custody.tar.gz",
+    "sha256": "1cf533efca21da3638ae43931b5f5685a8790e3c45ae812622d10efcbcbfa6e8",
+    "bytes": 1766472,
+    "files": 377,
+    "original_output_bytes": 37850708
+  },
+  "controller": {
+    "path": "/home/ts/.local/state/openhcs-maintenance/20261003/invocation-owner-c59-paired-v2-preparation/controller.py",
+    "sha256": "7a2d2265a391c2e8ebdbbb057fdebaab2b46f39024d6d9ad8ce3602f30bd56ec",
+    "baseline": "/home/ts/.local/state/openhcs-maintenance/20261003/current-3d-speckles-paired-preparation-v2/controller.py",
+    "scope": "Reviewed original driver/native/science implementation retained; changes only detachedsource,custodyactualeditableimportowner discovery and currentmissingGitblobdocumentation supplement."
+  },
+  "source_input_refs": {
+    "cp_tutorial_3d_monolayer": 180,
+    "ExampleSpeckles": 2
+  },
+  "physical_inputs_sha256": "980311696da713abd37ba7588dc21d06e0552ec4e5e76a72e7fcf2e636ce255e",
+  "all_handles_terminal": {
+    "prepare": {
+      "session": 87187,
+      "code": 0
+    },
+    "ordinary": {
+      "session": 23481,
+      "code": 0
+    },
+    "native": {
+      "session": 82103,
+      "code": 0
+    },
+    "compare": {
+      "session": 19497,
+      "code": 0
+    }
+  },
+  "retained_failure": {
+    "session": 26868,
+    "code": 1,
+    "reason": "Oldsparsecustody lacked7currentunexecuteddocs; no driver launched; V1 source/controller/log/output preserved."
+  },
+  "scope": "Fresh descriptive2repetitions1well1workerCPU5/defaultOUTCOMES/RSS,READY/startupoutsideclocks; nativeCP39/JVM11 import/load/warmup excluded. No causal gain/full30/scalingclaim. Mutable root source notexecuted; only frozen detachedc59 and exactinstalled8editables used. Scientificoutputs retainedimmutable; no captures/newenv."
+}

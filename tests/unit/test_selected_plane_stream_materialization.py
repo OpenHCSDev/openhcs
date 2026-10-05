@@ -1,5 +1,7 @@
 """Selected image declarations must materialize with their exact source identity."""
 
+from openhcs.core.artifacts import ImageArtifactType
+
 from pathlib import Path
 from dataclasses import dataclass, fields, replace
 from multiprocessing.shared_memory import SharedMemory
@@ -39,13 +41,9 @@ from openhcs.core.runtime_plane_projection import (
 from openhcs.core.runtime_spatial_graph import SpatialGraph, SpatialGraphNode
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.steps.function_runtime import (
-    ImageFunctionOutputContextStrategy,
-    FunctionOutputContextStrategy,
-)
+
 from openhcs.core.steps.function_artifact_materialization import (
     PersistentArtifactMaterializationTargetPlan,
-    materialize_artifact_outputs,
     runtime_artifact_materializations,
 )
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
@@ -97,7 +95,7 @@ def test_public_selected_checkpoint_materializes_and_streams_without_storage_axe
     source = _source_stack(axis)
     pixels = np.arange(56, dtype=np.uint16).reshape(1, 7, 8)
     selected = SelectedPlaneImageOutput(pixels, (1,))
-    payload = ImageFunctionOutputContextStrategy().contextualize(
+    payload = ImageArtifactType.contextualize_output(
         source,
         selected,
         None,
@@ -221,7 +219,7 @@ def test_independent_leaf_and_capabilities_execute_cooperative_selection_hooks()
 
     selected = DeclaredCrop(np.arange(112).reshape(2, 7, 8))
     calls.clear()
-    payload = ImageFunctionOutputContextStrategy().contextualize(
+    payload = ImageArtifactType.contextualize_output(
         _source_stack(RuntimePlaneAxis.SOURCE_BINDING),
         selected,
         None,
@@ -255,7 +253,7 @@ def test_all_public_declared_outputs_persist_with_selected_qa_streams(
     cell = NeuriteOutgrowthCellResult(
         1, 1, 0.0, 0, 0.0, 0.0, 0.0, 0, 0.0, 1.0, 0.0, False
     )
-    selected = ImageFunctionOutputContextStrategy().contextualize(
+    selected = ImageArtifactType.contextualize_output(
         source,
         SelectedPlaneImageOutput((labels[1] > 0).astype(np.uint8)[None], (1,)),
         None,
@@ -313,7 +311,7 @@ def test_all_public_declared_outputs_persist_with_selected_qa_streams(
         output_dir=tmp_path / "images",
     )
     for output, value in zip(plans, values, strict=True):
-        value = FunctionOutputContextStrategy.for_output_plan(output).contextualize(
+        value = (ImageArtifactType if output is None else output.artifact_type).contextualize_output(
             source,
             value,
             output,
@@ -337,12 +335,7 @@ def test_all_public_declared_outputs_persist_with_selected_qa_streams(
 
     monkeypatch.setattr(filemanager, "save_batch", capture_stream)
     try:
-        materialize_artifact_outputs(
-            filemanager,
-            plan,
-            PersistentArtifactMaterializationTargetPlan("disk"),
-            context,
-        )
+        PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(filemanager, plan, context)
         materializations = runtime_artifact_materializations(plan, context)
         assert {item.output_plan.name for item in materializations} == set(
             specs.names()

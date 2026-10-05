@@ -31,7 +31,6 @@ from openhcs.core.measurement_row_materialization import (
 )
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_measurements import MeasurementTable
-from openhcs.core.runtime_artifact_queries import MeasurementTableUnion
 from openhcs.core.runtime_tabular_values import (
     FieldSpec,
 )
@@ -506,13 +505,14 @@ def test_quality_control_measurements_keep_distinct_site_image_identities() -> N
         )
         for channel in range(1, 6)
     )
-    union = MeasurementTableUnion("quality_metrics", tables)
     table = MeasureImageQualityModule.build_measurement_table(
         name="quality_metrics",
-        rows=union.rows(),
+        rows=ConcatenatedColumnarRows(tuple(table.rows for table in tables)),
         object_name=None,
         source_image_name=None,
-        source_metadata=union.source_metadata(),
+        source_metadata=ImagePayloadMetadata(
+            source_provenance=MeasurementTable.joined_source_provenance("quality_metrics", tables),
+        ),
     )
 
     projected_rows = CellProfilerImageSetNumbering(

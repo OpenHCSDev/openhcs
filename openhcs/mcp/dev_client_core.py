@@ -17,7 +17,7 @@ from dataclasses import dataclass, field, fields, is_dataclass, replace
 from enum import Enum
 from functools import singledispatch
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar, Self, TextIO, TypeVar, cast, get_type_hints
+from typing import TYPE_CHECKING, ClassVar, Self, TextIO, TypeVar, cast, get_args, get_type_hints
 
 from metaclass_registry import AutoRegisterMeta
 from python_introspect import (
@@ -43,6 +43,7 @@ from openhcs.agent.dto.common import (
     JsonValue,
 )
 from openhcs.agent.dto.execution import PipelineExecutionSubmissionRequest
+from openhcs.agent.dto.mcp import McpBoundaryFailure, McpToolErrorResult
 from openhcs.agent.dto.ui_bridge import (
     UiActionInvocationStatus,
     UiBridgeOperationRef,
@@ -407,10 +408,9 @@ class McpDevPayloadFailure:
     receipt: JsonValue
     errors: tuple[AgentError, ...]
 
-
-@to_jsonable.register(McpDevPayloadFailure)
-def _jsonable_payload_failure(value: McpDevPayloadFailure) -> JsonValue:
-    return value.receipt
+    def __post_init__(self) -> None:
+        if not self.errors:
+            raise ValueError("A rejected MCP payload requires its diagnostic cause.")
 
 
 @dataclass(frozen=True, slots=True)
@@ -441,6 +441,16 @@ class McpDevToolResult:
     def _decode_payload(payload, contracts):
         if isinstance(payload, McpDevPayloadFailure):
             return payload
+        # Transport failures are not malformed successes. Admit their nominal
+        # declaration first, without attaching unrelated error-shape rejections
+        # to an actual capability result or its original diagnostic cause.
+        for boundary_contract in get_args(McpBoundaryFailure):
+            try:
+                if isinstance(payload, boundary_contract):
+                    return payload
+                return dataclass_from_mapping(boundary_contract, payload)
+            except (TypeError, ValueError):
+                pass
         rejections: list[AgentError] = []
         for contract in contracts:
             try:
@@ -451,14 +461,24 @@ class McpDevToolResult:
                 rejections.append(
                     AgentError.from_exception("mcp_payload_invalid", error)
                 )
-        return McpDevPayloadFailure(payload, (*_agent_errors(payload), *rejections))
+        # The local rejection is a declared transport record too. Its canonical
+        # dataclass projection retains both cause and original native receipt.
+        # Recover that record through the same codec, not another error parser.
+        try:
+            return dataclass_from_mapping(McpDevPayloadFailure, payload)
+        except (TypeError, ValueError):
+            return McpDevPayloadFailure(payload, (*_agent_errors(payload), *rejections))
 
     def first_decoded_payload(self):
         """A missing or rejected payload is not a successful empty record."""
         if not self.payloads:
             return None
         payload = self.payloads[0]
-        return None if isinstance(payload, McpDevPayloadFailure) else payload
+        return (
+            None
+            if isinstance(payload, (McpDevPayloadFailure, McpToolErrorResult))
+            else payload
+        )
 
     def decoded_payload_as(
         self, output_contract: type[DeclaredPayloadT]

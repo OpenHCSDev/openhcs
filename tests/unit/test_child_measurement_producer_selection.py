@@ -101,7 +101,7 @@ def _compiled_edge(*, dynamic=False, declared=True):
         consumer_variable_components=ComponentSet((AllComponents.SITE,)),
         source_bindings=EMPTY_SOURCE_BINDINGS,
         available_artifacts=ArtifactSpecCollection(()),
-        consumes_main_flow=False,
+        main_flow_projection=None,
     )
     return edge, child
 
@@ -212,13 +212,13 @@ def test_declared_child_measurements_gather_all_exact_producer_channels(dynamic)
         "3",
         "3",
     ]
-    from openhcs.interop.cellprofiler.runtime.object_measurement_tables import (
-        ObjectMeasurementTableIndex,
+    from openhcs.core.measurement_feature_queries import (
+        ColumnarMeasurementTableSchema,
     )
 
-    children = ObjectMeasurementTableIndex.from_tables(
-        tuple(record.value.data for record in records)
-    ).for_object("Children")
+    children = ColumnarMeasurementTableSchema.tables_for_object(
+        tuple(record.data for record in records), "Children"
+    )
     assert [table.source_image_name for table in children] == [
         "Orig1",
         "Orig2",
@@ -512,13 +512,13 @@ def _upstream_rows(*, sites=("1", "2"), well="A01", time="1"):
 
 def test_actual_upstream_consumer_preserves_all_channels_and_site_correlation():
     rows, child, _ = _upstream_rows(sites=("2", "1"))
-    values = rows.upstream_child_measurement_values(child)
+    values = rows.upstream_child_feature_indexes(child)
     for channel in ("1", "2", "5", "3"):
         feature = f"Intensity_MeanIntensity_Orig{channel}"
         for index in (0, 1):
             for label in (1, 2):
                 assert (
-                    values[index, label][feature]
+                    values[index][feature].values_by_label[label]
                     == int(channel) * 100 + (index + 1) * 10 + label
                 )
 
@@ -527,7 +527,7 @@ def test_actual_upstream_consumer_preserves_all_channels_and_site_correlation():
 def test_actual_upstream_consumer_rejects_incompatible_source_planes(kwargs):
     rows, child, _ = _upstream_rows(**kwargs)
     with pytest.raises(ValueError, match="does not align"):
-        rows.upstream_child_measurement_values(child)
+        rows.upstream_child_feature_indexes(child)
 
 
 def test_actual_parent_means_include_each_channel_without_merging_site_ids():
@@ -571,13 +571,13 @@ def test_actual_parent_means_include_each_channel_without_merging_site_ids():
 def test_upstream_tables_without_source_coordinates_are_rejected():
     rows, child, _ = _upstream_rows()
     table = next(
-        record.value.data
+        record.data
         for record in rows.request.adapter.request.context.runtime_value_store.values()
-        if isinstance(record.value.data, MeasurementTable)
+        if isinstance(record.data, MeasurementTable)
     )
     table.source_image_provenance_planes = SourceImageProvenancePlanes()
     with pytest.raises(ValueError, match="complete source image-set identity"):
-        rows.upstream_child_measurement_values(child)
+        rows.upstream_child_feature_indexes(child)
 
 
 def test_input_relation_preserves_original_output_and_surviving_input_relations():
@@ -672,7 +672,7 @@ def test_complete_input_keeps_existing_record_scope_ambiguity_guard():
 def test_upstream_repeated_source_coordinates_do_not_merge_distinct_row_planes():
     rows, child, _ = _upstream_rows(sites=("1", "1"))
     with pytest.raises(ValueError, match="row axes .* exceed its source axis"):
-        rows.upstream_child_measurement_values(child)
+        rows.upstream_child_feature_indexes(child)
 
 
 @pytest.mark.parametrize(
@@ -732,9 +732,9 @@ def test_complete_dynamic_input_rejects_foreign_producer_location():
     foreign = RuntimeValueStore()
     for record in _measurement_store(edge).values():
         foreign.record(
-            record.value,
-            path=record.path.replace("/memory/", "/another-producer/"),
-            backend=record.backend,
+            record,
+            path=record.location.path.replace("/memory/", "/another-producer/"),
+            backend=record.location.backend,
         )
     with pytest.raises(RuntimeError, match="Missing dynamic grouped artifact input"):
         _runtime_input(edge).records(foreign)
@@ -744,7 +744,7 @@ def test_complete_dynamic_input_rejects_foreign_producer_backend():
     edge, _ = _compiled_edge(dynamic=True)
     foreign = RuntimeValueStore()
     for record in _measurement_store(edge).values():
-        foreign.record(record.value, path=record.path, backend="disk")
+        foreign.record(record, path=record.location.path, backend="disk")
     with pytest.raises(RuntimeError, match="Missing dynamic grouped artifact input"):
         _runtime_input(edge).records(foreign)
 
@@ -755,8 +755,8 @@ def test_complete_dynamic_input_selects_compiled_producer_after_workspace_rebind
     original = store.values()
     for record in original:
         store.replace(
-            record.value,
-            path=record.path.replace("/memory/", "/later-producer/"),
-            backend=record.backend,
+            record,
+            path=record.location.path.replace("/memory/", "/later-producer/"),
+            backend=record.location.backend,
         )
     assert _runtime_input(edge).records(store) == original

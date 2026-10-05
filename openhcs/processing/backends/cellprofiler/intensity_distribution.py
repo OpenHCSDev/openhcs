@@ -102,7 +102,6 @@ from openhcs.interop.cellprofiler.settings_binder import (
 )
 from openhcs.interop.cellprofiler.measurement_dialect import (
     CELLPROFILER_MEASUREMENT_DIALECT,
-    cellprofiler_projected_measurement_feature_name,
 )
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
 from openhcs.processing.backends.cellprofiler._backend import (
@@ -416,7 +415,7 @@ class RadialDistributionFeatureDeclaration(
             raise TypeError(
                 "Radial feature rendering requires IndexedRadialDistributionFeature."
             )
-        return cellprofiler_projected_measurement_feature_name(
+        return CELLPROFILER_MEASUREMENT_DIALECT.projected_feature_name(
             identity.feature.source_qualified_name(
                 source_image_name=identity.source_image_name
             ),
@@ -2461,7 +2460,7 @@ def _radial_distribution_arrays_from_bin_totals_numba(
     _IntensityDistributionHeatmapOutputsRuntimeParameter,
 )
 def measure_object_intensity_distribution(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     labels: ObjectLabelValue,
     bin_count: int = 4,
     wants_scaled: bool = True,
@@ -2562,7 +2561,7 @@ def measure_object_intensity_distribution(
 
 
 def _intensity_distribution_heatmap(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     request: IntensityDistributionHeatmapRuntimeOutput,
     *,
     radial_backend: "RadialDistributionBackendStrategy",

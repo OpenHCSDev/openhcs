@@ -63,7 +63,7 @@ def test_new_gateway_hook_cooperates_in_both_mros_before_terminal_result(tmp_pat
     """Independent audit capability needs no edits to service or MCP consumers."""
     identity = ContextVar("cold-feedback-request", default="outside")
     calls, messages = [], []
-    emitted = threading.Event()
+    compile_entered = threading.Event()
     release = threading.Event()
     error = ValueError("original declared compiler error")
 
@@ -77,8 +77,8 @@ def test_new_gateway_hook_cooperates_in_both_mros_before_terminal_result(tmp_pat
     class DeclaredGateway(_FakeCompileInspectionGateway):
         def _compile(self, request):
             assert threading.current_thread() is threading.main_thread()
+            compile_entered.set()
             self.emit_progress(request)
-            emitted.set()
             assert release.wait(3), "Actual stage relay was not delivered during held work"
             if fails:
                 raise error
@@ -97,7 +97,7 @@ def test_new_gateway_hook_cooperates_in_both_mros_before_terminal_result(tmp_pat
             assert threading.current_thread() is not threading.main_thread()
             messages.append(message)
             if "compile: running: A01: compilation" in message:
-                assert emitted.is_set()
+                assert compile_entered.is_set()
                 release.set()
 
     executor = McpTransportExecutor()
@@ -105,7 +105,7 @@ def test_new_gateway_hook_cooperates_in_both_mros_before_terminal_result(tmp_pat
     try:
         for gateway_type in (Before, After):
             release.clear()
-            emitted.clear()
+            compile_entered.clear()
             gateway = gateway_type()
             service = ExecutionSessionService(
                 path_policy=AgentPathPolicy.with_roots(

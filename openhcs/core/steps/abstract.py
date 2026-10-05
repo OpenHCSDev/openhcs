@@ -8,10 +8,11 @@ validation, and state management.
 
 import abc
 import inspect
+from pathlib import Path
 from collections.abc import Mapping
-from dataclasses import dataclass, is_dataclass
+from dataclasses import dataclass, field, is_dataclass
 from types import MappingProxyType
-from typing import TYPE_CHECKING, get_type_hints
+from typing import TYPE_CHECKING, Iterable, get_type_hints
 
 from objectstate import get_base_type_for_lazy, semantic_values_equal
 
@@ -33,25 +34,66 @@ from openhcs.core.source_bindings import (
 from openhcs.core.runtime_stores import (
     RuntimeArtifactAddress,
     RuntimeArtifactLocation,
+    StoredRuntimeValue,
 )
 
 # ProcessingContext is used in type hints
 if TYPE_CHECKING:
     from openhcs.core.context.processing_context import ProcessingContext
+    from openhcs.core.orchestrator.analysis_consolidation import (
+        RuntimeAnalysisConsolidationInputs,
+    )
 
 
 @dataclass(frozen=True, slots=True)
 class StepExecutionObservation:
-    """Execution facts emitted by one step's authoritative side effects."""
+    """Saved outputs and explicitly reused historical outputs from one step."""
 
     materialized_locations_by_address: Mapping[
         RuntimeArtifactAddress,
         tuple[RuntimeArtifactLocation, ...],
     ]
 
+    runtime_export_paths: tuple[Path, ...] = field(default_factory=tuple)
+    analysis_inputs: "RuntimeAnalysisConsolidationInputs | None" = None
+
     @classmethod
     def empty(cls) -> "StepExecutionObservation":
         return cls(MappingProxyType({}))
+
+    def paths_for(self, record: StoredRuntimeValue) -> tuple[Path, ...]:
+        """Return saved paths for this exact producer value, never its filename."""
+        address = RuntimeArtifactAddress.from_record(record)
+        return tuple(
+            Path(location.path)
+            for location in self.materialized_locations_by_address.get(address, ())
+        )
+
+    @classmethod
+    def combine(
+        cls, observations: Iterable["StepExecutionObservation"]
+    ) -> "StepExecutionObservation":
+        from openhcs.core.orchestrator.analysis_consolidation import (
+            RuntimeAnalysisConsolidationInputs,
+        )
+
+        locations = {}
+        paths = []
+        analysis_inputs = []
+        for observation in observations:
+            for (
+                address,
+                values,
+            ) in observation.materialized_locations_by_address.items():
+                locations[address] = tuple(
+                    dict.fromkeys((*locations.get(address, ()), *values))
+                )
+            paths.extend(observation.runtime_export_paths)
+            analysis_inputs.append(observation.analysis_inputs)
+        return cls(
+            MappingProxyType(locations), tuple(dict.fromkeys(paths)),
+            RuntimeAnalysisConsolidationInputs.combine(analysis_inputs),
+        )
 
 
 # def get_step_id(step: 'AbstractStep') -> str:

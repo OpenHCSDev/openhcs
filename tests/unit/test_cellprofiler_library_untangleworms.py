@@ -59,7 +59,7 @@ from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
 from openhcs.processing.backends.cellprofiler.object_images import (
-    object_label_colormap,
+    ColorImageModeRenderer,
 )
 from openhcs.processing.backends.cellprofiler.worm_geometry import (
     branchpoints,
@@ -392,7 +392,7 @@ def test_overlapping_worm_outline_crops_without_changing_pixels() -> None:
         labels=SparseIJVLabelRows(ijv),
     ).payload(representation=ObjectLabelRepresentation.SPARSE_IJV)
 
-    colors = object_label_colormap("viridis", 5)
+    colors = ColorImageModeRenderer.palette("viridis", 5)
     expected = np.zeros((*image.shape, 3), dtype=np.float32)
     for label_id in (1, 3, 5):
         label_rows = ijv[ijv[:, 2] == label_id]

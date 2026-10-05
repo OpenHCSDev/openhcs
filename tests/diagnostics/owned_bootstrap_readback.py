@@ -107,7 +107,7 @@ def verify_volume_publication(owned: Path, image_path: Path, pixels: np.ndarray,
             expected_runtime_paths.add(matched.path)
             return matched
 
-        image = record(image_name).value.data
+        image = record(image_name).data
         np.testing.assert_array_equal(image_payload_data(image), expected)
         assert addresses(image_payload_metadata(image)) == expected_addresses
         flow = summary.main_flow_materialization
@@ -132,8 +132,8 @@ def verify_volume_publication(owned: Path, image_path: Path, pixels: np.ndarray,
         result['steps'].append(step_result)
         if summary.step_index % 3 == 0:
             continue
-        labels = record('volume_fixture_labels_v2').value.data
-        rows = record('volume_fixture_rows_v2').value.data
+        labels = record('volume_fixture_labels_v2').data
+        rows = record('volume_fixture_rows_v2').data
         np.testing.assert_array_equal(object_label_dense_array(labels), expected.astype(np.int32))
         assert addresses(image_payload_metadata(labels)) == expected_addresses
         assert rows.subject.object_name == plans['volume_fixture_labels_v2'].name

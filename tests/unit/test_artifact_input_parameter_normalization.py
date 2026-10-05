@@ -4,13 +4,14 @@ from dataclasses import dataclass, replace
 
 import pytest
 
-from openhcs.core.artifacts import ArtifactSpec, SpecialArtifactType
+from openhcs.core.artifacts import ArtifactSpec, ObjectLabelsArtifactType, SpecialArtifactType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.invocation_artifacts import (
     InvocationContractPlan,
     InvocationContractProvider,
 )
+from openhcs.core.runtime_adapters import runtime_adapter
 from openhcs.core.pipeline.function_contracts import (
     artifact_inputs,
     special_input_names_from_callable,
@@ -59,6 +60,28 @@ def test_optional_abi_only_parameter_keeps_its_declared_default() -> None:
     image = object()
     assert invocation.func(image) is image
     assert received == [None]
+
+
+@pytest.mark.parametrize("managed", [False, True])
+def test_scalar_artifact_roster_cardinality_belongs_to_its_runtime_binder(managed) -> None:
+    inputs = tuple(
+        ArtifactSpec.input(name, ObjectLabelsArtifactType, parameter_name="labels")
+        for name in ("Nuclei", "Cells")
+    )
+
+    @runtime_adapter("runtime", lambda request: object(), manages_artifact_inputs=managed)
+    @artifact_inputs(*inputs)
+    def consume(image, *, labels, runtime):
+        raise AssertionError("Contract admission must not execute the callable")
+
+    if not managed:
+        with pytest.raises(ValueError, match="labels.*multiple exact artifact occurrences"):
+            compile_function_pattern(consume, {}, {})
+        return
+    compiled = compile_function_pattern(consume, {}, {})
+    (invocation,) = compiled.default_group.invocations
+    assert invocation.contract.artifact_inputs.specs == inputs
+    assert invocation.contract.artifact_input_parameter_names == ("labels",)
 
 
 def test_artifact_spec_only_parameter_declaration_compiles() -> None:

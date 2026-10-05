@@ -19,6 +19,7 @@ from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_patterns import (
+    MainFlowInputProjection,
     CompiledFunctionGroup,
     CompiledFunctionInvocation,
     CompiledFunctionPattern,
@@ -74,7 +75,7 @@ def _compiled_pattern(
                     ),
                     storage_plan=None,
                     projection=None,
-                    consumes_main_flow=True,
+                    main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
                 ),
             )
         )

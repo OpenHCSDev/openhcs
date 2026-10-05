@@ -1,0 +1,113 @@
+{
+  "conclusion": "All nine original assertion/error signatures recur against original Git blobs. No candidate-caused failure among these nine is demonstrated.",
+  "original_source_revision": "e8587bd7eb0c4aa283bc300c5eb9f2294f24890f",
+  "baseline_scope": "Original 27 changed production modules, all loaded; other source and shared dependencies/environment unchanged current installation, not reconstruction of a historical whole environment.",
+  "original_result": {
+    "failed": 9,
+    "passed": 0,
+    "seconds": 5.89,
+    "exit_code": 1
+  },
+  "candidate_result": {
+    "failed": 9,
+    "passed": 700,
+    "seconds": 37.58
+  },
+  "test_files_byte_equal_to_original_git_before_and_unchanged_after": {
+    "tests/unit/test_cellprofiler_runtime_adapter.py": "e4c1e9a86e2dc93a0af24088855caf3c12566e4bd99b9852c9ad3d152e2531a0",
+    "tests/unit/test_cellprofiler_runtime_binding_identity.py": "ff7ce51901b7d2f6838f19c454c0ecd32c219f82fafcb56748d6a8988ec73629",
+    "tests/unit/test_cellprofiler_module_execution.py": "5d28dcb3645197772b77d5f8eb4dc07e729bc4b2094322e20efd6a7468f5993f"
+  },
+  "all_27_loaded_original_hashes_match": true,
+  "candidate_disk_modules_unchanged_since_each_overlay_import": true,
+  "error_lines_equal": true,
+  "error_line_comparison": "Exact E-line text except replacing process-specific 0x object repr addresses. Full raw logs retained.",
+  "error_lines": [
+    "E       assert [2] == [1, 2]",
+    "E         ",
+    "E         At index 0 diff: 2 != 1",
+    "E         Right contains one more item: 2",
+    "E         Use -v to get more diff",
+    "E       assert np.float64(nan) == 30.0",
+    "E       AssertionError: assert <MeasurementObjectRowIdentity.ROW_ORDINAL: 'row_ordinal'> is <MeasurementObjectRowIdentity.ROW_SEQUENCE: 'row_sequence'>",
+    "E        +  where <MeasurementObjectRowIdentity.ROW_ORDINAL: 'row_ordinal'> = object_identity()",
+    "E        +    where object_identity = <openhcs.processing.backends.cellprofiler.shape.MeasureObjectSizeShapeModule object at <process-object-address>>.object_identity",
+    "E        +      where <openhcs.processing.backends.cellprofiler.shape.MeasureObjectSizeShapeModule object at <process-object-address>> = runtime_object_measurement_row_policy()",
+    "E        +        where runtime_object_measurement_row_policy = MeasureObjectSizeShapeModule.runtime_object_measurement_row_policy",
+    "E        +  and   <MeasurementObjectRowIdentity.ROW_SEQUENCE: 'row_sequence'> = MeasurementObjectRowIdentity.ROW_SEQUENCE",
+    "E       assert nan == 16.0",
+    "E       assert [1, 2, 3, 4, 5] == [1, 2, 3]",
+    "E         ",
+    "E         Left contains 2 more items, first extra item: 4",
+    "E         Use -v to get more diff",
+    "E       AssertionError: assert CallableContr...pingproxy({})) == CallableContr...pingproxy({}))",
+    "E         ",
+    "E         Omitting 4 identical items, use -vv to show",
+    "E         Differing attributes:",
+    "E         ['metadata']",
+    "E         ",
+    "E         Drill down into differing attribute metadata:",
+    "E           metadata: CallableMetadata(input_memory_type='numpy', output_memory_type='numpy', execution_memory_type='numpy', artifact_inputs=(ArtifactSpec(name='Worms', artifact_type=<class 'openhcs.core.artifacts.ImageArtifactType'>, parameter_name=None, materialization=None, viewer_streaming=<ArtifactViewerStreaming.AUTOMATIC: 'automatic'>, required=True, sidecar_role=None, relations=(), plan_type=<class 'openhcs.core.artifacts.ArtifactInputPlan'>, measuremen...",
+    "E         ",
+    "E         ...Full output truncated (11 lines hidden), use '-vv' to show",
+    "E           RuntimeError: Missing dynamic grouped artifact input 'Nuclei' (object_labels) on axis 'A01' for producer component 'channel'.",
+    "E           RuntimeError: Missing dynamic grouped artifact input 'Cells' (object_labels) on axis 'A01' for producer component 'channel'.",
+    "E           RuntimeError: Missing dynamic grouped artifact input 'DNA' (image) on axis 'A01' for producer component 'site'."
+  ],
+  "failure_groups": [
+    {
+      "count": 5,
+      "group": "Shape row-domain controls",
+      "failures": [
+        "projected IDs [2] versus [1,2]",
+        "NaN versus 30",
+        "ROW_ORDINAL versus ROW_SEQUENCE policy",
+        "NaN Zernike versus 16",
+        "backend IDs [1,2,3,4,5] versus [1,2,3]"
+      ]
+    },
+    {
+      "count": 1,
+      "group": "Crop settings contract",
+      "failure": "CallableContract metadata comparison differs"
+    },
+    {
+      "count": 3,
+      "group": "Dynamic grouped artifact discovery",
+      "failure": "Missing Nuclei/Cells channel-grouped labels and DNA site-grouped images on A01"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261003/plane-facts-original-nine-boundary-controls-v1/selection.json",
+      "bytes": 2743,
+      "sha256": "73e2ee370c4b0c16223d7fa82777da1ddd67e1aff32c0362f0e8213a3b583fef"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261003/plane-facts-original-nine-boundary-controls-v1/run_original.py",
+      "bytes": 3048,
+      "sha256": "53e37ff4a439bbe7e6732b5e1c45fc6ecf9207a98128337a12f40ad3c26f727c"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261003/plane-facts-original-nine-boundary-controls-v1/imports-and-source.json",
+      "bytes": 15390,
+      "sha256": "29627098d5d59fd02c1d2a383b1cc3b03e60c08ba91b18edee441a6000b1486f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261003/plane-facts-original-nine-boundary-controls-v1/pytest.log",
+      "bytes": 31083,
+      "sha256": "76045c7dbfc544cff33a9ad6deacf75d8d3617605431ad65b3c069a043960aff"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261003/plane-facts-runtime-boundary-controls-v1/pytest.log",
+      "bytes": 32104,
+      "sha256": "a9ac9e60f3f7892299f182bd839bb9ccc5d56b5d0a9d86a4c14eeed7019b37b5"
+    }
+  ],
+  "production_changes": false,
+  "new_environment_or_checkout": false,
+  "pipeline_or_native_run": false,
+  "all_handles_terminal": [
+    90981
+  ]
+}

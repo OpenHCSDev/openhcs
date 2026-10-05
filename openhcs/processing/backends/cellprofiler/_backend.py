@@ -14,6 +14,7 @@ from metaclass_registry import AutoRegisterMeta
 from openhcs.constants.constants import MemoryType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.processing_preparation import PersistentNumbaKernelPreparation
+from openhcs.core.runtime_object_labels import DenseArrayObjectLabelStorageStrategy
 from openhcs.core.runtime_plane_projection import RuntimeSliceInvariantValue
 
 
@@ -306,6 +307,7 @@ class CellProfilerBackendStrategyMixin(PersistentNumbaKernelPreparation):
         """Prepare every registered backend implementation for compiler warmup."""
         if cls is CellProfilerBackendStrategyMixin:
             return
+        DenseArrayObjectLabelStorageStrategy.prepare_coordinates()
         snapshot = CellProfilerBackendRegistrySnapshot.for_family(
             cls,
             MemoryType.NUMPY,

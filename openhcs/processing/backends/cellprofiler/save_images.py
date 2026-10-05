@@ -23,7 +23,7 @@ from openhcs.core.artifacts import (
     MeasurementsArtifactType,
 )
 from openhcs.core.context.processing_context import ProcessingContext
-from openhcs.core.image_file_serialization import image_payload_as_uint8
+from openhcs.core.image_file_serialization import ImagePayloadUint8Strategy
 from openhcs.core.memory import numpy
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
@@ -146,7 +146,7 @@ class SaveImagesBitDepth(str, Enum):
         if self is SaveImagesBitDepth.NATIVE:
             converted = data
         elif self is SaveImagesBitDepth.UINT8:
-            converted = image_payload_as_uint8(data)
+            converted = ImagePayloadUint8Strategy.for_dtype(data.dtype).prepare(data)
         elif self is SaveImagesBitDepth.UINT16:
             converted = _image_payload_as_uint16(data)
         else:

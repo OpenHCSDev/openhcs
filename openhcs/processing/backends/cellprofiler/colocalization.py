@@ -2522,7 +2522,7 @@ def _colocalization_unit_interval_scale(
 @numpy(contract=ProcessingContract.FLEXIBLE)
 @runtime_bound_parameters(_ColocalizationThresholdMaskOutputsRuntimeParameter)
 def measure_colocalization(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     channel_1: int = 0,
     channel_2: int = 1,
     threshold_percent: float = 15.0,
@@ -2790,7 +2790,7 @@ def _measure_colocalization_objects_core(
     _ColocalizationCostesThresholdBatchRuntimeParameter,
 )
 def measure_colocalization_objects(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     labels: ObjectLabelValue,
     measurement_scope: CellProfilerMeasurementTargetScope = CellProfilerMeasurementTargetScope.OBJECT,
     channel_1: int = 0,
@@ -2881,7 +2881,7 @@ def measure_colocalization_objects(
 
 
 def _colocalization_threshold_mask_canonical_output(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     *,
     threshold_mask_groups: tuple[ColocalizationThresholdMaskGroup, ...],
     threshold_mask_outputs: tuple[ColocalizationThresholdMaskRuntimeOutput, ...],
@@ -2911,7 +2911,7 @@ def _colocalization_threshold_mask_canonical_output(
 
 
 def _colocalization_threshold_mask(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     request: ColocalizationThresholdMaskRuntimeOutput,
 ) -> RuntimeArrayData:
     """Apply CellProfiler's whole-image or per-object percentage threshold."""
@@ -3219,7 +3219,12 @@ class ColocalizationCostesThresholdBatch(RuntimeSliceInvariantValue):
     def request_kwargs(
         self, request: RuntimeBatchInvocationRequest
     ) -> dict[str, object]:
-        """Return request kwargs with source-pair thresholds materialized once."""
+        """Prepare batch-local views and retain the step's threshold owner."""
+        threshold_batch = request.kwargs.get("costes_threshold_batch")
+        if threshold_batch is None:
+            threshold_batch = self
+        elif not isinstance(threshold_batch, ColocalizationCostesThresholdBatch):
+            raise TypeError("Costes threshold batch must be a runtime cache instance.")
         image_pair_context = self.image_pair_context(request)
         object_label_context = self.object_label_context(
             request,
@@ -3230,7 +3235,7 @@ class ColocalizationCostesThresholdBatch(RuntimeSliceInvariantValue):
         )
         thresholds = None
         if threshold_request is not None:
-            thresholds = self.resolve(threshold_request)
+            thresholds = threshold_batch.resolve(threshold_request)
         kwargs = {
             **request.kwargs,
             "image_pair_context": image_pair_context,

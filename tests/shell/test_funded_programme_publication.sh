@@ -11,7 +11,7 @@ jq -n --arg root "$scratch" --arg operations "$operations" '{
   phase:"controlled-funding", authors:([
     {slot:"A",run_owner_root:($root+"/old-a"),display:94,native_port:6012,native_ack_port:7012,viewer_port:6013,viewer_ack_port:7013,vnc_port:5998},
     {slot:"B",run_owner_root:($root+"/old-b"),display:96,native_port:6016,native_ack_port:7016,viewer_port:6017,viewer_ack_port:7017,vnc_port:6007}
-  ] | map(. + {cpu:0,input_root:"/controlled/input",writer_handoff:[],
+  ] | map(. + {cpu:0,input_root:"/controlled/input",writer_handoff:[],fresh_history:true,native_thread_id:null,
     helper_custody:{program_root:.run_owner_root,slot:.slot,parent_handoff_receipt:($root+"/helper-"+.slot+".json")}})),
   scope_slice:"controlled-unstarted.slice",source_install:"/controlled/old-install",python:"/controlled/python",
   operation_owner_root:$operations,funding_root:($root+"/funding"),task_minutes_from_first_mcp_start:75,
@@ -29,7 +29,7 @@ done
 jq -n --arg root "$scratch" '{
   phase:"controlled-next", predecessor_program_root:($root+"/funding"),
   run_template_root:($root+"/old-a"),
-  resource_policy:{total_output_and_scratch_mib:10240,output_per_author_mib:3},members:[],
+  resource_policy:{output_per_author_mib:3},members:[],
   retired_members:[{slot:"B",terminal_custody_receipt:($root+"/terminal-b.rst")}],
   additional_authors:[{slot:"INDEPENDENT_C",run_owner_root:($root+"/next"),display:96,
     native_port:6016,native_ack_port:7016,viewer_port:6017,viewer_ack_port:7017,vnc_port:6007,
@@ -42,33 +42,62 @@ jq -e --arg root "$scratch" '(.funded_members|map(.slot))==["A","INDEPENDENT_C"]
   (.authors|map(.slot))==["INDEPENDENT_C"] and
   .retained_output_roots==[($root+"/old-b/B/author-workspace/output")]' "$scratch/next/program.json" >/dev/null
 printf 'PASS original projection: independent declaration replaces retired membership and retains FULL output once\n'
+jq -e '.task_minutes_from_first_mcp_start==null' "$scratch/next/program.json" >/dev/null
+jq -e '.task_minutes_from_first_mcp_start==75' "$scratch/old-a/program.json" >/dev/null
+for interval_case in explicit zero negative fractional string; do
+  mkdir "$scratch/interval-$interval_case"
+  case "$interval_case" in
+    explicit) interval='30' ;;
+    zero) interval='0' ;;
+    negative) interval='-1' ;;
+    fractional) interval='1.5' ;;
+    string) interval='"75"' ;;
+  esac
+  jq --argjson interval "$interval" '.task_minutes_from_first_mcp_start=$interval' \
+    "$scratch/next/successor-declaration.json" > "$scratch/interval-$interval_case/successor-declaration.json"
+  set +e
+  bash "$owner" prepare "$scratch/funding" "$scratch/interval-$interval_case" "$scratch/qualification.json" \
+    > "$scratch/interval-$interval_case.log" 2>&1
+  status=$?
+  set -e
+  if [[ "$interval_case" == explicit ]]; then
+    test "$status" = 0
+    jq -e '.task_minutes_from_first_mcp_start==30' "$scratch/interval-explicit/program.json" >/dev/null
+  else test "$status" != 0; fi
+done
+printf 'PASS future interval comes only from its declaration; historical 75 unchanged and invalid values rejected\n'
 
-# These are inert test fixtures, not production parent releases or custody.
-printf 'Controlled parent-release fixture; no actual client/native launch.\n' > "$scratch/next/PARENT-RELEASE.rst"
-(cd "$scratch/next"; sha256sum program.json successor-declaration.json PARENT-RELEASE.rst > READY-FREEZE.sha256)
+# No parent file: the explicit original publisher invocation owns the grant.
+(cd "$scratch/next"; sha256sum program.json successor-declaration.json > READY-FREEZE.sha256)
 refuse() {
-  local status
+  local proposal=${1:?proposal} status
+  shift
   set +e
   "$@"
   status=$?
   set -e
   test "$status" != 0
   test "$(sha256sum "$scratch/funding/program.json" | cut -d' ' -f1)" = "$expected"
-  test ! -e "$scratch/next/publication-before.json"
+  test ! -e "$proposal/publication-before.json"
 }
-refuse bash "$owner" publish "$scratch/funding" "$scratch/next" "$expected"
-refuse env FLEET_PARENT_RELEASED=1 bash "$owner" publish "$scratch/funding" "$scratch/next" stale
-refuse env FLEET_PARENT_RELEASED=1 bash "$owner" publish "$scratch/funding" "$scratch/next" "$expected"
+refuse "$scratch/next" bash "$owner" publish "$scratch/funding" "$scratch/next" "$expected"
+refuse "$scratch/next" env FLEET_PARENT_RELEASED=1 bash "$owner" publish "$scratch/funding" "$scratch/next" stale
+refuse "$scratch/next" env FLEET_PARENT_RELEASED=1 bash "$owner" publish "$scratch/funding" "$scratch/next" "$expected"
 printf 'PASS no release, stale current revision, and absent/UNKNOWN terminal custody leave funding unchanged\n'
 
 printf 'Controlled exact terminal/borrower custody fixture.\n' > "$scratch/terminal-b.rst"
 FLEET_PARENT_RELEASED=1 bash "$owner" publish "$scratch/funding" "$scratch/next" "$expected"
+test ! -e "$scratch/next/PARENT-RELEASE.rst"
 jq -e 'all(.authors[]; keys==["run_owner_root","slot"]) and
   (has("source_install")|not) and (has("author_config")|not) and
-  (.proposed_resource_envelope|has("output_per_author_mib")|not)' "$scratch/funding/program.json" >/dev/null
+  (.proposed_resource_envelope|has("output_per_author_mib")|not) and
+  (.proposed_resource_envelope|has("total_output_and_scratch_mib")|not)' "$scratch/funding/program.json" >/dev/null
 test "$(sha256sum "$scratch/next/publication-before.json" | cut -d' ' -f1)" = "$expected"
 jq -e --arg root "$scratch" '.authors[0].run_owner_root==($root+"/old-a") and (.authors|length)==2' "$scratch/funding/program.json" >/dev/null
 printf 'PASS one current programme atomically transitions roster+history; continuing run identity unchanged\n'
+jq -e '.proposed_resource_envelope.full_memory_psi_max_percent==100' "$scratch/funding/program.json" >/dev/null
+! jq -e '.proposed_resource_envelope | has("full_memory_psi_max_percent")' "$scratch/next/program.json" >/dev/null
+printf 'PASS sealed continuing reader retains original FUND field; new run does not declare it\n'
 set +e
 FLEET_PARENT_RELEASED=1 bash "$owner" publish "$scratch/funding" "$scratch/next" "$expected"
 status=$?
@@ -81,8 +110,8 @@ printf 'PASS original expected revision prohibits a second publication/replay\n'
 # helper, scope, import, client or scientist is started by ledger mode.
 mkdir -p "$scratch/old-a/A/author-workspace/output" "$scratch/old-b/B/author-workspace/output" "$scratch/next/INDEPENDENT_C/author-workspace/output"
 bash "$operations/resource-check.sh" "$scratch/funding" A current_funding01 ledger > "$scratch/ledger01.log" 2>&1
-rg -q 'reservedCurrent=6291456 ' "$scratch/ledger01.log"
-test "$(rg -c '^Retained ' "$scratch/ledger01.log")" = 1
+rg -q 'growthEstimate=6291456 ' "$scratch/ledger01.log"
+rg -q 'Programme retainedRoots=1 ' "$scratch/ledger01.log"
 bash -c 'source "$1" "$2" A; test "$FLEET_INSTALL" = /controlled/old-install; test "$FLEET_OPERATIONS" = "$3"; test "$(fleet_limits_for A | jq -er .output_per_author_mib)" = 1' \
   _ "$operations/slot-env.sh" "$scratch/funding" "$operations"
 bash "$operations/launch-author.sh" "$scratch/funding" A --preflight > "$scratch/preflight-a.log"
@@ -90,6 +119,25 @@ rg -q 'config=/controlled/original-config.*cli=/controlled/never-invoked-cli' "$
 rg -q 'model=controlled-model provider=controlled-provider effort=controlled-effort' "$scratch/preflight-a.log"
 printf 'PASS original launcher uses immutable run config/model/CLI with no provider turn\n'
 printf 'PASS current reservations sum immutable own caps (2+4MiB), full retired bytes once; continuing source/operations/cap unchanged\n'
+
+# Actual sibling retained/scratch overage must not veto A's own permission or
+# erase A's unused growth. Neither member has an agent-created output quota.
+mkdir -p "$scratch/next/INDEPENDENT_C/author-workspace/output/runtime/scratch"
+dd if=/dev/zero of="$scratch/next/INDEPENDENT_C/author-workspace/output/sibling-overage.bin" bs=1M count=7 status=none
+dd if=/dev/zero of="$scratch/next/INDEPENDENT_C/author-workspace/output/runtime/scratch/overage.bin" bs=1M count=2 status=none
+bash "$operations/resource-check.sh" "$scratch/funding" A sibling_overage01 ledger > "$scratch/sibling-overage.log" 2>&1
+set +e
+bash "$operations/resource-check.sh" "$scratch/funding" INDEPENDENT_C own_overage01 ledger > "$scratch/own-overage.log" 2>&1
+status=$?
+set -e
+test "$status" = 0
+rg -q 'startupReserve 0.000 GiB; policy=warning' "$scratch/sibling-overage.log"
+measured_a=$(awk '/^Current / && /\/old-a\// {for(i=1;i<=NF;i++) if($i ~ /^total=/) {split($i,value,"="); print value[2]}}' "$scratch/sibling-overage.log")
+remaining_growth=$(sed -n 's/.*remainingGrowthEstimate=\([0-9]*\).*/\1/p' "$scratch/sibling-overage.log")
+test "$remaining_growth" = "$((2097152-measured_a))"
+unlink "$scratch/next/INDEPENDENT_C/author-workspace/output/sibling-overage.bin"
+unlink "$scratch/next/INDEPENDENT_C/author-workspace/output/runtime/scratch/overage.bin"
+printf 'PASS own/sibling overages remain physical usage; forecast clamped, no quota or sibling veto\n'
 
 cp "$scratch/funding/program.json" "$scratch/funding-before-overlap.json"
 jq --arg output "$scratch/old-a/A/author-workspace/output" '.retained_output_roots += [$output]' "$scratch/funding-before-overlap.json" > "$scratch/funding/program.json"
@@ -165,25 +213,52 @@ printf 'PASS positive aliases across members/roles and invalid endpoint declarat
 # Retirement-only transition in the SAME owner releases C's entire unused
 # future reservation. A's run, operations, clock and source remain untouched.
 mkdir "$scratch/retirement"
-printf 'Controlled exact terminal C fixture.\n' > "$scratch/terminal-c.rst"
 jq --arg root "$scratch" '.phase="controlled-retirement" |
-  .members=[] | .additional_authors=[] |
+  .members=[] | .additional_authors=[] | .resource_policy={} |
   .retired_members=[{slot:"INDEPENDENT_C",terminal_custody_receipt:($root+"/terminal-c.rst")}]' \
   "$scratch/next/successor-declaration.json" > "$scratch/retirement/successor-declaration.json"
 expected=$(sha256sum "$scratch/funding/program.json" | cut -d' ' -f1)
 bash "$owner" prepare "$scratch/funding" "$scratch/retirement" "$scratch/qualification.json"
-printf 'Controlled release.\n' > "$scratch/retirement/PARENT-RELEASE.rst"
-(cd "$scratch/retirement"; sha256sum program.json successor-declaration.json PARENT-RELEASE.rst > READY-FREEZE.sha256)
-FLEET_PARENT_RELEASED=1 bash "$owner" publish "$scratch/funding" "$scratch/retirement" "$expected"
+(cd "$scratch/retirement"; sha256sum program.json successor-declaration.json > READY-FREEZE.sha256)
+refuse "$scratch/retirement" env -u FLEET_PARENT_RELEASED bash "$owner" publish "$scratch/funding" "$scratch/retirement" "$expected"
+printf 'Controlled exact terminal C fixture.\n' > "$scratch/terminal-c.rst"
+(cd "$scratch/retirement"; sha256sum program.json successor-declaration.json "$scratch/terminal-c.rst" > READY-FREEZE.sha256)
+
+# Standing retirement is a projection of terminal membership, not a way to
+# add a grant or change common policy without an explicit release.
+for retirement_case in policy_change tampered_grant tampered_policy; do
+  mkdir "$scratch/retirement-$retirement_case"
+  jq --arg phase "controlled-$retirement_case" '.phase=$phase' \
+    "$scratch/retirement/successor-declaration.json" > "$scratch/retirement-$retirement_case/successor-declaration.json"
+  if [[ "$retirement_case" == policy_change ]]; then
+    jq '.resource_policy={desktop_growth_reserve_mib:1}' \
+      "$scratch/retirement-$retirement_case/successor-declaration.json" > "$scratch/changed-policy.json"
+    mv "$scratch/changed-policy.json" "$scratch/retirement-$retirement_case/successor-declaration.json"
+  fi
+  bash "$owner" prepare "$scratch/funding" "$scratch/retirement-$retirement_case" "$scratch/qualification.json"
+  case "$retirement_case" in
+    tampered_grant) change='.funded_members += [{slot:"INDEPENDENT_C",run_owner_root:(.retained_output_roots[0] | sub("/old-b/B/author-workspace/output$";"/next"))}]' ;;
+    tampered_policy) change='.proposed_resource_envelope.desktop_growth_reserve_mib=1' ;;
+    policy_change) change='.' ;;
+  esac
+  jq "$change" "$scratch/retirement-$retirement_case/program.json" > "$scratch/changed-proposal.json"
+  mv "$scratch/changed-proposal.json" "$scratch/retirement-$retirement_case/program.json"
+  (cd "$scratch/retirement-$retirement_case"; sha256sum program.json successor-declaration.json > READY-FREEZE.sha256)
+  refuse "$scratch/retirement-$retirement_case" env -u FLEET_PARENT_RELEASED bash "$owner" publish "$scratch/funding" "$scratch/retirement-$retirement_case" "$expected"
+done
+env -u FLEET_PARENT_RELEASED bash "$owner" publish "$scratch/funding" "$scratch/retirement" "$expected"
+test ! -e "$scratch/retirement/PARENT-RELEASE.rst"
+printf 'PASS standing terminal retirement: no repeated release file/flag; missing proof and policy/grant changes reject\n'
 bash "$operations/resource-check.sh" "$scratch/funding" A after_retirement02 ledger > "$scratch/ledger02.log" 2>&1
-rg -q 'reservedCurrent=2097152 ' "$scratch/ledger02.log"
-test "$(rg -c '^Retained ' "$scratch/ledger02.log")" = 2
+rg -q 'growthEstimate=2097152 ' "$scratch/ledger02.log"
+rg -q 'Programme retainedRoots=2 ' "$scratch/ledger02.log"
 set +e
 bash "$operations/slot-env.sh" "$scratch/funding" INDEPENDENT_C > "$scratch/retired-c.log" 2>&1
 status=$?
 set -e
 test "$status" != 0
 printf 'PASS one continuing author sees current retirement without run/permission/clock edits; removed author loses funding\n'
+jq -e '.proposed_resource_envelope.full_memory_psi_max_percent==100' "$scratch/funding/program.json" >/dev/null
 
 # Actual recorder/guard/slot/client; only external X/systemctl/exec controlled.
 printf 'Controlled helper terminal custody, not production authority.\n' > "$scratch/helper-terminal.rst"
@@ -195,38 +270,37 @@ mkdir -p "$scratch/controlled-install/openhcs/mcp"
 touch "$scratch/controlled-install/openhcs/mcp/server.py"
 jq --arg install "$scratch/controlled-install" '.source_install=$install' "$scratch/old-a/program.json" > "$scratch/old-a/fixture-complete.json"
 mv "$scratch/old-a/fixture-complete.json" "$scratch/old-a/program.json"
-printf 'Controlled immutable run release.\n' > "$scratch/old-a/PARENT-RELEASE.rst"
-(cd "$scratch/old-a"; sha256sum program.json PARENT-RELEASE.rst > READY-FREEZE.sha256)
-FLEET_PARENT_RELEASED=1 bash "$operations/launch-author.sh" "$scratch/funding" A --preflight > "$scratch/preflight-after.log"
+(cd "$scratch/old-a"; sha256sum program.json > READY-FREEZE.sha256)
+env -u FLEET_PARENT_RELEASED bash "$operations/launch-author.sh" "$scratch/funding" A --preflight > "$scratch/preflight-after.log"
 export BASH_ENV="$repo/tests/shell/fixtures/funded_run/bash-env.sh"
 set +e
-FLEET_PARENT_RELEASED=1 bash "$operations/recorded-mcp.sh" "$scratch/funding" A startup01
+env -u FLEET_PARENT_RELEASED bash "$operations/recorded-mcp.sh" "$scratch/funding" A startup01
 status=$?
 set -e
 test "$status" = 42
 runtime="$scratch/old-a/A/author-workspace/output/runtime"
-rg -q 'CONTROLLED_EXEC cap=7 cpu=25' "$runtime/mcp.stdout"
+rg -q 'CONTROLLED_EXEC cpu=25' "$runtime/mcp.stdout"
 test -f "$runtime/first-mcp-started.epoch"
 test ! -e "$scratch/funding/A"
 (cd "$scratch/old-a"; sha256sum --check --quiet READY-FREEZE.sha256)
 sha256sum "$runtime"/mcp.* "$runtime/first-mcp-started.epoch" > "$scratch/retained-startup.sha256"
 set +e
-FLEET_PARENT_RELEASED=1 bash "$operations/recorded-mcp.sh" "$scratch/funding" A forbidden02
+env -u FLEET_PARENT_RELEASED bash "$operations/recorded-mcp.sh" "$scratch/funding" A forbidden02
 status=$?
 set -e
 test "$status" = 1
 test ! -e "$runtime/resources-forbidden02.output"
 sha256sum --check --quiet "$scratch/retained-startup.sha256"
-printf 'PASS original recorded path: own cap7/CPU25, exact child42, run-local clock/journals, no replay\n'
+printf 'PASS original uncapped recorded path: CPU25, exact child42, run-local clock/journals, no replay\n'
 
 # Initial publication uses the SAME writer, not a manually copied head/store.
 mkdir "$scratch/initial-run"
 jq --arg root "$scratch" '.funding_root=($root+"/initial-funding") |
   .authors |= map(.run_owner_root=($root+"/initial-run")) |
   .funded_members=[.authors[]|{slot,run_owner_root}]' "$scratch/old-a/program.json" > "$scratch/initial-run/program.json"
-printf 'Controlled initial parent release.\n' > "$scratch/initial-run/PARENT-RELEASE.rst"
-(cd "$scratch/initial-run"; sha256sum program.json PARENT-RELEASE.rst > READY-FREEZE.sha256)
+(cd "$scratch/initial-run"; sha256sum program.json > READY-FREEZE.sha256)
 FLEET_PARENT_RELEASED=1 bash "$owner" initialize "$scratch/initial-funding" "$scratch/initial-run" absent
+test ! -e "$scratch/initial-run/PARENT-RELEASE.rst"
 jq -e '(.authors|length)==1 and (has("python")|not) and
   (.proposed_resource_envelope|has("per_author_science_mib")|not)' "$scratch/initial-funding/program.json" >/dev/null
 before=$(sha256sum "$scratch/initial-funding/program.json")
@@ -245,10 +319,80 @@ jq --arg root "$scratch" '.phase="controlled-empty-funding" |
   "$scratch/retirement/successor-declaration.json" > "$scratch/last-retirement/successor-declaration.json"
 expected=$(sha256sum "$scratch/funding/program.json" | cut -d' ' -f1)
 bash "$owner" prepare "$scratch/funding" "$scratch/last-retirement" "$scratch/qualification.json"
-printf 'Controlled last-terminal release.\n' > "$scratch/last-retirement/PARENT-RELEASE.rst"
-(cd "$scratch/last-retirement"; sha256sum program.json successor-declaration.json PARENT-RELEASE.rst > READY-FREEZE.sha256)
-FLEET_PARENT_RELEASED=1 bash "$owner" publish "$scratch/funding" "$scratch/last-retirement" "$expected"
+(cd "$scratch/last-retirement"; sha256sum program.json successor-declaration.json "$scratch/terminal-a.rst" > READY-FREEZE.sha256)
+env -u FLEET_PARENT_RELEASED bash "$owner" publish "$scratch/funding" "$scratch/last-retirement" "$expected"
 jq -e '(.authors|length)==0 and (.retained_output_roots|length)==3' "$scratch/funding/program.json" >/dev/null
+! jq -e '.proposed_resource_envelope | has("full_memory_psi_max_percent")' "$scratch/funding/program.json" >/dev/null
 (cd "$scratch/old-a"; sha256sum --check --quiet READY-FREEZE.sha256)
 sha256sum --check --quiet "$scratch/retained-startup.sha256"
 printf 'PASS last terminal writer releases all future growth; complete output and original run/journals remain\n'
+printf 'PASS final sealed reader retirement removes its shared contract automatically\n'
+
+# Optional real mounted-destination control. This is a declaration consumed by
+# the unchanged original prepare/publish/launcher/ledger route, not a client.
+if [[ -n "${2:-}" ]]; then
+  payload_mount=$(realpath -e "$2")
+  mountpoint --quiet "$payload_mount"
+  payload=$(mktemp -d "$payload_mount/openhcs-destination-control.XXXXXXXX")
+  mkdir "$scratch/hdd-run"
+  jq -n --arg root "$scratch" --arg payload "$payload" --arg mount "$payload_mount" \
+    --slurpfile original "$scratch/old-a/program.json" '{
+    phase:"controlled-hdd",predecessor_program_root:($root+"/funding"),
+    run_template_root:($root+"/old-a"),resource_policy:{},members:[],retired_members:[],
+    additional_authors:[$original[0].authors[0] | .slot="HDD" |
+      .run_owner_root=($root+"/hdd-run") |
+      .artifact_destination={path:$payload,mount:$mount}]
+  }' > "$scratch/hdd-run/successor-declaration.json"
+  jq --arg install "$scratch/controlled-install" '.target=$install' \
+    "$scratch/qualification.json" > "$scratch/hdd-qualification.json"
+  bash "$owner" prepare "$scratch/funding" "$scratch/hdd-run" "$scratch/hdd-qualification.json"
+  (cd "$scratch/hdd-run"; sha256sum program.json successor-declaration.json > READY-FREEZE.sha256)
+  FLEET_PARENT_RELEASED=1 bash "$owner" publish "$scratch/funding" "$scratch/hdd-run" \
+    "$(sha256sum "$scratch/funding/program.json" | cut -d' ' -f1)"
+  mkdir -p "$scratch/hdd-run/HDD/author-workspace/output"
+  bash -c 'source "$1" "$2" HDD; fleet_require_artifact_destination HDD;
+    test "$FLEET_ARTIFACT_ROOT" = "$3"; test "$FLEET_SCRATCH" = "$3/runtime/scratch";
+    test "$(fleet_output_roots_for HDD | wc -l)" = 2' \
+    _ "$operations/slot-env.sh" "$scratch/funding" "$payload"
+  bash "$operations/launch-author.sh" "$scratch/funding" HDD --preflight > "$scratch/hdd-preflight.log"
+  rg -Fq "write=$scratch/hdd-run/HDD/author-workspace/output:$payload" "$scratch/hdd-preflight.log"
+  bash "$operations/resource-check.sh" "$scratch/funding" HDD destination01 ledger > "$scratch/hdd-ledger.log" 2>&1
+  rg -Fq "PayloadDestination=$payload" "$scratch/hdd-ledger.log"
+  printf 'Controlled original HDD destination: %s\n' "$payload" > "$scratch/hdd-control-path.rst"
+  set +e
+  bash "$operations/recorded-mcp.sh" "$scratch/funding" HDD hdd_startup01 > "$scratch/hdd-startup.log" 2>&1
+  status=$?
+  set -e
+  test "$status" = 42
+  hdd_runtime="$scratch/hdd-run/HDD/author-workspace/output/runtime"
+  rg -Fq "write=$scratch/hdd-run/HDD/author-workspace/output:$payload" "$hdd_runtime/mcp.stdout"
+  rg -Fq "temp=$payload/runtime/scratch data=$hdd_runtime/data runtime=$hdd_runtime/xdg-runtime" "$hdd_runtime/mcp.stdout"
+  test -f "$hdd_runtime/mcp.stdin"
+  test ! -e "$payload/native-sessions"
+  # The actual owner refuses an unmounted destination; no HOME fallback.
+  bash -c 'source "$1" "$2" HDD;
+    negative_mount="$3/not-mounted";
+    fleet_member() { jq --arg mount "$negative_mount" ".authors[0] | .artifact_destination.mount=\$mount" "$FLEET_RUN_ROOT/program.json"; }
+    ! fleet_require_artifact_destination HDD' \
+    _ "$operations/slot-env.sh" "$scratch/funding" "$payload"
+  mkdir "$payload/ordinary-target"
+  ln -s "$payload/ordinary-target" "$payload/alias"
+  bash -c 'source "$1" "$2" HDD;
+    negative_path="$3/alias";
+    fleet_member() { jq --arg path "$negative_path" ".authors[0] | .artifact_destination.path=\$path" "$FLEET_RUN_ROOT/program.json"; }
+    ! fleet_require_artifact_destination HDD' \
+    _ "$operations/slot-env.sh" "$scratch/funding" "$payload"
+  mkdir "$scratch/hdd-retirement"
+  printf 'Controlled retained client42 terminal, no SCI/provider.\n' > "$scratch/hdd-terminal.rst"
+  jq --arg root "$scratch" '.phase="controlled-hdd-retirement" |
+    .additional_authors=[] | .members=[] | .resource_policy={} |
+    .retired_members=[{slot:"HDD",terminal_custody_receipt:($root+"/hdd-terminal.rst")}]' \
+    "$scratch/hdd-run/successor-declaration.json" > "$scratch/hdd-retirement/successor-declaration.json"
+  bash "$owner" prepare "$scratch/funding" "$scratch/hdd-retirement" "$scratch/hdd-qualification.json"
+  jq -e --arg payload "$payload" --arg control "$scratch/hdd-run/HDD/author-workspace/output" \
+    '(.retained_output_roots | map(select(.==$payload)) | length)==1 and
+     (.retained_output_roots | map(select(.==$control)) | length)==1' \
+    "$scratch/hdd-retirement/program.json" >/dev/null
+  printf 'PASS ordinary mounted HDD declaration: HOME history/control retained, explicit payload/scratch roots and actual destination telemetry\n'
+  printf 'PASS missing mount/symlink refused, original retirement retains HOME and payload roots once\n'
+fi

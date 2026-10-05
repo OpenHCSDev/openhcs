@@ -284,6 +284,35 @@ def test_callable_ownership_uses_complete_import_identity() -> None:
     assert CellProfilerModule.for_callable_contract(numpy_contract) is None
 
 
+
+@pytest.mark.parametrize("mutation", ("replacement", "unowned_exclusion"))
+def test_compiled_callable_owner_keeps_current_declaration_admission(
+    monkeypatch: pytest.MonkeyPatch,
+    mutation: str,
+) -> None:
+    module = CellProfilerModule.require_module("Crop")
+    raw = module.require_callable()
+    contract = CallableContract.from_prepared_callable(raw)
+    if mutation == "replacement":
+        implementation_module = importlib.import_module(module.__module__)
+        monkeypatch.setattr(
+            implementation_module, contract.function_name, lambda image: image
+        )
+        with pytest.raises(
+            ValueError, match="not the declaration-owned canonical callable"
+        ):
+            CellProfilerModule.require_callable_contract_owner(contract)
+    else:
+        from python_introspect import parameter_exclusions, set_parameter_exclusions
+
+        original = parameter_exclusions(raw)
+        try:
+            set_parameter_exclusions(raw, (*original, "undeclared_runtime_input"))
+            with pytest.raises(ValueError, match="undeclared_runtime_input"):
+                CellProfilerModule.require_callable_contract_owner(contract)
+        finally:
+            set_parameter_exclusions(raw, original)
+
 def test_duplicate_function_ownership_fails_during_module_declaration() -> None:
     existing_owner = CellProfilerModule.require_module("Crop")
 

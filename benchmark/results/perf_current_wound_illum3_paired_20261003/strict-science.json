@@ -1,0 +1,491 @@
+{
+  "status": "PASS",
+  "comparisons": [
+    {
+      "case": "ExampleIlluminationCorrection_Example3",
+      "ordinary_repeat": 0,
+      "native_repeat": 0,
+      "measurement_differences": 0,
+      "image_differences": 0,
+      "declared_export_comparisons": [
+        {
+          "artifact": {
+            "artifact_name": "PolynomialCorrected",
+            "artifact_type": "ImageArtifactType",
+            "semantic_kind": "numeric_image_pixels",
+            "output_filename": "reference_image__PolynomialCorrected.npy",
+            "comparison": "float pixels: atol=1e-6, rtol=1e-6, zero mismatches"
+          },
+          "reference_path": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/0/reference_image__PolynomialCorrected.npy",
+          "candidate_path": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-0/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/results/reference_image__PolynomialCorrected.npy",
+          "reference_shape": [
+            463,
+            461
+          ],
+          "candidate_shape": [
+            463,
+            461
+          ],
+          "reference_dtype": "float32",
+          "candidate_dtype": "float32",
+          "reference_pixel_digest": "b5073cb872058f88bb250be9e7a39bedd2ef281f23dfedde5262e4431f1fb0fe",
+          "candidate_pixel_digest": "8aedbeab3f9868c1d1d46b0aafb3b20bb9dfd107dc08bb0882577c493f08173b",
+          "compared_pixel_count": 213443,
+          "different_pixel_count": null,
+          "out_of_tolerance_pixel_count": 0,
+          "max_abs_difference": 2.9802322387695312e-08,
+          "equivalent": true
+        },
+        {
+          "artifact": {
+            "artifact_name": "ConvexHullCorrWorm",
+            "artifact_type": "ImageArtifactType",
+            "semantic_kind": "numeric_image_pixels",
+            "output_filename": "reference_image__ConvexHullCorrWorm.npy",
+            "comparison": "float pixels: atol=1e-6, rtol=1e-6, zero mismatches"
+          },
+          "reference_path": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/0/reference_image__ConvexHullCorrWorm.npy",
+          "candidate_path": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-0/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/results/reference_image__ConvexHullCorrWorm.npy",
+          "reference_shape": [
+            463,
+            461
+          ],
+          "candidate_shape": [
+            463,
+            461
+          ],
+          "reference_dtype": "float32",
+          "candidate_dtype": "float32",
+          "reference_pixel_digest": "fdc35df90fb97b2d2ab79e4acdaa00aef26d4d9c76fb53d6aa53351bd598dd9b",
+          "candidate_pixel_digest": "fdc35df90fb97b2d2ab79e4acdaa00aef26d4d9c76fb53d6aa53351bd598dd9b",
+          "compared_pixel_count": 213443,
+          "different_pixel_count": null,
+          "out_of_tolerance_pixel_count": 0,
+          "max_abs_difference": 0.0,
+          "equivalent": true
+        }
+      ],
+      "tables": [
+        0,
+        0
+      ],
+      "physical_images": [
+        2,
+        2
+      ],
+      "logical_images": [
+        2,
+        2
+      ],
+      "known_relationship_keys": [
+        0,
+        0
+      ],
+      "ordinary_receipt_sha256": "05161397be3c2b6ab87b13e8387080ba7f4de39af35e25b9882d9ca4591e4180",
+      "output_hashes": {
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/0/reference_image__PolynomialCorrected.npy": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/0/reference_image__ConvexHullCorrWorm.npy": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-0/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/results/reference_image__PolynomialCorrected.npy": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-0/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/openhcs_metadata.json": "579ac084b396dff5f7fbaa844139bf952c2576b6cb0242772c925ba9839c2267",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-0/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/results/reference_image__ConvexHullCorrWorm.npy": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-0/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/openhcs_metadata.json.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "case": "ExampleIlluminationCorrection_Example3",
+      "ordinary_repeat": 0,
+      "native_repeat": 1,
+      "measurement_differences": 0,
+      "image_differences": 0,
+      "declared_export_comparisons": [
+        {
+          "artifact": {
+            "artifact_name": "PolynomialCorrected",
+            "artifact_type": "ImageArtifactType",
+            "semantic_kind": "numeric_image_pixels",
+            "output_filename": "reference_image__PolynomialCorrected.npy",
+            "comparison": "float pixels: atol=1e-6, rtol=1e-6, zero mismatches"
+          },
+          "reference_path": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/1/reference_image__PolynomialCorrected.npy",
+          "candidate_path": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-0/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/results/reference_image__PolynomialCorrected.npy",
+          "reference_shape": [
+            463,
+            461
+          ],
+          "candidate_shape": [
+            463,
+            461
+          ],
+          "reference_dtype": "float32",
+          "candidate_dtype": "float32",
+          "reference_pixel_digest": "b5073cb872058f88bb250be9e7a39bedd2ef281f23dfedde5262e4431f1fb0fe",
+          "candidate_pixel_digest": "8aedbeab3f9868c1d1d46b0aafb3b20bb9dfd107dc08bb0882577c493f08173b",
+          "compared_pixel_count": 213443,
+          "different_pixel_count": null,
+          "out_of_tolerance_pixel_count": 0,
+          "max_abs_difference": 2.9802322387695312e-08,
+          "equivalent": true
+        },
+        {
+          "artifact": {
+            "artifact_name": "ConvexHullCorrWorm",
+            "artifact_type": "ImageArtifactType",
+            "semantic_kind": "numeric_image_pixels",
+            "output_filename": "reference_image__ConvexHullCorrWorm.npy",
+            "comparison": "float pixels: atol=1e-6, rtol=1e-6, zero mismatches"
+          },
+          "reference_path": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/1/reference_image__ConvexHullCorrWorm.npy",
+          "candidate_path": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-0/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/results/reference_image__ConvexHullCorrWorm.npy",
+          "reference_shape": [
+            463,
+            461
+          ],
+          "candidate_shape": [
+            463,
+            461
+          ],
+          "reference_dtype": "float32",
+          "candidate_dtype": "float32",
+          "reference_pixel_digest": "fdc35df90fb97b2d2ab79e4acdaa00aef26d4d9c76fb53d6aa53351bd598dd9b",
+          "candidate_pixel_digest": "fdc35df90fb97b2d2ab79e4acdaa00aef26d4d9c76fb53d6aa53351bd598dd9b",
+          "compared_pixel_count": 213443,
+          "different_pixel_count": null,
+          "out_of_tolerance_pixel_count": 0,
+          "max_abs_difference": 0.0,
+          "equivalent": true
+        }
+      ],
+      "tables": [
+        0,
+        0
+      ],
+      "physical_images": [
+        2,
+        2
+      ],
+      "logical_images": [
+        2,
+        2
+      ],
+      "known_relationship_keys": [
+        0,
+        0
+      ],
+      "ordinary_receipt_sha256": "05161397be3c2b6ab87b13e8387080ba7f4de39af35e25b9882d9ca4591e4180",
+      "output_hashes": {
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/1/reference_image__PolynomialCorrected.npy": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/1/reference_image__ConvexHullCorrWorm.npy": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-0/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/results/reference_image__PolynomialCorrected.npy": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-0/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/openhcs_metadata.json": "579ac084b396dff5f7fbaa844139bf952c2576b6cb0242772c925ba9839c2267",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-0/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/results/reference_image__ConvexHullCorrWorm.npy": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-0/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/openhcs_metadata.json.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "case": "ExampleWoundHealing",
+      "ordinary_repeat": 0,
+      "native_repeat": 0,
+      "measurement_differences": 0,
+      "image_differences": 0,
+      "declared_export_comparisons": [],
+      "tables": [
+        1,
+        1
+      ],
+      "physical_images": [
+        0,
+        0
+      ],
+      "logical_images": [
+        0,
+        0
+      ],
+      "known_relationship_keys": [
+        0,
+        0
+      ],
+      "ordinary_receipt_sha256": "d5e133d0c3a20eb14fdb324cfc380019e24ad44105303e7e413bccd96113ba62",
+      "output_hashes": {
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleWoundHealing/outputs/0/Image.csv": "497700eb62ed0a557b902968c0fdb444eca8b748a772d8234f241c84f5dfad87",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-0/ExampleWoundHealing/wells_1/workers_1/images_ExampleWoundHealing_source_workspace_well_throughput/openhcs_metadata.json": "71582c62cabb2571ebf8a0de57f92fdf82c55a7ece3dac0bf2a6eca95cad84c9",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-0/ExampleWoundHealing/wells_1/workers_1/images_ExampleWoundHealing_source_workspace_well_throughput/results/Image.csv": "939735fa17a067137fea2adc77d57f9ce1df24bfcb6588c49023de1cc3998677",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-0/ExampleWoundHealing/wells_1/workers_1/images_ExampleWoundHealing_source_workspace_well_throughput/openhcs_metadata.json.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "case": "ExampleWoundHealing",
+      "ordinary_repeat": 0,
+      "native_repeat": 1,
+      "measurement_differences": 0,
+      "image_differences": 0,
+      "declared_export_comparisons": [],
+      "tables": [
+        1,
+        1
+      ],
+      "physical_images": [
+        0,
+        0
+      ],
+      "logical_images": [
+        0,
+        0
+      ],
+      "known_relationship_keys": [
+        0,
+        0
+      ],
+      "ordinary_receipt_sha256": "d5e133d0c3a20eb14fdb324cfc380019e24ad44105303e7e413bccd96113ba62",
+      "output_hashes": {
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleWoundHealing/outputs/1/Image.csv": "373f02427a4758051bfdd80efd7071774d8adcae60a2928c6d3bb67ad993155c",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-0/ExampleWoundHealing/wells_1/workers_1/images_ExampleWoundHealing_source_workspace_well_throughput/openhcs_metadata.json": "71582c62cabb2571ebf8a0de57f92fdf82c55a7ece3dac0bf2a6eca95cad84c9",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-0/ExampleWoundHealing/wells_1/workers_1/images_ExampleWoundHealing_source_workspace_well_throughput/results/Image.csv": "939735fa17a067137fea2adc77d57f9ce1df24bfcb6588c49023de1cc3998677",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-0/ExampleWoundHealing/wells_1/workers_1/images_ExampleWoundHealing_source_workspace_well_throughput/openhcs_metadata.json.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "case": "ExampleIlluminationCorrection_Example3",
+      "ordinary_repeat": 1,
+      "native_repeat": 0,
+      "measurement_differences": 0,
+      "image_differences": 0,
+      "declared_export_comparisons": [
+        {
+          "artifact": {
+            "artifact_name": "PolynomialCorrected",
+            "artifact_type": "ImageArtifactType",
+            "semantic_kind": "numeric_image_pixels",
+            "output_filename": "reference_image__PolynomialCorrected.npy",
+            "comparison": "float pixels: atol=1e-6, rtol=1e-6, zero mismatches"
+          },
+          "reference_path": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/0/reference_image__PolynomialCorrected.npy",
+          "candidate_path": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-1/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/results/reference_image__PolynomialCorrected.npy",
+          "reference_shape": [
+            463,
+            461
+          ],
+          "candidate_shape": [
+            463,
+            461
+          ],
+          "reference_dtype": "float32",
+          "candidate_dtype": "float32",
+          "reference_pixel_digest": "b5073cb872058f88bb250be9e7a39bedd2ef281f23dfedde5262e4431f1fb0fe",
+          "candidate_pixel_digest": "8aedbeab3f9868c1d1d46b0aafb3b20bb9dfd107dc08bb0882577c493f08173b",
+          "compared_pixel_count": 213443,
+          "different_pixel_count": null,
+          "out_of_tolerance_pixel_count": 0,
+          "max_abs_difference": 2.9802322387695312e-08,
+          "equivalent": true
+        },
+        {
+          "artifact": {
+            "artifact_name": "ConvexHullCorrWorm",
+            "artifact_type": "ImageArtifactType",
+            "semantic_kind": "numeric_image_pixels",
+            "output_filename": "reference_image__ConvexHullCorrWorm.npy",
+            "comparison": "float pixels: atol=1e-6, rtol=1e-6, zero mismatches"
+          },
+          "reference_path": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/0/reference_image__ConvexHullCorrWorm.npy",
+          "candidate_path": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-1/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/results/reference_image__ConvexHullCorrWorm.npy",
+          "reference_shape": [
+            463,
+            461
+          ],
+          "candidate_shape": [
+            463,
+            461
+          ],
+          "reference_dtype": "float32",
+          "candidate_dtype": "float32",
+          "reference_pixel_digest": "fdc35df90fb97b2d2ab79e4acdaa00aef26d4d9c76fb53d6aa53351bd598dd9b",
+          "candidate_pixel_digest": "fdc35df90fb97b2d2ab79e4acdaa00aef26d4d9c76fb53d6aa53351bd598dd9b",
+          "compared_pixel_count": 213443,
+          "different_pixel_count": null,
+          "out_of_tolerance_pixel_count": 0,
+          "max_abs_difference": 0.0,
+          "equivalent": true
+        }
+      ],
+      "tables": [
+        0,
+        0
+      ],
+      "physical_images": [
+        2,
+        2
+      ],
+      "logical_images": [
+        2,
+        2
+      ],
+      "known_relationship_keys": [
+        0,
+        0
+      ],
+      "ordinary_receipt_sha256": "c8c926e9001f1c5d01ea1d45e88603122eb9a3cb82343e848d67c7e31d7d8de8",
+      "output_hashes": {
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/0/reference_image__PolynomialCorrected.npy": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/0/reference_image__ConvexHullCorrWorm.npy": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-1/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/results/reference_image__PolynomialCorrected.npy": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-1/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/results/reference_image__ConvexHullCorrWorm.npy": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-1/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/openhcs_metadata.json.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-1/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/openhcs_metadata.json": "579ac084b396dff5f7fbaa844139bf952c2576b6cb0242772c925ba9839c2267"
+      }
+    },
+    {
+      "case": "ExampleIlluminationCorrection_Example3",
+      "ordinary_repeat": 1,
+      "native_repeat": 1,
+      "measurement_differences": 0,
+      "image_differences": 0,
+      "declared_export_comparisons": [
+        {
+          "artifact": {
+            "artifact_name": "PolynomialCorrected",
+            "artifact_type": "ImageArtifactType",
+            "semantic_kind": "numeric_image_pixels",
+            "output_filename": "reference_image__PolynomialCorrected.npy",
+            "comparison": "float pixels: atol=1e-6, rtol=1e-6, zero mismatches"
+          },
+          "reference_path": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/1/reference_image__PolynomialCorrected.npy",
+          "candidate_path": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-1/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/results/reference_image__PolynomialCorrected.npy",
+          "reference_shape": [
+            463,
+            461
+          ],
+          "candidate_shape": [
+            463,
+            461
+          ],
+          "reference_dtype": "float32",
+          "candidate_dtype": "float32",
+          "reference_pixel_digest": "b5073cb872058f88bb250be9e7a39bedd2ef281f23dfedde5262e4431f1fb0fe",
+          "candidate_pixel_digest": "8aedbeab3f9868c1d1d46b0aafb3b20bb9dfd107dc08bb0882577c493f08173b",
+          "compared_pixel_count": 213443,
+          "different_pixel_count": null,
+          "out_of_tolerance_pixel_count": 0,
+          "max_abs_difference": 2.9802322387695312e-08,
+          "equivalent": true
+        },
+        {
+          "artifact": {
+            "artifact_name": "ConvexHullCorrWorm",
+            "artifact_type": "ImageArtifactType",
+            "semantic_kind": "numeric_image_pixels",
+            "output_filename": "reference_image__ConvexHullCorrWorm.npy",
+            "comparison": "float pixels: atol=1e-6, rtol=1e-6, zero mismatches"
+          },
+          "reference_path": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/1/reference_image__ConvexHullCorrWorm.npy",
+          "candidate_path": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-1/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/results/reference_image__ConvexHullCorrWorm.npy",
+          "reference_shape": [
+            463,
+            461
+          ],
+          "candidate_shape": [
+            463,
+            461
+          ],
+          "reference_dtype": "float32",
+          "candidate_dtype": "float32",
+          "reference_pixel_digest": "fdc35df90fb97b2d2ab79e4acdaa00aef26d4d9c76fb53d6aa53351bd598dd9b",
+          "candidate_pixel_digest": "fdc35df90fb97b2d2ab79e4acdaa00aef26d4d9c76fb53d6aa53351bd598dd9b",
+          "compared_pixel_count": 213443,
+          "different_pixel_count": null,
+          "out_of_tolerance_pixel_count": 0,
+          "max_abs_difference": 0.0,
+          "equivalent": true
+        }
+      ],
+      "tables": [
+        0,
+        0
+      ],
+      "physical_images": [
+        2,
+        2
+      ],
+      "logical_images": [
+        2,
+        2
+      ],
+      "known_relationship_keys": [
+        0,
+        0
+      ],
+      "ordinary_receipt_sha256": "c8c926e9001f1c5d01ea1d45e88603122eb9a3cb82343e848d67c7e31d7d8de8",
+      "output_hashes": {
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/1/reference_image__PolynomialCorrected.npy": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/1/reference_image__ConvexHullCorrWorm.npy": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-1/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/results/reference_image__PolynomialCorrected.npy": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-1/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/results/reference_image__ConvexHullCorrWorm.npy": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-1/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/openhcs_metadata.json.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-1/ExampleIlluminationCorrection_Example3/wells_1/workers_1/images_ExampleIlluminationCorrection_Example3_source_workspace_well_throughput/openhcs_metadata.json": "579ac084b396dff5f7fbaa844139bf952c2576b6cb0242772c925ba9839c2267"
+      }
+    },
+    {
+      "case": "ExampleWoundHealing",
+      "ordinary_repeat": 1,
+      "native_repeat": 0,
+      "measurement_differences": 0,
+      "image_differences": 0,
+      "declared_export_comparisons": [],
+      "tables": [
+        1,
+        1
+      ],
+      "physical_images": [
+        0,
+        0
+      ],
+      "logical_images": [
+        0,
+        0
+      ],
+      "known_relationship_keys": [
+        0,
+        0
+      ],
+      "ordinary_receipt_sha256": "42f967eef57d1f1f85168d225258b50c79225fcafef0f1137a4f7f6de0d9e02e",
+      "output_hashes": {
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleWoundHealing/outputs/0/Image.csv": "497700eb62ed0a557b902968c0fdb444eca8b748a772d8234f241c84f5dfad87",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-1/ExampleWoundHealing/wells_1/workers_1/images_ExampleWoundHealing_source_workspace_well_throughput/openhcs_metadata.json.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-1/ExampleWoundHealing/wells_1/workers_1/images_ExampleWoundHealing_source_workspace_well_throughput/openhcs_metadata.json": "71582c62cabb2571ebf8a0de57f92fdf82c55a7ece3dac0bf2a6eca95cad84c9",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-1/ExampleWoundHealing/wells_1/workers_1/images_ExampleWoundHealing_source_workspace_well_throughput/results/Image.csv": "939735fa17a067137fea2adc77d57f9ce1df24bfcb6588c49023de1cc3998677"
+      }
+    },
+    {
+      "case": "ExampleWoundHealing",
+      "ordinary_repeat": 1,
+      "native_repeat": 1,
+      "measurement_differences": 0,
+      "image_differences": 0,
+      "declared_export_comparisons": [],
+      "tables": [
+        1,
+        1
+      ],
+      "physical_images": [
+        0,
+        0
+      ],
+      "logical_images": [
+        0,
+        0
+      ],
+      "known_relationship_keys": [
+        0,
+        0
+      ],
+      "ordinary_receipt_sha256": "42f967eef57d1f1f85168d225258b50c79225fcafef0f1137a4f7f6de0d9e02e",
+      "output_hashes": {
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleWoundHealing/outputs/1/Image.csv": "373f02427a4758051bfdd80efd7071774d8adcae60a2928c6d3bb67ad993155c",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-1/ExampleWoundHealing/wells_1/workers_1/images_ExampleWoundHealing_source_workspace_well_throughput/openhcs_metadata.json.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-1/ExampleWoundHealing/wells_1/workers_1/images_ExampleWoundHealing_source_workspace_well_throughput/openhcs_metadata.json": "71582c62cabb2571ebf8a0de57f92fdf82c55a7ece3dac0bf2a6eca95cad84c9",
+        "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/ordinary-1/ExampleWoundHealing/wells_1/workers_1/images_ExampleWoundHealing_source_workspace_well_throughput/results/Image.csv": "939735fa17a067137fea2adc77d57f9ce1df24bfcb6588c49023de1cc3998677"
+      }
+    }
+  ],
+  "source_head": "293e04acb53156a0dd9ae71476703e24f66b196c",
+  "scope": "Both ordinary observations versus both native measured observations; full strict files/values/correlation policy; descriptive two-repeat clocks, not full30 acceptance."
+}

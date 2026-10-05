@@ -1,8 +1,10 @@
 """Canonical callable twice through document, compiler, execution and publication."""
 
 from csv import DictReader
+from inspect import unwrap
 
 import numpy as np
+import pytest
 import tifffile
 
 from openhcs.agent.services.execution_session_service import (
@@ -35,15 +37,32 @@ from openhcs.core.source_bindings import (
     SourceSelector,
 )
 from openhcs.core.steps.function_step import FunctionStep
+from openhcs.processing.custom_functions.runtime_registry import (
+    CustomFunctionRuntimeRegistry,
+    register_custom_function,
+)
 from polystore.roi import load_rois_from_zip
 
 # Reuse the public reference's authoritative code block, not a copied callable.
 from tests.unit.agent.test_callable_artifact_reference import reference_namespace  # noqa: F401
 
 
+@pytest.fixture
+def registered_reference_callable(reference_namespace):
+    """Give the executable public example its actual custom catalog lifetime."""
+    function = reference_namespace["inspect_label_fixture"]
+    registered = register_custom_function(function)
+    try:
+        assert unwrap(registered) is unwrap(function)
+        yield function
+    finally:
+        CustomFunctionRuntimeRegistry.remove(function.__name__)
+
+
 def test_chained_public_callable_uses_declared_main_flow_not_storage_argument(
-    tmp_path, reference_namespace,
+    tmp_path, reference_namespace, registered_reference_callable,
 ):
+    assert reference_namespace["inspect_label_fixture"] is registered_reference_callable
     plate = tmp_path / "plate"
     plate.mkdir()
     fixture = np.zeros((8, 8), dtype=np.uint16)
@@ -106,7 +125,7 @@ def test_chained_public_callable_uses_declared_main_flow_not_storage_argument(
     assert edge.spec.ref() == incoming_ref
     assert edge.spec.parameter_name is None
     assert second_invocation.contract.group_scope_inputs.ref_set() == {incoming_ref}
-    assert edge.consumes_main_flow
+    assert edge.main_flow_projection is not None
     assert edge.main_flow_projection is MainFlowInputProjection.COMPLETE_PAYLOAD
     assert edge.storage_plan is None
     assert edge.projection is None
@@ -140,7 +159,7 @@ def test_chained_public_callable_uses_declared_main_flow_not_storage_argument(
                 )
             )
             records.append(record)
-        image, labels, rows = (record.value.data for record in records)
+        image, labels, rows = (record.data for record in records)
         np.testing.assert_array_equal(np.squeeze(image_payload_data(image)), fixture)
         np.testing.assert_array_equal(np.squeeze(object_label_dense_array(labels)), fixture)
         assert rows.subject.object_name == labels_plan.name

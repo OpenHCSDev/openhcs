@@ -1,4 +1,4 @@
-"""Synthetic stdpickle transport, without workers, UI, or a science dataset.
+"""Synthetic stdpickle and spawned-worker transport, without UI or science data.
 
 The producer persists through CustomFunctionManager. An independently started
 consumer has only those durable sources and the pickle, never producer globals.
@@ -23,6 +23,14 @@ PYTHON = Path(sys.executable)
 NAMES = ("transport_synthetic_alpha", "transport_synthetic_beta")
 TOKENS = ("alpha_units", "beta_units")
 OUTPUT_LIMIT = 16_384
+
+# Apply explicit source backing before spawn unpickles its product initializer,
+# not only in the producer's __main__ path. Ordinary installed runs omit this.
+dependency_root = os.environ.get("OPENHCS_SOURCE_VALIDATION_EXTERNAL_ROOT")
+if dependency_root:
+    sys.path.insert(0, str(WORKTREE))
+    from openhcs._source_dependencies import ensure_source_checkout_external_paths
+    ensure_source_checkout_external_paths(Path(dependency_root))
 
 
 @pytest.fixture(autouse=True)
@@ -96,6 +104,7 @@ def _run_child(env, *arguments):
     output = captured.decode("utf-8", errors="replace")
     assert returncode == 0, f"Child {arguments!r} exited {returncode}:\n{output}"
     assert "transport-ok" in output, output
+    return output
 
 
 def _source(name, token):
@@ -108,6 +117,7 @@ from openhcs.core.memory import numpy
 from openhcs.core.artifacts import (
     ArtifactSpec, ArtifactViewerStreaming, GroupLineageSourceRelation,
     ImageArtifactType, MainFlowPlaneProjectionOutputSpec, MeasurementsArtifactType,
+    ObjectLabelsArtifactType, ObjectMeasurementSubjectRelation,
 )
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
 from openhcs.core.runtime_measurements import (
@@ -151,13 +161,14 @@ class HelperFeatureOwner(RowCapability, UnitCapability, RuntimeMeasurementFeatur
         return cls.owns_measurement_feature_name(feature_name)
 
 input_spec = ArtifactSpec.input(
-    "SyntheticInput", ImageArtifactType, parameter_name="auxiliary", required=False,
+    "SyntheticInput", ObjectLabelsArtifactType, parameter_name="auxiliary", required=False,
 )
 measurement_spec = ArtifactSpec.output(
     "SyntheticMeasurements", MeasurementsArtifactType, required=False,
     viewer_streaming=ArtifactViewerStreaming.ON_DEMAND,
     measurement_feature_owner=HelperFeatureOwner,
-    relations=(GroupLineageSourceRelation(input_spec.ref()),),
+    relations=(GroupLineageSourceRelation(input_spec.ref()),
+               ObjectMeasurementSubjectRelation(input_spec.ref())),
 )
 image_spec = MainFlowPlaneProjectionOutputSpec.output(
     "SyntheticProjection", ImageArtifactType,
@@ -389,6 +400,156 @@ def _require_stale_rejection(operation):
     raise AssertionError("A persisted reference accepted a stale source revision")
 
 
+def _spawned_custom_task(payload, execution_id, plate_id):
+    """Run actual registered declarations and emit through the initialized queue."""
+    import numpy as np
+    from openhcs.core.progress import emit, ProgressPhase, ProgressStatus
+
+    _assert_payload(payload, "reference")
+    values = np.arange(6, dtype=np.uint16).reshape(2, 3)
+    results = []
+    for reference, _helpers in payload:
+        np.testing.assert_array_equal(reference.resolve()(values), values)
+        owner = reference.metadata.artifact_outputs[0].measurement_feature_owner
+        results.append(owner.make_row(2.5))
+    emit(execution_id=execution_id, plate_id=plate_id, axis_id="synthetic",
+         step_name="custom", phase=ProgressPhase.STEP_COMPLETED,
+         status=ProgressStatus.SUCCESS, percent=100)
+    return os.getpid(), tuple(results)
+
+
+def _spawned_compiled_custom_task(context, helpers):
+    """Exercise queue transport of the captured contract, not just its reference."""
+    import numpy as np
+    from openhcs.core.function_reference import FunctionReference
+
+    plan = context.step_plans[0]
+    (invocation,) = tuple(plan.compiled_function_pattern.iter_invocations())
+    assert isinstance(invocation.contract.raw_processing_function, FunctionReference)
+    assert invocation.contract.metadata.prepare is None
+    values = np.arange(6, dtype=np.uint16).reshape(2, 3)
+    np.testing.assert_array_equal(invocation.runtime_callable(values), values)
+    owner = invocation.contract.artifact_outputs[0].measurement_feature_owner
+    assert owner.row_type is helpers[4]
+    assert owner.make_row(2.5) == helpers[5]
+    return context.axis_id, os.getpid(), values.tolist(), owner.make_row(2.5)
+
+
+def _compiled_custom_contexts(payload, runtime):
+    from polystore.filemanager import FileManager
+    from polystore.memory import MemoryStorageBackend
+    from openhcs.constants.constants import Backend
+    from openhcs.core.compiled_execution import CompiledExecutionBundle
+    from openhcs.core.compiled_step_plan import CompiledStepPlan
+    from openhcs.core.context.processing_context import ProcessingContext
+    from openhcs.core.function_patterns import (
+        compile_function_pattern, normalize_function_pattern,
+    )
+    from openhcs.core.function_step_transport import FunctionStepTransportAuthority
+
+    contexts = {}
+    for index, (reference, _helpers) in enumerate(payload):
+        axis_id = f"synthetic_{index}"
+        # Compilation captures metadata from the registered runtime callable.
+        # Unlike an already-referenced pattern, this carries a displaced raw
+        # callable until the existing transport projection derives its owner.
+        captured = normalize_function_pattern(reference.resolve())
+        pattern = compile_function_pattern(captured, {}, {})
+        (invocation,) = tuple(pattern.iter_invocations())
+        assert callable(invocation.contract.raw_processing_function)
+        prepared = invocation.contract.resolve_runtime_callable()
+        plan = CompiledStepPlan(
+            step_index=0, step_name="Synthetic custom", step_type="FunctionStep",
+            axis_id=axis_id, func=captured, compiled_function_pattern=pattern,
+        )
+        context = ProcessingContext(
+            axis_id=axis_id, step_plans={0: plan},
+            filemanager=FileManager({Backend.MEMORY.value: MemoryStorageBackend()}),
+        )
+        context.freeze()
+        contexts[axis_id] = context
+        normalized = FunctionStepTransportAuthority.normalize_context(context)
+        transported = next(
+            normalized.step_plans[0].compiled_function_pattern.iter_invocations()
+        )
+        assert transported.contract is not invocation.contract
+        assert invocation.contract.resolve_runtime_callable() is prepared
+        assert callable(invocation.contract.raw_processing_function)
+        assert FunctionStepTransportAuthority.normalize_callable_contract(
+            transported.contract
+        ) is transported.contract
+    return CompiledExecutionBundle.from_runtime_contexts(
+        pipeline_definition=(), runtime_contexts=contexts,
+        worker_assignments={f"worker_{i}": [axis] for i, axis in enumerate(contexts)},
+        runtime_environment=runtime,
+    ).transport_contexts
+
+
+def _spawn(path):
+    import multiprocessing
+    from openhcs.core.compiled_execution import (
+        CompiledRuntimeEnvironmentPlan, CompiledWorkerStartPlan,
+    )
+    from openhcs.core.config import MultiprocessingStartMethod
+    from openhcs.core.orchestrator.cancellation import ExecutionCancellationSignal
+    from openhcs.core.orchestrator.worker_execution import WorkerExecutorFactory
+    from openhcs.core.progress import ProgressExecutionContext
+
+    # A future derived context can carry nontransportable local runtime state;
+    # no generic worker-bootstrap consumer should need to learn its fields.
+    @dataclasses.dataclass(frozen=True)
+    class RichProgressContext(ProgressExecutionContext):
+        runtime_callback: object
+
+    context = RichProgressContext("spawn-custom", "synthetic-plate", lambda: None)
+    _produce(path, "reference")
+    payload = _load(path)
+    method = MultiprocessingStartMethod.SPAWN
+    runtime = CompiledRuntimeEnvironmentPlan(
+        worker_start=CompiledWorkerStartPlan(method, method, "source fixture", False, False),
+        use_threading=False, configured_num_workers=2,
+    )
+    queue = multiprocessing.get_context(method.value).Queue()
+    resources = WorkerExecutorFactory(
+        log_file_base=None, progress_queue=queue,
+        cancellation=ExecutionCancellationSignal(),
+    ).create(runtime_environment=runtime, actual_max_workers=2)
+    contexts = _compiled_custom_contexts(payload, runtime)
+    try:
+        with resources.execution_context():
+            tasks = tuple(
+                resources.executor.submit(_spawned_compiled_custom_task, lane_context, helpers)
+                for lane_context, (_reference, helpers) in zip(
+                    contexts.values(), payload, strict=True
+                )
+            )
+            for (axis, lane_context), task, (_reference, helpers) in zip(
+                contexts.items(), tasks, payload, strict=True
+            ):
+                observed_axis, worker_pid, values, row = task.result(timeout=15)
+                assert observed_axis == axis and lane_context.axis_id == axis
+                assert worker_pid != os.getpid()
+                assert values == [[0, 1, 2], [3, 4, 5]]
+                assert type(row) is helpers[4] and row == helpers[5]
+            pid, rows = resources.executor.submit(
+                _spawned_custom_task, payload, context.execution_id, context.plate_id,
+            ).result(timeout=15)
+        assert pid != os.getpid()
+        for row, (_reference, helpers) in zip(rows, payload, strict=True):
+            assert type(row) is helpers[4]
+            assert row == helpers[5]
+        progress = queue.get(timeout=5)
+        assert progress["execution_id"] == context.execution_id
+        assert progress["plate_id"] == context.plate_id
+        assert progress["pid"] == pid
+        assert progress["status"] == "success"
+        assert progress["percent"] == 100
+        print(f"spawned custom revision/progress/rows: worker {pid}", flush=True)
+    finally:
+        queue.close()
+        queue.join_thread()
+
+
 def _child_main():
     # A script's sys.path starts in tests/integration, not the worktree root.
     sys.path.insert(0, str(WORKTREE))
@@ -407,6 +568,8 @@ def _child_main():
     path = Path(raw_path)
     if role == "produce":
         _produce(path, kind)
+    elif role == "spawn":
+        _spawn(path)
     elif role == "mutate":
         _mutate(mutation)
     elif role == "consume":
@@ -452,6 +615,13 @@ def test_persisted_payload_preserves_nominal_helpers_in_independent_consumer(
     path = tmp_path / "transport.pkl"
     _run_child(transport_environment, "produce", str(path), kind, state, "unchanged")
     _run_child(transport_environment, "consume", str(path), kind, state, "unchanged")
+
+
+def test_persisted_custom_revision_executes_in_original_spawn_factory(
+    tmp_path, transport_environment,
+):
+    print(_run_child(transport_environment, "spawn", str(tmp_path / "spawn.pkl"),
+                     "reference", "cold", "unchanged"), end="")
 
 
 @pytest.mark.parametrize("mutation", ["changed", "deleted", "renamed"])

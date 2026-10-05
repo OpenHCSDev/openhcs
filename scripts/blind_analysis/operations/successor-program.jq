@@ -27,9 +27,26 @@ $funding[0] as $original
 | .reviewed_source_merge = $source_head
 | .required_skill_merge = $source_head
 | .qualification_receipt = $new.package_qualification
+| .task_minutes_from_first_mcp_start = $new.task_minutes_from_first_mcp_start
+| if .task_minutes_from_first_mcp_start == null then .
+  elif (.task_minutes_from_first_mcp_start|type)=="number" then
+    if .task_minutes_from_first_mcp_start > 0 and
+       .task_minutes_from_first_mcp_start == (.task_minutes_from_first_mcp_start|floor)
+    then . else error("scientific interval must be null or positive integer minutes") end
+  else error("scientific interval must be null or positive integer minutes") end
 | if ($new.resource_policy|type)!="object"
   then error("missing resource policy") else . end
 | .proposed_resource_envelope += $original.proposed_resource_envelope + $new.resource_policy
+| del(.proposed_resource_envelope.aggregate_memory_max_bytes,
+      .proposed_resource_envelope.per_author_science_mib,
+      .proposed_resource_envelope.per_author_cli_mib,
+      .proposed_resource_envelope.per_author_helpers_mib,
+      .proposed_resource_envelope.helper_caps_mib,
+      .proposed_resource_envelope.swap_max_bytes,
+      .proposed_resource_envelope.helpers_scope_grouping,
+      .proposed_resource_envelope.approval)
+| del(.proposed_resource_envelope.total_output_and_scratch_mib,
+      .proposed_resource_envelope.full_memory_psi_max_percent)
 | .authors = $original.authors
 | .authors |= map(
     . as $member
@@ -39,6 +56,7 @@ $funding[0] as $original
         | .input_root = $leaves[0].input_root
         | .brief = $leaves[0].brief
         | .scientific_files = $leaves[0].scientific_files
+        | .artifact_destination = $leaves[0].artifact_destination
         | .helper_custody.parent_handoff_receipt = $leaves[0].helper_handoff_receipt
         | .writer_handoff = [{program_root:$member.run_owner_root,slot:$member.slot,terminal_custody_receipt:$leaves[0].terminal_custody_receipt}]
         | .run_owner_root = $successor_root
@@ -48,6 +66,12 @@ $funding[0] as $original
     | .slot as $slot | select(all($retired[]; .slot!=$slot))
   )
 | .authors += $new.additional_authors
+| if any(.authors[]; .artifact_destination != null and
+    (.artifact_destination | if type!="object" then true else
+      ([.path,.mount] | any(.[]; if type!="string" then true
+        else (startswith("/")|not) or contains(":") or contains("\n") end))
+      end))
+  then error("artifact destination requires absolute path and mount") else . end
 | if (.authors|map(.slot)|unique|length)!=(.authors|length)
   then error("ambiguous scientific member") else . end
 | if (.authors|map(.display)|unique|length)!=(.authors|length)
@@ -62,7 +86,8 @@ $funding[0] as $original
     [($new.members[]|.predecessor_slot),($retired[]|.slot)] as $terminal |
       $original.retained_output_roots +
       [$terminal[] as $member | $original.authors[] | select(.slot==$member) |
-       .run_owner_root+"/"+.slot+"/author-workspace/output"]
+       (.run_owner_root+"/"+.slot+"/author-workspace/output"),
+       (.artifact_destination.path // (.run_owner_root+"/"+.slot+"/author-workspace/output"))]
     | unique
   )
 | .funded_members = [.authors[] | {slot,run_owner_root}]

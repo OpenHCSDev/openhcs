@@ -15,7 +15,6 @@ Architecture:
 
 from __future__ import annotations
 
-import hashlib
 import logging
 import os
 import tempfile
@@ -208,7 +207,7 @@ class CustomFunctionManager:
         sources = tuple(
             CustomFunctionSource(
                 function_name=source_path.stem,
-                content_sha256=hashlib.sha256(source_path.read_bytes()).hexdigest(),
+                content_sha256=CustomFunctionSource.content_digest(source_path.read_bytes()),
             )
             for source_path in sorted(self.storage_dir.glob("*.py"))
         )
@@ -531,7 +530,7 @@ class CustomFunctionManager:
             )
         source = CustomFunctionSource(
             function_name=declaration.__name__,
-            content_sha256=hashlib.sha256(code.encode("utf-8")).hexdigest(),
+            content_sha256=CustomFunctionSource.content_digest(code.encode("utf-8")),
         )
         CustomFunctionSourceNamespace(source, namespace).bind(declaration)
         try:
@@ -597,7 +596,7 @@ class CustomFunctionManager:
         return CustomFunctionSourceSnapshot(
             source=CustomFunctionSource(
                 function_name=source_path.stem,
-                content_sha256=hashlib.sha256(source_bytes).hexdigest(),
+                content_sha256=CustomFunctionSource.content_digest(source_bytes),
             ),
             code=code,
         )

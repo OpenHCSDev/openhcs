@@ -94,6 +94,6 @@ def test_native_grouped_main_flow_compiles_into_cellprofiler_consumer(tmp_path):
     assert threshold_plan.compiled_function_pattern is not None
     invocation = next(threshold_plan.compiled_function_pattern.iter_invocations())
     (edge,) = invocation.artifact_input_edges
-    assert edge.consumes_main_flow
+    assert (edge.main_flow_projection is not None)
     assert edge.storage_plan is None
     assert invocation.contract.execution_scope is FunctionStepExecutionScope.AXIS

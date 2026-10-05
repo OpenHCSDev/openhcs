@@ -19,6 +19,7 @@ from openhcs.core.runtime_batch_contracts import (
     RuntimePure2DSliceBatchRequest,
     pure_2d_batch_executor,
 )
+from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     image_payload_data,
     with_image_payload_data,
@@ -35,6 +36,7 @@ from openhcs.processing.backends.cellprofiler._backend import (
     CellProfilerBackendProvider,
     CellProfilerBackendStrategyMixin,
 )
+from openhcs.processing.backends.cellprofiler import _median_native
 from openhcs.processing.backends.cellprofiler.perf_fixtures import (
     capture_array_fixture,
 )
@@ -175,7 +177,9 @@ class NumpyMedianFilterBackendStrategy(MedianFilterBackendStrategy):
         image = np.linspace(0.0, 1.0, 8 * 16 * 16, dtype=np.float32).reshape(
             (8, 16, 16)
         )
-        self.filter(image, window_size=5, mode=ScipyBoundaryMode.CONSTANT)
+        windows = _median_native.supported_windows()
+        for window in windows or (5,):
+            self.filter(image, window_size=window, mode=ScipyBoundaryMode.CONSTANT)
 
     def filter(
         self,
@@ -235,6 +239,9 @@ class NumpyMedianFilterBackendStrategy(MedianFilterBackendStrategy):
         self, image: np.ndarray, window_size: int, mode: ScipyBoundaryMode
     ) -> np.ndarray | None:
         """Return an exact constant-mode median using NumPy's vectorized partition."""
+        accelerated = self.selection_network_filter(image, window_size, mode)
+        if accelerated is not None:
+            return accelerated
         plan = self.vectorized_memory_policy.plan(
             image, window_size=window_size, mode=mode
         )
@@ -275,6 +282,31 @@ class NumpyMedianFilterBackendStrategy(MedianFilterBackendStrategy):
                 flattened_windows, plan.median_rank, axis=-1
             )[..., plan.median_rank]
         return filtered.astype(image.dtype, copy=False)
+
+    def selection_network_filter(
+        self, image: np.ndarray, window_size: int, mode: ScipyBoundaryMode
+    ) -> np.ndarray | None:
+        """Use a compiled network only where its scalar ordering matches NumPy."""
+        if (
+            image.ndim != 3
+            or image.dtype != np.dtype(np.float32)
+            or mode is not ScipyBoundaryMode.CONSTANT
+            or window_size not in _median_native.supported_windows()
+            or min(image.shape) < 1
+            or not np.all(np.isfinite(image))
+            or np.any((image == 0) & np.signbit(image))
+        ):
+            return None
+        radius = int(window_size) // 2
+        padded = np.pad(
+            image, ((radius, radius), (radius, radius), (radius, radius + 7)),
+            mode="constant", constant_values=0,
+        )
+        depth, height, width = image.shape
+        output_width = ((width + 7) // 8) * 8
+        output = np.empty((depth, height, output_width), dtype=np.float32)
+        _median_native.filter(padded, output, int(window_size))
+        return output[..., :width]
 
     def scipy_filter(
         self, image: np.ndarray, window_size: int, mode: ScipyBoundaryMode
@@ -371,7 +403,7 @@ def median_filter_backend(
 @runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
 @numpy(contract=ProcessingContract.FLEXIBLE)
 def medianfilter(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     window_size: int = 3,
     mode: ScipyBoundaryMode = ScipyBoundaryMode.CONSTANT,
 ) -> np.ndarray:

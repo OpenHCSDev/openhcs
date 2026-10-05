@@ -24,7 +24,6 @@ from openhcs.core.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelVariantData,
 )
-from openhcs.core.runtime_output_matching import RuntimeReturnedOutputMatcher
 from openhcs.core.runtime_plane_projection import RuntimePlaneProjection
 from openhcs.core.runtime_tabular_values import MeasurementObjectRowIdentity
 from openhcs.interop.cellprofiler.measurement_dialect import (
@@ -188,12 +187,12 @@ def test_optional_removed_declaration_validates_and_matches_exact_runtime_slots(
         emit_removed_objects=removed,
     )
     assert len(result) == (6 if removed else 4)
-    resolved = RuntimeReturnedOutputMatcher(contract, result).resolve()
+    resolved = contract.resolve_returned_output(result)
     assert len(resolved) == len(contract.artifact_outputs)
     assert result[-1].source_ids == (() if empty else ((2,) if removed else (7,)))
     assert result[-1].target_ids == (() if empty else (1,))
     with pytest.raises(ValueError, match="trailing return count"):
-        RuntimeReturnedOutputMatcher(contract, result[:-1]).resolve()
+        contract.resolve_returned_output(result[:-1])
 
 
 def test_optional_return_annotation_does_not_weaken_object_identity_validation():

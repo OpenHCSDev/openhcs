@@ -1,0 +1,37 @@
+{
+  "trial": "H004_FRESH656_95",
+  "scope": "fresh independent development on two released public raw TIFFs; not unseen validation",
+  "final_attempt": "C07",
+  "final_source_sha256": "9295fb4b61758b6ea6e02dedc403ffdf770f1f50a89bbc7133e4129e44efa23c",
+  "manifest_sha256": "b0e4344091ff5315b75883412c2f00d736b48020d4342832f97394944ba32bd8",
+  "disposition": "scoped nuclear and observed segment findings; full outgrowth and ownership rejected",
+  "scoped_findings": {
+    "compact_nuclear_objects": 8,
+    "observed_segment_length_pixels": 51.556349,
+    "segment_boundary_censored": true,
+    "external_reference_accuracy_verified": false
+  },
+  "unaccepted_algorithm_outputs": {
+    "branches": 143,
+    "total_outgrowth_pixels": 6795.7147
+  },
+  "independent_integrity_check": {
+    "scientific_files": 283,
+    "control_files": 112,
+    "completed_mcp_journals": 3,
+    "outer_journal_prefixes": 2,
+    "size_and_sha256_mismatches": 0
+  },
+  "original_control_root": "/home/ts/wt/openhcs-issue-batch-20260929/next-h004-fresh95-after656-20261004/H004_FRESH656_95/author-workspace/output",
+  "canonical_scientific_root": "/run/media/ts/hdd/openhcs-science/next-h004-fresh95-after656-20261004/H004_FRESH656_95",
+  "original_final_records": ["FINAL.rst", "REPORT.md", "manifest.json", "final_attempt.json", "trials/C07/pipeline.py"],
+  "reference_answers_opened_or_scored": false,
+  "recorded_client_exit_code": 2,
+  "limitations": [
+    "physical calibration unverified; report pixels despite legacy physical-unit field names",
+    "faint processes remain discontinuous",
+    "near-process fragments and crossing ownership uncertain",
+    "complete soma geometry not accepted",
+    "independent visual review does not establish exhaustive object truth or a causal skill improvement"
+  ]
+}

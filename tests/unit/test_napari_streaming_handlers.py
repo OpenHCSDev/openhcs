@@ -870,7 +870,7 @@ class _FakeViewer:
         )
 
     def _add_layer(self, layer_type, data, name, kwargs):
-        layer_attributes = {"name": name, "data": data, "kwargs": kwargs}
+        layer_attributes = {"name": name, "data": data, "kwargs": kwargs, "visible": True}
         if layer_type == "shapes":
             layer_attributes.update(
                 {
@@ -1980,8 +1980,10 @@ class _RegionDisplayConfig(NapariDisplayConfig):
         (_RegionDisplayConfig.REGION_COMPONENT, "region_mode", _RegionDisplayConfig),
     ],
 )
+@pytest.mark.parametrize("stack_origin", ["raw", "pipeline"])
+@pytest.mark.parametrize("raw_first", [True, False])
 def test_paired_raw_stack_review_accepts_layer_pipeline_at_same_channel_coordinates(
-    component, mode_field, config_type
+    component, mode_field, config_type, stack_origin, raw_first
 ):
     from napari.components import ViewerModel
     from openhcs.core.config import NapariDimensionMode
@@ -1992,16 +1994,14 @@ def test_paired_raw_stack_review_accepts_layer_pipeline_at_same_channel_coordina
     server.layer_route_state = NapariLayerRouteStateStore.empty()
     server.viewer = ViewerModel()
     pipeline = NapariLayerDisplayPipeline(server)
-    for origin, config, producer in (
-        (
-            "raw", config_type(),
-            StreamProducerIdentity("manual", "image", "raw", "raw"),
-        ),
-        (
-            "pipeline", config_type(**{mode_field: NapariDimensionMode.LAYER}),
-            None,
-        ),
-    ):
+    for origin in (("raw", "pipeline") if raw_first else ("pipeline", "raw")):
+        config = config_type(**{
+            mode_field: (
+                NapariDimensionMode.STACK if origin == stack_origin
+                else NapariDimensionMode.LAYER
+            )
+        })
+        producer = StreamProducerIdentity("manual", "image", "raw", "raw") if origin == "raw" else None
         for channel in (1, 2):
             route = f"{origin}-{channel}"
             item = _layer_item(
@@ -2735,8 +2735,8 @@ def test_napari_display_pipeline_includes_collapsed_component_labels_in_overlay(
 def test_napari_display_pipeline_uses_updated_route_when_selected_route_ndim_mismatches():
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
 
-    selected_layer = object()
-    updated_layer = object()
+    selected_layer = SimpleNamespace(visible=True)
+    updated_layer = SimpleNamespace(visible=True)
 
     class FakeSelection:
         active = selected_layer
@@ -2804,8 +2804,8 @@ def test_napari_display_pipeline_uses_updated_route_when_selected_route_ndim_mis
 def test_napari_display_pipeline_applies_updated_derived_route_overlay():
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
 
-    selected_layer = object()
-    derived_layer = object()
+    selected_layer = SimpleNamespace(visible=True)
+    derived_layer = SimpleNamespace(visible=True)
 
     class FakeSelection:
         active = selected_layer
@@ -2880,7 +2880,7 @@ def test_napari_display_pipeline_preserves_active_non_openhcs_layer_during_updat
     server.viewer.dims.current_step = (0, 0, 0)
     server.viewer.text_overlay.text = "stale OpenHCS overlay"
     server.viewer.layers.selection.active = object()
-    derived_layer = object()
+    derived_layer = SimpleNamespace(visible=True)
     server.layer_route_state.set_layer("derived", derived_layer)
     server.layer_route_state.set_dimension_state(
         "derived",
@@ -2906,8 +2906,8 @@ def test_napari_display_pipeline_preserves_active_non_openhcs_layer_during_updat
 def test_napari_display_pipeline_falls_back_when_selected_route_lacks_current_step_labels():
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
 
-    selected_layer = object()
-    fallback_layer = object()
+    selected_layer = SimpleNamespace(visible=True)
+    fallback_layer = SimpleNamespace(visible=True)
 
     class FakeSelection:
         active = selected_layer
@@ -2989,8 +2989,8 @@ def test_napari_display_pipeline_falls_back_when_selected_route_lacks_current_st
 def test_napari_display_pipeline_falls_back_from_selected_offset_channel():
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
 
-    source_layer = object()
-    selected_neurite_layer = object()
+    source_layer = SimpleNamespace(visible=True)
+    selected_neurite_layer = SimpleNamespace(visible=True)
 
     class FakeSelection:
         active = selected_neurite_layer
@@ -3051,8 +3051,8 @@ def test_napari_display_pipeline_falls_back_from_selected_offset_channel():
 def test_napari_display_pipeline_labels_all_slices_from_nonzero_axis_origin():
     napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
 
-    map2_layer = object()
-    smi312_layer = object()
+    map2_layer = SimpleNamespace(visible=True)
+    smi312_layer = SimpleNamespace(visible=True)
 
     class FakeSelection:
         active = map2_layer
@@ -3166,7 +3166,7 @@ def test_napari_display_pipeline_rejects_axis_labels_for_wrong_viewer_ndim():
         dims = FakeDims()
         text_overlay = FakeTextOverlay()
 
-    layer = type("Layer", (), {"data": np.zeros((2, 2, 8, 16))})()
+    layer = type("Layer", (), {"data": np.zeros((2, 2, 8, 16)), "visible": True})()
     server = _FakeNapariServer()
     server.layer_route_state = NapariLayerRouteStateStore.empty()
     server.viewer = FakeViewer()
@@ -5985,24 +5985,23 @@ def test_napari_shapes_layer_display_applies_route_global_axis_translate():
         component_values={"channel": [4], "site": [1, 2]},
         axis_offsets=(3, 0),
     )
+    item = _layer_item(
+        {"channel": 4, "site": 1},
+        [
+            {
+                "type": "polygon",
+                "coordinates": [[0, 0], [0, 2], [2, 2], [2, 0]],
+                "metadata": {"source_spatial_shape_yx": (3, 3)},
+            }
+        ],
+        stream_layer_data_type=StreamingDataType.SHAPES,
+    )
 
     napari_viewer_server.NapariShapesLayerDisplayHandler().handle(
         napari_viewer_server.NapariLayerDisplayRequest(
             pipeline=pipeline,
             presentation=presentation,
-            items=[
-                _layer_item(
-                    {"channel": 4, "site": 1},
-                    [
-                        {
-                            "type": "polygon",
-                            "coordinates": [[0, 0], [0, 2], [2, 2], [2, 0]],
-                            "metadata": {"source_spatial_shape_yx": (3, 3)},
-                        }
-                    ],
-                    stream_layer_data_type=StreamingDataType.SHAPES,
-                )
-            ],
+            items=[item],
             display_config=NapariDisplayConfig(),
         )
     )
@@ -6019,6 +6018,7 @@ def test_napari_shapes_layer_display_applies_route_global_axis_translate():
         "source_spatial_shape_yx": ["(3, 3)"],
         "label": [1],
         "path": ["test"],
+        NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE: [item.element_identity(0)],
     }
     assert layer_kwargs["ndim"] == 4
     assert layer_kwargs["edge_color"] == "label"

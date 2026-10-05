@@ -233,6 +233,253 @@ class FigureSheet:
         print(f"Rendered {self.stem}")
 
 
+def h001_scored():
+    """Native witnesses from the exact fresh author evaluated in Figure 5B."""
+    sheet = FigureSheet("h001_scored_native", "", 6.4)
+    sheet.source(
+        ROOT / "figure-collection-20261004/H001-FRESH586-SCORED-NATIVE-REVIEW.rst"
+    )
+    evaluation_path = (
+        ROOT / "paper/supplementary/task_only_analysis/h001-fresh586-postfreeze-evaluation.json"
+    )
+    sheet.source(evaluation_path)
+    evaluation = json.loads(evaluation_path.read_text())
+    first, final = evaluation["attempts"]
+    sheet.text(
+        3, 97, "H001: native views from the scored task-only run",
+        size=18, weight="bold", va="top",
+    )
+    for y, title, prefix, crop, bottom, height in (
+        (89, "A  Matched overview", "overview", (553, 40, 995, 478), 47, 36),
+        (41, "B  Elongated-body false split repaired", "detail", (297, 28, 1037, 492), 9, 26),
+    ):
+        sheet.text(3, y, title, size=15, weight="bold")
+        for x, stage, label in (
+            (3, "raw", "Raw"), (35, "first", "First, a01"), (67, "final", "Final, a04")
+        ):
+            sheet.text(x, y - 5, label, size=14)
+            sheet.source_image(
+                OUTPUT / "h001_scored_sources" / f"{prefix}_{stage}.png",
+                (x, bottom, 29, height), crop=crop,
+            )
+    sheet.text(
+        3, 3,
+        f"Object F1 {first['derived_f1']:.3f} → {final['derived_f1']:.3f}; "
+        f"{final['score']['false_negative_objects']} reference misses remain.",
+        size=14,
+    )
+    sheet.save()
+
+
+def task_only_story():
+    """Main-text native evidence and scores from the same frozen author runs."""
+    from build_slas_task_only import (
+        BBBC039_SOURCE, H001_SOURCE, load_evaluations, plot_coverage, plot_pair,
+    )
+
+    h001, bbbc039 = load_evaluations(ROOT)
+    with plt.rc_context({"font.size": 14, "axes.titlesize": 15,
+                         "axes.spines.top": False, "axes.spines.right": False}):
+        sheet = FigureSheet("task_only_visual", "", 8.2)
+        for path in (H001_SOURCE, BBBC039_SOURCE,
+                     Path("paper/figures/build_slas_task_only.py"),
+                     Path("figure-collection-20261004/H001-FRESH586-SCORED-NATIVE-REVIEW.rst")):
+            sheet.source(ROOT / path)
+        sheet.text(3, 98, "Autonomous segmentation: repair and field coverage",
+                   size=18, weight="bold", va="top")
+        sheet.text(3, 93, "A  H001: an elongated-body split repaired",
+                   size=15, weight="bold")
+        for x, stage, label in ((3, "raw", "Raw"), (35, "first", "First"),
+                                (67, "final", "Final")):
+            sheet.text(x, 89, label, size=14)
+            sheet.source_image(
+                OUTPUT / "h001_scored_sources" / f"detail_{stage}.png",
+                (x, 64, 30, 24), crop=(297, 28, 1037, 492),
+            )
+        sheet.text(50, 64, "Own image review; no reference feedback",
+                   size=14, ha="center", color=MUTED)
+        axes = (sheet.figure.add_axes((.09, .37, .35, .23)),
+                sheet.figure.add_axes((.60, .37, .35, .23)),
+                sheet.figure.add_axes((.09, .08, .86, .19)))
+        first, final = h001["attempts"]
+        plot_pair(axes[0], first["derived_f1"], final["derived_f1"],
+                  "B  H001: same whole image", "Notebook-derived reference", font_size=16)
+        paired = bbbc039["first_vs_final_same_three"]
+        plot_pair(axes[1], paired["first"]["micro_f1"], paired["final"]["micro_f1"],
+                  "C  BBBC039: same three fields", "Independent annotations", font_size=16)
+        plot_coverage(axes[2], bbbc039, font_size=14)
+        axes[2].set_title("D  BBBC039: final coverage, all 200 fields")
+        for axis in axes:
+            axis.grid(axis="y", color="#d9e0e5", linewidth=.6)
+            axis.set_axisbelow(True)
+        sheet.save()
+
+
+def translocation_repeat():
+    """Plot frozen native well summaries, without rerunning scientific analysis."""
+    source_path = ROOT / "paper/supplementary/task_only_analysis/bbbc013-fresh13-plot-source.json"
+    source = json.loads(source_path.read_text())
+    if source["author_run"] != "BBBC013_FRESH13_88":
+        raise ValueError("Expected the frozen fresh13 translocation author")
+    tables = source["tables"]
+    with plt.rc_context({"font.size": 12, "axes.titlesize": 13,
+                         "axes.spines.top": False, "axes.spines.right": False}):
+        sheet = FigureSheet("translocation_fresh13", "", 6.3)
+        sheet.source(source_path)
+        sheet.source(ROOT / "figure-collection-20261004/BBBC013-FRESH13-DEVELOPMENT-VISUAL-REVIEW.rst")
+        sheet.text(3, 97, "Fresh-context analysis recovers translocation response",
+                   size=16, weight="bold", va="top")
+        for index, (block, unit, color) in enumerate(
+            (("Wortmannin", "nM", BLUE), ("LY294002", "uM", TEAL))
+        ):
+            rows = sorted(
+                (row for row in tables["dose_response"]["rows"]
+                 if row["assay_block"] == block and row["assay_role"] in {"empty", "dose"}),
+                key=lambda row: float(row["concentration"]),
+            )
+            if any(row["concentration_unit"] != unit or row["treatment"] != block
+                   or int(row["finite_wells"]) != 4 for row in rows):
+                raise ValueError("Dose plots require the declared treatment, units and four wells")
+            left = .09 + .49 * index
+            dose_axis = sheet.figure.add_axes((left, .52, .36, .33))
+            positions = list(range(len(rows)))
+            dose_axis.errorbar(
+                positions, [float(row["mean_well_ratio"]) for row in rows],
+                yerr=[float(row["replicate_sd"]) for row in rows],
+                fmt="o-", color=color, capsize=3, linewidth=1.3, markersize=4,
+            )
+            dose_axis.set(
+                title=f"{'AB'[index]}  {block}", ylim=(0, 9),
+                ylabel="Nuclear / cytoplasmic GFP",
+                xlabel=f"Concentration ({'µM' if unit == 'uM' else unit})",
+                xticks=positions,
+                xticklabels=[f"{float(row['concentration']):g}" for row in rows],
+            )
+            dose_axis.tick_params(axis="x", labelrotation=45, labelsize=12)
+            statistics, = (row for row in tables["assay_statistics"]["rows"]
+                           if row["assay_block"] == block)
+            control_axis = sheet.figure.add_axes((left, .13, .36, .21))
+            control_axis.bar(
+                (0, 1), (float(statistics["negative_mean"]), float(statistics["positive_mean"])),
+                yerr=(float(statistics["negative_replicate_sd"]),
+                      float(statistics["positive_replicate_sd"])),
+                color=(MUTED, color), width=.5, capsize=3,
+            )
+            control_axis.set(
+                title=f"{'CD'[index]}  Controls: Z′ = {float(statistics['z_prime']):.3f}",
+                xticks=(0, 1), xticklabels=("Vehicle", "Wortmannin\n150 nM"),
+                ylabel="GFP ratio", ylim=(0, 9),
+            )
+            for axis in (dose_axis, control_axis):
+                axis.set_yticks((0, 2, 4, 6, 8))
+                axis.grid(axis="y", color="#d9e0e5", linewidth=.6)
+                axis.set_axisbelow(True)
+        sheet.text(50, 3, "Means ± between-well SD; four wells per group. Dose positions equally spaced.",
+                   size=12, ha="center", color=MUTED)
+        sheet.save()
+
+
+def bbbc039_repeat():
+    """Compare independent frozen authors using their existing score receipts."""
+    from build_slas_task_only import BBBC039_SOURCE
+
+    earlier_path = ROOT / BBBC039_SOURCE
+    repeat_path = ROOT / "figure-collection-20261004/bbbc039-fresh10coverage-postfreeze-evaluation.json"
+    earlier = json.loads(earlier_path.read_text())
+    repeat = json.loads(repeat_path.read_text())
+    if digest(earlier_path) != repeat["comparison612"]["report_sha256"]:
+        raise ValueError("Repeat comparison must use the exact earlier receipt")
+    key = lambda row: (row["source_set_id"], row["channel"], row["partition"])
+    previous = {key(row): row for row in earlier["instance_metrics"]}
+    current = {key(row): row for row in repeat["instance_metrics"]}
+    if len(previous) != 200 or previous.keys() != current.keys():
+        raise ValueError("Independent repeat requires the same 200 field identities")
+    if repeat["match_iou"] != earlier["match_iou"] or repeat["match_iou"] != .5:
+        raise ValueError("Independent repeat requires the same IoU matching rule")
+    for identity, row in current.items():
+        if row["reference_count"] != previous[identity]["reference_count"]:
+            raise ValueError("Reference population changed between authors")
+
+    with plt.rc_context({"font.size": 14, "axes.titlesize": 15,
+                         "axes.spines.top": False, "axes.spines.right": False}):
+        sheet = FigureSheet("bbbc039_independent_repeat", "", 4.9)
+        sheet.source(earlier_path)
+        sheet.source(repeat_path)
+        sheet.text(3, 98, "Independent authors: agreement across the same 200 fields",
+                   size=18, weight="bold", va="top")
+        scatter = sheet.figure.add_axes((.09, .27, .35, .55))
+        pooled = sheet.figure.add_axes((.61, .27, .35, .55))
+        for empty, color, label in (
+            (False, BLUE, "Annotated fields"),
+            (True, ORANGE, "Annotation-empty fields (n=3)"),
+        ):
+            rows = [row for row in current.values()
+                    if (row["reference_count"] == 0) == empty]
+            scatter.scatter([100 * previous[key(row)]["f1"] for row in rows],
+                            [100 * row["f1"] for row in rows],
+                            s=24, alpha=.75, color=color, label=label, zorder=3)
+        scatter.plot((0, 100), (0, 100), "--", color=MUTED, linewidth=1)
+        scatter.set(title="A  Paired field scores", xlabel="Earlier author F1 (%)",
+                    ylabel="Independent repeat F1 (%)", xlim=(-3, 103), ylim=(-3, 103))
+        scatter.set_aspect("equal", adjustable="box")
+        for offset, record, color, label in (
+            (-.18, earlier, BLUE, "Earlier author"),
+            (.18, repeat, TEAL, "Independent repeat"),
+        ):
+            values = [100 * record["summary"][name]
+                      for name in ("precision", "recall", "micro_f1")]
+            bars = pooled.bar([index + offset for index in range(3)], values,
+                              width=.34, color=color, label=label)
+            pooled.bar_label(bars, labels=[f"{value:.2f}" for value in values],
+                             padding=3, fontsize=12, rotation=90)
+        pooled.set(title="B  Pooled object agreement", ylabel="Agreement (%)",
+                   xticks=(0, 1, 2), xticklabels=("Precision", "Recall", "F1"),
+                   ylim=(0, 112), yticks=(0, 20, 40, 60, 80, 100))
+        pooled.legend(frameon=False, fontsize=11, loc="upper center",
+                      bbox_to_anchor=(.5, -.24), ncol=2)
+        for axis in (scatter, pooled):
+            axis.grid(color="#d9e0e5", linewidth=.6)
+            axis.set_axisbelow(True)
+        counts = repeat["distribution"]
+        sheet.text(50, 4,
+                   f"{counts['improved_vs612']} fields improved; "
+                   f"{counts['regressed_vs612']} lower; "
+                   f"{counts['unchanged_vs612']} unchanged",
+                   size=14, ha="center", color=MUTED)
+        sheet.save()
+
+
+def h004_junction():
+    """Retained neurite support repair, separate from crossing ownership."""
+    sheet = FigureSheet("h004_junction_native", "", 6.3)
+    sheet.source(ROOT / "figure-collection-20261004/H004-FRESH10-NATIVE-REVIEW.rst")
+    metrics_path = ROOT / "paper/supplementary/task_only_analysis/h004-fresh10/final-metrics.json"
+    sheet.source(metrics_path)
+    metrics = json.loads(metrics_path.read_text())
+    for attempt in ("BIO04", "BIO06"):
+        sheet.source(ROOT / f"paper/supplementary/task_only_analysis/h004-fresh10/{attempt}.py")
+    sheet.text(3, 97, "Neurite support: a recovered junction, remaining gaps", size=18, weight="bold", va="top")
+    for x, y, name, label in (
+        (3, 53, "raw", "A  Raw process channel"),
+        (52, 53, "before", "B  Before: ridge-derived support"),
+        (3, 12, "final", "C  Final: strong-raw support added"),
+        (52, 12, "combined", "D  Final raw + skeleton / soma"),
+    ):
+        sheet.text(x, y + 35, label, size=14, weight="bold")
+        sheet.source_image(
+            OUTPUT / "h004_junction_sources" / f"{name}.png",
+            (x, y, 45, 32), crop=(297, 28, 1250, 430),
+        )
+    sheet.text(
+        3, 5,
+        f"Selected bright-junction tile: {metrics['junction_raw20_count']} strong raw pixels; "
+        f"{metrics['junction_raw20_missing_final']} excluded in final support.",
+        size=14,
+    )
+    sheet.text(3, 1, "Local support recovery is not complete tracing or neuron ownership.", size=14)
+    sheet.save()
+
+
 def architecture():
     sheet = FigureSheet(
         "shared_workflow", "OpenHCS: one editable workflow from images to results", 8.1

@@ -1,0 +1,24 @@
+{
+  "status": "PASS",
+  "controls": [
+    "original_called_once",
+    "argument_mutation_and_result_identity",
+    "signature_wrapped_code",
+    "nested_exclusive_conservation",
+    "error_identity_and_mutation",
+    "finally_restores_nested_state",
+    "root_namespace_no_overwrite",
+    "outside_root_ready_passthrough",
+    "fork_tls_reset",
+    "source_loader_real_declaring_path",
+    "instance_descriptor",
+    "classmethod_descriptor",
+    "staticmethod_descriptor",
+    "source_hash_drift_refusal",
+    "unchanged_storage_caps_and_41_hook_roster"
+  ],
+  "count": 15,
+  "site_sha256": "339c145b2c13548589958d12ebfe77672f87a108c82cbb44dbe1fdcc929d024b",
+  "controller_sha256": "5460564d44ffdc7e70078d63ac1250bb65a4fff2320da8dcb89b06fba999602f",
+  "scope": "Temporary test-owned source only, original result/error/mutation and descriptor/path/hash laws; no candidate pipeline import, compile, execution, profiler, snapshot or processing callback invocation."
+}

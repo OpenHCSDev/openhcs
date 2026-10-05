@@ -30,7 +30,6 @@ from openhcs.core.pipeline.path_planner import (
     PathPlannerExecutionGroups,
     PathPlannerGroupScope,
 )
-from openhcs.core.pipeline.step_snapshot import StepSnapshot
 from openhcs.core.progress import set_progress_queue
 from openhcs.core.source_bindings import (
     NamedSourceBinding,
@@ -103,7 +102,7 @@ def test_artifact_owned_scope_uses_exact_source_artifact_component_identity() ->
         ),
         source_bindings=source_bindings,
     )
-    snapshot = StepSnapshot(index=0, scope_id="combine", step=step)
+    snapshot = step
     planner = SimpleNamespace(
         declared={},
         artifact_context=ArtifactDeclarationStepContext(
@@ -112,7 +111,6 @@ def test_artifact_owned_scope_uses_exact_source_artifact_component_identity() ->
         session=SimpleNamespace(
             realized_source_metadata=({"source_alias": source.name, "channel": "2"},),
         ),
-        source_bindings_for_snapshot=lambda _snapshot: source_bindings,
     )
 
     scope = PathPlannerExecutionGroups(planner).artifact_owned_execution_scope(

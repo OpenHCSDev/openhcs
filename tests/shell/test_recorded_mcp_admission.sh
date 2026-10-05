@@ -10,7 +10,7 @@ ln -s "$repo/scripts/blind_analysis/operations/recorded-mcp.sh" "$scratch/operat
 for file in slot-env.sh resource-check.sh mcp-client.sh; do
   ln -s "$fixtures/$file" "$scratch/operations/$file"
 done
-export FLEET_PARENT_RELEASED=1
+unset FLEET_PARENT_RELEASED
 run() {
   local expected=$1 slot=$2 observation=$3 status
   set +e

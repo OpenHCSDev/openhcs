@@ -114,6 +114,12 @@ At the same position, Z/time and camera scale, capture:
 3. **Raw plus result:** restore raw and result. Inspect biological support and
    alignment, with the same raw window as the first view.
 
+When using `openhcs_isolate_viewer_window_layers`, select the intended visible
+result route for **result only**, not the hidden raw route: isolation includes
+the selected route in its effective visible set. Keep raw mounted but hidden.
+Check the acknowledgement's `visible_route_keys`, not just `applied=true`,
+before capturing; selecting raw can otherwise turn result-only into combined.
+
 Toggle visibility through MCP without changing the candidate's arrays or result
 identity during the matched set. This comparison control does not prohibit
 analytical preprocessing in a subsequent candidate.
@@ -184,9 +190,15 @@ contract is exposed:
 2. Read fresh, unfiltered viewer state on the same viewer incarnation. Choose
    only explicitly superseded routes; retain the current matched candidate,
    raw/source domain and reference routes still needed for the next comparison.
+   Select only entries with `mounted=true` and a nonempty `producer_identities`
+   array. State can also list declared, unmounted routes with empty arrays;
+   omit those placeholders from the retirement mapping, rather than sending
+   `[]` or inventing an identity for them.
    Build `expected_producers` by mapping each chosen **exact `route_key`** to
    its **complete `producer_identities` array** from that readback, including
-   `invocation_key`. Do not shorten, fabricate or substitute identities from a
+   `invocation_key`; preserve `null` when that is the returned value. It is a
+   valid optional identity field, not a missing producer. Do not shorten,
+   fabricate or substitute identities from a
    previous candidate, title or port. The receiving owner checks the whole set
    before removal; a changed producer requires a fresh disposition/readback,
    not a weaker identity check.
@@ -244,7 +256,21 @@ Change one semantic operation or parameter group, then recheck failure and
 regression-control crops against raw. Also revisit the preselected distributed
 bright/dim and centre/edge witnesses: assess whether a local repair introduces
 material misses, merges or background elsewhere, not just whether it changes
-one object. For uneven illumination or denoising,
+one object. Reuse the recorded native crop, Z/time, orientation, camera scale
+and raw window for both the predecessor and revised candidate. Restore and
+read back that state before capture; a repeated field name with a shifted
+viewport is not the same regression witness. If the canvas changed, compare
+the same native region rather than screen-pixel positions.
+
+At those coordinates compare recovered and lost structures, separation and
+mask footprints: a revision can find more objects while eroding supported
+boundaries, merging neighbours or truncating paths elsewhere. Record the
+benefit and regression separately, and choose the candidate against the
+task's measurement claims. More labels or longer graphs alone do not establish
+a task-wide improvement; useful supported findings do not require every
+ambiguous object to be resolved.
+
+For uneven illumination or denoising,
 inspect the correction field or residual and processed pixels before downstream
 labels; an independently auto-stretched display can conceal the regression.
 Reconcile persisted labels/ROIs,

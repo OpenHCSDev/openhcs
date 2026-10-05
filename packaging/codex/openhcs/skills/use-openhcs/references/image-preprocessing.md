@@ -61,6 +61,31 @@ silently substituting the detection transform; see
 [measurement-image choice](measurement-interpretation.md#detection-pixels-versus-measurement-pixels).
 Do not silently apply per-field normalisation to treatment comparisons.
 
+### Shared scaling for fields of one mosaic
+
+For fields belonging to the same well or mosaic, fit one low/high percentile
+pair over the complete field stack **per channel**, then apply that shared
+mapping to every field. This applies whether segmentation is field-by-field
+or follows stitching; stitching is not required to obtain consistent scaling.
+Independent field fits give the same raw signal different analytical values
+depending on its neighbours and can distort seam and detection comparisons.
+Use the canonical `image_analysis_workflow` assembly/grouping contract and
+inspect the compiled SITE scope and live stack-normalisation callable: a
+singleton field invocation does not pool the other fields. Keep channels and
+unrelated wells separate unless the task explicitly calls for a wider fit.
+Pooling the tiles and fitting a stitched image express the same shared-scaling
+intent, but overlap duplication, blending and mosaic padding can change the
+exact histogram. Record the fit domain rather than assuming identical bounds.
+
+One shared position artifact keeps channel placement consistent, but does not
+prove that tiles are aligned. Inspect overlaps for repeated nuclei, parallel
+process ghosts and broken continuations in separate raw channels, not only a
+composite or a matching position list. A composite used to estimate placement
+is a registration input, not an analytical channel merge: follow the canonical
+assembly branch, reload original channel stacks and apply the shared positions
+to raw or explicitly justified normalised inputs. Judge registration separately
+from pooled scaling; a repaired local join does not validate every seam.
+
 ## Slowly varying additive background
 
 Test subtraction of a background estimate or a white top-hat. Its spatial scale
@@ -178,6 +203,20 @@ labels or traces; follow the linked measurement-image guidance. NLM reduces
 noise; it does not estimate a shading field or justify a globally tuned threshold
 on uneven illumination.
 
+## Weak rims and morphological gap repair
+
+For a supported body whose rim is broken, closing is one hypothesis, not an
+automatic way to obtain a cell envelope. Measure the within-body gap AND the
+smallest supported gap between genuine neighbouring bodies on the consumed
+response. A footprint smaller than the body radius can still bridge neighbours;
+cell diameter alone does not justify its scale. Inspect the actual grayscale
+or binary operation and its threshold order: their effects are not equivalent.
+Compare foreground connectivity, markers and final labels at the broken rim
+and the close pair. If the rim improves but the pair joins, retain that failed
+trial and compare a smaller footprint or the unclosed support. Inspect
+marker/partition behavior or another evidenced admission model rather than
+assuming more closing is needed.
+
 ## Local contrast and local thresholds
 
 CLAHE can reveal local structure but can also amplify noise and alter intensity
@@ -192,6 +231,14 @@ can approach the failed global threshold. Test dim edge regions and bright
 centre regions, not just a single successful crop. Global Otsu is most plausible
 when classes separate; a dominant background with a sparse foreground tail
 requires checking that assumption rather than blindly choosing Otsu.
+
+For textured/ring-shaped bodies amid diffuse nuisance, compare
+[body-admission models](segmentation-diagnostics.md#compare-body-admission-models)
+before choosing a correction: local background differences and intensity-class
+separation fail differently. Judge corrected support against local body extent
+AND regional negatives, not background uniformity, nuclear eligibility or a
+preferred count. Opposite faint-loss/background-flooding outcomes motivate a
+model change, not repeated scalar toggles.
 
 ## Spots, edges and thin processes
 

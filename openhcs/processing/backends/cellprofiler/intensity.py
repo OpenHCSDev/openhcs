@@ -303,6 +303,7 @@ from openhcs.core.runtime_measurements import (
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
 )
+from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     ImageMetadataPayload,
     MaskedImagePayload,
@@ -347,7 +348,7 @@ from openhcs.processing.backends.cellprofiler.shape import (
     ShapeMeasurementBackendStrategy,
 )
 from openhcs.processing.backends.cellprofiler.label_geometry import (
-    _numpy124_aquicksort_indices,
+    _numpy124_ordered_label_maximum_indices,
 )
 from openhcs.interop.cellprofiler.settings_binder import coerce_cellprofiler_enum
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
@@ -1118,9 +1119,15 @@ class NumbaNumpyObjectIntensityBackendStrategy(ObjectIntensityBackendStrategy):
             + x_indices
         )
         flat_images = image_batch.reshape((image_batch.shape[0], -1))
+        requested_indexes = np.arange(labels.object_count, dtype=np.int64)
         positions: list[tuple[np.ndarray, ...]] = []
         for flat_image in flat_images:
-            order = _numpy124_aquicksort_indices(flat_image[source_positions])
+            order = _numpy124_ordered_label_maximum_indices(
+                flat_image[source_positions],
+                foreground_index.object_indexes,
+                requested_indexes,
+                labels.object_count - 1,
+            )
             maximum_positions = np.zeros(labels.object_count, dtype=np.int64)
             maximum_positions[foreground_index.object_indexes[order]] = (
                 source_positions[order]
@@ -1560,7 +1567,7 @@ def _object_intensity_batch_key(
 @object_label_input_execution_mode(ObjectLabelInputExecutionMode.SLICE_ALIGNED)
 @runtime_bound_parameters(SliceIndexRuntimeParameter)
 def measure_object_intensity(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     labels: ObjectLabelValue,
     object_intensity_backend_provider: BackendProviderInput = DEFAULT_CELLPROFILER_BACKEND_SELECTION,
     slice_index: int = OBJECT_INTENSITY_DEFAULT_SLICE_INDEX,
@@ -1857,7 +1864,7 @@ class DivideByValueRescaleMethodRunner(RescaleMethodRunner):
 @runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
 @numpy_decorator(contract=ProcessingContract.PURE_2D)
 def rescale_intensity(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     rescale_method: RescaleMethod = RescaleMethod.STRETCH,
     automatic_low: AutomaticLow = AutomaticLow.EACH_IMAGE,
     automatic_high: AutomaticHigh = AutomaticHigh.EACH_IMAGE,

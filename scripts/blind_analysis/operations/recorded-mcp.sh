@@ -3,7 +3,6 @@
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/slot-env.sh" "${1:?root}" "${2:?slot}"
 observation=${3:?unique startup observation}
-test "$FLEET_PARENT_RELEASED" = 1
 runtime="$FLEET_WORKSPACE/output/runtime"
 mkdir -p "$runtime"
 test ! -e "$runtime/mcp.stdin"

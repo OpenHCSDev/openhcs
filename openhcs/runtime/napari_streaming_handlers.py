@@ -22,7 +22,7 @@ from zmqruntime.viewer_protocol import ViewerComponentMode, ViewerWireField
 from openhcs.constants import AllComponents
 from openhcs.core.artifacts import ObjectArtifactSubjectBinding
 from openhcs.core.config import NapariDisplayConfig
-from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
+from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata, ROIPlaneMetadata
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
 )
@@ -34,6 +34,7 @@ from openhcs.runtime.viewer_component_system import (
     ViewerComponentAxisSemantics,
     ViewerComponentLayout,
     ViewerComponentValueDomainPayload,
+    ViewerRouteComponentValueTracker,
     ViewerLayerAxisProjection,
 )
 from openhcs.runtime.viewer_protocol import (
@@ -115,6 +116,8 @@ class VisualMetadataField(str, Enum):
 class NapariLayerHandle(ABC):
     """Nominal marker for concrete layer objects returned by a Napari viewer."""
 
+    visible: bool
+
 
 class NapariHighlightEmitterABC(ABC):
     """Native Napari highlight event used by selectable layers."""
@@ -147,7 +150,6 @@ class NapariShapesLayerHandle(NapariLayerHandle):
     face_color_mode: str
     edge_color_cycle: Sequence[tuple[float, float, float, float]]
     face_color_cycle: Sequence[tuple[float, float, float, float]]
-    visible: bool
     events: NapariSelectableLayerEventsABC
 
     @abstractmethod
@@ -630,7 +632,7 @@ class NapariAggregateAxisBindingSet:
     ) -> ComponentMap:
         if not self.bindings:
             return dict(item.address.components)
-        plane_indices = NapariShapePlaneMetadata(shape_dict).indices()
+        plane_indices = ROIPlaneMetadata.from_shape_payload(shape_dict).indices()
         return self.item_component_values(item, plane_indices)
 
 
@@ -789,61 +791,10 @@ class NapariAggregateAxisBindingAuthority:
     def _shape_aggregate_extents(data: LayerData) -> tuple[int, ...]:
         if not isinstance(data, Sequence) or isinstance(data, (str, bytes)):
             return ()
-        shapes: list[tuple[int, ...]] = []
-        missing_plane_metadata = 0
-        for shape_dict in data:
-            if not isinstance(shape_dict, Mapping):
-                continue
-            plane_metadata = NapariShapePlaneMetadata(shape_dict)
-            if plane_metadata.has_plane_metadata():
-                shapes.append(plane_metadata.shape())
-            else:
-                missing_plane_metadata += 1
-        if not shapes:
-            return ()
-        if missing_plane_metadata:
-            raise ValueError(
-                "Napari shape payload mixes plane-indexed and unindexed shapes; "
-                "all shapes in an aggregate stack route must carry plane metadata."
-            )
-        first = shapes[0]
-        if any(shape != first for shape in shapes):
-            raise ValueError(
-                "Napari shape payload has inconsistent plane_shape metadata: "
-                f"{shapes!r}."
-            )
-        return first
-
-
-@dataclass(frozen=True, slots=True)
-class NapariShapePlaneMetadata:
-    """Plane-index metadata carried by one serialized ROI shape."""
-
-    shape_dict: ShapePayloadMap
-
-    @property
-    def metadata(self) -> Mapping[str, ShapePayloadValue]:
-        metadata = self.shape_dict.get("metadata")
-        if not isinstance(metadata, Mapping):
-            return {}
-        return metadata
-
-    def has_plane_metadata(self) -> bool:
-        return "plane_indices" in self.metadata and "plane_shape" in self.metadata
-
-    def indices(self) -> tuple[int, ...]:
-        return self._tuple_field("plane_indices")
-
-    def shape(self) -> tuple[int, ...]:
-        return self._tuple_field("plane_shape")
-
-    def _tuple_field(self, field: str) -> tuple[int, ...]:
-        value = self.metadata.get(field)
-        if not isinstance(value, Sequence) or isinstance(value, (str, bytes)):
-            raise ValueError(
-                f"Napari shape plane metadata field {field!r} must be a sequence."
-            )
-        return tuple(int(item) for item in value)
+        return ROIPlaneMetadata.common_shape(tuple(
+            ROIPlaneMetadata.from_shape_payload(shape_dict).metadata
+            for shape_dict in data if isinstance(shape_dict, Mapping)
+        ))
 
 
 NapariLayerCreator: TypeAlias = Callable[
@@ -1413,6 +1364,55 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
             raise ValueError("Route dimension rank exceeds native viewer rank.")
         return tuple(range(offset, viewer_ndim))
 
+    @contextmanager
+    def preserve_native_axes(
+        self, dims, replacement: "NapariAxisPresentation",
+        items: Sequence[NapariStreamLayerItem],
+    ):
+        """Carry actual native world positions/order through semantic slot insertion.
+
+        This is a transient presentation snapshot, not a second component domain.
+        Values come from native Dims and names from the original presentations.
+        Restore before selectable handlers check geometry on the current slice.
+        """
+        dimensions = self.viewer_dimension_indices(dims.ndim)
+        names = dict(zip(dimensions, self.axis_labels, strict=True))
+        points = {name: dims.point[axis] for axis, name in names.items()}
+        ranges = {name: dims.range[axis] for axis, name in names.items()}
+        order = tuple(names[axis] for axis in dims.order if axis in names)
+        yield
+        target_dimensions = replacement.viewer_dimension_indices(dims.ndim)
+        target_axes = dict(zip(replacement.axis_labels, target_dimensions, strict=True))
+        point = list(dims.point)
+        native_ranges = list(dims.range)
+        for name, value in points.items():
+            point[target_axes[name]] = value
+            native_ranges[target_axes[name]] = ranges[name]
+        transform = replacement.spatial_layer_kwargs(items, replacement.payload_axis_labels)
+        for name in replacement.display_axis_components:
+            if name in points:
+                continue
+            routed_values = replacement.projection.routed_component_values[name]
+            if len(routed_values) != 1:
+                raise ValueError(
+                    f"New native slot {name!r} requires an unambiguous original route value."
+                )
+            axis = replacement.axis_labels.index(name)
+            # This newly inserted singleton's source-local index is zero.
+            # The original transform already contains its shared-domain offset.
+            point[target_axes[name]] = transform["translate"][axis]
+            native_ranges[target_axes[name]] = (
+                point[target_axes[name]], point[target_axes[name]], transform["scale"][axis],
+            )
+        # Dims clips points to its ranges. Remap the detached snapshot's bounds
+        # first; the live viewer's bounds remain owned by its mounted layers.
+        dims.range = tuple(native_ranges)
+        dims.point = tuple(point)
+        retained_order = tuple(target_axes[name] for name in order)
+        dims.order = tuple(
+            axis for axis in dims.order if axis not in retained_order
+        ) + retained_order
+
     def display_order(
         self, display_axes: tuple[str, str], current_order: tuple[int, ...]
     ) -> tuple[int, ...]:
@@ -1528,28 +1528,13 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
             raise ValueError(
                 "A native viewer route requires consistent source voxel spacing."
             )
-        component_scales = [1.0] * len(self.display_axis_components)
-        component_units = ["dimensionless"] * len(self.display_axis_components)
-        z_component = AllComponents.Z_INDEX.value
-        if (
-            len(spacing.values_zyx) == 3
-            and z_component in self.display_axis_components
-        ):
-            z_axis = self.display_axis_components.index(z_component)
-            component_scales[z_axis] = spacing.spacing_for_ndim(3)[0]
-            component_units[z_axis] = spacing.native_coordinate_unit
-        scale = (
-            *component_scales,
-            *(1.0 for _ in payload_axis_labels),
-            *spacing.spacing_for_ndim(2),
+        coordinate_kwargs = spacing.layer_coordinate_kwargs(
+            (*self.display_axis_components, *payload_axis_labels, "y", "x")
         )
         return {
-            "scale": scale,
-            "translate": self.translate(payload_axis_labels, scale=scale),
-            "units": (
-                *component_units,
-                *("dimensionless" for _ in payload_axis_labels),
-                *(spacing.native_coordinate_unit for _ in range(2)),
+            **coordinate_kwargs,
+            "translate": self.translate(
+                payload_axis_labels, scale=coordinate_kwargs["scale"]
             ),
         }
 
@@ -1652,6 +1637,48 @@ class NapariLayerRouteStateStore:
             (layer_key, state)
             for layer_key, state in self.layer_dimension_states.items()
             if layer_key in self.layers
+        )
+
+    def shared_display_layout(
+        self, layout: ViewerComponentLayout
+    ) -> ViewerComponentLayout:
+        """Derive native slots from declarations of actually mounted routes."""
+        return layout.with_shared_stack_axes(tuple(
+            mounted_layout
+            for _route, state in self.mounted_dimension_states()
+            for mounted_layout in state.display_layouts
+        ))
+
+    def shared_component_values(
+        self,
+        tracker: ViewerRouteComponentValueTracker,
+        layout: ViewerComponentLayout,
+        *,
+        replacement_route: str,
+        additional_component_values: ComponentValues,
+    ) -> ComponentValues:
+        """Project mounted declarations, including axes previously shown as layers.
+
+        The tracker owns observed stack coordinates. A newly shared stack slot
+        must also include the original source declarations of mounted peers;
+        those values were not stack coordinates in their former presentation.
+        No route domain is mutated during this preview.
+        """
+        declarations = (
+            additional_component_values,
+            *(state.presentation.component_values()
+              for route, state in self.mounted_dimension_states()
+              if route != replacement_route and state.presentation is not None),
+        )
+        axes = layout.components_for_mode(ViewerComponentMode.STACK)
+        return tracker.shared_values_for(
+            axes,
+            replacement_route=replacement_route,
+            additional_component_values={
+                component: [value for declaration in declarations
+                            for value in declaration.get(component, ())]
+                for component in axes
+            },
         )
 
     def axis_origins_for(self, axis_labels: tuple[str, ...]) -> tuple[int, ...]:

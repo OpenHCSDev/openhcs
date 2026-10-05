@@ -18,6 +18,7 @@ from numba import njit
 
 from openhcs.constants.constants import VariableComponents
 from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
+from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.artifacts import (
     ArtifactSpecCollection,
     ArtifactSpecRelation,
@@ -1293,14 +1294,14 @@ class IdentifyObjectsInGridRequest(GridShapeContext):
     """Executable request for CellProfiler IdentifyObjectsInGrid semantics."""
 
     registry_key = "identify_objects"
-    image: np.ndarray
+    image: RuntimeArrayData
     shape_choice: ShapeChoice
 
     @classmethod
     def from_runtime(
         cls,
         *,
-        image: np.ndarray,
+        image: RuntimeArrayData,
         grid_definition: GridRuntimeDefinitionRequest,
         shape_choice: ShapeChoice,
         diameter_choice: DiameterChoice,
@@ -1485,7 +1486,7 @@ def draw_grid_overlay(
 @numpy(contract=ProcessingContract.PURE_2D)
 @special_inputs("topology_inputs")
 def identify_objects_in_grid(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     topology_inputs: tuple[SpatialGrid | ObjectLabelValue, ...],
     grid_rows: int = 8,
     grid_columns: int = 12,
@@ -1558,10 +1559,10 @@ def identify_objects_in_grid(
     ).execute()
 
 
-class IdentifyObjectsInGridKernelPreparation(
+class GridKernelPreparation(
     CellProfilerCallableKernelPreparation, metaclass=AutoRegisterMeta
 ):
-    """Own the persistent kernel cache work for identify_objects_in_grid."""
+    """Own persistent grid-definition and grid-object kernel readiness."""
 
     def execute(self) -> None:
         """Compile grid-label kernels before timed execution."""
@@ -1584,24 +1585,28 @@ class IdentifyObjectsInGridKernelPreparation(
             declared_object_count=2,
             declared_object_ids=(1, 2),
         ).payload()
-        identify_objects_in_grid.__wrapped__(
-            image,
-            topology_inputs=(grid,),
-            shape_choice=ShapeChoice.RECTANGLE,
-        )
-        identify_objects_in_grid.__wrapped__(
-            image,
-            topology_inputs=(grid, guide_payload),
-            shape_choice=ShapeChoice.NATURAL,
-        )
+        for writable in (True, False):
+            guide_labels.setflags(write=writable)
+            define_grid_automatic.__wrapped__(image, labels=guide_payload)
+            for shape_choice in ShapeChoice:
+                strategy = GridShapeStrategy.for_enum_member(shape_choice)
+                topology_inputs = (
+                    (grid, guide_payload) if strategy.requires_guides else (grid,)
+                )
+                identify_objects_in_grid.__wrapped__(
+                    image,
+                    topology_inputs=topology_inputs,
+                    shape_choice=shape_choice,
+                )
 
 
-def prepare_identify_objects_in_grid() -> None:
+def prepare_grid_kernels() -> None:
     """Prepare the kernels through their declared registry obligation."""
-    IdentifyObjectsInGridKernelPreparation().execute()
+    GridKernelPreparation().prepare()
 
 
-identify_objects_in_grid.__openhcs_prepare__ = prepare_identify_objects_in_grid
+define_grid_automatic.__openhcs_prepare__ = prepare_grid_kernels
+identify_objects_in_grid.__openhcs_prepare__ = prepare_grid_kernels
 
 
 @njit(cache=True)
@@ -1861,6 +1866,6 @@ __all__ = public_names_from_objects(
     draw_grid_overlay,
     identify_objects_in_grid,
     label_centroid_extremes,
-    prepare_identify_objects_in_grid,
+    prepare_grid_kernels,
     spatial_grid_from_spacing,
 )

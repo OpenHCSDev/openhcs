@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass, field
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
@@ -27,10 +28,12 @@ from openhcs.core.runtime_plane_projection import RuntimePlaneProjection
 from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.core.runtime_measurements import MeasurementTable
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
+from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjectionCache
 from openhcs.core.steps.function_output_identity import FunctionOutputIdentityCache
 from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
-from openhcs.interop.cellprofiler.runtime.object_measurement_tables import (
-    ObjectMeasurementTableIndex,
+from openhcs.core.measurement_feature_queries import (
+    ColumnarMeasurementTableSchema,
 )
 from openhcs.microscopes.imagexpress import ImageXpressFilenameParser
 
@@ -43,6 +46,13 @@ class CellProfilerRuntimeTestContext:
     filemanager: object | None
     microscope_handler: object
     source_image_set_identity_policy: SourceImageSetIdentityPolicy
+    plate_path: Path = Path('/plate/Images')
+    runtime_source_binding_context_cache: RuntimeSourceBindingContextCache = field(
+        default_factory=RuntimeSourceBindingContextCache,
+    )
+    runtime_source_workspace_projection_cache: VirtualWorkspaceSourceProjectionCache = field(
+        default_factory=VirtualWorkspaceSourceProjectionCache,
+    )
     runtime_function_output_identity_cache: FunctionOutputIdentityCache = field(
         default_factory=FunctionOutputIdentityCache
     )
@@ -126,14 +136,10 @@ def object_measurement_tables_for_test(
 ) -> tuple[MeasurementTable, ...]:
     """Query object measurement tables through their nominal index owner."""
 
-    index = ObjectMeasurementTableIndex.from_tables(
-        adapter.measurement_tables(
-            group_key=group_key,
-            match_group=match_group,
-        )
+    return ColumnarMeasurementTableSchema.tables_for_object(
+        adapter.measurement_tables(group_key=group_key, match_group=match_group),
+        object_name,
     )
-    tables = index.for_object(object_name)
-    return () if tables is None else tables
 
 
 def runtime_adapter_request_for_test(

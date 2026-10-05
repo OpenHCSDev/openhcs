@@ -20,6 +20,7 @@ from openhcs.core.artifacts import (
     ArtifactSpecCollection,
     ImageArtifactType,
     MeasurementsArtifactType,
+    SpatialGridArtifactType,
     RelationshipsArtifactType,
     SpecialArtifactType,
 )
@@ -54,7 +55,13 @@ from openhcs.core.runtime_tabular_values import ColumnarRows
 from openhcs.core.runtime_relationships import (
     ObjectRelationship,
 )
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source_image_provenance import (
+    SourceImageProvenancePlanes,
+    SourceImageProvenance,
+    RuntimeSourceImageProvenancePlane,
+    SourceImageProvenanceContributor,
+    SourceImageIdentity,
+)
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.source_bindings import (
     ComponentSelector,
@@ -402,6 +409,146 @@ def test_export_to_spreadsheet_renders_only_declared_batch_records() -> None:
     assert relationship_rows[0]["target_role"] == "child"
     assert "Leaked" not in bundle["Run1/Image.csv"]
     assert "Ignored" not in bundle["Run1/Cells.csv"]
+
+
+@pytest.mark.parametrize("add_metadata", (False, True))
+@pytest.mark.parametrize("add_files", (False, True))
+@pytest.mark.parametrize("axisless", (False, True))
+def test_spreadsheet_projects_source_identity_without_upstream_image_features(
+    add_metadata: bool, add_files: bool, axisless: bool,
+) -> None:
+    provenance = SourceImageProvenancePlanes((
+        RuntimeSourceImageProvenancePlane(
+            SourceImageIdentity('/acquisition/body.tif', {
+                'well': 'A01', 'site': '2', 'channel': '3', 'z_index': '4',
+                'timepoint': '5', ORIGINAL_SOURCE_METADATA_FIELD: {'Treatment': 'control'},
+            }),
+            source_image_name='Body',
+        ),
+    ))
+    cells = _measurement_record(
+        'cells', axis_id='A01',
+        subject=MeasurementSubject(MeasurementScope.OBJECT, 'Cells', 'object_number'),
+        rows=({**({} if axisless else {'slice_index': 0}), 'object_number': 7, 'Area': 12.0},),
+        source_image_provenance_planes=provenance,
+    )
+    bundle = export_to_spreadsheet(
+        artifact_batch=RuntimeArtifactBatch(
+            input_specs=(ArtifactSpec.input('cells', MeasurementsArtifactType),),
+            records_by_axis={'A01': (cells,)},
+            source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
+        ),
+        add_image_metadata=add_metadata, add_image_file_names=add_files,
+        add_filename_prefix=False,
+    )
+    image, = csv.DictReader(io.StringIO(bundle['Image.csv']))
+    cell, = csv.DictReader(io.StringIO(bundle['Cells.csv']))
+    assert image['Metadata_Treatment'] == 'control'
+    assert ('Metadata_site' in image) is add_metadata
+    assert ('FileName_Body' in image) is add_files
+    if add_metadata:
+        assert image['Metadata_well'] == 'A01'
+        assert image['Metadata_site'] == '2'
+        assert image['Metadata_z_index'] == '4'
+        assert image['Metadata_timepoint'] == '5'
+    if add_files:
+        assert image['FileName_Body'] == 'body.tif'
+        assert image['PathName_Body'] == '/acquisition'
+    assert cell['object_label'] == '7'
+    assert cell['Area'] == '12.0'
+    assert ('Metadata_site' in cell) is add_metadata
+    assert ('Image_FileName_Body' in cell) is add_files
+    if add_files:
+        assert cell['Image_FileName_Body'] == 'body.tif'
+        assert cell['Image_PathName_Body'] == '/acquisition'
+
+
+@pytest.mark.parametrize('names', (('Body', 'Nuclear'), ('Nuclear', 'Body')))
+def test_spreadsheet_preserves_independent_contributor_filenames(names: tuple[str, ...]) -> None:
+    provenance = SourceImageProvenancePlanes((
+        RuntimeSourceImageProvenancePlane(
+            SourceImageIdentity(component_metadata={'well': 'A01', 'site': '2'}),
+            contributors=tuple(
+                SourceImageProvenanceContributor(
+                    SourceImageIdentity(f'/acquisition/{name}.tif', {'well': 'A01', 'site': '2'}),
+                    source_image_name=name,
+                )
+                for name in names
+            ),
+        ),
+    ))
+    record = _measurement_record(
+        'cells', axis_id='A01',
+        subject=MeasurementSubject(MeasurementScope.OBJECT, 'Cells', 'object_number'),
+        rows=({'slice_index': 0, 'object_number': 1, 'Area': 12.0},),
+        source_image_provenance_planes=provenance,
+    )
+    bundle = export_to_spreadsheet(
+        artifact_batch=RuntimeArtifactBatch(
+            input_specs=(ArtifactSpec.input('cells', MeasurementsArtifactType),),
+            records_by_axis={'A01': (record,)},
+            source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
+        ),
+        add_image_metadata=True, add_image_file_names=True, add_filename_prefix=False,
+    )
+    row, = csv.DictReader(io.StringIO(bundle['Cells.csv']))
+    for name in names:
+        assert row[f'Image_FileName_{name}'] == f'{name}.tif'
+        assert row[f'Image_PathName_{name}'] == '/acquisition'
+    assert 'Metadata_channel' not in row
+    assert 'Metadata_z_index' not in row
+
+
+def test_requested_source_columns_preserve_original_extraction_path_template() -> None:
+    image = _measurement_record(
+        'image', axis_id='A01',
+        subject=MeasurementSubject(MeasurementScope.IMAGE, 'Image'),
+        rows=({'slice_index': 0, 'Count_Cells': 1},),
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            component_metadata=({'site': '1', ORIGINAL_SOURCE_METADATA_FIELD: {'Run': 'run1'}},),
+        ),
+    )
+    cells = _measurement_record(
+        'cells', axis_id='A01',
+        subject=MeasurementSubject(MeasurementScope.OBJECT, 'Cells', 'object_number'),
+        rows=({'slice_index': 0, 'object_number': 1, 'Area': 12.0},),
+    )
+    bundle = export_to_spreadsheet(
+        artifact_batch=RuntimeArtifactBatch(
+            input_specs=tuple(ArtifactSpec.input(record.key.name, MeasurementsArtifactType) for record in (image, cells)),
+            records_by_axis={'A01': (image, cells)},
+            source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
+        ),
+        add_image_metadata=True, add_image_file_names=True,
+        output_directory='{Run}', add_filename_prefix=False,
+    )
+    assert set(bundle) == {'run1/Image.csv', 'run1/Cells.csv'}
+    row, = csv.DictReader(io.StringIO(bundle['run1/Cells.csv']))
+    assert row['Metadata_Run'] == 'run1'
+    assert row['Metadata_site'] == '1'
+
+
+def test_spreadsheet_rejects_existing_filename_conflicting_with_provenance() -> None:
+    record = _measurement_record(
+        'image', axis_id='A01',
+        subject=MeasurementSubject(MeasurementScope.IMAGE, 'Image'),
+        rows=({'slice_index': 0, 'FileName_Body': 'other.tif'},),
+        source_image_provenance_planes=SourceImageProvenancePlanes((
+            RuntimeSourceImageProvenancePlane(
+                SourceImageIdentity('/acquisition/body.tif', {'site': '1'}),
+                source_image_name='Body',
+            ),
+        )),
+    )
+    with pytest.raises(ValueError, match='Conflicting sparse measurement values'):
+        export_to_spreadsheet(
+            artifact_batch=RuntimeArtifactBatch(
+                input_specs=(ArtifactSpec.input('image', MeasurementsArtifactType),),
+                records_by_axis={'A01': (record,)},
+                source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
+            ),
+            add_image_file_names=True,
+        )
 
 
 def test_export_to_spreadsheet_bundle_uses_generic_file_materialization() -> None:
@@ -1645,9 +1792,11 @@ def _measurement_record(
         axis_id=axis_id,
     )
     return StoredRuntimeValue(
-        value,
-        RuntimeArtifactLocation(path=output_plan.path, backend="memory"),
-    )
+               key=value.key,
+               data=value.data,
+               materialization_source_metadata=value.materialization_source_metadata,
+               location=RuntimeArtifactLocation(path=output_plan.path, backend="memory"),
+           )
 
 
 def _fixture_field_dtype(
@@ -1694,6 +1843,97 @@ def _relationship_record(name: str, *, axis_id: str) -> StoredRuntimeValue:
         axis_id=axis_id,
     )
     return StoredRuntimeValue(
-        value,
-        RuntimeArtifactLocation(path=output_plan.path, backend="memory"),
+               key=value.key,
+               data=value.data,
+               materialization_source_metadata=value.materialization_source_metadata,
+               location=RuntimeArtifactLocation(path=output_plan.path, backend="memory"),
+           )
+
+
+@pytest.mark.parametrize("cycle_aligned", (False, True))
+def test_spatial_grid_geometry_is_exported_for_exact_source_cycles(
+    cycle_aligned: bool,
+) -> None:
+    from openhcs.core.runtime_spatial_grid import SpatialGrid, SpatialGridAxis
+    from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
+    from openhcs.core.runtime_artifact_queries import (
+        RuntimeArtifactQueryContext,
+        runtime_measurement_tables,
+    )
+    from openhcs.core.runtime_stores import RuntimeValueStore
+
+    provenance = SourceImageProvenance(
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=("/inputs/site2.tif", "/inputs/site1.tif"),
+            component_metadata=({"site": "2"}, {"site": "1"}),
+        ),
+    )
+    grid = SpatialGrid(
+        name="Grid",
+        rows=8,
+        columns=12,
+        x_spacing=102.5,
+        y_spacing=103.25,
+        x_origin=71,
+        y_origin=57,
+        source_provenance=provenance,
+    )
+    data = (
+        RuntimeSliceAlignedValues(
+            (
+                grid,
+                grid.replace_fields(
+                    column_axis=SpatialGridAxis(spacing=102.5, origin=72).normalized(
+                        12, "column_axis"
+                    )
+                ),
+            )
+        )
+        if cycle_aligned
+        else grid
+    )
+    plan = ArtifactOutputPlan(
+        name="Grid", path="/memory/Grid.pkl", artifact_type=SpatialGridArtifactType
+    )
+    value = RuntimeValue.normalize(plan, data, axis_id="A01")
+    store = RuntimeValueStore()
+    record = store.record(value, path=plan.path, backend="memory")
+    batch = RuntimeArtifactBatch(
+        input_specs=(ArtifactSpec.input("Grid", SpatialGridArtifactType),),
+        records_by_axis={"A01": (record,)},
+        source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
+    )
+    bundle = export_to_spreadsheet(
+        delimiter=SpreadsheetDelimiter.COMMA,
+        add_filename_prefix=False,
+        artifact_batch=batch,
+        file_selections=(SpreadsheetFileSelection(("Image",), "Image.csv"),),
+    )
+    rows = tuple(csv.DictReader(io.StringIO(bundle["Image.csv"])))
+    assert [row["image_number"] for row in rows] == ["1", "2"]
+    assert [float(row["DefinedGrid_Grid_XLocationOfLowestXSpot"]) for row in rows] == [
+        71,
+        72 if cycle_aligned else 71,
+    ]
+    for row in rows:
+        assert float(row["DefinedGrid_Grid_Columns"]) == 12
+        assert float(row["DefinedGrid_Grid_Rows"]) == 8
+        assert float(row["DefinedGrid_Grid_XSpacing"]) == 102.5
+        assert float(row["DefinedGrid_Grid_YLocationOfLowestYSpot"]) == 57
+        assert float(row["DefinedGrid_Grid_YSpacing"]) == 103.25
+    context = RuntimeArtifactQueryContext(store, "A01")
+    assert runtime_measurement_tables(context)
+    grid.column_axis = SpatialGridAxis(spacing=102.5, origin=73).normalized(
+        12, "column_axis"
+    )
+    assert all(
+        float(row["spatial_grid_grid_x_origin"]) == 73
+        for row in runtime_measurement_tables(context)[0].iter_row_mappings()
+    )
+    materialized = SpatialGridArtifactType.materialization_payload(value)
+    restored = SpatialGridArtifactType.normalize_runtime_payload("Grid", materialized)
+    restored_grid = restored.value_for_slice(0) if cycle_aligned else restored
+    assert (
+        restored_grid.source_provenance.equality_identity
+        == grid.source_provenance.equality_identity
     )

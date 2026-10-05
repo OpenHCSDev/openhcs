@@ -12,37 +12,27 @@ import numpy as np
 from openhcs.core.artifacts import (
     ArtifactType,
     MeasurementsArtifactType,
+    MeasurementBearingArtifactType,
     RelationshipsArtifactType,
     SpatialGridArtifactType,
 )
 from openhcs.core.measurement_row_materialization import (
-    ConcatenatedColumnarRows,
     MeasurementColumnarRowsView,
-    MeasurementRowOwnership,
-    MeasurementRowsAxisProjection,
     columnar_row_values,
     measurement_row_object_name,
     measurement_rows,
     measurement_table_axis_values,
 )
 from openhcs.core.measurement_feature_queries import (
-    ColumnarMeasurementTableSchema,
     IndexedObjectMeasurementLabelPlaneBinding,
     MeasurementAxisValueProjection,
     MeasurementFeatureValueIndex,
     MeasurementObjectFeatureVectorBatchQuery,
     MeasurementTableFeatureQuery,
+    ColumnarMeasurementTableSchema,
     MeasurementValueIndexResult,
 )
-from openhcs.core.measurement_lookup_dialect import (
-    resolve_runtime_measurement_lookup_dialect,
-)
-from openhcs.core.process_local_cache import (
-    BoundedCache,
-    RegisteredProcessLocalBoundedCache,
-    identity_owner_tuples_match,
-    named_identity_owner_tuples_match,
-)
+from openhcs.core.process_local_cache import BoundedCache
 from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementSubject,
@@ -63,10 +53,6 @@ from openhcs.core.runtime_tabular_values import (
 )
 from openhcs.core.runtime_measurements import (
     MeasurementTable,
-)
-from openhcs.core.runtime_image_values import (
-    ImagePayloadMetadata,
-    ImagePayloadMetadataCompositionMode,
 )
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
@@ -89,245 +75,6 @@ class RuntimeMeasurementTablesQueryCache(
     ]
 ):
     """Store-owned measurement tables for one axis and component group."""
-
-
-MeasurementLabelSliceFeatureBatchCacheValue = tuple[
-    tuple[MeasurementTable, ...],
-    tuple[tuple[str, object], ...],
-    Mapping[str, tuple[Any, ...]],
-]
-
-
-@dataclass(frozen=True, slots=True)
-class MeasurementLabelSliceFeatureBatchCacheKey:
-    """Identity key for label-plane feature projections."""
-
-    feature_name: str
-    object_names: tuple[str, ...]
-    dialect_identity: int
-    row_axis: MeasurementRowAxisField
-    table_identities: tuple[int, ...]
-    label_identities: tuple[tuple[str, int], ...]
-    row_axis_values: tuple[tuple[str, tuple[int, ...]], ...]
-
-
-class MeasurementLabelSliceFeatureBatchQueryCache(
-    RegisteredProcessLocalBoundedCache[
-        MeasurementLabelSliceFeatureBatchCacheKey,
-        MeasurementLabelSliceFeatureBatchCacheValue,
-    ]
-):
-    """Process-local cache for repeated label-plane feature projections."""
-
-    max_entries = 1024
-
-
-@dataclass(frozen=True, slots=True)
-class MeasurementTableUnion:
-    """Lossless row-owned view over same-artifact measurement subject tables."""
-
-    name: str
-    tables: tuple[MeasurementTable, ...]
-
-    def __post_init__(self) -> None:
-        if not self.name:
-            raise ValueError("MeasurementTableUnion.name cannot be empty.")
-        if not self.tables:
-            raise ValueError("MeasurementTableUnion.tables cannot be empty.")
-
-    def as_table(self) -> MeasurementTable:
-        if len(self.tables) == 1:
-            return self.tables[0]
-        subjects = tuple(dict.fromkeys(table.subject for table in self.tables))
-        if len(subjects) != 1:
-            raise ValueError(
-                "Measurement table unions require one exact nominal subject; "
-                f"got {subjects!r}."
-            )
-        owners = tuple(
-            dict.fromkeys(table.measurement_feature_owner for table in self.tables)
-        )
-        if len(owners) != 1:
-            raise ValueError(
-                "Measurement table unions require one exact nominal measurement "
-                f"feature owner; got {owners!r}."
-            )
-        source_names = tuple(
-            dict.fromkeys(table.source_image_name for table in self.tables)
-        )
-        if len(source_names) != 1:
-            raise ValueError(
-                "Measurement table unions require one exact source-image owner; "
-                f"got {source_names!r}."
-            )
-        return MeasurementTable(
-            name=self.name,
-            rows=self.rows(),
-            source_image_name=source_names[0],
-            subject=subjects[0],
-            measurement_feature_owner=owners[0],
-            source_provenance=self.source_metadata().source_provenance,
-        )
-
-    def as_artifact_table(self) -> MeasurementTable:
-        """Re-own mixed subject rows as one artifact-level export table."""
-
-        return MeasurementTable(
-            name=self.name,
-            rows=ConcatenatedColumnarRows(
-                tuple(
-                    cast(
-                        ColumnarRows,
-                        MeasurementRowOwnership(
-                            object_name=table.subject.object_name,
-                            source_image_name=(
-                                table.source_image_name
-                                or table.subject.source_image_name
-                            ),
-                        ).annotate_rows(table.rows),
-                    )
-                    for table in self.tables
-                )
-            ),
-            subject=MeasurementSubject(MeasurementScope.ARTIFACT, self.name),
-            source_provenance=self.source_metadata().source_provenance,
-        )
-
-    def rows(self) -> ColumnarRows:
-        return ConcatenatedColumnarRows(tuple(table.rows for table in self.tables))
-
-    def source_metadata(self) -> ImagePayloadMetadata:
-        """Compose table provenance on its declared runtime-slice axis."""
-
-        if len(self.tables) == 1:
-            return ImagePayloadMetadata(
-                source_provenance=self.tables[0].source_provenance,
-            )
-
-        slice_axis = MeasurementRowAxisField.SLICE_INDEX
-        axis_domain = self.row_axis_domain(slice_axis)
-        if axis_domain is None:
-            return ImagePayloadMetadata.compose(
-                tuple(
-                    ImagePayloadMetadata(
-                        source_provenance=table.source_provenance,
-                    ).payload_with((0,))
-                    for table in self.tables
-                ),
-                mode=ImagePayloadMetadataCompositionMode.STACK,
-            )
-
-        table_domains = tuple(
-            MeasurementRowsAxisProjection.from_rows(table.rows).present_axis_values(
-                slice_axis.value
-            )
-            for table in self.tables
-        )
-        declared_plane_counts = tuple(
-            table.source_provenance.source_plane_count
-            for table in self.tables
-            if table.source_provenance.source_plane_count > 0
-        )
-        distinct_plane_counts = tuple(dict.fromkeys(declared_plane_counts))
-        if len(distinct_plane_counts) > 1:
-            raise ValueError(
-                f"Measurement table union {self.name!r} cannot align declared "
-                f"source-plane counts {distinct_plane_counts!r}."
-            )
-        axis_size = (
-            distinct_plane_counts[0] if distinct_plane_counts else max(axis_domain) + 1
-        )
-        if max(axis_domain) >= axis_size:
-            raise ValueError(
-                f"Measurement table union {self.name!r} declares "
-                f"{slice_axis.value}={max(axis_domain)} beyond its source-plane "
-                f"axis of size {axis_size}."
-            )
-
-        for table, domain in zip(self.tables, table_domains, strict=True):
-            provenance = table.source_provenance
-            if (
-                provenance.source_plane_count == 0
-                and provenance.has_values
-                and len(domain) > 1
-            ):
-                raise ValueError(
-                    f"Measurement table {table.name!r} carries scalar source "
-                    f"provenance for multiple {slice_axis.value} values {domain!r}."
-                )
-
-        plane_metadata: list[ImagePayloadMetadata] = []
-        for plane_index in range(axis_size):
-            plane_provenance = tuple(
-                (
-                    table.source_provenance.for_source_plane(plane_index)
-                    if table.source_provenance.source_plane_count > 0
-                    else table.source_provenance
-                )
-                for table, domain in zip(self.tables, table_domains, strict=True)
-                if table.source_provenance.source_plane_count > 0
-                or domain == (plane_index,)
-            )
-            source_metadata = tuple(
-                ImagePayloadMetadata(source_provenance=provenance)
-                for provenance in plane_provenance
-            )
-            if not source_metadata:
-                raise ValueError(
-                    f"Measurement table union {self.name!r} has no declared "
-                    f"source provenance for {slice_axis.value}={plane_index}."
-                )
-            if len(source_metadata) == 1:
-                plane_metadata.append(source_metadata[0])
-            else:
-                plane_metadata.append(
-                    ImagePayloadMetadata.compose(
-                        tuple(
-                            metadata.payload_with((0,)) for metadata in source_metadata
-                        ),
-                        mode=ImagePayloadMetadataCompositionMode.BUNDLE,
-                    ).without_leading_plane_axis()
-                )
-
-        return ImagePayloadMetadata.compose(
-            tuple(metadata.payload_with((0,)) for metadata in plane_metadata),
-            mode=ImagePayloadMetadataCompositionMode.STACK,
-        )
-
-    def row_axis_domain(
-        self,
-        axis: MeasurementRowAxisField,
-    ) -> tuple[int, ...] | None:
-        """Return one exact row-axis domain, or ``None`` for an axisless union."""
-
-        projections = tuple(
-            MeasurementRowsAxisProjection.from_rows(table.rows) for table in self.tables
-        )
-        declarations = tuple(
-            projection.declares_axis_field(axis)
-            or any(field.name == axis.value for field in table.rows.fields)
-            for table, projection in zip(self.tables, projections, strict=True)
-        )
-        if not any(declarations):
-            return None
-        domains = tuple(
-            projection.present_axis_values(axis.value) for projection in projections
-        )
-        if not any(domains):
-            return None
-        for table, projection, domain in zip(
-            self.tables,
-            projections,
-            domains,
-            strict=True,
-        ):
-            if projection.has_rows and not domain:
-                raise ValueError(
-                    f"Measurement table union {self.name!r} mixes declared and "
-                    f"axisless {axis.value!r} row domains; table {table.name!r} "
-                    "declares no concrete axis value."
-                )
-        return tuple(sorted({value for domain in domains for value in domain}))
 
 
 @dataclass(frozen=True, slots=True)
@@ -383,7 +130,7 @@ class RuntimeArtifactQueryContext:
 def runtime_record_locations(records: Sequence[StoredRuntimeValue]) -> tuple[str, ...]:
     """Return compact runtime-record identities without formatting payload data."""
     return tuple(
-        f"{record.key.scope.value_text or '<none>'}@{record.backend}:{record.path}"
+        f"{record.key.scope.value_text or '<none>'}@{record.location.backend}:{record.location.path}"
         for record in records
     )
 
@@ -402,10 +149,9 @@ class MeasurementObjectQuery:
         if table.subject.scope is MeasurementScope.OBJECT:
             return table.subject.name == self.object_name
         if isinstance(table.rows, ColumnarRows):
-            return (
-                self.object_name
-                in ColumnarMeasurementTableSchema.from_table(table).object_names
-            )
+            return self.object_name in ColumnarMeasurementTableSchema.from_table(
+                table
+            ).object_names(table)
         if not _measurement_table_may_declare_object_name(table):
             return False
         return any(
@@ -439,14 +185,29 @@ def runtime_measurement_tables(
     """Return all measurement tables in a runtime query context."""
     cache_key = (context.axis_id, context.group_key)
     store_cache = context.store.query_cache(RuntimeMeasurementTablesQueryCache)
-    cached = store_cache.cached_value(cache_key)
+    records = tuple(
+        record
+        for record in context.find()
+        if issubclass(record.key.artifact_type, MeasurementBearingArtifactType)
+    )
+    # Stored tables retain their carrier identity. Derived geometry views must
+    # observe the current geometry rather than caching a detached row snapshot.
+    stored_tables_only = all(
+        record.key.artifact_type is MeasurementsArtifactType for record in records
+    )
+    cached = store_cache.cached_value(cache_key) if stored_tables_only else None
     if cached is not None:
         return cached
+    from openhcs.core.equivalence.policy import DEFAULT_RUNTIME_MEASUREMENT_DIALECT
+
     tables = tuple(
-        cast(MeasurementTable, record.value.data)
-        for record in context.find(artifact_type=MeasurementsArtifactType)
+        table
+        for record in records
+        for table in record.key.artifact_type.measurement_tables(
+            record, DEFAULT_RUNTIME_MEASUREMENT_DIALECT
+        )
     )
-    return store_cache.store_value(cache_key, tables)
+    return store_cache.store_value(cache_key, tables) if stored_tables_only else tables
 
 
 def runtime_measurement_tables_for_object(
@@ -482,7 +243,7 @@ def runtime_relationship(
         artifact_type=RelationshipsArtifactType,
         purpose="relationship artifact",
     )
-    return cast(ObjectRelationship, record.value.data)
+    return cast(ObjectRelationship, record.data)
 
 
 def runtime_spatial_grid(
@@ -495,7 +256,7 @@ def runtime_spatial_grid(
         artifact_type=SpatialGridArtifactType,
         purpose="spatial grid artifact",
     )
-    return cast(SpatialGrid, record.value.data)
+    return cast(SpatialGrid, record.data)
 
 
 def _measurement_table_may_declare_object_name(table: MeasurementTable) -> bool:
@@ -874,10 +635,6 @@ class MeasurementLabelSliceFeatureBatchQuery(MeasurementLabelSliceFeatureQuery):
 
     def values_by_object(self) -> Mapping[str, tuple[Any, ...]]:
         """Return label-plane-aligned vectors keyed by object name."""
-        cached = self.cached_values_by_object()
-        if cached is not None:
-            return cached
-
         label_planes_by_object = {
             object_name: self.object_feature_query(object_name).label_planes(labels)
             for object_name, labels in self.labels_by_object.items()
@@ -952,13 +709,8 @@ class MeasurementLabelSliceFeatureBatchQuery(MeasurementLabelSliceFeatureQuery):
                     strict=True,
                 )
             )
-        return self.cache_values_by_object(
-            MappingProxyType(
-                {
-                    object_name: values_by_object[object_name]
-                    for object_name in object_names
-                }
-            )
+        return MappingProxyType(
+            {object_name: values_by_object[object_name] for object_name in object_names}
         )
 
     def object_feature_query(
@@ -973,73 +725,6 @@ class MeasurementLabelSliceFeatureBatchQuery(MeasurementLabelSliceFeatureQuery):
             row_axis=self.row_axis,
             plane_projector=self.plane_projector,
         )
-
-    def cache_key(self) -> MeasurementLabelSliceFeatureBatchCacheKey:
-        """Return the identity key for this label-plane feature projection."""
-        object_names = self.object_names
-        return MeasurementLabelSliceFeatureBatchCacheKey(
-            feature_name=self.feature_name,
-            object_names=object_names,
-            dialect_identity=id(
-                resolve_runtime_measurement_lookup_dialect(self.dialect)
-            ),
-            row_axis=self.row_axis,
-            table_identities=tuple(id(table) for table in self.measurement_tables),
-            label_identities=tuple(
-                (object_name, id(self.labels_by_object[object_name]))
-                for object_name in object_names
-            ),
-            row_axis_values=tuple(
-                (
-                    object_name,
-                    self.object_feature_query(object_name)
-                    .select_axis(self.labels_by_object[object_name])
-                    .row_axis_values,
-                )
-                for object_name in object_names
-            ),
-        )
-
-    def table_owners(self) -> tuple[MeasurementTable, ...]:
-        """Return table owners used to protect identity-keyed cache entries."""
-        return self.measurement_tables
-
-    def label_owners(self) -> tuple[tuple[str, object], ...]:
-        """Return label owners used to protect identity-keyed cache entries."""
-        return tuple(
-            (object_name, self.labels_by_object[object_name])
-            for object_name in self.object_names
-        )
-
-    def cached_values_by_object(self) -> Mapping[str, tuple[Any, ...]] | None:
-        """Return cached label-plane feature projections when owners still match."""
-        cached = (
-            MeasurementLabelSliceFeatureBatchQueryCache.process_cache().cached_value(
-                self.cache_key()
-            )
-        )
-        if cached is None:
-            return None
-        cached_tables, cached_labels, cached_values = cached
-        if not identity_owner_tuples_match(cached_tables, self.table_owners()):
-            return None
-        if not named_identity_owner_tuples_match(cached_labels, self.label_owners()):
-            return None
-        return cached_values
-
-    def cache_values_by_object(
-        self,
-        values_by_object: Mapping[str, tuple[Any, ...]],
-    ) -> Mapping[str, tuple[Any, ...]]:
-        """Store label-plane feature projections with identity-owner protection."""
-        return MeasurementLabelSliceFeatureBatchQueryCache.process_cache().store_value(
-            self.cache_key(),
-            (
-                self.table_owners(),
-                self.label_owners(),
-                values_by_object,
-            ),
-        )[2]
 
 
 def _merge_measurement_value_index(

@@ -1555,6 +1555,9 @@ class NapariDimensionLabelRouteResolver:
     ) -> bool:
         if route_key is None:
             return False
+        route_state = self.server.layer_route_state
+        if route_key not in route_state.layers or not route_state.layer(route_key).visible:
+            return False
         state = self.server.layer_route_state.dimension_state_for(route_key)
         axis_labels = state.axis_labels
         viewer_axis_origins = self.server.layer_route_state.axis_origins_for(
@@ -1752,6 +1755,7 @@ class NapariLayerDisplayRequest:
         """Create or replace the concrete Napari layer for this display request."""
         route_key = self.presentation.route_key
         layer_route_state = self.pipeline.server.layer_route_state
+        self.reconcile_peers()
         layer = _NAPARI_LAYER_UPDATES.create_or_update(
             layer_kind=layer_kind,
             viewer=self.pipeline.server.viewer,
@@ -1767,6 +1771,7 @@ class NapariLayerDisplayRequest:
     def mount_layer(self, layer: NapariLayerHandle) -> None:
         """Publish only a complete native candidate through the route owner."""
         server = self.pipeline.server
+        self.reconcile_peers()
         _NAPARI_LAYER_UPDATES.mount(
             viewer=server.viewer,
             layers=server.layer_route_state.layers,
@@ -1789,17 +1794,50 @@ class NapariLayerDisplayRequest:
             self.presentation,
             display_config=self.display_config,
         )
-        self.reconcile_peers()
 
     def reconcile_peers(self) -> None:
         self.pipeline.reconcile_mounted_axis_projections(
             updated_route_key=self.presentation.route_key,
+            display_layout=self.presentation.layout,
+            viewer_component_values=self.pipeline.server.layer_route_state.shared_component_values(
+                self.pipeline.server.component_values,
+                self.presentation.layout,
+                replacement_route=self.presentation.route_key,
+                additional_component_values=self.presentation.component_values(),
+            ),
         )
 
 
 @dataclass(frozen=True, slots=True)
 class NapariRematerializationRequest(NapariLayerDisplayRequest):
     """The original reconciliation traversal already owns every survivor."""
+
+    original_presentation: NapariAxisPresentation
+    native_frame: napari.components.Dims
+
+    @property
+    def slots_changed(self) -> bool:
+        return (
+            self.presentation.display_axis_components
+            != self.original_presentation.display_axis_components
+        )
+
+    @property
+    def requires_rematerialization(self) -> bool:
+        return (
+            self.slots_changed
+            or self.presentation.aligned_component_shape()
+            != self.original_presentation.aligned_component_shape()
+        )
+
+    def restore_native_frame(self) -> None:
+        """Apply the one batch snapshot before native selection eligibility."""
+        dims = self.pipeline.server.viewer.dims
+        offset = dims.ndim - self.native_frame.ndim
+        if offset < 0:
+            raise ValueError("Reconciled native frame exceeds the mounted viewer rank.")
+        dims.point = (*dims.point[:offset], *self.native_frame.point)
+        dims.order = (*range(offset), *(axis + offset for axis in self.native_frame.order))
 
     def reconcile_peers(self) -> None:
         pass
@@ -1849,9 +1887,10 @@ class NapariLayerDisplayHandler(
         layer = state.layer(route)
         layer.visible, layer.opacity, layer.blending = visible, opacity, blending
 
-    def rematerialize(self, request: NapariLayerDisplayRequest) -> None:
+    def rematerialize(self, request: NapariRematerializationRequest) -> None:
         with self.preserve_native_presentation(request):
             self.handle(request)
+            request.restore_native_frame()
 
     def geometric_component_values(
         self,
@@ -2329,6 +2368,7 @@ class NapariLayerDisplayPipeline:
         *,
         updated_route_key: str | None = None,
         viewer_component_values: ComponentValues | None = None,
+        display_layout: ViewerComponentLayout | None = None,
         apply: bool = True,
         rematerialize: bool = False,
     ) -> None:
@@ -2336,12 +2376,15 @@ class NapariLayerDisplayPipeline:
 
         Independently streamed routes can declare different subsets of the same
         component axis.  A newly observed value may therefore change the shared
-        coordinate assigned to an already mounted singleton route.  Shape-neutral
-        changes are applied directly to that route's native transform and semantic
-        presentation.  A change that would alter stored array extents fails during
-        dispatch instead of leaving silently misaligned layers.
+        coordinate assigned to an already mounted singleton route. Every route
+        also shares the declaration-owned native axis slots. Adding stack slots
+        rematerializes through the original display handler without changing
+        grouping or source coordinates. Shape-neutral domain changes update the
+        transform directly; other extent changes still require explicit
+        rematerialization instead of leaving silently misaligned layers.
         """
 
+        requests: list[NapariRematerializationRequest] = []
         for (
             route_key,
             state,
@@ -2351,7 +2394,12 @@ class NapariLayerDisplayPipeline:
             items = self.server.component_groups.existing_items_for(route_key)
             if not items:
                 continue
-            axis_projection_semantics = state.presentation.axis_projection_semantics()
+            layout = self.server.layer_route_state.shared_display_layout(
+                state.presentation.layout
+            )
+            if display_layout is not None:
+                layout = layout.with_shared_stack_axes((display_layout,))
+            axis_projection_semantics = state.presentation.for_display_layout(layout)
             aggregate_axis_bindings = NapariAggregateAxisBindingAuthority.bindings(
                 items,
                 axis_projection_semantics,
@@ -2361,39 +2409,64 @@ class NapariLayerDisplayPipeline:
                 axis_projection_semantics,
                 items,
                 aggregate_axis_bindings,
-                publish=apply,
+                publish=False,
                 viewer_component_values=viewer_component_values,
             )
-            presentation = replace(state.presentation, projection=projection)
+            presentation = replace(state.presentation, layout=layout, projection=projection)
+            request = NapariRematerializationRequest(
+                pipeline=self,
+                items=items,
+                presentation=presentation,
+                display_config=state.display_config,
+                original_presentation=state.presentation,
+                native_frame=self.server.viewer.dims,
+            )
             if (
-                presentation.aligned_component_shape()
-                != state.presentation.aligned_component_shape()
+                request.requires_rematerialization
+                and not request.slots_changed
+                and not rematerialize
             ):
-                if rematerialize:
-                    NapariLayerDisplayHandler.for_data_type(
-                        items[0].address.stream_layer_data_type
-                    ).rematerialize(
-                        NapariRematerializationRequest(
-                            pipeline=self,
-                            items=items,
-                            presentation=presentation,
-                            display_config=state.display_config,
-                        )
-                    )
-                    continue
                 raise ValueError(
                     "Napari shared semantic axis expansion requires route "
                     f"{route_key!r} to be rematerialized; old component shape="
                     f"{state.presentation.aligned_component_shape()!r}, new="
                     f"{presentation.aligned_component_shape()!r}."
                 )
-            if not apply:
-                continue
-            layer = self.server.layer_route_state.layer(route_key)
-            layer.translate = presentation.spatial_layer_kwargs(
-                items, presentation.payload_axis_labels
-            )["translate"]
-            self.dimension_label_store.apply(presentation)
+            requests.append(request)
+
+        if not apply or not requests:
+            return
+        if any(request.requires_rematerialization for request in requests):
+            # Capture once, before any peer changes native rank. The original
+            # label/selection resolver owns which source frame is current.
+            current_route = self.dimension_label_overlay.route_resolver.resolve().route_key
+            basis = next(
+                (request for request in requests if request.presentation.route_key == current_route),
+                requests[0],
+            )
+            native_frame = self.server.viewer.dims.copy()
+            if basis.slots_changed:
+                with basis.original_presentation.preserve_native_axes(
+                    native_frame, basis.presentation, basis.items,
+                ):
+                    native_frame.ndim = max(native_frame.ndim, len(basis.presentation.axis_labels))
+                    offset = native_frame.ndim - len(basis.presentation.axis_labels)
+                    native_frame.axis_labels = (
+                        *native_frame.axis_labels[:offset], *basis.presentation.axis_labels,
+                    )
+            requests = [replace(request, native_frame=native_frame) for request in requests]
+
+        for request in requests:
+            if request.requires_rematerialization:
+                NapariLayerDisplayHandler.for_data_type(
+                    request.items[0].address.stream_layer_data_type
+                ).rematerialize(request)
+            else:
+                layer = self.server.layer_route_state.layer(request.presentation.route_key)
+                layer.translate = request.presentation.spatial_layer_kwargs(
+                    request.items, request.presentation.payload_axis_labels,
+                )["translate"]
+                request.publish()
 
     def schedule_layer_update(
         self,
@@ -2621,20 +2694,19 @@ class NapariLayerDisplayPipeline:
         )
         display_layout = ViewerObjectDisplayConfigInput(
             display_payload.display_config
-        ).layout().with_shared_stack_axes(tuple(
-            layout
-            for _route, state in self.server.layer_route_state.mounted_dimension_states()
-            for layout in state.display_layouts
-        ))
+        ).layout()
+        display_layout = self.server.layer_route_state.shared_display_layout(display_layout)
         projection_semantics = display_payload.for_display_layout(display_layout)
-        preview_values = self.server.component_values.shared_values_for(
-            display_layout.components_for_mode(ViewerComponentMode.STACK),
+        preview_values = self.server.layer_route_state.shared_component_values(
+            self.server.component_values,
+            display_layout,
             replacement_route=layer_key,
             additional_component_values=display_payload.component_values(),
         )
         self.reconcile_mounted_axis_projections(
             updated_route_key=layer_key,
             viewer_component_values=preview_values,
+            display_layout=display_layout,
             apply=False,
         )
         axis_projection = self.display_axis_projection(
@@ -2643,6 +2715,7 @@ class NapariLayerDisplayPipeline:
             items,
             aggregate_axis_bindings,
             publish=False,
+            viewer_component_values=preview_values,
         )
         work = NapariLayerDisplayHandler.for_data_type(data_type).display_work(
             NapariLayerDisplayRequest(
@@ -4242,6 +4315,7 @@ class NapariViewerProjectionABC(ABC, Generic[NapariViewerProjectionRequestT]):
             ViewerPayloadField.PATH.value: item.address.path,
             ViewerPayloadField.COMPONENTS.value: dict(components),
             "payload_type": type(data).__name__,
+            "source_voxel_spacing": to_jsonable(item.image_metadata.source_voxel_spacing),
         }
         summary.update(
             item.image_metadata.source_spatial_domain.to_viewer_wire_mapping()

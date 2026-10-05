@@ -1,0 +1,63 @@
+{
+  "returncode": 0,
+  "diagnostic_admission": true,
+  "public_rows": [
+    {
+      "case_name": "cp_tutorial_3d_monolayer",
+      "mode_name": "1w_1t",
+      "worker_count": "1",
+      "well_count": "1",
+      "compile_seconds": "1.495826244354248",
+      "prepare_seconds": "0.0",
+      "execute_seconds": "8.396726846694946",
+      "total_seconds": "10.694032318890095",
+      "wells_per_second": "0.11909402535746559",
+      "successful_wells": "1",
+      "native_single_sample_execution_seconds": "",
+      "projected_native_execution_seconds": "",
+      "projected_execution_speedup": "",
+      "peak_memory_mb": "1658.1875",
+      "status": "success",
+      "memory_limit_mb": "",
+      "error_message": "",
+      "execution_route": "ordinary-zmq-outcomes-v1",
+      "server_lifecycle": "reused-per-sweep",
+      "run_input_sha256": "7f66dd478c9a56033495f056335a0eaadb9fd5facd953b504f0e1f8f7eaa57d5"
+    }
+  ],
+  "regions": [
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261003/compiler-config-coarse-ledger-v1/output/regions/region-1948899-139659153200832-0001.json",
+      "sha256": "6b604c99652c36aba1ce3eff39b65ccd73b71d17ca827c121a98676b4608c687"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261003/compiler-config-coarse-ledger-v1/output/regions/region-1948899-139659153200832-0002.json",
+      "sha256": "ea2b9668eb40dc72c8af0ed9a6d55250fcd46721db5c5554fd0ea3c82ff738dd"
+    }
+  ],
+  "root_sequence_complete": true,
+  "actual_index_calls": 0,
+  "actual_declared_calls": 211,
+  "compile_only_actual_calls": {
+    "PipelineCompiler.compile_pipelines": 1,
+    "PipelineCompiler._register_and_resolve_pipeline_once": 1,
+    "PipelineCompiler._capture_pipeline_config": 1,
+    "AxisCompilationRequest.context_for": 1,
+    "CompilationSession.from_context": 1,
+    "PipelineOrchestrator.create_context": 3,
+    "PipelineOrchestrator.get_effective_config": 10,
+    "ObjectState.__init__": 44,
+    "ObjectState._compute_resolved_snapshot": 88,
+    "ObjectState._reconstruct_from_resolved": 532,
+    "ObjectState.to_saved_resolved_object": 42
+  },
+  "all_required_compiler_boundaries_reached": true,
+  "all41_hooks_installed": true,
+  "retained_json_bytes": 51356,
+  "generated_output_bytes": 18189886,
+  "public_log_bytes": 541,
+  "profiler_artifacts_absent": true,
+  "source_env_native_input_freeze": "PASS",
+  "science": "NOT_RUN: original full saved-output126file/schema/discrete/numerical/nativeinput witness separate gate. No exclusions or missing outputs waived.",
+  "scope": "One source-pinned ordinary3D Monolayer1w1t compiler/config diagnostic with NEW41 coarse nominal hooks: inherited24 plus17 compiler/state boundaries. Site is versioned/changed, not byte-identical. cProfile and runtime profiler OFF, no captures/percell hooks. Existing defaultOUTCOMES/memory observers/READY clocks unchanged. Same-thread nested exclusive clocks exclude query from its real ancestors; worker independent roots are not added to parent waits. Nearordinary diagnostic only; wrapper overhead remains, no scale factors/causal performance promotion. Full saved126file (6CSV120TIFF) science/native source witness independently required."
+}

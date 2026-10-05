@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from types import SimpleNamespace
 
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
@@ -33,8 +32,8 @@ from openhcs.interop.cellprofiler.measurement_dialect import (
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
 )
-from openhcs.interop.cellprofiler.runtime.object_measurement_tables import (
-    ObjectMeasurementTableIndex,
+from openhcs.core.measurement_feature_queries import (
+    ColumnarMeasurementTableSchema,
 )
 from openhcs.interop.cellprofiler.runtime.object_measurement_vectors import (
     MeasurementImageOperandVectorResolution,
@@ -52,7 +51,7 @@ def _measurement_consumer(image):
 class _MeasurementInputAdapter:
     def __init__(
         self,
-        runtime_values: tuple[object, ...],
+        runtime_values: tuple[RuntimeValue, ...],
         callable_contract: CallableContract,
         measurement_spec: ArtifactSpec,
     ) -> None:
@@ -87,11 +86,11 @@ class _MeasurementInputAdapter:
         self,
         name: str,
         artifact_type: type[MeasurementsArtifactType],
-    ) -> tuple[SimpleNamespace, ...]:
+    ) -> tuple[RuntimeValue, ...]:
         self.measurement_record_queries += 1
         assert name == "measurements"
         assert artifact_type is MeasurementsArtifactType
-        return tuple(SimpleNamespace(value=value) for value in self._runtime_values)
+        return self._runtime_values
 
     def declared_measurement_input_records(
         self,
@@ -99,7 +98,7 @@ class _MeasurementInputAdapter:
         group_key: str | None = None,
         match_group: bool = True,
         current_image: object | None = None,
-    ) -> tuple[SimpleNamespace, ...]:
+    ) -> tuple[RuntimeValue, ...]:
         del group_key, match_group, current_image
         return self.artifact_input_records("measurements", MeasurementsArtifactType)
 
@@ -123,10 +122,11 @@ def test_object_measurement_index_preserves_producer_slice_indexes() -> None:
         for value in (11.0, 13.0)
     )
 
-    indexed = ObjectMeasurementTableIndex.from_tables(tables)
+    indexed = tables
 
     assert tuple(
-        table.rows[0]["slice_index"] for table in indexed.for_object("Cells")
+        table.rows[0]["slice_index"]
+        for table in ColumnarMeasurementTableSchema.tables_for_object(indexed, "Cells")
     ) == (0, 0)
 
 
@@ -147,9 +147,11 @@ def test_object_measurement_index_preserves_mixed_payload_and_slice_rows() -> No
         subject=MeasurementSubject(MeasurementScope.OBJECT, "Cells", "object_label"),
     )
 
-    indexed = ObjectMeasurementTableIndex.from_tables((table,))
+    indexed = (table,)
 
-    (indexed_table,) = indexed.for_object("Cells")
+    (indexed_table,) = ColumnarMeasurementTableSchema.tables_for_object(
+        indexed, "Cells"
+    )
     assert tuple(indexed_table.rows) == tuple(table.rows)
 
 

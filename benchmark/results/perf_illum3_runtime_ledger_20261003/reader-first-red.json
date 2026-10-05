@@ -1,0 +1,13 @@
+{
+  "status": "ORIGINAL_READER_CUSTODY_RED_RETAINED",
+  "process_session": 84897,
+  "returncode": 1,
+  "original_reader": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/science_validator.py",
+  "original_reader_sha256": "710f87213f2ebff207aa9c0c629cdb59639479c96a32656f1f3ec4adfd57d669",
+  "error": "AssertionError: Effective ordinary environment changed.",
+  "first_failure_boundary": "Original comparator final validate after comparison assertions, before science report write; FULLSCIENCEPASS was not claimed.",
+  "environment_audit": "/home/ts/.local/state/openhcs-maintenance/20261003/illum3-compiler-runtime-ledger-v2/science-first-red-environment-audit.json",
+  "environment_audit_sha256": "4fa0497da2158f883c3af73aaea0b906a63f0d3887d7f82ee89e9c8afc03db20",
+  "driver_admission_unchanged": true,
+  "no_pipeline_rerun": true
+}

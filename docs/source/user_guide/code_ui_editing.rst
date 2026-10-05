@@ -111,9 +111,11 @@ code apply clears the unsaved marker for its reconciled graph. On surfaces with
 an explicit save or commit action, use that owning action where persistence is
 required.
 
-For an attached agent, the safe sequence is read, explain, obtain approval,
-re-read, validate, apply with the fresh revision, retain the receipt, then poll
-the relevant state surface. Small field-level ObjectState mutations have a
+For an attached agent, follow :ref:`openhcs-task-authorization`: routine edits
+within existing task authority do not need another approval request. Read,
+explain, re-read, validate, apply with the fresh revision and declared
+confirmation policy, retain the receipt, then inspect the relevant state
+surface. Small field-level ObjectState mutations have a
 request token but no base-revision guard; use them only after a fresh field read
 and verify immediately afterward. Prefer the code document for atomic related
 changes.

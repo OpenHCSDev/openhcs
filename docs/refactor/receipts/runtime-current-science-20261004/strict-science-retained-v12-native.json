@@ -1,0 +1,257 @@
+{
+  "status": "PASS",
+  "comparisons": [
+    {
+      "case": "cp_tutorial_3d_monolayer",
+      "ordinary_repeat": 0,
+      "native_repeat": 0,
+      "measurement_differences": 0,
+      "image_differences": 0,
+      "tables": [
+        7,
+        6
+      ],
+      "physical_images": [
+        2,
+        2
+      ],
+      "logical_images": [
+        2,
+        2
+      ],
+      "known_relationship_keys": [
+        3,
+        3
+      ],
+      "ordinary_receipt_sha256": "633d57c188c7701d05105ba96d1f8c3cd33ef2910a22dae00ca93dd028cb8618",
+      "output_hashes": {
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_3d_monolayer/outputs/0/3d_monolayer_xy1_ch0_CellsLabels.tiff": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_3d_monolayer/outputs/0/3d_monolayer_Experiment.csv": "0f58915fe15ec67558af05090093a38ca3622f81321e369e7dd30ce8538f1ea9",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_3d_monolayer/outputs/0/3d_monolayer_downsizedNuclei.csv": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_3d_monolayer/outputs/0/3d_monolayer_Image.csv": "4a59e7c318d943cb6a45d88ec61ce997224c9d247153b6ba413f8bbc84470fa3",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_3d_monolayer/outputs/0/3d_monolayer_erodedDownsizedNuclei.csv": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_3d_monolayer/outputs/0/3d_monolayer_erodedResizedNuclei.csv": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_3d_monolayer/outputs/0/3d_monolayer_xy1_ch2_NucleiLabels.tiff": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_3d_monolayer/outputs/0/3d_monolayer_Nuclei.csv": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_3d_monolayer/outputs/0/3d_monolayer_Cells.csv": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_3d_monolayer/wells_1/workers_1/images_3d_monolayer_final_source_workspace_well_throughput/results/3d_monolayer_downsizedNuclei.csv": "a7b998c5a524e11747fc5452fd763fc3d9abe16f46e961f62e09e9393b6a8adf",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_3d_monolayer/wells_1/workers_1/images_3d_monolayer_final_source_workspace_well_throughput/results/3d_monolayer_Nuclei.csv": "17500f5d4321bbf255df31f7a3503339029c2b077045a6c10e4d4f6f0db9ad1e",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_3d_monolayer/wells_1/workers_1/images_3d_monolayer_final_source_workspace_well_throughput/images/W001_s001_w0_z001_t001_CellsLabels.tiff": "64e6fc421b929e67b440b8a7a14a0c36ed42a8d1831fd1a2685103ee18023471",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_3d_monolayer/wells_1/workers_1/images_3d_monolayer_final_source_workspace_well_throughput/results/3d_monolayer_Image.csv": "75ac32ff5ef57bc285ec4eae1c9b501c27a35b486bf35435af5d499d856d34a4",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_3d_monolayer/wells_1/workers_1/images_3d_monolayer_final_source_workspace_well_throughput/results/3d_monolayer_erodedResizedNuclei.csv": "cca23f86a85bb3ee7a5c3a1d174c34b5f026ca7f399be98458e1a8c6e12d5c77",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_3d_monolayer/wells_1/workers_1/images_3d_monolayer_final_source_workspace_well_throughput/results/3d_monolayer_erodedDownsizedNuclei.csv": "ee507fb9c2387f86fc768184baf2596ebe1f8e40f7fc5eb24f252345fee63ae6",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_3d_monolayer/wells_1/workers_1/images_3d_monolayer_final_source_workspace_well_throughput/openhcs_metadata.json.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_3d_monolayer/wells_1/workers_1/images_3d_monolayer_final_source_workspace_well_throughput/results/3d_monolayer_Cells.csv": "6f6e7431171ed5ea73a01784105147eca0e43a6e3e41f8720df93106353c9c79",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_3d_monolayer/wells_1/workers_1/images_3d_monolayer_final_source_workspace_well_throughput/images/W001_s001_w2_z001_t001_NucleiLabels.tiff": "ca1a92ddcb7bf58230bb912458caac5c8277f16e84dd67354ac1ef421ef26f67",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_3d_monolayer/wells_1/workers_1/images_3d_monolayer_final_source_workspace_well_throughput/openhcs_metadata.json": "7abeed37c6bb569dae7578de336df9cf66ecb9c1cfd5d2227513d87b56212e96"
+      }
+    },
+    {
+      "case": "cp_tutorial_3d_monolayer",
+      "ordinary_repeat": 0,
+      "native_repeat": 1,
+      "measurement_differences": 0,
+      "image_differences": 0,
+      "tables": [
+        7,
+        6
+      ],
+      "physical_images": [
+        2,
+        2
+      ],
+      "logical_images": [
+        2,
+        2
+      ],
+      "known_relationship_keys": [
+        3,
+        3
+      ],
+      "ordinary_receipt_sha256": "633d57c188c7701d05105ba96d1f8c3cd33ef2910a22dae00ca93dd028cb8618",
+      "output_hashes": {
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_3d_monolayer/outputs/1/3d_monolayer_xy1_ch0_CellsLabels.tiff": "aaed9ed23179a162ee7f5a7e8d1d88f1fa342ca55172b7fccd4cbf67f7841d81",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_3d_monolayer/outputs/1/3d_monolayer_Nuclei.csv": "440c33edc7e8cb5611910a835454db62390301a7af617a542349f60aece57561",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_3d_monolayer/outputs/1/3d_monolayer_erodedDownsizedNuclei.csv": "527a0cce497d2a618478be84d1a0bf174049f58aa2a666e37626a990fdca0116",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_3d_monolayer/outputs/1/3d_monolayer_Experiment.csv": "ae3bf6c4967656a3cbad7de214db7b56a42452ef6db777f8458d89061f8b15e7",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_3d_monolayer/outputs/1/3d_monolayer_downsizedNuclei.csv": "2c66bc7b17de52147d5a875403f9a9746019ac61371c08157979044c6ed818dd",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_3d_monolayer/outputs/1/3d_monolayer_Cells.csv": "cc34681db8a66c38ca77bc47db496b26703f21e4d7c7628dd74e30c33250859f",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_3d_monolayer/outputs/1/3d_monolayer_Image.csv": "8b58906e58685d5433f651c69e1b1dcbe69a6c76d32ccd166e6673654127447f",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_3d_monolayer/outputs/1/3d_monolayer_xy1_ch2_NucleiLabels.tiff": "340bbd795541e4031749d1fff767fa4fcdcac10f5b97879056b25dac9fd7674b",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_3d_monolayer/outputs/1/3d_monolayer_erodedResizedNuclei.csv": "66a58f78cab0cfdbe907468e8ba383fc59fab49025b84b589855bdfa04854609",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_3d_monolayer/wells_1/workers_1/images_3d_monolayer_final_source_workspace_well_throughput/results/3d_monolayer_downsizedNuclei.csv": "a7b998c5a524e11747fc5452fd763fc3d9abe16f46e961f62e09e9393b6a8adf",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_3d_monolayer/wells_1/workers_1/images_3d_monolayer_final_source_workspace_well_throughput/results/3d_monolayer_Nuclei.csv": "17500f5d4321bbf255df31f7a3503339029c2b077045a6c10e4d4f6f0db9ad1e",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_3d_monolayer/wells_1/workers_1/images_3d_monolayer_final_source_workspace_well_throughput/images/W001_s001_w0_z001_t001_CellsLabels.tiff": "64e6fc421b929e67b440b8a7a14a0c36ed42a8d1831fd1a2685103ee18023471",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_3d_monolayer/wells_1/workers_1/images_3d_monolayer_final_source_workspace_well_throughput/results/3d_monolayer_Image.csv": "75ac32ff5ef57bc285ec4eae1c9b501c27a35b486bf35435af5d499d856d34a4",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_3d_monolayer/wells_1/workers_1/images_3d_monolayer_final_source_workspace_well_throughput/results/3d_monolayer_erodedResizedNuclei.csv": "cca23f86a85bb3ee7a5c3a1d174c34b5f026ca7f399be98458e1a8c6e12d5c77",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_3d_monolayer/wells_1/workers_1/images_3d_monolayer_final_source_workspace_well_throughput/results/3d_monolayer_erodedDownsizedNuclei.csv": "ee507fb9c2387f86fc768184baf2596ebe1f8e40f7fc5eb24f252345fee63ae6",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_3d_monolayer/wells_1/workers_1/images_3d_monolayer_final_source_workspace_well_throughput/openhcs_metadata.json.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_3d_monolayer/wells_1/workers_1/images_3d_monolayer_final_source_workspace_well_throughput/results/3d_monolayer_Cells.csv": "6f6e7431171ed5ea73a01784105147eca0e43a6e3e41f8720df93106353c9c79",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_3d_monolayer/wells_1/workers_1/images_3d_monolayer_final_source_workspace_well_throughput/images/W001_s001_w2_z001_t001_NucleiLabels.tiff": "ca1a92ddcb7bf58230bb912458caac5c8277f16e84dd67354ac1ef421ef26f67",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_3d_monolayer/wells_1/workers_1/images_3d_monolayer_final_source_workspace_well_throughput/openhcs_metadata.json": "7abeed37c6bb569dae7578de336df9cf66ecb9c1cfd5d2227513d87b56212e96"
+      }
+    },
+    {
+      "case": "ExampleSpeckles",
+      "ordinary_repeat": 0,
+      "native_repeat": 0,
+      "measurement_differences": 0,
+      "image_differences": 0,
+      "tables": [
+        3,
+        3
+      ],
+      "physical_images": [
+        0,
+        0
+      ],
+      "logical_images": [
+        0,
+        0
+      ],
+      "known_relationship_keys": [
+        1,
+        1
+      ],
+      "ordinary_receipt_sha256": "09ae9829478d3948a6e1dcfd457fd83cc9f33f20ca9af3ca1b6d972d41bbd7ed",
+      "output_hashes": {
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/ExampleSpeckles/outputs/0/h2ax.csv": "0f54fc72ccdeb7e1a68bab9dc3a8d9d49788cdf81dbbc109ed119e589c09538a",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/ExampleSpeckles/outputs/0/Nuclei.csv": "15af7cac08d651c19b3e3f409b2b0d7fc4f96011c9b53394aa9a35969a8936a6",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/ExampleSpeckles/outputs/0/Image.csv": "ecf5dc33df4e9252eeff914df33376fc233be116c407e1c20056d6f5448e8c20",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/ExampleSpeckles/wells_1/workers_1/images_ExampleSpeckles_source_workspace_well_throughput/openhcs_metadata.json.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/ExampleSpeckles/wells_1/workers_1/images_ExampleSpeckles_source_workspace_well_throughput/results/Image.csv": "85ef16f24e75f03dc7055215cf2e6cb196b1dc0a0d73713a4c5999f698d4f96e",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/ExampleSpeckles/wells_1/workers_1/images_ExampleSpeckles_source_workspace_well_throughput/openhcs_metadata.json": "71582c62cabb2571ebf8a0de57f92fdf82c55a7ece3dac0bf2a6eca95cad84c9",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/ExampleSpeckles/wells_1/workers_1/images_ExampleSpeckles_source_workspace_well_throughput/results/Nuclei.csv": "e50cb9f8c23f65e9ce8db25132263cf4a4448ed65fc1088d782536abf74c5670",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/ExampleSpeckles/wells_1/workers_1/images_ExampleSpeckles_source_workspace_well_throughput/results/h2ax.csv": "eb453565f3b79ac932eeb5cde8605888b72e58c80f42edbbf0b1ba37f34fd6f8"
+      }
+    },
+    {
+      "case": "ExampleSpeckles",
+      "ordinary_repeat": 0,
+      "native_repeat": 1,
+      "measurement_differences": 0,
+      "image_differences": 0,
+      "tables": [
+        3,
+        3
+      ],
+      "physical_images": [
+        0,
+        0
+      ],
+      "logical_images": [
+        0,
+        0
+      ],
+      "known_relationship_keys": [
+        1,
+        1
+      ],
+      "ordinary_receipt_sha256": "09ae9829478d3948a6e1dcfd457fd83cc9f33f20ca9af3ca1b6d972d41bbd7ed",
+      "output_hashes": {
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/ExampleSpeckles/outputs/1/Nuclei.csv": "15af7cac08d651c19b3e3f409b2b0d7fc4f96011c9b53394aa9a35969a8936a6",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/ExampleSpeckles/outputs/1/Image.csv": "e87fca015a2cfc9ac2b626c3c52a24d415c95a37fb7c5c075138a16fb42ba464",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/ExampleSpeckles/outputs/1/h2ax.csv": "0f54fc72ccdeb7e1a68bab9dc3a8d9d49788cdf81dbbc109ed119e589c09538a",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/ExampleSpeckles/wells_1/workers_1/images_ExampleSpeckles_source_workspace_well_throughput/openhcs_metadata.json.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/ExampleSpeckles/wells_1/workers_1/images_ExampleSpeckles_source_workspace_well_throughput/results/Image.csv": "85ef16f24e75f03dc7055215cf2e6cb196b1dc0a0d73713a4c5999f698d4f96e",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/ExampleSpeckles/wells_1/workers_1/images_ExampleSpeckles_source_workspace_well_throughput/openhcs_metadata.json": "71582c62cabb2571ebf8a0de57f92fdf82c55a7ece3dac0bf2a6eca95cad84c9",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/ExampleSpeckles/wells_1/workers_1/images_ExampleSpeckles_source_workspace_well_throughput/results/Nuclei.csv": "e50cb9f8c23f65e9ce8db25132263cf4a4448ed65fc1088d782536abf74c5670",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/ExampleSpeckles/wells_1/workers_1/images_ExampleSpeckles_source_workspace_well_throughput/results/h2ax.csv": "eb453565f3b79ac932eeb5cde8605888b72e58c80f42edbbf0b1ba37f34fd6f8"
+      }
+    },
+    {
+      "case": "cp_tutorial_beginner_segmentation_final",
+      "ordinary_repeat": 0,
+      "native_repeat": 0,
+      "measurement_differences": 0,
+      "image_differences": 0,
+      "tables": [
+        7,
+        7
+      ],
+      "physical_images": [
+        2,
+        2
+      ],
+      "logical_images": [
+        2,
+        2
+      ],
+      "known_relationship_keys": [
+        5,
+        5
+      ],
+      "ordinary_receipt_sha256": "58b16de63936ba96b993b01f23119dc584e8b99a11fb12639cc6fc6ac0c1de6b",
+      "output_hashes": {
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_beginner_segmentation_final/outputs/0/MyExpt_Nucleoli.csv": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_beginner_segmentation_final/outputs/0/MyExpt_NucleoliChildObjects.csv": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_beginner_segmentation_final/outputs/0/MyExpt_Cells.csv": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_beginner_segmentation_final/outputs/0/MyExpt_Experiment.csv": "ddf5fa4028a6593d3bf112279f963f42c011c6ee1c934af485cfe9fcc6b342f3",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_beginner_segmentation_final/outputs/0/overlay_images/plate1_A14_site2_Ch3_overlay.tiff": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_beginner_segmentation_final/outputs/0/MyExpt_Image.csv": "8b4fa44d6178a4c3e8fe113f0a6d64841436b100968f16b9627a3996699948dc",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_beginner_segmentation_final/outputs/0/MyExpt_Nuclei.csv": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_beginner_segmentation_final/outputs/0/overlay_images/plate1_A14_site1_Ch3_overlay.tiff": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_beginner_segmentation_final/outputs/0/MyExpt_Cytoplasm.csv": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_beginner_segmentation_final/wells_1/workers_1/images_Illum-corrected_segmentation_final_source_workspace_well_throughput/results/MyExpt_Cytoplasm.csv": "0e843133986efdcc44443575f8dca408ebdb6a45c13ed9d33a0691046f365bfd",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_beginner_segmentation_final/wells_1/workers_1/images_Illum-corrected_segmentation_final_source_workspace_well_throughput/results/MyExpt_Nuclei.csv": "82e6bf71dd73a17b0fe97ec96b93055cc09918ec36d7e9bc443818e15133cf5b",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_beginner_segmentation_final/wells_1/workers_1/images_Illum-corrected_segmentation_final_source_workspace_well_throughput/images/W001_s001_w3_z001_t001_overlay.tiff": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_beginner_segmentation_final/wells_1/workers_1/images_Illum-corrected_segmentation_final_source_workspace_well_throughput/results/MyExpt_Image.csv": "481cd40bba32dc50883007662cf0885326e83aa3efa8d18250426bad2fd719a7",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_beginner_segmentation_final/wells_1/workers_1/images_Illum-corrected_segmentation_final_source_workspace_well_throughput/results/MyExpt_Nucleoli.csv": "845b39e07d694b1864c3e65bd4980d89bda24ba14fea34e63a148767b64fa30c",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_beginner_segmentation_final/wells_1/workers_1/images_Illum-corrected_segmentation_final_source_workspace_well_throughput/results/MyExpt_Cells.csv": "e72abca3ccfc5ffdb4e24a955c8f9ecddfab8e657c8e9df1e3552c6efdf3f23e",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_beginner_segmentation_final/wells_1/workers_1/images_Illum-corrected_segmentation_final_source_workspace_well_throughput/results/MyExpt_NucleoliChildObjects.csv": "5f06dd1b2b81f4f527d5ade9c608e10c61befd9dc55ffce10234d0bb8ad89491",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_beginner_segmentation_final/wells_1/workers_1/images_Illum-corrected_segmentation_final_source_workspace_well_throughput/openhcs_metadata.json": "a9688ee0d51600ef559c5ae52cb2f840044f84834f630038ae37b26c6fb22eac",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_beginner_segmentation_final/wells_1/workers_1/images_Illum-corrected_segmentation_final_source_workspace_well_throughput/results/MyExpt_Object relationships.csv": "99a65fd24408eaf57a323035adbfea18a2cd336c827ba9d65095e30dd0b87393",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_beginner_segmentation_final/wells_1/workers_1/images_Illum-corrected_segmentation_final_source_workspace_well_throughput/images/W001_s002_w3_z001_t001_overlay.tiff": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_beginner_segmentation_final/wells_1/workers_1/images_Illum-corrected_segmentation_final_source_workspace_well_throughput/openhcs_metadata.json.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "case": "cp_tutorial_beginner_segmentation_final",
+      "ordinary_repeat": 0,
+      "native_repeat": 1,
+      "measurement_differences": 0,
+      "image_differences": 0,
+      "tables": [
+        7,
+        7
+      ],
+      "physical_images": [
+        2,
+        2
+      ],
+      "logical_images": [
+        2,
+        2
+      ],
+      "known_relationship_keys": [
+        5,
+        5
+      ],
+      "ordinary_receipt_sha256": "58b16de63936ba96b993b01f23119dc584e8b99a11fb12639cc6fc6ac0c1de6b",
+      "output_hashes": {
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_beginner_segmentation_final/outputs/1/MyExpt_Nuclei.csv": "80496e920f2098aa181c8d6f7efd435c9b9da62cf28780d61e898fa899b62304",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_beginner_segmentation_final/outputs/1/MyExpt_Image.csv": "236f19d9fa89b84c3b4ec3eecd15f7b98a9cf2581cb1318050788009ad50a9ea",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_beginner_segmentation_final/outputs/1/MyExpt_NucleoliChildObjects.csv": "bd75ae8a5ae880fa090956729f7826a6242164ab763172084309db29b01b5cb6",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_beginner_segmentation_final/outputs/1/MyExpt_Cells.csv": "990c806a68d7f44addfc5294acd50bd42ff6cfcab23fb11b5c39e5f45f9be505",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_beginner_segmentation_final/outputs/1/MyExpt_Cytoplasm.csv": "f918da3280f8e88f70b048249ed10f9815ef04f5381fe0fe016cbc0ed0b19c2f",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_beginner_segmentation_final/outputs/1/MyExpt_Experiment.csv": "8c9d0ded37816301e8ae329e33fa8e442563c2a83f2b023213715f6793b7c926",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_beginner_segmentation_final/outputs/1/overlay_images/plate1_A14_site2_Ch3_overlay.tiff": "89888a6d23423bb99118578d423fb5efa13641c1346ddb09547792fd294d6981",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_beginner_segmentation_final/outputs/1/MyExpt_Nucleoli.csv": "6c7ae52b3b3d3dbfa7cbbb8e088cf9cb2aa4d9c14c608867b8a18b29eb783f2a",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-cache-client-paired-v12-qualified/native/cp_tutorial_beginner_segmentation_final/outputs/1/overlay_images/plate1_A14_site1_Ch3_overlay.tiff": "05a85674095f244ab4d85aad6644e04420ac2e8394d01d781ec968ecb5ff59f1",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_beginner_segmentation_final/wells_1/workers_1/images_Illum-corrected_segmentation_final_source_workspace_well_throughput/results/MyExpt_Cytoplasm.csv": "0e843133986efdcc44443575f8dca408ebdb6a45c13ed9d33a0691046f365bfd",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_beginner_segmentation_final/wells_1/workers_1/images_Illum-corrected_segmentation_final_source_workspace_well_throughput/results/MyExpt_Nuclei.csv": "82e6bf71dd73a17b0fe97ec96b93055cc09918ec36d7e9bc443818e15133cf5b",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_beginner_segmentation_final/wells_1/workers_1/images_Illum-corrected_segmentation_final_source_workspace_well_throughput/images/W001_s001_w3_z001_t001_overlay.tiff": "a623e96717783cf919c95f0005dc6dfc45677e7d52a36d0a2720b120f89abe16",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_beginner_segmentation_final/wells_1/workers_1/images_Illum-corrected_segmentation_final_source_workspace_well_throughput/results/MyExpt_Image.csv": "481cd40bba32dc50883007662cf0885326e83aa3efa8d18250426bad2fd719a7",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_beginner_segmentation_final/wells_1/workers_1/images_Illum-corrected_segmentation_final_source_workspace_well_throughput/results/MyExpt_Nucleoli.csv": "845b39e07d694b1864c3e65bd4980d89bda24ba14fea34e63a148767b64fa30c",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_beginner_segmentation_final/wells_1/workers_1/images_Illum-corrected_segmentation_final_source_workspace_well_throughput/results/MyExpt_Cells.csv": "e72abca3ccfc5ffdb4e24a955c8f9ecddfab8e657c8e9df1e3552c6efdf3f23e",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_beginner_segmentation_final/wells_1/workers_1/images_Illum-corrected_segmentation_final_source_workspace_well_throughput/results/MyExpt_NucleoliChildObjects.csv": "5f06dd1b2b81f4f527d5ade9c608e10c61befd9dc55ffce10234d0bb8ad89491",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_beginner_segmentation_final/wells_1/workers_1/images_Illum-corrected_segmentation_final_source_workspace_well_throughput/openhcs_metadata.json": "a9688ee0d51600ef559c5ae52cb2f840044f84834f630038ae37b26c6fb22eac",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_beginner_segmentation_final/wells_1/workers_1/images_Illum-corrected_segmentation_final_source_workspace_well_throughput/results/MyExpt_Object relationships.csv": "99a65fd24408eaf57a323035adbfea18a2cd336c827ba9d65095e30dd0b87393",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_beginner_segmentation_final/wells_1/workers_1/images_Illum-corrected_segmentation_final_source_workspace_well_throughput/images/W001_s002_w3_z001_t001_overlay.tiff": "0ea08cc6991124dbed3643a6d8a3d3190eb86a5c7b49a98ec9406d987196ddc8",
+        "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-coherent-paired-v13-qualified/ordinary-0/cp_tutorial_beginner_segmentation_final/wells_1/workers_1/images_Illum-corrected_segmentation_final_source_workspace_well_throughput/openhcs_metadata.json.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  ],
+  "source_head": "9e838be5646a0dd414630f8b84951238387df2e7",
+  "scope": "SCIENCE ONLY: current 9e838 ordinary repeat0 versus BOTH RETAINED qualified v12 native sets. V13 campaign remains RED for terminal progress coverage; no fresh-native or timing qualification."
+}

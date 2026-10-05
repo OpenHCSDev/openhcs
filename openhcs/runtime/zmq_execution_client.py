@@ -9,6 +9,7 @@ import sys
 import time
 from collections.abc import Callable, Mapping, Sequence
 from concurrent.futures import CancelledError
+from copy import deepcopy
 from contextlib import AbstractContextManager, nullcontext
 from dataclasses import dataclass, replace
 from enum import Enum
@@ -39,6 +40,7 @@ from zmqruntime.messages import (
     ControlMessageType,
     ControlRequestHeader,
     EndpointApplicationCompatibilityError,
+    ExecutionRecord,
     MessageFields,
     PongResponse,
     ServerRole,
@@ -79,6 +81,8 @@ if TYPE_CHECKING:
         CustomFunctionRegistrationDestinationRequest,
         CustomFunctionRegistrationRequest,
         CustomFunctionRegistrationResult,
+        CustomFunctionRegistrationHandle,
+        CustomFunctionRegistrationObservation,
         FunctionCatalogControlRequest,
         FunctionCatalogControlRequestABC,
         FunctionCatalogPage,
@@ -339,9 +343,6 @@ class OpenHCSExecutionSubmission:
     def compile_only(self) -> bool:
         return self.compile_control.compile_only
 
-    def to_task(self) -> "OpenHCSExecutionSubmission":
-        return self
-
     def with_config_params(
         self, config_params: ZMQParams
     ) -> "OpenHCSExecutionSubmission":
@@ -394,9 +395,6 @@ class OpenHCSExecutionSubmission:
     def pipeline_code(self) -> str:
         return PipelineDocumentAuthority.execution_source(self.pipeline_document)
 
-    def step_count_label(self) -> str:
-        return str(len(self.pipeline_steps))
-
 
 class ZMQPipelineRunPhase(Enum):
     """Source-owned boundaries for one compiled pipeline execution."""
@@ -413,17 +411,16 @@ class ZMQCompiledPipelineRun:
 
     compile_artifact_id: str
     execution_id: str
-    completion_response: Mapping[str, Any]
+    request: ZMQExecutionRequestBuilder
+    compile_record: ExecutionRecord
+    execution_record: ExecutionRecord
     completion_observed_at: float
 
     @property
     def results_summary(self) -> Mapping[str, Any]:
         """Project the completed wait response's ordinary result summary."""
 
-        value = self.completion_response.get("results")
-        if not value:
-            value = self.completion_response.get(MessageFields.RESULTS_SUMMARY)
-        return dict(value) if isinstance(value, Mapping) else {}
+        return dict(self.execution_record.results_summary or {})
 
     @property
     def output_plate(self) -> ExecutionOutputPlateSummary:
@@ -446,8 +443,9 @@ def run_compiled_pipeline(
         return nullcontext() if phase_context is None else phase_context(phase)
 
     with phase_scope(ZMQPipelineRunPhase.SUBMIT_COMPILE):
+        request = ZMQExecutionRequestBuilder.from_task(submission)
         compile_response = ExecutionSubmissionResponse.from_wire(
-            client.submit_compile(submission)
+            client.submit_prepared_pipeline(request.compile_request())
         )
     if not compile_response.accepted:
         raise RuntimeError(
@@ -461,14 +459,16 @@ def run_compiled_pipeline(
             compile_artifact_id,
             poll_interval=_COMPILED_PIPELINE_POLL_INTERVAL_SECONDS,
         )
-    ExecutionWaitResult.from_wire(compile_wait_response).require_complete(
-        "OpenHCS ZMQ compilation failed"
+    compile_record = ExecutionWaitResult.from_wire(
+        compile_wait_response
+    ).require_completed_execution(
+        "OpenHCS ZMQ compilation failed", expected_execution_id=compile_artifact_id
     )
 
-    execution_submission = submission.with_compile_artifact_id(compile_artifact_id)
+    execution_request = request.with_compile_artifact_id(compile_artifact_id)
     with phase_scope(ZMQPipelineRunPhase.SUBMIT_EXECUTION):
         execution_response = ExecutionSubmissionResponse.from_wire(
-            client.submit_pipeline(execution_submission)
+            client.submit_prepared_pipeline(execution_request)
         )
     if not execution_response.accepted:
         raise RuntimeError(
@@ -483,13 +483,17 @@ def run_compiled_pipeline(
             poll_interval=_COMPILED_PIPELINE_POLL_INTERVAL_SECONDS,
         )
         completion_observed_at = time.time()
-    ExecutionWaitResult.from_wire(completion_response).require_complete(
-        "OpenHCS ZMQ execution failed"
+    execution_record = ExecutionWaitResult.from_wire(
+        completion_response
+    ).require_completed_execution(
+        "OpenHCS ZMQ execution failed", expected_execution_id=execution_id
     )
     return ZMQCompiledPipelineRun(
         compile_artifact_id=compile_artifact_id,
         execution_id=execution_id,
-        completion_response=completion_response,
+        request=execution_request,
+        compile_record=compile_record,
+        execution_record=execution_record,
         completion_observed_at=completion_observed_at,
     )
 
@@ -505,9 +509,10 @@ def _pycodify_config_source(
 
 @dataclass(frozen=True, slots=True)
 class ZMQExecutionRequestBuilder:
-    task: OpenHCSExecutionSubmission
+    identity: ZMQExecutionIdentity
+    compile_control: ZMQExecutionCompileControl
     pipeline_code: str
-    config_projection: "ZMQConfigProjection"
+    config_projection: ZMQConfigProjection
 
     @classmethod
     def from_task(
@@ -515,18 +520,40 @@ class ZMQExecutionRequestBuilder:
         task: OpenHCSExecutionSubmission,
     ) -> "ZMQExecutionRequestBuilder":
         return cls(
-            task=task,
+            identity=task.identity,
+            compile_control=task.compile_control,
             pipeline_code=task.pipeline_code(),
             config_projection=ZMQConfigProjection.from_task(task),
         )
 
+    def compile_request(self) -> ZMQExecutionRequestBuilder:
+        return replace(self, compile_control=self.compile_control.as_compile_request())
+
+    def with_compile_artifact_id(self, artifact_id: str) -> ZMQExecutionRequestBuilder:
+        return replace(
+            self,
+            compile_control=self.compile_control.as_execution_request(artifact_id),
+        )
+
+    @property
+    def global_config_code(self) -> str:
+        fields = self.config_projection.source_fields
+        if fields is None or fields.config_code is None:
+            raise RuntimeError("Prepared execution request has no global config source")
+        return fields.config_code
+
+    @property
+    def config_params(self) -> ZMQParams | None:
+        boundary = self.config_projection.params_boundary
+        return None if boundary is None else boundary.params
+
     @property
     def request_payload(self) -> ZMQExecutionRequestPayload:
         return ZMQExecutionRequestPayload(
-            identity=self.task.identity,
+            identity=self.identity,
             pipeline_code=self.pipeline_code,
             config_transport=self.config_projection.signature_transport(),
-            compile_control=self.task.compile_control,
+            compile_control=self.compile_control,
         )
 
     def request(self) -> "ZMQRequest":
@@ -534,8 +561,8 @@ class ZMQExecutionRequestBuilder:
             (
                 (MessageFields.TYPE, ControlMessageType.EXECUTE.value),
                 (MessageFields.PIPELINE_CODE, self.pipeline_code),
-                *self.task.identity.request_items(),
-                *self.task.compile_control.request_items(),
+                *self.identity.request_items(),
+                *self.compile_control.request_items(),
                 *self.config_projection.request_items(),
             )
         )
@@ -621,7 +648,7 @@ class ZMQConfigProjection:
         config_source = _pycodify_config_source(task.global_pipeline_config)
         return cls(
             params_boundary=(
-                task.config_boundary
+                ZMQConfigParamsBoundary(deepcopy(task.config_boundary.params))
                 if task.config_boundary.params is not None
                 else None
             ),
@@ -789,7 +816,6 @@ class FunctionCatalogExecutionClient(
         from openhcs.agent.dto.functions import (
             CustomFunctionRegistrationDestinationControlResponse,
         )
-
         response = self._send_function_catalog_exchange(
             request,
             operation_deadline=operation_deadline,
@@ -799,6 +825,19 @@ class FunctionCatalogExecutionClient(
                 response
             ).destination
         )
+
+    def observe_custom_function_registration(
+        self, handle: CustomFunctionRegistrationHandle,
+    ) -> CustomFunctionRegistrationObservation:
+        """One read-only exchange; never register/load the requested source."""
+        from openhcs.agent.dto.functions import (
+            CustomFunctionRegistrationObservationRequest,
+            CustomFunctionRegistrationObservationControlResponse,
+        )
+        response = self._send_function_catalog_exchange(
+            CustomFunctionRegistrationObservationRequest(handle),
+        )
+        return CustomFunctionRegistrationObservationControlResponse.from_control_response(response).value
 
     def function_catalog_preparation(
         self,
@@ -1012,15 +1051,18 @@ class ZMQExecutionClient(FunctionCatalogExecutionClient):
         task: OpenHCSExecutionSubmission,
         config=None,
     ) -> dict[str, ZMQValue]:
-        request_builder = ZMQExecutionRequestBuilder.from_task(task)
+        return self.serialize_prepared_request(ZMQExecutionRequestBuilder.from_task(task))
+
+    def serialize_prepared_request(
+        self, request_builder: ZMQExecutionRequestBuilder
+    ) -> dict[str, ZMQValue]:
         request = request_builder.request()
         request_payload = request_builder.request_payload
         logger.info(
-            "Serialize task: plate=%s compile_only=%s artifact_id=%s step_count=%s pipeline_sha=%s config_sha=%s",
-            task.plate_id,
-            task.compile_only,
-            task.compile_artifact_id,
-            task.step_count_label(),
+            "Serialize task: plate=%s compile_only=%s artifact_id=%s pipeline_sha=%s config_sha=%s",
+            request_builder.identity.plate_id,
+            request_builder.compile_control.compile_only,
+            request_builder.compile_control.compile_artifact_id,
             request_payload.pipeline_sha,
             request_builder.config_projection.config_sha,
         )
@@ -1033,7 +1075,19 @@ class ZMQExecutionClient(FunctionCatalogExecutionClient):
         timeout_ms: int | None = None,
     ):
         return self._submit_submission(
-            submission.to_task(),
+            lambda: self.serialize_task(submission),
+            timeout_ms=self._submission_timeout_ms(timeout_ms),
+        )
+
+    def submit_prepared_pipeline(
+        self,
+        request: ZMQExecutionRequestBuilder,
+        *,
+        timeout_ms: int | None = None,
+    ):
+        """Submit the exact declaration already admitted for a compiled run."""
+        return self._submit_submission(
+            lambda: self.serialize_prepared_request(request),
             timeout_ms=self._submission_timeout_ms(timeout_ms),
         )
 
@@ -1048,7 +1102,9 @@ class ZMQExecutionClient(FunctionCatalogExecutionClient):
             submission.config_params
         ).with_updates(debug_config.to_config_params())
         return self._submit_submission(
-            submission.with_config_params(config_params_boundary.params).to_task(),
+            lambda: self.serialize_task(
+                submission.with_config_params(config_params_boundary.params)
+            ),
             timeout_ms=self._submission_timeout_ms(timeout_ms),
         )
 
@@ -1059,7 +1115,7 @@ class ZMQExecutionClient(FunctionCatalogExecutionClient):
         timeout_ms: int | None = None,
     ):
         return self._submit_submission(
-            submission.compile_request().to_task(),
+            lambda: self.serialize_task(submission.compile_request()),
             timeout_ms=self._submission_timeout_ms(timeout_ms),
         )
 
@@ -1115,7 +1171,7 @@ class ZMQExecutionClient(FunctionCatalogExecutionClient):
 
     def _submit_submission(
         self,
-        submission: OpenHCSExecutionSubmission,
+        build_request: Callable[[], dict[str, ZMQValue]],
         *,
         timeout_ms: int,
     ):
@@ -1136,7 +1192,7 @@ class ZMQExecutionClient(FunctionCatalogExecutionClient):
             self._ensure_progress_subscription(
                 timeout_ms=deadline.remaining_milliseconds()
             )
-            request = self.serialize_task(submission, None)
+            request = build_request()
             if MessageFields.TYPE not in request:
                 request[MessageFields.TYPE] = ControlMessageType.EXECUTE.value
             request_timeout_ms = deadline.remaining_milliseconds()

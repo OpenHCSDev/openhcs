@@ -1,0 +1,51 @@
+{
+  "schema_version": "openhcs.paper.task_only_outcome.v1",
+  "run": "BBBC007_FRESH08_96",
+  "phase": "fresh_context_uncoached_development_on_released_fields",
+  "control_output": "/home/ts/wt/openhcs-issue-batch-20260929/next-bbbc007-fresh96-after08-20261004/BBBC007_FRESH08_96/author-workspace/output",
+  "payload_root": "/run/media/ts/hdd/openhcs-science/next-bbbc007-fresh96-after08-20261004/BBBC007_FRESH08_96/staged_input_candidate03_adaptive_otsu60",
+  "manifest": {
+    "file": "frozen_manifest.json",
+    "sha256": "f06e38db38ea70ea7f29f04265b2dd40ba821bd3851372097927720109598463",
+    "independently_checked_entries": 815,
+    "checked_bytes": 797409650,
+    "failures": 0,
+    "journal_prefixes": 5,
+    "journal_prefix_manifest_sha256": "caa395618dcae0380b2866dfe7baa87df483ed7018af88febe6e205c93ea4272",
+    "outer_journal_sealing_certified_by_this_check": false
+  },
+  "report": {
+    "file": "FINAL_REPORT.md",
+    "sha256": "7480c70625f0b6f044b106aa810ee85e8323c47ee53af450d5b8a939e28f3ed6"
+  },
+  "final_pipeline": {
+    "file": "candidate03_adaptive_otsu60.py",
+    "sha256": "b423f046d3c4df9b96c4ba9d8c8647d719d3e3778ef049ac3e5cddb3ff4b3656",
+    "execution_id": "35d25bc4-b614-472c-8d0e-dbb512835249"
+  },
+  "independently_checked_table_properties": {
+    "fields": 16,
+    "nuclear_rows": 1363,
+    "cell_rows": 1363,
+    "duplicate_source_object_keys": 0,
+    "unmatched_primary_secondary_keys": 0,
+    "seed_sized_secondary_areas": 81,
+    "secondary_areas_smaller_than_primary": 0
+  },
+  "demonstrated_local_gain": "Several missing crowded-region nuclear anchors recovered; inspected faint bodies and single textured-body outlines retained.",
+  "remaining_limits": [
+    "Clear crowded-region nuclear misses remain; sampled local detections do not establish exhaustive coverage or an exact biological population count.",
+    "Pixelwise same-ID containment was not verified because typed QA callables failed serialization in the frozen package.",
+    "Cell-body boundary interpretation and seed-sized secondary objects remain qualified separately from nuclear detection.",
+    "No manual-reference score, unseen-validation claim or verified physical calibration."
+  ],
+  "closure": {
+    "viewer_pid": 1902940,
+    "native_pid": 1817325,
+    "typed_closure_acknowledged": true,
+    "both_processes_independently_absent": true,
+    "actual_client_exit_code": 2
+  },
+  "review_record": "figure-collection-20261004/BBBC007-FRESH08-96-INTERIM-VISUAL-REVIEW.rst",
+  "original_science_and_report_changed": false
+}

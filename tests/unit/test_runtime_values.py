@@ -1,3 +1,4 @@
+import pickle
 from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
@@ -112,14 +113,14 @@ from openhcs.core.source_image_provenance import (
     SourceImageIdentity,
     SourceImageProvenancePlanes,
 )
-from openhcs.core.source_image_semantics import apply_source_binding_payload
 from openhcs.core.source_metadata import (
+    SOURCE_VOXEL_SPACING_FIELD,
     SOURCE_PLANE_COUNT_FIELD,
     SOURCE_PLANE_INDEX_FIELD,
     SourceVoxelSpacing,
 )
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.steps.function_runtime import (
+from openhcs.core.projected_image_output import (
     DefaultImageOutputSourceContextStrategy,
 )
 from openhcs.processing.backends.analysis.region_properties import (
@@ -394,6 +395,40 @@ def test_object_label_pure_2d_aggregator_preserves_dense_payload_domains() -> No
         ),
     )
     assert aggregated.domain.declared_object_id_domains == ((1,), (2,))
+
+
+
+def test_object_label_aggregation_preserves_variant_plane_writes_and_transport() -> None:
+    planes = (np.array([[0, 1]], dtype=np.int16), np.array([[0, 2]], dtype=np.int32))
+    values = tuple(
+        ObjectLabelPayload(
+            variant_data=ObjectLabelVariantData(plane, plane, plane),
+            domain=ObjectLabelDomain(declared_object_ids=(index + 1,)),
+        )
+        for index, plane in enumerate(planes)
+    )
+    aggregate = ObjectLabelPure2DSliceAggregator.aggregate(
+        values, "numpy", plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+    )
+    assert aggregate.shape == (2, 1, 2)
+    assert aggregate.dtype == np.dtype(np.int32)
+    decoded = pickle.loads(pickle.dumps(aggregate))
+    projected = decoded.project_source_plane(1)
+    projected.unedited_labels[0, 1] = 9
+    assert projected.labels[0, 1] == 2
+    assert projected.small_removed_labels[0, 1] == 2
+    assert decoded.unedited_labels[1, 0, 1] == 9
+    assert planes[1][0, 1] == 2
+    decoded.labels[1, 0, 1] = 7
+    assert projected.labels[0, 1] == 7
+    subset = decoded.with_plane_projection((1,))
+    assert subset.shape == (1, 1, 2)
+    assert subset.unedited_labels[0, 0, 1] == 9
+    restored = pickle.loads(pickle.dumps(decoded))
+    assert restored.labels[1, 0, 1] == 7
+    assert restored.unedited_labels[1, 0, 1] == 9
+    assert restored.small_removed_labels[1, 0, 1] == 2
+    np.testing.assert_array_equal(aggregate.labels, np.stack(planes))
 
 
 def test_object_label_pure_2d_aggregator_preserves_single_payload_identity() -> None:
@@ -900,7 +935,7 @@ def test_object_label_source_plane_projection_preserves_projected_variants() -> 
         ),
     )
 
-    projected = source.with_source_plane_measurement_labels(labels[1], 1)
+    projected = source.project_source_plane(1, labels=labels[1])
 
     np.testing.assert_array_equal(projected.labels, labels[1])
     np.testing.assert_array_equal(projected.small_removed_labels, small_removed[1])
@@ -2142,9 +2177,8 @@ def test_source_aligned_object_labels_replace_stale_plane_provenance() -> None:
 def test_source_image_loading_semantics_attaches_component_metadata() -> None:
     image = np.zeros((4, 5), dtype=np.uint16)
 
-    payload = apply_source_binding_payload(
+    payload = NamedSourceBinding(alias="DNA").apply_loaded_payload(
         image,
-        NamedSourceBinding(alias="DNA"),
         ImagePayloadSourceMetadataContext(
             SourceImageIdentity(
                 "01_POS002_D.TIF",
@@ -2301,13 +2335,12 @@ def test_declared_source_pixel_channel_axis_owns_source_spatial_domain() -> None
         ),
     )
 
-    bound = apply_source_binding_payload(
+    bound = NamedSourceBinding(
+        alias="Color",
+        source_channel_axis=-1,
+        source_channel_counts=frozenset((3, 4)),
+    ).apply_loaded_payload(
         payload,
-        NamedSourceBinding(
-            alias="Color",
-            source_channel_axis=-1,
-            source_channel_counts=frozenset((3, 4)),
-        ),
         ImagePayloadSourceMetadataContext(SourceImageIdentity("color.tif")),
     )
 
@@ -2325,15 +2358,14 @@ def test_object_label_source_image_semantics_treats_rgb_image_as_label_plane() -
         ImagePayloadMetadata(source_channel_axis=-1),
     )
 
-    payload = apply_source_binding_payload(
+    payload = NamedSourceBinding(
+        alias="Objects",
+        artifact_kind=ObjectLabelsArtifactType,
+        projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+        source_channel_axis=-1,
+        source_channel_counts=frozenset((3, 4)),
+    ).apply_loaded_payload(
         source,
-        NamedSourceBinding(
-            alias="Objects",
-            artifact_kind=ObjectLabelsArtifactType,
-            projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
-            source_channel_axis=-1,
-            source_channel_counts=frozenset((3, 4)),
-        ),
         ImagePayloadSourceMetadataContext(SourceImageIdentity("objects.png")),
     )
 
@@ -2353,13 +2385,12 @@ def test_source_file_pixel_semantics_declare_ingestion_channel_axis(
     image = np.zeros((4, 5, 3), dtype=np.uint8)
     iio.imwrite(path, image)
 
-    payload = apply_source_binding_payload(
+    payload = NamedSourceBinding(
+        alias="Color",
+        source_channel_axis=-1,
+        source_channel_counts=frozenset((3, 4)),
+    ).apply_loaded_payload(
         iio.imread(path),
-        NamedSourceBinding(
-            alias="Color",
-            source_channel_axis=-1,
-            source_channel_counts=frozenset((3, 4)),
-        ),
         ImagePayloadSourceMetadataContext(SourceImageIdentity(str(path))),
     )
 
@@ -2394,13 +2425,12 @@ def test_source_file_pixel_semantics_allow_monochrome_without_declared_channel_a
     path = tmp_path / "source.png"
     iio.imwrite(path, np.zeros((4, 5), dtype=np.uint8))
 
-    payload = apply_source_binding_payload(
+    payload = NamedSourceBinding(
+        alias="Color",
+        source_channel_axis=-1,
+        source_channel_counts=frozenset((3, 4)),
+    ).apply_loaded_payload(
         iio.imread(path),
-        NamedSourceBinding(
-            alias="Color",
-            source_channel_axis=-1,
-            source_channel_counts=frozenset((3, 4)),
-        ),
         ImagePayloadSourceMetadataContext(SourceImageIdentity(str(path))),
     )
 
@@ -3468,7 +3498,7 @@ def test_default_image_output_context_preserves_explicit_intensity_proof_invalid
     )
     output = (
         ImagePayloadMetadata(source_dtype="float32")
-        .without_unit_interval_intensity_scale()
+        .with_unit_interval_intensity_scale(None)
         .payload_with(np.ones((4, 5), dtype=np.float32))
     )
 
@@ -3986,6 +4016,26 @@ def test_derived_image_payload_context_uses_source_provenance_atomically() -> No
         "/input/A01_s001_w2_z001_t001.tif",
     )
     assert metadata.source_image_names == ("Grayscale",)
+
+
+@pytest.mark.parametrize("invalid_owner", ("source", "output"))
+def test_derived_image_context_admits_current_calibration_before_channel_axis(
+    invalid_owner,
+):
+    source = ImagePayloadMetadata(source_path="/input/source.tif").payload_with(
+        np.zeros((4, 5), dtype=np.float32)
+    )
+    output = ImagePayloadMetadata(source_path="/stale/output.tif").payload_with(
+        np.ones((4, 5), dtype=np.float32)
+    )
+    metadata = image_payload_metadata(source if invalid_owner == "source" else output)
+    metadata.source_provenance.source_identity.component_metadata = {
+        SOURCE_VOXEL_SPACING_FIELD: "-1,1,1",
+    }
+    metadata.source_channel_axis = False
+
+    with pytest.raises(ValueError, match="finite and positive"):
+        image_payload_metadata(source).derive_payload(source, output)
 
 
 def test_object_label_source_context_keeps_source_aligned_stack_planes() -> None:
