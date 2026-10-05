@@ -645,6 +645,59 @@ def test_library_registry_discovery_is_stable_across_fresh_worker_processes(
     assert tuple((tmp_path / "cache" / "metaclass-registry").glob("*.json"))
 
 
+def test_registered_metadata_preparation_discovers_measurements_before_lookup(
+    tmp_path: Path,
+) -> None:
+    """Warm discovery once while later plugin declarations remain visible."""
+    environment = os.environ.copy()
+    environment.update(
+        OPENHCS_CPU_ONLY="true",
+        XDG_CACHE_HOME=str(tmp_path / "cache"),
+        XDG_DATA_HOME=str(tmp_path / "data"),
+    )
+    script = textwrap.dedent("""
+        from openhcs.core.processing_preparation import CallablePreparation, RegistryFamilyPreparation
+        from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
+        from openhcs.processing.backends.cellprofiler.thresholding import threshold
+
+        assert not CellProfilerModule.__registry__._discovered
+        operations = tuple(
+            operation
+            for source in CallablePreparation.from_callable(threshold).cache_sources()
+            for operation in source.cache_operations()
+        )
+        preparation = next(
+            operation for operation in operations
+            if isinstance(operation, RegistryFamilyPreparation)
+            and operation.family is CellProfilerModule
+        )
+        preparation.prepare()
+        assert CellProfilerModule.__registry__._discovered
+        declarations = tuple(CellProfilerModule.__registry__.values())
+        assert declarations
+        prefixes = CellProfilerModule.measurement_category_prefix_declarations()
+        assert prefixes
+        preparation.prepare()
+        assert tuple(CellProfilerModule.__registry__.values()) == declarations
+
+        class WarmupPlugin(CellProfilerModule):
+            module_name = "WarmupPlugin"
+            measurement_category_prefixes = (("warmup_plugin",),)
+
+        assert CellProfilerModule.__registry__["WarmupPlugin"] is WarmupPlugin
+        assert ("warmup_plugin",) in CellProfilerModule.measurement_category_prefix_declarations()
+    """)
+    completed = subprocess.run(
+        (sys.executable, "-c", script),
+        cwd=Path(__file__).parents[2],
+        env=environment,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert completed.returncode == 0, completed.stderr
+
+
 def test_cpu_only_registry_inventory_does_not_import_gpu_runtimes(
     tmp_path: Path,
 ) -> None:
