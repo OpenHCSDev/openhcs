@@ -137,15 +137,41 @@ fleet_helper_unit_for() {
 FLEET_HELPER_UNIT=$(fleet_helper_unit_for "$FLEET_SLOT")
 export FLEET_HELPER_UNIT
 
+# A named observation replaces only a positively closed controller. The funded
+# member, native roots and first-start clock remain the original owners.
+FLEET_RECORD_RUNTIME="$FLEET_WORKSPACE/output/runtime"
+FLEET_CLIENT_UNIT="$FLEET_UNIT-mcp"
+FLEET_AUTHOR_UNIT="$FLEET_UNIT-author"
+if [[ -n "${FLEET_RECOVERY_OBSERVATION:-}" ]]; then
+  [[ "$FLEET_RECOVERY_OBSERVATION" =~ ^[a-zA-Z0-9_-]+$ ]] || exit 64
+  FLEET_RECORD_RUNTIME+="/$FLEET_RECOVERY_OBSERVATION"
+  FLEET_CLIENT_UNIT+="-$FLEET_RECOVERY_OBSERVATION"
+  FLEET_AUTHOR_UNIT+="-$FLEET_RECOVERY_OBSERVATION"
+  # Explicit operational revision: one complete family, not frozen-file edits.
+  FLEET_OPERATIONS=$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)
+fi
+export FLEET_RECORD_RUNTIME FLEET_CLIENT_UNIT FLEET_AUTHOR_UNIT FLEET_OPERATIONS
+
+fleet_require_closed_controllers() {
+  local runtime="$FLEET_WORKSPACE/output/runtime" journal state
+  test -f "$runtime/first-mcp-started.epoch" || return
+  for journal in author-events.typescript mcp.stdin mcp.stdout; do
+    tail -n 3 "$runtime/$journal" | rg -q '^Script done .*COMMAND_EXIT_CODE="[0-9]+"' || return
+    if fuser "$runtime/$journal" >/dev/null 2>&1; then return 75; fi
+  done
+  state=$(systemctl --user show "$FLEET_UNIT-author.scope" -p ActiveState --value) || return
+  [[ "$state" == inactive || "$state" == failed || -z "$state" ]] || return 75
+}
+
 fleet_require_joint_slice() {
   systemctl --user is-active --quiet "$FLEET_SLICE"
 }
 
 fleet_require_live_client() {
-  local runtime="$FLEET_WORKSPACE/output/runtime" unit="$FLEET_UNIT-mcp.scope" invocation
+  local runtime="$FLEET_RECORD_RUNTIME" unit="$FLEET_CLIENT_UNIT.scope" invocation
   # The recorder creates these only after its startup admission. Never infer
   # an ongoing client from a port, a helper, or a requested tool name.
-  test -f "$runtime/first-mcp-started.epoch"
+  test -f "$FLEET_WORKSPACE/output/runtime/first-mcp-started.epoch"
   test -f "$runtime/mcp.stdin"
   test -f "$runtime/mcp.stdout"
   test -f "$runtime/mcp.timing"
@@ -219,6 +245,18 @@ fleet_require_writer_release() {
 fleet_author_context() {
   local context predecessor predecessor_root predecessor_slot predecessor_member
   local history_roots='[]' read_roots='[]' predecessors output_roots output_root physical_root
+  if [[ -n "${FLEET_RECOVERY_OBSERVATION:-}" ]]; then
+    fleet_require_closed_controllers >&2 || return
+    local original_history="$FLEET_WORKSPACE/output/native-sessions" session_ids
+    # The original launcher journal owns the started thread, not a guessed
+    # newest rollout. Later recovery children cannot change this ancestry.
+    session_ids=$(rg '^\{"type":"thread.started"' "$FLEET_WORKSPACE/output/runtime/author-events.typescript" |
+      jq -sce 'map(.thread_id)|unique') || return
+    jq -ce --arg history "$original_history" '
+      if length==1 then {argv:["fork",.[0]], history_roots:[$history],read_roots:[]}
+      else error("recovery requires one original saved author context") end' <<< "$session_ids"
+    return
+  fi
   context=$(jq -ce '
     if .fresh_history==true and .native_thread_id==null then {argv:[]}
     elif .fresh_history==false and (.native_thread_id|type)=="string"

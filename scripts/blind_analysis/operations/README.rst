@@ -86,6 +86,36 @@ recorded interactive client with tools.exec_command tty=true::
 
   bash "$FLEET_OPERATIONS/recorded-mcp.sh" "$FLEET_ROOT" "$FLEET_SLOT" startup01
 
+Known-closed controller recovery
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+An authorized operator may set ``FLEET_RECOVERY_OBSERVATION`` to a unique plain
+observation name when the original author and recorded stdio controllers have
+positively closed but their owned native processes remain retained. The original
+slot owner requires recorder terminal footers, no open journal holders and an
+inactive author. It derives the parent thread from that launcher's original
+``thread.started`` event. The ordinary launcher forks this saved context while
+mounting its old rollout readonly; it does not append to or replay that rollout.
+Recording and client units derive their new observation suffix from this same
+owner. Native roots, original first-start clock, funded membership and frozen
+package remain unchanged. The explicitly selected complete operations family
+is an operational intervention, not an unchanged fresh harness.
+
+The author starts one replacement recorded shell and first observes the exact
+original ``RuntimeBootstrapHandle`` through ``openhcs_observe_owned_runtime``.
+That existing typed owner checks PID/create time, startup journal and native
+ping identity without spawning. No port-based adoption, inferred process handle,
+new runtime, replay of uncertain input or different provider/model is permitted.
+Controller and final-message recordings live under the named runtime observation;
+original journals and final files are preserved. Recovery is a continuation,
+never a new fresh autonomous pass. A journal namespace does not prove native
+readiness: the installed original typed observation remains required.
+The reconnect is a controller allocation admitted through existing ``full``
+resource observation, not a cold ``replacement`` helper/native launch. A
+headless recorded stdio controller requires no VNC/window-manager startup.
+Absent GUI helpers remain a distinct unresolved viewer-access gap; this
+observation does not grant their restart or certify a viewer incarnation.
+
 The original slot owner resolves canonical funding before any performer starts.
 Launch, recording, client and helper consumers take that granted member; none
 rechecks a release flag or a parent file. Missing, retired, ambiguous or foreign

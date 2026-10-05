@@ -2,8 +2,12 @@
 # Internal recorded-client performer; admission belongs to recorded-mcp.sh.
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/slot-env.sh" "${1:?root}" "${2:?slot}"
-DISPLAY=:$FLEET_DISPLAY /usr/bin/xprop -root _NET_SUPPORTING_WM_CHECK _NET_SUPPORTED > "$FLEET_WORKSPACE/output/runtime/wm-before-mcp.txt"
-rg -q WINDOW "$FLEET_WORKSPACE/output/runtime/wm-before-mcp.txt"
+if [[ -z "${FLEET_RECOVERY_OBSERVATION:-}" ]]; then
+  DISPLAY=:$FLEET_DISPLAY /usr/bin/xprop -root _NET_SUPPORTING_WM_CHECK _NET_SUPPORTED > "$FLEET_WORKSPACE/output/runtime/wm-before-mcp.txt"
+  rg -q WINDOW "$FLEET_WORKSPACE/output/runtime/wm-before-mcp.txt"
+fi
+# Retained native observation uses the headless stdio server. No GUI-helper
+# startup or VNC access is implied by replacing its closed controller.
 test -f "$FLEET_INSTALL/openhcs/mcp/server.py"
 unset OPENHCS_METADATA_FILENAME OPENHCS_UI_BRIDGE_DESCRIPTOR
 export PYTHONPATH="$FLEET_INSTALL" DISPLAY=:$FLEET_DISPLAY QT_QPA_PLATFORM=xcb LIBGL_ALWAYS_SOFTWARE=1
@@ -26,6 +30,10 @@ export OPENHCS_AGENT_WRITE_ROOTS="$FLEET_WORKSPACE/output:$FLEET_ARTIFACT_ROOT:$
 mkdir -p "$XDG_CACHE_HOME" "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_STATE_HOME" "$XDG_RUNTIME_DIR" "$NUMBA_CACHE_DIR" "$MPLCONFIGDIR"
 chmod 700 "$XDG_RUNTIME_DIR"
 cpu=$(jq -er '.proposed_resource_envelope.cpu_quota_per_author_percent' <<< "$FLEET_RUN_PROGRAM")
-test ! -e "$FLEET_WORKSPACE/output/runtime/first-mcp-started.epoch"
-date -u +%s | tee "$FLEET_WORKSPACE/output/runtime/first-mcp-started.epoch"
-exec /usr/bin/env XDG_RUNTIME_DIR=/run/user/1000 /usr/bin/systemd-run --user --scope --slice="$FLEET_SLICE" --unit="$FLEET_UNIT-mcp" -p CPUQuota="${cpu}%" /usr/bin/env XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" /usr/bin/taskset -c "$FLEET_CPU" "$FLEET_PYTHON" -B -m openhcs.mcp.dev_client --no-resident --timeout-seconds 10 shell --no-prompt
+if [[ -n "${FLEET_RECOVERY_OBSERVATION:-}" ]]; then
+  fleet_require_closed_controllers
+else
+  test ! -e "$FLEET_WORKSPACE/output/runtime/first-mcp-started.epoch"
+  date -u +%s | tee "$FLEET_WORKSPACE/output/runtime/first-mcp-started.epoch"
+fi
+exec /usr/bin/env XDG_RUNTIME_DIR=/run/user/1000 /usr/bin/systemd-run --user --scope --slice="$FLEET_SLICE" --unit="$FLEET_CLIENT_UNIT" -p CPUQuota="${cpu}%" /usr/bin/env XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" /usr/bin/taskset -c "$FLEET_CPU" "$FLEET_PYTHON" -B -m openhcs.mcp.dev_client --no-resident --timeout-seconds 10 shell --no-prompt
