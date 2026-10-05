@@ -25,6 +25,7 @@ from openhcs.core.artifacts import (
     ImageArtifactType,
     InputImageSetContextSourceRelation,
     InputGroupLineageSourceRelation,
+    InputObjectMeasurementSourceRelation,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
     ObjectMeasurementSubjectRelation,
@@ -563,8 +564,73 @@ def test_prior_measurement_selects_its_declared_producer_group_scope() -> None:
         MeasurementsArtifactType,
     )
     assert measurement_input.relations == (
+        InputObjectMeasurementSourceRelation(
+            ArtifactSpec.input(nuclei.name, ObjectLabelsArtifactType).ref()
+        ),
         InputGroupLineageSourceRelation(green.ref()),
     )
+
+
+def test_calculate_math_retains_measurement_subjects_across_producer_channels() -> None:
+    from openhcs.core.artifacts import ArtifactInputProjectionPlan
+    from openhcs.core.component_group_scope import ComponentGroupScope
+
+    image = ArtifactSpec.input("CorrProtein", ImageArtifactType)
+    objects = tuple(
+        ArtifactSpec.output(name, ObjectLabelsArtifactType)
+        for name in ("Nuclei", "Cells")
+    )
+    measurements = ArtifactSpec.output(
+        "intensity",
+        MeasurementsArtifactType,
+        measurement_feature_owner=MeasureObjectIntensityModule,
+        relations=(
+            GroupLineageSourceRelation(image.ref()),
+            *(
+                ObjectMeasurementSubjectRelation(
+                    spec.for_plan_type(ArtifactInputPlan).ref()
+                )
+                for spec in objects
+            ),
+        ),
+    )
+    contract = _callable_contract(
+        _module(8, "CalculateMath", {
+            "Name the output measurement": "Ratio",
+            "Operation": "Divide",
+            "Select the numerator objects": "Nuclei",
+            "Select the numerator measurement": "Intensity_MeanIntensity_CorrProtein",
+            "Select the denominator objects": "Cells",
+            "Select the denominator measurement": "Intensity_MeanIntensity_CorrProtein",
+        }),
+        step_index=7,
+        available_artifacts=ArtifactSpecCollection((image, *objects, measurements)),
+        main_flow_artifacts=ArtifactSpecCollection((image,)),
+        available_artifact_producers=artifact_producers_for_outputs(
+            (measurements,),
+            groups=("2", "1"),
+            invocation_keys=(FunctionInvocationKey(
+                "measure_object_intensity", DEFAULT_GROUP_KEY, 0
+            ),),
+        ),
+    )
+    (measurement_input,) = contract.artifact_inputs.of_artifact_type(
+        MeasurementsArtifactType
+    )
+    assert tuple(
+        relation.source.name for relation in measurement_input.relations
+        if isinstance(relation, InputObjectMeasurementSourceRelation)
+    ) == ("Nuclei", "Cells")
+    storage = ArtifactInputPlan(
+        name=measurements.name,
+        path="/memory/intensity.pkl",
+        artifact_type=MeasurementsArtifactType,
+        group_keys=("2", "1"),
+        group_component=AllComponents.CHANNEL,
+    )
+    assert ArtifactInputProjectionPlan.declared_producer_selection_scope(
+        measurement_input, storage
+    ) == ComponentGroupScope.from_raw(("2", "1"), component=AllComponents.CHANNEL)
 
 
 def test_declarations_carry_cross_step_object_and_measurement_flow() -> None:

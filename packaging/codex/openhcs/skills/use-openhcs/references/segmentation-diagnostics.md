@@ -16,6 +16,17 @@ histograms and the threshold's assumptions; use the preprocessing guide when
 the foreground failure is illumination, noise or contrast. Record connectivity:
 4/8 in 2-D and 6/26 in 3-D produce different connected objects.
 
+Before the first crowded-body method, consider where hole filling belongs in
+the declared chain. Filling enclosed gaps in a multi-body foreground before
+declumping can admit unsupported interbody background and change the distance
+landscape that places shape markers. Compare threshold support, filled support
+and the consumed landscape against raw at a crowded group and an isolated body
+with genuine interior holes. If predeclump filling causes that failure, test
+postdeclump filling while retaining threshold and marker settings, then check
+pair separation and isolated-body extent. Filling supported nuclear interiors
+can still be useful; this is an ordering diagnostic, not a universal prohibition
+or instruction to copy a benchmark's hole-filling default.
+
 For all-foreground or empty support, compare the reported threshold with values
 from the **current processing alias**, not only the physical source or viewer
 window. Check [current processing intensity units](measurement-interpretation.md#current-processing-intensity-units)
@@ -111,6 +122,25 @@ Test one change to seed prominence, minimum separation, smoothing or splitting
 method. Prominence/H-maxima depends on the landscape's numeric units; a tolerance
 from an 8-bit intensity example is not a calibrated distance-map setting.
 Compare both crops after the change, not just the repaired split.
+
+### Ring fragmentation: disconnected support or too many markers?
+
+For complementary crescents inside one raw-supported body, compare the admitted
+foreground components with the markers and unfiltered labels at those same
+coordinates. Several markers dividing one connected support component suggest
+an unclumping problem. Separate support components divided by a missing dim rim
+or interior suggest an admission/connectivity problem instead. In a masked
+watershed, suppressing a marker cannot restore excluded pixels or connect those
+components; one fragment may simply disappear. Hole filling likewise cannot
+close an open ring whose gap remains connected to background.
+
+Choose the next operation from that distinction, using the actual consumed
+support rather than label colours or a smaller total. If raw continuity justifies
+testing local admission, reconstruction or closing, measure the missing gap
+and retain a genuine neighbouring pair and nuisance-only patch as controls:
+joining fragments can also bridge different bodies. Do not fill every ring or
+assume a nuclear anchor proves its body class. Keep supported localisation
+separate from full-envelope area or intensity when extent remains uncertain.
 
 ### A stronger prominence leaves the same false split
 

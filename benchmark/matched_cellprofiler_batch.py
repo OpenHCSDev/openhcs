@@ -93,7 +93,11 @@ from openhcs.serialization.json import to_jsonable
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", type=Path, required=True)
-    parser.add_argument("--case", required=True)
+    cases = parser.add_mutually_exclusive_group(required=True)
+    cases.add_argument("--case", help="Run one case from the manifest.")
+    cases.add_argument(
+        "--all-cases", action="store_true", help="Run the manifest on one owned server."
+    )
     selection = parser.add_mutually_exclusive_group(required=True)
     selection.add_argument(
         "--well-count", type=int, help="Select the first N declared source wells."
@@ -446,6 +450,31 @@ def main(argv: list[str] | None = None) -> int:
         raise ValueError(
             "Native and OpenHCS worker counts must match in a concurrency pilot."
         )
+    cases = load_comparison_cases(args.manifest.expanduser().resolve())
+    selected_cases = tuple(
+        case for case in cases if args.all_cases or case.name == args.case
+    )
+    if not selected_cases:
+        raise ValueError(f"No manifest case matches {args.case!r}.")
+    output_root = args.output_dir.expanduser().resolve()
+    if output_root.exists() and any(output_root.iterdir()):
+        raise FileExistsError(f"Matched pilot output directory must be empty: {output_root}")
+    port = DataControlPortPairAuthority.acquire(
+        OPENHCS_ZMQ_CONFIG,
+        transport_mode=OPENHCS_ZMQ_CONFIG.transport_mode,
+    ).data_port
+    with ZMQExecutionClient(port=port, persistent=False) as client:
+        for case in selected_cases:
+            case_args = argparse.Namespace(**vars(args))
+            case_args.case = case.name
+            case_args.output_dir = output_root / case.name if args.all_cases else output_root
+            _run_case(case_args, client)
+    return 0
+
+
+def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
+    """Qualify one case while retaining the suite's prepared execution server."""
+
     project_root = Path(__file__).resolve().parent.parent
     source_commit = subprocess.check_output(
         ("git", "rev-parse", "HEAD"), cwd=project_root, text=True
@@ -709,256 +738,250 @@ def main(argv: list[str] | None = None) -> int:
             axis_events.append(ProgressEvent.from_dict(dict(event)))
 
     timing_observer = _ZMQProgressTimingObserver(on_event=capture_progress_event)
-    port = DataControlPortPairAuthority.acquire(
-        OPENHCS_ZMQ_CONFIG,
-        transport_mode=OPENHCS_ZMQ_CONFIG.transport_mode,
-    ).data_port
+    client.progress_callback = timing_observer
     observations = []
-    with ZMQExecutionClient(
-        port=port, persistent=False, progress_callback=timing_observer
-    ) as client:
-        for repetition in range(-1, args.repetitions):
-            axis_events.clear()
-            progress_events.clear()
-            print(f"OpenHCS batch {repetition} starting.", flush=True)
-            export_scope = ZMQRuntimeObservationExportScope.OUTCOMES
-            evidence_dir = root / "candidate_evidence" / str(repetition)
-            output_dir = root / "candidate" / str(repetition)
-            global_config = _global_config(
-                output_dir,
-                wells,
-                worker_count=args.openhcs_workers,
-                start_method=start_method,
+    for repetition in range(-1, args.repetitions):
+        axis_events.clear()
+        progress_events.clear()
+        print(f"OpenHCS batch {repetition} starting.", flush=True)
+        export_scope = ZMQRuntimeObservationExportScope.OUTCOMES
+        evidence_dir = root / "candidate_evidence" / str(repetition)
+        output_dir = root / "candidate" / str(repetition)
+        global_config = _global_config(
+            output_dir,
+            wells,
+            worker_count=args.openhcs_workers,
+            start_method=start_method,
+        )
+        ensure_global_config_context(GlobalPipelineConfig, global_config)
+        pipeline_config = _candidate_pipeline_config(
+            prepared.pipeline_config, global_config, output_dir, wells
+        )
+        submission = OpenHCSExecutionSubmission(
+            plate_id=case.dataset_path,
+            execution_plate_id=prepared.execution_plate_path,
+            selected_pipeline_path=case.cppipe_path,
+            pipeline_document=PipelineDocumentAuthority.from_values(
+                pipeline_config=pipeline_config,
+                pipeline_steps=prepared.pipeline_steps,
+            ),
+            global_config=global_config,
+        ).with_auxiliary_params(
+            ZMQAuxiliaryExecutionParams(
+                runtime_observation_export_path=(evidence_dir / "observation.pkl"),
+                runtime_observation_export_scope=export_scope,
             )
-            ensure_global_config_context(GlobalPipelineConfig, global_config)
-            pipeline_config = _candidate_pipeline_config(
-                prepared.pipeline_config, global_config, output_dir, wells
+        )
+        completed, _ = execute_measured_openhcs_pipeline_on_client(
+            client=client,
+            submission=submission,
+            phase_timing=PhaseTimingTrace(
+                run_id=f"{case.name}-{repetition}",
+                pipeline_name=case.name,
+                tool="OpenHCS",
+            ),
+            timing_observer=timing_observer,
+            expected_axis_count=well_count,
+            require_owned_server=True,
+        )
+        retained_evidence = inspect_measured_pipeline_run(evidence_dir)
+        if not retained_evidence.retained_evidence_valid:
+            raise RuntimeError(
+                "Measured OpenHCS evidence failed retained-file inspection: "
+                f"{retained_evidence.warnings!r}"
             )
-            submission = OpenHCSExecutionSubmission(
-                plate_id=case.dataset_path,
-                execution_plate_id=prepared.execution_plate_path,
-                selected_pipeline_path=case.cppipe_path,
-                pipeline_document=PipelineDocumentAuthority.from_values(
-                    pipeline_config=pipeline_config,
-                    pipeline_steps=prepared.pipeline_steps,
-                ),
-                global_config=global_config,
-            ).with_auxiliary_params(
-                ZMQAuxiliaryExecutionParams(
-                    runtime_observation_export_path=(evidence_dir / "observation.pkl"),
-                    runtime_observation_export_scope=export_scope,
-                )
+        status = ExecutionStatusSnapshot.from_dict(
+            client.poll_status(completed.execution_id)
+        )
+        record = status.execution
+        first_axis_started_at = timing_observer.execution_started_at
+        if record is None or first_axis_started_at is None:
+            raise RuntimeError(
+                "Completed OpenHCS batch lacks its server job or first-axis "
+                "timing boundary."
             )
-            completed, _ = execute_measured_openhcs_pipeline_on_client(
-                client=client,
-                submission=submission,
-                phase_timing=PhaseTimingTrace(
-                    run_id=f"{case.name}-{repetition}",
-                    pipeline_name=case.name,
-                    tool="OpenHCS",
-                ),
-                timing_observer=timing_observer,
-                expected_axis_count=well_count,
-                require_owned_server=True,
+        server_job_seconds = completed_server_execution_seconds(
+            record, expected_execution_id=completed.execution_id
+        )
+        worker_evidence = _worker_axis_evidence(
+            tuple(axis_events),
+            execution_id=completed.execution_id,
+            expected_axes=well_count,
+            expected_workers=args.openhcs_workers,
+        )
+        _write_progress_diagnostics(
+            evidence_dir,
+            case_name=case.name,
+            worker_count=args.openhcs_workers,
+            well_count=well_count,
+            events=progress_events,
+        )
+        if (
+            record.start_time is None
+            or record.end_time is None
+            or first_axis_started_at < record.start_time
+            or first_axis_started_at > record.end_time
+        ):
+            raise RuntimeError(
+                "OpenHCS first-axis event lies outside the completed server job."
             )
-            retained_evidence = inspect_measured_pipeline_run(evidence_dir)
-            if not retained_evidence.retained_evidence_valid:
-                raise RuntimeError(
-                    "Measured OpenHCS evidence failed retained-file inspection: "
-                    f"{retained_evidence.warnings!r}"
-                )
-            status = ExecutionStatusSnapshot.from_dict(
-                client.poll_status(completed.execution_id)
-            )
-            record = status.execution
-            first_axis_started_at = timing_observer.execution_started_at
-            if record is None or first_axis_started_at is None:
-                raise RuntimeError(
-                    "Completed OpenHCS batch lacks its server job or first-axis "
-                    "timing boundary."
-                )
-            server_job_seconds = completed_server_execution_seconds(
-                record, expected_execution_id=completed.execution_id
-            )
-            worker_evidence = _worker_axis_evidence(
-                tuple(axis_events),
-                execution_id=completed.execution_id,
-                expected_axes=well_count,
-                expected_workers=args.openhcs_workers,
-            )
-            _write_progress_diagnostics(
-                evidence_dir,
-                case_name=case.name,
-                worker_count=args.openhcs_workers,
-                well_count=well_count,
-                events=progress_events,
-            )
-            if (
-                record.start_time is None
-                or record.end_time is None
-                or first_axis_started_at < record.start_time
-                or first_axis_started_at > record.end_time
-            ):
-                raise RuntimeError(
-                    "OpenHCS first-axis event lies outside the completed server job."
-                )
-            observation = completed.observation_export
-            owned_exports = observation.exports
-            candidate_exports = (
-                owned_exports
-                if owned_exports is not None
-                else RuntimeExportObservation.from_output_roots(completed.output_roots)
-            )
-            native_root = root / "native" / str(repetition)
-            database_report = cellprofiler_database_export_equivalence(
-                native_root, candidate_exports, policy=policy
-            )
-            native_exports = RuntimeExportObservation.from_output_roots((native_root,))
-            native_snapshot = RuntimeOutputSnapshot.from_export_observation(
-                native_exports
-            )
-            candidate_snapshot = RuntimeOutputSnapshot.from_export_observation(
-                candidate_exports,
-                source_workspaces=completed.output_roots,
-                image_set_policy=SourceImageSetIdentityPolicy.from_pipeline_config(
-                    pipeline_config
-                ),
-            )
-            csv_report = runtime_measurement_equivalence(
-                RuntimeMeasurementSnapshot.from_output_snapshot(
-                    native_snapshot, policy=policy
-                ),
-                RuntimeMeasurementSnapshot.from_output_snapshot(
-                    candidate_snapshot, policy=policy
-                ),
-                policy=policy,
-            )
-            native_images = native_snapshot.images
-            candidate_images = candidate_snapshot.images
-            image_differences = runtime_image_differences(
-                native_images, candidate_images, policy
-            )
-            declared_output_files = (
-                frozenset(Path(path) for path in owned_exports.output_files)
-                if owned_exports is not None
+        observation = completed.observation_export
+        owned_exports = observation.exports
+        candidate_exports = (
+            owned_exports
+            if owned_exports is not None
+            else RuntimeExportObservation.from_output_roots(completed.output_roots)
+        )
+        native_root = root / "native" / str(repetition)
+        database_report = cellprofiler_database_export_equivalence(
+            native_root, candidate_exports, policy=policy
+        )
+        native_exports = RuntimeExportObservation.from_output_roots((native_root,))
+        native_snapshot = RuntimeOutputSnapshot.from_export_observation(
+            native_exports
+        )
+        candidate_snapshot = RuntimeOutputSnapshot.from_export_observation(
+            candidate_exports,
+            source_workspaces=completed.output_roots,
+            image_set_policy=SourceImageSetIdentityPolicy.from_pipeline_config(
+                pipeline_config
+            ),
+        )
+        csv_report = runtime_measurement_equivalence(
+            RuntimeMeasurementSnapshot.from_output_snapshot(
+                native_snapshot, policy=policy
+            ),
+            RuntimeMeasurementSnapshot.from_output_snapshot(
+                candidate_snapshot, policy=policy
+            ),
+            policy=policy,
+        )
+        native_images = native_snapshot.images
+        candidate_images = candidate_snapshot.images
+        image_differences = runtime_image_differences(
+            native_images, candidate_images, policy
+        )
+        declared_output_files = (
+            frozenset(Path(path) for path in owned_exports.output_files)
+            if owned_exports is not None
+            else None
+        )
+        actual_output_files = frozenset(
+            path
+            for output_root in completed.output_roots
+            for path in output_root.rglob("*")
+            if path.is_file()
+        )
+        native_output_files = frozenset(
+            path for path in native_root.rglob("*") if path.is_file()
+        )
+        managed_output_files = frozenset(
+            path
+            for output_root in completed.output_roots
+            for path in METADATA_CONFIG.managed_paths(output_root)
+        )
+        _require_compared_output_inventory(
+            reference_files=native_output_files,
+            candidate_files=actual_output_files,
+            reference_exports=native_exports,
+            candidate_exports=candidate_exports,
+            reference_snapshot=native_snapshot,
+            candidate_snapshot=candidate_snapshot,
+            candidate_managed_files=managed_output_files,
+            compared_file_report=database_report,
+        )
+        result = {
+            "repetition": repetition,
+            "execution_id": completed.execution_id,
+            "compile_artifact_id": completed.receipt.compile_artifact_id,
+            "endpoint_pid": completed.endpoint_provenance.endpoint_pid,
+            "axis_count": completed.axis_count,
+            "observation_scope": export_scope.value,
+            **worker_evidence,
+            "server_job_started_at_epoch_seconds": record.start_time,
+            "first_axis_started_at_epoch_seconds": first_axis_started_at,
+            "server_job_completed_at_epoch_seconds": record.end_time,
+            "server_job_seconds": server_job_seconds,
+            "first_axis_through_server_completion_seconds": (
+                record.end_time - first_axis_started_at
+            ),
+            "native_image_count": len(native_images),
+            "candidate_image_count": len(candidate_images),
+            "native_physical_image_count": len(native_exports.image_outputs),
+            "candidate_physical_image_count": len(candidate_exports.image_outputs),
+            "native_output_file_count": len(native_output_files),
+            "candidate_output_file_count": len(actual_output_files),
+            "declared_output_file_count": (
+                len(declared_output_files)
+                if declared_output_files is not None
                 else None
-            )
-            actual_output_files = frozenset(
-                path
-                for output_root in completed.output_roots
-                for path in output_root.rglob("*")
-                if path.is_file()
-            )
-            native_output_files = frozenset(
-                path for path in native_root.rglob("*") if path.is_file()
-            )
-            managed_output_files = frozenset(
-                path
-                for output_root in completed.output_roots
-                for path in METADATA_CONFIG.managed_paths(output_root)
-            )
-            _require_compared_output_inventory(
-                reference_files=native_output_files,
-                candidate_files=actual_output_files,
-                reference_exports=native_exports,
-                candidate_exports=candidate_exports,
-                reference_snapshot=native_snapshot,
-                candidate_snapshot=candidate_snapshot,
-                candidate_managed_files=managed_output_files,
-                compared_file_report=database_report,
-            )
-            result = {
-                "repetition": repetition,
-                "execution_id": completed.execution_id,
-                "compile_artifact_id": completed.receipt.compile_artifact_id,
-                "endpoint_pid": completed.endpoint_provenance.endpoint_pid,
-                "axis_count": completed.axis_count,
-                "observation_scope": export_scope.value,
-                **worker_evidence,
-                "server_job_started_at_epoch_seconds": record.start_time,
-                "first_axis_started_at_epoch_seconds": first_axis_started_at,
-                "server_job_completed_at_epoch_seconds": record.end_time,
-                "server_job_seconds": server_job_seconds,
-                "first_axis_through_server_completion_seconds": (
-                    record.end_time - first_axis_started_at
-                ),
-                "native_image_count": len(native_images),
-                "candidate_image_count": len(candidate_images),
-                "native_physical_image_count": len(native_exports.image_outputs),
-                "candidate_physical_image_count": len(candidate_exports.image_outputs),
-                "native_output_file_count": len(native_output_files),
-                "candidate_output_file_count": len(actual_output_files),
-                "declared_output_file_count": (
-                    len(declared_output_files)
-                    if declared_output_files is not None
-                    else None
-                ),
-                "native_output_inventory": _output_inventory(
-                    native_root, native_output_files
-                ),
-                "candidate_output_inventory": _output_inventory(
-                    output_dir, actual_output_files
-                ),
-                "unexpected_output_files": (
-                    tuple(
-                        str(path)
-                        for path in sorted(
-                            actual_output_files
-                            - declared_output_files
-                            - managed_output_files
-                        )
+            ),
+            "native_output_inventory": _output_inventory(
+                native_root, native_output_files
+            ),
+            "candidate_output_inventory": _output_inventory(
+                output_dir, actual_output_files
+            ),
+            "unexpected_output_files": (
+                tuple(
+                    str(path)
+                    for path in sorted(
+                        actual_output_files
+                        - declared_output_files
+                        - managed_output_files
                     )
-                    if declared_output_files is not None
-                    else None
-                ),
-                "missing_declared_output_files": (
-                    tuple(
-                        str(path)
-                        for path in sorted(declared_output_files - actual_output_files)
-                    )
-                    if declared_output_files is not None
-                    else None
-                ),
-                "database_differences": tuple(
-                    str(difference) for difference in database_report.differences
-                ),
-                "csv_differences": tuple(
-                    str(difference) for difference in csv_report.differences
-                ),
-                "image_differences": tuple(
-                    str(difference) for difference in image_differences
-                ),
-                "receipt_path": str(evidence_dir / "measured_pipeline_receipt.json"),
-            }
-            observations.append(result)
-            (root / "candidate_report.json").write_text(
-                json.dumps(observations, indent=2)
-            )
-            print(
-                f"OpenHCS batch {repetition}: {completed.axis_count} axes, "
-                f"{len(result['database_differences'])} database and "
-                f"{len(csv_report.differences)} CSV and "
-                f"{len(result['image_differences'])} image differences.",
-                flush=True,
-            )
-            if (
-                not native_output_files
-                or not actual_output_files
-                or (
-                    declared_output_files is not None
-                    and len(declared_output_files - managed_output_files)
-                    != len(actual_output_files - managed_output_files)
                 )
-                or result["unexpected_output_files"]
-                or result["missing_declared_output_files"]
-                or result["database_differences"]
-                or csv_report.differences
-                or result["image_differences"]
-            ):
-                raise RuntimeError(
-                    f"Matched output equivalence failed in repetition {repetition}: "
-                    f"{result}"
+                if declared_output_files is not None
+                else None
+            ),
+            "missing_declared_output_files": (
+                tuple(
+                    str(path)
+                    for path in sorted(declared_output_files - actual_output_files)
                 )
+                if declared_output_files is not None
+                else None
+            ),
+            "database_differences": tuple(
+                str(difference) for difference in database_report.differences
+            ),
+            "csv_differences": tuple(
+                str(difference) for difference in csv_report.differences
+            ),
+            "image_differences": tuple(
+                str(difference) for difference in image_differences
+            ),
+            "receipt_path": str(evidence_dir / "measured_pipeline_receipt.json"),
+        }
+        observations.append(result)
+        (root / "candidate_report.json").write_text(
+            json.dumps(observations, indent=2)
+        )
+        print(
+            f"OpenHCS batch {repetition}: {completed.axis_count} axes, "
+            f"{len(result['database_differences'])} database and "
+            f"{len(csv_report.differences)} CSV and "
+            f"{len(result['image_differences'])} image differences.",
+            flush=True,
+        )
+        if (
+            not native_output_files
+            or not actual_output_files
+            or (
+                declared_output_files is not None
+                and len(declared_output_files - managed_output_files)
+                != len(actual_output_files - managed_output_files)
+            )
+            or result["unexpected_output_files"]
+            or result["missing_declared_output_files"]
+            or result["database_differences"]
+            or csv_report.differences
+            or result["image_differences"]
+        ):
+            raise RuntimeError(
+                f"Matched output equivalence failed in repetition {repetition}: "
+                f"{result}"
+            )
 
     final_input_inventory = _source_input_inventory(native_domain.input_dir)
     if final_input_inventory != provenance["native_input_inventory"]:

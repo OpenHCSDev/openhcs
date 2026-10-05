@@ -29,7 +29,10 @@ TASKS = (
     ("graded segmentation quality", "openhcs_autonomous_analysis_strategy"),
     ("channel identity RGB composite", "openhcs_image_interpretation"),
     ("uneven background additive subtraction", "openhcs_image_preprocessing"),
+    ("weak troughs hysteresis connected support", "openhcs_image_preprocessing"),
     ("nucleus split watershed", "openhcs_segmentation_diagnostics"),
+    ("predeclump hole filling landscape", "openhcs_segmentation_diagnostics"),
+    ("ring fragmentation disconnected support", "openhcs_segmentation_diagnostics"),
     ("zero growth cytoplasm", "openhcs_segmentation_diagnostics"),
     ("all foreground threshold units", "openhcs_segmentation_diagnostics"),
     ("strong seed component retention", "openhcs_segmentation_diagnostics"),
@@ -107,7 +110,7 @@ def test_packaged_transfer_guides_retain_content_sections_and_skill_links(tmp_pa
         ).strip()
         # Each local companion link is available in the projected package,
         # rather than depending on the developer's checkout or /tmp sources.
-        for link in re.findall(r"\]\(([^)]+\.md)\)", document.content):
+        for link in re.findall(r"\]\(([^)#]+\.md)(?:#[^)]*)?\)", document.content):
             if "://" not in link:
                 assert (destination / source_path.parent / link).is_file()
 
@@ -134,7 +137,7 @@ def test_domain_knowledge_remains_progressively_retrieved():
             document_id="openhcs_autonomous_analysis_strategy"
         )
     )
-    links = set(re.findall(r"\]\(([^)]+\.md)\)", strategy.content))
+    links = set(re.findall(r"\]\(([^)#]+\.md)(?:#[^)]*)?\)", strategy.content))
     # A skill-only reader must be able to follow the same topic routes without
     # guessing filenames or needing the live knowledge service.
     for document in transferred.values():
@@ -177,6 +180,7 @@ def test_complete_projected_skill_sync_preserves_canonical_resource_bytes(tmp_pa
         ("openhcs_measurement_interpretation", "current-processing-intensity-units"),
         ("openhcs_measurement_interpretation", "include-no-object-fields-before-widening"),
         ("openhcs_segmentation_diagnostics", "foreground-before-unclumping"),
+        ("openhcs_segmentation_diagnostics", "ring-fragmentation-disconnected-support-or-too-many-markers"),
         ("openhcs_segmentation_diagnostics", "separate-support-recovery-from-rooted-graph-validity"),
     ):
         request = KnowledgeBaseDocumentRequest.from_fields(

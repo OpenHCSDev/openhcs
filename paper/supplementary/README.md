@@ -401,6 +401,27 @@ and Supplementary Data 8.
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
+## Supplementary Figure 21. Personal neurite mosaic during retained-context development
+
+![Matched seam and field-core raw, body/path result and combined views.](../figures/slas/p001_stitched_dev13_native.png){width=6in}
+
+(A–C) Sampled overlap region; (D–F) lower-right field core in an acquisition-placed
+nine-field mosaic. Each triplet uses the same native crop, with raw FITC,
+body envelopes plus process paths, and their combination. The analysis fits
+one pooled percentile pair per complete nine-field channel stack before
+assembly, rather than fitting fields separately. Supported long paths remain
+visible, but faint segments and crowded ownership are incomplete. These are
+saved attempt08 development outputs; its terminal viewer settlement failed.
+The author subsequently completed attempt09 after changing streaming and
+destination. This figure does not establish bytewise equivalence of those
+attempts or final09 biological validation. It is same-author development,
+not a fresh autonomous pass. Original captures and the independent review
+are retained in the [stitched-development record](../../figure-collection-20261004/P001-STITCHED-DEV13-INDEPENDENT-REVIEW.rst).
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
 ## Supplementary Table 1. Reusable libraries and their roles
 
 | Library | Role in OpenHCS |
@@ -1045,6 +1066,17 @@ source, payload and closed-inner-journal entries. No reference accuracy score
 was calculated for this repeat. Both owned processes were absent after their
 typed closure; client exit 2 and a four-second cleanup-handoff overrun remain
 recorded separately from scientific completion.
+
+A further fresh volume author selected its method from measured nuclear
+dimensions, background and neighbour separation, producing 26 candidate
+centres with one scientific method. Independent XY/XZ/YZ raw/Points/combined
+review supported ordinary-body centre placement while retaining uncertainty
+around a lobed chromatin complex and partial border supports. The
+[independent review](../../figure-collection-20261004/H002-FRESH15-INDEPENDENT-CENTRES-REVIEW.rst)
+identifies all twelve reviewed captures. The [detailed outcome](task_only_analysis.md#h002-fresh15-measurement-first-volumetric-centres)
+retains the final pipeline and custom-callable hashes, the 208-file payload
+verification and technical rerun history. Reference accuracy and an exhaustive
+biological count remain unmeasured.
 
 A fresh-context paired DNA/actin author also retained 55 nuclei and 55
 source-linked actin territories after repairing a local nuclear merge. A

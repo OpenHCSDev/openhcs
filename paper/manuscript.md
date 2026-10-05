@@ -256,7 +256,13 @@ whether each linked territory represents a physical cell. Another independent
 author corrected texture-driven splits and a bright/dim merge, recovering
 55 nuclear instances while withholding two weak actin regions from its
 53-region body result. Crowded boundaries remained uncertain (Supplementary
-Data 8).
+Data 8). In a later independent repeat, measured raw controls still led to
+missed crowded nuclei because admitted haze changed the distance landscape.
+The author inspected that failure and revised foreground, markers, division
+and suppression, recovering useful local detections in its final 54-instance
+result. Haze extent, an upper-edge possible merge and crowded actin boundaries
+remained uncertain; the repeat supports self-directed repair, not improved
+first-attempt accuracy (Supplementary Data 8).
 
 Retinal authors used measured background and weak-body support to select
 smoothing, background subtraction and foreground admission. Earlier repeats
@@ -289,6 +295,16 @@ pair. Its 22 provisional centres included an unresolved bright multi-lobed
 cluster. Native XY, XZ and YZ review separated useful ordinary-body support
 from that identity uncertainty (Supplementary Figure 17); no global biological
 count or new reference score was established.
+
+A further fresh volume author measured nuclear dimensions, background intensity
+and neighbour separation before selecting a shape-based marker method. Its
+first scientific method produced 26 candidate centres; a technical rerun
+changed output delivery while retaining the same detector. Independent raw,
+point-only and combined XY/XZ/YZ review supported centre placement inside
+ordinary nuclei. A bright lobed complex and cropped border supports retained
+identity uncertainty. This trial demonstrates useful measurement-first
+localisation, with reference accuracy and an exhaustive biological count
+remaining unmeasured (Supplementary Data 8).
 
 A fresh public neurite-field author identified bright junction pixels lost
 after ridge enhancement and restored them by combining enhanced support with
@@ -356,6 +372,11 @@ do not supply fresh autonomous scores.
 
 \(A) Matched H001 raw and first/final overlays show an elongated-body split repaired without reference feedback. Screenshots are clipped/scaled, not retouched; colours do not identify objects across attempts. Supplementary Figure 18 retains wider views and capture records. (B) Whole-image H001 object F1 against a notebook-derived reference: excess predictions fall from four to two, with 59/64 matches and five misses unchanged. (C) BBBC039 pooled object F1 on the same three development fields against independent annotations. (D) Final scores across all 200 fields, including three annotation-empty fields and the low-score tail. The dashed line is pooled, not mean field F1. Matching requires intersection over union at least 0.5. First is the initial completed scientific prediction (H001 a01; final a04). These comparisons do not establish first-200 accuracy, an isolated skill effect or held-out generalization.
 
+The independent full-200 repeat reached pooled F1 0.898 versus 0.906 for the
+run plotted above: 61 fields improved, 123 decreased and 16 were unchanged
+(Supplementary Figure 20). This repeat retains useful agreement but shows that
+within-run repair does not guarantee a better result from the next fresh author.
+
 ### Figure 6. Autonomous local repair with a retained merge
 
 ![Matched first/final nuclear overlays and a final-only faint-pair failure control.](figures/slas/h003_native_repair.png){width=6in}
@@ -394,7 +415,7 @@ Workflow reuse can reduce the setup required for a new experiment. A laboratory 
 
 The evaluations cover complementary parts of this workflow. The unified current-source run establishes selected reference-value agreement across all 30 imported workflows, while the release CI record independently preserves package-level execution for the released source. The single-field neurite demonstration records completion under one prompt and client/model configuration; image review then exposed cell-assignment and crossover errors despite successful execution checks. Three prospective trials extend evaluation to held-out annotations or treatment structure. They show useful first-attempt results while also identifying nuclear over-segmentation and the limits of directed boundary and treatment-level references. Because each assay used one authoring attempt with one model and prompt, they do not estimate the probability that an agent will produce an acceptable workflow on a new assay. The separate archived throughput measurements describe a configured analysis-focused workload, not current output-complete performance. Matched Translocation and advanced-segmentation pilots cover two output-complete workflows (Supplementary Data 3); comparative native CellProfiler throughput across workflows remains to be established.
 
-The task-only trials show that agents can improve segmentation through their own image review without reference feedback. H001 reduced excess instances without changing foreground overlap, while BBBC039 recovered more reference nuclei on the paired development fields but retained a low-accuracy tail across the full corpus. The retinal trials show why review must cover several regions: a change that repaired one body also merged a genuine pair elsewhere, and the author corrected that regression before freezing the final result. In the volumetric development example, reducing the centre count removed boundary fragments but left suspect interior splits. Detection, object separation and boundary extent therefore need separate assessment; a better count alone does not establish a better segmentation (Supplementary Data 8).
+The task-only trials show that agents can improve segmentation through their own image review without reference feedback. H001 reduced excess instances without changing foreground overlap, while BBBC039 recovered more reference nuclei on the paired development fields but retained a low-accuracy tail across the full corpus. The retinal trials show why review must cover several regions: a change that repaired one body also merged a genuine pair elsewhere, and the author corrected that regression before freezing the final result. The volume trials include both a development repair that removed boundary fragments while leaving suspect interior splits and a fresh measurement-first method with useful ordinary-body centre placement. Detection, object separation and boundary extent therefore need separate assessment; a better count alone does not establish a better segmentation (Supplementary Data 8).
 
 Operational losses also need separate accounting: a later public BBBC013 trial was terminated at an imposed 4.5 GiB scope limit before complete table export or distributed review, despite partial mask production. That incomplete trial does not estimate segmentation accuracy or host-wide memory exhaustion. Retained outcomes should distinguish completed analysis, biological acceptance and operational interruption rather than pool them into a single accuracy claim.
 
