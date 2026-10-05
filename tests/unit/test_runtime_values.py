@@ -1,3 +1,4 @@
+import pickle
 from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
@@ -394,6 +395,40 @@ def test_object_label_pure_2d_aggregator_preserves_dense_payload_domains() -> No
         ),
     )
     assert aggregated.domain.declared_object_id_domains == ((1,), (2,))
+
+
+
+def test_object_label_aggregation_preserves_variant_plane_writes_and_transport() -> None:
+    planes = (np.array([[0, 1]], dtype=np.int16), np.array([[0, 2]], dtype=np.int32))
+    values = tuple(
+        ObjectLabelPayload(
+            variant_data=ObjectLabelVariantData(plane, plane, plane),
+            domain=ObjectLabelDomain(declared_object_ids=(index + 1,)),
+        )
+        for index, plane in enumerate(planes)
+    )
+    aggregate = ObjectLabelPure2DSliceAggregator.aggregate(
+        values, "numpy", plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+    )
+    assert aggregate.shape == (2, 1, 2)
+    assert aggregate.dtype == np.dtype(np.int32)
+    decoded = pickle.loads(pickle.dumps(aggregate))
+    projected = decoded.project_source_plane(1)
+    projected.unedited_labels[0, 1] = 9
+    assert projected.labels[0, 1] == 2
+    assert projected.small_removed_labels[0, 1] == 2
+    assert decoded.unedited_labels[1, 0, 1] == 9
+    assert planes[1][0, 1] == 2
+    decoded.labels[1, 0, 1] = 7
+    assert projected.labels[0, 1] == 7
+    subset = decoded.with_plane_projection((1,))
+    assert subset.shape == (1, 1, 2)
+    assert subset.unedited_labels[0, 0, 1] == 9
+    restored = pickle.loads(pickle.dumps(decoded))
+    assert restored.labels[1, 0, 1] == 7
+    assert restored.unedited_labels[1, 0, 1] == 9
+    assert restored.small_removed_labels[1, 0, 1] == 2
+    np.testing.assert_array_equal(aggregate.labels, np.stack(planes))
 
 
 def test_object_label_pure_2d_aggregator_preserves_single_payload_identity() -> None:
@@ -900,7 +935,7 @@ def test_object_label_source_plane_projection_preserves_projected_variants() -> 
         ),
     )
 
-    projected = source.with_source_plane_measurement_labels(labels[1], 1)
+    projected = source.project_source_plane(1, labels=labels[1])
 
     np.testing.assert_array_equal(projected.labels, labels[1])
     np.testing.assert_array_equal(projected.small_removed_labels, small_removed[1])
