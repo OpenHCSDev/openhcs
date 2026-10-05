@@ -411,8 +411,9 @@ def test_export_to_spreadsheet_renders_only_declared_batch_records() -> None:
 
 @pytest.mark.parametrize("add_metadata", (False, True))
 @pytest.mark.parametrize("add_files", (False, True))
+@pytest.mark.parametrize("axisless", (False, True))
 def test_spreadsheet_projects_source_identity_without_upstream_image_features(
-    add_metadata: bool, add_files: bool,
+    add_metadata: bool, add_files: bool, axisless: bool,
 ) -> None:
     provenance = SourceImageProvenancePlanes((
         RuntimeSourceImageProvenancePlane(
@@ -426,7 +427,7 @@ def test_spreadsheet_projects_source_identity_without_upstream_image_features(
     cells = _measurement_record(
         'cells', axis_id='A01',
         subject=MeasurementSubject(MeasurementScope.OBJECT, 'Cells', 'object_number'),
-        rows=({'slice_index': 0, 'object_number': 7, 'Area': 12.0},),
+        rows=({**({} if axisless else {'slice_index': 0}), 'object_number': 7, 'Area': 12.0},),
         source_image_provenance_planes=provenance,
     )
     bundle = export_to_spreadsheet(

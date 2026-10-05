@@ -478,20 +478,16 @@ def _measurement_tables(
         tables = tuple(cast(MeasurementTable, record.data) for record in records)
         all_tables.extend(tables)
         slice_axis = MeasurementRowAxisField.SLICE_INDEX
-        row_domains = tuple(
-            MeasurementRowsAxisProjection.from_rows(table.rows) for table in tables
-        )
         MeasurementTable.shared_row_axis_domain(spec.name, tables, slice_axis)
-        for record, table, row_domain in zip(
+        for record, table in zip(
             records,
             tables,
-            row_domains,
             strict=True,
         ):
             image_numbers_by_slice = image_numbers.for_source_slices(
                 scope=record.key.scope,
                 provenance=table.source_provenance,
-                slice_indices=row_domain.present_axis_values(slice_axis.value),
+                slice_indices=image_numbers.source_slices_for_measurement_table(table),
                 owner=table.name,
             )
             accumulator.add_declared_rows(
@@ -515,7 +511,6 @@ def _measurement_tables(
                 file_values,
             ) in _source_metadata_measurement_rows(
                 table,
-                row_domain,
                 image_numbers_by_slice,
                 add_image_metadata=add_image_metadata,
                 add_image_file_names=add_image_file_names,
@@ -617,7 +612,6 @@ def _source_metadata_consensus(
 
 def _source_metadata_measurement_rows(
     table: MeasurementTable,
-    row_domain: MeasurementRowsAxisProjection,
     image_numbers_by_slice: Mapping[int, int],
     *,
     add_image_metadata: bool,
@@ -632,9 +626,7 @@ def _source_metadata_measurement_rows(
     ] = []
     dialect = CellProfilerDatabaseColumnDialect()
     image_subject = MeasurementSubject(MeasurementScope.IMAGE, "Image")
-    for slice_index in row_domain.present_axis_values(
-        MeasurementRowAxisField.SLICE_INDEX.value
-    ):
+    for slice_index in image_numbers_by_slice:
         provenance = table.source_provenance.for_source_plane(slice_index)
         metadata = dialect.source_metadata_values(
             provenance.source_component_metadata,
