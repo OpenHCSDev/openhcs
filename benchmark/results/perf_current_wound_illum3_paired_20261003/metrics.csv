@@ -1,0 +1,7 @@
+pipeline_name,method,assay_category,module_category,accuracy_fraction,raw_seconds,speedup,peak_memory_mb
+ExampleIlluminationCorrection_Example3,Native CP execution,,,1.0,0.6269565154798329,1.0,
+ExampleIlluminationCorrection_Example3,OH execution,,,1.0,0.5359861850738525,1.1697251401982418,
+ExampleIlluminationCorrection_Example3,OH total,,,1.0,1.5395865004975349,0.4072239625881526,
+ExampleWoundHealing,Native CP execution,,,1.0,4.253329693106934,1.0,
+ExampleWoundHealing,OH execution,,,1.0,3.0008292198181152,1.4173847898497653,
+ExampleWoundHealing,OH total,,,1.0,3.6219175045844167,1.174330913866291,

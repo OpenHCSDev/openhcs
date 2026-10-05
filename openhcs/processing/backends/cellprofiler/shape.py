@@ -1,7 +1,7 @@
 """Shape-measurement backends for CellProfiler-compatible processing."""
 
 from __future__ import annotations
-from typing import Annotated, TYPE_CHECKING, TypeAlias
+from typing import Annotated, ClassVar, TYPE_CHECKING, TypeAlias
 from openhcs.interop.cellprofiler.settings_binder import (
     SettingToKeywordBinding,
     parse_cellprofiler_bool,
@@ -74,7 +74,6 @@ class MeasureObjectSizeShapeModule(
     function_name = "measure_object_size_shape"
     validated = True
     confidence = 1.0
-    row_identity = MeasurementObjectRowIdentity.ROW_SEQUENCE
     ignored_settings = ("Select objects to measure", "Select object sets to measure")
     measurement_category_prefixes = (("area", "shape"), ("location",))
 
@@ -423,6 +422,9 @@ import logging
 import time
 from types import MappingProxyType
 import numpy as np
+from openhcs.processing.backends.cellprofiler._preparation import (
+    CellProfilerCallableKernelPreparation,
+)
 from metaclass_registry import AutoRegisterMeta
 from numba import njit
 from openhcs.constants.constants import MemoryType
@@ -434,6 +436,7 @@ from openhcs.core.pipeline.function_contracts import (
 )
 from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomain,
+    dense_object_label_measurement_row_domain,
 )
 from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
@@ -445,6 +448,7 @@ from openhcs.core.runtime_object_labels import (
 )
 from openhcs.core.measurement_row_materialization import (
     MeasurementProjectedColumnarRows,
+    ObjectMeasurementColumnarRows,
 )
 from openhcs.core.runtime_tabular_values import ColumnarRows
 from openhcs.core.runtime_object_labels import (
@@ -454,9 +458,6 @@ from openhcs.core.runtime_object_labels import (
     object_label_sparse_ijv_rows,
 )
 from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
-from openhcs.processing.backends.cellprofiler.object_measurement_columnar_rows import (
-    ObjectMeasurementColumnarRows,
-)
 from openhcs.processing.backends.analysis.region_properties import (
     LabelRegionPropertiesBackendStrategy,
 )
@@ -469,20 +470,19 @@ from openhcs.processing.backends.cellprofiler._backend import (
 from openhcs.processing.backends.cellprofiler.label_geometry import (
     feret_diameters_from_labels,
     _numpy124_aquicksort_indices,
+    _numpy124_ordered_label_maximum_indices,
 )
 from openhcs.processing.backends.cellprofiler.morphology import (
     MorphologyBackendStrategy,
 )
-from openhcs.processing.backends.cellprofiler.granularity import (
-    CellProfilerRuntimeProfiler,
-)
+from openhcs.core.runtime_profile import RuntimeProfiler
 from openhcs.processing.backends.cellprofiler.distance_propagation_numba import (
     _edt_1d_numba,
 )
 from openhcs.processing.backends.cellprofiler.zernike import shape_zernike_moments
 
 logger = logging.getLogger(__name__)
-runtime_profiler = CellProfilerRuntimeProfiler(logger)
+runtime_profiler = RuntimeProfiler(logger)
 ShapeFeatureArrays = tuple[dict[str, np.ndarray], np.ndarray]
 ShapeFeatureRows = tuple[dict[str, np.ndarray], np.ndarray, tuple[int, ...]]
 RegionpropsBackendProviderInput: TypeAlias = Annotated[
@@ -496,43 +496,8 @@ class ShapeObjectFeatureValueTable(ObjectFeatureValueTable):
 
     table_label = "shape"
 
-    def rows(self) -> list[dict[str, float | int]]:
-        """Project shape vectors directly onto their declared row-ordinal domain."""
-        declared_features = frozenset(
-            MeasureObjectSizeShapeModule.measurement_all_field_names()
-        )
-        rows: list[dict[str, float | int]] = [
-            {
-                self.slice_index_field: self.slice_index,
-                self.object_id_field: object_id,
-            }
-            for object_id in self.object_domain
-        ]
-        row_count = len(rows)
-        for feature_name, raw_values in self.feature_values.items():
-            values = np.asarray(raw_values)
-            python_values = self.python_feature_values(values)
-            if values.ndim == 0:
-                for row in rows:
-                    row[feature_name] = python_values
-                continue
-            if feature_name not in declared_features:
-                self.feature_array_domain(feature_name)
-            value_count = int(values.shape[0])
-            if value_count > row_count:
-                self.validate_feature_value_domain(feature_name, values)
-            for row, value in zip(rows, python_values):
-                row[feature_name] = value
-            if value_count < row_count:
-                missing_value = self.feature_missing_value(feature_name).scalar
-                for row_index in range(value_count, row_count):
-                    rows[row_index][feature_name] = missing_value
-        for row in rows:
-            self.complete_row(row)
-        return rows
-
     def feature_array_domain(self, feature_name: str) -> ObjectFeatureArrayDomain:
-        """Project CellProfiler AreaShape vectors by emitted row sequence."""
+        """Validate the shape vocabulary; the ancestor indexes measured IDs."""
         if (
             feature_name
             not in MeasureObjectSizeShapeModule.measurement_all_field_names()
@@ -541,7 +506,7 @@ class ShapeObjectFeatureValueTable(ObjectFeatureValueTable):
                 f"{type(self).__name__} feature {feature_name!r} has no declared "
                 "feature-array domain."
             )
-        return ObjectFeatureArrayDomain.ROW_ORDINAL
+        return super().feature_array_domain(feature_name)
 
     def feature_missing_value(self, feature_name: str) -> ObjectFeatureMissingValue:
         """Return the missing value declared by the owning shape feature."""
@@ -559,7 +524,7 @@ class ShapeObjectFeatureValueTable(ObjectFeatureValueTable):
 class ShapeObjectMeasurementRows(ObjectMeasurementColumnarRows):
     """Dense AreaShape rows that already span their declared object domain."""
 
-    object_row_identity = MeasurementObjectRowIdentity.ROW_SEQUENCE
+    object_row_identity = MeasurementObjectRowIdentity.LABEL_ID
     __slots__ = ("_columns", "_fields", "_rows")
 
     def __init__(
@@ -636,45 +601,6 @@ class ShapeObjectMeasurementRows(ObjectMeasurementColumnarRows):
 
     def row_mappings(self) -> tuple[Mapping[str, object], ...]:
         return self._rows
-
-
-@dataclass(frozen=True, slots=True)
-class SurfaceArea3DRegions:
-    """Object labels and bounded 3-D regions for surface-area measurement."""
-
-    label_ids: np.ndarray
-    bounds_zyxzyx: np.ndarray
-
-    def __post_init__(self) -> None:
-        label_ids = np.ascontiguousarray(self.label_ids, dtype=np.int64)
-        bounds = np.ascontiguousarray(self.bounds_zyxzyx, dtype=np.int64)
-        if bounds.shape != (label_ids.size, 6):
-            raise ValueError(
-                f"3-D surface-area bounds must have shape ({label_ids.size}, 6), got {bounds.shape!r}."
-            )
-        object.__setattr__(self, "label_ids", label_ids)
-        object.__setattr__(self, "bounds_zyxzyx", bounds)
-
-    @classmethod
-    def from_label_array(
-        cls, labels: np.ndarray, label_ids: np.ndarray
-    ) -> "SurfaceArea3DRegions":
-        label_id_array = np.asarray(label_ids, dtype=np.int64)
-        if label_id_array.size == 0:
-            return cls(label_id_array, np.zeros((0, 6), dtype=np.int64))
-        label_array = np.asarray(labels)
-        bounds = np.zeros((label_id_array.size, 6), dtype=np.int64)
-        for index, label_id in enumerate(label_id_array):
-            positions = np.argwhere(label_array == int(label_id))
-            if positions.size == 0:
-                continue
-            minimum = positions.min(axis=0)
-            maximum = positions.max(axis=0) + 1
-            bounds[index, :3] = minimum
-            bounds[index, 3:] = maximum
-        return cls(
-            label_id_array, _expanded_surface_area_bounds(bounds, label_array.shape)
-        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -810,16 +736,9 @@ class ObjectSizeShapeFeatureMeasurement(ObjectSizeShapeFeatureArrayOwner):
         perimeter = np.asarray(props["perimeter"], dtype=float)
         area = np.asarray(props["area"], dtype=float)
         phase_started_at = time.perf_counter()
-        measured_max_radius, measured_mean_radius, measured_median_radius = (
+        max_radius, mean_radius, median_radius = (
             shape_backend.radius_features_from_labels(labels, measured_labels)
         )
-        max_radius = np.zeros(nobjects, dtype=np.float64)
-        mean_radius = np.zeros(nobjects, dtype=np.float64)
-        median_radius = np.zeros(nobjects, dtype=np.float64)
-        measured_count = len(measured_labels)
-        max_radius[:measured_count] = measured_max_radius
-        mean_radius[:measured_count] = measured_mean_radius
-        median_radius[:measured_count] = measured_median_radius
         runtime_profiler.log(
             "moss_radius_features",
             time.perf_counter() - phase_started_at,
@@ -832,7 +751,7 @@ class ObjectSizeShapeFeatureMeasurement(ObjectSizeShapeFeatureArrayOwner):
             compactness = 1.0 / form_factor
         phase_started_at = time.perf_counter()
         min_feret_diameter, max_feret_diameter = shape_backend.feret_diameters(
-            labels, object_indices
+            labels, measured_labels
         )
         runtime_profiler.log(
             "moss_feret_diameters",
@@ -931,7 +850,7 @@ class ObjectSizeShapeFeatureMeasurement(ObjectSizeShapeFeatureArrayOwner):
             features.update(
                 _zernike_features(
                     labels,
-                    object_indices,
+                    measured_labels,
                     backend_provider=self.zernike_backend_provider,
                 )
             )
@@ -950,8 +869,6 @@ class ObjectSizeShapeFeatureMeasurement(ObjectSizeShapeFeatureArrayOwner):
         return (features, measured_labels)
 
     def _feature_arrays_3d(self, labels: np.ndarray) -> ShapeFeatureArrays:
-        import skimage.measure
-
         total_started_at = time.perf_counter()
         capture_array_fixture(
             "measure_object_size_shape_3d_input",
@@ -959,140 +876,21 @@ class ObjectSizeShapeFeatureMeasurement(ObjectSizeShapeFeatureArrayOwner):
             calculate_advanced=np.asarray(self.calculate_advanced),
             calculate_zernikes=np.asarray(self.calculate_zernikes),
         )
-        phase_started_at = time.perf_counter()
         shape_backend = ShapeMeasurementBackendStrategy.for_memory_type(
             backend_provider=self.shape_backend_provider
         )
-        runtime_profiler.log(
-            "moss_backend_resolution_3d",
-            time.perf_counter() - phase_started_at,
-            function="measure_object_size_shape",
-        )
-        phase_started_at = time.perf_counter()
-        regions = skimage.measure.regionprops(labels, cache=True)
-        object_count = len(regions)
-        measured_labels = np.empty(object_count, dtype=np.int64)
-        area = np.empty(object_count, dtype=np.float64)
-        centroid = np.empty((object_count, 3), dtype=np.float64)
-        bounds = np.empty((object_count, 6), dtype=np.int64)
-        bounding_box_volume = np.empty(object_count, dtype=np.float64)
-        inertia_tensor_eigenvalues = np.empty((object_count, 3), dtype=np.float64)
-        extent = np.empty(object_count, dtype=np.float64)
-        equivalent_diameter = np.empty(object_count, dtype=np.float64)
-        euler_number = np.empty(object_count, dtype=np.int64)
-        solidity = (
-            np.empty(object_count, dtype=np.float64)
-            if self.calculate_advanced
-            else None
-        )
-        for object_index, region in enumerate(regions):
-            measured_labels[object_index] = region.label
-            area[object_index] = region.area
-            centroid[object_index] = region.centroid
-            bounds[object_index] = region.bbox
-            bounding_box_volume[object_index] = region.area_bbox
-            inertia_tensor_eigenvalues[object_index] = region.inertia_tensor_eigvals
-            extent[object_index] = region.extent
-            equivalent_diameter[object_index] = region.equivalent_diameter_area
-            euler_number[object_index] = region.euler_number
-            if solidity is not None:
-                solidity[object_index] = region.solidity
-        runtime_profiler.log(
-            "moss_regionprops_table_3d",
-            time.perf_counter() - phase_started_at,
-            function="measure_object_size_shape",
-        )
-        surface_regions = SurfaceArea3DRegions(
-            measured_labels,
-            _expanded_surface_area_bounds(bounds, labels.shape),
-        )
-        phase_started_at = time.perf_counter()
-        major_axis_length, minor_axis_length = _cellprofiler_3d_axis_lengths(
-            inertia_tensor_eigenvalues
-        )
-        runtime_profiler.log(
-            "moss_axis_lengths_3d",
-            time.perf_counter() - phase_started_at,
-            function="measure_object_size_shape",
-            objects=int(measured_labels.size),
-        )
-        phase_started_at = time.perf_counter()
-        surface_areas = shape_backend.surface_areas_3d(
+        features, measured_labels = shape_backend.feature_arrays_3d(
             labels,
-            surface_regions,
+            calculate_advanced=self.calculate_advanced,
             spacing=self.feature_source_voxel_spacing.spacing_for_ndim(labels.ndim),
         )
-        runtime_profiler.log(
-            "moss_surface_areas_3d",
-            time.perf_counter() - phase_started_at,
-            function="measure_object_size_shape",
-            objects=int(measured_labels.size),
-        )
-        features = {
-            _shape_feature(
-                MeasureObjectSizeShapeModule.MeasurementFeature.VOLUME
-            ): area,
-            _shape_feature(
-                MeasureObjectSizeShapeModule.MeasurementFeature.SURFACE_AREA
-            ): surface_areas,
-            _shape_feature(
-                MeasureObjectSizeShapeModule.MeasurementFeature.MAJOR_AXIS_LENGTH
-            ): major_axis_length,
-            _shape_feature(
-                MeasureObjectSizeShapeModule.MeasurementFeature.MINOR_AXIS_LENGTH
-            ): minor_axis_length,
-            _shape_feature(
-                MeasureObjectSizeShapeModule.MeasurementFeature.CENTER_X
-            ): centroid[:, 2],
-            _shape_feature(
-                MeasureObjectSizeShapeModule.MeasurementFeature.CENTER_Y
-            ): centroid[:, 1],
-            _shape_feature(
-                MeasureObjectSizeShapeModule.MeasurementFeature.CENTER_Z
-            ): centroid[:, 0],
-            _shape_feature(
-                MeasureObjectSizeShapeModule.MeasurementFeature.BOUNDING_BOX_VOLUME
-            ): bounding_box_volume,
-            _shape_feature(
-                MeasureObjectSizeShapeModule.MeasurementFeature.BOUNDING_BOX_MINIMUM_X
-            ): bounds[:, 2],
-            _shape_feature(
-                MeasureObjectSizeShapeModule.MeasurementFeature.BOUNDING_BOX_MAXIMUM_X
-            ): bounds[:, 5],
-            _shape_feature(
-                MeasureObjectSizeShapeModule.MeasurementFeature.BOUNDING_BOX_MINIMUM_Y
-            ): bounds[:, 1],
-            _shape_feature(
-                MeasureObjectSizeShapeModule.MeasurementFeature.BOUNDING_BOX_MAXIMUM_Y
-            ): bounds[:, 4],
-            _shape_feature(
-                MeasureObjectSizeShapeModule.MeasurementFeature.BOUNDING_BOX_MINIMUM_Z
-            ): bounds[:, 0],
-            _shape_feature(
-                MeasureObjectSizeShapeModule.MeasurementFeature.BOUNDING_BOX_MAXIMUM_Z
-            ): bounds[:, 3],
-            _shape_feature(
-                MeasureObjectSizeShapeModule.MeasurementFeature.EXTENT
-            ): extent,
-            _shape_feature(
-                MeasureObjectSizeShapeModule.MeasurementFeature.EULER_NUMBER
-            ): euler_number,
-            _shape_feature(
-                MeasureObjectSizeShapeModule.MeasurementFeature.EQUIVALENT_DIAMETER
-            ): equivalent_diameter,
-        }
-        if self.calculate_advanced:
-            assert solidity is not None
-            features[
-                _shape_feature(MeasureObjectSizeShapeModule.MeasurementFeature.SOLIDITY)
-            ] = solidity
         runtime_profiler.log(
             "moss_features_3d_total",
             time.perf_counter() - total_started_at,
             function="measure_object_size_shape",
             objects=int(measured_labels.size),
         )
-        return (features, measured_labels)
+        return features, measured_labels
 
 
 def measure_object_size_shape_feature_arrays(
@@ -1224,32 +1022,41 @@ def measure_object_size_shape(
     return (image, measurement_rows)
 
 
-def prepare_measure_object_size_shape() -> None:
-    """Compile AreaShape paths before benchmark execution."""
-    image = np.linspace(0.0, 1.0, 32 * 32, dtype=np.float32).reshape((32, 32))
-    labels = np.zeros((32, 32), dtype=np.int32)
-    labels[8:24, 8:24] = 1
-    measure_object_size_shape.__wrapped__(
-        image,
-        ObjectLabelPayload(
-            variant_data=ObjectLabelVariantData(labels=labels),
-            domain=ObjectLabelDomain(declared_object_ids=(1,)),
-        ),
-    )
-    image_3d = np.linspace(0.0, 1.0, 8 * 16 * 16, dtype=np.float32).reshape((8, 16, 16))
-    labels_3d = np.zeros(image_3d.shape, dtype=np.int32)
-    labels_3d[1:4, 3:9, 3:9] = 1
-    labels_3d[4:7, 7:14, 7:14] = 2
-    measure_object_size_shape.__wrapped__(
-        image_3d,
-        ObjectLabelPayload(
-            variant_data=ObjectLabelVariantData(labels=labels_3d),
-            domain=ObjectLabelDomain(declared_object_ids=(1, 2)),
-        ),
-    )
+class ObjectSizeShapeKernelPreparation(
+    CellProfilerCallableKernelPreparation, metaclass=AutoRegisterMeta
+):
+    """Own the persistent kernel cache work for measure_object_size_shape."""
+
+    def execute(self) -> None:
+        """Compile AreaShape paths before benchmark execution."""
+        image = np.linspace(0.0, 1.0, 32 * 32, dtype=np.float32).reshape((32, 32))
+        labels = np.zeros((32, 32), dtype=np.int32)
+        labels[8:24, 8:24] = 1
+        measure_object_size_shape.__wrapped__(
+            image,
+            ObjectLabelPayload(
+                variant_data=ObjectLabelVariantData(labels=labels),
+                domain=ObjectLabelDomain(declared_object_ids=(1,)),
+            ),
+        )
+        image_3d = np.linspace(0.0, 1.0, 8 * 16 * 16, dtype=np.float32).reshape(
+            (8, 16, 16)
+        )
+        labels_3d = np.zeros(image_3d.shape, dtype=np.int32)
+        labels_3d[1:4, 3:9, 3:9] = 1
+        labels_3d[4:7, 7:14, 7:14] = 2
+        measure_object_size_shape.__wrapped__(
+            image_3d,
+            ObjectLabelPayload(
+                variant_data=ObjectLabelVariantData(labels=labels_3d),
+                domain=ObjectLabelDomain(declared_object_ids=(1, 2)),
+            ),
+        )
 
 
-measure_object_size_shape.__openhcs_prepare__ = prepare_measure_object_size_shape
+measure_object_size_shape.__openhcs_prepare__ = (
+    ObjectSizeShapeKernelPreparation().execute
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -1279,7 +1086,8 @@ class DenseObjectSizeShapeMeasurement(
         if not np.any(labels_nd > 0):
             return []
         feature_values, measured_labels, object_domain = self.feature_arrays_for_labels(
-            labels_nd
+            labels_nd,
+            object_domain=dense_object_label_measurement_row_domain(labels, labels_nd),
         )
         rows = ShapeObjectFeatureValueTable.from_feature_arrays(
             feature_values,
@@ -1436,15 +1244,133 @@ class ShapeMeasurementBackendStrategy(
     ) -> tuple[np.ndarray, np.ndarray]:
         """Return minimum and maximum Feret diameters."""
 
-    def surface_areas_3d(
+    _unit_surface_triangles: ClassVar[np.ndarray | None] = None
+    _cube_euler_coefficients: ClassVar[np.ndarray | None] = None
+
+    def feature_arrays_3d(
         self,
         labels: np.ndarray,
-        regions: SurfaceArea3DRegions,
         *,
-        spacing: tuple[float, ...] | None = None,
-    ) -> np.ndarray:
-        """Return Lewiner marching-cubes surface areas for 3-D dense labels."""
-        return _surface_areas_3d_from_regions(labels, regions, spacing=spacing)
+        calculate_advanced: bool,
+        spacing: tuple[float, ...],
+    ) -> ShapeFeatureArrays:
+        """Reference numerical owner for unprepared calls and oversized moments."""
+        import skimage.measure
+
+        regions = skimage.measure.regionprops(labels, cache=True)
+        count = len(regions)
+        measured_labels = np.empty(count, dtype=np.int64)
+        area = np.empty(count, dtype=np.float64)
+        centroid = np.empty((count, 3), dtype=np.float64)
+        bounds = np.empty((count, 6), dtype=np.int64)
+        eigenvalues = np.empty((count, 3), dtype=np.float64)
+        euler_number = np.empty(count, dtype=np.int64)
+        surface_areas = np.empty(count, dtype=np.float64)
+        solidity = np.empty(count, dtype=np.float64) if calculate_advanced else None
+        for index, region in enumerate(regions):
+            measured_labels[index] = region.label
+            area[index] = region.area
+            centroid[index] = region.centroid
+            bounds[index] = region.bbox
+            eigenvalues[index] = region.inertia_tensor_eigvals
+            euler_number[index] = region.euler_number
+            lower = np.maximum(bounds[index, :3] - 1, 0)
+            upper = np.minimum(bounds[index, 3:] + 1, labels.shape)
+            binary = (
+                labels[tuple(slice(a, b) for a, b in zip(lower, upper))] == region.label
+            )
+            surface_areas[index] = _surface_area(binary, spacing)
+            if solidity is not None:
+                solidity[index] = region.solidity
+        return self._feature_arrays_from_3d_statistics(
+            measured_labels,
+            area,
+            centroid,
+            bounds,
+            eigenvalues,
+            euler_number,
+            surface_areas,
+            solidity,
+        )
+
+    @staticmethod
+    def _feature_arrays_from_3d_statistics(
+        measured_labels: np.ndarray,
+        area: np.ndarray,
+        centroid: np.ndarray,
+        bounds: np.ndarray,
+        inertia_tensor_eigenvalues: np.ndarray,
+        euler_number: np.ndarray,
+        surface_areas: np.ndarray,
+        solidity: np.ndarray | None,
+    ) -> ShapeFeatureArrays:
+        """Retain the single declared AreaShape mapping for both algorithms."""
+        bounding_box_volume = np.prod(bounds[:, 3:] - bounds[:, :3], axis=1).astype(
+            np.float64
+        )
+        extent = area / bounding_box_volume
+        equivalent_diameter = (6.0 * area / np.pi) ** (1.0 / 3.0)
+        major_axis_length, minor_axis_length = _cellprofiler_3d_axis_lengths(
+            inertia_tensor_eigenvalues
+        )
+        features = {
+            _shape_feature(
+                MeasureObjectSizeShapeModule.MeasurementFeature.VOLUME
+            ): area,
+            _shape_feature(
+                MeasureObjectSizeShapeModule.MeasurementFeature.SURFACE_AREA
+            ): surface_areas,
+            _shape_feature(
+                MeasureObjectSizeShapeModule.MeasurementFeature.MAJOR_AXIS_LENGTH
+            ): major_axis_length,
+            _shape_feature(
+                MeasureObjectSizeShapeModule.MeasurementFeature.MINOR_AXIS_LENGTH
+            ): minor_axis_length,
+            _shape_feature(
+                MeasureObjectSizeShapeModule.MeasurementFeature.CENTER_X
+            ): centroid[:, 2],
+            _shape_feature(
+                MeasureObjectSizeShapeModule.MeasurementFeature.CENTER_Y
+            ): centroid[:, 1],
+            _shape_feature(
+                MeasureObjectSizeShapeModule.MeasurementFeature.CENTER_Z
+            ): centroid[:, 0],
+            _shape_feature(
+                MeasureObjectSizeShapeModule.MeasurementFeature.BOUNDING_BOX_VOLUME
+            ): bounding_box_volume,
+            _shape_feature(
+                MeasureObjectSizeShapeModule.MeasurementFeature.BOUNDING_BOX_MINIMUM_X
+            ): bounds[:, 2],
+            _shape_feature(
+                MeasureObjectSizeShapeModule.MeasurementFeature.BOUNDING_BOX_MAXIMUM_X
+            ): bounds[:, 5],
+            _shape_feature(
+                MeasureObjectSizeShapeModule.MeasurementFeature.BOUNDING_BOX_MINIMUM_Y
+            ): bounds[:, 1],
+            _shape_feature(
+                MeasureObjectSizeShapeModule.MeasurementFeature.BOUNDING_BOX_MAXIMUM_Y
+            ): bounds[:, 4],
+            _shape_feature(
+                MeasureObjectSizeShapeModule.MeasurementFeature.BOUNDING_BOX_MINIMUM_Z
+            ): bounds[:, 0],
+            _shape_feature(
+                MeasureObjectSizeShapeModule.MeasurementFeature.BOUNDING_BOX_MAXIMUM_Z
+            ): bounds[:, 3],
+            _shape_feature(
+                MeasureObjectSizeShapeModule.MeasurementFeature.EXTENT
+            ): extent,
+            _shape_feature(
+                MeasureObjectSizeShapeModule.MeasurementFeature.EULER_NUMBER
+            ): euler_number,
+            _shape_feature(
+                MeasureObjectSizeShapeModule.MeasurementFeature.EQUIVALENT_DIAMETER
+            ): equivalent_diameter,
+        }
+        if solidity is not None:
+            features[
+                _shape_feature(MeasureObjectSizeShapeModule.MeasurementFeature.SOLIDITY)
+            ] = solidity
+        return features, measured_labels
 
     @abstractmethod
     def distance_to_edge(self, labels: np.ndarray) -> np.ndarray:
@@ -1469,6 +1395,154 @@ class ShapeMeasurementBackendStrategy(
 class NumbaShapeMeasurementMixin(ABC):
     """Shared Numba-backed shape leaves reused by concrete backend policies."""
 
+    def prepare_3d_shape_measurements(self) -> None:
+        """Derive binary Lewiner geometry and warm both supported input layouts."""
+        if ShapeMeasurementBackendStrategy._unit_surface_triangles is None:
+            import skimage.measure
+            from skimage.measure._regionprops_utils import EULER_COEFS3D_26
+
+            triangles = []
+            euler_coefficients = np.empty(256, dtype=np.int64)
+            for case in range(256):
+                cube = np.asarray(
+                    [(case >> corner) & 1 for corner in range(8)],
+                    dtype=np.float32,
+                ).reshape((2, 2, 2))
+                if case in (0, 255):
+                    triangles.append(np.empty((0, 3, 3), dtype=np.float32))
+                else:
+                    vertices, faces, _normals, _values = skimage.measure.marching_cubes(
+                        cube,
+                        method="lewiner",
+                        level=0,
+                    )
+                    triangles.append(vertices[faces])
+                # Match the existing Euler convolution's reversed Z/Y/X
+                # neighborhood and its X/Y bit ordering; retain its coefficients.
+                euler_case = sum(
+                    int(value) << corner
+                    for corner, value in enumerate(
+                        cube[::-1, ::-1, ::-1].transpose((0, 2, 1)).ravel()
+                    )
+                )
+                euler_coefficients[case] = EULER_COEFS3D_26[euler_case]
+            geometry = np.zeros(
+                (len(triangles), max(map(len, triangles)), 3, 3), dtype=np.float32
+            )
+            for case, values in enumerate(triangles):
+                geometry[case, : len(values)] = values
+            geometry.setflags(write=False)
+            euler_coefficients.setflags(write=False)
+            ShapeMeasurementBackendStrategy._cube_euler_coefficients = (
+                euler_coefficients
+            )
+            ShapeMeasurementBackendStrategy._unit_surface_triangles = geometry
+
+        labels = np.zeros((3, 3, 3), dtype=np.int32)
+        labels[1, 1, 1] = 1
+        for writable in (True, False):
+            labels.setflags(write=writable)
+            self.feature_arrays_3d(
+                labels, calculate_advanced=False, spacing=(1.0, 1.0, 1.0)
+            )
+
+    def feature_arrays_3d(
+        self,
+        labels: np.ndarray,
+        *,
+        calculate_advanced: bool,
+        spacing: tuple[float, ...],
+    ) -> ShapeFeatureArrays:
+        """Measure the full label cohort without per-object binary meshes."""
+        geometry = ShapeMeasurementBackendStrategy._unit_surface_triangles
+        if geometry is None:
+            # Direct public calls retain reference behavior before library READY.
+            return super().feature_arrays_3d(
+                labels, calculate_advanced=calculate_advanced, spacing=spacing
+            )
+        label_array = np.ascontiguousarray(labels, dtype=np.int32)
+        label_ids = np.unique(label_array)
+        label_ids = label_ids[label_ids > 0]
+        counts, bounds = _label_bounds_counts_3d_numba(label_array, label_ids)
+        if not self._local_moments_fit_int64(counts, bounds):
+            return super().feature_arrays_3d(
+                label_array, calculate_advanced=calculate_advanced, spacing=spacing
+            )
+        coefficients = ShapeMeasurementBackendStrategy._cube_euler_coefficients
+        assert coefficients is not None
+        sums, products, surface_cases, euler_scaled = (
+            _label_local_moments_surface_euler_3d_numba(
+                label_array, label_ids, bounds, coefficients
+            )
+        )
+        area = counts.astype(np.float64)
+        centroid = sums / area[:, None] + bounds[:, :3]
+        inertia = np.zeros((label_ids.size, 3, 3), dtype=np.float64)
+        for index, count in enumerate(counts):
+            # Integer central numerators avoid subtracting large float moments.
+            # Python integers also avoid overflow in the derived count products.
+            n = int(count)
+            local_sums = tuple(int(value) for value in sums[index])
+            central = tuple(
+                (n * int(products[index, product]) - local_sums[a] * local_sums[b])
+                / (n * n)
+                for product, (a, b) in enumerate(
+                    ((0, 0), (1, 1), (2, 2), (0, 1), (0, 2), (1, 2))
+                )
+            )
+            inertia[index, 0, 0] = central[1] + central[2]
+            inertia[index, 1, 1] = central[0] + central[2]
+            inertia[index, 2, 2] = central[0] + central[1]
+            inertia[index, 0, 1] = inertia[index, 1, 0] = -central[3]
+            inertia[index, 0, 2] = inertia[index, 2, 0] = -central[4]
+            inertia[index, 1, 2] = inertia[index, 2, 1] = -central[5]
+        eigenvalues = np.maximum(np.linalg.eigvalsh(inertia)[:, ::-1], 0.0)
+        if spacing == (1.0, 1.0, 1.0):
+            vertices = geometry
+        else:
+            vertices = geometry * np.asarray(spacing, dtype=np.float64)
+        edge_a = vertices[:, :, 0] - vertices[:, :, 1]
+        edge_b = vertices[:, :, 0] - vertices[:, :, 2]
+        case_areas = (
+            np.sqrt((np.cross(edge_a, edge_b) ** 2).sum(axis=2)).sum(axis=1) / 2.0
+        )
+        surface_areas = surface_cases @ case_areas
+        solidity = None
+        if calculate_advanced:
+            from skimage.morphology import convex_hull_image
+
+            convex_volumes = np.empty(label_ids.size, dtype=np.int64)
+            for index, label_id in enumerate(label_ids):
+                lower, upper = bounds[index, :3], bounds[index, 3:]
+                binary = (
+                    label_array[tuple(slice(a, b) for a, b in zip(lower, upper))]
+                    == label_id
+                )
+                convex_volumes[index] = np.count_nonzero(convex_hull_image(binary))
+            solidity = area / convex_volumes
+        return self._feature_arrays_from_3d_statistics(
+            label_ids.astype(np.int64),
+            area,
+            centroid,
+            bounds,
+            eigenvalues,
+            euler_scaled // 8,
+            surface_areas,
+            solidity,
+        )
+
+    @staticmethod
+    def _local_moments_fit_int64(counts: np.ndarray, bounds: np.ndarray) -> bool:
+        """Check one conservative bound before accumulating local moments."""
+        capacity = np.iinfo(np.int64).max
+        for count, region in zip(counts, bounds):
+            extent = max(
+                int(region[axis + 3]) - int(region[axis]) - 1 for axis in range(3)
+            )
+            if int(count) * extent * extent > capacity:
+                return False
+        return True
+
     def prepare_numba_shape_leaves(self) -> None:
         labels = np.array([[0, 1, 1], [0, 1, 0], [2, 2, 0]], dtype=np.int32)
         image = np.arange(9, dtype=np.float64).reshape((3, 3))
@@ -1477,8 +1551,15 @@ class NumbaShapeMeasurementMixin(ABC):
         self.radius_features_from_labels(labels, label_ids)
         self.feret_diameters(labels, label_ids)
         self.distance_to_edge(labels)
-        self.maximum_position_of_labels(image, labels, label_ids)
+        for dtype in (np.float32, np.float64):
+            ordering_image = image.astype(dtype)
+            _numpy124_aquicksort_indices(ordering_image.ravel())
+            self.maximum_position_of_labels(ordering_image, labels, label_ids)
+            immutable_ids = label_ids.view()
+            immutable_ids.setflags(write=False)
+            self.maximum_position_of_labels(ordering_image, labels, immutable_ids)
         self.color_labels(labels)
+        self.prepare_3d_shape_measurements()
 
     def form_factor_values(
         self, labels: np.ndarray, label_ids: np.ndarray
@@ -1554,12 +1635,6 @@ class NumbaNumpyShapeMeasurementBackendStrategy(
 
     def prepare_backend(self) -> None:
         self.prepare_numba_shape_leaves()
-        label_ids = np.array([1, 2], dtype=np.int32)
-        labels_3d = np.zeros((3, 3, 3), dtype=np.int32)
-        labels_3d[0:2, 0:2, 0:2] = 1
-        labels_3d[1:3, 1:3, 1:3] = 2
-        regions_3d = SurfaceArea3DRegions.from_label_array(labels_3d, label_ids)
-        self.surface_areas_3d(labels_3d, regions_3d)
 
 
 def _distance_to_edge_planewise(
@@ -1763,6 +1838,108 @@ def _zernike_features(
     }
 
 
+@njit(cache=True)
+def _label_bounds_counts_3d_numba(
+    labels: np.ndarray, label_ids: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
+    """First cohort pass captures bounds for stable local moment coordinates."""
+    nz, ny, nx = labels.shape
+    counts = np.zeros(label_ids.size, dtype=np.int64)
+    bounds = np.zeros((label_ids.size, 6), dtype=np.int64)
+    bounds[:, 0] = nz
+    bounds[:, 1] = ny
+    bounds[:, 2] = nx
+    for z in range(nz):
+        for y in range(ny):
+            for x in range(nx):
+                label = labels[z, y, x]
+                if label <= 0:
+                    continue
+                index = np.searchsorted(label_ids, label)
+                counts[index] += 1
+                bounds[index, 0] = min(bounds[index, 0], z)
+                bounds[index, 1] = min(bounds[index, 1], y)
+                bounds[index, 2] = min(bounds[index, 2], x)
+                bounds[index, 3] = max(bounds[index, 3], z + 1)
+                bounds[index, 4] = max(bounds[index, 4], y + 1)
+                bounds[index, 5] = max(bounds[index, 5], x + 1)
+    return counts, bounds
+
+
+@njit(cache=True)
+def _label_local_moments_surface_euler_3d_numba(
+    labels: np.ndarray,
+    label_ids: np.ndarray,
+    bounds: np.ndarray,
+    euler_coefficients: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Second cohort pass collects local moments and correlated cube counts."""
+    count = label_ids.size
+    sums = np.zeros((count, 3), dtype=np.int64)
+    products = np.zeros((count, 6), dtype=np.int64)
+    surface_cases = np.zeros((count, 256), dtype=np.int64)
+    euler_scaled = np.zeros(count, dtype=np.int64)
+    corners = np.zeros(8, dtype=np.int32)
+    nz, ny, nx = labels.shape
+    for z in range(-1, nz):
+        for y in range(-1, ny):
+            for x in range(-1, nx):
+                for corner in range(8):
+                    zz = z + (corner >> 2)
+                    yy = y + ((corner >> 1) & 1)
+                    xx = x + (corner & 1)
+                    if 0 <= zz < nz and 0 <= yy < ny and 0 <= xx < nx:
+                        corners[corner] = labels[zz, yy, xx]
+                    else:
+                        corners[corner] = 0
+                if corners[0] > 0:
+                    index = np.searchsorted(label_ids, corners[0])
+                    local_z = z - bounds[index, 0]
+                    local_y = y - bounds[index, 1]
+                    local_x = x - bounds[index, 2]
+                    sums[index, 0] += local_z
+                    sums[index, 1] += local_y
+                    sums[index, 2] += local_x
+                    products[index, 0] += local_z * local_z
+                    products[index, 1] += local_y * local_y
+                    products[index, 2] += local_x * local_x
+                    products[index, 3] += local_z * local_y
+                    products[index, 4] += local_z * local_x
+                    products[index, 5] += local_y * local_x
+                if (
+                    corners[0]
+                    == corners[1]
+                    == corners[2]
+                    == corners[3]
+                    == corners[4]
+                    == corners[5]
+                    == corners[6]
+                    == corners[7]
+                ):
+                    continue
+                for corner in range(8):
+                    label = corners[corner]
+                    if label <= 0:
+                        continue
+                    seen = False
+                    for previous in range(corner):
+                        if corners[previous] == label:
+                            seen = True
+                    if seen:
+                        continue
+                    case = 0
+                    for other in range(8):
+                        if corners[other] == label:
+                            case |= 1 << other
+                    index = np.searchsorted(label_ids, label)
+                    euler_scaled[index] += euler_coefficients[case]
+                    # Euler includes an exterior zero border; marching cubes
+                    # retains the original clipped domain, including open edges.
+                    if 0 <= z < nz - 1 and 0 <= y < ny - 1 and 0 <= x < nx - 1:
+                        surface_cases[index, case] += 1
+    return sums, products, surface_cases, euler_scaled
+
+
 def _surface_area(
     volume: np.ndarray, spacing: tuple[float, ...] | None = None
 ) -> float:
@@ -1781,59 +1958,6 @@ def _surface_area(
     edge_a = verts[faces[:, 0]] - verts[faces[:, 1]]
     edge_b = verts[faces[:, 0]] - verts[faces[:, 2]]
     return float(((np.cross(edge_a, edge_b) ** 2).sum(axis=1) ** 0.5).sum() / 2.0)
-
-
-def _expanded_surface_area_bounds(
-    bounds_zyxzyx: np.ndarray, labels_shape: tuple[int, ...]
-) -> np.ndarray:
-    bounds = np.ascontiguousarray(bounds_zyxzyx, dtype=np.int64)
-    if bounds.shape[1:] != (6,):
-        raise ValueError(
-            f"3-D surface-area bounds must have six columns (z0, y0, x0, z1, y1, x1), got {bounds.shape!r}."
-        )
-    if len(labels_shape) != 3:
-        raise ValueError(
-            f"3-D surface-area labels require a 3-D shape, got {labels_shape!r}."
-        )
-    expanded = bounds.copy()
-    shape = np.asarray(labels_shape, dtype=np.int64)
-    expanded[:, :3] = np.maximum(expanded[:, :3] - 1, 0)
-    expanded[:, 3:] = np.minimum(expanded[:, 3:] + 1, shape)
-    return np.ascontiguousarray(expanded, dtype=np.int64)
-
-
-def _surface_areas_3d_from_labels(
-    labels: np.ndarray,
-    label_ids: np.ndarray,
-    *,
-    spacing: tuple[float, ...] | None = None,
-) -> np.ndarray:
-    return _surface_areas_3d_from_regions(
-        labels,
-        SurfaceArea3DRegions.from_label_array(labels, label_ids),
-        spacing=spacing,
-    )
-
-
-def _surface_areas_3d_from_regions(
-    labels: np.ndarray,
-    regions: SurfaceArea3DRegions,
-    *,
-    spacing: tuple[float, ...] | None = None,
-) -> np.ndarray:
-    if regions.label_ids.size == 0:
-        return np.zeros(0, dtype=np.float64)
-    label_array = np.asarray(labels)
-    if label_array.ndim != 3:
-        raise ValueError("3-D surface-area measurement requires a 3-D label array.")
-    surface_areas = np.zeros(regions.label_ids.size, dtype=np.float64)
-    for object_index, label_id in enumerate(regions.label_ids):
-        z0, y0, x0, z1, y1, x1 = (
-            int(value) for value in regions.bounds_zyxzyx[object_index]
-        )
-        volume = label_array[z0:z1, y0:y1, x0:x1] == int(label_id)
-        surface_areas[object_index] = _surface_area(volume, spacing=spacing)
-    return surface_areas
 
 
 def _form_factor_values_from_labels(
@@ -2199,8 +2323,11 @@ def _maximum_position_of_labels_scipy_select(
         source_positions = np.flatnonzero(mask_array.ravel())
     max_label = int(np.max(label_array)) if label_array.size else 0
     working_values = image_array.ravel()[source_positions]
-    order = _numpy124_aquicksort_indices(working_values)
-    sorted_labels = label_array.ravel()[source_positions[order]]
+    working_labels = label_array.ravel()[source_positions]
+    order = _numpy124_ordered_label_maximum_indices(
+        working_values, working_labels, label_id_array.ravel(), max_label
+    )
+    sorted_labels = working_labels[order]
     sorted_positions = source_positions[order]
     max_positions = np.zeros(max_label + 2, dtype=np.int64)
     valid_sorted = (sorted_labels >= 0) & (sorted_labels <= max_label)

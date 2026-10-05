@@ -1,0 +1,39 @@
+Interpreter: /home/ts/wt/openhcs-generated-inputs-installed-parent-20261001/.venv/bin/python 3.12.3 (main, May 22 2025, 14:39:13) [GCC 14.2.1 20250207]
+Discovery owner: /home/ts/wt/metaclass-registry-selected-discovery-376-20261001/src/metaclass_registry/__init__.py
+.....................................                                    [100%]
+=============================== warnings summary ===============================
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_default_fixture_loop_scope
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_mode
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+37 passed, 2 warnings in 9.34s
+	Command being timed: "/home/ts/wt/openhcs-generated-inputs-installed-parent-20261001/.venv/bin/python docs/validation/knowledge-selected-source-tests.py --basetemp=/home/ts/.cache/agent-scratch/h001-stream-plane-427-20261002/pytest tests/unit/test_rescale_stream_plane_declaration.py tests/unit/test_module_only_setting_binding.py tests/unit/test_stream_component_semantics.py -q"
+	User time (seconds): 9.75
+	System time (seconds): 0.89
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:10.75
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 526332
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 1
+	Minor (reclaiming a frame) page faults: 145439
+	Voluntary context switches: 215
+	Involuntary context switches: 313
+	Swaps: 0
+	File system inputs: 840
+	File system outputs: 2712
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

@@ -14,6 +14,7 @@ from zmqruntime.config import TransportMode
 from zmqruntime.execution import ExecutionServer
 from zmqruntime.messages import (
     ExecuteRequest,
+    ExecutionRecord,
     ExecutionStatus,
     MessageFields,
     StatusRequest,
@@ -21,6 +22,8 @@ from zmqruntime.messages import (
 from zmqruntime.startup import EndpointStartupStatusCallback
 
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+from objectstate.object_state import ObjectState
+from objectstate.object_state_registry import ObjectStateRegistry
 from openhcs.core.config_document import ConfigDocumentAuthority
 from openhcs.core.orchestrator.cancellation import ExecutionCancelledError
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
@@ -123,7 +126,42 @@ class ZMQExecutionContext:
         }
 
 
-class ZMQExecutionServer(ExecutionServer):
+class FunctionCatalogExecutionServer(ExecutionServer):
+    """Own catalogue preparation across physical endpoint start and stop."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from openhcs.agent.services.function_catalog_service import (
+            FunctionCatalogService,
+        )
+        from openhcs.runtime.function_catalog_preparation import (
+            FunctionCatalogPreparation,
+        )
+
+        self._function_catalog = FunctionCatalogService()
+        self._function_catalog_preparation = FunctionCatalogPreparation(
+            self._function_catalog
+        )
+
+    def prepare_runtime_capabilities(
+        self,
+        status_callback: EndpointStartupStatusCallback | None = None,
+    ) -> None:
+        """Prepare catalog metadata before physical endpoint readiness."""
+        self._function_catalog_preparation.prepare_before_serving(status_callback)
+
+    def start(self) -> None:
+        self.prepare_runtime_capabilities()
+        super().start()
+
+    def stop(self) -> None:
+        try:
+            super().stop()
+        finally:
+            self._function_catalog_preparation.cancel_and_join()
+
+
+class ZMQExecutionServer(FunctionCatalogExecutionServer):
     """OpenHCS-specific execution server."""
 
     _server_type = "execution"
@@ -153,25 +191,6 @@ class ZMQExecutionServer(ExecutionServer):
         self._compiled_artifacts: dict[str, ZMQCompileArtifactRecord] = {}
         self._compiled_artifact_ttl_seconds = config.compiled_artifact_ttl_seconds
         self._server_environment = RuntimeEnvironmentSnapshot.current()
-        from openhcs.agent.services.function_catalog_service import (
-            FunctionCatalogService,
-        )
-        from openhcs.runtime.function_catalog_preparation import (
-            FunctionCatalogPreparation,
-        )
-
-        self._function_catalog = FunctionCatalogService()
-        self._function_catalog_preparation = FunctionCatalogPreparation(
-            self._function_catalog
-        )
-
-    def prepare_runtime_capabilities(
-        self,
-        status_callback: EndpointStartupStatusCallback | None = None,
-    ) -> None:
-        """Materialize cached capabilities before exposing the live endpoint."""
-
-        self._function_catalog_preparation.wait_until_ready(status_callback)
 
     def stop(self) -> None:
         """Stop transport and every exact process resource owned by this server."""
@@ -179,10 +198,7 @@ class ZMQExecutionServer(ExecutionServer):
         try:
             super().stop()
         finally:
-            try:
-                self._function_catalog_preparation.cancel_and_join()
-            finally:
-                cleanup_backend_connections(include_process_resources=True)
+            cleanup_backend_connections(include_process_resources=True)
 
     def handle_control_message(self, message):
         if ZMQControlMessageRouter.handles(message):
@@ -258,7 +274,7 @@ class ZMQExecutionServer(ExecutionServer):
                 list(progress_update.keys()),
                 event.step_name,
             )
-        self.progress_queue.put(event.to_dict())
+        self.send_progress_update(event.to_dict())
 
     def _forward_worker_progress(self, worker_queue) -> None:
         import logging
@@ -280,7 +296,7 @@ class ZMQExecutionServer(ExecutionServer):
                         "Execution-level progress cannot carry a worker claim: "
                         f"{progress_update}"
                     )
-                self.progress_queue.put(
+                self.send_progress_update(
                     event.with_worker_topology(
                         worker_assignments=assignments,
                         total_wells=sorted(
@@ -325,7 +341,7 @@ class ZMQExecutionServer(ExecutionServer):
                 enriched_event.step_name,
                 enriched_event.worker_slot,
             )
-            self.progress_queue.put(enriched_event.to_dict())
+            self.send_progress_update(enriched_event.to_dict())
 
     def _worker_assignments_for_execution(
         self,
@@ -354,24 +370,16 @@ class ZMQExecutionServer(ExecutionServer):
             execution_payload=execution_payload,
         )
 
-    def run_execution(self, execution_id, request, record):
-        """Run an execution and enrich results_summary with output plate path.
-
-        The base zmqruntime ExecutionServer only populates well_count/wells in
-        results_summary. OpenHCS needs the final output plate root (computed by
-        path planning during compilation) so the UI can optionally auto-add it
-        as a new orchestrator in Plate Manager.
-        """
-        super().run_execution(execution_id, request, record)
-
+    def finalize_execution_record(self, record: ExecutionRecord) -> None:
+        """Attach OpenHCS summary fields before terminal status is published."""
         try:
             self._attach_results_summary_extras(
-                execution_id=execution_id, record=record
+                execution_id=record.execution_id, record=record
             )
         except Exception as e:
             logger.warning(
                 "[%s] Failed to attach output_plate_root to results_summary: %s",
-                execution_id,
+                record.execution_id,
                 e,
             )
 
@@ -397,14 +405,45 @@ class ZMQExecutionServer(ExecutionServer):
     ):
         logger.info("[%s] Starting plate %s", execution_id, request_payload.plate_id)
 
+        request_payload.compile_control.validate()
+        self._cleanup_compiled_artifacts()
+        if request_payload.compile_artifact_id is not None:
+            artifact = self._compiled_artifacts.get(request_payload.compile_artifact_id)
+            if artifact is None:
+                raise ValueError(
+                    f"Missing compile artifact '{request_payload.compile_artifact_id}'. "
+                    "Re-run compilation before execution."
+                )
+            auxiliary = ZMQAuxiliaryExecutionParams.from_transport(
+                request_payload.config_params
+            )
+            retain = self._retain_compile_artifact(auxiliary.debug_execution_config)
+            artifact.require_compatible_request(
+                plate_id=request_payload.plate_id,
+                signature=(
+                    request_payload.debug_replay_signature
+                    if retain
+                    else request_payload.compilation_signature
+                ),
+                retain_compile_artifact=retain,
+            )
+            return self._execute_with_orchestrator(
+                ZMQExecutionContext(
+                    execution_id=execution_id,
+                    request_payload=request_payload,
+                    pipeline_steps=list(
+                        artifact.compilation.execution_bundle.pipeline_definition
+                    ),
+                    configs=artifact.configs,
+                )
+            )
+
         import openhcs.processing.func_registry as func_registry_module
 
         if func_registry_module.pipeline_source_requires_import_projection(
             request_payload.pipeline_code
         ):
             func_registry_module.initialize_registry()
-
-        self._cleanup_compiled_artifacts()
 
         module_name = f"openhcs_zmq_pipeline_{request_payload.pipeline_sha}"
         module = ModuleType(module_name)
@@ -506,11 +545,27 @@ class ZMQExecutionServer(ExecutionServer):
                 request_context.compile_artifact_id,
             )
             self._ensure_request_global_config_context(request_context)
+            resolved_config, _ = ObjectState.resolve_saved_object(
+                request_context.pipeline_config,
+                ancestor_objects_with_scopes=(
+                    ObjectStateRegistry.get_ancestor_objects_with_scopes(
+                        None, use_saved=True
+                    )
+                ),
+            )
             orchestrator = self._initialize_orchestrator(
                 request_context.execution_id,
                 plate_path_str,
                 request_context.pipeline_config,
+                resolved_config=resolved_config,
                 selected_pipeline_path=request_context.request_payload.selected_pipeline_path,
+                execution_bundle=(
+                    self._compiled_artifacts[
+                        request_context.compile_artifact_id
+                    ].compilation.execution_bundle
+                    if request_context.compile_artifact_id is not None
+                    else None
+                ),
             )
             self._raise_if_cancelled(request_context.execution_id, "initialization")
             wells = self._wells_for_execution(
@@ -531,6 +586,7 @@ class ZMQExecutionServer(ExecutionServer):
                 debug_execution_config=debug_execution_config,
                 debug_execution_policy=debug_execution_policy,
                 progress_emitter=progress_emitter,
+                resolved_config=resolved_config,
             )
             compilation_resolved = True
             self._record_compilation_outputs(request_context.execution_id, compilation)
@@ -581,7 +637,10 @@ class ZMQExecutionServer(ExecutionServer):
         execution_id: str,
         plate_path_str: str,
         pipeline_config,
+        *,
+        resolved_config: GlobalPipelineConfig,
         selected_pipeline_path: str | None = None,
+        execution_bundle=None,
     ):
         from pathlib import Path
 
@@ -590,12 +649,16 @@ class ZMQExecutionServer(ExecutionServer):
         orchestrator = PipelineOrchestrator(
             plate_path=Path(plate_path_str),
             pipeline_config=pipeline_config,
+            resolved_config=resolved_config,
             selected_pipeline_path=selected_pipeline_path,
             progress_callback=None,
             transport_config=self.config,
         )
         orchestrator.execution_id = execution_id
-        orchestrator.initialize()
+        if execution_bundle is None:
+            orchestrator.initialize(resolved_config=resolved_config)
+        else:
+            orchestrator.adopt_compiled_execution(execution_bundle)
         self.active_executions[execution_id].set_extra("orchestrator", orchestrator)
         return orchestrator
 
@@ -648,6 +711,7 @@ class ZMQExecutionServer(ExecutionServer):
         debug_execution_config,
         debug_execution_policy,
         progress_emitter: ZMQProgressEmitter,
+        resolved_config: GlobalPipelineConfig,
     ):
         if request_context.compile_artifact_id is not None:
             self._cleanup_compiled_artifacts()
@@ -656,6 +720,7 @@ class ZMQExecutionServer(ExecutionServer):
             plate_id=request_context.plate_id,
             pipeline_steps=request_context.pipeline_steps,
             orchestrator=orchestrator,
+            resolved_config=resolved_config,
             wells=wells,
             compile_artifact_id=request_context.compile_artifact_id,
             compilation_signature=request_context.compilation_signature,
@@ -757,17 +822,8 @@ class ZMQExecutionServer(ExecutionServer):
             is ZMQRuntimeObservationExportScope.OUTCOMES
         ):
             observed_exports = RuntimeExportObservation.from_runtime_observations(
-                tuple(
-                    result.runtime_observation for result in execution_results.values()
-                )
+                execution_results.runtime_observations
             )
-            if execution_bundle.requires_parent_runtime_observation:
-                parent_exports = RuntimeExportObservation.from_execution_contexts(
-                    execution_bundle.runtime_contexts
-                )
-                observed_exports = RuntimeExportObservation.from_output_paths(
-                    (*observed_exports.output_files, *parent_exports.output_files)
-                )
             export = ZMQRuntimeExecutionOutcomeExport.from_execution(
                 compiled_axis_ids=execution_bundle.runtime_contexts,
                 execution_results=execution_results,
@@ -780,6 +836,7 @@ class ZMQExecutionServer(ExecutionServer):
             export = ZMQRuntimeExecutionObservationExport.from_execution(
                 compiled_contexts=execution_bundle.runtime_contexts,
                 execution_results=execution_results,
+                runtime_observations=execution_results.runtime_observations,
                 output_roots=output_roots,
                 server_environment=self._server_environment,
                 execution_id=request_context.execution_id,
@@ -812,6 +869,7 @@ class ZMQExecutionServer(ExecutionServer):
                 compilation_signature=request_context.compilation_signature,
                 debug_replay_signature=request_context.debug_replay_signature,
                 compilation=compilation,
+                configs=request_context.configs,
             )
         )
         logger.info(

@@ -1,0 +1,100 @@
+{
+  "status": "PASS",
+  "measured_source_head": "cd0b2ee7cbcd065c2a3d9836342d26316c396e71",
+  "case": "ExampleIlluminationCorrection_Example3",
+  "assignment_scope": "independent repeated source assignments",
+  "selected_source_wells": [
+    "A01"
+  ],
+  "assignments": [
+    "W001",
+    "W002"
+  ],
+  "repetitions": 1,
+  "native": [
+    {
+      "repetition": -1,
+      "image_set_count": 2,
+      "invocation_seconds": 1.9280383153818548,
+      "first_module_through_post_run_seconds": 1.6369694443419576,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          1
+        ],
+        [
+          "W002",
+          1
+        ]
+      ]
+    },
+    {
+      "repetition": 0,
+      "image_set_count": 2,
+      "invocation_seconds": 1.3504415028728545,
+      "first_module_through_post_run_seconds": 1.2712244777940214,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          1
+        ],
+        [
+          "W002",
+          1
+        ]
+      ]
+    }
+  ],
+  "openhcs": [
+    {
+      "repetition": -1,
+      "axis_count": 2,
+      "compared_assignments": [
+        "W001",
+        "W002"
+      ],
+      "execution_seconds": 0.3905050754547119,
+      "compile_seconds": 0.18075346946716309,
+      "total_seconds": 0.7379418513737619,
+      "declared_logical_images": 4,
+      "image_differences": [],
+      "csv_differences": [],
+      "database_differences": [],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "raw_receipt_sha256": "272a8412f6afd97d8d5ec7ab9e05657d919fc576b33082c2f9d598d8f4b6788f",
+      "raw_report_total_seconds": 0.4609957132488489
+    },
+    {
+      "repetition": 0,
+      "axis_count": 2,
+      "compared_assignments": [
+        "W001",
+        "W002"
+      ],
+      "execution_seconds": 0.35818958282470703,
+      "compile_seconds": 0.1610584259033203,
+      "total_seconds": 0.6530260141007602,
+      "declared_logical_images": 4,
+      "image_differences": [],
+      "csv_differences": [],
+      "database_differences": [],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "raw_receipt_sha256": "b4fe20adb8091a9d380ce0c91786a67c1a3eee5d72e14083015fef51cab7662a",
+      "raw_report_total_seconds": 0.41841991199180484
+    }
+  ],
+  "science_scope": "All four declared image outputs exact and complete inventories for both assignments in warm-up and measured repetition. This recipe declares no spreadsheet/database measurement exports; scoped table/relationship receiving remains covered by focused controls.",
+  "guards": "PASS",
+  "owned_pids_absent": true,
+  "packet": "/home/ts/.local/state/openhcs-maintenance/20261005/measured-repeated-assignments-illum3-v2",
+  "terminal_sha256": "b89dd46aa153469b0fd6678cbb6bd7a0ab2fad277549c2e0e26a02c54d5e122a",
+  "report_sha256": "523c0a5b59ad9d3b579f359e8f2cb2026cace22e5a13c942b75b7a4d4c702aae",
+  "limitations": [
+    "One measured batch qualifies this infrastructure; not the final 3-repeat multiwell matrix.",
+    "Original v1 source-filter type failure is retained; no native or candidate execution occurred there.",
+    "Raw v2 total_seconds initially omitted compile submit/wait through dict overwrite. Corrected totals above aggregate every immutable raw receipt phase via PhaseTimingRecord; raw evidence is not rewritten.",
+    "Native batch first-module interval includes later assignment setup gaps; full invocation and complete OpenHCS client interval are reported separately."
+  ]
+}

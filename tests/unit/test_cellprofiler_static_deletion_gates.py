@@ -794,7 +794,7 @@ def test_runtime_adapter_state_has_one_nominal_owner() -> None:
     }
     request = classes["RuntimeAdapterRequest"]
     adapter = classes["CellProfilerRuntimeAdapter"]
-    source_context = classes["SourceBindingRuntimeContext"]
+    assert "SourceBindingRuntimeContext" not in classes
 
     request_fields = {
         node.target.id
@@ -826,9 +826,10 @@ def test_runtime_adapter_state_has_one_nominal_owner() -> None:
         isinstance(node, ast.AnnAssign)
         and isinstance(node.target, ast.Name)
         and node.target.id == "source_binding_context"
-        for node in source_context.body
+        for node in request.body
     )
-    for class_name in ("FunctionRuntimeScope", "PatternGroupData"):
+    assert "FunctionRuntimeScope" not in classes
+    for class_name in ("PatternGroupData",):
         assert all(
             ast.unparse(base) != "SourceBindingRuntimeContext"
             for base in classes[class_name].bases
@@ -936,7 +937,7 @@ def test_forward_artifact_state_has_one_nominal_owner() -> None:
         if isinstance(node, ast.ClassDef)
         and node.name == "CellProfilerInvocationContractProviderFactory"
     )
-    provider_method = _method(factory, "provider_for_session")
+    provider_method = _method(factory, "provider_for_pipeline")
     calls = {
         _dotted_name(node.func)
         for node in ast.walk(provider_method)
@@ -1267,8 +1268,8 @@ def test_nominal_payloads_are_not_erased_before_semantic_projection() -> None:
     )
     semantic_calls = frozenset(
         {
-            "MeasurementLabelSourceAlignmentStrategy.align",
-            "MeasurementLabelSourceAlignmentStrategy.align_request_labels_to_image_source",
+            "MeasurementImageLabelAlignmentRequest.labels_for_image",
+            "MeasurementImageLabelAlignmentRequest.labels_in_image_source",
             "RuntimeSliceProjection.value_for_slice",
             "SourceSpatialDomainAdapter.aligned_values",
         }

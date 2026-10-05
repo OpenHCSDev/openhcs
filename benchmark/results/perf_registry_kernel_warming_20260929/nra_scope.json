@@ -1,0 +1,10 @@
+{
+  "source_revision": "fbf6b2d91-plus-registry-warmup-candidate",
+  "module_count": 698,
+  "original_class_count": 5045,
+  "projected_count": 5033,
+  "note": "Census before final Sobel preparation base admission; authored source-checked patch plus runtime tests covers that added base. Full global semantic proof not attempted.",
+  "scoped_class_count": 179,
+  "scoped_class_inventory": "nra_classes.csv",
+  "full_census_artifact": "/home/ts/code/projects/openhcs-benchmark-runs/perf-registry-kernel-warming-nra-class-census-20260929.json"
+}

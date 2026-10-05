@@ -11,7 +11,6 @@ from openhcs.core.equivalence import (
     RuntimeEquivalencePolicy,
     RuntimeMeasurementDialect,
     RuntimeMeasurementSourceNameEncoding,
-    measurement_row_qualifiers,
 )
 from openhcs.core.measurement_lookup_dialect import (
     RuntimeMeasurementFeatureLookup,
@@ -108,6 +107,9 @@ CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT = RuntimeMeasurementLookupDialect(
         CellProfilerModule.alternative_measurement_feature_part_aliases
     ),
     source_qualified_feature_families_provider=CellProfilerModule.source_qualified_measurement_feature_family_parts,
+    indexed_descriptor_suffix_width_provider=(
+        RuntimeMeasurementFeatureDeclaration.indexed_suffix_token_width_for
+    ),
     object_domain_policy=CellProfilerMeasurementObjectDomainPolicy(),
 )
 
@@ -207,23 +209,6 @@ CELLPROFILER_MEASUREMENT_DIALECT = RuntimeMeasurementDialect(
     ),
     measurement_feature_relation_provider=CellProfilerModule.measurement_feature_relation_declarations,
 )
-
-
-@lru_cache(maxsize=8192)
-def cellprofiler_projected_measurement_feature_name(
-    feature_name: str,
-    qualifier_values: tuple[tuple[str, object], ...],
-) -> str:
-    """Append declared descriptor axes to an exact producer feature name."""
-
-    qualifiers = measurement_row_qualifiers(
-        dict(qualifier_values),
-        CELLPROFILER_MEASUREMENT_DIALECT,
-        feature_name,
-    )
-    if not qualifiers:
-        return feature_name
-    return "_".join((feature_name, *qualifiers))
 
 
 def cellprofiler_runtime_equivalence_policy(

@@ -1,0 +1,17 @@
+{
+  "returncode": 0,
+  "cli_seconds": 20.468950994778425,
+  "command": [
+    "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "/home/ts/code/projects/openhcs/scripts/benchmark_cppipe_well_throughput.py",
+    "--manifest",
+    "/home/ts/code/projects/openhcs/benchmark/manifests/official30_portable_axis1.json",
+    "--output-dir",
+    "/home/ts/code/projects/openhcs-benchmark-runs/perf-source-header-primary-only-abba-3-candidate-20260930",
+    "--mode",
+    "1w_1t",
+    "--case",
+    "cp_tutorial_3d_monolayer"
+  ],
+  "package": "/tmp/openhcs-source-header-installed-20260930"
+}

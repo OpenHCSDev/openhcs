@@ -28,12 +28,13 @@ import logging
 import os
 import time
 from abc import ABC, abstractmethod
-from collections.abc import Callable as CallableABC
+from collections.abc import Callable as CallableABC, Iterator
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from functools import lru_cache, wraps
 from pathlib import Path
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     ClassVar,
@@ -61,7 +62,9 @@ from python_introspect import (
 )
 
 from openhcs.constants import MemoryType
-from openhcs.core.aligned_image_payload import AlignedImageStack
+from openhcs.core.aligned_image_payload import (
+    AlignedImageStack, ImagePayloadSliceStack, ProducedImageStack,
+)
 from openhcs.core.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     MeasurementRowsAxisProjection,
@@ -74,11 +77,11 @@ from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_array_values import RuntimeArrayPayload, is_array_payload
 from openhcs.core.runtime_batch_contracts import (
     Pure2DSliceBatchExecutor,
-    RuntimeBatchExecutionDomain,
     RuntimePure2DSliceBatchRequest,
     runtime_batch_executors_from_callable,
 )
 from openhcs.core.runtime_image_values import (
+    ImagePayloadMetadataCarrier,
     ImageMetadataPayload,
     ImagePayloadMetadata,
     ImagePayloadMetadataCompositionMode,
@@ -118,6 +121,9 @@ from openhcs.core.variable_component_stack_requirement import (
 from openhcs.core.xdg_paths import get_cache_file_path
 
 logger = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from openhcs.core.callable_contract import CallableContract
 
 PURE2D_VALUE_TYPE_REGISTRY_KEY = "value_type"
 
@@ -203,6 +209,7 @@ class RuntimeInvocationKwargPolicyStrategy(
         self,
         func: Callable[..., Any],
         kwargs: Mapping[str, Any],
+        *, signature: inspect.Signature | None = None,
     ) -> dict[str, Any]:
         """Return kwargs accepted by ``func`` under this policy."""
 
@@ -216,8 +223,9 @@ class PassThroughRuntimeInvocationKwargPolicyStrategy(
         self,
         func: Callable[..., Any],
         kwargs: Mapping[str, Any],
+        *, signature: inspect.Signature | None = None,
     ) -> dict[str, Any]:
-        del func
+        del func, signature
         return dict(kwargs)
 
 
@@ -230,8 +238,11 @@ class SignatureFilteredRuntimeInvocationKwargPolicyStrategy(
         self,
         func: Callable[..., Any],
         kwargs: Mapping[str, Any],
+        *, signature: inspect.Signature | None = None,
     ) -> dict[str, Any]:
-        parameters = _runtime_callable_parameters(func)
+        from openhcs.core.callable_contract import CallableMetadata
+
+        parameters = (CallableMetadata.callable_signature(func) if signature is None else signature).parameters
         if any(
             parameter.kind is inspect.Parameter.VAR_KEYWORD
             for parameter in parameters.values()
@@ -251,6 +262,7 @@ class RuntimeCallableInvocation:
     kwarg_policy: RuntimeInvocationKwargPolicy = (
         RuntimeInvocationKwargPolicy.PASS_THROUGH
     )
+    signature: inspect.Signature | None = None
 
     def call(self) -> Any:
         target = RuntimeCallableViewStrategy.for_view(self.callable_view).resolve(
@@ -260,7 +272,7 @@ class RuntimeCallableInvocation:
             *self.args,
             **RuntimeInvocationKwargPolicyStrategy.for_policy(
                 self.kwarg_policy
-            ).accepted_kwargs(target, self.kwargs),
+            ).accepted_kwargs(target, self.kwargs, signature=self.signature),
         )
 
 
@@ -273,11 +285,22 @@ class RuntimeCallablePolicy:
         RuntimeInvocationKwargPolicy.PASS_THROUGH
     )
 
+    def contract_invocation(
+        self, contract: "CallableContract", func: Callable[..., Any],
+        image: Any, kwargs: Mapping[str, Any],
+    ) -> RuntimeCallableInvocation:
+        """Bind the prepared main-image carrier and actual raw execution ABI."""
+        return self.invocation(
+            func, (contract.raw_main_flow_call_argument(image),), kwargs,
+            signature=contract.raw_runtime_signature,
+        )
+
     def invocation(
         self,
         func: Callable[..., Any],
         args: tuple[Any, ...],
         kwargs: Mapping[str, Any],
+        *, signature: inspect.Signature | None = None,
     ) -> RuntimeCallableInvocation:
         return RuntimeCallableInvocation(
             func=func,
@@ -285,14 +308,8 @@ class RuntimeCallablePolicy:
             kwargs=kwargs,
             callable_view=self.callable_view,
             kwarg_policy=self.kwarg_policy,
+            signature=signature,
         )
-
-
-@lru_cache(maxsize=256)
-def _runtime_callable_parameters(
-    func: Callable[..., Any],
-) -> Mapping[str, inspect.Parameter]:
-    return inspect.signature(func).parameters
 
 
 def _registry_runtime_parameter_exclusions(
@@ -544,6 +561,27 @@ class ImagePayloadPure2DInputSlicer(Pure2DInputSlicer):
         )
 
 
+class ProducedImageStackPure2DInputSlicer(ImagePayloadPure2DInputSlicer):
+    """Project literal image leaves through their existing declared axis owner."""
+
+    value_type = ProducedImageStack
+
+    def slice_value(self, value: ProducedImageStack, memory_type: str) -> tuple[Any, ...]:
+        del memory_type
+        return tuple(
+            RuntimeSliceProjection.value_for_slice(
+                value,
+                RuntimePlaneAxisValueProjection.from_selected_plane(
+                    axis=value.plane_axis,
+                    source_aliases=value.metadata.source_image_names,
+                    plane_index=index,
+                    axis_size=len(value.slices),
+                ),
+            )
+            for index in range(len(value.slices))
+        )
+
+
 class MaskedImagePayloadPure2DInputSlicer(ImagePayloadPure2DInputSlicer):
     """Register masked image payloads for PURE_2D input slicing."""
 
@@ -726,6 +764,8 @@ class RuntimeArrayPure2DAuxiliaryOutputAggregator(Pure2DAuxiliaryOutputAggregato
         )
 
     def type_distance(self, values: list[Any]) -> int:
+        if super().supports(values):
+            return super().type_distance(values)
         if self.owns_mixed_values(values):
             return 0
         return super().type_distance(values)
@@ -756,7 +796,7 @@ class ImagePayloadPure2DAuxiliaryOutputAggregator(
 ):
     """Stack image payload slices and reattach composed runtime image context."""
 
-    value_type = None
+    value_type = ImagePayloadMetadataCarrier
     include_in_family = True
 
     def _accepts_mixed_value(self, value: Any) -> bool:
@@ -772,23 +812,9 @@ class ImagePayloadPure2DAuxiliaryOutputAggregator(
         *,
         plane_axis: RuntimePlaneAxis,
     ) -> Any:
-        data_values = [image_payload_data(value) for value in values]
-        data = stack_runtime_slices(data_values, memory_type, 0)
-        masks = [image_payload_mask(value) for value in values]
-        present_masks = [mask for mask in masks if mask is not None]
-        if present_masks and len(present_masks) != len(masks):
-            raise ValueError(
-                "Cannot aggregate a mix of masked and unmasked image payloads."
-            )
-        mask = (
-            None
-            if not present_masks
-            else stack_runtime_slices(present_masks, memory_type, 0)
+        return ImagePayloadSliceStack.from_output_slices(
+            values, memory_type=memory_type, plane_axis=plane_axis,
         )
-        return ImagePayloadMetadata.compose(
-            tuple(values),
-            mode=ImagePayloadMetadataCompositionMode.for_plane_axis(plane_axis),
-        ).payload_with(data, mask)
 
 
 class MaskedImagePayloadPure2DAuxiliaryOutputAggregator(
@@ -852,8 +878,8 @@ class NumPyPure2DAuxiliaryOutputAggregator(Pure2DAuxiliaryOutputAggregator):
         *,
         plane_axis: RuntimePlaneAxis,
     ) -> Any:
-        return ImagePayloadMetadata(plane_axis=plane_axis).payload_with(
-            stack_runtime_slices(values, memory_type, 0)
+        return ImagePayloadSliceStack.from_output_slices(
+            values, memory_type=memory_type, plane_axis=plane_axis,
         )
 
 
@@ -1004,6 +1030,12 @@ class ProcessingContractDeclaration(ABC):
 
         return source_payload
 
+    def main_flow_call_argument(
+        self, callable_contract: "CallableContract", source_payload: Any,
+    ) -> Any:
+        """Expose the raw ABI when this contract needs no earlier plane slicing."""
+        return callable_contract.runtime_main_flow_call_argument(source_payload)
+
     def injected_semantic_control_parameter_names(self) -> frozenset[str]:
         """Semantic controls that this contract may inject into public callables."""
         return frozenset(
@@ -1017,10 +1049,14 @@ class ProcessingContractDeclaration(ABC):
         kwargs: MutableMapping[str, Any],
         *,
         func: Callable[..., Any] | None = None,
+        parameters: Mapping[str, inspect.Parameter] | None = None,
     ) -> dict[str, Any]:
         """Consume and return semantic selectors owned by this declaration."""
 
-        parameters = {} if func is None else inspect.signature(func).parameters
+        if parameters is None:
+            from openhcs.core.callable_contract import CallableMetadata
+
+            parameters = {} if func is None else CallableMetadata.callable_signature(func).parameters
         values: dict[str, Any] = {}
         for parameter_type in self.runtime_parameter_types():
             if not parameter_type.is_semantic_control:
@@ -1085,12 +1121,20 @@ class Pure3DProcessingContract(VariableComponentStackProcessingContract):
 class Pure2DProcessingContract(ProcessingContractDeclaration):
     """Execute a callable as independent 2D slices."""
 
+    def main_flow_call_argument(
+        self, callable_contract: "CallableContract", source_payload: Any,
+    ) -> Any:
+        """Keep the declared plane domain until the PURE_2D slicer consumes it."""
+        del callable_contract
+        return source_payload
+
     def execute(self, registry, func, image, *args, **kwargs):
         return registry.execute_pure_2d(func, image, *args, **kwargs)
 
 
 class FlexibleProcessingContract(
-    SemanticControlVariableComponentStackProcessingContract
+    SemanticControlVariableComponentStackProcessingContract,
+    Pure2DProcessingContract,
 ):
     """Choose 2D or full-stack semantics using this contract's control hook."""
 
@@ -1242,6 +1286,9 @@ class FunctionMetadata:
 
         return f"{self.registry.library_name}:{self.name}"
 
+    def require_current_declaration(self) -> None:
+        """Validate declaration lifetimes specialized by metadata owners."""
+
     @property
     def display_name(self) -> str:
         """Human-readable function name for catalogs and selectors."""
@@ -1288,11 +1335,9 @@ class FunctionMetadata:
 
 
 class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
-    """
-    Minimal ABC for all library registries.
+    """ABC for declared library registries.
 
-    Provides only essential contracts that all registries must implement,
-    regardless of whether they use runtime testing or explicit contracts.
+    Catalog projection, cache identity and runtime contracts live on this owner.
 
     Registry auto-created and stored as LibraryRegistryBase.__registry__.
     Subclasses auto-register by setting _registry_name class attribute.
@@ -1416,6 +1461,22 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
         del func
         return None
 
+    @classmethod
+    def _canonical_metadata_claims(
+        cls, function_id: str, *, prepare_catalog: bool = True,
+    ) -> Iterator[FunctionMetadata]:
+        """Supply catalog-owned claims; independent capabilities compose via super."""
+
+        from .registry_service import RegistryService
+
+        catalog = (
+            RegistryService.get_all_functions_with_metadata()
+            if prepare_catalog else RegistryService.cached_metadata_snapshot()
+        )
+        metadata = catalog.get(function_id)
+        if metadata is not None:
+            yield metadata
+
     def composite_keys_for_declared_callable(
         self,
         func: Callable,
@@ -1445,20 +1506,6 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
                 for module_name in module_names
             )
         )
-
-    def require_declared_callable_composite_key(
-        self,
-        func: Callable,
-        composite_key: str,
-    ) -> None:
-        """Require a transported key to be owned by the declaration inventory."""
-
-        declared_keys = self.composite_keys_for_declared_callable(func)
-        if composite_key not in declared_keys:
-            raise RuntimeError(
-                f"Function reference {composite_key!r} contradicts "
-                f"declaration-owned identity candidates {declared_keys!r}."
-            )
 
     # ===== CONTRACT HANDLING =====
     def apply_contract_wrapper(
@@ -1543,6 +1590,9 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
             if normalized_parameter is None:
                 public_original_parameters.append(parameter)
                 continue
+            normalized_parameter = normalized_parameter.replace(
+                default=normalized_parameter.annotation(),
+            )
             runtime_config_parameters.append(normalized_parameter)
             public_original_parameters.append(normalized_parameter)
         public_original_parameters = tuple(public_original_parameters)
@@ -1711,11 +1761,14 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
     # ===== PROCESSING CONTRACT EXECUTION METHODS =====
     def execute_pure_3d(self, func, image, *args, **kwargs):
         """Execute a full-stack callable once and restore payload context."""
+        from openhcs.core.callable_contract import CallableContract
+
+        callable_contract = CallableContract.from_callable(func)
         result = (
             RuntimeCallablePolicy()
             .invocation(
                 func,
-                (image, *args),
+                (callable_contract.runtime_main_flow_call_argument(image), *args),
                 kwargs,
             )
             .call()
@@ -1724,6 +1777,9 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
 
     def execute_pure_2d(self, func, image, *args, **kwargs):
         """Execute 2D→2D function with unstack/restack wrapper."""
+        from openhcs.core.callable_contract import CallableContract
+
+        callable_contract = CallableContract.from_callable(func)
         # Input slicing and output aggregation belong to distinct declarations.
         # Older registry callables may expose output memory only, in which case
         # their historical same-framework behavior remains the fallback.
@@ -1743,9 +1799,14 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
                 RuntimeCallablePolicy().invocation(func, (image, *args), kwargs).call()
             )
         if slicer.is_single_plane_value(image):
-            return (
-                RuntimeCallablePolicy().invocation(func, (image, *args), kwargs).call()
+            result = (
+                RuntimeCallablePolicy().invocation(
+                    func,
+                    (callable_contract.runtime_main_flow_call_argument(image), *args),
+                    kwargs,
+                ).call()
             )
+            return contextualize_main_image_output(image, result)
         input_metadata = image_payload_metadata(image)
         plane_axis = input_metadata.plane_axis
         if plane_axis is None:
@@ -1776,14 +1837,7 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
                 kwargs.setdefault(parameter.name, value)
             args = args[len(positional_parameters) :]
         slices = slicer.slice_value(image, input_memory_type)
-        declared_batch_executor = runtime_batch_executors_from_callable(func).get(
-            RuntimeBatchExecutionDomain.PURE_2D_SLICES
-        )
-        batch_executor = (
-            declared_batch_executor
-            if callable(declared_batch_executor)
-            else Pure2DSliceBatchExecutor.default_executor()
-        )
+        batch_executor = Pure2DSliceBatchExecutor.from_executors(runtime_batch_executors_from_callable(func))
 
         def execute_slice(
             slice_func: Callable[..., Any],
@@ -1801,15 +1855,16 @@ class LibraryRegistryBase(ABC, metaclass=AutoRegisterMeta):
                     axis_size=slice_count,
                 ),
             )
-            return (
+            result = (
                 RuntimeCallablePolicy()
                 .invocation(
                     slice_func,
-                    (slice_2d, *args),
+                    (callable_contract.runtime_main_flow_call_argument(slice_2d), *args),
                     projected_kwargs,
                 )
                 .call()
             )
+            return contextualize_main_image_output(slice_2d, result)
 
         slice_results = batch_executor(
             RuntimePure2DSliceBatchRequest(

@@ -40,6 +40,7 @@ class EnhanceEdgesModule(CellProfilerModule):
 
 
 from abc import ABC, abstractmethod
+from openhcs.core.callable_contract import CompilerPreparedAutoRegisterFamily
 from dataclasses import dataclass, replace
 from enum import Enum
 from typing import ClassVar
@@ -49,6 +50,7 @@ from metaclass_registry import AutoRegisterMeta
 from numba import njit
 from openhcs.core.memory.decorators import numpy as numpy_decorator
 from openhcs.core.public_api import public_names_from_objects
+from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     image_payload_data,
     image_payload_mask,
@@ -180,13 +182,24 @@ class EdgeEnhancementRequest:
         )
 
 
-class EdgeEnhancementStrategy(ABC, metaclass=AutoRegisterMeta):
+class EdgeEnhancementStrategy(
+    CompilerPreparedAutoRegisterFamily, ABC, metaclass=AutoRegisterMeta
+):
     """Nominal dispatch point for one backend/method/direction edge algorithm."""
 
     __registry_key__ = "strategy_label"
     __skip_if_no_key__ = True
     strategy_label: ClassVar[str | None] = None
     strategy_key: ClassVar[EdgeEnhancementStrategyKey | None] = None
+
+    @classmethod
+    def prepare_registered_family(cls) -> None:
+        """Derive kernel preparation from registered edge implementations."""
+        for strategy_type in cls.__registry__.values():
+            strategy_type().prepare_backend()
+
+    def prepare_backend(self) -> None:
+        """Leave preparation empty for implementations without persistent kernels."""
 
     @classmethod
     def for_request(cls, request: EdgeEnhancementRequest) -> "EdgeEnhancementStrategy":
@@ -226,6 +239,17 @@ class NumbaSobelStrategy(EdgeEnhancementStrategyLeaf):
 
     backend_provider = CellProfilerBackendProvider.NUMBA
     method = EdgeMethod.SOBEL
+
+    def prepare_backend(self) -> None:
+        """Compile the exact dtype and direction contract used by ``enhance``."""
+        image = np.zeros((8, 8), dtype=np.float32)
+        mask = np.ones(image.shape, dtype=np.bool_)
+        _sobel_numba_kernel(
+            image,
+            mask,
+            self.direction.includes_horizontal_response,
+            self.direction.includes_vertical_response,
+        )
 
     def enhance(self, request: EdgeEnhancementRequest) -> np.ndarray:
         return _sobel_numba_kernel(
@@ -485,7 +509,7 @@ def _native_kirsch(image: np.ndarray) -> np.ndarray:
 
 @numpy_decorator(contract=ProcessingContract.PURE_2D)
 def enhance_edges(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     method: EdgeMethod = EdgeMethod.SOBEL,
     direction: EdgeDirection = EdgeDirection.ALL,
     edge_backend_provider: BackendProviderInput = DEFAULT_CELLPROFILER_BACKEND_SELECTION,

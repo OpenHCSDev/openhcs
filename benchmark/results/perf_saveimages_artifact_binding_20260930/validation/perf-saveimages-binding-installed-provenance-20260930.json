@@ -1,0 +1,32 @@
+{
+  "source_commit": "399820539a659f0d485f6d5088fc87b9dd7508ca",
+  "python": "3.12.14 (main, Sep 24 2026, 17:57:43) [Clang 22.1.3 ]",
+  "modules": [
+    {
+      "module": "openhcs.core.artifacts",
+      "path": "/tmp/openhcs-saveimages-binding-installed-20260930/openhcs/core/artifacts.py",
+      "sha256": "1daba9882c59980e8403520321c07ad3e1ea252d1f375f6cbd3ed9d3292e5b18",
+      "matches_source": true
+    },
+    {
+      "module": "openhcs.core.function_patterns",
+      "path": "/tmp/openhcs-saveimages-binding-installed-20260930/openhcs/core/function_patterns.py",
+      "sha256": "7f9f1cd690f081d9cf50e5c7d4b84a399e027080e11c64250e6aa0c49a418353",
+      "matches_source": true
+    },
+    {
+      "module": "openhcs.core.runtime_artifact_values",
+      "path": "/tmp/openhcs-saveimages-binding-installed-20260930/openhcs/core/runtime_artifact_values.py",
+      "sha256": "83c8de2f8456ca944306d1019723fb9e90a6add55596cac273415701a6d2af3f",
+      "matches_source": true
+    },
+    {
+      "module": "openhcs.core.steps.function_runtime",
+      "path": "/tmp/openhcs-saveimages-binding-installed-20260930/openhcs/core/steps/function_runtime.py",
+      "sha256": "43be38e269d5347dcda2fb828ed6b37028f98d8bc096bd86cfb94aa7e6e83dea",
+      "matches_source": true
+    }
+  ],
+  "gitlinks": "160000 commit b0004daf3223326ac78689ba7b2e68abc18ae298\texternal/ObjectState\n160000 commit 1209068f5fc9e4f7025a24ada8a73ef30dd1ddd7\texternal/PolyStore\n160000 commit 409b1e0831f815fa9ef91d4ecc04989f9fbb89c5\texternal/arraybridge\n160000 commit ca0a87e873f929b311a87a4d60cd3bfba315dbcf\texternal/metaclass-registry\n160000 commit 792b03413331fdf107e369c924c257a2f0b16126\texternal/pycodify\n160000 commit a51c3d965f8ffdefe95a2b4b37347a85341d483a\texternal/pyqt-reactive\n160000 commit 4e8f8bde5f750d9a50eacac80acd3806123addd8\texternal/python-introspect\n160000 commit 2c68a114bc7121e6e72124edbaaf321cccc1a2b7\texternal/zmqruntime\n",
+  "wheel_sha256": "c4c6577b7c9d5858771d0511f23a72fd098430d3dbcd2c029f4c1753c683d992"
+}

@@ -1,0 +1,388 @@
+{
+  "status": "PASS",
+  "issue": 435,
+  "scope": "New bounded synthetic ordinary public #435 aggregate and 2D contributor Mosaic receiving; not biological #494 replay or performance evidence.",
+  "receiving_source": {
+    "path": "/var/tmp/openhcs-resolved-pipeline-owner-20261004",
+    "head": "a0bb0f4089a85475e112cea32d60132c1cd94752"
+  },
+  "aggregate_execution_source": "ee23a11d4f05e088fc5e267e98862281d993eb29",
+  "production_fixes": {
+    "source_position_lookup_aliases": "ee23a11d4f05e088fc5e267e98862281d993eb29",
+    "qualify_canonical_main_output_once": "a0bb0f4089a85475e112cea32d60132c1cd94752"
+  },
+  "dependencies": {
+    "external/ObjectState": "9fb5b7eeea96f3b7bb0579de30718bbcc0018823",
+    "external/python-introspect": "430fbbeeb6c7e0a9274d3bf9b0998a10cae5a505",
+    "external/arraybridge": "1e53d03d9f468322a1c085c8be29485fb139caf2",
+    "external/metaclass-registry": "393a7e03003cdc56df9013f932ed4f26e632d77a",
+    "external/zmqruntime": "04d813fe6c93f74166c05847afb1eae158d3c817",
+    "external/pycodify": "108a8edbf25de258168756bac22c7572f018fa90",
+    "external/PolyStore": "89deeef3662eabb11bc520fad9acd976698636bd",
+    "external/pyqt-reactive": "b64ed2eca96fcdad29ba90beb545caa669a4d3d8"
+  },
+  "python": {
+    "path": "/home/ts/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/bin/python3.12",
+    "sha256": "edffa803e5c4d73a1357f7f2c6c9fd38e9693712b2c06793e6a5e5cc1090d03a"
+  },
+  "native": {
+    "openhcs/core/_tabular_native.abi3.so": {
+      "path": "/home/ts/code/projects/openhcs/openhcs/core/_tabular_native.abi3.so",
+      "sha256": "2ce348417de70ad3f614962c82aed9c4977c32b3ba00e13531ecafb8c10d8d1d"
+    },
+    "openhcs/processing/backends/cellprofiler/_granularity_native.abi3.so": {
+      "path": "/home/ts/code/projects/openhcs/openhcs/processing/backends/cellprofiler/_granularity_native.abi3.so",
+      "sha256": "6e45987a50d5c0588a8fb0b09a2232a63e72c122d6a3d583ae4d62830e3b4096"
+    }
+  },
+  "custody": {
+    "final_journey": {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261004/public-435-aggregate-mosaic-v8/journey.json",
+      "sha256": "caa36da0b2b91326e3c8f5476d7855d2a6a3bb0a02e85b0e5cbfbebf602338d9"
+    },
+    "source_environment_and_50_prepared_file_hashes": {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261004/public-435-aggregate-mosaic-v8/source-freeze.json",
+      "sha256": "264f99b2c3df7ba48553450212c2d182e2785336926ac71cc8c49e575c40ffc1"
+    },
+    "original_preparation": {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261004/public-435-aggregate-mosaic-v2/source-freeze.json",
+      "sha256": "0f815329ffdea143cd7525b788e2ea63f937d876f5876aef10626500bbed171a",
+      "head": "6145ac3e5315c0591035d19e502248c601f1247d",
+      "controller_sha256": "07bd7f72cd9397d8de9a969f8f614e80cbded9a0b3a84cce5bedc3d8bd37819b"
+    },
+    "controller": {
+      "path": "/var/tmp/run_public_435_aggregate_mosaic_qualified_v8_20261004.py",
+      "sha256": "2d84f3eb7fb4cf30d5594f1f18321b7085f6bb5baf1dc088bad854f97f1adac5"
+    },
+    "original_public_helper": {
+      "path": "/var/tmp/run_public_installed_consumers_419_435_450_v7_20261004.py",
+      "sha256": "733ba0c91ad79a01702708fc899ff5c1a3ff24a3bcb2c5a5ab31609010551bbe"
+    },
+    "output_routing_only": {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261004/public-435-aggregate-mosaic-v8/output-routing-only.json",
+      "sha256": "8635630b257cd5cd7a7dc3aa22d14c71962565bcb62e21c57812bbd21a7a8111"
+    },
+    "controller_terminal_log": {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261004/public-435-aggregate-mosaic-v8/controller.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "prelaunch_refusals": {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261004/public-435-aggregate-mosaic-v8/qualification-preflight-failures.json",
+      "sha256": "98fd76e0f6f3143a37a3ceeba6a3e44c6a820e22803fad393197319371e5b5b1"
+    },
+    "preserved_prior_receipts": [
+      {
+        "path": "/home/ts/.local/state/openhcs-maintenance/20261004/public-435-aggregate-mosaic-v3/journey.json",
+        "sha256": "6fa69210c2f4654aefdaa0445575ffac8919ef1a9b14da6b123558252b914b55",
+        "included_in_final_prepared_guard": false
+      },
+      {
+        "path": "/home/ts/.local/state/openhcs-maintenance/20261004/public-435-aggregate-mosaic-v3/source-freeze.json",
+        "sha256": "44eb967d3b78edc1a9850da8e64788dd45c3d8f0efa8ac4695a6cdbab3bec25c",
+        "included_in_final_prepared_guard": false
+      },
+      {
+        "path": "/home/ts/.local/state/openhcs-maintenance/20261004/public-435-aggregate-mosaic-v4/journey.json",
+        "sha256": "5bee37afcc4577771fe64626b52705ae91ad4567339d93bd34f69bb0a3ea48a6",
+        "included_in_final_prepared_guard": true
+      },
+      {
+        "path": "/home/ts/.local/state/openhcs-maintenance/20261004/public-435-aggregate-mosaic-v4/source-freeze.json",
+        "sha256": "e18d944ea3cc0bad71307ed5b93d7f7b78a487e2071e896000a6f34fd97f3ba1",
+        "included_in_final_prepared_guard": true
+      },
+      {
+        "path": "/home/ts/.local/state/openhcs-maintenance/20261004/public-435-aggregate-mosaic-v5/journey.json",
+        "sha256": "12dde33a239b77448d15ab04ea32a73c70c66ec5046e163067c3b75169e89811",
+        "included_in_final_prepared_guard": true
+      },
+      {
+        "path": "/home/ts/.local/state/openhcs-maintenance/20261004/public-435-aggregate-mosaic-v5/source-freeze.json",
+        "sha256": "43f9769c0b240bea0b683caf89051b16ce02ab807fb8b017ed18ab26905f4ae4",
+        "included_in_final_prepared_guard": true
+      },
+      {
+        "path": "/home/ts/.local/state/openhcs-maintenance/20261004/public-435-aggregate-mosaic-v6/journey.json",
+        "sha256": "170393fb791c3146f6d61c5aac444acea09b0f051b8d15e44516cf2eafd00fb5",
+        "included_in_final_prepared_guard": true
+      },
+      {
+        "path": "/home/ts/.local/state/openhcs-maintenance/20261004/public-435-aggregate-mosaic-v6/source-freeze.json",
+        "sha256": "e261acf9f5af601d4ee5d5cb3985236184262a9ffae191c7918b312ffd893731",
+        "included_in_final_prepared_guard": true
+      },
+      {
+        "path": "/home/ts/.local/state/openhcs-maintenance/20261004/public-435-aggregate-mosaic-v7/journey.json",
+        "sha256": "a52879178c2fa876bda00b3cd8f21957b944f420508ac4725726758e0091580e",
+        "included_in_final_prepared_guard": true
+      },
+      {
+        "path": "/home/ts/.local/state/openhcs-maintenance/20261004/public-435-aggregate-mosaic-v7/source-freeze.json",
+        "sha256": "c18e194279834147839f1b3d50484f18c0ec644ca5371ec735afabb077859e9e",
+        "included_in_final_prepared_guard": true
+      }
+    ],
+    "production_owner_replays": [
+      {
+        "path": "/var/tmp/openhcs-435-valid-v4-source-position-replay-20261004.json",
+        "sha256": "57f9282918e1638071af4c7f3592e362ef2f8c435eaea78282fa6edd665c32df"
+      },
+      {
+        "path": "/var/tmp/openhcs-435-mosaic-main-owner-replay-20261004.json",
+        "sha256": "831d56a703a55a75b99caad4172d5e195ea25a62c4b8857ef8ea5e89a3884e92"
+      }
+    ]
+  },
+  "immutable_guards": {
+    "status": "PASS: final controller validate(freeze) completed before accepted=True",
+    "prepared_file_count": 50,
+    "scope": "source, installed dependencies/environment, Python/native, controller/helper, original physical/custom/document bytes, pinned failures and completed old outputs",
+    "startup_owned_registry_caches_unfrozen": true
+  },
+  "cases": {
+    "mosaic": {
+      "compile_status": "complete",
+      "execute_status": "complete",
+      "execution_reused_without_processing": false,
+      "function": "public_435_vertical_mosaic_20261004",
+      "role": "MosaicRole",
+      "output_plate_root": "/home/ts/.local/state/openhcs-maintenance/20261004/public-435-aggregate-mosaic-v8/outputs/mosaic/mosaic_openhcs",
+      "shape": [
+        8,
+        5
+      ],
+      "dtype": "uint16",
+      "spacing_micrometers": [
+        0.5,
+        0.5
+      ],
+      "complete_inventory_count": 3,
+      "qualified_role_count": 3,
+      "distinct_qualified_occurrences": 3,
+      "wire_rows_for_qualified_occurrences": 3,
+      "metadata_sha256": "3d16ab99de1a2ac214a48c8e1e0a5c0c4cf80c7df16b22f866b2e4a77a1973dc",
+      "first_public_receiving": "PASS",
+      "independent_fresh_sdk_reopen": "PASS: exact first-read equality",
+      "source_domain": {
+        "runtime_planes": 0,
+        "contributors": 2,
+        "ordered_sites": [
+          "1",
+          "2"
+        ],
+        "scalar_site_absent": true,
+        "plane_axis": null,
+        "semantic_address": null,
+        "spatial_rank": 2,
+        "source_origin_yx": null,
+        "source_shape_yx": null
+      },
+      "qualified_scope": {
+        "axis_id": "A01",
+        "component": null,
+        "value": null,
+        "fixed_component_values": [
+          [
+            "channel",
+            "2"
+          ],
+          [
+            "z_index",
+            "1"
+          ],
+          [
+            "timepoint",
+            "1"
+          ]
+        ]
+      },
+      "inventory": [
+        {
+          "virtual_path": "checkpoints/A01_s001_w2_z001_t001.tif",
+          "physical_file": {
+            "path": "/home/ts/.local/state/openhcs-maintenance/20261004/public-435-aggregate-mosaic-v8/outputs/mosaic/mosaic_openhcs/checkpoints/A01_s001_w2_z001_t001.tif",
+            "sha256": "0a73a87400d5d48c59603aaadd37d2b85543260a51117d359098c617a19257c7"
+          },
+          "disposition": "Full pixels, typed projection/domain/calibration and public sample PASS"
+        },
+        {
+          "virtual_path": "checkpoints_results/A01_s001_w2_z001_t001_MosaicRole.tif",
+          "physical_file": {
+            "path": "/home/ts/.local/state/openhcs-maintenance/20261004/public-435-aggregate-mosaic-v8/outputs/mosaic/mosaic_openhcs/checkpoints_results/A01_s001_w2_z001_t001_MosaicRole.tif",
+            "sha256": "0a73a87400d5d48c59603aaadd37d2b85543260a51117d359098c617a19257c7"
+          },
+          "disposition": "Full pixels, typed projection/domain/calibration and public sample PASS"
+        },
+        {
+          "virtual_path": "images/A01_s001_w2_z001_t001.tif",
+          "physical_file": {
+            "path": "/home/ts/.local/state/openhcs-maintenance/20261004/public-435-aggregate-mosaic-v8/outputs/mosaic/mosaic_openhcs/images/A01_s001_w2_z001_t001.tif",
+            "sha256": "0a73a87400d5d48c59603aaadd37d2b85543260a51117d359098c617a19257c7"
+          },
+          "disposition": "Full pixels, typed projection/domain/calibration and public sample PASS"
+        }
+      ]
+    },
+    "aggregate": {
+      "compile_status": "complete",
+      "execute_status": "complete",
+      "execution_reused_without_processing": true,
+      "function": "public_435_aggregate_copy_20261004",
+      "role": "fixture_image_494",
+      "output_plate_root": "/home/ts/.local/state/openhcs-maintenance/20261004/public-435-aggregate-mosaic-v4/outputs/aggregate/aggregate_openhcs",
+      "shape": [
+        4,
+        5,
+        7
+      ],
+      "dtype": "uint16",
+      "spacing_micrometers": [
+        2.0,
+        0.65,
+        0.65
+      ],
+      "complete_inventory_count": 9,
+      "qualified_role_count": 1,
+      "distinct_qualified_occurrences": 1,
+      "wire_rows_for_qualified_occurrences": 1,
+      "metadata_sha256": "5051df18221dfec5776cab56e1a92789114e343d8104b8065fb903e29a4978ed",
+      "first_public_receiving": "PASS",
+      "independent_fresh_sdk_reopen": "PASS: exact first-read equality",
+      "source_domain": {
+        "runtime_planes": 4,
+        "nested_original_contributors": 4,
+        "ordered_z": [
+          "0",
+          "1",
+          "2",
+          "3"
+        ],
+        "scalar_z_absent": true,
+        "semantic_address": null,
+        "spatial_rank": 2,
+        "source_shape_yx": [
+          5,
+          7
+        ]
+      },
+      "qualified_scope": {
+        "axis_id": "A01",
+        "component": "channel",
+        "value": "1",
+        "fixed_component_values": [
+          [
+            "site",
+            "1"
+          ],
+          [
+            "timepoint",
+            "1"
+          ]
+        ]
+      },
+      "inventory": [
+        {
+          "virtual_path": "checkpoints/A01_s001_w1_z000_t001.tif",
+          "physical_file": {
+            "path": "/home/ts/.local/state/openhcs-maintenance/20261004/public-435-aggregate-mosaic-v4/outputs/aggregate/aggregate_openhcs/checkpoints/A01_s001_w1_z000_t001.tif",
+            "sha256": "185acf4f100bc70b25c2afeb1fa87ef93d1e30431054750190fde43d1c4a88ed"
+          },
+          "disposition": "Scalar occurrence retained in complete public inventory; fresh reopen PASS"
+        },
+        {
+          "virtual_path": "checkpoints/A01_s001_w1_z001_t001.tif",
+          "physical_file": {
+            "path": "/home/ts/.local/state/openhcs-maintenance/20261004/public-435-aggregate-mosaic-v4/outputs/aggregate/aggregate_openhcs/checkpoints/A01_s001_w1_z001_t001.tif",
+            "sha256": "6ff09db984f2459da1d6f4d364c487419765f434cf916463f65f9a4e4ef76561"
+          },
+          "disposition": "Scalar occurrence retained in complete public inventory; fresh reopen PASS"
+        },
+        {
+          "virtual_path": "checkpoints/A01_s001_w1_z002_t001.tif",
+          "physical_file": {
+            "path": "/home/ts/.local/state/openhcs-maintenance/20261004/public-435-aggregate-mosaic-v4/outputs/aggregate/aggregate_openhcs/checkpoints/A01_s001_w1_z002_t001.tif",
+            "sha256": "8d0b320758591c448b98e059717455d0c64cc1af3f2c18a25b6ba88e6c96cc2a"
+          },
+          "disposition": "Scalar occurrence retained in complete public inventory; fresh reopen PASS"
+        },
+        {
+          "virtual_path": "checkpoints/A01_s001_w1_z003_t001.tif",
+          "physical_file": {
+            "path": "/home/ts/.local/state/openhcs-maintenance/20261004/public-435-aggregate-mosaic-v4/outputs/aggregate/aggregate_openhcs/checkpoints/A01_s001_w1_z003_t001.tif",
+            "sha256": "d29162230ba5972912bd665b43857d548afa2fa35ef2b3039f30268bf0757f4b"
+          },
+          "disposition": "Scalar occurrence retained in complete public inventory; fresh reopen PASS"
+        },
+        {
+          "virtual_path": "checkpoints_results/A01_s001_w1_z000_t001_fixture_image_494.tif",
+          "physical_file": {
+            "path": "/home/ts/.local/state/openhcs-maintenance/20261004/public-435-aggregate-mosaic-v4/outputs/aggregate/aggregate_openhcs/checkpoints_results/A01_s001_w1_z000_t001_fixture_image_494.tif",
+            "sha256": "083537b57bcf28f80bf8abff0f28452a4f0d66c4ed65e6f400cf4a437a1a4d8a"
+          },
+          "disposition": "Full pixels, typed projection/domain/calibration and public sample PASS"
+        },
+        {
+          "virtual_path": "images/A01_s001_w1_z000_t001.tif",
+          "physical_file": {
+            "path": "/home/ts/.local/state/openhcs-maintenance/20261004/public-435-aggregate-mosaic-v4/outputs/aggregate/aggregate_openhcs/images/A01_s001_w1_z000_t001.tif",
+            "sha256": "185acf4f100bc70b25c2afeb1fa87ef93d1e30431054750190fde43d1c4a88ed"
+          },
+          "disposition": "Scalar occurrence retained in complete public inventory; fresh reopen PASS"
+        },
+        {
+          "virtual_path": "images/A01_s001_w1_z001_t001.tif",
+          "physical_file": {
+            "path": "/home/ts/.local/state/openhcs-maintenance/20261004/public-435-aggregate-mosaic-v4/outputs/aggregate/aggregate_openhcs/images/A01_s001_w1_z001_t001.tif",
+            "sha256": "6ff09db984f2459da1d6f4d364c487419765f434cf916463f65f9a4e4ef76561"
+          },
+          "disposition": "Scalar occurrence retained in complete public inventory; fresh reopen PASS"
+        },
+        {
+          "virtual_path": "images/A01_s001_w1_z002_t001.tif",
+          "physical_file": {
+            "path": "/home/ts/.local/state/openhcs-maintenance/20261004/public-435-aggregate-mosaic-v4/outputs/aggregate/aggregate_openhcs/images/A01_s001_w1_z002_t001.tif",
+            "sha256": "8d0b320758591c448b98e059717455d0c64cc1af3f2c18a25b6ba88e6c96cc2a"
+          },
+          "disposition": "Scalar occurrence retained in complete public inventory; fresh reopen PASS"
+        },
+        {
+          "virtual_path": "images/A01_s001_w1_z003_t001.tif",
+          "physical_file": {
+            "path": "/home/ts/.local/state/openhcs-maintenance/20261004/public-435-aggregate-mosaic-v4/outputs/aggregate/aggregate_openhcs/images/A01_s001_w1_z003_t001.tif",
+            "sha256": "d29162230ba5972912bd665b43857d548afa2fa35ef2b3039f30268bf0757f4b"
+          },
+          "disposition": "Scalar occurrence retained in complete public inventory; fresh reopen PASS"
+        }
+      ]
+    }
+  },
+  "terminal": {
+    "controller_returncode": 0,
+    "owned_runtime_terminal": true,
+    "runtime_process_identity": {
+      "pid": 1285281,
+      "create_time": 1791103474.58
+    },
+    "mcp_children": [
+      {
+        "pid": 1285066,
+        "returncode": 0
+      },
+      {
+        "pid": 1286340,
+        "returncode": 0
+      }
+    ],
+    "official_lease": "RELEASED"
+  },
+  "commands": [
+    "/home/ts/code/projects/openhcs/.venv/bin/python -B /var/tmp/run_public_435_aggregate_mosaic_qualified_v8_20261004.py --qualify-head a0bb0f4089a85475e112cea32d60132c1cd94752",
+    "/home/ts/code/projects/openhcs/.venv/bin/python -B /var/tmp/run_public_435_aggregate_mosaic_qualified_v8_20261004.py --run"
+  ],
+  "limits": [
+    "Tiny synthetic cases, not historical biological #494 replay or failure-cause proof.",
+    "Aggregate execution on ee23 was retained without reprocessing; both plates freshly read on a0bb.",
+    "No native CP or performance claim; V15 source4f2 remains separate.",
+    "Inspection PARTIAL only for missing plate grid dimensions; no grid manufactured."
+  ]
+}

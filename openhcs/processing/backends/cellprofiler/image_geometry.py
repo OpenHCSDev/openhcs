@@ -587,7 +587,7 @@ from enum import Enum
 from typing import Any
 import numpy as np
 from openhcs.core.aligned_image_payload import (
-    AlignedImageStack,
+    ImagePayloadSliceStack,
     payload_slices_for_alignment,
 )
 from openhcs.core.image_shapes import (
@@ -1009,7 +1009,7 @@ def restore_image_mask_planes(
     """Restore masked planes through the image payload's declared owner."""
     if not masked_planes:
         raise ValueError("Cannot restore an empty CellProfiler image plane set.")
-    if isinstance(original_image, AlignedImageStack):
+    if isinstance(original_image, ImagePayloadSliceStack):
         if len(masked_planes) != len(original_image.slices):
             raise ValueError(
                 "Aligned image result cardinality must exactly match its owner: "
@@ -1093,12 +1093,12 @@ def align_label_plane_to_shape(
 @numpy(contract=ProcessingContract.FLEXIBLE)
 @special_inputs("mask")
 def mask_image(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     mask: np.ndarray | ObjectLabelValue,
     mask_source: MaskSource = MaskSource.IMAGE,
     invert_mask: bool = False,
     binary_threshold: float = 0.5,
-) -> np.ndarray:
+) -> RuntimeArrayData:
     """Mask an image using CellProfiler image/object mask semantics.
 
     Args:
@@ -1130,7 +1130,7 @@ def mask_image(
 
 
 def masked_image_plane(
-    image: np.ndarray, binary_mask: np.ndarray, *, invert_mask: bool
+    image: RuntimeArrayData, binary_mask: np.ndarray, *, invert_mask: bool
 ) -> tuple[np.ndarray, np.ndarray]:
     image_data = image_payload_data(image)
     if invert_mask:
@@ -1159,7 +1159,7 @@ def masked_image_plane(
 
 @numpy(contract=ProcessingContract.PURE_2D)
 def mask_image_with_binary(
-    image: np.ndarray, invert_mask: bool = False
+    image: RuntimeArrayData, invert_mask: bool = False
 ) -> RuntimeArrayData:
     """Return a binary mask plane, optionally inverted."""
     binary_mask = image_payload_data(image) > 0.5
@@ -1220,7 +1220,7 @@ def tile_output_shape(
 
 @numpy(contract=ProcessingContract.FLEXIBLE)
 def tile(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     rows: int = 8,
     columns: int = 12,
     place_first: PlaceFirst = PlaceFirst.TOP_LEFT,
@@ -1276,14 +1276,14 @@ def tile(
 
 @numpy(contract=ProcessingContract.PURE_2D)
 def resize(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     resize_method: ResizeMethod = ResizeMethod.BY_FACTOR,
     resizing_factor_x: float = 0.25,
     resizing_factor_y: float = 0.25,
     specific_width: int = 100,
     specific_height: int = 100,
     interpolation: InterpolationMethod = InterpolationMethod.NEAREST_NEIGHBOR,
-) -> np.ndarray:
+) -> RuntimeArrayData:
     """Resize a CellProfiler image plane by factor or explicit dimensions."""
     pixels = image_payload_data(image)
     geometry = ResizeGeometry.from_parameters(
@@ -1298,7 +1298,7 @@ def resize(
 
 @numpy(contract=ProcessingContract.PURE_3D)
 def resize_volumetric(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     resize_method: ResizeMethod = ResizeMethod.BY_FACTOR,
     resizing_factor_x: float = 0.25,
     resizing_factor_y: float = 0.25,
@@ -1307,7 +1307,7 @@ def resize_volumetric(
     specific_height: int = 100,
     specific_planes: int = 10,
     interpolation: InterpolationMethod = InterpolationMethod.NEAREST_NEIGHBOR,
-) -> np.ndarray:
+) -> RuntimeArrayData:
     """Resize a CellProfiler ZYX image volume by factor or explicit dimensions."""
     pixels = image_payload_data(image)
     geometry = ResizeGeometry.from_trailing_spatial_parameters(
@@ -1322,7 +1322,7 @@ def resize_volumetric(
 
 @numpy(contract=ProcessingContract.PURE_2D)
 def flip_and_rotate(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     flip_method: FlipMethod = FlipMethod.NONE,
     rotate_method: RotateMethod = RotateMethod.NONE,
     rotation_angle: float = 0.0,

@@ -20,6 +20,7 @@ from openhcs.agent.dto.ui_bridge import (
     UiCodeDocumentApplyResult,
     UiCodeDocumentCatalog,
     UiCodeDocumentValidationResult,
+    UiSelectedPlateWorkflowResult,
     UiStateSurfaceCatalog,
     UiStateSurfaceDocument,
     UiWidgetActionInvokeResult,
@@ -38,6 +39,8 @@ from openhcs.mcp.dev_client_rendering import (
     CatalogRenderOptions,
     CodeDocumentRenderOptions,
     McpDevOutputRenderer,
+    McpDevTypedOutputRenderer,
+    McpDevOutputRenderOptions,
     McpDevPayloadProjection,
     McpDiagnosticRenderer,
     UiActionCatalogRenderOptions,
@@ -192,7 +195,7 @@ class UiSmokeRenderer:
 
         results = McpDevPayloadProjection.sequence_of_mappings(response.get("results"))
         mcp_errors = sum(1 for result in results if result.get("mcp_error") is True)
-        lines = ["UI smoke: " f"results={len(results)} mcp_errors={mcp_errors}"]
+        lines = [f"UI smoke: results={len(results)} mcp_errors={mcp_errors}"]
         lines.append(cls._health_line(response))
         lines.extend(
             UiBridgeStatusRenderer.render(
@@ -782,7 +785,7 @@ class PipelineDebugSessionStateSurfaceRenderer(UiStateSurfacePayloadRenderer):
             suffix = ""
             if disabled:
                 suffix = (
-                    " disabled=" f"{McpDevPayloadProjection.text(disabled.get('code'))}"
+                    f" disabled={McpDevPayloadProjection.text(disabled.get('code'))}"
                 )
             lines.append(
                 "- "
@@ -1250,19 +1253,12 @@ class CodeDocumentRenderer(McpDevOutputRenderer):
         source = payload.get("source")
         if include_source and isinstance(source, str):
             lines.append("Source:")
-            lines.append(cls._source_text(source, max_source_chars=max_source_chars))
+            lines.append(
+                CodeDocumentRenderOptions(
+                    max_source_chars=max_source_chars
+                ).source_text(source)
+            )
         return "\n".join(lines)
-
-    @staticmethod
-    def _source_text(source: str, *, max_source_chars: int) -> str:
-        if max_source_chars < 0:
-            raise ValueError("max_source_chars must be nonnegative.")
-        if len(source) <= max_source_chars:
-            return source
-        return (
-            source[:max_source_chars]
-            + f"\n...<truncated {len(source) - max_source_chars} chars>"
-        )
 
 
 class CodeDocumentValidationRenderer(McpDevOutputRenderer):
@@ -1527,70 +1523,87 @@ class UiActionCatalogRenderer(McpDevOutputRenderer):
         )
 
 
-class UiActionInvokeRenderer(McpDevOutputRenderer):
-    """Compact renderer for semantic UI action invocation results."""
+class UiActionResultRenderer(McpDevTypedOutputRenderer, ABC):
+    """Shared presentation of the action owned by each declared result."""
 
-    output_contract = UiActionInvokeResult
-
-    @classmethod
-    def render_with_options(
-        cls,
-        response: JsonObject,
-        options: UiActionInvokeRenderOptions,
-    ) -> str:
-        return cls.render(
-            response,
-            widget_id=options.widget_id,
-            action_id=options.action_id,
-        )
+    unavailable_summary = "UI action: <unavailable>"
 
     @classmethod
-    def render(
-        cls,
-        response: JsonObject,
-        *,
-        widget_id: str | None = None,
-        action_id: str | None = None,
-    ) -> str:
-        payload = McpDevPayloadProjection.first_tool_payload(response)
-        if payload is None:
-            return json.dumps(response, indent=2, sort_keys=True)
+    @abstractmethod
+    def action_result(cls, payload) -> UiActionInvokeResult:
+        raise NotImplementedError
 
-        receipt = McpDevPayloadProjection.nested_mapping(payload, "receipt")
-        resolved_widget_id = payload.get("widget_id")
-        resolved_action_id = payload.get("action_id")
+    @classmethod
+    def introduction_lines(cls, payload) -> tuple[str, ...]:
+        return ()
+
+    @classmethod
+    def render_payload(cls, payload, options: McpDevOutputRenderOptions) -> str:
+        action = cls.action_result(payload)
+        receipt = action.receipt
         lines = [
+            *cls.introduction_lines(payload),
             (
                 "UI action invoke: "
-                f"action={McpDevPayloadProjection.text(resolved_widget_id or widget_id)}/"
-                f"{McpDevPayloadProjection.text(resolved_action_id or action_id)} "
-                f"status={McpDevPayloadProjection.text(payload.get('status'))}"
+                f"action={action.identity.widget_id}/{action.identity.action_id} "
+                f"status={action.status}"
             ),
             (
                 "Receipt: "
-                f"accepted={McpDevPayloadProjection.text(receipt.get('accepted'))} "
+                f"accepted={receipt.accepted} "
                 "request_token="
-                f"{CodeDocumentApplyRenderer._request_token_text(receipt.get('request_token'))} "
+                f"{McpDevPayloadProjection.text(receipt.request_token.value)} "
                 "bridge_operation="
-                f"{McpDevPayloadProjection.text(receipt.get('bridge_operation_id'))}"
+                f"{McpDevPayloadProjection.text(receipt.bridge_operation_id)}"
             ),
             (
                 "Selection: "
                 "targets="
-                f"{ViewerValidationRenderer._sequence_text(payload.get('target_scope_ids'))} "
+                f"{','.join(action.target_scope_ids) or '<none>'} "
                 "selection_rev="
-                f"{McpDevPayloadProjection.text(payload.get('selection_revision_token'))}"
+                f"{McpDevPayloadProjection.text(action.selection_revision_token)}"
             ),
             (
                 "Polling: "
                 "surfaces="
-                f"{ViewerValidationRenderer._sequence_text(payload.get('workflow_status_surface_ids'))} "
+                f"{','.join(action.workflow_status_surface_ids) or '<none>'} "
                 "interval_ms="
-                f"{McpDevPayloadProjection.text(payload.get('recommended_poll_interval_ms'))}"
+                f"{action.recommended_poll_interval_ms}"
             ),
         ]
-        ObjectStateScopeRenderer._append_messages(lines, payload)
         return "\n".join(lines)
+
+
+class UiActionInvokeRenderer(UiActionResultRenderer):
+    """The direct action is already the declared invocation result."""
+
+    output_contract = UiActionInvokeResult
+    render_options_type = UiActionInvokeRenderOptions
+
+    @classmethod
+    def action_result(cls, payload: UiActionInvokeResult) -> UiActionInvokeResult:
+        return payload
+
+
+class UiSelectedPlateWorkflowRenderer(UiActionResultRenderer):
+    """Workflow wrapper owns its nested action, not a second action schema."""
+
+    output_contract = UiSelectedPlateWorkflowResult
+
+    @classmethod
+    def action_result(
+        cls, payload: UiSelectedPlateWorkflowResult
+    ) -> UiActionInvokeResult:
+        return payload.action_result
+
+    @classmethod
+    def introduction_lines(
+        cls, payload: UiSelectedPlateWorkflowResult
+    ) -> tuple[str, ...]:
+        return (
+            *super().introduction_lines(payload),
+            f"Workflow: {payload.workflow.value} state_surface={payload.state_surface_id}",
+        )
 
 
 class UiWidgetActionInvokeRenderer(McpDevOutputRenderer):

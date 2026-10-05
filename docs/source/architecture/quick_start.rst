@@ -113,6 +113,11 @@ Use this sequence:
 5. Retrieve the matching section with ``openhcs_get_knowledge_document``. The
    Official30 source section ids end in ``-openhcs-python`` and are generated
    from the exact manifest-resolved ``.cppipe`` only when requested.
+   Before a FIRST segmentation method/parameter proposal, retrieve
+   ``openhcs_autonomous_analysis_strategy`` section
+   ``match-the-strategy-to-the-failure``. Its first-method routes connect
+   foreground/nuisance admission AND the chosen marker landscape where applicable;
+   these are pre-authoring decisions, not only post-failure diagnostics.
 6. Before setting configuration values, call
    ``openhcs_describe_config_schema`` for ``pipeline``, ``global``, or ``step``
    and follow a returned nested ``path_prefix``. Use a field's
@@ -123,14 +128,36 @@ Use this sequence:
    ``openhcs_create_pipeline``; rendering and source-backed execution preserve
    that same config inside the resulting ``PipelineDocument``.
 7. Inspect real plate inventory, validate the declaration, inspect its artifact
-   plan, and compile before execution. Begin with read-only operations and ask
-   before mutation, execution, UI actions, viewer launch, or external access.
+   plan, and compile before execution. Begin read-only, then follow
+   :ref:`openhcs-task-authorization` rather than asking again for each routine
+   step of an already authorised workflow.
 
 For example, search for ``ExampleHuman OpenHCS Python`` and retrieve document
 ``openhcs_official30_benchmark_recipes`` section
 ``examplehuman-openhcs-python``. That section defines an importable
 ``pipeline_config`` and ``pipeline_steps`` pair. The corpus contains 30 such
 source-backed recipes; it is the broadest current end-to-end example set.
+
+.. _openhcs-task-authorization:
+
+Task authorization
+~~~~~~~~~~~~~~~~~~
+
+An existing user authorisation covers routine bounded pipeline edits,
+compilation, execution, UI actions and viewer QA within the agreed task,
+sources, destinations and resource budget. Continue that work without another
+approval request for each step. Keep the intended target/change visible,
+refresh actual state and revision/request tokens, validate declarations and
+compile before execution, and retain operation receipts and failed attempts.
+
+Ask when the action is not covered: a scope expansion, additional spending,
+destructive operation, or private/external data exposure needs its own
+authorisation. An analysis request does not authorise overwriting acquisition
+files, accessing another owner's runtime, installing dependencies or changing
+the provider. Capability exposure, path policy and declared confirmation
+requirements still apply; existing task authority is not permission to bypass
+them. A timeout or missing receipt does not authorise replay of an uncertain
+mutation: retain its handle and reconcile the original operation.
 
 CellProfiler pipelines
 ----------------------
@@ -197,10 +224,14 @@ For files such as ``A01_s1_DNA.tif`` and ``A01_s1_GFP.tif``:
 .. code-block:: python
 
    from openhcs.constants import AllComponents
-   from openhcs.core.config import PipelineConfig
+   from openhcs.core.config import (
+       LazyProcessingConfig,
+       LazySourceBindingsConfig,
+       LazyStepSourceBindingsConfig,
+       PipelineConfig,
+   )
    from openhcs.core.source_bindings import (
        ComponentSelector,
-       LazySourceBindingsConfig,
        MetadataExtractionRule,
        MetadataSource,
        NamedSourceBinding,
@@ -209,6 +240,7 @@ For files such as ``A01_s1_DNA.tif`` and ``A01_s1_GFP.tif``:
        SourceFilterSubject,
        SourceSelector,
    )
+   from openhcs.core.steps.function_step import FunctionStep
    from openhcs.processing.backends.processors.numpy_processor import (
        stack_percentile_normalize,
    )

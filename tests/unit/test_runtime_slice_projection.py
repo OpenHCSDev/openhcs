@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import inspect
 from typing import Any, get_args, get_origin
 
 import numpy as np
@@ -59,6 +60,7 @@ from openhcs.core.runtime_spatial_grid import (
 )
 from openhcs.core.runtime_tabular_values import ColumnarRows, FieldSpec
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source_metadata import SourceVoxelSpacing
 
 
 def _subclasses(root: type) -> tuple[type, ...]:
@@ -85,6 +87,8 @@ def _annotation_leaf_types(annotation: object) -> tuple[type, ...]:
 def test_cellprofiler_runtime_parameter_types_declare_slice_projection() -> None:
     missing: list[str] = []
     for parameter_type in _subclasses(KeywordRuntimeParameter):
+        if inspect.isabstract(parameter_type):
+            continue
         if not parameter_type.__module__.startswith(
             ("openhcs.processing.backends.cellprofiler", "openhcs.interop.cellprofiler")
         ):
@@ -154,6 +158,7 @@ def test_spatial_graph_declares_scalar_pass_through_projection() -> None:
         name="morphology",
         nodes=(SpatialGraphNode(1, (2.0, 3.0)),),
         edges=(),
+        coordinate_spacing=SourceVoxelSpacing((1.0, 1.0)),
     )
 
     strategy = RuntimeSliceProjectionStrategy.strategy_for_value(graph)

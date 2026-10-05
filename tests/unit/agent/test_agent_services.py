@@ -12,7 +12,10 @@ from polystore.virtual_workspace import SourcePixelRef
 from pyqt_reactive.services.parameter_help_service import (
     dataclass_parameter_descriptions,
 )
-from pyqt_reactive.services.window_snapshot import WindowSnapshotCaptureScope
+from pyqt_reactive.services.window_snapshot import (
+    WindowSnapshotCaptureScope,
+    WindowSnapshotFrameCondition,
+)
 from zmqruntime.client import EndpointShutdownResult
 from zmqruntime.config import TransportMode
 from zmqruntime.execution import ExecutionProgressObservation
@@ -53,9 +56,11 @@ from openhcs.agent.dto.viewer import (
 )
 from openhcs.agent.path_policy import AgentPathPolicy, AgentPathPolicyError
 from openhcs.agent.services import function_catalog_service as function_catalog_module
+from openhcs.agent.services import execution_session_service as execution_session_module
 from openhcs.agent.services import viewer_window_service as viewer_window_service_module
 from openhcs.agent.services.config_service import ConfigService
 from openhcs.agent.services.execution_session_service import (
+    CompileInspectionGatewayABC,
     CompileInspectionResult,
     ExecutionSessionService,
     PipelineSourceSessionRequest,
@@ -64,8 +69,6 @@ from openhcs.agent.services.execution_session_service import (
 from openhcs.agent.services.function_catalog_service import (
     AgentFunctionSearchPolicy,
     FunctionCatalogService,
-    SignatureView,
-    SummaryView,
 )
 from openhcs.agent.services.llm_context_service import AgentAuthoringContextService
 from openhcs.agent.services.pipeline_authoring_service import (
@@ -105,6 +108,9 @@ from openhcs.core.config_document import ConfigDocumentAuthority
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
+from openhcs.core.progress import (
+    ProgressEventPayload, ProgressIdentity, ProgressPhase, ProgressStatus, create_event,
+)
 from openhcs.core.source_bindings import (
     LazySourceBindingsConfig,
     MetadataExtractionRule,
@@ -114,6 +120,7 @@ from openhcs.core.source_bindings import (
 )
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.streaming_config_declarations import ViewerType
+from openhcs.core import virtual_workspace_metadata as metadata_module
 from openhcs.microscopes.exceptions import MicroscopePixelSizeUnavailableError
 from openhcs.runtime.viewer_protocol import (
     ViewerControlMessageType,
@@ -314,6 +321,11 @@ class _FakeExecutionClient:
 
     def endpoint_handshake(self):
         return None
+
+    def submit_prepared_pipeline(self, request, *, timeout_ms=OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms):
+        if request.compile_control.compile_only:
+            return self.submit_compile(request, timeout_ms=timeout_ms)
+        return self.submit_pipeline(request, timeout_ms=timeout_ms)
 
     def submit_compile(
         self,
@@ -534,13 +546,21 @@ def _compile_inspection_result(
     )
 
 
-class _FakeCompileInspectionGateway:
+class _FakeCompileInspectionGateway(CompileInspectionGatewayABC):
     def __init__(self) -> None:
         self.requests = []
 
-    def compile(self, request):
+    @staticmethod
+    def emit_progress(request):
+        request.progress_queue.put(create_event(ProgressEventPayload(
+            identity=ProgressIdentity("inspection", str(request.plate), "A01", "compilation"),
+            phase=ProgressPhase.COMPILE, status=ProgressStatus.RUNNING,
+            percent=0.0,
+        )).to_dict())
+
+    def _compile(self, request):
         self.requests.append(request)
-        request.progress_queue.put({"phase": "compile", "status": "running"})
+        self.emit_progress(request)
         step_plan = CompiledStepPlan(
             step_index=0,
             step_name="WriteArtifacts",
@@ -610,22 +630,30 @@ class _FakeCompileInspectionGateway:
         )
 
 
-class _FailingCompileInspectionGateway:
+class _FailingCompileInspectionGateway(_FakeCompileInspectionGateway):
     def __init__(self, exception: Exception) -> None:
         self.exception = exception
 
-    def compile(self, request):
-        request.progress_queue.put({"phase": "compile", "status": "running"})
+    def _compile(self, request):
+        self.emit_progress(request)
         raise self.exception
 
 
 class _WorkspacePreparingCompileInspectionGateway(_FakeCompileInspectionGateway):
-    def compile(self, request):
+    def _compile(self, request):
         (request.plate / "openhcs_metadata.json").write_text(
             "{}",
             encoding="utf-8",
         )
-        return super().compile(request)
+        return super()._compile(request)
+
+
+class _MetadataTransactionCompileInspectionGateway(_FakeCompileInspectionGateway):
+    def _compile(self, request):
+        metadata_module.AtomicMetadataWriter().replace_subdirectory_metadata(
+            metadata_module.get_metadata_path(request.plate), "A01", {}
+        )
+        return super()._compile(request)
 
 
 class _FakeRuntimeServerGateway:
@@ -767,7 +795,7 @@ class _FakeViewerWindowGateway(ViewerWindowGatewayABC):
         self.requests.append(request)
         return EndpointShutdownResult(succeeded=True, endpoint_terminated=True)
 
-    def viewport(self, request):
+    def presentation_control(self, request):
         self.requests.append(request)
         return {
             "status": "success",
@@ -1092,7 +1120,7 @@ class _MalformedViewerWindowGateway(ViewerWindowGatewayABC):
         del request
         return EndpointShutdownResult(succeeded=False, endpoint_terminated=False)
 
-    def viewport(self, request):
+    def presentation_control(self, request):
         del request
         return {"status": "success", "native_viewport": {"zoom": 1}}
 
@@ -1367,7 +1395,8 @@ def test_viewer_window_zmq_gateway_times_out_without_blocking_context_teardown(
     assert result.reachable is False
     assert result.errors[0].code == "viewer_window_state_failed"
     assert "timed out after 25ms" in result.errors[0].message
-    assert poller.poll_timeouts == [25]
+    assert len(poller.poll_timeouts) == 1
+    assert 0 < poller.poll_timeouts[0] <= 25
     assert socket.sent_flags == [viewer_window_service_module.zmq.DONTWAIT]
     assert socket.closed is True
     assert context.destroy_linger == 0
@@ -1493,8 +1522,28 @@ def test_function_catalog_resolves_detail_by_callable_import_path(monkeypatch):
         f"{sample_processing_function.__qualname__}"
     )
 
+    selected = _Metadata(tags=[])
+    unrelated = _Metadata.from_function(sample_large_signature_function, "Unrelated")
+    monkeypatch.setattr(
+        catalog, "_all_metadata",
+        lambda **_kwargs: {
+            "test:aaa_unrelated": unrelated,
+            "test:sample_processing_function": selected,
+            "test:zzz_duplicate_identity": selected,
+        },
+    )
+    original = catalog._entry
+    presented = []
+
+    def entry(function_id, *args, **kwargs):
+        assert function_id == "test:sample_processing_function"
+        presented.append(function_id)
+        return original(function_id, *args, **kwargs)
+
+    monkeypatch.setattr(catalog, "_entry", entry)
     detail = catalog.get_by_import_path(import_path)
 
+    assert presented == ["test:sample_processing_function"]
     assert detail is not None
     assert detail.entry.function_id == "test:sample_processing_function"
     assert detail.entry.signature == "sample_processing_function(sigma=1.0)"
@@ -1759,6 +1808,14 @@ def test_function_catalog_search_prefers_concise_exact_owner_text(monkeypatch):
 
 
 def test_function_catalog_reuses_projection_until_registry_mapping_changes(monkeypatch):
+    class DeclaredDefault:
+        value = "1.0"
+
+        def __repr__(self):
+            return self.value
+
+    default = DeclaredDefault()
+    monkeypatch.setattr(sample_processing_function, "__defaults__", (default,))
     first_metadata = {
         "test:sample_processing_function": _Metadata.from_function(
             sample_processing_function,
@@ -1782,13 +1839,23 @@ def test_function_catalog_reuses_projection_until_registry_mapping_changes(monke
     catalog = FunctionCatalogService()
 
     first = catalog.search(query="sample", compact_signatures=True)
-    cache_key = (SignatureView.COMPACT, SummaryView.COMPACT)
-    first_projection = catalog._projections[cache_key]
-    repeated = catalog.search(query="operation", compact_signatures=True)
+    first_projection = catalog._projections
+    default.value = "2.0"
+    repeated = catalog.search(query="operation", compact_signatures=False)
 
     assert first.items
     assert repeated.items
-    assert catalog._projections[cache_key] is first_projection
+    assert (
+        first.items[0].signature
+        == repeated.items[0].signature
+        == "sample_processing_function(sigma=1.0)"
+    )
+    assert catalog.search(query="sample", compact_signatures=True).items[0] is first.items[0]
+    assert (
+        catalog.get("test:sample_processing_function").entry.signature
+        == "sample_processing_function(sigma=2.0)"
+    )
+    assert catalog._projections is first_projection
 
     current_metadata[0] = second_metadata
     refreshed = catalog.search(query="gaussian", compact_signatures=True)
@@ -1796,7 +1863,7 @@ def test_function_catalog_reuses_projection_until_registry_mapping_changes(monke
     assert tuple(item.function_id for item in refreshed.items) == (
         "test:sample_gaussian_filter",
     )
-    assert catalog._projections[cache_key] is not first_projection
+    assert catalog._projections is not first_projection
 
 
 def test_function_catalog_search_ranks_complete_owner_text_over_incidental_name(
@@ -2010,7 +2077,7 @@ def test_function_catalog_search_finds_tile_assembler_by_stitch_vocabulary(monke
     assert "Stitch/assemble overlapping image tiles" in (page.items[0].summary or "")
 
 
-def test_viewer_window_service_snapshots_running_viewer():
+def test_viewer_window_service_snapshots_running_viewer_explicitly_immediate():
     gateway = _FakeViewerWindowGateway()
     service = ViewerWindowService(gateway=gateway)
 
@@ -2019,10 +2086,12 @@ def test_viewer_window_service_snapshots_running_viewer():
             connection=_viewer_connection(),
             output_dir_path="/tmp/openhcs-mcp-window-snapshots",
             capture_scope=WindowSnapshotCaptureScope.WINDOW,
+            frame_condition=WindowSnapshotFrameCondition.IMMEDIATE,
         ),
     )
 
     assert result.captured is True
+    assert result.frame_condition is WindowSnapshotFrameCondition.IMMEDIATE
     assert result.connection.port == 5584
     assert result.viewer is not None
     assert result.viewer.viewer_type is ViewerType.NAPARI
@@ -2125,6 +2194,38 @@ def test_viewer_window_service_reads_running_viewer_state():
     assert gateway.requests[0].timeout_ms == 5000
 
 
+def test_viewer_window_service_keeps_explicit_zero_summary_counts():
+    class ZeroCountsGateway(_FakeViewerWindowGateway):
+        def window_state(self, request):
+            response = super().window_state(request)
+            response["layers"][0]["component_value_count"] = 0
+            response["layers"][0]["payload_summary_count"] = 0
+            return response
+
+    result = ViewerWindowService(gateway=ZeroCountsGateway()).window_state(
+        ViewerWindowStateRequest(connection=_viewer_connection())
+    )
+    assert result.observed and not result.errors
+    layer = result.layers[0]
+    assert len(layer.component_values) == 2 and len(layer.payload_summaries) == 2
+    assert layer.component_value_count == 0 and layer.payload_summary_count == 0
+
+
+def test_viewer_window_service_rejects_boolean_native_integer_count():
+    class BooleanCountGateway(_FakeViewerWindowGateway):
+        def window_state(self, request):
+            response = super().window_state(request)
+            response["layers"][0]["component_value_count"] = False
+            return response
+
+    result = ViewerWindowService(gateway=BooleanCountGateway()).window_state(
+        ViewerWindowStateRequest(connection=_viewer_connection())
+    )
+    assert result.observed is False
+    assert result.errors[0].code == "viewer_window_state_response_invalid"
+    assert "component_value_count" in result.errors[0].message
+
+
 def test_viewer_window_service_can_omit_raw_state_response():
     gateway = _FakeViewerWindowGateway()
     service = ViewerWindowService(gateway=gateway)
@@ -2196,9 +2297,9 @@ def test_viewer_window_service_reads_payload_records():
     payload = layer.payloads[0]
     assert payload.components["well"] == "A14"
     assert payload.axis_indices == (0, 0, 0)
-    assert payload.summary["nonzero_count"] == 128
+    assert payload.summary.nonzero_count == 128
     assert payload.array_values == (1, 2, 3)
-    assert payload.array_value_summary == {
+    assert payload.array_value_summary.to_wire_mapping() == {
         "requested": True,
         "included": True,
         "shape": (3,),
@@ -3075,13 +3176,13 @@ def test_execution_session_service_submits_compile_and_execution_jobs(
         ("compile", OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms),
         ("execute", OPENHCS_ZMQ_CONFIG.execution_submission_timeout_ms),
     ]
-    assert fake_client.compile_submissions[0].plate_id == str(tmp_path.resolve())
+    assert fake_client.compile_submissions[0].identity.plate_id == str(tmp_path.resolve())
     assert (
         session.pipeline_config_id
         == pipeline_service.get_pipeline(pipeline_ref).pipeline_config_id
     )
     assert (
-        fake_client.compile_submissions[0].pipeline_document.pipeline_config
+        PipelineDocumentAuthority.from_source(fake_client.compile_submissions[0].pipeline_code).pipeline_config
         == pipeline_service.to_pipeline_document(pipeline_ref).pipeline_config
     )
     assert fake_client.status_requests[0] == (
@@ -3095,11 +3196,11 @@ def test_execution_session_service_submits_compile_and_execution_jobs(
     assert len(fake_client.status_requests) == 1
     assert fake_client.disconnect_count == 1
     assert (
-        fake_client.execution_submissions[0].compile_artifact_id
+        fake_client.execution_submissions[0].compile_control.compile_artifact_id
         == _ExecutionTestId.COMPILE
     )
-    assert type(fake_client.compile_submissions[0].pipeline_steps) is list
-    assert len(fake_client.compile_submissions[0].pipeline_steps) == 1
+    assert type(PipelineDocumentAuthority.from_source(fake_client.compile_submissions[0].pipeline_code).pipeline_steps) is list
+    assert len(PipelineDocumentAuthority.from_source(fake_client.compile_submissions[0].pipeline_code).pipeline_steps) == 1
     assert not hasattr(fake_client.compile_submissions[0], "submission_pipeline")
 
 
@@ -3132,7 +3233,8 @@ def test_execution_session_observation_export_uses_ordinary_submission(
 
     assert job.server_execution_id == _ExecutionTestId.EXECUTE
     assert fake_client.execution_submissions[0].config_params == {
-        "runtime_observation_export_path": str(export_path)
+        "runtime_observation_export_path": str(export_path),
+        "runtime_observation_export_scope": "values",
     }
 
     outcome_path = tmp_path / "evidence" / "outcomes.pkl"
@@ -3317,11 +3419,9 @@ def test_execution_session_service_preserves_pipeline_source_document(
     execution_service.submit_compile(session_ref.session_id)
 
     submission = fake_client.compile_submissions[0]
-    assert submission.pipeline_document.original_source == pipeline_source
-    assert submission.pipeline_code() == pipeline_source
-    assert submission.pipeline_steps == []
-    assert submission.pipeline_config == pipeline_config
-    assert submission.pipeline_code() == pipeline_source
+    assert submission.pipeline_code == pipeline_source
+    assert PipelineDocumentAuthority.from_source(submission.pipeline_code).pipeline_steps == []
+    assert PipelineDocumentAuthority.from_source(submission.pipeline_code).pipeline_config == pipeline_config
     assert not hasattr(submission, "pipeline_steps_boundary")
 
 
@@ -3358,9 +3458,13 @@ def test_execution_session_service_inspects_pipeline_source_artifact_plan(
         == PipelineConfig()
     )
     assert compile_gateway.requests[0].axis_filter == ("A01",)
-    assert compile_gateway.requests[0].progress_queue.events == [
-        {"phase": "compile", "status": "running"}
-    ]
+    events = compile_gateway.requests[0].progress_queue.events
+    assert len(events) == 1
+    assert events[0].phase is ProgressPhase.COMPILE
+    assert events[0].status is ProgressStatus.RUNNING
+    assert events[0].identity == ProgressIdentity(
+        "inspection", str(tmp_path.resolve()), "A01", "compilation",
+    )
     assert inspection.errors == ()
     assert inspection.axis_count == 1
     assert inspection.axes == ("A01",)
@@ -3491,6 +3595,109 @@ def test_compile_inspection_rejects_read_only_plate_before_initialization(
 
     assert gateway.requests == []
     assert {path.name: path.read_bytes() for path in plate.iterdir()} == before
+
+
+@pytest.mark.parametrize(
+    "destination_kind",
+    (
+        "relative",
+        "absolute",
+        "directory_symlink",
+        "metadata_symlink",
+        "lock_symlink",
+        "transaction_parent",
+    ),
+)
+def test_compile_inspection_rejects_escaping_metadata_transaction(
+    monkeypatch, tmp_path: Path, destination_kind: str
+):
+    plate = tmp_path / "plate"
+    outside = tmp_path / "outside"
+    plate.mkdir()
+    outside.mkdir()
+    filename = "openhcs_metadata.json"
+    if destination_kind == "relative":
+        filename = "../outside/metadata.json"
+    elif destination_kind == "absolute":
+        filename = str(outside / "metadata.json")
+    elif destination_kind == "directory_symlink":
+        (plate / "transaction").symlink_to(outside, target_is_directory=True)
+        filename = "transaction/metadata.json"
+    elif destination_kind == "metadata_symlink":
+        (plate / filename).symlink_to(outside / "metadata.json")
+    elif destination_kind == "lock_symlink":
+        # Derive the lock from its real owner, not another suffix declaration.
+        config = metadata_module.OpenHCSMetadataConfig(METADATA_FILENAME=filename)
+        _, lock = config.managed_paths(plate)
+        lock.symlink_to(outside / "transaction.lock")
+    elif destination_kind == "transaction_parent":
+        # The metadata target is admitted, but staging would still write outside.
+        filename = str(outside / "metadata.json")
+        (outside / "metadata.json").symlink_to(plate / "admitted.json")
+        config = metadata_module.OpenHCSMetadataConfig(METADATA_FILENAME=filename)
+        _, lock = config.managed_paths(plate)
+        lock.symlink_to(plate / "admitted.lock")
+    config = metadata_module.OpenHCSMetadataConfig(METADATA_FILENAME=filename)
+    monkeypatch.setattr(metadata_module, "METADATA_CONFIG", config)
+    monkeypatch.setattr(execution_session_module, "METADATA_CONFIG", config)
+    before = tuple((path.name, path.is_symlink()) for path in outside.iterdir())
+    gateway = _MetadataTransactionCompileInspectionGateway()
+    service = ExecutionSessionService(
+        path_policy=AgentPathPolicy.with_roots(
+            readable_roots=(plate,), writable_roots=(plate,)
+        ),
+        pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
+        config_service=ConfigService(),
+        client_factory=_FakeExecutionClientFactory(_FakeExecutionClient()),
+        compile_inspection_gateway=gateway,
+    )
+    with pytest.raises(AgentPathPolicyError, match="Writable path is outside"):
+        service.inspect_pipeline_source_artifact_plan(
+            PipelineSourceSessionRequest(
+                identity=ZMQExecutionIdentity(plate_id=str(plate)),
+                pipeline_source=_pipeline_document_source(),
+                global_config_id=None,
+                connection=ExecutionConnectionSpec(),
+            )
+        )
+    assert gateway.requests == []
+    assert tuple((path.name, path.is_symlink()) for path in outside.iterdir()) == before
+    assert not (plate / "admitted.json").exists()
+    assert not (plate / "admitted.lock").exists()
+
+
+def test_compile_inspection_uses_metadata_owner_despite_environment_drift(
+    monkeypatch, tmp_path: Path
+):
+    config = metadata_module.OpenHCSMetadataConfig(
+        METADATA_FILENAME="transaction/metadata.json"
+    )
+    monkeypatch.setattr(metadata_module, "METADATA_CONFIG", config)
+    monkeypatch.setattr(execution_session_module, "METADATA_CONFIG", config)
+    monkeypatch.setenv("OPENHCS_METADATA_FILENAME", "../unadmitted/metadata.json")
+    gateway = _MetadataTransactionCompileInspectionGateway()
+    service = ExecutionSessionService(
+        path_policy=AgentPathPolicy.with_roots(
+            readable_roots=(tmp_path,), writable_roots=(tmp_path,)
+        ),
+        pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
+        config_service=ConfigService(),
+        client_factory=_FakeExecutionClientFactory(_FakeExecutionClient()),
+        compile_inspection_gateway=gateway,
+    )
+    inspection = service.inspect_pipeline_source_artifact_plan(
+        PipelineSourceSessionRequest(
+            identity=ZMQExecutionIdentity(plate_id=str(tmp_path)),
+            pipeline_source=_pipeline_document_source(),
+            global_config_id=None,
+            connection=ExecutionConnectionSpec(),
+        )
+    )
+    assert inspection.errors == ()
+    assert len(gateway.requests) == 1
+    assert all(path.is_file() for path in config.managed_paths(tmp_path))
+    assert str(config.metadata_path(tmp_path)) in inspection.warnings[0].message
+    assert not (tmp_path.parent / "unadmitted").exists()
 
 
 def test_compile_inspection_capability_declares_workspace_persistence():
@@ -3727,8 +3934,8 @@ def test_pipeline_source_session_uses_prepared_execution_plate(tmp_path: Path):
     assert session.selected_pipeline_path is None
     job = service.submit_execution(session_ref.session_id)
     assert job.server_execution_id == _ExecutionTestId.EXECUTE
-    assert fake_client.execution_submissions[0].execution_plate_id == str(prepared)
-    assert fake_client.execution_submissions[0].selected_pipeline_path is None
+    assert fake_client.execution_submissions[0].identity.execution_plate_id == str(prepared)
+    assert fake_client.execution_submissions[0].identity.selected_pipeline_path is None
 
     with pytest.raises(AgentPathPolicyError, match="outside allowed roots"):
         service.create_session_from_pipeline_source_request(
@@ -3783,7 +3990,7 @@ def test_completed_pipeline_job_retains_exact_submission_and_server_result(
 
     completed = service.require_completed_pipeline_execution(job.job_id)
 
-    assert completed.submission is fake_client.execution_submissions[0]
+    assert completed.request is fake_client.execution_submissions[0]
     assert completed.record.start_time == 10.0
     assert completed.record.end_time == 12.0
     assert completed.record.results_summary == {"output_plate_root": str(tmp_path)}
@@ -3847,8 +4054,9 @@ def test_execution_session_service_reports_nested_runtime_status(
 ):
     fake_client = _EnvelopeStatusExecutionClient()
     fake_client.progress_by_execution_id[_ExecutionTestId.COMPILE] = (
-        ExecutionProgressObservation.first(
-            {
+        ExecutionProgressObservation(
+            sequence=1,
+            event={
                 "execution_id": _ExecutionTestId.COMPILE,
                 "phase": "compile",
                 "status": "running",

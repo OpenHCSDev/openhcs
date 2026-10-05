@@ -24,10 +24,12 @@ def main() -> int:
     )
     parser.add_argument(
         "--reuse-execution-server",
-        action="store_true",
+        action=argparse.BooleanOptionalAction,
+        default=True,
         help=(
-            "Keep one client-owned server across observations. Per-observation "
-            "total_seconds then excludes server startup and shutdown."
+            "Keep one ready client-owned server across observations (default). "
+            "Pipeline total_seconds excludes server startup and shutdown. "
+            "Use --no-reuse-execution-server for cold-server diagnostics."
         ),
     )
     parser.add_argument("--case", action="append", dest="case_names")
@@ -184,7 +186,7 @@ def main() -> int:
         print(f"figures={figures_output_dir}")
         for output in figure_outputs:
             print(output)
-    return 0
+    return int(any(not result.is_successful() for result in results))
 
 
 def _parse_observation_key(raw_value: str):

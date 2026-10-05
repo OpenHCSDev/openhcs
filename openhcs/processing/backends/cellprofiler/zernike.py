@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from openhcs.core.process_local_cache import RegisteredProcessLocalBoundedCache
+
 from abc import ABC, abstractmethod
-from collections import OrderedDict
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
@@ -28,7 +29,6 @@ from openhcs.core.runtime_tabular_values import (
 )
 from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
-    MeasurementRowValueField,
     RuntimeMeasurementFeature,
     RuntimeMeasurementIndexedDescriptorDeclaration,
 )
@@ -47,6 +47,7 @@ from openhcs.core.runtime_tabular_values import (
 from openhcs.core.runtime_image_values import (
     project_image_mask_to_data_domain,
 )
+from openhcs.core.runtime_identifier import normalize_runtime_identifier
 from openhcs.core.public_api import public_names_from_objects
 from openhcs.interop.cellprofiler.module_measurement_features import (
     IntensityFeature,
@@ -59,19 +60,17 @@ from openhcs.processing.backends.cellprofiler._backend import (
     CellProfilerBackendStrategyMixin,
     CellProfilerBackendAuthority,
 )
-from openhcs.processing.backends.cellprofiler.granularity import (
-    CellProfilerRuntimeProfiler,
-)
+from openhcs.core.runtime_profile import RuntimeProfiler
 from openhcs.processing.backends.cellprofiler.label_geometry import (
     minimum_enclosing_circle_from_labels,
 )
-from openhcs.processing.backends.cellprofiler.object_measurement_columnar_rows import (
+from openhcs.core.measurement_row_materialization import (
     ObjectMeasurementColumnarRows,
 )
 
 _INTENSITY_DEBUG_TRACE_DIR_ENV = "OPENHCS_ZERNIKE_INTENSITY_DEBUG_TRACE_DIR"
 logger = logging.getLogger(__name__)
-runtime_profiler = CellProfilerRuntimeProfiler(logger)
+runtime_profiler = RuntimeProfiler(logger)
 
 
 ZernikeMomentIndexes: TypeAlias = tuple[tuple[int, int], ...]
@@ -99,7 +98,7 @@ def indexed_object_intensity_zernike_feature_name(
     degree: int,
     repetition: int,
 ) -> str:
-    """Return CP-compatible long-form intensity Zernike feature identity."""
+    """Return the exact indexed intensity Zernike feature identity."""
     return "{0}_{1}_{2}_{3}".format(
         feature.value,
         source_image_name,
@@ -126,15 +125,9 @@ class IndexedObjectZernikeDescriptor:
         allow_source_qualified: bool = False,
     ) -> "IndexedObjectZernikeDescriptor | None":
         normalized_parts = tuple(
-            (
-                part
-                for part in str(feature_name)
-                .strip()
-                .lower()
-                .replace("-", "_")
-                .split("_")
-                if part
-            )
+            part
+            for part in normalize_runtime_identifier(feature_name).split("_")
+            if part
         )
         for candidate_family in (
             (family,) if family is not None else tuple(ObjectZernikeDescriptorFeature)
@@ -146,14 +139,9 @@ class IndexedObjectZernikeDescriptor:
             )
             for family_name in candidate_family_names:
                 family_parts = tuple(
-                    (
-                        part
-                        for part in str(family_name)
-                        .lower()
-                        .replace("-", "_")
-                        .split("_")
-                        if part
-                    )
+                    part
+                    for part in normalize_runtime_identifier(family_name).split("_")
+                    if part
                 )
                 family_prefixes = (family_parts, ("".join(family_parts),))
                 for family_prefix in family_prefixes:
@@ -608,7 +596,7 @@ class ZernikeIntensityDebugTrace:
 
 @dataclass(frozen=True, slots=True)
 class IntensityZernikeMeasurementRowsRequest:
-    """Backend request for long-form intensity-Zernike measurement rows."""
+    """Backend request for wide intensity-Zernike measurement columns."""
 
     image: np.ndarray
     labels: np.ndarray
@@ -704,6 +692,13 @@ class ObjectIntensityZernikeMeasurementColumnarRows(ObjectMeasurementColumnarRow
     def __post_init__(self) -> None:
         object_ids = np.asarray(self.object_ids, dtype=np.int32)
         zernike_indexes = tuple((int(n), int(m)) for n, m in self.zernike_indexes)
+        field_columns: list[tuple[FieldSpec, Sequence[object]]] = [
+            (FieldSpec(MeasurementRowAxisField.OBJECT_LABEL.value, int), object_ids),
+            (
+                FieldSpec(MeasurementRowAxisField.SOURCE_IMAGE_NAME.value, str),
+                np.full(object_ids.size, self.source_image_name, dtype=object),
+            ),
+        ]
         if object_ids.size and zernike_indexes:
             magnitude_values = np.asarray(self.magnitudes, dtype=np.float64)
             phase_values = np.asarray(self.phases, dtype=np.float64)
@@ -714,90 +709,42 @@ class ObjectIntensityZernikeMeasurementColumnarRows(ObjectMeasurementColumnarRow
                     zero_phase_rows[:, np.newaxis] & np.isnan(phase_values)
                 ] = 0.0
                 phase_values[~zero_phase_rows, :] = np.nan
-            descriptor_count = 2 if self.include_phase else 1
-            row_count = int(object_ids.size) * len(zernike_indexes) * descriptor_count
-            feature_sequence: list[str] = []
-            zernike_ns: list[int] = []
-            zernike_ms: list[int] = []
-            value_columns: list[np.ndarray] = []
             for index, (degree, repetition) in enumerate(zernike_indexes):
-                feature_sequence.append(
-                    indexed_object_intensity_zernike_feature_name(
-                        ObjectZernikeDescriptorFeature.INTENSITY_MAGNITUDE,
-                        source_image_name=self.source_image_name,
-                        degree=degree,
-                        repetition=repetition,
+                field_columns.append(
+                    (
+                        FieldSpec(
+                            indexed_object_intensity_zernike_feature_name(
+                                ObjectZernikeDescriptorFeature.INTENSITY_MAGNITUDE,
+                                source_image_name=self.source_image_name,
+                                degree=degree,
+                                repetition=repetition,
+                            ),
+                            float,
+                        ),
+                        magnitude_values[:, index],
                     )
                 )
-                zernike_ns.append(degree)
-                zernike_ms.append(repetition)
-                value_columns.append(magnitude_values[:, index])
                 if self.include_phase:
-                    feature_sequence.append(
-                        indexed_object_intensity_zernike_feature_name(
-                            ObjectZernikeDescriptorFeature.INTENSITY_PHASE,
-                            source_image_name=self.source_image_name,
-                            degree=degree,
-                            repetition=repetition,
+                    field_columns.append(
+                        (
+                            FieldSpec(
+                                indexed_object_intensity_zernike_feature_name(
+                                    ObjectZernikeDescriptorFeature.INTENSITY_PHASE,
+                                    source_image_name=self.source_image_name,
+                                    degree=degree,
+                                    repetition=repetition,
+                                ),
+                                float,
+                            ),
+                            phase_values[:, index],
                         )
                     )
-                    zernike_ns.append(degree)
-                    zernike_ms.append(repetition)
-                    value_columns.append(phase_values[:, index])
-
-            object_labels = np.tile(object_ids, len(feature_sequence)).astype(
-                np.int32,
-                copy=False,
-            )
-            feature_names = np.repeat(
-                np.asarray(feature_sequence, dtype=object),
-                int(object_ids.size),
-            )
-            source_image_names = np.full(
-                row_count,
-                self.source_image_name,
-                dtype=object,
-            )
-            zernike_n_values = np.repeat(
-                np.asarray(zernike_ns, dtype=np.int32), int(object_ids.size)
-            )
-            zernike_m_values = np.repeat(
-                np.asarray(zernike_ms, dtype=np.int32), int(object_ids.size)
-            )
-            result_values = np.concatenate(value_columns).astype(
-                np.float64,
-                copy=False,
-            )
-        else:
-            row_count = 0
-            object_labels = np.empty(0, dtype=np.int32)
-            feature_names = np.empty(0, dtype=object)
-            source_image_names = np.empty(0, dtype=object)
-            zernike_n_values = np.empty(0, dtype=np.int32)
-            zernike_m_values = np.empty(0, dtype=np.int32)
-            result_values = np.empty(0, dtype=np.float64)
-
-        field_columns: tuple[tuple[FieldSpec, Sequence[object]], ...] = (
-            (FieldSpec(MeasurementRowAxisField.OBJECT_LABEL.value, int), object_labels),
-            (FieldSpec(MeasurementRowAxisField.FEATURE_NAME.value, str), feature_names),
-            (
-                FieldSpec(MeasurementRowAxisField.SOURCE_IMAGE_NAME.value, str),
-                source_image_names,
-            ),
-            (FieldSpec(MeasurementRowAxisField.ZERNIKE_N.value, int), zernike_n_values),
-            (FieldSpec(MeasurementRowAxisField.ZERNIKE_M.value, int), zernike_m_values),
-            (
-                FieldSpec(MeasurementRowValueField.RESULT_VALUE.value, float),
-                result_values,
-            ),
-        )
         if self.slice_index is not None:
-            field_columns = (
-                *field_columns,
+            field_columns.append(
                 (
                     FieldSpec(MeasurementRowAxisField.SLICE_INDEX.value, int),
-                    np.full(row_count, int(self.slice_index), dtype=np.int32),
-                ),
+                    np.full(object_ids.size, int(self.slice_index), dtype=np.int32),
+                )
             )
         self._fields = tuple(field_spec for field_spec, _values in field_columns)
         self._columns = MappingProxyType(
@@ -814,11 +761,16 @@ class ObjectIntensityZernikeMeasurementColumnarRows(ObjectMeasurementColumnarRow
         return self._fields
 
 
-_ZERNIKE_LABEL_GEOMETRY_CACHE: OrderedDict[
-    tuple[str, tuple[int, ...], bytes, str, tuple[int, ...], bytes],
-    _ZernikeLabelGeometry,
-] = OrderedDict()
-_ZERNIKE_LABEL_GEOMETRY_CACHE_MAX_ENTRIES = 16
+@dataclass
+class ZernikeLabelGeometryCache(
+    RegisteredProcessLocalBoundedCache[
+        tuple[str, tuple[int, ...], bytes, str, tuple[int, ...], bytes],
+        _ZernikeLabelGeometry,
+    ]
+):
+    """Process-local numerical geometry with shared bounded storage."""
+
+    max_entries: int = 16
 
 
 class ShapeZernikeBackendStrategy(
@@ -909,9 +861,8 @@ class LegacyFastNumpyShapeZernikeBackendStrategy(ShapeZernikeBackendStrategy):
             time.perf_counter() - key_started_at,
             objects=object_ids_array.size,
         )
-        entry = _ZERNIKE_LABEL_GEOMETRY_CACHE.get(key)
+        entry = ZernikeLabelGeometryCache.process_cache().cached_value(key)
         if entry is not None:
-            _ZERNIKE_LABEL_GEOMETRY_CACHE.move_to_end(key)
             runtime_profiler.log(
                 "zernike_geometry_cache_hit",
                 time.perf_counter() - total_started_at,
@@ -958,13 +909,7 @@ class LegacyFastNumpyShapeZernikeBackendStrategy(ShapeZernikeBackendStrategy):
             label_values=np.ascontiguousarray(label_values, dtype=np.int32),
             raw_label_values=raw_label_values,
         )
-        _ZERNIKE_LABEL_GEOMETRY_CACHE[key] = geometry
-        _ZERNIKE_LABEL_GEOMETRY_CACHE.move_to_end(key)
-        while (
-            len(_ZERNIKE_LABEL_GEOMETRY_CACHE)
-            > _ZERNIKE_LABEL_GEOMETRY_CACHE_MAX_ENTRIES
-        ):
-            _ZERNIKE_LABEL_GEOMETRY_CACHE.popitem(last=False)
+        ZernikeLabelGeometryCache.process_cache().store_value(key, geometry)
         runtime_profiler.log(
             "zernike_geometry_total",
             time.perf_counter() - total_started_at,

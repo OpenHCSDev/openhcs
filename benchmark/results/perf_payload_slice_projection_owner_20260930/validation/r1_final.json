@@ -1,0 +1,42 @@
+{
+  "base": "2b7969f700c33eb7f73f891d975afd1efc0628bb",
+  "head": "3d23d960275b43d03395d86c2e63d3bc85098a2a",
+  "changed": [
+    "benchmark/results/perf_payload_slice_projection_owner_20260930/recipes/apply_payload_slice_projection_owner_20260930.py",
+    "benchmark/results/perf_payload_slice_projection_owner_20260930/recipes/refine_payload_slice_projection_owner_20260930.py",
+    "benchmark/results/perf_payload_slice_projection_owner_20260930/recipes/replay_payload_slice_projection_owner_20260930.py",
+    "benchmark/results/perf_payload_slice_projection_owner_20260930/recipes/reproduce_profile_thread_contamination_20260930.py",
+    "benchmark/results/perf_payload_slice_projection_owner_20260930/recipes/retire_unreachable_mask_axis_guard_20260930.py",
+    "benchmark/results/perf_payload_slice_projection_owner_20260930/recipes/run_payload_slice_projection_acceptance_20260930.py",
+    "benchmark/results/perf_payload_slice_projection_owner_20260930/recipes/run_runtime_owner_timer_20260930.py",
+    "benchmark/results/perf_payload_slice_projection_owner_20260930/recipes/sitecustomize.py",
+    "openhcs/core/aligned_image_payload.py",
+    "openhcs/core/runtime_image_values.py",
+    "openhcs/processing/backends/cellprofiler/colocalization.py"
+  ],
+  "before": [
+    {
+      "check": "mapping_read",
+      "file": "openhcs/processing/backends/cellprofiler/colocalization.py",
+      "count": 1
+    },
+    {
+      "check": "unmodeled_record_shape",
+      "file": "openhcs/processing/backends/cellprofiler/colocalization.py",
+      "count": 1
+    }
+  ],
+  "after": [
+    {
+      "check": "mapping_read",
+      "file": "openhcs/processing/backends/cellprofiler/colocalization.py",
+      "count": 1
+    },
+    {
+      "check": "unmodeled_record_shape",
+      "file": "openhcs/processing/backends/cellprofiler/colocalization.py",
+      "count": 1
+    }
+  ],
+  "increased": []
+}

@@ -6,8 +6,10 @@ import sys
 from pathlib import Path
 from types import SimpleNamespace
 
+import zmqruntime.client as client_owner
 from zmqruntime import TransportMode
-from zmqruntime.messages import PongResponse, ServerRole
+from zmqruntime.client import EndpointProcess, ZMQClient
+from zmqruntime.messages import PongResponse, ProcessIdentity, ServerRole
 from zmqruntime.startup import (
     EndpointStartupObserver,
     EndpointStartupPhase,
@@ -18,6 +20,22 @@ from openhcs.runtime import zmq_execution_client, zmq_execution_server_launcher
 from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
 from openhcs.runtime.zmq_config import OpenHCSZMQConfig
 from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
+
+
+class _StartupChild(EndpointProcess):
+    identity = ProcessIdentity(123, 456.0)
+
+    def is_alive(self):
+        return True
+
+    def exit(self):
+        return None
+
+    def wait_for_exit(self, timeout):
+        return None
+
+    def stop(self, timeout=5.0, kill_timeout=2.0):
+        raise AssertionError("readiness observation must not stop the child")
 
 
 def test_execution_server_preserves_worker_interpreter_and_background_flags(
@@ -67,12 +85,13 @@ def test_execution_server_preserves_worker_interpreter_and_background_flags(
         popen_call["stdout"].close()
 
     command = popen_call["command"]
-    assert command[:3] == [
+    assert command[:4] == [
         sys.executable,
+        "-B",
         "-X",
         "faulthandler",
     ]
-    assert command[3:5] == list(
+    assert command[4:6] == list(
         OpenHCSRuntimeImportAuthority.current().module_process_arguments(
             "openhcs.runtime.zmq_execution_server_launcher"
         )
@@ -84,8 +103,10 @@ def test_execution_server_preserves_worker_interpreter_and_background_flags(
     assert Path(popen_call["stdout"].name).parent == data_home / "openhcs" / "logs"
 
 
-def test_execution_server_launcher_advertises_ready_after_start(monkeypatch) -> None:
-    """The endpoint becomes ready before on-demand catalog preparation."""
+def test_execution_server_launcher_prepares_before_binding_and_ready(
+    monkeypatch,
+) -> None:
+    """Every cold endpoint prepares its registry before it can accept requests."""
 
     events: list[str] = []
 
@@ -115,7 +136,7 @@ def test_execution_server_launcher_advertises_ready_after_start(monkeypatch) -> 
         server_runner=serve_forever,
     )
 
-    assert events == ["construct", "start", "ready", "serve"]
+    assert events == ["construct", "prepare_runtime", "start", "ready", "serve"]
 
 
 def test_execution_server_launcher_projects_endpoint_overrides_into_config(
@@ -199,7 +220,9 @@ def test_child_startup_events_are_resequenced_by_client_owner(
     statuses = []
     client = ZMQExecutionClient(connection_status_callback=statuses.append)
     client._startup_status_path = startup_path
-    process = SimpleNamespace(exit=lambda: None)
+    process = _StartupChild()
+    monkeypatch.setattr(ProcessIdentity, "work_snapshot", lambda self: {})
+    monkeypatch.setattr(ProcessIdentity, "is_alive", lambda self: True)
     endpoint = PongResponse(
         port=client.port,
         control_port=client.control_port,
@@ -217,7 +240,7 @@ def test_child_startup_events_are_resequenced_by_client_owner(
         return endpoint
 
     monkeypatch.setattr(
-        zmq_execution_client,
+        client_owner,
         "wait_for_endpoint_ready",
         wait_for_ready,
     )
@@ -239,13 +262,51 @@ def test_failed_child_startup_journal_remains_available(
     writer.emit(EndpointStartupPhase.FAILED, "Import failed")
     client = ZMQExecutionClient()
     client._startup_status_path = startup_path
-    process = SimpleNamespace(exit=lambda: None)
+    process = _StartupChild()
+    monkeypatch.setattr(ProcessIdentity, "work_snapshot", lambda self: {})
 
     monkeypatch.setattr(
-        zmq_execution_client,
+        client_owner,
         "wait_for_endpoint_ready",
         lambda *_args, **_kwargs: None,
     )
 
     assert client._wait_for_endpoint_ready(process) is None
     assert startup_path.exists()
+
+
+def test_execution_client_inherits_shared_readiness_algorithm():
+    assert (
+        ZMQExecutionClient._wait_for_endpoint_ready
+        is ZMQClient._wait_for_endpoint_ready
+    )
+
+
+def test_cold_execution_readiness_preserves_working_child_without_journal_churn(
+    monkeypatch, tmp_path
+):
+    import zmqruntime.transport as transport
+    from zmqruntime.transport import TransportEndpoint
+
+    now = [0.0]
+    client = ZMQExecutionClient(config=OpenHCSZMQConfig(server_poll_interval_seconds=5))
+    startup_path = tmp_path / "cold.jsonl"
+    client._startup_status_path = startup_path
+    EndpointStartupStatusWriter(startup_path).emit(
+        EndpointStartupPhase.PREPARING_CAPABILITIES, "Discovering registered callables"
+    )
+    process = _StartupChild()
+    monkeypatch.setattr(transport.time, "monotonic", lambda: now[0])
+    monkeypatch.setattr(transport.time, "sleep", lambda duration:
+                        now.__setitem__(0, now[0] + duration))
+    monkeypatch.setattr(ProcessIdentity, "work_snapshot", lambda self: {self: now[0]})
+    monkeypatch.setattr(ProcessIdentity, "is_alive", lambda self: True)
+    monkeypatch.setattr(client.transport_mode.declaration, "endpoint_in_use",
+                        staticmethod(lambda *args: True))
+    endpoint = PongResponse(port=client.port, control_port=client.control_port,
+                            ready=True, server="execution", server_role=ServerRole.EXECUTION)
+    monkeypatch.setattr(TransportEndpoint, "ping", lambda *args, **kwargs:
+                        endpoint if now[0] >= 109 else None)
+    assert client._wait_for_endpoint_ready(process, timeout=15) is endpoint
+    assert now[0] == 110
+    assert not startup_path.exists()

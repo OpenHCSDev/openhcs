@@ -4,27 +4,48 @@ from __future__ import annotations
 
 import inspect
 import threading
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from concurrent.futures import Future
 from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import Enum, auto
 from typing import TYPE_CHECKING
 
-from openhcs.constants import MemoryType
-from openhcs.core.callable_contract import CallableContract
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
+from openhcs.processing.backends.lib_registry.unified_registry import FunctionMetadata
 from openhcs.processing.custom_functions.source_namespace import (
     CustomFunctionSource,
     CustomFunctionSourceNamespace,
 )
 
 if TYPE_CHECKING:
-    from openhcs.processing.backends.lib_registry.unified_registry import (
-        FunctionMetadata,
-    )
-
     from .source_namespace import CustomFunctionSourceRevision
+
+
+class CustomFunctionMetadata(FunctionMetadata):
+    """Metadata whose lifetime is owned by the original custom-source registry."""
+
+    def require_current_declaration(self) -> None:
+        super().require_current_declaration()
+        CustomFunctionRuntimeRegistry.require_current_metadata(self)
+
+
+class CustomFunctionCanonicalLookup:
+    """Independent source-lookup capability composed with the registry template."""
+
+    @classmethod
+    def _canonical_metadata_claims(
+        cls, function_id: str, *, prepare_catalog: bool = True,
+    ) -> Iterator[FunctionMetadata]:
+        registry_name, _, name = function_id.partition(":")
+        local = None
+        if registry_name == cls._registry_name and name.isidentifier() and not name.startswith("_"):
+            local = CustomFunctionRuntimeRegistry.metadata_for_name(name)
+        if local is not None:
+            yield local
+        yield from super()._canonical_metadata_claims(
+            function_id, prepare_catalog=prepare_catalog and local is None,
+        )
 
 
 class CustomFunctionLifetime(Enum):
@@ -40,7 +61,7 @@ class CustomFunctionLifetime(Enum):
                 CustomFunctionManager,
             )
 
-            CustomFunctionManager().require_source(source)
+            CustomFunctionManager(create_storage=False).require_source(source)
 
     @classmethod
     def from_persist(cls, persist: bool) -> CustomFunctionLifetime:
@@ -119,6 +140,20 @@ class CustomFunctionRuntimeRegistry:
             return declaration
 
     @classmethod
+    def published_sources_for_content(
+        cls, content_sha256: str, *, function_name: str | None = None,
+    ) -> tuple[CustomFunctionSource, ...]:
+        """Observe existing exact declarations without loading or evaluating source."""
+        with cls._lock:
+            sources = tuple(
+                CustomFunctionSource(name, content_sha256)
+                for name, declaration in cls._declarations_by_name.items()
+                if (function_name is None or name == function_name)
+                and cls._declaration_revision(declaration.metadata) == content_sha256
+            )
+            return tuple(source for source in sources if cls.declaration_for_source(source) is not None)
+
+    @classmethod
     @contextmanager
     def lifecycle(cls):
         """Serialize one source mutation or lazy-load transaction."""
@@ -135,6 +170,40 @@ class CustomFunctionRuntimeRegistry:
                 name: declaration.metadata
                 for name, declaration in cls._declarations_by_name.items()
             }
+
+    @classmethod
+    def metadata_for_name(cls, name: str) -> FunctionMetadata | None:
+        """Load at most this source through the existing preparation/publication owner."""
+
+        with cls._lock:
+            declaration = cls._declarations_by_name.get(name)
+            if declaration is not None:
+                return declaration.metadata
+
+        from openhcs.processing.custom_functions.manager import CustomFunctionManager
+
+        CustomFunctionManager(create_storage=False).load_custom_function(
+            name, clear_caches=False, publish_only_if_missing=True,
+        )
+        with cls._lock:
+            declaration = cls._declarations_by_name.get(name)
+            return None if declaration is None else declaration.metadata
+
+    @classmethod
+    def require_current_metadata(cls, metadata: FunctionMetadata) -> None:
+        """Reject removed, replaced, displaced or changed-on-disk source claims."""
+
+        with cls._lock:
+            declaration = cls._declarations_by_name.get(metadata.original_name)
+            if declaration is None or declaration.metadata is not metadata:
+                raise RuntimeError("Custom function declaration changed; recompile the pipeline.")
+            if not cls.owns_published_export(metadata.original_name):
+                raise RuntimeError("Custom function public export changed; recompile the pipeline.")
+            revision = cls._declaration_revision(metadata)
+            if revision is not None:
+                declaration.lifetime.require_current_source(
+                    CustomFunctionSource(metadata.original_name, revision)
+                )
 
     @classmethod
     def metadata_for_callable(cls, func: Callable) -> FunctionMetadata | None:
@@ -459,52 +528,16 @@ def project_custom_function(
     from openhcs.processing.backends.lib_registry.openhcs_registry import (
         OpenHCSRegistry,
     )
-    from openhcs.processing.backends.lib_registry.unified_registry import (
-        FunctionMetadata,
-        ProcessingContract,
-    )
-
-    callable_contract = CallableContract.from_callable(func)
-    for role, memory_type in (
-        ("input", callable_contract.input_memory_type),
-        ("output", callable_contract.output_memory_type),
-        ("execution", callable_contract.execution_memory_type),
-    ):
-        if memory_type is None:
-            continue
-        try:
-            MemoryType(memory_type)
-        except ValueError as exc:
-            raise ValueError(
-                f"Invalid custom-function {role} memory type: {memory_type!r}"
-            ) from exc
-
-    processing_contract = callable_contract.processing_contract
-    if not isinstance(processing_contract, ProcessingContract):
-        processing_contract = ProcessingContract.FLEXIBLE
-        vars(func)[FunctionContractAttribute.processing_contract] = processing_contract
-
     registry = OpenHCSRegistry()
     if declaration_revision is not None:
         vars(func)[FunctionContractAttribute.declaration_revision] = (
             declaration_revision
         )
-    wrapped = registry.apply_contract_wrapper(func, processing_contract)
-    if declaration_revision is not None:
-        vars(wrapped)[FunctionContractAttribute.declaration_revision] = (
-            declaration_revision
-        )
-    metadata = FunctionMetadata(
-        name=func.__name__,
-        func=wrapped,
-        contract=processing_contract,
-        registry=registry,
-        module=func.__module__ or "",
-        doc=func.__doc__ or "",
-        tags=["openhcs", "custom"],
-        original_name=func.__name__,
-        memory_type=callable_contract.input_memory_type,
+    metadata = registry._metadata_for_function(
+        func.__name__, func, "custom", metadata_type=CustomFunctionMetadata,
     )
+    if metadata is None:
+        raise ValueError(f"Function {func.__name__!r} is not an admitted OpenHCS declaration.")
     return metadata
 
 

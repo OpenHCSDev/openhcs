@@ -1,0 +1,327 @@
+........................................................................ [  9%]
+........................................................................ [ 18%]
+............FF......................F................................... [ 28%]
+........................................................................ [ 37%]
+........................................................................ [ 47%]
+........................................................................ [ 56%]
+........................................................................ [ 66%]
+........................................................................ [ 75%]
+........................................................................ [ 85%]
+........................................................................ [ 94%]
+......................................                                   [100%]
+=================================== FAILURES ===================================
+_ test_same_scope_parameter_bound_input_does_not_select_lifecycle_output[object-label-runtime-argument] _
+
+tmp_path = PosixPath('/tmp/pytest-of-ts/pytest-204/test_same_scope_parameter_boun0')
+artifact_type = <class 'openhcs.core.artifacts.ObjectLabelsArtifactType'>
+parameter_name = 'labels'
+
+    @pytest.mark.parametrize(
+        ("artifact_type", "parameter_name"),
+        (
+            pytest.param(
+                ObjectLabelsArtifactType,
+                "labels",
+                id="object-label-runtime-argument",
+            ),
+            pytest.param(
+                ImageArtifactType,
+                "illumination_function",
+                id="auxiliary-image-runtime-argument",
+            ),
+        ),
+    )
+    def test_same_scope_parameter_bound_input_does_not_select_lifecycle_output(
+        tmp_path: Path,
+        artifact_type,
+        parameter_name: str,
+    ) -> None:
+        output_dir = tmp_path / "images"
+        producer = SimpleNamespace(
+            step_scope_id="artifact_producer",
+            step_name="ArtifactProducer",
+            pipeline_position=1,
+            axis_id="A01",
+            output_dir=output_dir,
+        )
+        auxiliary_input = ArtifactSpec.input(
+            "AuxiliaryArtifact",
+            artifact_type,
+            parameter_name=parameter_name,
+        )
+        consumer = SimpleNamespace(
+            axis_id="A01",
+            main_input_dependency=StepInputDependency.step_output(
+                source_step_index=1,
+                source_step_scope_id="artifact_producer",
+            ),
+>           compiled_function_pattern=_compiled_pattern_with_input_edges(
+                ((auxiliary_input, "artifact_producer"),)
+            ),
+        )
+
+tests/unit/test_function_output_manifest_input_scope.py:457: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/unit/test_function_output_manifest_input_scope.py:52: in _compiled_pattern_with_input_edges
+    compiled = compile_function_pattern(consume, {}, {})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+openhcs/core/function_patterns.py:1057: in compile_function_pattern
+    groups=tuple(compiler.compile(group) for group in normalized.groups),
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+openhcs/core/function_patterns.py:1057: in <genexpr>
+    groups=tuple(compiler.compile(group) for group in normalized.groups),
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+openhcs/core/function_patterns.py:1227: in compile
+    invocations = tuple(
+openhcs/core/function_patterns.py:1228: in <genexpr>
+    _compile_invocation(
+openhcs/core/function_patterns.py:1266: in _compile_invocation
+    item.contract.validate_artifact_input_parameter_bindings()
+openhcs/core/callable_contract.py:1200: in validate_artifact_input_parameter_bindings
+    parameter_name: resolved_callable_parameter(raw_callable, parameter_name)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+func = <function _compiled_pattern_with_input_edges.<locals>.consume at 0x7f399e3c6ca0>
+parameter_name = 'labels'
+
+    def resolved_callable_parameter(
+        func: Callable,
+        parameter_name: str,
+    ) -> inspect.Parameter:
+        """Return one callable parameter with its runtime type hint resolved."""
+    
+        signature = inspect.signature(func)
+        parameter = signature.parameters.get(parameter_name)
+        if parameter is None:
+>           raise ValueError(
+                f"Callable {func.__name__!r} does not declare parameter "
+                f"{parameter_name!r}."
+            )
+E           ValueError: Callable 'consume' does not declare parameter 'labels'.
+
+openhcs/core/pipeline/function_contracts.py:107: ValueError
+_ test_same_scope_parameter_bound_input_does_not_select_lifecycle_output[auxiliary-image-runtime-argument] _
+
+tmp_path = PosixPath('/tmp/pytest-of-ts/pytest-204/test_same_scope_parameter_boun1')
+artifact_type = <class 'openhcs.core.artifacts.ImageArtifactType'>
+parameter_name = 'illumination_function'
+
+    @pytest.mark.parametrize(
+        ("artifact_type", "parameter_name"),
+        (
+            pytest.param(
+                ObjectLabelsArtifactType,
+                "labels",
+                id="object-label-runtime-argument",
+            ),
+            pytest.param(
+                ImageArtifactType,
+                "illumination_function",
+                id="auxiliary-image-runtime-argument",
+            ),
+        ),
+    )
+    def test_same_scope_parameter_bound_input_does_not_select_lifecycle_output(
+        tmp_path: Path,
+        artifact_type,
+        parameter_name: str,
+    ) -> None:
+        output_dir = tmp_path / "images"
+        producer = SimpleNamespace(
+            step_scope_id="artifact_producer",
+            step_name="ArtifactProducer",
+            pipeline_position=1,
+            axis_id="A01",
+            output_dir=output_dir,
+        )
+        auxiliary_input = ArtifactSpec.input(
+            "AuxiliaryArtifact",
+            artifact_type,
+            parameter_name=parameter_name,
+        )
+        consumer = SimpleNamespace(
+            axis_id="A01",
+            main_input_dependency=StepInputDependency.step_output(
+                source_step_index=1,
+                source_step_scope_id="artifact_producer",
+            ),
+>           compiled_function_pattern=_compiled_pattern_with_input_edges(
+                ((auxiliary_input, "artifact_producer"),)
+            ),
+        )
+
+tests/unit/test_function_output_manifest_input_scope.py:457: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/unit/test_function_output_manifest_input_scope.py:52: in _compiled_pattern_with_input_edges
+    compiled = compile_function_pattern(consume, {}, {})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+openhcs/core/function_patterns.py:1057: in compile_function_pattern
+    groups=tuple(compiler.compile(group) for group in normalized.groups),
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+openhcs/core/function_patterns.py:1057: in <genexpr>
+    groups=tuple(compiler.compile(group) for group in normalized.groups),
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+openhcs/core/function_patterns.py:1227: in compile
+    invocations = tuple(
+openhcs/core/function_patterns.py:1228: in <genexpr>
+    _compile_invocation(
+openhcs/core/function_patterns.py:1266: in _compile_invocation
+    item.contract.validate_artifact_input_parameter_bindings()
+openhcs/core/callable_contract.py:1200: in validate_artifact_input_parameter_bindings
+    parameter_name: resolved_callable_parameter(raw_callable, parameter_name)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+func = <function _compiled_pattern_with_input_edges.<locals>.consume at 0x7f394ef962a0>
+parameter_name = 'illumination_function'
+
+    def resolved_callable_parameter(
+        func: Callable,
+        parameter_name: str,
+    ) -> inspect.Parameter:
+        """Return one callable parameter with its runtime type hint resolved."""
+    
+        signature = inspect.signature(func)
+        parameter = signature.parameters.get(parameter_name)
+        if parameter is None:
+>           raise ValueError(
+                f"Callable {func.__name__!r} does not declare parameter "
+                f"{parameter_name!r}."
+            )
+E           ValueError: Callable 'consume' does not declare parameter 'illumination_function'.
+
+openhcs/core/pipeline/function_contracts.py:107: ValueError
+________ test_artifact_lineage_projects_exact_source_binding_component _________
+
+    def test_artifact_lineage_projects_exact_source_binding_component():
+        source_binding_spec = ArtifactSpec.input("OrigStain1", ImageArtifactType)
+        aligned_output = ArtifactSpec.output_preserving_source_stack_scope(
+            "Stain1",
+            ImageArtifactType,
+            source_binding_spec,
+        )
+        aligned_input = aligned_output.for_plan_type(ArtifactInputPlan)
+        object_output = ArtifactSpec.output_preserving_source_stack_scope(
+            "Objects1",
+            ObjectLabelsArtifactType,
+            aligned_input,
+        )
+    
+        @artifact_inputs(aligned_input)
+        @artifact_outputs(object_output)
+        def identify(main_image, Stain1):
+            del Stain1
+            return main_image
+    
+        source_bindings = StepSourceBindingsConfig(
+            enabled=True,
+            bindings=(
+                NamedSourceBinding(
+                    alias=source_binding_spec.name,
+                    component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+                ),
+            ),
+        )
+        planner = _artifact_planner_stub()
+        planner.artifact_context = (
+            ArtifactDeclarationStepContext(source_bindings=source_bindings)
+            .with_source_declarations((source_binding_spec,))
+            .advance_artifact_graph(
+                ArtifactGraph(
+                    producers=(
+                        ArtifactProducer(
+                            spec=aligned_output,
+                            groups=("1", "2"),
+                            invocation_keys=(
+                                FunctionInvocationKey("align", DEFAULT_GROUP_KEY, 0),
+                            ),
+                        ),
+                    ),
+                ),
+                main_flow_artifacts=ArtifactSpecCollection((aligned_input,)),
+            )
+        )
+        _record_declared_output(
+            planner,
+            ArtifactOutputPlan(
+                name=aligned_input.name,
+                path="/memory/Stain1.pkl",
+                artifact_type=ImageArtifactType,
+                group_keys=("1", "2"),
+                group_component=AllComponents.SITE,
+                variable_components=(AllComponents.CHANNEL,),
+                paths_by_group={
+                    "1": "/memory/Stain1_site_1.pkl",
+                    "2": "/memory/Stain1_site_2.pkl",
+                },
+                relations=aligned_output.relations,
+                producer_step_index=2,
+                producer_step_name="Align",
+            ),
+        )
+        snapshot = _snapshot(
+            name="IdentifyPrimaryObjects",
+            func=identify,
+            source_bindings=source_bindings,
+        )
+        declarations = extract_artifact_declarations(identify)
+        execution_scope = planner.execution_groups.get_execution_groups(
+            snapshot,
+            PathPlannerComponentScopes.empty(),
+            source_bindings=source_bindings,
+        )
+        declarations = planner.artifacts.namespace_grouped_outputs_for_runtime_consumers(
+            identify,
+            declarations,
+            execution_scope,
+        )
+    
+        maps = planner.artifacts.compile_plan_maps(
+            snapshot,
+            3,
+            declarations,
+            execution_scope,
+            source_bindings=source_bindings,
+        )
+        compiled = planner.artifacts.build_step_compiled_function_pattern(
+            snapshot,
+            True,
+            identify,
+            maps.inputs,
+            maps.outputs,
+            maps.relation_source_scopes,
+            maps.group_scope,
+        )
+    
+        expected_channel_scope = ComponentGroupScope.from_raw(
+            ("1",),
+            component=AllComponents.CHANNEL,
+        )
+        assert maps.group_scope.keys == expected_channel_scope.keys
+        assert maps.group_scope.component is expected_channel_scope.component
+        assert maps.outputs[object_output.ref()].group_keys == ("1",)
+        assert maps.outputs[object_output.ref()].variable_components == (
+            AllComponents.SITE,
+        )
+        edge = next(compiled.iter_invocations()).artifact_input_edges[0]
+>       assert edge.projection.invocation_scope == expected_channel_scope
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'NoneType' object has no attribute 'invocation_scope'
+
+tests/unit/test_path_planner_materialization.py:1351: AttributeError
+=============================== warnings summary ===============================
+tests/unit/test_cellprofiler_module_execution.py::test_watershed_marker_special_input_preserves_declared_image_scale
+  /home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/watershed.py:1420: FutureWarning: `binary_dilation` is deprecated since version 0.26 and will be removed in version 0.28. Use `skimage.morphology.dilation` instead. Note the lack of mirroring for non-symmetric footprints (see docstring notes).
+    seeds = skimage.morphology.binary_dilation(
+
+tests/unit/test_cellprofiler_module_execution.py::test_watershed_marker_special_input_preserves_declared_image_scale
+  /home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/cellprofiler/watershed.py:1449: RuntimeWarning: overflow encountered in scalar add
+    y_data += np.abs(np.min(y_data)) + 1
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/unit/test_function_output_manifest_input_scope.py::test_same_scope_parameter_bound_input_does_not_select_lifecycle_output[object-label-runtime-argument]
+FAILED tests/unit/test_function_output_manifest_input_scope.py::test_same_scope_parameter_bound_input_does_not_select_lifecycle_output[auxiliary-image-runtime-argument]
+FAILED tests/unit/test_path_planner_materialization.py::test_artifact_lineage_projects_exact_source_binding_component
+3 failed, 755 passed, 2 warnings in 9.40s

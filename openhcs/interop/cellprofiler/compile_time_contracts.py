@@ -12,7 +12,7 @@ from openhcs.core.artifacts import (
     ArtifactSpecCollection,
     ImageArtifactType,
 )
-from openhcs.core.callable_contract import FunctionStepExecutionScope
+from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
 from openhcs.core.function_patterns import (
     FunctionInvocationKey,
     NormalizedFunctionGroup,
@@ -28,16 +28,16 @@ from openhcs.core.invocation_artifacts import (
     InvocationContractProviderFactory,
     unnamed_main_flow_artifact_name,
 )
-from openhcs.core.pipeline.compilation_session import CompilationSession
 from openhcs.core.pipeline.artifact_planning import (
     extract_artifact_declarations,
 )
+from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
 from openhcs.core.steps.function_step import FunctionStep
 
 
 @dataclass(frozen=True, slots=True)
 class CellProfilerInvocationContractProvider(InvocationContractProvider):
-    """Session-scoped exact CellProfiler invocation-contract provider."""
+    """Saved-declaration-scoped exact CellProfiler invocation contracts."""
 
     plans: Mapping[
         tuple[int, FunctionInvocationKey],
@@ -114,9 +114,25 @@ class CellProfilerInvocationContractProviderFactory(InvocationContractProviderFa
     """Compile exact CellProfiler invocation contracts from public snapshots."""
 
     @classmethod
-    def provider_for_session(
+    def compile_time_parameter_names(cls, contract: CallableContract) -> tuple[str, ...]:
+        from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
+
+        owner = CellProfilerModule.for_callable_contract(contract)
+        return () if owner is None else owner.compile_time_parameter_names(contract)
+
+    @classmethod
+    def normalize_authoring_kwargs(
+        cls, contract: CallableContract, kwargs: Mapping[str, object],
+    ) -> Mapping[str, object] | None:
+        from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
+
+        owner = CellProfilerModule.for_callable_contract(contract)
+        return None if owner is None else owner.normalize_authoring_kwargs(contract, kwargs)
+
+    @classmethod
+    def provider_for_pipeline(
         cls,
-        session: CompilationSession,
+        pipeline: ResolvedPipelineDefinition,
     ) -> InvocationContractProvider | None:
         from openhcs.interop.cellprofiler.module_declarations import (
             CellProfilerModule,
@@ -131,29 +147,25 @@ class CellProfilerInvocationContractProviderFactory(InvocationContractProviderFa
         ] = {}
         forward_context = ArtifactDeclarationStepContext.empty()
         next_module_num = 1
-        for snapshot in session.snapshots:
-            if (
-                not snapshot.step.enabled
-                or not isinstance(snapshot.step, FunctionStep)
-                or snapshot.step.func is None
-            ):
+        for step_index, step in enumerate(pipeline.steps):
+            if not step.enabled or not isinstance(step, FunctionStep) or step.func is None:
                 continue
-            source_bindings = snapshot.step.source_bindings
+            source_bindings = step.source_bindings
             effective_source_bindings = source_bindings.for_input_source(
-                snapshot.step.processing_config.input_source
+                step.processing_config.input_source
             )
             forward_context = replace(
                 forward_context,
-                step_name=snapshot.step.name,
-                step_index=snapshot.index,
+                step_name=step.name,
+                step_index=step_index,
             ).with_source_binding_scope(
                 source_bindings=effective_source_bindings,
-                group_by=snapshot.step.processing_config.group_by,
-                input_source=snapshot.step.processing_config.input_source,
+                group_by=step.processing_config.group_by,
+                input_source=step.processing_config.input_source,
             )
             step_context = forward_context
 
-            normalized_pattern = normalize_function_pattern(snapshot.step.func)
+            normalized_pattern = normalize_function_pattern(step.func)
             first_step_module_num = next_module_num
             step_invocations = []
             group_contexts: list[ArtifactDeclarationStepContext] = []
@@ -194,7 +206,7 @@ class CellProfilerInvocationContractProviderFactory(InvocationContractProviderFa
                                 (
                                     ArtifactSpec.input(
                                         unnamed_main_flow_artifact_name(
-                                            snapshot.index,
+                                            step_index,
                                             invocation.key,
                                         ),
                                         ImageArtifactType,
@@ -239,7 +251,7 @@ class CellProfilerInvocationContractProviderFactory(InvocationContractProviderFa
                     except (TypeError, ValueError) as exc:
                         raise type(exc)(
                             "CellProfiler contract compilation failed for step "
-                            f"{snapshot.index} ({snapshot.step.name!r}), invocation "
+                            f"{step_index} ({step.name!r}), invocation "
                             f"{invocation.key!r}, module {module_type.__name__}: {exc}"
                         ) from exc
                     compiled_contract = replace(
@@ -256,11 +268,11 @@ class CellProfilerInvocationContractProviderFactory(InvocationContractProviderFa
                             ),
                         ),
                     )
-                    key = (snapshot.index, invocation.key)
+                    key = (step_index, invocation.key)
                     if key in plans:
                         raise ValueError(
                             f"Duplicate CellProfiler invocation contract for step "
-                            f"{snapshot.index} ({snapshot.step.name!r}), invocation "
+                            f"{step_index} ({step.name!r}), invocation "
                             f"{invocation.key!r}, module {module_type.__name__}: "
                             f"{key!r}."
                         )

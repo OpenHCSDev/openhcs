@@ -1,0 +1,823 @@
+{
+  "source_proof": {
+    "path": "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/bbbc013-dev02-native-panel-proof.json",
+    "size_bytes": 24493,
+    "sha256": "eb0f92e67e09f2e67e4087cf9cecb82c018acdb7ea33d3951b3d0aee6c1b8047"
+  },
+  "existing_workflow": {
+    "path": "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/render_h001_fresh586_native_panels.py",
+    "size_bytes": 8653,
+    "sha256": "c5498b8966e4ae4318a82ba57855a0ed8f41e00fda6d94ad0abe749347a169aa"
+  },
+  "render_driver": {
+    "path": "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/render_bbbc013_dev02_native_panels.py",
+    "size_bytes": 8809,
+    "sha256": "ed12ebc93ccfe5d6a9a302210a7b16c77e935a20337ac37b7306f85aa44ac161"
+  },
+  "panels": [
+    {
+      "panel": "A0",
+      "label": "Raw \u00b7 a21",
+      "tag": "a21-h12-miss-raw",
+      "original_png": {
+        "mime_type": "image/png",
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/qa/a21-h12-miss-raw/20261003T233430626342Z_napari_6013_OpenHCS_Napari_Visualization.png",
+        "sha256": "5c04b67030ef7c5aac52284ebf32982edd4d615eab7ffae31516811d83e528e5",
+        "size_bytes": 139007,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/qa/a21-h12-miss-raw/20261003T233430626342Z_napari_6013_OpenHCS_Napari_Visualization.png"
+      },
+      "capture_receipt": "/home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/evidence/qa21-h12-miss-raw-shot.json",
+      "capture_receipt_sha256": "c3dc446ef0296377c38a7612db8d12d8de90d0c84af31321fd6cc97870015957",
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          420
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          2,
+          319.5,
+          319.5
+        ]
+      },
+      "clip_ltrb": [
+        297,
+        28,
+        1250,
+        448
+      ],
+      "scale": 0.5246589716684156,
+      "display_xywh": [
+        24,
+        102,
+        500,
+        220.35676810073454
+      ]
+    },
+    {
+      "panel": "A1",
+      "label": "Before \u00b7 a20 combined",
+      "tag": "a20-h12-miss-combined",
+      "original_png": {
+        "mime_type": "image/png",
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/qa/a20-h12-miss-combined/20261003T232833447928Z_napari_6013_OpenHCS_Napari_Visualization.png",
+        "sha256": "31c4597a036bba1085b33ee0ae2844c8990e33ed4f9e161a0827da0ebaa959e8",
+        "size_bytes": 170867,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/qa/a20-h12-miss-combined/20261003T232833447928Z_napari_6013_OpenHCS_Napari_Visualization.png"
+      },
+      "capture_receipt": "/home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/evidence/qa20-h12-miss-combined-shot.json",
+      "capture_receipt_sha256": "80f2a4a8f16d3a1b24e0c21ea15c9ee603165ed0e38a682ba836d215b2fd4b0d",
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          420
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          2,
+          319.5,
+          319.5
+        ]
+      },
+      "clip_ltrb": [
+        297,
+        28,
+        1250,
+        448
+      ],
+      "scale": 0.5246589716684156,
+      "display_xywh": [
+        540,
+        102,
+        500,
+        220.35676810073454
+      ]
+    },
+    {
+      "panel": "A2",
+      "label": "After \u00b7 a21 combined",
+      "tag": "a21-h12-miss-combined",
+      "original_png": {
+        "mime_type": "image/png",
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/qa/a21-h12-miss-combined/20261003T233444749898Z_napari_6013_OpenHCS_Napari_Visualization.png",
+        "sha256": "85b28ec2fdffc35c781765615fbff4b864e39d6563afd77ece4e68d44ce86b18",
+        "size_bytes": 172834,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/qa/a21-h12-miss-combined/20261003T233444749898Z_napari_6013_OpenHCS_Napari_Visualization.png"
+      },
+      "capture_receipt": "/home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/evidence/qa21-h12-miss-combined-shot.json",
+      "capture_receipt_sha256": "a1ea76e915d092fe72d3d49165e661454f4b2c37ce8bf23f1ceafef8ebdcd9bc",
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          420
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          2,
+          319.5,
+          319.5
+        ]
+      },
+      "clip_ltrb": [
+        297,
+        28,
+        1250,
+        448
+      ],
+      "scale": 0.5246589716684156,
+      "display_xywh": [
+        1056,
+        102,
+        500,
+        220.35676810073454
+      ]
+    },
+    {
+      "panel": "B0",
+      "label": "After \u00b7 a21 raw",
+      "tag": "a21-a01-control-raw",
+      "original_png": {
+        "mime_type": "image/png",
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/qa/a21-a01-control-raw/20261003T233536515149Z_napari_6013_OpenHCS_Napari_Visualization.png",
+        "sha256": "6d7487d46920f2792d4566edc66b21e79c9da76dd03517d53e2e3fae99f6892c",
+        "size_bytes": 190003,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/qa/a21-a01-control-raw/20261003T233536515149Z_napari_6013_OpenHCS_Napari_Visualization.png"
+      },
+      "capture_receipt": "/home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/evidence/qa21-a01-control-raw-shot.json",
+      "capture_receipt_sha256": "f02ae742d28d77f9f3e751ca72e73289a4c81a8c15955c2c08ce714f87ab41b0",
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          420
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          319.5,
+          319.5
+        ]
+      },
+      "clip_ltrb": [
+        297,
+        28,
+        1250,
+        448
+      ],
+      "scale": 0.5246589716684156,
+      "display_xywh": [
+        24,
+        434,
+        500,
+        220.35676810073454
+      ]
+    },
+    {
+      "panel": "B1",
+      "label": "After \u00b7 a21 result",
+      "tag": "a21-a01-control-result",
+      "original_png": {
+        "mime_type": "image/png",
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/qa/a21-a01-control-result/20261003T233544076781Z_napari_6013_OpenHCS_Napari_Visualization.png",
+        "sha256": "bc1f7419158ed3dddc7d6f1852b6c458faeef75e87a1a34e9877b44039b83b66",
+        "size_bytes": 151529,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/qa/a21-a01-control-result/20261003T233544076781Z_napari_6013_OpenHCS_Napari_Visualization.png"
+      },
+      "capture_receipt": "/home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/evidence/qa21-a01-control-result-shot.json",
+      "capture_receipt_sha256": "d62e2373c6d55a09b1cd9721065a4b6949aad8ca02c995468f3ea038dbea2993",
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          420
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          319.5,
+          319.5
+        ]
+      },
+      "clip_ltrb": [
+        297,
+        28,
+        1250,
+        448
+      ],
+      "scale": 0.5246589716684156,
+      "display_xywh": [
+        540,
+        434,
+        500,
+        220.35676810073454
+      ]
+    },
+    {
+      "panel": "B2",
+      "label": "After \u00b7 a21 combined",
+      "tag": "a21-a01-control-combined",
+      "original_png": {
+        "mime_type": "image/png",
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/qa/a21-a01-control-combined/20261003T233552814273Z_napari_6013_OpenHCS_Napari_Visualization.png",
+        "sha256": "d2952d4e86b053a7f5d490653749d996ca4a95d87b7a3e3588bef9dc9afbd622",
+        "size_bytes": 240595,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/qa/a21-a01-control-combined/20261003T233552814273Z_napari_6013_OpenHCS_Napari_Visualization.png"
+      },
+      "capture_receipt": "/home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/evidence/qa21-a01-control-combined-shot.json",
+      "capture_receipt_sha256": "b996d5bf536af70de88407041ea442231eecbd742638f14722e6bbe72cd440f8",
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          420
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          319.5,
+          319.5
+        ]
+      },
+      "clip_ltrb": [
+        297,
+        28,
+        1250,
+        448
+      ],
+      "scale": 0.5246589716684156,
+      "display_xywh": [
+        1056,
+        434,
+        500,
+        220.35676810073454
+      ]
+    },
+    {
+      "panel": "C0",
+      "label": "After \u00b7 a21 raw",
+      "tag": "a21-d06-gfp-corrected-raw",
+      "original_png": {
+        "mime_type": "image/png",
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/qa/a21-d06-gfp-corrected-raw/20261003T234306907412Z_napari_6013_OpenHCS_Napari_Visualization.png",
+        "sha256": "f188ca58bedfb9b052776ab45a75c27ed46f5839fb389ff9878dbdb817f1afc5",
+        "size_bytes": 223706,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/qa/a21-d06-gfp-corrected-raw/20261003T234306907412Z_napari_6013_OpenHCS_Napari_Visualization.png"
+      },
+      "capture_receipt": "/home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/evidence/qa21-d06-gfp-corrected-raw-shot.json",
+      "capture_receipt_sha256": "a73807fea979c742ca4cdefa50c18e97139b97de9051c783f86c83d7ae3858c0",
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          420
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          1,
+          0,
+          0,
+          1,
+          319.5,
+          319.5
+        ]
+      },
+      "clip_ltrb": [
+        297,
+        28,
+        1250,
+        448
+      ],
+      "scale": 0.5246589716684156,
+      "display_xywh": [
+        24,
+        766,
+        500,
+        220.35676810073454
+      ]
+    },
+    {
+      "panel": "C1",
+      "label": "After \u00b7 a21 result",
+      "tag": "a21-d06-gfp-corrected-result",
+      "original_png": {
+        "mime_type": "image/png",
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/qa/a21-d06-gfp-corrected-result/20261003T234320771247Z_napari_6013_OpenHCS_Napari_Visualization.png",
+        "sha256": "5dce85b3e6994977838509a952afe2c983c02983f5e9f8c2021acb82736f923c",
+        "size_bytes": 156853,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/qa/a21-d06-gfp-corrected-result/20261003T234320771247Z_napari_6013_OpenHCS_Napari_Visualization.png"
+      },
+      "capture_receipt": "/home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/evidence/qa21-d06-gfp-corrected-result-shot.json",
+      "capture_receipt_sha256": "38552933eb44b8a12d74b37b5cc2f8e35bf41f9658c21a60ff5bf65e0453adbc",
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          420
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          1,
+          0,
+          0,
+          1,
+          319.5,
+          319.5
+        ]
+      },
+      "clip_ltrb": [
+        297,
+        28,
+        1250,
+        448
+      ],
+      "scale": 0.5246589716684156,
+      "display_xywh": [
+        540,
+        766,
+        500,
+        220.35676810073454
+      ]
+    },
+    {
+      "panel": "C2",
+      "label": "After \u00b7 a21 combined",
+      "tag": "a21-d06-gfp-corrected-combined",
+      "original_png": {
+        "mime_type": "image/png",
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/qa/a21-d06-gfp-corrected-combined/20261003T234334396634Z_napari_6013_OpenHCS_Napari_Visualization.png",
+        "sha256": "fef7d1138ccfb0137481dca2219c66ca98d8f348f798a2f77497a22487915a3b",
+        "size_bytes": 235528,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/qa/a21-d06-gfp-corrected-combined/20261003T234334396634Z_napari_6013_OpenHCS_Napari_Visualization.png"
+      },
+      "capture_receipt": "/home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/evidence/qa21-d06-gfp-corrected-combined-shot.json",
+      "capture_receipt_sha256": "59ea58815ac5ee1924a1589c1a443b31dd22aef1b721dd1b9299ce63d3dfaeda",
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          420
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          1,
+          0,
+          0,
+          1,
+          319.5,
+          319.5
+        ]
+      },
+      "clip_ltrb": [
+        297,
+        28,
+        1250,
+        448
+      ],
+      "scale": 0.5246589716684156,
+      "display_xywh": [
+        1056,
+        766,
+        500,
+        220.35676810073454
+      ]
+    }
+  ],
+  "original_png_embedding_verified": 9,
+  "original_selected_pngs_unchanged": 12,
+  "source_identity": {
+    "scope": "Same-author DEV02 attempts20/21 only; not REPEAT94 finaljob14 or DEV02 interrupted22.",
+    "presentation_controls": [
+      {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/evidence/qa20-h12-miss-window60-summary.json",
+        "sha256": "18d5f62a0b09b33cce41ec3fda7a2216af199dd42496b4282fcecf2ab31ab465",
+        "presentation": {
+          "native_intensity": {
+            "contrast_limits": [
+              0,
+              60
+            ],
+            "gamma": 1
+          }
+        }
+      },
+      {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/evidence/qa20-h12-miss-viewport-summary.json",
+        "sha256": "767eb3a6fb16ae42a5edcdb984f874e30df4e27217de073f4cd498a51df017d3",
+        "presentation": {
+          "native_viewport": {
+            "center": [
+              0,
+              170,
+              110
+            ],
+            "zoom": 2.5
+          }
+        }
+      },
+      {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/evidence/qa21-h12-miss-window60-summary.json",
+        "sha256": "0344e54d96a77d766d2783995432a77fb21c3f27e18d36829b8a71b63d3a6634",
+        "presentation": {
+          "native_intensity": {
+            "contrast_limits": [
+              0,
+              60
+            ],
+            "gamma": 1
+          }
+        }
+      },
+      {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/evidence/qa21-h12-miss-viewport-summary.json",
+        "sha256": "b30971dc41043c70384c421fbb5db42074e96f4d13f6c4599941c9f6c3fcea3a",
+        "presentation": {
+          "native_viewport": {
+            "center": [
+              0,
+              170,
+              110
+            ],
+            "zoom": 2.5
+          }
+        }
+      },
+      {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/evidence/qa21-a01-control-window-summary.json",
+        "sha256": "05d611835ff9dce13a5b5b4922ee8e779cc0c75660276967c840ca9b02d6f6ad",
+        "presentation": {
+          "native_intensity": {
+            "contrast_limits": [
+              0,
+              123
+            ],
+            "gamma": 1
+          }
+        }
+      },
+      {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/evidence/qa21-a01-control-viewport-summary.json",
+        "sha256": "59c87600599781173581fea404818e4151e8a7d90e7db6f27b1cb0dc36996ff2",
+        "presentation": {
+          "native_viewport": {
+            "center": [
+              0,
+              190,
+              380
+            ],
+            "zoom": 2.2
+          }
+        }
+      },
+      {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/evidence/qa21-d06-gfp-corrected-pre-summary.json",
+        "sha256": "29fad5d6f06d81f4686abdd492e23e1872bb1771ccf808b88094778ef260ccf6",
+        "presentation": {
+          "native_viewport": {
+            "center": [
+              0,
+              319.5,
+              319.5
+            ],
+            "zoom": 0.6234375
+          },
+          "current_step": [
+            0,
+            0,
+            0,
+            0,
+            1,
+            320,
+            320
+          ],
+          "axis_labels": [
+            "site",
+            "channel",
+            "z_index",
+            "timepoint",
+            "well",
+            "y",
+            "x"
+          ]
+        }
+      }
+    ],
+    "keepers": [
+      {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/REPORT.md",
+        "sha256": "8f45a2c2c27b42e7fa1a3b2893cde9342de8143cfe7862f92b51a0e6a106c933",
+        "size_bytes": 11783
+      },
+      {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/qa/review-index.json",
+        "sha256": "1675de01399d5dd2317e77ddff1c45a40381532c345b8e8b21afc808af8c07e1",
+        "size_bytes": 61947
+      },
+      {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/attempt20/pipeline.py",
+        "sha256": "5d51d8b545c283037566d43145eb1afed669d24bb579db30e7738aac46dc731f",
+        "size_bytes": 8088
+      },
+      {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/attempt21/pipeline.py",
+        "sha256": "a887f625333f542992fe35a00101303969b37b70007659a156de66ee2e991c6a",
+        "size_bytes": 8089
+      },
+      {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/frozen/parameter-freeze.json",
+        "sha256": "bb426bd7e8fd4c38c8aaaf830e755736f951a369b40cef50611beedb0f584584",
+        "size_bytes": 852
+      },
+      {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-development-recovery02-20261003/BBBC013_DEV02_94/author-workspace/output/frozen/freeze-manifest.json",
+        "sha256": "ae26a6713addd2f99ed3ce10a1b5df6d6483f355a5238f06634013f13aff5825",
+        "size_bytes": 4049
+      }
+    ]
+  },
+  "crop": {
+    "clip_ltrb": [
+      297,
+      28,
+      1250,
+      448
+    ],
+    "scope": "Complete native953x420 canvas, including original footer; identical for all nine panels."
+  },
+  "pixel_operations": "None. Complete original compressed PNG bytes embedded unchanged; SVG clipping/scaling only. No recolouring/painting/contrast/analysis.",
+  "output_dimensions": [
+    1584,
+    1216
+  ],
+  "render_runs": [
+    {
+      "command": [
+        "/usr/bin/rsvg-convert",
+        "--output",
+        "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/singer-bbbc013-dev02-native-panels/preview.png",
+        "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/singer-bbbc013-dev02-native-panels/candidate.svg"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/usr/bin/rsvg-convert",
+        "--width",
+        "576",
+        "--output",
+        "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/singer-bbbc013-dev02-native-panels/six-inch-preview.png",
+        "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/singer-bbbc013-dev02-native-panels/candidate.svg"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/usr/bin/rsvg-convert",
+        "--format",
+        "pdf",
+        "--dpi-x",
+        "72",
+        "--dpi-y",
+        "72",
+        "--width",
+        "432",
+        "--output",
+        "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/singer-bbbc013-dev02-native-panels/six-inch.pdf",
+        "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/singer-bbbc013-dev02-native-panels/candidate.svg"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "publication_scale": {
+    "width_inches": 6,
+    "width_points": 432,
+    "minimum_svg_font_units": 32.0,
+    "minimum_label_points": 8.727272727272727,
+    "preview_width_pixels_at_96dpi": 576
+  },
+  "parent_review": "Pending parent visual review/manuscript integration.",
+  "outputs": [
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/singer-bbbc013-dev02-native-panels/candidate.svg",
+      "size_bytes": 2247258,
+      "sha256": "53e13febcea98fd328514bbaae45ff2ad7ab44f73ccc737d5235bb134d6adeb6"
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/singer-bbbc013-dev02-native-panels/preview.png",
+      "size_bytes": 707264,
+      "sha256": "3f926de8b3b076d6292f74cf54481edc968b720b3e34e449babd600da582dee8"
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/singer-bbbc013-dev02-native-panels/six-inch-preview.png",
+      "size_bytes": 218507,
+      "sha256": "81a243f315c71d12062ef4ed9b284b8e4549c636eee9566dd13c39c430e8107f"
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/singer-bbbc013-dev02-native-panels/six-inch.pdf",
+      "size_bytes": 1595715,
+      "sha256": "64949ea1837f4ed08158d55124be29ed5fe632b1b5fdf1496efbfa618b829d0a"
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/figure-collection-20261004/singer-bbbc013-dev02-native-panels/caption.rst",
+      "size_bytes": 1064,
+      "sha256": "e6dbc6ad23d462f5317da8e66b5b1ff3419214476b5ca275c4c9718f7795d5d5"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "trial": "BBBC013_REPEAT94",
+  "source_root": "/home/ts/wt/openhcs-issue-batch-20260929/next-bbbc013-repeat94-20261003/BBBC013_REPEAT94/author-workspace/output",
+  "disposition": "operationally_interrupted_not_biologically_scored",
+  "declared_source_sets": 96,
+  "complete_final_mask_sets": 42,
+  "final_plate_tables_exported": false,
+  "distributed_biological_review_complete": false,
+  "scope_result": "oom-kill",
+  "scope_memory_max_bytes": 4831838208,
+  "scope_memory_peak_bytes": 4831838208,
+  "host_memory_exhaustion_established": false,
+  "statistics_registration": "uncertain_not_executed",
+  "source_sha256": {
+    "FREEZE.json": "d232a15097480250e6afd4312dd270ea6b5fcf1b8901d9f5634bc721ea2b14ef",
+    "REPORT.rst": "4b2fbbf61f8b1e3cc396df0ada7a465b95f4acb7d6b95b577a2f722183cafe36",
+    "pipelines/final_catalog.py": "8862393693b478d38798eacfeaf8fa696d14820f13d25893c94446bef6c8c663",
+    "evidence/final-partial-inventory.json": "e7e44cda65390c3260747ef8fd39c1c2b6e853b70eabc2cdfd0395fac32d2bc8",
+    "evidence/terminated-scope-state.txt": "6b6b19f629daf77c457a2b408a497446fbecc6dc6f0cec0d22a759e6889cf774",
+    "evidence/terminated-scope-journal.txt": "80c3999ecd9482806001e4faefcd1ad9a06c99aea7714fcf9ec00db2cfa6f940"
+  },
+  "qualification": "Hashes checked against retained originals and freeze entries. This small record is not a portable scientific archive, full programme attempt census, segmentation score or scientific rerun."
+}

@@ -1,0 +1,242 @@
+{
+  "before": {
+    "source_revision": "589c33a12-before-dense-center-reduction",
+    "module_count": 699,
+    "original_class_count": 5075,
+    "projected_count": 5063,
+    "open_rows": [
+      {
+        "path": "openhcs/components/framework.py",
+        "line": 198,
+        "name": "_ComponentTemplate",
+        "lexical_scope": [
+          "ComponentConfigurationFactory",
+          "create_openhcs_default_configuration"
+        ],
+        "status": "OPEN-unprojected"
+      },
+      {
+        "path": "openhcs/gui_startup.py",
+        "line": 481,
+        "name": "_EventBridge",
+        "lexical_scope": [
+          "_run_startup_window_child"
+        ],
+        "status": "OPEN-unprojected"
+      },
+      {
+        "path": "openhcs/gui_startup.py",
+        "line": 485,
+        "name": "_StartupWindow",
+        "lexical_scope": [
+          "_run_startup_window_child"
+        ],
+        "status": "OPEN-unprojected"
+      },
+      {
+        "path": "openhcs/gui_startup.py",
+        "line": 612,
+        "name": "_StartupWindowPresentation",
+        "lexical_scope": [
+          "_run_startup_window_child"
+        ],
+        "status": "OPEN-unprojected"
+      },
+      {
+        "path": "openhcs/mcp/http.py",
+        "line": 76,
+        "name": "OpenHCSHostedFastMCP",
+        "lexical_scope": [
+          "create_hosted_fastmcp_type"
+        ],
+        "status": "OPEN-unprojected"
+      },
+      {
+        "path": "openhcs/processing/backends/analysis/dxf_mask_pipeline.py",
+        "line": 107,
+        "name": "_RegistrationCNN_torch",
+        "lexical_scope": [],
+        "status": "OPEN-unprojected"
+      },
+      {
+        "path": "openhcs/pyqt_gui/widgets/shared/services/execution_submission_service.py",
+        "line": 102,
+        "name": "_ClientDisconnected",
+        "lexical_scope": [
+          "ExecutionSubmissionService",
+          "start_completion_poller"
+        ],
+        "status": "OPEN-unprojected"
+      },
+      {
+        "path": "openhcs/runtime/fiji_viewer_server.py",
+        "line": 2604,
+        "name": "DimensionScrollbarListener",
+        "lexical_scope": [
+          "FijiViewerServer",
+          "_add_dimension_change_listener"
+        ],
+        "status": "OPEN-unprojected"
+      },
+      {
+        "path": "openhcs/runtime/fiji_viewer_server.py",
+        "line": 2682,
+        "name": "WindowCloseListener",
+        "lexical_scope": [
+          "FijiViewerServer",
+          "_add_dimension_change_listener"
+        ],
+        "status": "OPEN-unprojected"
+      },
+      {
+        "path": "openhcs/runtime/fiji_viewer_server.py",
+        "line": 3051,
+        "name": "FijiUiWorkUnit",
+        "lexical_scope": [
+          "FijiRoiManagerProvider",
+          "invoke_on_event_dispatch_thread"
+        ],
+        "status": "OPEN-unprojected"
+      },
+      {
+        "path": "openhcs/utils/import_utils.py",
+        "line": 67,
+        "name": "Placeholder",
+        "lexical_scope": [
+          "create_placeholder_class"
+        ],
+        "status": "OPEN-unprojected"
+      },
+      {
+        "path": "openhcs/utils/pipeline_migration.py",
+        "line": 358,
+        "name": "MigratingGroupBy",
+        "lexical_scope": [
+          "LegacyGroupByUnpickler",
+          "_create_migrating_groupby_class"
+        ],
+        "status": "OPEN-unprojected"
+      }
+    ]
+  },
+  "after": {
+    "source_revision": "32d070c26-plus-shared-radial-normalization",
+    "module_count": 699,
+    "original_class_count": 5075,
+    "projected_count": 5063,
+    "open_rows": [
+      {
+        "path": "openhcs/components/framework.py",
+        "line": 198,
+        "name": "_ComponentTemplate",
+        "lexical_scope": [
+          "ComponentConfigurationFactory",
+          "create_openhcs_default_configuration"
+        ],
+        "status": "OPEN-unprojected"
+      },
+      {
+        "path": "openhcs/gui_startup.py",
+        "line": 481,
+        "name": "_EventBridge",
+        "lexical_scope": [
+          "_run_startup_window_child"
+        ],
+        "status": "OPEN-unprojected"
+      },
+      {
+        "path": "openhcs/gui_startup.py",
+        "line": 485,
+        "name": "_StartupWindow",
+        "lexical_scope": [
+          "_run_startup_window_child"
+        ],
+        "status": "OPEN-unprojected"
+      },
+      {
+        "path": "openhcs/gui_startup.py",
+        "line": 612,
+        "name": "_StartupWindowPresentation",
+        "lexical_scope": [
+          "_run_startup_window_child"
+        ],
+        "status": "OPEN-unprojected"
+      },
+      {
+        "path": "openhcs/mcp/http.py",
+        "line": 76,
+        "name": "OpenHCSHostedFastMCP",
+        "lexical_scope": [
+          "create_hosted_fastmcp_type"
+        ],
+        "status": "OPEN-unprojected"
+      },
+      {
+        "path": "openhcs/processing/backends/analysis/dxf_mask_pipeline.py",
+        "line": 107,
+        "name": "_RegistrationCNN_torch",
+        "lexical_scope": [],
+        "status": "OPEN-unprojected"
+      },
+      {
+        "path": "openhcs/pyqt_gui/widgets/shared/services/execution_submission_service.py",
+        "line": 102,
+        "name": "_ClientDisconnected",
+        "lexical_scope": [
+          "ExecutionSubmissionService",
+          "start_completion_poller"
+        ],
+        "status": "OPEN-unprojected"
+      },
+      {
+        "path": "openhcs/runtime/fiji_viewer_server.py",
+        "line": 2604,
+        "name": "DimensionScrollbarListener",
+        "lexical_scope": [
+          "FijiViewerServer",
+          "_add_dimension_change_listener"
+        ],
+        "status": "OPEN-unprojected"
+      },
+      {
+        "path": "openhcs/runtime/fiji_viewer_server.py",
+        "line": 2682,
+        "name": "WindowCloseListener",
+        "lexical_scope": [
+          "FijiViewerServer",
+          "_add_dimension_change_listener"
+        ],
+        "status": "OPEN-unprojected"
+      },
+      {
+        "path": "openhcs/runtime/fiji_viewer_server.py",
+        "line": 3051,
+        "name": "FijiUiWorkUnit",
+        "lexical_scope": [
+          "FijiRoiManagerProvider",
+          "invoke_on_event_dispatch_thread"
+        ],
+        "status": "OPEN-unprojected"
+      },
+      {
+        "path": "openhcs/utils/import_utils.py",
+        "line": 67,
+        "name": "Placeholder",
+        "lexical_scope": [
+          "create_placeholder_class"
+        ],
+        "status": "OPEN-unprojected"
+      },
+      {
+        "path": "openhcs/utils/pipeline_migration.py",
+        "line": 358,
+        "name": "MigratingGroupBy",
+        "lexical_scope": [
+          "LegacyGroupByUnpickler",
+          "_create_migrating_groupby_class"
+        ],
+        "status": "OPEN-unprojected"
+      }
+    ]
+  }
+}

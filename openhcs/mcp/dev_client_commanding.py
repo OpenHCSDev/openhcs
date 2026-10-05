@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import argparse
 from abc import ABC, abstractmethod
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
+from contextlib import AbstractContextManager, nullcontext
 import inspect
 import json
+import sys
 import tempfile
 from typing import ClassVar
 
@@ -120,6 +122,14 @@ class McpDevCommandSpec(ABC, metaclass=AutoRegisterMeta):
     def configure_reflected_parser(self, parser: argparse.ArgumentParser) -> None:
         """Add options reflected from declarations owned outside the command."""
 
+    def prepare_input(
+        self,
+        args: argparse.Namespace,
+        *,
+        stdin_context: Callable[[], AbstractContextManager[None]] = nullcontext,
+    ) -> None:
+        """Resolve declaration-owned input before building or submitting calls."""
+
     @abstractmethod
     def calls_from_args(
         self,
@@ -133,6 +143,7 @@ class McpDevCommandSpec(ABC, metaclass=AutoRegisterMeta):
         args: argparse.Namespace,
     ) -> McpDevToolBatchResponse | McpDevToolListResponse:
         """Execute this command through one initialized MCP dev session."""
+        self.prepare_input(args)
         prepared_calls = self.calls_from_args(args)
         for call in prepared_calls:
             call.require_surface_profile(server_spec.surface_profile)
@@ -209,6 +220,43 @@ class McpDevCommandSpec(ABC, metaclass=AutoRegisterMeta):
         del args
         return json.dumps(payload, indent=2, sort_keys=True)
 
+    def render_result(self, response, args: argparse.Namespace) -> str:
+        """Render a framed production result without requiring a JSON round trip."""
+        from openhcs.serialization.json import to_jsonable
+
+        return self.render_response(to_jsonable(response), args)
+
+    def requests_json_output(self, args: argparse.Namespace) -> bool:
+        """Project this command's declared output selection for shared rendering."""
+        return args.json
+
+
+class StdinSourceCommandSpec(McpDevCommandSpec):
+    """Independent source-input capability composed with execution/rendering."""
+
+    def prepare_input(
+        self,
+        args: argparse.Namespace,
+        *,
+        stdin_context: Callable[[], AbstractContextManager[None]] = nullcontext,
+    ) -> None:
+        super().prepare_input(args, stdin_context=stdin_context)
+        if args.source_file == "-":
+            with stdin_context():
+                args.source_text = sys.stdin.read()
+            args.source_file = None
+
+
+class TypedCompositeCommandSpec(McpDevCommandSpec):
+    """Composite commands consume the same decoded batch as their wire ingress."""
+
+    def render_result(self, response, args: argparse.Namespace) -> str:
+        if self.requests_json_output(args):
+            from openhcs.serialization.json import to_jsonable
+
+            return super().render_response(to_jsonable(response), args)
+        return self.render_response(response, args)
+
 
 class CapabilityBackedCommandSpec(McpDevCommandSpec):
     """Command whose primary MCP tool capability is declared on the command."""
@@ -260,7 +308,9 @@ class CapabilityBackedCommandSpec(McpDevCommandSpec):
     def output_renderer_binding(self):
         output_contract = self.capability.output_contract
         return McpDevOutputRenderer.for_output_contract(
-            output_contract if isinstance(output_contract, type) else None
+            None
+            if output_contract is None
+            else require_agent_type_contract(output_contract)
         )
 
     def configure_reflected_parser(self, parser: argparse.ArgumentParser) -> None:
@@ -278,6 +328,12 @@ class CapabilityBackedCommandSpec(McpDevCommandSpec):
             self.call_render_args(tool_arguments),
         )
 
+    def render_call_result(
+        self, response, tool_arguments: Mapping[str, JsonValue]
+    ) -> str:
+        """Generic calls use the same nominal command contract as named calls."""
+        return self.render_result(response, self.call_render_args(tool_arguments))
+
     def renderer_options(
         self,
         args: argparse.Namespace,
@@ -292,7 +348,7 @@ class CapabilityBackedCommandSpec(McpDevCommandSpec):
         payload: JsonObject,
         args: argparse.Namespace,
     ) -> str:
-        if bool(vars(args).get("json", False)):
+        if self.requests_json_output(args):
             return super().render_response(payload, args)
         renderer_binding = self.output_renderer_binding()
         if renderer_binding is None:
@@ -300,6 +356,12 @@ class CapabilityBackedCommandSpec(McpDevCommandSpec):
         return renderer_binding.render_with_options(
             payload, self.renderer_options(args)
         )
+
+    def render_result(self, response, args: argparse.Namespace) -> str:
+        binding = self.output_renderer_binding()
+        if self.requests_json_output(args) or binding is None:
+            return super().render_result(response, args)
+        return binding.render_result(response, self.renderer_options(args))
 
 
 class ToolsCommandSpec(McpDevCommandSpec):

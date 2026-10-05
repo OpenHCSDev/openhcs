@@ -1,0 +1,507 @@
+"""Preparation preserves declaration effects and independent cache lifetimes."""
+
+import multiprocessing
+import os
+import signal
+import subprocess
+import sys
+import textwrap
+import time
+from dataclasses import dataclass
+from pathlib import Path
+from types import ModuleType
+
+import psutil
+import pytest
+
+from openhcs.core.autoregister_preparation import AutoRegisterRegistryPreparation
+from openhcs.core.callable_contract import (
+    CallableContract,
+    prepare_processing_callable,
+    reset_processing_callable_preparation_cache,
+)
+from openhcs.core.function_contract_metadata import FunctionContractAttribute
+from openhcs.core.processing_preparation import (
+    CallablePreparation,
+    PreparationCacheBatch,
+    PreparationOperation,
+    PreparationCacheWorker,
+)
+
+
+@dataclass(frozen=True)
+class AdditionalChildCachePreparation(PreparationOperation):
+    name: str
+    output_directory: Path
+
+    @property
+    def identity(self):
+        return (type(self), self.name)
+
+    def execute(self):
+        (self.output_directory / self.name).write_text(str(os.getpid()))
+
+    def can_prepare_in_child(self):
+        return True
+
+
+@pytest.fixture
+def declared_module(monkeypatch):
+    module = ModuleType("_openhcs_preparation_test")
+    monkeypatch.setitem(sys.modules, module.__name__, module)
+    reset_processing_callable_preparation_cache()
+    yield module
+    reset_processing_callable_preparation_cache()
+
+
+def declare_process(module):
+    def process(image):
+        return image
+
+    process.__module__ = module.__name__
+    return process
+
+
+def test_hooks_are_read_after_preceding_registry_and_module_effects(
+    monkeypatch, declared_module
+):
+    events = []
+    process = declare_process(declared_module)
+    process.__dict__[FunctionContractAttribute.processing_prepare] = "invalid"
+
+    def prepare_callable():
+        events.append("callable")
+
+    def prepare_module():
+        events.append("module")
+        process.__dict__[FunctionContractAttribute.processing_prepare] = (
+            prepare_callable
+        )
+
+    def prepare_registries(modules):
+        events.append(tuple(module.__name__ for module in modules))
+        declared_module.__dict__[FunctionContractAttribute.processing_prepare] = (
+            prepare_module
+        )
+
+    monkeypatch.setattr(
+        AutoRegisterRegistryPreparation,
+        "prepare_module_registered_families",
+        prepare_registries,
+    )
+    prepare_processing_callable(process)
+    prepare_processing_callable(process)
+    assert events == [(declared_module.__name__,), "module", "callable"]
+
+
+def test_invalid_callable_hook_fails_after_module_preparation(declared_module):
+    events = []
+    process = declare_process(declared_module)
+    declared_module.__dict__[FunctionContractAttribute.processing_prepare] = (
+        lambda: events.append("module")
+    )
+    process.__dict__[FunctionContractAttribute.processing_prepare] = 42
+    with pytest.raises(TypeError, match="must be callable"):
+        prepare_processing_callable(process)
+    assert events == ["module"]
+
+
+def test_failed_hook_remains_retryable_then_success_is_shared(declared_module):
+    attempts = []
+    process = declare_process(declared_module)
+
+    def prepare():
+        attempts.append(len(attempts))
+        if len(attempts) == 1:
+            raise RuntimeError("not ready")
+
+    process.__dict__[FunctionContractAttribute.processing_prepare] = prepare
+    with pytest.raises(RuntimeError, match="not ready"):
+        CallablePreparation.from_callable(process).prepare()
+    prepare_processing_callable(process)
+    prepare_processing_callable(process)
+    assert attempts == [0, 1]
+
+
+def test_replaced_module_hook_keeps_its_distinct_identity(declared_module):
+    events = []
+    process = declare_process(declared_module)
+    first = lambda: events.append("first")
+    second = lambda: events.append("second")
+    declared_module.__dict__[FunctionContractAttribute.processing_prepare] = first
+    prepare_processing_callable(process)
+    declared_module.__dict__[FunctionContractAttribute.processing_prepare] = second
+    prepare_processing_callable(process)
+    prepare_processing_callable(process)
+    assert events == ["first", "second"]
+
+
+def test_callable_without_module_runs_only_its_declared_hook(declared_module):
+    events = []
+    process = declare_process(declared_module)
+    process.__module__ = None
+    process.__dict__[FunctionContractAttribute.processing_prepare] = (
+        lambda: events.append("callable")
+    )
+    prepare_processing_callable(process)
+    prepare_processing_callable(process)
+    assert events == ["callable"]
+    assert PreparationCacheBatch.from_callables((process,)).preparations == ()
+
+
+def test_cache_batch_deduplicates_modules_before_discovery(
+    monkeypatch, declared_module
+):
+    calls = []
+    process = declare_process(declared_module)
+
+    def discover(module):
+        calls.append(module.__name__)
+        return ()
+
+    monkeypatch.setattr(
+        AutoRegisterRegistryPreparation,
+        "module_registry_families",
+        staticmethod(discover),
+    )
+    monkeypatch.setattr(
+        "openhcs.core.processing_preparation.multiprocessing.get_all_start_methods",
+        lambda: ["fork"],
+    )
+    PreparationCacheBatch.from_callables((process, process)).populate_child_caches(
+        max_workers=2
+    )
+    assert calls == [declared_module.__name__]
+
+
+def test_new_operation_inherits_readiness_without_a_scheduler_roster(declared_module):
+    events = []
+
+    class AdditionalPreparation(PreparationOperation):
+        @property
+        def identity(self):
+            return type(self)
+
+        def execute(self):
+            events.append("prepared")
+
+    AdditionalPreparation().prepare()
+    AdditionalPreparation().prepare()
+    assert events == ["prepared"]
+    assert not AdditionalPreparation().can_prepare_in_child()
+    PreparationOperation.reset()
+    AdditionalPreparation().prepare()
+    assert events == ["prepared", "prepared"]
+
+
+@pytest.mark.skipif(
+    "fork" not in multiprocessing.get_all_start_methods(),
+    reason="fork required",
+)
+@pytest.mark.parametrize("count", [1, 2])
+def test_new_cache_operation_runs_in_children_and_still_prepares_parent(
+    declared_module, tmp_path, count
+):
+    operations = tuple(
+        AdditionalChildCachePreparation(name, tmp_path)
+        for name in ("first", "second")[:count]
+    )
+    PreparationCacheBatch(operations).populate_child_caches(max_workers=1)
+    assert all(
+        int((tmp_path / operation.name).read_text()) != os.getpid()
+        for operation in operations
+    )
+    assert (
+        len({(tmp_path / operation.name).read_text() for operation in operations}) == 1
+    )
+    for operation in operations:
+        operation.prepare()
+    assert all(
+        int((tmp_path / operation.name).read_text()) == os.getpid()
+        for operation in operations
+    )
+
+
+def test_registry_startup_prepares_parent_after_cache_work_with_cached_metadata(
+    monkeypatch, declared_module
+):
+    from types import SimpleNamespace
+
+    from openhcs.processing.backends.lib_registry.registry_service import (
+        RegistryService,
+    )
+
+    process = declare_process(declared_module)
+    events = []
+    process.__dict__[FunctionContractAttribute.processing_prepare] = (
+        lambda: events.append("hook")
+    )
+    metadata = {
+        "first": SimpleNamespace(func=process),
+        "alias": SimpleNamespace(func=process),
+    }
+    monkeypatch.setattr(RegistryService, "_metadata_cache", metadata)
+    monkeypatch.setattr(
+        PreparationCacheBatch,
+        "populate_child_caches",
+        lambda batch, *, max_workers, status_callback: events.append(
+            tuple(item.module_name for item in batch.preparations)
+        ),
+    )
+
+    assert RegistryService.prepare_in_current_process() is metadata
+    assert RegistryService.prepare_in_current_process() is metadata
+    assert events == [(declared_module.__name__,), "hook", (declared_module.__name__,)]
+
+
+def test_registry_startup_includes_declared_raw_owner_in_another_module(
+    monkeypatch, declared_module
+):
+    from types import SimpleNamespace
+
+    from openhcs.processing.backends.lib_registry.registry_service import (
+        RegistryService,
+    )
+
+    raw_module = ModuleType("_openhcs_raw_preparation_test")
+    monkeypatch.setitem(sys.modules, raw_module.__name__, raw_module)
+    wrapper = declare_process(declared_module)
+    raw = declare_process(raw_module)
+    events = []
+    wrapper.__dict__[FunctionContractAttribute.raw_processing_function] = raw
+    wrapper.__dict__[FunctionContractAttribute.processing_prepare] = (
+        lambda: events.append("wrapper")
+    )
+    raw.__dict__[FunctionContractAttribute.processing_prepare] = lambda: events.append(
+        "raw"
+    )
+    monkeypatch.setattr(
+        RegistryService, "_metadata_cache", {"wrapper": SimpleNamespace(func=wrapper)}
+    )
+    monkeypatch.setattr(
+        PreparationCacheBatch,
+        "populate_child_caches",
+        lambda self, **kwargs: events.append(
+            tuple(item.module_name for item in self.preparations)
+        ),
+    )
+
+    RegistryService.prepare_in_current_process()
+    RegistryService.prepare_in_current_process()
+    compiler_target = CallableContract.from_callable(
+        wrapper
+    ).resolve_canonical_raw_callable()
+    assert compiler_target is raw
+    prepare_processing_callable(compiler_target)
+
+    assert events == [
+        (declared_module.__name__, raw_module.__name__),
+        "wrapper",
+        "raw",
+        (declared_module.__name__, raw_module.__name__),
+    ]
+
+
+@pytest.mark.skipif(
+    "fork" not in multiprocessing.get_all_start_methods(),
+    reason="fork required",
+)
+@pytest.mark.parametrize("budget", [1, 2])
+def test_cancelling_cache_batch_reaps_its_live_cache_workers(tmp_path, budget):
+    """SIGTERM must unwind the owned worker scope, without leaving descendants."""
+
+    script = textwrap.dedent("""
+        import os
+        import sys
+        import time
+        import signal
+        from concurrent.futures import CancelledError
+        from pathlib import Path
+        from openhcs.core.processing_preparation import PreparationOperation, PreparationCacheBatch
+
+        directory = Path(sys.argv[1])
+        class SlowPreparation(PreparationOperation):
+            def __init__(self, name): self.name = name
+            @property
+            def identity(self): return self.name
+            def can_prepare_in_child(self): return True
+            def execute(self):
+                (directory / self.name).write_text(str(os.getpid()))
+                time.sleep(60)
+
+        batch = PreparationCacheBatch(tuple(SlowPreparation(name) for name in ('first', 'second')))
+        def cancel(signum, frame):
+            raise CancelledError
+        signal.signal(signal.SIGTERM, cancel)
+        batch.populate_child_caches(max_workers=int(sys.argv[2]))
+    """)
+    process = subprocess.Popen(
+        (sys.executable, "-c", script, str(tmp_path), str(budget)),
+        cwd=Path(__file__).parents[2],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    try:
+        deadline = time.monotonic() + 15
+        names = (
+            ("first", "second")
+            if budget > 1 and len(os.sched_getaffinity(0)) > 1
+            else ("first",)
+        )
+        while not all((tmp_path / name).exists() for name in names):
+            assert process.poll() is None, process.communicate()
+            assert time.monotonic() < deadline, "cache workers did not start"
+            time.sleep(0.02)
+        worker_pids = tuple(int((tmp_path / name).read_text()) for name in names)
+        process.send_signal(signal.SIGTERM)
+        _, stderr = process.communicate(timeout=5)
+        assert process.returncode != 0
+        assert "CancelledError" in stderr
+        assert all(not psutil.pid_exists(pid) for pid in worker_pids)
+        if names == ("first",):
+            assert not (tmp_path / "second").exists()
+    finally:
+        if process.poll() is None:
+            process.kill()
+            process.communicate(timeout=5)
+
+
+@pytest.mark.skipif(
+    "fork" not in multiprocessing.get_all_start_methods()
+    or len(os.sched_getaffinity(0)) < 4,
+    reason="four admitted fork slots required",
+)
+def test_child_slot_refills_before_other_initial_jobs_finish(tmp_path):
+    """Four held workers bound capacity; releasing one must admit the fifth."""
+    script = textwrap.dedent("""
+        import os, sys, time
+        from pathlib import Path
+        from openhcs.core.processing_preparation import PreparationOperation, PreparationCacheBatch
+
+        directory = Path(sys.argv[1])
+        class WrittenPreparation(PreparationOperation):
+            def __init__(self, name): self.name = name
+            @property
+            def identity(self): return self.name
+            def can_prepare_in_child(self): return True
+            def execute(self):
+                (directory / self.name).write_text(str(os.getpid()))
+
+        class HeldPreparation(WrittenPreparation):
+            def execute(self):
+                super().execute()
+                while not (directory / (self.name + '.release')).exists():
+                    time.sleep(0.01)
+
+        jobs = tuple(HeldPreparation(str(i)) for i in range(4))
+        PreparationCacheBatch((*jobs, WrittenPreparation('fifth'))).populate_child_caches(max_workers=4)
+    """)
+    process = subprocess.Popen(
+        (sys.executable, "-c", script, str(tmp_path)),
+        cwd=Path(__file__).parents[2],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    initial = tuple(tmp_path / str(index) for index in range(4))
+    try:
+        deadline = time.monotonic() + 15
+        while not all(path.exists() for path in initial):
+            assert process.poll() is None, process.communicate()
+            assert time.monotonic() < deadline, "four cache jobs did not start"
+            time.sleep(0.01)
+        pids = tuple(int(path.read_text()) for path in initial)
+        assert all(psutil.pid_exists(pid) for pid in pids)
+        assert not (tmp_path / "fifth").exists()
+        (tmp_path / "0.release").touch()
+        deadline = time.monotonic() + 5
+        while not (tmp_path / "fifth").exists():
+            assert process.poll() is None, process.communicate()
+            assert time.monotonic() < deadline, "a completed slot did not refill"
+            time.sleep(0.01)
+        assert not psutil.pid_exists(pids[0])
+        assert all(psutil.pid_exists(pid) for pid in pids[1:])
+        for index in range(1, 4):
+            (tmp_path / f"{index}.release").touch()
+        _, stderr = process.communicate(timeout=5)
+        assert process.returncode == 0, stderr
+        assert all(not psutil.pid_exists(pid) for pid in pids)
+        assert not psutil.pid_exists(int((tmp_path / "fifth").read_text()))
+    finally:
+        for index in range(4):
+            (tmp_path / f"{index}.release").touch()
+        if process.poll() is None:
+            process.communicate(timeout=5)
+
+
+@pytest.mark.skipif(
+    "fork" not in multiprocessing.get_all_start_methods(), reason="fork required"
+)
+def test_completed_worker_release_is_idempotent(tmp_path):
+    worker = PreparationCacheWorker.start(
+        multiprocessing.get_context("fork"),
+        (AdditionalChildCachePreparation("completed", tmp_path),),
+    )
+    pid = worker.process.pid
+    try:
+        worker.wait()
+        worker.close()
+        worker.close()
+        assert worker.closed
+        assert worker.result_connection.closed
+        assert not psutil.pid_exists(pid)
+    finally:
+        worker.close()
+
+
+@pytest.mark.skipif(
+    "fork" not in multiprocessing.get_all_start_methods()
+    or len(os.sched_getaffinity(0)) < 2,
+    reason="two admitted fork slots required",
+)
+def test_cache_progress_reports_reaped_workers_without_marking_parent_ready(tmp_path):
+    events = []
+    batch = PreparationCacheBatch(
+        tuple(AdditionalChildCachePreparation(name, tmp_path) for name in ("a", "b"))
+    )
+
+    def report(message):
+        pid = int(message.rsplit(" ", 1)[1])
+        assert not psutil.pid_exists(pid)
+        assert not PreparationOperation._completed
+        events.append(pid)
+
+    batch.populate_child_caches(max_workers=2, status_callback=report)
+    assert set(events) == {int(path.read_text()) for path in tmp_path.iterdir()}
+
+
+@pytest.mark.skipif(
+    "fork" not in multiprocessing.get_all_start_methods()
+    or len(os.sched_getaffinity(0)) < 2,
+    reason="two admitted fork slots required",
+)
+def test_failure_in_refilled_slot_reaps_all_owned_workers(tmp_path, declared_module):
+    class HeldPreparation(AdditionalChildCachePreparation):
+        def execute(self):
+            super().execute()
+            time.sleep(5)
+            raise RuntimeError("a held cache job blocked refill")
+
+    class FailingPreparation(AdditionalChildCachePreparation):
+        def execute(self):
+            super().execute()
+            raise RuntimeError("failure in refilled slot")
+
+    operations = (
+        HeldPreparation("held", tmp_path),
+        *(AdditionalChildCachePreparation(str(index), tmp_path) for index in range(3)),
+        FailingPreparation("fifth", tmp_path),
+    )
+    with pytest.raises(RuntimeError, match="failure in refilled slot"):
+        PreparationCacheBatch(operations).populate_child_caches(max_workers=2)
+    assert (tmp_path / "fifth").exists()
+    assert not PreparationOperation._completed
+    assert all(
+        not psutil.pid_exists(int(path.read_text())) for path in tmp_path.iterdir()
+    )

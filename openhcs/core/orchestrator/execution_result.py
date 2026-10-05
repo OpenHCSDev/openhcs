@@ -8,12 +8,12 @@ following OpenHCS standards for explicit contracts and type safety.
 import copyreg
 from dataclasses import dataclass, field
 from enum import Enum
-from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Mapping, Optional
 
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.runtime_stores import StoredRuntimeValue
+from openhcs.core.steps.abstract import StepExecutionObservation
 
 if TYPE_CHECKING:
     from openhcs.core.compiled_execution import CompiledExecutionBundle
@@ -60,7 +60,24 @@ class RuntimeContextObservation:
 
     context_key: str
     records: tuple[StoredRuntimeValue, ...]
-    runtime_export_paths: tuple[Path, ...] = field(default_factory=tuple)
+    outputs: StepExecutionObservation = field(default_factory=StepExecutionObservation.empty)
+
+    @classmethod
+    def from_context(
+        cls,
+        *,
+        context_key: str,
+        context: ProcessingContext,
+        records: tuple[StoredRuntimeValue, ...],
+        runtime_observation_mode: "RuntimeObservationMode",
+        outputs: StepExecutionObservation,
+    ) -> "RuntimeContextObservation":
+        """Retain requested records beside the completed output projections."""
+        return cls(
+            context_key=context_key,
+            records=runtime_observation_mode.retain_records(records, context),
+            outputs=outputs,
+        )
 
 
 @dataclass(frozen=True)
@@ -88,10 +105,6 @@ class RuntimeObservationMode(Enum):
     def collects_records(self) -> bool:
         return self is not RuntimeObservationMode.OMIT
 
-    @property
-    def releases_worker_records(self) -> bool:
-        return self is RuntimeObservationMode.OMIT
-
     @classmethod
     def from_parent_requirement(cls, required: bool) -> "RuntimeObservationMode":
         """Select the mode implied by compiled parent-side execution needs."""
@@ -102,10 +115,8 @@ class RuntimeObservationMode(Enum):
     def for_compiled_bundle(
         cls, bundle: "CompiledExecutionBundle"
     ) -> "RuntimeObservationMode":
-        """Retain only plate inputs unless another parent consumer needs all records."""
+        """Consolidation carries rendered tables; only plate inputs need records."""
 
-        if bundle.requires_full_parent_runtime_observation:
-            return cls.MERGE_INTO_PARENT
         if bundle.requires_parent_runtime_observation:
             return cls.MERGE_PLATE_INPUTS
         return cls.OMIT

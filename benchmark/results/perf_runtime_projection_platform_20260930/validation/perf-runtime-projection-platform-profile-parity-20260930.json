@@ -1,0 +1,30 @@
+{
+  "directory": "/home/ts/code/projects/openhcs-benchmark-runs/perf-runtime-projection-platform-profile-production-20260930",
+  "exact_csv_count": 6,
+  "exact_label_image_count": 120,
+  "rows": [
+    {
+      "case_name": "cp_tutorial_3d_monolayer",
+      "mode_name": "1w_1t",
+      "worker_count": "1",
+      "well_count": "1",
+      "compile_seconds": "1.702385425567627",
+      "prepare_seconds": "0.0",
+      "execute_seconds": "13.121612548828125",
+      "total_seconds": "15.56449062610045",
+      "wells_per_second": "0.07621014538257409",
+      "successful_wells": "1",
+      "native_single_sample_execution_seconds": "",
+      "projected_native_execution_seconds": "",
+      "projected_execution_speedup": "",
+      "peak_memory_mb": "1532.9453125",
+      "status": "success",
+      "memory_limit_mb": "",
+      "error_message": "",
+      "execution_route": "ordinary-zmq-outcomes-v1",
+      "server_lifecycle": "reused-per-sweep",
+      "run_input_sha256": "bc64d405d0aef4cbaa45683f86d6599afe195e8014ddeaa14d15710d33a8e094"
+    }
+  ],
+  "limits": "Profiled diagnostic, do not pool its timings with unprofiled ABBA."
+}

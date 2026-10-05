@@ -1,0 +1,431 @@
+{
+  "source_revision": "480aed49b30448de4380af5c9274e48084e67b63",
+  "diagnostic_only": true,
+  "production_change": false,
+  "public_row": {
+    "case_name": "cp_tutorial_3d_monolayer",
+    "mode_name": "1w_1t",
+    "worker_count": "1",
+    "well_count": "1",
+    "compile_seconds": "1.495826244354248",
+    "prepare_seconds": "0.0",
+    "execute_seconds": "8.396726846694946",
+    "total_seconds": "10.694032318890095",
+    "wells_per_second": "0.11909402535746559",
+    "successful_wells": "1",
+    "native_single_sample_execution_seconds": "",
+    "projected_native_execution_seconds": "",
+    "projected_execution_speedup": "",
+    "peak_memory_mb": "1658.1875",
+    "status": "success",
+    "memory_limit_mb": "",
+    "error_message": "",
+    "execution_route": "ordinary-zmq-outcomes-v1",
+    "server_lifecycle": "reused-per-sweep",
+    "run_input_sha256": "7f66dd478c9a56033495f056335a0eaadb9fd5facd953b504f0e1f8f7eaa57d5"
+  },
+  "execution_partition": {
+    "root": 8.383970148861408,
+    "declared_callable_exclusive": 3.6605217196047306,
+    "outside_declared_callable": 4.723448429256678,
+    "outside_fraction": 0.5633904159234333
+  },
+  "compilation": {
+    "root": 1.2609371892176569,
+    "state_owner_exclusive": 0.6710898061282933,
+    "interpretation": "Sum of nested disjoint exclusive state-owner spans. The ten effective-config reads are a .195838s inclusive subset, not an additional term or a removable .671s cost."
+  },
+  "timing_contract": "Public original 1w_1t driver, CPU5, inline execution, reused-per-sweep server READY/library/kernel preparation before clocks; both profilers off, original OUTCOMES and RSS observer. New41 hook version with inherited24 plus17 nominal compiler/config boundaries. Diagnostic overhead remains; no ordinary gain, regression, statistical significance, or fresh native ratio inferred.",
+  "parity": "FULL6CSV120TIFF_AND180_PHYSICAL_SOURCE_REFS_PASS",
+  "native_scope": "TRANSITIVE ONLY: exact current saved science equals retained reference and B764-qualified bytes with actual same3physicalvolume inputs/180orderedrefs. Retained2native repetitions verified; native was NOT rerun for current source/environment. Original native compare API RED retained separately; no current native timing ratio or performance claim.",
+  "environment": {
+    "python": "3.12.14 (main, Sep 24 2026, 17:57:43) [Clang 22.1.3 ]",
+    "versions": {
+      "openhcs": "0.8.7",
+      "numpy": "2.5.3",
+      "scipy": "1.18.1",
+      "arraybridge": "0.3.6",
+      "polystore": "0.3.0",
+      "python-introspect": "0.1.15",
+      "metaclass-registry": "0.2.2",
+      "zmqruntime": "0.3.0"
+    }
+  },
+  "declared_hooks": [
+    {
+      "module": "openhcs.runtime.zmq_execution_server",
+      "owner": "ZMQExecutionServer",
+      "method": "_execute_with_orchestrator",
+      "line": 485,
+      "descriptor_kind": "function",
+      "source_relative": "openhcs/runtime/zmq_execution_server.py"
+    },
+    {
+      "module": "openhcs.runtime.zmq_execution_server",
+      "owner": "ZMQExecutionServer",
+      "method": "_initialize_orchestrator",
+      "line": 592,
+      "descriptor_kind": "function",
+      "source_relative": "openhcs/runtime/zmq_execution_server.py"
+    },
+    {
+      "module": "openhcs.runtime.zmq_execution_server",
+      "owner": "ZMQExecutionServer",
+      "method": "_export_runtime_observation",
+      "line": 741,
+      "descriptor_kind": "function",
+      "source_relative": "openhcs/runtime/zmq_execution_server.py"
+    },
+    {
+      "module": "openhcs.core.orchestrator.worker_execution",
+      "owner": "",
+      "method": "execute_worker_lane",
+      "line": 1064,
+      "descriptor_kind": "function",
+      "source_relative": "openhcs/core/orchestrator/worker_execution.py"
+    },
+    {
+      "module": "openhcs.core.steps.function_runtime",
+      "owner": "FunctionCoreExecutor",
+      "method": "execute",
+      "line": 2075,
+      "descriptor_kind": "function",
+      "source_relative": "openhcs/core/steps/function_runtime.py"
+    },
+    {
+      "module": "openhcs.core.steps.function_runtime",
+      "owner": "PatternGroupRuntime",
+      "method": "_load_input_stack",
+      "line": 2821,
+      "descriptor_kind": "function",
+      "source_relative": "openhcs/core/steps/function_runtime.py"
+    },
+    {
+      "module": "openhcs.core.steps.function_runtime",
+      "owner": "PatternGroupRuntime",
+      "method": "_validate_and_unstack",
+      "line": 3248,
+      "descriptor_kind": "function",
+      "source_relative": "openhcs/core/steps/function_runtime.py"
+    },
+    {
+      "module": "openhcs.core.steps.function_runtime",
+      "owner": "PatternGroupRuntime",
+      "method": "_save_outputs",
+      "line": 3374,
+      "descriptor_kind": "function",
+      "source_relative": "openhcs/core/steps/function_runtime.py"
+    },
+    {
+      "module": "openhcs.processing.backends.lib_registry.unified_registry",
+      "owner": "RuntimeCallableInvocation",
+      "method": "call",
+      "line": 264,
+      "descriptor_kind": "function",
+      "source_relative": "openhcs/processing/backends/lib_registry/unified_registry.py"
+    },
+    {
+      "module": "openhcs.interop.cellprofiler.runtime.module_execution",
+      "owner": "CellProfilerModuleExecutor",
+      "method": "__call__",
+      "line": 251,
+      "descriptor_kind": "function",
+      "source_relative": "openhcs/interop/cellprofiler/runtime/module_execution.py"
+    },
+    {
+      "module": "openhcs.interop.cellprofiler.runtime.module_execution",
+      "owner": "CellProfilerModuleExecutor",
+      "method": "_image_request",
+      "line": 1259,
+      "descriptor_kind": "function",
+      "source_relative": "openhcs/interop/cellprofiler/runtime/module_execution.py"
+    },
+    {
+      "module": "openhcs.interop.cellprofiler.runtime.function_contract_execution",
+      "owner": "CellProfilerFunctionContractExecutor",
+      "method": "execute",
+      "line": 78,
+      "descriptor_kind": "function",
+      "source_relative": "openhcs/interop/cellprofiler/runtime/function_contract_execution.py"
+    },
+    {
+      "module": "openhcs.interop.cellprofiler.runtime.output_recording",
+      "owner": "CellProfilerOutputRecorder",
+      "method": "record_module_outputs",
+      "line": 106,
+      "descriptor_kind": "classmethod",
+      "source_relative": "openhcs/interop/cellprofiler/runtime/output_recording.py"
+    },
+    {
+      "module": "openhcs.interop.cellprofiler.runtime.measurement_execution_support",
+      "owner": "ObjectMeasurementOutputRecorder",
+      "method": "record",
+      "line": 408,
+      "descriptor_kind": "function",
+      "source_relative": "openhcs/interop/cellprofiler/runtime/measurement_execution_support.py"
+    },
+    {
+      "module": "openhcs.core.steps.function_outputs",
+      "owner": "",
+      "method": "finalize_function_step_outputs",
+      "line": 140,
+      "descriptor_kind": "function",
+      "source_relative": "openhcs/core/steps/function_outputs.py"
+    },
+    {
+      "module": "openhcs.core.steps.function_outputs",
+      "owner": "OpenHCSMetadataWriter",
+      "method": "finalize_completed_plate",
+      "line": 1092,
+      "descriptor_kind": "classmethod",
+      "source_relative": "openhcs/core/steps/function_outputs.py"
+    },
+    {
+      "module": "openhcs.core.steps.function_outputs",
+      "owner": "RuntimeArtifactMetadataTarget",
+      "method": "reconciliation_targets",
+      "line": 1217,
+      "descriptor_kind": "function",
+      "source_relative": "openhcs/core/steps/function_outputs.py"
+    },
+    {
+      "module": "openhcs.core.virtual_workspace_metadata",
+      "owner": "AtomicMetadataWriter",
+      "method": "publish_source_projection_metadata",
+      "line": 181,
+      "descriptor_kind": "function",
+      "source_relative": "openhcs/core/virtual_workspace_metadata.py"
+    },
+    {
+      "module": "openhcs.core.runtime_stack_cache",
+      "owner": "RuntimeImageStackCache",
+      "method": "get",
+      "line": 38,
+      "descriptor_kind": "function",
+      "source_relative": "openhcs/core/runtime_stack_cache.py"
+    },
+    {
+      "module": "openhcs.core.runtime_stack_cache",
+      "owner": "RuntimeImageStackCache",
+      "method": "store",
+      "line": 49,
+      "descriptor_kind": "function",
+      "source_relative": "openhcs/core/runtime_stack_cache.py"
+    },
+    {
+      "module": "openhcs.core.aligned_image_payload",
+      "owner": "",
+      "method": "stack_image_payload_context",
+      "line": 400,
+      "descriptor_kind": "function",
+      "source_relative": "openhcs/core/aligned_image_payload.py"
+    },
+    {
+      "module": "openhcs.core.aligned_image_payload",
+      "owner": "",
+      "method": "unstack_image_payload_context",
+      "line": 598,
+      "descriptor_kind": "function",
+      "source_relative": "openhcs/core/aligned_image_payload.py"
+    },
+    {
+      "module": "openhcs.core.orchestrator.analysis_consolidation",
+      "owner": "",
+      "method": "consolidate_analysis_outputs",
+      "line": 109,
+      "descriptor_kind": "function",
+      "source_relative": "openhcs/core/orchestrator/analysis_consolidation.py"
+    },
+    {
+      "module": "openhcs.core.measurement_feature_queries",
+      "owner": "MeasurementFeatureValueIndex",
+      "method": "from_columnar_table_by_object",
+      "line": 1327,
+      "descriptor_kind": "classmethod",
+      "source_relative": "openhcs/core/measurement_feature_queries.py"
+    },
+    {
+      "module": "openhcs.core.pipeline.compiler",
+      "owner": "PipelineCompiler",
+      "method": "compile_pipelines",
+      "line": 1816,
+      "descriptor_kind": "staticmethod",
+      "source_relative": "openhcs/core/pipeline/compiler.py"
+    },
+    {
+      "module": "openhcs.core.pipeline.compiler",
+      "owner": "PipelineCompiler",
+      "method": "_register_and_resolve_pipeline_once",
+      "line": 1061,
+      "descriptor_kind": "staticmethod",
+      "source_relative": "openhcs/core/pipeline/compiler.py"
+    },
+    {
+      "module": "openhcs.core.pipeline.compiler",
+      "owner": "PipelineCompiler",
+      "method": "initialize_step_plans_for_context",
+      "line": 235,
+      "descriptor_kind": "staticmethod",
+      "source_relative": "openhcs/core/pipeline/compiler.py"
+    },
+    {
+      "module": "openhcs.core.pipeline.compiler",
+      "owner": "PipelineCompiler",
+      "method": "_capture_pipeline_config",
+      "line": 1229,
+      "descriptor_kind": "staticmethod",
+      "source_relative": "openhcs/core/pipeline/compiler.py"
+    },
+    {
+      "module": "openhcs.core.pipeline.compiler",
+      "owner": "PipelineCompiler",
+      "method": "_resolve_global_step_axis_filters",
+      "line": 1241,
+      "descriptor_kind": "staticmethod",
+      "source_relative": "openhcs/core/pipeline/compiler.py"
+    },
+    {
+      "module": "openhcs.core.pipeline.compiler",
+      "owner": "PipelineCompiler",
+      "method": "_configure_input_conversion_if_needed",
+      "line": 364,
+      "descriptor_kind": "staticmethod",
+      "source_relative": "openhcs/core/pipeline/compiler.py"
+    },
+    {
+      "module": "openhcs.core.pipeline.compiler",
+      "owner": "PipelineCompiler",
+      "method": "declare_zarr_stores",
+      "line": 590,
+      "descriptor_kind": "staticmethod",
+      "source_relative": "openhcs/core/pipeline/compiler.py"
+    },
+    {
+      "module": "openhcs.core.pipeline.compiler",
+      "owner": "PipelineCompiler",
+      "method": "_finalize_compilation",
+      "line": 1735,
+      "descriptor_kind": "staticmethod",
+      "source_relative": "openhcs/core/pipeline/compiler.py"
+    },
+    {
+      "module": "openhcs.core.pipeline.compiler",
+      "owner": "PipelineCompiler",
+      "method": "_axis_values_to_process",
+      "line": 1023,
+      "descriptor_kind": "staticmethod",
+      "source_relative": "openhcs/core/pipeline/compiler.py"
+    },
+    {
+      "module": "openhcs.core.pipeline.compiler",
+      "owner": "AxisCompilationRequest",
+      "method": "context_for",
+      "line": 205,
+      "descriptor_kind": "function",
+      "source_relative": "openhcs/core/pipeline/compiler.py"
+    },
+    {
+      "module": "openhcs.core.pipeline.compilation_session",
+      "owner": "CompilationSession",
+      "method": "from_context",
+      "line": 182,
+      "descriptor_kind": "classmethod",
+      "source_relative": "openhcs/core/pipeline/compilation_session.py"
+    },
+    {
+      "module": "openhcs.core.orchestrator.orchestrator",
+      "owner": "PipelineOrchestrator",
+      "method": "create_context",
+      "line": 556,
+      "descriptor_kind": "function",
+      "source_relative": "openhcs/core/orchestrator/orchestrator.py"
+    },
+    {
+      "module": "openhcs.core.orchestrator.orchestrator",
+      "owner": "PipelineOrchestrator",
+      "method": "get_effective_config",
+      "line": 1009,
+      "descriptor_kind": "function",
+      "source_relative": "openhcs/core/orchestrator/orchestrator.py"
+    },
+    {
+      "module": "objectstate.object_state",
+      "owner": "ObjectState",
+      "method": "__init__",
+      "line": 144,
+      "descriptor_kind": "function",
+      "source_relative": "external/ObjectState/src/objectstate/object_state.py"
+    },
+    {
+      "module": "objectstate.object_state",
+      "owner": "ObjectState",
+      "method": "_compute_resolved_snapshot",
+      "line": 2111,
+      "descriptor_kind": "function",
+      "source_relative": "external/ObjectState/src/objectstate/object_state.py"
+    },
+    {
+      "module": "objectstate.object_state",
+      "owner": "ObjectState",
+      "method": "_reconstruct_from_resolved",
+      "line": 1245,
+      "descriptor_kind": "function",
+      "source_relative": "external/ObjectState/src/objectstate/object_state.py"
+    },
+    {
+      "module": "objectstate.object_state",
+      "owner": "ObjectState",
+      "method": "to_saved_resolved_object",
+      "line": 470,
+      "descriptor_kind": "function",
+      "source_relative": "external/ObjectState/src/objectstate/object_state.py"
+    }
+  ],
+  "freeze": {
+    "path": "/home/ts/.local/state/openhcs-maintenance/20261003/compiler-config-coarse-ledger-v1/output/source-freeze.json",
+    "sha256": "0aa8d013c340ed52de584cc006becc832dfa1a9875745213d2d2e4c0904656cf",
+    "controller_path": "/home/ts/.local/state/openhcs-maintenance/20261003/compiler-config-coarse-ledger-v1/controller.py",
+    "controller_sha256": "5460564d44ffdc7e70078d63ac1250bb65a4fff2320da8dcb89b06fba999602f",
+    "site_path": "/home/ts/.local/state/openhcs-maintenance/20261003/compiler-config-coarse-ledger-v1/site/sitecustomize.py",
+    "site_sha256": "339c145b2c13548589958d12ebfe77672f87a108c82cbb44dbe1fdcc929d024b",
+    "installed_freeze_sha256": "b7e5bbb9b5171476dfeb1692378419bfa157bb620028e1b91c8969eef2498b41",
+    "full_environment_sha256": "00b7f550f6e584e34d6070f79bdd60d37859cb58c752b866fc95ac7f5293dabd"
+  },
+  "prelaunch_refusal": "Root exec87291 terminated1 before launching a driver: full environment hash differed only in CODEX_THREAD_ID. Original matching agent environment retained the exact freeze, ran once in session17712 terminal0, and validated science in session51754 terminal0. No gate bypass/freeze rewrite.",
+  "completed_controls": 15,
+  "originals": {
+    "controls.json": {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261003/compiler-config-coarse-ledger-v1/controls.json",
+      "sha256": "9acdee867fb46c959a6ddbab82505cb288e1ac564d439f0e35f713d79a65b122"
+    },
+    "science.json": {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261003/compiler-config-coarse-ledger-v1/science.json",
+      "sha256": "d19e5294a829cf98a0d0730b2729224e8a6947f258641a6f0923dfc6af732d74"
+    },
+    "registration-owner-analysis.json": {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261003/compiler-config-coarse-ledger-v1/registration-owner-analysis.json",
+      "sha256": "45faf15f51d4a293b3e432afe86995274eee00925c159ed2db06856ea821c238"
+    },
+    "agent-environment-comparison.json": {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261003/compiler-config-coarse-ledger-v1/agent-environment-comparison.json",
+      "sha256": "2a62e8d0f8563b8d461a8128676b933d68b89b37e0be947125acc51b7e8fcf61"
+    },
+    "observations.json": {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261003/compiler-config-coarse-ledger-v1/output/observations.json",
+      "sha256": "07c19d9a2b6183d1cbb69691258862f3b89b65149481989557b0d1029bf728e3"
+    },
+    "compile_only-region.json": {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261003/compiler-config-coarse-ledger-v1/output/regions/region-1948899-139659153200832-0001.json",
+      "sha256": "6b604c99652c36aba1ce3eff39b65ccd73b71d17ca827c121a98676b4608c687"
+    },
+    "execution-region.json": {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261003/compiler-config-coarse-ledger-v1/output/regions/region-1948899-139659153200832-0002.json",
+      "sha256": "ea2b9668eb40dc72c8af0ed9a6d55250fcd46721db5c5554fd0ea3c82ff738dd"
+    },
+    "availability-rejection.json": {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261003/workspace-availability-replay-v1/decision.json",
+      "sha256": "91d34dd84e764f3eb45ab1f15b8ddeeabbebf1f7104b3032534b1541d937e78c"
+    }
+  },
+  "outstanding": "Dominant integrated runtime fix, matched ordinary before/after gain, original branch architectural gates, installed acceptance, full-catalog/scaling/native refresh and figures remain unproved. Goal active."
+}

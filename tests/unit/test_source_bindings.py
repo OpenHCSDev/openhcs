@@ -32,11 +32,11 @@ from openhcs.core.config import (
     LazyStepSourceBindingsConfig,
     PipelineConfig,
 )
-from openhcs.core.pipeline.step_snapshot import StepSnapshot
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_binding_selection import (
     SourceBindingCandidateMatcher,
     SourceBindingMatchedImageSet,
+    SourceIdentityResolutionContext,
     SourcePatternResolutionContext,
 )
 from openhcs.core.source_bindings import (
@@ -56,7 +56,6 @@ from openhcs.core.source_bindings import (
     SourceBindingMatchMethod,
     SourceBindingMatchPlan,
     SourceBindingOrigin,
-    SourceBindingRuntimeContext,
     SourceBindingsConfig,
     SourceFilterClause,
     SourceFilterMatchType,
@@ -429,22 +428,16 @@ def test_step_source_bindings_inherit_plate_source_bindings_for_snapshot():
             exclude_params=["func"],
         )
         ObjectStateRegistry.register(step_state, _skip_snapshot=True)
-        snapshot = StepSnapshot(
-            index=0,
-            scope_id=step_state.scope_id,
-            step=step_state.to_saved_resolved_object(),
-        )
+        snapshot = step_state.to_saved_resolved_object()
     finally:
         ObjectStateRegistry.clear()
 
-    assert snapshot.step.source_bindings.bindings == (binding,)
-    assert snapshot.step.source_bindings.source_stack_components == (
-        AllComponents.Z_INDEX,
-    )
-    assert snapshot.step.source_bindings.grouping_metadata_fields == ("Plate",)
-    assert snapshot.step.source_bindings.metadata_fields == metadata_fields
+    assert snapshot.source_bindings.bindings == (binding,)
+    assert snapshot.source_bindings.source_stack_components == (AllComponents.Z_INDEX,)
+    assert snapshot.source_bindings.grouping_metadata_fields == ("Plate",)
+    assert snapshot.source_bindings.metadata_fields == metadata_fields
     compiled = CompiledSourceBindingPlan.from_config(
-        snapshot.step.source_bindings,
+        snapshot.source_bindings,
     )
     assert compiled.bindings == (binding,)
     assert compiled.source_stack_components == (AllComponents.Z_INDEX,)
@@ -516,17 +509,13 @@ def test_enabled_step_source_bindings_compile_inherited_bindings():
             exclude_params=["func"],
         )
         ObjectStateRegistry.register(step_state, _skip_snapshot=True)
-        snapshot = StepSnapshot(
-            index=0,
-            scope_id=step_state.scope_id,
-            step=step_state.to_saved_resolved_object(),
-        )
+        snapshot = step_state.to_saved_resolved_object()
     finally:
         ObjectStateRegistry.clear()
 
-    assert snapshot.step.source_bindings.bindings == (binding,)
+    assert snapshot.source_bindings.bindings == (binding,)
     assert CompiledSourceBindingPlan.from_config(
-        snapshot.step.source_bindings,
+        snapshot.source_bindings,
     ).bindings == (binding,)
 
 
@@ -554,18 +543,14 @@ def test_pipeline_step_source_bindings_enabled_inherits_to_function_steps():
             exclude_params=["func"],
         )
         ObjectStateRegistry.register(step_state, _skip_snapshot=True)
-        snapshot = StepSnapshot(
-            index=0,
-            scope_id=step_state.scope_id,
-            step=step_state.to_saved_resolved_object(),
-        )
+        snapshot = step_state.to_saved_resolved_object()
     finally:
         ObjectStateRegistry.clear()
 
-    assert snapshot.step.source_bindings.enabled is True
-    assert snapshot.step.source_bindings.bindings == (binding,)
+    assert snapshot.source_bindings.enabled is True
+    assert snapshot.source_bindings.bindings == (binding,)
     assert CompiledSourceBindingPlan.from_config(
-        snapshot.step.source_bindings,
+        snapshot.source_bindings,
     ).bindings == (binding,)
 
 
@@ -723,6 +708,68 @@ def test_orchestrator_microscope_init_uses_saved_resolved_pipeline_config(
     assert captured_kwargs["microscope_type"] == Microscope.OPENHCS.value
 
 
+def test_admitted_request_config_survives_next_live_global_context(
+    tmp_path, monkeypatch,
+):
+    from openhcs.core.orchestrator import orchestrator as orchestrator_module
+    from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
+    from openhcs.core.pipeline.compiler import AxisCompilationRequest
+    from openhcs.core.pipeline.materialization_flag_planner import (
+        MaterializationFlagPlanner,
+    )
+
+    authored = PipelineConfig(microscope=Microscope.OPENHCS)
+    ensure_global_config_context(
+        GlobalPipelineConfig,
+        GlobalPipelineConfig(num_workers=2, auto_add_output_plate_to_plate_manager=True),
+    )
+    admitted = ObjectState(authored).to_saved_resolved_object()
+    ensure_global_config_context(
+        GlobalPipelineConfig,
+        GlobalPipelineConfig(num_workers=4, auto_add_output_plate_to_plate_manager=False),
+    )
+    received = {}
+    monkeypatch.setattr(
+        orchestrator_module, "create_microscope_handler",
+        lambda **kwargs: received.update(kwargs) or SimpleNamespace(),
+    )
+    orchestrator = PipelineOrchestrator(
+        tmp_path, pipeline_config=authored, resolved_config=admitted,
+    )
+    orchestrator.initialize_microscope_handler(admitted)
+    assert received["source_bindings_config"] is admitted.source_bindings_config
+    assert received["microscope_type"] == Microscope.OPENHCS.value
+    assert orchestrator.get_effective_config().num_workers == 4
+
+    orchestrator._initialized = True
+    orchestrator.input_dir = tmp_path
+    request = AxisCompilationRequest(
+        orchestrator=orchestrator,
+        global_config=admitted,
+        pipeline=SimpleNamespace(), path_resolver=SimpleNamespace(),
+        global_step_axis_filters={}, enable_visualizer_override=False,
+        source_projections_by_axis={},
+        materialization_planner=MaterializationFlagPlanner(
+            pipeline_config=admitted,
+            microscope_handler=orchestrator.microscope_handler,
+            filemanager=orchestrator.filemanager,
+            input_dir=orchestrator.input_dir,
+            available_axis_values=("A01",),
+        ),
+        is_zmq_execution=True,
+    )
+    context = request.context_for("A01")
+    assert context.auto_add_output_plate_to_plate_manager is True
+    assert context.tiff_config is admitted.tiff_config
+
+    # The next authored request admits current global and local changes.
+    orchestrator.pipeline_config = PipelineConfig(microscope=Microscope.OPENHCS, num_workers=3)
+    next_request = orchestrator.get_effective_config()
+    assert next_request.num_workers == 3
+    assert next_request.auto_add_output_plate_to_plate_manager is False
+    assert admitted.num_workers == 2
+
+
 def test_source_bindings_expose_generic_resolution_requirements():
     config = StepSourceBindingsConfig(
         bindings=(
@@ -763,7 +810,7 @@ def test_component_identity_owns_realized_source_group_values() -> None:
     ) == ("DNA",)
 
 
-def test_realized_component_values_are_scoped_by_source_selector() -> None:
+def test_realized_component_values_are_scoped_by_source_selector(monkeypatch) -> None:
     binding = NamedSourceBinding(
         alias="DNA",
         selector=SourceSelector(
@@ -778,6 +825,33 @@ def test_realized_component_values_are_scoped_by_source_selector() -> None:
             {"channel": 2, "site": 7},
         ),
     ) == ("3",)
+    records = [
+        {"channel": 1, "site": 3, "Z": 5, "z_index": 4},
+        {"channel": 2, "site": 7, "z_index": 9},
+    ]
+    expected = {
+        component: binding.component_values(
+            component, realized_source_metadata=records
+        )
+        for component in AllComponents
+    }
+    matched = []
+    original_match = NamedSourceBinding.matches_realized_source_metadata
+
+    def record_match(owner, metadata):
+        matched.append(metadata)
+        return original_match(owner, metadata)
+
+    monkeypatch.setattr(NamedSourceBinding, "matches_realized_source_metadata", record_match)
+    domains = binding.component_domains(realized_source_metadata=iter(records))
+    assert {component: domains.get(component, ()) for component in AllComponents} == expected
+    assert matched == records
+    assert domains[AllComponents.SITE] == ("3",)
+    assert domains[AllComponents.Z_INDEX] == ("4", "5")
+    records[0]["channel"] = 2
+    assert AllComponents.SITE not in binding.component_domains(
+        realized_source_metadata=records
+    )
 
 
 def test_compiled_source_binding_plan_preserves_named_selectors():
@@ -1118,6 +1192,73 @@ def test_narrow_step_binding_uses_exact_workspace_provenance_identity():
             )
 
 
+@pytest.mark.parametrize("shared_source", [True, False])
+def test_source_binding_members_use_exact_source_identity_without_metadata_axes(
+    shared_source,
+):
+    primary_path = "A01_s001_w2_z001_t001.tif"
+    object_path = "_source/SavedIPO/A01_s001_w2_z001_t001.tif"
+    source_path = "/a/saved.labels.tif"
+    object_source = source_path if shared_source else "/b/saved.labels.tif"
+    metadata = {
+        "well": "A01",
+        "site": "1",
+        "channel": "2",
+        "z_index": "1",
+        "timepoint": "1",
+    }
+    coordinates = tuple(
+        ComponentSelector(component, metadata[component.value])
+        for component in AllComponents
+    )
+    primary = NamedSourceBinding(alias="SavedImage", component_identity=coordinates)
+    objects = NamedSourceBinding(
+        alias="SavedIPO",
+        component_identity=coordinates,
+        artifact_kind=ObjectLabelsArtifactType,
+        projection_role=SourceProjectionRole.SOURCE_ARTIFACT,
+    )
+    refs = {
+        primary_path: SourcePixelRef("disk", source_path),
+        object_path: SourcePixelRef("disk", object_source),
+    }
+    address = OpenHCSPlaneAddress.from_complete_source_metadata(metadata)
+    projection = VirtualWorkspaceSourceProjection(
+        source_refs_by_virtual_path=refs,
+        source_metadata_by_path={primary_path: metadata, object_path: metadata},
+        source_projections_by_virtual_path={
+            primary_path: SourcePlaneProjection(
+                address=address, ref=refs[primary_path], source_alias=primary.alias
+            ),
+            object_path: SourceArtifactProjection(
+                address=address,
+                ref=refs[object_path],
+                source_alias=objects.alias,
+                artifact_kind=ObjectLabelsArtifactType,
+            ),
+        },
+    )
+    policy = SourceImageSetIdentityPolicy.from_source_bindings(
+        SourceBindingsConfig(bindings=(primary, objects))
+    )
+    assert not policy.identity_components()
+    matched = SourceBindingMatchedImageSet.from_plan(
+        bindings=(primary, objects),
+        match_plan=SourceBindingMatchPlan(SourceBindingMatchMethod.ORDER),
+        source_context=SourcePatternResolutionContext.from_projection(
+            parser=SourceSchemaFilenameParser(), projection=projection
+        ),
+        identity_policy=policy,
+    )
+    assert matched.members_for_binding(
+        objects,
+        anchor_provenance=SourceImageProvenance(
+            source_path=primary_path, source_component_metadata=metadata
+        ),
+        source_universe=(object_path,),
+    ) == ((object_path,) if shared_source else ())
+
+
 def test_source_binding_members_load_one_store_for_multiple_matching_identities():
     binding = NamedSourceBinding(
         alias="Membrane",
@@ -1187,6 +1328,235 @@ def test_source_binding_members_load_one_store_for_multiple_matching_identities(
         anchor_provenance=provenance,
         source_universe=(virtual_path,),
     ) == (virtual_path,)
+
+
+@pytest.mark.parametrize("aliases", [("DAPI", "FITC"), ("DAPI", "FITC", "TRITC")])
+def test_source_binding_members_canonicalize_declared_physical_spellings(aliases):
+    virtual_paths = tuple(
+        f"A01_s001_w{channel}_z001_t001.tif" for channel in range(1, len(aliases) + 1)
+    )
+    paths = {path: f"/declared/plate/{path}" for path in virtual_paths}
+    bindings = tuple(
+        NamedSourceBinding(
+            alias=alias,
+            selector=SourceSelector(metadata=(MetadataSelector("channel", channel),)),
+            component_identity=(ComponentSelector(AllComponents.CHANNEL, channel),),
+        )
+        for alias, channel in zip(aliases, map(str, range(1, len(aliases) + 1)), strict=True)
+    )
+    context = SourcePatternResolutionContext.from_sources(
+        parser=SourceSchemaFilenameParser(), source_paths_by_virtual_path=paths
+    )
+    matched_set = SourceBindingMatchedImageSet.from_plan(
+        bindings=bindings,
+        match_plan=SourceBindingMatchPlan(SourceBindingMatchMethod.ORDER),
+        source_context=context,
+        identity_policy=SourceImageSetIdentityPolicy.from_source_bindings(
+            SourceBindingsConfig(bindings=bindings)
+        ),
+    )
+    for binding, virtual_path in zip(bindings[1:], virtual_paths[1:], strict=True):
+        assert matched_set.members_for_binding(
+            binding,
+            anchor_provenance=SourceImageProvenance(source_path=paths[virtual_paths[0]]),
+            source_universe=tuple(paths.values()),
+        ) == (paths[virtual_path],)
+
+
+def test_declared_positions_keep_store_planes_and_same_basename_sources_distinct():
+    positions = (
+        "A01_s001_w1_z001_t001.tif", "A01_s001_w1_z002_t001.tif",
+        "A02_s001_w1_z001_t001.tif",
+    )
+    paths = dict(zip(positions, ("/a/raw.tif", "/a/raw.tif", "/b/raw.tif")))
+    context = SourceIdentityResolutionContext.from_sources(
+        parser=SourceSchemaFilenameParser(), source_paths_by_virtual_path=paths,
+    )
+    candidates = (*positions, *paths.values())
+    assert context.virtual_paths_for_sources(
+        ("/a/raw.tif", "/b/raw.tif", "raw.tif")
+    ) == (positions[:2], (positions[2],), ())
+    assert context.declared_positions_for_candidates(candidates) == positions
+    assert context.matching_candidates_for_source_identities(
+        (SourceImageIdentity("/a/raw.tif"),
+         SourceImageIdentity("/a/raw.tif", {"z_index": "2"}),
+         SourceImageIdentity("/b/raw.tif"), SourceImageIdentity("/elsewhere/raw.tif")),
+        candidates,
+    ) == (positions[:2], (positions[1],), (positions[2],), ())
+
+
+
+def test_source_binding_members_collapse_lookup_aliases_of_same_projection():
+    relative = tuple(f"A01_s001_w1_z{z:03d}_t001.tif" for z in (0, 1))
+    full = tuple(f"/workspace/{path}" for path in relative)
+    source_path = "/physical/source.tif"
+    binding = NamedSourceBinding(alias="OriginalPhysical")
+    projections = tuple(
+        SourcePlaneProjection(
+            address=OpenHCSPlaneAddress.from_values("A01", "1", "1", z, "1"),
+            ref=SourcePixelRef("disk", source_path), source_alias=binding.alias,
+        )
+        for z in (0, 1)
+    )
+    typed = {
+        spelling: projection
+        for path, loadable, projection in zip(relative, full, projections, strict=True)
+        for spelling in (path, loadable)
+    }
+    workspace = VirtualWorkspaceSourceProjection(
+        source_refs_by_virtual_path={path: projection.ref for path, projection in typed.items()},
+        source_metadata_by_path={full[0]: {"channel": "9"}},
+        source_projections_by_virtual_path=typed,
+    )
+    context = SourcePatternResolutionContext.from_projection(
+        parser=SourceSchemaFilenameParser(), projection=workspace,
+    )
+    matched = SourceBindingMatchedImageSet.from_plan(
+        bindings=(binding,), match_plan=None, source_context=context,
+        identity_policy=SourceImageSetIdentityPolicy(),
+    )
+    candidates = (*typed, source_path)
+    assert matched.members_for_binding(
+        binding,
+        anchor_provenance=SourceImageProvenance(source_path, {"z_index": "0"}),
+        source_universe=candidates,
+    ) == (relative[0],)
+    assert matched.matching_candidates_for_source_identities(
+        (SourceImageIdentity(source_path), SourceImageIdentity(full[0]),
+         SourceImageIdentity(source_path, {"channel": "9"})), candidates,
+    ) == (relative, (relative[0],), (relative[0],))
+    # A later declaration replacement is a new position even with equal fields.
+    typed[full[0]] = SourcePlaneProjection(
+        address=projections[0].address, ref=projections[0].ref, source_alias=binding.alias,
+    )
+    with pytest.raises(ValueError, match="one exact declared source-set position"):
+        matched.members_for_binding(
+            binding,
+            anchor_provenance=SourceImageProvenance(source_path, {"z_index": "0"}),
+            source_universe=candidates,
+        )
+
+def test_source_binding_exact_position_projection_inherits_owning_context():
+    """Surface policy guard: declaration resolution is not reimplemented in leaves."""
+    assert (
+        SourceBindingMatchedImageSet.virtual_paths_for_sources
+        is SourcePatternResolutionContext.virtual_paths_for_sources
+    )
+    assert (
+        SourceBindingMatchedImageSet.declared_positions_for_candidates
+        is SourcePatternResolutionContext.declared_positions_for_candidates
+    )
+
+
+def test_source_identity_batch_preserves_planes_ambiguity_and_query_order():
+    paths = {
+        "A01_s001_w1_z001_t001.tif": "/source/shared.tif",
+        "A01_s001_w1_z002_t001.tif": "/source/shared.tif",
+        "A01_s001_w1_z003_t001.tif": "/source/other.tif",
+    }
+    context = SourceIdentityResolutionContext.from_sources(
+        parser=SourceSchemaFilenameParser(),
+        source_paths_by_virtual_path=paths,
+    )
+    candidates = tuple(paths)
+    identities = (
+        SourceImageIdentity("/source/shared.tif", {"z_index": "2"}),
+        SourceImageIdentity("/source/shared.tif"),
+        SourceImageIdentity(None, {"z_index": "3"}),
+        SourceImageIdentity("/source/absent.tif"),
+        SourceImageIdentity(candidates[0]),
+        SourceImageIdentity(),
+    )
+
+    expected = (
+        (candidates[1],),
+        candidates[:2],
+        (candidates[2],),
+        (),
+        (candidates[0],),
+        (),
+    )
+    assert (
+        context.matching_candidates_for_source_identities(identities, candidates)
+        == expected
+    )
+    restored = pickle.loads(pickle.dumps(context))
+    assert (
+        restored.matching_candidates_for_source_identities(identities, candidates)
+        == expected
+    )
+    # A later query must observe changed declarations, rather than a stale index.
+    paths[candidates[1]] = "/source/replaced.tif"
+    assert context.matching_candidates_for_source_identities(
+        (identities[0], identities[1]), candidates
+    ) == ((), (candidates[0],))
+
+
+def test_source_identity_batch_keeps_components_on_one_metadata_record():
+    candidate = "A01_s001_w1_z001_t001.tif"
+    context = SourceIdentityResolutionContext.from_sources(
+        parser=SourceSchemaFilenameParser(),
+        source_paths_by_virtual_path={candidate: "/source/shared.tif"},
+        source_metadata_by_path={
+            candidate: {"channel": "1", "z_index": "1"},
+            "/source/shared.tif": {"channel": "2", "z_index": "2"},
+        },
+    )
+    identities = (
+        SourceImageIdentity("/source/shared.tif", {"channel": "1", "z_index": "2"}),
+        SourceImageIdentity("/source/shared.tif", {"channel": "2", "z_index": "2"}),
+    )
+    assert context.matching_candidates_for_source_identities(
+        identities, (candidate,)
+    ) == ((), (candidate,))
+
+
+def test_source_identity_batch_preserves_template_source_path_projection():
+    virtual_paths = (
+        "A01_s001_w1_z001_t001.tif",
+        "A01_s001_w1_z002_t001.tif",
+    )
+    context = SourceIdentityResolutionContext.from_sources(
+        parser=SourceSchemaFilenameParser(),
+        source_paths_by_virtual_path=dict(
+            zip(virtual_paths, ("/source/first.tif", "/source/second.tif"))
+        ),
+    )
+    pattern = "A01_s001_w1_z{iii}_t001.tif"
+    identities = tuple(
+        SourceImageIdentity(path)
+        for path in ("/source/first.tif", *virtual_paths, "/source/second.tif")
+    )
+    # Existing template projection uses the first physical path and every
+    # matching virtual path; the index must not broaden physical membership.
+    assert context.matching_candidates_for_source_identities(
+        identities, (pattern,)
+    ) == ((pattern,), (pattern,), (pattern,), ())
+
+
+def test_source_identity_batch_avoids_unrelated_metadata_reads(monkeypatch):
+    candidates = tuple(f"/source/image_{index}.tif" for index in range(180))
+    context = SourceIdentityResolutionContext.from_sources(
+        parser=SourceSchemaFilenameParser(),
+        source_paths_by_virtual_path={},
+    )
+    identities = tuple(SourceImageIdentity(path) for path in candidates[:60])
+    calls = []
+    original = SourceIdentityResolutionContext._candidate_matches_source_identity
+
+    def record_match(self, candidate, identity):
+        calls.append(candidate)
+        return original(self, candidate, identity)
+
+    monkeypatch.setattr(
+        SourceIdentityResolutionContext,
+        "_candidate_matches_source_identity",
+        record_match,
+    )
+    assert context.matching_candidates_for_source_identities(
+        identities, candidates
+    ) == tuple((path,) for path in candidates[:60])
+    assert calls == list(candidates[:60])
 
 
 def test_virtual_workspace_projection_filters_source_metadata_by_axis():
@@ -1363,38 +1733,3 @@ def test_compiled_source_binding_plan_round_trips_through_pickle():
     assert restored.metadata_rules == plan.metadata_rules
     assert restored.match_plan == plan.match_plan
     assert restored.binding_for_alias("OrigBlue") == plan.binding_for_alias("OrigBlue")
-
-
-def test_source_binding_runtime_context_preserves_source_provenance_through_pickle():
-    context = SourceBindingRuntimeContext(
-        step_input_files=("A01_s001_w1_z001_t001.tif",),
-        step_input_dir="/workspace",
-        step_input_source_paths={
-            "A01_s001_w1_z001_t001.tif": "/real/source_C20_w1.tif",
-        },
-        source_metadata_by_path={
-            "A01_s001_w1_z001_t001.tif": {
-                "Compound": "DMSO",
-                ORIGINAL_SOURCE_METADATA_FIELD: {
-                    "Plate": "PlateA",
-                    "ChannelNumber": "1",
-                },
-            },
-        },
-        pipeline_input_files=("/real/source_C20_w1.tif",),
-        pipeline_input_backend="disk",
-    )
-
-    restored = pickle.loads(pickle.dumps(context))
-
-    assert restored == context
-    assert dict(restored.step_input_source_paths) == {
-        "A01_s001_w1_z001_t001.tif": "/real/source_C20_w1.tif",
-    }
-    assert dict(restored.source_metadata_by_path["A01_s001_w1_z001_t001.tif"]) == {
-        "Compound": "DMSO",
-        ORIGINAL_SOURCE_METADATA_FIELD: {
-            "Plate": "PlateA",
-            "ChannelNumber": "1",
-        },
-    }

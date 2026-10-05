@@ -377,10 +377,14 @@ class RunWellThroughputCommand(BenchmarkCliCommand):
         parser.add_argument("--execution-port", type=int)
         parser.add_argument(
             "--reuse-execution-server",
-            action="store_true",
+            action=argparse.BooleanOptionalAction,
+            default=True,
             help=(
-                "Keep one client-owned server across observations. Per-observation "
-                "total_seconds then excludes server startup and shutdown."
+                "Keep one ready client-owned server across observations (default). "
+                "Pipeline total_seconds includes outcome delivery and excludes "
+                "server startup/shutdown, benchmark diagnostics, and RSS "
+                "observer setup/teardown. "
+                "Use --no-reuse-execution-server for cold-server diagnostics."
             ),
         )
         parser.add_argument(
@@ -775,6 +779,49 @@ class PlotBenchmarkCommand(BenchmarkCliCommand):
         configure_headless_cpu_benchmark_runtime(args.log_level)
         plot_summary(args.summary_csv, args.output_dir)
         print(f"figures={args.output_dir}")
+        return 0
+
+
+class PlotMeasuredBenchmarkCommand(BenchmarkCliCommand):
+    """Plot qualified matched summaries with measured native time per mode."""
+
+    command_name = "plot-measured"
+    help_text = "Plot measured CP/OH execution or total batch comparisons."
+    sort_order = 32
+
+    def configure(
+        self, subparsers: argparse._SubParsersAction
+    ) -> argparse.ArgumentParser:
+        parser = self._parser(subparsers)
+        parser.add_argument(
+            "--summary-source",
+            action="append",
+            required=True,
+            help="MODE_LABEL=qualified_summary.csv; repeat for measured well/worker modes.",
+        )
+        parser.add_argument("--scope", choices=("execution", "total"), required=True)
+        parser.add_argument("--output-dir", type=Path, required=True)
+        return parser
+
+    def run(self, args: argparse.Namespace) -> int:
+        configure_headless_cpu_benchmark_runtime(args.log_level)
+        from benchmark.reports.cppipe_figures import (
+            MeasuredBatchSummarySource,
+            generate_measured_batch_figures,
+            parse_summary_source,
+        )
+
+        sources = tuple(parse_summary_source(value) for value in args.summary_source)
+        outputs = generate_measured_batch_figures(
+            tuple(
+                MeasuredBatchSummarySource(source.label, source.path)
+                for source in sources
+            ),
+            scope=args.scope,
+            output_dir=args.output_dir,
+        )
+        print(f"figures={args.output_dir}")
+        print(f"outputs={len(outputs)}")
         return 0
 
 

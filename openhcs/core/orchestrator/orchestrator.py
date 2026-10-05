@@ -20,7 +20,9 @@ from openhcs.constants.constants import (
 from openhcs.constants import Microscope
 from openhcs.core.compiled_execution import CompiledExecutionBundle
 from openhcs.core.config import GlobalPipelineConfig
+from openhcs.core.execution_visualizer import ExecutionVisualizerABC
 from objectstate.object_state import ObjectState
+from objectstate.object_state_registry import ObjectStateRegistry
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
 
 
@@ -63,16 +65,6 @@ from openhcs.core.alias_property import AliasProperty
 
 # Import generic component system - required for orchestrator functionality
 
-# Optional napari import for visualization
-try:
-    from openhcs.runtime.napari_stream_visualizer import NapariStreamVisualizer
-
-    NapariVisualizerType = NapariStreamVisualizer
-except ImportError:
-    # Create a placeholder type for type hints when napari is not available
-    NapariStreamVisualizer = None
-    NapariVisualizerType = Any  # Use Any for type hints when napari is not available
-
 logger = logging.getLogger(__name__)
 
 
@@ -107,6 +99,7 @@ class PipelineOrchestrator:
         workspace_path: Optional[Union[str, Path]] = None,
         *,
         pipeline_config: Optional["PipelineConfig"] = None,
+        resolved_config: GlobalPipelineConfig | None = None,
         storage_registry: Optional[Any] = None,
         selected_pipeline_path: Union[str, Path, None] = None,
         progress_callback: Optional[Callable[[Dict[str, Any]], None]] = None,
@@ -120,9 +113,8 @@ class PipelineOrchestrator:
         self.execution_id = f"local::{plate_path}"
         self.transport_config = transport_config
 
-        # Initialize auto-sync control for pipeline config
+        # Hold the authored declaration before the plate identity is assigned.
         self._pipeline_config = None
-        self._auto_sync_enabled = True
 
         # Context management now handled by contextvars-based system
 
@@ -141,11 +133,6 @@ class PipelineOrchestrator:
         # PipelineConfig should always have None values that resolve through lazy resolution
         # Copying concrete values breaks the placeholder system and makes all fields appear "explicitly set"
 
-        self.pipeline_config = pipeline_config
-
-        # CRITICAL FIX: Expose pipeline config as public attribute for dual-axis resolver discovery
-        # The resolver's _is_context_provider method only finds public attributes (skips _private)
-        # This allows the resolver to discover the orchestrator's pipeline config during context resolution
         self.pipeline_config = pipeline_config
         logger.info(
             "PipelineOrchestrator initialized with PipelineConfig for context discovery."
@@ -201,7 +188,9 @@ class PipelineOrchestrator:
             logger.info("PipelineOrchestrator using global StorageRegistry instance.")
 
         # Override zarr backend with orchestrator's resolved config.
-        effective_config = self.get_effective_config()
+        effective_config = (
+            self.get_effective_config() if resolved_config is None else resolved_config
+        )
         zarr_backend_with_config = ZarrStorageBackend(effective_config.zarr_config)
         self.registry[Backend.ZARR.value] = zarr_backend_with_config
         logger.info(
@@ -304,7 +293,9 @@ class PipelineOrchestrator:
         self._visualizers[(backend_name,)] = vis
         return vis
 
-    def initialize_microscope_handler(self):
+    def initialize_microscope_handler(
+        self, resolved_config: GlobalPipelineConfig | None = None
+    ):
         """Initializes the microscope handler."""
         if self.microscope_handler is not None:
             logger.debug("Microscope handler already initialized.")
@@ -316,7 +307,11 @@ class PipelineOrchestrator:
             f"Initializing microscope handler using input directory: {self.input_dir}..."
         )
         try:
-            shared_context = self.get_effective_config()
+            shared_context = (
+                self.get_effective_config()
+                if resolved_config is None
+                else resolved_config
+            )
             microscope_type = (
                 shared_context.microscope.value
                 if shared_context.microscope != Microscope.AUTO
@@ -405,7 +400,10 @@ class PipelineOrchestrator:
             self._plate_path_frozen = True
 
     def initialize(
-        self, workspace_path: Optional[Union[str, Path]] = None
+        self,
+        workspace_path: Optional[Union[str, Path]] = None,
+        *,
+        resolved_config: GlobalPipelineConfig | None = None,
     ) -> "PipelineOrchestrator":
         """
         Initializes all required components for the orchestrator.
@@ -417,7 +415,12 @@ class PipelineOrchestrator:
             return self
 
         try:
-            self.initialize_microscope_handler()
+            effective_config = (
+                self.get_effective_config()
+                if resolved_config is None
+                else resolved_config
+            )
+            self.initialize_microscope_handler(effective_config)
             self.microscope_handler.source_selection_role().require_available_source(
                 self.plate_path
             )
@@ -435,7 +438,7 @@ class PipelineOrchestrator:
 
             # Log effective backend intent early for debugging test/UI differences
             try:
-                vfs_cfg = self.get_effective_config().vfs_config
+                vfs_cfg = effective_config.vfs_config
                 logger.info(
                     "VFS config at init: read_backend=%s intermediate_backend=%s materialization_backend=%s",
                     vfs_cfg.read_backend,
@@ -469,7 +472,7 @@ class PipelineOrchestrator:
             )
 
             # Ensure complete OpenHCS metadata exists
-            self._ensure_openhcs_metadata()
+            self._ensure_openhcs_metadata(effective_config)
 
             logger.info(
                 "PipelineOrchestrator fully initialized with cached component keys and metadata."
@@ -480,10 +483,75 @@ class PipelineOrchestrator:
             logger.error(f"Failed to initialize orchestrator: {e}")
             raise
 
+    def adopt_compiled_execution(
+        self,
+        execution_bundle: CompiledExecutionBundle,
+    ) -> "PipelineOrchestrator":
+        """Bind an admitted compiled source domain to this fresh runtime owner."""
+        if self._initialized or self.state is not OrchestratorState.CREATED:
+            raise RuntimeError(
+                "Compiled execution can only be adopted before initialization."
+            )
+        contexts = tuple(execution_bundle.runtime_contexts.values())
+        if not contexts:
+            raise ValueError("Compile artifact missing compiled_contexts")
+        source = contexts[0]
+        if (
+            source.microscope_handler is None
+            or source.input_dir is None
+            or source.filemanager is None
+        ):
+            raise ValueError("Compiled execution lacks its admitted source workspace.")
+        source_registry = source.filemanager.registry
+        for context in contexts:
+            if (
+                context.plate_path != self.plate_path
+                or context.input_dir != source.input_dir
+                or context.workspace_path != source.workspace_path
+                or context.microscope_handler is not source.microscope_handler
+                or context.filemanager is None
+                or context.filemanager.registry.keys() != source_registry.keys()
+                or any(
+                    backend is not source_registry[name]
+                    for name, backend in context.filemanager.registry.items()
+                )
+            ):
+                raise ValueError(
+                    "Compiled execution source domain does not match this runtime."
+                )
+        if source_registry.get(Backend.MEMORY.value) is not self.registry.get(
+            Backend.MEMORY.value
+        ):
+            raise ValueError(
+                "Compiled execution memory backend does not match this runtime."
+            )
+        source.microscope_handler.source_selection_role().require_available_source(
+            self.plate_path
+        )
+        self.registry = dict(source_registry)
+        self.registry[Backend.ZARR.value] = self.filemanager.registry[
+            Backend.ZARR.value
+        ]
+        self.filemanager = FileManager(self.registry)
+        self.microscope_handler = source.microscope_handler
+        self.input_dir = source.input_dir
+        self.workspace_path = source.workspace_path
+        self.default_pipeline_definition = list(execution_bundle.pipeline_definition)
+        from openhcs.constants import MULTIPROCESSING_AXIS
+
+        self._component_keys_cache[MULTIPROCESSING_AXIS] = list(
+            execution_bundle.axis_ids
+        )
+        self._initialized = True
+        self._state = OrchestratorState.READY
+        return self
+
     def is_initialized(self) -> bool:
         return self._initialized
 
-    def _ensure_openhcs_metadata(self) -> None:
+    def _ensure_openhcs_metadata(
+        self, resolved_config: GlobalPipelineConfig
+    ) -> None:
         """Ensure complete OpenHCS metadata exists for the plate.
 
         Uses the same context creation logic as pipeline execution to get full metadata
@@ -507,7 +575,9 @@ class PipelineOrchestrator:
         subdir_name = get_subdirectory_name(self.input_dir, self.plate_path)
 
         # Create context using SAME logic as create_context() to get full metadata
-        context = self.create_context(axis_id="metadata_init")
+        context = self.create_context(
+            axis_id="metadata_init", resolved_config=resolved_config
+        )
 
         # Determine correct backend using handler's logic (virtual_workspace for ImageXpress/Opera, disk for others)
         backend = self.microscope_handler.get_primary_backend(
@@ -553,7 +623,9 @@ class PipelineOrchestrator:
 
         return output_plate_root / materialization_path
 
-    def create_context(self, axis_id: str) -> ProcessingContext:
+    def create_context(
+        self, axis_id: str, *, resolved_config: GlobalPipelineConfig | None = None
+    ) -> ProcessingContext:
         """Creates a ProcessingContext for a given multiprocessing axis value."""
         if not self.is_initialized():
             raise RuntimeError(
@@ -566,7 +638,9 @@ class PipelineOrchestrator:
                 "Orchestrator input_dir is not set; initialize orchestrator first."
             )
 
-        effective_config = self.get_effective_config()
+        effective_config = (
+            self.get_effective_config() if resolved_config is None else resolved_config
+        )
         context = ProcessingContext(
             axis_id=axis_id,
             filemanager=self.filemanager,
@@ -640,6 +714,8 @@ class PipelineOrchestrator:
         enable_visualizer_override: bool = False,
         is_zmq_execution: bool = False,
         debug_execution_policy: DebugExecutionPolicy = NoOpDebugExecutionPolicy(),
+        *,
+        resolved_config: GlobalPipelineConfig | None = None,
     ) -> CompiledExecutionBundle:
         """Compile the selected axes into one typed execution bundle."""
         return PipelineCompiler.compile_pipelines(
@@ -649,6 +725,7 @@ class PipelineOrchestrator:
             enable_visualizer_override=enable_visualizer_override,
             is_zmq_execution=is_zmq_execution,
             debug_execution_policy=debug_execution_policy,
+            resolved_config=resolved_config,
         )
 
     def cancel_execution(self):
@@ -670,7 +747,7 @@ class PipelineOrchestrator:
         self,
         execution_bundle: CompiledExecutionBundle,
         max_workers: Optional[int] = None,
-        visualizer: Optional[NapariVisualizerType] = None,
+        visualizer: ExecutionVisualizerABC | None = None,
         log_file_base: Optional[str] = None,
         progress_queue=None,
         progress_context=None,
@@ -685,8 +762,7 @@ class PipelineOrchestrator:
             compiled_contexts: Dict of axis_id to its compiled, frozen ProcessingContext.
                                Obtained from `compile_plate_for_processing`.
             max_workers: Maximum number of worker threads for parallel execution.
-            visualizer: Optional instance of NapariStreamVisualizer for real-time visualization
-                        (requires napari to be installed; must be initialized with orchestrator's filemanager by the caller).
+            visualizer: Viewer implementing the compiled execution lifecycle.
             log_file_base: Base path for worker process log files (without extension).
                           Each worker will create its own log file: {log_file_base}_worker_{pid}.log
 
@@ -931,22 +1007,17 @@ class PipelineOrchestrator:
 
     @pipeline_config.setter
     def pipeline_config(self, value: Optional["PipelineConfig"]) -> None:
-        """Set pipeline configuration with auto-sync to thread-local context."""
-        self._pipeline_config = value
-        if self._auto_sync_enabled and value is not None:
-            self._sync_to_thread_local()
-
-    def _sync_to_thread_local(self) -> None:
-        """Internal method to sync current pipeline_config to thread-local context."""
-        if self._pipeline_config and self.plate_path is not None:
-            self.apply_pipeline_config(self._pipeline_config)
+        """Replace the declaration through source invalidation once bound to a plate."""
+        if value is None or self.plate_path is None:
+            self._pipeline_config = value
+        else:
+            self.apply_pipeline_config(value)
 
     def apply_pipeline_config(self, pipeline_config: "PipelineConfig") -> None:
         """
-        Apply per-orchestrator configuration using thread-local storage.
+        Replace the declaration and invalidate changed source bindings.
 
-        This method sets the orchestrator's effective config in thread-local storage
-        for step-level lazy configurations to resolve against.
+        Saved inheritance is resolved without modifying global thread-local state.
         """
         # Import PipelineConfig at runtime for isinstance check
         from openhcs.core.config import PipelineConfig
@@ -957,26 +1028,29 @@ class PipelineOrchestrator:
         previous_config = self._pipeline_config
         previous_source_bindings = None
         if previous_config is not None:
-            previous_source_bindings = (
-                ObjectState(previous_config)
-                .to_saved_resolved_object()
-                .source_bindings_config
+            previous_resolved, _ = ObjectState.resolve_saved_object(
+                previous_config,
+                ancestor_objects_with_scopes=(
+                    ObjectStateRegistry.get_ancestor_objects_with_scopes(
+                        None, use_saved=True
+                    )
+                ),
             )
-        current_source_bindings = (
-            ObjectState(pipeline_config)
-            .to_saved_resolved_object()
-            .source_bindings_config
+            previous_source_bindings = previous_resolved.source_bindings_config
+        current_resolved, _ = ObjectState.resolve_saved_object(
+            pipeline_config,
+            ancestor_objects_with_scopes=(
+                ObjectStateRegistry.get_ancestor_objects_with_scopes(
+                    None, use_saved=True
+                )
+            ),
         )
+        current_source_bindings = current_resolved.source_bindings_config
         source_bindings_changed = (
             previous_source_bindings is not None
             and previous_source_bindings != current_source_bindings
         )
-        # Temporarily disable auto-sync to prevent recursion
-        self._auto_sync_enabled = False
-        try:
-            self._pipeline_config = pipeline_config
-        finally:
-            self._auto_sync_enabled = True
+        self._pipeline_config = pipeline_config
 
         if source_bindings_changed:
             self._invalidate_source_projection()
@@ -1020,7 +1094,14 @@ class PipelineOrchestrator:
         if self.pipeline_config is None:
             raise RuntimeError("No pipeline configuration available for resolution")
 
-        result = ObjectState(self.pipeline_config).to_saved_resolved_object()
+        result, _ = ObjectState.resolve_saved_object(
+            self.pipeline_config,
+            ancestor_objects_with_scopes=(
+                ObjectStateRegistry.get_ancestor_objects_with_scopes(
+                    None, use_saved=True
+                )
+            ),
+        )
         if not isinstance(result, GlobalPipelineConfig):
             raise TypeError(
                 "Resolved pipeline configuration must be GlobalPipelineConfig, "

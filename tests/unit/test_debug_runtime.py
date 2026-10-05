@@ -79,7 +79,15 @@ from openhcs.core.artifacts import (
     ImageArtifactType,
     ObjectLabelsArtifactType,
     MeasurementsArtifactType,
+    NoMainFlowOutput,
     RelationshipsArtifactType,
+)
+from openhcs.core.artifact_key_selection import (
+    AdapterRecordedArtifactOutputPolicy,
+    NativeReturnArtifactOutputPolicy,
+)
+from openhcs.interop.cellprofiler.runtime.adapter import (
+    CellProfilerRecordedArtifactOutputPolicy,
 )
 from openhcs.core.runtime_adapters import RuntimeAdapterSpec
 from openhcs.core.measurement_row_materialization import (
@@ -122,12 +130,10 @@ from openhcs.core.function_patterns import (
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
-    SourceBindingRuntimeContext,
 )
 from openhcs.core.source_load_plan import SourceLoadPlan
 from openhcs.core.steps.function_runtime import (
-    ComponentArtifactPlans,
-    FunctionRuntimeScope,
+    PatternGroupData,
 )
 from openhcs.core.runtime_stores import RuntimeValueStore
 from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
@@ -330,11 +336,14 @@ class DebugRuntimeFixture:
         artifact_outputs=None,
         runtime_plane_index: int = 0,
         runtime_plane_count: int = 1,
-        source_binding_context: SourceBindingRuntimeContext | None = None,
     ):
         resolved_artifact_inputs = {} if artifact_inputs is None else artifact_inputs
         resolved_artifact_outputs = {} if artifact_outputs is None else artifact_outputs
-        runtime_scope = FunctionRuntimeScope(
+        runtime_scope = PatternGroupData(
+            matching_files=[
+                f"input-{index}.tif" for index in range(runtime_plane_count)
+            ],
+            main_data_stack=initial_data_stack,
             context=context,
             execution_plan=cls.execution_plan(
                 artifact_inputs=resolved_artifact_inputs,
@@ -344,19 +353,12 @@ class DebugRuntimeFixture:
                 group_key=cls.GROUP_KEY,
                 invocations=invocations,
             ),
-            artifacts=ComponentArtifactPlans(
-                inputs=resolved_artifact_inputs,
-                outputs=resolved_artifact_outputs,
-            ),
-            source_binding_context=(
-                SourceBindingRuntimeContext.empty()
-                if source_binding_context is None
-                else source_binding_context
-            ),
+            artifact_inputs=resolved_artifact_inputs,
+            artifact_outputs=resolved_artifact_outputs,
             runtime_plane_index=runtime_plane_index,
             runtime_plane_count=runtime_plane_count,
         )
-        return runtime_scope.execute_chain(initial_data_stack)
+        return runtime_scope.execute_chain()
 
     @classmethod
     def cursor(cls) -> DebugCursor:
@@ -656,6 +658,42 @@ def test_debug_execution_config_normalizes_compile_cache_payload():
     assert (
         compile_payload["replay_mode"] == DebugReplayMode.PERSISTENT_PAUSED_WORKER.value
     )
+
+
+@pytest.mark.parametrize(
+    "output_policy",
+    [
+        CellProfilerRecordedArtifactOutputPolicy,
+        AdapterRecordedArtifactOutputPolicy,
+        NativeReturnArtifactOutputPolicy,
+    ],
+)
+def test_outputless_chain_uses_declared_owner_instead_of_selected_output_count(
+    output_policy,
+):
+    def publish(image, *, runtime):
+        return image
+
+    invocation = DebugRuntimeFixture.compiled_invocation(
+        publish,
+        runtime_adapter=RuntimeAdapterSpec(
+            "runtime",
+            lambda request: object(),
+            artifact_output_policy=output_policy,
+        ),
+    )
+    assert not invocation.adapter_records_artifact_outputs
+    image = np.arange(6, dtype=np.uint16).reshape(1, 2, 3)
+    result = DebugRuntimeFixture.execute_function_chain(
+        initial_data_stack=image,
+        invocations=(invocation,),
+        context=DebugExecutionContextStub(debug_event_sink=NoOpDebugEventSink()),
+    )
+    if output_policy is CellProfilerRecordedArtifactOutputPolicy:
+        assert isinstance(result, NoMainFlowOutput)
+    else:
+        assert not isinstance(result, NoMainFlowOutput)
+        np.testing.assert_array_equal(image_payload_data(result), image)
 
 
 def test_execute_chain_emits_debug_invocation_events():

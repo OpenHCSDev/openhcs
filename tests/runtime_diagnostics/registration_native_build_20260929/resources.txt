@@ -1,0 +1,23 @@
+	Command being timed: "env OPENHCS_CPU_ONLY=true PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 PYTHONPATH=/home/ts/wt/openhcs-custom-function-admission-20260929:/home/ts/wt/openhcs-custom-function-admission-20260929/external/ObjectState/src:/home/ts/wt/openhcs-custom-function-admission-20260929/external/PolyStore/src:/home/ts/wt/openhcs-custom-function-admission-20260929/external/arraybridge/src:/home/ts/wt/openhcs-custom-function-admission-20260929/external/metaclass-registry/src:/home/ts/wt/openhcs-custom-function-admission-20260929/external/pycodify/src:/home/ts/wt/openhcs-custom-function-admission-20260929/external/pyqt-reactive/src:/home/ts/wt/openhcs-custom-function-admission-20260929/external/python-introspect/src:/home/ts/wt/openhcs-custom-function-admission-20260929/external/zmqruntime/src POLYSTORE_IMAGEJ_CACHE_ROOT=/home/ts/.cache/polystore/imagej POLYSTORE_IMAGEJ_ALLOW_DOWNLOAD=false OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 /home/ts/code/projects/openhcs/.venv/bin/python -B setup.py build_ext --inplace --parallel 1 --build-temp /home/ts/.cache/agent-scratch/openhcs-registration-native-build-20260929/objects --build-lib /home/ts/.cache/agent-scratch/openhcs-registration-native-build-20260929/lib"
+	User time (seconds): 1.33
+	System time (seconds): 0.13
+	Percent of CPU this job got: 98%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.48
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 93004
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 22710
+	Voluntary context switches: 28
+	Involuntary context switches: 142
+	Swaps: 0
+	File system inputs: 56
+	File system outputs: 288
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

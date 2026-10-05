@@ -23,13 +23,14 @@ from openhcs.core.artifacts import (
     MeasurementsArtifactType,
 )
 from openhcs.core.context.processing_context import ProcessingContext
-from openhcs.core.image_file_serialization import image_payload_as_uint8
+from openhcs.core.image_file_serialization import ImagePayloadUint8Strategy
 from openhcs.core.memory import numpy
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
 from openhcs.core.pipeline.function_contracts import (
     runtime_bound_parameters,
+    runtime_context_parameter,
     special_inputs,
 )
 from openhcs.core.runtime_array_values import RuntimeArrayData
@@ -145,7 +146,7 @@ class SaveImagesBitDepth(str, Enum):
         if self is SaveImagesBitDepth.NATIVE:
             converted = data
         elif self is SaveImagesBitDepth.UINT8:
-            converted = image_payload_as_uint8(data)
+            converted = ImagePayloadUint8Strategy.for_dtype(data.dtype).prepare(data)
         elif self is SaveImagesBitDepth.UINT16:
             converted = _image_payload_as_uint16(data)
         else:
@@ -978,6 +979,7 @@ def _recorded_save_images_rows(
 
 @numpy(contract=ProcessingContract.PURE_3D)
 @special_inputs("image_to_save")
+@runtime_context_parameter(None)
 def save_images(
     image: RuntimeArrayData,
     *,
@@ -1033,6 +1035,7 @@ def save_images(
 @numpy(contract=ProcessingContract.PURE_3D)
 @special_inputs("image_to_save")
 @runtime_bound_parameters(SliceIndexRuntimeParameter)
+@runtime_context_parameter("context")
 def save_images_with_measurements(
     image: RuntimeArrayData,
     *,

@@ -1,0 +1,208 @@
+{
+  "base": "702b2c2c9563da2636db251f8b734cff215596b8",
+  "authorization": "User requests removing optimization at wrong abstraction layers and moving it to generic platform owners; shared algorithms and nominal contracts required.",
+  "domain": "Parent image payload to correlated child pixel, mask and source metadata projection.",
+  "census": {
+    "source_revision": "c20b56b411778bdf3bf2909cae280f20e55f9977",
+    "module_count": 702,
+    "original_class_count": 5121,
+    "projected_count": 5109
+  },
+  "census_transition": "Every censused OpenHCS/setup source unchanged through base; all original OPEN rows retained.",
+  "OPEN": [
+    {
+      "path": "openhcs/components/framework.py",
+      "line": 198,
+      "name": "_ComponentTemplate",
+      "lexical_scope": [
+        "ComponentConfigurationFactory",
+        "create_openhcs_default_configuration"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/gui_startup.py",
+      "line": 481,
+      "name": "_EventBridge",
+      "lexical_scope": [
+        "_run_startup_window_child"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/gui_startup.py",
+      "line": 485,
+      "name": "_StartupWindow",
+      "lexical_scope": [
+        "_run_startup_window_child"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/gui_startup.py",
+      "line": 612,
+      "name": "_StartupWindowPresentation",
+      "lexical_scope": [
+        "_run_startup_window_child"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/mcp/http.py",
+      "line": 76,
+      "name": "OpenHCSHostedFastMCP",
+      "lexical_scope": [
+        "create_hosted_fastmcp_type"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/processing/backends/analysis/dxf_mask_pipeline.py",
+      "line": 107,
+      "name": "_RegistrationCNN_torch",
+      "lexical_scope": [],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/pyqt_gui/widgets/shared/services/execution_submission_service.py",
+      "line": 102,
+      "name": "_ClientDisconnected",
+      "lexical_scope": [
+        "ExecutionSubmissionService",
+        "start_completion_poller"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/runtime/fiji_viewer_server.py",
+      "line": 2618,
+      "name": "DimensionScrollbarListener",
+      "lexical_scope": [
+        "FijiViewerServer",
+        "_add_dimension_change_listener"
+      ],
+      "decorators": [
+        "jpype.JImplements('java.awt.event.AdjustmentListener')"
+      ],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/runtime/fiji_viewer_server.py",
+      "line": 2696,
+      "name": "WindowCloseListener",
+      "lexical_scope": [
+        "FijiViewerServer",
+        "_add_dimension_change_listener"
+      ],
+      "decorators": [
+        "jpype.JImplements('java.awt.event.WindowListener')"
+      ],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/runtime/fiji_viewer_server.py",
+      "line": 3064,
+      "name": "FijiUiWorkUnit",
+      "lexical_scope": [
+        "FijiRoiManagerProvider",
+        "invoke_on_event_dispatch_thread"
+      ],
+      "decorators": [
+        "JImplements('java.lang.Runnable')"
+      ],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/utils/import_utils.py",
+      "line": 67,
+      "name": "Placeholder",
+      "lexical_scope": [
+        "create_placeholder_class"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    },
+    {
+      "path": "openhcs/utils/pipeline_migration.py",
+      "line": 358,
+      "name": "MigratingGroupBy",
+      "lexical_scope": [
+        "LegacyGroupByUnpickler",
+        "_create_migrating_groupby_class"
+      ],
+      "decorators": [],
+      "status": "OPEN-unprojected"
+    }
+  ],
+  "determiner": "Existing ImagePayloadSliceProjector, moved from aligned-image composition into runtime_image_values alongside ImagePayloadMetadata and payload primitives.",
+  "required_pairs": [
+    "Scalar context helper derives payload creation from ImagePayloadSliceProjector.",
+    "Standalone mask helper and colocalization invoke the same scalar policy.",
+    "Aligned unstacking invokes the batch policy on that existing owner.",
+    "Masked batch child metadata is projected once and reused for its pixels and mask validation."
+  ],
+  "forbidden_pairs": [
+    "Alignment module owns a second scalar payload/mask projection algorithm.",
+    "Processing functions cache or reconstruct projected metadata independently.",
+    "New persistent mutable metadata cache or new manual function/component roster."
+  ],
+  "separate_roles": [
+    "Batch masks retain exact leading cardinality and bool conversion.",
+    "Scalar SOURCE_BINDING masks may be shared spatial masks and preserve dtype.",
+    "Alignment owns paired contexts and stack packing, not primitive image metadata selection."
+  ],
+  "counterevidence": [
+    "Bulk and scalar mask contracts differ and must not be collapsed into a single permissive selector.",
+    "SourceImageProvenance owns contributor and source identity semantics; no reconstruction policy moved out of it.",
+    "Numerical kernels and declared preparation operations remain at intrinsic/provider and generic readiness owners respectively."
+  ],
+  "production_consumers": [
+    "Aligned unstacking",
+    "RuntimeSliceProjection through image_payload_slice_context",
+    "CellProfiler colocalization standalone masks"
+  ],
+  "direct_timer": {
+    "pattern_count": 32,
+    "pattern_seconds": 8.053711743559688,
+    "totals": {
+      "PatternGroupRuntime._load_input_stack": [
+        32,
+        1.2381714242510498
+      ],
+      "SourceImageIdentity.component_metadata_with_missing_from": [
+        26821,
+        0.8988473853096366
+      ],
+      "PatternGroupRuntime._execute_pattern": [
+        32,
+        5.470690558198839
+      ],
+      "ImagePayloadMetadata.for_leading_source_plane": [
+        6540,
+        0.7934979111887515
+      ],
+      "PatternGroupRuntime._validate_and_unstack": [
+        28,
+        0.47736326791346073
+      ],
+      "PatternGroupRuntime._save_outputs": [
+        28,
+        0.8330912520177662
+      ]
+    },
+    "limits": "Thread-local explicit timers. Inclusive nested scopes must not be summed. No cProfile; no overlapping benchmarks/tests/builds/audits. Diagnostic instrumentation included."
+  },
+  "performance_decision": "0.90s inclusive source merge and 0.79s inclusive leading metadata projection overlap. Saved exact slice prototype about halves affected projection, estimated 0.15\u20130.25s per well. This is explicitly user-authorized ownership cleanup and removes a duplicate reconstruction, not a proposed dominant fix or an achievement of whole-runtime target. Persistent-index prototype rejected as slower; query-local merge prototype not promoted as it cannot close the target gap alone.",
+  "proof_limits": [
+    "Authored exact replacement changes algorithms: syntax/revision simulation is not native equivalence proof.",
+    "Dynamic external imports/pickled instances of the moved transient projector are OPEN; no serialized platform API promises its old module path.",
+    "Saved fixtures and executed mask, provenance, artifact and numerical consumer gates required."
+  ]
+}

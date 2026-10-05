@@ -43,7 +43,7 @@ from tests.unit.cellprofiler_runtime_test_support import (
 class _PayloadBackedOutputRecordRequest(CellProfilerOutputRecordRequest):
     artifact_values: ClassVar[dict[ArtifactSpecRef, ObjectLabelSet]] = {}
 
-    def artifact_value(self, spec: ArtifactSpec) -> ObjectLabelSet:
+    def declared_artifact_value(self, spec: ArtifactSpec) -> ObjectLabelSet:
         return self.artifact_values[spec.ref()]
 
 
@@ -134,7 +134,7 @@ def test_measurement_source_alignment_uses_selected_output_group_scope() -> None
             source_image_name=None,
             image_count=1,
         ),
-        call_kwargs={},
+        kwargs={},
         current_image=first_value,
     )
 

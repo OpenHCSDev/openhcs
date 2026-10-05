@@ -1,0 +1,233 @@
+{
+  "status": "CURRENT_DIAGNOSTIC_SCIENCE_PASS_READ_ONLY_OWNER_MAP",
+  "source_revision": "480aed49b30448de4380af5c9274e48084e67b63",
+  "source_unchanged_against_original_NRA_census": true,
+  "NRA_census": {
+    "path": "/home/ts/.local/state/openhcs-maintenance/20261003/compiler-config-transaction-map-v1/census.json",
+    "sha256": "60541e7bc14f20f6e9d698ac25ea6f094b5503a0670df2f893d83bb5564d3868",
+    "modules": 731,
+    "original_classes": 5302,
+    "selected_families": 67,
+    "all_source_hashes_revalidated": 731
+  },
+  "science_receipt": {
+    "path": "/home/ts/.local/state/openhcs-maintenance/20261003/compiler-config-coarse-ledger-v1/science.json",
+    "sha256": "d19e5294a829cf98a0d0730b2729224e8a6947f258641a6f0923dfc6af732d74"
+  },
+  "timing": {
+    "compile_only": {
+      "root_seconds": 1.2609371892176569,
+      "owners": {
+        "ObjectState._compute_resolved_snapshot": {
+          "owner": "ObjectState._compute_resolved_snapshot",
+          "dimensions": "",
+          "phase": "compiler_config:_compute_resolved_snapshot",
+          "calls": 88,
+          "inclusive": 0.4525698209181428,
+          "exclusive": 0.4525698209181428
+        },
+        "ObjectState.__init__": {
+          "owner": "ObjectState.__init__",
+          "dimensions": "",
+          "phase": "compiler_config:__init__",
+          "calls": 44,
+          "inclusive": 0.6144807459786534,
+          "exclusive": 0.16191092506051064
+        },
+        "ObjectState._reconstruct_from_resolved": {
+          "owner": "ObjectState._reconstruct_from_resolved",
+          "dimensions": "",
+          "phase": "compiler_config:_reconstruct_from_resolved",
+          "calls": 532,
+          "inclusive": 0.1099232928827405,
+          "exclusive": 0.05649412330240011
+        },
+        "ObjectState.to_saved_resolved_object": {
+          "owner": "ObjectState.to_saved_resolved_object",
+          "dimensions": "",
+          "phase": "compiler_config:to_saved_resolved_object",
+          "calls": 42,
+          "inclusive": 0.056609060149639845,
+          "exclusive": 0.00011493684723973274
+        },
+        "PipelineOrchestrator.get_effective_config": {
+          "owner": "PipelineOrchestrator.get_effective_config",
+          "dimensions": "",
+          "phase": "compiler_config:get_effective_config",
+          "calls": 10,
+          "inclusive": 0.19583785673603415,
+          "exclusive": 8.42963345348835e-05
+        },
+        "PipelineOrchestrator.create_context": {
+          "owner": "PipelineOrchestrator.create_context",
+          "dimensions": "",
+          "phase": "compiler_config:create_context",
+          "calls": 3,
+          "inclusive": 0.04134061839431524,
+          "exclusive": 0.0006397129036486149
+        },
+        "PipelineCompiler._axis_values_to_process": {
+          "owner": "PipelineCompiler._axis_values_to_process",
+          "dimensions": "",
+          "phase": "compiler_config:_axis_values_to_process",
+          "calls": 1,
+          "inclusive": 0.017245036084204912,
+          "exclusive": 6.654579192399979e-05
+        },
+        "PipelineCompiler._register_and_resolve_pipeline_once": {
+          "owner": "PipelineCompiler._register_and_resolve_pipeline_once",
+          "dimensions": "",
+          "phase": "compiler_config:_register_and_resolve_pipeline_once",
+          "calls": 1,
+          "inclusive": 0.47889699088409543,
+          "exclusive": 0.005476511083543301
+        },
+        "PipelineCompiler._capture_pipeline_config": {
+          "owner": "PipelineCompiler._capture_pipeline_config",
+          "dimensions": "",
+          "phase": "compiler_config:_capture_pipeline_config",
+          "calls": 1,
+          "inclusive": 0.0019184919074177742,
+          "exclusive": 2.7259811758995056e-06
+        },
+        "PipelineCompiler._resolve_global_step_axis_filters": {
+          "owner": "PipelineCompiler._resolve_global_step_axis_filters",
+          "dimensions": "",
+          "phase": "compiler_config:_resolve_global_step_axis_filters",
+          "calls": 1,
+          "inclusive": 0.015254999045282602,
+          "exclusive": 0.001242930069565773
+        },
+        "AxisCompilationRequest.context_for": {
+          "owner": "AxisCompilationRequest.context_for",
+          "dimensions": "",
+          "phase": "compiler_config:context_for",
+          "calls": 1,
+          "inclusive": 0.013713276013731956,
+          "exclusive": 0.00032007182016968727
+        },
+        "CompilationSession.from_context": {
+          "owner": "CompilationSession.from_context",
+          "dimensions": "",
+          "phase": "compiler_config:from_context",
+          "calls": 1,
+          "inclusive": 2.0298175513744354e-05,
+          "exclusive": 2.0298175513744354e-05
+        },
+        "PipelineCompiler._configure_input_conversion_if_needed": {
+          "owner": "PipelineCompiler._configure_input_conversion_if_needed",
+          "dimensions": "",
+          "phase": "compiler_config:_configure_input_conversion_if_needed",
+          "calls": 1,
+          "inclusive": 0.013645949773490429,
+          "exclusive": 5.200039595365524e-06
+        },
+        "PipelineCompiler.initialize_step_plans_for_context": {
+          "owner": "PipelineCompiler.initialize_step_plans_for_context",
+          "dimensions": "",
+          "phase": "compiler_config:initialize_step_plans_for_context",
+          "calls": 1,
+          "inclusive": 0.4779214742593467,
+          "exclusive": 0.46425522631034255
+        },
+        "PipelineCompiler.declare_zarr_stores": {
+          "owner": "PipelineCompiler.declare_zarr_stores",
+          "dimensions": "",
+          "phase": "compiler_config:declare_zarr_stores",
+          "calls": 1,
+          "inclusive": 0.018639610148966312,
+          "exclusive": 9.438721463084221e-05
+        },
+        "PipelineCompiler._finalize_compilation": {
+          "owner": "PipelineCompiler._finalize_compilation",
+          "dimensions": "",
+          "phase": "compiler_config:_finalize_compilation",
+          "calls": 1,
+          "inclusive": 0.016232328955084085,
+          "exclusive": 0.00027552898973226547
+        },
+        "PipelineCompiler.compile_pipelines": {
+          "owner": "PipelineCompiler.compile_pipelines",
+          "dimensions": "",
+          "phase": "compiler_config:compile_pipelines",
+          "calls": 1,
+          "inclusive": 1.094543606042862,
+          "exclusive": 0.05472139874473214
+        }
+      },
+      "state_disjoint_exclusive_seconds": 0.6710898061282933
+    },
+    "execution": {
+      "root_seconds": 8.383970148861408,
+      "owners": {
+        "ObjectState._compute_resolved_snapshot": {
+          "owner": "ObjectState._compute_resolved_snapshot",
+          "dimensions": "",
+          "phase": "compiler_config:_compute_resolved_snapshot",
+          "calls": 8,
+          "inclusive": 0.04228230891749263,
+          "exclusive": 0.04228230891749263
+        },
+        "ObjectState.__init__": {
+          "owner": "ObjectState.__init__",
+          "dimensions": "",
+          "phase": "compiler_config:__init__",
+          "calls": 4,
+          "inclusive": 0.05480403359979391,
+          "exclusive": 0.012521724682301283
+        },
+        "ObjectState._reconstruct_from_resolved": {
+          "owner": "ObjectState._reconstruct_from_resolved",
+          "dimensions": "",
+          "phase": "compiler_config:_reconstruct_from_resolved",
+          "calls": 92,
+          "inclusive": 0.013641910627484322,
+          "exclusive": 0.007105355150997639
+        },
+        "ObjectState.to_saved_resolved_object": {
+          "owner": "ObjectState.to_saved_resolved_object",
+          "dimensions": "",
+          "phase": "compiler_config:to_saved_resolved_object",
+          "calls": 4,
+          "inclusive": 0.007119361776858568,
+          "exclusive": 1.4006625860929489e-05
+        },
+        "PipelineOrchestrator.get_effective_config": {
+          "owner": "PipelineOrchestrator.get_effective_config",
+          "dimensions": "",
+          "phase": "compiler_config:get_effective_config",
+          "calls": 4,
+          "inclusive": 0.06195876281708479,
+          "exclusive": 3.5367440432310104e-05
+        },
+        "PipelineOrchestrator.create_context": {
+          "owner": "PipelineOrchestrator.create_context",
+          "dimensions": "",
+          "phase": "compiler_config:create_context",
+          "calls": 1,
+          "inclusive": 0.014066982083022594,
+          "exclusive": 6.845779716968536e-05
+        }
+      },
+      "state_disjoint_exclusive_seconds": 0.06192339537665248
+    }
+  },
+  "findings": [
+    "44 constructor / 88 snapshots is exactly consistent with constructor initializing independent live and saved baselines; same count is not proof they have equivalent values/effects.",
+    "Constructor first computes live using current parameters, LIVE global context, and ancestor.to_object; it then detached-copies saved parameters and resolves SAVED global and saved ancestor extraction targets. Initial dirty/provenance/signature sets depend on both.",
+    "Compiler force_fresh registration is intentional protection from stale UI/post-compile stripped states. Every state is constructed before registry.register fires callbacks; skipping live setup changes observable state at callbacks.",
+    "Registry ancestral objects include current scope when old state is already registered. force_fresh constructor may therefore observe replaced old registry state before register overwrites it; not assumed empty/no-edits.",
+    "ObjectState.saved_object synchronizes delegate changes; ancestor live.to_object synchronizes and caches reconstruction; merged context dataclass constructors and validators are real effects. Compiler later uses to_saved_resolved_object but public registered state still has both baseline APIs.",
+    "Context manager extract_all_configs already owns operation cache per object ID, cleared at context changes. resolver collects layer configs once per single field, with extraction cached during unchanged stack. Do not invent an absent config extraction cache.",
+    "All10 effective config reads total .195838 inclusive, a subset of ObjectState .671090 disjoint owner work. Late context-only removal cannot claim whole registration lane.",
+    "Live-versus-saved snapshot split timing is not retained per-argument by41-hook diagnostic; half of .45257 is not an empirical removable bound. Whole snapshot .45257 is an absolute ceiling before mandatory saved resolution and live state laws.",
+    "Compiler-state work is a total-time opportunity only. Execution state owner work .061924 is separate and cannot bridge execution gap. No production optimization, cache, validation bypass, proxy, subtype switch or constructor mode introduced."
+  ],
+  "existing_law_controls": [
+    "ObjectState/tests/test_global_config.py:test_dual_config_pattern",
+    "ObjectState/tests/test_construction_history.py:test_alias_graph_is_detached_and_restored_across_scopes_and_saved_live",
+    "ObjectState/tests/test_callable_baseline.py:test_initial_values_flatten_nested_dataclass_overrides",
+    "ObjectState/tests/test_lazy_factory.py:test_patch_lazy_constructors_does_not_hide_default_factory_failure"
+  ],
+  "next_admission": "Only if root selects this total-time dependency: a bounded actual registered state snapshot replay must compare both saved/live outputs, provenance/dirty states, independent mutable aliases, registration callbacks, stale same-scope state replacement, delegated object sync, exception/factory/validation ordering. Existing diagnostic does not authorize collapsing live/saved snapshots."
+}

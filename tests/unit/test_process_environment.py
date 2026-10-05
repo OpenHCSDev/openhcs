@@ -1,5 +1,10 @@
 from pathlib import PureWindowsPath
 
+from polystore.imagej_distribution import (
+    FijiArchiveDistribution,
+    ImageJArchiveDownloadPolicy,
+)
+
 from openhcs.agent.runtime_platform import WindowsAgentRuntimePlatformAuthority
 from openhcs.resources.brand import BRAND_PRODUCT_NAME
 from openhcs.utils.environment import OpenHCSProcessEnvironment
@@ -11,6 +16,10 @@ def test_process_environment_owns_inherited_mode_selectors() -> None:
         OpenHCSProcessEnvironment.headless_key,
         OpenHCSProcessEnvironment.numba_cache_key,
         OpenHCSProcessEnvironment.use_threading_key,
+        OpenHCSProcessEnvironment.worker_profile_directory_key,
+        OpenHCSProcessEnvironment.numba_sys_monitoring_key,
+        FijiArchiveDistribution.cache_root_environment_key,
+        ImageJArchiveDownloadPolicy.allow_download_environment_key,
     )
 
 
@@ -72,6 +81,7 @@ def test_cpu_only_mode_projects_gpu_import_policy_to_dependencies() -> None:
         OpenHCSProcessEnvironment.cpu_only_key: "true",
         OpenHCSProcessEnvironment.subprocess_no_gpu_key: "1",
         OpenHCSProcessEnvironment.polystore_subprocess_no_gpu_key: "1",
+        OpenHCSProcessEnvironment.jax_platforms_key: "cpu",
     }
     assert OpenHCSProcessEnvironment.gpu_imports_disabled(environment) is True
 
@@ -84,3 +94,10 @@ def test_subprocess_gpu_suppression_projects_without_enabling_cpu_only() -> None
     assert OpenHCSProcessEnvironment.cpu_only_mode(environment) is False
     assert environment[OpenHCSProcessEnvironment.subprocess_no_gpu_key] == "1"
     assert environment[OpenHCSProcessEnvironment.polystore_subprocess_no_gpu_key] == "1"
+    assert OpenHCSProcessEnvironment.jax_platforms_key not in environment
+
+
+def test_cpu_only_mode_selects_cpu_even_if_jax_requested_an_accelerator() -> None:
+    environment = {OpenHCSProcessEnvironment.jax_platforms_key: "cuda"}
+    OpenHCSProcessEnvironment.enable_cpu_only_mode(environment)
+    assert environment[OpenHCSProcessEnvironment.jax_platforms_key] == "cpu"

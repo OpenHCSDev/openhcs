@@ -969,7 +969,7 @@ def test_cellprofiler_backend_selection_is_memory_provider_keyed() -> None:
     )
     assert type(
         RadialDistributionBackendStrategy.for_memory_type(MemoryType.NUMPY)
-    ) is (NativeNumpyRadialDistributionBackendStrategy)
+    ) is (NumbaNumpyRadialDistributionBackendStrategy)
     assert (
         type(
             RadialDistributionBackendStrategy.for_memory_type(
@@ -3322,15 +3322,15 @@ def test_zernike_label_geometry_cache_reuses_equal_label_values() -> None:
     labels[2:6, 2:6] = 1
     labels[7:10, 7:11] = 2
     object_ids = np.array([1, 2], dtype=np.int32)
-    zernike._ZERNIKE_LABEL_GEOMETRY_CACHE.clear()
+    zernike.ZernikeLabelGeometryCache.process_cache().clear()
     strategy = zernike.LegacyFastNumpyShapeZernikeBackendStrategy()
 
     first = strategy.zernike_label_geometry(labels, object_ids)
     second = strategy.zernike_label_geometry(labels.copy(), object_ids.copy())
 
     assert second is first
-    assert len(zernike._ZERNIKE_LABEL_GEOMETRY_CACHE) == 1
-    zernike._ZERNIKE_LABEL_GEOMETRY_CACHE.clear()
+    assert len(zernike.ZernikeLabelGeometryCache.process_cache().entries) == 1
+    zernike.ZernikeLabelGeometryCache.process_cache().clear()
 
 
 def test_zernike_numba_provider_is_not_registered_until_pure() -> None:

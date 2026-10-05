@@ -1,0 +1,18 @@
+{
+  "base": "992a479b118e7054b3137445bb6ec7af4ce0b571",
+  "source": "aade4e5f8ff066b82d0e8a2bf8541f827a513fa9",
+  "paths": [
+    "openhcs/core/steps/function_outputs.py"
+  ],
+  "increased": {},
+  "metric_count": 5114,
+  "census": {
+    "source_revision": "992a479b118e7054b3137445bb6ec7af4ce0b571",
+    "module_count": 702,
+    "original_class_count": 5109,
+    "projected_count": 5097
+  },
+  "OPEN": 12,
+  "ratchet_sha256": "e2edb4d752c8bda214d8abf7fb95028cf489ea40e788367a567069228c7e554a",
+  "claim": "Original class census and scoped structural screens, not full semantic proof"
+}

@@ -1,0 +1,22 @@
+{
+  "qualified-controls.json": {
+    "original": "/var/tmp/issue487-synchronized-qualified-controls-20261002.json",
+    "sha256": "96f34ac97ff5ca1bb96bbb50e83d4e9b49fe17b9c518f341728aff629d7db0ab"
+  },
+  "strict-native-summary.json": {
+    "original": "/var/tmp/issue487-strict-native-saved-scope-summary-20261002.json",
+    "sha256": "a73d12dd885125fa5837aad42e263ba5c6e48240c223a99039a9fd4373befb65"
+  },
+  "cache-window-counterevidence.json": {
+    "original": "/var/tmp/openhcs-beginner-metric-487-cache-write-window-audit-v1-20261002.json",
+    "sha256": "c643418cbb9aaaf9da1de962b1f105a7f3272d6019e66dbe413c514fb185f07a"
+  },
+  "common-saved-output-comparison.json": {
+    "original": "/var/tmp/openhcs-beginner-metric-487-provisional-raw-saved-v1-20261002.json",
+    "sha256": "6a3b2737c6adb71734af22dcefb3d41f2d6a3ec9960380c383652a748ee1a5fb"
+  },
+  "strict-native-full.json.gz": {
+    "original": "/var/tmp/openhcs-beginner-metric-487-strict-native-science-v1-20261002/receipt.json",
+    "uncompressed_sha256": "517795a672df2e99a8b8163f0e8365b82b041e94bfd08bc6fe61c9db70a76697"
+  }
+}

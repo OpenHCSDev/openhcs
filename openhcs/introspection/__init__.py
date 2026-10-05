@@ -19,7 +19,6 @@ from python_introspect import (
     DocstringInfo,
     DocstringExtractor,
     UnifiedParameterAnalyzer,
-    UnifiedParameterInfo,
     register_namespace_provider,
 )
 
@@ -51,7 +50,6 @@ __all__ = [
     "DocstringExtractor",
     # Unified analysis (from python_introspect)
     "UnifiedParameterAnalyzer",
-    "UnifiedParameterInfo",
     # Plugin registration (from python_introspect)
     "register_namespace_provider",
 ]

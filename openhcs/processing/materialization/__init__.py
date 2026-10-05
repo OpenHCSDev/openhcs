@@ -6,11 +6,14 @@ from openhcs.processing.materialization.constants import (
 )
 from openhcs.processing.materialization.core import (
     BackendSaver,
+    MaterializationBatch,
     MaterializationContext,
     MaterializationSpec,
     Output,
+    SavedMaterializationOutputs,
     PathHelper,
     materialize,
+    prepare_materialization,
     materialization_outputs,
     registered_materialization_option_types,
     tabular_field_names_from_materialization,
@@ -34,6 +37,10 @@ from openhcs.processing.materialization.path_scopes import (
     MaterializationRelativePathScope,
     SharedMaterializationRelativePathScope,
 )
+from openhcs.processing.materialization.persistence import (
+    StreamingOnlyMaterializationSpec,
+    TerminalMaterializationSpec,
+)
 from openhcs.processing.materialization.presets import (
     csv_dataclass_materializer,
     csv_materializer,
@@ -51,11 +58,16 @@ __all__ = [
     "MaterializationFormat",
     "WriteMode",
     "MaterializationSpec",
+    "TerminalMaterializationSpec",
+    "StreamingOnlyMaterializationSpec",
+    "MaterializationBatch",
     "MaterializationContext",
     "Output",
+    "SavedMaterializationOutputs",
     "PathHelper",
     "BackendSaver",
     "materialize",
+    "prepare_materialization",
     "materialization_outputs",
     "registered_materialization_option_types",
     "FileOutputOptions",

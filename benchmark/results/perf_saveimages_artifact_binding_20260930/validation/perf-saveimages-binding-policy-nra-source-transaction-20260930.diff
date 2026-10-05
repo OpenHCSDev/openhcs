@@ -1,0 +1,59 @@
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/core/artifacts.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/core/artifacts.py
+@@ -1590,6 +1590,10 @@
+         default=None,
+         kw_only=True,
+     )
++
++    def binds_callable_parameter(self) -> bool:
++        """Distinguish a runtime argument from a context-only artifact identity."""
++        return self.parameter_name is not None
+ 
+     def __post_init__(self) -> None:
+         if not isinstance(self.viewer_streaming, ArtifactViewerStreaming):
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/core/function_patterns.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/core/function_patterns.py
+@@ -261,6 +261,14 @@
+                 )
+             ),
+         )
++
++    def uses_runtime_storage(self) -> bool:
++        """Return whether an exact producer storage plan supplies this edge."""
++        return self.storage_plan is not None
++
++    def requires_callable_binding(self) -> bool:
++        """Admit parameter-bearing sources and validate every stored argument."""
++        return self.uses_runtime_storage() or self.spec.binds_callable_parameter()
+ 
+     def __post_init__(self) -> None:
+         if type(self.consumes_main_flow) is not bool:
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/core/steps/function_runtime.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/core/steps/function_runtime.py
+@@ -1860,7 +1860,7 @@
+         parameter_values: dict[str, list[RuntimeValue]] = {}
+         for input_plan in self.selected_artifact_input_edges:
+             parameter_name = input_plan.spec.parameter_name
+-            if input_plan.storage_plan is None and parameter_name is None:
++            if not input_plan.requires_callable_binding():
+                 continue
+             if parameter_name is None:
+                 raise ValueError(
+@@ -1870,7 +1870,7 @@
+             artifact_ref = input_plan.spec.ref()
+             projected_values = (
+                 self.load_artifact_input(input_plan.spec.name, input_plan)
+-                if input_plan.storage_plan is not None
++                if input_plan.uses_runtime_storage()
+                 else (
+                     RuntimeValue.from_spec(
+                         input_plan.spec,
+@@ -1891,7 +1891,7 @@
+     def should_load_artifact_inputs(self) -> bool:
+         return bool(
+             any(
+-                edge.storage_plan is not None or edge.spec.parameter_name is not None
++                edge.requires_callable_binding()
+                 for edge in self.selected_artifact_input_edges
+             )
+             and not self.invocation.adapter_manages_artifact_inputs

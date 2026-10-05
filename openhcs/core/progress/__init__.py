@@ -8,7 +8,6 @@ Public API:
     - ProgressPhase, ProgressStatus: Type-safe enums
     - emit(): Emit progress (convenience wrapper)
     - registry(): Get per-process registry
-    - ProgressEmitter: Emitter base class
     - ProgressRegistry: Registry singleton
 
 Usage Examples:
@@ -35,13 +34,6 @@ Usage Examples:
             print(f"{event.phase.value}: {event.percent}%")
 
         registry().add_listener(on_progress)
-
-    Testing (mock emitter):
-        from openhcs.core.progress import NoopEmitter, ProgressEvent
-
-        emitter = NoopEmitter()
-        event = ProgressEvent(...)
-        emitter.emit(event)
 """
 
 # Public API - Types
@@ -69,15 +61,6 @@ from .types import (
 
 # Public API - Registry
 from .registry import registry
-
-# Public API - Emitters
-from .emitters import (
-    ProgressEmitter,
-    NoopEmitter,
-    CallbackEmitter,
-    ZMQProgressEmitter,
-    LoggingEmitter,
-)
 
 # Public API - Exceptions
 from .exceptions import (

@@ -1,0 +1,395 @@
+# OpenHCS pipeline
+
+from openhcs.constants.constants import (
+    AllComponents,
+    GroupBy,
+    Microscope,
+    VariableComponents,
+)
+from openhcs.constants.input_source import InputSource
+from openhcs.core.config import (
+    LazyAnalysisConsolidationConfig,
+    LazyCompilationDebugConfig,
+    LazyDtypeConfig,
+    LazyFijiDisplayConfig,
+    LazyFijiStreamingConfig,
+    LazyNapariDisplayConfig,
+    LazyNapariStreamingConfig,
+    LazyPathPlanningConfig,
+    LazyPlateMetadataConfig,
+    LazyProcessingConfig,
+    LazySequentialProcessingConfig,
+    LazyStepMaterializationConfig,
+    LazyStepWellFilterConfig,
+    LazyStreamingDefaults,
+    LazyTiffConfig,
+    LazyVFSConfig,
+    LazyWellFilterConfig,
+    LazyZarrConfig,
+    MultiprocessingStartMethod,
+    PipelineConfig,
+    WellFilterMode,
+)
+from openhcs.core.source_bindings import (
+    ComponentSelector,
+    LazySourceBindingsConfig,
+    LazyStepSourceBindingsConfig,
+    NamedSourceBinding,
+    SourceBindingMatchMethod,
+    SourceBindingMatchPlan,
+    SourceBindingOrigin,
+    SourceFilterClause,
+    SourceFilterMatchType,
+    SourceFilterSubject,
+    SourceSelector,
+)
+from openhcs.core.source_metadata import (
+    SourceVoxelSpacing,
+    SourceVoxelSpacingUnit,
+)
+from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.steps.function_step import FunctionStep
+from openhcs.processing.backends.cellprofiler.primary_objects import (
+    UnclumpMethod,
+    WatershedMethod,
+)
+from openhcs.processing.backends.cellprofiler.thresholding import CellProfilerThresholdMethod
+from openhcs.processing.func_registry import get_function
+from pathlib import Path
+
+pipeline_config = PipelineConfig(
+    materialization_results_path=Path('results'),
+    materialize_runtime_artifacts=True,
+    num_workers=1,
+    microscope=Microscope.SOURCE_BINDINGS,
+    use_threading=True,
+    multiprocessing_start_method=MultiprocessingStartMethod.SPAWN,
+    auto_add_output_plate_to_plate_manager=False,
+    napari_display_config=LazyNapariDisplayConfig(),
+    fiji_display_config=LazyFijiDisplayConfig(),
+    well_filter_config=LazyWellFilterConfig(),
+    zarr_config=LazyZarrConfig(),
+    tiff_config=LazyTiffConfig(),
+    vfs_config=LazyVFSConfig(),
+    dtype_config=LazyDtypeConfig(),
+    processing_config=LazyProcessingConfig(
+        variable_components=[
+            VariableComponents.SITE
+        ],
+        group_by=GroupBy.NONE
+    ),
+    source_bindings_config=LazySourceBindingsConfig(
+        match_plan=SourceBindingMatchPlan(
+            method=SourceBindingMatchMethod.ORDER
+        ),
+        bindings=(
+            NamedSourceBinding(
+                alias='Mask',
+                selector=SourceSelector(
+                    filters=(
+                        SourceFilterClause(
+                            subject=SourceFilterSubject.FILE,
+                            match_type=SourceFilterMatchType.EQUALS,
+                            value='Mask.tif'
+                        ),
+                    )
+                ),
+                origin=SourceBindingOrigin.PIPELINE_START,
+                component_identity=(
+                    ComponentSelector(
+                        component=AllComponents.WELL,
+                        value='A01'
+                    ),
+                    ComponentSelector(
+                        component=AllComponents.SITE,
+                        value='1'
+                    ),
+                    ComponentSelector(
+                        component=AllComponents.CHANNEL,
+                        value='1'
+                    ),
+                    ComponentSelector(
+                        component=AllComponents.Z_INDEX,
+                        value='1'
+                    ),
+                    ComponentSelector(
+                        component=AllComponents.TIMEPOINT,
+                        value='1'
+                    )
+                )
+            ),
+            NamedSourceBinding(
+                alias='Process',
+                selector=SourceSelector(
+                    filters=(
+                        SourceFilterClause(
+                            subject=SourceFilterSubject.FILE,
+                            match_type=SourceFilterMatchType.EQUALS,
+                            value='Process.tif'
+                        ),
+                    )
+                ),
+                origin=SourceBindingOrigin.PIPELINE_START,
+                component_identity=(
+                    ComponentSelector(
+                        component=AllComponents.WELL,
+                        value='A01'
+                    ),
+                    ComponentSelector(
+                        component=AllComponents.SITE,
+                        value='1'
+                    ),
+                    ComponentSelector(
+                        component=AllComponents.CHANNEL,
+                        value='2'
+                    ),
+                    ComponentSelector(
+                        component=AllComponents.Z_INDEX,
+                        value='1'
+                    ),
+                    ComponentSelector(
+                        component=AllComponents.TIMEPOINT,
+                        value='1'
+                    )
+                )
+            ),
+            NamedSourceBinding(
+                alias='Nuclear',
+                selector=SourceSelector(
+                    filters=(
+                        SourceFilterClause(
+                            subject=SourceFilterSubject.FILE,
+                            match_type=SourceFilterMatchType.EQUALS,
+                            value='Nuclear.tif'
+                        ),
+                    )
+                ),
+                origin=SourceBindingOrigin.PIPELINE_START,
+                component_identity=(
+                    ComponentSelector(
+                        component=AllComponents.WELL,
+                        value='A01'
+                    ),
+                    ComponentSelector(
+                        component=AllComponents.SITE,
+                        value='1'
+                    ),
+                    ComponentSelector(
+                        component=AllComponents.CHANNEL,
+                        value='3'
+                    ),
+                    ComponentSelector(
+                        component=AllComponents.Z_INDEX,
+                        value='1'
+                    ),
+                    ComponentSelector(
+                        component=AllComponents.TIMEPOINT,
+                        value='1'
+                    )
+                )
+            )
+        ),
+        source_voxel_spacing=SourceVoxelSpacing(
+            values_zyx=(
+                1.0,
+                1.0
+            ),
+            unit=SourceVoxelSpacingUnit.RELATIVE
+        )
+    ),
+    step_source_bindings_config=LazyStepSourceBindingsConfig(),
+    sequential_processing_config=LazySequentialProcessingConfig(),
+    analysis_consolidation_config=LazyAnalysisConsolidationConfig(),
+    plate_metadata_config=LazyPlateMetadataConfig(),
+    path_planning_config=LazyPathPlanningConfig(
+        well_filter_mode=WellFilterMode.INCLUDE,
+        output_dir_suffix='_openhcs',
+        global_output_folder=Path('/run/media/ts/hdd/openhcs-engineering/engineering743-provenance-20261005/public01/forward'),
+        sub_dir='images'
+    ),
+    step_well_filter_config=LazyStepWellFilterConfig(),
+    step_materialization_config=LazyStepMaterializationConfig(),
+    streaming_defaults=LazyStreamingDefaults(),
+    napari_streaming_config=LazyNapariStreamingConfig(
+        enabled=False
+    ),
+    fiji_streaming_config=LazyFijiStreamingConfig(),
+    compilation_debug_config=LazyCompilationDebugConfig()
+)
+
+pipeline_steps = [
+    FunctionStep(
+        func=(get_function('openhcs:cellprofiler_identify_primary_objects'), {
+                'min_diameter': 2,
+                'exclude_size': False,
+                'exclude_border_objects': False,
+                'unclump_method': UnclumpMethod.NONE,
+                'watershed_method': WatershedMethod.NONE,
+                'threshold_method': CellProfilerThresholdMethod.MANUAL,
+                'threshold_smoothing_scale': 0.0,
+                'manual_threshold': 0.5,
+                'name_the_primary_objects_to_be_identified': 'Cells'
+            }),
+        name='OneObject',
+        processing_config=LazyProcessingConfig(
+            input_source=InputSource.PIPELINE_START
+        ),
+        source_bindings=LazyStepSourceBindingsConfig(
+            enabled=True,
+            metadata_rules=(),
+            metadata_fields=(),
+            source_filters=(),
+            bindings=(
+                NamedSourceBinding(
+                    alias='Mask',
+                    selector=SourceSelector(
+                        filters=(
+                            SourceFilterClause(
+                                subject=SourceFilterSubject.FILE,
+                                match_type=SourceFilterMatchType.EQUALS,
+                                value='Mask.tif'
+                            ),
+                        )
+                    ),
+                    origin=SourceBindingOrigin.PIPELINE_START,
+                    component_identity=(
+                        ComponentSelector(
+                            component=AllComponents.WELL,
+                            value='A01'
+                        ),
+                        ComponentSelector(
+                            component=AllComponents.SITE,
+                            value='1'
+                        ),
+                        ComponentSelector(
+                            component=AllComponents.CHANNEL,
+                            value='1'
+                        ),
+                        ComponentSelector(
+                            component=AllComponents.Z_INDEX,
+                            value='1'
+                        ),
+                        ComponentSelector(
+                            component=AllComponents.TIMEPOINT,
+                            value='1'
+                        )
+                    )
+                ),
+            ),
+            image_plane_sources=(),
+            imported_metadata_tables=(),
+            source_stack_components=(),
+            source_spatial_domain=SourceSpatialDomain(),
+            grouping_metadata_fields=(),
+            source_voxel_spacing=SourceVoxelSpacing()
+        )
+    ),
+    FunctionStep(
+        func=(get_function('openhcs:cellprofiler_measure_object_intensity'), {
+                'select_object_sets_to_measure': (
+                    'Cells',
+                ),
+                'select_images_to_measure': (
+                    'Process',
+                    'Nuclear'
+                )
+            }),
+        name='TwoImagePhotometry',
+        processing_config=LazyProcessingConfig(
+            group_by=GroupBy.NONE,
+            input_source=InputSource.PIPELINE_START
+        ),
+        source_bindings=LazyStepSourceBindingsConfig(
+            enabled=True,
+            metadata_rules=(),
+            metadata_fields=(),
+            source_filters=(),
+            bindings=(
+                NamedSourceBinding(
+                    alias='Process',
+                    selector=SourceSelector(
+                        filters=(
+                            SourceFilterClause(
+                                subject=SourceFilterSubject.FILE,
+                                match_type=SourceFilterMatchType.EQUALS,
+                                value='Process.tif'
+                            ),
+                        )
+                    ),
+                    origin=SourceBindingOrigin.PIPELINE_START,
+                    component_identity=(
+                        ComponentSelector(
+                            component=AllComponents.WELL,
+                            value='A01'
+                        ),
+                        ComponentSelector(
+                            component=AllComponents.SITE,
+                            value='1'
+                        ),
+                        ComponentSelector(
+                            component=AllComponents.CHANNEL,
+                            value='2'
+                        ),
+                        ComponentSelector(
+                            component=AllComponents.Z_INDEX,
+                            value='1'
+                        ),
+                        ComponentSelector(
+                            component=AllComponents.TIMEPOINT,
+                            value='1'
+                        )
+                    )
+                ),
+                NamedSourceBinding(
+                    alias='Nuclear',
+                    selector=SourceSelector(
+                        filters=(
+                            SourceFilterClause(
+                                subject=SourceFilterSubject.FILE,
+                                match_type=SourceFilterMatchType.EQUALS,
+                                value='Nuclear.tif'
+                            ),
+                        )
+                    ),
+                    origin=SourceBindingOrigin.PIPELINE_START,
+                    component_identity=(
+                        ComponentSelector(
+                            component=AllComponents.WELL,
+                            value='A01'
+                        ),
+                        ComponentSelector(
+                            component=AllComponents.SITE,
+                            value='1'
+                        ),
+                        ComponentSelector(
+                            component=AllComponents.CHANNEL,
+                            value='3'
+                        ),
+                        ComponentSelector(
+                            component=AllComponents.Z_INDEX,
+                            value='1'
+                        ),
+                        ComponentSelector(
+                            component=AllComponents.TIMEPOINT,
+                            value='1'
+                        )
+                    )
+                )
+            ),
+            image_plane_sources=(),
+            imported_metadata_tables=(),
+            source_stack_components=(),
+            source_spatial_domain=SourceSpatialDomain(),
+            grouping_metadata_fields=(),
+            source_voxel_spacing=SourceVoxelSpacing()
+        )
+    ),
+    FunctionStep(
+        func=(get_function('openhcs:cellprofiler_export_to_spreadsheet'), {
+                'add_image_metadata': True,
+                'add_image_file_names': True,
+                'add_filename_prefix': False
+            }),
+        name='SourceBearingSpreadsheet'
+    )
+]

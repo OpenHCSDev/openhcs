@@ -1,0 +1,627 @@
+Interpreter: /home/ts/wt/openhcs-generated-inputs-installed-parent-20261001/.venv/bin/python 3.12.3 (main, May 22 2025, 14:39:13) [GCC 14.2.1 20250207]
+Discovery owner: /home/ts/wt/metaclass-registry-selected-discovery-376-20261001/src/metaclass_registry/__init__.py
+FFFFFF                                                                   [100%]
+=================================== FAILURES ===================================
+_ test_public_rescale_preserves_one_source_plane_through_stream_binding[None-RescaleMethod.DIVIDE_BY_VALUE] _
+
+method = <RescaleMethod.DIVIDE_BY_VALUE: 'divide_by_value'>, matching = None
+
+    @pytest.mark.parametrize("method", [RescaleMethod.DIVIDE_BY_VALUE, RescaleMethod.MANUAL_INPUT_RANGE])
+    @pytest.mark.parametrize("matching", [None, "Bright", "Other"])
+    def test_public_rescale_preserves_one_source_plane_through_stream_binding(method, matching):
+        kwargs = {
+            "select_the_input_image": "Bright", "name_the_output_image": "Detection",
+            "rescale_method": method, "automatic_low": AutomaticLow.CUSTOM,
+            "automatic_high": AutomaticHigh.CUSTOM, "source_low": 0.0,
+            "source_high": 20.0, "divisor_value": 2.0,
+        }
+        if matching is not None:
+            kwargs["select_image_to_match_in_maximum_intensity"] = matching
+>       step = FunctionStep(
+            func=(rescale_intensity, kwargs), name="SyntheticRescale",
+            source_bindings=StepSourceBindingsConfig(
+                enabled=True, bindings=(NamedSourceBinding("Bright"),),
+            ),
+        )
+
+tests/unit/test_rescale_stream_plane_declaration.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/core/steps/function_step.py:38: in __init__
+    super().__init__(**kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <openhcs.core.steps.function_step.FunctionStep object at 0x7f9ddfcb02f0>
+
+    def __init__(
+        self,
+        *,  # Force keyword-only arguments
+        name: str = None,
+        description: str = None,
+        enabled: bool = True,
+        debug_pause: bool = False,
+        dtype_config: "LazyDtypeConfig" = LazyDtypeConfig(),
+        processing_config: "LazyProcessingConfig" = LazyProcessingConfig(),
+        source_bindings: "LazyStepSourceBindingsConfig" = LazyStepSourceBindingsConfig(),
+        step_well_filter_config: "LazyStepWellFilterConfig" = LazyStepWellFilterConfig(),
+        step_materialization_config: "LazyStepMaterializationConfig" = LazyStepMaterializationConfig(),
+        streaming_defaults: "LazyStreamingDefaults" = LazyStreamingDefaults(),
+        napari_streaming_config: "LazyNapariStreamingConfig" = LazyNapariStreamingConfig(),
+        fiji_streaming_config: "LazyFijiStreamingConfig" = LazyFijiStreamingConfig(),
+    ) -> None:
+        """
+        Initialize a step. These attributes are primarily used during the
+        pipeline definition and compilation phase. After compilation, step
+        instances are stripped of these attributes by StepAttributeStripper
+        to enforce statelessness during execution.
+    
+        Args:
+            name: Human-readable name for the step. Defaults to class name.
+            description: Optional description of what this step does.
+            enabled: Whether this step is enabled. Disabled steps are filtered out
+                    during pipeline compilation. Defaults to True.
+            debug_pause: Whether bounded debug "run to pause" should stop after
+                    this step. This is definition-time debug metadata and does
+                    not affect normal execution.
+            dtype_config: Output dtype policy for this step's decorated callable.
+                Unset fields inherit the pipeline dtype policy.
+            processing_config: Stack-axis components, post-assembly grouping,
+                and previous-step versus pipeline-start main-flow source for
+                this step. Pipeline-level sequential processing is owned
+                separately by SequentialProcessingConfig.
+            source_bindings: Named semantic inputs selected for this step from
+                pipeline sources or prior step artifacts.
+            step_well_filter_config: Wells eligible to execute this step. The
+                step policy can narrow but cannot restore wells removed by the
+                pipeline execution-domain filter.
+            step_materialization_config: Optional persistent checkpoint of this
+                step's ordinary main-flow result. Named artifacts have an
+                independent persistence plan.
+            streaming_defaults: Shared viewer enablement, well selection,
+                lifetime, host, and transport defaults inherited by this step's
+                registered viewer configurations.
+            napari_streaming_config: Napari-specific enablement, display,
+                transport, and scope overrides for this step.
+            fiji_streaming_config: Fiji-specific enablement, display,
+                transport, and scope overrides for this step.
+        """
+        self.name = name or self.__class__.__name__
+        self.description = description
+        self.enabled = enabled
+        self.debug_pause = debug_pause
+        self.dtype_config = dtype_config
+        self.processing_config = processing_config
+        if not isinstance(source_bindings, StepSourceBindingsConfig):
+>           raise TypeError(
+                "AbstractStep.source_bindings must be StepSourceBindingsConfig, "
+                f"got {type(source_bindings).__name__}."
+            )
+E           TypeError: AbstractStep.source_bindings must be StepSourceBindingsConfig, got StepSourceBindingsConfig.
+
+openhcs/core/steps/abstract.py:237: TypeError
+_ test_public_rescale_preserves_one_source_plane_through_stream_binding[None-RescaleMethod.MANUAL_INPUT_RANGE] _
+
+method = <RescaleMethod.MANUAL_INPUT_RANGE: 'manual_input_range'>
+matching = None
+
+    @pytest.mark.parametrize("method", [RescaleMethod.DIVIDE_BY_VALUE, RescaleMethod.MANUAL_INPUT_RANGE])
+    @pytest.mark.parametrize("matching", [None, "Bright", "Other"])
+    def test_public_rescale_preserves_one_source_plane_through_stream_binding(method, matching):
+        kwargs = {
+            "select_the_input_image": "Bright", "name_the_output_image": "Detection",
+            "rescale_method": method, "automatic_low": AutomaticLow.CUSTOM,
+            "automatic_high": AutomaticHigh.CUSTOM, "source_low": 0.0,
+            "source_high": 20.0, "divisor_value": 2.0,
+        }
+        if matching is not None:
+            kwargs["select_image_to_match_in_maximum_intensity"] = matching
+>       step = FunctionStep(
+            func=(rescale_intensity, kwargs), name="SyntheticRescale",
+            source_bindings=StepSourceBindingsConfig(
+                enabled=True, bindings=(NamedSourceBinding("Bright"),),
+            ),
+        )
+
+tests/unit/test_rescale_stream_plane_declaration.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/core/steps/function_step.py:38: in __init__
+    super().__init__(**kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <openhcs.core.steps.function_step.FunctionStep object at 0x7f9ddfcc45c0>
+
+    def __init__(
+        self,
+        *,  # Force keyword-only arguments
+        name: str = None,
+        description: str = None,
+        enabled: bool = True,
+        debug_pause: bool = False,
+        dtype_config: "LazyDtypeConfig" = LazyDtypeConfig(),
+        processing_config: "LazyProcessingConfig" = LazyProcessingConfig(),
+        source_bindings: "LazyStepSourceBindingsConfig" = LazyStepSourceBindingsConfig(),
+        step_well_filter_config: "LazyStepWellFilterConfig" = LazyStepWellFilterConfig(),
+        step_materialization_config: "LazyStepMaterializationConfig" = LazyStepMaterializationConfig(),
+        streaming_defaults: "LazyStreamingDefaults" = LazyStreamingDefaults(),
+        napari_streaming_config: "LazyNapariStreamingConfig" = LazyNapariStreamingConfig(),
+        fiji_streaming_config: "LazyFijiStreamingConfig" = LazyFijiStreamingConfig(),
+    ) -> None:
+        """
+        Initialize a step. These attributes are primarily used during the
+        pipeline definition and compilation phase. After compilation, step
+        instances are stripped of these attributes by StepAttributeStripper
+        to enforce statelessness during execution.
+    
+        Args:
+            name: Human-readable name for the step. Defaults to class name.
+            description: Optional description of what this step does.
+            enabled: Whether this step is enabled. Disabled steps are filtered out
+                    during pipeline compilation. Defaults to True.
+            debug_pause: Whether bounded debug "run to pause" should stop after
+                    this step. This is definition-time debug metadata and does
+                    not affect normal execution.
+            dtype_config: Output dtype policy for this step's decorated callable.
+                Unset fields inherit the pipeline dtype policy.
+            processing_config: Stack-axis components, post-assembly grouping,
+                and previous-step versus pipeline-start main-flow source for
+                this step. Pipeline-level sequential processing is owned
+                separately by SequentialProcessingConfig.
+            source_bindings: Named semantic inputs selected for this step from
+                pipeline sources or prior step artifacts.
+            step_well_filter_config: Wells eligible to execute this step. The
+                step policy can narrow but cannot restore wells removed by the
+                pipeline execution-domain filter.
+            step_materialization_config: Optional persistent checkpoint of this
+                step's ordinary main-flow result. Named artifacts have an
+                independent persistence plan.
+            streaming_defaults: Shared viewer enablement, well selection,
+                lifetime, host, and transport defaults inherited by this step's
+                registered viewer configurations.
+            napari_streaming_config: Napari-specific enablement, display,
+                transport, and scope overrides for this step.
+            fiji_streaming_config: Fiji-specific enablement, display,
+                transport, and scope overrides for this step.
+        """
+        self.name = name or self.__class__.__name__
+        self.description = description
+        self.enabled = enabled
+        self.debug_pause = debug_pause
+        self.dtype_config = dtype_config
+        self.processing_config = processing_config
+        if not isinstance(source_bindings, StepSourceBindingsConfig):
+>           raise TypeError(
+                "AbstractStep.source_bindings must be StepSourceBindingsConfig, "
+                f"got {type(source_bindings).__name__}."
+            )
+E           TypeError: AbstractStep.source_bindings must be StepSourceBindingsConfig, got StepSourceBindingsConfig.
+
+openhcs/core/steps/abstract.py:237: TypeError
+_ test_public_rescale_preserves_one_source_plane_through_stream_binding[Bright-RescaleMethod.DIVIDE_BY_VALUE] _
+
+method = <RescaleMethod.DIVIDE_BY_VALUE: 'divide_by_value'>, matching = 'Bright'
+
+    @pytest.mark.parametrize("method", [RescaleMethod.DIVIDE_BY_VALUE, RescaleMethod.MANUAL_INPUT_RANGE])
+    @pytest.mark.parametrize("matching", [None, "Bright", "Other"])
+    def test_public_rescale_preserves_one_source_plane_through_stream_binding(method, matching):
+        kwargs = {
+            "select_the_input_image": "Bright", "name_the_output_image": "Detection",
+            "rescale_method": method, "automatic_low": AutomaticLow.CUSTOM,
+            "automatic_high": AutomaticHigh.CUSTOM, "source_low": 0.0,
+            "source_high": 20.0, "divisor_value": 2.0,
+        }
+        if matching is not None:
+            kwargs["select_image_to_match_in_maximum_intensity"] = matching
+>       step = FunctionStep(
+            func=(rescale_intensity, kwargs), name="SyntheticRescale",
+            source_bindings=StepSourceBindingsConfig(
+                enabled=True, bindings=(NamedSourceBinding("Bright"),),
+            ),
+        )
+
+tests/unit/test_rescale_stream_plane_declaration.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/core/steps/function_step.py:38: in __init__
+    super().__init__(**kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <openhcs.core.steps.function_step.FunctionStep object at 0x7f9ddfcc4b00>
+
+    def __init__(
+        self,
+        *,  # Force keyword-only arguments
+        name: str = None,
+        description: str = None,
+        enabled: bool = True,
+        debug_pause: bool = False,
+        dtype_config: "LazyDtypeConfig" = LazyDtypeConfig(),
+        processing_config: "LazyProcessingConfig" = LazyProcessingConfig(),
+        source_bindings: "LazyStepSourceBindingsConfig" = LazyStepSourceBindingsConfig(),
+        step_well_filter_config: "LazyStepWellFilterConfig" = LazyStepWellFilterConfig(),
+        step_materialization_config: "LazyStepMaterializationConfig" = LazyStepMaterializationConfig(),
+        streaming_defaults: "LazyStreamingDefaults" = LazyStreamingDefaults(),
+        napari_streaming_config: "LazyNapariStreamingConfig" = LazyNapariStreamingConfig(),
+        fiji_streaming_config: "LazyFijiStreamingConfig" = LazyFijiStreamingConfig(),
+    ) -> None:
+        """
+        Initialize a step. These attributes are primarily used during the
+        pipeline definition and compilation phase. After compilation, step
+        instances are stripped of these attributes by StepAttributeStripper
+        to enforce statelessness during execution.
+    
+        Args:
+            name: Human-readable name for the step. Defaults to class name.
+            description: Optional description of what this step does.
+            enabled: Whether this step is enabled. Disabled steps are filtered out
+                    during pipeline compilation. Defaults to True.
+            debug_pause: Whether bounded debug "run to pause" should stop after
+                    this step. This is definition-time debug metadata and does
+                    not affect normal execution.
+            dtype_config: Output dtype policy for this step's decorated callable.
+                Unset fields inherit the pipeline dtype policy.
+            processing_config: Stack-axis components, post-assembly grouping,
+                and previous-step versus pipeline-start main-flow source for
+                this step. Pipeline-level sequential processing is owned
+                separately by SequentialProcessingConfig.
+            source_bindings: Named semantic inputs selected for this step from
+                pipeline sources or prior step artifacts.
+            step_well_filter_config: Wells eligible to execute this step. The
+                step policy can narrow but cannot restore wells removed by the
+                pipeline execution-domain filter.
+            step_materialization_config: Optional persistent checkpoint of this
+                step's ordinary main-flow result. Named artifacts have an
+                independent persistence plan.
+            streaming_defaults: Shared viewer enablement, well selection,
+                lifetime, host, and transport defaults inherited by this step's
+                registered viewer configurations.
+            napari_streaming_config: Napari-specific enablement, display,
+                transport, and scope overrides for this step.
+            fiji_streaming_config: Fiji-specific enablement, display,
+                transport, and scope overrides for this step.
+        """
+        self.name = name or self.__class__.__name__
+        self.description = description
+        self.enabled = enabled
+        self.debug_pause = debug_pause
+        self.dtype_config = dtype_config
+        self.processing_config = processing_config
+        if not isinstance(source_bindings, StepSourceBindingsConfig):
+>           raise TypeError(
+                "AbstractStep.source_bindings must be StepSourceBindingsConfig, "
+                f"got {type(source_bindings).__name__}."
+            )
+E           TypeError: AbstractStep.source_bindings must be StepSourceBindingsConfig, got StepSourceBindingsConfig.
+
+openhcs/core/steps/abstract.py:237: TypeError
+_ test_public_rescale_preserves_one_source_plane_through_stream_binding[Bright-RescaleMethod.MANUAL_INPUT_RANGE] _
+
+method = <RescaleMethod.MANUAL_INPUT_RANGE: 'manual_input_range'>
+matching = 'Bright'
+
+    @pytest.mark.parametrize("method", [RescaleMethod.DIVIDE_BY_VALUE, RescaleMethod.MANUAL_INPUT_RANGE])
+    @pytest.mark.parametrize("matching", [None, "Bright", "Other"])
+    def test_public_rescale_preserves_one_source_plane_through_stream_binding(method, matching):
+        kwargs = {
+            "select_the_input_image": "Bright", "name_the_output_image": "Detection",
+            "rescale_method": method, "automatic_low": AutomaticLow.CUSTOM,
+            "automatic_high": AutomaticHigh.CUSTOM, "source_low": 0.0,
+            "source_high": 20.0, "divisor_value": 2.0,
+        }
+        if matching is not None:
+            kwargs["select_image_to_match_in_maximum_intensity"] = matching
+>       step = FunctionStep(
+            func=(rescale_intensity, kwargs), name="SyntheticRescale",
+            source_bindings=StepSourceBindingsConfig(
+                enabled=True, bindings=(NamedSourceBinding("Bright"),),
+            ),
+        )
+
+tests/unit/test_rescale_stream_plane_declaration.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/core/steps/function_step.py:38: in __init__
+    super().__init__(**kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <openhcs.core.steps.function_step.FunctionStep object at 0x7f9ddfcb1400>
+
+    def __init__(
+        self,
+        *,  # Force keyword-only arguments
+        name: str = None,
+        description: str = None,
+        enabled: bool = True,
+        debug_pause: bool = False,
+        dtype_config: "LazyDtypeConfig" = LazyDtypeConfig(),
+        processing_config: "LazyProcessingConfig" = LazyProcessingConfig(),
+        source_bindings: "LazyStepSourceBindingsConfig" = LazyStepSourceBindingsConfig(),
+        step_well_filter_config: "LazyStepWellFilterConfig" = LazyStepWellFilterConfig(),
+        step_materialization_config: "LazyStepMaterializationConfig" = LazyStepMaterializationConfig(),
+        streaming_defaults: "LazyStreamingDefaults" = LazyStreamingDefaults(),
+        napari_streaming_config: "LazyNapariStreamingConfig" = LazyNapariStreamingConfig(),
+        fiji_streaming_config: "LazyFijiStreamingConfig" = LazyFijiStreamingConfig(),
+    ) -> None:
+        """
+        Initialize a step. These attributes are primarily used during the
+        pipeline definition and compilation phase. After compilation, step
+        instances are stripped of these attributes by StepAttributeStripper
+        to enforce statelessness during execution.
+    
+        Args:
+            name: Human-readable name for the step. Defaults to class name.
+            description: Optional description of what this step does.
+            enabled: Whether this step is enabled. Disabled steps are filtered out
+                    during pipeline compilation. Defaults to True.
+            debug_pause: Whether bounded debug "run to pause" should stop after
+                    this step. This is definition-time debug metadata and does
+                    not affect normal execution.
+            dtype_config: Output dtype policy for this step's decorated callable.
+                Unset fields inherit the pipeline dtype policy.
+            processing_config: Stack-axis components, post-assembly grouping,
+                and previous-step versus pipeline-start main-flow source for
+                this step. Pipeline-level sequential processing is owned
+                separately by SequentialProcessingConfig.
+            source_bindings: Named semantic inputs selected for this step from
+                pipeline sources or prior step artifacts.
+            step_well_filter_config: Wells eligible to execute this step. The
+                step policy can narrow but cannot restore wells removed by the
+                pipeline execution-domain filter.
+            step_materialization_config: Optional persistent checkpoint of this
+                step's ordinary main-flow result. Named artifacts have an
+                independent persistence plan.
+            streaming_defaults: Shared viewer enablement, well selection,
+                lifetime, host, and transport defaults inherited by this step's
+                registered viewer configurations.
+            napari_streaming_config: Napari-specific enablement, display,
+                transport, and scope overrides for this step.
+            fiji_streaming_config: Fiji-specific enablement, display,
+                transport, and scope overrides for this step.
+        """
+        self.name = name or self.__class__.__name__
+        self.description = description
+        self.enabled = enabled
+        self.debug_pause = debug_pause
+        self.dtype_config = dtype_config
+        self.processing_config = processing_config
+        if not isinstance(source_bindings, StepSourceBindingsConfig):
+>           raise TypeError(
+                "AbstractStep.source_bindings must be StepSourceBindingsConfig, "
+                f"got {type(source_bindings).__name__}."
+            )
+E           TypeError: AbstractStep.source_bindings must be StepSourceBindingsConfig, got StepSourceBindingsConfig.
+
+openhcs/core/steps/abstract.py:237: TypeError
+_ test_public_rescale_preserves_one_source_plane_through_stream_binding[Other-RescaleMethod.DIVIDE_BY_VALUE] _
+
+method = <RescaleMethod.DIVIDE_BY_VALUE: 'divide_by_value'>, matching = 'Other'
+
+    @pytest.mark.parametrize("method", [RescaleMethod.DIVIDE_BY_VALUE, RescaleMethod.MANUAL_INPUT_RANGE])
+    @pytest.mark.parametrize("matching", [None, "Bright", "Other"])
+    def test_public_rescale_preserves_one_source_plane_through_stream_binding(method, matching):
+        kwargs = {
+            "select_the_input_image": "Bright", "name_the_output_image": "Detection",
+            "rescale_method": method, "automatic_low": AutomaticLow.CUSTOM,
+            "automatic_high": AutomaticHigh.CUSTOM, "source_low": 0.0,
+            "source_high": 20.0, "divisor_value": 2.0,
+        }
+        if matching is not None:
+            kwargs["select_image_to_match_in_maximum_intensity"] = matching
+>       step = FunctionStep(
+            func=(rescale_intensity, kwargs), name="SyntheticRescale",
+            source_bindings=StepSourceBindingsConfig(
+                enabled=True, bindings=(NamedSourceBinding("Bright"),),
+            ),
+        )
+
+tests/unit/test_rescale_stream_plane_declaration.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/core/steps/function_step.py:38: in __init__
+    super().__init__(**kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <openhcs.core.steps.function_step.FunctionStep object at 0x7f9ddfcc73e0>
+
+    def __init__(
+        self,
+        *,  # Force keyword-only arguments
+        name: str = None,
+        description: str = None,
+        enabled: bool = True,
+        debug_pause: bool = False,
+        dtype_config: "LazyDtypeConfig" = LazyDtypeConfig(),
+        processing_config: "LazyProcessingConfig" = LazyProcessingConfig(),
+        source_bindings: "LazyStepSourceBindingsConfig" = LazyStepSourceBindingsConfig(),
+        step_well_filter_config: "LazyStepWellFilterConfig" = LazyStepWellFilterConfig(),
+        step_materialization_config: "LazyStepMaterializationConfig" = LazyStepMaterializationConfig(),
+        streaming_defaults: "LazyStreamingDefaults" = LazyStreamingDefaults(),
+        napari_streaming_config: "LazyNapariStreamingConfig" = LazyNapariStreamingConfig(),
+        fiji_streaming_config: "LazyFijiStreamingConfig" = LazyFijiStreamingConfig(),
+    ) -> None:
+        """
+        Initialize a step. These attributes are primarily used during the
+        pipeline definition and compilation phase. After compilation, step
+        instances are stripped of these attributes by StepAttributeStripper
+        to enforce statelessness during execution.
+    
+        Args:
+            name: Human-readable name for the step. Defaults to class name.
+            description: Optional description of what this step does.
+            enabled: Whether this step is enabled. Disabled steps are filtered out
+                    during pipeline compilation. Defaults to True.
+            debug_pause: Whether bounded debug "run to pause" should stop after
+                    this step. This is definition-time debug metadata and does
+                    not affect normal execution.
+            dtype_config: Output dtype policy for this step's decorated callable.
+                Unset fields inherit the pipeline dtype policy.
+            processing_config: Stack-axis components, post-assembly grouping,
+                and previous-step versus pipeline-start main-flow source for
+                this step. Pipeline-level sequential processing is owned
+                separately by SequentialProcessingConfig.
+            source_bindings: Named semantic inputs selected for this step from
+                pipeline sources or prior step artifacts.
+            step_well_filter_config: Wells eligible to execute this step. The
+                step policy can narrow but cannot restore wells removed by the
+                pipeline execution-domain filter.
+            step_materialization_config: Optional persistent checkpoint of this
+                step's ordinary main-flow result. Named artifacts have an
+                independent persistence plan.
+            streaming_defaults: Shared viewer enablement, well selection,
+                lifetime, host, and transport defaults inherited by this step's
+                registered viewer configurations.
+            napari_streaming_config: Napari-specific enablement, display,
+                transport, and scope overrides for this step.
+            fiji_streaming_config: Fiji-specific enablement, display,
+                transport, and scope overrides for this step.
+        """
+        self.name = name or self.__class__.__name__
+        self.description = description
+        self.enabled = enabled
+        self.debug_pause = debug_pause
+        self.dtype_config = dtype_config
+        self.processing_config = processing_config
+        if not isinstance(source_bindings, StepSourceBindingsConfig):
+>           raise TypeError(
+                "AbstractStep.source_bindings must be StepSourceBindingsConfig, "
+                f"got {type(source_bindings).__name__}."
+            )
+E           TypeError: AbstractStep.source_bindings must be StepSourceBindingsConfig, got StepSourceBindingsConfig.
+
+openhcs/core/steps/abstract.py:237: TypeError
+_ test_public_rescale_preserves_one_source_plane_through_stream_binding[Other-RescaleMethod.MANUAL_INPUT_RANGE] _
+
+method = <RescaleMethod.MANUAL_INPUT_RANGE: 'manual_input_range'>
+matching = 'Other'
+
+    @pytest.mark.parametrize("method", [RescaleMethod.DIVIDE_BY_VALUE, RescaleMethod.MANUAL_INPUT_RANGE])
+    @pytest.mark.parametrize("matching", [None, "Bright", "Other"])
+    def test_public_rescale_preserves_one_source_plane_through_stream_binding(method, matching):
+        kwargs = {
+            "select_the_input_image": "Bright", "name_the_output_image": "Detection",
+            "rescale_method": method, "automatic_low": AutomaticLow.CUSTOM,
+            "automatic_high": AutomaticHigh.CUSTOM, "source_low": 0.0,
+            "source_high": 20.0, "divisor_value": 2.0,
+        }
+        if matching is not None:
+            kwargs["select_image_to_match_in_maximum_intensity"] = matching
+>       step = FunctionStep(
+            func=(rescale_intensity, kwargs), name="SyntheticRescale",
+            source_bindings=StepSourceBindingsConfig(
+                enabled=True, bindings=(NamedSourceBinding("Bright"),),
+            ),
+        )
+
+tests/unit/test_rescale_stream_plane_declaration.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+openhcs/core/steps/function_step.py:38: in __init__
+    super().__init__(**kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <openhcs.core.steps.function_step.FunctionStep object at 0x7f9ddfcc6630>
+
+    def __init__(
+        self,
+        *,  # Force keyword-only arguments
+        name: str = None,
+        description: str = None,
+        enabled: bool = True,
+        debug_pause: bool = False,
+        dtype_config: "LazyDtypeConfig" = LazyDtypeConfig(),
+        processing_config: "LazyProcessingConfig" = LazyProcessingConfig(),
+        source_bindings: "LazyStepSourceBindingsConfig" = LazyStepSourceBindingsConfig(),
+        step_well_filter_config: "LazyStepWellFilterConfig" = LazyStepWellFilterConfig(),
+        step_materialization_config: "LazyStepMaterializationConfig" = LazyStepMaterializationConfig(),
+        streaming_defaults: "LazyStreamingDefaults" = LazyStreamingDefaults(),
+        napari_streaming_config: "LazyNapariStreamingConfig" = LazyNapariStreamingConfig(),
+        fiji_streaming_config: "LazyFijiStreamingConfig" = LazyFijiStreamingConfig(),
+    ) -> None:
+        """
+        Initialize a step. These attributes are primarily used during the
+        pipeline definition and compilation phase. After compilation, step
+        instances are stripped of these attributes by StepAttributeStripper
+        to enforce statelessness during execution.
+    
+        Args:
+            name: Human-readable name for the step. Defaults to class name.
+            description: Optional description of what this step does.
+            enabled: Whether this step is enabled. Disabled steps are filtered out
+                    during pipeline compilation. Defaults to True.
+            debug_pause: Whether bounded debug "run to pause" should stop after
+                    this step. This is definition-time debug metadata and does
+                    not affect normal execution.
+            dtype_config: Output dtype policy for this step's decorated callable.
+                Unset fields inherit the pipeline dtype policy.
+            processing_config: Stack-axis components, post-assembly grouping,
+                and previous-step versus pipeline-start main-flow source for
+                this step. Pipeline-level sequential processing is owned
+                separately by SequentialProcessingConfig.
+            source_bindings: Named semantic inputs selected for this step from
+                pipeline sources or prior step artifacts.
+            step_well_filter_config: Wells eligible to execute this step. The
+                step policy can narrow but cannot restore wells removed by the
+                pipeline execution-domain filter.
+            step_materialization_config: Optional persistent checkpoint of this
+                step's ordinary main-flow result. Named artifacts have an
+                independent persistence plan.
+            streaming_defaults: Shared viewer enablement, well selection,
+                lifetime, host, and transport defaults inherited by this step's
+                registered viewer configurations.
+            napari_streaming_config: Napari-specific enablement, display,
+                transport, and scope overrides for this step.
+            fiji_streaming_config: Fiji-specific enablement, display,
+                transport, and scope overrides for this step.
+        """
+        self.name = name or self.__class__.__name__
+        self.description = description
+        self.enabled = enabled
+        self.debug_pause = debug_pause
+        self.dtype_config = dtype_config
+        self.processing_config = processing_config
+        if not isinstance(source_bindings, StepSourceBindingsConfig):
+>           raise TypeError(
+                "AbstractStep.source_bindings must be StepSourceBindingsConfig, "
+                f"got {type(source_bindings).__name__}."
+            )
+E           TypeError: AbstractStep.source_bindings must be StepSourceBindingsConfig, got StepSourceBindingsConfig.
+
+openhcs/core/steps/abstract.py:237: TypeError
+=============================== warnings summary ===============================
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_default_fixture_loop_scope
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../../code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441
+  /home/ts/code/projects/openhcs/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: asyncio_mode
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/unit/test_rescale_stream_plane_declaration.py::test_public_rescale_preserves_one_source_plane_through_stream_binding[None-RescaleMethod.DIVIDE_BY_VALUE]
+FAILED tests/unit/test_rescale_stream_plane_declaration.py::test_public_rescale_preserves_one_source_plane_through_stream_binding[None-RescaleMethod.MANUAL_INPUT_RANGE]
+FAILED tests/unit/test_rescale_stream_plane_declaration.py::test_public_rescale_preserves_one_source_plane_through_stream_binding[Bright-RescaleMethod.DIVIDE_BY_VALUE]
+FAILED tests/unit/test_rescale_stream_plane_declaration.py::test_public_rescale_preserves_one_source_plane_through_stream_binding[Bright-RescaleMethod.MANUAL_INPUT_RANGE]
+FAILED tests/unit/test_rescale_stream_plane_declaration.py::test_public_rescale_preserves_one_source_plane_through_stream_binding[Other-RescaleMethod.DIVIDE_BY_VALUE]
+FAILED tests/unit/test_rescale_stream_plane_declaration.py::test_public_rescale_preserves_one_source_plane_through_stream_binding[Other-RescaleMethod.MANUAL_INPUT_RANGE]
+6 failed, 2 warnings in 10.80s
+Command exited with non-zero status 1
+	Command being timed: "/home/ts/wt/openhcs-generated-inputs-installed-parent-20261001/.venv/bin/python docs/validation/knowledge-selected-source-tests.py --basetemp=/home/ts/.cache/agent-scratch/h001-stream-plane-427-20261002/pytest tests/unit/test_rescale_stream_plane_declaration.py -q"
+	User time (seconds): 10.54
+	System time (seconds): 0.81
+	Percent of CPU this job got: 95%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:11.92
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 545656
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 123
+	Minor (reclaiming a frame) page faults: 157573
+	Voluntary context switches: 988
+	Involuntary context switches: 2109
+	Swaps: 0
+	File system inputs: 40504
+	File system outputs: 2776
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1

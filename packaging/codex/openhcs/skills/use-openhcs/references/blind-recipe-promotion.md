@@ -6,6 +6,14 @@ biological validation. This is a *how-to guide* for an analyst making a
 promotion decision; the current `image_analysis_workflow` and `viewer_review`
 authoring contexts remain the operating authority for image inspection.
 
+Development checkpoints are not terminal evaluation freezes. Follow the
+[analysis strategy's mode distinction](analysis-strategy.md#development-corrections-and-autonomous-evaluation):
+preserve failed candidates and continue authorised development with corrections
+when useful. A result reached with external corrections is assisted evidence,
+not an autonomous pass. Retain its intervention history, then test transferable
+harness improvements in a fresh context without task-specific answers. Keep
+existing frozen records unchanged and the validation reserve sealed.
+
 ## Develop, review and validate a candidate
 
 1. Define the development and untouched validation reserve before tuning.
@@ -46,7 +54,10 @@ authoring contexts remain the operating authority for image inspection.
    misses, splits/merges, and an explicit accept/reject/ambiguous judgement
    against stated biological criteria. Escalate ambiguous objects to a domain
    reviewer. Counts, overlap scores, and visually attractive preprocessing
-   alone cannot pass this gate.
+   alone cannot pass this gate. Apply the
+   [graded, claim-scoped quality criteria](analysis-strategy.md#scope-conclusions-to-the-evidence),
+   including reference disagreement; acceptance does not require perfect
+   annotation agreement.
 5. Freeze the accepted pipeline, parameters, source layout contract, and
    acceptance criteria in a dated receipt before releasing the validation
    reserve. Run the frozen candidate on the reserve once, without tuning on

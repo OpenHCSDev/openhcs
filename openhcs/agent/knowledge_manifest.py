@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
-import json
-from collections.abc import Mapping
 from pathlib import Path
 
 from openhcs.agent.knowledge_manifest_schema import (
     DEFAULT_KNOWLEDGE_BASE_MANIFEST_PATH,
     PACKAGED_KNOWLEDGE_BASE_ROOT,
+    ComparisonManifestSnapshot,
     KnowledgeBaseManifestField,
+    PackagedComparisonManifestSnapshot,
+    knowledge_source_projections,
 )
 
 
@@ -58,22 +59,23 @@ def knowledge_base_source_paths_from_manifest(
     selected_manifest_path = manifest_path or default_knowledge_base_manifest_path()
     repo_root = _knowledge_base_root_for_manifest(selected_manifest_path)
     try:
-        manifest = json.loads(selected_manifest_path.read_text(encoding="utf-8"))
+        projections = knowledge_source_projections(
+            selected_manifest_path,
+            source_root=repo_root,
+            recipe_type=comparison_manifest_type_for_root(repo_root),
+        )
     except FileNotFoundError:
         return (selected_manifest_path,)
-    if not isinstance(manifest, Mapping):
-        return (selected_manifest_path,)
-    documents = manifest.get(KnowledgeBaseManifestField.DOCUMENTS.value)
-    if not isinstance(documents, list):
-        return (selected_manifest_path,)
-    source_paths: list[Path] = [selected_manifest_path]
-    for document in documents:
-        if not isinstance(document, Mapping):
-            continue
-        source_path = document.get(KnowledgeBaseManifestField.SOURCE_PATH.value)
-        if isinstance(source_path, str):
-            source_paths.append((repo_root / source_path).resolve())
-    return tuple(source_paths)
+    return tuple(dict.fromkeys(path.resolve() for path in projections.values()))
+
+
+def comparison_manifest_type_for_root(
+    root: Path,
+) -> type[ComparisonManifestSnapshot]:
+    """Select the existing canonical or installed knowledge-source identity once."""
+    if root.resolve() == packaged_knowledge_base_root().resolve():
+        return PackagedComparisonManifestSnapshot
+    return ComparisonManifestSnapshot
 
 
 def _knowledge_base_root_for_manifest(manifest_path: Path) -> Path:

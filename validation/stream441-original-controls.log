@@ -1,0 +1,5 @@
+Running as unit: dewey-441-original-controls-20261002.scope; invocation ID: ff88ca339a7244608d11f7370a60034e
+..ROI_STREAM_TERMINAL 0 12.06613805500092 idle10 token 2
+ROI_STREAM_TERMINAL 1 0.028949990053661168 idle10 token 3
+ROI_STREAM_TERMINAL 2 0.039297437004279345 idle10 token 4
+........BOUNDED_SOURCE peak_aggregate_rss_kib=525872 elapsed_seconds=21.861 returncode=143 reason=512MiB aggregate RSS exceeded

@@ -46,7 +46,6 @@ from openhcs.core.execution_state import (
 )
 from openhcs.core.input_workspace import InputWorkspacePreparationResult
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
-from openhcs.core.pipeline.step_snapshot import StepSnapshot
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.core.progress import (
     ProgressEvent,
@@ -1085,27 +1084,19 @@ class TestPlateManagerWidget:
             )
 
             plate_state = ObjectStateRegistry.get_by_scope(plate_scope)
-            editor_state = PipelineObjectStateBinding.editor_state_for_plate(
-                plate_scope
-            )
+            editor_state = PipelineObjectStateBinding.editor_state_for_plate(plate_scope)
             assert plate_state is not None
             assert widget.plate_configs[plate_scope] == pipeline_config
             assert (
-                plate_state.get_saved_resolved_value(
-                    "source_bindings_config.match_plan"
-                )
+                plate_state.get_saved_resolved_value("source_bindings_config.match_plan")
                 == match_plan
             )
 
             step_scope_id = editor_state.step_scope_ids[0]
             step_state = ObjectStateRegistry.get_by_scope(step_scope_id)
             assert step_state is not None
-            snapshot = StepSnapshot(
-                index=0,
-                scope_id=step_state.scope_id,
-                step=step_state.to_saved_resolved_object(),
-            )
-            assert snapshot.step.source_bindings.match_plan == match_plan
+            snapshot = step_state.to_saved_resolved_object()
+            assert snapshot.source_bindings.match_plan == match_plan
         finally:
             close_widget(widget)
             ObjectStateRegistry.clear()

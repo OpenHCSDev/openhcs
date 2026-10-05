@@ -24,11 +24,15 @@ It distinguishes missing information from an unhelpful display.
 
 | Observation or task | Retrieve | Decision to make |
 | --- | --- | --- |
+| FIRST foreground proposal, especially textured/ring bodies or regional nuisance | [openhcs_segmentation_diagnostics](segmentation-diagnostics.md#compare-body-admission-models), then [openhcs_image_preprocessing](image-preprocessing.md) when needed | Does admission on the consumed alias/response preserve distributed positives while excluding nuisance-only regions? |
+| FIRST threshold proposal or widening a positive-only sample to more fields | [openhcs_measurement_interpretation](measurement-interpretation.md#include-no-object-fields-before-widening) | Does the sampled scope include available whole no-object fields as well as genuine dim positives? |
+| FIRST marker/declumping proposal, including a shape-based method | [openhcs_measurement_interpretation](measurement-interpretation.md#choose-the-marker-landscape-before-the-first-candidate) | Does the actual chosen landscape distinguish within-body maxima from a genuine pair, with justified competition and spacing units? |
 | Uneven background, noisy seeds, dim objects, bright outliers | [openhcs_image_preprocessing](image-preprocessing.md) | Which nuisance model fits, and what biology must survive? |
 | Touching nuclei, one body split, merged cells, zero-growth secondary objects | [openhcs_segmentation_diagnostics](segmentation-diagnostics.md) | Is the failure in foreground, markers, separation or secondary growth? |
 | Thin neurites, disconnected traces, puncta or irregular cells | [openhcs_segmentation_diagnostics](segmentation-diagnostics.md) | Does the object model match the target and its topology? |
 | Intensity, volume, colocalisation, comparisons or final figures | [openhcs_measurement_interpretation](measurement-interpretation.md) | Which pixels, geometry, units and experimental units support the claim? |
-| Repeated errors or transferring a successful recipe | [openhcs_analysis_learning](analysis-learning.md) | Is this a source-backed recipe, an observed repair or an untested hypothesis? |
+| Choosing size, seed separation, smoothing, background scale or shape priors | [openhcs_measurement_interpretation](measurement-interpretation.md#measure-feature-scales-before-choosing-parameters) | Which representative native raw measurements justify the parameter range? |
+| Unfamiliar task, raw morphology conflicting with an example, repeated errors or recipe transfer | [openhcs_analysis_learning](analysis-learning.md#retrieve-before-first-authorship-and-retries) | Which conditional lesson informs the FIRST method, and what raw evidence could disconfirm it? |
 | No registered operation has the required input/output contract | [openhcs_custom_function_workflow](custom-function-authoring.md) | Can the missing operation become a typed, reproducible registry function? |
 | Raw/overlay review or a changed viewer canvas | [openhcs_viewer_qa](viewer-qa.md) | Are the three views matched, interpretable and personally inspected? |
 
@@ -36,6 +40,30 @@ Search the first-class Official30 examples for the closest task, retrieve the
 exact OpenHCS Python section and inspect the reference case's inputs and parity
 scope. Use it as a working starting point, not as proof for the new assay. The
 ExampleHuman nuclei card is one example, not the only eligible pipeline.
+
+For a first segmentation proposal, use both applicable first-method routes above,
+not just the foreground route or a recipe's detector defaults. Retrieve the named
+sections before committing method and parameters; their worked examples own the
+details. Raw morphology informs support, but admission consumes a particular
+alias/response and markers consume a particular landscape. Use the measurement
+guide's compound-detector reasoning to map each proposed parameter to ALL its
+coupled mechanisms in the reflected callable, not just its apparent size role.
+State the predicted effect on distributed positive/nuisance and
+continuous-body/genuine-pair controls;
+keep marker extraction distinct from the subsequent division boundary. If no
+marker stage is proposed, do not invent one merely to follow this route.
+Use raw or processed evidence already available; an unproduced enhanced response
+or marker landscape remains a provisional hypothesis to inspect in the first
+bounded candidate, not a reason to withhold an exploratory proposal. Record an
+unavailable control, such as a genuine pair, rather than inventing one or making
+its absence an approval gate.
+
+When the task is unfamiliar or raw morphology contradicts an example's method,
+follow [pre-authorship learning retrieval](analysis-learning.md#retrieve-before-first-authorship-and-retries)
+before adapting it. Retrieve general foreground/marker/division reasoning through
+the existing knowledge service, not a sibling task's worked solution. Include the
+lesson query/source/applicability in the same example-selection record below;
+if none fits, proceed from measured raw evidence rather than waiting for a recipe.
 
 Before authoring, retain an example-selection record in the authorised trial:
 the search query, returned document/section ID, retrieved source identity and
@@ -58,6 +86,22 @@ a plausible miss and a regression-control close pair or faint path. Make a
 specific prediction about the earliest failed stage and change one operation or
 parameter group. Retain its source, parameters and diagnostic intermediate.
 
+Before widening a measurement batch or adding a late aggregate, discover the
+current artifact-planning and persistence capabilities and inspect the compiled
+plan for the selected outputs. Distinguish runtime-only measurements from saved
+checkpoints, including their source/object identities and output scope. A global
+materialisation flag alone does not prove that every declared output is saved;
+retained label images do not establish retained photometry.
+
+When a downstream join or aggregate can fail after expensive upstream work,
+retain the minimal per-unit measurements and identities needed to diagnose and
+reproduce it through the registered persistence/export route. Check a bounded
+saved sample's rows, scope and source identity before expanding. Do not save every
+array. If the installed contract cannot retain the required output, report that
+specific gap and keep supported analysis moving; distinguish saved results from
+runtime-only evidence that may disappear on closure. Preserve failed checkpoints
+and uncertain attempts rather than replaying them to reconstruct missing output.
+
 Use the canonical `image_analysis_workflow` and `viewer_review` contexts for
 native-coordinate raw-only, result-only and combined inspection, numeric display
 windows and viewer-state checks; follow [the viewer QA procedure](viewer-qa.md)
@@ -77,13 +121,111 @@ missing biological information, a missing tool contract, new authority or unsafe
 resource use, report the exact boundary and retain the best candidate with its
 known failures. Do not force unsupported structures into a mask to finish.
 
+## Scope conclusions to the evidence
+
+Judge each requested claim at its declared object, relationship and spatial
+scope. Keep supported findings, clear failures and ambiguous cases distinct,
+with their witness and persisted identities. Uncertain body boundaries or path
+ownership do not automatically invalidate independently supported centres or
+path geometry; those findings do not establish complete bodies or correct
+body-to-path associations either. Technical completion remains separate from
+these biological judgements.
+
+Autonomous success means materially useful quality for that scope, not perfect
+accuracy or exact agreement with human annotations. Report achieved coverage,
+clear misses, nuisance admission, splits/merges, boundary quality and downstream
+measurement suitability separately across the distributed sample. Link each
+judgement to witnesses, spatial extent and uncertainty rather than collapsing
+them into a single validated/rejected label. Useful detection can coexist with
+uncertain outlines: for detection/counting, assess whether distinct supported
+bodies are represented once and localised appropriately, with splits, merges,
+material misses and nuisance still affecting that claim. Area, shape and
+fluorescence measurements need their own boundary evidence. Do not force outputs
+to an expected count or prior candidate's positions. Quantify frequency only
+when the reviewed sample supplies a defensible denominator.
+Human annotations and algorithms can both be incomplete or mistaken: retain
+reference disagreement rather than treating either as exhaustive biological truth.
+An isolated plausible error does not automatically reject the whole analysis.
+Systematic or material missed paths, false bridges, wrong channels, invalid
+units, misaligned geometry or catastrophic failures still reject the affected
+claim. Do not invent a universal error tolerance or relax the task's declared
+criteria to fit a result.
+
+Useful algorithm-defined assay or morphology estimates can include counts and
+per-object summaries with stated inclusion rules, observed errors and uncertainty.
+They are not biological ground truth. Do not require proof of every body's cell
+identity or resolution of every overlap/crossing before reporting any supported
+estimate; withhold the particular ownership-dependent metric if its assumptions
+fail. Conversely, biased favourable crops cannot establish global accuracy or
+excuse material omissions in the distributed review.
+
+Report reviewed coverage, inclusion rules, exclusions with their denominator,
+and unresolved cases alongside the supported result. When ambiguity affects a
+total, retain a justified lower/upper bound or sensitivity analysis if the evidence permits;
+do not invent a confidence interval or silently drop uncertain objects. A few
+accepted witnesses do not establish whole-field completeness. Withhold a
+whole-population claim when unresolved cases invalidate it, not every unrelated
+finding merely because one claim remains uncertain.
+
+When the user accepts an imperfect result for a stated use, retain it as a
+practical reviewed baseline with its exact source/result identity, matched
+witnesses, supported claims and known limits. This is not proof of unreviewed
+claims, independent validation or autonomous performance. Keep that best-reviewed
+baseline distinct from the latest local-repair predecessor: compare recovered
+coverage and regressions against both when relevant, rather than assuming that
+the newest candidate is the best overall. Acceptance need not end useful
+development, and an unresolved case need not erase the accepted findings.
+
+Partial support is not a stopping rule for a clear failure. Follow the existing
+[earliest-stage diagnosis](segmentation-diagnostics.md), make one discriminating
+repair while the authorised budget permits, and revisit distributed regression
+controls. Improved downstream paths cannot repair an unchanged failed body
+stage; diagnose that stage rather than repeatedly tuning faint-signal thresholds.
+Preserve frozen evaluations unchanged. Record a later evaluation-policy change
+separately, not as a retroactive author pass; apply new guidance only to future
+authorised runs, never as feedback to live blind authors.
+
+## Development corrections and autonomous evaluation
+
+Declare the run's purpose before starting. Development aims to reach an
+evidence-supported result and learn which general guidance or software contract
+is missing. Preserve the same analysis context through useful corrections;
+rejecting a hypothesis or archiving a failed checkpoint does not require a new
+agent. Do not impose an arbitrary candidate-count cap on development unless the
+task explicitly requires one. Bound work by time, RAM, disk and a discriminating
+next action instead. Record every source version and failed attempt, including
+technical failures before scientific execution; keep technical repairs distinct
+from changes to the analysis hypothesis, without deleting either denominator.
+
+External corrections, including operational guidance or a mid-run harness fix,
+make the completed continuation assisted development evidence, not an autonomous
+pass. Record who supplied what, when it arrived, the affected source/software
+version, and the result after correction. A successful corrected journey can
+identify how to reach success; it does not establish that a fresh agent would
+discover that journey unaided. If a technical failure requires an engineer,
+retain the exact request and owner, and resume development after repair rather
+than resetting the scientific context. Observation timeout alone never permits
+mutation replay or process replacement; resolve the original handle first.
+Preserve already frozen records unchanged and start an explicitly linked
+development continuation instead of rewriting their disposition.
+
 For an autonomous-performance evaluation, freeze the harness and skill before a
-fresh context-isolated run. Supply the scientific task brief, acquisition facts
-and authorised images, not the intended method, suspect failure, prior trial
+fresh context-isolated run. Supply only the scientific brief, acquisition facts
+and authorised images, not the intended method, suspected failure, prior trial
 conclusions or worked answer. Internal agent review may be part of the declared
-harness, but human channel hints, parameter corrections and candidate coaching
-must remain visible as interventions; do not count an assisted repair as an
-uncoached success. Keep failures and abstentions in the evaluation denominator.
+harness. Self-correction using that frozen harness is autonomous; externally
+corrected or repaired continuations are not. If assistance is supplied, retain
+the original unassisted outcome and its evaluation denominator, then label the
+continuation separately. Do not change a declared evaluation budget mid-run.
+
+Transfer only general, tested operational or reasoning improvements into the
+skill/MCP harness through [analysis learning](analysis-learning.md). Do not copy
+dataset-specific thresholds, object identities, expected masks, scoring answers
+or the successful trial transcript into the fresh agent's instructions. Freeze
+the new harness before testing it without corrections. Reusing a consulted
+development image tests repeatability, not unseen generalization; keep a genuine
+untouched reserve for the latter. Final candidate freezing precedes held-out
+access, not every unsuccessful development iteration.
 
 ## Keep execution bounded
 

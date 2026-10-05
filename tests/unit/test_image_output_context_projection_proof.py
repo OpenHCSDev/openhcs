@@ -20,24 +20,21 @@ from openhcs.core.runtime_plane_projection import (
     RuntimePlaneProjection,
 )
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
-from openhcs.core.steps.function_runtime import (
-    FunctionOutputContextStrategy,
-    ImageFunctionOutputContextStrategy,
-)
+
 
 
 def _track_ownership_proofs(
     monkeypatch: pytest.MonkeyPatch,
 ) -> list[tuple[object, ...]]:
     proof_calls: list[tuple[object, ...]] = []
-    original = ImageFunctionOutputContextStrategy.output_owns_source_context
+    original = ImageArtifactType.output_owns_source_context
 
     def record_proof(*args: object) -> bool:
         proof_calls.append(args)
         return original(*args)
 
     monkeypatch.setattr(
-        ImageFunctionOutputContextStrategy,
+        ImageArtifactType,
         "output_owns_source_context",
         staticmethod(record_proof),
     )
@@ -108,9 +105,7 @@ def test_projected_variable_stack_proves_source_ownership_once(
     )
     proof_calls = _track_ownership_proofs(monkeypatch)
 
-    result = FunctionOutputContextStrategy.for_output_plan(
-        output_plan,
-    ).contextualize_from_projector(
+    result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         source,
         output,
         output_plan,
@@ -152,9 +147,7 @@ def test_derived_2d_image_does_not_inherit_input_runtime_plane_axis() -> None:
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
 
-    result = FunctionOutputContextStrategy.for_output_plan(
-        output_plan,
-    ).contextualize_from_projector(
+    result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         source,
         image_payload_metadata(source)
         .collapse_leading_plane_axis()
@@ -182,9 +175,7 @@ def test_bare_full_stack_image_inherits_source_runtime_plane_axis() -> None:
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
 
-    result = FunctionOutputContextStrategy.for_output_plan(
-        output_plan,
-    ).contextualize_from_projector(
+    result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         source,
         np.ones((2, 4, 5), dtype=np.float32),
         output_plan,
@@ -212,9 +203,7 @@ def test_derived_image_preserves_explicit_output_runtime_plane_axis() -> None:
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
 
-    result = FunctionOutputContextStrategy.for_output_plan(
-        output_plan,
-    ).contextualize_from_projector(
+    result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         source,
         output,
         output_plan,
@@ -270,9 +259,7 @@ def test_projected_crop_preserves_complete_spatial_domain_after_plane_compositio
         relations=(GroupLineageSourceRelation(source_spec.ref()),),
     )
 
-    result = FunctionOutputContextStrategy.for_output_plan(
-        output_plan,
-    ).contextualize_from_projector(
+    result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         source,
         output,
         output_plan,
@@ -291,9 +278,7 @@ def test_projected_scalar_rgb_proves_complete_identity_once(
     source, output, output_plan = _scalar_rgb_output()
     proof_calls = _track_ownership_proofs(monkeypatch)
 
-    result = FunctionOutputContextStrategy.for_output_plan(
-        output_plan,
-    ).contextualize_from_projector(
+    result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         source,
         output,
         output_plan,
@@ -316,9 +301,7 @@ def test_owned_variable_output_without_projector_returns_after_one_proof(
     source, output, output_plan = _scalar_rgb_output()
     proof_calls = _track_ownership_proofs(monkeypatch)
 
-    result = FunctionOutputContextStrategy.for_output_plan(
-        output_plan,
-    ).contextualize_from_projector(
+    result = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         source,
         output,
         output_plan,
@@ -347,9 +330,7 @@ def test_unowned_variable_output_without_projector_preserves_error(
         ValueError,
         match="runtime invocation supplies no plane projector",
     ):
-        FunctionOutputContextStrategy.for_output_plan(
-            output_plan,
-        ).contextualize_from_projector(
+        (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
             np.ones((2, 4, 5), dtype=np.float32),
             np.ones((2, 4, 5), dtype=np.uint16),
             output_plan,

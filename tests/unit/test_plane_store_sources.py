@@ -6,6 +6,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 import zarr
+from objectstate import ObjectState
 from objectstate.lazy_factory import ensure_global_config_context
 from ome_zarr.format import Format
 from polystore.base import ensure_storage_registry, storage_registry
@@ -351,11 +352,18 @@ def test_mixed_plane_stores_bind_and_load_through_virtual_workspace(
 
 
 @pytest.mark.parametrize("fmt", NGFF_FORMATS, ids=lambda fmt: fmt.version)
+@pytest.mark.parametrize("replace_config", ("apply", "setter", "delegate"))
 def test_saved_source_bindings_rebuild_canonical_store_projection(
     monkeypatch,
     tmp_path: Path,
     fmt: Format,
+    replace_config: str,
 ) -> None:
+    def reject_editor(*args, **kwargs):
+        raise AssertionError("Saved runtime config capture must not construct an editor")
+
+    if replace_config != "delegate":
+        monkeypatch.setattr(ObjectState, "__init__", reject_editor)
     stores = _write_mixed_stores(tmp_path, fmt)
     monkeypatch.setattr(
         BioFormatsJavaContext,
@@ -392,11 +400,17 @@ def test_saved_source_bindings_rebuild_canonical_store_projection(
             for alias, (path, _pixels) in stores.items()
         )
     )
-    orchestrator.apply_pipeline_config(
-        PipelineConfig(
-            source_bindings_config=LazySourceBindingsConfig.from_config(edited_bindings)
-        )
+    replacement = PipelineConfig(
+        source_bindings_config=LazySourceBindingsConfig.from_config(edited_bindings)
     )
+    if replace_config == "delegate":
+        state = ObjectState(orchestrator)
+        monkeypatch.setattr(ObjectState, "__init__", reject_editor)
+        state.update_object_instance(replacement)
+    elif replace_config == "setter":
+        orchestrator.pipeline_config = replacement
+    else:
+        orchestrator.apply_pipeline_config(replacement)
 
     assert orchestrator.state is OrchestratorState.CREATED
     assert not orchestrator.is_initialized()

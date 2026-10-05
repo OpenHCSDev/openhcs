@@ -1,268 +1,130 @@
-"""
-BaSiC (Background and Shading Correction) Implementation using JAX via BaSiCPy
-
-This module provides OpenHCS-compatible wrapper functions for BaSiCPy's
-JAX-based BaSiC implementation, integrating with OpenHCS memory decorators
-and pipeline system.
-
-Doctrinal Clauses:
-- Clause 3 — Declarative Primacy: All functions are pure and stateless
-- Clause 65 — Fail Loudly: No silent fallbacks or inferred capabilities
-- Clause 88 — No Inferred Capabilities: Explicit JAX dependency via BaSiCPy
-- Clause 273 — Memory Backend Restrictions: JAX-only implementation
-"""
+"""Real BaSiCPy correction of independent, same-channel observations."""
 
 from __future__ import annotations
 
-import logging
-from typing import TYPE_CHECKING, Any, Optional, Union
+import numpy as np
+from basicpy import BaSiC
+from basicpy.basicpy import FittingMode
 
-# Import decorator directly from core.memory to avoid circular imports
-from openhcs.core.memory import jax as jax_func
-from openhcs.processing.backends.enhance.flatfield import BasicFittingMode
-from openhcs.utils.import_utils import optional_import_placeholder
-
-# For type checking only
-if TYPE_CHECKING:
-    import jax.numpy as jnp
-
-# Import jax.numpy for runtime type hint evaluation
-try:
-    import jax.numpy as jnp
-except ImportError:
-    jnp = None
-
-# Import BaSiCPy as an optional dependency
-basicpy = optional_import_placeholder("basicpy")
-if basicpy:
-    BaSiC = basicpy.BaSiC
-else:
-    BaSiC = None
-
-logger = logging.getLogger(__name__)
-
-
-def _validate_jax_array(array: Any, name: str = "input") -> None:
-    """
-    Validate that BaSiCPy is available and input is compatible.
-
-    Args:
-        array: Array to validate
-        name: Name of the array for error messages
-
-    Raises:
-        ImportError: If BaSiCPy is not available
-        ValueError: If the array is not compatible
-    """
-    if not basicpy or BaSiC is None:
-        raise ImportError(
-            "BaSiCPy is not available. Please install BaSiCPy for BaSiC correction. "
-            "Install with: pip install basicpy"
-        )
-
-    if not hasattr(array, "shape") or not hasattr(array, "dtype"):
-        raise ValueError(
-            f"{name} must be an array-like object with shape and dtype attributes, "
-            f"got {type(array)}."
-        )
+from openhcs.constants.constants import GroupBy
+from openhcs.core.artifacts import (
+    ArtifactSidecarRole,
+    ArtifactSpec,
+    ArtifactViewerStreaming,
+    ImageArtifactType,
+    MainFlowPlaneProjectionOutputSpec,
+    MainFlowStackOutputSpec,
+)
+from openhcs.core.config import DtypeConfig
+from openhcs.core.memory import numpy as numpy_func
+from openhcs.core.pipeline.function_contracts import (
+    allowed_group_by,
+    artifact_outputs,
+    required_variable_components,
+)
+from openhcs.processing.backends.enhance.flatfield import FittedIlluminationFieldOutput
+from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+from openhcs.processing.materialization import (
+    ImageFileOptions,
+    MaterializationSpec,
+    MaterializedFilenameIdentity,
+)
 
 
-@jax_func
-def basic_flatfield_correction_jax(
-    image: "jnp.ndarray",
-    max_iters: int = 50,
-    lambda_sparse: float = 0.01,
-    lambda_lowrank: float = 0.1,
-    epsilon: float = 0.1,
-    smoothness_flatfield: float = 1.0,
-    smoothness_darkfield: float = 1.0,
-    sparse_cost_darkfield: float = 0.01,
-    get_darkfield: bool = False,
-    fitting_mode: BasicFittingMode = BasicFittingMode.LADMAP,
-    working_size: Optional[Union[int, list]] = 128,
-    verbose: bool = False,
-) -> "jnp.ndarray":
-    """
-    Perform BaSiC-style illumination correction on a 3D image stack using JAX via BaSiCPy.
-
-    This function provides OpenHCS integration for BaSiCPy's sophisticated BaSiC
-    algorithm implementation, supporting both LADMAP and approximate fitting modes
-    with automatic parameter tuning capabilities.
-
-    Args:
-        image: 3D JAX array of shape (Z, Y, X)
-        max_iters: Maximum number of iterations for optimization
-        lambda_sparse: Regularization parameter for sparse component (mapped to epsilon)
-        lambda_lowrank: Regularization parameter for low-rank component (mapped to smoothness)
-        epsilon: Weight regularization term
-        smoothness_flatfield: Weight of flatfield term in Lagrangian
-        smoothness_darkfield: Weight of darkfield term in Lagrangian
-        sparse_cost_darkfield: Weight of darkfield sparse term in Lagrangian
-        get_darkfield: Whether to estimate darkfield component
-        fitting_mode: Fitting mode ('ladmap' or 'approximate')
-        working_size: Size for running computations (None means no rescaling)
-        verbose: Whether to print progress information
-        **kwargs: Additional parameters (ignored for compatibility)
-
-    Returns:
-        Corrected 3D JAX array of shape (Z, Y, X)
-
-    Raises:
-        ImportError: If BaSiCPy is not available
-        ValueError: If input is not a 3D array
-        RuntimeError: If BaSiC fitting fails
-    """
-    # Validate input and dependencies
-    _validate_jax_array(image)
-
-    if image.ndim != 3:
-        raise ValueError(f"Input must be a 3D array, got {image.ndim}D")
-
-    logger.debug(f"BaSiC correction: {image.shape} image, mode={fitting_mode}")
-
-    try:
-        # Convert JAX array to numpy for BaSiCPy (it handles JAX internally)
-        import numpy as np
-
-        image_np = np.asarray(image)
-
-        # Create BaSiC instance with parameters
-        basic = BaSiC(
-            # Core algorithm parameters
-            max_iterations=max_iters,
-            epsilon=epsilon,
-            smoothness_flatfield=smoothness_flatfield,
-            smoothness_darkfield=smoothness_darkfield,
-            sparse_cost_darkfield=sparse_cost_darkfield,
-            get_darkfield=get_darkfield,
-            fitting_mode=fitting_mode.value,
-            working_size=working_size,
-            # Optimization parameters
-            optimization_tol=1e-3,
-            optimization_tol_diff=1e-2,
-            reweighting_tol=1e-2,
-            max_reweight_iterations=10,
-            # Memory and performance
-            resize_mode="jax",
-            sort_intensity=False,
-        )
-
-        # Fit and transform the image
-        logger.debug("Starting BaSiC fit and transform")
-        corrected_np = basic.fit_transform(image_np, timelapse=False)
-
-        # Convert back to JAX array
-        import jax.numpy as jnp
-
-        corrected = jnp.asarray(corrected_np)
-
-        logger.debug(f"BaSiC correction completed: {corrected.shape}")
-        return corrected.astype(image.dtype)
-
-    except Exception as e:
-        logger.error(f"BaSiC correction failed: {e}")
-        raise RuntimeError(f"BaSiC flat field correction failed: {e}") from e
-
-
-@jax_func
-def basic_flatfield_correction_batch_jax(
-    image_batch: "jnp.ndarray",
-    *,
-    batch_dim: int = 0,
-    max_iters: int = 50,
-    lambda_sparse: float = 0.01,
-    lambda_lowrank: float = 0.1,
-    epsilon: float = 0.1,
-    smoothness_flatfield: float = 1.0,
-    smoothness_darkfield: float = 1.0,
-    sparse_cost_darkfield: float = 0.01,
-    get_darkfield: bool = False,
-    fitting_mode: BasicFittingMode = BasicFittingMode.LADMAP,
-    working_size: Optional[Union[int, list]] = 128,
-    verbose: bool = False,
-) -> "jnp.ndarray":
-    """
-    Apply BaSiC flatfield correction to a batch of 3D image stacks.
-
-    Args:
-        image_batch: 4D JAX array of shape (B, Z, Y, X) or (Z, B, Y, X)
-        batch_dim: Dimension along which the batch is organized (0 or 1)
-        max_iters: Maximum BaSiC optimisation iterations for each stack.
-        lambda_sparse: Compatibility regularisation value forwarded to each stack; the current per-stack adapter does not apply it.
-        lambda_lowrank: Compatibility regularisation value forwarded to each stack; the current per-stack adapter does not apply it.
-        epsilon: Weight regularisation term passed to BaSiC.
-        smoothness_flatfield: Smoothness weight for the estimated flatfield.
-        smoothness_darkfield: Smoothness weight for the estimated darkfield.
-        sparse_cost_darkfield: Sparse-cost weight for the estimated darkfield.
-        get_darkfield: Estimate a darkfield component in addition to the flatfield.
-        fitting_mode: BaSiC fitting algorithm used for every stack.
-        working_size: Spatial working size used by BaSiC, or ``None`` to disable rescaling.
-        verbose: Compatibility progress flag forwarded to each stack; the current per-stack adapter does not apply it.
-
-    Returns:
-        Corrected 4D JAX array of the same shape as input
-
-    Raises:
-        ImportError: If BaSiCPy is not available
-        ValueError: If input is not a 4D array or batch_dim is invalid
-    """
-    # Validate input
-    _validate_jax_array(image_batch)
-
-    if image_batch.ndim != 4:
-        raise ValueError(f"Input must be a 4D array, got {image_batch.ndim}D")
-
-    if batch_dim not in [0, 1]:
-        raise ValueError(f"batch_dim must be 0 or 1, got {batch_dim}")
-
-    logger.debug(f"BaSiC batch correction: {image_batch.shape}, batch_dim={batch_dim}")
-
-    # Process each 3D stack in the batch
-    result_list = []
-
-    if batch_dim == 0:
-        # Batch is organized as (B, Z, Y, X)
-        for b in range(image_batch.shape[0]):
-            corrected = basic_flatfield_correction_jax(
-                image_batch[b],
-                max_iters=max_iters,
-                lambda_sparse=lambda_sparse,
-                lambda_lowrank=lambda_lowrank,
-                epsilon=epsilon,
-                smoothness_flatfield=smoothness_flatfield,
-                smoothness_darkfield=smoothness_darkfield,
-                sparse_cost_darkfield=sparse_cost_darkfield,
-                get_darkfield=get_darkfield,
-                fitting_mode=fitting_mode,
-                working_size=working_size,
-                verbose=verbose,
+def _fitted_field_output(name: str) -> ArtifactSpec:
+    """Project group lineage; runtime field owns aggregate contributor context."""
+    return MainFlowPlaneProjectionOutputSpec.output(
+        name,
+        ImageArtifactType,
+        sidecar_role=ArtifactSidecarRole.QA_CHECKPOINT,
+        materialization=MaterializationSpec(
+            ImageFileOptions(
+                filename_suffix=".tif",
+                filename_identity=MaterializedFilenameIdentity.ARTIFACT_NAME,
             )
-            result_list.append(corrected)
+        ),
+        viewer_streaming=ArtifactViewerStreaming.ON_DEMAND,
+    )
 
-        # Stack along batch dimension
-        import jax.numpy as jnp
 
-        return jnp.stack(result_list, axis=0)
+CORRECTED_OUTPUT = MainFlowStackOutputSpec.output("basic_corrected", ImageArtifactType)
+FLATFIELD_OUTPUT = _fitted_field_output("basic_flatfield")
+DARKFIELD_OUTPUT = _fitted_field_output("basic_darkfield")
 
-    # Batch is organized as (Z, B, Y, X)
-    for b in range(image_batch.shape[1]):
-        corrected = basic_flatfield_correction_jax(
-            image_batch[:, b],
-            max_iters=max_iters,
-            lambda_sparse=lambda_sparse,
-            lambda_lowrank=lambda_lowrank,
-            epsilon=epsilon,
-            smoothness_flatfield=smoothness_flatfield,
-            smoothness_darkfield=smoothness_darkfield,
-            sparse_cost_darkfield=sparse_cost_darkfield,
-            get_darkfield=get_darkfield,
-            fitting_mode=fitting_mode,
-            working_size=working_size,
-            verbose=verbose,
-        )
-        result_list.append(corrected)
 
-    # Stack along batch dimension
-    import jax.numpy as jnp
+@numpy_func(contract=ProcessingContract.PURE_3D, dtype_config_default=DtypeConfig())
+@allowed_group_by(GroupBy.CHANNEL)
+@required_variable_components(FittedIlluminationFieldOutput.observation_axis)
+@artifact_outputs(CORRECTED_OUTPUT, FLATFIELD_OUTPUT, DARKFIELD_OUTPUT)
+def basic_flatfield_correction_jax(
+    image: np.ndarray,
+    max_iterations: int = 50,
+    epsilon: float = 0.1,
+    smoothness_flatfield: float = 1.0,
+    smoothness_darkfield: float = 1.0,
+    sparse_cost_darkfield: float = 0.01,
+    get_darkfield: bool = False,
+    fitting_mode: FittingMode = FittingMode.ladmap,
+    working_size: int | None = 128,
+) -> tuple[np.ndarray, FittedIlluminationFieldOutput, FittedIlluminationFieldOutput]:
+    """Fit one BaSiC model to independent observations and apply its fields.
 
-    return jnp.stack(result_list, axis=1)
+    The leading N axis contains independent timepoints or mosaic positions,
+    not channels or the Z planes of a single volume. In a FunctionStep use
+    group_by=CHANNEL and variable_components=[SITE] to fit across mosaic fields.
+    Z-only stacks are not independent-observation ensembles and are rejected
+    by the declared SITE requirement before pipeline execution.
+    BaSiCPy's public fit/transform boundary uses NumPy arrays; its internal JAX
+    solver does not imply JAX-array transport or require a GPU. CPU-only process
+    policy selects the solver's CPU platform before importing the dependency.
+    All observations must share a spatial grid and acquisition illumination.
+    Several diverse observations are needed to separate stationary shading
+    from biology; two is only a minimum input sanity check, not identifiability.
+
+    Args:
+        image: Same-channel observations, (N,Y,X) or volumes (N,Z,Y,X).
+        max_iterations: Maximum iterations per BaSiC optimization.
+        epsilon: BaSiC weight regularization term.
+        smoothness_flatfield: Flatfield smoothness weight.
+        smoothness_darkfield: Darkfield smoothness weight.
+        sparse_cost_darkfield: Darkfield sparse-cost weight.
+        get_darkfield: Estimate additive darkfield as well as flatfield.
+        fitting_mode: BaSiCPy's declared optimization algorithm.
+        working_size: Spatial working size, or None for no rescaling.
+
+    Returns:
+        Corrected observations, fitted flatfield and fitted darkfield, all from
+        this same fit. The first image remains the pipeline's main flow; fields
+        are persisted image sidecars, available for on-demand inspection. When
+        get_darkfield=False the darkfield is the model's zero additive field.
+        Floating-point corrected observations retain the input shape. BaSiC's
+        (image - darkfield) / flatfield retains intensity units, fractions and
+        negative values; no clipping, normalization, integer recast or temporal
+        baseline subtraction is applied. Values can exceed the input range.
+    """
+    observations = np.asarray(image)
+    if observations.ndim not in (3, 4):
+        raise ValueError("BaSiC requires (N,Y,X) or (N,Z,Y,X) observations.")
+    if observations.shape[0] < 2:
+        raise ValueError("BaSiC requires multiple independent observations.")
+    if not np.isfinite(observations).all():
+        raise ValueError("BaSiC observations must contain only finite values.")
+    FittedIlluminationFieldOutput.validate_observation_domain(image)
+
+    model = BaSiC(
+        max_iterations=max_iterations,
+        epsilon=epsilon,
+        smoothness_flatfield=smoothness_flatfield,
+        smoothness_darkfield=smoothness_darkfield,
+        sparse_cost_darkfield=sparse_cost_darkfield,
+        get_darkfield=get_darkfield,
+        fitting_mode=fitting_mode,
+        working_size=working_size,
+    )
+    corrected = model.fit_transform(observations, timelapse=False)
+    observation_count = observations.shape[0]
+    return (
+        np.asarray(corrected),
+        FittedIlluminationFieldOutput(np.asarray(model.flatfield), observation_count),
+        FittedIlluminationFieldOutput(np.asarray(model.darkfield), observation_count),
+    )

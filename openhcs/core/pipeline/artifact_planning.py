@@ -1,16 +1,19 @@
 """Artifact graph extraction for compiled function patterns."""
 
+import inspect
 from collections import Counter, OrderedDict, defaultdict
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, replace
-from typing import Any, Callable, ClassVar, Iterable, Iterator, Mapping, Optional
+from dataclasses import dataclass, field, replace
+from typing import Any, Callable, ClassVar, Iterable, Iterator, Mapping, Optional, TYPE_CHECKING
 
+from openhcs.core.artifact_key_selection import ArtifactPlanKeySelector
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactMaterializationPayload,
     ArtifactOutputPlan,
     ArtifactSpec,
     ArtifactSpecAccumulator,
+    ArtifactSpecCollection,
     ArtifactSpecRef,
     ArtifactType,
     ArtifactTypeStrategyMatchMixin,
@@ -20,11 +23,17 @@ from openhcs.core.artifacts import (
 )
 from openhcs.core.function_patterns import DEFAULT_GROUP_KEY
 from openhcs.core.function_patterns import FunctionInvocationKey
-from openhcs.core.function_patterns import normalize_function_pattern
+from openhcs.core.function_patterns import (
+    normalize_function_pattern,
+    NormalizedFunctionPattern,
+    NormalizedFunctionItem,
+)
 from openhcs.core.invocation_artifacts import (
     ArtifactDeclarationStepContext,
     CompositeInvocationContractProvider,
     InvocationContractProvider,
+    InvocationContractPlan,
+    unnamed_main_flow_artifact_name,
     InvocationArtifactDeclarationProviderLike,
     callable_contract_artifact_declarations,
 )
@@ -33,27 +42,18 @@ from openhcs.processing.materialization import (
     CsvOptions,
     ImageFileOptions,
     MaterializedFilenameIdentity,
-    MaterializationSpec,
     ROIOptions,
+    TerminalMaterializationSpec,
 )
 
+from openhcs.constants.input_source import InputSource
+from openhcs.core.callable_contract import FunctionStepExecutionScope
+from openhcs.core.source_bindings import CompiledSourceBindingPlan, StepSourceBindingsConfig
+from openhcs.core.step_dependencies import StepInputDependency
+from openhcs.core.steps.function_step import FunctionStep
 
-class TerminalMaterializationSpec(MaterializationSpec):
-    """Compiler-added persistence excluded from declared export comparison."""
-
-    def participates_in_runtime_export_observation(self) -> bool:
-        return False
-
-
-class StreamingOnlyMaterializationSpec(MaterializationSpec):
-    """Compiler-added viewer materialization excluded from persistent exports."""
-
-    def participates_in_runtime_export_observation(self) -> bool:
-        return False
-
-    def participates_in_persistent_materialization(self) -> bool:
-        return False
-
+if TYPE_CHECKING:
+    from openhcs.core.steps.abstract import AbstractStep
 
 class AutomaticArtifactOutputMaterializationStrategy(
     ArtifactTypeStrategyMatchMixin,
@@ -231,6 +231,292 @@ class ArtifactGraph:
     producers: tuple[ArtifactProducer, ...] = ()
     consumers: tuple[ArtifactConsumer, ...] = ()
     non_plan_consumers: tuple[ArtifactConsumer, ...] = ()
+    pattern: NormalizedFunctionPattern | None = field(default=None, repr=False)
+    invocation_contract_plans: Mapping[
+        FunctionInvocationKey, InvocationContractPlan | None
+    ] = field(default_factory=dict, repr=False)
+    invocation_declarations: Mapping[FunctionInvocationKey, ArtifactPlanKeySelector] = (
+        field(default_factory=dict, repr=False)
+    )
+    main_input_dependency: StepInputDependency = field(
+        default_factory=StepInputDependency.unresolved
+    )
+    source_binding_plan: CompiledSourceBindingPlan = field(
+        default_factory=CompiledSourceBindingPlan.empty
+    )
+    _input_lineage_order: (
+        tuple[tuple[ArtifactSpecRef, tuple[ArtifactSpecRef, ...]], ...] | None
+    ) = field(default=None, init=False, repr=False, compare=False)
+
+    _config_bound_parameters: tuple[inspect.Parameter, ...] | None = field(
+        default=None, init=False, repr=False, compare=False
+    )
+
+    def resolve_main_input_dependency(
+        self,
+        step: "AbstractStep",
+        step_index: int,
+        *,
+        execution_scope: FunctionStepExecutionScope,
+        source_bindings: StepSourceBindingsConfig,
+        context: ArtifactDeclarationStepContext,
+        declared: Mapping[ArtifactSpecRef, ArtifactOutputPlan],
+        step_scope_ids: Mapping[int, str],
+        previous_dependency: StepInputDependency | None,
+        previous_preserves_input_main_flow: bool,
+    ) -> StepInputDependency:
+        """Resolve fixed topology or a standalone planner's explicit producer facts."""
+        if (
+            isinstance(step, FunctionStep)
+            and execution_scope is FunctionStepExecutionScope.PLATE
+        ):
+            return StepInputDependency.no_main_flow()
+
+        if (
+            step_index == 0
+            or step.processing_config.input_source == InputSource.PIPELINE_START
+        ):
+            return StepInputDependency.pipeline_start()
+
+        local_output_refs = frozenset(
+            producer.spec.ref() for producer in self.producers
+        )
+        main_input_specs = tuple(
+            dict.fromkeys(
+                consumer.spec
+                for consumer in self.non_plan_consumers
+                if not source_bindings.declares_artifact_ref(consumer.spec.ref())
+                and consumer.spec.ref().for_plan_type(ArtifactOutputPlan)
+                not in local_output_refs
+            )
+        )
+        producer_step_indices: list[int | str] = []
+        for main_input_spec in main_input_specs:
+            producer_ref = main_input_spec.ref().for_plan_type(ArtifactOutputPlan)
+            producer_plan = declared.get(producer_ref)
+            context_producer = (
+                context.available_artifact_producer_for(
+                    main_input_spec
+                )
+            )
+            candidate_indices = tuple(
+                dict.fromkeys(
+                    candidate
+                    for candidate in (
+                        (
+                            None
+                            if producer_plan is None
+                            else producer_plan.producer_step_index
+                        ),
+                        (
+                            None
+                            if context_producer is None
+                            else context_producer.producer_step_index
+                        ),
+                    )
+                    if candidate is not None
+                )
+            )
+            if not candidate_indices:
+                from openhcs.core.pipeline.path_planner import MissingArtifactInputError
+
+                raise MissingArtifactInputError(
+                    step_id=step_index,
+                    artifact_key=producer_ref.name,
+                    step_name=step.name,
+                )
+            if len(candidate_indices) > 1:
+                raise ValueError(
+                    f"Main-flow artifact {producer_ref!r} has conflicting producer "
+                    f"steps {candidate_indices!r}."
+                )
+            producer_step_indices.append(candidate_indices[0])
+
+        producer_step_indices = tuple(dict.fromkeys(producer_step_indices))
+        if len(producer_step_indices) > 1:
+            raise ValueError(
+                f"Step {step.name!r} declares main-flow inputs from multiple "
+                f"producer steps {producer_step_indices!r}: {main_input_specs!r}."
+            )
+        if producer_step_indices:
+            producer_index = producer_step_indices[0]
+            if not isinstance(producer_index, int):
+                raise TypeError(
+                    f"Main-flow artifact producer for step {step.name!r} has "
+                    f"non-integer step identity {producer_index!r}."
+                )
+            producer_scope_id = step_scope_ids[producer_index]
+            if not producer_scope_id:
+                raise ValueError(
+                    f"Main-flow artifact producer step {producer_index} has no "
+                    "compiled scope identity."
+                )
+            return StepInputDependency.step_output(
+                source_step_index=producer_index,
+                source_step_scope_id=producer_scope_id,
+            )
+
+        producer_index = step_index - 1
+        if previous_preserves_input_main_flow:
+            if previous_dependency is None or not previous_dependency.is_resolved:
+                raise RuntimeError(
+                    f"Main-flow-preserving step {producer_index} has no resolved "
+                    "main-input dependency."
+                )
+            return previous_dependency
+
+        producer_scope_id = step_scope_ids[producer_index]
+        return StepInputDependency.step_output(
+            source_step_index=producer_index,
+            source_step_scope_id=producer_scope_id,
+        )
+
+    def with_source_binding_plan(
+        self,
+        config: StepSourceBindingsConfig,
+        dependency: StepInputDependency,
+        context: ArtifactDeclarationStepContext,
+    ) -> "ArtifactGraph":
+        """Capture fixed source routing once per graph."""
+        binding_plan = CompiledSourceBindingPlan.from_contracts(
+            config,
+            () if self.pattern is None else (
+                item.contract for item in self.pattern.iter_items()
+            ),
+            dependency,
+            context.available_artifacts,
+        )
+        return replace(
+            self,
+            main_input_dependency=dependency,
+            source_binding_plan=binding_plan,
+        )
+
+    def config_parameters_for_step(
+        self, step_name: str
+    ) -> tuple[inspect.Parameter, ...]:
+        """Admit the shared signature roster before binding axis-local values."""
+        if self._config_bound_parameters is None:
+            parameters: dict[str, inspect.Parameter] = {}
+            for item in () if self.pattern is None else self.pattern.iter_items():
+                for parameter in item.contract.config_bound_parameters:
+                    prior = parameters.setdefault(parameter.name, parameter)
+                    if prior.annotation is not parameter.annotation:
+                        raise TypeError(
+                            f"FunctionStep {step_name!r} callable pattern "
+                            f"declares incompatible config parameter {parameter.name!r}: "
+                            f"{prior.annotation!r} and {parameter.annotation!r}."
+                        )
+            object.__setattr__(
+                self, "_config_bound_parameters", tuple(parameters.values())
+            )
+        return self._config_bound_parameters
+
+    @property
+    def input_lineage_order(
+        self,
+    ) -> tuple[tuple[ArtifactSpecRef, tuple[ArtifactSpecRef, ...]], ...]:
+        """Admit output-reachable input topology once, retaining self-lineage leaves."""
+        if self._input_lineage_order is not None:
+            return self._input_lineage_order
+        inputs = self.inputs
+        order: list[tuple[ArtifactSpecRef, tuple[ArtifactSpecRef, ...]]] = []
+        visited: set[ArtifactSpecRef] = set()
+        resolving: set[ArtifactSpecRef] = set()
+
+        def visit(ref: ArtifactSpecRef) -> None:
+            if ref in visited:
+                return
+            if ref in resolving:
+                raise ValueError(
+                    f"Input group-lineage declarations contain a cycle at {ref!r}."
+                )
+            resolving.add(ref)
+            spec = inputs.get(ref)
+            sources = () if spec is None else spec.group_scope_sources()
+            for source in sources:
+                if source != ref:
+                    visit(source)
+            resolving.remove(ref)
+            visited.add(ref)
+            order.append((ref, sources))
+
+        for output in self.outputs.values():
+            for ref in output.group_scope_sources():
+                visit(ref)
+        object.__setattr__(self, "_input_lineage_order", tuple(order))
+        return self._input_lineage_order
+
+    def advance_declaration_context(
+        self,
+        context: ArtifactDeclarationStepContext,
+    ) -> ArtifactDeclarationStepContext:
+        """Advance plate-fixed named and anonymous flow before axis specialization."""
+        producers = tuple(
+            replace(producer, producer_step_index=context.step_index)
+            for producer in self.producers
+        )
+        main_flow = context.main_flow_artifacts
+        pattern = self.pattern
+        if pattern and not all(
+            item.contract.preserves_input_main_flow() for item in pattern.iter_items()
+        ):
+            main_specs: list[ArtifactSpec] = []
+            outputs = self.outputs
+            for group in pattern.groups:
+                named_refs: tuple[ArtifactSpecRef, ...] = ()
+                implicit_owner = None
+                for item in group.items:
+                    selected_refs = frozenset(
+                        spec.ref()
+                        for spec in self.invocation_declarations[
+                            item.key
+                        ].artifact_key_specs.for_plan_type(ArtifactOutputPlan)
+                    )
+                    refs = tuple(
+                        spec.ref()
+                        for spec in item.contract.canonical_return_output_specs
+                        if spec.ref() in selected_refs
+                    )
+                    if refs:
+                        named_refs, implicit_owner = refs, None
+                    elif not item.contract.preserves_input_main_flow():
+                        named_refs, implicit_owner = (), item
+                if named_refs:
+                    main_specs.extend(
+                        spec.for_plan_type(ArtifactInputPlan)
+                        for ref, spec in outputs.items()
+                        if ref in named_refs
+                    )
+                elif implicit_owner is not None:
+                    spec = ArtifactSpec.output(
+                        unnamed_main_flow_artifact_name(
+                            context.step_index, implicit_owner.key
+                        ),
+                        ImageArtifactType,
+                    )
+                    producers += (
+                        ArtifactProducer(
+                            spec=spec,
+                            groups=(
+                                None
+                                if group.group_key == DEFAULT_GROUP_KEY
+                                else group.group_key,
+                            ),
+                            invocation_keys=(implicit_owner.key,),
+                            producer_step_index=context.step_index,
+                        ),
+                    )
+                    main_specs.append(spec.for_plan_type(ArtifactInputPlan))
+            main_flow = ArtifactSpecCollection(
+                ArtifactSpecCollection(main_specs).unique(
+                    conflict_context="compiled main flow"
+                )
+            )
+        return context.advance_artifact_graph(
+            replace(self, producers=producers),
+            main_flow_artifacts=main_flow,
+        )
 
     @classmethod
     def empty(cls) -> "ArtifactGraph":
@@ -345,11 +631,7 @@ class ArtifactGraph:
                     producer_step_index=producer.producer_step_index,
                 )
             )
-        return ArtifactGraph(
-            producers=tuple(producers),
-            consumers=self.consumers,
-            non_plan_consumers=self.non_plan_consumers,
-        )
+        return replace(self, producers=tuple(producers))
 
     @staticmethod
     def _require_output_group_values(
@@ -423,12 +705,19 @@ def extract_artifact_declarations(
     ] = defaultdict(list)
     consumers: list[ArtifactConsumer] = []
     declared_input_consumers: list[ArtifactConsumer] = []
+    contract_plans: dict[FunctionInvocationKey, InvocationContractPlan | None] = {}
+    declarations: dict[FunctionInvocationKey, ArtifactPlanKeySelector] = {}
+    normalized = normalize_function_pattern(pattern)
+    resolved_items: dict[FunctionInvocationKey, NormalizedFunctionItem] = {}
 
-    for invocation in normalize_function_pattern(pattern).iter_items():
+    for invocation in normalized.iter_items():
         contract_plan = invocation_contract_provider(invocation, step_context)
+        contract_plans[invocation.key] = contract_plan
         if contract_plan is not None:
             invocation = replace(invocation, contract=contract_plan.contract)
+        resolved_items[invocation.key] = invocation
         artifact_selector = declaration_provider(invocation, step_context)
+        declarations[invocation.key] = artifact_selector
         artifact_selector.validate_artifact_relation_refs(
             owner_name=invocation.contract.function_name,
         )
@@ -464,7 +753,19 @@ def extract_artifact_declarations(
             )
 
     planned_input_refs = frozenset(consumer.spec.ref() for consumer in consumers)
+    resolved_pattern = replace(
+        normalized,
+        groups=tuple(
+            replace(
+                group, items=tuple(resolved_items[item.key] for item in group.items)
+            )
+            for group in normalized.groups
+        ),
+    )
     return ArtifactGraph(
+        pattern=resolved_pattern,
+        invocation_contract_plans=contract_plans,
+        invocation_declarations=declarations,
         producers=tuple(
             ArtifactProducer(
                 spec=spec,

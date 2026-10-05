@@ -12,6 +12,7 @@ from openhcs.core.orchestrator.execution_result import (
     RuntimeExecutionObservation,
 )
 from openhcs.core.runtime_exports import RuntimeExportObservation
+from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.runtime.zmq_execution_observation import (
     ZMQRuntimeExecutionObservationExport,
     ZMQRuntimeExecutionOutcomeExport,
@@ -32,7 +33,7 @@ def test_outcome_export_round_trip_excludes_runtime_values(tmp_path: Path) -> No
                     RuntimeContextObservation(
                         "context",
                         (runtime_value,),
-                        runtime_export_paths=(declared_output,),
+                        outputs=StepExecutionObservation({}, (declared_output,)),
                     ),
                 )
             ),
@@ -110,6 +111,7 @@ def test_value_export_rejects_an_uncompiled_execution_axis() -> None:
         compiled_contexts={},
         execution_results={"A01": ExecutionResult.success("A01")},
         output_roots=(),
+        runtime_observations=(),
     )
     with pytest.raises(RuntimeError, match="execution outcomes have no compiled axis"):
         exported.require_valid_observation()
@@ -167,6 +169,7 @@ def test_previous_runtime_export_versions_remain_readable(tmp_path: Path) -> Non
             execution_results={},
             output_roots=(),
             execution_id="new-job",
+            runtime_observations=(),
         ),
         schema_version=6,
         execution_id=None,
@@ -178,6 +181,7 @@ def test_previous_runtime_export_versions_remain_readable(tmp_path: Path) -> Non
             execution_results={},
             output_roots=(),
             execution_id="other-job",
+            runtime_observations=(),
         ).write(observation_path)
     assert observation_path.read_bytes() == retained_bytes
     assert (

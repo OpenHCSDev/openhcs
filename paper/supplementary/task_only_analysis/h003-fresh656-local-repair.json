@@ -1,0 +1,48 @@
+{
+  "schema_version": "openhcs.paper.task_only_outcome.v1",
+  "run": "H003_FRESH656_88",
+  "phase": "fresh_context_uncoached_development_on_released_field",
+  "control_output": "/home/ts/wt/openhcs-issue-batch-20260929/next-h003-fresh88-after656-20261004/H003_FRESH656_88/author-workspace/output",
+  "payload_root": "/run/media/ts/hdd/openhcs-science/next-h003-fresh88-after656-20261004/H003_FRESH656_88/attempts/c04/staged_input_c04",
+  "manifest": {
+    "file": "FROZEN-MANIFEST.json",
+    "sha256": "66b2c5106c444cb3aa539cc5b044ebeb8547a2f54ce721535e5ffbab60f7d250",
+    "independently_checked_entries": 83,
+    "checked_bytes": 18176368,
+    "failures": 0,
+    "journal_prefixes": 1,
+    "outer_journal_sealing_certified_by_this_check": false
+  },
+  "report": {
+    "file": "FINAL-REPORT.md",
+    "sha256": "5e6649e736916b0f815f620a80fd841baa344a47cf7d618040f87565a36de55f"
+  },
+  "final_pipeline": {
+    "file": "c04-core-and-boundary-repair.py",
+    "sha256": "2fa532562caeb21089f78c3b6067ef09a2921e23fbfdfcf8b4dd31b1c4104ab7",
+    "execution_id": "d42e5898-e11c-402c-a3a4-064dec06db41"
+  },
+  "algorithmic_counts": {
+    "nuclear_instances": 54,
+    "actin_territories": 54,
+    "seed_only_territories": 1,
+    "nuclear_border_flags": 11,
+    "cell_border_flags": 16
+  },
+  "demonstrated_local_gain": "Three previously missed nuclei recovered; dim nucleus and clipped border control retained after the core/boundary repair.",
+  "remaining_limits": [
+    "One seed-only territory; crowded Actin boundaries and lobulated versus separate body identity remain uncertain.",
+    "No manual-reference score or unseen-validation claim; detector count is not an exact biological cell census.",
+    "Source pixel spacing is relative, not independently calibrated physical units.",
+    "Original report retains premature 320544-byte staging under refused admission; a later accepted check and source comparison reconciled it before scientific use."
+  ],
+  "closure": {
+    "viewer_pid": 1336899,
+    "native_pid": 1252981,
+    "typed_closure_acknowledged": true,
+    "both_processes_independently_absent": true,
+    "actual_client_exit_code": 2
+  },
+  "review_record": "figure-collection-20261004/H003-FRESH656-AUTONOMOUS-DIAGNOSIS.rst",
+  "original_science_and_report_changed": false
+}

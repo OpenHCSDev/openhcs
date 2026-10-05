@@ -52,31 +52,44 @@ class AutoRegisterRegistryPreparation:
     ) -> AutoRegisterRegistryPreparationReport:
         """Scan module registries and optionally prepare module-owned families."""
         report = AutoRegisterRegistryPreparationReport()
-        prepared_registry_ids: set[int] = set()
+        for candidate in cls.module_registry_owners(
+            modules, compiler_prepared_only=prepare_families
+        ):
+            registry = candidate.__registry__
+            report.class_count += len(tuple(registry.values()))
+            report.registry_count += 1
+            if prepare_families:
+                candidate.prepare_registered_family()
+                report.prepared_family_count += 1
+        return report
+
+    @classmethod
+    def module_registry_owners(
+        cls,
+        modules: Iterable[ModuleType | None],
+        *,
+        compiler_prepared_only: bool,
+    ) -> tuple[type, ...]:
+        """Derive registry owners once for both discovery and preparation."""
+        registry_ids: set[int] = set()
+        families: list[type] = []
         for module in modules:
             if not isinstance(module, ModuleType):
                 continue
             for candidate in cls.module_registry_families(module):
                 # Counting an unrelated lazy registry would discover its whole
                 # package even though this path has no preparation hook to run.
-                if prepare_families and not issubclass(
+                if compiler_prepared_only and not issubclass(
                     candidate, CompilerPreparedAutoRegisterFamily
                 ):
                     continue
                 registry = candidate.__registry__
                 registry_id = id(registry)
-                if registry_id in prepared_registry_ids:
+                if registry_id in registry_ids:
                     continue
-                report.class_count += len(tuple(registry.values()))
-                report.registry_count += 1
-                if prepare_families and issubclass(
-                    candidate,
-                    CompilerPreparedAutoRegisterFamily,
-                ):
-                    candidate.prepare_registered_family()
-                    report.prepared_family_count += 1
-                prepared_registry_ids.add(registry_id)
-        return report
+                families.append(candidate)
+                registry_ids.add(registry_id)
+        return tuple(families)
 
     @staticmethod
     def module_registry_families(

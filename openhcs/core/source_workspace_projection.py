@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING, TypeVar
 
+from openhcs.core.source_path_identity import source_path_identity, source_path_join
 from openhcs.constants import Backend
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
@@ -20,9 +21,13 @@ from openhcs.core.runtime_image_values import (
 from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.source_bindings import (
     SOURCE_BINDING_ALIAS_METADATA_FIELD,
+    NamedSourceBinding,
     SourceProjectionRole,
 )
-from openhcs.core.source_metadata import SourceMetadataMapping
+from openhcs.core.source_metadata import (
+    SourceMetadataFields,
+    SourceMetadataMapping,
+)
 from openhcs.core.source_matching import (
     source_component_metadata_values,
     source_metadata_value,
@@ -45,6 +50,7 @@ if TYPE_CHECKING:
     from openhcs.microscopes.microscope_interfaces import MetadataHandler
     from openhcs.core.vfs_protocol import FileManagerLike
     from polystore.filemanager import FileManager
+    from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
 
 
 LookupValueT = TypeVar("LookupValueT")
@@ -165,6 +171,26 @@ class VirtualWorkspaceSourceProjection:
             lookup,
         )
 
+    def logical_path_for(self, lookup: VirtualWorkspacePathLookup) -> str:
+        """Use the declared workspace identity independently of I/O spelling."""
+
+        projection = self.require_source_projection_for(lookup)
+        for path in lookup.candidates():
+            if self.source_projections_by_virtual_path.get(path) is not projection:
+                continue
+            declared_path = source_path_identity(path)
+            if self.workspace_root is not None and declared_path.is_relative_to(
+                self.workspace_root
+            ):
+                relative_path = str(declared_path.relative_to(self.workspace_root))
+                if (
+                    self.source_projections_by_virtual_path.get(relative_path)
+                    is projection
+                ):
+                    return relative_path
+            return path
+        raise RuntimeError("Admitted workspace projection has no declared path.")
+
     def resolved_source_path_for(
         self,
         lookup: VirtualWorkspacePathLookup,
@@ -239,12 +265,11 @@ class VirtualWorkspaceSourceProjection:
         """Carry one nominal source projection into runtime payload provenance."""
         projection = self.require_source_projection_for(lookup)
         source_metadata = self.source_metadata_for(lookup)
-        return self._project_payload_source_metadata(
-            payload,
+        return VirtualWorkspaceImagePayloadProjection(
             source_metadata=source_metadata,
             source_alias=projection.source_alias,
             persisted_metadata=projection.image_metadata,
-        )
+        ).apply(payload)
 
     def project_unbound_payload(
         self,
@@ -263,59 +288,13 @@ class VirtualWorkspaceSourceProjection:
                 SOURCE_BINDING_ALIAS_METADATA_FIELD,
             )
         )
-        return self._project_payload_source_metadata(
-            payload,
+        return VirtualWorkspaceImagePayloadProjection(
             source_metadata=source_metadata,
             source_alias=source_alias,
             persisted_metadata=(
                 None if projection is None else projection.image_metadata
             ),
-        )
-
-    @staticmethod
-    def _project_payload_source_metadata(
-        payload: RuntimeArrayData,
-        *,
-        source_metadata: SourceMetadataMapping | None,
-        source_alias: str | None,
-        persisted_metadata: ImagePayloadMetadata | None = None,
-    ) -> RuntimeArrayData:
-        """Apply component metadata and source-name provenance to one payload."""
-
-        if source_metadata is not None:
-            source_metadata = MappingProxyType(
-                {
-                    field: value
-                    for field, value in source_metadata.items()
-                    if field != SOURCE_BINDING_ALIAS_METADATA_FIELD
-                }
-            )
-        current_metadata = image_payload_metadata(payload)
-        metadata = (
-            current_metadata
-            if persisted_metadata is None
-            else persisted_metadata.with_source_spatial_context_from(
-                current_metadata
-            ).with_missing_intensity_from(current_metadata)
-        )
-        metadata = metadata.replace_fields(
-            source_spatial_domain=metadata.source_spatial_domain.with_native_image_context(
-                current_metadata.source_spatial_domain,
-                image_shape_yx=current_metadata.spatial_shape_yx(
-                    image_payload_data(payload)
-                ),
-            )
-        )
-        if source_metadata is not None and persisted_metadata is None:
-            metadata = metadata.with_source_component_metadata(source_metadata)
-        if source_alias is not None:
-            metadata = metadata.with_source_provenance(
-                metadata.source_provenance.with_source_image_names((source_alias,))
-            )
-        return metadata.payload_with(
-            image_payload_data(payload),
-            image_payload_mask(payload),
-        )
+        ).apply(payload)
 
     def source_metadata_for(
         self,
@@ -362,7 +341,7 @@ class VirtualWorkspaceSourceProjection:
         return tuple(
             virtual_path
             for virtual_path, source_ref in self.source_refs_by_virtual_path.items()
-            if not _cached_path_is_absolute(virtual_path)
+            if not source_path_identity(virtual_path).is_absolute()
             and source_path_identity_key(source_ref.backend_address)
             in source_path_identities
         )
@@ -412,6 +391,27 @@ class VirtualWorkspaceSourceProjection:
             ).projection_role
             is role
         )
+
+    def source_occurrences_for_binding(
+        self,
+        binding: NamedSourceBinding,
+        *,
+        axis_id: str,
+    ) -> tuple[tuple[str, SourceProjection], ...]:
+        """Select exact declared occurrences without merging physical resources."""
+
+        occurrences = []
+        for path in self.files_for_projection_role(
+            binding.projection_role, axis_id=axis_id
+        ):
+            projection = self.require_source_projection_for(
+                VirtualWorkspacePathLookup.from_paths(path, path)
+            )
+            if projection.matches_binding(
+                binding
+            ) and projection.belongs_to_execution_axis(axis_id):
+                occurrences.append((path, projection))
+        return tuple(occurrences)
 
     def validate_runtime_metadata_projection(
         self,
@@ -477,7 +477,7 @@ class VirtualWorkspaceSourceProjection:
         relative_virtual_paths = tuple(
             virtual_path
             for virtual_path in self.source_refs_by_virtual_path
-            if not _cached_path_is_absolute(virtual_path)
+            if not source_path_identity(virtual_path).is_absolute()
         )
         if relative_virtual_paths:
             return relative_virtual_paths
@@ -492,33 +492,61 @@ class VirtualWorkspaceSourceProjection:
         if axis_id is None:
             return self
 
-        source_refs_by_virtual_path: dict[str, SourcePixelRef] = {}
-        source_metadata_by_path: dict[str, SourceMetadataMapping] = {}
-        source_projections_by_virtual_path: dict[str, SourceProjection] = {}
-        for virtual_path, source_ref in self.source_refs_by_virtual_path.items():
-            if not self._path_belongs_to_axis(virtual_path, axis_id):
-                continue
-            source_refs_by_virtual_path[virtual_path] = source_ref
-            projection = self.source_projections_by_virtual_path.get(virtual_path)
-            if projection is not None:
-                source_projections_by_virtual_path[virtual_path] = projection
-            for metadata_path in (
-                virtual_path,
-                self._loadable_virtual_path(virtual_path),
-                source_ref.backend_address,
-            ):
-                metadata = self.source_metadata_by_path.get(metadata_path)
-                if metadata is not None:
-                    source_metadata_by_path[metadata_path] = metadata
+        return self.partition_by_axes((axis_id,))[axis_id]
 
-        return VirtualWorkspaceSourceProjection(
-            source_refs_by_virtual_path=MappingProxyType(source_refs_by_virtual_path),
-            source_metadata_by_path=MappingProxyType(source_metadata_by_path),
-            source_projections_by_virtual_path=MappingProxyType(
-                source_projections_by_virtual_path
-            ),
-            workspace_root=self.workspace_root,
-        )
+    def partition_by_axes(
+        self,
+        axis_ids: Sequence[str],
+    ) -> Mapping[str, "VirtualWorkspaceSourceProjection"]:
+        """Admit all requested axis views in one traversal of this source epoch."""
+        from openhcs.constants import MULTIPROCESSING_AXIS
+
+        source_refs = {axis_id: {} for axis_id in axis_ids}
+        source_metadata = {axis_id: {} for axis_id in source_refs}
+        source_projections = {axis_id: {} for axis_id in source_refs}
+        for virtual_path, source_ref in self.source_refs_by_virtual_path.items():
+            metadata = self.source_metadata_for(
+                VirtualWorkspacePathLookup.from_paths(
+                    virtual_path, self._loadable_virtual_path(virtual_path)
+                )
+            )
+            values = (
+                () if metadata is None
+                else source_component_metadata_values(metadata, MULTIPROCESSING_AXIS)
+            )
+            selected_axes = (
+                tuple(dict.fromkeys(value for value in values if value in source_refs))
+                if values else tuple(source_refs)
+            )
+            if not selected_axes:
+                continue
+            projection = self.source_projections_by_virtual_path.get(virtual_path)
+            metadata_records = tuple(
+                (path, self.source_metadata_by_path[path])
+                for path in (
+                    virtual_path,
+                    self._loadable_virtual_path(virtual_path),
+                    source_ref.backend_address,
+                )
+                if path in self.source_metadata_by_path
+            )
+            for axis_id in selected_axes:
+                source_refs[axis_id][virtual_path] = source_ref
+                if projection is not None:
+                    source_projections[axis_id][virtual_path] = projection
+                source_metadata[axis_id].update(metadata_records)
+
+        return MappingProxyType({
+            axis_id: VirtualWorkspaceSourceProjection(
+                source_refs_by_virtual_path=MappingProxyType(refs),
+                source_metadata_by_path=MappingProxyType(source_metadata[axis_id]),
+                source_projections_by_virtual_path=MappingProxyType(
+                    source_projections[axis_id]
+                ),
+                workspace_root=self.workspace_root,
+            )
+            for axis_id, refs in source_refs.items()
+        })
 
     def _path_belongs_to_axis(
         self,
@@ -543,25 +571,63 @@ class VirtualWorkspaceSourceProjection:
         return any(source_metadata_values_equal(value, axis_id) for value in values)
 
     def _loadable_virtual_path(self, virtual_path: str) -> str:
-        if _cached_path_is_absolute(virtual_path):
+        if source_path_identity(virtual_path).is_absolute():
             return virtual_path
         if self.workspace_root is not None:
-            return _cached_join_workspace_path(str(self.workspace_root), virtual_path)
+            return source_path_join(str(self.workspace_root), virtual_path)
         return virtual_path
 
 
-@lru_cache(maxsize=65536)
-def _cached_path_is_absolute(path: str) -> bool:
-    """Return whether a virtual/source path string is absolute."""
+@dataclass(frozen=True, slots=True)
+class VirtualWorkspaceImagePayloadProjection:
+    """Join persisted semantics to loaded native headers for one workspace image."""
 
-    return Path(path).is_absolute()
+    source_metadata: SourceMetadataMapping | None = None
+    source_alias: str | None = None
+    persisted_metadata: ImagePayloadMetadata | None = None
 
+    def metadata(self, loaded: ImagePayloadMetadata) -> ImagePayloadMetadata:
+        """Preserve semantic omissions, but not an empty header's lost identity."""
+        if self.persisted_metadata is None:
+            return loaded
+        metadata = self.persisted_metadata.with_source_spatial_context_from(
+            loaded
+        ).with_missing_intensity_from(loaded)
+        provenance = metadata.source_provenance
+        if not (
+            provenance.source_identity.addressable
+            or provenance.source_image_provenance_planes.has_values
+        ):
+            metadata = metadata.with_source_context_from(loaded)
+        return metadata
 
-@lru_cache(maxsize=65536)
-def _cached_join_workspace_path(workspace_root: str, virtual_path: str) -> str:
-    """Return loadable path for a workspace-root/virtual-path pair."""
-
-    return str(Path(workspace_root) / virtual_path)
+    def apply(self, payload: RuntimeArrayData) -> RuntimeArrayData:
+        """Apply declared component metadata and source aliases to one payload."""
+        source_metadata = self.source_metadata
+        if source_metadata is not None:
+            source_metadata = SourceMetadataFields.with_fields(
+                source_metadata, {}, without=(SOURCE_BINDING_ALIAS_METADATA_FIELD,)
+            )
+        current_metadata = image_payload_metadata(payload)
+        metadata = self.metadata(current_metadata)
+        metadata = metadata.replace_fields(
+            source_spatial_domain=metadata.source_spatial_domain.with_native_image_context(
+                current_metadata.source_spatial_domain,
+                image_shape_yx=current_metadata.spatial_shape_yx(
+                    image_payload_data(payload)
+                ),
+            )
+        )
+        if source_metadata is not None and self.persisted_metadata is None:
+            metadata = metadata.with_source_component_metadata(source_metadata)
+        if self.source_alias is not None:
+            metadata = metadata.with_source_provenance(
+                metadata.source_provenance.with_source_image_names((self.source_alias,))
+            )
+        return metadata.payload_with(
+            image_payload_data(payload),
+            image_payload_mask(payload),
+        )
 
 
 @lru_cache(maxsize=8192)
@@ -656,8 +722,12 @@ class VirtualWorkspaceSourceProjectionAuthority:
     """Projection authority for source-workspace metadata owned by a plate handler."""
 
     plate_path: Path
-    metadata_handlers: tuple["MetadataHandler", ...]
+    metadata_handler: "MetadataHandler"
+    filemanager: "FileManager"
     cache: VirtualWorkspaceSourceProjectionCache | None = None
+    _workspace_metadata_handler: "OpenHCSMetadataHandler | None" = field(
+        default=None, init=False, compare=False, repr=False,
+    )
 
     @classmethod
     def from_context(
@@ -686,35 +756,38 @@ class VirtualWorkspaceSourceProjectionAuthority:
 
         return cls(
             plate_path=plate_path,
-            metadata_handlers=cls._plate_metadata_handlers(
-                plate_path,
-                metadata_handler,
-                filemanager,
-            ),
+            metadata_handler=metadata_handler,
+            filemanager=filemanager,
             cache=DEFAULT_SOURCE_PROJECTION_CACHE if cache is None else cache,
         )
 
-    @staticmethod
-    def _plate_metadata_handlers(
-        plate_path: Path,
-        metadata_handler: "MetadataHandler",
-        filemanager: "FileManager",
-    ) -> tuple["MetadataHandler", ...]:
-        """Return metadata handlers that can own source-workspace metadata."""
+    def is_bound_to_context(self, context: "ProcessingContext") -> bool:
+        """Compare actual owners, never identities of already-released objects."""
+        return (
+            self.plate_path == Path(context.plate_path)
+            and self.metadata_handler is context.microscope_handler.metadata_handler
+            and self.filemanager is context.filemanager
+        )
 
+    def metadata_handlers(self) -> tuple["MetadataHandler", ...]:
+        """Observe workspace eligibility live while retaining admitted providers."""
         from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
 
-        handlers: list["MetadataHandler"] = [metadata_handler]
-        metadata_path = plate_path / OpenHCSMetadataHandler.METADATA_FILENAME
-        if not isinstance(handlers[0], OpenHCSMetadataHandler) and filemanager.exists(
-            str(metadata_path), Backend.DISK.value
-        ):
-            handlers.append(OpenHCSMetadataHandler(filemanager))
-        return tuple(handlers)
+        if isinstance(self.metadata_handler, OpenHCSMetadataHandler):
+            return (self.metadata_handler,)
+        metadata_path = self.plate_path / OpenHCSMetadataHandler.METADATA_FILENAME
+        if not self.filemanager.exists(str(metadata_path), Backend.DISK.value):
+            return (self.metadata_handler,)
+        workspace_handler = self._workspace_metadata_handler
+        if workspace_handler is None:
+            workspace_handler = OpenHCSMetadataHandler(self.filemanager)
+            object.__setattr__(self, "_workspace_metadata_handler", workspace_handler)
+        workspace_handler.invalidate_metadata_cache()
+        return (self.metadata_handler, workspace_handler)
 
     def metadata_documents(self) -> tuple[OpenHCSMetadataPayload, ...]:
         documents: list[OpenHCSMetadataPayload] = []
-        for metadata_handler in self.metadata_handlers:
+        for metadata_handler in self.metadata_handlers():
             metadata = metadata_handler.source_workspace_metadata_document(
                 self.plate_path
             )
@@ -762,11 +835,9 @@ class VirtualWorkspaceSourceProjectionBuilder:
     def ingest_subdirectory(self, subdirectory: OpenHCSSubdirectoryPayload) -> None:
         workspace_mapping = VirtualWorkspaceMapping.from_subdirectory(subdirectory)
         self.ingest_workspace_mapping(workspace_mapping)
-        self.ingest_source_projections(
-            VirtualWorkspaceSourceProjectionEntries.from_subdirectory(subdirectory)
-        )
-        self.ingest_source_metadata(
-            VirtualWorkspaceSourceMetadataEntries.from_subdirectory(subdirectory),
+        self.ingest_admitted_subdirectory(
+            subdirectory,
+            VirtualWorkspaceSourceProjectionEntries.from_subdirectory(subdirectory),
         )
 
     def ingest_workspace_mapping(
@@ -788,10 +859,27 @@ class VirtualWorkspaceSourceProjectionBuilder:
         self.workspace_source_refs[virtual_path] = source_ref
         self.workspace_source_refs[loadable_path] = source_ref
 
+    def ingest_admitted_subdirectory(
+        self,
+        subdirectory: OpenHCSSubdirectoryPayload,
+        source_projections: VirtualWorkspaceSourceProjectionEntries,
+    ) -> None:
+        """Ingest admitted projections, then their correlated source fields.
+
+        Workspace mappings must already be ingested. Raw readers admit each
+        projection after its mapping; reconciliation admits the whole document's
+        projection records before any workspace fields. Both share this tail.
+        """
+        self.ingest_source_projections(source_projections)
+        self.ingest_source_metadata(
+            VirtualWorkspaceSourceMetadataEntries.from_subdirectory(subdirectory)
+        )
+
     def ingest_source_projections(
         self,
         source_projections: VirtualWorkspaceSourceProjectionEntries,
     ) -> None:
+        """Ingest a projection-only source authority after its workspace mapping."""
         for virtual_path, projection in source_projections.entries.items():
             mapped_ref = self.workspace_source_refs.get(virtual_path)
             if mapped_ref is None:
@@ -821,7 +909,7 @@ class VirtualWorkspaceSourceProjectionBuilder:
         virtual_path: str,
         metadata_fields: SourceMetadataMapping,
     ) -> None:
-        normalized_metadata = MappingProxyType(dict(metadata_fields))
+        normalized_metadata = SourceMetadataFields.readonly_snapshot(metadata_fields)
         self.source_metadata_by_path[virtual_path] = normalized_metadata
         self.source_metadata_by_path[str(self.plate_path / virtual_path)] = (
             normalized_metadata

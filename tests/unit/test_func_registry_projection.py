@@ -10,6 +10,8 @@ import pytest
 import openhcs.processing.func_registry as func_registry
 from openhcs.core.memory import numpy
 from openhcs.processing.backends.lib_registry.registry_service import RegistryService
+from openhcs.processing.backends.lib_registry.openhcs_registry import OpenHCSRegistry
+from openhcs.processing.backends.lib_registry.unified_registry import FunctionMetadata, ProcessingContract
 
 
 class _ExternalProjectionOwner:
@@ -76,13 +78,13 @@ def test_legacy_name_lookup_fails_with_canonical_candidates(monkeypatch) -> None
         return image
 
     metadata = {
-        "openhcs:numpy_crop": SimpleNamespace(
-            func=first_crop,
-            display_name="crop",
+        "openhcs:numpy_crop": FunctionMetadata(
+            name="numpy_crop", func=first_crop, original_name="crop",
+            registry=OpenHCSRegistry(), contract=ProcessingContract.FLEXIBLE,
         ),
-        "openhcs:cellprofiler_crop": SimpleNamespace(
-            func=second_crop,
-            display_name="crop",
+        "openhcs:cellprofiler_crop": FunctionMetadata(
+            name="cellprofiler_crop", func=second_crop, original_name="crop",
+            registry=OpenHCSRegistry(), contract=ProcessingContract.FLEXIBLE,
         ),
     }
     monkeypatch.setattr(

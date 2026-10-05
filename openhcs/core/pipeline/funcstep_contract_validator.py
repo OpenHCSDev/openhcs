@@ -31,7 +31,6 @@ from typing import (
 
 from openhcs.constants.constants import (
     GroupBy,
-    VALID_MEMORY_TYPES,
     get_openhcs_config,
 )
 from openhcs.core.callable_contract import CallableContract, FunctionStepExecutionScope
@@ -109,10 +108,6 @@ def missing_memory_type_error(func_name, step_name):
 
 def inconsistent_memory_types_error(step_name, func1, func2):
     return f"Functions in step '{step_name}' have different memory types: {func1} vs {func2}"
-
-
-def invalid_memory_type_error(func_name, input_type, output_type, valid_types):
-    return f"Function '{func_name}' has invalid memory types: {input_type}/{output_type}. Valid: {valid_types}"
 
 
 def invalid_pattern_error(pattern):
@@ -762,7 +757,7 @@ class FuncStepContractValidator:
 
         if (
             orchestrator is not None
-            and isinstance(func_pattern, dict)
+            and compiled_pattern.is_grouped
             and group_by not in (None, GroupBy.NONE)
         ):
             dict_validation_result = validator.validate_dict_pattern_keys(
@@ -831,7 +826,7 @@ class FuncStepContractValidator:
             )
         execution_scope = FunctionStepExecutionScope.require_uniform(contracts)
         if execution_scope is FunctionStepExecutionScope.PLATE:
-            if isinstance(func_pattern, dict):
+            if normalized.is_grouped:
                 raise ValueError(
                     f"Plate-scoped FunctionStep {step_name!r} cannot use a dict pattern."
                 )
@@ -881,7 +876,7 @@ class FuncStepContractValidator:
         # Validate dict pattern keys if orchestrator is available
         if (
             orchestrator is not None
-            and isinstance(func_pattern, dict)
+            and normalized.is_grouped
             and group_by not in (None, GroupBy.NONE)
         ):
             dict_validation_result = validator.validate_dict_pattern_keys(
@@ -1031,29 +1026,14 @@ class FuncStepContractValidator:
 
         input_type = contract.input_memory_type
         output_type = contract.output_memory_type
-        execution_type = contract.execution_memory_type
         if input_type is None or output_type is None:
             raise ValueError(
                 missing_memory_type_error(contract.function_name, step_name)
             )
-        if (
-            input_type not in VALID_MEMORY_TYPES
-            or output_type not in VALID_MEMORY_TYPES
-        ):
-            raise ValueError(
-                invalid_memory_type_error(
-                    callable_label or contract.function_name,
-                    input_type,
-                    output_type,
-                    ", ".join(sorted(VALID_MEMORY_TYPES)),
-                )
-            )
-        if execution_type is not None and execution_type not in VALID_MEMORY_TYPES:
-            raise ValueError(
-                f"Callable {contract.function_name!r} in step {step_name!r} "
-                f"declares invalid execution memory type {execution_type!r}; "
-                f"valid memory types are {', '.join(sorted(VALID_MEMORY_TYPES))}."
-            )
+        input_type, output_type = contract.require_memory_types(
+            callable_label=callable_label,
+        )
+        contract.require_execution_memory_type(step_name=step_name)
         return input_type, output_type
 
     @staticmethod
@@ -1124,59 +1104,6 @@ class FuncStepContractValidator:
             raise ValueError(
                 missing_required_args_error(func.__name__, step_name, missing_args)
             )
-
-    @staticmethod
-    def _validate_dict_pattern_keys(
-        func_pattern: dict, group_by, step_name: str, orchestrator
-    ) -> None:
-        """
-        Validate that dict function pattern keys match available component keys.
-
-        This validation ensures compile-time guarantee that dict patterns will work
-        at runtime by checking that all dict keys exist in the actual component data.
-
-        Args:
-            func_pattern: Dict function pattern to validate
-            group_by: GroupBy enum specifying component type
-            step_name: Name of the step containing the function
-            orchestrator: Orchestrator for component key access
-
-        Raises:
-            ValueError: If dict pattern keys don't match available component keys
-        """
-        # Get available component keys from orchestrator
-        try:
-            available_keys = orchestrator.get_component_keys(group_by)
-            available_keys_set = set(str(key) for key in available_keys)
-        except Exception as e:
-            raise ValueError(f"Failed to get component keys for {group_by.value}: {e}")
-
-        # Check each dict key against available keys
-        pattern_keys = list(func_pattern.keys())
-        pattern_keys_set = set(str(key) for key in pattern_keys)
-
-        # Try direct string match first
-        missing_keys = pattern_keys_set - available_keys_set
-
-        if missing_keys:
-            # Try integer conversion for missing keys
-            still_missing = set()
-            for key in missing_keys:
-                try:
-                    # Try converting pattern key to int and check if int version exists
-                    key_as_int = int(key)
-                    if str(key_as_int) in available_keys_set:
-                        continue  # Key exists as integer, not missing
-                except (ValueError, TypeError):
-                    still_missing.add(key)
-
-            if still_missing:
-                raise ValueError(
-                    f"Function pattern keys not found in available {group_by.value} components for step '{step_name}'. "
-                    f"Missing keys: {sorted(still_missing)}. "
-                    f"Available keys: {sorted(available_keys)}. "
-                    f"Function pattern keys must match component values from the plate data."
-                )
 
     @staticmethod
     def validate_pattern_structure(

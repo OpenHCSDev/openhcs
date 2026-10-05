@@ -6,15 +6,18 @@ from collections import defaultdict, deque
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import ClassVar, Self
+from typing import ClassVar, Self, TYPE_CHECKING
 
 import numpy as np
 
 from openhcs.core.artifacts import NamedArtifactPayload
+from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingFields
 from openhcs.core.source_image_provenance import (
-    SourceImageProvenance,
     SourceImageProvenanceFields,
 )
+
+if TYPE_CHECKING:
+    from openhcs.core.runtime_image_values import ImagePayloadMetadata
 
 SpatialGraphFeatureValue = str | int | float | bool | None
 SpatialCoordinate = tuple[float, ...]
@@ -56,7 +59,7 @@ def _validated_features(
 
 @dataclass(frozen=True, slots=True)
 class SpatialGraphNode:
-    """One spatial topology node with scalar features and a physical radius."""
+    """One topology node with features and radius in its graph's analysis unit."""
 
     node_id: int
     coordinates: SpatialCoordinate
@@ -188,7 +191,7 @@ class SpatialGraphEdge:
 
 
 @dataclass(slots=True)
-class SpatialGraph(SourceImageProvenanceFields, NamedArtifactPayload):
+class SpatialGraph(SourceImageProvenanceFields, SourceVoxelSpacingFields, NamedArtifactPayload):
     """Named spatial graph with direct node references and path geometry."""
 
     SWC_TYPE_FEATURE: ClassVar[str] = "swc_type"
@@ -197,14 +200,18 @@ class SpatialGraph(SourceImageProvenanceFields, NamedArtifactPayload):
     name: str
     nodes: tuple[SpatialGraphNode, ...]
     edges: tuple[SpatialGraphEdge, ...]
-    coordinate_spacing: SpatialCoordinate = (1.0, 1.0)
+    coordinate_spacing: SourceVoxelSpacing
+    """Analysis metric per source-pixel coordinate; distinct from acquisition calibration.
+
+    Node radii and dimensional feature values use this metric's declared unit.
+    The inherited source_voxel_spacing retains acquisition/native coordinates.
+    """
     source_plane_index: int | None = None
 
     def __post_init__(self, *source_provenance_values: object) -> None:
-        self.absorb_explicit_source_provenance(
-            SourceImageProvenance.from_init_values(source_provenance_values)
-        )
+        self.absorb_explicit_source_provenance(source_provenance_values)
         self.normalize_source_provenance_fields()
+        self.normalize_source_voxel_spacing_fields()
         self.validate_artifact_name()
         nodes = tuple(self.nodes)
         edges = tuple(self.edges)
@@ -218,14 +225,10 @@ class SpatialGraph(SourceImageProvenanceFields, NamedArtifactPayload):
         if len(set(edge_ids)) != len(edge_ids):
             raise ValueError("SpatialGraph edge IDs must be unique.")
 
-        spacing = tuple(float(value) for value in self.coordinate_spacing)
+        spacing = self.coordinate_spacing.values_zyx
         if len(spacing) not in (2, 3):
             raise ValueError(
                 "SpatialGraph.coordinate_spacing must contain two or three values."
-            )
-        if not np.all(np.isfinite(spacing)) or any(value <= 0 for value in spacing):
-            raise ValueError(
-                "SpatialGraph.coordinate_spacing must contain finite positive values."
             )
         if any(len(node.coordinates) != len(spacing) for node in nodes):
             raise ValueError(
@@ -245,7 +248,6 @@ class SpatialGraph(SourceImageProvenanceFields, NamedArtifactPayload):
                 raise ValueError(
                     "Every SpatialGraphEdge dimensionality must match coordinate_spacing."
                 )
-        object.__setattr__(self, "coordinate_spacing", spacing)
         if self.source_plane_index is not None:
             if isinstance(self.source_plane_index, bool) or not isinstance(
                 self.source_plane_index,
@@ -256,15 +258,15 @@ class SpatialGraph(SourceImageProvenanceFields, NamedArtifactPayload):
                 raise ValueError("SpatialGraph.source_plane_index cannot be negative")
             object.__setattr__(self, "source_plane_index", int(self.source_plane_index))
 
-    def contextualized_source_provenance(
-        self,
-        source_provenance: SourceImageProvenance,
-    ) -> SourceImageProvenance:
-        """Project invocation provenance through the graph's declared source plane."""
-
-        if self.source_plane_index is None:
-            return source_provenance
-        return source_provenance.for_source_plane(self.source_plane_index)
+    def contextualized_source_metadata(self, metadata: ImagePayloadMetadata) -> Self:
+        """Bind acquisition provenance/calibration without altering the analysis metric."""
+        if self.source_plane_index is not None:
+            metadata = metadata.for_source_plane(self.source_plane_index)
+        provenance = self.source_provenance.with_missing_from(metadata.source_provenance)
+        spacing = self.source_voxel_spacing.with_missing_from(metadata.source_voxel_spacing)
+        if provenance == self.source_provenance and spacing == self.source_voxel_spacing:
+            return self
+        return self.replace_fields(source_provenance=provenance, source_voxel_spacing=spacing)
 
     @classmethod
     def from_swc(cls, path: str | Path) -> Self:
@@ -358,7 +360,7 @@ class SpatialGraph(SourceImageProvenanceFields, NamedArtifactPayload):
             name=graph_name,
             nodes=nodes,
             edges=tuple(edges),
-            coordinate_spacing=(1.0, 1.0, 1.0),
+            coordinate_spacing=SourceVoxelSpacing((1.0, 1.0, 1.0)),
             source_path=str(source_path),
         )
         graph.require_directed_forest()

@@ -5,6 +5,7 @@ import pytest
 from openhcs.constants.constants import AllComponents
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source_image_provenance import SourceImageIdentity
 from openhcs.core.source_metadata import ORIGINAL_SOURCE_METADATA_FIELD
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
@@ -203,6 +204,43 @@ def _plane_metadata(axis, coordinates):
             component_metadata=coordinates,
         ),
     )
+
+
+@pytest.mark.parametrize("component", ("site", "channel", "z_index"))
+def test_retained_stream_domain_includes_exact_planes_not_scalar_address(component):
+    metadata = _plane_metadata(
+        RuntimePlaneAxis.RUNTIME_SLICE,
+        ({component: "3"}, {component: "1"}),
+    )
+    scalar = SourceImageIdentity(component_metadata={"well": "A01"})
+    observations = StreamSourceComponentMetadataItems.from_image_metadata(
+        metadata, fallback_source_identity=scalar,
+    )
+    assert observations.complete_component_order(("well", component, "timepoint")) == (
+        "well", component,
+    )
+    assert observations.domain_metadata_items(("well", component)) == (
+        {"well": "A01", component: 3}, {"well": "A01", component: 1},
+    )
+    fields = StreamImagePayloadMetadataProjector.item_fields(metadata, (component,))
+    route_metadata = StreamViewerComponentMetadataProjector.for_item_fields(
+        ("well", component), fields,
+    ).indexed_source_metadata((scalar.component_metadata,))
+    # Two plane observations still describe ONE streamed image/route address.
+    assert route_metadata.metadata_by_index == ({"well": "A01"},)
+
+
+def test_collapsed_contributors_do_not_restore_a_stream_pixel_axis():
+    metadata = _plane_metadata(
+        RuntimePlaneAxis.RUNTIME_SLICE, ({"site": "3"}, {"site": "1"}),
+    ).collapse_leading_plane_axis()
+    observations = StreamSourceComponentMetadataItems.from_image_metadata(
+        metadata, fallback_source_identity=SourceImageIdentity(
+            component_metadata={"well": "A01"},
+        ),
+    )
+    assert observations.complete_component_order(("well", "site")) == ("well",)
+    assert observations.domain_metadata_items(("well", "site")) == ({"well": "A01"},)
 
 
 @pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))

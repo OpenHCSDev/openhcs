@@ -11,6 +11,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Hashable, Iterable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
+import re
 from typing import ClassVar, Dict, Mapping, Optional, TYPE_CHECKING, Tuple, Union
 from openhcs.constants.constants import Backend, AllComponents
 from openhcs.core.components.parser_metaprogramming import (
@@ -18,6 +19,11 @@ from openhcs.core.components.parser_metaprogramming import (
     GenericFilenameParser,
 )
 from openhcs.core.components.component_values import OpenHCSComponentValues
+from openhcs.core.source_metadata import (
+    SourceMetadataValue,
+    SourceVoxelSpacing,
+    source_metadata_dict,
+)
 from metaclass_registry import AutoRegisterMeta
 from polystore.streaming.viewer_transport import (
     ViewerFilenameParserABC,
@@ -25,9 +31,13 @@ from polystore.streaming.viewer_transport import (
     ViewerMicroscopeHandlerABC,
 )
 from polystore.filemanager import FileManager
+from polystore.virtual_workspace import SourcePixelRef
 
 if TYPE_CHECKING:
-    from openhcs.core.source_projection import SourcePlaneDataset
+    from openhcs.core.source_projection import SourcePlaneDataset, SourceProjection
+    from openhcs.core.source_workspace_projection import (
+        VirtualWorkspaceSourceProjection,
+    )
     from openhcs.microscopes.openhcs import OpenHCSMetadata
 
 
@@ -127,6 +137,36 @@ class AnalysisResultDirectory:
 
     subdirectory_name: str
     path: Path
+    source_projection: VirtualWorkspaceSourceProjection | None = None
+
+    @classmethod
+    def from_declared_path(
+        cls,
+        subdirectory_name: str,
+        path: Path,
+        source_projection: VirtualWorkspaceSourceProjection | None = None,
+    ) -> AnalysisResultDirectory | None:
+        """Admit existing declared directories without inventing missing results."""
+        if not path.exists():
+            return None
+        if not path.is_dir():
+            raise NotADirectoryError(
+                f"Analysis metadata subdirectory {subdirectory_name!r} "
+                f"declares a non-directory results path: {path}"
+            )
+        return cls(subdirectory_name, path, source_projection)
+
+    def source_binding_for(
+        self, virtual_path: str, full_path: str
+    ) -> SourceProjection | None:
+        """Resolve a file through this directory's metadata-owned source authority."""
+        if self.source_projection is None:
+            return None
+        from openhcs.core.source_workspace_projection import VirtualWorkspacePathLookup
+
+        return self.source_projection.source_projection_for(
+            VirtualWorkspacePathLookup.from_paths(virtual_path, full_path)
+        )
 
 
 class MetadataArtifactProvider(ABC, metaclass=AutoRegisterMeta):
@@ -338,6 +378,80 @@ class FilenameParser(
         pass
 
 
+class MicroscopeImagePathParser(ABC):
+    """Interpret acquisition paths using the microscope's existing filename owner.
+
+    Independent folder capabilities cooperate through ``image_path_components``;
+    consumers never need to know which acquisition layout supplies an axis.
+    """
+
+    parser: FilenameParser | None
+
+    def parse_filename(self, filename: str) -> FilenameParseResult | None:
+        """Delegate to the declared filename parser, when available."""
+        return None if self.parser is None else self.parser.parse_filename(filename)
+
+    def construct_filename(self, components: FilenameParseResult) -> str:
+        """Delegate nominal filename construction to the parser."""
+        return self.require_filename_parser(
+            "Filename construction requires a filename parser"
+        ).construct_filename(components)
+
+    def require_filename_parser(self, absence_message: str) -> FilenameParser:
+        """Require this owner's optional parser with the caller's operation context."""
+        if self.parser is None:
+            raise ValueError(absence_message)
+        return self.parser
+
+    def parse_image_path(self, relative_path: str) -> FilenameParseResult | None:
+        """Decode once, then compose nominal coordinates from the relative path."""
+        path = Path(relative_path)
+        parsed = self.parse_filename(path.name)
+        return (
+            None
+            if parsed is None
+            else parsed.with_values(self.image_path_components(path))
+        )
+
+    def image_path_components(
+        self, path: Path
+    ) -> tuple[tuple[AllComponents, int], ...]:
+        """Identity terminus for cooperative acquisition-coordinate capabilities."""
+        return ()
+
+    @staticmethod
+    def indexed_folder_components(
+        path: Path,
+        component: AllComponents,
+        pattern: re.Pattern[str],
+    ) -> tuple[tuple[AllComponents, int], ...]:
+        """Project a declared folder grammar onto an existing nominal component."""
+        return tuple(
+            (component, int(match.group(1)))
+            for part in path.parent.parts
+            if (match := pattern.search(part)) is not None
+        )
+
+    def acquisition_workspace_mapping(
+        self,
+        image_paths: Iterable[str],
+        *,
+        backend: str,
+    ) -> dict[str, SourcePixelRef]:
+        """Collect the same interpreted acquisition identities for initialization."""
+        mapping: dict[str, SourcePixelRef] = {}
+        for relative_path in image_paths:
+            parsed = self.parse_image_path(relative_path)
+            if parsed is None:
+                continue
+            virtual_path = self.construct_filename(parsed)
+            source_ref = SourcePixelRef(backend=backend, backend_address=relative_path)
+            if virtual_path in mapping and mapping[virtual_path] != source_ref:
+                raise ValueError(f"Acquisition paths collide at {virtual_path!r}")
+            mapping[virtual_path] = source_ref
+        return mapping
+
+
 class MetadataHandler(ViewerMetadataHandlerABC, ABC):
     """
     Abstract base class for handling microscope metadata.
@@ -463,6 +577,37 @@ class MetadataHandler(ViewerMetadataHandlerABC, ABC):
         view without supplying the physical scalar artifact.
         """
         return self.get_pixel_size(plate_path)
+
+    def source_voxel_spacing(self, plate_path: Union[str, Path]) -> SourceVoxelSpacing:
+        """Project this acquisition's physical calibration into source coordinates."""
+
+        pixel_size = self.get_pixel_size(plate_path)
+        return SourceVoxelSpacing((pixel_size, pixel_size))
+
+    def source_metadata_by_path(
+        self,
+        plate_path: Union[str, Path],
+        parser: FilenameParser,
+        source_paths: Iterable[str],
+    ) -> dict[str, dict[str, SourceMetadataValue]]:
+        """Publish parsed source identities with acquisition-owned calibration.
+
+        The filename parser owns component interpretation; this metadata owner
+        supplies physical coordinates. Explicit source spacing remains authoritative.
+        """
+
+        acquisition_spacing = self.source_voxel_spacing(plate_path)
+        sources = {}
+        for path in source_paths:
+            parsed = parser.parse_filename(Path(path).name)
+            if parsed is None:
+                continue
+            values = source_metadata_dict(parsed.wire_mapping())
+            SourceVoxelSpacing.from_source_metadata(values).with_missing_from(
+                acquisition_spacing
+            ).merge_into(values, path=path)
+            sources[path] = values
+        return sources
 
     @abstractmethod
     def get_pixel_size(self, plate_path: Union[str, Path]) -> float:

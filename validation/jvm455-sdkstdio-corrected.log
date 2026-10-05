@@ -1,0 +1,25 @@
+Running as unit: dewey-jvm455-sdkstdio-corrected.scope; invocation ID: 0236cf6e44fe4978b1967e1b3d32906a
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "tests/unit/agent/test_mcp_process_resource_lifetime.py", line 197, in test_real_sdk_stdio_declared_resource_closes_before_child_exit
+    asyncio.run(journey())
+  File "/home/ts/.pyenv/versions/3.12.3/lib/python3.12/asyncio/runners.py", line 194, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/home/ts/.pyenv/versions/3.12.3/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/.pyenv/versions/3.12.3/lib/python3.12/asyncio/base_events.py", line 687, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "tests/unit/agent/test_mcp_process_resource_lifetime.py", line 190, in journey
+    assert closed.read_text() == "main-thread resource closed"
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/ts/.pyenv/versions/3.12.3/lib/python3.12/pathlib.py", line 1027, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/.pyenv/versions/3.12.3/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/ts/.cache/agent-scratch/dewey-jvm455-sdkstdio-corrected/tmpprdvtkc_/resource-closed.txt'
+BOUNDED_SOURCE peak_aggregate_rss_kib=365704 elapsed_seconds=6.447 returncode=1 reason=None

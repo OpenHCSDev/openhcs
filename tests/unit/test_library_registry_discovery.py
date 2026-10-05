@@ -151,6 +151,39 @@ def test_cpu_only_inventory_resolves_memory_decorator_import_aliases() -> None:
     )
 
 
+def test_cpu_only_inventory_rejects_compiled_extension_source() -> None:
+    """A native implementation has no Python memory decorators to admit."""
+
+    from openhcs.processing.backends.lib_registry.openhcs_registry import (
+        _module_declares_allowed_memory_type,
+    )
+
+    assert not _module_declares_allowed_memory_type(
+        "openhcs.processing.backends.cellprofiler._granularity_native",
+        frozenset({"numpy"}),
+    )
+
+
+def test_cpu_only_inventory_honors_python_source_encoding(
+    tmp_path, monkeypatch
+) -> None:
+    """The module loader owns decoding, including Python coding declarations."""
+
+    from openhcs.processing.backends.lib_registry.openhcs_registry import (
+        _module_declares_allowed_memory_type,
+    )
+
+    (tmp_path / "encoded_probe.py").write_bytes(
+        "# coding: latin-1\n"
+        "# caf\u00e9\n"
+        "from openhcs.core.memory import numpy\n"
+        "@numpy\ndef process(image):\n    return image\n".encode("latin-1")
+    )
+    monkeypatch.syspath_prepend(str(tmp_path))
+
+    assert _module_declares_allowed_memory_type("encoded_probe", frozenset({"numpy"}))
+
+
 def test_cpu_only_decorator_resolution_honors_plain_dotted_imports() -> None:
     """Python's top-level binding for a dotted import remains resolvable."""
 
@@ -293,7 +326,7 @@ def test_registry_cache_miss_is_prepared_out_of_process(monkeypatch) -> None:
     )
     monkeypatch.setattr(
         RegistryService,
-        "_prepare_persistent_catalog",
+        "prepare_persistent_catalog",
         classmethod(
             lambda cls, *, status_callback=None, cancellation=None: prepared.append(
                 True
@@ -495,7 +528,7 @@ def test_registry_preparation_uses_background_process_policy(monkeypatch) -> Non
         lambda source: OwnedProcess() if source is process else None,
     )
 
-    registry_service.RegistryService._prepare_persistent_catalog()
+    registry_service.RegistryService.prepare_persistent_catalog()
 
     from openhcs.runtime.import_authority import OpenHCSRuntimeImportAuthority
 
@@ -546,7 +579,7 @@ def test_registry_preparation_cancels_its_exact_owned_process(monkeypatch) -> No
     )
 
     with pytest.raises(CancelledError):
-        registry_service.RegistryService._prepare_persistent_catalog(
+        registry_service.RegistryService.prepare_persistent_catalog(
             cancellation=cancellation,
         )
 
@@ -612,10 +645,63 @@ def test_library_registry_discovery_is_stable_across_fresh_worker_processes(
     assert tuple((tmp_path / "cache" / "metaclass-registry").glob("*.json"))
 
 
-def test_cpu_only_registry_inventory_does_not_import_gpu_runtimes(
+def test_registered_metadata_preparation_discovers_measurements_before_lookup(
     tmp_path: Path,
 ) -> None:
-    """Catalog inventory honors memory declarations before runtime imports."""
+    """Warm discovery once while later plugin declarations remain visible."""
+    environment = os.environ.copy()
+    environment.update(
+        OPENHCS_CPU_ONLY="true",
+        XDG_CACHE_HOME=str(tmp_path / "cache"),
+        XDG_DATA_HOME=str(tmp_path / "data"),
+    )
+    script = textwrap.dedent("""
+        from openhcs.core.processing_preparation import CallablePreparation, RegistryFamilyPreparation
+        from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
+        from openhcs.processing.backends.cellprofiler.thresholding import threshold
+
+        assert not CellProfilerModule.__registry__._discovered
+        operations = tuple(
+            operation
+            for source in CallablePreparation.from_callable(threshold).cache_sources()
+            for operation in source.cache_operations()
+        )
+        preparation = next(
+            operation for operation in operations
+            if isinstance(operation, RegistryFamilyPreparation)
+            and operation.family is CellProfilerModule
+        )
+        preparation.prepare()
+        assert CellProfilerModule.__registry__._discovered
+        declarations = tuple(CellProfilerModule.__registry__.values())
+        assert declarations
+        prefixes = CellProfilerModule.measurement_category_prefix_declarations()
+        assert prefixes
+        preparation.prepare()
+        assert tuple(CellProfilerModule.__registry__.values()) == declarations
+
+        class WarmupPlugin(CellProfilerModule):
+            module_name = "WarmupPlugin"
+            measurement_category_prefixes = (("warmup_plugin",),)
+
+        assert CellProfilerModule.__registry__["WarmupPlugin"] is WarmupPlugin
+        assert ("warmup_plugin",) in CellProfilerModule.measurement_category_prefix_declarations()
+    """)
+    completed = subprocess.run(
+        (sys.executable, "-c", script),
+        cwd=Path(__file__).parents[2],
+        env=environment,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert completed.returncode == 0, completed.stderr
+
+
+def test_cpu_only_registry_inventory_preserves_cpu_dependency_policy(
+    tmp_path: Path,
+) -> None:
+    """Inventory avoids accelerator imports; admitted CPU solvers keep CPU devices."""
 
     repository_root = Path(__file__).parents[2]
     environment = os.environ.copy()
@@ -628,6 +714,7 @@ def test_cpu_only_registry_inventory_does_not_import_gpu_runtimes(
     )
     script = textwrap.dedent("""
         import json
+        import os
         import sys
 
         from openhcs.processing.backends.lib_registry.openhcs_registry import (
@@ -637,15 +724,32 @@ def test_cpu_only_registry_inventory_does_not_import_gpu_runtimes(
             RegistryService,
         )
 
+        framework_names = ("cupy", "torch", "tensorflow", "jax", "pyclesperanto")
         instances = RegistryService._available_registry_instances()
+        inventory_gpu_modules = tuple(
+            name
+            for name in framework_names
+            if name in sys.modules
+        )
         OpenHCSRegistry().get_modules_to_scan()
         gpu_modules = tuple(
             name
-            for name in ("cupy", "torch", "tensorflow", "jax", "pyclesperanto")
+            for name in framework_names
             if name in sys.modules
         )
+        from openhcs.utils.environment import OpenHCSProcessEnvironment
+
+        # NumPy-transport solvers can use JAX internally. The package's actual
+        # CPU policy must select its CPU backend before dependency admission.
+        jax_platforms = (
+            [] if "jax" not in sys.modules
+            else [device.platform for device in sys.modules["jax"].devices()]
+        )
         print(json.dumps({
+            "inventory_gpu_modules": inventory_gpu_modules,
             "gpu_modules": gpu_modules,
+            "jax_requested_platforms": os.environ[OpenHCSProcessEnvironment.jax_platforms_key],
+            "jax_device_platforms": jax_platforms,
             "registries": [instance.library_name for instance in instances],
         }))
         """)
@@ -662,14 +766,18 @@ def test_cpu_only_registry_inventory_does_not_import_gpu_runtimes(
 
     assert completed.returncode == 0, completed.stderr
     result = json.loads(completed.stdout)
-    assert result["gpu_modules"] == []
+    assert result["inventory_gpu_modules"] == []
+    assert set(result["gpu_modules"]).issubset({"jax"})
+    assert result["jax_requested_platforms"] == "cpu"
+    assert all(platform == "cpu" for platform in result["jax_device_platforms"])
+    assert bool(result["jax_device_platforms"]) == ("jax" in result["gpu_modules"])
     assert set(result["registries"]) == {"openhcs", "skimage"}
 
 
 def test_cold_execution_server_catalog_request_discovers_library_roots(
     tmp_path: Path,
 ) -> None:
-    """The first live catalog request initializes the server-owned library registry."""
+    """Cold server startup prepares declarations before the first catalog request."""
 
     repository_root = Path(__file__).parents[2]
     environment = os.environ.copy()
@@ -684,8 +792,10 @@ def test_cold_execution_server_catalog_request_discovers_library_roots(
         import importlib
         import json
         import socket
+        import sys
         import threading
         import time
+        from pathlib import Path
 
         from openhcs.agent.dto.functions import FunctionCatalogControlRequest
         from openhcs.processing.backends.lib_registry.unified_registry import (
@@ -702,6 +812,8 @@ def test_cold_execution_server_catalog_request_discovers_library_roots(
         startup_started = time.perf_counter()
         server.start()
         startup_seconds = time.perf_counter() - startup_started
+        future = server._function_catalog_preparation.ensure_started()
+        assert future.done() and future.exception() is None
 
         def pump_server():
             while server.is_running():
@@ -738,7 +850,7 @@ def test_cold_execution_server_catalog_request_discovers_library_roots(
                 resolved = getattr(resolved, owner_name)
             assert resolved is declaration
 
-        print(
+        Path(sys.argv[1]).write_text(
             json.dumps(
                 {
                     "catalog_size": len(catalog.items),
@@ -751,22 +863,21 @@ def test_cold_execution_server_catalog_request_discovers_library_roots(
         )
         """)
 
+    observation_path = tmp_path / "startup-observation.json"
     completed = subprocess.run(
-        (sys.executable, "-c", script),
+        (sys.executable, "-c", script, str(observation_path)),
         cwd=repository_root,
         env=environment,
         check=False,
         capture_output=True,
         text=True,
-        timeout=90,
+        timeout=165,
     )
 
     assert completed.returncode == 0, completed.stderr
-    result = json.loads(completed.stdout)
+    result = json.loads(observation_path.read_text())
     assert result["catalog_size"] > 0
-    # Cold discovery is deliberately isolated from the request thread.  The typed
-    # pending protocol keeps the endpoint responsive until preparation completes;
-    # the unit-level protocol tests assert that polling contract directly.  Server
-    # startup itself must remain independent of discovery latency.
-    assert result["startup_seconds"] < 5.0
+    # Kernel preparation belongs to startup; a ready endpoint serves its catalog
+    # directly without paying that work during a pipeline or catalog request.
+    assert result["catalog_request_seconds"] < 5.0
     assert {"openhcs", "skimage"}.issubset(result["library_roots"])

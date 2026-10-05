@@ -1,0 +1,13 @@
+{
+  "upper_soma_pixels": 1135,
+  "upper_skeleton_pixels": 64,
+  "upper_skeleton_inside_soma": 0,
+  "quiet_candidate_pixels": 0,
+  "whole_candidate_pixels": 24730,
+  "whole_skeleton_pixels": 4144,
+  "lower_tile_candidate_pixels": 170,
+  "junction_tile_candidate_pixels": 346,
+  "soma_area_sum": 8854,
+  "junction_raw20_count": 291,
+  "junction_raw20_missing_final": 0
+}

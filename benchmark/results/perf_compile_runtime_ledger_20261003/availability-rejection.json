@@ -1,0 +1,33 @@
+{
+  "status": "REJECT_ROUTE_AS_DOMINANT_FIX",
+  "source_revision": "480aed49b30448de4380af5c9274e48084e67b63",
+  "source_document": "/home/ts/.local/state/openhcs-maintenance/20261003/plane-facts-whole-driver-baseline-v1/public/cp_tutorial_3d_monolayer/wells_1/workers_1/images_3d_monolayer_final_source_workspace/openhcs_metadata.json",
+  "source_document_sha256": "a42ec413a0ec213d22f4ba96fac785bfbfac167dd5d2da7cbd1acc8cf9c2d862",
+  "source_pins": {
+    "/home/ts/code/projects/openhcs-shared-runtime-plumbing/openhcs/core/virtual_workspace_metadata.py": "25987be96327dadefa1ecb63a93b2678a0957ffdf42383822d02ef666282b24a",
+    "/home/ts/code/projects/openhcs-shared-runtime-plumbing/openhcs/core/source_workspace_projection.py": "1e54affed309fbc0d150bee4a3deedbc127aedf39a83f0c8a0eaf719257922be",
+    "/home/ts/code/projects/openhcs-shared-runtime-plumbing/external/PolyStore/src/polystore/virtual_workspace.py": "b19fcda85369d812e70bfc1a0efc5d8861ae256f69e94372e2e9515c591d36af"
+  },
+  "original_projection_cache_hit_calls_per_replay": 68,
+  "original_unprofiled_seconds": [
+    0.024565204977989197,
+    0.024529157672077417,
+    0.024390146136283875,
+    0.02441246807575226,
+    0.024447152856737375,
+    0.02439353195950389,
+    0.024356392212212086,
+    0.02441841922700405,
+    0.024412577971816063
+  ],
+  "median_seconds": 0.024412577971816063,
+  "controls": [
+    {
+      "name": "current_invalid_ref_rejected_after_projection_cache_hit",
+      "passed": true,
+      "type": "TypeError",
+      "message": "SourcePixelRef.source_axis_indices must contain nonnegative integers."
+    }
+  ],
+  "interpretation": "This retained real source document replays all 68 availability calls observed in an older worker trace. It measures the complete original cache-hit availability operation with a trivial already-loaded document handler; it does not claim the current ordinary driver has identical call counts or equate the replay clock with an end-to-end saving. Even removing the complete replay operation cannot materially close the qualified 1.916s execution gap. Public mutable document validation is observable and cannot simply be skipped."
+}

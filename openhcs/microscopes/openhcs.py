@@ -29,6 +29,10 @@ from openhcs.core.source_metadata import (
     SourceComponentProjectionStrategy,
     SourceVoxelSpacing,
 )
+from openhcs.core.source_workspace_projection import (
+    VirtualWorkspaceSourceProjection,
+    VirtualWorkspaceSourceProjectionBuilder,
+)
 from metaclass_registry import AutoRegisterMeta
 from polystore.exceptions import MetadataNotFoundError
 from polystore.filemanager import FileManager
@@ -38,6 +42,9 @@ from openhcs.core.virtual_workspace_metadata import (
     FIELDS,
     METADATA_CONFIG,
     MetadataWriteError,
+    OpenHCSMetadataSubdirectories,
+    VirtualWorkspaceMapping,
+    VirtualWorkspaceSourceProjectionEntries,
     component_metadata_field,
     get_metadata_path,
 )
@@ -102,14 +109,13 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
     METADATA_FILENAME = METADATA_CONFIG.METADATA_FILENAME
 
     def __init__(self, filemanager: FileManager):
-        """
-        Initialize the metadata handler.
-
-        Args:
-            filemanager: FileManager instance for file operations.
-        """
+        """Bind the file owner and initialize derived metadata views."""
         MetadataHandler.__init__(self)
         OpenHCSMetadataBase.__init__(self, filemanager)
+        self.invalidate_metadata_cache()
+
+    def invalidate_metadata_cache(self) -> None:
+        """Release derived metadata views before a new source observation."""
         self._metadata_cache: Optional[Dict[str, Any]] = None
         self._plate_path_cache: Optional[Path] = None
         self._metadata_dict_cache: Optional[Dict[str, Any]] = None
@@ -133,40 +139,17 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
         if self._metadata_cache is not None and self._plate_path_cache == current_path:
             return self._metadata_cache
 
-        metadata_file_path = self.find_metadata_file(current_path)
-        if not self.filemanager.exists(str(metadata_file_path), Backend.DISK.value):
-            raise MetadataNotFoundError(
-                f"Metadata file '{self.METADATA_FILENAME}' not found in {plate_path}"
-            )
-
-        try:
-            content = self.filemanager.load(str(metadata_file_path), Backend.DISK.value)
-            # Backend may return already-parsed dict (disk backend auto-parses JSON)
-            if isinstance(content, dict):
-                metadata_dict = content
-            else:
-                # Otherwise parse raw bytes/string
-                metadata_dict = json.loads(
-                    content.decode("utf-8") if isinstance(content, bytes) else content
-                )
-
-            # Handle subdirectory-keyed format
-            subdirs = self._metadata_subdirectories(metadata_dict, plate_path)
-            base_metadata = self._metadata_projection(subdirs, plate_path)
-            base_metadata[FIELDS.IMAGE_FILES] = [
-                image_file
-                for subdir_name, subdir in subdirs.items()
-                for image_file in self._image_files(subdir_name, subdir)
-            ]
-            self._metadata_cache = base_metadata
-
-            self._plate_path_cache = current_path
-            return self._metadata_cache
-
-        except json.JSONDecodeError as e:
-            raise MetadataNotFoundError(
-                f"Error decoding JSON from '{metadata_file_path}': {e}"
-            ) from e
+        metadata_dict = self._load_metadata_dict(current_path)
+        subdirs = self._metadata_subdirectories(metadata_dict, plate_path)
+        base_metadata = self._metadata_projection(subdirs, plate_path)
+        base_metadata[FIELDS.IMAGE_FILES] = [
+            image_file
+            for subdir_name, subdir in subdirs.items()
+            for image_file in self._image_files(subdir_name, subdir)
+        ]
+        self._metadata_cache = base_metadata
+        self._plate_path_cache = current_path
+        return self._metadata_cache
 
     def determine_main_subdirectory(self, plate_path: Union[str, Path]) -> str:
         """Determine main input subdirectory from metadata."""
@@ -243,7 +226,7 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
         self,
         plate_path: Union[str, Path],
     ) -> Mapping[str, Any] | None:
-        """Return the unambiguous subdirectory that owns a workspace mapping."""
+        """Return the metadata-owned mapping for input or read-only output."""
 
         metadata_document = self.source_workspace_metadata_document(plate_path)
         subdirectories = self._metadata_subdirectories(
@@ -260,13 +243,13 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
         if len(mapped_subdirectories) == 1:
             return next(iter(mapped_subdirectories.values()))
 
-        main_subdirectory = self._main_subdirectory_name(subdirectories, plate_path)
-        if main_subdirectory not in mapped_subdirectories:
+        projected_metadata = self._metadata_projection(subdirectories, plate_path)
+        if not projected_metadata.get(FIELDS.WORKSPACE_MAPPING):
             raise ValueError(
-                f"OpenHCS main subdirectory {main_subdirectory!r} for {plate_path} "
+                f"OpenHCS selected metadata for {plate_path} "
                 "does not own one of the declared workspace mappings."
             )
-        return mapped_subdirectories[main_subdirectory]
+        return projected_metadata
 
     def build_metadata_view_document(
         self,
@@ -398,7 +381,70 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
         plate_root = Path(plate_path)
         metadata_document = self.load_metadata_document(plate_root)
         subdirectories = self._metadata_subdirectories(metadata_document, plate_root)
+        source_projection = (
+            VirtualWorkspaceSourceProjection.from_openhcs_metadata_if_available(
+                plate_root, metadata_document
+            )
+        )
+        return self._analysis_result_directories(
+            plate_root, subdirectories, source_projection
+        )
 
+    def reconciliation_directories(
+        self, plate_path: Union[str, Path], backend: str
+    ) -> tuple[Path, ...]:
+        """Derive artifact and result destinations from one admitted document.
+
+        Projection records are admitted before workspace fields, as required by
+        completed-plate reconciliation. The same admitted records then populate
+        the result-directory source authority; they are not decoded a second time.
+        """
+        plate_root = Path(plate_path)
+        metadata_path = METADATA_CONFIG.metadata_path(plate_root)
+        if not metadata_path.is_file():
+            return tuple(
+                directory.path
+                for directory in self.analysis_result_directories(plate_root)
+            )
+        document = OpenHCSMetadataSubdirectories.from_path(metadata_path)
+        admitted = tuple(
+            (
+                subdirectory,
+                VirtualWorkspaceSourceProjectionEntries.from_subdirectory(subdirectory),
+            )
+            for _name, subdirectory in document.items()
+        )
+        directories = tuple(
+            plate_root / directory
+            for _subdirectory, entries in admitted
+            for path, projection in entries.entries.items()
+            if (directory := projection.artifact_result_directory(path, backend))
+            is not None
+        )
+        subdirectories = self._metadata_subdirectories(document.metadata, plate_root)
+        source_projection = None
+        if document.has_workspace_mapping():
+            builder = VirtualWorkspaceSourceProjectionBuilder(plate_root)
+            for subdirectory, entries in admitted:
+                builder.ingest_workspace_mapping(
+                    VirtualWorkspaceMapping.from_subdirectory(subdirectory)
+                )
+                builder.ingest_admitted_subdirectory(subdirectory, entries)
+            source_projection = builder.projection()
+        results = self._analysis_result_directories(
+            plate_root, subdirectories, source_projection
+        )
+        return tuple(
+            dict.fromkeys((*directories, *(directory.path for directory in results)))
+        )
+
+    def _analysis_result_directories(
+        self,
+        plate_root: Path,
+        subdirectories: Mapping[str, Mapping[str, Any]],
+        source_projection: VirtualWorkspaceSourceProjection | None,
+    ) -> tuple[AnalysisResultDirectory, ...]:
+        """Admit declared result paths against their document's source authority."""
         result_directories = []
         for subdirectory_name, subdirectory_data in subdirectories.items():
             result_dir_name = _optional_metadata_field(subdirectory_data, "results_dir")
@@ -409,26 +455,13 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
                     f"OpenHCS metadata subdirectory {subdirectory_name!r} "
                     "results_dir must be a non-empty string when declared."
                 )
-            result_path = plate_root / result_dir_name
-            if not result_path.exists():
-                logger.debug(
-                    "OpenHCS metadata subdirectory %r declares missing results "
-                    "directory %s; treating it as no result artifacts.",
-                    subdirectory_name,
-                    result_path,
-                )
-                continue
-            if not result_path.is_dir():
-                raise NotADirectoryError(
-                    f"OpenHCS metadata subdirectory {subdirectory_name!r} "
-                    f"declares a non-directory results path: {result_path}"
-                )
-            result_directories.append(
-                AnalysisResultDirectory(
-                    subdirectory_name=subdirectory_name,
-                    path=result_path,
-                )
+            result_directory = AnalysisResultDirectory.from_declared_path(
+                subdirectory_name=subdirectory_name,
+                path=plate_root / result_dir_name,
+                source_projection=source_projection,
             )
+            if result_directory is not None:
+                result_directories.append(result_directory)
         return tuple(result_directories)
 
     def _metadata_projection(
@@ -515,6 +548,14 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
                 },
                 plate_path,
                 "available_backends",
+            ),
+            FIELDS.WORKSPACE_MAPPING: self._merge_subdirectory_mapping(
+                {
+                    subdirectory_name: metadata.workspace_mapping
+                    for subdirectory_name, metadata in metadata_by_subdirectory.items()
+                },
+                plate_path,
+                "workspace_mapping",
             ),
         }
 
@@ -772,11 +813,7 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
             self.atomic_writer.update_available_backends(
                 metadata_file_path, available_backends
             )
-            # Clear cache to force reload on next access
-            self._metadata_cache = None
-            self._plate_path_cache = None
-            self._metadata_dict_cache = None
-            self._metadata_dict_plate_path_cache = None
+            self.invalidate_metadata_cache()
             logger.info(
                 f"Updated available backends to {available_backends} in {metadata_file_path}"
             )

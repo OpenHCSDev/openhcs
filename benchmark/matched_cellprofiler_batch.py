@@ -10,9 +10,10 @@ import argparse
 import json
 import os
 import subprocess
+from collections import Counter
 from collections.abc import Mapping
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import replace
+from dataclasses import asdict, replace
 from pathlib import Path
 from typing import Any
 
@@ -37,12 +38,25 @@ from benchmark.cellprofiler_export_equivalence import (
 )
 from benchmark.control import inspect_measured_pipeline_run
 from benchmark.file_digest import sha256_file
+from benchmark.native_batch_contracts import (
+    NativeBatchEnvironment,
+    NativeBatchReport,
+    NativeBatchRequest,
+)
 from benchmark.openhcs_measured_run import (
     _ZMQProgressTimingObserver,
     execute_measured_openhcs_pipeline_on_client,
 )
-from benchmark.timing import PhaseTimingTrace, completed_server_execution_seconds
+from benchmark.timing import (
+    BenchmarkPhase,
+    PhaseTimingRecord,
+    PhaseTimingTrace,
+    additive_phase_total_seconds,
+    completed_server_execution_seconds,
+)
 from benchmark.well_throughput_scaling import (
+    _replicate_source_binding_workspace_wells,
+    _synthetic_well_ids,
     _write_progress_diagnostics,
     well_throughput_start_method_from_manifest,
 )
@@ -61,11 +75,26 @@ from openhcs.core.config import (
 )
 from openhcs.core.equivalence.comparison import runtime_image_differences
 from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot
+from openhcs.core.equivalence.report import (
+    RuntimeEquivalenceDifference,
+    RuntimeEquivalenceReport,
+)
+from openhcs.core.source_matching import SourceImageSetIdentityPolicy
+from openhcs.core.equivalence.policy import (
+    RuntimeEquivalencePolicy,
+    normalize_runtime_identifier,
+)
 from openhcs.core.input_workspace import InputWorkspacePreparationRequest
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.core.progress.types import ProgressEvent, ProgressPhase
 from openhcs.core.runtime_exports import RuntimeExportObservation
+from openhcs.core.runtime_equivalence import (
+    RuntimeMeasurementSnapshot,
+    runtime_measurement_equivalence,
+)
 from openhcs.core.source_matching import source_component_metadata_value
+from openhcs.core.virtual_workspace_metadata import METADATA_CONFIG
+from openhcs.core.source_projection import OpenHCSPlaneAddress
 from openhcs.interop.cellprofiler.plate_workspace import (
     prepare_cellprofiler_input_workspace,
 )
@@ -84,7 +113,11 @@ from openhcs.serialization.json import to_jsonable
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", type=Path, required=True)
-    parser.add_argument("--case", required=True)
+    cases = parser.add_mutually_exclusive_group(required=True)
+    cases.add_argument("--case", help="Run one case from the manifest.")
+    cases.add_argument(
+        "--all-cases", action="store_true", help="Run the manifest on one owned server."
+    )
     selection = parser.add_mutually_exclusive_group(required=True)
     selection.add_argument(
         "--well-count", type=int, help="Select the first N declared source wells."
@@ -95,11 +128,21 @@ def _parser() -> argparse.ArgumentParser:
         action="append",
         help="Select one declared source well; repeat for an explicit sample.",
     )
+    parser.add_argument(
+        "--repeat-assignments",
+        type=int,
+        help="Repeat one selected source well as independent matched assignments.",
+    )
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--repetitions", type=int, default=1)
     parser.add_argument("--openhcs-workers", type=int, default=1)
     parser.add_argument("--native-jobs", type=int, default=1)
     parser.add_argument("--native-python", type=Path, required=True)
+    parser.add_argument(
+        "--native-reference-root",
+        type=Path,
+        help="Existing cases root with genuine native reports; missing cases run fresh.",
+    )
     return parser
 
 
@@ -160,6 +203,182 @@ def _source_input_inventory(input_dir: Path) -> tuple[dict[str, object], ...]:
     )
 
 
+def _require_compared_output_inventory(
+    *,
+    reference_files: frozenset[Path],
+    candidate_files: frozenset[Path],
+    reference_exports: RuntimeExportObservation,
+    candidate_exports: RuntimeExportObservation,
+    reference_snapshot: RuntimeOutputSnapshot,
+    candidate_snapshot: RuntimeOutputSnapshot,
+    candidate_managed_files: frozenset[Path] = frozenset(),
+    compared_file_report: RuntimeEquivalenceReport = RuntimeEquivalenceReport(()),
+) -> None:
+    """Reject unqualified output formats and missing scientific output files."""
+    # Validate all explicit edges against their object rows, then compare the
+    # cross-output correlations before using redundant scalar table inventory.
+    from openhcs.core.equivalence.relationships import (
+        ExportedRelationshipMeasurementSemantics,
+    )
+    from openhcs.core.runtime_equivalence import RuntimeMeasurementSnapshot
+
+    measurements = tuple(
+        RuntimeMeasurementSnapshot.from_output_snapshot(snapshot)
+        for snapshot in (reference_snapshot, candidate_snapshot)
+    )
+    correlations = tuple(
+        measurement.required_relationship_correlations() for measurement in measurements
+    )
+    if correlations[0] != correlations[1]:
+        raise RuntimeError("Matched saved output relationship correlations differ.")
+    comparable_tables = tuple(
+        tuple(
+            table
+            for table in snapshot.tables
+            if table.participates_in_comparison
+            and not ExportedRelationshipMeasurementSemantics.supports_table(table)
+        )
+        for snapshot in (reference_snapshot, candidate_snapshot)
+    )
+    counts = []
+    for files, exports, snapshot, managed_files, tables in (
+        (
+            reference_files,
+            reference_exports,
+            reference_snapshot,
+            frozenset(),
+            comparable_tables[0],
+        ),
+        (
+            candidate_files,
+            candidate_exports,
+            candidate_snapshot,
+            candidate_managed_files,
+            comparable_tables[1],
+        ),
+    ):
+        files = files - managed_files
+        compared_files = (
+            frozenset(exports.table_outputs)
+            | frozenset(exports.image_outputs)
+            | (files & compared_file_report.compared_output_files)
+        )
+        if files != compared_files:
+            raise RuntimeError(
+                "Matched output inventory contains files without a value comparison: "
+                f"{tuple(sorted(files - compared_files))!r}."
+            )
+        snapshot.require_image_file_coverage(frozenset(exports.image_outputs))
+        count = (
+            len(files)
+            - len(snapshot.tables)
+            - len(exports.image_outputs)
+            + len(snapshot.images)
+            + len(tables)
+        )
+        if count < 1:
+            raise RuntimeError("Matched batch has no compared scientific output files.")
+        counts.append(count)
+    if counts[0] != counts[1]:
+        raise RuntimeError(
+            "Matched scientific output file counts differ: "
+            f"reference={counts[0]}, candidate={counts[1]}."
+        )
+    table_shapes = tuple(
+        Counter(
+            (
+                tuple(
+                    (
+                        measurement.subject.scope.value,
+                        normalize_runtime_identifier(measurement.subject.name),
+                    )
+                    for measurement in table.measurement_tables()
+                ),
+                len(table.rows),
+            )
+            for table in tables
+        )
+        for tables in comparable_tables
+    )
+    if table_shapes[0] != table_shapes[1]:
+        raise RuntimeError(
+            "Matched CSV table row counts differ: "
+            f"reference={table_shapes[0]}, candidate={table_shapes[1]}."
+        )
+
+
+def _saved_output_equivalence(
+    native_root: Path,
+    candidate_exports: RuntimeExportObservation,
+    *,
+    policy: RuntimeEquivalencePolicy,
+    source_workspaces: tuple[Path, ...] = (),
+    image_set_policy: SourceImageSetIdentityPolicy = SourceImageSetIdentityPolicy(),
+    execution_axis_id: str | None = None,
+    actual_candidate_files: frozenset[Path] | None = None,
+    candidate_managed_files: frozenset[Path] = frozenset(),
+) -> tuple[
+    RuntimeEquivalenceReport,
+    RuntimeEquivalenceReport,
+    tuple[RuntimeEquivalenceDifference, ...],
+    RuntimeExportObservation,
+    RuntimeOutputSnapshot,
+    RuntimeOutputSnapshot,
+]:
+    """Consume complete saved schemas, values, correlations and file inventories."""
+    database_report = cellprofiler_database_export_equivalence(
+        native_root,
+        candidate_exports,
+        policy=policy,
+        execution_axis_id=execution_axis_id,
+    )
+    native_exports = RuntimeExportObservation.from_output_roots((native_root,))
+    native_snapshot = RuntimeOutputSnapshot.from_export_observation(native_exports)
+    candidate_snapshot = RuntimeOutputSnapshot.from_export_observation(
+        candidate_exports,
+        source_workspaces=source_workspaces,
+        image_set_policy=image_set_policy,
+        execution_axis_id=execution_axis_id,
+        measurement_dialect=policy.measurement_dialect,
+    )
+    csv_report = runtime_measurement_equivalence(
+        RuntimeMeasurementSnapshot.from_output_snapshot(native_snapshot, policy=policy),
+        RuntimeMeasurementSnapshot.from_output_snapshot(
+            candidate_snapshot, policy=policy
+        ),
+        policy=policy,
+    )
+    image_differences = runtime_image_differences(
+        native_snapshot.images,
+        candidate_snapshot.images,
+        policy,
+    )
+    _require_compared_output_inventory(
+        reference_files=frozenset(
+            path for path in native_root.rglob("*") if path.is_file()
+        ),
+        candidate_files=(
+            frozenset(candidate_exports.output_files)
+            if actual_candidate_files is None
+            else actual_candidate_files
+        ),
+        reference_exports=native_exports,
+        candidate_exports=candidate_exports,
+        reference_snapshot=native_snapshot,
+        candidate_snapshot=candidate_snapshot,
+        candidate_managed_files=candidate_managed_files,
+        compared_file_report=database_report,
+    )
+    return (
+        database_report,
+        csv_report,
+        image_differences,
+        native_exports,
+        native_snapshot,
+        candidate_snapshot,
+    )
+
+
 def _native_python_executable(path: Path, project_root: Path) -> Path:
     """Keep the virtual-environment entrypoint, not its base-interpreter target."""
 
@@ -181,6 +400,7 @@ def _invoke_native_worker(
     evidence_prefix: Path,
     project_root: Path,
     repetitions: int,
+    timeout_seconds: float | None,
 ) -> dict[str, object]:
     temporary_root = evidence_prefix.with_name(evidence_prefix.name + "_tmp")
     temporary_root.mkdir(parents=True, exist_ok=False)
@@ -188,23 +408,194 @@ def _invoke_native_worker(
     native_environment.update(
         {name: str(temporary_root) for name in ("TMPDIR", "TMP", "TEMP")}
     )
-    process = subprocess.run(
-        (str(native_python), str(worker_script), str(request_path)),
-        cwd=project_root,
-        env=native_environment,
+    report_path = evidence_prefix.with_name(
+        evidence_prefix.name + "_report.json"
+    ).resolve()
+    request = json.loads(request_path.read_text())
+    request["report_path"] = str(report_path)
+    request_path.write_text(json.dumps(request, indent=2) + "\n")
+    with (
+        evidence_prefix.with_name(evidence_prefix.name + "_stdout.log").open(
+            "w"
+        ) as stdout,
+        evidence_prefix.with_name(evidence_prefix.name + "_stderr.log").open(
+            "w"
+        ) as stderr,
+    ):
+        process = subprocess.run(
+            (str(native_python), str(worker_script), str(request_path)),
+            cwd=project_root,
+            env=native_environment,
+            stdout=stdout,
+            stderr=stderr,
+            text=True,
+            timeout=(
+                None
+                if timeout_seconds is None
+                else timeout_seconds
+                * (repetitions + 1)
+                * max(1, len(request.get("assignment_output_subdirectories", ())))
+            ),
+            check=False,
+        )
+    process.check_returncode()
+    return json.loads(report_path.read_text())
+
+
+def _probe_native_environment(
+    native_python: Path,
+    native_worker: Path,
+) -> NativeBatchEnvironment:
+    """Consume the native report owner's capture without Java or pipeline execution."""
+    result = subprocess.run(
+        (str(native_python), str(native_worker), "--environment"),
         capture_output=True,
         text=True,
-        timeout=900 * (repetitions + 1),
-        check=False,
+        check=True,
+        timeout=60,
     )
-    evidence_prefix.with_name(evidence_prefix.name + "_stdout.log").write_text(
-        process.stdout
+    return NativeBatchEnvironment(**json.loads(result.stdout))
+
+
+def _native_reference_inventory(paths: frozenset[Path]) -> tuple[dict[str, str], ...]:
+    return tuple(
+        {"path": str(path), "sha256": sha256_file(path)} for path in sorted(paths)
     )
-    evidence_prefix.with_name(evidence_prefix.name + "_stderr.log").write_text(
-        process.stderr
+
+
+def _reuse_native_report(
+    reference_case: Path,
+    *,
+    native_payload: Mapping[str, object],
+    native_python: Path,
+    native_worker: Path,
+    provenance: dict[str, object],
+) -> dict[str, object]:
+    """Qualify native measurements independently of the candidate's source revision."""
+    if sha256_file(native_worker) != provenance["native_worker_sha256"]:
+        raise RuntimeError("Current native worker differs from its declared source.")
+    if (
+        sha256_file(native_worker.with_name("native_batch_contracts.py"))
+        != provenance["native_contract_sha256"]
+    ):
+        raise RuntimeError(
+            "Current native report contract differs from its declared source."
+        )
+    report_path = reference_case / "native_report.json"
+    origin_path = reference_case / "pilot_provenance.json"
+    request_path = reference_case / "native_request.json"
+    report = json.loads(report_path.read_text())
+    typed_report = NativeBatchReport.from_payload(report)
+    origin = json.loads(origin_path.read_text())
+    request = typed_report.request
+    original_request = NativeBatchRequest(**json.loads(request_path.read_text()))
+    if request != original_request:
+        raise RuntimeError("Retained native report differs from its original request.")
+    request.require_same_workload(NativeBatchRequest(**native_payload))
+    for key in (
+        "case",
+        "wells",
+        "selected_source_wells",
+        "assignment_scope",
+        "cppipe_sha256",
+        "native_worker_sha256",
+        "native_contract_sha256",
+        "native_job_count",
+        "thread_environment",
+    ):
+        if origin[key] != json.loads(json.dumps(provenance[key])):
+            raise RuntimeError(f"Retained native reference differs in {key}.")
+    if origin["native_job_count"] != 1:
+        raise RuntimeError(
+            "Retained native shards require barrier-specific qualification."
+        )
+    # Exact prepared bytes reject unsupported path-dependent differences rather
+    # than normalizing arbitrary CPPipe fields or accepting a changed input role.
+    original_pipeline = Path(request.pipeline_path)
+    current_pipeline = Path(native_payload["pipeline_path"])
+    if sha256_file(original_pipeline) != sha256_file(current_pipeline):
+        raise RuntimeError("Retained native effective CPPipe bytes differ.")
+    original_file_list = request.file_list_path
+    current_file_list = native_payload["file_list_path"]
+    if (original_file_list is None) != (current_file_list is None) or (
+        original_file_list is not None
+        and Path(original_file_list).read_bytes()
+        != Path(current_file_list).read_bytes()
+    ):
+        raise RuntimeError("Retained native ordered source file list differs.")
+    current_inventory = json.loads(json.dumps(provenance["native_input_inventory"]))
+    original_inventory = json.loads(
+        json.dumps(_source_input_inventory(Path(request.input_dir)))
     )
-    process.check_returncode()
-    return json.loads(process.stdout.splitlines()[-1])
+    if (
+        original_inventory != origin["native_input_inventory"]
+        or original_inventory != current_inventory
+    ):
+        raise RuntimeError("Retained native source images or metadata differ.")
+    typed_report.environment.require_equivalent(
+        _probe_native_environment(native_python, native_worker)
+    )
+    typed_report.require_complete(int(native_payload["repetitions"]))
+    if any(
+        row["image_set_count"] != origin["native_image_set_count"]
+        for row in report["observations"]
+    ):
+        raise RuntimeError(
+            "Retained native image-set domain changed between observations."
+        )
+    outputs = frozenset(
+        path
+        for row in report["observations"]
+        for path in Path(row["output_root"]).rglob("*")
+        if path.is_file()
+    )
+    candidate_path = reference_case / "candidate_report.json"
+    if candidate_path.is_file():
+        for row in json.loads(candidate_path.read_text()):
+            run_root = Path(request.output_root) / str(row["repetition"])
+            files = frozenset(path for path in run_root.rglob("*") if path.is_file())
+            if (
+                json.loads(json.dumps(_output_inventory(run_root, files)))
+                != row["native_output_inventory"]
+            ):
+                raise RuntimeError("Previously inventoried native outputs changed.")
+    source_files = {report_path, origin_path, request_path, original_pipeline}
+    if original_file_list is not None:
+        source_files.add(Path(original_file_list))
+    provenance.update(
+        native_reference_report_path=str(report_path),
+        native_reference_report_sha256=sha256_file(report_path),
+        native_reference_source_commit=origin.get(
+            "native_reference_source_commit", origin["source_commit"]
+        ),
+        native_reference_file_inventory=_native_reference_inventory(
+            outputs | frozenset(source_files)
+        ),
+    )
+    return report
+
+
+def _require_native_reference_unchanged(provenance: Mapping[str, object]) -> None:
+    """Retained inputs and outputs stay untouched throughout fresh scientific checks."""
+    if "native_reference_file_inventory" not in provenance:
+        return
+    before = provenance["native_reference_file_inventory"]
+    paths = frozenset(Path(row["path"]) for row in before)
+    report = NativeBatchReport.from_payload(
+        json.loads(Path(provenance["native_reference_report_path"]).read_text())
+    )
+    paths |= frozenset(
+        path
+        for observation in report.observations
+        for path in Path(observation.output_root).rglob("*")
+        if path.is_file()
+    )
+    if json.loads(json.dumps(_native_reference_inventory(paths))) != json.loads(
+        json.dumps(before)
+    ):
+        raise RuntimeError(
+            "Retained native reference files changed during qualification."
+        )
 
 
 def _worker_axis_evidence(
@@ -324,6 +715,42 @@ def main(argv: list[str] | None = None) -> int:
         raise ValueError(
             "Native and OpenHCS worker counts must match in a concurrency pilot."
         )
+    if args.native_reference_root is not None:
+        if args.native_jobs != 1:
+            raise ValueError("Retained native shard reuse is not supported.")
+        if not args.native_reference_root.expanduser().is_dir():
+            raise FileNotFoundError("Native reference cases root does not exist.")
+    if args.repeat_assignments is not None and args.repeat_assignments < 1:
+        raise ValueError("Repeated assignment count must be positive.")
+    cases = load_comparison_cases(args.manifest.expanduser().resolve())
+    selected_cases = tuple(
+        case for case in cases if args.all_cases or case.name == args.case
+    )
+    if not selected_cases:
+        raise ValueError(f"No manifest case matches {args.case!r}.")
+    output_root = args.output_dir.expanduser().resolve()
+    if output_root.exists() and any(output_root.iterdir()):
+        raise FileExistsError(
+            f"Matched pilot output directory must be empty: {output_root}"
+        )
+    port = DataControlPortPairAuthority.acquire(
+        OPENHCS_ZMQ_CONFIG,
+        transport_mode=OPENHCS_ZMQ_CONFIG.transport_mode,
+    ).data_port
+    with ZMQExecutionClient(port=port, persistent=False) as client:
+        for case in selected_cases:
+            case_args = argparse.Namespace(**vars(args))
+            case_args.case = case.name
+            case_args.output_dir = (
+                output_root / case.name if args.all_cases else output_root
+            )
+            _run_case(case_args, client)
+    return 0
+
+
+def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
+    """Qualify one case while retaining the suite's prepared execution server."""
+
     project_root = Path(__file__).resolve().parent.parent
     source_commit = subprocess.check_output(
         ("git", "rev-parse", "HEAD"), cwd=project_root, text=True
@@ -367,7 +794,21 @@ def main(argv: list[str] | None = None) -> int:
         well_count=args.well_count,
         requested_wells=tuple(args.requested_wells or ()),
     )
+    source_wells = wells
+    if args.repeat_assignments is not None:
+        if len(source_wells) != 1:
+            raise ValueError(
+                "Repeated assignments require exactly one selected source well."
+            )
+        wells = _synthetic_well_ids(args.repeat_assignments)
+    assignment_directories = (
+        tuple(OpenHCSPlaneAddress.component_token(well) for well in wells)
+        if args.repeat_assignments is not None and len(wells) > 1
+        else ()
+    )
     well_count = len(wells)
+    if args.openhcs_workers > well_count:
+        raise ValueError("OpenHCS workers cannot exceed the selected assignment count.")
     if well_count % args.native_jobs:
         raise ValueError(
             "Native jobs must partition the selected wells evenly in a "
@@ -376,11 +817,20 @@ def main(argv: list[str] | None = None) -> int:
     provenance = {
         "case": case.name,
         "wells": wells,
+        "selected_source_wells": source_wells,
+        "assignment_scope": (
+            "independent repeated source assignments"
+            if args.repeat_assignments is not None
+            else "genuine source wells"
+        ),
         "manifest_sha256": sha256_file(manifest),
         "cppipe_sha256": sha256_file(case.cppipe_path),
         "driver_sha256": sha256_file(Path(__file__)),
         "native_worker_sha256": sha256_file(
             project_root / "benchmark/native_cellprofiler_batch_worker.py"
+        ),
+        "native_contract_sha256": sha256_file(
+            project_root / "benchmark/native_batch_contracts.py"
         ),
         "source_commit": source_commit,
         "source_dirty": source_dirty,
@@ -404,7 +854,7 @@ def main(argv: list[str] | None = None) -> int:
 
     native_preparation = root / "native_preparation"
     native_global_config = _global_config(
-        root / "native", wells, start_method=start_method
+        root / "native", source_wells, start_method=start_method
     )
     native_request = CellProfilerRunRequest(
         dataset_path=case.dataset_path,
@@ -416,7 +866,7 @@ def main(argv: list[str] | None = None) -> int:
         ),
         first_image_set=None,
         last_image_set=None,
-        timeout_seconds=None,
+        timeout_seconds=case.cellprofiler_timeout_seconds,
         metrics=(),
         global_config=native_global_config,
     )
@@ -427,6 +877,12 @@ def main(argv: list[str] | None = None) -> int:
     native_domain = NativeCellProfilerInputDomainStrategy.select_for(
         native_request, source
     ).prepare(native_request, source, execution_cppipe)
+    if args.repeat_assignments is not None:
+        _replicate_source_binding_workspace_wells(
+            prepared.materialization.metadata_path,
+            wells,
+            source_well_filter=native_global_config.well_filter_config,
+        )
     provenance["native_input_inventory"] = _source_input_inventory(
         native_domain.input_dir
     )
@@ -442,19 +898,40 @@ def main(argv: list[str] | None = None) -> int:
         "output_root": str(root / "native"),
         "expected_image_sets": None,
         "repetitions": args.repetitions,
+        "assignment_output_subdirectories": assignment_directories,
     }
     native_request_path = root / "native_request.json"
     native_request_path.write_text(json.dumps(native_payload, indent=2))
     native_python = _native_python_executable(args.native_python, project_root)
     native_worker = project_root / "benchmark/native_cellprofiler_batch_worker.py"
-    native_report = _invoke_native_worker(
-        native_python=native_python,
-        worker_script=native_worker,
-        request_path=native_request_path,
-        evidence_prefix=root / "native",
-        project_root=project_root,
-        repetitions=args.repetitions,
+    reference_case = (
+        args.native_reference_root.expanduser().resolve() / case.name
+        if args.native_reference_root is not None
+        else None
     )
+    if reference_case is not None and reference_case.exists():
+        native_report = _reuse_native_report(
+            reference_case,
+            native_payload=native_payload,
+            native_python=native_python,
+            native_worker=native_worker,
+            provenance=provenance,
+        )
+        native_request_path.write_text(
+            json.dumps(
+                asdict(NativeBatchReport.from_payload(native_report).request), indent=2
+            )
+        )
+    else:
+        native_report = _invoke_native_worker(
+            native_python=native_python,
+            worker_script=native_worker,
+            request_path=native_request_path,
+            evidence_prefix=root / "native",
+            project_root=project_root,
+            repetitions=args.repetitions,
+            timeout_seconds=native_request.timeout_seconds,
+        )
     (root / "native_report.json").write_text(json.dumps(native_report, indent=2))
     native_image_set_counts = {
         observation["image_set_count"] for observation in native_report["observations"]
@@ -462,6 +939,28 @@ def main(argv: list[str] | None = None) -> int:
     if len(native_image_set_counts) != 1:
         raise RuntimeError("Native whole-batch image-set count changed between runs.")
     (native_image_set_count,) = native_image_set_counts
+    if args.repeat_assignments is not None:
+        expected_directories = assignment_directories or ("",)
+        observed_domains = tuple(
+            tuple(
+                (str(directory), int(count))
+                for directory, count in observation["assignment_image_set_counts"]
+            )
+            for observation in native_report["observations"]
+        )
+        if (
+            any(
+                tuple(directory for directory, _ in domain) != expected_directories
+                for domain in observed_domains
+            )
+            or len(set(observed_domains)) != 1
+            or any(count < 1 for _, count in observed_domains[0])
+            or len({count for _, count in observed_domains[0]}) != 1
+            or sum(count for _, count in observed_domains[0]) != native_image_set_count
+        ):
+            raise RuntimeError(
+                "Native repeated assignments must retain complete identical input domains."
+            )
     if native_image_set_count < args.native_jobs or (
         native_image_set_count % args.native_jobs
     ):
@@ -470,7 +969,14 @@ def main(argv: list[str] | None = None) -> int:
         )
     provenance["native_image_set_count"] = native_image_set_count
     (root / "pilot_provenance.json").write_text(json.dumps(provenance, indent=2))
-    print("Native warm-up and observed batches complete.", flush=True)
+    print(
+        (
+            "Validated retained genuine native batches."
+            if "native_reference_report_path" in provenance
+            else "Native warm-up and observed batches complete."
+        ),
+        flush=True,
+    )
 
     policy = _strict_cellprofiler_runtime_equivalence_policy()
     (root / "equivalence_policy.json").write_text(
@@ -486,8 +992,25 @@ def main(argv: list[str] | None = None) -> int:
                 **native_payload,
                 "output_root": str(root / "native_shards" / str(index)),
                 "expected_image_sets": partition_size,
-                "first_image_set": index * partition_size + 1,
-                "last_image_set": (index + 1) * partition_size,
+                "first_image_set": (
+                    1
+                    if args.repeat_assignments is not None
+                    else index * partition_size + 1
+                ),
+                "last_image_set": (
+                    None
+                    if args.repeat_assignments is not None
+                    else (index + 1) * partition_size
+                ),
+                "assignment_output_subdirectories": (
+                    assignment_directories[
+                        index
+                        * (well_count // args.native_jobs) : (index + 1)
+                        * (well_count // args.native_jobs)
+                    ]
+                    if args.repeat_assignments is not None
+                    else ()
+                ),
                 "start_barrier_root": str(root / "native_shards" / "start_barrier"),
                 "start_barrier_job_count": args.native_jobs,
                 "start_barrier_job_index": index,
@@ -506,6 +1029,7 @@ def main(argv: list[str] | None = None) -> int:
                         evidence_prefix=root / "native_shards" / str(item[0]),
                         project_root=project_root,
                         repetitions=args.repetitions,
+                        timeout_seconds=native_request.timeout_seconds,
                     ),
                     enumerate(request_paths),
                 )
@@ -519,11 +1043,57 @@ def main(argv: list[str] | None = None) -> int:
                 root / "native_shards" / str(index) / str(repetition)
                 for index in range(args.native_jobs)
             )
-            comparison = cellprofiler_native_shard_equivalence(
-                root / "native" / str(repetition),
-                shard_roots,
-                policy=policy,
-            )
+            if args.repeat_assignments is None:
+                comparison = cellprofiler_native_shard_equivalence(
+                    root / "native" / str(repetition),
+                    shard_roots,
+                    policy=policy,
+                )
+            else:
+                reports = []
+                covered_files = set()
+                for directory in assignment_directories:
+                    assignment_roots = tuple(
+                        shard_root / directory
+                        for shard_root in shard_roots
+                        if (shard_root / directory).is_dir()
+                    )
+                    if len(assignment_roots) != 1:
+                        raise RuntimeError(
+                            "Native workers must own each repeated assignment exactly once."
+                        )
+                    assignment_exports = RuntimeExportObservation.from_output_root(
+                        assignment_roots[0]
+                    )
+                    db, csv, images, _, _, _ = _saved_output_equivalence(
+                        root / "native" / str(repetition) / directory,
+                        assignment_exports,
+                        policy=policy,
+                    )
+                    reports.extend((db, csv, RuntimeEquivalenceReport(images)))
+                    covered_files.update(assignment_exports.output_files)
+                actual_files = frozenset(
+                    path
+                    for shard_root in shard_roots
+                    for path in shard_root.rglob("*")
+                    if path.is_file()
+                )
+                if covered_files != actual_files:
+                    raise RuntimeError(
+                        "Native assignment comparison leaves unowned output files."
+                    )
+                comparison = RuntimeEquivalenceReport(
+                    tuple(
+                        difference
+                        for report in reports
+                        for difference in report.differences
+                    ),
+                    frozenset(
+                        path
+                        for report in reports
+                        for path in report.compared_output_files
+                    ),
+                )
             observations_for_repetition = tuple(
                 report["observations"][repetition + 1] for report in shard_reports
             )
@@ -587,241 +1157,295 @@ def main(argv: list[str] | None = None) -> int:
             axis_events.append(ProgressEvent.from_dict(dict(event)))
 
     timing_observer = _ZMQProgressTimingObserver(on_event=capture_progress_event)
-    port = DataControlPortPairAuthority.acquire(
-        OPENHCS_ZMQ_CONFIG,
-        transport_mode=OPENHCS_ZMQ_CONFIG.transport_mode,
-    ).data_port
+    client.progress_callback = timing_observer
     observations = []
-    with ZMQExecutionClient(
-        port=port, persistent=False, progress_callback=timing_observer
-    ) as client:
-        for repetition in range(-1, args.repetitions):
-            axis_events.clear()
-            progress_events.clear()
-            print(f"OpenHCS batch {repetition} starting.", flush=True)
-            export_scope = ZMQRuntimeObservationExportScope.OUTCOMES
-            evidence_dir = root / "candidate_evidence" / str(repetition)
-            output_dir = root / "candidate" / str(repetition)
-            global_config = _global_config(
-                output_dir,
-                wells,
-                worker_count=args.openhcs_workers,
-                start_method=start_method,
+    for repetition in range(-1, args.repetitions):
+        axis_events.clear()
+        progress_events.clear()
+        print(f"OpenHCS batch {repetition} starting.", flush=True)
+        export_scope = ZMQRuntimeObservationExportScope.OUTCOMES
+        evidence_dir = root / "candidate_evidence" / str(repetition)
+        output_dir = root / "candidate" / str(repetition)
+        global_config = _global_config(
+            output_dir,
+            wells,
+            worker_count=args.openhcs_workers,
+            start_method=start_method,
+        )
+        ensure_global_config_context(GlobalPipelineConfig, global_config)
+        pipeline_config = _candidate_pipeline_config(
+            prepared.pipeline_config, global_config, output_dir, wells
+        )
+        submission = OpenHCSExecutionSubmission(
+            plate_id=case.dataset_path,
+            execution_plate_id=prepared.execution_plate_path,
+            selected_pipeline_path=case.cppipe_path,
+            pipeline_document=PipelineDocumentAuthority.from_values(
+                pipeline_config=pipeline_config,
+                pipeline_steps=prepared.pipeline_steps,
+            ),
+            global_config=global_config,
+        ).with_auxiliary_params(
+            ZMQAuxiliaryExecutionParams(
+                runtime_observation_export_path=(evidence_dir / "observation.pkl"),
+                runtime_observation_export_scope=export_scope,
             )
-            ensure_global_config_context(GlobalPipelineConfig, global_config)
-            pipeline_config = _candidate_pipeline_config(
-                prepared.pipeline_config, global_config, output_dir, wells
+        )
+        completed, _ = execute_measured_openhcs_pipeline_on_client(
+            client=client,
+            submission=submission,
+            phase_timing=PhaseTimingTrace(
+                run_id=f"{case.name}-{repetition}",
+                pipeline_name=case.name,
+                tool="OpenHCS",
+            ),
+            timing_observer=timing_observer,
+            expected_axis_count=well_count,
+            require_owned_server=True,
+        )
+        retained_evidence = inspect_measured_pipeline_run(evidence_dir)
+        if not retained_evidence.retained_evidence_valid:
+            raise RuntimeError(
+                "Measured OpenHCS evidence failed retained-file inspection: "
+                f"{retained_evidence.warnings!r}"
             )
-            submission = OpenHCSExecutionSubmission(
-                plate_id=case.dataset_path,
-                execution_plate_id=prepared.execution_plate_path,
-                selected_pipeline_path=case.cppipe_path,
-                pipeline_document=PipelineDocumentAuthority.from_values(
-                    pipeline_config=pipeline_config,
-                    pipeline_steps=prepared.pipeline_steps,
+        status = ExecutionStatusSnapshot.from_dict(
+            client.poll_status(completed.execution_id)
+        )
+        record = status.execution
+        first_axis_started_at = timing_observer.execution_started_at
+        if record is None or first_axis_started_at is None:
+            raise RuntimeError(
+                "Completed OpenHCS batch lacks its server job or first-axis "
+                "timing boundary."
+            )
+        server_job_seconds = completed_server_execution_seconds(
+            record, expected_execution_id=completed.execution_id
+        )
+        worker_evidence = _worker_axis_evidence(
+            tuple(axis_events),
+            execution_id=completed.execution_id,
+            expected_axes=well_count,
+            expected_workers=args.openhcs_workers,
+        )
+        _write_progress_diagnostics(
+            evidence_dir,
+            case_name=case.name,
+            worker_count=args.openhcs_workers,
+            well_count=well_count,
+            events=progress_events,
+        )
+        if (
+            record.start_time is None
+            or record.end_time is None
+            or first_axis_started_at < record.start_time
+            or first_axis_started_at > record.end_time
+        ):
+            raise RuntimeError(
+                "OpenHCS first-axis event lies outside the completed server job."
+            )
+        observation = completed.observation_export
+        owned_exports = observation.exports
+        candidate_exports = (
+            owned_exports
+            if owned_exports is not None
+            else RuntimeExportObservation.from_output_roots(completed.output_roots)
+        )
+        native_root = Path(native_report["observations"][repetition + 1]["output_root"])
+        declared_output_files = (
+            frozenset(Path(path) for path in owned_exports.output_files)
+            if owned_exports is not None
+            else None
+        )
+        actual_output_files = frozenset(
+            path
+            for output_root in completed.output_roots
+            for path in output_root.rglob("*")
+            if path.is_file()
+        )
+        native_output_files = frozenset(
+            path for path in native_root.rglob("*") if path.is_file()
+        )
+        managed_output_files = frozenset(
+            path
+            for output_root in completed.output_roots
+            for path in METADATA_CONFIG.managed_paths(output_root)
+        )
+        image_set_policy = SourceImageSetIdentityPolicy.from_pipeline_config(
+            pipeline_config
+        )
+        if args.repeat_assignments is None:
+            comparisons = (
+                _saved_output_equivalence(
+                    native_root,
+                    candidate_exports,
+                    policy=policy,
+                    source_workspaces=completed.output_roots,
+                    image_set_policy=image_set_policy,
+                    actual_candidate_files=actual_output_files,
+                    candidate_managed_files=managed_output_files,
                 ),
-                global_config=global_config,
-            ).with_auxiliary_params(
-                ZMQAuxiliaryExecutionParams(
-                    runtime_observation_export_path=(evidence_dir / "observation.pkl"),
-                    runtime_observation_export_scope=export_scope,
-                )
             )
-            completed, _ = execute_measured_openhcs_pipeline_on_client(
-                client=client,
-                submission=submission,
-                phase_timing=PhaseTimingTrace(
-                    run_id=f"{case.name}-{repetition}",
-                    pipeline_name=case.name,
-                    tool="OpenHCS",
-                ),
-                timing_observer=timing_observer,
-                expected_axis_count=well_count,
-                require_owned_server=True,
+        else:
+            assignment_exports = tuple(
+                candidate_exports.for_execution_axis(well) for well in wells
             )
-            retained_evidence = inspect_measured_pipeline_run(evidence_dir)
-            if not retained_evidence.retained_evidence_valid:
+            if frozenset(
+                path for exports in assignment_exports for path in exports.output_files
+            ) != frozenset(candidate_exports.output_files):
                 raise RuntimeError(
-                    "Measured OpenHCS evidence failed retained-file inspection: "
-                    f"{retained_evidence.warnings!r}"
+                    "Assignment comparison does not cover every declared output file."
                 )
-            status = ExecutionStatusSnapshot.from_dict(
-                client.poll_status(completed.execution_id)
-            )
-            record = status.execution
-            first_axis_started_at = timing_observer.execution_started_at
-            if record is None or first_axis_started_at is None:
-                raise RuntimeError(
-                    "Completed OpenHCS batch lacks its server job or first-axis "
-                    "timing boundary."
+            comparisons = tuple(
+                _saved_output_equivalence(
+                    native_root / (directory if assignment_directories else ""),
+                    exports,
+                    policy=policy,
+                    source_workspaces=completed.output_roots,
+                    image_set_policy=image_set_policy,
+                    execution_axis_id=well,
                 )
-            server_job_seconds = completed_server_execution_seconds(
-                record, expected_execution_id=completed.execution_id
-            )
-            worker_evidence = _worker_axis_evidence(
-                tuple(axis_events),
-                execution_id=completed.execution_id,
-                expected_axes=well_count,
-                expected_workers=args.openhcs_workers,
-            )
-            _write_progress_diagnostics(
-                evidence_dir,
-                case_name=case.name,
-                worker_count=args.openhcs_workers,
-                well_count=well_count,
-                events=progress_events,
-            )
-            if (
-                record.start_time is None
-                or record.end_time is None
-                or first_axis_started_at < record.start_time
-                or first_axis_started_at > record.end_time
-            ):
-                raise RuntimeError(
-                    "OpenHCS first-axis event lies outside the completed server job."
+                for well, directory, exports in zip(
+                    wells,
+                    assignment_directories or ("",),
+                    assignment_exports,
+                    strict=True,
                 )
-            observation = completed.observation_export
-            owned_exports = observation.exports
-            candidate_exports = (
-                owned_exports
-                if owned_exports is not None
-                else RuntimeExportObservation.from_output_roots(completed.output_roots)
             )
-            native_root = root / "native" / str(repetition)
-            database_report = cellprofiler_database_export_equivalence(
-                native_root, candidate_exports, policy=policy
-            )
-            native_images = RuntimeOutputSnapshot.from_output_root(native_root).images
-            candidate_images = RuntimeOutputSnapshot.from_export_observation(
-                candidate_exports
-            ).images
-            image_differences = runtime_image_differences(
-                native_images, candidate_images, policy
-            )
-            declared_output_files = (
-                frozenset(Path(path) for path in owned_exports.output_files)
-                if owned_exports is not None
+        database_report = RuntimeEquivalenceReport(
+            tuple(
+                difference
+                for comparison in comparisons
+                for difference in comparison[0].differences
+            ),
+            frozenset(
+                path
+                for comparison in comparisons
+                for path in comparison[0].compared_output_files
+            ),
+        )
+        csv_report = RuntimeEquivalenceReport(
+            tuple(
+                difference
+                for comparison in comparisons
+                for difference in comparison[1].differences
+            ),
+        )
+        image_differences = tuple(
+            difference for comparison in comparisons for difference in comparison[2]
+        )
+        native_images = tuple(
+            image for comparison in comparisons for image in comparison[4].images
+        )
+        candidate_images = tuple(
+            image for comparison in comparisons for image in comparison[5].images
+        )
+        native_exports = RuntimeExportObservation.from_output_roots((native_root,))
+        phase_seconds = PhaseTimingRecord.seconds_by_phase(
+            completed.receipt.phase_timings
+        )
+        result = {
+            "repetition": repetition,
+            "execution_id": completed.execution_id,
+            "compile_artifact_id": completed.receipt.compile_artifact_id,
+            "endpoint_pid": completed.endpoint_provenance.endpoint_pid,
+            "axis_count": completed.axis_count,
+            "observation_scope": export_scope.value,
+            "assignment_scope": provenance["assignment_scope"],
+            "compared_assignments": (
+                wells if args.repeat_assignments is not None else ()
+            ),
+            **worker_evidence,
+            "server_job_started_at_epoch_seconds": record.start_time,
+            "first_axis_started_at_epoch_seconds": first_axis_started_at,
+            "server_job_completed_at_epoch_seconds": record.end_time,
+            "server_job_seconds": server_job_seconds,
+            "execution_seconds": phase_seconds[BenchmarkPhase.EXECUTE_OPENHCS.name],
+            "compile_seconds": phase_seconds[BenchmarkPhase.COMPILE_OPENHCS.name],
+            "total_seconds": additive_phase_total_seconds(phase_seconds),
+            "first_axis_through_server_completion_seconds": (
+                record.end_time - first_axis_started_at
+            ),
+            "native_image_count": len(native_images),
+            "candidate_image_count": len(candidate_images),
+            "native_physical_image_count": len(native_exports.image_outputs),
+            "candidate_physical_image_count": len(candidate_exports.image_outputs),
+            "native_output_file_count": len(native_output_files),
+            "candidate_output_file_count": len(actual_output_files),
+            "declared_output_file_count": (
+                len(declared_output_files)
+                if declared_output_files is not None
                 else None
-            )
-            actual_output_files = frozenset(
-                path
-                for output_root in completed.output_roots
-                for path in output_root.rglob("*")
-                if path.is_file()
-            )
-            native_output_files = frozenset(
-                path for path in native_root.rglob("*") if path.is_file()
-            )
-            supported_native_outputs = frozenset(
-                image.path for image in native_images
-            ) | frozenset(
-                path
-                for path in native_output_files
-                if path.suffix.lower() in {".db", ".properties"}
-            )
-            supported_candidate_outputs = frozenset(
-                image.path for image in candidate_images
-            ) | frozenset(
-                path
-                for path in actual_output_files
-                if path.suffix.lower() in {".db", ".properties"}
-            )
-            if (
-                not any(path.suffix.lower() == ".db" for path in native_output_files)
-                or native_output_files != supported_native_outputs
-                or actual_output_files != supported_candidate_outputs
-            ):
-                raise RuntimeError(
-                    "This matched pilot can prove only SQLite, CPA properties "
-                    "and image outputs; another export type requires its own "
-                    "value comparison before timing can be reported."
-                )
-            result = {
-                "repetition": repetition,
-                "execution_id": completed.execution_id,
-                "compile_artifact_id": completed.receipt.compile_artifact_id,
-                "endpoint_pid": completed.endpoint_provenance.endpoint_pid,
-                "axis_count": completed.axis_count,
-                "observation_scope": export_scope.value,
-                **worker_evidence,
-                "server_job_started_at_epoch_seconds": record.start_time,
-                "first_axis_started_at_epoch_seconds": first_axis_started_at,
-                "server_job_completed_at_epoch_seconds": record.end_time,
-                "server_job_seconds": server_job_seconds,
-                "first_axis_through_server_completion_seconds": (
-                    record.end_time - first_axis_started_at
-                ),
-                "native_image_count": len(native_images),
-                "candidate_image_count": len(candidate_images),
-                "native_output_file_count": len(native_output_files),
-                "candidate_output_file_count": len(actual_output_files),
-                "declared_output_file_count": (
-                    len(declared_output_files)
-                    if declared_output_files is not None
-                    else None
-                ),
-                "native_output_inventory": _output_inventory(
-                    native_root, native_output_files
-                ),
-                "candidate_output_inventory": _output_inventory(
-                    output_dir, actual_output_files
-                ),
-                "unexpected_output_files": (
-                    tuple(
-                        str(path)
-                        for path in sorted(actual_output_files - declared_output_files)
+            ),
+            "native_output_inventory": _output_inventory(
+                native_root, native_output_files
+            ),
+            "candidate_output_inventory": _output_inventory(
+                output_dir, actual_output_files
+            ),
+            "unexpected_output_files": (
+                tuple(
+                    str(path)
+                    for path in sorted(
+                        actual_output_files
+                        - declared_output_files
+                        - managed_output_files
                     )
-                    if declared_output_files is not None
-                    else None
-                ),
-                "missing_declared_output_files": (
-                    tuple(
-                        str(path)
-                        for path in sorted(declared_output_files - actual_output_files)
-                    )
-                    if declared_output_files is not None
-                    else None
-                ),
-                "database_differences": tuple(
-                    str(difference) for difference in database_report.differences
-                ),
-                "image_differences": tuple(
-                    str(difference) for difference in image_differences
-                ),
-                "receipt_path": str(evidence_dir / "measured_pipeline_receipt.json"),
-            }
-            observations.append(result)
-            (root / "candidate_report.json").write_text(
-                json.dumps(observations, indent=2)
-            )
-            print(
-                f"OpenHCS batch {repetition}: {completed.axis_count} axes, "
-                f"{len(result['database_differences'])} database and "
-                f"{len(result['image_differences'])} image differences.",
-                flush=True,
-            )
-            if (
-                not native_output_files
-                or not actual_output_files
-                or len(native_images) != len(candidate_images)
-                or len(native_output_files) != len(actual_output_files)
-                or (
-                    declared_output_files is not None
-                    and len(declared_output_files) != len(actual_output_files)
                 )
-                or result["unexpected_output_files"]
-                or result["missing_declared_output_files"]
-                or result["database_differences"]
-                or result["image_differences"]
-            ):
-                raise RuntimeError(
-                    f"Matched output equivalence failed in repetition {repetition}: "
-                    f"{result}"
+                if declared_output_files is not None
+                else None
+            ),
+            "missing_declared_output_files": (
+                tuple(
+                    str(path)
+                    for path in sorted(declared_output_files - actual_output_files)
                 )
+                if declared_output_files is not None
+                else None
+            ),
+            "database_differences": tuple(
+                str(difference) for difference in database_report.differences
+            ),
+            "csv_differences": tuple(
+                str(difference) for difference in csv_report.differences
+            ),
+            "image_differences": tuple(
+                str(difference) for difference in image_differences
+            ),
+            "receipt_path": str(evidence_dir / "measured_pipeline_receipt.json"),
+        }
+        observations.append(result)
+        (root / "candidate_report.json").write_text(json.dumps(observations, indent=2))
+        print(
+            f"OpenHCS batch {repetition}: {completed.axis_count} axes, "
+            f"{len(result['database_differences'])} database and "
+            f"{len(csv_report.differences)} CSV and "
+            f"{len(result['image_differences'])} image differences.",
+            flush=True,
+        )
+        if (
+            not native_output_files
+            or not actual_output_files
+            or (
+                declared_output_files is not None
+                and len(declared_output_files - managed_output_files)
+                != len(actual_output_files - managed_output_files)
+            )
+            or result["unexpected_output_files"]
+            or result["missing_declared_output_files"]
+            or result["database_differences"]
+            or csv_report.differences
+            or result["image_differences"]
+        ):
+            raise RuntimeError(
+                f"Matched output equivalence failed in repetition {repetition}: "
+                f"{result}"
+            )
 
     final_input_inventory = _source_input_inventory(native_domain.input_dir)
     if final_input_inventory != provenance["native_input_inventory"]:
         raise RuntimeError("Native source images or metadata changed during pilot.")
+    _require_native_reference_unchanged(provenance)
     provenance["native_input_inventory_after"] = final_input_inventory
     (root / "pilot_provenance.json").write_text(json.dumps(provenance, indent=2))
 
@@ -832,9 +1456,16 @@ def main(argv: list[str] | None = None) -> int:
         "native_shard_equivalence": shard_equivalence,
         "candidate": observations,
         "timing_claim": (
-            "none: process counts, overlap, and source-owned intervals are "
-            "retained, but first-module/first-axis boundary equivalence and "
-            "repeated throughput remain under review"
+            "Observed complete selected batches: native first-module through post-run "
+            "and full invocation are separate; OpenHCS worker execution and complete "
+            "client operation are separate. Repeated assignments are independently "
+            "executed source copies, not projected timings or additional genuine wells."
+            + (
+                " Native timings and output roots were reused from genuine retained "
+                "observations; their original source and report SHA are recorded separately."
+                if "native_reference_report_path" in provenance
+                else ""
+            )
         ),
     }
     (root / "report.json").write_text(json.dumps(report, indent=2))

@@ -13,7 +13,7 @@ from openhcs.core.artifacts import (
     ArtifactSpec,
     ArtifactSpecCollection,
     ImageArtifactType,
-    MeasurementsArtifactType,
+    MeasurementBearingArtifactType,
     RelationshipsArtifactType,
     SpecialArtifactType,
 )
@@ -31,6 +31,9 @@ from openhcs.interop.cellprofiler.analyst_export import (
     CellProfilerAnalystProjectionBuilder,
     CellProfilerDatabaseExportSettings,
     CellProfilerObjectTableMode,
+)
+from openhcs.interop.cellprofiler.workspace_export import (
+    CPAWorkspacePanel,
 )
 from openhcs.interop.cellprofiler.cellprofiler_literals import (
     cellprofiler_setting_literal,
@@ -404,7 +407,7 @@ class ExportToDatabaseModule(ArtifactExportModule):
         overwrite_value = optional_setting_value(module, cls.overwrite_mode_setting)
         if overwrite_value is not None:
             _parse_overwrite_mode(overwrite_value)
-        cls._validate_workspace_settings(module)
+        workspace_settings = CPAWorkspacePanel.bound_settings(module, cls)
         location_value = optional_setting_value(module, cls.location_object_setting)
         filter_count_value = optional_setting_value(
             module,
@@ -454,7 +457,7 @@ class ExportToDatabaseModule(ArtifactExportModule):
         bound = bound.with_consumed_settings(
             cls.property_filter_count_setting,
         )
-        return bound.with_consumed_settings(
+        return bound.with_kwargs(workspace_settings).with_consumed_settings(
             cls.aggregate_well_mean_setting,
             cls.aggregate_well_median_setting,
             cls.aggregate_well_standard_deviation_setting,
@@ -522,11 +525,7 @@ class ExportToDatabaseModule(ArtifactExportModule):
                 cellprofiler_setting_literal(False),
             ),
             ModuleSetting(cls.overwrite_mode_setting.canonical, "Never"),
-            ModuleSetting(cls.workspace_measurement_count_setting.canonical, "0"),
-            ModuleSetting(
-                cls.wants_workspace_file_setting.canonical,
-                cellprofiler_setting_literal(False),
-            ),
+            *CPAWorkspacePanel.setting_records(cls, **arguments.arguments),
             *cls._selected_object_setting_records(selected_objects),
             *cls._property_image_setting_records(image_channels),
             *cls._group_setting_records(group_fields),
@@ -580,10 +579,10 @@ class ExportToDatabaseModule(ArtifactExportModule):
         selected_image_name_set = frozenset(selected_image_names)
         inputs: list[ArtifactSpec] = []
         for spec in available.specs:
-            if spec.artifact_type in {
-                MeasurementsArtifactType,
-                RelationshipsArtifactType,
-            }:
+            if (
+                issubclass(spec.artifact_type, MeasurementBearingArtifactType)
+                or spec.artifact_type is RelationshipsArtifactType
+            ):
                 inputs.append(spec.for_plan_type(ArtifactInputPlan))
             elif (
                 spec.artifact_type is ImageArtifactType
@@ -722,54 +721,6 @@ class ExportToDatabaseModule(ArtifactExportModule):
         )
 
     @classmethod
-    def _validate_workspace_settings(
-        cls,
-        module: ModuleBlock,
-    ) -> None:
-        count_value = optional_setting_value(
-            module,
-            cls.workspace_measurement_count_setting,
-        )
-        declared_count = 0 if count_value is None else int(count_value)
-        display_tools = module.get_setting_values(
-            cls.workspace_display_tool_setting.canonical
-        )
-        x_types = module.get_setting_values(cls.workspace_x_type_setting.canonical)
-        object_names = module.get_setting_values(
-            cls.workspace_object_name_setting.canonical
-        )
-        x_measurements = module.get_setting_values(
-            cls.workspace_x_measurement_setting.canonical
-        )
-        x_indices = module.get_setting_values(cls.workspace_x_index_setting.canonical)
-        y_types = module.get_setting_values(cls.workspace_y_type_setting.canonical)
-        y_measurements = module.get_setting_values(
-            cls.workspace_y_measurement_setting.canonical
-        )
-        y_indices = module.get_setting_values(cls.workspace_y_index_setting.canonical)
-        for setting_name, values in (
-            (cls.workspace_display_tool_setting, display_tools),
-            (cls.workspace_x_type_setting, x_types),
-            (cls.workspace_x_measurement_setting, x_measurements),
-            (cls.workspace_x_index_setting, x_indices),
-            (cls.workspace_y_type_setting, y_types),
-            (cls.workspace_y_measurement_setting, y_measurements),
-            (cls.workspace_y_index_setting, y_indices),
-        ):
-            cls._require_record_count(declared_count, setting_name, values)
-        cls._require_record_count(
-            declared_count * 2,
-            cls.workspace_object_name_setting,
-            object_names,
-        )
-        wants_workspace_value = optional_setting_value(
-            module,
-            cls.wants_workspace_file_setting,
-        )
-        if wants_workspace_value is not None:
-            parse_cellprofiler_bool(wants_workspace_value)
-
-    @classmethod
     def _require_record_count(
         cls,
         declared_count: int,
@@ -898,6 +849,8 @@ def export_to_database(
     object_table_mode: CellProfilerObjectTableMode = CellProfilerObjectTableMode.PER_OBJECT,
     selected_objects: tuple[str, ...] | None = None,
     wants_properties_file: bool = True,
+    wants_workspace_file: bool = False,
+    workspace_panels: tuple[CPAWorkspacePanel, ...] = (),
     wants_relationship_tables: bool = False,
     include_all_images: bool = True,
     image_channels: tuple[CPAImageChannelSpec, ...] = (),
@@ -941,6 +894,8 @@ def export_to_database(
         object_table_mode=object_table_mode,
         selected_objects=selected_objects,
         wants_properties_file=wants_properties_file,
+        wants_workspace_file=wants_workspace_file,
+        workspace_panels=workspace_panels,
         wants_relationship_tables=wants_relationship_tables,
         maximum_column_name_length=maximum_column_name_length,
         location_object=location_object,
@@ -981,14 +936,19 @@ def export_to_database(
     bundle: dict[str, bytes | str] = {
         settings.sqlite_file: CPASQLiteRenderer(dialect).render(projection, settings)
     }
-    for properties_file in CPAPropertiesRenderer(dialect).render(
-        settings,
-        resolved_channels,
-        projection,
-    ):
-        if properties_file.file_name in bundle:
-            raise ValueError(
-                f"ExportToDatabase emits duplicate file {properties_file.file_name!r}."
+    text_files = (
+        *(
+            (file.file_name, file.text)
+            for file in CPAPropertiesRenderer(dialect).render(
+                settings, resolved_channels, projection
             )
-        bundle[properties_file.file_name] = properties_file.text
+        ),
+        *settings.workspace_files(dialect).items(),
+    )
+    for file_name, text in text_files:
+        if file_name in bundle:
+            raise ValueError(f"ExportToDatabase emits duplicate file {file_name!r}.")
+        bundle[file_name] = text
+    if projection.image_set_numbering is not None:
+        projection.image_set_numbering.observe_export_paths(context, tuple(bundle))
     return bundle

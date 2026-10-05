@@ -2,22 +2,22 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from typing import TYPE_CHECKING
 
 from python_introspect import project_dataclass, validate_annotated_dataclass
 from zmqruntime.config import NonBlankString, SocketPort, TransportMode
-from zmqruntime.transport import TransportEndpoint, resolve_transport_mode
+from zmqruntime.transport import TransportEndpoint
 
-from openhcs.agent.dto.common import JsonObject
+from openhcs.agent.dto.common import AgentDataclassCliRequest, JsonObject
+from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG, OpenHCSZMQConfig
 
 if TYPE_CHECKING:
-    from openhcs.runtime.zmq_config import OpenHCSZMQConfig
     from openhcs.runtime.zmq_execution_client import ZMQExecutionClient
 
 
 @dataclass(frozen=True, slots=True)
-class ExecutionConnectionSpec:
+class ExecutionConnectionSpec(AgentDataclassCliRequest):
     host: NonBlankString = "localhost"
     port: SocketPort | None = None
     transport_mode: TransportMode | None = None
@@ -60,38 +60,35 @@ class ExecutionConnectionSpec:
 
         return project_dataclass(ExecutionConnectionSpec, self)
 
-    def zmq_data_url(self, config) -> str:
-        from zmqruntime.transport import get_zmq_transport_url
+    def zmq_data_url(self, config: OpenHCSZMQConfig) -> str:
+        return self.transport_endpoint(config, purpose="ZMQ data URL").data_url(config)
 
-        return get_zmq_transport_url(
-            self.require_port("ZMQ data URL"),
+    def zmq_control_port(self, config: OpenHCSZMQConfig) -> int:
+        return self.transport_endpoint(config, purpose="ZMQ control port").control_port(config)
+
+    def zmq_control_url(self, config: OpenHCSZMQConfig) -> str:
+        return self.transport_endpoint(config, purpose="ZMQ control URL").control_url(config)
+
+    def transport_endpoint(
+        self,
+        config: OpenHCSZMQConfig = OPENHCS_ZMQ_CONFIG,
+        *,
+        purpose: str = "ZMQ transport endpoint",
+    ) -> TransportEndpoint:
+        """Project the exact route using the supplied execution config owner."""
+
+        return config.client_endpoint(
+            self.require_port(purpose),
             host=self.host,
-            mode=self.transport_mode,
-            config=config,
+            transport_mode=self.transport_mode,
         )
 
-    def zmq_control_port(self, config) -> int:
-        from zmqruntime.transport import get_control_port
+    def resolved(self, config: OpenHCSZMQConfig) -> ExecutionConnectionSpec:
+        """Retain effective routing in the public nominal connection."""
 
-        return get_control_port(self.require_port("ZMQ control port"), config)
-
-    def zmq_control_url(self, config) -> str:
-        from zmqruntime.transport import get_control_url
-
-        return get_control_url(
-            self.require_port("ZMQ control URL"),
-            self.transport_mode,
-            host=self.host,
-            config=config,
-        )
-
-    def transport_endpoint(self) -> TransportEndpoint:
-        """Project this connection declaration to its generic endpoint identity."""
-
-        return TransportEndpoint(
-            host=self.host,
-            port=self.require_port("ZMQ transport endpoint"),
-            transport_mode=resolve_transport_mode(self.transport_mode),
+        return replace(
+            self.public_connection(),
+            transport_mode=self.transport_endpoint(config).transport_mode,
         )
 
     def execution_client(

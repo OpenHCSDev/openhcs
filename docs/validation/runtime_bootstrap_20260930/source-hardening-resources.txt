@@ -1,0 +1,23 @@
+	Command being timed: "/home/ts/code/projects/openhcs/.venv/bin/python -B -m pytest --noconftest -o addopts= -q tests/unit/agent/test_owned_runtime_bootstrap.py external/zmqruntime/tests/test_owned_startup.py external/metaclass-registry/tests/test_cache_path_projection.py tests/unit/agent/test_progressive_authoring_context.py tests/unit/agent/test_image_analysis_qa.py external/zmqruntime/tests/test_startup.py -k not actual_mcp_onboarding --basetemp=/home/ts/.cache/agent-scratch/runtime-bootstrap-20260930/final"
+	User time (seconds): 12.17
+	System time (seconds): 0.55
+	Percent of CPU this job got: 101%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:12.55
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 280400
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 84
+	Minor (reclaiming a frame) page faults: 91172
+	Voluntary context switches: 592
+	Involuntary context switches: 375
+	Swaps: 0
+	File system inputs: 13400
+	File system outputs: 11016
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

@@ -1,3 +1,5 @@
+
+from openhcs.core.artifacts import ImageArtifactType
 import numpy as np
 import pytest
 
@@ -17,6 +19,7 @@ from openhcs.core.artifacts import (
     ObjectLabelsArtifactType,
     SpatialGraphArtifactType,
 )
+from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_spatial_graph import (
@@ -24,11 +27,9 @@ from openhcs.core.runtime_spatial_graph import (
     SpatialGraphEdge,
     SpatialGraphNode,
 )
-from openhcs.core.steps.function_runtime import (
-    FunctionOutputContextStrategy,
-    SpatialGraphFunctionOutputContextStrategy,
-)
+
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
 from openhcs.processing.materialization import (
     BackendSaver,
     MaterializationSpec,
@@ -91,7 +92,7 @@ def _branched_graph() -> SpatialGraph:
                 neuron_label=7,
             ),
         ),
-        coordinate_spacing=(2.0, 3.0),
+        coordinate_spacing=SourceVoxelSpacing((2.0, 3.0)),
     )
 
 
@@ -103,6 +104,48 @@ def _outputs(graph: SpatialGraph):
         path="/tmp/A01_neurite_graph_step3.roi.zip",
         filemanager=filemanager,
     )
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("unit", (SourceVoxelSpacingUnit.PIXELS, SourceVoxelSpacingUnit.RELATIVE))
+def test_nonphysical_analysis_graph_cannot_assert_physical_swc(unit) -> None:
+    graph = _branched_graph().replace_fields(
+        coordinate_spacing=SourceVoxelSpacing((1.0, 1.0), unit=unit)
+    )
+    with pytest.raises(ValueError, match="explicit micrometer spacing"):
+        _outputs(graph)
+
+
+@pytest.mark.unit
+def test_pixel_analysis_graph_roi_preserves_original_acquisition_calibration() -> None:
+    graph = _branched_graph().replace_fields(
+        coordinate_spacing=SourceVoxelSpacing((1.0, 1.0), unit=SourceVoxelSpacingUnit.PIXELS),
+        source_plane_index=0,
+    )
+    acquisition = ImagePayloadMetadata(
+        source_path="/engineering/A03_s001_w1_z002_t001.tif",
+        source_component_metadata={"well": "A03", "site": 1, "channel": 1, "z_index": 2, "timepoint": 1},
+        source_voxel_spacing=SourceVoxelSpacing((2.0, 0.65, 0.65)),
+    )
+    graph = SpatialGraphArtifactType.contextualize_output(
+        acquisition.payload_with(np.zeros((8, 8), dtype=np.uint8)), graph, None, None
+    )
+    (output,) = materialization_outputs(
+        MaterializationSpec(SpatialGraphROIOptions()), data=graph,
+        path="/engineering/pixel-graph.roi.zip", filemanager=FileManager({"memory": MemoryStorageBackend()}),
+    )
+    restored = ROIArchiveSourceMetadata.decode(output.content)
+    assert restored.source_voxel_spacing == acquisition.source_voxel_spacing
+    assert restored.source_provenance == acquisition.source_provenance.for_source_plane(0)
+    assert graph.coordinate_spacing.unit is SourceVoxelSpacingUnit.PIXELS
+    assert graph.source_voxel_spacing.unit is SourceVoxelSpacingUnit.MICROMETERS
+    assert np.array_equal(ROIArchiveSourceMetadata.geometry(output.content)[0].shapes[0].coordinates, graph.edges[0].coordinates)
+
+
+@pytest.mark.unit
+def test_graph_coordinate_unit_requires_original_nominal_spacing() -> None:
+    with pytest.raises(AttributeError, match="values_zyx"):
+        _branched_graph().replace_fields(coordinate_spacing=(1.0, 1.0))
 
 
 @pytest.mark.unit
@@ -137,10 +180,9 @@ def test_spatial_graph_output_context_preserves_exact_source_identity() -> None:
         artifact_type=SpatialGraphArtifactType,
     )
 
-    strategy = FunctionOutputContextStrategy.for_output_plan(output_plan)
-    contextualized = strategy.contextualize(source, graph, output_plan, None)
+    strategy = (ImageArtifactType if output_plan is None else output_plan.artifact_type)
+    contextualized = strategy.contextualize_output(source, graph, output_plan, None)
 
-    assert isinstance(strategy, SpatialGraphFunctionOutputContextStrategy)
     assert isinstance(contextualized, SpatialGraph)
     assert contextualized is not graph
     assert contextualized.source_path == "/tmp/A01_s002_w1_z001_t001.tif"
@@ -171,9 +213,7 @@ def test_spatial_graph_output_context_projects_declared_source_plane() -> None:
         artifact_type=SpatialGraphArtifactType,
     )
 
-    contextualized = FunctionOutputContextStrategy.for_output_plan(
-        output_plan
-    ).contextualize(source, graph, output_plan, None)
+    contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(source, graph, output_plan, None)
 
     assert contextualized.source_path == "/tmp/smi312.tif"
     assert contextualized.source_component_metadata["channel"] == "4"
@@ -188,7 +228,7 @@ def test_spatial_graph_normalizes_mutable_node_and_edge_sequences() -> None:
     nodes = [root, target]
     edges = [edge]
 
-    graph = SpatialGraph("graph", nodes, edges)  # type: ignore[arg-type]
+    graph = SpatialGraph("graph", nodes, edges, SourceVoxelSpacing((1.0, 1.0)))  # type: ignore[arg-type]
     nodes.clear()
     edges.clear()
 
@@ -209,7 +249,7 @@ def test_spatial_graph_rejects_nonmember_endpoint_references() -> None:
     )
 
     with pytest.raises(ValueError, match="directly reference nodes"):
-        SpatialGraph("graph", (root, member_target), (edge,))
+        SpatialGraph("graph", (root, member_target), (edge,), SourceVoxelSpacing((1.0, 1.0)))
 
 
 @pytest.mark.unit
@@ -225,6 +265,7 @@ def test_directed_forest_validation_rejects_cycles_and_multiple_parents() -> Non
             _edge(2, second, third, ((0.0, 1.0), (1.0, 1.0))),
             _edge(3, third, first, ((1.0, 1.0), (0.0, 0.0))),
         ),
+        coordinate_spacing=SourceVoxelSpacing((1.0, 1.0)),
     )
     multiple_parents = SpatialGraph(
         "multiple_parents",
@@ -233,6 +274,7 @@ def test_directed_forest_validation_rejects_cycles_and_multiple_parents() -> Non
             _edge(1, first, third, ((0.0, 0.0), (1.0, 1.0))),
             _edge(2, second, third, ((0.0, 1.0), (1.0, 1.0))),
         ),
+        coordinate_spacing=SourceVoxelSpacing((1.0, 1.0)),
     )
 
     with pytest.raises(ValueError, match="cycle detected"):
@@ -271,7 +313,7 @@ def test_swc_reader_restores_physical_forest_and_standard_features(tmp_path) -> 
 
     assert restored.name == "neurite_graph"
     assert restored.source_path == str(swc_path)
-    assert restored.coordinate_spacing == (1.0, 1.0, 1.0)
+    assert restored.coordinate_spacing == SourceVoxelSpacing((1.0, 1.0, 1.0))
     assert tuple(node.node_id for node in restored.nodes) == tuple(range(1, 8))
     assert tuple(edge.target_node_id for edge in restored.edges) == tuple(range(2, 8))
     assert restored.nodes[0].coordinates == (0.0, 0.0, 0.0)
@@ -340,7 +382,7 @@ def test_graph_roi_projection_preserves_paths_and_graph_features() -> None:
 
     assert roi_output.path == "/tmp/A01_neurite_graph_step3.graph.roi.zip"
     assert len(roi_output.content) == 3
-    first_roi = roi_output.content[0]
+    first_roi = ROIArchiveSourceMetadata.geometry(roi_output.content)[0]
     assert isinstance(first_roi.shapes[0], PolylineShape)
     np.testing.assert_array_equal(
         first_roi.shapes[0].coordinates,
@@ -471,7 +513,7 @@ def test_graph_roi_projection_rejects_three_dimensional_imagej_paths() -> None:
         "graph_3d",
         (root, target),
         (_edge(1, root, target, ((0.0, 0.0, 0.0), (1.0, 2.0, 3.0))),),
-        coordinate_spacing=(1.0, 1.0, 1.0),
+        coordinate_spacing=SourceVoxelSpacing((1.0, 1.0, 1.0)),
     )
 
     with pytest.raises(ValueError, match="ImageJ polyline ROI archives are 2D"):

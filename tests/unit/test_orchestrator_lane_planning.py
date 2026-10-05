@@ -49,6 +49,7 @@ from openhcs.core.orchestrator.worker_execution import (
     ForkInheritedWorkerLaneRunner,
     InlineWorkerExecutorResources,
     PooledWorkerExecutorResources,
+    ThreadedWorkerExecutorResources,
     PooledWorkerLaneRunner,
     WorkerExecutorFactory,
 )
@@ -56,6 +57,7 @@ from openhcs.core.orchestrator.worker_lanes import (
     CompiledContextLanePlanner,
     ForkInheritedWorkerExecutionState,
     WorkerAssignmentPlan,
+    WorkerLaneExecutionContext,
     WorkerLaneExecutionPlan,
 )
 from openhcs.core.progress import ProgressEvent, ProgressExecutionContext, ProgressPhase
@@ -371,7 +373,6 @@ def test_executor_factory_uses_inline_lane_for_single_threaded_worker(monkeypatc
     resources = WorkerExecutorFactory(
         log_file_base=None,
         progress_queue="queue",
-        progress_context=PROGRESS_CONTEXT,
         cancellation=ExecutionCancellationSignal(),
     ).create(
         runtime_environment=_runtime_environment(
@@ -388,6 +389,41 @@ def test_executor_factory_uses_inline_lane_for_single_threaded_worker(monkeypatc
     assert resources.use_multiprocessing is False
 
 
+def test_resource_modes_select_prepared_runtime_or_serial_transport_contexts():
+    runtime_context = _compiled_context("A01")
+    transport_context = _compiled_context("A01")
+    bundle = CompiledExecutionBundle(
+        pipeline_definition=(), runtime_contexts={"A01": runtime_context},
+        transport_contexts={"A01": transport_context}, worker_assignments={},
+        runtime_environment=_runtime_environment(
+            use_threading=False, start_method=MultiprocessingStartMethod.SPAWN,
+        ),
+    )
+    cancellation = ExecutionCancellationSignal()
+    resources = (
+        InlineWorkerExecutorResources(
+            multiprocessing_context=None, use_multiprocessing=False,
+            cancellation=cancellation,
+        ),
+        ForkInheritedWorkerExecutorResources(
+            multiprocessing_context=None, use_multiprocessing=True,
+        ),
+        ThreadedWorkerExecutorResources(
+            multiprocessing_context=None, use_multiprocessing=False,
+            _executor=None, cancellation=cancellation,
+        ),
+    )
+    for resource in resources:
+        contexts = resource.contexts_snapshot(bundle)
+        assert contexts is not bundle.runtime_contexts
+        assert contexts["A01"] is runtime_context
+    serial = PooledWorkerExecutorResources(
+        multiprocessing_context=None, use_multiprocessing=True,
+        _executor=None, cancellation=None,
+    )
+    assert serial.contexts_snapshot(bundle)["A01"] is transport_context
+
+
 def test_executor_factory_uses_inline_lane_for_single_fork_worker(monkeypatch):
     context = object()
     monkeypatch.setattr(
@@ -399,7 +435,6 @@ def test_executor_factory_uses_inline_lane_for_single_fork_worker(monkeypatch):
     resources = WorkerExecutorFactory(
         log_file_base="/tmp/worker",
         progress_queue="queue",
-        progress_context=PROGRESS_CONTEXT,
         cancellation=ExecutionCancellationSignal(),
     ).create(
         runtime_environment=_runtime_environment(
@@ -438,7 +473,6 @@ def test_executor_factory_creates_thread_pool_for_multi_worker_threading(monkeyp
     resources = WorkerExecutorFactory(
         log_file_base=None,
         progress_queue="queue",
-        progress_context=PROGRESS_CONTEXT,
         cancellation=ExecutionCancellationSignal(),
     ).create(
         runtime_environment=_runtime_environment(
@@ -450,7 +484,7 @@ def test_executor_factory_creates_thread_pool_for_multi_worker_threading(monkeyp
 
     assert isinstance(resources.executor, FakeThreadPoolExecutor)
     assert created == {"max_workers": 3}
-    assert isinstance(resources, PooledWorkerExecutorResources)
+    assert isinstance(resources, ThreadedWorkerExecutorResources)
     assert resources.uses_fork_inherited_contexts is False
     assert resources.use_multiprocessing is False
 
@@ -466,7 +500,6 @@ def test_executor_factory_uses_fork_inherited_lane_without_pool(monkeypatch):
     resources = WorkerExecutorFactory(
         log_file_base="/tmp/worker",
         progress_queue="queue",
-        progress_context=PROGRESS_CONTEXT,
         cancellation=ExecutionCancellationSignal(),
     ).create(
         runtime_environment=_runtime_environment(
@@ -509,7 +542,6 @@ def test_executor_factory_creates_process_pool_with_worker_initializer(monkeypat
     resources = WorkerExecutorFactory(
         log_file_base="/tmp/worker-log",
         progress_queue="queue",
-        progress_context=PROGRESS_CONTEXT,
         cancellation=ExecutionCancellationSignal(),
     ).create(
         runtime_environment=runtime_environment,
@@ -523,7 +555,6 @@ def test_executor_factory_creates_process_pool_with_worker_initializer(monkeypat
     assert created["initargs"] == (
         "/tmp/worker-log",
         "queue",
-        PROGRESS_CONTEXT,
     )
     assert isinstance(resources, PooledWorkerExecutorResources)
     assert resources.uses_fork_inherited_contexts is False
@@ -633,7 +664,11 @@ def test_worker_lane_honours_cancellation_before_next_axis(monkeypatch):
         "_execute_axis_with_sequential_combinations",
         execute_axis,
     )
-    lane_context = SimpleNamespace()
+    lane_context = WorkerLaneExecutionContext(
+        execution_id="cancel-lane", plate_id="synthetic",
+        debug_execution_policy=NoOpDebugExecutionPolicy(), worker_slot="worker_0",
+        worker_assignments={"worker_0": ["A01", "B01"]},
+    )
     lane_axis_contexts = [
         ("A01", [("A01", SimpleNamespace(axis_id="A01"))]),
         ("B01", [("B01", SimpleNamespace(axis_id="B01"))]),
@@ -889,8 +924,8 @@ def test_analysis_consolidation_propagates_runtime_failures(monkeypatch):
         ),
     )
     monkeypatch.setattr(
-        analysis_consolidation_module,
-        "execution_analysis_outputs",
+        analysis_consolidation_module.RuntimeAnalysisConsolidationInputs,
+        "from_observations",
         lambda *args: inputs,
     )
     monkeypatch.setattr(
@@ -1097,7 +1132,7 @@ def test_compiled_execution_returns_settled_nonpersistent_viewer_state_before_cl
 ):
     events = []
     monkeypatch.setattr(
-        compiled_plate_execution_module.OpenHCSMetadataWriter,
+        compiled_plate_execution_module.OpenHCSMetadataTarget,
         "finalize_completed_plate",
         lambda _contexts: events.append("metadata"),
     )

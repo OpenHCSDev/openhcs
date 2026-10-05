@@ -1,0 +1,125 @@
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/core/processing_preparation.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/core/processing_preparation.py
+@@ -274,7 +274,9 @@
+         }
+         return cls(tuple(sources.values()))
+ 
+-    def populate_child_caches(self) -> None:
++    def populate_child_caches(
++        self, *, status_callback: Callable[[str], None] | None = None
++    ) -> None:
+         if "fork" not in multiprocessing.get_all_start_methods():
+             return
+         operations = {
+@@ -304,5 +306,7 @@
+                 for worker in tuple(workers):
+                     if worker.result_connection in ready:
+                         worker.wait()
++                        if status_callback is not None:
++                            status_callback(f"Prepared kernel cache worker {worker.process.pid}")
+                         worker.close()
+                         workers.remove(worker)
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/lib_registry/registry_service.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/processing/backends/lib_registry/registry_service.py
+@@ -101,7 +101,9 @@
+             return {} if cls._metadata_cache is None else dict(cls._metadata_cache)
+ 
+     @classmethod
+-    def prepare_in_current_process(cls) -> Dict[str, FunctionMetadata]:
++    def prepare_in_current_process(
++        cls, *, status_callback: RegistryPreparationCallback | None = None
++    ) -> Dict[str, FunctionMetadata]:
+         """Discover callables and prepare their declared persistent kernel caches."""
+ 
+         from openhcs.core.processing_preparation import (
+@@ -109,14 +111,22 @@
+             PreparationCacheBatch,
+         )
+ 
++        emit_status = status_callback or logger.debug
++        emit_status("Discovering registered callables")
+         if cls._metadata_cache is None:
+             cls._metadata_cache = cls._metadata_from_instances(
+                 cls._available_registry_instances()
+             )
+         functions = tuple(metadata.func for metadata in cls._metadata_cache.values())
+-        PreparationCacheBatch.from_callables(functions).populate_child_caches()
++        emit_status("Preparing declared registry kernel caches")
++        PreparationCacheBatch.from_callables(functions).populate_child_caches(
++            status_callback=emit_status
++        )
+         for function in functions:
+-            CallablePreparation.from_callable(function).prepare()
++            preparation = CallablePreparation.from_callable(function)
++            preparation.prepare()
++            emit_status(f"Prepared callable {preparation.projection.module_name}.{preparation.projection.name}")
++        emit_status(f"Registered kernels ready ({len(functions)} callables)")
+         return cls._metadata_cache
+ 
+     @classmethod
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/runtime/function_catalog_preparation.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/runtime/function_catalog_preparation.py
+@@ -28,8 +28,10 @@
+     """Own one lazily started endpoint catalog preparation operation."""
+ 
+     @staticmethod
+-    def prepare_persistent_catalog() -> None:
+-        """Build registry-owned persistent caches in the dedicated child process."""
++    def prepare_persistent_catalog(
++        *, status_callback: Callable[[str], None] | None = None
++    ) -> None:
++        """Prepare registry caches under cooperative owned-process cancellation."""
+ 
+         from openhcs.processing.backends.lib_registry.registry_service import (
+             RegistryService,
+@@ -40,7 +42,7 @@
+ 
+         previous_handler = signal.signal(signal.SIGTERM, cancel_preparation)
+         try:
+-            RegistryService.prepare_in_current_process()
++            RegistryService.prepare_in_current_process(status_callback=status_callback)
+         finally:
+             signal.signal(signal.SIGTERM, previous_handler)
+ 
+@@ -99,7 +101,7 @@
+         if future is not None and not future.cancelled():
+             if status_callback is not None:
+                 status_callback(self.snapshot())
+-            self._prepare(future, self._prepare_current_process)
++            self._prepare(future, self._prepare_current_process, status_callback)
+         self.wait_until_ready(status_callback)
+ 
+     def _prepare_current_process(self, *, status_callback, cancellation) -> None:
+@@ -107,7 +109,7 @@
+         if cancellation.requested():
+             raise CancelledError
+         status_callback("Warming registered function kernels in the execution server")
+-        self.prepare_persistent_catalog()
++        self.prepare_persistent_catalog(status_callback=status_callback)
+         if cancellation.requested():
+             raise CancelledError
+         self._function_catalog.catalog(
+@@ -233,11 +235,21 @@
+                 timestamp=time.time(),
+             )
+ 
+-    def _prepare(self, future: Future[None], prepare: Callable[..., None]) -> None:
++    def _prepare(
++        self,
++        future: Future[None],
++        prepare: Callable[..., None],
++        observer: Callable[[EndpointStartupStatus], None] | None = None,
++    ) -> None:
+         """Complete this same future under either admitted preparation context."""
++        def report(message: str) -> None:
++            self._set_message(message)
++            if observer is not None:
++                observer(self.snapshot())
++
+         try:
+             prepare(
+-                status_callback=self._set_message,
++                status_callback=report,
+                 cancellation=self._cancellation,
+             )
+         except CancelledError:

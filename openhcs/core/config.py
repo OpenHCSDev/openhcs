@@ -166,7 +166,8 @@ class GlobalPipelineConfig(AnnotatedDataclassValidationMixin):
     Directory for materialized named analysis artifacts such as CSV and JSON files.
 
     A relative path is resolved inside the compiled output plate root; an
-    absolute path is used unchanged. This pipeline-wide destination is separate
+    absolute path must also remain inside that root. Unsupported root geometry
+    is rejected during planning before dispatch. This destination is separate
     from ordinary image outputs and per-step main-flow checkpoints.
     """
 
@@ -1003,6 +1004,14 @@ class StreamingDefaults(Enableable, StepWellFilterConfig):
     IPC transports remain local regardless of this value.
     """
 
+    listen_host: Annotated[NonBlankString, abbreviation("listen")] = "127.0.0.1"
+    """Interface for a locally launched viewer's TCP data and control sockets.
+
+    The default keeps managed viewers local. Set an explicit interface or
+    ``*`` to permit remote clients. This does not change the connection host
+    above, rebind an externally owned viewer, or affect IPC transport.
+    """
+
     transport_mode: Annotated[TransportMode, abbreviation("transport")] = (
         get_default_transport_mode()
     )
@@ -1167,7 +1176,10 @@ class NapariStreamingConfig(
     def viewer_process_launch_config(self) -> ViewerProcessLaunchConfig:
         """Project Napari's process-global Qt setting onto viewer launch."""
 
-        return ViewerProcessLaunchConfig(qt_font_dpi=self.font_dpi)
+        return ViewerProcessLaunchConfig(
+            qt_font_dpi=self.font_dpi,
+            listen_host=self.listen_host,
+        )
 
 
 @abbreviation("fiji")
@@ -1214,31 +1226,25 @@ _inject_all_pending_fields()
 def runtime_config_parameter(
     parameter: inspect.Parameter,
 ) -> inspect.Parameter | None:
-    """Resolve a callable parameter owned by an exact PipelineConfig field."""
-    from dataclasses import fields as dataclass_fields
+    """Resolve config parameter schema without constructing a config value."""
     from objectstate.lazy_factory import LazyDataclass
 
-    matching_fields = tuple(
-        config_field
-        for config_field in dataclass_fields(PipelineConfig)
-        if config_field.name == parameter.name
-        and isinstance(config_field.type, type)
-        and issubclass(config_field.type, LazyDataclass)
-    )
-    if not matching_fields:
+    config_field = PipelineConfig.__dataclass_fields__.get(parameter.name)
+    if config_field is None:
         return None
-    if len(matching_fields) != 1:
-        raise TypeError(
-            f"PipelineConfig declares multiple runtime config fields named "
-            f"{parameter.name!r}."
-        )
-    config_type = matching_fields[0].type
-    if not isinstance(parameter.annotation, type) or not issubclass(
-        config_type,
-        parameter.annotation,
+    config_type = config_field.type
+    if (
+        not isinstance(config_type, type)
+        or not issubclass(config_type, LazyDataclass)
+        or not isinstance(parameter.annotation, type)
+        or not issubclass(config_type, parameter.annotation)
     ):
         return None
-    return parameter.replace(annotation=config_type, default=config_type())
+    return (
+        parameter
+        if parameter.annotation is config_type
+        else parameter.replace(annotation=config_type)
+    )
 
 
 SourceBindingsConfig = source_binding_configs.SourceBindingsConfig

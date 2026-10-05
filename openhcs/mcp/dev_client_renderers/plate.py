@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Mapping
+from math import prod
 from pathlib import Path
 from typing import ClassVar
 
@@ -25,55 +26,54 @@ from openhcs.agent.dto.plate import (
 from openhcs.mcp.dev_client_core import optional_int
 from openhcs.mcp.dev_client_rendering import (
     McpDevOutputRenderer,
+    McpDevTypedOutputRenderer,
+    McpDevOutputRenderOptions,
     McpDevPayloadProjection,
     McpDiagnosticRenderer,
 )
 
 
-class PlateImageSampleRenderer(McpDevOutputRenderer):
+class PlateImageSampleRenderer(McpDevTypedOutputRenderer):
     """Compact renderer for sampled plate image pixels and statistics."""
 
     output_contract = PlateImageSampleResult
+    unavailable_summary = "Sample failed: <unavailable>"
 
     @classmethod
-    def render(cls, response: JsonObject) -> str:
-        sample_payload = cls._first_tool_payload(response)
-        if sample_payload is None:
-            return json.dumps(response, indent=2, sort_keys=True)
-        errors = sample_payload.get("errors")
-        if isinstance(errors, list) and errors:
-            return "\n".join(cls._error_lines(errors))
-
-        sample_values = sample_payload.get("sample_values")
-        sample_value_count = cls._json_value_count(sample_values)
+    def render_payload(cls, sample: PlateImageSampleResult,
+                       options: McpDevOutputRenderOptions) -> str:
+        if sample.errors:
+            return "Sample failed:"
+        sample_values = sample.sample_values
+        sample_value_count = cls.json_value_count(sample_values)
         lines = [
-            f"Image: {cls._text(sample_payload.get('virtual_path'))}",
-            f"Source: {cls._text(sample_payload.get('source_path'))}",
+            f"Image: {McpDevPayloadProjection.text(sample.virtual_path)}",
+            f"Source: {McpDevPayloadProjection.text(sample.source_path)}",
             (
                 "Resolution: "
-                f"selected={cls._text(sample_payload.get('selected_resolution_index'))} "
-                f"count={cls._text(sample_payload.get('resolution_count'))} "
-                f"source_shape={cls._sequence_text(sample_payload.get('shape'))} "
+                f"selected={McpDevPayloadProjection.text(sample.selected_resolution_index)} "
+                f"count={McpDevPayloadProjection.text(sample.resolution_count)} "
+                f"source_shape={cls._sequence_text(sample.shape)} "
                 "resolution_shape="
-                f"{cls._sequence_text(sample_payload.get('resolution_shape'))} "
-                f"downsample_yx={cls._sequence_text(sample_payload.get('downsample_yx'))}"
+                f"{cls._sequence_text(sample.resolution_shape)} "
+                f"downsample_yx={cls._sequence_text(sample.downsample_yx)}"
             ),
             (
                 "Statistics: "
-                f"scope={cls._text(sample_payload.get('statistics_scope'))} "
-                f"dtype={cls._text(sample_payload.get('dtype'))} "
-                f"min={cls._text(sample_payload.get('minimum'))} "
-                f"max={cls._text(sample_payload.get('maximum'))} "
-                f"mean={cls._mean_text(sample_payload.get('mean'))}"
+                f"scope={McpDevPayloadProjection.text(sample.statistics_scope)} "
+                f"dtype={McpDevPayloadProjection.text(sample.dtype)} "
+                f"min={McpDevPayloadProjection.text(sample.minimum)} "
+                f"max={McpDevPayloadProjection.text(sample.maximum)} "
+                f"mean={cls._mean_text(sample.mean)}"
             ),
             (
                 "Sample: "
-                f"origin_yx={cls._sequence_text(sample_payload.get('sample_origin_yx'))} "
-                f"shape={cls._sequence_text(sample_payload.get('sample_shape'))} "
-                f"included={cls._text(sample_payload.get('sample_included'))}"
+                f"origin_yx={cls._sequence_text(sample.sample_origin_yx)} "
+                f"shape={cls._sequence_text(sample.sample_shape)} "
+                f"included={sample.sample_included}"
             ),
         ]
-        if sample_payload.get("sample_included") is True:
+        if sample.sample_included:
             if sample_value_count <= 64:
                 lines.append("Sample values:")
                 lines.append(json.dumps(sample_values, indent=2))
@@ -82,13 +82,11 @@ class PlateImageSampleRenderer(McpDevOutputRenderer):
                     f"Sample values: {sample_value_count} elements; pass --json to print them."
                 )
         else:
-            omitted_reason = cls._text(sample_payload.get("sample_omitted_reason"))
+            omitted_reason = McpDevPayloadProjection.text(sample.sample_omitted_reason)
             omitted_line = f"Sample values omitted: {omitted_reason}"
-            required_elements = cls._shape_element_count(
-                sample_payload.get("sample_shape")
-            )
+            required_elements = prod(sample.sample_shape) if sample.sample_shape else None
             if (
-                cls._omitted_by_element_budget(omitted_reason)
+                "max_array_elements" in omitted_reason
                 and required_elements is not None
             ):
                 omitted_line += (
@@ -102,86 +100,17 @@ class PlateImageSampleRenderer(McpDevOutputRenderer):
             lines.append(omitted_line)
         return "\n".join(lines)
 
-    @staticmethod
-    def _first_tool_payload(payload: JsonObject) -> Mapping[str, JsonValue] | None:
-        results = payload.get("results")
-        if not isinstance(results, list) or not results:
-            return None
-        result = results[0]
-        if not isinstance(result, Mapping):
-            return None
-        payloads = result.get("payloads")
-        if not isinstance(payloads, list) or not payloads:
-            return None
-        first_payload = payloads[0]
-        if not isinstance(first_payload, Mapping):
-            return None
-        return first_payload
+    @classmethod
+    def _sequence_text(cls, value) -> str:
+        return next(iter(cls.optional_lines(
+            value, lambda items: ("x".join(str(item) for item in items),),
+        )), "<none>")
 
     @classmethod
-    def _error_lines(cls, errors: list[JsonValue]) -> list[str]:
-        lines = ["Sample failed:"]
-        for error in errors[:3]:
-            if isinstance(error, Mapping):
-                code = cls._text(error.get("code"))
-                message = cls._text(error.get("message"))
-                hint = error.get("hint")
-                lines.append(f"- {code}: {message}")
-                if hint is not None:
-                    lines.append(f"  hint: {cls._text(hint)}")
-            else:
-                lines.append(f"- {cls._text(error)}")
-        if len(errors) > 3:
-            lines.append(f"... {len(errors) - 3} more errors")
-        return lines
-
-    @staticmethod
-    def _json_value_count(value: JsonValue) -> int:
-        if isinstance(value, list | tuple):
-            return sum(
-                PlateImageSampleRenderer._json_value_count(item) for item in value
-            )
-        if isinstance(value, Mapping):
-            return sum(
-                PlateImageSampleRenderer._json_value_count(item)
-                for item in value.values()
-            )
-        if value is None:
-            return 0
-        return 1
-
-    @staticmethod
-    def _shape_element_count(value: JsonValue) -> int | None:
-        if not isinstance(value, list | tuple) or not value:
-            return None
-        element_count = 1
-        for item in value:
-            if isinstance(item, bool) or not isinstance(item, int) or item < 0:
-                return None
-            element_count *= item
-        return element_count
-
-    @staticmethod
-    def _omitted_by_element_budget(reason: str) -> bool:
-        return reason == "max_array_elements_exceeded" or "max_array_elements" in reason
-
-    @staticmethod
-    def _sequence_text(value: JsonValue) -> str:
-        if isinstance(value, list | tuple):
-            return "x".join(str(item) for item in value)
-        return PlateImageSampleRenderer._text(value)
-
-    @staticmethod
-    def _mean_text(value: JsonValue) -> str:
-        if isinstance(value, int | float):
-            return f"{value:.3f}"
-        return PlateImageSampleRenderer._text(value)
-
-    @staticmethod
-    def _text(value: JsonValue) -> str:
-        if value is None:
-            return "<none>"
-        return str(value)
+    def _mean_text(cls, value: float | None) -> str:
+        return next(iter(cls.optional_lines(
+            value, lambda mean: (f"{mean:.3f}",),
+        )), "<none>")
 
 
 class SyntheticPlateGenerationRenderer(McpDevOutputRenderer):
@@ -1394,66 +1323,36 @@ class SelectedPlateFilesRenderer(McpDevOutputRenderer):
         return query.get("plate_path") == selected_plate.get("plate_root")
 
 
-class SelectedPlateSampleRenderer(McpDevOutputRenderer):
+class SelectedPlateSampleRenderer(McpDevTypedOutputRenderer):
     """Compact renderer for selected-plate image sampling."""
 
     output_contract = SelectedPlateImageSampleResult
+    unavailable_summary = "Selected plate sample: <unavailable>"
 
     @classmethod
-    def render(cls, response: JsonObject) -> str:
-        payload = McpDevPayloadProjection.first_tool_payload(response)
-        if payload is None:
-            return json.dumps(response, indent=2, sort_keys=True)
-        selected_plate = McpDevPayloadProjection.nested_mapping(
-            payload,
-            "selected_plate",
-        )
-        target = payload.get("target") or SelectedPlateFileQueryTarget.SELECTED.value
-        errors = McpDevPayloadProjection.sequence_of_mappings(payload.get("errors"))
-        if errors:
-            return "\n".join(
-                (
-                    "Selected plate sample: failed",
-                    (
-                        "Selected plate: "
-                        f"{McpDevPayloadProjection.text(selected_plate.get('name'))} "
-                        f"root={McpDevPayloadProjection.text(selected_plate.get('plate_root'))} "
-                        f"target={McpDevPayloadProjection.text(target)}"
-                    ),
-                    *PlateImageSampleRenderer._error_lines(list(errors)),
-                )
-            )
-
-        sample = McpDevPayloadProjection.nested_mapping(payload, "sample")
+    def render_payload(cls, payload: SelectedPlateImageSampleResult,
+                       options: McpDevOutputRenderOptions) -> str:
+        selected_plate = payload.selected_plate
         lines = [
             (
                 "Selected plate: "
                 f"{McpDevPayloadProjection.text(selected_plate.get('name'))} "
                 f"root={McpDevPayloadProjection.text(selected_plate.get('plate_root'))} "
-                f"target={McpDevPayloadProjection.text(target)}"
+                f"target={payload.target.value}"
             ),
             (
                 "Selected image: "
-                f"{McpDevPayloadProjection.text(payload.get('image_path'))} "
-                f"auto={McpDevPayloadProjection.text(payload.get('auto_selected_image_path'))}"
+                f"{McpDevPayloadProjection.text(payload.image_path)} "
+                f"auto={payload.auto_selected_image_path}"
             ),
         ]
-        if not sample:
-            lines.append("Sample: <none>")
+        if payload.errors:
+            lines.insert(0, "Selected plate sample: failed")
             return "\n".join(lines)
-        lines.append(
-            PlateImageSampleRenderer.render(
-                {
-                    "results": [
-                        {
-                            "tool": agent_capabilities.sample_plate_image.name,
-                            "mcp_error": False,
-                            "payloads": [sample],
-                        }
-                    ]
-                }
-            )
-        )
+        lines.extend(cls.optional_lines(
+            payload.sample,
+            lambda sample: (cls.render_payload_value(sample, options),),
+        ) or ("Sample: <none>",))
         return "\n".join(lines)
 
 

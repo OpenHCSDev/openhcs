@@ -8,6 +8,7 @@ while producing the same FunctionMetadata format as external libraries.
 
 import ast
 import importlib
+import importlib.abc
 import inspect
 import logging
 from abc import ABC, abstractmethod
@@ -20,7 +21,7 @@ from typing import Any, ClassVar, Dict, List, Tuple
 from weakref import WeakKeyDictionary
 
 import numpy as np
-from metaclass_registry import import_module_preserving_root_logging
+from metaclass_registry import LazyDiscoveryDict, import_module_preserving_root_logging
 
 from openhcs.constants import VALID_MEMORY_TYPES, MemoryType
 from openhcs.core.callable_contract import (
@@ -35,6 +36,7 @@ from openhcs.processing.backends.lib_registry.unified_registry import (
     ProcessingContract,
 )
 from openhcs.utils.environment import OpenHCSProcessEnvironment
+from openhcs.processing.custom_functions.runtime_registry import CustomFunctionCanonicalLookup
 
 logger = logging.getLogger(__name__)
 
@@ -47,15 +49,121 @@ class OpenHCSFunctionCatalogModule(ModuleType, ABC):
         """Return processing functions owned by this module's catalog."""
 
 
+class _CatalogDeclarationSourceSelection(ast.NodeVisitor):
+    """Read declaration eligibility through Python's native AST traversal owner."""
+
+    def __init__(
+        self, keys: frozenset[str], attributes: tuple[str, ...],
+        normalize: Callable[[str], str],
+    ) -> None:
+        self.keys = keys
+        self.attributes = attributes
+        self.normalize = normalize
+        self.selected = False
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        """Function bodies cannot supply enclosing class declaration fields."""
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        """Async function bodies are likewise outside class-field ownership."""
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        for statement in node.body:
+            if isinstance(statement, ast.Assign):
+                targets = statement.targets
+            elif isinstance(statement, ast.AnnAssign):
+                targets = (statement.target,)
+            else:
+                continue
+            if not any(
+                isinstance(target, ast.Name) and target.id in self.attributes
+                for target in targets
+            ):
+                continue
+            try:
+                value = ast.literal_eval(statement.value)
+            except (ValueError, TypeError):
+                self.selected = True
+                return
+            if value is None:
+                continue
+            values = (value,) if isinstance(value, str) else value
+            if any(self.normalize(item) in self.keys for item in values):
+                self.selected = True
+                return
+        self.generic_visit(node)
+
+
 class OpenHCSFunctionCatalogDeclaration(ABC):
     """Nominal declaration that assigns local callables to one catalog module."""
 
     registry_catalog_module: ClassVar[str | None] = None
+    __registry__: ClassVar[LazyDiscoveryDict]
+
+    @classmethod
+    def discover_source_declarations(
+        cls,
+        lookup_keys: frozenset[str],
+        attributes: tuple[str, ...],
+        normalize: Callable[[str], str],
+        declared_keys: Callable[[type], frozenset[str]],
+    ) -> tuple[type, ...]:
+        """Select declaration sources, then read the original registered owners.
+
+        Source literals are eligibility only, never registered membership or
+        callable metadata. Nonliteral declarations must be imported to resolve
+        their value. Loaders without source likewise require discovery rather
+        than a source-based exclusion; failures remain authoritative. No
+        projection is cached.
+        """
+        missing = lookup_keys.difference(
+            key for declaration in dict.values(cls.__registry__)
+            for key in declared_keys(declaration)
+        )
+        if not missing:
+            return tuple(
+                declaration for declaration in dict.values(cls.__registry__)
+                if lookup_keys.intersection(declared_keys(declaration))
+            )
+
+        def eligible(module_name: str) -> bool:
+            spec = importlib.util.find_spec(module_name)
+            if spec is None or not isinstance(spec.loader, importlib.abc.InspectLoader):
+                raise ImportError(f"No declaration source loader for {module_name!r}")
+            source = spec.loader.get_source(module_name)
+            if source is None:
+                return True
+            module_ast = ast.parse(source, filename=spec.origin or module_name)
+            selection = _CatalogDeclarationSourceSelection(missing, attributes, normalize)
+            selection.visit(module_ast)
+            return selection.selected
+
+        cls.__registry__.discover_matching(eligible)
+        return tuple(
+            declaration for declaration in dict.values(cls.__registry__)
+            if lookup_keys.intersection(declared_keys(declaration))
+        )
 
     @classmethod
     @abstractmethod
     def declared_function_names(cls) -> tuple[str, ...]:
         """Return the local callable names owned by this declaration."""
+
+    @classmethod
+    def for_backend_function_name(cls, function_name: str) -> type | None:
+        """Resolve one function through this nominal catalog's declarations."""
+        if not isinstance(function_name, str) or not function_name.strip():
+            raise ValueError(f"{cls.__name__}.function_name must be a non-empty string.")
+        matches = cls.discover_source_declarations(
+            frozenset((function_name,)), ("function_name", "function_variants"), str,
+            lambda declaration: frozenset(declaration.declared_function_names()),
+        )
+        if len(matches) > 1:
+            raise ValueError(
+                f"Function {function_name!r} is owned by multiple catalog "
+                f"declarations: {tuple(owner.__name__ for owner in matches)!r}."
+            )
+        return matches[0] if matches else None
 
     @classmethod
     def require_registry_catalog_module(cls) -> str:
@@ -134,37 +242,28 @@ def _module_declares_allowed_memory_type(
     if allowed_memory_types is None:
         return True
     spec = importlib.util.find_spec(module_name)
-    origin = spec.origin if spec is not None else None
     if spec is not None and spec.submodule_search_locations is not None:
         return True
-    if origin is None:
-        return True
-    try:
-        source_stat = Path(origin).stat()
-    except OSError:
-        return True
+    if spec is None or not isinstance(spec.loader, importlib.abc.InspectLoader):
+        return False
+    source = spec.loader.get_source(module_name)
+    if source is None:
+        return False
     return _source_declares_allowed_memory_type(
-        origin,
-        source_stat.st_mtime_ns,
-        source_stat.st_size,
+        source,
+        spec.origin or module_name,
         allowed_memory_types,
     )
 
 
 @lru_cache(maxsize=1024)
 def _source_declares_allowed_memory_type(
+    source: str,
     origin: str,
-    source_mtime_ns: int,
-    source_size: int,
     allowed_memory_types: frozenset[str],
 ) -> bool:
-    """Inspect one source revision under the current admission declaration."""
+    """Inspect loader-decoded source; content identity invalidates edited modules."""
 
-    del source_mtime_ns, source_size
-    try:
-        source = Path(origin).read_text(encoding="utf-8")
-    except OSError:
-        return True
     try:
         module_ast = ast.parse(source, filename=origin)
     except SyntaxError:
@@ -242,7 +341,7 @@ def _memory_type_from_decorator(
         return None
 
 
-class OpenHCSRegistry(LibraryRegistryBase):
+class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
     """
     Registry for OpenHCS native functions with explicit contract support.
 
@@ -543,12 +642,9 @@ class OpenHCSRegistry(LibraryRegistryBase):
 
         return functions
 
-    def _metadata_for_function(
-        self,
-        name: str,
-        func,
-        module_name: str,
-    ) -> FunctionMetadata | None:
+    @classmethod
+    def declared_callable_contract(cls, func: Callable) -> CallableContract | None:
+        """Select valid declarations independently of catalog import policy."""
         declared = inspect.unwrap(func)
         if not inspect.isfunction(declared):
             return None
@@ -557,36 +653,40 @@ class OpenHCSRegistry(LibraryRegistryBase):
             callable_contract.execution_scope is FunctionStepExecutionScope.PLATE
         )
 
-        # Look for functions with memory type attributes (added by @numpy, @cupy, etc.)
-        if (
+        if not plate_scoped and (
             callable_contract.input_memory_type is None
             or callable_contract.output_memory_type is None
         ):
-            if not plate_scoped:
-                return None
-            input_type = None
-            output_type = None
-        else:
-            input_type = callable_contract.input_memory_type
-            output_type = callable_contract.output_memory_type
+            return None
 
         if not plate_scoped and (
-            input_type not in VALID_MEMORY_TYPES
-            or output_type not in VALID_MEMORY_TYPES
+            callable_contract.input_memory_type not in VALID_MEMORY_TYPES
+            or callable_contract.output_memory_type not in VALID_MEMORY_TYPES
         ):
             logger.debug(
-                f"Skipping {name} - invalid memory types: {input_type} -> {output_type}"
+                "Skipping %s - invalid input/output memory declarations", declared.__name__
             )
             return None
 
-        declared_memory_types = _catalog_memory_types(func)
-        if declared_memory_types is None:
-            logger.debug(
-                "Skipping %s - declared framework roles are invalid, unavailable, "
-                "or excluded by current catalog policy",
-                name,
-            )
+        try:
+            callable_contract.declared_memory_types
+        except ValueError:
             return None
+        return callable_contract
+
+    def _metadata_for_function(
+        self,
+        name: str,
+        func: Callable,
+        module_name: str,
+        *,
+        metadata_type: type[FunctionMetadata] = FunctionMetadata,
+    ) -> FunctionMetadata | None:
+        callable_contract = self.declared_callable_contract(func)
+        if callable_contract is None:
+            return None
+        declared = inspect.unwrap(func)
+        plate_scoped = callable_contract.execution_scope is FunctionStepExecutionScope.PLATE
 
         contract = self._processing_contract_for_function(
             callable_contract,
@@ -611,7 +711,7 @@ class OpenHCSRegistry(LibraryRegistryBase):
         # Extract full docstring, not just first line
         doc = self._extract_function_docstring(func)
 
-        return FunctionMetadata(
+        return metadata_type(
             name=unique_name,
             func=wrapped_func,
             contract=contract,
@@ -620,7 +720,7 @@ class OpenHCSRegistry(LibraryRegistryBase):
             doc=doc,
             tags=self._generate_tags(module_name),
             original_name=declared.__name__,
-            memory_type=input_type,
+            memory_type=callable_contract.input_memory_type,
         )
 
     def _catalog_metadata_for_function(
@@ -637,6 +737,8 @@ class OpenHCSRegistry(LibraryRegistryBase):
             name,
             declared,
         ):
+            return None
+        if _catalog_memory_types(func) is None:
             return None
         return self._metadata_for_function(
             name,
@@ -661,6 +763,8 @@ class OpenHCSRegistry(LibraryRegistryBase):
 
         declared = inspect.unwrap(func)
         if not inspect.isfunction(declared):
+            return None
+        if _catalog_memory_types(func) is None:
             return None
 
         return cls()._metadata_for_function(

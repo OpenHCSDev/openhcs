@@ -1,0 +1,197 @@
+Native CSV producers and matched output qualification (#356)
+============================================================
+
+The matched benchmark did not qualify CSV-only pipelines. Real native/public
+exports additionally exposed metadata renamed as scientific measurements,
+flat combined-object headers, granularity samples padded to 16 when only five
+were requested, and synthetic Z features in 2D object measurements. The saved
+Imaging Flow Cytometry replay isolated 68 extra features after correcting the
+header presentation: 66 padded granularity samples and two 2D Z columns.
+No numerical discrepancy in the actual requested features was found.
+Main's merged named-selector authoring change is included in the final checkpoint.
+
+The production checkpoint is ``37e4c7aadddbf4df444490312d17f3a4723822aa``,
+which merges main ``fe7ad23cc6ffc43eebac0e315d411142e4057364``.
+All eight child pins match main, including pyqt-reactive
+``ad4948775ab81180a354d4b793d17ee5ddff3972``. The initially stale local
+child mirror was refreshed from its upstream before installing that exact pin.
+The shared environment includes declared optional
+viewer dependencies, Napari 0.9.2 and napari-crop 0.1.12. Numerical dependency
+versions remain unchanged. Both native extensions were rebuilt with the recorded
+compiler flags; only the shared table renderer's source changed.
+
+Nominal production consumers
+----------------------------
+
+SpreadsheetFileSelection owns combined rows and native contextual headers;
+the common native CSV writer renders explicit header rows with its existing
+escaping and scalar normalization. Metadata names remain native ``Metadata_*``;
+canonical filename/path prefixes are correctly recognized. The flat combined
+header path and detached row/render helpers are removed.
+
+GranularitySpectrumMeasurementRows owns the actual spectrum matrix and derives
+its schema through the existing indexed descriptor declaration. Image and object
+leaves provide only their identities; the object leaf also inherits the existing
+ObjectMeasurementColumnarRows capability. Two fixed-16 scalar dataclasses,
+16-argument factories and duplicate iteration/field rosters are removed. Actual
+requested sample counts, including empty object domains and more than 16 samples,
+flow through the existing module projection and materialization consumers.
+The numerical reconstruction and requested-sample calculations are unchanged.
+
+ObjectLocationCoordinateValues owns physical axis-presence facts. The full
+native gate rejected a uniform present-axis emission rule: 17 of 30 cases need
+native segmentation Z fields. Installed CP ImageSegmentation.add_measurements
+explicitly emits XYZ with zero Z in 2D; the identify utility used by grid objects
+emits actual label dimensions. One abstract CP location-row parent shares domain,
+identity and coordinate calculations; two concrete leaves own those contracts.
+The existing module factory chooses the row owner. The shared
+LabelDimensionObjectArtifactOutputModule capability selects the utility contract
+for grid, expand/shrink, mask, split/merge, tertiary, manual, straighten/untangle
+worms and combination producers. It composes through MI with existing transform
+and lineage capabilities; the grid-local factory is removed. Native segmentation
+retains XYZ. Eleven actual module factories have exact 2D/3D coordinate controls
+and recorded MRO/owner bindings. Original XYZ, 3D and NaN controls
+are preserved, and an actual grid recorder test asserts exact native XY features.
+There is no module-name switch, copied coordinate algorithm, feature blacklist,
+NULL schema padding or tolerance change. The invalid route is retained.
+A subsequent fresh run exposed one SSC Z feature
+from expand/shrink, proving that grid-only adoption was incomplete. The shared
+utility capability and source-backed migration replace that incomplete route.
+
+RuntimeTableSnapshot owns the exact existing Experiment Key/Value participation
+predicate. The matched workflow consumes existing measurement, image, SQLite and
+CPA comparisons. Physical file participation and table row counts independently
+reject unsupported files, empty/unqualified output and CSV duplication/loss.
+Managed workspace paths derive from METADATA_CONFIG.managed_paths; their raw
+inventory remains visible. No filename exclusion roster is added.
+CellProfiler's existing 1e-6 absolute/relative tolerance remains unchanged.
+
+Installed-environment fixture qualification (#369)
+--------------------------------------------------
+
+The original matched test leaked its rebuilt configuration into ObjectState
+saved/live globals; GlobalContextValues now owns capture/restore at teardown.
+The exact original order failure and exporter regression on untouched main are
+retained.
+
+Installing the declared viewer dependencies exposed an old invalid ROI fixture:
+it supplied Z=2 as an anchor for a source-relative Z=2.375 point, while the real
+streaming loader derives the anchor from the first source plane. The updated
+test derives its address/domain from the reopened archive, retains the exact
+2.375 geometry and feature assertions, and adds source origins 0 and 10.
+Actual streaming-service coverage also exposed the shared fake metadata handler's
+obsolete scalar pixel-size API. Its typed spacing method and native-calibration
+negative controls now match the production contract. No production viewer
+coordinate regression was inferred from these invalid fixtures.
+
+Expanding coverage after main's viewer snapshot merge exposed three additional
+fixture failures reproduced on untouched main. Observation submission now asserts
+the complete existing transport, including default values scope. Transaction-parent
+safety derives its lock path through MetadataConfig.managed_paths instead of a
+removed LOCK_CONFIG import. The real Qt paint test runs the Qt event loop until
+the capture owner delivers its terminal reply under the unchanged 0.5-second
+deadline; it no longer assumes one processEvents call completes an asynchronous
+capture. Exact pixels, identity, path safety and one-submission assertions remain.
+The complete installed viewer/service cohort passes 149 tests.
+
+Source checks and local tests
+-----------------------------
+
+The original global AST census inventories all 703 modules, with 5154 original
+ClassDefs at the production checkpoint: 5142 projected and 12 unprojected OPEN.
+Latest main has 5151 originals, 5139 projected and the same 12 OPEN; the
+two additional row cases and one utility-module capability have production
+consumers; the row cases derive from a meaningful abstract location parent.
+The shared spectral parent is abstract; image/object leaves have resolved
+inheritance, and the object leaf's MI MRO and keyword constructors are recorded.
+No binding theorem or all-detector cleanliness is claimed.
+
+Original R0 checks pass openhcs, scripts and benchmark with no increases.
+Original full-context NRA R1 passes the two configured detectors and semantic
+comparison; existing mapping/record findings remain visible. All original
+failures and intermediate attempts remain in the evidence archive.
+The original source checks run at ``0914ec2dda113a18bd11b61677e8cad91b88fff9``
+against exact current main. The final fixture commit leaves the entire openhcs,
+benchmark and scripts trees byte-identical; their Git object bindings are retained.
+
+The final utility-family/module cohort passes 468 tests; earlier coordinate/schema
+production checks pass 659 tests; original
+source guardrail checks pass 35; actual ROI materialization/streaming/native-viewer
+checks pass 244. The newly merged registry-source owner exposed a stale direct
+module-import expectation: the updated public transport test executes the
+rendered declaration and asserts exact registered crop callable identity. Its
+57-test roundtrip cohort passes, retaining original source/compile assertions.
+
+The final installed-environment suite passes 2673 tests across 66 modules,
+including actual ROI streaming, merged viewer/source binding and authoring source
+roundtrip coverage. Five expected library warnings remain, with no skips. The
+original optional-dependency collection failure, invalid ROI/calibration fixtures
+and stale direct-import expectation remain with their passing receipts. Acceptance
+counts the 2673 unique testcase elements and terminal pytest summary; the XML
+aggregate tests attribute is 2715. The original failed verifier assumption and
+corrected exact-element validation are recorded without altering the XML.
+
+Native qualification
+--------------------
+
+The clean 30-case gate at ``4f94e394148006953458ee6fbcbcacbb831e0661``
+passes all 30 comparisons with zero differences. It reuses the existing fresh
+native scientific outputs from September 28; their old clocks are not used for
+speedup claims. The final checkpoint retains identical Git trees for core,
+interop, processing, benchmark, scripts and setup. Main's subsequent viewer
+capture change and child pin are covered by the final installed-environment
+suite and fresh original-output gate below. Exact tree bindings are retained.
+
+Fresh native CP and OpenHCS each complete warm-up plus two measured repetitions
+of the original Imaging Flow Cytometry combined CSV export on the final clean
+checkpoint. All three comparisons have zero measurement/CSV, database and image
+differences; each side emits one scientific CSV with no missing or unexpected
+files. The source input inventory is unchanged, including hashes. Native CP
+processes two image sets per repetition; OpenHCS completes one well axis in one
+inline worker in the server process. Configured fork is not an actual child
+process launch in this one-worker cohort.
+
+The timing claim remains none: source-owned intervals and process counts are
+retained, while first-module versus first-axis boundary equivalence and repeated
+throughput remain under review. Native interpreter/Java startup and OpenHCS
+ZMQ startup, mandatory registry/kernel preparation and shutdown are excluded
+from pipeline clocks. This is scientific qualification, not a new speedup claim.
+
+Original 3D volume presentation remains open (#361)
+---------------------------------------------------
+
+Saved-file replay shows zero CSV differences. Native CP writes two volume TIFFs;
+OpenHCS writes 120 typed plane TIFFs. Assembling planes using the existing
+workspace source projection and Z addresses reproduces both (60, 256, 256)
+uint16 native volumes exactly. This is diagnostic evidence only. The physical
+matched driver continues rejecting the layout until the shared logical-image
+comparison consumer owns complete plane coverage. No 3D timing ratio is accepted.
+
+Full native-reference qualification uses existing declaration-owned derived
+reference exports and does not qualify original volume-versus-plane layouts.
+Multi-job CSV shard merging remains outside this one-job acceptance. This repair
+claims no numerical performance optimization; execution/total optimization and
+fresh multiwell scaling figures continue under #162.
+
+Storage incident (#373)
+-----------------------
+
+The earlier full gate stopped when the shared /home filesystem filled up.
+Twenty-one comparisons had succeeded, followed by skipped cases and a failed
+receipt write; that incomplete run is not accepted. Rebuildable pip download
+cache was removed. This task's superseded and interrupted outputs were copied
+to the available filesystem under /var/tmp/openhcs-benchmark-preserved-ts-20261001.
+Every file was SHA256-verified before removing the original copy; symlinks
+preserve the original public paths. Scientific artifacts, input datasets and
+native references were retained. Storage hash inventories and original failure
+logs are included. The final scientific gate uses a new output root.
+
+Evidence
+--------
+
+``matched_csv_356_evidence_20261001.tgz`` contains source/dependency/extension
+binding, native build flags, global class inventories, source checks, original
+failures and final tests, saved-file diagnostics, controllers and scientific
+acceptance. SHA256SUMS authenticates the archived files. Large scientific images
+and datasets remain in the named benchmark workspace. Pipeline clocks exclude
+ZMQ startup, mandatory registry/kernel preparation and shutdown.

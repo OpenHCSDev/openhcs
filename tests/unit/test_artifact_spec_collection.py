@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
 from openhcs.core.artifacts import (
@@ -9,9 +11,12 @@ from openhcs.core.artifacts import (
     ArtifactSpecCollection,
     GroupLineageSourceRelation,
     ImageArtifactType,
+    InputImageSetContextSourceRelation,
+    InputStackBroadcastSourceRelation,
     MainFlowPlaneProjectionOutputSpec,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
+    SpatialGraphArtifactType,
 )
 from openhcs.core.runtime_measurements import RuntimeMeasurementFeatureOwner
 
@@ -49,6 +54,83 @@ def test_artifact_spec_collection_queries_ordered_artifact_contracts() -> None:
         == objects
     )
     assert collection.by_name_and_artifact_type("Nuclei", ImageArtifactType) is None
+
+
+def test_stack_broadcast_indices_use_exact_ordered_occurrences() -> None:
+    primary = ArtifactSpec.input("Primary", ImageArtifactType)
+    secondary = ArtifactSpec.input(
+        "Secondary",
+        ImageArtifactType,
+        relations=(InputStackBroadcastSourceRelation(source=primary.ref()),),
+    )
+    unrelated = ArtifactSpec.input("Primary", ObjectLabelsArtifactType)
+
+    assert ArtifactSpecCollection(()).stack_broadcast_source_indices() == ()
+    assert ArtifactSpecCollection(
+        (secondary, unrelated, primary)
+    ).stack_broadcast_source_indices() == (2, None, None)
+
+    for specs in ((secondary,), (primary, secondary, primary)):
+        with pytest.raises(ValueError, match="exactly one active occurrence"):
+            ArtifactSpecCollection(specs).stack_broadcast_source_indices()
+
+    self_broadcast = replace(
+        primary,
+        relations=(InputStackBroadcastSourceRelation(source=primary.ref()),),
+    )
+    with pytest.raises(ValueError, match="cannot broadcast from itself"):
+        ArtifactSpecCollection((self_broadcast,)).stack_broadcast_source_indices()
+
+    other = ArtifactSpec.input("Other", ImageArtifactType)
+    multiple_owners = replace(
+        secondary,
+        relations=(
+            InputStackBroadcastSourceRelation(source=primary.ref()),
+            InputStackBroadcastSourceRelation(source=other.ref()),
+        ),
+    )
+    with pytest.raises(ValueError, match="multiple stack-broadcast owners"):
+        ArtifactSpecCollection(
+            (primary, other, multiple_owners)
+        ).stack_broadcast_source_indices()
+
+
+@pytest.mark.parametrize(
+    "artifact_type", (ImageArtifactType, ObjectLabelsArtifactType, SpatialGraphArtifactType)
+)
+def test_input_image_set_context_does_not_regroup_or_broadcast(artifact_type) -> None:
+    image = ArtifactSpec.input("Actin", ImageArtifactType)
+    relation = InputImageSetContextSourceRelation(image.ref())
+    target = ArtifactSpec.input("Subject", artifact_type, relations=(relation,))
+
+    assert target.source_context_sources() == (image.ref(),)
+    assert target.group_scope_sources() == ()
+    assert target.source_stack_scope_sources() == ()
+    assert target.stack_broadcast_sources() == ()
+    assert relation.dependency_refs() == (image.ref(),)
+    assert target.for_plan_type(ArtifactOutputPlan).relations == ()
+
+
+@pytest.mark.parametrize(
+    "source",
+    (
+        ArtifactSpec.output("Actin", ImageArtifactType),
+        ArtifactSpec.input("Cells", ObjectLabelsArtifactType),
+    ),
+)
+def test_input_image_set_context_requires_an_input_image_source(source) -> None:
+    with pytest.raises(ValueError, match="requires an input image source"):
+        InputImageSetContextSourceRelation(source.ref())
+
+
+def test_input_image_set_context_rejects_output_and_contextless_targets() -> None:
+    relation = InputImageSetContextSourceRelation(
+        ArtifactSpec.input("Actin", ImageArtifactType).ref()
+    )
+    with pytest.raises(ValueError, match="target plan role"):
+        ArtifactSpec.output("Cells", ObjectLabelsArtifactType, relations=(relation,))
+    with pytest.raises(ValueError, match="carrying source-image context"):
+        ArtifactSpec.input("Measurements", MeasurementsArtifactType, relations=(relation,))
 
 
 def test_artifact_spec_collection_deduplicates_or_fails_loudly() -> None:

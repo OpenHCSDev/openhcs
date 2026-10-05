@@ -1,5 +1,6 @@
 """Exercise task retrieval and installable projection, not prose acceptance."""
 
+import hashlib
 import re
 import runpy
 from pathlib import Path
@@ -14,20 +15,40 @@ from openhcs.agent.dto.knowledge import (
     KnowledgeBaseDocumentRequest,
     KnowledgeBaseSearchRequest,
 )
-from openhcs.agent.services.knowledge_base_service import KnowledgeBaseService
+from openhcs.agent.services.knowledge_base_service import (
+    MAX_DOCUMENT_CHARS,
+    KnowledgeBaseService,
+)
 from openhcs.agent.services.llm_context_service import AgentAuthoringContextService
+from openhcs.agent.skill_bundle import AGENT_PLUGIN_MANIFEST_PATH, AgentSkillBundle
+from openhcs.agent.skill_sync import SkillSyncReceipt, sync_skills
 
 ROOT = Path(__file__).resolve().parents[3]
 TASKS = (
     ("autonomous analysis strategy", "openhcs_autonomous_analysis_strategy"),
+    ("graded segmentation quality", "openhcs_autonomous_analysis_strategy"),
     ("channel identity RGB composite", "openhcs_image_interpretation"),
     ("uneven background additive subtraction", "openhcs_image_preprocessing"),
+    ("weak troughs hysteresis connected support", "openhcs_image_preprocessing"),
     ("nucleus split watershed", "openhcs_segmentation_diagnostics"),
+    ("predeclump hole filling landscape", "openhcs_segmentation_diagnostics"),
+    ("ring fragmentation disconnected support", "openhcs_segmentation_diagnostics"),
     ("zero growth cytoplasm", "openhcs_segmentation_diagnostics"),
+    ("all foreground threshold units", "openhcs_segmentation_diagnostics"),
+    ("strong seed component retention", "openhcs_segmentation_diagnostics"),
+    ("near-track nuisance fragments", "openhcs_segmentation_diagnostics"),
     ("volume anisotropic Z spacing", "openhcs_measurement_interpretation"),
     ("Pearson Manders Costes", "openhcs_measurement_interpretation"),
+    ("current processing intensity units", "openhcs_measurement_interpretation"),
+    ("whole no-object field sampling", "openhcs_measurement_interpretation"),
+    ("Otsu noise partition threshold floor", "openhcs_measurement_interpretation"),
     ("recipe error memory", "openhcs_analysis_learning"),
     ("canvas resize recapture", "openhcs_viewer_qa"),
+    ("per image contrast check", "openhcs_viewer_qa"),
+    ("channel switch contrast window", "openhcs_viewer_qa"),
+    ("remote desktop compression native capture", "openhcs_viewer_qa"),
+    ("diagnostic soma saturation", "openhcs_viewer_qa"),
+    ("noise background illumination scan", "openhcs_viewer_qa"),
     ("blind recipe promotion", "openhcs_blind_recipe_promotion"),
     ("missing analysis operation", "openhcs_custom_function_workflow"),
 )
@@ -42,7 +63,7 @@ def test_task_retrieval_reaches_a_bounded_canonical_source(query, document_id):
 
     document = service.get_document(
         KnowledgeBaseDocumentRequest.from_fields(
-            document_id=document_id, max_chars=12_000
+            document_id=document_id, max_chars=MAX_DOCUMENT_CHARS
         )
     )
     assert not document.errors
@@ -74,7 +95,7 @@ def test_packaged_transfer_guides_retain_content_sections_and_skill_links(tmp_pa
     for document_id in dict.fromkeys(document_id for _, document_id in TASKS):
         document = service.get_document(
             KnowledgeBaseDocumentRequest.from_fields(
-                document_id=document_id, max_chars=12_000
+                document_id=document_id, max_chars=MAX_DOCUMENT_CHARS
             )
         )
         assert not document.errors
@@ -84,9 +105,12 @@ def test_packaged_transfer_guides_retain_content_sections_and_skill_links(tmp_pa
         assert (destination / source_path).read_bytes() == (
             ROOT / source_path
         ).read_bytes()
+        assert document.content.strip() == (ROOT / source_path).read_text(
+            encoding="utf-8"
+        ).strip()
         # Each local companion link is available in the projected package,
         # rather than depending on the developer's checkout or /tmp sources.
-        for link in re.findall(r"\]\(([^)]+\.md)\)", document.content):
+        for link in re.findall(r"\]\(([^)#]+\.md)(?:#[^)]*)?\)", document.content):
             if "://" not in link:
                 assert (destination / source_path.parent / link).is_file()
 
@@ -113,7 +137,7 @@ def test_domain_knowledge_remains_progressively_retrieved():
             document_id="openhcs_autonomous_analysis_strategy"
         )
     )
-    links = set(re.findall(r"\]\(([^)]+\.md)\)", strategy.content))
+    links = set(re.findall(r"\]\(([^)#]+\.md)(?:#[^)]*)?\)", strategy.content))
     # A skill-only reader must be able to follow the same topic routes without
     # guessing filenames or needing the live knowledge service.
     for document in transferred.values():
@@ -122,6 +146,75 @@ def test_domain_knowledge_remains_progressively_retrieved():
             "openhcs_blind_recipe_promotion",
         ):
             assert Path(document.source_path).name in links
+
+
+def test_no_object_field_section_is_complete_at_normal_section_bound():
+    service = KnowledgeBaseService(repo_root=ROOT)
+    section = service.get_document(
+        KnowledgeBaseDocumentRequest.from_fields(
+            document_id="openhcs_measurement_interpretation",
+            section_id="include-no-object-fields-before-widening",
+            max_chars=4000,
+        )
+    )
+    document = service.get_document(
+        KnowledgeBaseDocumentRequest.from_fields(
+            document_id="openhcs_measurement_interpretation",
+            max_chars=MAX_DOCUMENT_CHARS,
+        )
+    )
+    assert not section.errors and not document.errors
+    assert not section.truncated and not document.truncated
+    assert section.content and section.content in document.content
+    assert section.selected_section_id == "include-no-object-fields-before-widening"
+
+
+def test_complete_projected_skill_sync_preserves_canonical_resource_bytes(tmp_path):
+    project = runpy.run_path(str(ROOT / "scripts/build_mcp_knowledge_assets.py"))
+    projection = tmp_path / "knowledge"
+    project["project_knowledge_assets"](ROOT, projection)
+    canonical = AgentSkillBundle.from_manifest(ROOT / AGENT_PLUGIN_MANIFEST_PATH)
+    packaged = AgentSkillBundle.from_manifest(projection / AGENT_PLUGIN_MANIFEST_PATH)
+    for document_id, section_id in (
+        ("openhcs_architecture_quick_start", "task-authorization"),
+        ("openhcs_measurement_interpretation", "current-processing-intensity-units"),
+        ("openhcs_measurement_interpretation", "include-no-object-fields-before-widening"),
+        ("openhcs_segmentation_diagnostics", "foreground-before-unclumping"),
+        ("openhcs_segmentation_diagnostics", "ring-fragmentation-disconnected-support-or-too-many-markers"),
+        ("openhcs_segmentation_diagnostics", "separate-support-recovery-from-rooted-graph-validity"),
+    ):
+        request = KnowledgeBaseDocumentRequest.from_fields(
+            document_id=document_id, section_id=section_id, max_chars=MAX_DOCUMENT_CHARS
+        )
+        original = KnowledgeBaseService(repo_root=ROOT).get_document(request)
+        copied = KnowledgeBaseService(repo_root=projection).get_document(request)
+        assert not original.errors and not copied.errors
+        assert not original.truncated and not copied.truncated
+        assert copied.selected_section_id == original.selected_section_id == section_id
+        assert copied.document.source_path == original.document.source_path
+        assert copied.content == original.content
+    destination = tmp_path / "isolated-harness/skills"
+
+    (result,) = sync_skills(destination, bundle=packaged)
+    assert result.status == "installed"
+    installed = Path(result.path)
+    (source,) = canonical.skill_roots()
+    expected = {
+        path.relative_to(source).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
+        for path in canonical.source_paths()
+        if path.is_relative_to(source)
+    }
+    assert SkillSyncReceipt.read(installed).files == expected
+    assert {
+        path.relative_to(installed).as_posix()
+        for path in installed.rglob("*")
+        if path.is_file() and path.name != SkillSyncReceipt.filename
+    } == expected.keys()
+    for relative in expected:
+        assert (installed / relative).read_bytes() == (source / relative).read_bytes()
+    receipt_time = (installed / SkillSyncReceipt.filename).stat().st_mtime_ns
+    assert sync_skills(destination, bundle=packaged)[0].status == "unchanged"
+    assert (installed / SkillSyncReceipt.filename).stat().st_mtime_ns == receipt_time
 
 
 @pytest.mark.parametrize(

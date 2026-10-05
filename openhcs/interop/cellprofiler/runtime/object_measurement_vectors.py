@@ -21,7 +21,10 @@ from openhcs.core.runtime_artifact_queries import (
     MeasurementLabelSliceFeatureQuery,
     MeasurementLabelSliceFeatureBatchQuery,
 )
-from openhcs.core.measurement_feature_queries import MeasurementFeatureQuery
+from openhcs.core.measurement_feature_queries import (
+    MeasurementFeatureQuery,
+    RuntimeObjectLabelMeasurementQueryCache,
+)
 from openhcs.core.measurement_row_materialization import measurement_rows
 from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
@@ -49,10 +52,9 @@ from openhcs.interop.cellprofiler.runtime.invocation import (
 )
 from openhcs.interop.cellprofiler.runtime.object_label_measurements import (
     ObjectLabelMeasurementSliceRequest,
-    object_label_measurement_values_cache,
 )
-from openhcs.interop.cellprofiler.runtime.object_measurement_tables import (
-    ObjectMeasurementTableIndex,
+from openhcs.core.measurement_feature_queries import (
+    ColumnarMeasurementTableSchema,
 )
 from openhcs.interop.cellprofiler.runtime.runtime_profile import (
     CellProfilerRuntimeProfileLogger,
@@ -250,7 +252,7 @@ class MeasurementImageOperandVectorResolution:
             )
         table_records = []
         for record in source_records:
-            table = cast(MeasurementTable, record.value.data)
+            table = cast(MeasurementTable, record.data)
             if (
                 query.table_may_carry_feature(table)
                 or query.optional_value_index((table,)) is not None
@@ -430,9 +432,11 @@ class CellProfilerObjectMeasurementVectorBinding(ObjectLabelMeasurementSliceRequ
                 f"{self.request.adapter.request.require_callable_contract().module_name} feature {self.feature_name!r} "
                 "requires a declared MeasurementsArtifactType runtime input."
             )
-        matches = ObjectMeasurementTableIndex.from_tables(declared).for_object_feature(
+        matches = ColumnarMeasurementTableSchema.tables_for_object_feature(
+            declared,
             self.object_name,
             self.feature_name,
+            dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
         )
         if not matches:
             raise ValueError(
@@ -597,25 +601,25 @@ class CellProfilerObjectMeasurementVectorBatchBinding:
         vectors: Mapping[str, tuple[np.ndarray, ...]],
         bindings: tuple[CellProfilerObjectMeasurementVectorBinding, ...],
     ) -> None:
-        process_cache = object_label_measurement_values_cache(
-            adapter.request.context.runtime_value_store
+        store_cache = adapter.request.context.runtime_value_store.query_cache(
+            RuntimeObjectLabelMeasurementQueryCache
         )
         for binding in bindings:
             values = vectors[binding.object_name]
             query = binding.measurement_query(adapter)
-            process_cache[query] = values
+            store_cache.store_value(query, values)
 
     def cached_runtime_batch_vectors(
         self,
         adapter: "CellProfilerRuntimeAdapter",
     ) -> dict[str, tuple[np.ndarray, ...]]:
-        process_cache = object_label_measurement_values_cache(
-            adapter.request.context.runtime_value_store
+        store_cache = adapter.request.context.runtime_value_store.query_cache(
+            RuntimeObjectLabelMeasurementQueryCache
         )
         cached_vectors: dict[str, tuple[np.ndarray, ...]] = {}
         for binding in self.bindings:
             query = binding.measurement_query(adapter)
-            cached = process_cache.get(query)
+            cached = store_cache.cached_value(query)
             if cached is not None:
                 cached_vectors[binding.object_name] = cached
         return cached_vectors

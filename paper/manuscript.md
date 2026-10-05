@@ -40,13 +40,13 @@ Before execution, OpenHCS prepares the workflow (compilation) by combining funct
 
 CellProfiler import provides a direct test of workflow preservation. A `.cppipe` file contains image-loading rules, module settings, image names, object names, measurement expectations, display choices, and output behavior. OpenHCS translates these files into editable workflows. Comparing their outputs against native CellProfiler tests whether the imported analyses retain the expected measurements and images.
 
-We show that graphical controls and Python retain the same configured analysis through an editing round trip, and that all 30 imported CellProfiler workflows pass selected reference-output comparisons. An agent constructed, corrected and executed a neurite-outgrowth workflow through MCP; later visual review identified a tracing error despite successful output checks. Separate repeated-input experiments show how throughput and memory change with worker count and queue depth. Together, these results demonstrate shared workflow editing, reuse of established analyses and agent-operated execution with inspectable results.
+We evaluate whether this shared workflow preserves established analyses and supports agent-authored analyses that scientists can inspect. Graphical controls and Python retain the same configured analysis through an editing round trip, and all 30 imported CellProfiler workflows pass selected reference-output comparisons. An agent constructed and executed a neurite-outgrowth workflow through MCP; later visual review identified a tracing error despite successful output checks. Prospective assays test frozen agent-authored workflows on held-out images or treatment groups. Separate task-only trials measure first-to-final segmentation changes and show agents detecting and repairing errors through their own image review (Figures 5–7). Repeated-input experiments measure throughput and memory as worker count and queue depth change (Figure 4).
 
 ### Figure 1. Scientists and agents operate a shared microscopy workflow
 
 ![Shared workflow, source connections and execution.](figures/slas/shared_workflow.png){width=6in}
 
-\(A) Desktop, Python and MCP operations act on a shared pipeline; CellProfiler import supplies an editable analysis in that model. The processing sequence is illustrative, with functions chosen for each assay. (B) Image-source bindings and established or custom functions connect to the same definition. OMERO is experimental. (C) Compilation resolves inputs, dependencies and array requirements before worker processes execute the analysis. Selected intermediate results can be inspected in napari or Fiji, and retained images, ROIs and measurements support review and subsequent edits. CPU/GPU support depends on the selected functions; performance measurements are presented separately in Figure 5.
+\(A) Desktop, Python and MCP operations act on a shared pipeline; CellProfiler import supplies an editable analysis in that model. The processing sequence is illustrative, with functions chosen for each assay. (B) Image-source bindings and established or custom functions connect to the same definition. OMERO is experimental. (C) Compilation resolves inputs, dependencies and array requirements before worker processes execute the analysis. Selected intermediate results can be inspected in napari or Fiji, and retained images, ROIs and measurements support review and subsequent edits. CPU/GPU support depends on the selected functions; performance measurements are presented separately in Figure 4.
 
 ## Materials and Methods
 
@@ -82,20 +82,7 @@ Deployment profiles determine which operations are available. Desktop operations
 
 ### Reusable workflow infrastructure
 
-The mechanisms that turn declarations into interfaces and coordinate execution are packaged for reuse independently of the microscopy functions (Table 1). Eight libraries discover implementations, read function definitions, track settings, generate controls and Python, convert arrays, route stored results and coordinate processes. OpenHCS supplies the microscopy functions, configurations, source handlers and viewer integrations. New processing functions use these shared mechanisms when they enter the workflow.
-
-**Table 1. Reusable libraries and their roles in the shared workflow.**
-
-| Library | Role in OpenHCS |
-| --- | --- |
-| [metaclass-registry](https://github.com/OpenHCSDev/metaclass-registry) | Discovers classes implementing a shared interface and makes them available for selection. |
-| [python-introspect](https://github.com/OpenHCSDev/python-introspect) | Reads a function's parameters, types, defaults and documentation. |
-| [ObjectState](https://github.com/OpenHCSDev/objectstate) | Tracks editable settings and resolves shared defaults and local overrides. |
-| [pyqt-reactive](https://github.com/OpenHCSDev/pyqt-reactive) | Generates parameter controls and updates them as settings change. |
-| [pycodify](https://github.com/OpenHCSDev/pycodify) | Generates editable Python representations and manages their imports. |
-| [ArrayBridge](https://github.com/OpenHCSDev/arraybridge) | Converts arrays between supported libraries and manages their computational resources. |
-| [PolyStore](https://github.com/OpenHCSDev/PolyStore) | Reads, writes and streams data through supported storage interfaces. |
-| [ZMQRuntime](https://github.com/OpenHCSDev/zmqruntime) | Coordinates communication, startup, shutdown and progress between processes. |
+The mechanisms that turn declarations into interfaces and coordinate execution are packaged for reuse independently of the microscopy functions (Supplementary Table 1). Eight libraries discover implementations, read function definitions, track settings, generate controls and Python, convert arrays, route stored results and coordinate processes. OpenHCS supplies the microscopy functions, configurations, source handlers and viewer integrations. New processing functions use these shared mechanisms when they enter the workflow.
 
 ### Agent-operated analysis
 
@@ -131,16 +118,19 @@ For the five workflows without file exports, terminal image or object-label expo
 
 The corpus contains 22 workflows and associated image sets from the official CellProfiler 3 examples repository, seven workflows and image sets from the official CellProfiler tutorials repository, and one workflow from the supplement to the CellProfiler 4 performance study [@CellProfilerExamples; @CellProfilerTutorials; @Stirling2021]. The CellProfiler project and the cited dataset contributors retain authorship and provenance for these materials. The retained manifest maps workflow names to pipeline and image locations; Supplementary Data 1-3 provide the corresponding comparison, coverage and throughput tables.
 
+### Task-only authoring and independent repair
+
+Separate trials evaluated whether a fresh gpt-6.1-sol agent could choose and revise an analysis using the task brief, packaged OpenHCS skill and MCP. The skill describes function discovery, image measurements, preprocessing and visual review; it does not supply the evaluated images' reference labels or accepted settings. Authors inspected their own inputs and intermediate results, retaining pipeline attempts, tool calls and matched image-only, result-only and combined views. The coordinator evaluated frozen predictions after authoring ended, without returning reference scores to the authors. These trials are distinct from the earlier three-assay held-out evaluation (Supplementary Data 8).
+
+We compared first completed scientific settings with the final settings on exactly the same inputs. Technical corrections needed to submit or execute a pipeline remain part of the record; the first completed prediction is not necessarily the first tool call. H001 used a single notebook-derived bright-object image and its predeclared computational label reference. BBBC039 used independent nuclear annotations, with a paired first/final comparison on three fields and a separate final evaluation across all 200 fields. Some of those fields were inspected during development, so the 200-field result measures reference agreement rather than unseen generalization. Existing instance scorers used one-to-one matching at intersection over union at least 0.5.
+
 ### Performance measurements and reproducibility
 
-Archived May development runs measured throughput and peak memory by assigning the same source images to multiple well identifiers, creating repeated analysis work (Table 2). Queue depth specifies how many assignments were supplied per configured worker. Each condition has one recorded run per workflow. The retained rows report completed assignments but do not preserve worker-process traces or per-run output inventories.
+Archived May development runs measured throughput and peak memory by assigning the same source images to multiple well identifiers, creating repeated analysis work. Queue depth specifies how many assignments were supplied per configured worker. Each condition has one recorded run per workflow. The retained rows report completed assignments but do not preserve worker-process traces or per-run output inventories.
 
-**Table 2. Performance experiments across the 30 workflows.**
-
-| Measurement | Varied | Held fixed |
-| --- | --- | --- |
-| Completed assignments per execution second | 2, 3, 4 workers | 4 assignments per worker |
-| Peak memory | 1, 2, 3, 4, 6, 8 assignments per worker | 4 workers |
+Throughput varied the configured worker maximum over two, three and four,
+with four assignments per worker. The memory sweep fixed four workers and
+varied assignments per worker over one, two, three, four, six and eight.
 
 Throughput uses execution time after initialization and compilation. The recorded configuration disables default saving of named results and return of detailed worker records, and requests removal of unused steps whose outputs are not saved. Supplementary Data 3 identifies these settings, the individual runs and the limits of their historical output-policy provenance. These rows characterize that archived analysis-focused workload, not the current output-complete CellProfiler translation. Measurements cover CPU execution on local or explicitly mounted image sources; GPU and cloud or network-storage performance were not measured.
 
@@ -196,17 +186,11 @@ The BBBC013 run produced matched nuclear and cytoplasmic measurements for 14,262
 
 All 30 workflows passed selected reference-output comparisons in one unified current-source run, with zero reported differences. The selected reference profiles comprised 21 with CSV measurements, three with SQLite measurements and CellProfiler Analyst properties, and six containing only retained images or arrays. The five supplemented workflows contributed five object-label images and three numerical images. All five label images matched exactly after singleton-axis normalization, and all three numerical images passed with zero out-of-tolerance pixels. Supplementary Data 1 identifies every selected output and preserves the unified observations and source identity.
 
-Image comparison executed for seven workflows: six image- or array-only profiles and the completed translocation example, whose overlay was compared alongside its SQLite measurements. Figure 4 shows how named images, objects and operations are retained in the imported Comet Assay.
+Image comparison executed for seven workflows: six image- or array-only profiles and the completed translocation example, whose overlay was compared alongside its SQLite measurements. Supplementary Figure 15 shows how named images, objects and operations are retained in the imported Comet Assay.
 
 The assays include DNA-damage measurement, human and Drosophila cell morphology, tumor morphology, Cell Painting morphology and quality control, protein translocation, wound healing, time-lapse tracking, imaging flow cytometry, colocalization, positive-cell classification, yeast screening, and *C. elegans* phenotyping. Supplementary Data 1-2 identify the workflows and imported settings.
 
 The archived coverage tables list 58 distinct module names and 7,158 setting rows. They record whether a setting supplies a function parameter, an input/output requirement, an infrastructure option, or is intentionally ignored. Coverage describes how configurations are imported; the comparison results assess their outputs. Database export remains an ordinary terminal workflow step, using the same measurements and source identities as preceding steps.
-
-### Figure 4. A familiar CellProfiler pipeline expressed as OpenHCS steps
-
-![CellProfiler modules, imported function steps and named-object relationships.](figures/slas/cellprofiler_translation.png){width=5.8in}
-
-\(A) The public ExampleCometAssay pipeline maps image loading to source bindings and processing to 12 function steps. Rows align original modules and imported functions; multiplicity marks repeated calls. Spreadsheet export runs plate-wide. (B) MeasureObjectSizeShape applies the same function to Comet, CometHead and CometTail within one step. (C) Masking the comet with its head, with inversion enabled, defines CometTail. The diagram is derived from the source pipeline and importer; function identities, parameters and counts are checked against its retained mapping.
 
 ### Complex workflows retain their processing and measurement structure
 
@@ -217,11 +201,11 @@ The 3D monolayer tutorial segments nuclei and cells in volumetric images. It com
 
 ### Throughput and memory across worker counts and queue depths
 
-In the archived analysis-focused repeated-input runs over all 30 workflows, median throughput with four assignments per configured worker was 1.79, 2.67 and 2.96 completed assignments per execution second at configured maxima of two, three and four workers, respectively (Figure 5A). Every assignment was recorded complete. These rates do not establish throughput for the later output-complete translation; Supplementary Data 3 retains the individual historical rows and their provenance limits.
+In the archived analysis-focused repeated-input runs over all 30 workflows, median throughput with four assignments per configured worker was 1.79, 2.67 and 2.96 completed assignments per execution second at configured maxima of two, three and four workers, respectively (Figure 4A). Every assignment was recorded complete. These rates do not establish throughput for the later output-complete translation; Supplementary Data 3 retains the individual historical rows and their provenance limits.
 
 Each worker uses memory for imported libraries, cached arrays, and intermediate outputs. Across all 30 OpenHCS workflows in the four-worker queue-depth sweep, median peak RAM increased from 3.89 GiB at one assignment per worker to 4.15 GiB at eight assignments per worker, with maximum peak RAM reaching 14.3 GiB. Memory summaries include the wound-healing workflow because its OpenHCS run completed; only comparisons requiring its native CellProfiler timing exclude it. In these runs, more workers increased median throughput, while memory requirements varied substantially between workflows.
 
-### Figure 5. Measured OpenHCS throughput and memory use
+### Figure 4. Measured OpenHCS throughput and memory use
 
 ![Archived benchmark measurements.](figures/slas/figure2_benchmarks.png){width=5.5in}
 
@@ -229,13 +213,276 @@ Each worker uses memory for imported libraries, cached arrays, and intermediate 
 
 ### Inspecting results in Fiji and napari
 
-Figure 6 shows streamed images and objects in both viewers. napari additionally exposes structured image, layer and ROI information for agent inspection; Supplementary Figure 4 links a selected object to its saved measurements and viewer features. Fiji provides native image and ROI display with a smaller programmatic inspection interface.
+Supplementary Figure 16 shows streamed images and objects in both viewers. napari additionally exposes structured image, layer and ROI information for agent inspection; Supplementary Figure 4 links a selected object to its saved measurements and viewer features. Fiji provides native image and ROI display with a smaller programmatic inspection interface.
 
-### Figure 6. Image and object inspection in Fiji and napari
+### Task-only instance segmentation and autonomous repair
 
-![Recorded image and ROI inspection in two viewers.](figures/slas/inspectable_results.png){width=5.5in}
+On the complete 254 x 256-pixel H001 image, the first completed prediction matched 59 of 64 notebook-reference objects, with four excess and five missed objects (Figure 5B). The author's final prediction retained 59 matches while reducing excess objects to two, increasing object F1 from 0.929 to 0.944. Foreground intersection over union remained 0.982: the improvement concerned how foreground was partitioned, not recovery of additional foreground. The reference was generated by a pinned notebook, not manual biological annotation. A preceding fresh author scored 0.627 on its first prediction and 0.913 on its final prediction against the same reference. The newer first prediction was therefore substantially better on this image, although different software bundles and independently chosen settings prevent attributing the change to the skill alone.
 
-\(A) Fiji displays a single NeuronCyto II field 1 nuclear plane with nine corresponding native ROI Manager entries. (B) A separate three-plane napari demonstration shows segmented objects, a selected ROI-list entry and the displayed channel/Z coordinates. Its accompanying recording shows selection navigating between planes. These are retained viewer demonstrations, separate from the unattended analysis in Figure 3; their segmentation outputs are not compared with each other. Details enlarge the ROI entries and a nuclear outline in A, and the selected object, highlighted list entry and coordinates in B. The full captures and checksum records are retained in the gallery archive.
+The BBBC039 author improved object F1 from 0.908 to 0.934 on its original three fields, reducing missed reference nuclei from 39 to 25 while retaining 14 excess predictions (Figure 5C). Its final pipeline then covered all 200 fields: 20,521 of 23,615 reference nuclei matched, with precision 0.947, recall 0.869 and pooled object F1 0.906. Field F1 reached at least 0.90 in 135 fields; ten fields remained below 0.80 (Figure 5D). This distribution retains difficult fields and three annotation-empty fields rather than selecting only favorable examples. No first-attempt score across 200 fields is inferred from the three initial outputs.
+
+Native H001 views show the elongated-body false-split repair in the same scored
+run, alongside its remaining possible merge (Supplementary Figure 18).
+
+Independent repeats exposed variability beyond the within-run improvements.
+On 156 completed BBBC039 fields, a later author achieved precision 0.942,
+recall 0.838 and pooled F1 0.887, compared with 0.909 for the earlier pipeline
+on exactly those fields. Correcting noise-only foreground admission therefore
+did not improve overall reference agreement. Another repeat completed all
+200 fields across two execution phases with unchanged scientific parameters;
+its regional review retained useful detections and unresolved splits or merges,
+but no reference score was obtained. Execution coverage and segmentation
+quality are reported separately (Supplementary Data 8). A further independent
+author completed all 200 fields and achieved precision 0.946, recall 0.856 and
+pooled F1 0.898 against the same references. Compared with the earlier complete
+run, 61 field scores improved, 123 decreased and 16 were unchanged. The repeat
+retained useful agreement but did not improve overall accuracy; 314 additional
+misses accounted for most of the reduction (Supplementary Figure 20).
+
+A subsequent independent author achieved pooled F1 0.904 across all 200
+fields, with precision 0.944 and recall 0.866. It matched 20,457 of the same
+23,615 annotated nuclei, with 1,205 unmatched predictions and 3,158 missed
+annotations. Field F1 reached at least 0.90 in 137 fields; seven annotated
+fields remained below 0.80. All three annotation-empty fields had no
+detections. On its six initial development fields, the author's own revisions
+increased F1 from 0.826 to 0.840, recovering 17 additional matches while adding
+two unmatched predictions. The complete-corpus score was close to the earlier
+0.906 result, rather than an improvement; no first-attempt score across 200
+fields or causal skill effect is inferred (Supplementary Data 8).
+
+### Image review supports local repair with regression controls
+
+In a released DNA/actin field, a fresh author separated a joined nuclear pair
+through its own review and exported 55 nuclear instances with linked actin
+territories (Figure 6). A faint pair remained merged. An independent repeat
+recovered three missed nuclei by detecting bright cores before growing their
+boundaries; its 54 nuclear instances included a dim nucleus and clipped edge
+object lost during its first repair (Supplementary Figure 13). A further author
+measured nuclear texture, neighbour separation and actin support before choosing
+its method. Boundary revision reduced assigned actin area from 55,903 to
+52,787 pixels while preserving 55 instances. A nucleus with unsupported actin
+extent and uncertain crowded interfaces remained. These trials demonstrate
+useful nuclear recovery and boundary revision, assessed independently of
+whether each linked territory represents a physical cell. Another independent
+author corrected texture-driven splits and a bright/dim merge, recovering
+55 nuclear instances while withholding two weak actin regions from its
+53-region body result. Crowded boundaries remained uncertain (Supplementary
+Data 8). In a later independent repeat, measured raw controls still led to
+missed crowded nuclei because admitted haze changed the distance landscape.
+The author inspected that failure and revised foreground, markers, division
+and suppression, recovering useful local detections in its final 54-instance
+result. Haze extent, an upper-edge possible merge and crowded actin boundaries
+remained uncertain; the repeat supports self-directed repair, not improved
+first-attempt accuracy (Supplementary Data 8).
+
+A further independent author retained its initial scientific settings after
+measuring nuclear texture, neighbour spacing and weak actin support. Its
+55 nuclear candidates and 53 expanded associated regions had useful ordinary-body
+coverage in independent matched-channel review; two unsupported regions remained
+seed-sized. Transport and source-binding repairs were required, but did not
+change the segmentation. This is a useful first-method outcome, not a
+manual-reference accuracy score or evidence that every crowded boundary is
+correct (Supplementary Data 8).
+
+Retinal authors used measured background and weak-body support to select
+smoothing, background subtraction and foreground admission. Earlier repeats
+retained useful soma detections but uncertain ring-shaped partitions and weak
+boundaries. In the independent trial shown in Figure 7, an intermediate repair
+joined a genuine northwest pair while correcting a southeast body split.
+The author detected that regression and adjusted marker suppression.
+Matched final views confirmed separate northwest neighbours and one southeast
+envelope in the same 102-instance candidate. Diffuse and lobed regions still
+had uncertain identities and extent (Supplementary Figure 14). The result
+supports autonomous local repair with a retained neighbour control;
+manual-reference accuracy remains unmeasured.
+
+Whole-volume analysis also separated useful localisation from instance
+identity. One fresh nucleus-centre trial matched all 15 manual reference
+centres within 30 voxels, with ten unmatched predictions; at ten voxels it
+matched 14 of 15. The reference was not established as exhaustive, so unmatched
+centres were not automatically treated as spurious cells. The author's
+bright-core adjustment left first and final geometries unchanged. A separate
+fresh author repaired duplicate centres within one continuous body after
+rejecting an ineffective marker adjustment. Native XY and orthogonal views
+supported one representative, while a positive control stayed unchanged.
+Its 26 provisional centres retained unresolved associations and border
+supports. Supplementary Data 8 preserves these distinct trials and their
+remaining whole-volume uncertainties.
+
+A later independent volume author removed sampled internal-peak duplicates
+using measured component-local spacing while retaining a genuine neighbour
+pair. Its 22 provisional centres included an unresolved bright multi-lobed
+cluster. Native XY, XZ and YZ review separated useful ordinary-body support
+from that identity uncertainty (Supplementary Figure 17); no global biological
+count or new reference score was established.
+
+A further fresh volume author measured nuclear dimensions, background intensity
+and neighbour separation before selecting a shape-based marker method. Its
+first scientific method produced 26 candidate centres; a technical rerun
+changed output delivery while retaining the same detector. Independent raw,
+point-only and combined XY/XZ/YZ review supported centre placement inside
+ordinary nuclei. A bright lobed complex and cropped border supports retained
+identity uncertainty. This trial demonstrates useful measurement-first
+localisation. After the workflow was frozen, one-to-one matching recovered
+all 15 manually annotated centres within the predeclared 30-voxel distance,
+with a mean localisation error of 4.80 voxels (Figure 9). All 15 also matched within
+20 voxels, and 14 matched within 10 voxels. Eleven of the 26 predictions were
+unmatched to these annotations. Their coverage was not established as
+exhaustive, so unmatched predictions do not establish false biological
+detections. These unscaled voxel distances assess centre placement rather
+than physical distance, segmentation boundaries or a whole-volume census
+(Supplementary Data 8).
+
+A fresh public neurite-field author identified bright junction pixels lost
+after ridge enhancement and restored them by combining enhanced support with
+a separately measured strong-raw threshold (Supplementary Figure 19).
+In a selected junction tile, 19 of 291 strong raw pixels were absent before
+the repair and none afterward; a sampled quiet tile remained empty.
+Faint branches still terminated prematurely, and shared-marker crossings did
+not establish per-neuron ownership. The trial separates a useful image-support
+repair from the unresolved requirements for complete outgrowth measurement.
+
+### Recovery and self-diagnosis vary between images
+
+Crowded DNA/actin fields exposed failures that consistent object tables did
+not resolve. One fresh BBBC007 author processed all 16 paired fields but left
+many bright nuclei without outlines in a dense cluster. An independent author
+traced similar losses to broad foreground support, sparse shape markers and
+size-filtered merged basins. Its threshold repair recovered several nuclear
+anchors while preserving inspected dim and textured bodies, but clear misses
+and seed-sized secondary objects remained. A separate paired-field author
+repaired a cluster and close pair, then introduced an apparent split in an
+isolated mottled nucleus while a dim neighbour stayed joined. It identified
+both failures in its final review. These cases show useful stage-specific
+diagnosis and partial recovery, with inconsistent completion of the repair.
+
+A separate retinal author smoothed fragmented body outlines while preserving
+an inspected bright neighbouring pair (Supplementary Figure 22). The matched
+raw captures were byte-identical before and after repair, separating the
+visible mask change from display changes. Possible splitting at the source
+border and incomplete weak-body coverage remained. This retained-run repair
+supports improved local geometry rather than a manual-count accuracy estimate.
+
+Public neurite-field authors recovered clear process segments while weak
+paths and ambiguous crossings remained difficult. One corrected false nuclear
+splits and traced a segment to the boundary but admitted nearby fragments.
+Another measured the enhanced response along a missed faint process and in
+background controls, recovered the process while preserving bright trunks,
+and corrected wrong-channel photometry by checking exported values against
+raw pixels. Both retained eight nuclear objects. Discontinuous paths and
+uncertain crossings prevented complete outgrowth and per-neuron topology
+measurements. A later frozen continuation retained eight supported soma
+candidates, agreeing in count with the eight manually traced entries for the
+same public image [@NeuronCytoII]. This aggregate agreement was assessed after
+freezing; spatial cell correspondence and complete arbor length were not scored.
+A separate retained-context personal-neurite continuation
+processed a nine-field mosaic with shared channel fits and paths across sampled
+joins, but incomplete nuclear and soma detection limited its morphology
+measurements. That assisted continuation is distinct from fresh autonomous
+authoring.
+
+A later retained-context continuation completed fieldwise processing of all
+nine personal-neurite fields. Matched review at three sites showed supported
+bodies and process segments alongside faint gaps and incomplete body association
+in a dense cluster. The overlapping fields were not summed as unique cells or
+independent replicates; fieldwise coverage is distinct from stitched analysis
+and complete outgrowth measurement (Supplementary Data 8).
+
+A fresh, treatment-aware translocation author completed all 96 BBBC013 wells
+using scientific settings chosen from six development wells and frozen before
+the remaining 90 were opened. Its measured first candidate retained ordinary
+nuclei and separated inspected close pairs. Fixed ten-pixel expansions supplied
+local cytoplasmic measurement regions, not validated whole-cell boundaries.
+The resulting negative/positive control mean GFP ratios were 1.05/7.40 for
+Wortmannin (Z-prime 0.747) and 1.26/7.33 for LY294002 (Z-prime 0.493), with
+four wells per control group. Independent recalculation from all 96 well tables
+reproduced the dose summaries and assay statistics. This fresh-context repeat (Figure 8)
+supports recovery of the assay response, not exhaustive segmentation accuracy
+or unseen-dataset generalisation; it is distinct from the prospective experiment
+above (Supplementary Data 8).
+
+A later independent translocation author also completed all 96 wells, with
+incomplete compartments in the inspected fields. Its recorded continuation retained
+18,331 nuclear seed rows and 14,496 defined nuclear-to-cytoplasmic ratios;
+3,835 ratios were undefined because cytoplasmic regions had no pixels.
+Matched native review found a faint nuclear miss and regions confined to
+bright centres. This repeat supports execution coverage and exploratory
+measurements on selected masks, not reliable population counts or unbiased
+translocation estimates. The difference from the earlier repeat illustrates
+why successful execution and response recovery need separate visual assessment
+(Supplementary Data 8).
+
+Together, the task-only trials demonstrate useful initial choices, local
+recovery and self-diagnosis without reference-score feedback. Their quantitative
+comparisons and matched views distinguish detection, object separation,
+boundary extent and execution coverage. Repair of one region alone does not
+establish quality throughout an image or performance on a new dataset.
+Supplementary Data 8 retains the individual attempts, pipeline freezes and
+reference definitions. Supplementary Figures 9–12 separately show task-only
+local controls and same-author development cases; those development cases
+do not supply fresh autonomous scores.
+
+### Figure 5. Task-only analysis: within-run revision and final coverage
+
+![Native autonomous repair, paired scores and complete coverage.](figures/slas/task_only_visual.png){width=6in}
+
+\(A) Matched H001 raw and first/final overlays show an elongated-body split repaired without reference feedback. Screenshots are clipped/scaled, not retouched; colours do not identify objects across attempts. Supplementary Figure 18 retains wider views and capture records. (B) Whole-image H001 object F1 against a notebook-derived reference: excess predictions fall from four to two, with 59/64 matches and five misses unchanged. (C) BBBC039 pooled object F1 on the same three development fields against independent annotations. (D) Final scores across all 200 fields, including three annotation-empty fields and the low-score tail. The dashed line is pooled, not mean field F1. Matching requires intersection over union at least 0.5. First is the initial completed scientific prediction (H001 a01; final a04). These comparisons do not establish first-200 accuracy, an isolated skill effect or held-out generalization.
+
+The independent full-200 repeat reached pooled F1 0.898 versus 0.906 for the
+run plotted above: 61 fields improved, 123 decreased and 16 were unchanged
+(Supplementary Figure 20). This repeat retains useful agreement but shows that
+within-run repair does not guarantee a better result from the next fresh author.
+
+### Figure 6. Autonomous local repair with a retained merge
+
+![Matched first/final nuclear overlays and a final-only faint-pair failure control.](figures/slas/h003_native_repair.png){width=6in}
+
+\(A) Matched raw DNA and first/final overlays show separation of a joined pair; diffuse support remains in the lower region. A compact neighbour stays separate. (B) Final raw, result-only and combined views retain a faint merge. This fresh-context author revised its own pipeline without reference feedback. The first complete prediction follows technical repair; these local witnesses do not establish exhaustive accuracy or validated actin boundaries. DNA windows are 0–255 (A) and 0–151 (B), gamma 1, final ROI opacity 0.7. Colours are not cross-candidate identities. Original screenshots are clipped/scaled without pixel retouching; physical calibration is unverified. Supplementary Data 8 retains exact capture and crop identities. Source: BBBC007v1 A02, Sabatini laboratory, Whitehead Institute; CC0.
+
+### Figure 7. Autonomous retinal repair preserves a neighbouring pair
+
+![Matched whole-field and regional retinal raw images and final outlines.](figures/slas/retinal_fresh_native.png){width=5.3in}
+
+\(A) Whole-field detections against heterogeneous background. (B) Northwest neighbours remain separate. (C) A southeast partition is repaired. Using only the task, MCP and packaged skill, the author caught a pair-merging regression and retained both gains in its final 102-instance candidate. Diffuse regions remain uncertain (Supplementary Figure 14); manual-reference accuracy is unmeasured. Raw RBPMS uses window 0–63, gamma 1. Outline backgrounds use the frozen intensity stretch and display range 0–63/255, giving different brightness at matched positions. Original screenshots are clipped/scaled without retouching. Source: user-provided R0010 retina; physical calibration unverified. Supplementary Data 8 retains exact captures and settings.
+
+### Figure 8. Fresh-context recovery of the public translocation response
+
+![Frozen dose-response summaries and assay controls from the fresh BBBC013 author.](figures/slas/translocation_fresh13.png){width=6in}
+
+\(A, B) Native dose summaries from the treatment-aware 96-well BBBC013 repeat;
+each plotted group contains four wells. Points show means of well-level mean
+cell ratios; error bars are sample standard deviations between wells, not
+between cells. Concentration units differ between drugs. Dose positions are
+equally spaced; connecting lines guide the eye and are not fitted curves.
+(C, D) Each assay block's four vehicle and four Wortmannin 150 nM control wells,
+with the same between-well variability. LY294002's positive control is
+Wortmannin, not another LY294002 dose. Scientific settings were frozen after
+six development wells, before the 90 reserve wells were opened. These results
+support assay-response recovery using local cytoplasmic regions, not validated
+whole-cell boundaries or segmentation accuracy. This fresh-context public repeat
+is distinct from the prospective held-out experiment in Supplementary Figure 7.
+Supplementary Data 8 retains the frozen pipeline and original table identities.
+
+### Figure 9. Measurement-first autonomous localisation in three dimensions
+
+![Original native XY, XZ and YZ views and independent annotated-centre matching.](figures/slas/h002_measurement_first.png){width=6in}
+
+\(A–C) Retained native image/Points views from one fresh task-only author.
+XY uses Z index 34, XZ uses Y index 157 and YZ uses X index 80; all are voxel
+indices. Green points are the original fractional predicted centres, not added
+annotations. Out-of-plane Points are hidden, so a body without a visible point
+in one slice is not necessarily missed. Crops are scaled without image or point
+retouching. \(D) Independent postfreeze one-to-one matching recovered 14 of
+15 manual centres within 10 voxels and all 15 within the predeclared 30-voxel
+primary distance. Mean matched error at the primary distance was 4.80 voxels;
+11 of 26 predictions were unmatched to annotations whose coverage was not
+established as exhaustive. No new scorer or scientific execution was used to
+assemble the figure. The first scientific settings were unchanged through a
+technical rerun; this is localisation evidence, not boundary accuracy or a
+complete biological census. A lobed chromatin complex remains unresolved in
+the broader review. Physical calibration is unverified. Source: Allen Institute
+for Cell Science cells3d, through the pinned Haase notebook-derived task.
+Supplementary Data 8 retains capture hashes, crop coordinates and evaluation.
 
 ## Discussion
 
@@ -245,7 +492,11 @@ Workflow reuse can reduce the setup required for a new experiment. A laboratory 
 
 The evaluations cover complementary parts of this workflow. The unified current-source run establishes selected reference-value agreement across all 30 imported workflows, while the release CI record independently preserves package-level execution for the released source. The single-field neurite demonstration records completion under one prompt and client/model configuration; image review then exposed cell-assignment and crossover errors despite successful execution checks. Three prospective trials extend evaluation to held-out annotations or treatment structure. They show useful first-attempt results while also identifying nuclear over-segmentation and the limits of directed boundary and treatment-level references. Because each assay used one authoring attempt with one model and prompt, they do not estimate the probability that an agent will produce an acceptable workflow on a new assay. The separate archived throughput measurements describe a configured analysis-focused workload, not current output-complete performance. Matched Translocation and advanced-segmentation pilots cover two output-complete workflows (Supplementary Data 3); comparative native CellProfiler throughput across workflows remains to be established.
 
-Further evaluation can extend reference comparisons to additional modules and settings, compare repeated agent trials with expert-reviewed results, and measure paired CellProfiler/OpenHCS throughput with matched outputs and resource limits. Explicit image-source mappings keep channel and dimensional choices available for review as pipelines move to new experiments. The reusable libraries in Table 1 supply the supporting mechanisms independently of the microscopy functions.
+The task-only trials show that agents can improve segmentation through their own image review without reference feedback. H001 reduced excess instances without changing foreground overlap, while BBBC039 recovered more reference nuclei on the paired development fields but retained a low-accuracy tail across the full corpus. The retinal trials show why review must cover several regions: a change that repaired one body also merged a genuine pair elsewhere, and the author corrected that regression before freezing the final result. The volume trials include both a development repair that removed boundary fragments while leaving suspect interior splits and a fresh measurement-first method with useful ordinary-body centre placement. Detection, object separation and boundary extent therefore need separate assessment; a better count alone does not establish a better segmentation (Supplementary Data 8).
+
+Operational losses also need separate accounting: a later public BBBC013 trial was terminated at an imposed 4.5 GiB scope limit before complete table export or distributed review, despite partial mask production. That incomplete trial does not estimate segmentation accuracy or host-wide memory exhaustion. Retained outcomes should distinguish completed analysis, biological acceptance and operational interruption rather than pool them into a single accuracy claim.
+
+Further evaluation can extend reference comparisons to additional modules and settings, compare repeated agent trials with expert-reviewed results, and measure paired CellProfiler/OpenHCS throughput with matched outputs and resource limits. Explicit image-source mappings keep channel and dimensional choices available for review as pipelines move to new experiments. The reusable libraries in Supplementary Table 1 supply the supporting mechanisms independently of the microscopy functions.
 
 OpenHCS provides an analysis component for AI-guided laboratories in which established workflows, custom functions and intermediate results remain accessible through the same editable pipeline. Scientists can delegate pipeline construction and execution, then inspect the results in familiar viewers and revise the analysis through graphical controls or Python.
 
@@ -260,6 +511,7 @@ The [supplementary index](supplementary/README.md) links the retained files and 
 5. **Complex CellProfiler workflows:** source-derived step sequences, function-call counts and editable Python for advanced segmentation and 3D monolayer analysis.
 6. **Workflow regression tests:** representative configuration, generated-Python and compiler-validation checks, with source and CI-job references.
 7. **Prospective agent-authored assays:** frozen pipelines and held-out score receipts for BBBC039, BBBC007 and BBBC013, with quantitative results and operational findings.
+8. **Task-only authoring and independent repair:** first/final reference agreement on the same inputs, full-corpus BBBC039 coverage, computational versus biological reference definitions, and retained post-freeze evaluation receipts.
 
 ## Code and Data Availability
 
@@ -277,7 +529,7 @@ The benchmark uses biological images and pipelines distributed by the CellProfil
 
 The benchmark manifest maps workflows to pinned revisions of their source collections. The [unified comparison evidence](../benchmark/results/official30_unified_value_comparison_20260916/README.md) preserves current-source observations, the selected reference inventory and exact run provenance for all 30 workflows. The [release CI evidence](supplementary/ci_official30_085/README.md) separately preserves the OpenHCS 0.8.5 package-level test, with checksums and links to its exact source revision and hosted job. Historical performance records and separately versioned agent demonstrations are indexed alongside them.
 
-Table 1 links the source repositories for the eight reusable libraries.
+Supplementary Table 1 links the source repositories for the eight reusable libraries.
 
 ## Acknowledgements
 

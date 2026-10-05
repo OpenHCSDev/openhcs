@@ -1,0 +1,19 @@
+{
+  "returncode": 0,
+  "cli_seconds": 22.643560148775578,
+  "command": [
+    "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "/home/ts/code/projects/openhcs/scripts/benchmark_cppipe_well_throughput.py",
+    "--manifest",
+    "/home/ts/code/projects/openhcs/benchmark/manifests/official30_portable_axis1.json",
+    "--output-dir",
+    "/home/ts/code/projects/openhcs-benchmark-runs/perf-runtime-context-fixed-cpu-abba-1-main-20260930",
+    "--mode",
+    "1w_1t",
+    "--case",
+    "cp_tutorial_3d_monolayer",
+    "--native-summary-csv",
+    "/home/ts/code/projects/openhcs-benchmark-runs/official30-native-complete-fresh-20260928/summary.csv"
+  ],
+  "package": "/home/ts/code/projects/openhcs"
+}

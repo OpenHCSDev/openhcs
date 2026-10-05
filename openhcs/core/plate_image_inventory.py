@@ -29,12 +29,17 @@ from openhcs.core.virtual_workspace_metadata import (
 
 if TYPE_CHECKING:
     from openhcs.core.orchestrator import PipelineOrchestrator
+    from openhcs.microscopes.microscope_base import MicroscopeHandler
     from openhcs.microscopes.microscope_interfaces import (
         AnalysisResultDirectory,
         FilenameParser,
         MetadataHandler,
     )
-    from openhcs.core.source_projection import SourceCandidate
+    from openhcs.core.source_projection import (
+        SourceCandidate,
+        SourcePlaneDataset,
+        SourceProjection,
+    )
     from polystore.filemanager import FileManager
     from polystore.roi import ROI, ROIShape
 
@@ -52,6 +57,7 @@ class PlateImageRecord:
     source_path: str
     metadata: Mapping[str, JsonValue] = field(default_factory=dict)
     source_ref: SourcePixelRef | None = None
+    source_projection: "SourceProjection | None" = None
 
     @property
     def source_path_obj(self) -> Path:
@@ -90,6 +96,43 @@ class PlateImageInventory:
     records: tuple[PlateImageRecord, ...]
 
     @classmethod
+    def from_read_only_handler(
+        cls,
+        *,
+        plate_path: Path,
+        handler: "MicroscopeHandler",
+        filemanager: "FileManager",
+    ) -> "PlateImageInventory":
+        """Inventory the selected metadata owner, not a different source domain.
+
+        Acquisition owners expose their exact physical dataset. Workspace owners
+        retain the persisted projection. Neither path prepares or rewrites it.
+        """
+
+        handler.register_source_backends(filemanager)
+        source_dataset = handler.metadata_handler.source_dataset(plate_path)
+        if source_dataset is not None:
+            return cls.from_source_dataset(
+                plate_path=plate_path,
+                handler=handler,
+                filemanager=filemanager,
+                source_dataset=source_dataset,
+            )
+        source_projection = cls._projection(
+            plate_path, handler.metadata_handler, filemanager
+        )
+        if source_projection is not None:
+            handler.register_workspace_backends(plate_path, filemanager)
+        return cls.from_handler(
+            plate_path=plate_path,
+            handler=handler,
+            filemanager=filemanager,
+            backend=handler.get_primary_backend(plate_path, filemanager),
+            source_projection=source_projection,
+            all_subdirs=True,
+        )
+
+    @classmethod
     def from_orchestrator(
         cls,
         orchestrator: "PipelineOrchestrator",
@@ -110,8 +153,7 @@ class PlateImageInventory:
         )
         return cls.from_handler(
             plate_path=plate_path,
-            metadata_handler=handler.metadata_handler,
-            parser=handler.parser,
+            handler=handler,
             filemanager=orchestrator.filemanager,
             backend=handler.get_primary_backend(
                 orchestrator.plate_path,
@@ -126,31 +168,19 @@ class PlateImageInventory:
         cls,
         *,
         plate_path: Path,
-        metadata_handler: "MetadataHandler",
-        parser: "FilenameParser | None",
+        handler: "MicroscopeHandler",
         filemanager: "FileManager",
         backend: str,
         source_projection: VirtualWorkspaceSourceProjection | None,
         all_subdirs: bool = True,
     ) -> "PlateImageInventory":
-        source_dataset = metadata_handler.source_dataset(plate_path)
+        source_dataset = handler.metadata_handler.source_dataset(plate_path)
         if source_projection is None and source_dataset is not None:
-            if parser is None:
-                raise ValueError(
-                    "Exact source datasets require a filename parser for inventory "
-                    "projection."
-                )
-            return cls(
+            return cls.from_source_dataset(
                 plate_path=plate_path,
-                records=tuple(
-                    cls._record_from_source_candidate(
-                        plate_path=plate_path,
-                        candidate=candidate,
-                        parser=parser,
-                        filemanager=filemanager,
-                    )
-                    for candidate in source_dataset.candidates
-                ),
+                handler=handler,
+                filemanager=filemanager,
+                source_dataset=source_dataset,
             )
         image_files = (
             tuple(sorted(source_projection.relative_virtual_paths()))
@@ -158,7 +188,7 @@ class PlateImageInventory:
             else tuple(
                 str(image_file)
                 for image_file in sorted(
-                    metadata_handler.get_image_files(
+                    handler.metadata_handler.get_image_files(
                         plate_path,
                         all_subdirs=all_subdirs,
                     )
@@ -169,7 +199,7 @@ class PlateImageInventory:
             cls._record(
                 plate_path=plate_path,
                 image_file=image_file,
-                parser=parser,
+                handler=handler,
                 projection=source_projection,
                 filemanager=filemanager,
                 backend=backend,
@@ -178,11 +208,40 @@ class PlateImageInventory:
         )
         return cls(plate_path=plate_path, records=records)
 
+    @classmethod
+    def from_source_dataset(
+        cls,
+        *,
+        plate_path: Path,
+        handler: "MicroscopeHandler",
+        filemanager: "FileManager",
+        source_dataset: "SourcePlaneDataset",
+    ) -> "PlateImageInventory":
+        """Expose the metadata owner's exact acquisition planes, without writes."""
+
+        parser = handler.require_filename_parser(
+            "Exact source datasets require a filename parser for inventory projection."
+        )
+        return cls(
+            plate_path=plate_path,
+            records=tuple(
+                cls._record_from_source_candidate(
+                    plate_path=plate_path,
+                    candidate=candidate,
+                    handler=handler,
+                    parser=parser,
+                    filemanager=filemanager,
+                )
+                for candidate in source_dataset.candidates
+            ),
+        )
+
     @staticmethod
     def _record_from_source_candidate(
         *,
         plate_path: Path,
         candidate: "SourceCandidate",
+        handler: "MicroscopeHandler",
         parser: "FilenameParser",
         filemanager: "FileManager",
     ) -> PlateImageRecord:
@@ -194,10 +253,10 @@ class PlateImageInventory:
             )
         return PlateImageInventory._record(
             plate_path=plate_path,
-            image_file=parser.construct_filename(
+            image_file=handler.construct_filename(
                 parser.bind_declared_values(address.parsed_component_values())
             ),
-            parser=parser,
+            handler=handler,
             projection=None,
             filemanager=filemanager,
             backend=candidate.source_ref.backend,
@@ -222,7 +281,7 @@ class PlateImageInventory:
         *,
         plate_path: Path,
         image_file: str,
-        parser: "FilenameParser | None",
+        handler: "MicroscopeHandler",
         projection: VirtualWorkspaceSourceProjection | None,
         filemanager: "FileManager",
         backend: str,
@@ -263,9 +322,9 @@ class PlateImageInventory:
         }
         if resolved_source_metadata is not None:
             metadata.update(dict(resolved_source_metadata))
-        if parser is not None:
-            parsed = parser.parse_filename(image_file)
-            if parsed:
+        if resolved_source_metadata is None:
+            parsed = handler.parse_image_path(image_file)
+            if parsed is not None:
                 metadata.update(parsed.wire_mapping())
         source_file = Path(source_path)
         metadata["size"] = file_size_label(source_file)
@@ -277,6 +336,9 @@ class PlateImageInventory:
             source_path=source_path,
             metadata=metadata,
             source_ref=resolved_source_ref,
+            source_projection=(
+                None if projection is None else projection.source_projection_for(lookup)
+            ),
         )
 
     def require_record(self, image_path: str) -> PlateImageRecord:
@@ -318,6 +380,7 @@ class PlateResultFileRecord:
     file_format: FileFormat
     metadata: Mapping[str, JsonValue] = field(default_factory=dict)
     source_ref: SourcePixelRef | None = None
+    source_projection: "SourceProjection | None" = None
 
     @property
     def full_path_obj(self) -> Path:
@@ -338,6 +401,7 @@ class PlateFileRecord:
     full_path: str | None = None
     file_format: FileFormat | None = None
     source_ref: SourcePixelRef | None = None
+    source_projection: "SourceProjection | None" = None
 
     def require_image_source_ref(self) -> SourcePixelRef:
         """Return the inventory-authored source for an admitted native image."""
@@ -378,6 +442,7 @@ class PlateFileRecord:
             full_virtual_path=record.full_virtual_path,
             source_path=record.source_path,
             source_ref=record.source_ref,
+            source_projection=record.source_projection,
         )
 
     @classmethod
@@ -390,6 +455,7 @@ class PlateFileRecord:
             full_path=record.full_path,
             file_format=record.file_format,
             source_ref=record.source_ref,
+            source_projection=record.source_projection,
         )
 
     def matches(self, query: "PlateFileInventoryQuery") -> bool:
@@ -775,9 +841,10 @@ class PlateResultFileInventory:
         scanned_file_count = 0
         for inventory in inventories:
             scanned_file_count += inventory.scanned_file_count
-            records_by_path.update(
-                (record.full_path, record) for record in inventory.records
-            )
+            # The handler's declared inventory precedes path-only projections.
+            # Do not discard its typed source binding on duplicate discovery.
+            for record in inventory.records:
+                records_by_path.setdefault(record.full_path, record)
         return PlateResultFileInventory(
             plate_path=plate_path,
             records=tuple(
@@ -886,6 +953,9 @@ class PlateResultFileInventory:
             if file_format is None:
                 continue
             relative_path = file_path.relative_to(plate_path)
+            projection = result_directory.source_binding_for(
+                str(relative_path), str(file_path)
+            )
             metadata: dict[str, JsonValue] = {
                 "filename": str(relative_path),
                 "type": file_format.name,
@@ -894,7 +964,9 @@ class PlateResultFileInventory:
                 "result_subdirectory": result_directory.subdirectory_name,
                 "full_path": str(file_path),
             }
-            if parser is not None:
+            if projection is not None:
+                metadata.update(projection.source_metadata)
+            elif parser is not None:
                 parsed = parser.parse_filename(file_path.name)
                 if parsed:
                     metadata.update(parsed.wire_mapping())
@@ -904,13 +976,18 @@ class PlateResultFileInventory:
                     full_path=str(file_path),
                     file_format=file_format,
                     metadata=metadata,
+                    source_projection=projection,
                     source_ref=(
-                        SourcePixelRef(
-                            backend=Backend.DISK.value,
-                            backend_address=str(file_path),
+                        projection.ref
+                        if projection is not None
+                        else (
+                            SourcePixelRef(
+                                backend=Backend.DISK.value,
+                                backend_address=str(file_path),
+                            )
+                            if ImageFileFormat.is_image_path(file_path)
+                            else None
                         )
-                        if ImageFileFormat.is_image_path(file_path)
-                        else None
                     ),
                 )
             )
@@ -961,8 +1038,7 @@ class PlateFileInventory:
         cls,
         *,
         plate_path: Path,
-        metadata_handler: "MetadataHandler",
-        parser: "FilenameParser | None",
+        handler: "MicroscopeHandler",
         filemanager: "FileManager",
         backend: str,
         path_config=None,
@@ -971,13 +1047,12 @@ class PlateFileInventory:
         """Build the same file inventory shape when only a handler is available."""
         source_projection = PlateImageInventory._projection(
             plate_path,
-            metadata_handler,
+            handler.metadata_handler,
             filemanager,
         )
         image_inventory = PlateImageInventory.from_handler(
             plate_path=plate_path,
-            metadata_handler=metadata_handler,
-            parser=parser,
+            handler=handler,
             filemanager=filemanager,
             backend=backend,
             source_projection=source_projection,
@@ -986,15 +1061,15 @@ class PlateFileInventory:
         if path_config is None:
             result_inventory = PlateResultFileInventory.from_handler(
                 plate_path=plate_path,
-                metadata_handler=metadata_handler,
-                parser=parser,
+                metadata_handler=handler.metadata_handler,
+                parser=handler.parser,
             )
         else:
             result_inventory = (
                 PlateResultFileInventory.from_handler_and_configured_output_root(
                     plate_path=plate_path,
-                    metadata_handler=metadata_handler,
-                    parser=parser,
+                    metadata_handler=handler.metadata_handler,
+                    parser=handler.parser,
                     path_config=path_config,
                 )
             )

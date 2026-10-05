@@ -1,0 +1,164 @@
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/core/aligned_image_payload.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/core/aligned_image_payload.py
+@@ -1199,8 +1199,8 @@
+         self,
+     ) -> Iterator[tuple[Any, AlignedImageSliceContext | None]]:
+         """Project each output once together with its declaration-owned context."""
+-        for index, payload in enumerate(self.slices):
+-            context = self.slice_contexts[index] if self.slice_contexts else None
++        contexts = self.slice_contexts or (None,) * len(self.slices)
++        for payload, context in zip(self.slices, contexts, strict=True):
+             for output_slice in payload_slices_for_alignment(payload):
+                 yield output_slice, context
+ 
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/core/steps/function_output_identity.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/core/steps/function_output_identity.py
+@@ -318,9 +318,7 @@
+         if qualifier is None:
+             return filename
+         if not filename.endswith(extension):
+-            raise ValueError(
+-                "Constructed filename does not retain its declared extension."
+-            )
++            raise ValueError("Constructed filename does not retain its declared extension.")
+         return f"{filename[:-len(extension)]}_{qualifier}{extension}"
+ 
+     @staticmethod
+@@ -586,10 +584,8 @@
+         identity = cls._identity_from_metadata(
+             metadata.source_component_metadata,
+             extension=FunctionOutputExtensionAuthority.from_source(
+-                metadata.source_component_metadata,
+-                metadata.source_path,
+-                parser=parser,
+-                identity_cache=identity_cache,
++                metadata.source_component_metadata, metadata.source_path,
++                parser=parser, identity_cache=identity_cache,
+             ),
+             source="payload component metadata",
+         )
+@@ -643,10 +639,8 @@
+             identity = cls._identity_from_metadata(
+                 source_identity.component_metadata,
+                 extension=FunctionOutputExtensionAuthority.from_source(
+-                    source_identity.component_metadata,
+-                    source_identity.path,
+-                    parser=parser,
+-                    identity_cache=identity_cache,
++                    source_identity.component_metadata, source_identity.path,
++                    parser=parser, identity_cache=identity_cache,
+                 ),
+                 source="single represented payload source metadata",
+             )
+@@ -704,10 +698,8 @@
+         identity = cls._identity_from_metadata(
+             metadata.source_component_metadata,
+             extension=FunctionOutputExtensionAuthority.from_source(
+-                metadata.source_component_metadata,
+-                metadata.source_path,
+-                parser=parser,
+-                identity_cache=identity_cache,
++                metadata.source_component_metadata, metadata.source_path,
++                parser=parser, identity_cache=identity_cache,
+             ),
+             source="payload component metadata",
+         )
+@@ -906,10 +898,8 @@
+         identity = cls._identity_from_metadata(
+             source_identity.component_metadata,
+             extension=FunctionOutputExtensionAuthority.from_source(
+-                source_identity.component_metadata,
+-                source_identity.path,
+-                parser=parser,
+-                identity_cache=identity_cache,
++                source_identity.component_metadata, source_identity.path,
++                parser=parser, identity_cache=identity_cache,
+             ),
+             source=f"represented source identity {identity_index} metadata",
+         )
+--- a/home/ts/code/projects/openhcs-compile-perf/openhcs/core/steps/function_runtime.py
++++ b/home/ts/code/projects/openhcs-compile-perf/openhcs/core/steps/function_runtime.py
+@@ -82,6 +82,7 @@
+     unstack_image_payload_context,
+ )
+ from openhcs.core.memory import (
++    MemoryType,
+     convert_memory,
+     stack_runtime_slices,
+     unstack_runtime_slices,
+@@ -2437,6 +2438,36 @@
+                 f"got {len(self.slice_contexts)} context(s) for {len(self.slices)} slice(s)."
+             )
+ 
++    @classmethod
++    def from_aligned_stack(
++        cls,
++        value: AlignedImageStack,
++        *,
++        memory_type: MemoryType,
++        device_id: int | None,
++    ) -> "PatternGroupOutputData":
++        """Materialize correlated output slices through the alignment owner."""
++        projected_outputs = tuple(value.projected_output_slices())
++        payloads = [payload for payload, _context in projected_outputs]
++        data = tuple(image_payload_data(payload) for payload in payloads)
++        stack_payload = None
++        if len({tuple(np.shape(item)) for item in data}) == 1:
++            stacked = stack_runtime_slices(data, memory_type, device_id)
++            stack_payload = stack_image_payload_context(
++                payloads,
++                stacked,
++                metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
++            )
++        return cls(
++            slices=payloads,
++            slice_contexts=(
++                tuple(context for _payload, context in projected_outputs)
++                if value.slice_contexts
++                else ()
++            ),
++            stack_payload=stack_payload,
++        )
++
+     def __iter__(self) -> Iterator[RuntimeArrayData]:
+         return iter(self.slices)
+ 
+@@ -3117,33 +3148,12 @@
+                 ),
+             )
+         if isinstance(processed_stack, AlignedImageStack):
+-            projected_outputs = tuple(processed_stack.projected_output_slices())
+-            output_payloads = [payload for payload, _context in projected_outputs]
+-            output_data = tuple(
+-                image_payload_data(payload) for payload in output_payloads
+-            )
+-            stack_payload = None
+-            if len({tuple(np.shape(value)) for value in output_data}) == 1:
+-                stacked_data = stack_runtime_slices(
+-                    output_data,
+-                    self.request.execution_plan.output_memory_type,
+-                    self.request.execution_plan.device_id_for(
+-                        self.request.execution_plan.output_memory_type
+-                    ),
+-                )
+-                stack_payload = stack_image_payload_context(
+-                    output_payloads,
+-                    stacked_data,
+-                    metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
+-                )
+-            return PatternGroupOutputData(
+-                slices=output_payloads,
+-                slice_contexts=(
+-                    tuple(context for _payload, context in projected_outputs)
+-                    if processed_stack.slice_contexts
+-                    else ()
++            return PatternGroupOutputData.from_aligned_stack(
++                processed_stack,
++                memory_type=self.request.execution_plan.output_memory_type,
++                device_id=self.request.execution_plan.device_id_for(
++                    self.request.execution_plan.output_memory_type
+                 ),
+-                stack_payload=stack_payload,
+             )
+         output_context = self._unwrapped_main_flow_output_context()
+         output_projection = RuntimeSliceProjection.preserved_context_for_value(

@@ -1,0 +1,78 @@
+FF.                                                                      [100%]
+=================================== FAILURES ===================================
+_____ test_runtime_image_metadata_target_requires_persisted_images[absent] _____
+
+tmp_path = PosixPath('/tmp/pytest-of-ts/pytest-194/test_runtime_image_metadata_ta0')
+contents = 'absent'
+
+    @pytest.mark.parametrize("contents", ["absent", "tables", "images"])
+    def test_runtime_image_metadata_target_requires_persisted_images(tmp_path, contents):
+        directory = tmp_path / "results"
+        if contents != "absent":
+            directory.mkdir()
+            if contents == "tables":
+                (directory / "measurements.csv").write_text("ObjectNumber,Area\n1,4\n")
+            else:
+                tifffile.imwrite(directory / "A01_s001_w2_z001_t001.tif", np.ones((2, 2), dtype=np.uint8))
+        context = context_stub(FileManager({Backend.DISK.value: DiskStorageBackend()}))
+        plan = function_step_plan("SaveImages")
+        plan.write_backend = Backend.MEMORY.value
+        plan.output_plate_root = str(tmp_path)
+        plan.analysis_results_dir = str(directory)
+        plan.runtime_artifact_materialization = RuntimeArtifactMaterializationPlan(
+            persistent_enabled=True, persistent_backend=Backend.DISK.value,
+        )
+        target = RuntimeArtifactMetadataTarget.from_plan(plan)
+        assert target is not None
+        assert target.output_dir == directory
+        selected = OpenHCSMetadataWriter.OutputTarget.for_execution(context, plan)
+        if contents == "images":
+            assert selected == (target,)
+        else:
+>           assert selected == ()
+E           AssertionError: assert (RuntimeArtif...ts_dir=None),) == ()
+E             
+E             Left contains one more item: RuntimeArtifactMetadataTarget(output_dir=PosixPath('/tmp/pytest-of-ts/pytest-194/test_runtime_image_metadata_ta0/resul...'disk', plate_root='/tmp/pytest-of-ts/pytest-194/test_runtime_image_metadata_ta0', sub_dir='results', results_dir=None)
+E             Use -v to get more diff
+
+test_runtime_image_target_unchanged_main_20260930.py:2176: AssertionError
+_____ test_runtime_image_metadata_target_requires_persisted_images[tables] _____
+
+tmp_path = PosixPath('/tmp/pytest-of-ts/pytest-194/test_runtime_image_metadata_ta1')
+contents = 'tables'
+
+    @pytest.mark.parametrize("contents", ["absent", "tables", "images"])
+    def test_runtime_image_metadata_target_requires_persisted_images(tmp_path, contents):
+        directory = tmp_path / "results"
+        if contents != "absent":
+            directory.mkdir()
+            if contents == "tables":
+                (directory / "measurements.csv").write_text("ObjectNumber,Area\n1,4\n")
+            else:
+                tifffile.imwrite(directory / "A01_s001_w2_z001_t001.tif", np.ones((2, 2), dtype=np.uint8))
+        context = context_stub(FileManager({Backend.DISK.value: DiskStorageBackend()}))
+        plan = function_step_plan("SaveImages")
+        plan.write_backend = Backend.MEMORY.value
+        plan.output_plate_root = str(tmp_path)
+        plan.analysis_results_dir = str(directory)
+        plan.runtime_artifact_materialization = RuntimeArtifactMaterializationPlan(
+            persistent_enabled=True, persistent_backend=Backend.DISK.value,
+        )
+        target = RuntimeArtifactMetadataTarget.from_plan(plan)
+        assert target is not None
+        assert target.output_dir == directory
+        selected = OpenHCSMetadataWriter.OutputTarget.for_execution(context, plan)
+        if contents == "images":
+            assert selected == (target,)
+        else:
+>           assert selected == ()
+E           AssertionError: assert (RuntimeArtif...ts_dir=None),) == ()
+E             
+E             Left contains one more item: RuntimeArtifactMetadataTarget(output_dir=PosixPath('/tmp/pytest-of-ts/pytest-194/test_runtime_image_metadata_ta1/resul...'disk', plate_root='/tmp/pytest-of-ts/pytest-194/test_runtime_image_metadata_ta1', sub_dir='results', results_dir=None)
+E             Use -v to get more diff
+
+test_runtime_image_target_unchanged_main_20260930.py:2176: AssertionError
+=========================== short test summary info ============================
+FAILED test_runtime_image_target_unchanged_main_20260930.py::test_runtime_image_metadata_target_requires_persisted_images[absent]
+FAILED test_runtime_image_target_unchanged_main_20260930.py::test_runtime_image_metadata_target_requires_persisted_images[tables]
+2 failed, 1 passed, 60 deselected in 0.91s

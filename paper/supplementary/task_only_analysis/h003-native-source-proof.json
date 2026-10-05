@@ -1,0 +1,402 @@
+{
+  "scope": "native figure proposal only; no rendering, scientific-array decoding, scoring, live control or author feedback",
+  "scientific_freeze": {
+    "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/FREEZE.json",
+    "bytes": 48152,
+    "sha256": "85322769447c1bf254c8578ab93f9550ad4eff7f83121ff5ce8e1dc685ea1f7a"
+  },
+  "existing_freeze_verification": {
+    "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/freeze-verification.json",
+    "bytes": 153,
+    "sha256": "50a31c062635cad71dd0b8cedf080c43edc9cceabe7a21cbc0f9df00c8d0d287"
+  },
+  "inputs": [
+    {
+      "path": "/home/ts/wt/openhcs-h003-uncoached-20260929/input/A02_s001_w1_z001_t001.tif",
+      "bytes": 160272,
+      "sha256": "cb97674830100b30b15c13677a8753d5bc6b0c5773ce9c125914207eb8766607"
+    },
+    {
+      "path": "/home/ts/wt/openhcs-h003-uncoached-20260929/input/A02_s001_w2_z001_t001.tif",
+      "bytes": 160272,
+      "sha256": "74753e8d820a6982f0871a91643ae1883552977ab5d341a24ab0f07abc7f00f1"
+    }
+  ],
+  "selected_and_supporting_captures": [
+    {
+      "view": "first_complete_C4_raw",
+      "original_png": {
+        "path": "/run/media/ts/hdd/openhcs-science/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/qa/first_complete_C4_raw/20261004T182638526749Z_napari_6021_OpenHCS_Napari_Visualization.png",
+        "bytes": 104591,
+        "sha256": "7eeb23d6967a726542030887db106531275dedeb97b0a8b57f18829bdf092e64"
+      },
+      "original_receipt": {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/receipts/0145-openhcs_viewer_snapshot_window.json",
+        "bytes": 5249,
+        "sha256": "2cb7cf5cc3b1c6a31bca3adf05aa5b9072d0cb1c4de93de6afbfbfd2dd9485c2"
+      },
+      "frozen_member_match": true,
+      "captured": true,
+      "frame_condition": "render_complete",
+      "window_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "view": "first_complete_C4_combined",
+      "original_png": {
+        "path": "/run/media/ts/hdd/openhcs-science/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/qa/first_complete_C4_combined/20261004T182654440923Z_napari_6021_OpenHCS_Napari_Visualization.png",
+        "bytes": 119438,
+        "sha256": "7e5e6e8862e51a25bf8359dbd736535be7e95c4678150c17c5615cd2f789c48f"
+      },
+      "original_receipt": {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/receipts/0151-openhcs_viewer_snapshot_window.json",
+        "bytes": 5272,
+        "sha256": "6843bc6422b07838c1d8f271fa19e7c16b881cbf09efca0b3139526c3ec303f6"
+      },
+      "frozen_member_match": true,
+      "captured": true,
+      "frame_condition": "render_complete",
+      "window_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "view": "candidate06_final_C2_dna_w151_raw",
+      "original_png": {
+        "path": "/run/media/ts/hdd/openhcs-science/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/qa/candidate06_final_C2_dna_w151_raw/20261004T184643895073Z_napari_6021_OpenHCS_Napari_Visualization.png",
+        "bytes": 105289,
+        "sha256": "b791c1e34f302541e409350db9b32012afff47747486e78076f72dbaf35bd42c"
+      },
+      "original_receipt": {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/receipts/0284-openhcs_viewer_snapshot_window.json",
+        "bytes": 5319,
+        "sha256": "9df971e25beef39c5e966b34e3cd6ef2ef95b654d9ad755f789da394c6aa29b5"
+      },
+      "frozen_member_match": true,
+      "captured": true,
+      "frame_condition": "render_complete",
+      "window_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "view": "candidate06_final_C2_dna_w151_result",
+      "original_png": {
+        "path": "/run/media/ts/hdd/openhcs-science/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/qa/candidate06_final_C2_dna_w151_result/20261004T184649372977Z_napari_6021_OpenHCS_Napari_Visualization.png",
+        "bytes": 125974,
+        "sha256": "a8b5fb2faa30c396dc672cad621f10cf60406b483f25acbfde779395a4b18c5a"
+      },
+      "original_receipt": {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/receipts/0286-openhcs_viewer_snapshot_window.json",
+        "bytes": 5337,
+        "sha256": "467e046e74cfb39ddee83cec7e7ba8f60f36b48f6e93656b176a9118464a8e86"
+      },
+      "frozen_member_match": true,
+      "captured": true,
+      "frame_condition": "render_complete",
+      "window_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "view": "candidate06_final_C2_dna_w151_combined",
+      "original_png": {
+        "path": "/run/media/ts/hdd/openhcs-science/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/qa/candidate06_final_C2_dna_w151_combined/20261004T185023503015Z_napari_6021_OpenHCS_Napari_Visualization.png",
+        "bytes": 115002,
+        "sha256": "8938db8512a087102226f2cbd62b65018bc64fad4e001f77ad6fba54289c0139"
+      },
+      "original_receipt": {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/receipts/0288-openhcs_viewer_snapshot_window.json",
+        "bytes": 5349,
+        "sha256": "5159bd03c9684721c620e0186b6e934c438f536d27a2a8912f45d79fe325a912"
+      },
+      "frozen_member_match": true,
+      "captured": true,
+      "frame_condition": "render_complete",
+      "window_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "view": "candidate06_final_full_dna_w151_raw",
+      "original_png": {
+        "path": "/run/media/ts/hdd/openhcs-science/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/qa/candidate06_final_full_dna_w151_raw/20261004T185249512524Z_napari_6021_OpenHCS_Napari_Visualization.png",
+        "bytes": 191412,
+        "sha256": "009323bb30a60a843a74baa783ccdb207d7e63375cac59e89f3c16fe8bd3ef6c"
+      },
+      "original_receipt": {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/receipts/0332-openhcs_viewer_snapshot_window.json",
+        "bytes": 5333,
+        "sha256": "3153ac188059573eca4efa4e86bda00a07ea2729f3a1673022c38fdb6e08f028"
+      },
+      "frozen_member_match": true,
+      "captured": true,
+      "frame_condition": "render_complete",
+      "window_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "view": "candidate06_final_full_dna_w151_result",
+      "original_png": {
+        "path": "/run/media/ts/hdd/openhcs-science/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/qa/candidate06_final_full_dna_w151_result/20261004T185254876729Z_napari_6021_OpenHCS_Napari_Visualization.png",
+        "bytes": 128039,
+        "sha256": "9de0ca44ff697c4717dd29574d923d22e054766f0aea9182ca3b8bc66b00959a"
+      },
+      "original_receipt": {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/receipts/0334-openhcs_viewer_snapshot_window.json",
+        "bytes": 5351,
+        "sha256": "67887a1e26ee586f6bff56c1a15103d6125bfba0a6222c438ac9aaf2cba79ff6"
+      },
+      "frozen_member_match": true,
+      "captured": true,
+      "frame_condition": "render_complete",
+      "window_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "view": "candidate06_final_full_dna_w151_combined",
+      "original_png": {
+        "path": "/run/media/ts/hdd/openhcs-science/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/qa/candidate06_final_full_dna_w151_combined/20261004T185300522834Z_napari_6021_OpenHCS_Napari_Visualization.png",
+        "bytes": 183225,
+        "sha256": "365cfbf20127faa47a1099558aebb76a11bba55789ccfc276b8242f5ea5783ee"
+      },
+      "original_receipt": {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/receipts/0336-openhcs_viewer_snapshot_window.json",
+        "bytes": 5361,
+        "sha256": "83eaef6bb3d8fd64b1b4f1038768e4d1abe7af92bcf4f02c2538e4de4f91dd77"
+      },
+      "frozen_member_match": true,
+      "captured": true,
+      "frame_condition": "render_complete",
+      "window_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "view": "candidate06_final_full_actin_w68_raw",
+      "original_png": {
+        "path": "/run/media/ts/hdd/openhcs-science/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/qa/candidate06_final_full_actin_w68_raw/20261004T185420512518Z_napari_6021_OpenHCS_Napari_Visualization.png",
+        "bytes": 198105,
+        "sha256": "74b88e166b0be7a5b379fc1a1f78e33efd799aa8bb9fe8e1ace75531bfbc64f7"
+      },
+      "original_receipt": {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/receipts/0356-openhcs_viewer_snapshot_window.json",
+        "bytes": 5339,
+        "sha256": "00de9974c24c0fd3f39b08772f3ed0c674f937a2d1edeb52666acad4e3de26a2"
+      },
+      "frozen_member_match": true,
+      "captured": true,
+      "frame_condition": "render_complete",
+      "window_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "view": "candidate06_final_full_actin_w68_result",
+      "original_png": {
+        "path": "/run/media/ts/hdd/openhcs-science/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/qa/candidate06_final_full_actin_w68_result/20261004T185425927211Z_napari_6021_OpenHCS_Napari_Visualization.png",
+        "bytes": 132827,
+        "sha256": "b25f6f1a97d9979e82578f239c2f6542616f157d8fc64c3f15f8bb7b217f6caf"
+      },
+      "original_receipt": {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/receipts/0358-openhcs_viewer_snapshot_window.json",
+        "bytes": 5355,
+        "sha256": "d8c96aef8716e7099ca591b754e0331aa488a7885414c0cd5d4261ee4664b9b2"
+      },
+      "frozen_member_match": true,
+      "captured": true,
+      "frame_condition": "render_complete",
+      "window_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "view": "candidate06_final_full_actin_w68_combined",
+      "original_png": {
+        "path": "/run/media/ts/hdd/openhcs-science/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/qa/candidate06_final_full_actin_w68_combined/20261004T185431224243Z_napari_6021_OpenHCS_Napari_Visualization.png",
+        "bytes": 200434,
+        "sha256": "8bc71302d109136c452a2841ca5490ccd1b941b27eacf85ecaafca4781df2b53"
+      },
+      "original_receipt": {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/receipts/0360-openhcs_viewer_snapshot_window.json",
+        "bytes": 5364,
+        "sha256": "7f4e9a535481d73c73f6304291151a63ea806503d22e50ce26a3a0815fb55258"
+      },
+      "frozen_member_match": true,
+      "captured": true,
+      "frame_condition": "render_complete",
+      "window_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "view": "candidate06_final_C4_dna_w255_raw",
+      "original_png": {
+        "path": "/run/media/ts/hdd/openhcs-science/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/qa/candidate06_final_C4_dna_w255_raw/20261004T185758622098Z_napari_6021_OpenHCS_Napari_Visualization.png",
+        "bytes": 100026,
+        "sha256": "f8c743bedf7b99289f19cfa0ea448fa8f488ba7141be1e4f31045257541ed341"
+      },
+      "original_receipt": {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/receipts/0412-openhcs_viewer_snapshot_window.json",
+        "bytes": 5321,
+        "sha256": "9dae393459881aadcc4a3cae5b3adb0e43aaacfdc93f6ec1c995afc320e609e8"
+      },
+      "frozen_member_match": true,
+      "captured": true,
+      "frame_condition": "render_complete",
+      "window_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "view": "candidate06_final_C4_dna_w255_result",
+      "original_png": {
+        "path": "/run/media/ts/hdd/openhcs-science/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/qa/candidate06_final_C4_dna_w255_result/20261004T185803961509Z_napari_6021_OpenHCS_Napari_Visualization.png",
+        "bytes": 129501,
+        "sha256": "6ae8525a7db413ac739a4cfb6ea9990b4f5d6ab63fc71f006fa3467b7dafc87a"
+      },
+      "original_receipt": {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/receipts/0414-openhcs_viewer_snapshot_window.json",
+        "bytes": 5339,
+        "sha256": "e58f9bb1fba01ef883e8e6d54515004f654e186168726adad4767bd0a027e1ce"
+      },
+      "frozen_member_match": true,
+      "captured": true,
+      "frame_condition": "render_complete",
+      "window_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "view": "candidate06_final_C4_dna_w255_combined",
+      "original_png": {
+        "path": "/run/media/ts/hdd/openhcs-science/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/qa/candidate06_final_C4_dna_w255_combined/20261004T185809227897Z_napari_6021_OpenHCS_Napari_Visualization.png",
+        "bytes": 116005,
+        "sha256": "34e95798ae722a54d2af38a7f818f3ebb3af9bd09e471fa4f5194402a3ef1a9a"
+      },
+      "original_receipt": {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/receipts/0416-openhcs_viewer_snapshot_window.json",
+        "bytes": 5347,
+        "sha256": "86f3b6b3c233691e63113dde834a6a04e0c2692a6fc52e4bbf125bdf3543c20c"
+      },
+      "frozen_member_match": true,
+      "captured": true,
+      "frame_condition": "render_complete",
+      "window_size": [
+        1440,
+        944
+      ]
+    }
+  ],
+  "retained_source_files": [
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/attempts/candidate01_retry01/pipeline.py",
+      "bytes": 5949,
+      "sha256": "597e35b0146fe165022aec964824a4b635dc5649dfcd68ddd438a891bf8bb6c1"
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/final_pipeline.py",
+      "bytes": 5456,
+      "sha256": "d618e9a1a7270760cd048bab74371d0ba765fd2df63ed3e650f7cba394450cda"
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/final_custom_detector.py",
+      "bytes": 4504,
+      "sha256": "572365d109179769443af8b5e50db7f8d49fdd2e2eb7fd0586d186081d255285"
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/REPORT.md",
+      "bytes": 16402,
+      "sha256": "617d50281c43ba8c33efb2f949b14da8412ea750e72f6e8ecad2f102c8d2007b"
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/final_evidence.json",
+      "bytes": 120527,
+      "sha256": "cff6471888a3aa77ee31f019d11a7a68b099f58d8e537c898bbefd42849c925d"
+    },
+    {
+      "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/author-workspace/output/source-workspace/input/openhcs_metadata.json",
+      "bytes": 4601,
+      "sha256": "aea34630b3ec15361f2f43b76d901c1fc122f86c418c1d090ef6eb7335c55d34"
+    }
+  ],
+  "original_tables": [
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/candidate06/input_candidate01/results/Nuclei.csv",
+      "bytes": 19612,
+      "sha256": "ee4b97ae1e39060d0e4c22fda3b714e1ffaf7ecc7b1593122475c5014b450bcc"
+    },
+    {
+      "path": "/run/media/ts/hdd/openhcs-science/next-three-fresh-postpause-20261004/H003_POSTPAUSE_88/candidate06/input_candidate01/results/Cells.csv",
+      "bytes": 21709,
+      "sha256": "bf22b35cf6b8273044504fd57a80db014e4b79757f66bd27175c1cf8afff467c"
+    }
+  ],
+  "raw_presentation_comparison": {
+    "operation": "read-only Pillow RGB comparison of original screenshots; no saved crop or modified bitmap",
+    "first_rect_ltrb": [
+      300,
+      35,
+      1240,
+      390
+    ],
+    "final_rect_ltrb": [
+      300,
+      46,
+      1240,
+      401
+    ],
+    "difference_bbox": null,
+    "mean_absolute_rgb_difference": [
+      0,
+      0,
+      0
+    ],
+    "reason": "canvas grows by22pixels after well slider removed; same camera center and zoom; final geometry shifts11pixels down",
+    "not_a_claim": "whole PNG identity or segmentation-array identity"
+  },
+  "proposal_crops_ltrb": {
+    "rowA_raw_and_first_combined": [
+      630,
+      90,
+      930,
+      380
+    ],
+    "rowA_final_combined": [
+      630,
+      101,
+      930,
+      391
+    ],
+    "rowB_all_three": [
+      560,
+      28,
+      860,
+      318
+    ]
+  },
+  "licensing": {
+    "curation_owner": "/home/ts/code/projects/openhcs/benchmark/haase_blind_task_presets_20260927.md",
+    "primary_page": "https://bbbc.broadinstitute.org/BBBC007",
+    "primary_html_license_href": "http://creativecommons.org/publicdomain/zero/1.0/",
+    "primary_html_license_alt": "CC0",
+    "attribution": "BBBC007v1 Drosophila Kc167 DNA/actin; laboratory of David Sabatini, Whitehead Institute for Biomedical Research; BBBC recommended Jones et al 2005 and Ljosa et al 2012",
+    "qualification": "original input digests match curated A02 planes; no Haase tutorial or evaluator reference pixels used"
+  }
+}

@@ -1,21 +1,35 @@
+from openhcs.core.steps.function_runtime import (
+    PatternGroupExecutionRequest,
+    PatternGroupExecutionScope,
+    PatternGroupData,
+    FunctionCoreExecutor,
+)
 from collections.abc import Callable
 from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import Mock
 
 import numpy as np
 import pytest
+from objectstate.global_config import GlobalContextValues
 from polystore.virtual_workspace import SourcePixelRef
 
-from openhcs.constants.constants import AllComponents, GroupBy, VariableComponents
+from openhcs.constants.constants import (
+    AllComponents,
+    Backend,
+    GroupBy,
+    VariableComponents,
+)
 from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
     ImagePayloadBundleContext,
     payload_slices_for_alignment,
-    stack_image_payload_context,
+    stack_image_payloads,
 )
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
+    ArtifactMeasurementSubjectRelation,
     ArtifactOutputPlan,
     ArtifactSidecarRole,
     ArtifactSpec,
@@ -25,11 +39,13 @@ from openhcs.core.artifacts import (
     ObjectLabelsArtifactType,
 )
 from openhcs.core.compiled_step_plan import CompiledStepPlan
+from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.component_group_scope import (
     ComponentGroupScope,
 )
 from openhcs.core.component_set import ComponentSet
 from openhcs.core.function_patterns import (
+    MainFlowInputProjection,
     InvocationArtifactInputEdgePlan,
     InvocationArtifactInputProjectionKey,
     RuntimeInvocationDomain,
@@ -43,6 +59,8 @@ from openhcs.core.pipeline.function_contracts import (
     special_inputs,
 )
 from openhcs.core.pipeline.path_planner import PathPlanner, PathPlannerArtifactStage
+from openhcs.core.pipeline.compiler import PipelineCompiler
+from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPolicy
 from openhcs.core.runtime_adapters import runtime_adapter
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
@@ -53,6 +71,9 @@ from openhcs.core.runtime_image_values import (
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.runtime_stack_cache import RuntimeImageStackCache
 from openhcs.core.source_binding_selection import SourcePatternResolutionContext
+from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
+from openhcs.core.runtime_pattern_cache import RuntimePatternDiscoveryCache
+from openhcs.core.steps.function_output_manifest import _STEP_OUTPUT_MANIFESTS
 from openhcs.core.source_bindings import (
     SOURCE_BINDING_ALIAS_METADATA_FIELD,
     CompiledSourceBindingPlan,
@@ -61,7 +82,6 @@ from openhcs.core.source_bindings import (
     SourceBindingMatchMethod,
     SourceBindingMatchPlan,
     SourceBindingOrigin,
-    SourceBindingRuntimeContext,
     SourceFilterClause,
     SourceFilterMatchType,
     SourceFilterSubject,
@@ -80,6 +100,7 @@ from openhcs.core.source_projection import (
     SourceProjectionSet,
 )
 from openhcs.core.source_workspace_projection import (
+    VirtualWorkspaceSourceProjectionAuthority,
     VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjection,
     VirtualWorkspaceSourceProjectionCache,
@@ -87,27 +108,53 @@ from openhcs.core.source_workspace_projection import (
 from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.core.steps.function_execution import (
     FunctionStepExecutor,
-    PatternGroups,
-    StepAnchorPatternFilter,
 )
 from openhcs.core.steps.function_output_identity import (
     FunctionOutputIdentity,
-    FunctionOutputIdentityAuthority,
     FunctionOutputIdentityCache,
-    FunctionOutputPathAuthority,
     FunctionOutputPathRequest,
 )
 from openhcs.core.steps.function_output_manifest import (
     NoStepOutputManifestMatch,
     ProducedOutputSemantics,
+    ProducedPathRecordIndex,
     StepOutputManifestStore,
 )
 from openhcs.formats.pattern.pattern_discovery import PatternDiscoveryEngine
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 
 
+def _anchor_executor(
+    *, plan, parser, output_manifest, source_workspace_projection_cache
+):
+    executor = object.__new__(FunctionStepExecutor)
+    executor.plan = plan
+    executor.context = Mock(
+        plate_path=Path("."),
+        microscope_handler=SimpleNamespace(
+            parser=parser,
+            metadata_handler=SimpleNamespace(
+                source_workspace_metadata_document=lambda _path: None
+            ),
+        ),
+        filemanager=SimpleNamespace(exists=lambda *_args: False),
+        runtime_source_workspace_projection_cache=source_workspace_projection_cache,
+        runtime_source_binding_context_cache=RuntimeSourceBindingContextCache(),
+    )
+    executor.context.runtime_source_workspace_projection_authority = (
+        VirtualWorkspaceSourceProjectionAuthority.from_context(
+            executor.context, cache=source_workspace_projection_cache,
+        )
+    )
+    if output_manifest is not None:
+        _STEP_OUTPUT_MANIFESTS[executor.context] = output_manifest
+    return executor
+
+
 def _source_manifest(plan, paths_and_components):
-    producer = SimpleNamespace(
+    producer = CompiledStepPlan(
+        step_index=plan.main_input_dependency.source_step_index,
+        step_type="FunctionStep",
         step_scope_id=plan.main_input_dependency.source_step_scope_id,
         step_name="producer",
         pipeline_position=plan.main_input_dependency.source_step_index,
@@ -288,6 +335,34 @@ def test_workspace_source_files_select_exact_projection_roles(
     ) == (str(plate_path / artifact_path),)
 
 
+def test_workspace_logical_identity_requires_paired_projection_declaration(
+    tmp_path: Path,
+) -> None:
+    path = "A01_s001_w1_z001_t001.tif"
+    full_path = str(tmp_path / path)
+    first = SourcePlaneProjection(
+        address=OpenHCSPlaneAddress.from_values("A01", 1, 1, 1, 1),
+        ref=SourcePixelRef("disk", "/physical/shared.tif"),
+        source_alias="Original",
+    )
+    declarations = {path: first, full_path: first}
+    projection = VirtualWorkspaceSourceProjection(
+        source_refs_by_virtual_path={path: first.ref, full_path: first.ref},
+        source_metadata_by_path={},
+        source_projections_by_virtual_path=declarations,
+        workspace_root=str(tmp_path),
+    )
+    lookup = VirtualWorkspacePathLookup.from_paths(full_path, full_path)
+    assert projection.logical_path_for(lookup) == path
+
+    # Sharing a backend reference does not prove a shared logical declaration.
+    declarations[full_path] = replace(
+        first, address=OpenHCSPlaneAddress.from_values("B01", 1, 1, 1, 1)
+    )
+    assert projection.logical_path_for(lookup) == full_path
+    assert projection.source_path_for(lookup) == "/physical/shared.tif"
+
+
 def test_workspace_source_projection_carries_exact_aliases_into_stack_provenance(
     tmp_path: Path,
 ) -> None:
@@ -371,9 +446,8 @@ def test_workspace_source_projection_carries_exact_aliases_into_stack_provenance
         for payload in projected_payloads
     )
 
-    stack = stack_image_payload_context(
+    stack = stack_image_payloads(
         projected_payloads,
-        np.stack(tuple(image_payload_data(payload) for payload in projected_payloads)),
         metadata_mode=projection.payload_composition_mode(lookups),
     )
 
@@ -466,7 +540,7 @@ def test_workspace_source_loading_preserves_declared_tiff_intensity_scale(
 ) -> None:
     import tifffile
 
-    from openhcs.core.steps.function_runtime import PatternGroupRuntime
+    from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest
 
     source_path = tmp_path / "source.tif"
     source_pixels = np.array([[0, 4095]], dtype=np.uint16)
@@ -506,10 +580,21 @@ def test_workspace_source_loading_preserves_declared_tiff_intensity_scale(
 
         physical_source_path = resolve_address
 
-    runtime = PatternGroupRuntime.__new__(PatternGroupRuntime)
-    runtime.request = SimpleNamespace(
-        source_binding_plan=source_binding_plan,
+    runtime = PatternGroupExecutionRequest(
         context=SimpleNamespace(filemanager=SourceFileManager()),
+        execution_plan=CompiledStepPlan(
+            step_index=0,
+            step_name="source fixture",
+            step_type="FunctionStep",
+            axis_id="A01",
+            source_binding_plan=source_binding_plan,
+        ),
+        compiled_group=compile_function_pattern(
+            lambda image: image, {}, {}
+        ).default_group,
+        pattern_group_info="fixture",
+        component_index=0,
+        component_count=1,
     )
 
     payload = runtime._apply_workspace_source_binding_payload(
@@ -525,6 +610,89 @@ def test_workspace_source_loading_preserves_declared_tiff_intensity_scale(
     assert metadata.intensity_scale == 4095.0
     assert metadata.source_dtype == "uint16"
     assert metadata.source_image_names == ("OrigBlue",)
+
+
+def test_physical_source_loading_preserves_tiff_calibration_and_live_buffers(
+    tmp_path: Path,
+) -> None:
+    import tifffile
+    from polystore.base import ensure_storage_registry, storage_registry
+    from polystore.filemanager import FileManager
+
+    from openhcs.constants.constants import Backend
+    from openhcs.core.runtime_image_values import image_payload_mask
+    from openhcs.core.runtime_source_binding_cache import (
+        RuntimeSourceBindingContextCache,
+    )
+    from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest
+    from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+
+    source_path = tmp_path / "A01_s002_w1_z003_t004.tif"
+    pixels = np.array([[0, 4095]], dtype=np.uint16)
+    mask = np.array([[True, False]])
+    tifffile.imwrite(source_path, pixels, extratags=((281, "H", 1, 4095, False),))
+    ensure_storage_registry()
+    filemanager = FileManager(dict(storage_registry))
+    bindings = CompiledSourceBindingPlan.empty()
+    plan = CompiledStepPlan(
+        step_index=0,
+        step_name="Physical source",
+        step_type="FunctionStep",
+        axis_id="A01",
+        input_dir=tmp_path,
+        output_dir=tmp_path / "outputs",
+        output_plate_root=tmp_path / "outputs",
+        sub_dir="images",
+        read_backend=Backend.DISK.value,
+        write_backend=Backend.MEMORY.value,
+        pipeline_position=0,
+        variable_components=(),
+        source_binding_plan=bindings,
+        compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
+    )
+    context = SimpleNamespace(
+        input_dir=tmp_path,
+        filemanager=filemanager,
+        microscope_handler=SimpleNamespace(
+            parser=SourceSchemaFilenameParser(),
+            get_primary_backend=lambda *_args: Backend.DISK.value,
+        ),
+        runtime_source_binding_context_cache=RuntimeSourceBindingContextCache(),
+    )
+    runtime = PatternGroupExecutionRequest(
+        context=context,
+        execution_plan=replace(plan, source_binding_plan=bindings),
+        compiled_group=compile_function_pattern(
+            lambda image: image, {}, {}
+        ).default_group,
+        pattern_group_info="fixture",
+        component_index=0,
+        component_count=1,
+    )
+    payload = ImagePayloadMetadata().payload_with(pixels, mask)
+    lookup = VirtualWorkspacePathLookup.from_paths(source_path.name, str(source_path))
+
+    (loaded,) = runtime._apply_source_image_loading_semantics(
+        (payload,),
+        (lookup,),
+        (),
+        None,
+    )
+
+    metadata = image_payload_metadata(loaded)
+    assert metadata.intensity_scale == 4095.0
+    assert metadata.source_dtype == "uint16"
+    assert metadata.source_path == str(source_path)
+    assert metadata.source_component_metadata["site"] == 2
+    assert metadata.source_component_metadata["z_index"] == 3
+    assert metadata.source_component_metadata["timepoint"] == 4
+    assert image_payload_data(loaded) is pixels
+    assert image_payload_mask(loaded) is mask
+    np.testing.assert_array_equal(image_payload_data(loaded), [[0, 4095]])
+    pixels[0, 0] = 17
+    mask[0, 0] = False
+    assert image_payload_data(loaded)[0, 0] == 17
+    assert not image_payload_mask(loaded)[0, 0]
 
 
 def test_virtual_workspace_source_filters_use_persisted_candidate_identity(
@@ -627,10 +795,17 @@ def test_virtual_workspace_runtime_metadata_projection_validates_explicit_metada
     )
 
     projection.validate_runtime_metadata_projection()
+    # Compile validation uses the already-admitted view, without a runtime
+    # context/provider capable of reopening the source document.
+    PipelineCompiler.validate_source_workspace_projection(
+        SimpleNamespace(source_workspace_projection=projection, axis_id="A01")
+    )
 
 
+@pytest.mark.parametrize("field_name", ("OpenHCSSourceVoxelSpacingZYX", "well"))
 def test_virtual_workspace_runtime_metadata_projection_rejects_path_spelling_drift(
     tmp_path: Path,
+    field_name: str,
 ) -> None:
     plate_path = tmp_path / "plate"
     real_path = tmp_path / "source" / "image.tif"
@@ -640,13 +815,28 @@ def test_virtual_workspace_runtime_metadata_projection_rejects_path_spelling_dri
             virtual_path.name: SourcePixelRef("disk", str(real_path)),
         },
         source_metadata_by_path={
-            virtual_path.name: {"OpenHCSSourceVoxelSpacingZYX": "2,1,1"},
+            virtual_path.name: {field_name: "A01" if field_name == "well" else "2,1,1"},
+            **({str(virtual_path): {"well": "A02"}} if field_name == "well" else {}),
         },
         workspace_root=str(plate_path),
     )
 
-    with pytest.raises(ValueError, match="OpenHCSSourceVoxelSpacingZYX"):
+    with pytest.raises(ValueError, match=field_name):
         projection.validate_runtime_metadata_projection()
+    with pytest.raises(ValueError, match=field_name):
+        PipelineCompiler.validate_source_workspace_projection(
+            SimpleNamespace(source_workspace_projection=projection, axis_id="A01")
+        )
+    if field_name == "well":
+        PipelineCompiler.validate_source_workspace_projection(
+            SimpleNamespace(source_workspace_projection=projection, axis_id="A02")
+        )
+    else:
+        # Metadata without an axis remains shared by every admitted axis.
+        with pytest.raises(ValueError, match=field_name):
+            PipelineCompiler.validate_source_workspace_projection(
+                SimpleNamespace(source_workspace_projection=projection, axis_id="A02")
+            )
 
 
 def test_stack_payload_context_promotes_single_channel_slice_metadata() -> None:
@@ -669,9 +859,8 @@ def test_stack_payload_context_promotes_single_channel_slice_metadata() -> None:
         )
     )
 
-    payload = stack_image_payload_context(
+    payload = stack_image_payloads(
         (first, second),
-        stack,
         metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
     )
     metadata = image_payload_metadata(payload)
@@ -689,17 +878,26 @@ def test_stack_payload_context_promotes_single_channel_slice_metadata() -> None:
     )
 
 
-def test_bundle_payload_context_preserves_source_binding_plane_metadata() -> None:
+@pytest.mark.parametrize("extension", (None, ".tif", ".png"))
+def test_bundle_payload_context_preserves_source_binding_plane_metadata(
+    extension: str | None,
+) -> None:
+    # Consensus preserves declared metadata; it must not parse the TIFF paths.
+    extension_metadata = {} if extension is None else {"extension": extension}
     first = ImagePayloadMetadata(
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=("/input/A01_s001_w1_z001_t001.tif",),
-            component_metadata=({"well": "A01", "site": 1, "channel": 1},),
+            component_metadata=(
+                {"well": "A01", "site": 1, "channel": 1, **extension_metadata},
+            ),
         )
     ).payload_with(np.zeros((4, 5), dtype=np.float32), None)
     second = ImagePayloadMetadata(
         source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
             paths=("/input/A01_s001_w2_z001_t001.tif",),
-            component_metadata=({"well": "A01", "site": 1, "channel": 2},),
+            component_metadata=(
+                {"well": "A01", "site": 1, "channel": 2, **extension_metadata},
+            ),
         )
     ).payload_with(np.ones((4, 5), dtype=np.float32), None)
 
@@ -714,13 +912,13 @@ def test_bundle_payload_context_preserves_source_binding_plane_metadata() -> Non
         dict(item)
         for item in metadata.source_image_provenance_planes.component_metadata
     ) == (
-        {"well": "A01", "site": 1, "channel": 1},
-        {"well": "A01", "site": 1, "channel": 2},
+        {"well": "A01", "site": 1, "channel": 1, **extension_metadata},
+        {"well": "A01", "site": 1, "channel": 2, **extension_metadata},
     )
     assert dict(metadata.source_component_metadata) == {
         "well": "A01",
         "site": 1,
-        "extension": ".tif",
+        **extension_metadata,
     }
 
 
@@ -744,7 +942,9 @@ def test_payload_slices_do_not_infer_alignment_from_source_provenance() -> None:
 
 def test_step_output_manifest_scopes_previous_step_inputs(tmp_path: Path) -> None:
     output_dir = tmp_path / "images"
-    producer = SimpleNamespace(
+    producer = CompiledStepPlan(
+        step_index=1,
+        step_type="FunctionStep",
         step_scope_id="enhance",
         step_name="Enhance",
         pipeline_position=1,
@@ -831,7 +1031,9 @@ def test_step_output_manifest_pattern_lookup_returns_producer_memory_paths(
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = SimpleNamespace(
+    producer = CompiledStepPlan(
+        step_index=4,
+        step_type="FunctionStep",
         step_scope_id="mask_image",
         step_name="MaskImage",
         pipeline_position=4,
@@ -887,11 +1089,10 @@ def test_step_output_manifest_pattern_lookup_returns_producer_memory_paths(
         ),
     )
 
-    assert store.producer_paths_matching_pattern(
-        consumer,
-        "A14_s{iii}_w3_z001_t001.tif",
-        SourceSchemaFilenameParser(),
-    ) == [
+    index = store.producer_record_index_for(consumer, SourceSchemaFilenameParser())
+    assert [record.output_path for record in index.matching_records(
+        "A14_s{iii}_w3_z001_t001.tif"
+    )] == [
         str(output_dir / "A14_s001_w3_z001_t001.tif"),
         str(output_dir / "A14_s002_w3_z001_t001.tif"),
     ]
@@ -901,14 +1102,18 @@ def test_step_output_manifest_does_not_treat_artifact_inputs_as_main_flow(
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    cells_producer = SimpleNamespace(
+    cells_producer = CompiledStepPlan(
+        step_index=6,
+        step_type="FunctionStep",
         step_scope_id="identify_cells",
         step_name="IdentifySecondaryObjects",
         pipeline_position=6,
         axis_id="A14",
         output_dir=output_dir,
     )
-    nuclei_producer = SimpleNamespace(
+    nuclei_producer = CompiledStepPlan(
+        step_index=5,
+        step_type="FunctionStep",
         step_scope_id="identify_nuclei",
         step_name="IdentifyPrimaryObjects",
         pipeline_position=5,
@@ -991,28 +1196,26 @@ def test_step_output_manifest_does_not_treat_artifact_inputs_as_main_flow(
             ),
         )
 
-    assert (
-        store.producer_paths_matching_pattern(
-            consumer,
-            "A14_s{iii}_w1_z001_t001.tif",
-            SourceSchemaFilenameParser(),
-        )
-        == []
-    )
+    index = store.producer_record_index_for(consumer, SourceSchemaFilenameParser())
+    assert index is None
 
 
 def test_step_output_manifest_uses_declared_artifact_producer_scope(
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    requested_producer = SimpleNamespace(
+    requested_producer = CompiledStepPlan(
+        step_index=2,
+        step_type="FunctionStep",
         step_scope_id="crop_blue",
         step_name="CropBlue",
         pipeline_position=2,
         axis_id="A01",
         output_dir=output_dir,
     )
-    previous_producer = SimpleNamespace(
+    previous_producer = CompiledStepPlan(
+        step_index=3,
+        step_type="FunctionStep",
         step_scope_id="crop_red",
         step_name="CropRed",
         pipeline_position=3,
@@ -1107,7 +1310,9 @@ def test_special_artifact_input_does_not_narrow_step_output_main_flow(
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = SimpleNamespace(
+    producer = CompiledStepPlan(
+        step_index=2,
+        step_type="FunctionStep",
         step_scope_id="image_set",
         step_name="ImageSet",
         pipeline_position=2,
@@ -1241,12 +1446,11 @@ def test_step_output_anchor_filter_skips_source_binding_filter() -> None:
             bindings=(NamedSourceBinding(alias="OrigDNA"),)
         ),
     )
-    grouped_patterns = PatternGroups({None: ("A14_s{iii}_w1_z001_t001.tif",)})
-    pattern_filter = StepAnchorPatternFilter(
+    grouped_patterns = {None: ("A14_s{iii}_w1_z001_t001.tif",)}
+    pattern_filter = _anchor_executor(
         plan=plan,
         parser=None,
         output_manifest=StepOutputManifestStore(),
-        source_workspace_authority=None,
         source_workspace_projection_cache=VirtualWorkspaceSourceProjectionCache(),
     )
 
@@ -1269,18 +1473,17 @@ def test_step_output_anchor_uses_compiler_owned_component_scope() -> None:
         ),
         compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
     )
-    grouped_patterns = PatternGroups({"2": ("A01_s{iii}_w2_z001_t001.tif",)})
-    pattern_filter = StepAnchorPatternFilter(
+    grouped_patterns = {"2": ("A01_s{iii}_w2_z001_t001.tif",)}
+    pattern_filter = _anchor_executor(
         plan=plan,
         parser=SourceSchemaFilenameParser(),
         output_manifest=_source_manifest(
             plan, [("A01_s001_w2_z001_t001.tif", {"channel": 0})]
         ),
-        source_workspace_authority=None,
         source_workspace_projection_cache=VirtualWorkspaceSourceProjectionCache(),
     )
 
-    assert pattern_filter.execution_group_anchor_patterns(grouped_patterns).groups == {
+    assert pattern_filter.execution_group_anchor_patterns(grouped_patterns) == {
         "0": ("A01_s{iii}_w2_z001_t001.tif",),
     }
 
@@ -1312,27 +1515,19 @@ def test_step_output_dispatch_projects_producer_group_before_pattern_selection(
         ),
         compiled_function_pattern=compiled_pattern,
     )
-    pattern_filter = StepAnchorPatternFilter(
+    pattern_filter = _anchor_executor(
         plan=plan,
         parser=SourceSchemaFilenameParser(),
         output_manifest=_source_manifest(
             plan, [("A01_s001_w1_z001_t001.tif", {"channel": 2})]
         ),
-        source_workspace_authority=None,
         source_workspace_projection_cache=VirtualWorkspaceSourceProjectionCache(),
     )
-    monkeypatch.setattr(
-        StepAnchorPatternFilter,
-        "from_context",
-        classmethod(lambda cls, context, plan: pattern_filter),
-    )
-    executor = object.__new__(FunctionStepExecutor)
-    executor.context = SimpleNamespace()
-    executor.plan = plan
+    executor = pattern_filter
 
     grouped = executor._prepare_groups({"A01": {"1": ("A01_s{iii}_w1_z001_t001.tif",)}})
 
-    assert grouped.groups == {
+    assert grouped == {
         "2": ("A01_s{iii}_w1_z001_t001.tif",),
     }
 
@@ -1398,26 +1593,23 @@ def test_artifact_managed_dispatch_validates_producer_before_group_projection() 
     def filter_to_producer_paths(_plan, paths, _parser):
         return tuple(path for path in paths if "_w2_" in path)
 
-    pattern_filter = StepAnchorPatternFilter(
+    pattern_filter = _anchor_executor(
         plan=plan,
         parser=SourceSchemaFilenameParser(),
         output_manifest=SimpleNamespace(
             filter_to_producer_paths=filter_to_producer_paths,
         ),
-        source_workspace_authority=None,
         source_workspace_projection_cache=VirtualWorkspaceSourceProjectionCache(),
     )
 
-    filtered = pattern_filter.filtered(
-        PatternGroups(
-            {
-                "1": ("A01_s{iii}_w1_z001_t001.tif",),
-                "2": ("A01_s{iii}_w2_z001_t001.tif",),
-            }
-        )
+    filtered = pattern_filter._filter_anchor_patterns(
+        {
+            "1": ("A01_s{iii}_w1_z001_t001.tif",),
+            "2": ("A01_s{iii}_w2_z001_t001.tif",),
+        }
     )
 
-    assert filtered.groups == {
+    assert filtered == {
         "1": ("A01_s{iii}_w2_z001_t001.tif",),
     }
 
@@ -1436,17 +1628,22 @@ def test_artifact_managed_missing_output_context_is_an_error(
         "step_output_manifest",
         lambda _context: MissingProducerManifest(),
     )
-    runtime = function_runtime.PatternGroupRuntime(
-        SimpleNamespace(
-            context=SimpleNamespace(
-                microscope_handler=SimpleNamespace(parser=SourceSchemaFilenameParser())
-            ),
-            execution_plan=SimpleNamespace(),
-            compiled_group=SimpleNamespace(
-                runtime_domain=RuntimeInvocationDomain.ARTIFACT_MANAGED,
-            ),
-            pattern_group_info="A01_s001_w2_z001_t001.tif",
-        )
+    runtime = PatternGroupExecutionRequest(
+        context=SimpleNamespace(
+            microscope_handler=SimpleNamespace(parser=SourceSchemaFilenameParser())
+        ),
+        execution_plan=CompiledStepPlan(
+            step_index=0,
+            step_name="source fixture",
+            step_type="FunctionStep",
+            axis_id="A01",
+        ),
+        compiled_group=SimpleNamespace(
+            runtime_domain=RuntimeInvocationDomain.ARTIFACT_MANAGED,
+        ),
+        pattern_group_info="A01_s001_w2_z001_t001.tif",
+        component_index=0,
+        component_count=1,
     )
 
     with pytest.raises(NoStepOutputManifestMatch):
@@ -1467,13 +1664,11 @@ def test_step_output_anchor_resolves_dynamic_component_scope_from_patterns() -> 
             {},
         ),
     )
-    grouped_patterns = PatternGroups(
-        {
-            "1": ("A01_s001_w{iii}_z001_t001.tif",),
-            "2": ("A01_s002_w{iii}_z001_t001.tif",),
-        }
-    )
-    pattern_filter = StepAnchorPatternFilter(
+    grouped_patterns = {
+        "1": ("A01_s001_w{iii}_z001_t001.tif",),
+        "2": ("A01_s002_w{iii}_z001_t001.tif",),
+    }
+    pattern_filter = _anchor_executor(
         plan=plan,
         parser=SourceSchemaFilenameParser(),
         output_manifest=_source_manifest(
@@ -1483,13 +1678,12 @@ def test_step_output_anchor_resolves_dynamic_component_scope_from_patterns() -> 
                 ("A01_s002_w1_z001_t001.tif", {}),
             ],
         ),
-        source_workspace_authority=None,
         source_workspace_projection_cache=VirtualWorkspaceSourceProjectionCache(),
     )
 
     assert (
-        pattern_filter.execution_group_anchor_patterns(grouped_patterns).groups
-        == grouped_patterns.groups
+        pattern_filter.execution_group_anchor_patterns(grouped_patterns)
+        == grouped_patterns
     )
 
 
@@ -1506,22 +1700,19 @@ def test_source_anchor_uses_compiler_owned_static_component_scope() -> None:
             {},
         ),
     )
-    grouped_patterns = PatternGroups(
-        {
-            "1": ("A01_s{iii}_w1_z001_t001.tif",),
-            "2": ("A01_s{iii}_w2_z001_t001.tif",),
-            "3": ("A01_s{iii}_w3_z001_t001.tif",),
-        }
-    )
-    pattern_filter = StepAnchorPatternFilter(
+    grouped_patterns = {
+        "1": ("A01_s{iii}_w1_z001_t001.tif",),
+        "2": ("A01_s{iii}_w2_z001_t001.tif",),
+        "3": ("A01_s{iii}_w3_z001_t001.tif",),
+    }
+    pattern_filter = _anchor_executor(
         plan=plan,
         parser=None,
         output_manifest=StepOutputManifestStore(),
-        source_workspace_authority=None,
         source_workspace_projection_cache=VirtualWorkspaceSourceProjectionCache(),
     )
 
-    assert pattern_filter.execution_group_anchor_patterns(grouped_patterns).groups == {
+    assert pattern_filter.execution_group_anchor_patterns(grouped_patterns) == {
         "1": ("A01_s{iii}_w1_z001_t001.tif",),
     }
 
@@ -1556,7 +1747,8 @@ def test_source_bound_anchor_filter_combines_ordered_non_grouped_source_sets() -
         relations=tuple(
             GroupLineageSourceRelation(source=binding.input_spec().ref())
             for binding in bindings
-        ),
+        )
+        + (ArtifactMeasurementSubjectRelation(),),
     )
 
     @artifact_inputs(*(binding.input_spec() for binding in bindings))
@@ -1590,33 +1782,28 @@ def test_source_bound_anchor_filter_combines_ordered_non_grouped_source_sets() -
             {plan.ref(): plan for plan in (measurement_plan,)},
         ),
     )
-    pattern_filter = StepAnchorPatternFilter(
+    pattern_filter = _anchor_executor(
         plan=plan,
         parser=SourceSchemaFilenameParser(),
         output_manifest=StepOutputManifestStore(),
-        source_workspace_authority=SimpleNamespace(
-            projection_or_empty=lambda: VirtualWorkspaceSourceProjection.empty()
-        ),
         source_workspace_projection_cache=VirtualWorkspaceSourceProjectionCache(),
     )
 
     filtered = pattern_filter.source_bound_anchor_patterns(
-        PatternGroups(
-            {
-                "1": (
-                    "A01_s001_w1_z001_t001.tif",
-                    "A01_s002_w1_z001_t001.tif",
-                ),
-                "2": (
-                    "A01_s001_w2_z001_t001.tif",
-                    "A01_s002_w2_z001_t001.tif",
-                ),
-                "3": ("A01_s001_w3_z001_t001.tif",),
-            }
-        )
+        {
+            "1": (
+                "A01_s001_w1_z001_t001.tif",
+                "A01_s002_w1_z001_t001.tif",
+            ),
+            "2": (
+                "A01_s001_w2_z001_t001.tif",
+                "A01_s002_w2_z001_t001.tif",
+            ),
+            "3": ("A01_s001_w3_z001_t001.tif",),
+        }
     )
 
-    assert filtered.groups == {
+    assert filtered == {
         "1": (
             "A01_s001_w1_z001_t001.tif",
             "A01_s002_w1_z001_t001.tif",
@@ -1757,28 +1944,23 @@ def test_compiled_implicit_main_flow_uses_execution_component_source_anchor() ->
         ),
         compiled_function_pattern=compiled_pattern,
     )
-    pattern_filter = StepAnchorPatternFilter(
+    pattern_filter = _anchor_executor(
         plan=plan,
         parser=SourceSchemaFilenameParser(),
         output_manifest=StepOutputManifestStore(),
-        source_workspace_authority=SimpleNamespace(
-            projection_or_empty=lambda: VirtualWorkspaceSourceProjection.empty()
-        ),
         source_workspace_projection_cache=VirtualWorkspaceSourceProjectionCache(),
     )
-    grouped_patterns = PatternGroups(
-        {
-            "1": ("A01_s001_w1_z001_t001.tif",),
-            "3": ("A01_s001_w3_z001_t001.tif",),
-        }
-    )
+    grouped_patterns = {
+        "1": ("A01_s001_w1_z001_t001.tif",),
+        "3": ("A01_s001_w3_z001_t001.tif",),
+    }
 
     source_anchors = pattern_filter.source_bound_anchor_patterns(grouped_patterns)
-    assert source_anchors.groups == {
+    assert source_anchors == {
         "1": (),
         "3": ("A01_s001_w3_z001_t001.tif",),
     }
-    assert pattern_filter.execution_group_anchor_patterns(source_anchors).groups == {
+    assert pattern_filter.execution_group_anchor_patterns(source_anchors) == {
         "3": ("A01_s001_w3_z001_t001.tif",),
     }
 
@@ -1820,29 +2002,24 @@ def test_source_anchored_dict_pattern_excludes_out_of_scope_source_group() -> No
         ),
         compiled_function_pattern=compiled_pattern,
     )
-    pattern_filter = StepAnchorPatternFilter(
+    pattern_filter = _anchor_executor(
         plan=plan,
         parser=SourceSchemaFilenameParser(),
         output_manifest=StepOutputManifestStore(),
-        source_workspace_authority=SimpleNamespace(
-            projection_or_empty=lambda: VirtualWorkspaceSourceProjection.empty()
-        ),
         source_workspace_projection_cache=VirtualWorkspaceSourceProjectionCache(),
     )
-    grouped_patterns = PatternGroups(
-        {
-            "1": ("A01_s001_w1_z001_t001.tif",),
-            "2": ("A01_s001_w2_z001_t001.tif",),
-        }
-    )
+    grouped_patterns = {
+        "1": ("A01_s001_w1_z001_t001.tif",),
+        "2": ("A01_s001_w2_z001_t001.tif",),
+    }
 
     source_anchors = pattern_filter.source_bound_anchor_patterns(grouped_patterns)
 
-    assert source_anchors.groups == {
+    assert source_anchors == {
         "1": ("A01_s001_w1_z001_t001.tif",),
         "2": (),
     }
-    assert pattern_filter.execution_group_anchor_patterns(source_anchors).groups == {
+    assert pattern_filter.execution_group_anchor_patterns(source_anchors) == {
         "1": ("A01_s001_w1_z001_t001.tif",),
     }
 
@@ -1879,27 +2056,22 @@ def test_exact_source_artifact_filters_undeclared_detected_component_groups() ->
         ),
         compiled_function_pattern=compile_function_pattern(exact_source_input, {}, {}),
     )
-    pattern_filter = StepAnchorPatternFilter(
+    pattern_filter = _anchor_executor(
         plan=plan,
         parser=SourceSchemaFilenameParser(),
         output_manifest=StepOutputManifestStore(),
-        source_workspace_authority=SimpleNamespace(
-            projection_or_empty=lambda: VirtualWorkspaceSourceProjection.empty()
-        ),
         source_workspace_projection_cache=VirtualWorkspaceSourceProjectionCache(),
     )
 
     filtered = pattern_filter.source_bound_anchor_patterns(
-        PatternGroups(
-            {
-                "1": ("A01_s001_w1_z001_t001.tif",),
-                "2": ("A01_s001_w2_z001_t001.tif",),
-                "3": ("A01_s001_w3_z001_t001.tif",),
-            }
-        )
+        {
+            "1": ("A01_s001_w1_z001_t001.tif",),
+            "2": ("A01_s001_w2_z001_t001.tif",),
+            "3": ("A01_s001_w3_z001_t001.tif",),
+        }
     )
 
-    assert filtered.groups == {
+    assert filtered == {
         "1": ("A01_s001_w1_z001_t001.tif",),
     }
 
@@ -1937,33 +2109,36 @@ def test_pipeline_start_anchors_project_raw_selectors_to_semantic_groups() -> No
             {},
         ),
     )
-    pattern_filter = StepAnchorPatternFilter(
+    pattern_filter = _anchor_executor(
         plan=plan,
         parser=SourceSchemaFilenameParser(),
         output_manifest=StepOutputManifestStore(),
-        source_workspace_authority=SimpleNamespace(
-            projection_or_empty=lambda: VirtualWorkspaceSourceProjection.empty()
-        ),
         source_workspace_projection_cache=VirtualWorkspaceSourceProjectionCache(),
     )
 
     filtered = pattern_filter.source_bound_anchor_patterns(
-        PatternGroups(
-            {
-                "1": ("A01_s001_w1_z001_t001.tif",),
-                "2": ("A01_s001_w2_z001_t001.tif",),
-            }
-        )
+        {
+            "1": ("A01_s001_w1_z001_t001.tif",),
+            "2": ("A01_s001_w2_z001_t001.tif",),
+        }
     )
 
-    assert filtered.groups == {
+    assert filtered == {
         "MCP_DNA": ("A01_s001_w1_z001_t001.tif",),
         "MCP_AGP": ("A01_s001_w2_z001_t001.tif",),
     }
 
 
+@pytest.fixture
+def preserve_global_pipeline_context():
+    context = GlobalContextValues.capture(GlobalPipelineConfig)
+    yield
+    context.apply()
+
+
 def test_first_step_prepares_raw_source_anchors_under_semantic_binding_groups(
     tmp_path: Path,
+    preserve_global_pipeline_context,
 ) -> None:
     from multiprocessing import SimpleQueue
 
@@ -1972,13 +2147,13 @@ def test_first_step_prepares_raw_source_anchors_under_semantic_binding_groups(
     from objectstate.lazy_factory import ensure_global_config_context
 
     from openhcs.constants import Microscope
-    from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+    from openhcs.core.config import PipelineConfig
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
     from openhcs.core.progress import set_progress_queue
     from openhcs.core.source_bindings import LazyStepSourceBindingsConfig
     from openhcs.core.steps.function_runtime import (
+        PatternGroupExecutionScope,
         PatternGroupExecutionRequest,
-        PatternGroupRuntime,
     )
     from openhcs.core.steps.function_step import FunctionStep
 
@@ -2042,24 +2217,31 @@ def test_first_step_prepares_raw_source_anchors_under_semantic_binding_groups(
 
     assert executor.plan.main_input_dependency == StepInputDependency.pipeline_start()
     assert executor.plan.source_binding_plan.has_primary_content
-    assert grouped_patterns.groups == {
+    assert grouped_patterns == {
         "MCP_DNA": ("A01_s{iii}_w1_z001_t001.tif",),
         "MCP_AGP": ("A01_s{iii}_w2_z001_t001.tif",),
     }
-    executor._preload_inputs_if_needed(grouped_patterns)
 
     request = PatternGroupExecutionRequest(
         context=context,
         execution_plan=executor.plan,
         compiled_group=executor.plan.compiled_function_pattern.default_group,
         component_value="MCP_DNA",
-        pattern_group_info=grouped_patterns.groups["MCP_DNA"][0],
+        pattern_group_info=grouped_patterns["MCP_DNA"][0],
         component_index=0,
         component_count=2,
     )
-    loaded = PatternGroupRuntime(request)._load_input_stack()
+    loaded = request.load_input_stack()
 
-    assert loaded.matching_files == ["A01_s001_w1_z001_t001.tif"]
+    assert loaded[0] == ["A01_s001_w1_z001_t001.tif"]
+    assert context.filemanager.exists(
+        str(executor.plan.input_dir / "A01_s001_w1_z001_t001.tif"),
+        Backend.MEMORY.value,
+    )
+    assert not context.filemanager.exists(
+        str(executor.plan.input_dir / "A01_s001_w2_z001_t001.tif"),
+        Backend.MEMORY.value,
+    )
 
 
 def test_source_bound_artifact_managed_step_keeps_source_anchors() -> None:
@@ -2105,25 +2287,20 @@ def test_source_bound_artifact_managed_step_keeps_source_anchors() -> None:
         execution_group_scope=ComponentGroupScope.ungrouped(),
         compiled_function_pattern=compiled_pattern,
     )
-    pattern_filter = StepAnchorPatternFilter(
+    pattern_filter = _anchor_executor(
         plan=plan,
         parser=SourceSchemaFilenameParser(),
         output_manifest=StepOutputManifestStore(),
-        source_workspace_authority=SimpleNamespace(
-            projection_or_empty=lambda: VirtualWorkspaceSourceProjection.empty()
-        ),
         source_workspace_projection_cache=VirtualWorkspaceSourceProjectionCache(),
     )
-    grouped_patterns = PatternGroups(
-        {
-            None: (
-                "A01_s001_w1_z001_t001.tif",
-                "A01_s002_w1_z001_t001.tif",
-            )
-        }
-    )
+    grouped_patterns = {
+        None: (
+            "A01_s001_w1_z001_t001.tif",
+            "A01_s002_w1_z001_t001.tif",
+        )
+    }
 
-    assert pattern_filter.filtered(grouped_patterns).groups == grouped_patterns.groups
+    assert pattern_filter._filter_anchor_patterns(grouped_patterns) == grouped_patterns
 
 
 def test_default_callable_runtime_scope_projects_bindings_to_selected_group() -> None:
@@ -2205,13 +2382,12 @@ def test_dict_callable_runtime_scope_projects_bindings_to_selected_group() -> No
 
 def test_grouped_runtime_adapter_receives_component_selected_source_bindings() -> None:
     from openhcs.core.runtime_adapters import (
-        RuntimeAdapterRequest,
         RuntimePlaneProjection,
     )
     from openhcs.core.source_load_plan import SourceLoadPlan
     from openhcs.core.steps.function_runtime import (
-        ComponentArtifactPlans,
-        FunctionRuntimeScope,
+        PatternGroupData,
+        FunctionCoreExecutor,
     )
 
     source_binding_plan = CompiledSourceBindingPlan(
@@ -2242,25 +2418,30 @@ def test_grouped_runtime_adapter_receives_component_selected_source_bindings() -
         variable_components=(VariableComponents.SITE,),
         source_load_plan=SourceLoadPlan(),
     )
-    scope = FunctionRuntimeScope(
+    scope = PatternGroupData(
+        matching_files=["first.tif", "second.tif"],
+        main_data_stack=np.zeros((2, 3, 4), dtype=np.uint16),
         context=SimpleNamespace(),
         execution_plan=execution_plan,
         compiled_group=compiled_pattern.default_group,
         component_value="1",
-        artifacts=ComponentArtifactPlans(inputs={}, outputs={}),
-        source_binding_context=SourceBindingRuntimeContext.empty(),
+        artifact_inputs={},
+        artifact_outputs={},
         runtime_plane_index=0,
         runtime_plane_count=2,
     )
 
-    request = RuntimeAdapterRequest.from_runtime_scope(
-        runtime_scope=scope,
+    executor = FunctionCoreExecutor(
+        group_data=scope,
+        invocation=compiled_pattern.default_group.invocations[0],
         artifact_inputs={},
         artifact_outputs={},
         group_key="1",
         plane_projection=RuntimePlaneProjection.stack(),
-        source_payload=np.zeros((2, 3, 4), dtype=np.uint16),
+        main_data_arg=scope.main_data_stack,
+        source_memory_type="numpy",
     )
+    request = executor.runtime_adapter_request(scope.main_data_stack)
 
     assert tuple(
         binding.alias for binding in scope.source_binding_plan.binding_declarations
@@ -2268,7 +2449,6 @@ def test_grouped_runtime_adapter_receives_component_selected_source_bindings() -
     assert tuple(
         binding.alias for binding in request.source_binding_plan.binding_declarations
     ) == ("OrigStain1",)
-    assert request.source_binding_context is scope.source_binding_context
 
     from openhcs.interop.cellprofiler.runtime.module_execution import (
         cellprofiler_runtime_adapter_factory,
@@ -2286,8 +2466,7 @@ def test_runtime_invocation_uses_only_active_source_bound_main_flow_edges(
     from openhcs.core.source_load_plan import SourceLoadPlan
     from openhcs.core.steps import function_runtime
     from openhcs.core.steps.function_runtime import (
-        ComponentArtifactPlans,
-        FunctionRuntimeScope,
+        PatternGroupData,
     )
 
     source_binding_plan = CompiledSourceBindingPlan(
@@ -2337,7 +2516,7 @@ def test_runtime_invocation_uses_only_active_source_bound_main_flow_edges(
                 spec=spec,
                 storage_plan=None,
                 projection=None,
-                consumes_main_flow=True,
+                main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
             )
             for edge_key, spec in zip(
                 InvocationArtifactInputProjectionKey.for_input_count(
@@ -2367,22 +2546,27 @@ def test_runtime_invocation_uses_only_active_source_bound_main_flow_edges(
         artifact_inputs={},
         artifact_outputs=output_plans,
     )
-    scope = FunctionRuntimeScope(
+    scope = PatternGroupData(
+        matching_files=["input.tif"],
+        main_data_stack=np.zeros((1, 3, 4), dtype=np.uint16),
         context=SimpleNamespace(),
         execution_plan=execution_plan,
         compiled_group=compiled_group,
         component_value="1",
-        artifacts=ComponentArtifactPlans.from_step_component(execution_plan, "1"),
-        source_binding_context=SourceBindingRuntimeContext.empty(),
+        artifact_inputs=dict(execution_plan.artifact_inputs),
+        artifact_outputs=PatternGroupExecutionScope._select_output_plans_for_component(
+            execution_plan.artifact_outputs, execution_plan.execution_group_scope, "1"
+        ),
         runtime_plane_index=0,
         runtime_plane_count=1,
     )
     captured_executor_kwargs = []
     core_executor_type = function_runtime.FunctionCoreExecutor
 
-    class CapturingExecutor:
+    class CapturingExecutor(FunctionCoreExecutor):
         def __init__(self, **kwargs):
             captured_executor_kwargs.append(kwargs)
+            super().__init__(**kwargs)
 
         def execute(self, *, debug_sink=None):
             return NoMainFlowOutput()
@@ -2397,18 +2581,21 @@ def test_runtime_invocation_uses_only_active_source_bound_main_flow_edges(
     active_payload = ImagePayloadMetadata(
         source_image_names=("OrigStain1",),
     ).payload_with(np.zeros((1, 3, 4), dtype=np.uint16))
-    result = scope.execute_chain(active_payload)
+    scope = replace(scope, main_data_stack=active_payload)
+    result = scope.execute_chain()
 
     assert isinstance(result, NoMainFlowOutput)
     assert tuple(
         edge.spec.name
         for edge in captured_executor_kwargs[0]["invocation"].artifact_input_edges
     ) == ("OrigStain1", "OrigStain2")
-    selected_artifacts = captured_executor_kwargs[0]["artifacts"]
-    assert tuple(edge.spec.name for edge in selected_artifacts.inputs.values()) == (
-        "OrigStain1",
+    assert tuple(
+        edge.spec.name
+        for edge in captured_executor_kwargs[0]["artifact_inputs"].values()
+    ) == ("OrigStain1",)
+    assert tuple(captured_executor_kwargs[0]["artifact_outputs"]) == (
+        output_specs[0].ref(),
     )
-    assert tuple(selected_artifacts.outputs) == (output_specs[0].ref(),)
 
     request = core_executor_type(**captured_executor_kwargs[0]).runtime_adapter_request(
         np.zeros((1, 3, 4), dtype=np.uint16)
@@ -2420,6 +2607,84 @@ def test_runtime_invocation_uses_only_active_source_bound_main_flow_edges(
     assert request.selected_artifact_input_specs().names() == ("OrigStain1",)
 
 
+def test_source_roster_selection_cannot_replace_missing_stored_primary_epoch() -> None:
+    from openhcs.core.artifacts import ArtifactInputProjectionPlan
+    from openhcs.core.steps.function_runtime import (
+        PatternGroupExecutionScope,
+        FunctionCoreExecutor,
+        PatternGroupData,
+    )
+
+    bindings = CompiledSourceBindingPlan(
+        bindings=(NamedSourceBinding(alias="Original"),)
+    )
+    (source_spec,) = tuple(
+        binding.input_spec() for binding in bindings.binding_declarations
+    )
+
+    @runtime_adapter("runtime", lambda _request: object(), manages_artifact_inputs=True)
+    @artifact_inputs(source_spec)
+    def consume_original(image, *, runtime):
+        return image
+
+    storage = ArtifactInputPlan(
+        name=source_spec.name,
+        artifact_type=source_spec.artifact_type,
+        path="/memory/Original.pkl",
+        source_step_id=0,
+    )
+    invocation = compile_function_pattern(
+        consume_original, {storage.ref(): storage}, {}
+    ).default_group.invocations[0]
+    (key,) = InvocationArtifactInputProjectionKey.for_input_count(invocation.key, 1)
+    invocation = invocation.with_artifact_input_edges(
+        (
+            InvocationArtifactInputEdgePlan(
+                key=key,
+                spec=source_spec,
+                storage_plan=storage,
+                projection=ArtifactInputProjectionPlan(
+                    invocation_scope=ComponentGroupScope.ungrouped(),
+                    producer_selection_scope=storage.producer_group_scope(),
+                ),
+                main_flow_projection=MainFlowInputProjection.COMPLETE_PAYLOAD,
+            ),
+        )
+    )
+    payload = ImagePayloadMetadata(source_image_names=("Other",)).payload_with(
+        np.zeros((1, 2, 3))
+    )
+    loaded = PatternGroupData(
+        context=SimpleNamespace(),
+        execution_plan=CompiledStepPlan(
+            step_index=0,
+            step_name="Stored",
+            step_type="FunctionStep",
+            axis_id="A01",
+            source_binding_plan=bindings,
+        ),
+        compiled_group=compile_function_pattern(
+            consume_original, {storage.ref(): storage}, {}
+        ).default_group,
+        artifact_inputs={storage.ref(): storage},
+        artifact_outputs={},
+        runtime_plane_index=0,
+        runtime_plane_count=1,
+        matching_files=["source.tif"],
+        main_data_stack=payload,
+    )
+    with pytest.raises(
+        ValueError, match="producer cannot substitute.*current payload epoch"
+    ):
+        FunctionCoreExecutor.from_group_invocation(
+            loaded,
+            invocation,
+            main_data_arg=payload,
+            source_memory_type="numpy",
+            declared_source_bindings=loaded.execution_plan.source_binding_plan,
+        )
+
+
 def test_runtime_chain_skips_adapter_invocation_without_component_outputs(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -2427,8 +2692,7 @@ def test_runtime_chain_skips_adapter_invocation_without_component_outputs(
     from openhcs.core.source_load_plan import SourceLoadPlan
     from openhcs.core.steps import function_runtime
     from openhcs.core.steps.function_runtime import (
-        ComponentArtifactPlans,
-        FunctionRuntimeScope,
+        PatternGroupData,
     )
 
     first_spec = ArtifactSpec.output("FirstLabels", ObjectLabelsArtifactType)
@@ -2453,7 +2717,7 @@ def test_runtime_chain_skips_adapter_invocation_without_component_outputs(
     @runtime_adapter(
         "runtime",
         lambda _request: object(),
-        manages_artifact_outputs=True,
+        artifact_output_policy=AdapterRecordedArtifactOutputPolicy,
     )
     @artifact_outputs(first_spec)
     def record_first_labels(image, *, runtime):
@@ -2463,7 +2727,7 @@ def test_runtime_chain_skips_adapter_invocation_without_component_outputs(
     @runtime_adapter(
         "runtime",
         lambda _request: object(),
-        manages_artifact_outputs=True,
+        artifact_output_policy=AdapterRecordedArtifactOutputPolicy,
     )
     @artifact_outputs(second_spec)
     def record_second_labels(image, *, runtime):
@@ -2506,21 +2770,25 @@ def test_runtime_chain_skips_adapter_invocation_without_component_outputs(
         artifact_inputs={},
         artifact_outputs=output_plans,
     )
-    scope = FunctionRuntimeScope(
+    scope = PatternGroupData(
+        matching_files=["input.tif"],
+        main_data_stack=np.zeros((1, 3, 4), dtype=np.uint16),
         context=SimpleNamespace(),
         execution_plan=execution_plan,
         compiled_group=compiled_group,
         component_value="1",
-        artifacts=ComponentArtifactPlans.from_step_component(execution_plan, "1"),
-        source_binding_context=SourceBindingRuntimeContext.empty(),
+        artifact_inputs=dict(execution_plan.artifact_inputs),
+        artifact_outputs=PatternGroupExecutionScope._select_output_plans_for_component(
+            execution_plan.artifact_outputs, execution_plan.execution_group_scope, "1"
+        ),
         runtime_plane_index=0,
         runtime_plane_count=1,
     )
     executed = []
 
-    class CapturingExecutor:
+    class CapturingExecutor(FunctionCoreExecutor):
         def __init__(self, **kwargs):
-            self.invocation = kwargs["invocation"]
+            super().__init__(**kwargs)
 
         def execute(self, *, debug_sink=None):
             del debug_sink
@@ -2537,7 +2805,7 @@ def test_runtime_chain_skips_adapter_invocation_without_component_outputs(
         lambda context: SimpleNamespace(captures_invocation_events=lambda: False),
     )
 
-    scope.execute_chain(np.zeros((1, 3, 4), dtype=np.uint16))
+    scope.execute_chain()
 
     assert executed == ["record_first_labels"]
 
@@ -2618,7 +2886,7 @@ def test_main_flow_input_owns_runtime_binding_scope_with_auxiliary_source() -> N
                 spec=spec,
                 storage_plan=None,
                 projection=None,
-                consumes_main_flow=input_index == 0,
+                main_flow_projection=(MainFlowInputProjection.DECLARED_SOURCE_IMAGE if input_index == 0 else None),
             )
             for input_index, (edge_key, spec) in enumerate(
                 zip(
@@ -2777,7 +3045,7 @@ def test_payload_provenance_preserves_bindings_across_a_variable_stack_axis() ->
                 spec=spec,
                 storage_plan=None,
                 projection=None,
-                consumes_main_flow=True,
+                main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
             )
             for edge_key, spec in zip(
                 InvocationArtifactInputProjectionKey.for_input_count(
@@ -2849,7 +3117,7 @@ def test_main_flow_source_scope_intersects_cross_component_invocation_inputs() -
                 spec=spec,
                 storage_plan=None,
                 projection=None,
-                consumes_main_flow=True,
+                main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
             )
             for edge_key, spec in zip(
                 InvocationArtifactInputProjectionKey.for_input_count(
@@ -2922,7 +3190,7 @@ def test_special_input_preserves_ordered_declared_main_flow_sources() -> None:
                 spec=pixel_size_spec,
                 storage_plan=None,
                 projection=None,
-                consumes_main_flow=False,
+
             ),
         )
     )
@@ -2955,6 +3223,7 @@ def test_special_input_preserves_ordered_declared_main_flow_sources() -> None:
 
 def test_pipeline_start_main_flow_survives_prior_producer_image_input(
     tmp_path: Path,
+    preserve_global_pipeline_context,
 ) -> None:
     from multiprocessing import SimpleQueue
 
@@ -2965,7 +3234,6 @@ def test_pipeline_start_main_flow_survives_prior_producer_image_input(
     from openhcs.constants import Microscope
     from openhcs.constants.input_source import InputSource
     from openhcs.core.config import (
-        GlobalPipelineConfig,
         LazyProcessingConfig,
         PipelineConfig,
     )
@@ -3059,7 +3327,7 @@ def test_pipeline_start_main_flow_survives_prior_producer_image_input(
     ) == ("Primary",)
     assert mask_edge.spec == _MAIN_FLOW_MASK_INPUT
     assert mask_edge.storage_plan is not None
-    assert mask_edge.consumes_main_flow is False
+    assert (mask_edge.main_flow_projection is not None) is False
     assert invocation.contract.accepts_implicit_main_flow_input is True
     assert compiled_pattern.default_group.main_flow_input_refs is None
     assert tuple(
@@ -3070,7 +3338,6 @@ def test_pipeline_start_main_flow_survives_prior_producer_image_input(
 
 def test_runtime_plane_count_comes_from_loaded_slices_not_dispatch_groups() -> None:
     from openhcs.core.steps.function_runtime import (
-        FunctionRuntimeScope,
         PatternGroupData,
         PatternGroupExecutionRequest,
     )
@@ -3096,7 +3363,8 @@ def test_runtime_plane_count_comes_from_loaded_slices_not_dispatch_groups() -> N
         component_index=0,
         component_count=1,
     )
-    loaded = PatternGroupData(
+    scope = PatternGroupData.from_loaded_group(
+        request,
         matching_files=[
             "A01_s001_w1_z001_t001.tif",
             "A01_s002_w1_z001_t001.tif",
@@ -3129,8 +3397,6 @@ def test_runtime_plane_count_comes_from_loaded_slices_not_dispatch_groups() -> N
         ).payload_with(np.zeros((2, 4, 5), dtype=np.float32)),
     )
 
-    scope = FunctionRuntimeScope.from_pattern_group(request, loaded)
-
     assert scope.runtime_plane_count == 2
     assert scope.axis_scope.fixed_component_values == (
         (AllComponents.Z_INDEX, "3"),
@@ -3141,7 +3407,6 @@ def test_runtime_plane_count_comes_from_loaded_slices_not_dispatch_groups() -> N
 def test_grouped_main_flow_context_uses_component_selected_output_plan() -> None:
     from openhcs.core.steps.function_runtime import (
         PatternGroupExecutionRequest,
-        PatternGroupRuntime,
     )
 
     corrected_stain_1_spec = ArtifactSpec.output(
@@ -3189,16 +3454,14 @@ def test_grouped_main_flow_context_uses_component_selected_output_plan() -> None
         {},
         {plan.ref(): plan for plan in (corrected_stain_1, corrected_stain_2)},
     ).default_group
-    runtime = PatternGroupRuntime(
-        PatternGroupExecutionRequest(
-            context=SimpleNamespace(),
-            execution_plan=plan,
-            compiled_group=compiled_group,
-            component_value="1",
-            pattern_group_info="A01_s{iii}_w1_z001_t001.tif",
-            component_index=0,
-            component_count=2,
-        )
+    runtime = PatternGroupExecutionRequest(
+        context=SimpleNamespace(),
+        execution_plan=plan,
+        compiled_group=compiled_group,
+        component_value="1",
+        pattern_group_info="A01_s{iii}_w1_z001_t001.tif",
+        component_index=0,
+        component_count=2,
     )
 
     context = runtime._unwrapped_main_flow_output_context()
@@ -3211,7 +3474,6 @@ def test_grouped_main_flow_context_uses_component_selected_output_plan() -> None
 def test_adapter_recorded_outputs_use_compiled_canonical_context() -> None:
     from openhcs.core.steps.function_runtime import (
         PatternGroupExecutionRequest,
-        PatternGroupRuntime,
     )
 
     outline_spec = ArtifactSpec.output("outline", ImageArtifactType)
@@ -3229,7 +3491,7 @@ def test_adapter_recorded_outputs_use_compiled_canonical_context() -> None:
     @runtime_adapter(
         "runtime",
         lambda _request: object(),
-        manages_artifact_outputs=True,
+        artifact_output_policy=AdapterRecordedArtifactOutputPolicy,
     )
     @artifact_outputs(outline_spec, first_labels_spec, second_labels_spec)
     def record_mixed_outputs(image, *, runtime):
@@ -3241,21 +3503,19 @@ def test_adapter_recorded_outputs_use_compiled_canonical_context() -> None:
         {},
         output_plans,
     ).default_group
-    runtime = PatternGroupRuntime(
-        PatternGroupExecutionRequest(
-            context=SimpleNamespace(),
-            execution_plan=SimpleNamespace(
-                artifact_inputs={},
-                artifact_outputs=output_plans,
-                execution_group_scope=ComponentGroupScope.ungrouped(),
-                source_binding_plan=CompiledSourceBindingPlan.empty(),
-            ),
-            compiled_group=compiled_group,
-            component_value="default",
-            pattern_group_info="A01_s001_w1_z001_t001.tif",
-            component_index=0,
-            component_count=1,
-        )
+    runtime = PatternGroupExecutionRequest(
+        context=SimpleNamespace(),
+        execution_plan=SimpleNamespace(
+            artifact_inputs={},
+            artifact_outputs=output_plans,
+            execution_group_scope=ComponentGroupScope.ungrouped(),
+            source_binding_plan=CompiledSourceBindingPlan.empty(),
+        ),
+        compiled_group=compiled_group,
+        component_value="default",
+        pattern_group_info="A01_s001_w1_z001_t001.tif",
+        component_index=0,
+        component_count=1,
     )
 
     context = runtime._unwrapped_main_flow_output_context()
@@ -3266,7 +3526,11 @@ def test_adapter_recorded_outputs_use_compiled_canonical_context() -> None:
 
 
 def test_component_output_selection_keeps_distinct_axes_with_equal_keys() -> None:
-    from openhcs.core.steps.function_runtime import ComponentArtifactPlans
+    from openhcs.core.steps.function_runtime import (
+        PatternGroupExecutionScope,
+        FunctionCoreExecutor,
+        PatternGroupData,
+    )
 
     channel_1 = ArtifactOutputPlan(
         name="Stain1",
@@ -3290,15 +3554,21 @@ def test_component_output_selection_keeps_distinct_axes_with_equal_keys() -> Non
         execution_group_scope=ComponentGroupScope.dynamic(AllComponents.SITE),
     )
 
-    selected = ComponentArtifactPlans.from_step_component(plan, "1")
+    selected = PatternGroupExecutionScope._select_output_plans_for_component(
+        plan.artifact_outputs, plan.execution_group_scope, "1"
+    )
 
-    assert tuple(selected.outputs) == (channel_1.ref(), channel_2.ref())
-    assert selected.outputs[channel_1.ref()].path == "/memory/Stain1_1.pkl"
-    assert selected.outputs[channel_2.ref()].path == "/memory/Stain2_2.pkl"
+    assert tuple(selected) == (channel_1.ref(), channel_2.ref())
+    assert selected[channel_1.ref()].path == "/memory/Stain1_1.pkl"
+    assert selected[channel_2.ref()].path == "/memory/Stain2_2.pkl"
 
 
 def test_component_artifact_plans_reject_malformed_exact_plan_maps() -> None:
-    from openhcs.core.steps.function_runtime import ComponentArtifactPlans
+    from openhcs.core.steps.function_runtime import (
+        PatternGroupExecutionScope,
+        FunctionCoreExecutor,
+        PatternGroupData,
+    )
 
     input_plan = ArtifactInputPlan(
         name="InputImage",
@@ -3360,7 +3630,17 @@ def test_component_artifact_plans_reject_malformed_exact_plan_maps() -> None:
             execution_group_scope=ComponentGroupScope.ungrouped(),
         )
         with pytest.raises(error_type, match=message):
-            ComponentArtifactPlans.from_step_component(step_plan, None)
+            request = PatternGroupExecutionRequest(
+                context=SimpleNamespace(),
+                execution_plan=step_plan,
+                compiled_group=compile_function_pattern(
+                    lambda image: image, {}, {}
+                ).default_group,
+                pattern_group_info="fixture",
+                component_index=0,
+                component_count=1,
+            )
+            PatternGroupData.from_loaded_group(request, [], np.zeros((1, 2, 3)))
 
 
 def test_grouped_runtime_scope_preserves_empty_source_binding_plan() -> None:
@@ -3422,29 +3702,25 @@ def test_grouped_runtime_source_expansion_uses_scoped_bindings(
         {},
         {},
     )
-    runtime = function_runtime.PatternGroupRuntime(
-        function_runtime.PatternGroupExecutionRequest(
-            context=SimpleNamespace(
-                source_image_set_identity_policy=SourceImageSetIdentityPolicy(
-                    frozenset((AllComponents.SITE,))
-                )
-            ),
-            execution_plan=SimpleNamespace(
-                axis_id="A01",
-                execution_group_scope=ComponentGroupScope.dynamic(
-                    AllComponents.CHANNEL
-                ),
-                main_input_dependency=StepInputDependency.pipeline_start(),
-                source_binding_plan=source_binding_plan,
-                compiled_function_pattern=compiled_pattern,
-                variable_component_values=(VariableComponents.SITE.value,),
-            ),
-            compiled_group=compiled_pattern.require_group("1"),
-            component_value="1",
-            pattern_group_info="A01_s{iii}_w1_z001_t001.png",
-            component_index=0,
-            component_count=2,
-        )
+    runtime = function_runtime.PatternGroupExecutionRequest(
+        context=SimpleNamespace(
+            source_image_set_identity_policy=SourceImageSetIdentityPolicy(
+                frozenset((AllComponents.SITE,))
+            )
+        ),
+        execution_plan=SimpleNamespace(
+            axis_id="A01",
+            execution_group_scope=ComponentGroupScope.dynamic(AllComponents.CHANNEL),
+            main_input_dependency=StepInputDependency.pipeline_start(),
+            source_binding_plan=source_binding_plan,
+            compiled_function_pattern=compiled_pattern,
+            variable_component_values=(VariableComponents.SITE.value,),
+        ),
+        compiled_group=compiled_pattern.require_group("1"),
+        component_value="1",
+        pattern_group_info="A01_s{iii}_w1_z001_t001.png",
+        component_index=0,
+        component_count=2,
     )
     captured_aliases: tuple[str, ...] = ()
 
@@ -3464,14 +3740,14 @@ def test_grouped_runtime_source_expansion_uses_scoped_bindings(
         matched_image_set_from_plan,
     )
     monkeypatch.setattr(
-        runtime,
+        type(runtime),
         "_source_binding_candidate_context",
-        lambda: SimpleNamespace(),
+        lambda _request, *args, **kwargs: (lambda: SimpleNamespace())(*args, **kwargs),
     )
     monkeypatch.setattr(
-        runtime,
+        type(runtime),
         "_source_binding_load_universe",
-        lambda: (),
+        lambda _request, *args, **kwargs: (lambda: ())(*args, **kwargs),
     )
 
     matching_files = ["/input/A01_s001_N_R.png"]
@@ -3529,28 +3805,34 @@ def test_alias_only_workspace_filter_excludes_unselected_source_and_orders_stack
             NamedSourceBinding(alias="Hoechst"),
         )
     )
-    runtime = function_runtime.PatternGroupRuntime.__new__(
-        function_runtime.PatternGroupRuntime
-    )
-    runtime.request = SimpleNamespace(
+    runtime = PatternGroupExecutionRequest(
         context=SimpleNamespace(
             source_image_set_identity_policy=SourceImageSetIdentityPolicy()
         ),
-        execution_plan=SimpleNamespace(
-            main_input_dependency=StepInputDependency.pipeline_start(),
+        execution_plan=CompiledStepPlan(
+            step_index=0,
             step_name="MetaXpress",
+            step_type="FunctionStep",
+            axis_id="A01",
+            main_input_dependency=StepInputDependency.pipeline_start(),
+            source_binding_plan=selected_plan,
         ),
-        main_flow_source_binding_plan=selected_plan,
+        compiled_group=compile_function_pattern(
+            lambda image: image, {}, {}
+        ).default_group,
+        pattern_group_info="fixture",
+        component_index=0,
+        component_count=1,
     )
     monkeypatch.setattr(
-        runtime,
+        type(runtime),
         "_source_binding_candidate_context",
-        lambda: source_context,
+        lambda _request, *args, **kwargs: (lambda: source_context)(*args, **kwargs),
     )
     monkeypatch.setattr(
-        runtime,
+        type(runtime),
         "_source_binding_load_universe",
-        lambda: virtual_paths,
+        lambda _request, *args, **kwargs: (lambda: virtual_paths)(*args, **kwargs),
     )
 
     assert runtime._filter_matching_files_for_source_bindings(list(virtual_paths)) == [
@@ -3608,14 +3890,23 @@ def test_unbound_workspace_source_keeps_filename_component_provenance(
 
         physical_source_path = resolve_address
 
-    runtime = function_runtime.PatternGroupRuntime.__new__(
-        function_runtime.PatternGroupRuntime
-    )
-    runtime.request = SimpleNamespace(
+    runtime = PatternGroupExecutionRequest(
         context=SimpleNamespace(filemanager=SourceFileManager()),
-        source_binding_plan=CompiledSourceBindingPlan(
-            bindings=(NamedSourceBinding(alias="FilenamePrefix"),),
+        execution_plan=CompiledStepPlan(
+            step_index=0,
+            step_name="source fixture",
+            step_type="FunctionStep",
+            axis_id="A01",
+            source_binding_plan=CompiledSourceBindingPlan(
+                bindings=(NamedSourceBinding(alias="FilenamePrefix"),),
+            ),
         ),
+        compiled_group=compile_function_pattern(
+            lambda image: image, {}, {}
+        ).default_group,
+        pattern_group_info="fixture",
+        component_index=0,
+        component_count=1,
     )
     payload = ImagePayloadMetadata(source_path=full_virtual_path).payload_with(
         np.zeros((4, 5), dtype=np.uint16),
@@ -3633,7 +3924,6 @@ def test_unbound_workspace_source_keeps_filename_component_provenance(
         (payload,),
         (lookup,),
         workspace_source_lookups,
-        SourceBindingRuntimeContext.empty(),
         projection,
     )
 
@@ -3651,7 +3941,7 @@ def test_unbound_workspace_source_keeps_filename_component_provenance(
 
 
 def test_step_output_load_filter_skips_source_binding_filter() -> None:
-    from openhcs.core.steps.function_runtime import PatternGroupRuntime
+    from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest
 
     plan = SimpleNamespace(
         main_input_dependency=StepInputDependency.step_output(
@@ -3662,8 +3952,16 @@ def test_step_output_load_filter_skips_source_binding_filter() -> None:
             bindings=(NamedSourceBinding(alias="OrigDNA"),)
         ),
     )
-    runtime = PatternGroupRuntime.__new__(PatternGroupRuntime)
-    runtime.request = SimpleNamespace(execution_plan=plan)
+    runtime = PatternGroupExecutionRequest(
+        execution_plan=plan,
+        context=SimpleNamespace(),
+        compiled_group=compile_function_pattern(
+            lambda image: image, {}, {}
+        ).default_group,
+        pattern_group_info="fixture",
+        component_index=0,
+        component_count=1,
+    )
     matching_files = ["/tmp/outputs/A14_s001_w3_z001_t001.tif"]
 
     assert (
@@ -3675,7 +3973,6 @@ def test_step_output_load_filter_skips_source_binding_filter() -> None:
 def test_empty_source_binding_plan_does_not_filter_runtime_inputs() -> None:
     from openhcs.core.steps.function_runtime import (
         PatternGroupExecutionRequest,
-        PatternGroupRuntime,
     )
 
     compiled_pattern = compile_function_pattern(lambda image: image, {}, {})
@@ -3685,8 +3982,7 @@ def test_empty_source_binding_plan_does_not_filter_runtime_inputs() -> None:
         main_input_dependency=StepInputDependency.pipeline_start(),
         source_binding_plan=CompiledSourceBindingPlan.empty(),
     )
-    runtime = PatternGroupRuntime.__new__(PatternGroupRuntime)
-    runtime.request = PatternGroupExecutionRequest(
+    runtime = PatternGroupExecutionRequest(
         context=SimpleNamespace(),
         execution_plan=plan,
         compiled_group=compiled_pattern.default_group,
@@ -3710,6 +4006,9 @@ def test_producer_anchored_pipeline_start_paths_use_exact_source_projection_bund
     """Producer bookkeeping must not override exact workspace source ownership."""
 
     from openhcs.core.steps import function_runtime
+    from openhcs.core.runtime_source_binding_cache import (
+        RuntimeSourceBindingContextCache,
+    )
 
     virtual_paths = (
         "A01_s001_w1_z001_t001.tif",
@@ -3778,15 +4077,6 @@ def test_producer_anchored_pipeline_start_paths_use_exact_source_projection_bund
         )
     )
 
-    class SourceManifest:
-        @staticmethod
-        def producer_paths_matching_pattern(*_args):
-            return list(virtual_paths)
-
-        @staticmethod
-        def filter_to_producer_paths(_plan, paths, _parser):
-            return list(paths)
-
     class SourceFileManager:
         @staticmethod
         def load_batch(paths, backend):
@@ -3808,19 +4098,10 @@ def test_producer_anchored_pipeline_start_paths_use_exact_source_projection_bund
     monkeypatch.setattr(
         function_runtime,
         "step_output_manifest",
-        lambda _context: SourceManifest(),
+        lambda _context: StepOutputManifestStore(),
     )
     monkeypatch.setattr(
-        function_runtime.SourceBindingRuntimeContextRequest,
-        "from_context",
-        classmethod(
-            lambda cls, **_kwargs: SimpleNamespace(
-                runtime_context=SourceBindingRuntimeContext.empty
-            )
-        ),
-    )
-    monkeypatch.setattr(
-        function_runtime.PatternGroupRuntime,
+        function_runtime.PatternGroupExecutionRequest,
         "source_workspace_projection_authority",
         lambda _self: SimpleNamespace(
             projection_if_available=lambda: projection,
@@ -3835,6 +4116,7 @@ def test_producer_anchored_pipeline_start_paths_use_exact_source_projection_bund
         step_type="FunctionStep",
         axis_id="A01",
         input_dir=tmp_path,
+        read_backend="memory",
         input_memory_type="numpy",
         variable_components=(),
         main_input_dependency=StepInputDependency.pipeline_start(),
@@ -3843,35 +4125,35 @@ def test_producer_anchored_pipeline_start_paths_use_exact_source_projection_bund
     context = SimpleNamespace(
         microscope_handler=SimpleNamespace(
             parser=SourceSchemaFilenameParser(),
-            path_list_from_pattern=lambda *_args: list(virtual_paths),
+            path_list_from_pattern=lambda *_args, **_kwargs: list(virtual_paths),
         ),
         filemanager=SourceFileManager(),
         runtime_image_stack_cache=RuntimeImageStackCache(),
+        runtime_pattern_discovery_cache=RuntimePatternDiscoveryCache(),
+        runtime_source_binding_context_cache=RuntimeSourceBindingContextCache(),
         runtime_source_workspace_projection_cache=(
             VirtualWorkspaceSourceProjectionCache()
         ),
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
     )
-    runtime = function_runtime.PatternGroupRuntime(
-        function_runtime.PatternGroupExecutionRequest(
-            context=context,
-            execution_plan=plan,
-            compiled_group=compiled_pattern.default_group,
-            pattern_group_info="A01_s001_w{iii}_z001_t001.tif",
-            component_index=0,
-            component_count=1,
-        )
+    runtime = function_runtime.PatternGroupExecutionRequest(
+        context=context,
+        execution_plan=plan,
+        compiled_group=compiled_pattern.default_group,
+        pattern_group_info="A01_s001_w{iii}_z001_t001.tif",
+        component_index=0,
+        component_count=1,
     )
     monkeypatch.setattr(
-        runtime,
+        type(runtime),
         "_source_binding_load_universe",
-        lambda: virtual_paths,
+        lambda _request, *args, **kwargs: (lambda: virtual_paths)(*args, **kwargs),
     )
 
-    loaded = runtime._load_input_stack()
+    loaded = runtime.load_input_stack()
 
-    data = image_payload_data(loaded.main_data_stack)
-    metadata = image_payload_metadata(loaded.main_data_stack)
+    data = image_payload_data(loaded[1])
+    metadata = image_payload_metadata(loaded[1])
     assert data.shape == (2, 4, 5, 3)
     np.testing.assert_array_equal(data[1], np.full((4, 5, 3), 7, dtype=np.float32))
     assert metadata.source_image_names == aliases
@@ -3911,48 +4193,31 @@ def test_step_output_load_preserves_producer_stack_plane_provenance(
         ),
     ).payload_with(np.zeros((2, 4, 5), dtype=np.float32), None)
 
-    class ProducerManifest:
-        def producer_paths_matching_pattern(self, *_args):
-            return [str(output_path)]
-
-        def filter_to_producer_paths(self, _plan, paths, _parser):
-            return list(paths)
-
     class MemoryFileManager:
         def load_batch(self, paths, backend):
             assert paths == [str(output_path)]
             assert backend == "memory"
             return [producer_payload]
 
-    source_context = SourceBindingRuntimeContext()
     monkeypatch.setattr(
         function_runtime,
         "step_output_manifest",
-        lambda _context: ProducerManifest(),
+        lambda _context: producer_manifest,
     )
     monkeypatch.setattr(
-        function_runtime.SourceBindingRuntimeContextRequest,
-        "from_context",
-        classmethod(
-            lambda cls, **_kwargs: SimpleNamespace(
-                runtime_context=lambda: source_context
-            )
-        ),
-    )
-    monkeypatch.setattr(
-        function_runtime.PatternGroupRuntime,
+        function_runtime.PatternGroupExecutionRequest,
         "source_workspace_projection_authority",
         lambda _self: SimpleNamespace(
             projection_if_available=lambda: VirtualWorkspaceSourceProjection.empty()
         ),
     )
     monkeypatch.setattr(
-        function_runtime.PatternGroupRuntime,
+        function_runtime.PatternGroupExecutionRequest,
         "_filter_matching_files_for_group",
         lambda _self, paths: paths,
     )
     monkeypatch.setattr(
-        function_runtime.PatternGroupRuntime,
+        function_runtime.PatternGroupExecutionRequest,
         "_filter_matching_files_for_source_bindings",
         lambda _self, paths: paths,
     )
@@ -3964,29 +4229,61 @@ def test_step_output_load_preserves_producer_stack_plane_provenance(
         input_dir=tmp_path,
         input_memory_type="numpy",
         variable_components=(VariableComponents.Z_INDEX,),
+        compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
+        main_input_dependency=StepInputDependency.step_output(
+            source_step_index=0,
+            source_step_scope_id="producer",
+        ),
+    )
+    producer = CompiledStepPlan(
+        step_index=0,
+        step_name="producer",
+        step_type="FunctionStep",
+        step_scope_id="producer",
+        axis_id="A01",
+        output_dir=tmp_path,
+    )
+    producer_manifest = StepOutputManifestStore()
+    producer_manifest.begin_step(producer)
+    producer_manifest.record_outputs(
+        producer,
+        (
+            ProducedOutputSemantics.from_output(
+                producer,
+                output_path,
+                FunctionOutputIdentity(
+                    component_values={
+                        "well": "A01",
+                        "site": "1",
+                        "channel": "2",
+                        "z_index": "1",
+                        "timepoint": "1",
+                    },
+                    extension=".tif",
+                    source="test",
+                ),
+            ).with_filename_qualifier("RescaledDNA"),
+        ),
     )
     context = SimpleNamespace(
         microscope_handler=SimpleNamespace(parser=SourceSchemaFilenameParser()),
         filemanager=MemoryFileManager(),
         runtime_image_stack_cache=RuntimeImageStackCache(),
     )
-    runtime = function_runtime.PatternGroupRuntime(
-        SimpleNamespace(
-            context=context,
-            execution_plan=plan,
-            source_binding_plan=CompiledSourceBindingPlan.empty(),
-            compiled_group=SimpleNamespace(
-                runtime_domain=RuntimeInvocationDomain.SOURCE_ANCHORED,
-            ),
-            pattern_group_info="A01_s001_w2_z{iii}_t001.tif",
-        )
+    runtime = PatternGroupExecutionRequest(
+        context=context,
+        execution_plan=replace(
+            plan, source_binding_plan=CompiledSourceBindingPlan.empty()
+        ),
+        compiled_group=plan.compiled_function_pattern.default_group,
+        pattern_group_info="A01_s001_w2_z{iii}_t001.tif",
+        component_index=0,
+        component_count=1,
     )
 
-    loaded = runtime._load_input_stack()
+    loaded = runtime.load_input_stack()
 
-    provenance_planes = image_payload_metadata(
-        loaded.main_data_stack
-    ).source_image_provenance_planes
+    provenance_planes = image_payload_metadata(loaded[1]).source_image_provenance_planes
     assert provenance_planes.count == 2
     assert provenance_planes.contributor_count == 0
     plane_metadata = provenance_planes.component_metadata
@@ -3996,18 +4293,24 @@ def test_step_output_load_preserves_producer_stack_plane_provenance(
 def test_artifact_managed_group_uses_compiler_group_without_filtering_anchor_files() -> (
     None
 ):
-    from openhcs.core.steps.function_runtime import PatternGroupRuntime
+    from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest
 
-    runtime = PatternGroupRuntime.__new__(PatternGroupRuntime)
-    runtime.request = SimpleNamespace(
+    runtime = PatternGroupExecutionRequest(
         compiled_group=SimpleNamespace(
             runtime_domain=RuntimeInvocationDomain.ARTIFACT_MANAGED,
         ),
-        execution_plan=SimpleNamespace(
-            execution_group_value="channel",
+        execution_plan=CompiledStepPlan(
+            step_index=0,
+            step_name="source fixture",
+            step_type="FunctionStep",
+            axis_id="A01",
             main_input_dependency=StepInputDependency.pipeline_start(),
         ),
         component_value="1",
+        context=SimpleNamespace(),
+        pattern_group_info="fixture",
+        component_index=0,
+        component_count=1,
     )
     matching_files = ["/tmp/outputs/A01_s001_w2_z001_t001.tif"]
 
@@ -4015,21 +4318,27 @@ def test_artifact_managed_group_uses_compiler_group_without_filtering_anchor_fil
 
 
 def test_step_output_group_does_not_reinterpret_producer_path_component() -> None:
-    from openhcs.core.steps.function_runtime import PatternGroupRuntime
+    from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest
 
-    runtime = PatternGroupRuntime.__new__(PatternGroupRuntime)
-    runtime.request = SimpleNamespace(
+    runtime = PatternGroupExecutionRequest(
         compiled_group=SimpleNamespace(
             runtime_domain=RuntimeInvocationDomain.SOURCE_ANCHORED,
         ),
-        execution_plan=SimpleNamespace(
-            execution_group_value="channel",
+        execution_plan=CompiledStepPlan(
+            step_index=0,
+            step_name="source fixture",
+            step_type="FunctionStep",
+            axis_id="A01",
             main_input_dependency=StepInputDependency.step_output(
                 source_step_index=4,
                 source_step_scope_id="object_to_image",
             ),
         ),
         component_value="0",
+        context=SimpleNamespace(),
+        pattern_group_info="fixture",
+        component_index=0,
+        component_count=1,
     )
     matching_files = ["/tmp/outputs/A01_s001_w2_z001_t001.tif"]
 
@@ -4060,7 +4369,9 @@ def test_step_output_manifest_does_not_filter_main_flow_by_artifact_input(
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = SimpleNamespace(
+    producer = CompiledStepPlan(
+        step_index=1,
+        step_type="FunctionStep",
         step_scope_id="correct_illumination",
         step_name="CorrectIlluminationApply",
         pipeline_position=1,
@@ -4147,7 +4458,9 @@ def test_step_output_manifest_filters_declared_main_flow_contract_identity(
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = SimpleNamespace(
+    producer = CompiledStepPlan(
+        step_index=2,
+        step_type="FunctionStep",
         step_scope_id="align",
         step_name="Align",
         pipeline_position=2,
@@ -4172,7 +4485,7 @@ def test_step_output_manifest_filters_declared_main_flow_contract_identity(
                 spec=input_spec,
                 storage_plan=None,
                 projection=None,
-                consumes_main_flow=True,
+                main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
             ),
         )
     )
@@ -4241,14 +4554,18 @@ def test_step_output_manifest_updates_selected_slot_and_preserves_other_componen
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = SimpleNamespace(
+    producer = CompiledStepPlan(
+        step_index=1,
+        step_type="FunctionStep",
         step_scope_id="producer",
         step_name="Producer",
         pipeline_position=1,
         axis_id="A01",
         output_dir=output_dir,
     )
-    update = SimpleNamespace(
+    update = CompiledStepPlan(
+        step_index=2,
+        step_type="FunctionStep",
         step_scope_id="update",
         step_name="Update",
         pipeline_position=2,
@@ -4334,14 +4651,18 @@ def test_step_output_manifest_collapsed_domain_replaces_inherited_components(
     collapsed_input_domain: bool,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = SimpleNamespace(
+    producer = CompiledStepPlan(
+        step_index=1,
+        step_type="FunctionStep",
         step_scope_id="producer",
         step_name="Producer",
         pipeline_position=1,
         axis_id="A01",
         output_dir=output_dir,
     )
-    collapse = SimpleNamespace(
+    collapse = CompiledStepPlan(
+        step_index=2,
+        step_type="FunctionStep",
         step_scope_id="collapse",
         step_name="Collapse",
         pipeline_position=2,
@@ -4403,14 +4724,18 @@ def test_step_output_manifest_new_output_address_replaces_inherited_components(
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = SimpleNamespace(
+    producer = CompiledStepPlan(
+        step_index=1,
+        step_type="FunctionStep",
         step_scope_id="producer",
         step_name="Producer",
         pipeline_position=1,
         axis_id="A01",
         output_dir=output_dir,
     )
-    replacement = SimpleNamespace(
+    replacement = CompiledStepPlan(
+        step_index=2,
+        step_type="FunctionStep",
         step_scope_id="replacement",
         step_name="Replacement",
         pipeline_position=2,
@@ -4485,14 +4810,18 @@ def test_step_output_manifest_grouped_subset_replaces_inherited_components(
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = SimpleNamespace(
+    producer = CompiledStepPlan(
+        step_index=1,
+        step_type="FunctionStep",
         step_scope_id="producer",
         step_name="Producer",
         pipeline_position=1,
         axis_id="A01",
         output_dir=output_dir,
     )
-    subset = SimpleNamespace(
+    subset = CompiledStepPlan(
+        step_index=2,
+        step_type="FunctionStep",
         step_scope_id="subset",
         step_name="Subset",
         pipeline_position=2,
@@ -4556,7 +4885,9 @@ def test_step_output_manifest_preserves_anonymous_side_effect_main_flow(
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = SimpleNamespace(
+    producer = CompiledStepPlan(
+        step_index=2,
+        step_type="FunctionStep",
         step_scope_id="identify_primary",
         step_name="IdentifyPrimaryObjects",
         pipeline_position=2,
@@ -4616,7 +4947,9 @@ def test_step_output_manifest_accepts_source_anchor_for_qualified_output(
     tmp_path: Path,
 ) -> None:
     output_dir = tmp_path / "images"
-    producer = SimpleNamespace(
+    producer = CompiledStepPlan(
+        step_index=4,
+        step_type="FunctionStep",
         step_scope_id="correct_illumination_apply",
         step_name="CorrectIlluminationApply",
         pipeline_position=4,
@@ -4691,14 +5024,12 @@ def test_function_output_path_uses_payload_identity_over_input_carrier(
         },
     ).payload_with(np.zeros((4, 5), dtype=np.float32), None)
 
-    output_path = FunctionOutputPathAuthority.output_path(
-        FunctionOutputPathRequest(
+    output_path = FunctionOutputIdentity.path_from_request(FunctionOutputPathRequest(
             parser=SourceSchemaFilenameParser(),
             output_dir=tmp_path,
             output_payload=payload,
             input_path="A14_s001_w1_z001_t001.tif",
-        )
-    )
+        ))
 
     assert output_path.name == "A14_s002_w3_z001_t001.tif"
 
@@ -4717,14 +5048,12 @@ def test_function_output_path_uses_payload_identity_without_input_path(
         },
     ).payload_with(np.zeros((4, 5), dtype=np.float32), None)
 
-    output_path = FunctionOutputPathAuthority.output_path(
-        FunctionOutputPathRequest(
+    output_path = FunctionOutputIdentity.path_from_request(FunctionOutputPathRequest(
             parser=SourceSchemaFilenameParser(),
             output_dir=tmp_path,
             output_payload=payload,
             input_path=None,
-        )
-    )
+        ))
 
     assert output_path.name == "A14_s001_w5_z001_t001.tif"
 
@@ -4743,7 +5072,7 @@ def test_function_output_identity_completes_partial_payload_metadata_from_fallba
         },
     )
 
-    identity = FunctionOutputIdentityAuthority.identity_from_metadata(
+    identity = FunctionOutputIdentity.from_metadata(
         parser,
         metadata,
         fallback_identity_path="Sequence1_s001_w1_z001_t000.tif",
@@ -4751,7 +5080,7 @@ def test_function_output_identity_completes_partial_payload_metadata_from_fallba
 
     assert identity is not None
     assert (
-        FunctionOutputPathAuthority.filename_for_identity(parser, identity)
+        identity.filename(parser)
         == "Sequence1_s001_w1_z001_t000.tif"
     )
 
@@ -4770,7 +5099,7 @@ def test_function_output_identity_uses_fallback_path_extension_for_payload_ident
         },
     )
 
-    identity = FunctionOutputIdentityAuthority.identity_from_metadata(
+    identity = FunctionOutputIdentity.from_metadata(
         parser,
         metadata,
         fallback_identity_path="A01_s001_w1_z001_t001.png",
@@ -4778,7 +5107,7 @@ def test_function_output_identity_uses_fallback_path_extension_for_payload_ident
 
     assert identity is not None
     assert (
-        FunctionOutputPathAuthority.filename_for_identity(parser, identity)
+        identity.filename(parser)
         == "A01_s001_w2_z001_t001.png"
     )
 
@@ -4806,14 +5135,12 @@ def test_function_output_path_uses_input_identity_for_multi_plane_carrier(
         ),
     ).payload_with(np.zeros((2, 4, 5), dtype=np.float32), None)
 
-    output_path = FunctionOutputPathAuthority.output_path(
-        FunctionOutputPathRequest(
+    output_path = FunctionOutputIdentity.path_from_request(FunctionOutputPathRequest(
             parser=SourceSchemaFilenameParser(),
             output_dir=tmp_path,
             output_payload=payload,
             input_path="A14_s001_w1_z001_t001.tif",
-        )
-    )
+        ))
 
     assert output_path.name == "A14_s001_w1_z001_t001.tif"
 
@@ -4831,14 +5158,12 @@ def test_function_output_path_rejects_multi_plane_carrier_without_input_path(
     ).payload_with(np.zeros((2, 4, 5), dtype=np.float32), None)
 
     with pytest.raises(ValueError, match="multi-plane source provenance"):
-        FunctionOutputPathAuthority.output_path(
-            FunctionOutputPathRequest(
+        FunctionOutputIdentity.path_from_request(FunctionOutputPathRequest(
                 parser=SourceSchemaFilenameParser(),
                 output_dir=tmp_path,
                 output_payload=payload,
                 input_path=None,
-            )
-        )
+            ))
 
 
 def test_function_output_path_uses_variable_component_identity(
@@ -4876,11 +5201,8 @@ def test_function_output_path_uses_variable_component_identity(
         variable_components=(VariableComponents.Z_INDEX,),
     )
 
-    identity = FunctionOutputIdentityAuthority.identity(request)
-    output_path = FunctionOutputPathAuthority.output_path_for_identity(
-        request,
-        identity,
-    )
+    identity = FunctionOutputIdentity.from_request(request)
+    output_path = identity.path_for_request(request)
 
     assert output_path.name == "A14_s001_w1_z001_t001.tif"
     assert identity.component_values == {
@@ -4934,15 +5256,12 @@ def test_collapsed_output_identity_uses_retained_source_contributors(
         variable_components=(VariableComponents.SITE,),
     )
 
-    identity = FunctionOutputIdentityAuthority.identity(request)
-    filename_identity = FunctionOutputIdentityAuthority.filename_identity_from_metadata(
+    identity = FunctionOutputIdentity.from_request(request)
+    filename_identity = FunctionOutputIdentity.from_filename_metadata(
         request.parser,
         collapsed_metadata,
     )
-    output_path = FunctionOutputPathAuthority.output_path_for_identity(
-        request,
-        identity,
-    )
+    output_path = identity.path_for_request(request)
 
     assert collapsed_metadata.source_image_provenance_planes.count == 0
     assert collapsed_metadata.source_image_provenance_planes.contributor_count == 2
@@ -4957,10 +5276,7 @@ def test_collapsed_output_identity_uses_retained_source_contributors(
     assert identity.filename_component_values["site"] == 1
     assert filename_identity is not None
     assert (
-        FunctionOutputPathAuthority.filename_for_identity(
-            request.parser,
-            filename_identity,
-        )
+        filename_identity.filename(request.parser)
         == "A14_s001_w1_z001_t001.tif"
     )
 
@@ -5012,11 +5328,8 @@ def test_composite_then_z_collapse_uses_current_scalar_identity(
         variable_components=(VariableComponents.Z_INDEX,),
     )
 
-    identity = FunctionOutputIdentityAuthority.identity(request)
-    output_path = FunctionOutputPathAuthority.output_path_for_identity(
-        request,
-        identity,
-    )
+    identity = FunctionOutputIdentity.from_request(request)
+    output_path = identity.path_for_request(request)
 
     assert z_stack_metadata.source_provenance.source_plane_count == 3
     assert projected_metadata.source_provenance.source_plane_count == 0
@@ -5052,11 +5365,8 @@ def test_variable_component_identity_uses_fallback_path_extension(
         variable_components=(VariableComponents.CHANNEL,),
     )
 
-    identity = FunctionOutputIdentityAuthority.identity(request)
-    output_path = FunctionOutputPathAuthority.output_path_for_identity(
-        request,
-        identity,
-    )
+    identity = FunctionOutputIdentity.from_request(request)
+    output_path = identity.path_for_request(request)
 
     assert output_path.name == "A01_s001_w1_z001_t001.png"
     assert identity.extension == ".png"
@@ -5080,16 +5390,10 @@ def test_declared_main_flow_output_context_qualifies_output_filename(
         output_payload=payload,
         input_path="A01_s001_w1_z001_t001.jpg",
     )
-    identity = FunctionOutputIdentityAuthority.identity(request)
+    identity = FunctionOutputIdentity.from_request(request)
 
-    red_path = FunctionOutputPathAuthority.output_path_for_identity(
-        request,
-        identity.with_filename_qualifier("CorrRed"),
-    )
-    green_path = FunctionOutputPathAuthority.output_path_for_identity(
-        request,
-        identity.with_filename_qualifier("CorrGreen"),
-    )
+    red_path = identity.with_filename_qualifier("CorrRed").path_for_request(request)
+    green_path = identity.with_filename_qualifier("CorrGreen").path_for_request(request)
 
     assert red_path.name == "A01_s001_w1_z001_t001_CorrRed.jpg"
     assert green_path.name == "A01_s001_w1_z001_t001_CorrGreen.jpg"
@@ -5124,7 +5428,7 @@ def test_function_output_path_rejects_variation_outside_identity_components(
     )
 
     with pytest.raises(ValueError, match="varies outside identity components"):
-        FunctionOutputIdentityAuthority.identity(
+        FunctionOutputIdentity.from_request(
             FunctionOutputPathRequest(
                 parser=SourceSchemaFilenameParser(),
                 output_dir=tmp_path,
@@ -5148,7 +5452,7 @@ def test_function_output_path_rejects_group_by_component_stack_variation(
         ),
     ).payload_with(np.zeros((3, 4, 5), dtype=np.float32), None)
     with pytest.raises(ValueError, match="varies outside identity components"):
-        FunctionOutputIdentityAuthority.identity(
+        FunctionOutputIdentity.from_request(
             FunctionOutputPathRequest(
                 parser=SourceSchemaFilenameParser(),
                 output_dir=tmp_path,
@@ -5179,11 +5483,8 @@ def test_input_aligned_stack_output_uses_input_filename_identity(
         input_aligned_output=True,
     )
 
-    identity = FunctionOutputIdentityAuthority.identity(request)
-    output_path = FunctionOutputPathAuthority.output_path_for_identity(
-        request,
-        identity,
-    )
+    identity = FunctionOutputIdentity.from_request(request)
+    output_path = identity.path_for_request(request)
 
     assert output_path.name == "A01_s002_w1_z001_t001.png"
     assert identity.component_values["site"] == 2
@@ -5226,11 +5527,8 @@ def test_function_output_path_keeps_payload_split_axis_over_input_alignment(
         input_aligned_output=True,
     )
 
-    identity = FunctionOutputIdentityAuthority.identity(request)
-    output_path = FunctionOutputPathAuthority.output_path_for_identity(
-        request,
-        identity,
-    )
+    identity = FunctionOutputIdentity.from_request(request)
+    output_path = identity.path_for_request(request)
 
     assert output_path.name == "A01_s001_w1_z001_t001.tif"
     assert identity.component_values["site"] == 1
@@ -5238,13 +5536,17 @@ def test_function_output_path_keeps_payload_split_axis_over_input_alignment(
     assert identity.filename_component_values["site"] == 1
 
 
+@pytest.mark.parametrize("named_topology", ["anonymous", "unwrapped", "explicit"])
 def test_save_outputs_positional_lowering_preserves_explicit_payload_identity(
     tmp_path: Path,
+    named_topology: str,
 ) -> None:
-    from openhcs.core.steps.function_runtime import (
-        PatternGroupOutputData,
-        PatternGroupRuntime,
-    )
+    from openhcs.core.steps.function_runtime import PatternGroupExecutionRequest
+    from openhcs.core.runtime_stack_cache import RuntimeImageStackCache
+    from openhcs.core.compiled_step_plan import CompiledStepPlan
+    from openhcs.core.component_group_scope import ComponentGroupScope
+    from openhcs.core.function_patterns import compile_function_pattern
+    from openhcs.core.aligned_image_payload import AlignedImageStack
 
     class OutputFileManager:
         saved_payloads: list[object] = []
@@ -5267,25 +5569,45 @@ def test_save_outputs_positional_lowering_preserves_explicit_payload_identity(
             self.saved_payloads = payloads
             self.saved_paths = paths
 
-    filemanager = OutputFileManager()
-    runtime = PatternGroupRuntime(
-        SimpleNamespace(
-            context=SimpleNamespace(
-                filemanager=filemanager,
-                microscope_handler=SimpleNamespace(
-                    parser=SourceSchemaFilenameParser(),
-                ),
-                runtime_function_output_identity_cache=FunctionOutputIdentityCache(),
-            ),
-            execution_plan=SimpleNamespace(
-                output_dir=tmp_path,
-                variable_components=(VariableComponents.SITE,),
-                step_name="ExplicitIdentity",
-                pipeline_position=0,
-                step_scope_id="explicit-identity",
-            ),
-            pattern_group_info="A01_s{iii}_w1_z001_t001.tif",
+    output_plans = {}
+    func = lambda image: image
+    if named_topology != "anonymous":
+        spec = ArtifactSpec.output("Corrected", ImageArtifactType)
+        output_plan = ArtifactOutputPlan(
+            name=spec.name,
+            path=str(tmp_path / "Corrected.pkl"),
+            artifact_type=spec.artifact_type,
         )
+        output_plans[output_plan.ref()] = output_plan
+        func = artifact_outputs(spec)(func)
+    filemanager = OutputFileManager()
+    runtime = PatternGroupExecutionRequest(
+        context=SimpleNamespace(
+            filemanager=filemanager,
+            microscope_handler=SimpleNamespace(
+                parser=SourceSchemaFilenameParser(),
+            ),
+            runtime_function_output_identity_cache=FunctionOutputIdentityCache(),
+            runtime_image_stack_cache=RuntimeImageStackCache(),
+        ),
+        compiled_group=compile_function_pattern(func, {}, output_plans).default_group,
+        execution_plan=CompiledStepPlan(
+            step_index=0,
+            step_type="FunctionStep",
+            axis_id="A01",
+            output_dir=tmp_path,
+            output_memory_type="numpy",
+            variable_components=(VariableComponents.SITE,),
+            step_name="ExplicitIdentity",
+            pipeline_position=0,
+            step_scope_id="explicit-identity",
+            execution_group_scope=ComponentGroupScope.ungrouped(),
+            artifact_outputs=output_plans,
+        ),
+        pattern_group_info="A01_s{iii}_w1_z001_t001.tif",
+        component_value=None,
+        component_index=0,
+        component_count=1,
     )
     payload = ImagePayloadMetadata(
         source_path="/source/A01_s001_w1_z001_t001.tif",
@@ -5298,12 +5620,24 @@ def test_save_outputs_positional_lowering_preserves_explicit_payload_identity(
         },
     ).payload_with(np.zeros((4, 5), dtype=np.float32), None)
 
+    named_context = AlignedImageSliceContext.main_flow(
+        "Corrected",
+        artifact_kind=ImageArtifactType.value,
+    )
+    output = (
+        AlignedImageStack((payload,), (named_context,))
+        if named_topology == "explicit"
+        else payload
+    )
     records = runtime._save_outputs(
-        PatternGroupOutputData(slices=[payload]),
+        output,
         ["A01_s003_w1_z001_t001.tif"],
     )
 
-    assert Path(filemanager.saved_paths[0]).name == "A01_s001_w1_z001_t001.tif"
+    expected = "A01_s001_w1_z001_t001"
+    if named_topology == "explicit":
+        expected += "_Corrected"
+    assert Path(filemanager.saved_paths[0]).name == expected + ".tif"
     assert (
         image_payload_metadata(filemanager.saved_payloads[0]).source_component_metadata[
             "site"
@@ -5311,3 +5645,332 @@ def test_save_outputs_positional_lowering_preserves_explicit_payload_identity(
         == "1"
     )
     assert records[0].component_values["site"] == 1
+    if named_topology != "anonymous":
+        assert records[0].output_context == named_context
+        assert image_payload_metadata(
+            filemanager.saved_payloads[0]
+        ).source_image_names == ("Corrected",)
+    assert image_payload_data(filemanager.saved_payloads[0]) is image_payload_data(
+        payload
+    )
+
+
+@pytest.fixture
+def qualified_producer_manifest(tmp_path):
+    parser = SourceSchemaFilenameParser()
+    producer = CompiledStepPlan(
+        step_index=0,
+        step_type="FunctionStep",
+        step_scope_id="producer",
+        step_name="Producer",
+        pipeline_position=0,
+        axis_id="A01",
+        output_dir=tmp_path,
+    )
+    consumer = SimpleNamespace(
+        axis_id="A01",
+        main_input_dependency=StepInputDependency.step_output(
+            source_step_index=0, source_step_scope_id="producer"
+        ),
+        compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
+    )
+    records = []
+    for plane in (1, 2):
+        parsed = parser.parse_filename(f"A01_s001_w2_z{plane:03d}_t001.tif")
+        identity = FunctionOutputIdentity(
+            component_values=dict(parsed.component_wire_mapping()),
+            extension=".tif",
+            source="test",
+            filename_qualifier=f"Output{plane}",
+        )
+        records.append(
+            ProducedOutputSemantics.from_output(
+                producer,
+                tmp_path
+                / identity.filename(parser),
+                identity,
+                output_context=AlignedImageSliceContext.main_flow(
+                    output_key=f"Output{plane}",
+                    artifact_kind=ImageArtifactType.value,
+                ),
+            )
+        )
+    store = StepOutputManifestStore()
+    store.begin_step(producer)
+    store.record_outputs(producer, records)
+    return store, producer, consumer, tuple(records), parser
+
+
+def test_step_output_manifest_batch_lookup_preserves_aliases_order_and_duplicates(
+    qualified_producer_manifest,
+    monkeypatch,
+):
+    store, _producer, consumer, records, parser = qualified_producer_manifest
+    calls = []
+    original = FunctionOutputIdentity.filename
+
+    def count_filename(identity, parser):
+        calls.append(identity)
+        return original(identity, parser)
+
+    monkeypatch.setattr(
+        FunctionOutputIdentity, "filename", count_filename
+    )
+    paths = (
+        records[1].output_path,
+        "A01_s001_w2_z001_t001.tif",
+        records[1].relative_output_path,
+        "A01_s001_w2_z001_t001.tif",
+    )
+    result = store.producer_output_contexts_for_paths(consumer, paths, parser)
+    assert tuple(context.output_key for context in result) == (
+        "Output2",
+        "Output1",
+        "Output2",
+        "Output1",
+    )
+    assert len(calls) == len(records)
+
+
+def test_produced_identity_owns_filename_and_live_storage_coordinate_cache(
+    qualified_producer_manifest,
+    tmp_path,
+    monkeypatch,
+):
+    _store, _producer, _consumer, records, parser = qualified_producer_manifest
+    storage_components = dict(records[0].component_values)
+    storage_components["channel"] = 1
+    semantic_components = {**storage_components, "well": "B02", "channel": 9}
+    record = replace(
+        records[0],
+        component_values=semantic_components,
+        filename_component_values=storage_components,
+    ).with_filename_qualifier(" ./Corrected signal?!.. ")
+    cache = FunctionOutputIdentityCache()
+    calls = []
+    original_construct = parser.construct_filename
+
+    def construct(bound):
+        calls.append(bound)
+        return original_construct(bound)
+
+    monkeypatch.setattr(parser, "construct_filename", construct)
+    first = record.cached_filename(parser, cache)
+    assert first == "A01_s001_w1_z001_t001_Corrected_signal.tif"
+    assert record.cached_filename(parser, cache) == first
+    assert len(calls) == 1
+    # The inherited formatter follows the original live storage mapping;
+    # semantic producer coordinates and its recorded path are independent.
+    storage_components["channel"] = 2
+    second = record.cached_filename(parser, cache)
+    assert second == "A01_s001_w2_z001_t001_Corrected_signal.tif"
+    assert len(calls) == 2
+    assert record.component_metadata()["well"] == "B02"
+    assert record.component_metadata()["channel"] == "9"
+    assert record.output_path == records[0].output_path
+    request = FunctionOutputPathRequest(
+        parser=parser,
+        output_dir=tmp_path / "other",
+        output_payload=np.zeros((3, 4), dtype=np.float32),
+        input_path=None,
+        identity_cache=cache,
+    )
+    assert record.path_for_request(request) == tmp_path / "other" / second
+    assert len(calls) == 2
+
+
+def test_step_output_manifest_batch_lookup_template_deduplicates_record_aliases(
+    qualified_producer_manifest,
+):
+    store, _producer, consumer, records, parser = qualified_producer_manifest
+    path = "{anything}z001{suffix}.tif"
+    assert store.producer_output_contexts_for_paths(consumer, (path,), parser) == (
+        records[0].output_context,
+    )
+    index = ProducedPathRecordIndex.from_records(records, parser)
+    assert index.contains(path)
+    assert index.matching_records(path) == (records[0],)
+
+
+@pytest.mark.parametrize(
+    "path, count",
+    [
+        ("missing.tif", 0),
+        ("A01_s001_w2_z{plane}_t001.tif", 2),
+    ],
+)
+def test_step_output_manifest_batch_lookup_rejects_missing_and_ambiguous_templates(
+    qualified_producer_manifest,
+    path,
+    count,
+):
+    store, _producer, consumer, _records, parser = qualified_producer_manifest
+    with pytest.raises(NoStepOutputManifestMatch, match=f"found {count}"):
+        store.producer_output_contexts_for_paths(consumer, (path,), parser)
+
+
+def test_step_output_manifest_batch_lookup_rejects_shared_basename(
+    qualified_producer_manifest,
+):
+    store, producer, consumer, records, parser = qualified_producer_manifest
+    alias = records[0].relative_output_path
+    other = ProducedOutputSemantics.from_output(
+        producer,
+        producer.output_dir / "another" / alias,
+        FunctionOutputIdentity(
+            component_values=records[1].component_values,
+            extension=".tif",
+            source="test",
+        ),
+        output_context=records[1].output_context,
+    )
+    store.record_outputs(producer, (other,))
+    with pytest.raises(NoStepOutputManifestMatch, match="found 2"):
+        store.producer_output_contexts_for_paths(consumer, (alias,), parser)
+    assert store.producer_output_contexts_for_paths(
+        consumer, (records[0].output_path, other.output_path), parser
+    ) == (records[0].output_context, other.output_context)
+
+
+def test_producer_admission_rederives_live_storage_aliases_each_epoch(
+    qualified_producer_manifest,
+):
+    store, producer, consumer, records, parser = qualified_producer_manifest
+    storage_components = dict(records[0].filename_values)
+    record = replace(records[0], filename_component_values=storage_components).published()
+    store.record_outputs(producer, (record,))
+    old_index = store.producer_record_index_for(consumer, parser)
+    old_alias = record.without_filename_qualifier().filename(parser)
+    assert store.filter_to_producer_paths(consumer, (old_alias,), parser) == [old_alias]
+    storage_components["channel"] = 9
+    new_alias = record.without_filename_qualifier().filename(parser)
+    with pytest.raises(NoStepOutputManifestMatch):
+        store.filter_to_producer_paths(consumer, (old_alias,), parser)
+    assert old_index.matching_records(new_alias) == ()
+    current_index = store.producer_record_index_for(consumer, parser)
+    assert current_index.matching_records(new_alias) == (record,)
+    assert current_index.record_for_path(record.output_path) is record
+
+
+def test_producer_loader_validates_ambiguity_before_cache(
+    monkeypatch,
+):
+    from openhcs.core.steps import function_runtime
+
+    producer = CompiledStepPlan(
+        step_index=0,
+        step_name="producer",
+        step_type="FunctionStep",
+        step_scope_id="producer",
+        axis_id="A01",
+        output_dir=Path("/memory"),
+    )
+    plan = CompiledStepPlan(
+        step_index=1,
+        step_name="consumer",
+        step_type="FunctionStep",
+        axis_id="A01",
+        input_dir=Path("/memory"),
+        input_memory_type="numpy",
+        compiled_function_pattern=compile_function_pattern(lambda image: image, {}, {}),
+        main_input_dependency=StepInputDependency.step_output(
+            source_step_index=0,
+            source_step_scope_id="producer",
+        ),
+    )
+    manifest = StepOutputManifestStore()
+    manifest.begin_step(producer)
+    manifest.record_outputs(
+        producer,
+        (
+            ProducedOutputSemantics.from_existing_main_flow_path(
+                producer,
+                "A01_s001_w1_z001_t001.tif",
+                SourceSchemaFilenameParser(),
+            ),
+            ProducedOutputSemantics.from_output(
+                producer,
+                "/memory/other/A01_s001_w1_z001_t001.tif",
+                FunctionOutputIdentity(
+                    component_values={
+                        "well": "A01",
+                        "site": 2,
+                        "channel": 1,
+                        "z_index": 1,
+                        "timepoint": 1,
+                    },
+                    extension=".tif",
+                    source="test",
+                ),
+            ),
+        ),
+    )
+
+    class RejectImageCache:
+        def get(self, *_args, **_kwargs):
+            pytest.fail("Ambiguous producer admission must precede cached pixels")
+
+    context = SimpleNamespace(
+        microscope_handler=SimpleNamespace(parser=SourceSchemaFilenameParser()),
+        runtime_image_stack_cache=RejectImageCache(),
+    )
+    runtime = function_runtime.PatternGroupExecutionRequest(
+        context=context,
+        execution_plan=plan,
+        compiled_group=plan.compiled_function_pattern.default_group,
+        pattern_group_info="A01_s001_w1_z001_t001.tif",
+        component_index=0,
+        component_count=1,
+    )
+    monkeypatch.setattr(
+        function_runtime, "step_output_manifest", lambda _context: manifest
+    )
+    monkeypatch.setattr(
+        type(runtime),
+        "source_workspace_projection_authority",
+        lambda _request, *args, **kwargs: (
+            lambda: SimpleNamespace(
+                projection_if_available=lambda: None,
+            )
+        )(*args, **kwargs),
+    )
+
+    with pytest.raises(NoStepOutputManifestMatch, match="found 2"):
+        runtime.load_input_stack()
+
+
+def test_whole_volume_checkpoint_load_preserves_depth_and_independent_buffers():
+    from openhcs.core.aligned_image_payload import ImagePayloadStackComposition
+    from openhcs.core.runtime_image_values import image_payload_mask
+    from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
+
+    pixels = np.arange(3 * 4 * 5, dtype=np.float32).reshape(3, 4, 5)
+    mask = pixels % 2 == 0
+    metadata = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        source_spatial_domain=VolumeSourceSpatialDomain(source_depth=3),
+    )
+    source = metadata.payload_with(pixels, mask)
+    plan = CompiledStepPlan(
+        step_index=0,
+        step_name="Volume",
+        step_type="FunctionStep",
+        axis_id="A01",
+        step_scope_id="volume",
+        input_memory_type="numpy",
+    )
+    loaded = ImagePayloadStackComposition.from_loaded_images(
+        (source,),
+        producer_records=None,
+        execution_plan=plan,
+        source_projection=None,
+        workspace_source_lookups=(),
+    )
+    assert image_payload_data(loaded).shape == pixels.shape
+    assert loaded.metadata.source_spatial_domain.source_depth == 3
+    assert not np.shares_memory(image_payload_data(loaded), pixels)
+    assert not np.shares_memory(image_payload_mask(loaded), mask)
+    pixels[:] = -1
+    mask[:] = False
+    assert np.all(image_payload_data(loaded) >= 0)
+    assert np.any(image_payload_mask(loaded))

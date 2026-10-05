@@ -1,0 +1,34 @@
+{
+  "schema": "openhcs-paper-qualified-development-outcome-v1",
+  "trial": "P001_STITCH_DEV94",
+  "phase": "retained same-author development; no unseen reserve",
+  "biological_acceptance": false,
+  "disposition": "Useful local traces; rejected for complete biological counting and morphology",
+  "original_output_root": "/home/ts/wt/openhcs-issue-batch-20260929/next-p001-stitched94-after646-20261004/P001_STITCH_DEV94/author-workspace/output",
+  "manifest": {"relative_path": "handoff-manifest.json", "sha256": "b1b808b2cc63733c268c187e59fc3edf95cd7f5ac4e67108c8f1930885413961"},
+  "report": {"relative_path": "report.rst", "sha256": "ee7c25f38ecf275019d45447018f6aa88f2692eb72e6271b8c725e2b79750a0c"},
+  "final_pipeline": {"relative_path": "frozen/final-attempt.py", "sha256": "9ee282d55244049120c715f2151acd392f083d73d127f50e00fca49b712fdd1f"},
+  "qa_index": {"relative_path": "control/final-qa-completion.json", "sha256": "063dec6888d198df8ee89b7f02aa028a52150b147b650a3c75f41605172cc2b7"},
+  "independent_verification": {
+    "canonical_payload_entries": 1033,
+    "canonical_payload_hashes": "PASS",
+    "final_pipeline_hash": "PASS",
+    "bitmap_review": "Dense-region DAPI raw/result/combined: missing central anchors and a merged close pair",
+    "reference_scoring_performed": false
+  },
+  "descriptive_outputs_not_biological_totals": {
+    "body_ids": 1429,
+    "nuclear_labels": 1570,
+    "native_outgrowth_um": 150442.4259177157,
+    "zero_growth_bodies": 228,
+    "nonzero_graph_owners": 1201,
+    "xy_spacing_um": 1.3556,
+    "spacing_independently_calibrated": false
+  },
+  "operations": {
+    "elapsed_including_cleanup_seconds": 4369.269486188889,
+    "within_4500_second_clock": true,
+    "native_and_viewer_closed": true,
+    "recorded_client_exit_code": 2
+  }
+}

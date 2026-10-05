@@ -1,5 +1,5 @@
 import importlib
-from dataclasses import fields, replace
+from dataclasses import dataclass, fields, replace
 from inspect import signature, unwrap
 
 import numpy as np
@@ -13,7 +13,6 @@ from openhcs.core.artifacts import (
     ObjectLabelsArtifactType,
 )
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.runtime_output_matching import RuntimeReturnedOutputMatcher
 from openhcs.processing.backends.analysis.count_cells_simple import (
     Foreground,
     MetaXpressW2Settings,
@@ -31,6 +30,49 @@ from openhcs.processing.backends.analysis.count_cells_simple import (
 count_cells_simple_module = importlib.import_module(
     "openhcs.processing.backends.analysis.count_cells_simple"
 )
+
+
+def test_independent_wavelength_projection_uses_cooperative_hooks_in_round_detector():
+    projections = []
+
+    class ProjectionAudit:
+        def minimum_width_px(self, pixel_size_um):
+            projections.append("minimum")
+            return super().minimum_width_px(pixel_size_um)
+
+        def maximum_width_px(self, pixel_size_um):
+            projections.append("maximum")
+            return super().maximum_width_px(pixel_size_um)
+
+    class HalfWidthProjection:
+        def minimum_width_px(self, pixel_size_um):
+            return super().minimum_width_px(pixel_size_um) / 2.0
+
+        def maximum_width_px(self, pixel_size_um):
+            return super().maximum_width_px(pixel_size_um) / 2.0
+
+    @dataclass(frozen=True)
+    class AuditedWavelength(
+        ProjectionAudit, HalfWidthProjection, MetaXpressWavelengthSettings
+    ):
+        pass
+
+    image = np.zeros((48, 48), dtype=np.uint16)
+    rows, columns = disk((24, 24), 6, shape=image.shape)
+    image[rows, columns] = 1000
+    physical = MetaXpressWavelengthSettings(
+        approx_min_width=5.0, approx_max_width=20.0,
+        intensity_above_local_background=100.0,
+    )
+    declared = AuditedWavelength(
+        approx_min_width=10.0, approx_max_width=40.0,
+        intensity_above_local_background=100.0,
+    )
+    actual = segment_metaxpress_round_objects(image, declared, 1.3556)
+    expected = segment_metaxpress_round_objects(image, physical, 1.3556)
+    assert np.any(actual)
+    np.testing.assert_array_equal(actual, expected)
+    assert projections == ["minimum", "maximum"]
 
 
 def _count_cells_simple_impl():
@@ -592,7 +634,7 @@ def test_round_object_diagnostics_preserve_kernel_output_and_rejection_identity(
     )
     raw, measurements, prefilter, accepted, weak_core, adjacent_satellites = returned
     contract = CallableContract.from_callable(inspect_metaxpress_round_objects)
-    matched = RuntimeReturnedOutputMatcher(contract, returned).resolve()
+    matched = contract.resolve_returned_output(returned)
     assert (
         matched[count_cells_simple_module.ROUND_OBJECT_WIDTHS_OUTPUT.ref()]
         is measurements

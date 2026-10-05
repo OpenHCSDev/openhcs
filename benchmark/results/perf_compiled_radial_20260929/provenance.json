@@ -1,0 +1,13 @@
+{
+  "common_revision": "32d070c26",
+  "candidate_code_revision": "fad4808319a879c285bb51e4dbe71389cb98a770",
+  "candidate_module_sha256": "93f50c8ad2fb25217caa8c7951539bfffbc7ae25401c98e165e18949194edb87",
+  "python_environment": "/home/ts/code/projects/openhcs/.venv",
+  "python_version": "3.12.14",
+  "numpy_version": "2.5.3",
+  "numba_version": "0.67.0",
+  "zmqruntime_revision": "0f9e840a9ed526f0a2b87a660393f5b7c34fc9eb",
+  "nra_revision": "0844525ecaba93e090a064a4ae4914466b2dae60",
+  "pip_check": "No broken requirements found.",
+  "scope": "Warmed-cache ordinary fresh-server timings; explicit radial-family warming and source staging precede ordinary total; native reference reuses earlier physical runs. No timed-overlapping scans/tests/compilation."
+}

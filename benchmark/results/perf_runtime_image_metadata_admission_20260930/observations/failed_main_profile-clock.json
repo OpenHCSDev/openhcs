@@ -1,0 +1,19 @@
+{
+  "cli_seconds": 27.77931250585243,
+  "returncode": 0,
+  "command": [
+    "/usr/bin/taskset",
+    "-c",
+    "5",
+    "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "/home/ts/code/projects/openhcs/scripts/benchmark_cppipe_well_throughput.py",
+    "--manifest",
+    "/home/ts/code/projects/openhcs/benchmark/manifests/official30_portable_axis1.json",
+    "--output-dir",
+    "/home/ts/code/projects/openhcs-benchmark-runs/perf-current-3d-context-profile-after-index-run-20260930",
+    "--mode",
+    "1w_1t",
+    "--case",
+    "cp_tutorial_3d_monolayer"
+  ]
+}

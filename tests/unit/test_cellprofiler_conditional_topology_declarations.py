@@ -583,7 +583,7 @@ def test_watershed_contract_uses_active_roles_and_preserves_reuse() -> None:
         "Input",
     )
     assert WatershedModule.primary_image_inputs(
-        watershed_library,
+        contracts[0],
         contracts[0].artifact_inputs,
     ) == (contracts[0].artifact_inputs[0],)
     assert _contract_input_names(contracts[0]) == ("Input",)

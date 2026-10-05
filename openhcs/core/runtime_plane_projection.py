@@ -10,6 +10,10 @@ from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
 from collections.abc import Sequence
 from typing import ClassVar
 from typing import Self
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from openhcs.core.source_image_provenance import SourceImageProvenance
 
 
 class RuntimeSliceProjectableValue(ABC):
@@ -247,6 +251,26 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceProjectableValue):
         object.__setattr__(self, "plane_index", plane_index)
 
     @classmethod
+    def from_source_declaration(
+        cls,
+        axis: RuntimePlaneAxis | None,
+        source: "SourceImageProvenance",
+    ) -> "RuntimePlaneAxisValueProjection | None":
+        """Construct the retained axis declared by an exact source-image value.
+
+        A missing axis declares no plane projection, even when provenance has
+        multiple contributors. Cardinality and aliases come from that original
+        source declaration; array rank never supplies spatial meaning.
+        """
+        if axis is None:
+            return None
+        return cls.preserve(
+            axis=axis,
+            axis_size=source.source_plane_count,
+            source_aliases=source.source_image_names,
+        )
+
+    @classmethod
     def from_projector(
         cls,
         projector: RuntimePlaneAxisProjector | None,
@@ -272,6 +296,21 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceProjectableValue):
             plane_index=strategy.plane_index(projector, source_aliases),
             axis_size=axis_size,
         )
+
+    def validate_source_declaration(
+        self, axis: RuntimePlaneAxis | None, source: "SourceImageProvenance",
+    ) -> None:
+        """Check an explicit projection against retained acquisition declarations."""
+        if axis is None:
+            return
+        declared_count = source.source_plane_count
+        if self.axis is not axis or (
+            declared_count > 0 and self.axis_size != declared_count
+        ):
+            raise ValueError(
+                "Object-label plane projection conflicts with the source-image "
+                "axis declaration."
+            )
 
     @classmethod
     def require_from_projector(
@@ -347,6 +386,26 @@ class RuntimePlaneAxisValueProjection(RuntimeSliceProjectableValue):
                 "Runtime plane projection requires an explicitly selected plane."
             )
         return self.plane_index
+
+    def require_complete_axis(self, *, value_name: str) -> Self:
+        """Require that this declaration preserves every input plane."""
+
+        if self.plane_index is not None:
+            raise ValueError(f"{value_name} requires a complete input stack projection.")
+        return self
+
+    @classmethod
+    def require_complete_projection(
+        cls,
+        projection: RuntimePlaneAxisValueProjection | None,
+        *,
+        value_name: str,
+    ) -> RuntimePlaneAxisValueProjection:
+        """Admit an optional invocation projection as a complete input axis."""
+
+        if projection is None:
+            raise ValueError(f"{value_name} requires a complete input stack projection.")
+        return projection.require_complete_axis(value_name=value_name)
 
     def dense_shape_carries_axis(self, shape: Sequence[int]) -> bool:
         """Return whether a dense shape carries this declared leading axis."""

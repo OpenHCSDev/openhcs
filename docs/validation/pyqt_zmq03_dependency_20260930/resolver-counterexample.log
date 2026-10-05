@@ -1,0 +1,102 @@
+Obtaining file:///home/ts/code/projects/openhcs/external/metaclass-registry
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Getting requirements to build editable: finished with status 'done'
+  Installing backend dependencies: started
+  Installing backend dependencies: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Obtaining file:///home/ts/code/projects/openhcs/external/zmqruntime
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Getting requirements to build editable: finished with status 'done'
+  Installing backend dependencies: started
+  Installing backend dependencies: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Obtaining file:///home/ts/code/projects/openhcs/external/PolyStore
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Getting requirements to build editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Obtaining file:///home/ts/code/projects/openhcs
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Getting requirements to build editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Requirement already satisfied: annotated-types>=0.7.0 in ./.venv/lib/python3.12/site-packages (from zmqruntime==0.3.0) (0.8.0)
+Requirement already satisfied: numpy>=1.24 in ./.venv/lib/python3.12/site-packages (from zmqruntime==0.3.0) (2.5.3)
+Requirement already satisfied: portalocker>=2.8.2 in ./.venv/lib/python3.12/site-packages (from zmqruntime==0.3.0) (4.4.0)
+Requirement already satisfied: psutil>=5.9 in ./.venv/lib/python3.12/site-packages (from zmqruntime==0.3.0) (7.2.2)
+Requirement already satisfied: python-introspect>=0.1.12 in ./.venv/lib/python3.12/site-packages (from zmqruntime==0.3.0) (0.1.14)
+Requirement already satisfied: pyzmq>=22.0 in ./.venv/lib/python3.12/site-packages (from zmqruntime==0.3.0) (27.2.0)
+Requirement already satisfied: arraybridge>=0.3.0 in ./.venv/lib/python3.12/site-packages (from polystore==0.3.0) (0.3.4)
+Requirement already satisfied: imageio>=2.37.0 in ./.venv/lib/python3.12/site-packages (from polystore==0.3.0) (2.38.0)
+Requirement already satisfied: zarr>=3.0.10 in ./.venv/lib/python3.12/site-packages (from polystore==0.3.0) (3.4.0)
+Requirement already satisfied: numcodecs>=0.14.0 in ./.venv/lib/python3.12/site-packages (from polystore==0.3.0) (0.17.0)
+Requirement already satisfied: ome-zarr>=0.12.2 in ./.venv/lib/python3.12/site-packages (from polystore==0.3.0) (0.19.2)
+Requirement already satisfied: platformdirs>=4.0.0 in ./.venv/lib/python3.12/site-packages (from polystore==0.3.0) (4.12.2)
+Requirement already satisfied: scikit-image>=0.25.2 in ./.venv/lib/python3.12/site-packages (from openhcs==0.8.7) (0.26.0)
+Requirement already satisfied: scikit-learn>=1.7.1 in ./.venv/lib/python3.12/site-packages (from openhcs==0.8.7) (1.9.1)
+Requirement already satisfied: scipy>=1.12.0 in ./.venv/lib/python3.12/site-packages (from openhcs==0.8.7) (1.18.1)
+Requirement already satisfied: PyWavelets>=1.6.0 in ./.venv/lib/python3.12/site-packages (from openhcs==0.8.7) (1.10.0)
+Requirement already satisfied: pandas>=2.3.1 in ./.venv/lib/python3.12/site-packages (from openhcs==0.8.7) (3.0.6)
+Requirement already satisfied: openpyxl>=3.1.0 in ./.venv/lib/python3.12/site-packages (from openhcs==0.8.7) (3.1.5)
+Requirement already satisfied: xlsxwriter>=3.2.0 in ./.venv/lib/python3.12/site-packages (from openhcs==0.8.7) (3.2.9)
+Requirement already satisfied: numba>=0.61.0 in ./.venv/lib/python3.12/site-packages (from openhcs==0.8.7) (0.67.0)
+Requirement already satisfied: skan>=0.13.1 in ./.venv/lib/python3.12/site-packages (from openhcs==0.8.7) (0.13.1)
+Requirement already satisfied: threadpoolctl>=3.6.0 in ./.venv/lib/python3.12/site-packages (from openhcs==0.8.7) (3.7.0)
+Requirement already satisfied: tifffile>=2025.6.11 in ./.venv/lib/python3.12/site-packages (from openhcs==0.8.7) (2026.9.20)
+Requirement already satisfied: imagecodecs>=2025.3.30 in ./.venv/lib/python3.12/site-packages (from openhcs==0.8.7) (2026.8.16)
+Requirement already satisfied: opencv-python-headless>=4.11.0.86 in ./.venv/lib/python3.12/site-packages (from openhcs==0.8.7) (5.0.0.93)
+Requirement already satisfied: Multi-Template-Matching>=2.0.1 in ./.venv/lib/python3.12/site-packages (from openhcs==0.8.7) (2.0.1)
+Requirement already satisfied: roifile>=2024.5.24 in ./.venv/lib/python3.12/site-packages (from openhcs==0.8.7) (2026.9.22)
+Requirement already satisfied: PyYAML>=6.0.2 in ./.venv/lib/python3.12/site-packages (from openhcs==0.8.7) (6.0.3)
+Requirement already satisfied: dill>=0.4.0 in ./.venv/lib/python3.12/site-packages (from openhcs==0.8.7) (0.4.1)
+Requirement already satisfied: setuptools in ./.venv/lib/python3.12/site-packages (from openhcs==0.8.7) (84.0.0)
+Requirement already satisfied: packaging>=21.0 in ./.venv/lib/python3.12/site-packages (from openhcs==0.8.7) (26.3)
+Requirement already satisfied: watchdog>=6.0.0 in ./.venv/lib/python3.12/site-packages (from openhcs==0.8.7) (6.0.0)
+Requirement already satisfied: tomlkit>=0.13.3 in ./.venv/lib/python3.12/site-packages (from openhcs==0.8.7) (0.15.1)
+Requirement already satisfied: tqdm>=4.66.5 in ./.venv/lib/python3.12/site-packages (from openhcs==0.8.7) (4.70.1)
+Requirement already satisfied: pycodify<0.2,>=0.1.3 in ./.venv/lib/python3.12/site-packages (from openhcs==0.8.7) (0.1.3)
+Requirement already satisfied: objectstate<2,>=1.1.8 in ./.venv/lib/python3.12/site-packages (from openhcs==0.8.7) (1.1.8)
+Requirement already satisfied: pyqt-reactive<0.4,>=0.3.24 in ./.venv/lib/python3.12/site-packages (from openhcs==0.8.7) (0.3.24)
+Requirement already satisfied: docutils>=0.20 in ./.venv/lib/python3.12/site-packages (from pyqt-reactive<0.4,>=0.3.24->openhcs==0.8.7) (0.23)
+Requirement already satisfied: magicgui>=0.7.0 in ./.venv/lib/python3.12/site-packages (from pyqt-reactive<0.4,>=0.3.24->openhcs==0.8.7) (0.10.2)
+Requirement already satisfied: pygments>=2.15 in ./.venv/lib/python3.12/site-packages (from pyqt-reactive<0.4,>=0.3.24->openhcs==0.8.7) (2.21.0)
+Requirement already satisfied: pyqt6>=6.4.0 in ./.venv/lib/python3.12/site-packages (from pyqt-reactive<0.4,>=0.3.24->openhcs==0.8.7) (6.11.0)
+INFO: pip is looking at multiple versions of pyqt-reactive to determine which version is compatible with other requirements. This could take a while.
+Collecting pycodify<0.2,>=0.1.3 (from openhcs==0.8.7)
+  Downloading pycodify-0.1.3-py3-none-any.whl.metadata (3.6 kB)
+Collecting arraybridge>=0.3.0 (from polystore==0.3.0)
+  Downloading arraybridge-0.3.4-py3-none-any.whl.metadata (5.3 kB)
+ERROR: Cannot install openhcs==0.8.7, polystore==0.3.0, pyqt-reactive==0.3.24 and zmqruntime 0.3.0 (from editable /home/ts/code/projects/openhcs/external/zmqruntime) because these package versions have conflicting dependencies.
+
+The conflict is caused by:
+    The user requested zmqruntime 0.3.0 (from editable /home/ts/code/projects/openhcs/external/zmqruntime)
+    polystore 0.3.0 depends on zmqruntime<0.4 and >=0.3.0
+    openhcs 0.8.7 depends on zmqruntime<0.4 and >=0.3.0
+    pyqt-reactive 0.3.24 depends on zmqruntime<0.3 and >=0.2.19
+
+Additionally, some packages in these conflicts have no matching distributions available for your environment:
+    zmqruntime
+
+To fix this you could try to:
+1. loosen the range of package versions you've specified
+2. remove package versions to allow pip to attempt to solve the dependency conflict
+
+ERROR: ResolutionImpossible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts

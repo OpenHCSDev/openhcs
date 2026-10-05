@@ -9,16 +9,18 @@ import numpy as np
 import pytest
 from polystore.disk import DiskStorageBackend
 from polystore.filemanager import FileManager
-from polystore.roi import ROI, PointShape
+from polystore.roi import ROI, PointShape, load_rois_from_zip
 from polystore.roi_converters import NapariROIConverter
 from polystore.streaming.identity import (
     FixedStreamProducerIdentityKind,
     StreamProducerIdentity,
 )
+from polystore.streaming_constants import StreamingDataType
 from polystore.streaming.viewer_transport import ViewerStreamKwarg, ViewerStreamProducer
 from polystore.virtual_workspace import SourcePixelRef
 from polystore.zmq_config import POLYSTORE_ZMQ_CONFIG
 from zmqruntime.viewer_protocol import ViewerBatchWireField, ViewerWireField
+from zmqruntime.viewer_state import ViewerStateManager
 
 from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import ObjectLabelsArtifactType
@@ -64,9 +66,14 @@ from openhcs.core.viewer_streaming_service import (
 )
 from openhcs.runtime.fiji_stream_visualizer import FijiStreamVisualizer
 from openhcs.runtime.napari_stream_visualizer import NapariStreamVisualizer
+from openhcs.runtime.napari_streaming_handlers import (
+    NapariStreamLayerAddress,
+    NapariStreamLayerItem,
+)
 from openhcs.runtime.viewer_protocol import (
     DetachedViewerLaunchFailure,
     DetachedViewerServerEntrypointSpec,
+    ManagedViewerLifecycleMixin,
     ViewerControlMessageRequest,
     ViewerControlResponse,
     ViewerLaunchContext,
@@ -147,9 +154,9 @@ class FakeMetadataHandler:
     ) -> dict[str, str]:
         return {}
 
-    def get_pixel_size(self, plate_path) -> float:
+    def source_voxel_spacing(self, plate_path) -> SourceVoxelSpacing:
         del plate_path
-        return 1.3556
+        return SourceVoxelSpacing((1.3556, 1.3556))
 
 
 def filename_parse_result(*, channel: int = 1) -> FilenameParseResult:
@@ -218,10 +225,10 @@ def test_napari_viewer_reuse_requires_matching_process_launch(monkeypatch) -> No
             }
         ),
     )
-    assert visualizer.existing_viewer_matches_process_launch()
+    assert visualizer.matches_requested_process_launch(visualizer.process_launch)
 
     active_launch = ViewerProcessLaunchConfig(qt_font_dpi=120)
-    assert not visualizer.existing_viewer_matches_process_launch()
+    assert not visualizer.matches_requested_process_launch(visualizer.process_launch)
 
 
 @pytest.mark.parametrize("config", (GlobalPipelineConfig(), PipelineConfig()))
@@ -375,10 +382,10 @@ def test_stream_images_uses_plate_calibration_without_overwriting_native_spacing
             )
 
     class CalibratedMetadataHandler(FakeMetadataHandler):
-        def get_pixel_size(self, plate_path):
+        def source_voxel_spacing(self, plate_path):
             if spacing.has_values:
                 raise AssertionError("Native calibration must not query plate defaults")
-            return super().get_pixel_size(plate_path)
+            return super().source_voxel_spacing(plate_path)
 
     filemanager = CalibratedFileManager()
     service = StreamingService(
@@ -916,7 +923,7 @@ def test_reopen_native_roi_archives_preserves_per_file_source_and_calibration(
     metadata_handler = FakeMetadataHandler()
     monkeypatch.setattr(
         metadata_handler,
-        "get_pixel_size",
+        "source_voxel_spacing",
         lambda _path: pytest.fail("Native explicit spacing must not be replaced"),
     )
     handler = SimpleNamespace(
@@ -952,9 +959,10 @@ def test_reopen_native_roi_archives_preserves_per_file_source_and_calibration(
             stream.source.metadata.metadata_by_path[batch_paths[0]]
             == expected.source_component_metadata
         )
-        assert data[0][0].metadata == {
+        assert ROIArchiveSourceMetadata.feature_metadata(data[0][0].metadata) == {
             "label": expected.source_component_metadata["channel"]
         }
+        assert ROIArchiveSourceMetadata.decode(data[0]) == expected
         assert data[0][0].shapes == [PointShape(32.25, 40.5)]
 
 
@@ -1028,6 +1036,7 @@ def test_3d_point_archive_reopens_with_native_z_domain_and_features(tmp_path):
         ),
     )
     config = NapariStreamingConfig(enabled=True)
+    saved_source = ROIArchiveSourceMetadata.decode(load_rois_from_zip(Path(archive)))
     result = StreamingService(filemanager, handler, tmp_path).stream_rois(
         RoiStreamingRequest(
             viewer=FakeViewer(),
@@ -1045,6 +1054,13 @@ def test_3d_point_archive_reopens_with_native_z_domain_and_features(tmp_path):
     assert paths == [archive]
     assert data[0][0].metadata["response"] == 4.75
     assert data[0][0].metadata["openhcs_fractional_z"] == 2.375
+    reopened_source = ROIArchiveSourceMetadata.decode(data[0])
+    assert reopened_source is not None
+    assert reopened_source == saved_source
+    assert (
+        reopened_source.source_image_provenance_planes
+        == table.source_image_provenance_planes
+    )
     assert stream.source.metadata.metadata_by_path[archive]["z_index"] == 0
     assert stream.message_extra[ViewerBatchWireField.COMPONENT_VALUE_DOMAIN.value][
         "z_index"
@@ -1057,11 +1073,16 @@ def test_3d_point_archive_reopens_with_native_z_domain_and_features(tmp_path):
         entries=domain.entries,
         layout=ViewerObjectDisplayConfigInput(config).layout(),
     )
-    item = SimpleNamespace(
-        address=SimpleNamespace(
-            components=stream.source.metadata.metadata_by_path[archive]
+    item = NapariStreamLayerItem(
+        address=NapariStreamLayerAddress(
+            components=stream.source.metadata.metadata_by_path[archive],
+            path=archive,
+            stream_layer_data_type=StreamingDataType.POINTS,
         ),
+        producer=stream.producer.identities[0],
         data=NapariROIConverter.rois_to_shapes(data[0]),
+        image_metadata=reopened_source,
+        plane_component_domain=domain,
     )
     request = ViewerLayerAxisProjectionRequestAuthority.from_component_axis_semantics(
         route_key="centres",
@@ -1078,6 +1099,9 @@ def test_3d_point_archive_reopens_with_native_z_domain_and_features(tmp_path):
     points, properties = _build_nd_points([item], projection)
     assert points[0, projection.projected_axis_components.index("z_index")] == 2.375
     assert properties["response"] == [4.75]
+    assert properties[NapariStreamLayerItem.ELEMENT_IDENTITY_FEATURE] == [
+        item.element_identity(0)
+    ]
 
 
 def test_explicit_native_reopening_rejects_an_external_roi_without_source(tmp_path):
@@ -1221,29 +1245,33 @@ def test_stream_rois_rejects_unresolved_source_plane_metadata() -> None:
         )
 
 
+@pytest.fixture
+def lifecycle_manager(monkeypatch):
+    # Exercise the real manager/acquisition path without starting or stopping
+    # any real viewer, endpoint, Qt application or foreign process.
+    monkeypatch.setattr(ViewerStateManager, "_instance", None)
+    monkeypatch.setattr(
+        ManagedViewerLifecycleMixin, "is_running", property(lambda self: True)
+    )
+    monkeypatch.setattr(
+        ManagedViewerLifecycleMixin, "wait_for_ready", lambda self, timeout: True
+    )
+    monkeypatch.setattr(
+        ManagedViewerLifecycleMixin, "force_stop",
+        lambda self: self.lifecycle_state.mark_stopped(),
+    )
+    monkeypatch.setattr(
+        ManagedViewerLifecycleMixin, "start",
+        lambda self: (_ for _ in ()).throw(AssertionError("must not restart")),
+    )
+    manager = ViewerStateManager.get_instance()
+    yield manager
+    manager.stop_all_viewers()
+
+
 def test_streaming_viewer_lifecycle_attaches_existing_viewer_without_restart(
-    monkeypatch,
+    monkeypatch, lifecycle_manager,
 ) -> None:
-    class FakeManager:
-        def get_viewer(self, viewer_type: str, port: int):
-            del viewer_type, port
-            return None
-
-        def release_viewer(
-            self, viewer_type: str, port: int, *, stop: bool, force: bool
-        ):
-            raise AssertionError("fresh release should not run for non-fresh attach")
-
-    monkeypatch.setattr(
-        "zmqruntime.ViewerStateManager.get_instance",
-        lambda: FakeManager(),
-    )
-    monkeypatch.setattr(
-        "zmqruntime.get_or_create_viewer",
-        lambda **_kwargs: (_ for _ in ()).throw(
-            AssertionError("viewer restart path used")
-        ),
-    )
     monkeypatch.setattr(
         NapariStreamVisualizer,
         "existing_viewer_is_ready",
@@ -1276,23 +1304,10 @@ def test_streaming_viewer_lifecycle_attaches_existing_viewer_without_restart(
 )
 def test_streaming_viewer_lifecycle_projects_launch_context_for_every_viewer(
     monkeypatch,
+    lifecycle_manager,
     config,
     visualizer_type,
 ) -> None:
-    class FakeManager:
-        def get_viewer(self, viewer_type: str, port: int):
-            del viewer_type, port
-            return None
-
-        def release_viewer(
-            self, viewer_type: str, port: int, *, stop: bool, force: bool
-        ):
-            raise AssertionError("fresh release should not run for non-fresh attach")
-
-    monkeypatch.setattr(
-        "zmqruntime.ViewerStateManager.get_instance",
-        lambda: FakeManager(),
-    )
     monkeypatch.setattr(
         visualizer_type,
         "existing_viewer_is_ready",
@@ -1360,36 +1375,51 @@ def test_streaming_viewer_lifecycle_reports_bounded_launch_log(
     assert str(error.value.log_file) in str(error.value)
 
 
-def test_streaming_viewer_lifecycle_reuses_manager_owned_viewer(monkeypatch) -> None:
-    existing_viewer = FakeViewer()
-
-    class FakeManager:
-        def get_viewer(self, viewer_type: str, port: int):
-            assert viewer_type == "napari"
-            assert port == 5563
-            return existing_viewer
-
-        def release_viewer(
-            self, viewer_type: str, port: int, *, stop: bool, force: bool
-        ):
-            raise AssertionError("fresh release should not run for non-fresh reuse")
-
+@pytest.mark.parametrize("config_type", (NapariStreamingConfig, FijiStreamingConfig))
+@pytest.mark.parametrize(
+    ("owns_process", "requested_host", "reusable"),
+    ((True, "127.0.0.1", False), (True, "*", True), (False, "127.0.0.1", True)),
+)
+def test_streaming_viewer_lifecycle_admits_new_launch_inside_managed_acquisition(
+    monkeypatch, lifecycle_manager, config_type, owns_process, requested_host, reusable
+) -> None:
+    active_config = config_type(enabled=True, port=5563, persistent=True, listen_host="*")
+    existing_viewer = active_config.create_visualizer(FakeFileManager())
+    existing_viewer.lifecycle_state.mark_connected_external()
     monkeypatch.setattr(
-        "zmqruntime.ViewerStateManager.get_instance",
-        lambda: FakeManager(),
+        ManagedViewerLifecycleMixin, "owned_viewer_process_is_alive",
+        lambda self: owns_process,
     )
     monkeypatch.setattr(
-        NapariStreamingConfig,
+        ViewerControlMessageRequest, "send",
+        lambda self: ViewerControlResponse({
+            "status": "success",
+            "process_launch": active_config.viewer_process_launch_config().to_wire_mapping(),
+        }),
+    )
+    lifecycle_manager.get_or_create_viewer(
+        active_config.viewer_type.wire_value, 5563, lambda: existing_viewer
+    )
+    monkeypatch.setattr(
+        config_type,
         "create_visualizer",
-        lambda self, filemanager, visualizer_config=None: (_ for _ in ()).throw(
-            AssertionError("external viewer probe should not run")
+        lambda *args, **kwargs: (_ for _ in ()).throw(
+            AssertionError("managed reuse must not construct another viewer")
         ),
     )
 
-    viewer = StreamingViewerLifecycle.get_or_create_visualizer(
-        filemanager=FakeFileManager(),
-        config=NapariStreamingConfig(enabled=True, port=5563, persistent=True),
-        fresh=False,
+    requested = config_type(
+        enabled=True, port=5563, persistent=True, listen_host=requested_host
     )
-
-    assert viewer is existing_viewer
+    if reusable:
+        assert StreamingViewerLifecycle.get_or_create_visualizer(
+            filemanager=FakeFileManager(), config=requested, fresh=False,
+        ) is existing_viewer
+    else:
+        with pytest.raises(RuntimeError, match="does not match the requested process launch"):
+            StreamingViewerLifecycle.get_or_create_visualizer(
+                filemanager=FakeFileManager(), config=requested, fresh=False,
+            )
+    assert lifecycle_manager.get_viewer(
+        active_config.viewer_type.wire_value, 5563
+    ) is existing_viewer

@@ -1,10 +1,13 @@
+from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import Mock
 
 import pytest
 from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import (
+    ArtifactMeasurementSubjectRelation,
     ArtifactOutputPlan,
     ArtifactSpec,
     GroupLineageSourceRelation,
@@ -22,6 +25,8 @@ from openhcs.core.pipeline.function_contracts import (
     execution_scope,
 )
 from openhcs.core.source_binding_selection import SourcePatternResolutionContext
+from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
+from openhcs.core.steps.function_output_manifest import _STEP_OUTPUT_MANIFESTS
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     ComponentSelector,
@@ -34,11 +39,12 @@ from openhcs.core.source_bindings import (
     SourceSelector,
 )
 from openhcs.core.source_projection import OpenHCSPlaneAddress, SourcePlaneProjection
-from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
+from openhcs.core.source_workspace_projection import (
+    VirtualWorkspaceSourceProjection, VirtualWorkspaceSourceProjectionAuthority,
+)
 from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.core.steps.function_execution import (
-    PatternGroups,
-    StepAnchorPatternFilter,
+    FunctionStepExecutor,
 )
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 
@@ -49,6 +55,33 @@ SOURCE_ALIASES = (
     ("OrigPh_golgi", "4"),
     ("OrigSyto", "3"),
 )
+
+
+def _anchor_executor(
+    *, plan, parser, output_manifest, source_workspace_projection_cache
+):
+    executor = object.__new__(FunctionStepExecutor)
+    executor.plan = plan
+    executor.context = Mock(
+        plate_path=Path("."),
+        microscope_handler=SimpleNamespace(
+            parser=parser,
+            metadata_handler=SimpleNamespace(
+                source_workspace_metadata_document=lambda _path: None
+            ),
+        ),
+        filemanager=SimpleNamespace(exists=lambda *_args: False),
+        runtime_source_workspace_projection_cache=source_workspace_projection_cache,
+        runtime_source_binding_context_cache=RuntimeSourceBindingContextCache(),
+    )
+    executor.context.runtime_source_workspace_projection_authority = (
+        VirtualWorkspaceSourceProjectionAuthority.from_context(
+            executor.context, cache=source_workspace_projection_cache,
+        )
+    )
+    if output_manifest is not None:
+        _STEP_OUTPUT_MANIFESTS[executor.context] = output_manifest
+    return executor
 
 
 def test_artifact_only_group_declares_no_source_anchor_bindings() -> None:
@@ -72,14 +105,13 @@ def test_artifact_only_group_declares_no_source_anchor_bindings() -> None:
             ),
         ),
     )
-    pattern_filter = StepAnchorPatternFilter(
+    pattern_filter = _anchor_executor(
         plan=SimpleNamespace(
             source_binding_plan=source_binding_plan,
             execution_group_scope=ComponentGroupScope.ungrouped(),
         ),
         parser=SourceSchemaFilenameParser(),
         output_manifest=None,
-        source_workspace_authority=None,
         source_workspace_projection_cache=None,
     )
 
@@ -128,7 +160,7 @@ def _filter_source_anchors(
     dimension_aliases: tuple[str, ...] | None = None,
     shared_output: bool = True,
     composed_image_set: bool = True,
-) -> PatternGroups:
+) -> dict:
     available_bindings = _source_bindings()
     aliases = tuple(binding.alias for binding in available_bindings)
     compiled_bindings = tuple(
@@ -146,11 +178,16 @@ def _filter_source_anchors(
         ArtifactSpec.output(
             "Measurements" if shared_output else f"{binding.alias}Measurements",
             MeasurementsArtifactType,
-            relations=tuple(
-                GroupLineageSourceRelation(source=source_spec.ref())
-                for source_spec in (
-                    declared_specs if shared_output else (binding.input_spec(),)
-                )
+            # These synthetic declarations test dependency anchors, not image
+            # or object measurement rows. Their subject is the artifact itself.
+            relations=(
+                ArtifactMeasurementSubjectRelation(),
+                *(
+                    GroupLineageSourceRelation(source=source_spec.ref())
+                    for source_spec in (
+                        declared_specs if shared_output else (binding.input_spec(),)
+                    )
+                ),
             ),
         )
         for binding in (compiled_bindings[:1] if shared_output else compiled_bindings)
@@ -163,9 +200,12 @@ def _filter_source_anchors(
             ArtifactSpec.output(
                 "AggregateMeasurements",
                 MeasurementsArtifactType,
-                relations=tuple(
-                    GroupLineageSourceRelation(source=source_spec.ref())
-                    for source_spec in declared_specs
+                relations=(
+                    ArtifactMeasurementSubjectRelation(),
+                    *(
+                        GroupLineageSourceRelation(source=source_spec.ref())
+                        for source_spec in declared_specs
+                    ),
                 ),
             ),
         )
@@ -222,14 +262,10 @@ def _filter_source_anchors(
         ),
         compiled_function_pattern=compiled_pattern,
     )
-    patterns = PatternGroups(
-        {
-            channel: tuple(
-                f"A01_s{site:03d}_w{channel}_z001_t001.tif" for site in sites
-            )
-            for _alias, channel in SOURCE_ALIASES
-        }
-    )
+    patterns = {
+        channel: tuple(f"A01_s{site:03d}_w{channel}_z001_t001.tif" for site in sites)
+        for _alias, channel in SOURCE_ALIASES
+    }
     source_paths = {
         pattern: f"/source/{pattern}"
         for pattern_list in patterns.values()
@@ -250,15 +286,14 @@ def _filter_source_anchors(
         source_metadata_by_path=source_metadata,
     )
     monkeypatch.setattr(
-        StepAnchorPatternFilter,
+        FunctionStepExecutor,
         "source_pattern_context",
         lambda _self: source_context,
     )
-    pattern_filter = StepAnchorPatternFilter(
+    pattern_filter = _anchor_executor(
         plan=plan,
         parser=SourceSchemaFilenameParser(),
         output_manifest=None,
-        source_workspace_authority=None,
         source_workspace_projection_cache=None,
     )
     return pattern_filter.source_bound_anchor_patterns(patterns)
@@ -272,7 +307,7 @@ def test_all_loaded_contract_collapses_sibling_alias_groups_by_metadata(
         artifact_aliases=tuple(alias for alias, _channel in SOURCE_ALIASES),
     )
 
-    assert filtered.groups == {
+    assert filtered == {
         "2": ("A01_s001_w2_z001_t001.tif",),
         "1": (),
         "5": (),
@@ -290,7 +325,7 @@ def test_natural_callable_keeps_each_source_component_anchor(
         composed_image_set=False,
     )
 
-    assert filtered.groups == {
+    assert filtered == {
         channel: (f"A01_s001_w{channel}_z001_t001.tif",)
         for _alias, channel in SOURCE_ALIASES
     }
@@ -304,7 +339,7 @@ def test_selected_source_contract_keeps_only_its_exact_alias_anchor(
         artifact_aliases=("OrigHoechst",),
     )
 
-    assert filtered.groups == {
+    assert filtered == {
         "1": ("A01_s001_w1_z001_t001.tif",),
     }
 
@@ -318,7 +353,7 @@ def test_distinct_metadata_sets_each_keep_one_source_representative(
         sites=(1, 2),
     )
 
-    assert filtered.groups == {
+    assert filtered == {
         "2": (
             "A01_s001_w2_z001_t001.tif",
             "A01_s002_w2_z001_t001.tif",
@@ -339,7 +374,7 @@ def test_independent_source_aligned_outputs_keep_each_execution_group(
         shared_output=False,
     )
 
-    assert filtered.groups == {
+    assert filtered == {
         "2": ("A01_s001_w2_z001_t001.tif",),
         "1": ("A01_s001_w1_z001_t001.tif",),
     }
@@ -399,13 +434,11 @@ def test_grouped_branches_project_their_exact_contract_bindings(
         ),
         compiled_function_pattern=compiled_pattern,
     )
-    patterns = PatternGroups(
-        {
-            "2": ("A01_s001_w2_z001_t001.tif",),
-            "1": ("A01_s001_w1_z001_t001.tif",),
-            "5": ("A01_s001_w5_z001_t001.tif",),
-        }
-    )
+    patterns = {
+        "2": ("A01_s001_w2_z001_t001.tif",),
+        "1": ("A01_s001_w1_z001_t001.tif",),
+        "5": ("A01_s001_w5_z001_t001.tif",),
+    }
     source_context = SourcePatternResolutionContext.from_sources(
         parser=SourceSchemaFilenameParser(),
         source_paths_by_virtual_path={
@@ -420,21 +453,20 @@ def test_grouped_branches_project_their_exact_contract_bindings(
         },
     )
     monkeypatch.setattr(
-        StepAnchorPatternFilter,
+        FunctionStepExecutor,
         "source_pattern_context",
         lambda _self: source_context,
     )
-    pattern_filter = StepAnchorPatternFilter(
+    pattern_filter = _anchor_executor(
         plan=plan,
         parser=SourceSchemaFilenameParser(),
         output_manifest=None,
-        source_workspace_authority=None,
         source_workspace_projection_cache=None,
     )
 
     filtered = pattern_filter.source_bound_anchor_patterns(patterns)
 
-    assert filtered.groups == {
+    assert filtered == {
         "2": ("A01_s001_w2_z001_t001.tif",),
         "1": ("A01_s001_w1_z001_t001.tif",),
         "5": (),
@@ -501,28 +533,25 @@ def test_alias_only_step_binding_uses_virtual_projection_for_template_anchor(
         ),
     )
     monkeypatch.setattr(
-        StepAnchorPatternFilter,
+        FunctionStepExecutor,
         "source_pattern_context",
         lambda _self: source_context,
     )
-    pattern_filter = StepAnchorPatternFilter(
+    pattern_filter = _anchor_executor(
         plan=plan,
         parser=SourceSchemaFilenameParser(),
         output_manifest=None,
-        source_workspace_authority=None,
         source_workspace_projection_cache=None,
     )
 
     filtered = pattern_filter.source_bound_anchor_patterns(
-        PatternGroups(
-            {
-                "1": ("A01_s{iii}_w1_z001_t001.tif",),
-                "2": ("A01_s{iii}_w2_z001_t001.tif",),
-            }
-        )
+        {
+            "1": ("A01_s{iii}_w1_z001_t001.tif",),
+            "2": ("A01_s{iii}_w2_z001_t001.tif",),
+        }
     )
 
-    assert filtered.groups == {
+    assert filtered == {
         "2": ("A01_s{iii}_w2_z001_t001.tif",),
     }
 
@@ -545,8 +574,9 @@ def test_complete_source_set_templates_preserve_each_execution_group_anchor(
     measurements = ArtifactSpec.output(
         "SourceSetMeasurements",
         MeasurementsArtifactType,
-        relations=tuple(
-            GroupLineageSourceRelation(source=spec.ref()) for spec in input_specs
+        relations=(
+            ArtifactMeasurementSubjectRelation(),
+            *(GroupLineageSourceRelation(source=spec.ref()) for spec in input_specs),
         ),
     )
 
@@ -621,23 +651,20 @@ def test_complete_source_set_templates_preserve_each_execution_group_anchor(
         ),
     )
     monkeypatch.setattr(
-        StepAnchorPatternFilter,
+        FunctionStepExecutor,
         "source_pattern_context",
         lambda _self: source_context,
     )
-    pattern_filter = StepAnchorPatternFilter(
+    pattern_filter = _anchor_executor(
         plan=plan,
         parser=SourceSchemaFilenameParser(),
         output_manifest=None,
-        source_workspace_authority=None,
         source_workspace_projection_cache=None,
     )
-    patterns = PatternGroups(
-        {
-            "1": ("A01_s001_w{iii}_z001_t001.tif",),
-            "2": ("A01_s002_w{iii}_z001_t001.tif",),
-        }
-    )
+    patterns = {
+        "1": ("A01_s001_w{iii}_z001_t001.tif",),
+        "2": ("A01_s002_w{iii}_z001_t001.tif",),
+    }
 
     assert pattern_filter.source_bound_anchor_patterns(patterns) == patterns
 
@@ -671,8 +698,12 @@ def test_static_site_groups_do_not_cross_project_natural_source_set_templates(
         ArtifactSpec.output(
             "AlignMeasurements",
             MeasurementsArtifactType,
-            relations=tuple(
-                GroupLineageSourceRelation(source=spec.ref()) for spec in input_specs
+            relations=(
+                ArtifactMeasurementSubjectRelation(),
+                *(
+                    GroupLineageSourceRelation(source=spec.ref())
+                    for spec in input_specs
+                ),
             ),
         ),
     )
@@ -748,22 +779,19 @@ def test_static_site_groups_do_not_cross_project_natural_source_set_templates(
         ),
     )
     monkeypatch.setattr(
-        StepAnchorPatternFilter,
+        FunctionStepExecutor,
         "source_pattern_context",
         lambda _self: source_context,
     )
-    pattern_filter = StepAnchorPatternFilter(
+    pattern_filter = _anchor_executor(
         plan=plan,
         parser=SourceSchemaFilenameParser(),
         output_manifest=None,
-        source_workspace_authority=None,
         source_workspace_projection_cache=None,
     )
-    patterns = PatternGroups(
-        {
-            "1": ("A01_s001_w{iii}_z001_t001.tif",),
-            "2": ("A01_s002_w{iii}_z001_t001.tif",),
-        }
-    )
+    patterns = {
+        "1": ("A01_s001_w{iii}_z001_t001.tif",),
+        "2": ("A01_s002_w{iii}_z001_t001.tif",),
+    }
 
     assert pattern_filter.source_bound_anchor_patterns(patterns) == patterns

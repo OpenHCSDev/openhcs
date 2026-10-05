@@ -481,8 +481,12 @@ def test_sweep_cli_reports_recorded_failure_with_nonzero_exit(
     assert args.cli_command.run(args) == 1
 
 
+@pytest.mark.parametrize(
+    "server_options,reuse_server",
+    [((), True), (("--no-reuse-execution-server",), False)],
+)
 def test_sweep_cli_passes_complete_native_summary_baselines(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, server_options, reuse_server
 ) -> None:
     import benchmark.cellprofiler_benchmark_cli as cli
     import benchmark.well_throughput_scaling as throughput
@@ -541,10 +545,12 @@ def test_sweep_cli_passes_complete_native_summary_baselines(
             str(tmp_path / "outputs"),
             "--native-summary-csv",
             str(summary_path),
+            *server_options,
         )
     )
 
     assert args.cli_command.run(args) == 0
+    assert captured["reuse_execution_server"] is reuse_server
     assert captured["native_execution_baselines"] == {
         "Example": NativeCellProfilerExecutionBaseline("Example", 2.5)
     }
@@ -1286,6 +1292,43 @@ def test_well_throughput_case_submits_one_ordinary_outcome_run(
 ) -> None:
     from benchmark import well_throughput_scaling
 
+    # Account for observers independently of the public pipeline invocation.
+    clock = [0.0]
+    monkeypatch.setattr(
+        well_throughput_scaling,
+        "time",
+        SimpleNamespace(
+            time_ns=lambda: 1,
+            perf_counter=lambda: clock[0],
+        ),
+    )
+
+    class MemoryObserver:
+        limit_exceeded = False
+
+        def __init__(self, **kwargs):
+            pass
+
+        def __enter__(self):
+            clock[0] += 10.0
+            return self
+
+        def __exit__(self, *args):
+            clock[0] += 20.0
+
+        def get_result(self):
+            return 512.0
+
+    monkeypatch.setattr(well_throughput_scaling, "MemoryMetric", MemoryObserver)
+    write_diagnostics = well_throughput_scaling._write_progress_diagnostics
+
+    def observed_diagnostics(*args, **kwargs):
+        write_diagnostics(*args, **kwargs)
+        clock[0] += 100.0
+
+    monkeypatch.setattr(
+        well_throughput_scaling, "_write_progress_diagnostics", observed_diagnostics
+    )
     monkeypatch.setattr(
         well_throughput_scaling,
         "prepare_cellprofiler_input_workspace",
@@ -1317,6 +1360,7 @@ def test_well_throughput_case_submits_one_ordinary_outcome_run(
         execution_port,
         require_owned_server,
     ):
+        clock[0] += 4.25
         submissions.append(submission)
         assert expected_axis_count == well_count
         assert execution_port == 18088
@@ -1387,6 +1431,9 @@ def test_well_throughput_case_submits_one_ordinary_outcome_run(
     assert result.successful_wells == well_count
     assert result.compile_seconds == 1.5
     assert result.execute_seconds == 2.75
+    assert result.total_seconds == 4.25
+    assert result.peak_memory_mb == 512.0
+    assert clock[0] == 134.25
     assert result.execution_route == ORDINARY_ZMQ_OUTCOMES_EXECUTION_ROUTE
     assert len(submissions) == 1
     assert submissions[0].plate_id == str(tmp_path / "input")

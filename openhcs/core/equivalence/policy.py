@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
 from enum import Enum
-from functools import lru_cache
+from functools import lru_cache, partial
 from types import MappingProxyType
 from typing import Annotated, ClassVar, get_args, get_origin, get_type_hints
 
@@ -648,6 +648,31 @@ class RuntimeMeasurementDialect:
         """Return static and provider-supplied measurement category prefixes."""
         return _resolved_category_prefixes(runtime_measurement_dialect_cache_id(self))
 
+    @property
+    def projected_feature_name(
+        self,
+    ) -> Callable[[str, tuple[tuple[str, object], ...]], str]:
+        """Bind this declaration's grammar for one producer admission."""
+        return partial(
+            self._projected_feature_name, runtime_measurement_dialect_cache_id(self)
+        )
+
+    @staticmethod
+    @lru_cache(maxsize=8192)
+    def _projected_feature_name(
+        dialect_id: int,
+        feature_name: str,
+        qualifier_values: tuple[tuple[str, object], ...],
+    ) -> str:
+        from .measurement_rows import measurement_row_qualifiers
+
+        qualifiers = measurement_row_qualifiers(
+            dict(qualifier_values),
+            runtime_measurement_dialect_for_cache_id(dialect_id),
+            feature_name,
+        )
+        return "_".join((feature_name, *qualifiers)) if qualifiers else feature_name
+
     def spatial_grid_measurement_feature_name(
         self,
         grid_name: str,
@@ -662,9 +687,7 @@ class RuntimeMeasurementDialect:
             return "_".join(
                 ("spatial_grid", normalized_grid_name, normalized_field_name)
             )
-        return normalize_runtime_identifier(
-            provider(normalized_grid_name, normalized_field_name)
-        )
+        return provider(grid_name, normalized_field_name)
 
     def resolved_primary_category_prefixes(self) -> tuple[tuple[str, ...], ...]:
         """Return category prefixes declared canonical by their nominal owners."""

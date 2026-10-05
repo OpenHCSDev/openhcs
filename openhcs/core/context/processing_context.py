@@ -6,13 +6,14 @@ This module defines the ProcessingContext class, which maintains state during pi
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, TypeVar, cast
 
 if TYPE_CHECKING:
     from openhcs.core.orchestrator.worker_lanes import WorkerLaneExecutionContext
+    from openhcs.core.steps.abstract import StepExecutionObservation
 
 from polystore.filemanager import FileManager
 from zmqruntime.config import ZMQConfig
@@ -34,6 +35,7 @@ from openhcs.core.runtime_pattern_cache import RuntimePatternDiscoveryCache
 from openhcs.core.runtime_stack_cache import RuntimeImageStackCache
 from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
 from openhcs.core.source_workspace_projection import (
+    VirtualWorkspaceSourceProjectionAuthority,
     VirtualWorkspaceSourceProjectionCache,
 )
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
@@ -134,6 +136,9 @@ class ProcessingContext:
         self.runtime_source_workspace_projection_cache = (
             VirtualWorkspaceSourceProjectionCache()
         )
+        self._runtime_source_workspace_projection_authority: (
+            VirtualWorkspaceSourceProjectionAuthority | None
+        ) = None
         self.source_image_set_identity_policy = SourceImageSetIdentityPolicy()
         self.axis_id = axis_id
         self.filemanager = filemanager
@@ -168,6 +173,20 @@ class ProcessingContext:
         self.pipeline_sequential_combinations = None
         self.current_sequential_combination = None
 
+    @property
+    def runtime_source_workspace_projection_authority(
+        self,
+    ) -> VirtualWorkspaceSourceProjectionAuthority:
+        """Hold the context's metadata owners; projection documents remain live."""
+        authority = self._runtime_source_workspace_projection_authority
+        if authority is None or not authority.is_bound_to_context(self):
+            authority = VirtualWorkspaceSourceProjectionAuthority.from_context(
+                self,
+                cache=self.runtime_source_workspace_projection_cache,
+            )
+            self._runtime_source_workspace_projection_authority = authority
+        return authority
+
     def bind_execution_runtime(
         self,
         runtime: WorkerLaneExecutionContext,
@@ -191,7 +210,10 @@ class ProcessingContext:
             self._runtime_step_values = previous
 
     def runtime_step_value(
-        self, value_type: type[_RuntimeStepValue]
+        self,
+        value_type: type[_RuntimeStepValue],
+        *,
+        factory: Callable[[], _RuntimeStepValue] | None = None,
     ) -> _RuntimeStepValue:
         """Resolve one declared runtime value shared within the active step."""
         values = self._runtime_step_values
@@ -199,9 +221,42 @@ class ProcessingContext:
             raise RuntimeError("Runtime step values require an active FunctionStep.")
         value = values.get(value_type)
         if value is None:
-            value = value_type()
+            value = value_type() if factory is None else factory()
             values[value_type] = value
         return cast(_RuntimeStepValue, value)
+
+    def record_runtime_step_outputs(
+        self, observation: "StepExecutionObservation"
+    ) -> None:
+        """Retain exporter-owned output facts within the active step only."""
+        from openhcs.core.steps.abstract import StepExecutionObservation
+
+        values = self._runtime_step_values
+        if values is None:
+            raise RuntimeError(
+                "Runtime output observations require an active FunctionStep."
+            )
+        values[StepExecutionObservation] = StepExecutionObservation.combine(
+            (
+                self.runtime_step_value(
+                    StepExecutionObservation,
+                    factory=StepExecutionObservation.empty,
+                ),
+                observation,
+            )
+        )
+
+    @property
+    def runtime_step_outputs(self) -> "StepExecutionObservation | None":
+        """Return derived output facts admitted during the active step."""
+        from openhcs.core.steps.abstract import StepExecutionObservation
+
+        if self._runtime_step_values is None:
+            return None
+        return self.runtime_step_value(
+            StepExecutionObservation,
+            factory=StepExecutionObservation.empty,
+        )
 
     def install_debug_event_sink(self, debug_event_sink: DebugEventSink) -> None:
         """Install the debug sink selected for this execution context."""

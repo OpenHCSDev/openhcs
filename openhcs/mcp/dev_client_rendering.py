@@ -4,21 +4,23 @@ from __future__ import annotations
 
 import argparse
 import json
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from enum import Enum
-from typing import ClassVar, TypeAlias
+from typing import ClassVar, TypeAlias, TypeVar
 
 from metaclass_registry import AutoRegisterMeta
+from python_introspect import dataclass_from_mapping
 
 from openhcs.agent.capabilities import (
     AgentCapabilitySpec,
     CapabilityWorkflowGroup,
     get_agent_capability,
 )
-from openhcs.agent.dto.common import JsonObject, JsonValue
+from openhcs.agent.dto.common import AgentError, JsonObject, JsonValue
 
 DEFAULT_CODE_DOCUMENT_MAX_CHARS = 2_000
+PresentationValue = TypeVar("PresentationValue")
 
 
 class WidgetTreeOutputFormat(str, Enum):
@@ -26,6 +28,10 @@ class WidgetTreeOutputFormat(str, Enum):
 
     JSON = "json"
     OUTLINE = "outline"
+
+    @property
+    def is_json(self) -> bool:
+        return self is WidgetTreeOutputFormat.JSON
 
     @classmethod
     def choices(cls) -> tuple[str, ...]:
@@ -61,6 +67,17 @@ class AuthoringContextRenderOptions(McpDevOutputRenderOptions):
 class CodeDocumentRenderOptions(McpDevOutputRenderOptions):
     include_source: bool = True
     max_source_chars: int = DEFAULT_CODE_DOCUMENT_MAX_CHARS
+
+    def source_text(self, source: str) -> str:
+        """One bounded source-text policy shared by all source presentations."""
+        if self.max_source_chars < 0:
+            raise ValueError("max_source_chars must be nonnegative.")
+        if len(source) <= self.max_source_chars:
+            return source
+        return (
+            source[: self.max_source_chars]
+            + f"\n...<truncated {len(source) - self.max_source_chars} chars>"
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -140,14 +157,25 @@ class McpDevOutputRenderer(metaclass=AutoRegisterMeta):
     render_options_type: ClassVar[type[McpDevOutputRenderOptions]] = (
         McpDevOutputRenderOptions
     )
-    __renderer_types__: ClassVar[tuple[type["McpDevOutputRenderer"], ...]] = ()
 
-    def __init_subclass__(cls, **kwargs: JsonValue) -> None:
+    def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
-        McpDevOutputRenderer.__renderer_types__ = (
-            *McpDevOutputRenderer.__renderer_types__,
-            cls,
-        )
+        # AutoRegisterMeta prefers an explicit (including inherited) key. A
+        # child must register its own declaration, not overwrite its parent's
+        # key merely because the metaclass assigned that key to the parent.
+        cls.renderer_key = mcp_dev_output_renderer_key(cls.__name__, cls)
+
+    @classmethod
+    def declaration_types(cls):
+        """Derived hierarchy view, visiting a diamond's identity only once."""
+        pending = list(cls.__subclasses__())
+        seen: set[type] = set()
+        while pending:
+            member = pending.pop(0)
+            if member not in seen:
+                seen.add(member)
+                yield member
+                pending.extend(member.__subclasses__())
 
     @classmethod
     def for_output_contract(
@@ -161,7 +189,11 @@ class McpDevOutputRenderer(metaclass=AutoRegisterMeta):
         )
 
         ensure_dev_client_renderers_registered()
-        for renderer_type in cls.__renderer_types__:
+        for owner in output_contract.__mro__:
+            renderer_type = cls.__registry__.get(owner)
+            if renderer_type is not None:
+                return McpDevOutputRendererBinding(output_contract, renderer_type)
+        for renderer_type in cls.declaration_types():
             binding = renderer_type.binding_for_output_contract(output_contract)
             if binding is not None:
                 return binding
@@ -189,6 +221,12 @@ class McpDevOutputRenderer(metaclass=AutoRegisterMeta):
         return ()
 
     @classmethod
+    def render_result(cls, response, options: McpDevOutputRenderOptions) -> str:
+        from openhcs.serialization.json import to_jsonable
+
+        return cls.render_with_options(to_jsonable(response), options)
+
+    @classmethod
     def render(cls, response: JsonObject) -> str:
         raise NotImplementedError
 
@@ -210,6 +248,13 @@ class McpDevOutputRendererBinding:
     renderer_type: type[McpDevOutputRenderer]
     render_function: McpDevOutputRenderFunction | None = None
 
+    def render_result(self, response, options: McpDevOutputRenderOptions) -> str:
+        if self.render_function is not None:
+            from openhcs.serialization.json import to_jsonable
+
+            return self.render_function(to_jsonable(response))
+        return self.renderer_type.render_result(response, options)
+
     def configure_cli_parser(self, parser: argparse.ArgumentParser) -> None:
         self.renderer_type.render_options_type.configure_cli_parser(parser)
 
@@ -230,6 +275,70 @@ class McpDevOutputRendererBinding:
         if self.render_function is not None:
             return self.render_function(response)
         return self.renderer_type.render_with_options(response, options)
+
+
+class McpDevTypedOutputRenderer(McpDevOutputRenderer):
+    """Shared contract descent for typed presentation members, never raw readers."""
+
+    unavailable_summary: ClassVar[str] = "Result: <unavailable>"
+
+    @classmethod
+    def json_value_count(cls, value: JsonValue) -> int:
+        """Count preview scalars in the declared dynamic JSON value algebra."""
+        if isinstance(value, list | tuple):
+            return sum(cls.json_value_count(item) for item in value)
+        if isinstance(value, Mapping):
+            return sum(cls.json_value_count(item) for item in value.values())
+        return 0 if value is None else 1
+
+    @staticmethod
+    def optional_lines(
+        value: PresentationValue | None,
+        render_lines: Callable[[PresentationValue], Sequence[str]],
+    ) -> Sequence[str]:
+        """Compose a nullable declared fact without repeating omission policy.
+
+        None is the native absence fact; false, zero and empty strings remain
+        present. Members own only the presentation of a present value.
+        """
+        return () if value is None else render_lines(value)
+
+    @classmethod
+    def render_result(cls, response, options: McpDevOutputRenderOptions) -> str:
+        return cls.render_with_options(response, options)
+
+    @classmethod
+    def render(cls, response) -> str:
+        return cls.render_with_options(response, cls.render_options_type())
+
+    @classmethod
+    def render_with_options(cls, response, options: McpDevOutputRenderOptions) -> str:
+        from openhcs.mcp.dev_client_core import McpDevToolBatchResponse
+
+        decoded = McpDevToolBatchResponse.for_rendering(response)
+        payload = next(
+            (result.first_decoded_payload() for result in decoded.results), None
+        )
+        lines = [
+            cls.unavailable_summary
+            if payload is None
+            else cls.render_payload_value(payload, options)
+        ]
+        lines.extend(
+            McpDiagnosticRenderer.typed_error_lines(decoded.diagnostic_errors())
+        )
+        return "\n".join(lines)
+
+    @classmethod
+    def render_payload(cls, payload, options: McpDevOutputRenderOptions) -> str:
+        raise NotImplementedError
+
+    @classmethod
+    def render_payload_value(cls, payload, options: McpDevOutputRenderOptions) -> str:
+        binding = McpDevOutputRenderer.for_output_contract(type(payload))
+        if binding is None:
+            raise TypeError(f"No renderer declared for {type(payload).__name__}")
+        return binding.renderer_type.render_payload(payload, options)
 
 
 class McpDevPayloadProjection:
@@ -315,9 +424,9 @@ class McpDevPayloadProjection:
         return tuple(item for item in value if isinstance(item, Mapping))
 
     @staticmethod
-    def text(value: JsonValue) -> str:
+    def text(value: JsonValue, *, absent_text: str = "<none>") -> str:
         if value is None:
-            return "<none>"
+            return absent_text
         return str(value)
 
     @staticmethod
@@ -352,15 +461,21 @@ class McpDiagnosticRenderer:
 
     @staticmethod
     def error_lines(errors: tuple[Mapping[str, JsonValue], ...]) -> tuple[str, ...]:
+        return McpDiagnosticRenderer.typed_error_lines(
+            tuple(dataclass_from_mapping(AgentError, error) for error in errors)
+        )
+
+    @staticmethod
+    def typed_error_lines(errors) -> tuple[str, ...]:
         grouped_codes: dict[str, list[str]] = {}
         grouped_hints: dict[str, list[str]] = {}
         for error in errors:
-            message = McpDevPayloadProjection.text(error.get("message"))
-            hint = error.get("hint")
+            message = error.message
+            hint = error.hint
             hint_text = (
                 None if hint is None else McpDevPayloadProjection.quoted_text(hint)
             )
-            code = McpDevPayloadProjection.text(error.get("code"))
+            code = error.code
             codes = grouped_codes.setdefault(message, [])
             if code not in codes:
                 codes.append(code)
@@ -373,7 +488,7 @@ class McpDiagnosticRenderer:
         lines: list[str] = []
         for message, codes in tuple(grouped_codes.items())[:3]:
             code_text = codes[0] if len(codes) == 1 else ", ".join(codes)
-            line = f"- {code_text}: " f"{message}"
+            line = f"- {code_text}: {message}"
             hint_texts = grouped_hints.get(message, [])
             if len(hint_texts) == 1:
                 line += f" hint={hint_texts[0]}"

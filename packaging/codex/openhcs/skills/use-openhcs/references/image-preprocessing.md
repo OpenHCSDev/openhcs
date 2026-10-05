@@ -2,9 +2,12 @@
 
 Start from a failed raw biological witness, not a favourite filter. Establish
 the target channel, the structures that must survive and a specific nuisance
-model. Keep an untreated route and distinguish detection pixels, measurement
-pixels and display settings. These recipes are hypotheses, not unconditional
-steps to concatenate. Discover and describe the compatible registered OpenHCS
+model. Retain acquisition source and provenance as a reproducible reference;
+creating or modifying working analytical arrays is normal pipeline processing,
+not permission to overwrite acquisition files. Distinguish detection pixels,
+claim-appropriate measurement inputs and display settings. These recipes are
+hypotheses, not unconditional steps to concatenate. Discover and describe the
+compatible registered OpenHCS
 callable before choosing parameters; the live contract owns backend, dtype,
 axes, units and artifact flow.
 
@@ -13,12 +16,24 @@ axes, units and artifact flow.
 Choose development witnesses from the whole field before fitting a correction or
 tuning a detector. Include observed bright/dim background, centre/edge and
 sparse/dense regions, with a faint positive and a genuine close pair or thin path.
+Use [the raw-only faint-structure scan](viewer-qa.md#reveal-faint-structures-and-nuisance-variation)
+to expose faint paths, noise texture, background level and uneven illumination.
 Keep those witnesses across trials; add newly discovered failures rather than
 replacing inconvenient controls. Compare local background level/spread and
 signal-to-background contrast. A dim region may reflect additive background,
 multiplicative shading, focus, missing photons or genuine biology; do not flatten
-it simply because it differs. Saturation and lost focus are not repaired by
-normalisation.
+it simply because it differs. Saturated acquisition values and lost focus are
+not repaired by normalisation; intentionally saturated display highlights are
+a different, reversible presentation choice.
+
+Translate the observed nuisance into compatible declared operations. Depending
+on the evidence, test rolling-ball background subtraction or a white top-hat
+alone, denoising plus background subtraction, denoising plus flat-field and
+background correction, or another justified sequence. These are alternatives,
+not a mandatory stack or ordering. Distinguish additive background from
+multiplicative shading, focus loss and genuine diffuse biology before choosing
+a correction. Discover and describe each live callable's units, axes and artifact
+contracts rather than assuming a method name establishes compatibility.
 
 Review the correction field or denoising residual, raw/processed images and
 downstream labels across the same positions and scales. Record numeric display
@@ -29,14 +44,47 @@ sealed while choosing the method, fitting sample, parameters and QA criteria.
 
 ## Bright outliers and compressed display range
 
-First compare numeric display windows; a few bright objects may only make the
-viewer unhelpful. If an explicit detection transform is needed, test a bounded
-high-end clip/rescale or monotone tone curve on the development sample. Record
+First compare numeric display windows using the linked raw-only scan; a few
+bright objects may only make the viewer unhelpful. If an explicit detection
+transform is needed, test a bounded high-end clip/rescale or monotone tone curve
+on the development sample. Record
 the input percentile/value, output range and whether fitting is shared across
-fields. Inspect both bright-object boundaries and faint positives. Clipping
-can erase intensity differences, and gamma changes their relationships; use
-untreated or separately validated corrected pixels for intensity measurement.
+fields. Saturating bright somas in a suitable analytical transform is acceptable
+for segmentation if distributed raw/processed/result QA supports the required
+boundaries, faint paths and connectivity without induced background bridges or
+artifacts. Inspect both bright-object boundaries and faint positives; saturation
+alone is not a rejection gate. Analytical clipping changes working pixels,
+unlike a display-only upper limit. It can erase intensity differences, and gamma
+changes their relationships. For original-fluorescence photometry, choose the
+appropriate original or validated calibrated intensity source rather than
+silently substituting the detection transform; see
+[measurement-image choice](measurement-interpretation.md#detection-pixels-versus-measurement-pixels).
 Do not silently apply per-field normalisation to treatment comparisons.
+
+### Shared scaling for fields of one mosaic
+
+For fields belonging to the same well or mosaic, fit one low/high percentile
+pair over the complete field stack **per channel**, then apply that shared
+mapping to every field. This applies whether segmentation is field-by-field
+or follows stitching; stitching is not required to obtain consistent scaling.
+Independent field fits give the same raw signal different analytical values
+depending on its neighbours and can distort seam and detection comparisons.
+Use the canonical `image_analysis_workflow` assembly/grouping contract and
+inspect the compiled SITE scope and live stack-normalisation callable: a
+singleton field invocation does not pool the other fields. Keep channels and
+unrelated wells separate unless the task explicitly calls for a wider fit.
+Pooling the tiles and fitting a stitched image express the same shared-scaling
+intent, but overlap duplication, blending and mosaic padding can change the
+exact histogram. Record the fit domain rather than assuming identical bounds.
+
+One shared position artifact keeps channel placement consistent, but does not
+prove that tiles are aligned. Inspect overlaps for repeated nuclei, parallel
+process ghosts and broken continuations in separate raw channels, not only a
+composite or a matching position list. A composite used to estimate placement
+is a registration input, not an analytical channel merge: follow the canonical
+assembly branch, reload original channel stacks and apply the shared positions
+to raw or explicitly justified normalised inputs. Judge registration separately
+from pooled scaling; a repaired local join does not validate every seam.
 
 ## Slowly varying additive background
 
@@ -113,30 +161,61 @@ close pair and noise-only background before accepting a filter.
 
 ### Fast non-local means recipe
 
-Discover `openhcs:cellprofiler_reducenoise`. This existing CPU implementation
-uses scikit-image's `denoise_nl_means(..., fast_mode=True)` with `patch_size`,
-`patch_distance` and `cutoff_distance` (the upstream `h`). It needs no GPU or
-`torch_nlm`. Start with a small odd patch below the feature scale and a bounded
-search distance; increase search support only when the improvement justifies
-measured runtime and memory. Fast mode trades additional memory for speed.
+Choose the spatial domain before the implementation. For independent grayscale
+planes, discover
+`openhcs:processors_numpy_processor_non_local_means_denoise_planes` and confirm
+its live `PURE_2D` contract. The existing contract slices the declared runtime
+plane axis and restores the stack's metadata and provenance; scikit-image owns
+the denoising algorithm. A singleton SITE axis is still an acquisition axis,
+not evidence that the input should receive volumetric NLM. This operation
+rejects bare volumes instead of guessing an axis. When patches should cross
+physical Z planes, inspect the original
+`skimage:restoration.denoise_nl_means` volumetric route instead. Compile the
+actual source and axis scope; do not squeeze or relabel axes to select a method.
 
-Establish the incoming detection-image units and noise scale first. The wrapper
-casts integer input to float without normalising its values, so `h=0.1` has a
-different meaning on raw detector counts and unit-range data. Use a registered
-noise estimate or bounded local statistics when available, and test a modest
-noise-scale-based cutoff bracket rather than copying a normalised-image default.
-This wrapper does not expose upstream `sigma`; do not invent that kwarg or claim
-noise-variance compensation. Keep estimated noise and cutoff in the same units.
+The per-plane operation exposes upstream `patch_size`, `patch_distance`, `h`,
+`fast_mode`, `sigma` and `preserve_range`. Inspect the incoming dtype and
+intensity units: upstream integer-to-float conversion and `preserve_range`
+affect the meaning of `h` and `sigma`. Use a registered noise estimate or
+bounded local statistics and test a modest noise-scale-based cutoff bracket,
+not a normalised-image default applied to detector counts. Start with a small
+odd patch below the feature scale and a bounded search distance. Fast mode
+trades additional memory for speed; per-plane execution does not bound memory
+for an arbitrarily large plane. Check the intended image size and working set
+before widening a trial. A tiny compile/pixel-equivalence check proves an
+engineering route, not preservation of faint biology on a new assay.
 
-Describe the full-stack execution contract and compile the observation/axis
-scope: avoid denoising across independent fields, channels or time points merely
-because they share a stack. Keep runtime-owned slice controls out of callable
-kwargs. Review raw-minus-denoised residuals for erased puncta, bodies and thin
+For CellProfiler recipe transfer, `openhcs:cellprofiler_reducenoise` remains an
+alternative with its own full-stack contract. It uses fast scikit-image NLM,
+names the upstream `h` parameter `cutoff_distance`, casts integers to float
+without normalising their values, and does not expose `sigma`. Do not assume
+the same settings have the same intensity or axis semantics across wrappers.
+These CPU routes need no GPU or `torch_nlm`. Keep runtime-owned slice controls
+out of callable kwargs; choose the declaration that owns the required behavior.
+
+Review raw-minus-denoised residuals for erased puncta, bodies and thin
 paths, plus denoised foreground/markers and downstream labels at dim and bright
 witnesses. Reject newly joined neighbours or lost weak positives even if noise
-looks lower. Keep untreated measurement pixels unless the denoised measurement
-route has separate validation. NLM reduces noise; it does not estimate a shading
-field or justify a globally tuned threshold on uneven illumination.
+looks lower. For original-fluorescence photometry, use the named original or
+validated calibrated intensity source, not silently the denoised detection image.
+Counts, morphology, area and path length may use validated processed-derived
+labels or traces; follow the linked measurement-image guidance. NLM reduces
+noise; it does not estimate a shading field or justify a globally tuned threshold
+on uneven illumination.
+
+## Weak rims and morphological gap repair
+
+For a supported body whose rim is broken, closing is one hypothesis, not an
+automatic way to obtain a cell envelope. Measure the within-body gap AND the
+smallest supported gap between genuine neighbouring bodies on the consumed
+response. A footprint smaller than the body radius can still bridge neighbours;
+cell diameter alone does not justify its scale. Inspect the actual grayscale
+or binary operation and its threshold order: their effects are not equivalent.
+Compare foreground connectivity, markers and final labels at the broken rim
+and the close pair. If the rim improves but the pair joins, retain that failed
+trial and compare a smaller footprint or the unclosed support. Inspect
+marker/partition behavior or another evidenced admission model rather than
+assuming more closing is needed.
 
 ## Local contrast and local thresholds
 
@@ -153,6 +232,14 @@ centre regions, not just a single successful crop. Global Otsu is most plausible
 when classes separate; a dominant background with a sparse foreground tail
 requires checking that assumption rather than blindly choosing Otsu.
 
+For textured/ring-shaped bodies amid diffuse nuisance, compare
+[body-admission models](segmentation-diagnostics.md#compare-body-admission-models)
+before choosing a correction: local background differences and intensity-class
+separation fail differently. Judge corrected support against local body extent
+AND regional negatives, not background uniformity, nuclear eligibility or a
+preferred count. Opposite faint-loss/background-flooding outcomes motivate a
+model change, not repeated scalar toggles.
+
 ## Spots, edges and thin processes
 
 Difference/Laplacian of Gaussian can enhance objects at a selected scale; ridge
@@ -166,6 +253,21 @@ For faint structures connected to clear positives, consider high-confidence
 seeds grown within a lower-threshold support mask (hysteresis/reconstruction).
 This can retain supported weak structure but can also connect into background;
 inspect endpoints, crossings and nearby disconnected debris on raw pixels.
+Measure the response along the intended continuous path, including weak troughs,
+not only its peaks. A threshold below every sampled peak can still erase the
+connections between them. Compare those troughs with near-track nuisance and
+far-background profiles in the same response units. Where this evidence supports
+it, separate strong-seed admission from lower-threshold connected support;
+inspect the retained mask before thinning and recheck faint endpoints and false
+bridges. Two thresholds do not establish crossing ownership or guarantee that
+weak paths remain distinguishable from noise.
+
+If discovery finds no contract-compatible hysteresis/reconstruction callable,
+follow [custom-function authoring](custom-function-authoring.md) on the intended
+process owner. A typed registered operation using an appropriate existing
+implementation is a normal pipeline step, not permission to process saved images
+outside MCP. A negative search alone does not make the recipe unavailable;
+check the proposed operation's actual axes, dtype, units and artifact flow.
 
 ## Discover compatible OpenHCS implementations
 
@@ -180,11 +282,15 @@ for declared composition, grouping and reference settings.
 
 ## Compose one falsifiable change
 
-Test individual operations before their combination. Clipping before background
-estimation changes that estimate's input; smoothing before seeding changes its
-maxima. Record order as part of the pipeline. Retain only necessary diagnostic
+Test individual operations before their combination. Clipping or denoising
+before background estimation changes that estimate's input; smoothing before
+seeding changes its maxima. Record the actual operation order and each consumed
+alias as part of the pipeline. Retain only necessary diagnostic
 intermediates and compare raw/processed at matched coordinates with recorded
-windows, then review the downstream labels against raw biological signal.
+windows, then review downstream masks/traces against raw biological signal.
+Inspect residuals or correction fields for removed faint positives, biological
+structure and amplified noise. Recheck path connectivity and background-bridge
+controls at the same coordinates, not only background uniformity.
 
 Accept only when the predicted failure improves without erasing the faint
 positive or creating new splits/merges/leakage. Check that secondary objects

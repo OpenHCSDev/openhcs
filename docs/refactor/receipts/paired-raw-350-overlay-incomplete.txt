@@ -1,0 +1,10 @@
+Original refactor-audit/scripts/overlay.py, source checkpoint017642ff0.
+Frozen interpreter and environment in paired-raw-350-validation-environment.txt.
+Command: systemd-run --user --scope --quiet -p MemoryMax=512M -p MemorySwapMax=0
+-p CPUQuota=100% /usr/bin/time -v timeout 60s taskset -c 0 <frozen Python>
+/home/ts/.codex/skills/refactor-audit/scripts/overlay.py --repo . --root openhcs
+--upstream 094425c8c81324da7a3878379074e1bd8234ff52 --top 3
+Execution session8838 returned exit143 with empty output, no counts or time footer.
+Exact initiating signal/source and peak memory are not attested by this receipt.
+Incomplete, NOT a clean overlay or measured resource pass. Not replayed.
+This does not supply a complete source/dependency ownership audit.

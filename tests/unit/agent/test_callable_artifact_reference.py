@@ -13,17 +13,41 @@ from openhcs.agent.dto.knowledge import (
     KnowledgeBaseDocumentRequest,
     KnowledgeBaseSearchRequest,
 )
-from openhcs.agent.knowledge_manifest import knowledge_base_source_paths_from_manifest
+from openhcs.agent.knowledge_manifest import (
+    DEFAULT_KNOWLEDGE_BASE_MANIFEST_PATH,
+    knowledge_base_source_paths_from_manifest,
+)
 from openhcs.agent.services.knowledge_base_service import KnowledgeBaseService
-from openhcs.core.artifacts import ArtifactOutputPlan, ObjectLabelsArtifactType
+from openhcs.core.artifacts import (
+    ArtifactInputPlan,
+    ArtifactOutputPlan,
+    ArtifactSpec,
+    ArtifactSpecCollection,
+    ImageArtifactType,
+    ObjectLabelsArtifactType,
+)
 from openhcs.core.callable_contract import CallableContract
-from openhcs.core.function_patterns import compile_function_pattern
+from openhcs.core.function_patterns import (
+    compile_function_pattern,
+    normalize_function_pattern,
+)
+from openhcs.core.invocation_artifacts import (
+    ArtifactDeclarationStepContext,
+    MainFlowArtifactContractProvider,
+    PIPELINE_INPUT_ARTIFACT,
+)
 from openhcs.core.runtime_image_values import ImageMetadataPayload, ImagePayloadMetadata
+from openhcs.core.runtime_object_label_domains import ObjectLabelDomainScope
 from openhcs.core.runtime_object_labels import (
     ObjectLabelPayload,
+    ObjectLabelValue,
     ObjectLabelVariantData,
 )
-from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
+from openhcs.core.runtime_plane_projection import (
+    RuntimePlaneAxis,
+    RuntimePlaneAxisValueProjection,
+)
+
 from openhcs.processing.custom_functions import manager as custom_manager
 from openhcs.processing.materialization import materialize
 from polystore.disk import DiskStorageBackend
@@ -33,6 +57,13 @@ from polystore.roi import load_rois_from_zip
 ROOT = Path(__file__).resolve().parents[3]
 DOCUMENT_PATH = "docs/source/development/callable_artifact_authoring.rst"
 DOCUMENT_ID = "openhcs_callable_artifact_authoring"
+REFERENCE_BLOCKS = (
+    "callable-artifact-reference",
+    "callable-artifact-points-reference",
+    "callable-artifact-diagnostic-reference",
+    "callable-artifact-input-reference",
+    "callable-artifact-plate-reference",
+)
 
 
 def _reference_block(name):
@@ -54,12 +85,8 @@ def reference_namespace():
     module = ModuleType("_openhcs_public_artifact_reference")
     sys.modules[module.__name__] = module
     try:
-        exec(
-            compile(
-                _reference_block("callable-artifact-reference"), DOCUMENT_PATH, "exec"
-            ),
-            module.__dict__,
-        )
+        for block in REFERENCE_BLOCKS:
+            exec(compile(_reference_block(block), DOCUMENT_PATH, "exec"), module.__dict__)
         yield module.__dict__
     finally:
         sys.modules.pop(module.__name__, None)
@@ -75,7 +102,9 @@ def test_canonical_reference_is_unique_searchable_and_fully_readable():
     ]
     assert len(matches) == 1
     assert matches[0].document_id == DOCUMENT_ID
-    assert ROOT / DOCUMENT_PATH in knowledge_base_source_paths_from_manifest()
+    assert ROOT / DOCUMENT_PATH in knowledge_base_source_paths_from_manifest(
+        ROOT / DEFAULT_KNOWLEDGE_BASE_MANIFEST_PATH
+    )
     result = service.search(
         KnowledgeBaseSearchRequest(
             query="RuntimeMeasurementFeatureOwner DataclassMeasurementColumnarRows",
@@ -90,9 +119,10 @@ def test_canonical_reference_is_unique_searchable_and_fully_readable():
         )
     )
     assert not document.truncated
-    for line in _reference_block("callable-artifact-reference").splitlines():
-        if line.strip():
-            assert line in document.content
+    for block in REFERENCE_BLOCKS:
+        for line in _reference_block(block).splitlines():
+            if line.strip():
+                assert line in document.content
     assert "from openhcs.core.memory import numpy" in document.content
 
 
@@ -145,11 +175,136 @@ def test_reference_executes_and_compiles_actual_function_step(reference_namespac
     assert not namespace["FixtureFeatureOwner"].owns_measurement_feature_name("unknown")
 
 
+def test_diagnostic_reference_uses_one_canonical_slot_and_exact_trailing_artifacts(
+    reference_namespace,
+):
+    namespace = reference_namespace
+    function = namespace["inspect_label_fixture_with_diagnostic"]
+    contract = CallableContract.from_callable(function)
+    pixels = np.zeros((8, 8), dtype=np.uint16)
+    pixels[2:6, 3:7] = 7
+    returned = function(pixels)
+    assert len(returned) == 3
+    assert contract.canonical_return_output_specs.names() == (
+        "fixture_image", "fixture_diagnostic",
+    )
+    assert contract.trailing_return_output_specs.names() == (
+        "fixture_labels", "fixture_object_rows",
+    )
+    matched = contract.resolve_returned_output(returned)
+    np.testing.assert_array_equal(matched[namespace["FIXTURE_IMAGE"].ref()], pixels)
+    np.testing.assert_array_equal(
+        matched[namespace["FIXTURE_DIAGNOSTIC"].ref()], pixels > 0,
+    )
+    assert matched[namespace["FIXTURE_ROWS"].ref()].row_mappings() == (
+        {"slice_index": 0, "object_label": 7, "pixel_count": 16},
+    )
+    with pytest.raises(ValueError, match="trailing return count"):
+        contract.resolve_returned_output((pixels, pixels > 0, returned[1], returned[2]))
+
+
+def test_points_declaration_materializes_fractional_geometry_and_full_source_domain(
+    reference_namespace, tmp_path,
+):
+    from openhcs.core.roi_point_metadata import ROIFractionalZ
+    from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
+    from openhcs.core.runtime_measurements import MeasurementTable
+    from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
+    from polystore.roi import PointShape
+
+    namespace = reference_namespace
+    spec = namespace["CENTRE_ROWS"]
+    labels = namespace["CENTRE_LABELS"]
+    plan = ArtifactOutputPlan(
+        name=spec.name, path="/synthetic/centre_rows", artifact_type=spec.artifact_type,
+        relations=spec.relations,
+    )
+    assert plan.object_subject_binding().source == labels.ref()
+    row = namespace["CentreRow"](7, 1.5, 1.25, 2.5)
+    carrier = namespace["DataclassMeasurementColumnarRows"](
+        (row,), row_type=namespace["CentreRow"],
+    )
+    # Direct materialization supplies the same nominal context normally owned
+    # by runtime contextualization, without inventing an archive/CSV writer.
+    table = MeasurementTable(
+        name=spec.name, rows=carrier, subject=plan.measurement_subject(),
+        measurement_feature_owner=namespace["CentreFeatureOwner"],
+        source_path="/synthetic/volume.tif",
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=("/synthetic/volume.tif",) * 4,
+            component_metadata=tuple(
+                {"well": "A01", "site": 1, "channel": 1, "z_index": z, "timepoint": 1}
+                for z in range(4)
+            ),
+        ),
+    )
+    materialize(
+        spec.materialization, data=table, path=str(tmp_path / "centres"),
+        filemanager=FileManager({"disk": DiskStorageBackend()}),
+        backends=["disk"], backend_kwargs={},
+    )
+    csv_options = next(
+        option for option in spec.materialization.outputs
+        if isinstance(option, namespace["CsvOptions"])
+    )
+    assert (tmp_path / ("centres" + csv_options.filename_suffix)).read_text().splitlines() == [
+        "object_label,center_z,center_y,center_x", "7,1.5,1.25,2.5",
+    ]
+    rois = load_rois_from_zip(tmp_path / "centres_points.roi.zip")
+    assert rois[0].shapes == [PointShape(y=1.25, x=2.5)]
+    assert rois[0].metadata["object_label"] == 7
+    assert ROIFractionalZ.decode(rois[0].metadata) == ROIFractionalZ(1.5)
+    metadata = ROIArchiveSourceMetadata.decode(rois)
+    domain = ROIFractionalZ.source_component_domain(rois, metadata)
+    assert tuple(plane["z_index"] for plane in domain) == (0, 1, 2, 3)
+    assert metadata.source_path == "/synthetic/volume.tif"
+
+
+def test_input_reference_compiles_nominal_binding_and_repairs_wrong_annotation(
+    reference_namespace,
+):
+    namespace = reference_namespace
+    function = namespace["mask_declared_objects"]
+    declaration = namespace["STORED_LABELS"]
+    contract = CallableContract.from_callable(function)
+    assert declaration.artifact_type.runtime_parameter_types() == (ObjectLabelValue,)
+    assert contract.artifact_input_parameter_names == ("objects",)
+    contract.validate_artifact_input_parameter_bindings()
+    plan = ArtifactInputPlan(
+        declaration.name, "/synthetic/fixture-labels.pkl",
+        artifact_type=declaration.artifact_type,
+    )
+    compiled = compile_function_pattern(function, {plan.ref(): plan}, {})
+    assert compiled.groups[0].invocations[0].contract.artifact_inputs.specs == (
+        declaration,
+    )
+    pixels = np.asarray([[0, 2], [7, 0]], dtype=np.int32)
+    labels = ObjectLabelPayload(variant_data=ObjectLabelVariantData(labels=pixels))
+    image = np.asarray([[1, 3], [5, 9]], dtype=np.uint16)
+    np.testing.assert_array_equal(function(image, objects=labels), [[0, 3], [5, 0]])
+    np.testing.assert_array_equal(labels.labels, pixels)
+
+    # Exercise the original admission boundary, not a word-match assertion.
+    raw = contract.resolve_canonical_raw_callable()
+    original_annotation = raw.__annotations__["objects"]
+    try:
+        raw.__annotations__["objects"] = np.ndarray
+        with pytest.raises(TypeError, match="does not accept object_labels artifact payloads"):
+            compile_function_pattern(function, {plan.ref(): plan}, {})
+    finally:
+        raw.__annotations__["objects"] = original_annotation
+    compile_function_pattern(function, {plan.ref(): plan}, {})
+
+
 def test_complete_reference_prepares_in_real_custom_namespace(tmp_path, monkeypatch):
+    def fixture_storage(_name, *, create):
+        assert create is False
+        return tmp_path / "custom_functions"
+
     monkeypatch.setattr(
         custom_manager,
         "get_data_file_path",
-        lambda _name: tmp_path / "custom_functions",
+        fixture_storage,
     )
     manager = custom_manager.CustomFunctionManager()
     metadata = manager._prepare_source(_reference_block("callable-artifact-reference"))
@@ -169,6 +324,205 @@ def test_complete_reference_prepares_in_real_custom_namespace(tmp_path, monkeypa
         {"slice_index": 1, "object_label": 1, "pixel_count": 16},
     )
     assert list(manager.storage_dir.iterdir()) == []
+
+
+def test_input_reference_prepares_in_real_custom_namespace(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        custom_manager, "get_data_file_path",
+        lambda _name, *, create: tmp_path / "custom_functions",
+    )
+    manager = custom_manager.CustomFunctionManager(create_storage=False)
+    metadata = manager._prepare_source(_reference_block("callable-artifact-input-reference"))
+    contract = CallableContract.from_callable(metadata.func)
+    contract.validate_artifact_input_parameter_bindings()
+    assert contract.artifact_inputs.specs[0].parameter_name == "objects"
+    labels = ObjectLabelPayload(
+        variant_data=ObjectLabelVariantData(labels=np.asarray([[0, 7]], dtype=np.int32)),
+    )
+    image = np.asarray([[3, 5]], dtype=np.uint16)
+    np.testing.assert_array_equal(metadata.func(image, objects=labels), [[0, 5]])
+    assert not manager.storage_dir.exists()
+
+
+def test_plate_reference_prepares_compiles_and_runs_in_original_parent(
+    reference_namespace, tmp_path, monkeypatch,
+):
+    from openhcs.core.callable_contract import FunctionStepExecutionScope
+    from openhcs.core.pipeline.funcstep_contract_validator import FuncStepContractValidator
+    from openhcs.core.artifacts import SpecialArtifactType
+    from openhcs.core.measurement_row_materialization import DataclassMeasurementColumnarRows
+    from openhcs.core.runtime_measurements import MeasurementTable
+    from openhcs.core.runtime_stores import RuntimeArtifactBatch
+
+    monkeypatch.setattr(
+        custom_manager, "get_data_file_path",
+        lambda _name, *, create: tmp_path / "custom_functions",
+    )
+    manager = custom_manager.CustomFunctionManager(create_storage=False)
+    metadata = manager._prepare_source(_reference_block("callable-artifact-plate-reference"))
+    contract = CallableContract.from_callable(metadata.func)
+    FuncStepContractValidator.validate_plate_callable_contracts((contract,), metadata.name)
+    assert contract.execution_scope is FunctionStepExecutionScope.PLATE
+    assert contract.runtime_bound_parameter_types == (RuntimeArtifactBatch,)
+    assert contract.input_memory_type is contract.processing_contract is None
+    assert contract.artifact_input_parameter_names == ()
+    # Reuse the existing plate execution fixtures, not a replacement dispatcher.
+    plate = runpy.run_path(str(ROOT / "tests/unit/test_function_step_execution_scope.py"))
+    source = contract.artifact_inputs.specs[0]
+    output = contract.artifact_outputs.specs[0]
+    contexts = {}
+    for axis_id, fixture in (
+        ("axis-a", np.asarray([[0, 2], [7, 7]], dtype=np.uint16)),
+        ("axis-b", np.zeros((2, 2), dtype=np.uint16)),
+    ):
+        path = f"/memory/{axis_id}/rows"
+        plan = plate["_plate_step_plan"](
+            axis_id=axis_id, step_index=0, func=metadata.func,
+            artifact_inputs=(ArtifactInputPlan(
+                source.name, path, artifact_type=source.artifact_type,
+            ),),
+            artifact_output=ArtifactOutputPlan(
+                output.name, "/memory/plate/summary",
+                artifact_type=output.artifact_type, relations=output.relations,
+            ),
+            metadata_writer=axis_id == "axis-a",
+        )
+        context = plate["_plate_context"](axis_id, (plan,))
+        plate["_record_measurements"](context, name=source.name, path=path, count=0)
+        record = context.runtime_value_store.values()[0]
+        assert isinstance(record.data, MeasurementTable)
+        record.data.rows = reference_namespace["inspect_label_fixture"](fixture)[2]
+        plate["_record_measurements"](
+            context, name="unrelated_rows", path=f"/memory/{axis_id}/unrelated", count=99,
+        )
+        contexts[axis_id] = context
+    plate["_execute_plate_steps"](contexts)
+    summaries = tuple(
+        record for context in contexts.values()
+        for record in context.runtime_value_store.values()
+        if record.key.name == output.name
+    )
+    assert len(summaries) == 1  # one parent result, not one execution per axis
+    table = summaries[0].data
+    assert summaries[0].key.artifact_type is SpecialArtifactType
+    assert isinstance(table, DataclassMeasurementColumnarRows)
+    assert table.row_mappings() == (
+        {"axis_id": "axis-a", "record_count": 1, "measurement_row_count": 2},
+        {"axis_id": "axis-b", "record_count": 1, "measurement_row_count": 0},
+    )
+    csv_path = materialize(
+        output.materialization, data=table, path=str(tmp_path / "summary"),
+        filemanager=FileManager({"disk": DiskStorageBackend()}),
+        backends=["disk"], backend_kwargs={},
+    )
+    assert Path(csv_path).read_text().splitlines() == [
+        "axis_id,record_count,measurement_row_count", "axis-a,1,2", "axis-b,1,0",
+    ]
+    assert not manager.storage_dir.exists()
+
+
+@pytest.mark.parametrize("plane_count", (None, 1, 2))
+def test_reference_retains_plane_domain_until_raw_numpy_invocation(
+    tmp_path, monkeypatch, plane_count,
+):
+    monkeypatch.setattr(
+        custom_manager, "get_data_file_path",
+        lambda _name, *, create: tmp_path / "custom_functions",
+    )
+    manager = custom_manager.CustomFunctionManager(create_storage=False)
+    prepared = manager._prepare_source(_reference_block("callable-artifact-reference"))
+    contract = CallableContract.from_callable(prepared.func)
+    fixture = np.zeros((8, 8), dtype=np.uint16)
+    fixture[2:6, 3:7] = 1
+    stack = ImageMetadataPayload(
+        data=fixture if plane_count is None else np.stack((fixture,) * plane_count),
+        metadata=ImagePayloadMetadata(
+            source_dtype="uint16",
+            source_path="/synthetic/label-fixture.tif",
+            plane_axis=None if plane_count is None else RuntimePlaneAxis.RUNTIME_SLICE,
+        ),
+    )
+    call_argument = contract.main_flow_call_argument(stack)
+    assert call_argument is stack
+    image, labels, rows = prepared.func(call_argument)
+    np.testing.assert_array_equal(image, stack.data)
+    np.testing.assert_array_equal(labels, stack.data)
+    assert rows.row_mappings() == tuple(
+        {"slice_index": plane, "object_label": 1, "pixel_count": 16}
+        for plane in range(1 if plane_count is None else plane_count)
+    )
+    projection = (
+        None if plane_count is None else RuntimePlaneAxisValueProjection(
+            axis=RuntimePlaneAxis.RUNTIME_SLICE, source_aliases=(),
+            plane_index=None, axis_size=plane_count,
+        )
+    )
+    label_payload = ObjectLabelsArtifactType.contextualize_output(stack, labels, None, projection)
+    assert isinstance(label_payload, ObjectLabelPayload)
+    np.testing.assert_array_equal(label_payload.labels, stack.data)
+    assert label_payload.plane_axis is (
+        None if plane_count is None else RuntimePlaneAxis.RUNTIME_SLICE
+    )
+    assert label_payload.source_provenance == stack.metadata.source_provenance
+    assert label_payload.source_spatial_domain.source_shape_yx == (8, 8)
+    assert label_payload.domain.scope is (
+        ObjectLabelDomainScope.PAYLOAD
+        if plane_count is None else ObjectLabelDomainScope.PLANE
+    )
+    if plane_count is not None:
+        assert label_payload.domain.declared_object_id_domains == ((1,),) * plane_count
+        wrong_spatial_shape = ImagePayloadMetadata(
+            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        ).payload_with(stack.data[:, :-1, :])
+        with pytest.raises(ValueError, match="Object-label spatial shape"):
+            ObjectLabelsArtifactType.contextualize_output(stack, wrong_spatial_shape, None, projection)
+    assert not manager.storage_dir.exists()
+
+
+@pytest.mark.parametrize(
+    "source",
+    (
+        PIPELINE_INPUT_ARTIFACT,
+        ArtifactSpec.input("filtered_fixture", ImageArtifactType),
+    ),
+)
+def test_reference_binds_all_output_lineage_to_current_image(
+    reference_namespace, source,
+):
+    invocation = next(
+        normalize_function_pattern(
+            reference_namespace["inspect_label_fixture"]
+        ).iter_items()
+    )
+    plan = MainFlowArtifactContractProvider()(
+        invocation,
+        ArtifactDeclarationStepContext(
+            main_flow_artifacts=ArtifactSpecCollection((source,)),
+        ),
+    )
+    assert plan is not None
+    contract = plan.contract
+    assert contract.group_scope_inputs.specs == (source,)
+    assert contract.output_group_scope_sources == (source.ref(),)
+    for output in contract.artifact_outputs:
+        assert output.source_stack_scope_sources() == (source.ref(),)
+    assert contract.canonical_return_output_specs.names() == ("fixture_image",)
+    assert contract.trailing_return_output_specs.names() == (
+        "fixture_labels", "fixture_object_rows",
+    )
+    rows = contract.artifact_outputs.by_ref(
+        reference_namespace["FIXTURE_ROWS"].ref()
+    )
+    assert rows is not None
+    subject = ArtifactOutputPlan(
+        name=rows.name,
+        path="/memory/fixture_object_rows.csv",
+        artifact_type=rows.artifact_type,
+        relations=rows.relations,
+    ).object_subject_binding()
+    assert subject is not None
+    assert subject.source == reference_namespace["FIXTURE_LABELS"].ref()
+    assert subject.id_field == "object_label"
 
 
 def test_reference_writes_native_csv_and_roi_files(reference_namespace, tmp_path):
@@ -220,3 +574,33 @@ def test_packaged_knowledge_projection_retains_executable_reference(tmp_path):
     )
     assert "def inspect_label_fixture(" in document.content
     assert "from openhcs.core.memory import numpy" in document.content
+    for query in ("PointROIOptions fractional centres", "aligned diagnostic image returns"):
+        hits = service.search(KnowledgeBaseSearchRequest(query=query, limit=10))
+        assert DOCUMENT_ID in {hit.document.document_id for hit in hits.hits}
+    for block in REFERENCE_BLOCKS:
+        for line in _reference_block(block).splitlines():
+            if line.strip():
+                assert line in document.content
+    route = service.get_document(
+        KnowledgeBaseDocumentRequest.from_fields(
+            document_id="openhcs_custom_function_workflow", max_chars=30_000,
+        )
+    )
+    source_path = "packaging/codex/openhcs/skills/use-openhcs/references/custom-function-authoring.md"
+    assert (destination / source_path).read_bytes() == (ROOT / source_path).read_bytes()
+    assert "Summarize declared measurements once per" in route.content
+    for section_id in (
+        "materialize-typed-3d-centres-as-feature-bearing-points",
+        "return-diagnostic-images-without-flattening-the-abi",
+    ):
+        selected = service.get_document(KnowledgeBaseDocumentRequest.from_fields(
+            document_id=DOCUMENT_ID, section_id=section_id, max_chars=10_000,
+        ))
+        assert not selected.errors and not selected.truncated
+        assert selected.selected_section_id == section_id
+        original = KnowledgeBaseService(repo_root=ROOT).get_document(
+            KnowledgeBaseDocumentRequest.from_fields(
+                document_id=DOCUMENT_ID, section_id=section_id, max_chars=10_000,
+            )
+        )
+        assert selected.content == original.content

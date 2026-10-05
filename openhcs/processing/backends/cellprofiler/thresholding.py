@@ -45,6 +45,7 @@ from openhcs.core.memory.decorators import numpy
 from openhcs.core.pipeline.function_contracts import runtime_bound_parameters
 from openhcs.core.public_api import public_names_from_objects
 from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     image_intensity_scale_for_dtype,
@@ -549,7 +550,7 @@ class GlobalThresholdSourceSelection:
     method_parameters: GlobalThresholdMethodParameters
 
 
-def normalize_cellprofiler_image(image: np.ndarray) -> np.ndarray:
+def normalize_cellprofiler_image(image: RuntimeArrayData) -> np.ndarray:
     """Return an image in CellProfiler's normalized pixel-data convention."""
     return image_payload_data(
         normalize_cellprofiler_image_payload(
@@ -1035,32 +1036,36 @@ class NumbaNumpyThresholdDiagnosticsBackendStrategy(
             self.diagnostics(
                 image[None, ...], partial_mask[None, ...], binary[None, ...]
             )
-        quantized_image = np.rint(image32 * np.float32(255)) / np.float32(255)
-        quantized_binary = quantized_image > 0.5
-        self.diagnostics(
-            quantized_image,
-            None,
-            quantized_binary,
-            proven_unit_interval_scale=255,
-        )
-        self.diagnostics(
-            quantized_image,
-            partial_mask,
-            quantized_binary,
-            proven_unit_interval_scale=255,
-        )
-        self.diagnostics(
-            quantized_image[None, ...],
-            None,
-            quantized_binary[None, ...],
-            proven_unit_interval_scale=255,
-        )
-        self.diagnostics(
-            quantized_image[None, ...],
-            partial_mask[None, ...],
-            quantized_binary[None, ...],
-            proven_unit_interval_scale=255,
-        )
+        for image in (image64, image32):
+            for code_dtype in (np.uint8, np.uint16):
+                scale = int(np.iinfo(code_dtype).max)
+                producer_scale = image.dtype.type(scale)
+                quantized_image = np.rint(image * producer_scale) / producer_scale
+                quantized_binary = quantized_image > 0.5
+                self.diagnostics(
+                    quantized_image,
+                    None,
+                    quantized_binary,
+                    proven_unit_interval_scale=scale,
+                )
+                self.diagnostics(
+                    quantized_image,
+                    partial_mask,
+                    quantized_binary,
+                    proven_unit_interval_scale=scale,
+                )
+                self.diagnostics(
+                    quantized_image[None, ...],
+                    None,
+                    quantized_binary[None, ...],
+                    proven_unit_interval_scale=scale,
+                )
+                self.diagnostics(
+                    quantized_image[None, ...],
+                    partial_mask[None, ...],
+                    quantized_binary[None, ...],
+                    proven_unit_interval_scale=scale,
+                )
 
     def diagnostics(
         self,
@@ -2574,7 +2579,7 @@ class _ThresholdEmbeddedMaskRuntimeParameter(KeywordRuntimeParameter):
 @runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
 @numpy(contract=ProcessingContract.PURE_2D)
 def threshold(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     mask: np.ndarray | None = None,
     threshold_scope: ThresholdScope = ThresholdScope.GLOBAL,
     threshold_method: ThresholdMethod = ThresholdMethod.OTSU,

@@ -1,0 +1,3 @@
+{"source_revision": "87b992c38-plus-native-batch-durability", "module_count": 728, "original_class_count": 5232, "projected_count": 5220}
+OPEN-unprojected: 12
+artifact: /home/ts/code/projects/openhcs-benchmark-runs/perf-scaling-rise-investigation-20260929/reproduced_audit_after.json

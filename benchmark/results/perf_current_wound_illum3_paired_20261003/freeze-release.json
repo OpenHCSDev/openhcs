@@ -1,0 +1,15 @@
+{
+  "status": "RELEASED_AFTER_ALL_ACTIONS_TERMINAL",
+  "source_head": "293e04acb53156a0dd9ae71476703e24f66b196c",
+  "strict_science_sha256": "3d89dc4daaceb34535ceaab05100b80b88487e32e67180a99595035b66c67236",
+  "action_handles": {
+    "prepare": 65780,
+    "ordinary": 31694,
+    "native": 10409,
+    "compare": 44398
+  },
+  "all_action_exit_codes": 0,
+  "source_clean_at_release": true,
+  "main_based_fix_pr": 523,
+  "output_bytes": 10031981
+}

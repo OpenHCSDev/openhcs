@@ -1,0 +1,247 @@
+{
+  "modes": {
+    "1w": {
+      "control": {
+        "median": {
+          "compile": 3.174862504005432,
+          "execution": 15.328263282775879,
+          "total": 21.380500045605004,
+          "warming_seconds": 4.171256800414994
+        },
+        "observations": [
+          {
+            "variant": "control",
+            "repetition": 1,
+            "warming_seconds": 4.171450216788799,
+            "compile": 3.183772563934326,
+            "execution": 15.071923971176147,
+            "total": 21.135857165325433,
+            "status": "success",
+            "new_or_modified_radial_cache_files": {},
+            "cache_file_count": 44,
+            "output_dir": "/home/ts/code/projects/openhcs-benchmark-runs/perf-compiled-radial-control-normalized-1w-r1-20260929"
+          },
+          {
+            "variant": "control",
+            "repetition": 2,
+            "warming_seconds": 4.17106338404119,
+            "compile": 3.165952444076538,
+            "execution": 15.58460259437561,
+            "total": 21.625142925884575,
+            "status": "success",
+            "new_or_modified_radial_cache_files": {},
+            "cache_file_count": 44,
+            "output_dir": "/home/ts/code/projects/openhcs-benchmark-runs/perf-compiled-radial-control-normalized-1w-r2-20260929"
+          }
+        ],
+        "median_step_sums": {
+          "DefineGrid": 0.04467570781707764,
+          "IdentifyObjectsInGrid": 0.27195751667022705,
+          "MeasureObjectIntensity": 1.3199186325073242,
+          "FilterObjects": 0.730655312538147,
+          "MaskImage": 0.032362937927246094,
+          "Smooth": 0.1289350986480713,
+          "EnhanceEdges": 0.040631771087646484,
+          "Closing": 0.4707927703857422,
+          "IdentifyPrimaryObjects": 0.7763553857803345,
+          "MeasureObjectSizeShape": 0.6938350200653076,
+          "ExpandOrShrinkObjects": 0.4610860347747803,
+          "RelateObjects": 0.04332566261291504,
+          "OverlayOutlines": 0.31521356105804443,
+          "MeasureGranularity": 3.8321841955184937,
+          "MeasureTexture": 0.6981757879257202,
+          "MeasureObjectIntensityDistribution": 3.5719029903411865,
+          "ExportToSpreadsheet": 1.4553312063217163
+        }
+      },
+      "candidate": {
+        "median": {
+          "compile": 3.175499677658081,
+          "execution": 14.018037915229797,
+          "total": 20.051371020497754,
+          "warming_seconds": 6.673921015579253
+        },
+        "observations": [
+          {
+            "variant": "candidate",
+            "repetition": 1,
+            "warming_seconds": 6.673889290075749,
+            "compile": 3.1909143924713135,
+            "execution": 13.981416940689087,
+            "total": 20.011143433861434,
+            "status": "success",
+            "new_or_modified_radial_cache_files": {},
+            "cache_file_count": 44,
+            "output_dir": "/home/ts/code/projects/openhcs-benchmark-runs/perf-compiled-radial-candidate-normalized-1w-r1-20260929"
+          },
+          {
+            "variant": "candidate",
+            "repetition": 2,
+            "warming_seconds": 6.673952741082758,
+            "compile": 3.1600849628448486,
+            "execution": 14.054658889770508,
+            "total": 20.091598607134074,
+            "status": "success",
+            "new_or_modified_radial_cache_files": {},
+            "cache_file_count": 44,
+            "output_dir": "/home/ts/code/projects/openhcs-benchmark-runs/perf-compiled-radial-candidate-normalized-1w-r2-20260929"
+          }
+        ],
+        "median_step_sums": {
+          "DefineGrid": 0.044725775718688965,
+          "IdentifyObjectsInGrid": 0.28290045261383057,
+          "MeasureObjectIntensity": 1.2625685930252075,
+          "FilterObjects": 0.7280892133712769,
+          "MaskImage": 0.031023621559143066,
+          "Smooth": 0.13482320308685303,
+          "EnhanceEdges": 0.04246509075164795,
+          "Closing": 0.4713836908340454,
+          "IdentifyPrimaryObjects": 0.7857146263122559,
+          "MeasureObjectSizeShape": 0.686797022819519,
+          "ExpandOrShrinkObjects": 0.4507608413696289,
+          "RelateObjects": 0.04386556148529053,
+          "OverlayOutlines": 0.21100568771362305,
+          "MeasureGranularity": 3.927146077156067,
+          "MeasureTexture": 0.7695006132125854,
+          "MeasureObjectIntensityDistribution": 2.2737090587615967,
+          "ExportToSpreadsheet": 1.4583486318588257
+        }
+      },
+      "improvement": {
+        "execution": {
+          "seconds": 1.3102253675460815,
+          "percent": 8.547774417590803
+        },
+        "total": {
+          "seconds": 1.3291290251072496,
+          "percent": 6.216547893043622
+        }
+      },
+      "native_execution_ratio": 4.70278744590764
+    },
+    "16w": {
+      "control": {
+        "median": {
+          "compile": 10.149457216262817,
+          "execution": 92.40896034240723,
+          "total": 105.64987162104808,
+          "warming_seconds": 4.172187871998176
+        },
+        "observations": [
+          {
+            "variant": "control",
+            "repetition": 1,
+            "warming_seconds": 4.170213969890028,
+            "compile": 10.151121616363525,
+            "execution": 95.14341711997986,
+            "total": 108.53131210198626,
+            "status": "success",
+            "new_or_modified_radial_cache_files": {},
+            "cache_file_count": 44,
+            "output_dir": "/home/ts/code/projects/openhcs-benchmark-runs/perf-compiled-radial-control-normalized-16w-r1-20260929"
+          },
+          {
+            "variant": "control",
+            "repetition": 2,
+            "warming_seconds": 4.174161774106324,
+            "compile": 10.14779281616211,
+            "execution": 89.6745035648346,
+            "total": 102.7684311401099,
+            "status": "success",
+            "new_or_modified_radial_cache_files": {},
+            "cache_file_count": 44,
+            "output_dir": "/home/ts/code/projects/openhcs-benchmark-runs/perf-compiled-radial-control-normalized-16w-r2-20260929"
+          }
+        ],
+        "median_step_sums": {
+          "DefineGrid": 1.071515440940857,
+          "IdentifyObjectsInGrid": 10.746455430984497,
+          "MeasureObjectIntensity": 27.08834481239319,
+          "FilterObjects": 27.996209621429443,
+          "MaskImage": 1.0351802110671997,
+          "Smooth": 4.190837144851685,
+          "EnhanceEdges": 1.4338688850402832,
+          "Closing": 9.248925924301147,
+          "IdentifyPrimaryObjects": 26.998878836631775,
+          "MeasureObjectSizeShape": 14.85576331615448,
+          "ExpandOrShrinkObjects": 21.606501698493958,
+          "RelateObjects": 1.2587437629699707,
+          "OverlayOutlines": 10.827018022537231,
+          "MeasureGranularity": 30.282325744628906,
+          "MeasureTexture": 13.937540411949158,
+          "MeasureObjectIntensityDistribution": 47.72934937477112,
+          "ExportToSpreadsheet": 24.286149501800537
+        }
+      },
+      "candidate": {
+        "median": {
+          "compile": 10.218668222427368,
+          "execution": 84.17570304870605,
+          "total": 97.44473943766207,
+          "warming_seconds": 7.202703843358904
+        },
+        "observations": [
+          {
+            "variant": "candidate",
+            "repetition": 1,
+            "warming_seconds": 7.577301459852606,
+            "compile": 10.193272113800049,
+            "execution": 83.48963069915771,
+            "total": 96.5883060102351,
+            "status": "success",
+            "new_or_modified_radial_cache_files": {},
+            "cache_file_count": 44,
+            "output_dir": "/home/ts/code/projects/openhcs-benchmark-runs/perf-compiled-radial-candidate-normalized-16w-r1-20260929"
+          },
+          {
+            "variant": "candidate",
+            "repetition": 2,
+            "warming_seconds": 6.828106226865202,
+            "compile": 10.244064331054688,
+            "execution": 84.8617753982544,
+            "total": 98.30117286508903,
+            "status": "success",
+            "new_or_modified_radial_cache_files": {},
+            "cache_file_count": 44,
+            "output_dir": "/home/ts/code/projects/openhcs-benchmark-runs/perf-compiled-radial-candidate-normalized-16w-r2-20260929"
+          }
+        ],
+        "median_step_sums": {
+          "DefineGrid": 1.0577025413513184,
+          "IdentifyObjectsInGrid": 10.49321460723877,
+          "MeasureObjectIntensity": 26.470808625221252,
+          "FilterObjects": 27.244590878486633,
+          "MaskImage": 1.0261034965515137,
+          "Smooth": 4.856010556221008,
+          "EnhanceEdges": 1.4437217712402344,
+          "Closing": 9.243844985961914,
+          "IdentifyPrimaryObjects": 27.75455141067505,
+          "MeasureObjectSizeShape": 15.43643832206726,
+          "ExpandOrShrinkObjects": 18.426129698753357,
+          "RelateObjects": 1.1558102369308472,
+          "OverlayOutlines": 10.163493037223816,
+          "MeasureGranularity": 29.746758580207825,
+          "MeasureTexture": 14.43309223651886,
+          "MeasureObjectIntensityDistribution": 20.873074769973755,
+          "ExportToSpreadsheet": 24.26245951652527
+        }
+      },
+      "improvement": {
+        "execution": {
+          "seconds": 8.233257293701172,
+          "percent": 8.909587623531422
+        },
+        "total": {
+          "seconds": 8.205132183386013,
+          "percent": 7.766343732831704
+        }
+      },
+      "native_execution_ratio": 4.3270217566730365
+    }
+  },
+  "native_reference": {
+    "1w_execution_seconds": 65.923852724,
+    "16w_execution_seconds": 364.230098475,
+    "scope": "Previously completed physical CP 4.2.8.1 analysis; startup, full warmup and final shutdown excluded. Original 16w controller exit unobserved."
+  }
+}

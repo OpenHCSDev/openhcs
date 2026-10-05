@@ -1,0 +1,86 @@
+Read-only exact dependency stores: {'external/ObjectState': '/home/ts/code/projects/openhcs/.git/modules/external/ObjectState', 'external/PolyStore': '/home/ts/code/projects/openhcs/.git/modules/external/PolyStore', 'external/arraybridge': '/home/ts/wt/arraybridge-release-035-20261001', 'external/metaclass-registry': '/home/ts/code/projects/openhcs/.git/modules/external/metaclass-registry', 'external/pycodify': '/home/ts/code/projects/openhcs/.git/modules/external/uneval', 'external/pyqt-reactive': '/home/ts/code/projects/openhcs/.git/modules/external/pyqt-reactive', 'external/python-introspect': '/home/ts/code/projects/openhcs/.git/modules/external/python-introspect', 'external/zmqruntime': '/home/ts/code/projects/openhcs/.git/modules/external/zmqruntime'}
+Cloning into '/home/ts/.cache/agent-scratch/graytocolor-unary-repair-437-20261002/r1-exact-context/git-view'...
+done.
+Cloning into '/home/ts/.cache/agent-scratch/graytocolor-unary-repair-437-20261002/r1-exact-context/git-view/external/ObjectState'...
+done.
+Cloning into '/home/ts/.cache/agent-scratch/graytocolor-unary-repair-437-20261002/r1-exact-context/git-view/external/PolyStore'...
+done.
+Cloning into '/home/ts/.cache/agent-scratch/graytocolor-unary-repair-437-20261002/r1-exact-context/git-view/external/arraybridge'...
+done.
+Cloning into '/home/ts/.cache/agent-scratch/graytocolor-unary-repair-437-20261002/r1-exact-context/git-view/external/metaclass-registry'...
+done.
+Cloning into '/home/ts/.cache/agent-scratch/graytocolor-unary-repair-437-20261002/r1-exact-context/git-view/external/pycodify'...
+done.
+Cloning into '/home/ts/.cache/agent-scratch/graytocolor-unary-repair-437-20261002/r1-exact-context/git-view/external/pyqt-reactive'...
+done.
+Cloning into '/home/ts/.cache/agent-scratch/graytocolor-unary-repair-437-20261002/r1-exact-context/git-view/external/python-introspect'...
+done.
+Cloning into '/home/ts/.cache/agent-scratch/graytocolor-unary-repair-437-20261002/r1-exact-context/git-view/external/zmqruntime'...
+done.
+Exact original R1 dependency context: {'external/ObjectState': ['b0004daf3223326ac78689ba7b2e68abc18ae298'], 'external/PolyStore': ['84f322e46871de5ed47e7fd20976ad03e533c1c4'], 'external/arraybridge': ['1e53d03d9f468322a1c085c8be29485fb139caf2'], 'external/metaclass-registry': ['393a7e03003cdc56df9013f932ed4f26e632d77a'], 'external/pycodify': ['792b03413331fdf107e369c924c257a2f0b16126'], 'external/pyqt-reactive': ['ad4948775ab81180a354d4b793d17ee5ddff3972'], 'external/python-introspect': ['4e8f8bde5f750d9a50eacac80acd3806123addd8'], 'external/zmqruntime': ['668edafcb5ee530a163377c936431ae1e8334e85']}
+Traceback (most recent call last):
+  File "/home/ts/wt/openhcs-knowledge-declaration-source-376-20261001/docs/validation/graytocolor-singleton-binding-432-20261002/run_original_r1.py", line 60, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/home/ts/wt/openhcs-knowledge-declaration-source-376-20261001/docs/validation/graytocolor-singleton-binding-432-20261002/run_original_r1.py", line 54, in main
+    result = compare(view, base, head, scratch / "scan", budget_seconds=55)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/openhcs-knowledge-declaration-source-376-20261001/scripts/check_refactor_r1.py", line 310, in compare
+    scan_counts(snapshot, roots, changed, cache_root=work / "nra")
+  File "/home/ts/wt/openhcs-knowledge-declaration-source-376-20261001/scripts/check_refactor_r1.py", line 183, in scan_counts
+    result = analyze_compact_roots_with_cache(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/.pyenv/versions/3.12.3/lib/python3.12/contextlib.py", line 81, in inner
+    return func(*args, **kwds)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/nra-bounded-full-audit-20260929/nominal_refactor_advisor/analysis.py", line 2292, in analyze_compact_roots_with_cache
+    build_results = worker_plan.map(
+                    ^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/nra-bounded-full-audit-20260929/nominal_refactor_advisor/analysis.py", line 288, in map
+    return [function(item) for item in items]
+            ^^^^^^^^^^^^^^
+  File "/home/ts/.pyenv/versions/3.12.3/lib/python3.12/contextlib.py", line 81, in inner
+    return func(*args, **kwds)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/nra-bounded-full-audit-20260929/nominal_refactor_advisor/analysis.py", line 1237, in build_compact_projection_shard
+    modules = (source.parsed_module(),)
+               ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/nra-bounded-full-audit-20260929/nominal_refactor_advisor/analysis.py", line 1013, in parsed_module
+    module = parser.parsed_source_path(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/nra-bounded-full-audit-20260929/nominal_refactor_advisor/ast_tools.py", line 2686, in parsed_source_path
+    return _parse_source_module(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/nra-bounded-full-audit-20260929/nominal_refactor_advisor/ast_tools.py", line 683, in _parse_source_module
+    semantic_hash = semantic_python_source_hash(source)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/nra-bounded-full-audit-20260929/nominal_refactor_advisor/ast_tools.py", line 485, in semantic_python_source_hash
+    f"{token.type}:{token.start[0]}:{token.start[1]}:"
+                                    ^^^^^^^^^^^^^^^^
+  File "/home/ts/wt/nra-bounded-full-audit-20260929/nominal_refactor_advisor/deadline.py", line 91, in deadline_handler
+    raise error
+nominal_refactor_advisor.deadline.ScanDeadlineExceeded: scan deadline exceeded during parse_python_module: 55.000s/55.000s
+Command exited with non-zero status 1
+	Command being timed: "/home/ts/wt/openhcs-generated-inputs-installed-parent-20261001/.venv/bin/python -B docs/validation/graytocolor-singleton-binding-432-20261002/run_original_r1.py /home/ts/.cache/agent-scratch/graytocolor-unary-repair-437-20261002/r1-exact-context 8551a48644b5a9cd054ca1c738ffef2295c5266f ffc3a4f34 external/arraybridge=/home/ts/wt/arraybridge-release-035-20261001 external/pycodify=/home/ts/code/projects/openhcs/.git/modules/external/uneval"
+	User time (seconds): 55.14
+	System time (seconds): 1.35
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:57.06
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 134392
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 427
+	Minor (reclaiming a frame) page faults: 63566
+	Voluntary context switches: 25599
+	Involuntary context switches: 24280
+	Swaps: 0
+	File system inputs: 166200
+	File system outputs: 198664
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1

@@ -1,0 +1,22 @@
+{
+  "author_run": "H002_FRESH15_89",
+  "original_manifest": "/home/ts/wt/openhcs-issue-batch-20260929/next-h002-fresh15-89-after-retina-20261005/H002_FRESH15_89/author-workspace/output/PAYLOAD-MANIFEST.json",
+  "original_journal": "/home/ts/wt/openhcs-issue-batch-20260929/next-h002-fresh15-89-after-retina-20261005/H002_FRESH15_89/author-workspace/output/runtime/mcp.stdout",
+  "captures": {
+    "xz": {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h002-fresh15-89-after-retina-20261005/H002_FRESH15_89/qa/full-xz157-combined/20261005T175103967317Z_napari_6023_OpenHCS_Napari_Visualization.png",
+      "size_bytes": 102341,
+      "sha256": "f666af3514bdac000b9720a0396c6d6f4ccf0c1a9696c105c207470e5d21c879"
+    },
+    "yz": {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h002-fresh15-89-after-retina-20261005/H002_FRESH15_89/qa/full-yz80-combined/20261005T175106194866Z_napari_6023_OpenHCS_Napari_Visualization.png",
+      "size_bytes": 102175,
+      "sha256": "65525b52c29bac6aefae077a85a9f6ca5f33fb9499e29dc97acc92fceb5a1b82"
+    },
+    "xy": {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h002-fresh15-89-after-retina-20261005/H002_FRESH15_89/qa/v1-z34-combined-corrected/20261005T174038325557Z_napari_6023_OpenHCS_Napari_Visualization.png",
+      "size_bytes": 192031,
+      "sha256": "2740b7b1fb3da7476d09c2c4c014002e0038d0d045c590d6f9e5b13e0dabf5f9"
+    }
+  }
+}

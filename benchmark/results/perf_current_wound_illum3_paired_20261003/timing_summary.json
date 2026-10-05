@@ -1,0 +1,145 @@
+{
+  "source_head": "293e04acb53156a0dd9ae71476703e24f66b196c",
+  "cases": {
+    "ExampleIlluminationCorrection_Example3": {
+      "image_sets_per_full_invocation": 1,
+      "raw_samples": {
+        "compile_seconds": [
+          0.5973958969116211,
+          0.5914797782897949
+        ],
+        "execute_seconds": [
+          0.6867749691009521,
+          0.38519740104675293
+        ],
+        "total_seconds": [
+          1.7173079238273203,
+          1.3618650771677494
+        ],
+        "native_execution_seconds": [
+          0.5970225902274251,
+          0.6568904407322407
+        ],
+        "native_invocation_seconds": [
+          0.6704615103080869,
+          0.7205826421268284
+        ]
+      },
+      "means": {
+        "compile_seconds": 0.594437837600708,
+        "execute_seconds": 0.5359861850738525,
+        "total_seconds": 1.5395865004975349,
+        "native_execution_seconds": 0.6269565154798329,
+        "native_invocation_seconds": 0.6955220762174577
+      },
+      "raw_ranges": {
+        "compile_seconds": [
+          0.5914797782897949,
+          0.5973958969116211
+        ],
+        "execute_seconds": [
+          0.38519740104675293,
+          0.6867749691009521
+        ],
+        "total_seconds": [
+          1.3618650771677494,
+          1.7173079238273203
+        ],
+        "native_execution_seconds": [
+          0.5970225902274251,
+          0.6568904407322407
+        ],
+        "native_invocation_seconds": [
+          0.6704615103080869,
+          0.7205826421268284
+        ]
+      },
+      "warmup_excluded": {
+        "repetition": -1,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/-1",
+        "image_set_count": 1,
+        "invocation_seconds": 1.3667851807549596,
+        "pre_first_module_seconds": 0.2952348357066512,
+        "first_module_through_post_run_seconds": 1.0715503450483084,
+        "invocation_started_monotonic_seconds": 3808405.732912145,
+        "first_module_started_monotonic_seconds": 3808406.028146981,
+        "completed_monotonic_seconds": 3808407.099697326
+      },
+      "other_total_seconds_mean": 0.4091624778229743,
+      "execution_ratio_of_means": 1.1697251401982418,
+      "total_ratio_of_means": 0.4072239625881526,
+      "native_report_sha256": "437f3943b29f3335831f934c0c308f51134df18096016431276f7c976fb8b458"
+    },
+    "ExampleWoundHealing": {
+      "image_sets_per_full_invocation": 2,
+      "raw_samples": {
+        "compile_seconds": [
+          0.34695887565612793,
+          0.34340977668762207
+        ],
+        "execute_seconds": [
+          2.856407642364502,
+          3.1452507972717285
+        ],
+        "total_seconds": [
+          3.471247054170817,
+          3.7725879549980164
+        ],
+        "native_execution_seconds": [
+          4.377218026202172,
+          4.129441360011697
+        ],
+        "native_invocation_seconds": [
+          4.462228200864047,
+          4.201918839942664
+        ]
+      },
+      "means": {
+        "compile_seconds": 0.345184326171875,
+        "execute_seconds": 3.0008292198181152,
+        "total_seconds": 3.6219175045844167,
+        "native_execution_seconds": 4.253329693106934,
+        "native_invocation_seconds": 4.332073520403355
+      },
+      "raw_ranges": {
+        "compile_seconds": [
+          0.34340977668762207,
+          0.34695887565612793
+        ],
+        "execute_seconds": [
+          2.856407642364502,
+          3.1452507972717285
+        ],
+        "total_seconds": [
+          3.471247054170817,
+          3.7725879549980164
+        ],
+        "native_execution_seconds": [
+          4.129441360011697,
+          4.377218026202172
+        ],
+        "native_invocation_seconds": [
+          4.201918839942664,
+          4.462228200864047
+        ]
+      },
+      "warmup_excluded": {
+        "repetition": -1,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleWoundHealing/outputs/-1",
+        "image_set_count": 2,
+        "invocation_seconds": 5.988651636987925,
+        "pre_first_module_seconds": 0.3156425580382347,
+        "first_module_through_post_run_seconds": 5.67300907894969,
+        "invocation_started_monotonic_seconds": 3808416.643831191,
+        "first_module_started_monotonic_seconds": 3808416.959473749,
+        "completed_monotonic_seconds": 3808422.632482828
+      },
+      "other_total_seconds_mean": 0.2759039585944265,
+      "execution_ratio_of_means": 1.4173847898497653,
+      "total_ratio_of_means": 1.174330913866291,
+      "native_report_sha256": "907c654a35ae3f5b4ad9ea898a1d60070c75b50dd8796cb61f58b0fcf462b8ab"
+    }
+  },
+  "scope": "Descriptive two observations; no causal optimization gain or full30/scaling claim. Native execution is first module through post_run/close; invocation is retained separately. JVM/import/load/warmup and OH READY/startup/shutdown excluded. OH total includes compile/client wait/default OUTCOMES/RSS completion. Wound full two-image-set native invocation is compared with full OH well, without division. Bars are means; all raw observations and ranges retained, not confidence intervals.",
+  "science_sha256": "3d89dc4daaceb34535ceaab05100b80b88487e32e67180a99595035b66c67236"
+}

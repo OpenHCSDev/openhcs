@@ -371,6 +371,47 @@ def sample_control_points(
     return np.vstack((path_coords[:1, :], sampled, path_coords[-1:, :]))
 
 
+@njit(cache=True)
+def _fill_cellprofiler_line_points_numba(
+    row: int,
+    column: int,
+    end_row: int,
+    end_column: int,
+    rows: np.ndarray,
+    columns: np.ndarray,
+    output_index: int,
+) -> int:
+    """Fill one inclusive segment with CP's Bresenham endpoint and tie rules."""
+    row_delta = abs(row - end_row)
+    column_delta = abs(column - end_column)
+    count = max(row_delta, column_delta) + 1
+    rows[output_index] = row
+    columns[output_index] = column
+    step_row = 1 if end_row > row else -1
+    step_column = 1 if end_column > column else -1
+    if row_delta >= column_delta:
+        remainder = 2 * column_delta - row_delta
+        for offset in range(1, count):
+            if remainder >= 0:
+                column += step_column
+                remainder -= 2 * row_delta
+            row += step_row
+            remainder += 2 * column_delta
+            rows[output_index + offset] = row
+            columns[output_index + offset] = column
+    else:
+        remainder = 2 * row_delta - column_delta
+        for offset in range(1, count):
+            if remainder >= 0:
+                row += step_row
+                remainder -= 2 * column_delta
+            column += step_column
+            remainder += 2 * row_delta
+            rows[output_index + offset] = row
+            columns[output_index + offset] = column
+    return count
+
+
 def _cellprofiler_line_points(
     start_rows: np.ndarray,
     start_columns: np.ndarray,
@@ -393,34 +434,15 @@ def _cellprofiler_line_points(
     columns = np.empty(rows.size, dtype=int)
 
     for segment in range(len(count)):
-        output_index = int(index[segment])
-        row = int(row0[segment])
-        column = int(column0[segment])
-        rows[output_index] = row
-        columns[output_index] = column
-        step_row = 1 if row1[segment] > row0[segment] else -1
-        step_column = 1 if column1[segment] > column0[segment] else -1
-
-        if row_delta[segment] >= column_delta[segment]:
-            remainder = 2 * int(column_delta[segment]) - int(row_delta[segment])
-            for offset in range(1, int(count[segment])):
-                if remainder >= 0:
-                    column += step_column
-                    remainder -= 2 * int(row_delta[segment])
-                row += step_row
-                remainder += 2 * int(column_delta[segment])
-                rows[output_index + offset] = row
-                columns[output_index + offset] = column
-        else:
-            remainder = 2 * int(row_delta[segment]) - int(column_delta[segment])
-            for offset in range(1, int(count[segment])):
-                if remainder >= 0:
-                    row += step_row
-                    remainder -= 2 * int(column_delta[segment])
-                column += step_column
-                remainder += 2 * int(row_delta[segment])
-                rows[output_index + offset] = row
-                columns[output_index + offset] = column
+        _fill_cellprofiler_line_points_numba(
+            int(row0[segment]),
+            int(column0[segment]),
+            int(row1[segment]),
+            int(column1[segment]),
+            rows,
+            columns,
+            int(index[segment]),
+        )
 
     return index, count, rows, columns
 

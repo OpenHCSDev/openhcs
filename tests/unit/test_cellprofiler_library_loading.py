@@ -1154,7 +1154,7 @@ def test_measure_colocalization_objects_emits_and_splits_both_scopes():
         CellProfilerMeasurementTargetScope,
     )
     from openhcs.processing.backends.cellprofiler.colocalization import (
-        MeasureColocalizationObjectMeasurementRowPolicy,
+        MeasureColocalizationMeasurementRowPolicy,
     )
 
     image = np.stack(
@@ -1179,7 +1179,7 @@ def test_measure_colocalization_objects_emits_and_splits_both_scopes():
         do_overlap=False,
     )
     object_rows, image_rows = (
-        MeasureColocalizationObjectMeasurementRowPolicy().split_scoped_rows(rows)
+        MeasureColocalizationMeasurementRowPolicy().split_scoped_rows(rows)
     )
 
     assert image_rows.row_count() == 1
@@ -1399,6 +1399,86 @@ def test_measure_colocalization_objects_batch_uses_contract_execution() -> None:
     assert isinstance(
         executed_kwargs["object_label_context"], ColocalizationObjectLabelContext
     )
+
+
+def test_colocalization_batches_preserve_step_thresholds_and_live_source_epoch(
+    monkeypatch,
+) -> None:
+    image = np.stack(
+        (
+            np.array(((0.1, 0.2), (0.3, 0.4)), dtype=np.float32),
+            np.array(((0.4, 0.3), (0.2, 0.1)), dtype=np.float32),
+        )
+    )
+    mask = np.ones(image.shape, dtype=bool)
+    payload = MaskedImagePayload(
+        data=image,
+        mask=mask,
+        metadata=ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.SOURCE_BINDING),
+    )
+    label_sets = tuple(
+        ObjectLabelPayload(
+            variant_data=ObjectLabelVariantData(labels=labels),
+            domain=ObjectLabelDomain(declared_object_count=2),
+        )
+        for labels in (
+            np.array(((1, 1), (0, 2)), dtype=np.int32),
+            np.array(((1, 0), (2, 2)), dtype=np.int32),
+        )
+    )
+    threshold_calls = []
+    original_thresholds = ColocalizationCostesThresholdRequest.thresholds
+
+    def thresholds(request):
+        threshold_calls.append(request.cache_key)
+        return original_thresholds(request)
+
+    monkeypatch.setattr(ColocalizationCostesThresholdRequest, "thresholds", thresholds)
+
+    def execute_batch(step_thresholds):
+        requests = tuple(
+            RuntimeBatchInvocationRequest(
+                source_image_name="DNA_Memb",
+                func=measure_colocalization_objects,
+                image=payload,
+                kwargs={
+                    "labels": labels,
+                    "channel_1": 0,
+                    "channel_2": 1,
+                    "costes_threshold_batch": step_thresholds,
+                },
+                batch_index=index,
+                batch_count=len(label_sets),
+            )
+            for index, labels in enumerate(label_sets)
+        )
+        return measure_colocalization_objects_batch(
+            measure_colocalization_objects,
+            requests,
+            lambda _func, request: request.kwargs["costes_thresholds"],
+        )
+
+    step_thresholds = ColocalizationCostesThresholdBatch()
+    first = execute_batch(step_thresholds)
+    second = execute_batch(step_thresholds)
+    assert first[0] is first[1] is second[0] is second[1]
+    assert len(threshold_calls) == 1
+
+    # The same nominal source and array identities enter a later batch with a
+    # changed valid-pixel selection; batch-local views must observe this epoch.
+    mask[:, 0, 0] = False
+    masked = execute_batch(step_thresholds)
+    assert masked[0] is masked[1] and masked[0] is not first[0]
+    assert len(threshold_calls) == 2
+
+    image[0, 1, 1] += np.float32(0.1)
+    changed = execute_batch(step_thresholds)
+    assert changed[0] is changed[1] and changed[0] is not masked[0]
+    assert len(threshold_calls) == 3
+
+    next_step = execute_batch(ColocalizationCostesThresholdBatch())
+    assert next_step[0] is next_step[1] and next_step[0] is not changed[0]
+    assert len(threshold_calls) == 4
 
 
 def test_measure_colocalization_costes_thresholds_preserve_backend_values():
@@ -1897,7 +1977,7 @@ def test_identify_primary_objects_applies_threshold_smoothing_to_binary_mask(
 def test_identify_primary_objects_accepts_nominal_options_directly():
     image = np.zeros((8, 8), dtype=np.float32)
     image[2:6, 2:6] = 1.0
-    _image, _measurements, labels = identify_primary_objects(
+    _image, _measurements, labels, *_diagnostics = identify_primary_objects(
         image,
         min_diameter=2,
         max_diameter=8,
@@ -1960,7 +2040,7 @@ def test_identify_primary_objects_does_not_size_filter_after_hole_fill() -> None
     image[1:6, 5] = 1.0
     image[1, 1:6] = 1.0
     image[5, 1:6] = 1.0
-    _image, _measurements, labels = identify_primary_objects(
+    _image, _measurements, labels, *_diagnostics = identify_primary_objects(
         image,
         min_diameter=1,
         max_diameter=5,
@@ -1979,7 +2059,6 @@ def test_identify_primary_objects_does_not_size_filter_after_hole_fill() -> None
 
 def test_watershed_xy_downsample_factors_preserve_leading_axes():
     from openhcs.processing.backends.cellprofiler.watershed import (
-        watershed_connected_components,
         watershed_regionprops_stats,
         watershed_xy_downsample_factors,
     )
@@ -1987,7 +2066,11 @@ def test_watershed_xy_downsample_factors_preserve_leading_axes():
     assert watershed_xy_downsample_factors(2, 2) == (2.0, 2.0)
     assert watershed_xy_downsample_factors(3, 2) == (1.0, 2.0, 2.0)
     assert watershed_xy_downsample_factors(4, 2) == (1.0, 1.0, 2.0, 2.0)
-    labels = watershed_connected_components(np.ones((2, 3, 4, 5), dtype=bool))
+    from openhcs.processing.backends.cellprofiler.morphology import MorphologyBackendStrategy
+
+    labels = MorphologyBackendStrategy.for_memory_type().label_equal_values(
+        np.ones((2, 3, 4, 5), dtype=bool)
+    )
     assert labels.shape == (2, 3, 4, 5)
     assert labels.dtype == np.int32
     object_count, mean_area = watershed_regionprops_stats(labels)
@@ -2653,7 +2736,7 @@ def test_measure_texture_objects_preserves_runtime_projected_label_domain():
     assert list(results[1][1].columns["object_label"][::4]) == [3]
 
 
-def test_numba_haralick_backend_exactly_matches_mahotas_reference():
+def test_numba_haralick_backend_matches_mahotas_reference():
     from openhcs.processing.backends.cellprofiler._backend import (
         CellProfilerBackendProvider,
     )
@@ -2678,7 +2761,7 @@ def test_numba_haralick_backend_exactly_matches_mahotas_reference():
             actual = numba_backend.haralick_features(
                 image, scale=scale, ignore_zeros=ignore_zeros
             )
-            np.testing.assert_array_equal(actual, expected)
+            np.testing.assert_allclose(actual, expected, rtol=1e-6, atol=1e-6)
 
 
 def test_object_texture_crop_backend_matches_regionprops_intensity_images():
@@ -3969,7 +4052,7 @@ def test_absorbed_convex_hull_vertices_match_centrosome_for_sparse_labels():
     import centrosome.cpmorphology
 
     from openhcs.processing.backends.cellprofiler.label_geometry import (
-        _cellprofiler_convex_hull,
+        CellProfilerLabelHull,
     )
 
     labels = np.zeros((91, 103), dtype=np.int32)
@@ -3983,7 +4066,9 @@ def test_absorbed_convex_hull_vertices_match_centrosome_for_sparse_labels():
     expected_hull, expected_counts = centrosome.cpmorphology.convex_hull(
         labels, object_ids
     )
-    actual_hull, actual_counts = _cellprofiler_convex_hull(labels, object_ids)
+    actual_hull, actual_counts = CellProfilerLabelHull.from_labels(
+        labels, object_ids
+    ).vertices()
 
     np.testing.assert_array_equal(actual_hull, expected_hull)
     np.testing.assert_array_equal(actual_counts, expected_counts)

@@ -1,0 +1,40 @@
+{
+  "scope": "focused provider-free source checkpoint, not cold/live/installed acceptance",
+  "source_parent": "f5dbebb2798998646fcb85bfeff1185987d4a04e",
+  "polystore": "1209068f5fc9e4f7025a24ada8a73ef30dd1ddd7",
+  "python": "/home/ts/code/projects/openhcs/.venv/bin/python",
+  "source": "/home/ts/wt/openhcs-custom-function-admission-20260929",
+  "passed": 47,
+  "deselected": 25,
+  "pytest_seconds": 7.32,
+  "process_seconds": 8.13,
+  "peak_rss_kib": 305992,
+  "exit_code": 0,
+  "warnings": "two disabled async-plugin configuration options",
+  "pytest_arguments": [
+    "--noconftest", "--import-mode=importlib", "-p", "no:cacheprovider",
+    "-o", "addopts=", "-q", "--tb=short",
+    "--basetemp=/home/ts/.cache/agent-scratch/openhcs-registration-readiness-20260929/pytest",
+    "tests/unit/agent/test_custom_registration_admission.py",
+    "tests/unit/test_function_catalog_zmq.py",
+    "-k", "registration or native_preparation or mcp_context or readiness or preparation_failure"
+  ],
+  "environment": {
+    "PYTHONPATH": "reviewed worktree plus all eight recorded submodule src directories",
+    "OPENHCS_CPU_ONLY": "true",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTEST_DISABLE_PLUGIN_AUTOLOAD": "1",
+    "POLYSTORE_IMAGEJ_CACHE_ROOT": "/home/ts/.cache/polystore/imagej",
+    "POLYSTORE_IMAGEJ_ALLOW_DOWNLOAD": "false",
+    "OMP_OPENBLAS_MKL_NUMEXPR_NUMBA_BLIS_THREADS": "1"
+  },
+  "lock": "nonblocking shared validation.lock, released on test process exit",
+  "scratch_bytes_allocated": 335872,
+  "owned_disposable_fixtures_removed_after_receipts": true,
+  "handles_terminal": true,
+  "limitations": [
+    "controlled pending future, not actual cold supervised kernel preparation",
+    "no MCP subprocess, JVM, GUI, install, downloads or scientific inputs",
+    "new heavy journey held for non-swap disk headroom release"
+  ]
+}

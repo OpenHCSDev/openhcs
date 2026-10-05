@@ -24,10 +24,14 @@ from openhcs.core.artifacts import ArtifactSpec, ArtifactSpecRef
 from openhcs.core.callable_contract import (
     CallableContract,
     CallableImportIdentity,
+    CompilerPreparedAutoRegisterFamily,
     FunctionStepExecutionScope,
 )
 from openhcs.core.config import ProcessingConfig, StepSourceBindingsConfig
-from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
+from openhcs.core.invocation_artifacts import (
+    ArtifactDeclarationStepContext,
+    ArtifactInputPlan,
+)
 from openhcs.core.source_bindings import (
     SourceBindingsConfig,
 )
@@ -143,6 +147,7 @@ class CellProfilerModule(
     CellProfilerModuleSettings,
     TableMeasurementRecordRowsMixin,
     CellProfilerMeasurementFeatureOwner,
+    CompilerPreparedAutoRegisterFamily,
     ABC,
     metaclass=AutoRegisterMeta,
     registry_config=RegistryConfig(
@@ -174,6 +179,13 @@ class CellProfilerModule(
     contracts can opt into explicit dict-pattern emission at the declaration
     boundary.
     """
+
+    @classmethod
+    def prepare_registered_family(cls) -> None:
+        """Discover measurement declarations before execution readiness."""
+        # Selected callable imports do not complete this lazy registry.
+        # Keep discovery on its owner, including later plugin registration.
+        tuple(cls.__registry__.values())
 
     @staticmethod
     def number_step_invocation_blocks(
@@ -382,7 +394,7 @@ class CellProfilerModule(
 
     @classmethod
     def declared_function_names(cls) -> tuple[str, ...]:
-        """Return the primary and variant function names declared by this module."""
+        """Project this module's primary/variant declaration into catalog names."""
         if cls.function_name is None:
             return ()
         return (str(cls.function_name), *cls.function_variants)
@@ -411,6 +423,11 @@ class CellProfilerModule(
                 "CellProfiler source binding import requires SourceBindingsConfig, "
                 f"got {type(config).__name__}."
             )
+        modules = tuple(modules)
+        cls.discover_source_declarations(
+            frozenset(_module_lookup_key(module.name) for module in modules if module.enabled),
+            ("module_name", "aliases"), _module_lookup_key, _declared_lookup_keys,
+        )
         for module in modules:
             if not module.enabled:
                 continue
@@ -436,30 +453,6 @@ class CellProfilerModule(
         """Return whether axis execution requires the CellProfiler workspace adapter."""
 
         return True
-
-    @classmethod
-    def for_backend_function_name(
-        cls,
-        function_name: str,
-    ) -> type["CellProfilerModule"] | None:
-        """Resolve a function exposed inside the CellProfiler backend namespace."""
-        normalized_name = _required_string(
-            function_name,
-            "function_name",
-            cls.__name__,
-        )
-        matches = tuple(
-            module_type
-            for module_type in cls.__registry__.values()
-            if normalized_name in module_type.declared_function_names()
-        )
-        if len(matches) > 1:
-            raise ValueError(
-                f"CellProfiler function {normalized_name!r} is owned by multiple "
-                "module declarations: "
-                f"{tuple(item.require_module_name() for item in matches)!r}."
-            )
-        return matches[0] if matches else None
 
     @classmethod
     def for_callable_import_identity(
@@ -508,13 +501,16 @@ class CellProfilerModule(
         module_type = cls.for_callable_import_identity(identity)
         if module_type is None:
             return None
-        canonical_callable = module_type.require_callable(identity.function_name)
+        canonical_callable = module_type._require_declared_callable(
+            identity.function_name
+        )
         if raw_callable is not canonical_callable:
             raise ValueError(
                 f"Callable import identity {identity.import_path!r} claims "
                 f"CellProfiler module {module_type.__name__}, but its object is "
                 "not the declaration-owned canonical callable."
             )
+        module_type._validate_callable_parameter_exclusions(raw_callable, contract)
         return module_type
 
     @classmethod
@@ -550,11 +546,11 @@ class CellProfilerModule(
         return _required_string(cls.module_name, "module_name", cls.__name__)
 
     @classmethod
-    def require_callable(
+    def _require_declared_callable(
         cls,
         function_name: str | None = None,
     ) -> Callable[..., Any]:
-        """Load one raw backend callable declared by this module class."""
+        """Resolve the current exact callable without repeating authored preparation."""
         selected_name = cls.function_name if function_name is None else function_name
         selected_name = _required_string(
             selected_name,
@@ -573,10 +569,32 @@ class CellProfilerModule(
                 f"CellProfiler module {cls.module_name!r} declares missing "
                 f"callable {selected_name!r} in {cls.__module__!r}."
             )
+        return implementation
+
+    @classmethod
+    def require_callable(
+        cls,
+        function_name: str | None = None,
+    ) -> Callable[..., Any]:
+        """Prepare and admit one raw callable at the authored declaration boundary."""
+
+        implementation = cls._require_declared_callable(function_name)
         cls._install_callable_parameter_help(implementation)
+        cls._validate_callable_parameter_exclusions(
+            implementation, CallableContract.from_callable(implementation),
+        )
+        return implementation
+
+    @classmethod
+    def _validate_callable_parameter_exclusions(
+        cls,
+        implementation: Callable[..., Any],
+        contract: CallableContract,
+    ) -> None:
+        """Keep current exclusion admission while reusing the owned declaration."""
+
         from python_introspect import parameter_exclusions
 
-        contract = CallableContract.from_callable(implementation)
         excluded_names = parameter_exclusions(implementation)
         unowned_exclusions = tuple(
             sorted(excluded_names - contract.runtime_owned_parameter_names)
@@ -584,11 +602,10 @@ class CellProfilerModule(
         if unowned_exclusions:
             raise ValueError(
                 f"CellProfiler module {cls.module_name!r} callable "
-                f"{selected_name!r} excludes parameters without a runtime-owned "
+                f"{contract.function_name!r} excludes parameters without a runtime-owned "
                 "callable contract declaration: "
                 f"{unowned_exclusions!r}."
             )
-        return implementation
 
     @classmethod
     def _install_callable_parameter_help(
@@ -626,14 +643,11 @@ class CellProfilerModule(
     def for_module(cls, module_name: str) -> type["CellProfilerModule"] | None:
         """Return the registered module class for a canonical name or alias."""
         lookup_key = _module_lookup_key(module_name)
-        for module_type in cls.__registry__.values():
-            if _module_lookup_key(module_type.require_module_name()) == lookup_key:
-                return module_type
-            if lookup_key in {
-                _module_lookup_key(alias) for alias in module_type.aliases
-            }:
-                return module_type
-        return None
+        matches = cls.discover_source_declarations(
+            frozenset((lookup_key,)), ("module_name", "aliases"), _module_lookup_key,
+            _declared_lookup_keys,
+        )
+        return matches[0] if matches else None
 
     @classmethod
     def invocation_module_blocks(
@@ -904,6 +918,31 @@ class CellProfilerModule(
         return cls.require_callable()
 
     @classmethod
+    def input_source_for_contract(
+        cls,
+        callable_contract: CallableContract,
+        *,
+        step_context: ArtifactDeclarationStepContext,
+    ) -> InputSource:
+        """Resolve the main-flow anchor independently of auxiliary source inputs."""
+        produced_refs = frozenset(
+            producer.spec.ref().for_plan_type(ArtifactInputPlan)
+            for producer in step_context.available_artifact_producers
+        )
+        if any(
+            step_context.main_flow_artifacts.by_ref(spec.ref()) is not None
+            and spec.ref() in produced_refs
+            for spec in callable_contract.artifact_inputs
+        ):
+            return InputSource.PREVIOUS_STEP
+        if any(
+            step_context.source_bindings.binding_for_artifact_ref(spec.ref()) is not None
+            for spec in callable_contract.artifact_inputs
+        ):
+            return InputSource.PIPELINE_START
+        return InputSource.PREVIOUS_STEP
+
+    @classmethod
     def processing_config(
         cls,
         *,
@@ -941,11 +980,7 @@ class CellProfilerModule(
                 grouping_component = AllComponents.from_value(group_by.value)
                 source_anchor_group_keys = step_context.source_bindings.component_group_keys_for_artifact_specs(
                     grouping_component,
-                    tuple(
-                        spec
-                        for spec in callable_contract.artifact_inputs
-                        if spec.parameter_name is None
-                    ),
+                    cls.processing_group_scope_inputs(callable_contract),
                     step_context.available_artifacts,
                 )
                 if len(source_anchor_group_keys) > 1:
@@ -955,4 +990,16 @@ class CellProfilerModule(
             variable_components=list(variable_components),
             group_by=group_by,
             input_source=input_source,
+        )
+
+    @classmethod
+    def processing_group_scope_inputs(
+        cls,
+        callable_contract: CallableContract,
+    ) -> tuple[ArtifactSpec, ...]:
+        """Keep the complete unbound payload domain available for an invocation."""
+        return tuple(
+            spec
+            for spec in callable_contract.artifact_inputs
+            if spec.parameter_name is None
         )

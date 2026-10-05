@@ -1,6 +1,8 @@
 import pickle
 import sys
+from dataclasses import field, make_dataclass
 from enum import Enum
+from inspect import Parameter, signature
 from types import MappingProxyType, ModuleType
 
 import pytest
@@ -28,10 +30,17 @@ from openhcs.core.callable_contract import (
     runtime_image_execution_mode,
 )
 from openhcs.core.config import LazyDtypeConfig
+import openhcs.core.config as config_module
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
-from openhcs.core.function_reference import RegistryFunctionReference
+from openhcs.core.function_reference import (
+    FunctionReferenceTransportAuthority,
+    ImportableFunctionReference,
+    RegistryFunctionReference,
+)
+from openhcs.core.function_patterns import normalize_function_pattern
 from openhcs.core.memory.decorators import numpy
+from openhcs.core.pipeline.artifact_planning import extract_artifact_declarations
 from openhcs.core.pipeline.function_contracts import (
     required_variable_components,
     runtime_bound_parameters,
@@ -41,6 +50,7 @@ from openhcs.core.runtime_batch_contracts import (
     RuntimeBatchExecutionDomain,
     RuntimePure2DSliceBatchRequest,
     SliceIndexRuntimeParameter,
+    measurement_image_batch_executor,
     pure_2d_batch_executor,
 )
 from openhcs.processing.backends.lib_registry.cupy_registry import CupyRegistry
@@ -93,8 +103,22 @@ def _batch_executor(request):
     return request
 
 
+def _measurement_batch_executor(func, requests, execute_request):
+    return [execute_request(func, request) for request in requests]
+
+
+def _override_batch_executor(request):
+    return request
+
+
+@measurement_image_batch_executor(_measurement_batch_executor)
 @pure_2d_batch_executor(_batch_executor)
 def _function_with_runtime_batch_executor(image):
+    return image
+
+
+@pure_2d_batch_executor(_override_batch_executor)
+def _function_with_batch_override(image):
     return image
 
 
@@ -240,6 +264,14 @@ def test_callable_contract_validates_nominal_enum_values_from_resolved_annotatio
     with pytest.raises(TypeError, match="project.method must be ProjectionMethod"):
         contract.validate_public_kwargs({"method": "max"})
 
+    assert contract.decode_public_kwargs({"method": "max"}) == {"method": ProjectionMethod.MAX}
+    assert contract.decode_public_kwargs({"method": "MAX"}) == {"method": ProjectionMethod.MAX}
+    assert contract.decode_public_kwargs({"method": ProjectionMethod.MAX}) == {"method": ProjectionMethod.MAX}
+    with pytest.raises(TypeError, match="project.method must be ProjectionMethod"):
+        contract.decode_public_kwargs({"method": None})
+    with pytest.raises(ValueError, match="not a valid"):
+        contract.decode_public_kwargs({"method": "missing"})
+
 
 @pytest.mark.parametrize("slice_by_slice", [False, True])
 def test_callable_contract_preserves_declared_semantic_controls(slice_by_slice) -> None:
@@ -264,17 +296,62 @@ def test_callable_contract_still_rejects_injected_runtime_values() -> None:
         contract.validate_public_kwargs({"slice_index": 3})
 
 
-def test_callable_contract_reads_wrapper_declared_config_parameters() -> None:
+def test_callable_contract_reads_wrapper_declared_config_parameters(monkeypatch) -> None:
     @numpy(contract=ProcessingContract.PURE_3D)
     def process(image):
         return image
 
     contract = CallableContract.from_callable(process)
+    declared_parameter = contract.canonical_signature.parameters["dtype_config"]
+    assert isinstance(signature(process).parameters["dtype_config"].default, LazyDtypeConfig)
+
+    def forbidden_config_value(*args, **kwargs):
+        raise AssertionError("Config schema discovery constructed a value")
+
+    monkeypatch.setattr(LazyDtypeConfig, "__init__", forbidden_config_value)
 
     assert contract.config_bound_parameter_names == ("dtype_config",)
     assert contract.runtime_owned_parameter_names == frozenset({"dtype_config"})
+    assert contract.overridable_runtime_parameter_names == frozenset({"dtype_config"})
+    assert contract.validate_public_kwargs({}) == ()
     (parameter,) = contract.config_bound_parameters
     assert parameter.annotation is LazyDtypeConfig
+    assert parameter.default is declared_parameter.default
+
+    graph = extract_artifact_declarations(process)
+    parameters = graph.config_parameters_for_step("process")
+    assert tuple(parameter.name for parameter in parameters) == ("dtype_config",)
+
+    def forbidden_signature_read(owner):
+        raise AssertionError("Axis binding repeated admitted config schema discovery")
+
+    monkeypatch.setattr(
+        CallableContract, "config_bound_parameters", property(forbidden_signature_read)
+    )
+    assert graph.config_parameters_for_step("process") is parameters
+
+
+def test_config_parameter_schema_refreshes_from_replaced_pipeline_declaration(monkeypatch):
+    def forbidden_default():
+        raise AssertionError("Config field discovery evaluated a default factory")
+
+    original_default = object()
+    parameter = Parameter(
+        "custom_config", Parameter.KEYWORD_ONLY,
+        annotation=LazyDtypeConfig, default=original_default,
+    )
+    for declared_type, admitted in ((LazyDtypeConfig, True), (int, False)):
+        replacement = make_dataclass(
+            "PipelineConfig",
+            [("custom_config", declared_type, field(default_factory=forbidden_default))],
+        )
+        monkeypatch.setattr(config_module, "PipelineConfig", replacement)
+        resolved = config_module.runtime_config_parameter(parameter)
+        if admitted:
+            assert resolved is parameter
+            assert resolved.default is original_default
+        else:
+            assert resolved is None
 
 
 def test_callable_contract_preserves_arraybridge_execution_declaration() -> None:
@@ -330,12 +407,12 @@ def test_callable_contract_reads_required_variable_components() -> None:
 def test_callable_contract_reads_runtime_image_execution_mode_from_function_reference() -> (
     None
 ):
-    reference = RegistryFunctionReference(
+    reference = ImportableFunctionReference(
         import_identity=CallableImportIdentity(
             module_name=__name__,
-            function_name="process",
+            function_name="_function_with_runtime_batch_executor",
         ),
-        composite_key="numpy:process",
+        composite_key=f"{__name__}:_function_with_runtime_batch_executor",
         metadata=CallableMetadata(
             runtime_image_execution_mode=ImagePayloadExecutionMode.FULL_STACK,
         ),
@@ -511,6 +588,75 @@ def test_callable_contract_pickles_runtime_batch_executors() -> None:
         restored.runtime_batch_executor(RuntimeBatchExecutionDomain.PURE_2D_SLICES)
         is _batch_executor
     )
+
+
+def test_function_reference_preserves_batching_through_compiler_and_transport(
+    monkeypatch,
+) -> None:
+    func = _function_with_runtime_batch_executor
+    monkeypatch.setattr(func, "__dict__", dict(vars(func)))
+    prepare_processing_callable(func)
+    reference = FunctionReferenceTransportAuthority.function_reference(func)
+
+    normalized = normalize_function_pattern(reference)
+    contract = normalized.groups[0].items[0].contract
+    restored = pickle.loads(pickle.dumps(contract))
+    assert restored.func == reference
+    expected_metadata = reference.metadata.with_prepared_signatures(func, func)
+    assert restored.metadata.canonical_signature == expected_metadata.canonical_signature
+    assert restored.metadata == expected_metadata
+    assert restored.runtime_batch_executor(
+        RuntimeBatchExecutionDomain.PURE_2D_SLICES
+    ) is _batch_executor
+    assert restored.runtime_batch_executor(
+        RuntimeBatchExecutionDomain.MEASUREMENT_IMAGES
+    ) is _measurement_batch_executor
+
+
+def test_reference_batch_family_preserves_wrapper_precedence_and_raw_inheritance(
+    monkeypatch,
+) -> None:
+    wrapper = _function_with_batch_override
+    monkeypatch.setattr(wrapper, "__dict__", dict(vars(wrapper)))
+    attach_callable_contract_metadata(
+        wrapper,
+        raw_processing_function=_function_with_runtime_batch_executor,
+    )
+    prepare_processing_callable(wrapper)
+    reference = FunctionReferenceTransportAuthority.function_reference(wrapper)
+    assert isinstance(
+        reference.metadata.raw_processing_function, ImportableFunctionReference
+    )
+
+    contract = normalize_function_pattern(reference).groups[0].items[0].contract
+    assert contract.runtime_batch_executor(
+        RuntimeBatchExecutionDomain.PURE_2D_SLICES
+    ) is _override_batch_executor
+    assert contract.runtime_batch_executor(
+        RuntimeBatchExecutionDomain.MEASUREMENT_IMAGES
+    ) is _measurement_batch_executor
+
+
+def test_registry_reference_preserves_real_intensity_batch_declarations() -> None:
+    from openhcs.processing.backends.cellprofiler.intensity import (
+        measure_object_intensity,
+    )
+
+    direct = CallableContract.from_callable(measure_object_intensity)
+    reference = FunctionReferenceTransportAuthority.function_reference(
+        measure_object_intensity
+    )
+    assert isinstance(reference, RegistryFunctionReference)
+    contract = normalize_function_pattern(reference).groups[0].items[0].contract
+    restored = pickle.loads(pickle.dumps(contract))
+
+    for domain in (
+        RuntimeBatchExecutionDomain.MEASUREMENT_IMAGES,
+        RuntimeBatchExecutionDomain.PURE_2D_SLICES,
+    ):
+        executor = direct.runtime_batch_executor(domain)
+        assert executor is not None
+        assert restored.runtime_batch_executor(domain) is executor
 
 
 def test_runtime_slice_batch_request_exposes_callable_defaults() -> None:

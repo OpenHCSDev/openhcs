@@ -185,143 +185,35 @@ class OperaPhenixXmlParser:
         if not image_elements:
             raise OperaPhenixXmlContentError("No Image elements found in XML")
 
-        # Group images by well (Row+Col), channel, and plane
-        # We'll use the first group with multiple fields to determine grid size
-        image_groups = {}
+        # Keep coordinate populations separate, including colocated channels.
+        image_groups: dict[tuple[int, ...], list[tuple[float, float]]] = {}
 
         for image in image_elements:
-            # Extract well, channel, and plane information
-            row_elem = image.find(f"{self.namespace}Row")
-            col_elem = image.find(f"{self.namespace}Col")
-            channel_elem = image.find(f"{self.namespace}ChannelID")
-            plane_elem = image.find(f"{self.namespace}PlaneID")
-
-            if (
-                row_elem is not None
-                and row_elem.text
-                and col_elem is not None
-                and col_elem.text
-                and channel_elem is not None
-                and channel_elem.text
-                and plane_elem is not None
-                and plane_elem.text
-            ):
-
-                # Create a key for grouping
-                group_key = f"R{row_elem.text}C{col_elem.text}_CH{channel_elem.text}_P{plane_elem.text}"
-
-                # Extract position information
-                pos_x_elem = image.find(f"{self.namespace}PositionX")
-                pos_y_elem = image.find(f"{self.namespace}PositionY")
-                field_elem = image.find(f"{self.namespace}FieldID")
-
-                if (
-                    pos_x_elem is not None
-                    and pos_x_elem.text
-                    and pos_y_elem is not None
-                    and pos_y_elem.text
-                    and field_elem is not None
-                    and field_elem.text
-                ):
-
-                    try:
-                        # Parse position values
-                        x_value = float(pos_x_elem.text)
-                        y_value = float(pos_y_elem.text)
-                        field_id = int(field_elem.text)
-
-                        # Add to group
-                        if group_key not in image_groups:
-                            image_groups[group_key] = []
-
-                        image_groups[group_key].append(
-                            {
-                                "field_id": field_id,
-                                "pos_x": x_value,
-                                "pos_y": y_value,
-                                "pos_x_unit": pos_x_elem.get("Unit", ""),
-                                "pos_y_unit": pos_y_elem.get("Unit", ""),
-                            }
-                        )
-                    except ValueError as e:
-                        logger.warning(
-                            "Could not parse position values (invalid number format) for image in group %s: %s",
-                            group_key,
-                            e,
-                        )
-                    except TypeError as e:
-                        logger.warning(
-                            "Could not parse position values (wrong type) for image in group %s: %s",
-                            group_key,
-                            e,
-                        )
-
-        # Find the first group with multiple fields
-        for group_key, images in image_groups.items():
-            if len(images) > 1:
-                logger.debug(
-                    "Using image group %s with %d fields to determine grid size",
-                    group_key,
-                    len(images),
+            try:
+                group_key = tuple(
+                    int(self._get_element_text(image, tag))
+                    for tag in ("Row", "Col", "ChannelID", "PlaneID")
                 )
+            except (ValueError, TypeError):
+                continue
+            field_position = self._get_field_position(image)
+            if field_position is not None:
+                _, position = field_position
+                image_groups.setdefault(group_key, []).append(position)
 
-                # Extract unique X and Y positions
-                # Use a small epsilon for floating point comparison
-                epsilon = 1e-10
-                x_positions = [img["pos_x"] for img in images]
-                y_positions = [img["pos_y"] for img in images]
+        if not image_groups:
+            raise OperaPhenixXmlContentError("Could not determine grid size from XML data")
 
-                # Use numpy to find unique positions
-                unique_x = np.unique(
-                    np.round(np.array(x_positions) / epsilon) * epsilon
-                )
-                unique_y = np.unique(
-                    np.round(np.array(y_positions) / epsilon) * epsilon
-                )
-
-                # Count unique positions
-                num_x_positions = len(unique_x)
-                num_y_positions = len(unique_y)
-
-                # If we have a reasonable number of positions, use them as grid dimensions
-                if num_x_positions > 0 and num_y_positions > 0:
-                    logger.info(
-                        "Determined grid size from positions: %dx%d",
-                        num_x_positions,
-                        num_y_positions,
-                    )
-                    return (num_x_positions, num_y_positions)
-
-                # Alternative approach: try to infer grid size from field IDs
-                if len(images) > 1:
-                    # Sort images by field ID
-                    sorted_images = sorted(images, key=lambda x: x["field_id"])
-                    max_field_id = sorted_images[-1]["field_id"]
-
-                    # Try to determine if it's a square grid
-                    grid_size = int(
-                        np.sqrt(max_field_id) + 0.5
-                    )  # Round to nearest integer
-
-                    if grid_size**2 == max_field_id:
-                        logger.info(
-                            "Determined square grid size from field IDs: %dx%d",
-                            grid_size,
-                            grid_size,
-                        )
-                        return (grid_size, grid_size)
-
-                    # If not a perfect square, try to find factors
-                    for i in range(1, int(np.sqrt(max_field_id)) + 1):
-                        if max_field_id % i == 0:
-                            j = max_field_id // i
-                            logger.info(
-                                "Determined grid size from field IDs: %dx%d", i, j
-                            )
-                            return (i, j)
-
-        # If we couldn't determine grid size, raise an error
-        raise OperaPhenixXmlContentError("Could not determine grid size from XML data")
+        # Preserve the first multi-image group's precedence on partial exports;
+        # an acquisition consisting solely of singleton groups is also geometry.
+        groups = tuple(image_groups.values())
+        positions = next((group for group in groups if len(group) > 1), groups[0])
+        x_positions, y_positions = zip(*positions)
+        epsilon = 1e-10
+        columns = len(np.unique(np.round(np.array(x_positions) / epsilon) * epsilon))
+        rows = len(np.unique(np.round(np.array(y_positions) / epsilon) * epsilon))
+        logger.info("Determined grid size from positions: %dx%d", columns, rows)
+        return (columns, rows)
 
     def get_pixel_size(self) -> float:
         """
@@ -508,6 +400,24 @@ class OperaPhenixXmlParser:
         elem = parent_elem.find(f"{self.namespace}{tag_name}")
         return elem.get(attr_name) if elem is not None else None
 
+    def _get_field_position(
+        self, image: ET.Element
+    ) -> Optional[Tuple[int, Tuple[float, float]]]:
+        """Decode one finite Harmony stage position for grid and remapping readers."""
+        try:
+            field_id = int(self._get_element_text(image, "FieldID"))
+            position = (
+                float(self._get_element_text(image, "PositionX")),
+                float(self._get_element_text(image, "PositionY")),
+            )
+        except (ValueError, TypeError) as error:
+            logger.debug("Skipping field with invalid position data: %s", error)
+            return None
+        if not np.isfinite(position).all():
+            logger.debug("Skipping field %d with nonfinite position: %s", field_id, position)
+            return None
+        return field_id, position
+
     def detect_orphan_fields(
         self,
         positions: Dict[int, Tuple[float, float]],
@@ -596,32 +506,10 @@ class OperaPhenixXmlParser:
         image_elems = self.root.findall(f".//{self.namespace}Image")
 
         for image in image_elems:
-            # Check if this element has FieldID, PositionX, and PositionY children
-            field_id_elem = image.find(f"{self.namespace}FieldID")
-            pos_x_elem = image.find(f"{self.namespace}PositionX")
-            pos_y_elem = image.find(f"{self.namespace}PositionY")
-
-            if (
-                field_id_elem is not None
-                and pos_x_elem is not None
-                and pos_y_elem is not None
-            ):
-                try:
-                    field_id = int(field_id_elem.text)
-                    pos_x = float(pos_x_elem.text)
-                    pos_y = float(pos_y_elem.text)
-
-                    # Only add if we don't already have this field ID
-                    if field_id not in field_positions:
-                        field_positions[field_id] = (pos_x, pos_y)
-                except ValueError as e:
-                    # Skip entries with invalid number format
-                    logger.debug("Skipping field with invalid number format: %s", e)
-                    continue
-                except TypeError as e:
-                    # Skip entries with wrong type
-                    logger.debug("Skipping field with wrong type: %s", e)
-                    continue
+            field_position = self._get_field_position(image)
+            if field_position is not None:
+                field_id, position = field_position
+                field_positions.setdefault(field_id, position)
 
         # Detect and exclude orphan fields if requested
         if exclude_orphans and len(field_positions) > 2:

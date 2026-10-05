@@ -75,6 +75,14 @@ identities and exact command described in
 
 ## Run a measured well-throughput sweep
 
+Run timed sweeps separately from repository-wide AST audits, test suites, other
+benchmarks and compilation work. Keep code, dependencies and kernel-cache state
+matched for alternating comparisons, record host/process resource samples, and
+retain individual repetitions. Source edits can invalidate Numba disk caches;
+record any explicit family warmup separately from ordinary execution and total.
+A single observation with concurrent development work cannot establish a
+performance regression; see [the measured audit-interference investigation](../results/perf_scaling_rise_investigation_20260929/README.md).
+
 First check the modes, cases and missing sources without acquiring data or
 starting an execution server:
 
@@ -103,11 +111,12 @@ instead of presets. A non-empty output directory is refused; use `--resume` to
 continue its ordinary-route `well_throughput.csv`. Failed observations remain in
 that CSV and make the command exit non-zero.
 
-Use `--reuse-execution-server` to keep one client-owned execution server across
-the selected observations. Its `server_lifecycle` column is `reused-per-sweep`,
+The commands keep one ready client-owned execution server across the selected
+observations by default. Its `server_lifecycle` column is `reused-per-sweep`,
 and each `total_seconds` measures the observation after the server is ready.
-Startup and shutdown are excluded from those per-observation totals; use the
-default `fresh-per-observation` lifecycle to include them for each observation.
+Startup and shutdown are excluded from pipeline totals. Use
+`--no-reuse-execution-server` for a separate cold-server diagnostic; its
+`fresh-per-observation` total includes startup and shutdown and is not pipeline time.
 Both totals begin after the input workspace is prepared. The reused-server
 option cannot be combined with `--max-memory-mb`, whose guard may kill the
 shared server before later observations.

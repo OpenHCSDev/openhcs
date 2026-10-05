@@ -1,0 +1,15 @@
+Running as unit: dewey-jvm455-lifetime.scope; invocation ID: 538f472509c74906a9dc57a40733fe5c
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-8.3.5, pluggy-1.6.0
+PyQt6 6.11.0 -- Qt runtime 6.11.2 -- Qt compiled 6.11.0
+rootdir: /home/ts/wt/openhcs-mcp-affine-progress-436-20261002
+configfile: pytest.ini
+plugins: asyncio-1.0.0, napari-0.6.1, napari-plugin-engine-0.2.0, anyio-4.9.0, timeout-2.4.0, zarr-3.4.0, xdist-3.8.0, langsmith-0.4.37, cov-6.1.1, npe2-0.7.8, qt-4.5.0
+asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=function, asyncio_default_test_loop_scope=function
+collected 11 items
+
+tests/unit/agent/test_mcp_process_resource_lifetime.py ......            [ 54%]
+tests/unit/agent/test_mcp_dev_client_transport_failures.py .....         [100%]
+
+============================== 11 passed in 7.22s ==============================
+BOUNDED_SOURCE peak_aggregate_rss_kib=472832 elapsed_seconds=11.587 returncode=0 reason=None
