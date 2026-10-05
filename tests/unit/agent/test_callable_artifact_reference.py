@@ -243,7 +243,11 @@ def test_points_declaration_materializes_fractional_geometry_and_full_source_dom
         filemanager=FileManager({"disk": DiskStorageBackend()}),
         backends=["disk"], backend_kwargs={},
     )
-    assert (tmp_path / "centres.csv").read_text().splitlines() == [
+    csv_options = next(
+        option for option in spec.materialization.outputs
+        if isinstance(option, namespace["CsvOptions"])
+    )
+    assert (tmp_path / ("centres" + csv_options.filename_suffix)).read_text().splitlines() == [
         "object_label,center_z,center_y,center_x", "7,1.5,1.25,2.5",
     ]
     rois = load_rois_from_zip(tmp_path / "centres_points.roi.zip")
@@ -285,13 +289,10 @@ def test_input_reference_compiles_nominal_binding_and_repairs_wrong_annotation(
     original_annotation = raw.__annotations__["objects"]
     try:
         raw.__annotations__["objects"] = np.ndarray
-        from openhcs.core.pipeline.function_contracts import resolved_callable_type_hints
-        resolved_callable_type_hints.cache_clear()
         with pytest.raises(TypeError, match="does not accept object_labels artifact payloads"):
             compile_function_pattern(function, {plan.ref(): plan}, {})
     finally:
         raw.__annotations__["objects"] = original_annotation
-        resolved_callable_type_hints.cache_clear()
     compile_function_pattern(function, {plan.ref(): plan}, {})
 
 
@@ -573,6 +574,9 @@ def test_packaged_knowledge_projection_retains_executable_reference(tmp_path):
     )
     assert "def inspect_label_fixture(" in document.content
     assert "from openhcs.core.memory import numpy" in document.content
+    for query in ("PointROIOptions fractional centres", "aligned diagnostic image returns"):
+        hits = service.search(KnowledgeBaseSearchRequest(query=query, limit=10))
+        assert DOCUMENT_ID in {hit.document.document_id for hit in hits.hits}
     for block in REFERENCE_BLOCKS:
         for line in _reference_block(block).splitlines():
             if line.strip():

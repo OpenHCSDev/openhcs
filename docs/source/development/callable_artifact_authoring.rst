@@ -268,7 +268,7 @@ well as in an ordinary module. Persist the source when it must survive a new
 process; session-only registration does not make a spawned worker import it.
 
 Materialize typed 3D centres as feature-bearing Points
-----------------------------------------------------
+------------------------------------------------------------
 
 Points are a materialization of ``MeasurementsArtifactType``, not a missing
 ``PointsArtifactType`` or a centre-voxel image. Attach ``PointROIOptions`` to the
@@ -365,7 +365,7 @@ contracts before relying on automatic streaming or archive reopening. Declaratio
 and direct-call checks do not prove that live path.
 
 Return diagnostic images without flattening the ABI
---------------------------------------------------
+------------------------------------------------------------
 
 ``MainFlowStackOutputSpec`` declares source lineage; it does not give every
 Image its own outer tuple slot. ``CallableContract`` groups the consecutive
@@ -414,7 +414,7 @@ the corrected complete document and inspect its materialization/streaming plan;
 this ABI repair does not itself settle a viewer or validate the analysis.
 
 Consume a nominal artifact input
--------------------------------
+--------------------------------
 
 An artifact's input ABI is not necessarily its raw output representation.
 ``ObjectLabelsArtifactType`` accepts integer labels from a producer, but supplies
@@ -480,7 +480,7 @@ the corrected complete document through the ordinary route. This establishes
 technical input compatibility, not object identity or biological accuracy.
 
 Summarize declared measurements once per plate
----------------------------------------------
+----------------------------------------------
 
 A terminal ``PLATE`` callable receives ``RuntimeArtifactBatch``, not an image
 or a directory of CSVs. The parent executes it once after the compiled axes
