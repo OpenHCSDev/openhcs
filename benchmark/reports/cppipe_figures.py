@@ -68,6 +68,64 @@ class SummarySource:
     label: str
     path: Path
 
+    @property
+    def native_method(self) -> str:
+        """Historical variants share their first CellProfiler baseline."""
+        return CELLPROFILER_LABEL
+
+    def metric_rows(
+        self,
+        pipeline_name: str,
+        row: SummaryRow | None,
+        *,
+        category_row: SummaryRow | None,
+    ) -> tuple[BenchmarkMetricRow, BenchmarkMetricRow]:
+        """Derive the paired methods from this source's actual summary row."""
+        category = _category_from_summary_row(pipeline_name, row or category_row)
+        native_seconds = SUMMARY_ROW_NUMERICS.optional_float(row, NATIVE_SECONDS_FIELD)
+        openhcs_seconds = SUMMARY_ROW_NUMERICS.optional_float(
+            row, OPENHCS_SECONDS_FIELD
+        )
+        return (
+            BenchmarkMetricRow(
+                pipeline_name=pipeline_name,
+                method=self.native_method,
+                assay_category=category.assay,
+                module_category=category.module,
+                accuracy_fraction=1.0,
+                raw_seconds=native_seconds,
+                speedup=1.0,
+                peak_memory_mb=SUMMARY_ROW_NUMERICS.optional_float(
+                    row, NATIVE_MEMORY_FIELD
+                ),
+            ),
+            BenchmarkMetricRow(
+                pipeline_name=pipeline_name,
+                method=self.label,
+                assay_category=category.assay,
+                module_category=category.module,
+                accuracy_fraction=SUMMARY_ROW_NUMERICS.optional_float(
+                    row, ACCURACY_FIELD
+                ),
+                raw_seconds=openhcs_seconds,
+                speedup=SUMMARY_ROW_NUMERICS.speedup(
+                    row, native_seconds, openhcs_seconds
+                ),
+                peak_memory_mb=SUMMARY_ROW_NUMERICS.optional_float(
+                    row, OPENHCS_MEMORY_FIELD
+                ),
+            ),
+        )
+
+
+@dataclass(frozen=True)
+class MeasuredBatchSummarySource(SummarySource):
+    """An actual batch comparison with its own measured native baseline."""
+
+    @property
+    def native_method(self) -> str:
+        return f"CP ({self.label})"
+
 
 @dataclass(frozen=True)
 class BenchmarkMetricRow:
@@ -598,6 +656,92 @@ def generate_grouped_benchmark_metric_figures(
     return tuple(outputs)
 
 
+def generate_measured_batch_figures(
+    summary_sources: Sequence[MeasuredBatchSummarySource],
+    *,
+    scope: str,
+    output_dir: Path,
+    output_formats: Sequence[str] = DEFAULT_FORMATS,
+    include_average: bool = True,
+) -> tuple[Path, ...]:
+    """Render already-qualified measured summaries without projecting native time.
+
+    Each source is one measured well/worker mode. Qualification and clock
+    conversion belong to the matched-report producer; plotting never invents
+    timings, extends measured well counts, or substitutes absent RAM data.
+    """
+    if scope not in ("execution", "total"):
+        raise ValueError(f"Unknown measured timing scope: {scope!r}")
+    if not summary_sources:
+        raise ValueError("At least one measured summary source is required.")
+    methods = tuple(
+        method
+        for source in summary_sources
+        for method in (source.native_method, source.label)
+    )
+    if len(set(methods)) != len(methods):
+        raise ValueError("Measured mode method labels must be distinct.")
+    tables = tuple(_load_summary_table(source) for source in summary_sources)
+    pipeline_names = _pipeline_order(tables)
+    if any(set(table) != set(pipeline_names) for table in tables):
+        raise ValueError("Measured modes must contain the same pipeline cohort.")
+    rows = tuple(
+        _benchmark_metric_rows(
+            tables,
+            summary_sources=summary_sources,
+            pipeline_names=pipeline_names,
+            include_average=include_average,
+        )
+    )
+    metrics = (
+        FigureMetricSpec(
+            RAW_SECONDS_FIELD,
+            f"measured_{scope}_seconds",
+            f"Measured batch {scope} runtime",
+            f"{scope.title()} seconds",
+            minimum_ylim=0.0,
+            log_variant=True,
+        ),
+        FigureMetricSpec(
+            SPEEDUP_METRIC_KEY,
+            f"measured_{scope}_speedup",
+            f"Measured batch {scope} speedup versus CellProfiler",
+            "Speedup (x)",
+            baseline_line=1.0,
+            target_line=SPEEDUP_TARGET,
+            minimum_ylim=0.0,
+            log_variant=True,
+        ),
+    )
+    if scope == "execution":
+        metrics = (
+            FigureMetricSpec(
+                ACCURACY_FRACTION_FIELD,
+                "qualified_science_pass",
+                "Full scientific comparison passed",
+                "Qualified comparison (%)",
+                percentage=True,
+                target_line=100.0,
+                minimum_ylim=0.0,
+            ),
+            *metrics,
+        )
+    output_dir.mkdir(parents=True, exist_ok=True)
+    csv_path = output_dir / f"measured_{scope}_metrics_long.csv"
+    _write_metric_rows(csv_path, rows)
+    return (
+        csv_path,
+        *generate_grouped_benchmark_metric_figures(
+            rows,
+            metrics=metrics,
+            methods=methods,
+            pipeline_names=tuple(dict.fromkeys(row.pipeline_name for row in rows)),
+            output_dir=output_dir,
+            output_formats=output_formats,
+        ),
+    )
+
+
 def _load_summary_table(source: SummarySource) -> SummaryTable:
     with source.path.open(encoding="utf-8", newline="") as handle:
         rows = tuple(csv.DictReader(handle))
@@ -636,57 +780,19 @@ def _benchmark_metric_rows(
     pipeline_names: Sequence[str],
     include_average: bool,
 ) -> Iterable[BenchmarkMetricRow]:
-    first_table = source_tables[0]
     for pipeline_name in pipeline_names:
-        baseline_row = first_table.get(pipeline_name)
-        baseline_category = _category_from_summary_row(pipeline_name, baseline_row)
-        yield BenchmarkMetricRow(
-            pipeline_name=pipeline_name,
-            method=CELLPROFILER_LABEL,
-            assay_category=baseline_category.assay,
-            module_category=baseline_category.module,
-            accuracy_fraction=1.0,
-            raw_seconds=SUMMARY_ROW_NUMERICS.optional_float(
-                baseline_row,
-                NATIVE_SECONDS_FIELD,
-            ),
-            speedup=1.0,
-            peak_memory_mb=SUMMARY_ROW_NUMERICS.optional_float(
-                baseline_row,
-                NATIVE_MEMORY_FIELD,
-            ),
-        )
+        native_methods: set[str] = set()
+        category_row = source_tables[0].get(pipeline_name)
         for source, table in zip(summary_sources, source_tables, strict=True):
-            row = table.get(pipeline_name)
-            native_seconds = SUMMARY_ROW_NUMERICS.optional_float(
-                row,
-                NATIVE_SECONDS_FIELD,
+            native_row, candidate_row = source.metric_rows(
+                pipeline_name,
+                table.get(pipeline_name),
+                category_row=category_row,
             )
-            openhcs_seconds = SUMMARY_ROW_NUMERICS.optional_float(
-                row,
-                OPENHCS_SECONDS_FIELD,
-            )
-            category = _category_from_summary_row(pipeline_name, row or baseline_row)
-            yield BenchmarkMetricRow(
-                pipeline_name=pipeline_name,
-                method=source.label,
-                assay_category=category.assay,
-                module_category=category.module,
-                accuracy_fraction=SUMMARY_ROW_NUMERICS.optional_float(
-                    row,
-                    ACCURACY_FIELD,
-                ),
-                raw_seconds=openhcs_seconds,
-                speedup=SUMMARY_ROW_NUMERICS.speedup(
-                    row,
-                    native_seconds,
-                    openhcs_seconds,
-                ),
-                peak_memory_mb=SUMMARY_ROW_NUMERICS.optional_float(
-                    row,
-                    OPENHCS_MEMORY_FIELD,
-                ),
-            )
+            if native_row.method not in native_methods:
+                native_methods.add(native_row.method)
+                yield native_row
+            yield candidate_row
     if include_average:
         yield from _average_rows(
             _benchmark_metric_rows(
