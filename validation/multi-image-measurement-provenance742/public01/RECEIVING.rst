@@ -195,3 +195,26 @@ This resolves the predecessor's closure dependency, not the next case's package
 identity. Planck has the exact743 source/packet and closure handoff for the next
 ordinary whole candidate; immutable receiving12 must not be used as743 proof.
 No new client/runtime, installation, test or source merge was made here.
+
+Receiving13 ordinary prepared-source adjustment
+-----------------------------------------------
+
+Original95 source-plan refusal required writable plate_path; no compile or
+execution was submitted by that rejected request. Dewey staged three physical
+436-byte TIFF copies, byte-identical to the immutable original acquisition, at
+the already declared public01/execution-acquisition root. The successful normal
+source plan reports all three exact virtual/source mappings, aliases/channels,
+SITE1/Z1/T1 and relative1,1. It does not claim staged paths are original paths.
+Original complete replies remain in receiving13/public95/ADMIN743_95/
+author-workspace/output/runtime/mcp.stdout, including the refusal.
+
+The existing checker now takes the source plan's declared execution acquisition
+root as its fourth argument AFTER target/forwardVALUES/reverseVALUES. It hashes
+BOTH original and staged files against the same frozen three SHA256 values,
+checks native physical filter paths through SourceMetadataFields' original
+typed projection, and keeps exact native virtual-source/CSV identity checks.
+Receipt serialization uses the existing to_jsonable owner. No alternate codec,
+forged original paths, weaker numerical checks or product change is introduced.
+The complete pipeline documents and all expected numeric/source/coordinate
+relations are unchanged. This fixture-only adjustment does not require a new
+wheel or a repeat of source controls.

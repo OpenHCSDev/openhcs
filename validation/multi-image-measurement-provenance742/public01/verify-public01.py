@@ -1,6 +1,7 @@
 """Adapt receiving11's typed VALUES reader and CSV checks for the 743 relation.
 
-Run once after both public jobs are terminal, using their actual VALUES paths.
+Run once after both public jobs are terminal, using their actual VALUES paths
+and the execution acquisition root declared by the successful source plan.
 No MCP request, source execution, alternative loader or reference data here.
 """
 
@@ -15,10 +16,13 @@ target = Path(sys.argv[1]).resolve()
 sys.path.insert(0, str(target))
 import openhcs
 from openhcs.core.runtime_measurements import MeasurementTable
+from openhcs.core.source_metadata import SourceMetadataFields
 from openhcs.runtime.zmq_execution_observation import ZMQRuntimeExecutionObservationExport
+from openhcs.serialization.json import to_jsonable
 
 assert Path(openhcs.__file__).resolve().is_relative_to(target), openhcs.__file__
-acquisition = Path('/run/media/ts/hdd/openhcs-engineering/engineering721725-public10-94-20261005/photometry722/acquisition')
+original_acquisition = Path('/run/media/ts/hdd/openhcs-engineering/engineering721725-public10-94-20261005/photometry722/acquisition')
+acquisition = Path(sys.argv[4]).resolve()
 output = Path('/run/media/ts/hdd/openhcs-engineering/engineering743-provenance-20261005/public01')
 input_hashes = {
     'Mask': 'be5ef4d28ca0cdcad495c89e4006288b88c4dc46e1ce8c301cd19e3ea495bd4c',
@@ -26,7 +30,8 @@ input_hashes = {
     'Nuclear': '1c1c2d03486fcf4643b4379ff98fb4b1c1363053bdef028e09f0f84fc60bf398',
 }
 for alias, digest in input_hashes.items():
-    assert hashlib.sha256((acquisition / f'{alias}.tif').read_bytes()).hexdigest() == digest
+    for root in (original_acquisition, acquisition):
+        assert hashlib.sha256((root / f'{alias}.tif').read_bytes()).hexdigest() == digest
 
 numeric_expected = {
     f'Intensity_{feature}_{alias}': expected
@@ -78,7 +83,9 @@ for order, values_path in zip(('forward', 'reverse'), sys.argv[2:4], strict=True
             assert metadata[key] == value, (order, name, key, metadata)
         assert metadata['OpenHCSSourceVoxelSpacingUnit'] == 'relative'
         assert metadata['OpenHCSSourceVoxelSpacingZYX'] == '1,1'
-        assert str(acquisition / f'{name}.tif') in metadata['OpenHCSSourceFilterPaths']
+        assert str(acquisition / f'{name}.tif') in SourceMetadataFields.source_filter_paths(
+            source.source_component_metadata
+        ), (order, name, metadata)
         source_proof[name] = dict(path=str(source.source_path), metadata=metadata)
 
     tables = {}
@@ -116,6 +123,8 @@ for order, values_path in zip(('forward', 'reverse'), sys.argv[2:4], strict=True
                          native_sources=source_proof))
 
 assert orders['forward'] == orders['reverse'], 'Input order changed source/numeric identity'
-print(json.dumps(dict(status='PASS', module_origin=openhcs.__file__,
+print(json.dumps(to_jsonable(dict(status='PASS', module_origin=openhcs.__file__,
                       loader_origin=sys.modules[ZMQRuntimeExecutionObservationExport.__module__].__file__,
-                      receipts=receipts, values=orders, scientific_data_used=False), indent=2))
+                      original_acquisition=str(original_acquisition),
+                      execution_acquisition=str(acquisition), input_hashes=input_hashes,
+                      receipts=receipts, values=orders, scientific_data_used=False)), indent=2))
