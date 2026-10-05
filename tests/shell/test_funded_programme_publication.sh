@@ -42,6 +42,30 @@ jq -e --arg root "$scratch" '(.funded_members|map(.slot))==["A","INDEPENDENT_C"]
   (.authors|map(.slot))==["INDEPENDENT_C"] and
   .retained_output_roots==[($root+"/old-b/B/author-workspace/output")]' "$scratch/next/program.json" >/dev/null
 printf 'PASS original projection: independent declaration replaces retired membership and retains FULL output once\n'
+jq -e '.task_minutes_from_first_mcp_start==null' "$scratch/next/program.json" >/dev/null
+jq -e '.task_minutes_from_first_mcp_start==75' "$scratch/old-a/program.json" >/dev/null
+for interval_case in explicit zero negative fractional string; do
+  mkdir "$scratch/interval-$interval_case"
+  case "$interval_case" in
+    explicit) interval='30' ;;
+    zero) interval='0' ;;
+    negative) interval='-1' ;;
+    fractional) interval='1.5' ;;
+    string) interval='"75"' ;;
+  esac
+  jq --argjson interval "$interval" '.task_minutes_from_first_mcp_start=$interval' \
+    "$scratch/next/successor-declaration.json" > "$scratch/interval-$interval_case/successor-declaration.json"
+  set +e
+  bash "$owner" prepare "$scratch/funding" "$scratch/interval-$interval_case" "$scratch/qualification.json" \
+    > "$scratch/interval-$interval_case.log" 2>&1
+  status=$?
+  set -e
+  if [[ "$interval_case" == explicit ]]; then
+    test "$status" = 0
+    jq -e '.task_minutes_from_first_mcp_start==30' "$scratch/interval-explicit/program.json" >/dev/null
+  else test "$status" != 0; fi
+done
+printf 'PASS future interval comes only from its declaration; historical 75 unchanged and invalid values rejected\n'
 
 # No parent file: the explicit original publisher invocation owns the grant.
 (cd "$scratch/next"; sha256sum program.json successor-declaration.json > READY-FREEZE.sha256)
