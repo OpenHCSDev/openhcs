@@ -139,8 +139,8 @@ sources, executed their tiny2x3 arrays, returned original nominal rows and sent
 the original progress event with exact execution/plate/PID, success/100.
 The executor context joined; worker2476635 is absent. controls04 already passed
 the inline/thread/fork/resource selection, factory initializer, lane planning,
-result collection, settlement and normal executor shutdown controls. No fresh
-interpreter/catalog/native service, UI/viewer, scientific input or provider ran.
+result collection, settlement and normal executor shutdown controls. No new
+environment, catalog/native service, UI/viewer, scientific input or provider ran.
 This is real subprocess source acceptance, not public installed execution.
 Reported RSS is process high-water, not a combined cgroup memory measurement.
 
@@ -179,3 +179,16 @@ Loose originals and the isolated generic test directories remain in engineering7
 and validation/custom-worker-bootstrap708; no scientific/runtime archive was
 deleted, rewritten or reconstructed. No running operation or UNKNOWN attempt
 is owned by this source checkpoint. Installed/public receiving is still pending.
+
+Current-main integration
+------------------------
+
+Normal merge of main7e0452643 incorporates the independent saved-config owner,
+CP image-view declarations, memory metric and guide/paper updates. Neither
+changed bootstrap production file has any byte difference from qualified b1.
+The saved-config change affects orchestrator declaration replacement and saved
+ObjectState resolution, not the factory constructor, initializer or lane task
+transport. Its installed ObjectState1.2 requirement remains the original whole
+builder's responsibility. No repeated source batch or private installed overlay
+was used to claim this newer whole main qualified. Parent reviewed b1 production;
+Planck is preparing the one future whole bundle for the remaining public path.
