@@ -1000,18 +1000,9 @@ class CellProfilerModuleExecutor:
         combined_source_image_name = measurement_row_policy.table_source_image_name(
             measurement_images, source_image_name
         )
-        combined_source_metadata = (
-            CellProfilerMeasurementImage.composed_source_metadata(
-                measurement_images,
-                mode=measurement_row_policy.source_metadata_composition_mode(
-                    measurement_images
-                ),
-            )
+        combined_source_metadata = CellProfilerMeasurementImage.aligned_source_metadata(
+            measurement_images
         )
-        if combined_source_metadata is None:
-            combined_source_metadata = image_payload_metadata(
-                CellProfilerMeasurementImage.shared_source_payload(measurement_images)
-            )
         if profile_enabled:
             record_started_at = time.perf_counter()
         table_groups = tuple(

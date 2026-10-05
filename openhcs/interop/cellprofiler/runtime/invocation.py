@@ -173,13 +173,51 @@ class CellProfilerSourceIdentityMixin:
                 provenances, scalar_sources=scalar_sources
             )
         )
-        metadata = ImagePayloadMetadata(
+        return cls.metadata_for_source_provenance(provenance, mode=mode)
+
+    @staticmethod
+    def metadata_for_source_provenance(
+        provenance: SourceImageProvenance,
+        *,
+        mode: ImagePayloadMetadataCompositionMode,
+    ) -> ImagePayloadMetadata:
+        """Carry a composed source axis without projecting its image pixels."""
+        return ImagePayloadMetadata(
             source_provenance=provenance,
-            source_plane_intensity_scales=(None,) * len(provenances),
-            source_plane_dtypes=(None,) * len(provenances),
             plane_axis=mode.plane_axis,
         )
-        return metadata
+
+    @classmethod
+    def aligned_source_metadata(
+        cls,
+        sources: tuple["CellProfilerSourceIdentityMixin", ...],
+    ) -> ImagePayloadMetadata:
+        """Compose measured images as contributors on their shared slice axis.
+
+        Source aliases distinguish images, not runtime slices. Each image's
+        nominal source roster supplies one entry per local slice; composition
+        retains all images at that slice instead of appending image axes.
+        """
+        if not sources:
+            raise ValueError("Aligned measurement metadata requires source images.")
+        source_axes = tuple(cls.source_provenances(source.payload) for source in sources)
+        planes = tuple(
+            SourceImageProvenance.bundle(
+                tuple(source.with_runtime_planes_as_contributors() for source in plane)
+            ).with_runtime_planes_as_contributors()
+            for plane in zip(*source_axes, strict=True)
+        )
+        if not planes:
+            raise ValueError("Aligned measurement source axes cannot be empty.")
+        provenance = (
+            SourceImageProvenance.stack(planes)
+            if any(plane.has_values for plane in planes)
+            else SourceImageProvenance()
+        )
+        return cls.metadata_for_source_provenance(
+            provenance,
+            mode=ImagePayloadMetadataCompositionMode.STACK,
+        )
 
     @classmethod
     def source_provenances(

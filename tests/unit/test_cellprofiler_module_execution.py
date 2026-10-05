@@ -6825,6 +6825,96 @@ def test_multi_image_photometry_consumes_each_named_current_source(aliases):
         np.testing.assert_allclose(arrays.max_intensity_x, (expected[2],))
 
 
+@pytest.mark.parametrize("aliases", (("Process",), ("Process", "Nuclear"), ("Nuclear", "Process"), ("Process", "Nuclear", "Third")))
+@pytest.mark.parametrize("slice_count", (1, 2))
+def test_registered_object_photometry_retains_each_source_at_each_slice(aliases, slice_count):
+    image_specs = tuple(ArtifactSpec.input(name, ImageArtifactType) for name in aliases)
+    object_spec = ArtifactSpec.input("Cells", ObjectLabelsArtifactType)
+    output_spec = ArtifactSpec.output("Photometry", MeasurementsArtifactType)
+    images = {}
+    for name in aliases:
+        value = {"Process": 100, "Nuclear": 200, "Third": 300}[name]
+        paths = tuple(f"/synthetic/{name}_z{index + 1}.tif" for index in range(slice_count))
+        fields = tuple({"well": "A01", "site": "1", "channel": str(value // 100),
+                        "z_index": str(index + 1), "pixel_size": 0.5}
+                       for index in range(slice_count))
+        metadata = ImagePayloadMetadata(
+            source_image_names=(name,),
+            source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+                paths=paths, component_metadata=fields),
+            plane_axis=RuntimePlaneAxis.RUNTIME_SLICE if slice_count > 1 else None,
+        )
+        shape = (slice_count, 4, 5) if slice_count > 1 else (4, 5)
+        images[name] = metadata.payload_with(np.full(shape, value, dtype=np.uint16))
+    label_shape = (slice_count, 4, 5) if slice_count > 1 else (4, 5)
+    labels = ObjectLabelSet(
+        name="Cells",
+        variant_data=ObjectLabelVariantData(labels=np.ones(label_shape, dtype=np.int32)),
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE if slice_count > 1 else None,
+        domain=ObjectLabelDomain(
+            scope=ObjectLabelDomainScope.PLANE if slice_count > 1 else ObjectLabelDomainScope.PAYLOAD,
+            declared_object_id_domains=((1,),) * slice_count if slice_count > 1 else (),
+            declared_object_count=None if slice_count > 1 else 1,
+        ),
+    )
+    contract = _compiled_callable_contract(
+        MeasureObjectIntensityModule.require_callable(),
+        artifact_inputs=(*image_specs, object_spec), artifact_outputs=(output_spec,),
+    )
+    runtime = _FakeCellProfilerRuntime(
+        images, objects={"Cells": labels}, callable_contract=contract,
+        artifact_input_edges=tuple(_artifact_input_edge_for_test(spec) for spec in (*image_specs, object_spec)),
+        artifact_output_bindings=((output_spec, _artifact_output_plan(output_spec)),),
+        plane_projection=RuntimePlaneProjection.stack(slice_count),
+    )
+    _run_module(_module_executor(contract), images[aliases[0]], cellprofiler_runtime=runtime)
+    assert len(runtime.measurements) == 1
+    table = runtime.measurements[0]
+    assert table.subject.object_name == "Cells"
+    assert set(table.source_provenance.represented_source_image_names) == set(aliases)
+    assert {row["slice_index"] for row in table.rows.iter_row_mappings()} == set(range(slice_count))
+    for name in aliases:
+        provenance = table.source_provenance.for_source_image(name)
+        assert provenance.source_image_provenance_planes.paths == tuple(
+            f"/synthetic/{name}_z{index + 1}.tif" for index in range(slice_count))
+        assert all(fields["pixel_size"] == 0.5 for fields in provenance.source_image_provenance_planes.component_metadata)
+        assert tuple(fields["z_index"] for fields in provenance.source_image_provenance_planes.component_metadata) == tuple(str(index + 1) for index in range(slice_count))
+        column = f"Intensity_MaxIntensity_{name}"
+        values = tuple(row[column] for row in table.rows.iter_row_mappings() if column in row)
+        np.testing.assert_allclose(values, ({"Process": 100, "Nuclear": 200, "Third": 300}[name] / 65535,) * slice_count)
+
+
+def test_aligned_measurement_provenance_uses_cooperative_source_hook():
+    calls = []
+
+    class DeclaredMeasurementSource(CellProfilerMeasurementImage):
+        @classmethod
+        def source_provenances(cls, payload):
+            calls.append(payload)
+            return super().source_provenances(payload)
+
+    sources = tuple(DeclaredMeasurementSource(
+        source_image_name=name,
+        payload=ImagePayloadMetadata(source_path=f"/{name}.tif", source_image_names=(name,)).payload_with(np.ones((2, 3))),
+    ) for name in ("First", "Independent"))
+    metadata = DeclaredMeasurementSource.aligned_source_metadata(sources)
+    assert calls == [source.payload for source in sources]
+    assert metadata.source_provenance.source_plane_count == 1
+    assert metadata.source_provenance.represented_source_image_names == ("First", "Independent")
+    assert metadata.source_provenance.for_source_image("Independent").source_image_provenance_planes.paths == ("/Independent.tif",)
+
+
+def test_aligned_measurement_provenance_rejects_unequal_and_empty_axes():
+    sources = tuple(CellProfilerMeasurementImage(
+        source_image_name="Image",
+        payload=AlignedImageStack(tuple(np.ones((2, 3)) for _ in range(count))),
+    ) for count in (1, 2))
+    with pytest.raises(ValueError, match="zip"):
+        CellProfilerMeasurementImage.aligned_source_metadata(sources)
+    with pytest.raises(ValueError, match="requires source images"):
+        CellProfilerMeasurementImage.aligned_source_metadata(())
+
+
 def test_object_intensity_measurement_image_batch_preserves_request_labels() -> None:
     from openhcs.core.runtime_batch_contracts import RuntimeBatchInvocationRequest
     from openhcs.processing.backends.cellprofiler._backend import (
