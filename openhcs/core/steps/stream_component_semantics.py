@@ -119,9 +119,17 @@ class StreamImagePayloadMetadataProjector:
         component_order: tuple[str, ...],
     ) -> tuple[tuple[int, ...], ...]:
         """Group ordered items by the metadata common to one wire batch."""
+        return cls.partition_item_fields(
+            cls.item_fields(metadata, component_order) for metadata in metadata_items
+        )
+
+    @staticmethod
+    def partition_item_fields(
+        fields: Iterable[dict[str, ViewerWireValue]],
+    ) -> tuple[tuple[int, ...], ...]:
+        """Partition the actual rendered image or geometry fields once."""
         partitions: list[tuple[dict[str, ViewerWireValue], list[int]]] = []
-        for index, metadata in enumerate(metadata_items):
-            item_fields = cls.item_fields(metadata, component_order)
+        for index, item_fields in enumerate(fields):
             for partition_fields, indices in partitions:
                 if partition_fields == item_fields:
                     indices.append(index)

@@ -336,6 +336,11 @@ class Output:
              if fallback_source_identity is not None else None,)
         )
 
+    def viewer_item_fields(self) -> dict[str, ViewerWireValue]:
+        return StreamImagePayloadMetadataProjector.item_fields_for_plane_components(
+            self.metadata, self.variable_components,
+        )
+
     @property
     def viewer_stream_requires_source_metadata(self) -> bool:
         return True
@@ -391,7 +396,46 @@ class Output:
 
 
 @dataclass(frozen=True)
-class PointROIOutput(Output):
+class ROIOutput(Output):
+    """A rendered ROI carries a geometric domain, not an image pixel axis."""
+
+    @property
+    def source_component_domain(self) -> tuple[SourceComponentMetadata, ...] | None:
+        from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
+
+        if self.metadata is None:
+            return None
+        return ROIArchiveSourceMetadata.source_component_domain(self.content, self.metadata)
+
+    @property
+    def viewer_source_identity(self) -> SourceImageIdentity | None:
+        domain = self.source_component_domain
+        if domain is None:
+            return super().viewer_source_identity
+        identity = self.source_identity
+        return SourceImageIdentity(
+            path=identity.path if identity is not None else None,
+            component_metadata=domain[0],
+        )
+
+    def stream_source_metadata_items(
+        self, fallback_source_identity: SourceImageIdentity | None,
+    ) -> StreamSourceComponentMetadataItems:
+        domain = self.source_component_domain
+        if domain is None:
+            return super().stream_source_metadata_items(fallback_source_identity)
+        return StreamSourceComponentMetadataItems.from_values(domain)
+
+    def viewer_item_fields(self) -> dict[str, ViewerWireValue]:
+        from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
+
+        return ROIArchiveSourceMetadata.stream_item_fields(
+            self.content, self.metadata, super().viewer_item_fields(),
+        )
+
+
+@dataclass(frozen=True)
+class PointROIOutput(ROIOutput):
     """A point archive's represented source domain is geometric, not pixel planes."""
 
     @property
@@ -404,24 +448,6 @@ class PointROIOutput(Output):
         if domain is None:
             raise ValueError("Point ROI output requires fractional-Z metadata.")
         return domain
-
-    @property
-    def viewer_source_identity(self) -> SourceImageIdentity:
-        identity = self.source_identity
-        return SourceImageIdentity(
-            path=identity.path if identity is not None else None,
-            component_metadata=self.source_component_domain[0],
-        )
-
-    def stream_source_metadata_items(
-        self, fallback_source_identity: SourceImageIdentity | None,
-    ) -> StreamSourceComponentMetadataItems:
-        # A filename/scalar fallback cannot replace the validated geometric domain.
-        del fallback_source_identity
-        return StreamSourceComponentMetadataItems.from_values(
-            self.source_component_domain,
-        )
-
 
 @dataclass(frozen=True)
 class TextOutput(Output):
@@ -1793,12 +1819,7 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
                 "Viewer stream materialization requires output metadata with "
                 "source_component_metadata."
             )
-        item_fields = (
-            StreamImagePayloadMetadataProjector.item_fields_for_plane_components(
-                output.metadata,
-                output.variable_components,
-            )
-        )
+        item_fields = output.viewer_item_fields()
         display_config = output.viewer_display_config(
             self.values.stream_request.display_config
         )
@@ -3219,7 +3240,7 @@ def _write_roi_zip(
                 source_spatial_domain=source_domain_authority.domain_for_target(target)
             )
             outs.append(
-                Output(
+                ROIOutput(
                     path=target.archive.path,
                     content=ROIArchiveSourceMetadata.bind(target_rois, item_metadata),
                     metadata=item_metadata,

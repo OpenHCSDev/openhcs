@@ -1,5 +1,5 @@
-Automatic point publication: one rendered geometric source domain
-================================================================
+Automatic ROI publication: one rendered geometric source domain
+==============================================================
 
 Source checkpoint only; installed/public acceptance is pending. This branch
 is temporarily based on the published receiving12 integration18b9620, including
@@ -67,18 +67,73 @@ was added.
 
 Original FAMILY03 retained201PASS/10FAIL; nine cases observed no ROI because
 their old fixtures were empty, and one had the undeclared RGB scalar source.
-FAMILY04 is210PASS/1FAIL. The remaining original payload-scope volume-label
-control expects a represented Z domain. ROIMaterializationPlaneMetadataAuthority
-does not put that geometry domain on the rendered output when there is no
-pixel plane_axis, so the new output-derived request exposes that existing
-producer distinction. Its Z assertion is preserved; this is NOT full-family
-acceptance or a reason to fake a pixel axis. Point-domain controls remain PASS.
-The label domain needs the original ROI geometry owner follow-through.
+FAMILY04 remains210PASS/1FAIL: the original payload-scope volume-label control
+expected a represented Z domain. That assertion is unchanged and now passes.
+The completed label-family repair is described below; the old negative is not
+relabelled or erased.
 
-Public automatic producer settlement
-and same-viewer archive reopen with fractional-Z/calibration/features still
-require an original released engineering route. No runtime has been launched
-for this source checkpoint.
+Completed volume-label geometry owner
+-------------------------------------
+
+ROIOutput extends Output's existing source-address, domain and item-field hooks.
+PointROIOutput retains its stricter fractional-Z declaration. Both live output
+publication and StreamingService's saved archive reload consume
+ROIArchiveSourceMetadata.source_component_domain. Label geometry comes from
+the original PolyStore writer's plane_indices/plane_shape and the complete
+source-plane provenance, including empty label planes. The route address uses
+that domain's first plane, not a common scalar address with Z omitted.
+
+The former NapariShapePlaneMetadata reader is deleted. ROIPlaneMetadata owns
+the same external geometry fields for materialization, archive reload and
+native Shapes, delegating index/rank/bounds validation to the existing
+RuntimeProjectionPlaneMetadata. Mixed indexed/unindexed shapes, incomplete
+source domains and incompatible component extents remain errors. This closes
+IDEN-1 (pixel-axis versus geometric-domain identity), IMPL-12 (duplicate reader)
+and BOUND-2 (bypassed existing plane validation); it adds no registry, codec,
+stored axis mirror or compiler reconstruction.
+
+The existing image metadata projector still owns image fields and singleton
+compiled component projection. ROI geometry only supplements those fields.
+ROIMaterializationPlaneMetadataAuthority's existing declared stack composition
+is unchanged. Disk/native-model controls cover both a payload with no image
+plane_axis and the original compiled Z projection, at source-Z origins0 and10.
+They preserve four source planes even when only planes0 and2 contain contours,
+label7, calibration2/.65/.65 and actual saved-archive geometry. The native
+Shapes model preserves the local Z positions; this is not a Qt or MCP claim.
+
+Final POINT-DOMAIN-FAMILY10 completed386PASS across nine related test files in
+16.71 seconds. Original helper terminal0, elapsed22.04 seconds, peak724056KiB
+RSS, swaps0. The original211 family, singleton projections, fractional points,
+strict malformed-domain controls and the full native streaming-handler source
+family pass. Two older native fixtures were migrated to the existing visible
+layer and source-item-derived feature contracts; no identity fallback or
+production guard was added. New control fixture constructor/path/wire mistakes
+and the singleton regression are retained in FAMILY05 through FAMILY09, not
+claimed as production failures or overwritten.
+
+Final named AST evidence uses the existing refactor-audit measure_source owner:
+43 related production/test files plus three actual installed dependency files,
+254 named sites, zero parse omissions. POINT-DOMAIN-AST05 retains the prior
+owner/consumer snapshot; AST06 pins final file bytes. This is focused static
+evidence with semantic MRO/call review, not a global NRA/R1 completeness claim.
+External ROI extractor/converter and viewer transport declarations were read
+from receiving09's retained dependency backer; no dependency install was edited.
+
+Original evidence under the same engineering494 root::
+
+  POINT-DOMAIN-FAMILY10.log  6c3db41eaea3b29c118fd05d1629b51cbe8c30eeed56462b58e888d639a616bd
+  POINT-DOMAIN-FAMILY10.time c12f049178962dc688297dc3915a690241b02dc3d10f82d8e99f250a38deb607
+  POINT-DOMAIN-AST06.json   32cc000ad83501334903318a35f6aab08a60f68f24acd49ca2af3ccdc26c4e6d
+
+The batch uses the retained paired interpreter and engineering722/source_controls.py,
+which reports the source owner and receiving09 dependency backer explicitly.
+No client, native, viewer, environment or scientific execution was launched.
+
+The remaining live boundary is public automatic producer settlement and
+same-viewer saved point/volume-label reload with exact fractional-Z, complete
+domain, calibration, features and XY/XZ/YZ placement. It needs one ordinary
+qualified package and an explicitly handed-over existing engineering route.
+Dewey's original95/743 and subsequent732 receiving remain separate and untouched.
 
 The separately retained saved two-channel label witness is not claimed repaired:
 its two-dimensional geometry is mislabeled with a SOURCE_BINDING pixel axis.
