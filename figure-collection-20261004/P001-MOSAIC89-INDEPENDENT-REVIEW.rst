@@ -74,7 +74,33 @@ measurements. Faint continuity, crowded body partitions and crossing ownership
 remain qualified. Complete arborisation, verified biological neuron count and
 fresh autonomous success are not established. No reference answers were opened.
 
-At this checkpoint the author is closing its runtime and sealing the original
-bundle. A complete-file freeze verification and paired manuscript rendering
-remain required before merging the publication update. Existing evidence is
-not replaced and the current run is not restarted.
+The selected complete PipelineDocument was read: DAPI selects physical w1 and
+FITC w2, with source channel order preserved. Its SHA256 is
+01f9f417e9f650bb518139786c89c82b110c0af590591e5d388aeecc87678939;
+the rejected final document is
+49df417f043c7fb7a12e47547462f126dd5b74f9f0f03a4fcec81b93824e8223.
+Streaming SHA256 verification independently establishes byte-identical nuclear
+and body-label TIFFs across the three trials:
+83836b942a76e0773c2780fb0fec181cb47d9c4e8876f4c25442b36f50aca36e
+and 33878551fb313936a0a5ea7fda953df2ca3ca5cb2ea8785640bc989abdce59ea.
+
+The original closure receipt confirms viewer/native exit, and independent
+process checks find neither original PID 1601805 nor 1590675 present. The
+author preserves client exit status 1 and is sealing its original journal;
+that exit status is distinct from the three completed scientific executions.
+A complete-file freeze verification remains required before merging the
+publication update. Existing evidence is not replaced and the run is not
+restarted.
+
+Publication qualification
+-------------------------
+
+The existing shared papers interpreter built both PDFs successfully:
+``paper/build/run-20261005T215730-0e490d51`` (59 MiB).
+``paper/build_paper.py status`` reports current with no changed inputs.
+The reviewer opened rendered manuscript page 25 and supplement page 47;
+the new paragraphs are readable and unclipped. The two disposable PNG
+previews were removed after inspection; the PDFs remain. No new environment,
+package installation, figure regeneration or scientific execution was used.
+Invoking the builder with system Python initially failed because paper_build
+was absent; the existing shared papers environment was used instead.
