@@ -117,6 +117,7 @@ from openhcs.core.memory import numpy
 from openhcs.core.artifacts import (
     ArtifactSpec, ArtifactViewerStreaming, GroupLineageSourceRelation,
     ImageArtifactType, MainFlowPlaneProjectionOutputSpec, MeasurementsArtifactType,
+    ObjectLabelsArtifactType, ObjectMeasurementSubjectRelation,
 )
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
 from openhcs.core.runtime_measurements import (
@@ -160,13 +161,14 @@ class HelperFeatureOwner(RowCapability, UnitCapability, RuntimeMeasurementFeatur
         return cls.owns_measurement_feature_name(feature_name)
 
 input_spec = ArtifactSpec.input(
-    "SyntheticInput", ImageArtifactType, parameter_name="auxiliary", required=False,
+    "SyntheticInput", ObjectLabelsArtifactType, parameter_name="auxiliary", required=False,
 )
 measurement_spec = ArtifactSpec.output(
     "SyntheticMeasurements", MeasurementsArtifactType, required=False,
     viewer_streaming=ArtifactViewerStreaming.ON_DEMAND,
     measurement_feature_owner=HelperFeatureOwner,
-    relations=(GroupLineageSourceRelation(input_spec.ref()),),
+    relations=(GroupLineageSourceRelation(input_spec.ref()),
+               ObjectMeasurementSubjectRelation(input_spec.ref())),
 )
 image_spec = MainFlowPlaneProjectionOutputSpec.output(
     "SyntheticProjection", ImageArtifactType,
@@ -416,6 +418,73 @@ def _spawned_custom_task(payload, execution_id, plate_id):
     return os.getpid(), tuple(results)
 
 
+def _spawned_compiled_custom_task(context, helpers):
+    """Exercise queue transport of the captured contract, not just its reference."""
+    import numpy as np
+    from openhcs.core.function_reference import FunctionReference
+
+    plan = context.step_plans[0]
+    (invocation,) = tuple(plan.compiled_function_pattern.iter_invocations())
+    assert isinstance(invocation.contract.raw_processing_function, FunctionReference)
+    assert invocation.contract.metadata.prepare is None
+    values = np.arange(6, dtype=np.uint16).reshape(2, 3)
+    np.testing.assert_array_equal(invocation.runtime_callable(values), values)
+    owner = invocation.contract.artifact_outputs[0].measurement_feature_owner
+    assert owner.row_type is helpers[4]
+    assert owner.make_row(2.5) == helpers[5]
+    return context.axis_id, os.getpid(), values.tolist(), owner.make_row(2.5)
+
+
+def _compiled_custom_contexts(payload, runtime):
+    from polystore.filemanager import FileManager
+    from polystore.memory import MemoryStorageBackend
+    from openhcs.constants.constants import Backend
+    from openhcs.core.compiled_execution import CompiledExecutionBundle
+    from openhcs.core.compiled_step_plan import CompiledStepPlan
+    from openhcs.core.context.processing_context import ProcessingContext
+    from openhcs.core.function_patterns import (
+        compile_function_pattern, normalize_function_pattern,
+    )
+    from openhcs.core.function_step_transport import FunctionStepTransportAuthority
+
+    contexts = {}
+    for index, (reference, _helpers) in enumerate(payload):
+        axis_id = f"synthetic_{index}"
+        # Compilation captures metadata from the registered runtime callable.
+        # Unlike an already-referenced pattern, this carries a displaced raw
+        # callable until the existing transport projection derives its owner.
+        captured = normalize_function_pattern(reference.resolve())
+        pattern = compile_function_pattern(captured, {}, {})
+        (invocation,) = tuple(pattern.iter_invocations())
+        assert callable(invocation.contract.raw_processing_function)
+        prepared = invocation.contract.resolve_runtime_callable()
+        plan = CompiledStepPlan(
+            step_index=0, step_name="Synthetic custom", step_type="FunctionStep",
+            axis_id=axis_id, func=captured, compiled_function_pattern=pattern,
+        )
+        context = ProcessingContext(
+            axis_id=axis_id, step_plans={0: plan},
+            filemanager=FileManager({Backend.MEMORY.value: MemoryStorageBackend()}),
+        )
+        context.freeze()
+        contexts[axis_id] = context
+        normalized = FunctionStepTransportAuthority.normalize_context(context)
+        transported = next(
+            normalized.step_plans[0].compiled_function_pattern.iter_invocations()
+        )
+        assert transported.contract is not invocation.contract
+        assert invocation.contract.resolve_runtime_callable() is prepared
+        assert callable(invocation.contract.raw_processing_function)
+        assert FunctionStepTransportAuthority.normalize_callable_contract(
+            transported.contract
+        ) is transported.contract
+    return CompiledExecutionBundle.from_runtime_contexts(
+        pipeline_definition=(), runtime_contexts=contexts,
+        worker_assignments={f"worker_{i}": [axis] for i, axis in enumerate(contexts)},
+        runtime_environment=runtime,
+    ).transport_contexts
+
+
 def _spawn(path):
     import multiprocessing
     from openhcs.core.compiled_execution import (
@@ -445,8 +514,23 @@ def _spawn(path):
         log_file_base=None, progress_queue=queue,
         cancellation=ExecutionCancellationSignal(),
     ).create(runtime_environment=runtime, actual_max_workers=2)
+    contexts = _compiled_custom_contexts(payload, runtime)
     try:
         with resources.execution_context():
+            tasks = tuple(
+                resources.executor.submit(_spawned_compiled_custom_task, lane_context, helpers)
+                for lane_context, (_reference, helpers) in zip(
+                    contexts.values(), payload, strict=True
+                )
+            )
+            for (axis, lane_context), task, (_reference, helpers) in zip(
+                contexts.items(), tasks, payload, strict=True
+            ):
+                observed_axis, worker_pid, values, row = task.result(timeout=15)
+                assert observed_axis == axis and lane_context.axis_id == axis
+                assert worker_pid != os.getpid()
+                assert values == [[0, 1, 2], [3, 4, 5]]
+                assert type(row) is helpers[4] and row == helpers[5]
             pid, rows = resources.executor.submit(
                 _spawned_custom_task, payload, context.execution_id, context.plate_id,
             ).result(timeout=15)
