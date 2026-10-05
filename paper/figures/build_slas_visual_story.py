@@ -280,7 +280,7 @@ def task_only_story():
     h001, bbbc039 = load_evaluations(ROOT)
     with plt.rc_context({"font.size": 14, "axes.titlesize": 15,
                          "axes.spines.top": False, "axes.spines.right": False}):
-        sheet = FigureSheet("task_only_visual", "", 9.0)
+        sheet = FigureSheet("task_only_visual", "", 8.2)
         for path in (H001_SOURCE, BBBC039_SOURCE,
                      Path("paper/figures/build_slas_task_only.py"),
                      Path("figure-collection-20261004/H001-FRESH586-SCORED-NATIVE-REVIEW.rst")):
