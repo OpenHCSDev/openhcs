@@ -900,6 +900,17 @@ pipeline, callable, QA audit and reconciliation remain under
 `/home/ts/wt/openhcs-issue-batch-20260929/next-h002-fresh10-89-20261005/H002_FRESH10_89/author-workspace/output`;
 canonical payloads remain on HDD at the paths in the source proof.
 
+### H002 rotation repeat: useful localisation with an incomplete census
+
+The separate `H002_FRESH10_ROTATION_96` author retained 25 volumetric
+candidates, fourteen boundary-flagged, under its initial scientific settings.
+The [independent frozen-run review](../../figure-collection-20261004/H002-ROTATION-FROZEN-REVIEW.rst)
+verifies all 395 payload and 23 control-file hashes, reconciles the saved
+tables, and inspects ordinary-body and clipped-boundary native triads.
+Ordinary localisation remains useful; ambiguous bright masses and incomplete
+boundary geometry prevent interpreting the candidates as a complete cell
+census. No reference score or biological parameter improvement is claimed.
+
 ### BBBC007 fresh10 rotation: coverage failure with consistent exports
 
 The [independent frozen-run review](../../figure-collection-20261004/BBBC007-FRESH10-ROTATION-INDEPENDENT-REVIEW.rst)

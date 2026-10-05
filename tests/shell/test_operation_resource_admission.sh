@@ -210,6 +210,16 @@ printf '5500\n' > "$runtime/first-mcp-started.epoch"
 run 1 full deadline_exact_boundary
 printf '5501\n' > "$runtime/first-mcp-started.epoch"
 run 0 full deadline_one_second_remaining
+# The future admin run came through the SAME successor projector with no
+# declared interval. Preserve the old expired run and its unchanged clock.
+printf '1\n' > "$admin_runtime/first-mcp-started.epoch"
+run 0 full undeclared_interval_continues ADMIN
+rg -q 'Recorded elapsed=9999 seconds; scientific interval undeclared; mode=full' \
+  "$admin_runtime/resources-undeclared_interval_continues.deadline"
+jq -e '.task_minutes_from_first_mcp_start==null' "$scratch/admin-run/program.json" >/dev/null
+jq -e '.task_minutes_from_first_mcp_start==75' "$scratch/run/program.json" >/dev/null
+printf '5498\n' > "$runtime/first-mcp-started.epoch"
+run 1 full original_expiry_still_owned
 (cd "$scratch/run"; sha256sum --check --quiet READY-FREEZE.sha256)
 printf '5498\n' > "$runtime/first-mcp-started.epoch"
 sha256sum "$runtime/first-mcp-started.epoch" "$runtime/resources-expired_owned_cleanup.deadline" > "$scratch/expired-custody.sha256"
