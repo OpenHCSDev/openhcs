@@ -72,6 +72,12 @@ from openhcs.interop.cellprofiler.runtime.measurement_rows import (
 from openhcs.interop.cellprofiler.runtime.artifact_binding import (
     RuntimeInputBindingRequest,
 )
+from openhcs.interop.cellprofiler.runtime.object_input_policies import (
+    LabelsObjectInputPolicy,
+)
+from openhcs.interop.cellprofiler.runtime.primary_image_input_policies import (
+    ObjectLabelDrivenPrimaryImageInputPolicy,
+)
 
 if TYPE_CHECKING:
     from openhcs.core.function_patterns import NormalizedFunctionItem
@@ -329,7 +335,10 @@ class _ClassificationRuleValuesRuntimeParameter(_ClassificationRuntimeInputParam
         }
 
 
-class ClassifyObjectsMeasurementInputPolicy:
+class ClassifyObjectsMeasurementInputPolicy(
+    ObjectLabelDrivenPrimaryImageInputPolicy,
+    LabelsObjectInputPolicy,
+):
     """Resolve ClassifyObjects label and measurement-vector inputs."""
 
     @classmethod
