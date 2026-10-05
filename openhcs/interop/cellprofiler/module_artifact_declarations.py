@@ -25,6 +25,7 @@ from openhcs.core.artifacts import (
     ImageMeasurementSubjectRelation,
     InputGroupLineageSourceRelation,
     InputImageSetContextSourceRelation,
+    InputObjectMeasurementSourceRelation,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
     ObjectLineageArtifactType,
@@ -651,7 +652,22 @@ class PriorMeasurementArtifactInputModule(CellProfilerModule):
                 )
             group_lineage_refs = source_refs or object_refs
             for producer in feature_matches:
-                measurement_input = producer.spec.for_plan_type(ArtifactInputPlan)
+                object_subjects = tuple(dict.fromkeys(
+                    InputObjectMeasurementSourceRelation(relation.source)
+                    for relation in producer.spec.relations
+                    if relation.source.artifact_type is ObjectLabelsArtifactType
+                    and relation.source.for_plan_type(ArtifactInputPlan) in object_refs
+                ))
+                if object_subjects:
+                    measurement_input = object_subjects[0].input_spec_for_output(
+                        producer.spec
+                    )
+                    measurement_input = replace(
+                        measurement_input,
+                        relations=(*measurement_input.relations, *object_subjects[1:]),
+                    )
+                else:
+                    measurement_input = producer.spec.for_plan_type(ArtifactInputPlan)
                 lineage_sources = tuple(
                     source.for_plan_type(ArtifactInputPlan)
                     for source in producer.spec.group_scope_sources()
