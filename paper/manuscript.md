@@ -233,31 +233,43 @@ The BBBC039 author improved object F1 from 0.908 to 0.934 on its original three 
 Native H001 views show the elongated-body false-split repair in the same scored
 run, alongside its remaining possible merge (Supplementary Figure 18).
 
-Independent repeats exposed variability beyond the within-run improvements.
-On 156 completed BBBC039 fields, a later author achieved precision 0.942,
-recall 0.838 and pooled F1 0.887, compared with 0.909 for the earlier pipeline
-on exactly those fields. Correcting noise-only foreground admission therefore
-did not improve overall reference agreement. Another repeat completed all
-200 fields across two execution phases with unchanged scientific parameters;
-its regional review retained useful detections and unresolved splits or merges,
-but no reference score was obtained. Execution coverage and segmentation
-quality are reported separately (Supplementary Data 8). A further independent
-author completed all 200 fields and achieved precision 0.946, recall 0.856 and
-pooled F1 0.898 against the same references. Compared with the earlier complete
-run, 61 field scores improved, 123 decreased and 16 were unchanged. The repeat
-retained useful agreement but did not improve overall accuracy; 314 additional
-misses accounted for most of the reduction (Supplementary Figure 20).
+Three independently authored pipelines achieved pooled object F1 between
+0.898 and 0.906 on the same 200 BBBC039 fields and 23,615 reference nuclei
+(Table 1). This is repeated complete-corpus agreement, not first-attempt
+accuracy or a wholly unseen evaluation: each corpus includes the author's
+development fields, and the authors used different software bundles and
+independently chosen settings.
 
-A subsequent independent author achieved pooled F1 0.904 across all 200
-fields, with precision 0.944 and recall 0.866. It matched 20,457 of the same
-23,615 annotated nuclei, with 1,205 unmatched predictions and 3,158 missed
-annotations. Field F1 reached at least 0.90 in 137 fields; seven annotated
-fields remained below 0.80. All three annotation-empty fields had no
-detections. On its six initial development fields, the author's own revisions
-increased F1 from 0.826 to 0.840, recovering 17 additional matches while adding
-two unmatched predictions. The complete-corpus score was close to the earlier
-0.906 result, rather than an improvement; no first-attempt score across 200
-fields or causal skill effect is inferred (Supplementary Data 8).
+| Independent author | Matched nuclei | Precision | Recall | Object F1 |
+|---|---:|---:|---:|---:|
+| Figure 5 run | 20,521 | 0.947 | 0.869 | 0.906 |
+| Supplementary Figure 20 repeat | 20,207 | 0.946 | 0.856 | 0.898 |
+| Subsequent repeat | 20,457 | 0.944 | 0.866 | 0.904 |
+
+Table 1. Post-freeze reference agreement for three independent BBBC039 authors
+with scored complete-corpus outputs. Each row includes all 200 fields,
+including three annotation-empty fields; one-to-one matching requires
+intersection over union at least 0.5. Scores were not supplied to the authors.
+Supplementary Data 8 retains per-field results, source identities and
+first-to-final comparisons within their actual coverage.
+
+The Supplementary Figure 20 repeat improved 61 field scores, reduced 123 and
+left 16 unchanged relative to the Figure 5 run; 314 additional misses accounted
+for most of its lower pooled F1. The subsequent repeat reached field F1 at
+least 0.90 in 137 fields, with seven annotated fields below 0.80 and no
+detections in the three annotation-empty fields. Its own revisions improved
+F1 from 0.826 to 0.840 on the same six development fields, recovering 17
+additional matches while adding two unmatched predictions. These results
+retain useful agreement and its difficult-field tail rather than a monotonic
+improvement between authors.
+
+Other repeats retain separate coverage qualifications. One scored 156
+completed fields at precision 0.942, recall 0.838 and pooled F1 0.887, compared
+with 0.909 for the Figure 5 pipeline on exactly those fields. Correcting
+noise-only foreground admission did not improve overall reference agreement.
+Another completed all 200 fields across two execution phases with unchanged
+scientific parameters but was not reference-scored. Supplementary Data 8
+reports this execution coverage separately from measured accuracy.
 
 ### Image review supports local repair with regression controls
 
