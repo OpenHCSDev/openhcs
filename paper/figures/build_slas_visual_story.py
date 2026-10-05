@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, FancyArrowPatch, FancyBboxPatch, Rectangle
 from PIL import Image
 
-from build_slas_agent import ROOT, OUTPUT, digest
+from build_slas_agent import ROOT, OUTPUT, digest, normalize_generated_svg
 
 GALLERY = ROOT / "website/assets/gallery"
 INK = "#203044"
@@ -218,6 +218,8 @@ class FigureSheet:
         for extension in ("png", "pdf", "svg"):
             path = OUTPUT / f"{self.stem}.{extension}"
             self.figure.savefig(path, dpi=300)
+            if extension == "svg":
+                normalize_generated_svg(path)
             outputs.append(path)
         plt.close(self.figure)
         receipt = {
@@ -477,6 +479,41 @@ def h004_junction():
         size=14,
     )
     sheet.text(3, 1, "Local support recovery is not complete tracing or neuron ownership.", size=14)
+    sheet.save()
+
+
+def personal_stitched_development():
+    """Retained development witnesses, not a fresh autonomous score."""
+    sheet = FigureSheet("p001_stitched_dev13_native", "", 6.2)
+    sheet.source(ROOT / "figure-collection-20261004/P001-STITCHED-DEV13-INDEPENDENT-REVIEW.rst")
+    source_root = OUTPUT / "p001_stitched_dev13_sources"
+    record_path = source_root / "capture-records.json"
+    sheet.source(record_path)
+    records = {item["phase"]: item["record"] for item in json.loads(record_path.read_text())}
+    sheet.text(3, 97, "Nine-field neurite mosaic: retained-context development", size=16, weight="bold", va="top")
+    for row, (region, suffix, heading) in enumerate((
+        ("seam", "96", "Sampled tile overlap"),
+        ("bottom", "97", "Lower-right field core"),
+    )):
+        y = 53 - row * 39
+        sheet.text(3, y + 35, heading, size=13, weight="bold")
+        for column, (view, label) in enumerate((
+            ("raw", "Raw FITC"),
+            ("result", "Bodies + paths"),
+            ("combined", "Raw + result"),
+        )):
+            phase = f"{region}-{view}{suffix}"
+            path = source_root / f"{phase}.png"
+            record = records[phase]
+            if not record["captured"] or digest(path) != record["resource"]["sha256"]:
+                raise ValueError(f"Native screenshot hash mismatch: {phase}")
+            x = 3 + column * 32
+            letter = chr(ord("A") + row * 3 + column)
+            sheet.text(x, y + 29, f"{letter}  {label}", size=12, weight="bold")
+            sheet.source_image(path, (x, y, 30, 25), crop=(297, 28, 1250, 492))
+    sheet.text(3, 7, "Shared channel-stack fit; acquisition-derived placement.", size=12)
+    sheet.text(3, 4, "Faint paths and crowded ownership remain incomplete.", size=12)
+    sheet.text(3, 1, "Attempt08 development outputs—not final09 validation or a fresh autonomous pass.", size=12)
     sheet.save()
 
 
