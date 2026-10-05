@@ -330,13 +330,15 @@ class PathPlannerExecutionGroups:
             else input_component_scopes
         )
         artifact_owned = bool(contracts) and all(
-            contract.group_scope_inputs for contract in contracts
+            contract.invocation_domain_inputs for contract in contracts
         )
         if artifact_owned:
             source_bindings = (
                 step.source_bindings if source_bindings is None else source_bindings
             ).for_artifact_refs(
-                spec.ref() for contract in contracts for spec in contract.group_scope_inputs
+                spec.ref()
+                for contract in contracts
+                for spec in contract.invocation_domain_inputs
             )
         scope = component_scopes.scope_for_group_by(
             group_by,
@@ -374,11 +376,13 @@ class PathPlannerExecutionGroups:
         *,
         consumer_scope: PathPlannerGroupScope,
     ) -> PathPlannerGroupScope:
-        """Resolve non-dict invocation groups from declared artifact owners."""
+        """Resolve invocation groups from their declared input-domain owners."""
 
         owner_specs = tuple(
             dict.fromkeys(
-                spec for contract in contracts for spec in contract.group_scope_inputs
+                spec
+                for contract in contracts
+                for spec in contract.invocation_domain_inputs
             )
         )
         if not owner_specs:
