@@ -217,6 +217,64 @@ count and axes; downstream code must use the current artifact provenance plus
 its own ``variable_components`` declaration. ``group_by`` then partitions that
 already assembled downstream value.
 
+Plan image stacks and source-bound labels before authoring
+----------------------------------------------------------
+
+Naming two sources does not make both available in every invocation. Before
+authoring a multi-image measurement, separate its current image input from its
+typed artifact inputs. ``input_source=PIPELINE_START`` returns to acquisition
+images; it does not remove the step's inherited variable-component scope.
+When the invocation needs an assembled channel stack, declare
+``variable_components=[CHANNEL]`` with the intended step bindings/order. A
+``SITE`` stack or ``group_by=NONE`` alone does not assemble channels. Inspect the
+resolved step configuration and artifact plan, not just the pipeline universe.
+
+Object-label inputs also retain their producer's source context. Equal shape,
+the same well, or an exact artifact name alone does not establish that labels
+from one channel belong to a measurement invocation on another. A runtime
+error with an address-matched label candidate but different fixed channels is
+a context mismatch, not permission to rename the channels or use the first
+available labels. Check the producer, acquisition identity, current image
+scope and declared input relations before changing grouping.
+
+For a custom consumer that intentionally measures an aligned image using labels
+produced on another channel of the same declared image set, use the existing
+``InputImageSetContextSourceRelation`` on the label input. For example, this
+**input-contract fragment** names the measurement image and its label subject:
+
+.. code-block:: python
+
+   from openhcs.core.artifacts import (
+       ArtifactSpec, ImageArtifactType, InputImageSetContextSourceRelation,
+       ObjectLabelsArtifactType,
+   )
+
+   SIGNAL = ArtifactSpec.input(
+       "Signal", ImageArtifactType, parameter_name="signal",
+   )
+   SUBJECTS = ArtifactSpec.input(
+       "Subjects", ObjectLabelsArtifactType, parameter_name="subjects",
+       relations=(InputImageSetContextSourceRelation(SIGNAL.ref()),),
+   )
+
+Declare both inputs through ``artifact_inputs`` and provide the matching nominal
+callable parameters; follow :doc:`../development/callable_artifact_authoring`
+for the complete ABI. The relation derives image-set membership from the
+compiled source bindings while retaining exact artifact identity. It does not
+regroup or broadcast labels, register images, remap object IDs, or make
+unrelated samples compatible. Declare the real shared well/site/Z/time context
+and verify alignment; do not manufacture equality to satisfy a check.
+Registered CellProfiler object-measurement declarations already derive this
+relation from their selected image inputs; a custom callable's input names and
+``ObjectLabelValue`` annotations alone do not declare it.
+
+Check the compiled image and artifact scopes before the first execution, then
+read back each requested source's own values and label/object identity. Stack
+assembly, image-set context and intensity-unit conversion are separate
+decisions: fixing one does not prove the others. A failed receipt remains
+preserved; validate a separately recorded declaration repair rather than replay
+an uncertain operation.
+
 Executable code-mode declarations
 ---------------------------------
 
