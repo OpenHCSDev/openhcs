@@ -61,11 +61,18 @@ scope can be qualified.
 Eligibility compares authored CPPipe hash, native worker and shared contract
 hashes, selected input/assignment scope, worker count, thread environment,
 repetitions, complete monotonic clock records, and the same declared native
-Python/CellProfiler/core/NumPy/SciPy environment. The current prepared effective
+Python/CellProfiler/core/NumPy/SciPy environment, Linux machine identity, hostname,
+kernel/platform, stable CPU model/topology/features/microcode signature, and exact
+CPU affinity. Producer and read-only probe capture these through the same native
+environment owner. Dynamic CPU MHz and bogomips calibration readings are excluded
+from identity; changing affinity, host, CPU properties or kernel rejects reuse.
+The current prepared effective
 CPPipe and ordered file list must match exactly; unsupported path-dependent
 changes are rejected. Source images and metadata are rehashed against the
 original inventory. These guards do not establish unrecorded JVM, full dependency,
-or hardware hashes. Reuse belongs within a controlled benchmark environment.
+or dynamic CPU frequency/load histories. Reuse belongs within a controlled
+benchmark environment. Older reports without the physical environment fields
+remain scientific references and cannot qualify for timing reuse.
 
 The original measured native durations and per-repetition output roots remain
 unchanged. Fresh OpenHCS execution still undergoes the same persisted CSV/image/

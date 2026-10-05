@@ -77,10 +77,38 @@ class NativeBatchEnvironment:
     numpy_version: str
     scipy_version: str
     temporary_root: str
+    host_machine_id: str
+    host_node: str
+    host_platform: str
+    cpu_info_sha256: str
+    cpu_affinity: tuple[int, ...]
+
+    def __post_init__(self) -> None:
+        affinity = tuple(sorted(self.cpu_affinity))
+        if (
+            not affinity
+            or len(affinity) != len(set(affinity))
+            or any(cpu < 0 for cpu in affinity)
+        ):
+            raise ValueError(
+                "Native benchmark CPU affinity must be a nonempty unique CPU set."
+            )
+        object.__setattr__(self, "cpu_affinity", affinity)
+        if (
+            not self.host_machine_id
+            or not self.host_node
+            or not self.host_platform
+            or not self.cpu_info_sha256
+        ):
+            raise ValueError(
+                "Native benchmark physical environment identity is incomplete."
+            )
 
     @classmethod
     def capture(cls) -> NativeBatchEnvironment:
         """Capture the declared native environment for both producer and probe."""
+        import hashlib
+        import os
         import platform
         import sys
         import tempfile
@@ -89,6 +117,15 @@ class NativeBatchEnvironment:
         import numpy
         import scipy
 
+        # Linux CPU identity includes topology, model, flags and microcode. These
+        # two calibration readings vary within one benchmark and are not identity.
+        cpu_identity = "\n".join(
+            line
+            for line in Path("/proc/cpuinfo").read_text().splitlines()
+            if line.partition(":")[0].strip() not in ("cpu MHz", "bogomips")
+        )
+        if not cpu_identity.strip():
+            raise ValueError("Native benchmark Linux CPU identity is empty.")
         return cls(
             python_executable=sys.executable,
             python_version=platform.python_version(),
@@ -97,6 +134,11 @@ class NativeBatchEnvironment:
             numpy_version=numpy.__version__,
             scipy_version=scipy.__version__,
             temporary_root=tempfile.gettempdir(),
+            host_machine_id=Path("/etc/machine-id").read_text().strip(),
+            host_node=platform.node(),
+            host_platform=platform.platform(),
+            cpu_info_sha256=hashlib.sha256(cpu_identity.encode()).hexdigest(),
+            cpu_affinity=tuple(sorted(os.sched_getaffinity(0))),
         )
 
     def require_equivalent(self, current: NativeBatchEnvironment) -> None:
