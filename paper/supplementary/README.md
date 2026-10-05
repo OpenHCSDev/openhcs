@@ -923,7 +923,7 @@ are candidate-output properties, not biological accuracy. The
 815 independently checked artifact entries, five journal prefixes, pipeline
 identity and qualified local gains. No reference score was used in this repeat.
 
-A subsequent fresh paired-field trial separated a crowded cluster and a genuine
+A separate fresh paired-field trial separated a crowded cluster and a genuine
 pair, but its last marker-smoothing change retained a dim-neighbour merge and
 introduced an apparent isolated-body split. The author caught the regression
 without reference feedback. Its final 56 nuclear and 56 seeded cell labels are

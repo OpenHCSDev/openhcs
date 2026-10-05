@@ -311,7 +311,7 @@ associated cell-label identities therefore provide reproducible candidate
 outputs and partial autonomous recovery, not a validated population count;
 81 secondary objects remained seed-sized (Supplementary Data 8).
 
-A subsequent fresh paired-field author separated a crowded cluster and a
+A separate fresh paired-field author separated a crowded cluster and a
 genuine close pair after inspecting its marker and partition stages. Reducing
 marker smoothing in the last repair still failed to separate a dim neighbour
 and introduced an apparent split within an isolated mottled nucleus. The author
