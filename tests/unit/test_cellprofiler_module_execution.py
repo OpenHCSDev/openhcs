@@ -8082,7 +8082,7 @@ def test_cellprofiler_auxiliary_payload_stack_preserves_metadata() -> None:
         "numpy",
     )
 
-    assert isinstance(stacked, AlignedImageStack)
+    assert isinstance(stacked, ProducedImageStack)
     stacked = RuntimeSliceProjection.full_stack_value(stacked)
     assert isinstance(stacked, ImageMetadataPayload)
     assert image_payload_data(stacked).shape == (2, 1, 4, 5)
@@ -8105,19 +8105,23 @@ def test_cellprofiler_image_aggregation_uses_nominal_image_payload_type() -> Non
     )
 
 
-def test_cellprofiler_aligned_main_output_aggregation_transposes_surfaces() -> None:
+@pytest.mark.parametrize("owner", (AlignedImageStack, ImageOutputBundle))
+def test_cellprofiler_aligned_main_output_aggregation_transposes_surfaces(owner) -> None:
+    contexts = tuple(AlignedImageSliceContext.main_flow(name) for name in ("First", "Second"))
     outputs = (
-        AlignedImageStack(
+        owner(
             (
                 np.full((3, 4), 1.0, dtype=np.float32),
                 np.full((3, 4), 10.0, dtype=np.float32),
-            )
+            ),
+            slice_contexts=contexts,
         ),
-        AlignedImageStack(
+        owner(
             (
                 np.full((3, 4), 2.0, dtype=np.float32),
                 np.full((3, 4), 20.0, dtype=np.float32),
-            )
+            ),
+            slice_contexts=contexts,
         ),
     )
 
@@ -8126,7 +8130,7 @@ def test_cellprofiler_aligned_main_output_aggregation_transposes_surfaces() -> N
         MemoryType.NUMPY.value,
     )
 
-    assert isinstance(aggregated, AlignedImageStack)
+    assert type(aggregated) is owner
     assert len(aggregated.slices) == 2
     np.testing.assert_array_equal(
         image_payload_data(RuntimeSliceProjection.full_stack_value(aggregated.slices[0]))[:, 0, 0],

@@ -539,10 +539,7 @@ class ImagePayloadMetadata(
         return self.replace_fields(
             source_channel_axis=payload_metadata.source_channel_axis,
             plane_axis=payload_metadata.plane_axis,
-        ).payload_with(
-            image_payload_data(payload),
-            image_payload_mask(payload),
-        )
+        ).attach_to(payload)
 
     def derive_payload(
         self,

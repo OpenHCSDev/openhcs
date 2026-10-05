@@ -738,7 +738,7 @@ class ImagePayloadComposition:
 
     @property
     def plane_axis(self) -> RuntimePlaneAxis | None:
-        """Return the axis declared by the composed payload owner."""
+        """Return the invocation axis, distinct from a bundle's inner source axis."""
         if isinstance(self.payload, AlignedImageStack):
             return RuntimePlaneAxis.RUNTIME_SLICE
         return image_payload_metadata(self.payload).plane_axis
@@ -1129,10 +1129,10 @@ class AlignedImageSliceContext:
 
 
 @dataclass(slots=True)
-class AlignedImageStack(
+class ImagePayloadSliceStack(
     ImagePayloadStackComposition, RuntimeArrayPayload, ImagePayloadMetadataCarrier,
 ):
-    """Per-slice multi-image bundles aligned to one OpenHCS stack."""
+    """Shared slice storage, projection, and publication for image stacks."""
 
     slices: tuple[Any, ...]
     slice_contexts: tuple[AlignedImageSliceContext, ...] = ()
@@ -1201,10 +1201,6 @@ class AlignedImageStack(
         return self.slices
 
     @property
-    def composition_metadata_mode(self) -> ImagePayloadMetadataCompositionMode:
-        return ImagePayloadMetadataCompositionMode.STACK
-
-    @property
     def projected_output_composition_mode(self) -> ImagePayloadMetadataCompositionMode | None:
         """Declare the outer runtime axis retained by projected output members."""
         return self.composition_metadata_mode
@@ -1219,23 +1215,14 @@ class AlignedImageStack(
         """An explicitly aligned stack declares its outer runtime-slice domain."""
         return RuntimePlaneAxis.RUNTIME_SLICE
 
-    def composition_payload_metadata(
-        self, metadata: ImagePayloadMetadata
-    ) -> ImagePayloadMetadata:
-        """Inner image bundles contribute provenance, not an outer slice axis."""
-        metadata = super(AlignedImageStack, self).composition_payload_metadata(metadata)
-        return metadata.with_source_provenance(
-            metadata.source_provenance.with_runtime_planes_as_contributors()
-        )
-
     def __post_init__(self) -> None:
         self.slices = tuple(self.slices)
         self.slice_contexts = tuple(self.slice_contexts)
         if not self.slices:
-            raise ValueError("AlignedImageStack.slices cannot be empty.")
+            raise ValueError(f"{type(self).__name__}.slices cannot be empty.")
         if self.slice_contexts and len(self.slice_contexts) != len(self.slices):
             raise ValueError(
-                "AlignedImageStack.slice_contexts must be empty or match slices; "
+                f"{type(self).__name__}.slice_contexts must be empty or match slices; "
                 f"got {len(self.slice_contexts)} context(s) for {len(self.slices)} slice(s)."
             )
 
@@ -1259,14 +1246,14 @@ class AlignedImageStack(
             )
         return self.slices[slice_index]
 
-    def with_slices(self, slices: Sequence[Any]) -> "AlignedImageStack":
+    def with_slices(self, slices: Sequence[Any]) -> "ImagePayloadSliceStack":
         """Replace payload slices while preserving the concrete alignment owner."""
 
         return type(self)(tuple(slices), self.slice_contexts)
 
     def copy_input_cohort(
         self, *, memory_type: str, device_id: int | None,
-    ) -> "AlignedImageStack":
+    ) -> "ImagePayloadSliceStack":
         """Retain aligned member domains while admitting independent buffers."""
         return self.with_slices(
             tuple(
@@ -1396,8 +1383,26 @@ class AlignedImageStack(
         return matches[0] if matches else None
 
 
+@dataclass(slots=True)
+class AlignedImageStack(ImagePayloadSliceStack):
+    """Per-runtime-slice bundles of separately bound image inputs or outputs."""
+
+    @property
+    def composition_metadata_mode(self) -> ImagePayloadMetadataCompositionMode:
+        return ImagePayloadMetadataCompositionMode.STACK
+
+    def composition_payload_metadata(
+        self, metadata: ImagePayloadMetadata
+    ) -> ImagePayloadMetadata:
+        """Inner image bundles contribute provenance, not an outer slice axis."""
+        metadata = super(AlignedImageStack, self).composition_payload_metadata(metadata)
+        return metadata.with_source_provenance(
+            metadata.source_provenance.with_runtime_planes_as_contributors()
+        )
+
+
 @dataclass(slots=True, kw_only=True)
-class ProducedImageStack(AlignedImageStack):
+class ProducedImageStack(ImagePayloadSliceStack):
     """Borrowed produced image slices with one canonical dense realization.
 
     Produced pixels retain their literal values and heterogeneous numeric dtype
@@ -1903,7 +1908,7 @@ def compose_aligned_image_payload(
 
 def payload_slices_for_alignment(payload: Any) -> tuple[Any, ...]:
     """Return slices declared by a nominal runtime-alignment owner."""
-    if isinstance(payload, AlignedImageStack):
+    if isinstance(payload, ImagePayloadSliceStack):
         return payload.slices
     if isinstance(payload, RuntimeSliceAlignedValueSet):
         return tuple(
@@ -1948,7 +1953,7 @@ def payload_slices_for_alignment(payload: Any) -> tuple[Any, ...]:
 
 def flatten_aligned_image_payload_slices(payload: Any) -> tuple[Any, ...]:
     """Derive scalar image payloads from the nominal aligned-output owner."""
-    if isinstance(payload, AlignedImageStack):
+    if isinstance(payload, ImagePayloadSliceStack):
         return tuple(
             output_slice for output_slice, _context in payload.projected_output_slices()
         )

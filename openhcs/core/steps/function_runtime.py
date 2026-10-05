@@ -56,7 +56,7 @@ from openhcs.core.function_patterns import (
     RuntimeInvocationDomain,
 )
 from openhcs.core.aligned_image_payload import (
-    AlignedImageStack,
+    ImagePayloadSliceStack,
     AlignedImageSliceContext,
     ImagePayloadStackComposition,
     ImageOutputBundle,
@@ -1063,7 +1063,7 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
                 else AlignedImageSliceContext.anonymous_main_flow()
             )
             return ((processed_stack, context),)
-        if isinstance(processed_stack, AlignedImageStack):
+        if isinstance(processed_stack, ImagePayloadSliceStack):
             return tuple(processed_stack.projected_output_slices())
         output_context = self._unwrapped_main_flow_output_context()
         output_projection = RuntimeSliceProjection.preserved_context_for_value(
@@ -1170,7 +1170,7 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
         unstack_started_at = time.perf_counter()
         projected_outputs = self._project_output_slices(processed_stack, matching_files)
         plan = self.execution_plan
-        explicit_output_surfaces = isinstance(processed_stack, AlignedImageStack)
+        explicit_output_surfaces = isinstance(processed_stack, ImagePayloadSliceStack)
         if explicit_output_surfaces:
             stack_payload = processed_stack.copy_projected_output_stack(
                 projected_outputs,
@@ -1209,7 +1209,7 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
         def plane_axis_for_output(
             context: AlignedImageSliceContext,
         ) -> RuntimePlaneAxis | None:
-            if isinstance(processed_stack, AlignedImageStack):
+            if isinstance(processed_stack, ImagePayloadSliceStack):
                 return processed_stack.plane_axis_for_output_context(context)
             if isinstance(processed_stack, ImagePayloadMetadataCarrier):
                 return image_payload_metadata(processed_stack).plane_axis
