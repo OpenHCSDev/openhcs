@@ -216,6 +216,9 @@ def _native_sqlite_shard_differences(
     reference_tables = _sqlite_tables(reference_path, subjects, policy)
     shard_tables = tuple(_sqlite_tables(path, subjects, policy) for path in shard_paths)
     differences: list[RuntimeEquivalenceDifference] = []
+    measurement_candidates: list[list[RuntimeTableSnapshot]] = [
+        [] for _ in shard_tables
+    ]
     for shard_path, tables in zip(shard_paths, shard_tables, strict=True):
         if set(tables) != set(reference_tables):
             differences.append(
@@ -249,6 +252,9 @@ def _native_sqlite_shard_differences(
             candidates = (merged,)
         else:
             candidates = tuple(table for _, table in tables)
+        if subject is not None:
+            for index, cohort in enumerate(measurement_candidates):
+                cohort.append(candidates[0] if len(candidates) == 1 else candidates[index])
         for candidate in candidates:
             differences.extend(
                 RuntimeEquivalenceDifference(
@@ -256,7 +262,18 @@ def _native_sqlite_shard_differences(
                     f"Native shard table {name!r}: {difference.message}",
                 )
                 for difference in _sqlite_table_value_differences(
-                    reference_table, candidate, subject, policy
+                    reference_table, candidate, policy,
+                    measurement_subject=subject,
+                )
+            )
+    reference_measurements = tuple(
+        table for name, (_, table) in reference_tables.items() if name in subjects
+    )
+    if reference_measurements:
+        for cohort in measurement_candidates:
+            differences.extend(
+                _sqlite_measurement_cohort_differences(
+                    reference_measurements, tuple(cohort), policy
                 )
             )
     return tuple(differences)
@@ -350,7 +367,8 @@ def _sqlite_database_differences(
             else None
         )
         table_report = _sqlite_table_value_differences(
-            reference_table, candidate_table, subject, policy
+            reference_table, candidate_table, policy,
+            measurement_subject=subject,
         )
         differences.extend(
             RuntimeEquivalenceDifference(
@@ -360,14 +378,27 @@ def _sqlite_database_differences(
             )
             for difference in table_report
         )
+    reference_measurements = tuple(
+        table for name, (_, table) in reference_tables.items() if name in reference_subjects
+    )
+    candidate_measurements = tuple(
+        table for name, (_, table) in candidate_tables.items() if name in candidate_subjects
+    )
+    if reference_measurements or candidate_measurements:
+        differences.extend(
+            _sqlite_measurement_cohort_differences(
+                reference_measurements, candidate_measurements, policy
+            )
+        )
     return tuple(differences)
 
 
 def _sqlite_table_value_differences(
     reference_table: RuntimeTableSnapshot,
     candidate_table: RuntimeTableSnapshot,
-    subject: MeasurementSubject | None,
     policy: RuntimeEquivalencePolicy,
+    *,
+    measurement_subject: MeasurementSubject | None,
 ) -> tuple[RuntimeEquivalenceDifference, ...]:
     # Unequal row cardinality is already a definitive export-value failure.
     # Avoid projecting a large object table into semantic facts only to find
@@ -390,19 +421,26 @@ def _sqlite_table_value_differences(
         and Counter(reference_table.rows) == Counter(candidate_table.rows)
     ):
         return ()
-    if subject is None:
+    if measurement_subject is None:
         return runtime_table_differences((reference_table,), (candidate_table,), policy)
-    return runtime_measurement_equivalence(
+    # Declared measurements are compared with the full correlated database below.
+    return ()
+
+
+def _sqlite_measurement_cohort_differences(
+    reference_tables: tuple[RuntimeTableSnapshot, ...],
+    candidate_tables: tuple[RuntimeTableSnapshot, ...],
+    policy: RuntimeEquivalencePolicy,
+) -> tuple[RuntimeEquivalenceDifference, ...]:
+    snapshots = tuple(
         RuntimeMeasurementSnapshot.from_output_snapshot(
-            RuntimeOutputSnapshot(tables=(reference_table,)),
-            policy=policy,
-        ),
-        RuntimeMeasurementSnapshot.from_output_snapshot(
-            RuntimeOutputSnapshot(tables=(candidate_table,)),
-            policy=policy,
-        ),
-        policy=policy,
-    ).differences
+            RuntimeOutputSnapshot(tables=tables), policy=policy
+        )
+        for tables in (reference_tables, candidate_tables)
+    )
+    for snapshot in snapshots:
+        snapshot.required_relationship_correlations()
+    return runtime_measurement_equivalence(*snapshots, policy=policy).differences
 
 
 def _sqlite_tables(
