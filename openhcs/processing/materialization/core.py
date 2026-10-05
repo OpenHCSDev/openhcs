@@ -3346,6 +3346,8 @@ def _write_spatial_graph_swc(
         )
     graph.require_directed_forest()
 
+    physical_spacing = graph.coordinate_spacing.require_physical_coordinates()
+
     outgoing = {node.node_id: [] for node in graph.nodes}
     for edge in graph.edges:
         outgoing[edge.source.node_id].append(edge)
@@ -3365,7 +3367,7 @@ def _write_spatial_graph_swc(
         nonlocal next_sample_id
         sample_id = next_sample_id
         next_sample_id += 1
-        x, y, z = _swc_xyz(coordinates, graph.coordinate_spacing)
+        x, y, z = _swc_xyz(coordinates, physical_spacing)
         rows.append(
             f"{sample_id} {sample_type} {x:.9g} {y:.9g} {z:.9g} "
             f"{radius:.9g} {parent_sample_id}"
@@ -3534,7 +3536,7 @@ def _write_spatial_graph_roi_zip(
 
     source_metadata = ImagePayloadMetadata(
         source_provenance=graph.source_provenance,
-        source_voxel_spacing=SourceVoxelSpacing(graph.coordinate_spacing),
+        source_voxel_spacing=graph.source_voxel_spacing,
     )
     rois = []
     for edge in graph.edges:

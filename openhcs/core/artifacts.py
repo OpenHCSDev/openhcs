@@ -1767,15 +1767,7 @@ class SpatialGraphArtifactType(ArtifactType):
             )
         if output_plan is not None:
             output_value.validate_artifact_name(output_plan.name)
-        source_provenance = output_value.contextualized_source_provenance(
-            image_payload_metadata(source_payload).source_provenance
-        )
-        contextualized_provenance = output_value.source_provenance.with_missing_from(
-            source_provenance
-        )
-        if contextualized_provenance == output_value.source_provenance:
-            return output_value
-        return replace(output_value, source_provenance=contextualized_provenance)
+        return output_value.contextualized_source_metadata(image_payload_metadata(source_payload))
 
     @classmethod
     def contextualize_output_from_projector(

@@ -366,6 +366,7 @@ def test_full_stack_preserves_nonimage_identity_domains_and_dense_images():
         name="graph",
         nodes=(SpatialGraphNode(1, (2.0, 3.0)),),
         edges=(),
+        coordinate_spacing=SourceVoxelSpacing((1.0, 1.0)),
     )
     array = np.ones((2, 3), dtype=np.float32)
     image = ImagePayloadMetadata(source_path="/synthetic/source.tif").payload_with(

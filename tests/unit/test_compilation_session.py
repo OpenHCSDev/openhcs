@@ -55,6 +55,7 @@ from openhcs.core.step_dependencies import StepInputDependency
 from openhcs.core.steps.function_step import FunctionStep
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
     neurite_outgrowth_metaxpress,
+    neurite_outgrowth_metaxpress_pixels,
 )
 
 
@@ -756,7 +757,16 @@ def test_path_planner_step_output_projects_only_exact_source_artifacts() -> None
     assert source_binding_plan.bindings == (dna,)
 
 
-def test_path_planner_preserves_metaxpress_primary_source_order() -> None:
+@pytest.mark.parametrize(
+    "function,artifact_input_names",
+    (
+        (neurite_outgrowth_metaxpress, ("pixel_size",)),
+        (neurite_outgrowth_metaxpress_pixels, ()),
+    ),
+)
+def test_path_planner_preserves_metaxpress_primary_source_order(
+    function, artifact_input_names
+) -> None:
     pipeline_bindings = (
         NamedSourceBinding(alias="Hoechst"),
         NamedSourceBinding(alias="MAP2"),
@@ -766,7 +776,7 @@ def test_path_planner_preserves_metaxpress_primary_source_order() -> None:
         NamedSourceBinding(alias="SMI312"),
         NamedSourceBinding(alias="Hoechst"),
     )
-    step = FunctionStep(func=neurite_outgrowth_metaxpress, name="neurite")
+    step = FunctionStep(func=function, name="neurite")
     snapshot = _resolved_step(
         step,
         variable_components=(VariableComponents.CHANNEL,),
@@ -789,18 +799,18 @@ def test_path_planner_preserves_metaxpress_primary_source_order() -> None:
             step_provenance={0: {}},
         ),
     )
-    contract = CallableContract.from_callable(neurite_outgrowth_metaxpress)
+    contract = CallableContract.from_callable(function)
 
     execution_bindings, (source_binding_plan, _source_universe_plan) = (
         _compile_source_plans_for_contract(
             session,
             snapshot,
-            neurite_outgrowth_metaxpress,
+            function,
         )
     )
 
     assert contract.accepts_implicit_main_flow_input is True
-    assert contract.artifact_inputs.names() == ("pixel_size",)
+    assert contract.artifact_inputs.names() == artifact_input_names
     assert tuple(binding.alias for binding in pipeline_bindings) == (
         "Hoechst",
         "MAP2",
