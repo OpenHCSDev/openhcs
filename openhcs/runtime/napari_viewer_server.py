@@ -1830,17 +1830,24 @@ class NapariRematerializationRequest(NapariLayerDisplayRequest):
             != self.original_presentation.aligned_component_shape()
         )
 
-    @property
-    def requires_presentation_retention(self) -> bool:
+    @contextmanager
+    def preserve_native_presentation(self):
         """Only changed geometry/coordinates need remount selection admission.
 
         Untouched routes may legitimately hold hidden, off-slice native rows.
         Their unchanged membership is not a new rematerialized selection.
         """
-        return (
+        if (
             self.requires_rematerialization
             or self.presentation.projection != self.original_presentation.projection
-        )
+        ):
+            handler = NapariLayerDisplayHandler.for_data_type(
+                self.items[0].address.stream_layer_data_type,
+            )
+            with handler.preserve_native_presentation(self):
+                yield
+        else:
+            yield
 
     def restore_native_frame(self) -> None:
         """Apply the one batch snapshot before native selection eligibility."""
@@ -1913,10 +1920,7 @@ class NapariLayerDisplayHandler(
         """
         with ExitStack() as retention:
             for request in requests:
-                if not request.requires_presentation_retention:
-                    continue
-                handler = cls.for_data_type(request.items[0].address.stream_layer_data_type)
-                retention.enter_context(handler.preserve_native_presentation(request))
+                retention.enter_context(request.preserve_native_presentation())
             yield
 
     def geometric_component_values(
