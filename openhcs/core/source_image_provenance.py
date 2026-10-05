@@ -671,6 +671,9 @@ class SourceImageProvenancePlanes:
                 )
             runtime_index += 1
         unique_contributors: list[SourceImageProvenanceContributor] = []
+        named_addresses: dict[
+            tuple[str, str | None], list[SourceImageProvenanceContributor]
+        ] = {}
         for contributor in contributors:
             # A derived image and its original can name the same source at this
             # runtime slice. Removed axes represent source identities, not the
@@ -679,14 +682,15 @@ class SourceImageProvenancePlanes:
             if (
                 contributor.source_image_name is not None
                 and contributor.source_identity.addressable
-                and any(
-                    existing.source_image_name == contributor.source_image_name
-                    and existing.path == contributor.path
-                    and existing.component_metadata == contributor.component_metadata
-                    for existing in unique_contributors
-                )
             ):
-                continue
+                address = (contributor.source_image_name, contributor.path)
+                same_address = named_addresses.setdefault(address, [])
+                if any(
+                    existing.component_metadata == contributor.component_metadata
+                    for existing in same_address
+                ):
+                    continue
+                same_address.append(contributor)
             unique_contributors.append(contributor)
         return type(self)(tuple(unique_contributors))
 
