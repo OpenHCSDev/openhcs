@@ -179,3 +179,19 @@ Current disposition: source-reviewed and packet-prepared ONLY. Installed/public
 forward/reverse acceptance remains owned by Singer. The concrete dependencies
 are ordinary whole-package byte qualification and the original lane's exact
 closure/release, not732 scientific acceptance. No743 operation is in flight.
+
+Later original lane closure received
+-----------------------------------
+
+Dewey's original receiving12/public95/OWNER-TERMINAL.rst now records exact native
+and viewer ACK/process_exited with independent PID absence, recorded client38241
+terminal1, preserved acquired-table/reopen negatives and three sealed journals.
+The client exit1 is not replaced by native closure success. Existing helpers95
+remain owned for reuse; package/fixture/failed evidence are not disposable.
+Dewey reports original retirement FUND66176a2f19ed3861b3a546640934e875166da6f1d864b7c57200352ad9f0b1d7
+removes ADMIN732_95 while preserving the four scientist references.
+
+This resolves the predecessor's closure dependency, not the next case's package
+identity. Planck has the exact743 source/packet and closure handoff for the next
+ordinary whole candidate; immutable receiving12 must not be used as743 proof.
+No new client/runtime, installation, test or source merge was made here.
