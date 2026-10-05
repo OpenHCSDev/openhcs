@@ -753,3 +753,33 @@ comment6001652650. No ObjectState or hosted-CI hold remains. Actual whole READY
 and Dewey's exact released native/viewer/ACK custody are next, before Singer's
 installed registered execution/CSV/graph ROI/native saved reopen. No current
 scientific input/package or existing failures changed; no public541 call exists.
+
+Installed original ACK-fixture qualification23
+--------------------------------------------
+
+All nine receiving17/attempt02 READY-FREEZE entries verified. Exact candidate
+cc1805bfd includes this production; installed OpenHCS/PolyStore/ZMQ origins
+were asserted below that target. Original conftest plus three helper/test
+modules were extracted byte-exact with git archive from that candidate outside
+any source checkout. No fixture copy/reimplementation, installed overlay or
+ImageJ download. Standard pytest loaded the ORIGINAL viewer_ack_return_route.
+
+Initial22 terminated1 BEFORE pytest: source checkout cwd shadowed PYTHONPATH,
+and the explicit installed-origin assertion rejected those source imports.
+Original stdout/stderr/time remain intact. Distinct23 used the original
+installed bootstrap's outside-source cwd, and terminated0:1PASS/54warnings,
+7.31s pytest/8.62s total,452720KiB peakRSS/swaps0. Unknown marks/deprecations
+remain visible, not suppressed as a fake clean log. No source assertion changed.
+
+The original test persisted all12 outputs, read all five selected QA files,
+and built nominal ACK-addressed streaming messages with exact checkpoint
+pixels/channel2/source1.3556 calibration. Its stream sink is the original test
+fixture, not a live viewer. This resolves batch20's missing-conftest setup tier;
+it does NOT claim native settlement ACK, pixel MCP execution or saved graph
+reopening. No native/client/viewer was launched, and both22/23 are terminal.
+
+Exact raw logs and four original fixture files remain in
+engineering-neurite-units-20261003/installed-ack22. Native receiving now needs
+Dewey's actual known-terminal lane projection for the prepared public packet;
+no package, dependency publication or CI hold remains. Current scientific
+endpoints and original frozen inputs remain untouched.
