@@ -328,8 +328,12 @@ class ObjectMeasurementOutputRecorder:
         batch_executor: ObjectMeasurementBatchExecutor,
     ) -> float:
         func = self.callable_contract.resolve_canonical_raw_callable()
+        processing_contract = self.callable_contract.require_processing_contract()
         batch_requests = tuple(
-            invocation.batch_executor_request() for invocation in invocations
+            invocation.batch_executor_request(
+                processing_contract=processing_contract,
+            )
+            for invocation in invocations
         )
         if any(request is None for request in batch_requests):
             return self._execute_serial(invocations)

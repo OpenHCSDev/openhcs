@@ -47,6 +47,7 @@ from openhcs.processing.backends.analysis.region_properties import (
 )
 from openhcs.processing.backends.cellprofiler.zernike import (
     ShapeZernikeFeatureAuthority,
+    ShapeObjectZernikeDescriptorDeclaration,
 )
 from openhcs.core.runtime_object_labels import ObjectLabelVariantData
 
@@ -59,7 +60,11 @@ if TYPE_CHECKING:
 
 
 class ZeroFilledShapeFeature(RuntimeMeasurementFeatureSemanticMarker):
-    """Shape feature whose unmeasured CellProfiler rows contain zero."""
+    """Native shape vector padded with zero through the material object extent."""
+
+
+class LabelIndexedShapeFeature(RuntimeMeasurementFeatureSemanticMarker):
+    """Shape vector whose values retain their measured label identities."""
 
 
 class MeasureObjectSizeShapeModule(
@@ -169,12 +174,12 @@ class MeasureObjectSizeShapeModule(
         MIN_FERET_DIAMETER = (
             "MinFeretDiameter",
             (),
-            (ShapeDescriptorFeature, ZeroFilledShapeFeature),
+            (ShapeDescriptorFeature, LabelIndexedShapeFeature, ZeroFilledShapeFeature),
         )
         MAX_FERET_DIAMETER = (
             "MaxFeretDiameter",
             (),
-            (ShapeDescriptorFeature, ZeroFilledShapeFeature),
+            (ShapeDescriptorFeature, LabelIndexedShapeFeature, ZeroFilledShapeFeature),
         )
         EQUIVALENT_DIAMETER = ("EquivalentDiameter", (), (ShapeDescriptorFeature,))
         SPATIAL_MOMENT = ("SpatialMoment", (), (ShapeDescriptorFeature,))
@@ -514,7 +519,7 @@ class ShapeObjectFeatureValueTable(ObjectFeatureValueTable):
     table_label = "shape"
 
     def feature_array_domain(self, feature_name: str) -> ObjectFeatureArrayDomain:
-        """Validate the shape vocabulary; the ancestor indexes measured IDs."""
+        """Derive compact versus label-indexed vectors from feature declarations."""
         if (
             feature_name
             not in MeasureObjectSizeShapeModule.measurement_all_field_names()
@@ -523,19 +528,38 @@ class ShapeObjectFeatureValueTable(ObjectFeatureValueTable):
                 f"{type(self).__name__} feature {feature_name!r} has no declared "
                 "feature-array domain."
             )
-        return super().feature_array_domain(feature_name)
+        if (
+            ShapeObjectZernikeDescriptorDeclaration.from_feature_name(feature_name)
+            is not None
+            or any(
+                feature.value == feature_name
+                and LabelIndexedShapeFeature.matches_feature(feature)
+                for feature in MeasureObjectSizeShapeModule.MeasurementFeature
+            )
+        ):
+            return ObjectFeatureArrayDomain.MEASURED_OBJECT_ID
+        return ObjectFeatureArrayDomain.ROW_ORDINAL
 
-    def feature_missing_value(self, feature_name: str) -> ObjectFeatureMissingValue:
-        """Return the missing value declared by the owning shape feature."""
-        return (
-            ObjectFeatureMissingValue.ZERO
-            if any(
+    def feature_missing_value(
+        self, feature_name: str, *, object_id: int,
+    ) -> ObjectFeatureMissingValue:
+        """Native radius/Feret vectors contain zeros within their material extent."""
+        material_slot = (
+            object_id - 1
+            if self.feature_array_domain(feature_name)
+            is ObjectFeatureArrayDomain.MEASURED_OBJECT_ID
+            else self.object_domain.index(object_id)
+        )
+        if (
+            material_slot < max(self.measured_object_ids, default=0)
+            and any(
                 feature.value == feature_name
                 and ZeroFilledShapeFeature.matches_feature(feature)
                 for feature in MeasureObjectSizeShapeModule.MeasurementFeature
             )
-            else super().feature_missing_value(feature_name)
-        )
+        ):
+            return ObjectFeatureMissingValue.ZERO
+        return super().feature_missing_value(feature_name, object_id=object_id)
 
 
 class ShapeObjectMeasurementRows(ObjectMeasurementColumnarRows):
