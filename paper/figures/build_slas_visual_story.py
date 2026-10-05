@@ -322,7 +322,7 @@ def translocation_repeat():
     if source["author_run"] != "BBBC013_FRESH13_88":
         raise ValueError("Expected the frozen fresh13 translocation author")
     tables = source["tables"]
-    with plt.rc_context({"font.size": 11, "axes.titlesize": 13,
+    with plt.rc_context({"font.size": 12, "axes.titlesize": 13,
                          "axes.spines.top": False, "axes.spines.right": False}):
         sheet = FigureSheet("translocation_fresh13", "", 6.3)
         sheet.source(source_path)
@@ -355,7 +355,7 @@ def translocation_repeat():
                 xticks=positions,
                 xticklabels=[f"{float(row['concentration']):g}" for row in rows],
             )
-            dose_axis.tick_params(axis="x", labelrotation=45, labelsize=9)
+            dose_axis.tick_params(axis="x", labelrotation=45, labelsize=12)
             statistics, = (row for row in tables["assay_statistics"]["rows"]
                            if row["assay_block"] == block)
             control_axis = sheet.figure.add_axes((left, .13, .36, .21))
@@ -375,7 +375,7 @@ def translocation_repeat():
                 axis.grid(axis="y", color="#d9e0e5", linewidth=.6)
                 axis.set_axisbelow(True)
         sheet.text(50, 3, "Means ± between-well SD; four wells per group. Dose positions equally spaced.",
-                   size=11, ha="center", color=MUTED)
+                   size=12, ha="center", color=MUTED)
         sheet.save()
 
 
