@@ -989,8 +989,8 @@ class SourceImageProvenance:
         for component in AllComponents:
             if component in scalar_components:
                 continue
-            if not contributor_components or not all(
-                component in values for values in contributor_components
+            if len(contributor_components) < 2 or not all(
+                len(values.get(component, ())) == 1 for values in contributor_components
             ):
                 continue
             values = frozenset(
