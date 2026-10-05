@@ -40,8 +40,32 @@ class NativeBatchRequest:
                 )
         object.__setattr__(self, "assignment_output_subdirectories", assignments)
 
+    @property
+    def temporary_root(self) -> Path:
+        output_root = Path(self.output_root)
+        return output_root.with_name(output_root.name + "_tmp")
+
+    def worker_environment(self) -> dict[str, str]:
+        """Producer and probe inherit the same output-prefix-derived scratch scope."""
+        import os
+
+        environment = os.environ.copy()
+        environment.update(
+            {name: str(self.temporary_root) for name in ("TMPDIR", "TMP", "TEMP")}
+        )
+        return environment
+
+    def output_device(self) -> int:
+        output_root = Path(self.output_root).absolute()
+        existing = next(
+            path for path in (output_root, *output_root.parents) if path.exists()
+        )
+        return existing.stat().st_dev
+
     def require_same_workload(self, current: NativeBatchRequest) -> None:
         """Compare every workload field; driver validates the physical path roles."""
+        if self.output_device() != current.output_device():
+            raise RuntimeError("Retained native output filesystem differs.")
         same_roles = replace(
             current,
             pipeline_path=self.pipeline_path,
@@ -77,6 +101,7 @@ class NativeBatchEnvironment:
     numpy_version: str
     scipy_version: str
     temporary_root: str
+    temporary_device: int
     host_machine_id: str
     host_node: str
     host_platform: str
@@ -134,6 +159,7 @@ class NativeBatchEnvironment:
             numpy_version=numpy.__version__,
             scipy_version=scipy.__version__,
             temporary_root=tempfile.gettempdir(),
+            temporary_device=Path(tempfile.gettempdir()).stat().st_dev,
             host_machine_id=Path("/etc/machine-id").read_text().strip(),
             host_node=platform.node(),
             host_platform=platform.platform(),

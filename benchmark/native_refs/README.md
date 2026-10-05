@@ -66,6 +66,10 @@ kernel/platform, stable CPU model/topology/features/microcode signature, and exa
 CPU affinity. Producer and read-only probe capture these through the same native
 environment owner. Dynamic CPU MHz and bogomips calibration readings are excluded
 from identity; changing affinity, host, CPU properties or kernel rejects reuse.
+Intended native output roots must also share the same filesystem device. Scratch
+placement derives from the native output prefix through the same request owner
+for real execution and the probe, and its actual filesystem device must match.
+This prevents silently reusing NVMe output/scratch timings for an HDD/USB run.
 The current prepared effective
 CPPipe and ordered file list must match exactly; unsupported path-dependent
 changes are rejected. Source images and metadata are rehashed against the
