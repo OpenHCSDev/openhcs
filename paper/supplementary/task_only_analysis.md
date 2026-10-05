@@ -716,6 +716,37 @@ No analysis, private scoring or source-image transformation was rerun for this
 account. Figure 9 continues to show the separate 109-instance predecessor and
 must not be interpreted as an image of this 118-instance repeat.
 
+## BBBC039 fresh08: batch coverage completed in a separate continuation
+
+The independent author `BBBC039_FRESH08_88` froze a pipeline before its
+reserved-field review and retained complete label/table outputs for 182 of
+200 public fields. Its original partial disposition and interrupted execution
+remain unchanged. `BBBC039_COMPLETION18_REV02_88` subsequently completed the
+missing 18 fields as a retained-context development continuation, not a fresh
+blind author. Its scientific parameter file is byte-identical to the original;
+selected wells and distinct output declarations separate the new outputs.
+
+The original recorded MCP terminal status reports completion with no errors.
+Independent reconciliation found exactly one lossless labels TIFF, one primary
+detector table and one object-measurements table for each expected source
+identity. The 18 additional fields contain 2,136 object rows; every primary
+detector count matches its field's row count and every object label is unique
+within that field. The continuation's frozen pipeline and parameter hashes
+also passed independent checks. The combined coverage is therefore 200 fields
+across two recorded execution phases, rather than one retrospectively
+successful uninterrupted run.
+
+This coverage result is not an accuracy estimate. Regional native review of
+the fresh author's frozen output showed useful localisation alongside lobed
+merges and a partition through one continuous body. No reference masks or
+scorer were opened for this account, and the continuation's label pixels were
+not independently scored. Counts remain algorithmic outputs. The useful
+completed batch and regional failure evidence are retained for subsequent
+learning rather than discarded for failing to achieve perfect segmentation.
+The [completion record](task_only_analysis/bbbc039-fresh08-completion18.rst)
+identifies the source phases, original terminal receipt and independent checks.
+These outputs do not replace Figure 7's separately scored trial.
+
 ## Scope and retained evidence
 
 [Figure 7 plot data](../figures/slas/task_only_analysis_plot_data.csv) retains

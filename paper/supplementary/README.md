@@ -834,6 +834,16 @@ identifies the immutable source, terminal journals and original scorer. The
 incomplete subset is not random or unseen validation; missing fields are not
 silently treated as correct predictions.
 
+Another fresh-context BBBC039 repeat retained 182 completed fields. A separate
+same-author continuation subsequently completed the missing 18 fields without
+changing the scientific parameter file. Independent checks found all 18 label
+and table families, comprising 2,136 object rows with consistent per-field
+detector counts and unique object labels. The combined 200-field coverage is
+reported as two phases, not retroactive success of the interrupted job or a
+new autonomous trial. No reference accuracy was measured for this repeat;
+the [completion record](task_only_analysis/bbbc039-fresh08-completion18.rst)
+and detailed report retain the distinction between coverage and mask quality.
+
 A separate fresh retinal author completed a measured smoothing/background
 subtraction pipeline and retained 109 reconciled detector objects, including
 8 border objects. Local nuisance admission improved, while faint-body extent
