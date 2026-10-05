@@ -114,5 +114,54 @@ passed; empty/unequal aligned source axes reject. Original logs::
 Terminal0: 23 passed, 400 deselected, 22.95s whole wrapper, peak474388KiB,
 swaps0. Plugin-free pytest reports its two existing unused asyncio configuration
 warnings; originals are retained. Source tests are not installed/public proof.
-After-owner AST and original R0 remain to be recorded before source delivery.
+Source closure and original R0
+-------------------------------
+
+Production checkpoint: 484639bd9b333f3b710f9d5c5e42a637efafec0c. The after
+AST repeats the unchanged original parser against that committed source:
+701 production/705 test modules parsed, 70/128 relevant ASTs, zero omissions;
+terminal0, 25.20s, peak550224KiB, swaps0. Relevant declaration/consumer closure:
+
+* CellProfilerImageRequest and CellProfilerMeasurementImage share the original
+  source identity ancestor. Generic composed_source_metadata callers retain
+  their distinct stack/bundle operation; the shared metadata constructor now
+  leaves unknown per-plane numeric metadata absent instead of manufacturing
+  tuples of None. This path records source facts, never intensity values.
+* CellProfilerModuleExecutor._run_per_object_measurement uses the new aligned
+  ancestor operation. ObjectMeasurementOutputRecorder keeps numeric rows and
+  source-qualified ownership; its serial/batch execution mechanisms are intact.
+  The row policy no longer determines source topology from row names.
+* CellProfilerMeasurementTableModule.build_measurement_table and its strict
+  row-local projection consume the correctly composed axis unchanged. Current
+  payload/produced output/source-qualified input recording hooks remain valid
+  distinct authorities for their respective declarations, not export fallbacks.
+* Per-image execution still joins its individual tables through the existing
+  MeasurementTable.joined_source_provenance. Exact object/source group alignment
+  in CellProfilerOutputRecordRequest.measurement_source_metadata is unchanged.
+* SourceImageProvenance owns named projection and contributor identity.
+  SourceQualifiedWideMeasurementRowsModule owns feature qualification through
+  the existing module MRO; the database exporter reads represented typed source
+  identities. Neither is patched to infer the missing image from feature text.
+
+The original debt_census.py SHA is byte-equal between the authoritative skill
+archive and installed tool (fbe4651372d4d79963075d7fb6ba6dedf90d5e88e14eee07f845c5d836974e35).
+It measured every changed production file against e00129f64, excluding nothing:
+all structural counters have zero positive deltas; none_identity is -2, net
+production code lines +11. No parse omissions, bounds changed or positive-delta
+waivers. Full raw report/JSON are retained as r0-owner01.* in the evidence root.
+This is the original structural R0 and relevant source AST closure, not a claim
+of complete global NRA R1 or installed behavior.
+
+The byte-exact raw AST, test and R0 logs are also archived beside this receipt
+as multi-image-measurement-provenance-20261005.tar.gz. Loose original logs remain
+in the named engineering root; no history or failure was removed. Eight foreign
+gitlinks and all pre-existing untracked ledgers remain untouched.
+
+Remaining actual acceptance
+----------------------------
+
 Ordinary installed/public acceptance remains separate and is not a PR732 gate.
+It must compare both selected source identities and numeric values in the
+native measurement table and exported photometry through the normal registered
+pipeline, including reversed image order. No package or runtime was built or
+started for this source checkpoint; current scientific bundles remain immutable.
