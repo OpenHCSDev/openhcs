@@ -52,10 +52,12 @@ ordinary-body support and unresolved multi-lobed identity separately.
 [Supplementary Data 8](supplementary/task_only_analysis.md) retains the newer
 task-only authoring results separately from those prospective held-out assays.
 Figure 5 consumes the exact post-freeze evaluation receipts, without rerunning
-microscopy analyses or scoring. Regenerate its three panels with
-`python paper/figures/build_slas_task_only.py` in an existing matplotlib-capable
-environment; source/output hashes and plotted observations are retained beside
-the figure.
+microscopy analyses or scoring. Regenerate its native repair and three score
+panels with `PYTHONPATH=paper/figures python -c 'from build_slas_visual_story import task_only_story; task_only_story()'`
+in an existing matplotlib-capable environment. The existing
+`build_slas_task_only.py` owns evaluation loading and score plots; the shared
+`FigureSheet` owns retained-image placement, crops and source/output hashes.
+The earlier score-only rendering and plotted observations remain retained.
 
 Generators, editable artwork, native captures and provenance receipts are in
 `figures/`. Scientific examples in this revision use public CellProfiler workflows
