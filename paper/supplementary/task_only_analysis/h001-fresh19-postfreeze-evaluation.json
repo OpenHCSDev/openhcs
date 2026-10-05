@@ -1,0 +1,64 @@
+{
+  "author_run": "H001_FRESH19_89",
+  "scope": "Coordinator-only post-freeze computational agreement with the predeclared notebook reference; not manual biological accuracy or unseen-input generalization",
+  "author_scientific_freeze_utc": "2026-10-05T22:25:37.792745+00:00",
+  "freeze_sha256": "17a84028a51925b3d4610525d2828140c9423f0b5872f2abfa756243ef3e5dd1",
+  "qa_manifest_sha256": "a5f97c9c8a0c9afa0883721e22bbbab927556c60da5221de14292f229f1bdeb9",
+  "evaluation_feedback_supplied_to_author": false,
+  "original_exec_handle": 84527,
+  "scorer_exit_code": 0,
+  "interpreter": "/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/bin/python",
+  "scorer_path": "/home/ts/code/projects/openhcs/benchmark/score_instance_labels.py",
+  "scorer_sha256": "19576ade67dd1a00775bd780cbcdee9d4c9d7a136c25e54bf1bdc282c764f97d",
+  "invocation": "python -B SCORER --reference REFERENCE --prediction PREDICTION",
+  "reference_path": "/home/ts/.local/share/openhcs-blind-evaluation/haase_otsu_20260927/blobs_labels_skimage.tif",
+  "reference_sha256": "f051ee7663f34fa9093e0d62afd409524408c9074582f95320a605c932245cb0",
+  "raw_sha256": "26403a7c2a11921535499ff86798b73e09b8ac5786329bce8fa4a57fd9933fee",
+  "matching": "Maximum-total-IoU one-to-one assignment; accepted IoU >= 0.5; background zero; label numbering ignored",
+  "attempts": [
+    {
+      "attempt": "01",
+      "kind": "FIRST",
+      "author_disposition": "preferred provisional segmentation",
+      "pipeline_sha256": "24a7936cea930ae61e7a321fb99431962ad204f5d071c2ac4a184b0742ce8597",
+      "prediction_path": "/run/media/ts/hdd/openhcs-science/next-h001-fresh19-89-baseline-20261005/H001_FRESH19_89/attempt01/acquisition_first/images/image.tif_s001_w1_z001_t001_InstanceLabels.tif",
+      "prediction_sha256": "39839a0b3801b3491a78ad3f7ec5fe70c11b914871505f9c13ef90bf3e2baa59",
+      "score": {
+        "false_negative_objects": 2,
+        "false_positive_objects": 6,
+        "foreground_iou": 0.9847223452307148,
+        "foreground_xor_pixels": 345,
+        "matches_at_iou_0_5": 62,
+        "mean_matched_area_error_pixels": 24.29032258064516,
+        "mean_matched_iou": 0.9491887770637584,
+        "partition_exact_up_to_label_ids": false,
+        "predicted_objects": 68,
+        "reference_objects": 64,
+        "shape": [254, 256]
+      },
+      "derived_f1": 0.9393939393939394
+    },
+    {
+      "attempt": "02",
+      "kind": "self-directed scientific repair; final attempted pipeline",
+      "author_disposition": "rejected false split",
+      "pipeline_sha256": "06036f8d2948f06f19093dbf650e3b2443fcdd3a57f573039ea83a9896cc104a",
+      "prediction_path": "/run/media/ts/hdd/openhcs-science/next-h001-fresh19-89-baseline-20261005/H001_FRESH19_89/attempt02/acquisition_repair/labels/image.tif_s001_w1_z001_t001_InstanceLabels.tif",
+      "prediction_sha256": "c1e68f049a7e24f3fffc8eb6af84857e6e57834b9af9f7e163fbddd23b8d7f9f",
+      "score": {
+        "false_negative_objects": 2,
+        "false_positive_objects": 7,
+        "foreground_iou": 0.9847223452307148,
+        "foreground_xor_pixels": 345,
+        "matches_at_iou_0_5": 62,
+        "mean_matched_area_error_pixels": 30.612903225806452,
+        "mean_matched_iou": 0.9416177428998208,
+        "partition_exact_up_to_label_ids": false,
+        "predicted_objects": 69,
+        "reference_objects": 64,
+        "shape": [254, 256]
+      },
+      "derived_f1": 0.9323308270676691
+    }
+  ]
+}
