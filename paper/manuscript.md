@@ -426,6 +426,17 @@ translocation estimates. The difference from the earlier repeat illustrates
 why successful execution and response recovery need separate visual assessment
 (Supplementary Data 8).
 
+A self-directed continuation improved dim nuclear admission and local
+cytoplasmic growth, then completed all 96 wells with settings frozen before
+five additional fields were reviewed. It retained 16,589 defined ratios from
+18,073 nuclear seed rows. Independent recalculation reproduced all 24 dose
+summaries and control Z-prime values of 0.700 and 0.513 for the Wortmannin and
+LY294002 blocks, respectively. Both dose series rose at lower concentrations.
+Matched image review still found a faint nuclear miss, a plausible merged pair
+and seed-sized cytoplasmic regions. This same-author development recovered
+useful assay responses on selected masks, while incomplete compartments and
+GFP-dependent selection limited population inference (Supplementary Data 8).
+
 Together, the task-only trials demonstrate useful initial choices, local
 recovery and self-diagnosis without reference-score feedback. Their quantitative
 comparisons and matched views distinguish detection, object separation,
