@@ -16,11 +16,10 @@ lock or waiting on a historical acknowledgement.
   failed-build logs and exact command/source/pin evidence before cleanup.
 - Interpreter: existing `/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python`
   (3.9.25). JDK: existing `/usr/lib/jvm/java-11-openjdk`. No Python/JDK download.
-- Current instruction permits no new dependency downloads. Read-only inspection
-  still finds no CP/native closure in the existing pip wheel cache. The existing
-  oracle has setuptools69.5.1, not declared80.9.0; do not upgrade it or downgrade
-  the pin. Identify an admitted exact cached wheel/source closure before fresh
-  create; an existing installation is not construction evidence.
+- Current authorization permits ordinary missing pinned dependency acquisition
+  through the existing isolated bootstrap and shareable pip-cache owner. Do not
+  upgrade the old oracle, downgrade pins or redownload Fiji. An existing
+  installation is not fresh construction evidence.
 - No installed user package/source change, GUI, fleet, paid service or blind data.
 
 ## Run once the slot is released
@@ -32,17 +31,17 @@ available memory and free disk bytes without a fixed admission threshold.
 Create logs those facts before commands and retains them with success/failure
 evidence. This observation does not waive genuine resource exhaustion.
 
-Create a new attempt directory under the owned root. Place the oracle, pip cache
-and `TMPDIR` there. Run the current worktree's real `create` command with:
+Create a new attempt directory under the owned root. Place the oracle and
+`TMPDIR` there; reuse the existing shared pip cache. The accepted real command used:
 
 ```sh
-/home/ts/code/projects/openhcs/.venv/bin/python \
+/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python \
   scripts/bootstrap_cellprofiler_headless.py create \
   --python /home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python \
   --java-home /usr/lib/jvm/java-11-openjdk \
-  --venv /home/ts/.cache/agent-scratch/openhcs-issue-bootstrap-20260929/attempt-001/oracle \
-  --cache-dir /home/ts/.cache/agent-scratch/openhcs-issue-bootstrap-20260929/attempt-001/pip-cache \
-  --receipt "$PWD/docs/validation/cellprofiler_headless_fresh_attempt001_20260929.json"
+  --venv /home/ts/.cache/agent-scratch/openhcs-issue-bootstrap-20260929/attempt-20261005-01/oracle \
+  --cache-dir /home/ts/.cache/pip \
+  --receipt /home/ts/.cache/agent-scratch/openhcs-issue-bootstrap-20260929/attempt-20261005-01/receipt.json
 ```
 
 Keep resource supervision on the owned running build, not on Euler's lock or
@@ -66,8 +65,9 @@ settings, confirmed isolated mode plus disabled config files loaded no redirects
 Plan/Create share one declared cache capability; the stage owner builds the
 isolated pip command. No install was needed for this check.
 
-Current source correction is independent of fresh-create qualification. The
-remaining receiving requirement is an admitted exact cached dependency closure
-and the current heavy-lane handoff, not Euler's historical release. No build,
-download, new environment or JVM is claimed by this plan. Previous source-hashed
-receipts and original failed/drift evidence retain their exact historical scope.
+Fresh create now passed once on2026-10-05: all62 exact pins, no dependency errors
+or drift, imports inside the new target, Java start/Pipeline construction/stop,
+terminal0. See cellprofiler-headless-create01-accepted-20261005.rst and its raw
+archive for the installed receipt and resource disposition. Earlier source-only
+and original failed/drift evidence retains its exact historical scope. This is
+headless bootstrap acceptance, not scientific/GUI benchmark qualification.
