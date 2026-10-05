@@ -203,3 +203,28 @@ site-free-aggregate-publication-728-20261005.tar.gz (20626007bytes), SHA256
 The archive contains no scientific images, installed targets or UNKNOWN attempt
 replay. Original loose receipts remain retained in engineering728; no scratch
 cleanup was performed while receiving and review still need those paths.
+
+Prepared ordinary receiving packet
+----------------------------------
+
+validation/site-free-aggregate-publication-728/RECEIVING.rst now carries the
+concrete source-only next packet, complete pipeline.py and prepare_inputs.py.
+Four tiny embedded-header acquisitions (sites1/3, channels1/2) drive registered
+per-field measurements, original acquisition positions, CPU assembly and
+aggregate measurements. Default final persistence and streaming remain enabled;
+acquired/aggregate checkpoints do not bypass automatic publication. All actual
+schema names, producer addresses and paths must come from the first public plan
+and native observation, never guessed filenames or fabricated source receipts.
+
+The only added check was standard-library ast.parse on both new fixture files,
+terminal0; it imports no OpenHCS/scientific/runtime package and proves syntax
+only. No source-controls batch was repeated. The prepared packet has not been
+materialized, installed, compiled or submitted. Native6012/viewer6013 reuse is a
+proposal requiring the original receiving owner's explicit family handoff,
+not a new reservation. Planck's current734 receiving11 operation stays immutable.
+
+Current production and the source41 qualification are unchanged. This source
+packet is not part of the earlier byte-exact archive and does not alter its hash.
+Planck received a separate release of his original projected-Z message-extra
+and source-metadata producer hunks; no competing Points guard/fallback fix was
+started here. Coordinate any SourceImageProvenance/shared-scope crossing.
