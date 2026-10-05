@@ -1,14 +1,14 @@
 {
-  "generator_sha256": "4adcb272897f42378903e2d3dab98d949c346831b8dad930ee38006120986d10",
+  "generator_sha256": "bcfa911faf299531c7cf0e3a461aca965a1d8c5d6b696cf0e1ed9200d57f160b",
   "source_sha256": {
     "paper/supplementary/task_only_analysis/bbbc013-fresh13-plot-source.json": "cfa8b7c4e0c9347115da814510f233bd70fa63be48b2e4a5047ef22ca2cddd57",
     "figure-collection-20261004/BBBC013-FRESH13-DEVELOPMENT-VISUAL-REVIEW.rst": "a4d10a8bb4a9870426c1358e2f5cbca2feeaffe57f6ed69333eefd9898d306c1"
   },
   "ui_crops": [],
   "output_sha256": {
-    "translocation_fresh13.png": "31f04a82a3980a01c8c635e1c987c865821bab54598f9e918b7bba72d9d8fc24",
-    "translocation_fresh13.pdf": "6556b6ee37eace6851e0ae910f873ceeda1caf645fa34b92e0dee224f4db0eed",
-    "translocation_fresh13.svg": "1d846b321b24c1be8e17bded24c1dda6f4b142150307cc13290dd2dca3f4e010"
+    "translocation_fresh13.png": "ba15b874144b94c09373c8fb2d6d44215c973ba4e061a58d0c59bea8a0eac23a",
+    "translocation_fresh13.pdf": "21e017acaa167b670939772b7b9f806f82786cf962c854de154b1e57bcbfb4ee",
+    "translocation_fresh13.svg": "4d222244b593cd8b5af6b1d4e422d38c0b62dc04c07d0cfd565554513688d3d4"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
