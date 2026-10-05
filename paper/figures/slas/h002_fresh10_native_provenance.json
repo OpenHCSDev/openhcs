@@ -1,8 +1,8 @@
 {
   "scope": "Final-only native XY/XZ/YZ witnesses from independent H002_FRESH10_89, with useful ordinary-body detection and unresolved cluster identity.",
   "output_sha256": {
-    "h002_fresh10_native.svg": "34b9ade51935471d3a6211e692abc7ec9f34dbabd3e02f30f29a1c755cdd04ca",
-    "h002_fresh10_native.png": "8c2a93f09e84ad28124cf43bb75f1f132faad7e6d54e9c8399a5228f78c365fb",
+    "h002_fresh10_native.svg": "f4fce393880749f233c8e25c2e4db600a2310be044972abed20469271bc25134",
+    "h002_fresh10_native.png": "5d5ecaa7575ee07ff51a5e918fd82826b309516869ca4cc21fede210a1cb0c97",
     "h002_fresh10_final_bright_yz_x54_combined.png": "4939179dbc271265aff52d28a0dd17ca57e1eb5624878fc21fa865a29bf28c6b",
     "h002_fresh10_final_bright_yz_x54_raw.png": "d01795ac3cb575f70fbc2d8c709773f111f0f0430c0419d211f538bd39ce503f",
     "h002_fresh10_final_circle_combined.png": "c12f7a9ebbdcc9c4ce84dc0a60c35ee186f8792392f34ce86319163edc0997a4",

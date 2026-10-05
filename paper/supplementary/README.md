@@ -312,22 +312,19 @@ Supplementary Data 8 records the independently checked tables and final scope.
 
 ## Supplementary Figure 17. Native volume review distinguishes body support from unresolved identity
 
-![Matched raw and final body-centre views in XY, XZ and YZ.](../figures/slas/h002_fresh10_native.png){width=5.5in}
+![Matched raw and final body-centre views in XY, XZ and YZ.](../figures/slas/h002_fresh10_native.png){width=5.2in}
 
-\(A) A textured continuous body has one final centre in native XY. (B) A central
-body is reviewed in a genuine XZ section. (C) A bright multi-lobed cluster has
-one assigned centre, but its nuclear identity and appropriate instance count
-remain unresolved. These final-only views come from an independent task-only
-author analysing a released 60 × 256 × 256 single-channel volume. Its final
-output contains 22 provisional body centres; this is an algorithmic count,
-not a biological census or reference accuracy. Points are displayed at their
-native fractional coordinates; their visibility is slice-local. Yellow rings
-in B–C are native selection highlights. Each pair preserves camera, axes and
-raw display window: 901–27267 (A), 711–27219 (B), and 901–53727 (C), gamma 1.
-Original screenshots are clipped/scaled without retouching; physical
-calibration is unverified. The [native source proof](task_only_analysis/h002-fresh10-native-source-proof.json)
-retains the pipeline and original capture identities. Supplementary Data 8
-distinguishes the author's useful repairs from its unresolved global count.
+\(A) One centre in a textured continuous body, native XY. (B) Central body,
+genuine XZ. (C) One centre in a multi-lobed cluster of unresolved identity,
+genuine YZ. This independent task-only author's 22 provisional centres are
+an algorithmic output, not a biological census or reference score. These
+final-only views do not show the repair chronology. Points have fractional
+coordinates and slice-local visibility; yellow rings are native selection
+highlights. Matched cameras, axes and windows are retained: 901–27267 (A),
+711–27219 (B), and 901–53727 (C), gamma 1. Screenshots are clipped/scaled
+without retouching; physical calibration is unverified. The [native source proof](task_only_analysis/h002-fresh10-native-source-proof.json)
+binds original captures and the pipeline. Supplementary Data 8 retains
+ordinary-body repairs and the unresolved global count separately.
 
 ```{=openxml}
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
