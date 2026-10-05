@@ -1067,6 +1067,17 @@ was calculated for this repeat. Both owned processes were absent after their
 typed closure; client exit 2 and a four-second cleanup-handoff overrun remain
 recorded separately from scientific completion.
 
+A further fresh volume author selected its method from measured nuclear
+dimensions, background and neighbour separation, producing 26 candidate
+centres with one scientific method. Independent XY/XZ/YZ raw/Points/combined
+review supported ordinary-body centre placement while retaining uncertainty
+around a lobed chromatin complex and partial border supports. The
+[independent review](../../figure-collection-20261004/H002-FRESH15-INDEPENDENT-CENTRES-REVIEW.rst)
+identifies all twelve reviewed captures. The [detailed outcome](task_only_analysis.md#h002-fresh15-measurement-first-volumetric-centres)
+retains the final pipeline and custom-callable hashes, the 208-file payload
+verification and technical rerun history. Reference accuracy and an exhaustive
+biological count remain unmeasured.
+
 A fresh-context paired DNA/actin author also retained 55 nuclei and 55
 source-linked actin territories after repairing a local nuclear merge. A
 faint-neighbour merge, clipped objects and one no-growth territory remained
