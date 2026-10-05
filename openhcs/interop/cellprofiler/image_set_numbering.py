@@ -106,7 +106,7 @@ class CellProfilerImageSetNumbering:
         image_numbers_by_slice = self.for_source_slices(
             scope=scope,
             provenance=table.source_provenance,
-            slice_indices=projection.present_axis_values(slice_axis.value),
+            slice_indices=self.source_slices_for_measurement_table(table),
             owner=table.name,
         )
         axisless_image_number = None
@@ -116,12 +116,7 @@ class CellProfilerImageSetNumbering:
             ) or (0,)
             source_image_numbers = tuple(
                 dict.fromkeys(
-                    self.for_source_slices(
-                        scope=scope,
-                        provenance=table.source_provenance,
-                        slice_indices=source_plane_indices,
-                        owner=table.name,
-                    ).values()
+                    image_numbers_by_slice[index] for index in source_plane_indices
                 )
             )
             if (
@@ -144,6 +139,26 @@ class CellProfilerImageSetNumbering:
             image_numbers_by_slice,
             axisless_value=axisless_image_number,
         )
+
+    @staticmethod
+    def source_slices_for_measurement_table(
+        table: MeasurementTable,
+    ) -> tuple[int, ...]:
+        """Return exactly the slices represented by this producer's row scope.
+
+        Axisless rows consume their declared source stack, not a guessed plate
+        grid. Preserve explicit row order before additional source planes.
+        """
+        projection = MeasurementRowsAxisProjection.from_rows(table.rows)
+        indices = projection.present_axis_values(
+            MeasurementRowAxisField.SLICE_INDEX.value
+        )
+        if not projection.has_axisless_rows(MeasurementRowAxisField.SLICE_INDEX):
+            return indices
+        source_indices = (
+            tuple(range(table.source_provenance.source_plane_count)) or (0,)
+        )
+        return tuple(dict.fromkeys((*indices, *source_indices)))
 
     def _source_identity(
         self,

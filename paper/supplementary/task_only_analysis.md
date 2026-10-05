@@ -58,6 +58,15 @@ final report retains uncertain lobed groups, possible merges, small-focus
 exclusions and truncated border objects. Its 61 instances are a defined
 bright-object estimate rather than an exhaustive biological census.
 
+Supplementary Figure 18 shows native raw/first/final witnesses from this same
+scored author. The overview uses raw window 8–152; the upper-right detail uses
+8–248, gamma 1, with filled ROI opacity 0.7. It makes the local elongated-body
+false-split repair visible without substituting another trial's result. The
+[independent source review](../../figure-collection-20261004/H001-FRESH586-SCORED-NATIVE-REVIEW.rst)
+records original capture hashes, matched native states and the independent
+verification of all 417 frozen file sizes and hashes. Clipping and scaling are
+recorded in the figure receipt; original PNG bytes remain alongside the figure.
+
 An earlier independent author, `H001_FRESH10_96`, scored 62.65% on its first
 prediction and 91.34% on its final prediction using the same reference and
 scorer. Different packaged versions and independently selected settings
@@ -335,8 +344,10 @@ scientific execution. The [fresh retinal outcome record](task_only_analysis/reti
 binds original source, freeze, report and diagnostic identities. This trial is
 distinct from the assisted retinal continuation in Supplementary Figure 11;
 no new scientific execution, reference scoring or image transformation was
-used to prepare this account. Main Figure 9 uses the corrected whole-field and
-southwest raw/combined captures, not the earlier misnamed overview captures.
+used to prepare this account. The earlier Figure 9 presentation used the
+corrected whole-field and southwest raw/combined captures, not the earlier
+misnamed overview captures. Those predecessor captures remain retained;
+the current main figure shows the separate 102-instance repeat described below.
 Its [native source proof](task_only_analysis/retinal-fresh-native-source-proof.json)
 retains original PNG hashes, camera coordinates and exact geometric crops.
 Whole-field crops are [566,41,415,415] and southwest crops [413,28,837,442]
@@ -421,7 +432,7 @@ a faint neighbour elsewhere remained merged. The author ultimately registered
 a custom detector through the ordinary OpenHCS function/artifact route, retaining
 its consumed response, markers and support as diagnostics.
 
-Figure 8 shows matched raw and first/final native overlays of
+Figure 6 shows matched raw and first/final native overlays of
 the repaired pair, alongside final raw, result-only and combined views of the
 remaining faint merge. The first completed prediction follows a technical
 submission repair; these panels compare scientific outputs within the same
@@ -713,8 +724,9 @@ exits and are not certified by this prefix check. The
 [retinal repeat outcome record](task_only_analysis/retinal-fresh656-outcome.json)
 identifies the preserved report, manifest, pipeline and inspected captures.
 No analysis, private scoring or source-image transformation was rerun for this
-account. Figure 9 continues to show the separate 109-instance predecessor and
-must not be interpreted as an image of this 118-instance repeat.
+account. The separate 109-instance predecessor retains its original captures
+and source proof. Main Figure 7 shows the later 102-instance repeat, not this
+118-instance repeat.
 
 ## BBBC039 fresh08: batch coverage completed in a separate continuation
 
@@ -745,7 +757,43 @@ completed batch and regional failure evidence are retained for subsequent
 learning rather than discarded for failing to achieve perfect segmentation.
 The [completion record](task_only_analysis/bbbc039-fresh08-completion18.rst)
 identifies the source phases, original terminal receipt and independent checks.
-These outputs do not replace Figure 7's separately scored trial.
+These outputs do not replace Figure 5's separately scored trial.
+
+## Retinal fresh09: local repair with a retained neighbour control
+
+The independent author `R0010_FRESH09_96` analysed the released R0010 field
+without earlier retinal outputs, reference masks or supplied parameter
+corrections. Candidate08 repaired a southeast continuous-body partition but
+merged a genuine northwest pair; candidate09 retained that regression.
+The author independently identified it and changed marker suppression in
+candidate10. Parent review of matched raw/result/outline triples confirmed
+separate northwest neighbours and a continuous southeast envelope together
+in the final candidate. Southwest views retained plausible isolated-body
+detections, while diffuse northeast support left some boundaries and identities
+uncertain. These are regional visual judgements, not a field-wide error rate.
+
+Independent table reconciliation found 102 object rows with unique labels
+1–102 and an image-level detector count of102. The frozen pipeline SHA256 is
+`59f48a9ff4ee70f988f2ff0fed1eadf7df97a8de3bad8d9753e6432635b0e0a0`.
+The retained source manifest binds these tables to R0010.czi/site1/Z1/time1,
+RBPMS AF647 channel1; the CSVs themselves lack acquisition/source columns.
+Exact owned native and viewer exits were acknowledged and independently
+confirmed by absent process IDs. The original client exit2 and missed final
+sealing deadline remain recorded separately from completed numerical outputs
+and visual acceptance. No manual retinal count or mask score was obtained.
+
+The [independent final review](../../figure-collection-20261004/R0010-C10-INDEPENDENT-LOCAL-REPAIR-REVIEW.rst)
+and [intermediate tradeoff](../../figure-collection-20261004/R0010-C08-REGIONAL-TRADEOFF-REVIEW.rst)
+retain original capture identities, table checks and lifecycle qualifications.
+Main Figure 7 now shows this final candidate's whole field, northwest pair
+and southeast continuous envelope. Its [native source proof](task_only_analysis/retinal-fresh09-native-source-proof.json)
+binds six unchanged original PNGs, the frozen pipeline, native camera settings
+and exact geometric crops. Raw views use window 0–63 and gamma 1. The outline
+background uses the pipeline's source-intensity stretch followed by the manual
+display range 0–63/255, so it is brighter than the native raw presentation;
+same-coordinate matching does not imply identical photometry. Neither display
+changes the frozen labels or supplies a reference score. The preceding
+109-instance trial retains its separate source proof and original captures.
 
 ## Scope and retained evidence
 
@@ -785,9 +833,48 @@ These paths identify retained evidence rather than a portable archive. At the
 independent checkpoint runtime cleanup was pending; biological output completion
 does not imply sealed outer journals or verified runtime retirement.
 
+### H002 fresh10: ordinary-body repair and unresolved cluster identity
+
+The independent task-only author `H002_FRESH10_89` analysed the complete
+released 60 × 256 × 256 single-channel volume without reference answers,
+target count or parameter coaching. It measured raw body extent, internal
+peak spacing, a genuine neighbour pair and background before its first
+candidate. The official 3D example supplied workflow structure, not assay
+settings or a physical calibration.
+
+The first completed numerical output contained 28 provisional centres.
+Increasing marker prominence left its centre CSV unchanged. Compatible
+maxima-component connectivity reduced the count to 26 and repaired a
+lower-border split, but another continuous body retained a duplicate.
+Measured component-local, axis-aware spacing then produced 22 centres,
+with the same 718,474-voxel foreground support. Native review supported
+one centre in the repaired round body and retained two in a genuine pair;
+one bright multi-lobed cluster remained unresolved. Count reduction alone
+does not prove biological improvement or complete detection.
+
+Independent readback found 22 rows in the final centre CSV. The author also
+reconciled 22 persisted ROI geometries, native feature rows and image count.
+These delivery checks are separate from biological validity. Supplementary
+Figure 17 shows final-only native XY, XZ and YZ witnesses; it does not show
+the earlier candidates or independently establish their repair chronology.
+The [native source proof](task_only_analysis/h002-fresh10-native-source-proof.json)
+binds six byte-identical screenshots, matched camera/axes/windows, the frozen
+pipeline and registered callable, and the source report and table hashes.
+No analysis or reference scoring was rerun for this account.
+
+The author withheld acceptance of a global biological nucleus count while
+retaining useful ordinary-body repairs. Identity of the bright cluster,
+possible dim misses, close-neighbour sensitivity and border-truncated
+geometry remain uncertain. Coordinates are voxel indices, not verified
+micrometres. This independent run is distinct from the earlier 26-centre
+repeat and from the same-context development trial. Its original report,
+pipeline, callable, QA audit and reconciliation remain under
+`/home/ts/wt/openhcs-issue-batch-20260929/next-h002-fresh10-89-20261005/H002_FRESH10_89/author-workspace/output`;
+canonical payloads remain on HDD at the paths in the source proof.
+
 ### Programme-wide evidence scope
 
-[Figure 7 plot data](../figures/slas/task_only_analysis_plot_data.csv) retains
+[Figure 5 plot data](../figures/slas/task_only_analysis_plot_data.csv) retains
 the plotted first/final observations and all 200 field scores. Its
 [figure receipt](../figures/slas/task_only_analysis_provenance.json) records
 source, generator and output hashes. The

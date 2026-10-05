@@ -1,0 +1,24 @@
+{
+  "issue": 751,
+  "scope": "Semantic dead-field deletion; rejected as the next dominant performance route",
+  "receiving_main": "d5a59809c0e4d54451d5d1ee02367a8aa66510da",
+  "baseline_main": "caf39698511b9b80676778dd329b1b317f94c4c1",
+  "candidate_main": "ef05f38494f9c7f73de9b62716ebfd116304d263",
+  "main_delta": "Documentation only; production code unchanged during receiving sync",
+  "baseline_ingress_seconds": {
+    "generic_main_seconds": 0.306811167858541,
+    "source_artifact_seconds": 0.30298216873779893,
+    "whole_ingress_seconds": 0.6097933365963399
+  },
+  "candidate_ingress_seconds": {
+    "generic_main_seconds": 0.2502571768127382,
+    "source_artifact_seconds": 0.29535446921363473,
+    "whole_ingress_seconds": 0.5456116460263729
+  },
+  "saved_ingress_seconds": 0.06418169056996703,
+  "controls": "13 existing request selection and physical metadata controls PASS",
+  "parity": "Exact saved pixels, full metadata, masks, order, groups, binding refs, selected members and independent buffers across5 stack loads +8 source admissions",
+  "snapshot_counts": "One baseline unfiltered snapshot birth; zero candidate births. Filtered admission remains required. Five lookups were not five births.",
+  "limits": "Single saved ingress owner pair on CPU3/thread1; registry preparation, compilation and selected context outside clock. No processing/public pipeline/native rerun and no new full-pipeline speedup claim. Incidental errors from unused unfiltered matching admission disappear; consumed source validation stays.",
+  "packet": "/home/ts/.local/state/openhcs-maintenance/20261004/source-universe-required-fields-replay-v1"
+}
