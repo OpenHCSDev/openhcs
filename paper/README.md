@@ -6,7 +6,7 @@ Working author-review draft for **SLAS Technology**:
 ## Versioned sources
 
 - [Manuscript source](manuscript.md): the sole complete working text.
-- [Supplementary material](supplementary/README.md): ten explanatory figures,
+- [Supplementary material](supplementary/README.md): explanatory figures,
   historical timing and prospective validation plots, source tables and
   evaluation records.
 - [Additional CellProfiler workflows](supplementary/complex_cellprofiler_workflows.md):
@@ -29,11 +29,10 @@ to understand the scientific findings in the main text.
 
 ## Figures and validation
 
-The nine main figures show the shared workflow, matching UI/code/MCP authoring,
-the recorded agent analysis, CellProfiler translation, benchmark results and
-viewer inspection, followed by task-only first/final analysis and full-corpus
-coverage and native views of autonomous local repair and fresh retinal detection.
-Fourteen supplementary figures explain runtime composition,
+The seven main figures show the shared workflow, matching UI/code/MCP authoring,
+the recorded agent analysis and benchmark results, followed by task-only
+first/final analysis, full-corpus coverage and native views of autonomous local
+repair and fresh retinal detection. Sixteen supplementary figures explain runtime composition,
 process boundaries, compiler preparation, connected outputs and custom functions.
 They also report historical timing observations and three prospective
 agent-authored assays on held-out public data. The two newer native-view figures
@@ -42,12 +41,15 @@ same-context volumetric development example; neither substitutes for reference
 evaluation. Two further native-view figures retain retinal soma development
 and a local BBBC013 nuclear repair with unresolved compartment ownership;
 these same-author development examples are separate from autonomous scores.
-The final two figures show a fresh nuclear core/boundary repair and residual
-crowded-region uncertainty in the independent retinal result shown in Figure 9.
+Figures 13–14 show a fresh nuclear core/boundary repair and residual
+crowded-region uncertainty in the independent retinal result shown in main
+Figure 7. Figures 15–16 retain the source-derived CellProfiler import example
+and native Fiji/napari viewer demonstrations. Supplementary Table 1 retains the
+reusable-library roles and source links.
 
 [Supplementary Data 8](supplementary/task_only_analysis.md) retains the newer
 task-only authoring results separately from those prospective held-out assays.
-Figure 7 consumes the exact post-freeze evaluation receipts, without rerunning
+Figure 5 consumes the exact post-freeze evaluation receipts, without rerunning
 microscopy analyses or scoring. Regenerate its three panels with
 `python paper/figures/build_slas_task_only.py` in an existing matplotlib-capable
 environment; source/output hashes and plotted observations are retained beside
