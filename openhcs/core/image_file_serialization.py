@@ -478,11 +478,16 @@ class TiffImageFileFormat(ImageFileFormat):
         self, payload: Any, configured: TiffConfig | None
     ) -> TiffConfig | None:
         metadata = image_payload_metadata(payload)
-        if not metadata.persists_whole_image():
+        if metadata.persists_whole_image():
+            axes = list("ZYX")
+        elif metadata.plane_axis is not None:
+            # Q is a container frame, not a guessed physical Z/channel axis.
+            # Its exact OpenHCS component domain remains in source projection.
+            axes = list("QYX")
+        else:
             return configured
         data = image_payload_data(payload)
         channel_axis = metadata.normalized_source_channel_axis(data)
-        axes = list("ZYX")
         planarconfig = None
         photometric = TiffPhotometric.MINISBLACK
         if channel_axis is not None:
@@ -501,7 +506,7 @@ class TiffImageFileFormat(ImageFileFormat):
             photometric = TiffPhotometric.RGB
         if len(axes) != data.ndim:
             raise ValueError(
-                "Intrinsic TIFF pixels must retain exactly their declared Z/Y/X and channel axes."
+                "TIFF pixels must retain exactly their declared plane, Y/X and channel axes."
             )
         return replace(
             configured if configured is not None else TiffConfig(),
