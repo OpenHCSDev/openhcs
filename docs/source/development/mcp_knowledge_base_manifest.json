@@ -816,7 +816,7 @@
       "document_id": "openhcs_viewer_qa",
       "section_count": 0,
       "source_path": "packaging/codex/openhcs/skills/use-openhcs/references/viewer-qa.md",
-      "summary": "Distributed raw-only faint-structure and nuisance scans with progressively lower numeric upper display limits; diagnostic soma saturation versus publication intent. Matched raw-only/result-only/combined QA across channels, positions and scales. Settled explicit producer-incarnation retirement preserves current routes and saved evidence; measure actual memory rather than layer visibility.",
+      "summary": "Distributed raw-only faint-structure and nuisance scans with progressively lower numeric upper display limits; diagnostic soma saturation versus publication intent. Matched raw-only/result-only/combined QA across channels, positions and scales. Saturated positive-ID support is admission evidence, not instance separation; categorical IDs or per-ID outlines expose dividing interfaces. Settled explicit producer-incarnation retirement preserves current routes and saved evidence; measure actual memory rather than layer visibility.",
       "tags": ["viewer QA", "raw only result only combined", "overlay visibility", "canvas resize recapture", "multiscale channels contrast", "per image contrast check", "channel switch contrast window", "remote desktop compression native capture", "segmentation visual debugging", "faint neurite lower upper display limit", "diagnostic soma saturation", "noise background illumination scan", "viewer layer retirement", "producer incarnation expected_producers", "settled candidate memory RSS"],
       "title": "Review matched microscopy views"
     },
