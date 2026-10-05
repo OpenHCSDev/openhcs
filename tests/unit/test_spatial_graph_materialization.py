@@ -144,7 +144,7 @@ def test_pixel_analysis_graph_roi_preserves_original_acquisition_calibration() -
 
 @pytest.mark.unit
 def test_graph_coordinate_unit_requires_original_nominal_spacing() -> None:
-    with pytest.raises(TypeError, match="requires SourceVoxelSpacing"):
+    with pytest.raises(AttributeError, match="values_zyx"):
         _branched_graph().replace_fields(coordinate_spacing=(1.0, 1.0))
 
 

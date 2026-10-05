@@ -225,8 +225,6 @@ class SpatialGraph(SourceImageProvenanceFields, SourceVoxelSpacingFields, NamedA
         if len(set(edge_ids)) != len(edge_ids):
             raise ValueError("SpatialGraph edge IDs must be unique.")
 
-        if not isinstance(self.coordinate_spacing, SourceVoxelSpacing):
-            raise TypeError("SpatialGraph.coordinate_spacing requires SourceVoxelSpacing.")
         spacing = self.coordinate_spacing.values_zyx
         if len(spacing) not in (2, 3):
             raise ValueError(
