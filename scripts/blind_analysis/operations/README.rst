@@ -178,8 +178,15 @@ Every observation preserves all kernel pressure windows plus a separate
 operation-policy receipt. Missing, repeated or malformed pressure
 measurements reject. Missing, repeated or malformed MemAvailable also rejects.
 For startup/large allocations, available RAM or free HOME below its reserve
-still rejects. Inactive owners, expired clocks and missing custody reject in
-every mode through their original owners.
+still rejects. Inactive owners and missing custody reject through their original
+owners. The original recorded clock limits scientific dispatch, not settlement:
+expiry rejects ``full``, ``replacement`` and ``bootstrap``. ``ongoing`` records
+the overrun and permits only observing already-dispatched work, preserving
+evidence/freeze and exact owned cleanup, with its live-client identity and
+resource checks unchanged. ``ledger`` can still report custody/growth but never
+dispatches work. No new candidate, parameter trial or process is authorized
+after expiry; the clock is neither extended nor reset. Unique deadline receipts
+preserve both refusals and settlement observations without replacing history.
 High pressure alone is not declared safe: insufficient actual host desktop
 headroom stops allocating work, irrespective of whether a former cap matched.
 ``ledger`` remains ledger-only, never
