@@ -1121,6 +1121,23 @@ same-author development, not a fresh autonomous success. The
 [stitched-development outcome record](task_only_analysis/p001-stitched94-outcome.json)
 identifies the independently verified freeze and original report.
 
+## Supplementary Figure 13. Personal neurite mosaic during retained-context development
+
+![Matched seam and field-core raw, body/path result and combined views.](../figures/slas/p001_stitched_dev13_native.png){width=6in}
+
+(A–C) Sampled overlap region; (D–F) lower-right field core in an acquisition-placed
+nine-field mosaic. Each triplet uses the same native crop, with raw FITC,
+body envelopes plus process paths, and their combination. The analysis fits
+one pooled percentile pair per complete nine-field channel stack before
+assembly, rather than fitting fields separately. Supported long paths remain
+visible, but faint segments and crowded ownership are incomplete. These are
+saved attempt08 development outputs; its terminal viewer settlement failed.
+The author subsequently completed attempt09 after changing streaming and
+destination. This figure does not establish bytewise equivalence of those
+attempts or final09 biological validation. It is same-author development,
+not a fresh autonomous pass. Original captures and the independent review
+are retained in the [stitched-development record](../../figure-collection-20261004/P001-STITCHED-DEV13-INDEPENDENT-REVIEW.rst).
+
 ## Software snapshots and evidence
 
 | Evidence | Software identity | What the record establishes |
