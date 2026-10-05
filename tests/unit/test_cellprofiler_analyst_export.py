@@ -138,9 +138,13 @@ def test_cpa_row_projection_derives_fields_once_per_table_subject(
         field_name: str,
         *,
         subject: MeasurementSubject,
+        project_database_field,
     ) -> FieldSpec | None:
         calls.append((table.name, subject, field_name))
-        return original(self, table, field_name, subject=subject)
+        return original(
+            self, table, field_name, subject=subject,
+            project_database_field=project_database_field,
+        )
 
     monkeypatch.setattr(
         CPATableRowProjection,
@@ -164,12 +168,18 @@ def test_cpa_row_projection_derives_fields_once_per_table_subject(
         subject=subject,
     )
 
-    assert projection.measurement_rows_by_subject(first, scope=None)[subject] == (
+    first_subject, first_rows, first_fields = next(projection.measurement_projections(first, scope=None))
+    assert first_subject == subject
+    assert first_fields == (FieldSpec("Count_Nuclei", int),)
+    assert first_rows == (
         {"Count_Nuclei": 1},
         {"Count_Nuclei": 2},
         {"Count_Nuclei": 3},
     )
-    assert projection.measurement_rows_by_subject(second, scope=None)[subject] == (
+    second_subject, second_rows, second_fields = next(projection.measurement_projections(second, scope=None))
+    assert second_subject == subject
+    assert second_fields == (FieldSpec("Count_Nuclei", float),)
+    assert second_rows == (
         {"Count_Nuclei": 4.5},
         {"Count_Nuclei": 5.5},
     )
@@ -189,12 +199,14 @@ def test_cpa_row_projection_derives_fields_once_per_table_subject(
         {"AreaShape_Area": 1.0},
         subject=cells,
         field_projection_cache=object_field_cache,
+        project_database_field=None,
     ) == {"Cells_AreaShape_Area": 1.0}
     assert projection._project_runtime_row(
         object_table,
         {"AreaShape_Area": 2.0},
         subject=nuclei,
         field_projection_cache=object_field_cache,
+        project_database_field=None,
     ) == {"Nuclei_AreaShape_Area": 2.0}
     assert calls == [
         ("FirstExperiment", subject, "Count_Nuclei"),
@@ -202,6 +214,101 @@ def test_cpa_row_projection_derives_fields_once_per_table_subject(
         ("ObjectMeasurements", cells, "AreaShape_Area"),
         ("ObjectMeasurements", nuclei, "AreaShape_Area"),
     ]
+
+
+def test_database_field_projection_refreshes_declarations_and_live_dtype_hooks(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from openhcs.processing.backends.cellprofiler.relationships import (
+        RelateObjectsModule,
+    )
+
+    field = FieldSpec("Distance_Centroid_Nuclei", float, required=False)
+    project_field = RelateObjectsModule.database_measurement_field_projection()
+    assert project_field(field) == replace(field, dtype=int)
+    monkeypatch.setattr(
+        RelateObjectsModule.DistanceMeasurementFeature,
+        "database_measurement_dtype",
+        classmethod(lambda cls: float),
+    )
+    assert project_field(field) == field
+    monkeypatch.undo()
+    monkeypatch.setattr(RelateObjectsModule, "DistanceMeasurementFeature", None)
+    assert RelateObjectsModule.database_measurement_field(field) == field
+    assert project_field(field) == replace(field, dtype=int)
+
+    projection = CPATableRowProjection(
+        CellProfilerDatabaseColumnDialect(),
+        CellProfilerImageSetNumbering(SourceImageSetIdentityPolicy()),
+    )
+    table = MeasurementTable(
+        name="EmptyDistances",
+        rows=MeasurementProjectedColumnarRows(
+            {field.name: ()}, fields=(field,),
+        ),
+        subject=MeasurementSubject(MeasurementScope.EXPERIMENT),
+        measurement_feature_owner=RelateObjectsModule,
+    )
+    assert next(projection.measurement_projections(table, scope=None))[1:] == (
+        (), (field,),
+    )
+    monkeypatch.undo()
+    assert next(projection.measurement_projections(table, scope=None))[1:] == (
+        (), (replace(field, dtype=int),),
+    )
+
+    class CustomFieldOwner(RelateObjectsModule):
+        module_name = None
+
+        @classmethod
+        def database_measurement_field_projection(cls):
+            return lambda source_field: replace(source_field, dtype=str)
+
+    custom_table = replace(table, measurement_feature_owner=CustomFieldOwner)
+    assert next(projection.measurement_projections(custom_table, scope=None))[1:] == (
+        (), (replace(field, dtype=str),),
+    )
+    assert CustomFieldOwner.database_measurement_field(field).dtype is str
+
+
+def test_cpa_alias_collision_precedes_later_module_field_matching(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from openhcs.processing.backends.cellprofiler.relationships import (
+        RelateObjectsModule,
+    )
+
+    def reject_later_matching(self, feature_name: str) -> bool:
+        raise AssertionError("Later module field matching must not run.")
+
+    monkeypatch.setattr(
+        RelateObjectsModule.DistanceMeasurementFeature,
+        "matches_feature_name",
+        reject_later_matching,
+    )
+    table = MeasurementTable(
+        name="AliasCollision",
+        rows=MeasurementProjectedColumnarRows(
+            {
+                "slice_index": (0,),
+                "image_id": (0,),
+                "Distance_Centroid_Nuclei": (1.0,),
+            },
+            fields=(
+                FieldSpec("slice_index", int),
+                FieldSpec("image_id", int),
+                FieldSpec("Distance_Centroid_Nuclei", float),
+            ),
+        ),
+        subject=MeasurementSubject(MeasurementScope.EXPERIMENT),
+        measurement_feature_owner=RelateObjectsModule,
+    )
+    projection = CPATableRowProjection(
+        CellProfilerDatabaseColumnDialect(),
+        CellProfilerImageSetNumbering(SourceImageSetIdentityPolicy()),
+    )
+    with pytest.raises(ValueError, match="overwrite field 'ImageNumber'"):
+        next(projection.measurement_projections(table, scope=None))
 
 
 def test_default_cpa_channels_follow_compiled_source_binding_order() -> None:
