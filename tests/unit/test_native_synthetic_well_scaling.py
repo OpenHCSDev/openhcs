@@ -5,7 +5,33 @@ from pathlib import Path
 
 import pytest
 
-from benchmark.native_synthetic_well_scaling import _source_paths, _stage_wells
+from benchmark.native_synthetic_well_scaling import (
+    _concurrent_timing,
+    _source_paths,
+    _stage_wells,
+)
+
+
+def test_concurrent_timing_includes_preparation_before_module_callbacks() -> None:
+    reports = tuple(
+        {
+            "observations": [
+                {
+                    "repetition": 0,
+                    "invocation_started_monotonic_seconds": invocation,
+                    "pipeline_started_monotonic_seconds": pipeline,
+                    "completed_monotonic_seconds": completion,
+                }
+            ]
+        }
+        for invocation, pipeline, completion in ((1.0, 2.0, 10.0), (1.5, 3.0, 11.0))
+    )
+
+    timing = _concurrent_timing(reports, 0)
+
+    assert timing["pipeline_execution_makespan_seconds"] == 9.0
+    assert timing["pipeline_overlap_seconds"] == 7.0
+    assert timing["invocation_through_completion_makespan_seconds"] == 10.0
 
 
 def test_staging_reuses_exact_declared_source_bytes(tmp_path: Path) -> None:
