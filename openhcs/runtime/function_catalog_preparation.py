@@ -273,6 +273,8 @@ class FunctionCatalogPreparation:
             if self._cancellation.requested():
                 raise CancelledError
             threadpool_info()
+            if self._cancellation.requested():
+                raise CancelledError
         except CancelledError:
             self._set_message(
                 "Function catalog preparation cancelled",
