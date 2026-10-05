@@ -86,14 +86,15 @@ def load_evaluations(root: Path) -> tuple[dict, dict]:
 
 
 def plot_pair(
-    axis: plt.Axes, first: float, final: float, title: str, detail: str
+    axis: plt.Axes, first: float, final: float, title: str, detail: str,
+    *, font_size: int = 11,
 ) -> None:
     bars = axis.bar((0, 1), (100 * first, 100 * final), width=0.55, color=(BLUE, TEAL))
     axis.bar_label(
         bars,
         labels=(f"{100 * first:.2f}", f"{100 * final:.2f}"),
         padding=4,
-        fontsize=11,
+        fontsize=font_size,
     )
     axis.set(
         title=title,
@@ -104,12 +105,12 @@ def plot_pair(
         yticks=(0, 20, 40, 60, 80, 100),
     )
     axis.text(
-        0.5, -0.19, detail, transform=axis.transAxes, ha="center", va="top", fontsize=9
+        0.5, -0.19, detail, transform=axis.transAxes, ha="center", va="top", fontsize=font_size - 2
     )
 
 
 def plot_coverage(
-    axis: plt.Axes, bbbc039: dict
+    axis: plt.Axes, bbbc039: dict, *, font_size: int = 9,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     fields = bbbc039["instance_metrics"]
     ordinary = [100 * field["f1"] for field in fields if field["reference_count"] > 0]
@@ -140,7 +141,7 @@ def plot_coverage(
     )
     for left, count in zip(edges[:-1], ordinary_counts + empty_counts, strict=True):
         if count:
-            axis.text(left + 5, count + 1.4, str(int(count)), ha="center", fontsize=9)
+            axis.text(left + 5, count + 1.4, str(int(count)), ha="center", fontsize=font_size)
     pooled = 100 * bbbc039["summary"]["micro_f1"]
     axis.axvline(
         pooled,
@@ -157,7 +158,7 @@ def plot_coverage(
         xticks=np.arange(0, 101, 10),
         ylim=(0, max(ordinary_counts + empty_counts) * 1.2),
     )
-    axis.legend(frameon=False, fontsize=9, loc="upper left")
+    axis.legend(frameon=False, fontsize=font_size, loc="upper left")
     return edges, ordinary_counts, empty_counts
 
 

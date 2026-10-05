@@ -234,7 +234,7 @@ class FigureSheet:
 
 
 def h001_scored():
-    """Native witnesses from the exact fresh author evaluated in Figure 5A."""
+    """Native witnesses from the exact fresh author evaluated in Figure 5B."""
     sheet = FigureSheet("h001_scored_native", "", 6.4)
     sheet.source(
         ROOT / "figure-collection-20261004/H001-FRESH586-SCORED-NATIVE-REVIEW.rst"
@@ -269,6 +269,48 @@ def h001_scored():
         size=14,
     )
     sheet.save()
+
+
+def task_only_story():
+    """Main-text native evidence and scores from the same frozen author runs."""
+    from build_slas_task_only import (
+        BBBC039_SOURCE, H001_SOURCE, load_evaluations, plot_coverage, plot_pair,
+    )
+
+    h001, bbbc039 = load_evaluations(ROOT)
+    with plt.rc_context({"font.size": 14, "axes.titlesize": 15,
+                         "axes.spines.top": False, "axes.spines.right": False}):
+        sheet = FigureSheet("task_only_visual", "", 9.0)
+        for path in (H001_SOURCE, BBBC039_SOURCE,
+                     Path("paper/figures/build_slas_task_only.py"),
+                     Path("figure-collection-20261004/H001-FRESH586-SCORED-NATIVE-REVIEW.rst")):
+            sheet.source(ROOT / path)
+        sheet.text(3, 98, "Autonomous review: local repair and complete coverage",
+                   size=18, weight="bold", va="top")
+        sheet.text(3, 93, "A  H001: a false split repaired without reference feedback",
+                   size=15, weight="bold")
+        for x, stage, label in ((3, "raw", "Raw"), (35, "first", "First, a01"),
+                                (67, "final", "Final, a04")):
+            sheet.text(x, 88, label, size=14)
+            sheet.source_image(
+                OUTPUT / "h001_scored_sources" / f"detail_{stage}.png",
+                (x, 66, 29, 20), crop=(297, 28, 1037, 492),
+            )
+        axes = (sheet.figure.add_axes((.09, .37, .35, .23)),
+                sheet.figure.add_axes((.60, .37, .35, .23)),
+                sheet.figure.add_axes((.09, .08, .86, .19)))
+        first, final = h001["attempts"]
+        plot_pair(axes[0], first["derived_f1"], final["derived_f1"],
+                  "B  H001: same whole image", "Notebook-derived reference", font_size=16)
+        paired = bbbc039["first_vs_final_same_three"]
+        plot_pair(axes[1], paired["first"]["micro_f1"], paired["final"]["micro_f1"],
+                  "C  BBBC039: same three fields", "Independent annotations", font_size=16)
+        plot_coverage(axes[2], bbbc039, font_size=14)
+        axes[2].set_title("D  BBBC039: final coverage, all 200 fields")
+        for axis in axes:
+            axis.grid(axis="y", color="#d9e0e5", linewidth=.6)
+            axis.set_axisbelow(True)
+        sheet.save()
 
 
 def h004_junction():

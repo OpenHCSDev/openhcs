@@ -641,6 +641,20 @@ under `next-public03988-h00495-after08-20261004/H004_FRESH08_95` in the retained
 programme archive. This result does not replace the earlier neurite repeat or
 constitute evidence of a causal skill effect across fresh authors.
 
+## Independent retinal repeat: useful repair with faint loss
+
+An independent retinal author retained 73 method-defined soma candidates after
+repairing a bright-body split and preserving neighbouring-body controls. A weak
+southwest feature remained unlabelled, with uncertain complex extents elsewhere.
+The [independent native review](../../figure-collection-20261004/RETINA-FRESH11-INDEPENDENT-REVIEW.rst)
+records full checks of 1,147 payload entries, ten handoff entries and 83 opened
+captures, direct agreement of 73 labels/table rows and 439,694 foreground pixels,
+and the same-coordinate positive/faint comparisons. These sets overlap.
+Different size, border and preprocessing choices prevent interpreting its count
+against the earlier 102-instance candidate as an accuracy comparison. Useful
+local findings are retained separately from the unresolved population-level
+claim; no manual-reference score was obtained.
+
 ## Fresh public neurite field: bright-junction support repair
 
 Supplementary Figure 19 shows an independent author recovering a bright
@@ -885,6 +899,15 @@ repeat and from the same-context development trial. Its original report,
 pipeline, callable, QA audit and reconciliation remain under
 `/home/ts/wt/openhcs-issue-batch-20260929/next-h002-fresh10-89-20261005/H002_FRESH10_89/author-workspace/output`;
 canonical payloads remain on HDD at the paths in the source proof.
+
+### BBBC007 fresh10 rotation: coverage failure with consistent exports
+
+The [independent frozen-run review](../../figure-collection-20261004/BBBC007-FRESH10-ROTATION-INDEPENDENT-REVIEW.rst)
+retains complete 16-field execution and 1311 site-local nucleus/cell pairs,
+alongside observed missed groups and incomplete final-candidate QA. Direct
+saved-mask checks confirmed matching IDs and containment, not biological
+accuracy. The original timed trial stays frozen; separately assigned development
+continuation does not convert its rejected outcome into an autonomous pass.
 
 ### Programme-wide evidence scope
 
