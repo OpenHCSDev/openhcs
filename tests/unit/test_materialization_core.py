@@ -833,11 +833,24 @@ def test_point_roi_materialization_native_reopen_preserves_fractional_z(
         routed_component_values={"z_index": z_values},
         axis_offsets=(0,),
     )
+    from openhcs.runtime.napari_streaming_handlers import (
+        NapariStreamLayerAddress, NapariStreamLayerItem,
+    )
+    from openhcs.runtime.viewer_component_system import ViewerComponentValueDomainPayload
+    from polystore.streaming_constants import StreamingDataType
+
     points, properties = viewer_server._build_nd_points(
         [
-            SimpleNamespace(
+            NapariStreamLayerItem(
                 data=NapariROIConverter.rois_to_shapes(rois),
-                address=SimpleNamespace(components=source_domain[0]),
+                producer=StreamProducerIdentity.fixed_output(
+                    FixedStreamProducerIdentityKind.MANUAL, "point_reopen",
+                ),
+                address=NapariStreamLayerAddress(
+                    source_domain[0], archive, StreamingDataType.POINTS,
+                ),
+                image_metadata=metadata,
+                plane_component_domain=ViewerComponentValueDomainPayload(()),
             )
         ],
         projection,

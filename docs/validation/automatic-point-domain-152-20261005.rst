@@ -43,6 +43,20 @@ overlaid. Borrowed operations remain byte-identical to the recorded source.
 Remaining qualification
 -----------------------
 
+Original POINT-DOMAIN-CONTROLS02 completed86PASS in7.13 seconds, whole helper
+terminal0 in13.81 seconds, peak467052KiB RSS, no swaps. It exercises actual
+materialization/save/request construction with source-Z origins0 and10,
+unchanged fractional2.375/features, full four-plane domains without an invented
+image axis, native Points model reopening and original malformed-domain
+negatives. Source tier only: no installed MCP/native/public endpoint was started.
+Original controls01 remains82PASS/4FAIL: missing replace import in this patch
+and an older receiver fixture without the current source-element identity
+method. Both corrections use existing owners; the real NapariStreamLayerItem
+replaces the incomplete SimpleNamespace, no production identity fallback.
+
+Exact logs/times are retained in the existing issue-batch engineering494 root:
+POINT-DOMAIN-CONTROLS01.log/.time and POINT-DOMAIN-CONTROLS02.log/.time.
+
 Finish the original fixture family migration for the prepare-then-save batch
 contract, then batch focused materialization/stream/domain controls. Legacy
 fixtures returning only a SimpleNamespace(save=...) need the actual batch
