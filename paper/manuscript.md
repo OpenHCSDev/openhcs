@@ -256,6 +256,15 @@ run scored 0.909 on exactly the same 156 fields. Thus a useful local repair did
 not establish improved overall performance; the 44 incomplete fields remain
 outside this comparison (Supplementary Data 8).
 
+A separate fresh-context BBBC039 repeat retained outputs for 182 fields before
+its execution was stopped. A same-author continuation completed the remaining
+18 fields with unchanged scientific parameters, giving inspectable coverage
+of all 200 fields across two execution phases. Independent reconciliation of
+the additional outputs found 2,136 object rows with consistent detector counts
+and object identities. This resolves batch coverage, not segmentation accuracy:
+regional review retained both useful detections and unresolved splits or merges,
+and no reference score was obtained for this repeat (Supplementary Data 8).
+
 These completed trials demonstrate useful first scientific choices and subsequent repair without reference-score feedback. They do not establish perfect instance identity or a reliability estimate across new datasets. The matched images and retained attempts distinguish genuine recovery from excess partitions, missed objects and uncertain biological boundaries (Supplementary Data 8).
 
 Matched native views complement these numerical results. Supplementary Figure 9 shows the H001 elongated-object repair, a retained separated-pair control and a small-focus exclusion from the defined cohort. Supplementary Figure 10 separately illustrates the unresolved volumetric-centroid development case. Supplementary Figures 11 and 12 retain retinal soma development and a local BBBC013 nuclear repair alongside residual misses and compartment limitations. These same-author development cases are not fresh autonomous results or accuracy comparisons.
