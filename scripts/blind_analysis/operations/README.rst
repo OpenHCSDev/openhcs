@@ -115,6 +115,12 @@ resource observation, not a cold ``replacement`` helper/native launch. A
 headless recorded stdio controller requires no VNC/window-manager startup.
 Absent GUI helpers remain a distinct unresolved viewer-access gap; this
 observation does not grant their restart or certify a viewer incarnation.
+A later recovery explicitly selects its closed observation with
+``FLEET_RECOVERY_PREDECESSOR``; the same context owner derives that predecessor's
+journals, author unit and ``thread.started`` event. It does not rediscover the
+newest rollout or fork the initial context instead. Any other active controller
+in this exact member's systemd family refuses a concurrent observation name.
+There is no separate current-thread/controller roster.
 
 The original slot owner resolves canonical funding before any performer starts.
 Launch, recording, client and helper consumers take that granted member; none
