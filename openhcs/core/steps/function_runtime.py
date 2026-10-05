@@ -308,6 +308,8 @@ class PatternGroupExecutionScope:
         return (
             declared_plan.for_artifact_refs(source_refs)
             if source_refs
+            or self.compiled_group.runtime_domain
+            is RuntimeInvocationDomain.ARTIFACT_MANAGED
             else self.main_flow_source_binding_plan
         )
 
