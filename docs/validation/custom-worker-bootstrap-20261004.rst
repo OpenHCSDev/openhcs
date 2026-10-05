@@ -161,3 +161,21 @@ observe native progress and known terminal status, verify expected pixels/rows
 through original artifact routes, then exact typed closure. No second client,
 overlay, current08 SCI mutation or replay of the retained original job is allowed.
 The separate697 first-terminal STATUS/OUTCOMES acceptance remains distinct.
+
+Published evidence
+------------------
+
+Production is pinned to b1f5205baf5f458d4da5a6a057198a2da8131a66;
+final source/test qualification ff1e3e70d6cc3391d1052d5f401b2a39462558a8 has
+identical production bytes. family-after02 parses the changed orchestrator
+family and records both remaining owner/constructor modules; no removed context
+field, argument, alias or substitute authority remains in that family.
+
+Byte-exact original logs, initial failures, R0, before/after ASTs and qualified
+source/test files are published in custom-worker-bootstrap-20261004.tar.gz:
+2241285bytes, SHA256
+43720aec4cb68ab5bc84ab39022402029566e1c83a8284577088477da1467a45.
+Loose originals and the isolated generic test directories remain in engineering708
+and validation/custom-worker-bootstrap708; no scientific/runtime archive was
+deleted, rewritten or reconstructed. No running operation or UNKNOWN attempt
+is owned by this source checkpoint. Installed/public receiving is still pending.
