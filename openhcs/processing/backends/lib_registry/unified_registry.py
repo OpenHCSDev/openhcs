@@ -62,7 +62,7 @@ from python_introspect import (
 )
 
 from openhcs.constants import MemoryType
-from openhcs.core.aligned_image_payload import AlignedImageStack
+from openhcs.core.aligned_image_payload import AlignedImageStack, ProducedImageStack
 from openhcs.core.measurement_row_materialization import (
     ConcatenatedColumnarRows,
     MeasurementRowsAxisProjection,
@@ -555,6 +555,27 @@ class ImagePayloadPure2DInputSlicer(Pure2DInputSlicer):
         return tuple(
             image_payload_slice_context(value, slice_data, slice_index)
             for slice_index, slice_data in enumerate(slices)
+        )
+
+
+class ProducedImageStackPure2DInputSlicer(ImagePayloadPure2DInputSlicer):
+    """Project literal image leaves through their existing declared axis owner."""
+
+    value_type = ProducedImageStack
+
+    def slice_value(self, value: ProducedImageStack, memory_type: str) -> tuple[Any, ...]:
+        del memory_type
+        return tuple(
+            RuntimeSliceProjection.value_for_slice(
+                value,
+                RuntimePlaneAxisValueProjection.from_selected_plane(
+                    axis=value.plane_axis,
+                    source_aliases=value.metadata.source_image_names,
+                    plane_index=index,
+                    axis_size=len(value.slices),
+                ),
+            )
+            for index in range(len(value.slices))
         )
 
 
