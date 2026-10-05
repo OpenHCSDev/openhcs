@@ -412,6 +412,9 @@ def _sqlite_table_value_differences(
                 f"candidate={len(candidate_table.rows)}",
             ),
         )
+    # Declared measurement values and relationships belong to the full database.
+    if measurement_subject is not None:
+        return ()
     # A byte-for-byte equal multiset of normalized rows is already a stronger
     # proof than tolerance-based semantic matching. Large object and relationship
     # exports otherwise pay the cost of projecting every unchanged row.
@@ -421,10 +424,7 @@ def _sqlite_table_value_differences(
         and Counter(reference_table.rows) == Counter(candidate_table.rows)
     ):
         return ()
-    if measurement_subject is None:
-        return runtime_table_differences((reference_table,), (candidate_table,), policy)
-    # Declared measurements are compared with the full correlated database below.
-    return ()
+    return runtime_table_differences((reference_table,), (candidate_table,), policy)
 
 
 def _sqlite_measurement_cohort_differences(

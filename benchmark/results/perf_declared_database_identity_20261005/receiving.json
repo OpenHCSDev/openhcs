@@ -77,5 +77,10 @@
   "science_scope": "Complete CPA-declared SQLite tables, exact relational identities and parent correlations, existing CellProfiler measurement tolerances, nonempty declared tables and complete physical output inventory. This workload declares SQLite/CPA exports, not image or CSV outputs.",
   "negative_receipt": "declared-row-identity-receiving-v1/strict-comparison.log: table-isolated absent-parent failure after identity repair",
   "local_controls": "48 existing database/workspace controls; six focused object/relationship controls; one complete SQLite cohort regression. All PASS.",
-  "timing_claim": "None: saved outputs reused; no pipeline/native execution or timing rerun."
+  "timing_claim": "None: saved outputs reused; no pipeline/native execution or timing rerun.",
+  "post_science_cleanup": {
+    "change": "Declared tables return after cardinality checks; removed discarded Counter equality work before the same complete-cohort comparison. No changed admission/value law.",
+    "comparator_sha256": "f04c46e4d756a3138575015e465b08e49daa6035b33ab93978dd294d8ada2336",
+    "controls": "49 complete database/workspace controls PASS after cleanup; full saved SCI receipt above is retained for the preceding semantically equivalent comparator."
+  }
 }
