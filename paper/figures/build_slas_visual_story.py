@@ -343,8 +343,8 @@ def bbbc039_repeat():
         sheet.source(repeat_path)
         sheet.text(3, 98, "Independent authors: agreement across the same 200 fields",
                    size=18, weight="bold", va="top")
-        scatter = sheet.figure.add_axes((.09, .23, .35, .59))
-        pooled = sheet.figure.add_axes((.61, .23, .35, .59))
+        scatter = sheet.figure.add_axes((.09, .27, .35, .55))
+        pooled = sheet.figure.add_axes((.61, .27, .35, .55))
         for empty, color, label in (
             (False, BLUE, "Annotated fields"),
             (True, ORANGE, "Annotation-empty fields (n=3)"),
@@ -358,7 +358,7 @@ def bbbc039_repeat():
         scatter.set(title="A  Paired field scores", xlabel="Earlier author F1 (%)",
                     ylabel="Independent repeat F1 (%)", xlim=(-3, 103), ylim=(-3, 103))
         scatter.set_aspect("equal", adjustable="box")
-        scatter.legend(frameon=False, fontsize=11, loc="upper left")
+        scatter.legend(frameon=False, fontsize=11, loc="lower right")
         for offset, record, color, label in (
             (-.18, earlier, BLUE, "Earlier author"),
             (.18, repeat, TEAL, "Independent repeat"),
@@ -372,12 +372,13 @@ def bbbc039_repeat():
         pooled.set(title="B  Pooled object agreement", ylabel="Agreement (%)",
                    xticks=(0, 1, 2), xticklabels=("Precision", "Recall", "F1"),
                    ylim=(0, 112), yticks=(0, 20, 40, 60, 80, 100))
-        pooled.legend(frameon=False, fontsize=12, loc="lower left")
+        pooled.legend(frameon=False, fontsize=11, loc="upper center",
+                      bbox_to_anchor=(.5, -.24), ncol=2)
         for axis in (scatter, pooled):
             axis.grid(color="#d9e0e5", linewidth=.6)
             axis.set_axisbelow(True)
         counts = repeat["distribution"]
-        sheet.text(50, 8,
+        sheet.text(50, 4,
                    f"{counts['improved_vs612']} fields improved; "
                    f"{counts['regressed_vs612']} lower; "
                    f"{counts['unchanged_vs612']} unchanged",

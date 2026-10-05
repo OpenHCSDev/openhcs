@@ -1,0 +1,14 @@
+{
+  "generator_sha256": "1db01a27817159517e7467f0e49d8af0dea1c8c5249fc1239ed830ffbaa06ef9",
+  "source_sha256": {
+    "paper/supplementary/task_only_analysis/bbbc039-fresh612-postfreeze-evaluation.json": "b491df2f50f0f9a3b1d1f72c940f1a0103c0c74764c4c80852f456da2d1702b2",
+    "figure-collection-20261004/bbbc039-fresh10coverage-postfreeze-evaluation.json": "e257a17d67662967ba9af16a9a94aa78756b47a889c3e093a0cf1abe640f828e"
+  },
+  "ui_crops": [],
+  "output_sha256": {
+    "bbbc039_independent_repeat.png": "b3388f52f2f72f7cae8252b4836cbfa12dfd4a64b26ae3a5aee2134038b7200b",
+    "bbbc039_independent_repeat.pdf": "0a139833a85ce0771cb3dfec54efd49f72ab117d4d8cbf3c4434be8a26e3f232",
+    "bbbc039_independent_repeat.svg": "6fd6d6541e74a9fceb218ef26c0b7d22496ecc0b726fe27b7d0494cf0d9fc3a1"
+  },
+  "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
+}
