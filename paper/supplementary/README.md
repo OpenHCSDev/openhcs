@@ -1014,6 +1014,20 @@ autonomous pass supplied by the continuation or an improvement over the earlier
 fresh13 repeat. The [coverage and review record](task_only_analysis/bbbc013-fresh15-qualified-repeat.rst)
 identifies the frozen artifacts, independent checks and evidence boundaries.
 
+A subsequent self-directed development phase completed all 96 wells with
+18,073 nuclear seed rows, 16,589 defined ratios and 1,484 zero-cytoplasm rows.
+Settings froze before five additional pixel-review fields were opened; earlier
+whole-plate tables had already been seen. Independent recalculation reproduced
+all 24 four-well dose/control summaries, with Z-prime 0.700/0.513 and V-factor
+0.710/0.597 for the Wortmannin/LY294002 blocks. Matched raw, result and combined
+views showed broad GFP-supported bodies, a faint nuclear miss, a plausible
+merged pair and incomplete dim compartments. These selected-mask responses
+are useful exploratory assay results, not complete cell-boundary validation
+or a fresh autonomous pass. The
+[independent development review](../../figure-collection-20261004/BBBC013-SELFDEV96-INDEPENDENT-FINAL-REVIEW.rst)
+records original capture identities, display windows, table recalculation and
+terminal artifact checks without changing the scientific outputs.
+
 The report also records a same-author retinal continuation with 100 inspectable
 RBPMS soma-detector instances. Matched views show useful local improvements,
 but residual dim-body misses and uncertain dense partitions prevent treating
