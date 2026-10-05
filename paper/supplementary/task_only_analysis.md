@@ -825,6 +825,25 @@ changes the frozen labels or supplies a reference score. The preceding
 
 ## Scope and retained evidence
 
+### Retinal fresh13: supported localisation with weaker faint boundaries
+
+The independent `R0010_FRESH13_89` author retained 129 AF647 soma detections
+after its own foreground-admission repairs. The initial 235 detections included
+excess background; a stricter 91-detection attempt lost a faint regression
+control, and the intermediate final settings recovered some of that support.
+These counts describe parameter sensitivity, not a biological confidence interval.
+
+Independent native review supports useful bright-body localisation and clear-pair
+separation. Faint crescents, outline contamination and broad-cluster multiplicity
+remain less reliable; no manual total or reference accuracy score was obtained.
+The labels, table and ROI archive agree on 129 members, but that consistency
+does not establish that each member is one biological cell. The [independent
+final review](../../figure-collection-20261004/R0010-FRESH13-INDEPENDENT-FINAL-REVIEW.rst)
+records the complete pipeline identity, unchanged 106-file payload freeze and
+parent review of four matched three-view sets. All eight declared final sets
+have matching camera, axes, raw transform and window 0–47/gamma 1. Scientific
+artifact freezing is separate from the harness's final runtime/journal closure.
+
 ### H003 fresh09: nuclear instances and associated-region geometry
 
 The independent author `H003_FRESH09_95` analysed the released paired
