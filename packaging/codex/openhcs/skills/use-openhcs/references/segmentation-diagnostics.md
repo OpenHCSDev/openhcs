@@ -27,6 +27,15 @@ pair separation and isolated-body extent. Filling supported nuclear interiors
 can still be useful; this is an ordering diagnostic, not a universal prohibition
 or instruction to copy a benchmark's hole-filling default.
 
+The converse matters too: in a distance transform, excluded interior pixels are
+background boundaries. Holes within one raw-supported body can create a ring
+landscape with several rim maxima; filling only AFTER partition cannot undo
+those earlier marker decisions. If the retained support/EDT demonstrates this
+failure, compare a raw-justified interior-support repair BEFORE EDT with the
+unrepaired support, checking the genuine pair and nuisance controls above.
+Uncertain dark interiors are not automatically missing body: preserve that
+uncertainty, and do not fill real gaps between neighbours or every biological ring.
+
 For all-foreground or empty support, compare the reported threshold with values
 from the **current processing alias**, not only the physical source or viewer
 window. Check [current processing intensity units](measurement-interpretation.md#current-processing-intensity-units)

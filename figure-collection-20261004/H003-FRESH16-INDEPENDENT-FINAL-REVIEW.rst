@@ -79,3 +79,56 @@ Control root is
 Read sources: ``OWNER-TERMINAL.rst`` and the author's ``report.md``,
 ``qa-notes.rst``, ``qa-ledger.json`` and ``frozen-manifest.json``.
 This pass covers twelve captures, not all 131 reviewed by the author.
+
+Separate next94 repeat: measured suppression still merges neighbours
+-------------------------------------------------------------------
+
+``H003_FRESH16_NEXT94`` is a different fresh author, not a continuation of the
+accepted localisation checkpoint above. On 5 October the parent opened nine
+original candidate05 PNGs: upper and lower DNA crops and whole-field Actin,
+each raw-only, result-only and combined. No reference annotation, target count,
+new execution or feedback to the author was used in this review.
+
+The upper DNA crop contains an adjacent bright and dim body represented by one
+turquoise footprint. Several other bodies align with separate labels. The lower
+crop retains compact footprints over isolated bodies and one footprint over an
+elongated continuous body; its biological multiplicity remains uncertain.
+Whole-field Actin regions expand over much of the visible rim support, but
+crowded partitions and upstream nuclear merges prevent complete cell identity.
+These are useful localisations with a specific neighbour-separation failure,
+not an absence of segmentation and not a complete biological census.
+
+The author's pre-execution rationale measured unwanted seed separations of
+8.25 and 14.04 pixels and a supported neighbour separation of 18.97 pixels.
+Increasing suppression radius from 7 to 15 pixels was intended to separate
+those cases, but the final upper crop shows that this spacing argument alone
+did not preserve the pair. The author's recorded rejection is therefore
+independently corroborated. This review does not isolate the mechanism or
+establish an accuracy rate. A source/landscape comparison is assigned separately;
+this failed repeat does not replace the earlier useful checkpoint.
+
+The final freeze records 53 nuclear and 53 cell labels, execution completed,
+and pipeline SHA256
+``6814f6c73242e665fc47e1c93177260358dfd1281cdd07949072d748a1b04d27``.
+The parent independently checked all 29 frozen control records, 309 payload
+artifacts and 178 capture hashes: all passed. These three manifest lists are
+not asserted to be mutually exclusive. The scientific freeze explicitly leaves
+the active client/outer journal terminal disposition to its owner; this review
+does not claim runtime closure.
+
+Original control root::
+
+  /home/ts/wt/openhcs-issue-batch-20260929/next-h003-fresh16-94-after-recovery-20261005/H003_FRESH16_NEXT94/author-workspace/output
+
+Original captures are under the matching HDD programme root's ``qa`` directory.
+The personally opened sets are ``candidate05-upper-dna-p99-{raw,result,combined}``
+(timestamps 203702755834, 203703045715, 203703321239),
+``candidate05-lower-dna-p99-{raw,result,combined}``
+(203709895355, 203710176409, 203710452741), and
+``candidate05-full-actin-p99-{raw,result,combined}``
+(203649401466, 203649738617, 203650042348).
+Each filename is ``20261005T<timestamp>Z_napari_6013_OpenHCS_Napari_Visualization.png``.
+The original ``qa-manifest.json`` supplies each full path, capture receipt,
+presentation and hash. Matched native centre y/x and zoom are upper 70/30, 4;
+lower 350/105, 3; whole 199.5/199.5, 1.05. Raw windows are DNA 0--151 and
+Actin 0--104. The reviewer checked these saved receipts, not a new live readback.
