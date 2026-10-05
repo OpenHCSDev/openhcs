@@ -731,3 +731,25 @@ are terminal; no public541 operation or UNKNOWN outcome exists. Production
 remains39df6d49c. The next action is Root's original binary handoff to Planck,
 then the coalesced whole build/qualification and Dewey's exact released lane;
 Singer follows this packet through execution/reopen/ACK and merge without CI.
+
+Dependency artifact delivered (supersedes the missing-wheel boundary above)
+-------------------------------------------------------------------------
+
+Singer took actual local artifact ownership after the active-claim check found
+no deliverer or retained binary. The reused completed ObjectState checkout built
+exact v1.3.1 tag1d36774 without isolation/download/source change. Newly qualified
+wheel138148B SHA7be55a4b18326709df26b71cd4a8c7ee7456eff1db0e7fd3d676e94c6d9146ca
+is published at https://github.com/OpenHCSDev/ObjectState/releases/tag/v1.3.1.
+All30 tagged package members/33 hashed RECORD installed bytes match;
+215 original source tests and215 installed-origin tests PASS, TwinePASS.
+Raw qualification archive SHA4868d1cb240a58dfac79db4acfa94911974ebd918c3892bf40c5cf42236de440
+is published on that release. No nonexistent old-wheel equivalence is claimed.
+The package/build/workflow diff to declaredc75a457 is empty; only release-check
+script/tests differ. Original queued OIDC/PyPI publisher remains untouched.
+
+Planck's whole integrationcc1805bfd already includes main2dce374+541e5a7fc7.
+The artifact is now handed off on541 comment6001659466 and ObjectState25
+comment6001652650. No ObjectState or hosted-CI hold remains. Actual whole READY
+and Dewey's exact released native/viewer/ACK custody are next, before Singer's
+installed registered execution/CSV/graph ROI/native saved reopen. No current
+scientific input/package or existing failures changed; no public541 call exists.
