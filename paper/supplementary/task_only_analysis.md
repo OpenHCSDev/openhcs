@@ -749,6 +749,44 @@ These outputs do not replace Figure 7's separately scored trial.
 
 ## Scope and retained evidence
 
+### H003 fresh09: nuclear instances and associated-region geometry
+
+The independent author `H003_FRESH09_95` analysed the released paired
+400 x 400-pixel DNA/actin field through MCP using the packaged skill, without
+reference labels, a target count or parameter coaching. Before its first
+scientific candidate it retrieved the ExampleHuman contract and conditional
+marker/admission guidance, and measured internal texture, a genuine pair and
+actin positive/background support. This preparation is documented behaviour,
+not a controlled estimate of the skill's causal effect.
+
+The final pipeline exported 55 nuclear rows and 55 associated-region rows.
+Independent readback confirmed both row counts and the frozen complete source
+SHA256 `3c2766253361ce1f469ea6fb7c34aca36c260890ee345480e442742e5efe21be`.
+Its own repairs increased propagation regularization, rejected a gradient
+watershed trial that produced winding contact strips, and raised the actin
+foreground threshold while retaining four visibly faint bodies. Assigned
+actin support decreased from 55,903 to 52,787 pixels without changing counts.
+This was within-run autonomous repair, not an externally corrected pass.
+
+Matched native review retained useful nuclear localisation and body coverage,
+but an unsupported associated region equalled its nuclear seed, another weak
+body had unresolved extent, and lobed/contacting identities remained uncertain.
+Counts are algorithmic, not a manual cell census. Pixel-native geometry does
+not establish physical calibration. The qualified nuclear estimate is retained
+separately from exploratory actin regions; these local limitations are not
+reported as failure of all localisation. No held-out scoring or accuracy
+percentage was obtained.
+
+The original report, final manifest and source remain under
+`/home/ts/wt/openhcs-issue-batch-20260929/next-h003-fresh09-95-after720-20261005/H003_FRESH09_95/author-workspace/output`.
+Label planes, tables and original matched QA captures remain on HDD under
+`/run/media/ts/hdd/openhcs-science/next-h003-fresh09-95-after720-20261005/H003_FRESH09_95`.
+These paths identify retained evidence rather than a portable archive. At the
+independent checkpoint runtime cleanup was pending; biological output completion
+does not imply sealed outer journals or verified runtime retirement.
+
+### Programme-wide evidence scope
+
 [Figure 7 plot data](../figures/slas/task_only_analysis_plot_data.csv) retains
 the plotted first/final observations and all 200 field scores. Its
 [figure receipt](../figures/slas/task_only_analysis_provenance.json) records

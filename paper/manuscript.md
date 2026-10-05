@@ -280,6 +280,16 @@ divisions. Nuclear recovery therefore succeeded locally even where cell-body
 interpretation remained unresolved; no manual-reference accuracy score was
 calculated for this repeat (Supplementary Figure 13; Supplementary Data 8).
 
+A later independent repeat measured nuclear texture, true-neighbour separation
+and actin support before selecting its first method. Its final pipeline
+retained 55 nuclear instances while reducing assigned actin area from 55,903
+to 52,787 pixels through its own boundary review. Unchanged instance counts
+did not capture this geometric change: one nucleus lacked supported actin
+extent and crowded interfaces remained uncertain. Nuclear localisation and
+associated-region geometry were therefore assessed separately, retaining the
+useful nuclear result without treating every linked region as a validated
+cell boundary (Supplementary Data 8).
+
 A fresh retinal author independently revised its foreground model after measuring background admission and weak-body support. Smoothing followed by broad-background subtraction improved local signal discrimination, and the completed final pipeline exported 109 detector instances (Figure 9). Distributed review still found partial faint-body recovery and uncertain ring-shaped partitions; a saved response below the cutoff localized one plausible miss to foreground admission rather than watershed. This is evidence of autonomous diagnosis and useful candidate output, not a validated retinal ganglion-cell count (Supplementary Data 8).
 
 A subsequent independent retinal author retained separation of a conspicuous bright pair and repaired an additional body split by increasing marker smoothing. Its final pipeline produced 118 detector instances. Distributed review still showed excess partitions and uncertain weak-body admission, so the useful local segmentation gains were reported separately from the unresolved whole-field count. No manual-reference accuracy was measured; this repeat illustrates partial autonomous success rather than either a complete cell census or a wholly unusable analysis (Supplementary Data 8).
