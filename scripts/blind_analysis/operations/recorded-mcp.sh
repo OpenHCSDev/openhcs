@@ -3,14 +3,20 @@
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/slot-env.sh" "${1:?root}" "${2:?slot}"
 observation=${3:?unique startup observation}
-runtime="$FLEET_WORKSPACE/output/runtime"
+runtime="$FLEET_RECORD_RUNTIME"
 mkdir -p "$runtime"
 test ! -e "$runtime/mcp.stdin"
 test ! -e "$runtime/mcp.stdout"
 test ! -e "$runtime/mcp.timing"
-test ! -e "$runtime/first-mcp-started.epoch"
+if [[ -n "${FLEET_RECOVERY_OBSERVATION:-}" ]]; then
+  fleet_require_closed_controllers
+  admission=full
+else
+  test ! -e "$runtime/first-mcp-started.epoch"
+  admission=replacement
+fi
 fleet_require_writer_release
-bash "$FLEET_OPERATIONS/resource-check.sh" "$FLEET_ROOT" "$FLEET_SLOT" "$observation" replacement
+bash "$FLEET_OPERATIONS/resource-check.sh" "$FLEET_ROOT" "$FLEET_SLOT" "$observation" "$admission"
 # Failed admission leaves its original unique receipts but consumes no journal.
 # After script starts, retain this ONE handle/journal even on child failure.
 cd "$FLEET_WORKSPACE/output"
