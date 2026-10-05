@@ -12,6 +12,7 @@ from objectstate.global_config import GlobalContextValues
 
 import benchmark.matched_cellprofiler_batch as matched_batch
 from benchmark.native_batch_contracts import NativeBatchRequest
+from benchmark.adapters.cellprofiler import NativeCellProfilerSelectedSourceUniverse
 from benchmark.matched_cellprofiler_batch import (
     _candidate_pipeline_config,
     _global_config,
@@ -415,7 +416,9 @@ def test_source_input_inventory_hashes_symlink_target(tmp_path: Path) -> None:
     staged.mkdir()
     (staged / "source.tif").symlink_to(source)
 
-    inventory = _source_input_inventory(staged)
+    inventory = _source_input_inventory(
+        NativeCellProfilerSelectedSourceUniverse((staged / "source.tif",))
+    )
 
     assert inventory == (
         {
@@ -442,7 +445,9 @@ def test_pilot_inventories_stream_files_without_read_bytes(
     monkeypatch.setattr(Path, "read_bytes", reject_read_bytes)
     expected = hashlib.sha256(b"microscopy pixels").hexdigest()
 
-    assert _source_input_inventory(staged)[0]["sha256"] == expected
+    assert _source_input_inventory(
+        NativeCellProfilerSelectedSourceUniverse((staged / "image.tif",))
+    )[0]["sha256"] == expected
     assert _output_inventory(tmp_path, frozenset({source}))[0]["sha256"] == expected
 
 
