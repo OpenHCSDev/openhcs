@@ -80,14 +80,16 @@ class NativeBatchRequest:
 
 @dataclass(frozen=True)
 class NativeBatchObservation:
+    """Continuous pipeline-call through cleanup clocks, including preparation."""
+
     repetition: int
     output_root: str
     image_set_count: int
     invocation_seconds: float
-    pre_first_module_seconds: float
-    first_module_through_post_run_seconds: float
+    pre_pipeline_seconds: float
+    pipeline_execution_seconds: float
     invocation_started_monotonic_seconds: float
-    first_module_started_monotonic_seconds: float
+    pipeline_started_monotonic_seconds: float
     completed_monotonic_seconds: float
     assignment_image_set_counts: tuple[tuple[str, int], ...]
 
@@ -205,21 +207,21 @@ class NativeBatchReport:
         previous_completed = None
         for row in self.observations:
             invocation = row.invocation_started_monotonic_seconds
-            first_module = row.first_module_started_monotonic_seconds
+            pipeline_start = row.pipeline_started_monotonic_seconds
             completed = row.completed_monotonic_seconds
             if (
                 not all(
                     math.isfinite(value)
-                    for value in (invocation, first_module, completed)
+                    for value in (invocation, pipeline_start, completed)
                 )
-                or not invocation <= first_module < completed
+                or not invocation <= pipeline_start < completed
                 or (previous_completed is not None and invocation < previous_completed)
             ):
                 raise RuntimeError("Retained native clock boundaries are invalid.")
             for value, expected in (
                 (row.invocation_seconds, completed - invocation),
-                (row.pre_first_module_seconds, first_module - invocation),
-                (row.first_module_through_post_run_seconds, completed - first_module),
+                (row.pre_pipeline_seconds, pipeline_start - invocation),
+                (row.pipeline_execution_seconds, completed - pipeline_start),
             ):
                 if not math.isclose(value, expected, rel_tol=0.0, abs_tol=1e-9):
                     raise RuntimeError(

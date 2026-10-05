@@ -27,12 +27,10 @@ from native_batch_contracts import (
 @dataclass
 class NativeBatchClock:
     invocation_started: float
-    first_module_started: Optional[float] = None
+    pipeline_started: Optional[float] = None
     image_set_count: int = 0
 
     def before_module(self, module, module_count, image_set_index, image_set_count):
-        if self.first_module_started is None:
-            self.first_module_started = time.perf_counter()
         self.image_set_count = image_set_count
 
 
@@ -106,6 +104,10 @@ def main() -> None:
                 measurements.is_first_image = True
                 clock.image_set_count = 0
                 try:
+                    # Group preparation can load and process every source image.
+                    # Keep one continuous execution interval for the whole batch.
+                    if clock.pipeline_started is None:
+                        clock.pipeline_started = time.perf_counter()
                     for measurements in pipeline.run_with_yield(
                         image_set_start=request.first_image_set,
                         image_set_end=request.last_image_set,
@@ -120,7 +122,7 @@ def main() -> None:
                             "Native CellProfiler assignment did not complete: "
                             + str(status)
                         )
-                    if clock.image_set_count < 1 or clock.first_module_started is None:
+                    if clock.image_set_count < 1 or clock.pipeline_started is None:
                         raise RuntimeError(
                             "Native assignment executed no analysis modules"
                         )
@@ -142,12 +144,12 @@ def main() -> None:
                     output_root=str(output_root),
                     image_set_count=image_set_count,
                     invocation_seconds=completed - clock.invocation_started,
-                    pre_first_module_seconds=clock.first_module_started
+                    pre_pipeline_seconds=clock.pipeline_started
                     - clock.invocation_started,
-                    first_module_through_post_run_seconds=completed
-                    - clock.first_module_started,
+                    pipeline_execution_seconds=completed
+                    - clock.pipeline_started,
                     invocation_started_monotonic_seconds=clock.invocation_started,
-                    first_module_started_monotonic_seconds=clock.first_module_started,
+                    pipeline_started_monotonic_seconds=clock.pipeline_started,
                     completed_monotonic_seconds=completed,
                     assignment_image_set_counts=tuple(assignment_counts),
                 )

@@ -32,7 +32,8 @@ median, as persisted in the converted summary.
 
 The summary fields `median_native_execution_seconds`,
 `median_openhcs_execution_seconds`, and `median_speedup` hold the selected clock's
-converted values. For execution these are native first-module through post-run
+converted values. For execution these are native pipeline-call through post-run
+and cleanup (including `prepare_run` and `prepare_group`)
 and OpenHCS completed server job. For total these are native invocation and the
 sum of OpenHCS disjoint compile/execute client SUBMIT + WAIT phases. Server startup,
 registry warmup, and scientific comparison are outside both benchmark scopes.

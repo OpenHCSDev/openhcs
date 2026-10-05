@@ -1103,7 +1103,7 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
                 for observation in observations_for_repetition
             )
             starts = tuple(
-                observation["first_module_started_monotonic_seconds"]
+                observation["pipeline_started_monotonic_seconds"]
                 for observation in observations_for_repetition
             )
             completions = tuple(
@@ -1111,13 +1111,13 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
                 for observation in observations_for_repetition
             )
             if any(
-                invocation > first_module or first_module > completed
-                for invocation, first_module, completed in zip(
+                invocation > pipeline_start or pipeline_start > completed
+                for invocation, pipeline_start, completed in zip(
                     invocations, starts, completions, strict=True
                 )
             ):
                 raise RuntimeError(
-                    "Native batch invocation, first-module and completion "
+                    "Native batch invocation, pipeline-start and completion "
                     "timestamps are not ordered."
                 )
             result = {
@@ -1127,9 +1127,9 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
                 "invocation_through_completion_makespan_seconds": (
                     max(completions) - min(invocations)
                 ),
-                "first_module_start_skew_seconds": max(starts) - min(starts),
-                "first_module_overlap_seconds": min(completions) - max(starts),
-                "first_module_through_completion_makespan_seconds": (
+                "pipeline_start_skew_seconds": max(starts) - min(starts),
+                "pipeline_overlap_seconds": min(completions) - max(starts),
+                "pipeline_execution_makespan_seconds": (
                     max(completions) - min(starts)
                 ),
                 "differences": tuple(str(value) for value in comparison.differences),
@@ -1138,7 +1138,7 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
             (root / "native_shards" / "equivalence.json").write_text(
                 json.dumps(shard_equivalence, indent=2)
             )
-            if result["first_module_overlap_seconds"] <= 0 or result["differences"]:
+            if result["pipeline_overlap_seconds"] <= 0 or result["differences"]:
                 raise RuntimeError(
                     f"Native shard batch {repetition} did not prove concurrent, "
                     f"equivalent work: {result}"
@@ -1457,7 +1457,7 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
         "native_shard_equivalence": shard_equivalence,
         "candidate": observations,
         "timing_claim": (
-            "Observed complete selected batches: native first-module through post-run "
+            "Observed complete selected batches: native pipeline-start through post-run "
             "and full invocation are separate; OpenHCS worker execution and complete "
             "client operation are separate. Repeated assignments are independently "
             "executed source copies, not projected timings or additional genuine wells."

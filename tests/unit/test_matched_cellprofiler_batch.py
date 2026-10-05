@@ -2,7 +2,7 @@
 
 import hashlib
 import json
-from dataclasses import replace
+from dataclasses import asdict, replace
 from pathlib import Path
 from subprocess import CompletedProcess
 
@@ -11,6 +11,7 @@ from objectstate.context_manager import config_context
 from objectstate.global_config import GlobalContextValues
 
 import benchmark.matched_cellprofiler_batch as matched_batch
+from benchmark.native_batch_contracts import NativeBatchRequest
 from benchmark.matched_cellprofiler_batch import (
     _candidate_pipeline_config,
     _global_config,
@@ -345,7 +346,18 @@ def test_native_worker_receives_an_owned_temporary_root(
     evidence_prefix = tmp_path / "native"
     request_path = tmp_path / "request.json"
     request_path.write_text(
-        json.dumps({"assignment_output_subdirectories": assignments})
+        json.dumps(
+            asdict(
+                NativeBatchRequest(
+                    pipeline_path=str(tmp_path / "pipeline.cppipe"),
+                    input_dir=str(tmp_path / "inputs"),
+                    output_root=str(evidence_prefix),
+                    expected_image_sets=None,
+                    repetitions=1,
+                    assignment_output_subdirectories=assignments,
+                )
+            )
+        )
     )
 
     assert (

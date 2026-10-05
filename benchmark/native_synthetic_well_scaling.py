@@ -108,15 +108,15 @@ def _concurrent_timing(
         for observation in observations
     )
     starts = tuple(
-        observation["first_module_started_monotonic_seconds"]
+        observation["pipeline_started_monotonic_seconds"]
         for observation in observations
     )
     completions = tuple(
         observation["completed_monotonic_seconds"] for observation in observations
     )
     if any(
-        invocation > first_module or first_module > completed
-        for invocation, first_module, completed in zip(
+        invocation > pipeline_start or pipeline_start > completed
+        for invocation, pipeline_start, completed in zip(
             invocations, starts, completions, strict=True
         )
     ):
@@ -128,10 +128,10 @@ def _concurrent_timing(
         "invocation_start_skew_seconds": max(invocations) - min(invocations),
         "invocation_through_completion_makespan_seconds": max(completions)
         - min(invocations),
-        "first_module_start_skew_seconds": max(starts) - min(starts),
-        "first_module_through_completion_makespan_seconds": max(completions)
+        "pipeline_start_skew_seconds": max(starts) - min(starts),
+        "pipeline_execution_makespan_seconds": max(completions)
         - min(starts),
-        "first_module_overlap_seconds": min(completions) - max(starts),
+        "pipeline_overlap_seconds": min(completions) - max(starts),
     }
 
 
