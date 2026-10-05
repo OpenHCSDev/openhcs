@@ -1803,3 +1803,47 @@ def _field_rows(
     table: CellProfilerProjectedTable,
 ) -> tuple[dict[str, object], ...]:
     return tuple(dict(row) for row in table.rows)
+
+
+def test_database_projection_includes_derived_grid_measurements() -> None:
+    from openhcs.core.artifacts import SpatialGridArtifactType
+    from openhcs.core.runtime_spatial_grid import SpatialGrid
+    from openhcs.core.source_image_provenance import SourceImageProvenance
+
+    grid = SpatialGrid(
+        name="Grid",
+        rows=8,
+        columns=12,
+        x_spacing=102.5,
+        y_spacing=103.25,
+        x_origin=71,
+        y_origin=57,
+        source_provenance=SourceImageProvenance(
+            source_component_metadata={"site": "1"}
+        ),
+    )
+    plan = ArtifactOutputPlan(
+        name="Grid", path="/memory/Grid.pkl", artifact_type=SpatialGridArtifactType
+    )
+    store = RuntimeValueStore()
+    record = store.record(
+        RuntimeValue.normalize(plan, grid, axis_id=AXIS_ID),
+        path=plan.path,
+        backend="memory",
+    )
+    batch = RuntimeArtifactBatch(
+        input_specs=(ArtifactSpec.input("Grid", SpatialGridArtifactType),),
+        records_by_axis={AXIS_ID: (record,)},
+        source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
+    )
+    projection = _projection_builder().build(batch, _settings(), ())
+    (row,) = _external_rows(projection.image_table)
+    assert row["ImageNumber"] == 1
+    assert {name: value for name, value in row.items() if "DefinedGrid" in name} == {
+        "Image_DefinedGrid_Grid_Columns": 12,
+        "Image_DefinedGrid_Grid_Rows": 8,
+        "Image_DefinedGrid_Grid_XLocationOfLowestXSpot": 71,
+        "Image_DefinedGrid_Grid_XSpacing": 102.5,
+        "Image_DefinedGrid_Grid_YLocationOfLowestYSpot": 57,
+        "Image_DefinedGrid_Grid_YSpacing": 103.25,
+    }

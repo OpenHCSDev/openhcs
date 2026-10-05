@@ -449,7 +449,6 @@ def _module_executor(
     return executor
 
 
-
 def test_compiled_image_request_does_not_repeat_authored_callable_preparation(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -14248,13 +14247,34 @@ def test_define_grid_automatic_uses_integer_lowest_spot_origin() -> None:
 
 
 def test_spatial_grid_output_recorder_accepts_pure_2d_grid_sequence() -> None:
-    grid_spec = ArtifactSpec.output("Grid", SpatialGridArtifactType)
-    runtime = _FakeCellProfilerRuntime({})
+    source_spec = ArtifactSpec.input("SourceImage", ImageArtifactType)
+    grid_spec = ArtifactSpec.output(
+        "Grid",
+        SpatialGridArtifactType,
+        relations=(SourceStackLineageSourceRelation(source=source_spec.ref()),),
+    )
+    source_payload = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        source_image_names=(source_spec.name,),
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=("/input/site1.tif", "/input/site2.tif"),
+            component_metadata=({"site": "1"}, {"site": "2"}),
+        ),
+    ).payload_with(np.zeros((2, 4, 5), dtype=np.float32), None)
+    runtime = _FakeCellProfilerRuntime({source_spec.name: source_payload})
     request = _cellprofiler_output_record_request(
         callable_contract=_compiled_callable_contract(
             CellProfilerModule.require_module("DefineGridManual").require_callable(),
-            artifact_inputs=(),
+            artifact_inputs=(source_spec,),
             artifact_outputs=(grid_spec,),
+        ),
+        artifact_input_edges=(_artifact_input_edge_for_test(source_spec),),
+        source=CellProfilerMeasurementImage(
+            source_image_name=source_spec.name,
+            payload=source_payload,
+            plane_projection=RuntimePlaneAxisValueProjection.preserve(
+                axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=2
+            ),
         ),
         output_plans=tuple(_artifact_output_plan(item) for item in ((grid_spec,))),
         adapter=runtime,

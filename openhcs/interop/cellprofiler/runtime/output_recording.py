@@ -567,7 +567,18 @@ class SpatialGridOutputRecorder(CellProfilerOutputRecorder):
     artifact_type = SpatialGridArtifactType
 
     def record(self, request: CellProfilerOutputRecordRequest) -> None:
+        module_type = CellProfilerModule.require_callable_contract_owner(
+            request.callable_contract
+        )
+        grid = SpatialGridArtifactType.normalize_runtime_payload(
+            request.spec.name, request.output_value
+        )
         request.adapter.add_spatial_grid(
             request.spec.name,
-            request.output_value,
+            SpatialGridArtifactType.contextualize_output(
+                module_type.source_payload(request),
+                grid,
+                request.output_plan,
+                request.source.plane_projection,
+            ),
         )
