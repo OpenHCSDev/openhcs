@@ -18,7 +18,7 @@ terms = (
     "CustomFunctionRuntimeRegistry", "FunctionStepTransportAuthority",
     "FunctionReferenceTransportAuthority", "raw_processing_function",
     "ProcessPoolExecutor", "CompiledExecutionBundle",
-)
+) + tuple(sys.argv[1:])
 failures = []
 for root in ("openhcs", "tests"):
     package = Package.load(repo, revision, root)
