@@ -77,14 +77,26 @@ Pooling the tiles and fitting a stitched image express the same shared-scaling
 intent, but overlap duplication, blending and mosaic padding can change the
 exact histogram. Record the fit domain rather than assuming identical bounds.
 
-One shared position artifact keeps channel placement consistent, but does not
-prove that tiles are aligned. Inspect overlaps for repeated nuclei, parallel
-process ghosts and broken continuations in separate raw channels, not only a
-composite or a matching position list. A composite used to estimate placement
-is a registration input, not an analytical channel merge: follow the canonical
-assembly branch, reload original channel stacks and apply the shared positions
-to raw or explicitly justified normalised inputs. Judge registration separately
-from pooled scaling; a repaired local join does not validate every seam.
+Consistent channel placement does not require one cross-channel runtime
+artifact. For embedded acquisition geometry, discover and describe
+`acquisition_tile_positions`: its declared route uses SITE as the variable
+component and CHANNEL grouping, producing each channel's ordered positions for
+its compatible assembly invocation. Source ingestion validates common site
+layouts across channels; a DAPI-only producer does not thereby supply a FITC
+consumer. Inspect the compiled producer/consumer scope rather than treating
+equal coordinates as permission to broadcast an artifact.
+
+For image-derived registration, a composite or preprocessed image used to
+estimate placement is a registration input, not an analytical channel merge.
+Follow the canonical two-branch assembly recipe: estimate positions, then
+reload original channel stacks and assemble raw or explicitly justified
+normalised inputs. Reuse fitted positions across channels only where the live
+artifact contract and compiled source relation support that scope and ordered
+tile correspondence. Inspect overlaps for repeated nuclei, parallel process
+ghosts and broken continuations in separate raw channels, not only a composite
+or matching position lists. Acquisition-coordinate placement is not evidence
+of image registration. Judge seam alignment separately from pooled scaling;
+a repaired local join does not validate every seam.
 
 ## Slowly varying additive background
 
