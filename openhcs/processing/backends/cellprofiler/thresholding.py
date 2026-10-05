@@ -2716,6 +2716,24 @@ def _li_threshold_float32_numpy(values: np.ndarray) -> float:
 def _li_tolerance_numpy(values: np.ndarray) -> float:
     if values.size < 2:
         return CELLPROFILER_LI_TOLERANCE
+    if values.dtype == np.float32:
+        # Any distinct pair this close proves that the minimum positive sorted
+        # gap cannot raise Li's tolerance above its existing floor. Scan every
+        # adjacency until a witness is found, with bounded float64 scratch space
+        # so comparisons have the same precision as the unique/sort calculation.
+        flat = values.ravel()
+        chunk_size = 16384
+        for start in range(0, flat.size - 1, chunk_size):
+            chunk = np.asarray(flat[start:start + chunk_size + 1], dtype=np.float64)
+            with np.errstate(invalid="ignore", over="ignore"):
+                differences = np.abs(chunk[1:] - chunk[:-1])
+            if np.any(
+                np.isfinite(chunk[1:])
+                & np.isfinite(chunk[:-1])
+                & (differences > 0)
+                & (differences <= 2 * CELLPROFILER_LI_TOLERANCE)
+            ):
+                return CELLPROFILER_LI_TOLERANCE
     unique_values = np.unique(np.asarray(values, dtype=np.float64).ravel())
     if unique_values.size < 2:
         return CELLPROFILER_LI_TOLERANCE
