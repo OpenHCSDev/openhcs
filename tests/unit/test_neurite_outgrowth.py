@@ -35,6 +35,8 @@ from openhcs.processing.backends.analysis.neurite_outgrowth import (
     PixelNuclearSettings,
     PixelOutgrowthSettings,
     PixelCellProfilerNeuriteEngineProfile,
+    NeuriteAdmissionPlanes,
+    NeuriteAdmissionResult,
     NeuriteIllumination,
     _adopt_secondary_owned_path_segments,
     _analyze_owned_topology,
@@ -44,6 +46,7 @@ from openhcs.processing.backends.analysis.neurite_outgrowth import (
     _derive_signal_cell_bodies,
     _expand_skeleton_ownership,
     _identify_cell_bodies_cellprofiler,
+    _identify_neurites_cellprofiler,
     _physically_soma_rooted_owner_mask,
     _propagate_neurite_owner_regions,
     _repair_signal_supported_skeleton,
@@ -77,6 +80,36 @@ def _cell_body_count_implementation():
     return CallableContract.from_callable(
         count_neuronal_cell_bodies_metaxpress
     ).resolve_raw_runtime_callable()
+
+
+@pytest.mark.parametrize("seed_factor", [None, 1.2])
+def test_admission_exports_the_original_independent_gates(seed_factor):
+    image = _draw_fluorescent_neuron(branched=True)[0]
+    settings = MetaXpressOutgrowthSettings(
+        maximum_width=3, intensity_above_local_background=100,
+        candidate_hysteresis_seed_correction_factor=seed_factor,
+    )
+    result = _identify_neurites_cellprofiler(
+        image, _cell_body_settings(), settings, 1.0, bright_objects=True
+    )
+    assert isinstance(result, NeuriteAdmissionResult)
+    planes = result.planes
+    assert result.response is planes.local_response
+    np.testing.assert_array_equal(
+        planes.local_support, planes.local_response >= 100
+    )
+    np.testing.assert_array_equal(
+        result.mask, planes.retained_support & planes.local_support
+    )
+    assert np.all(planes.retained_support <= planes.threshold_support)
+    if seed_factor is None:
+        assert planes.retained_support is planes.threshold_support
+    assert np.issubdtype(planes.enhanced_response.dtype, np.floating)
+    assert np.issubdtype(planes.local_response.dtype, np.floating)
+    for output, original in zip(planes.selected_outputs(2), planes, strict=True):
+        assert np.shares_memory(output.data, original)
+        np.testing.assert_array_equal(output.data[0], original)
+        assert output.source_indices == (2,)
 
 
 @pytest.mark.parametrize("branched", [False, True])
@@ -446,6 +479,7 @@ def test_signature_exposes_documented_metaxpress_controls_only():
         "neurite_secondary_ownership",
         "neurite_topology_dropped_trace",
         "neurite_topology_added_trace",
+        *(spec.name for spec in NeuriteAdmissionPlanes.artifact_specs()),
         "neurite_morphology",
     )
     (
@@ -460,6 +494,7 @@ def test_signature_exposes_documented_metaxpress_controls_only():
         secondary_ownership_spec,
         topology_dropped_trace_spec,
         topology_added_trace_spec,
+        *admission_specs,
         morphology_spec,
     ) = contract.artifact_outputs
     assert summary_spec.artifact_type is MeasurementsArtifactType
@@ -483,6 +518,7 @@ def test_signature_exposes_documented_metaxpress_controls_only():
         secondary_ownership_spec,
         topology_dropped_trace_spec,
         topology_added_trace_spec,
+        *admission_specs,
     ):
         assert spec.artifact_type is ImageArtifactType
         assert spec.sidecar_role is ArtifactSidecarRole.QA_CHECKPOINT
@@ -1319,6 +1355,7 @@ def test_explicit_body_nuclear_and_neurite_channels_are_aligned():
         secondary_ownership,
         topology_dropped_trace,
         topology_added_trace,
+        *admission_planes,
         morphology,
     ) = _implementation()(
         image,
@@ -1363,6 +1400,10 @@ def test_explicit_body_nuclear_and_neurite_channels_are_aligned():
     assert np.asarray(secondary_ownership).shape == (1, *image.shape[1:])
     assert np.asarray(topology_dropped_trace).shape == (1, *image.shape[1:])
     assert np.asarray(topology_added_trace).shape == (1, *image.shape[1:])
+    assert len(admission_planes) == len(NeuriteAdmissionPlanes._fields)
+    for plane in admission_planes:
+        assert plane.source_indices == (2,)
+        assert np.asarray(plane).shape == (1, *image.shape[1:])
     assert not np.any(np.asarray(topology_dropped_trace)[0] & (cell_bodies[1] > 0))
     assert np.all(np.asarray(unrooted_residual) <= np.asarray(candidate_mask))
     assert not np.any(np.asarray(unrooted_residual)[0] & (cell_bodies[1] > 0))
