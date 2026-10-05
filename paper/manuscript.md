@@ -256,7 +256,13 @@ whether each linked territory represents a physical cell. Another independent
 author corrected texture-driven splits and a bright/dim merge, recovering
 55 nuclear instances while withholding two weak actin regions from its
 53-region body result. Crowded boundaries remained uncertain (Supplementary
-Data 8).
+Data 8). In a later independent repeat, measured raw controls still led to
+missed crowded nuclei because admitted haze changed the distance landscape.
+The author inspected that failure and revised foreground, markers, division
+and suppression, recovering useful local detections in its final 54-instance
+result. Haze extent, an upper-edge possible merge and crowded actin boundaries
+remained uncertain; the repeat supports self-directed repair, not improved
+first-attempt accuracy (Supplementary Data 8).
 
 Retinal authors used measured background and weak-body support to select
 smoothing, background subtraction and foreground admission. Earlier repeats
