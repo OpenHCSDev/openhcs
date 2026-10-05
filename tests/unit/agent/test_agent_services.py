@@ -69,8 +69,6 @@ from openhcs.agent.services.execution_session_service import (
 from openhcs.agent.services.function_catalog_service import (
     AgentFunctionSearchPolicy,
     FunctionCatalogService,
-    SignatureView,
-    SummaryView,
 )
 from openhcs.agent.services.llm_context_service import AgentAuthoringContextService
 from openhcs.agent.services.pipeline_authoring_service import (
@@ -1524,8 +1522,28 @@ def test_function_catalog_resolves_detail_by_callable_import_path(monkeypatch):
         f"{sample_processing_function.__qualname__}"
     )
 
+    selected = _Metadata(tags=[])
+    unrelated = _Metadata.from_function(sample_large_signature_function, "Unrelated")
+    monkeypatch.setattr(
+        catalog, "_all_metadata",
+        lambda **_kwargs: {
+            "test:aaa_unrelated": unrelated,
+            "test:sample_processing_function": selected,
+            "test:zzz_duplicate_identity": selected,
+        },
+    )
+    original = catalog._entry
+    presented = []
+
+    def entry(function_id, *args, **kwargs):
+        assert function_id == "test:sample_processing_function"
+        presented.append(function_id)
+        return original(function_id, *args, **kwargs)
+
+    monkeypatch.setattr(catalog, "_entry", entry)
     detail = catalog.get_by_import_path(import_path)
 
+    assert presented == ["test:sample_processing_function"]
     assert detail is not None
     assert detail.entry.function_id == "test:sample_processing_function"
     assert detail.entry.signature == "sample_processing_function(sigma=1.0)"
@@ -1790,6 +1808,14 @@ def test_function_catalog_search_prefers_concise_exact_owner_text(monkeypatch):
 
 
 def test_function_catalog_reuses_projection_until_registry_mapping_changes(monkeypatch):
+    class DeclaredDefault:
+        value = "1.0"
+
+        def __repr__(self):
+            return self.value
+
+    default = DeclaredDefault()
+    monkeypatch.setattr(sample_processing_function, "__defaults__", (default,))
     first_metadata = {
         "test:sample_processing_function": _Metadata.from_function(
             sample_processing_function,
@@ -1813,13 +1839,26 @@ def test_function_catalog_reuses_projection_until_registry_mapping_changes(monke
     catalog = FunctionCatalogService()
 
     first = catalog.search(query="sample", compact_signatures=True)
-    cache_key = (SignatureView.COMPACT, SummaryView.COMPACT)
-    first_projection = catalog._projections[cache_key]
-    repeated = catalog.search(query="operation", compact_signatures=True)
+    first_projection = catalog._projections
+    default.value = "2.0"
+    repeated = catalog.search(query="operation", compact_signatures=False)
 
     assert first.items
     assert repeated.items
-    assert catalog._projections[cache_key] is first_projection
+    assert (
+        first.items[0].signature
+        == repeated.items[0].signature
+        == "sample_processing_function(sigma=1.0)"
+    )
+    assert (
+        catalog.search(query="sample", compact_signatures=True).items[0].signature
+        == first.items[0].signature
+    )
+    assert (
+        catalog.get("test:sample_processing_function").entry.signature
+        == "sample_processing_function(sigma=2.0)"
+    )
+    assert catalog._projections is first_projection
 
     current_metadata[0] = second_metadata
     refreshed = catalog.search(query="gaussian", compact_signatures=True)
@@ -1827,7 +1866,7 @@ def test_function_catalog_reuses_projection_until_registry_mapping_changes(monke
     assert tuple(item.function_id for item in refreshed.items) == (
         "test:sample_gaussian_filter",
     )
-    assert catalog._projections[cache_key] is not first_projection
+    assert catalog._projections is not first_projection
 
 
 def test_function_catalog_search_ranks_complete_owner_text_over_incidental_name(
