@@ -903,15 +903,15 @@ def test_area_occupied_and_calculate_math_chain_measurement_artifacts() -> None:
     )
     assert len(_artifact_names(area.artifact_outputs, MeasurementsArtifactType)) == 1
     measurement_inputs = math.artifact_inputs.of_artifact_type(MeasurementsArtifactType)
-    assert tuple(spec.name for spec in measurement_inputs) == (
-        area_measurement.name,
-    ) * len(objects)
-    assert tuple(spec.relations for spec in measurement_inputs) == tuple(
-        (InputGroupLineageSourceRelation(
+    (measurement_input,) = measurement_inputs
+    assert measurement_input.name == area_measurement.name
+    assert measurement_input.relations == tuple(
+        InputGroupLineageSourceRelation(
             source=spec.for_plan_type(ArtifactInputPlan).ref(),
-        ),)
+        )
         for spec in objects
     )
+    assert math.artifact_inputs.by_ref(measurement_input.ref()) is measurement_input
     assert len(_artifact_names(math.artifact_outputs, MeasurementsArtifactType)) == 1
 
 

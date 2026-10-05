@@ -18,6 +18,7 @@ from openhcs.core.artifacts import (
     ArtifactOutputPlan,
     ArtifactSpec,
     ArtifactSpecCollection,
+    ArtifactSpecAccumulator,
     ArtifactSpecRef,
     ArtifactSpecRelation,
     GroupLineageSourceRelation,
@@ -623,7 +624,7 @@ class PriorMeasurementArtifactInputModule(CellProfilerModule):
         feature_names = cls.prior_measurement_feature_names(module)
         if not feature_names:
             return ()
-        selected: list[ArtifactSpec] = []
+        selected = ArtifactSpecAccumulator.empty("prior measurement input")
         for feature_name in feature_names:
             object_refs, source_refs = cls.prior_measurement_lineage_refs(
                 feature_name=feature_name,
@@ -683,10 +684,9 @@ class PriorMeasurementArtifactInputModule(CellProfilerModule):
                     measurement_input = measurement_input.with_group_scope_relation(
                         InputGroupLineageSourceRelation(lineage_sources[0])
                     )
-                selected.append(measurement_input)
-        selected = list(dict.fromkeys(selected))
-        if selected:
-            return tuple(selected)
+                selected.add(measurement_input)
+        if selected.specs:
+            return tuple(selected.specs.values())
         raise ValueError(
             f"{cls.__name__} cannot resolve prior measurement features "
             f"{feature_names!r} from declaration-owned artifact producers."
