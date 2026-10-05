@@ -1289,7 +1289,9 @@ def test_runtime_batch_projects_singleton_aligned_axis_before_colocalization() -
         batch_count=1,
     )
 
-    batch_request = request.batch_executor_request()
+    batch_request = request.batch_executor_request(
+        processing_contract=ProcessingContract.FLEXIBLE,
+    )
 
     assert batch_request is not None
     assert batch_request.execution_mode is ImagePayloadExecutionMode.FULL_STACK
@@ -5029,3 +5031,38 @@ def test_overlay_outlines_renders_exact_projected_empty_label_plane():
     )
     assert output.shape == (8, 8, 3)
     assert float(image_payload_data(output).max()) == 0.0
+
+
+@pytest.mark.parametrize(
+    "contract,mode,slice_by_slice,admitted",
+    (
+        (ProcessingContract.PURE_2D, ImagePayloadExecutionMode.NATURAL, False, False),
+        (ProcessingContract.PURE_2D, ImagePayloadExecutionMode.FULL_STACK, False, True),
+        (ProcessingContract.PURE_3D, ImagePayloadExecutionMode.NATURAL, False, True),
+        (ProcessingContract.FLEXIBLE, ImagePayloadExecutionMode.NATURAL, False, True),
+        (ProcessingContract.FLEXIBLE, ImagePayloadExecutionMode.NATURAL, True, False),
+    ),
+)
+def test_measurement_batch_admission_uses_declared_processing_domain(
+    contract, mode, slice_by_slice, admitted,
+) -> None:
+    image = np.stack((np.ones((2, 3)), np.full((2, 3), 2.0)))
+    request = RuntimeBatchInvocationRequest(
+        source_image_name="Measured",
+        func=lambda image, slice_by_slice=False: image,
+        image=image,
+        kwargs={"slice_by_slice": slice_by_slice},
+        execution_mode=mode,
+        plane_projection=RuntimePlaneAxisValueProjection.preserve(
+            axis=RuntimePlaneAxis.RUNTIME_SLICE,
+            axis_size=2,
+        ),
+        batch_index=0,
+        batch_count=2,
+    )
+
+    result = request.batch_executor_request(processing_contract=contract)
+
+    assert (result is request) is admitted
+    np.testing.assert_array_equal(request.image, image)
+    assert request.kwargs["slice_by_slice"] is slice_by_slice

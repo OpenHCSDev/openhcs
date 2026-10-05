@@ -63,7 +63,7 @@ from python_introspect import (
 
 from openhcs.constants import MemoryType
 from openhcs.core.aligned_image_payload import (
-    AlignedImageStack, ImagePayloadSliceStack, ProducedImageStack,
+    AlignedImageStack, ImagePayloadExecutionMode, ImagePayloadSliceStack, ProducedImageStack,
 )
 from openhcs.core.measurement_row_materialization import (
     ConcatenatedColumnarRows,
@@ -77,6 +77,7 @@ from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
 from openhcs.core.runtime_array_values import RuntimeArrayPayload, is_array_payload
 from openhcs.core.runtime_batch_contracts import (
     Pure2DSliceBatchExecutor,
+    RuntimeBatchInvocationRequest,
     RuntimePure2DSliceBatchRequest,
     runtime_batch_executors_from_callable,
 )
@@ -997,6 +998,12 @@ class ProcessingContractDeclaration(ABC):
 
     collapses_input_plane_axis = False
 
+    def supports_measurement_image_batch(
+        self, request: RuntimeBatchInvocationRequest,
+    ) -> bool:
+        """Whether the request already occupies this callable's image domain."""
+        return True
+
     def runtime_parameter_types(
         self,
     ) -> tuple[type[RuntimeParameterDeclarationABC], ...]:
@@ -1121,6 +1128,16 @@ class Pure3DProcessingContract(VariableComponentStackProcessingContract):
 class Pure2DProcessingContract(ProcessingContractDeclaration):
     """Execute a callable as independent 2D slices."""
 
+    def supports_measurement_image_batch(
+        self, request: RuntimeBatchInvocationRequest,
+    ) -> bool:
+        """Leave preserved NATURAL plane domains to the existing 2D slicer."""
+        return (
+            request.execution_mode is not ImagePayloadExecutionMode.NATURAL
+            or request.plane_projection is None
+            or request.plane_projection.plane_index is not None
+        )
+
     def main_flow_call_argument(
         self, callable_contract: "CallableContract", source_payload: Any,
     ) -> Any:
@@ -1137,6 +1154,15 @@ class FlexibleProcessingContract(
     Pure2DProcessingContract,
 ):
     """Choose 2D or full-stack semantics using this contract's control hook."""
+
+    def supports_measurement_image_batch(
+        self, request: RuntimeBatchInvocationRequest,
+    ) -> bool:
+        controls = self.consume_semantic_controls(dict(request.kwargs), func=request.func)
+        return (
+            not any(bool(value) for value in controls.values())
+            or super().supports_measurement_image_batch(request)
+        )
 
     def runtime_parameter_types(
         self,
