@@ -824,6 +824,45 @@ These paths identify retained evidence rather than a portable archive. At the
 independent checkpoint runtime cleanup was pending; biological output completion
 does not imply sealed outer journals or verified runtime retirement.
 
+### H002 fresh10: ordinary-body repair and unresolved cluster identity
+
+The independent task-only author `H002_FRESH10_89` analysed the complete
+released 60 × 256 × 256 single-channel volume without reference answers,
+target count or parameter coaching. It measured raw body extent, internal
+peak spacing, a genuine neighbour pair and background before its first
+candidate. The official 3D example supplied workflow structure, not assay
+settings or a physical calibration.
+
+The first completed numerical output contained 28 provisional centres.
+Increasing marker prominence left its centre CSV unchanged. Compatible
+maxima-component connectivity reduced the count to 26 and repaired a
+lower-border split, but another continuous body retained a duplicate.
+Measured component-local, axis-aware spacing then produced 22 centres,
+with the same 718,474-voxel foreground support. Native review supported
+one centre in the repaired round body and retained two in a genuine pair;
+one bright multi-lobed cluster remained unresolved. Count reduction alone
+does not prove biological improvement or complete detection.
+
+Independent readback found 22 rows in the final centre CSV. The author also
+reconciled 22 persisted ROI geometries, native feature rows and image count.
+These delivery checks are separate from biological validity. Supplementary
+Figure 17 shows final-only native XY, XZ and YZ witnesses; it does not show
+the earlier candidates or independently establish their repair chronology.
+The [native source proof](task_only_analysis/h002-fresh10-native-source-proof.json)
+binds six byte-identical screenshots, matched camera/axes/windows, the frozen
+pipeline and registered callable, and the source report and table hashes.
+No analysis or reference scoring was rerun for this account.
+
+The author withheld acceptance of a global biological nucleus count while
+retaining useful ordinary-body repairs. Identity of the bright cluster,
+possible dim misses, close-neighbour sensitivity and border-truncated
+geometry remain uncertain. Coordinates are voxel indices, not verified
+micrometres. This independent run is distinct from the earlier 26-centre
+repeat and from the same-context development trial. Its original report,
+pipeline, callable, QA audit and reconciliation remain under
+`/home/ts/wt/openhcs-issue-batch-20260929/next-h002-fresh10-89-20261005/H002_FRESH10_89/author-workspace/output`;
+canonical payloads remain on HDD at the paths in the source proof.
+
 ### Programme-wide evidence scope
 
 [Figure 5 plot data](../figures/slas/task_only_analysis_plot_data.csv) retains

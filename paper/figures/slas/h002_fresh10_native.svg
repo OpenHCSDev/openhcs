@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1450" viewBox="0 0 1400 1450">
+ <rect width="1400" height="1450" fill="white"/>
+ <g font-family="DejaVu Sans, sans-serif" fill="#17243a">
+  <text x="30" y="42" font-size="30" font-weight="bold">Volume detection: ordinary-body support and unresolved identity</text>
+  <text x="30" y="84" font-size="30">Raw source</text><text x="730" y="84" font-size="30">Final body-centre point on raw source</text>
+  <text x="30" y="131" font-size="30" font-weight="bold">A  XY · one centre within a textured continuous body</text>
+  <svg x="30" y="150" width="620" height="460" viewBox="610 100 350 260"><image href="h002_fresh10_final_circle_raw.png" width="1440" height="924"/></svg>
+  <svg x="730" y="150" width="620" height="460" viewBox="610 100 350 260"><image href="h002_fresh10_final_circle_combined.png" width="1440" height="924"/></svg>
+  <text x="30" y="660" font-size="30" font-weight="bold">B  XZ · central body reviewed through depth</text>
+  <svg x="30" y="680" width="620" height="337" viewBox="600 160 350 190"><image href="h002_fresh10_final_xz_y157_raw.png" width="1440" height="924"/></svg>
+  <svg x="730" y="680" width="620" height="337" viewBox="600 160 350 190"><image href="h002_fresh10_final_xz_y157_combined.png" width="1440" height="924"/></svg>
+  <text x="30" y="1080" font-size="30" font-weight="bold">C  YZ · one assigned centre, unresolved multi-lobed identity</text>
+  <svg x="30" y="1100" width="620" height="337" viewBox="620 180 350 190"><image href="h002_fresh10_final_bright_yz_x54_raw.png" width="1440" height="924"/></svg>
+  <svg x="730" y="1100" width="620" height="337" viewBox="620 180 350 190"><image href="h002_fresh10_final_bright_yz_x54_combined.png" width="1440" height="924"/></svg>
+ </g>
+</svg>

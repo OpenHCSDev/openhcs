@@ -310,6 +310,26 @@ Supplementary Data 8 records the independently checked tables and final scope.
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
+## Supplementary Figure 17. Native volume review distinguishes body support from unresolved identity
+
+![Matched raw and final body-centre views in XY, XZ and YZ.](../figures/slas/h002_fresh10_native.png){width=5.2in}
+
+\(A) One centre in a textured continuous body, native XY. (B) Central body,
+genuine XZ. (C) One centre in a multi-lobed cluster of unresolved identity,
+genuine YZ. This independent task-only author's 22 provisional centres are
+an algorithmic output, not a biological census or reference score. These
+final-only views do not show the repair chronology. Points have fractional
+coordinates and slice-local visibility; yellow rings are native selection
+highlights. Matched cameras, axes and windows are retained: 901–27267 (A),
+711–27219 (B), and 901–53727 (C), gamma 1. Screenshots are clipped/scaled
+without retouching; physical calibration is unverified. The [native source proof](task_only_analysis/h002-fresh10-native-source-proof.json)
+binds original captures and the pipeline. Supplementary Data 8 retains
+ordinary-body repairs and the unresolved global count separately.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
 ## Supplementary Table 1. Reusable libraries and their roles
 
 | Library | Role in OpenHCS |
