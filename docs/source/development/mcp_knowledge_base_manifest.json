@@ -615,6 +615,8 @@
         "mixed image stores",
         "named source bindings",
         "named channels",
+        "imported metadata table",
+        "source-set metadata join",
         "component metadata",
         "well site channel Z timepoint",
         "source provenance"
