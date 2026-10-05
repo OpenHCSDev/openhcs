@@ -1,8 +1,25 @@
-Integrated rooted neurite analysis: missing pixel-unit contract
-=============================================================
+Integrated rooted neurite analysis: explicit pixel-unit workflow
+==============================================================
 
 Status and ownership
 --------------------
+
+Current implemented checkpoint: production39df6d49c; source/control history
+8c0d9dd373b6e4cb2f074444c2211361e0b1bc7a and
+76284064d48c15a69daf1e74fb1051a86b6da29e remains retained. Main
+d5f660082e65b1d5f82985fbdcb0a353ad2a95dd was integrated normally; the eight
+foreign dependency worktrees and retained untracked evidence were not changed.
+The former registered-route implementation gap below is now closed in source.
+Ordinary installed MCP execution and native graph-ROI reopening remain a
+separate receiving boundary, coordinated with Planck's existing whole builder.
+
+The executable neurite_outgrowth_metaxpress_pixels declaration consumes the
+ordinary 2D channel stack without a physical pixel_size artifact. It uses the
+same detection, soma-rooted ownership, masks and measurement recipe as the
+physical callable. Pixel-labelled settings feed inherited geometry hooks;
+explicit pixel metrics produce CSV rows and feature-bearing graph ROI archives.
+The original physical input/provider and SWC calibration guard are preserved.
+This is source execution through real owners, not installed or biological proof.
 
 Singer owns the analysis declaration/unit boundary implementation. The original
 Root394 exclusive claim below is historical:394 is merged and no current unit
@@ -532,3 +549,145 @@ R0-11 plus corrected R0-16 and full after-source ASTs11/16/caller. The earlier
 checkpoint archive remains immutable. Current final source production is64d65596b;
 subsequent receipt changes do not imply another tested production version.
 All owned source-check handles are terminal, no provider/native/viewer started.
+
+Executable pixel-input, rows, edges and output declaration closure
+-----------------------------------------------------------------
+
+Production8c0d9dd37 moves the single numerical recipe off the physical public
+function onto existing CellProfilerNeuriteEngineProfile.analyze. Both public
+declarations consume that ancestor. Original helper algorithms remain single;
+no second segmentation, topology, table, metadata or export engine was created.
+CellProfilerNeuriteEngineProfile.artifact_outputs declares the common twelve
+artifacts once. Its morphology_output hook supplies the physical SWC+ROI
+declaration; PixelMetricCoordinates uses cooperative super to retain original
+identity/relations and declare only SpatialGraphROIOptions. Genuine C3 MRO is
+PixelCellProfilerNeuriteEngineProfile, PixelMetricCoordinates,
+CellProfilerNeuriteEngineProfile, object. An independent audit capability
+executes before/after analysis and export hooks without generic consumer edits.
+
+PixelCellBodySettings, PixelOutgrowthSettings and PixelNuclearSettings override
+only geometric field declarations/docs and inherit original validation and
+projection behavior. Pixel widths and scoring lengths are pixels, body areas
+square pixels. Intensity fields still describe consumed-image intensity units.
+The pixel declaration has no pixel_size argument/artifact dependency. The
+physical declaration still requires original micrometer calibration; neither
+relative nor missing source calibration is silently admitted as physical.
+The two callable declarations construct isotropic metrics before the shared
+algorithm; repeated optional/type admission inside that algorithm is deleted.
+
+Current measurement/edge schema is an explicit cutover: quantity names no longer
+assert _um/_um2; coordinate_unit is the original SourceVoxelSpacingUnit, and
+areas use its square. Physical measurements declare micrometers, pixel
+measurements pixels. The original unit enum now uses Python StrEnum so original
+CSV/codec owners project its declared value directly, not a new codec or column
+rename adapter. Every current neurite row factory, summary/edge consumer and
+affected test migrates in the same family. Separately physical neuronal-soma
+count rows remain unchanged. Frozen CSVs, recipes and historical evidence are
+not rewritten and no compatibility aliases/readers were added.
+
+Graph analysis spacing and acquisition spacing remain different owned facts.
+SpatialGraph's original metadata contextualization supplies native provenance,
+source plane and acquisition spacing after the recipe. Pixel analysis needs no
+invented metadata input/provider: its metric is explicit and independent of
+acquisition calibration. Original graph ROI writing keeps the acquisition
+spacing; original SWC writing rejects nonphysical analysis units before artifact
+creation. None of the saved-result source-receipt guards was relaxed.
+
+Final source checks and original outcomes
+----------------------------------------
+
+All commands reuse the original viewer-retirement source bootstrap, paired
+interpreter, matched receiving16 dependencies read-only and retained Numba
+cache. No install, build, native/viewer/MCP server or scientific input was used.
+Actual resource check reported12.4GiB available RAM, existing16.4GiB swap and
+disk warnings. One CPU/60s source shards completed without process swaps;
+there was no invented memory/swap cap. Shared historical cgroup peaks printed
+by the original runner are not these processes' allocation.
+
+Original pixel-route-controls17:13PASS/3FAIL/152deselected, terminal1,
+34.80s/523312KiB RSS. All three failures are the test's string argument to
+original load_rois_from_zip(Path), after pixel computation, CSV and ZIP writing.
+Only that test call was corrected to Path; assertions/reader/product unchanged.
+
+Final production pixel-route-controls18:22PASS/146deselected, terminal0,
+11.90s/453396KiB RSS. Actual registered contract and original source-plan compiler
+admit the pixel recipe without a physical artifact; physical contract still
+declares pixel_size. Tiny branched/unbranched source arrays remain unchanged;
+physical/pixel masks and topology geometry match, lengths scale2 and areas4 at
+the declared half-unit physical metric. CSVs contain explicit pixels, and actual
+graph ROI ZIPs preserve vertices/features/provenance and empty, relative or
+1.3556 micrometer acquisition calibration. Explicit pixel SWC rejects before
+creating a file. Cooperative independent metric/export capability executes.
+Original physical uniform/anisotropic/missing-calibration controls also pass.
+
+pixel-route-controls19:73PASS/1FAIL/14deselected, terminal1,
+25.46s/465988KiB RSS. The sole failure was an existing test's string traversal
+through the CellProfiler facade rather than its actual skeleton module, before
+its forbidden-remeasurement assertion could run. The test now imports the real
+module and patches the same function; the assertion was not removed/weakened.
+
+Consumer-test checkpoint76284064d, pixel-route-controls20:
+15PASS/1SETUP-ERROR/113deselected, terminal1,17.15s/532756KiB RSS.
+The corrected original forbidden-remeasurement check passes. Added nuclear
+pixel/physical pairs match labels, rooted geometry and metric scaling.
+Original physical SWC writer/reader/topology and graph-source roundtrip controls
+pass. The original all-public-output streaming test still lacks its
+viewer_ack_return_route fixture under the existing --noconftest bootstrap.
+That known setup failure is retained, not an executed product failure and not
+a green whole-streaming claim. No invented ACK/fixture bypass or replay.
+Original pytest configuration warnings are retained.
+
+Source/owner evidence and remaining receiving
+---------------------------------------------
+
+Complete original AST caller source-family04.py is reused, not copied into a
+new scanner. Source-family18 at exact production8c0d9dd37 parses702 OpenHCS,
+12 python-introspect,6 registry and17 ArrayBridge modules, zero parse omissions;
+24.95s/214992KiB RSS/terminal0. Full related declaration, read/write/import and
+MRO sites are retained. Consumer-only76284064d changes no production bytes.
+Historical global NRA/R1 OOM remains a limitation, not a clean global proof.
+Applicable catalog: IDEN-1/4, BOUND-2, IMPL-2/12. Shared source ABI/schema owners
+are consumed directly; no consumer unit/type switch, copied recipe or new roster.
+
+Original six-production-path R0-17 recorded the added optional-spacing admission.
+R0-18 after removing that redundant consumer guard retains all measured
+authority/dispatch/raw-read/type-check counts at delta0; class declarations+5
+are the three settings leaves and independent capability/recipe composition,
+code+155. Every changed production path is included against integrated main
+d5f660082; no detector copy, omitted file, bound increase or positive-count waiver.
+
+The source-executable pixel workflow is implemented and qualified. Remaining
+acceptance is one ordinary whole candidate's registered MCP compile/execution,
+persisted unit-bearing CSV/graph ROI readback and native reopen at the original
+source coordinates/calibration, plus the ordinary streaming fixture in its
+matching environment. Planck received exact published source/ABI and the schema
+cutover; parent owns the receiving release. No further Root394 unit-hunk or
+localization approval is needed. Active scientific bundles remain immutable.
+All original source-check handles17/18/19/20 and AST/R0 handles are terminal;
+there is no UNKNOWN operation to replay.
+
+Final shared-wavelength closure39df6d49c changes only the three shared projection
+signatures/local names from pixel_size_um to coordinate_scale. PixelNuclearSettings
+already overrides the geometric field declarations; the shared detector must
+not falsely name its numeric projection as physical calibration. All production
+and current test consumers pass those values positionally; no keyword alias or
+fallback remains. Public physical count functions and their physical row fields
+retain their meaning. Final affected batch21 is10PASS/110deselected, terminal0,
+11.22s/454180KiB RSS/process swaps0: both nuclear/non-nuclear pixel comparisons,
+the real pixel CSV/ROI roundtrip and original cooperative wavelength/recipe hooks.
+No broader unchanged batch was rerun for that parameter-only closure.
+
+Byte-exact earlier pixel checkpoint archive
+neurite-pixel-route-qualified-20261005.tar.gz, SHA256
+74ddf4b97b84c77ee2f4bf068d28178495dd853c3a4f450a7f7286e5f0f39b53,
+contains original17/19/20 negatives as well as18 positives, original R0-17/18,
+complete source-family18 and its original parser caller. This archive remains
+unchanged; final source21 evidence is published separately.
+
+Final archive neurite-pixel-route-final-20261005.tar.gz SHA256
+6a21ae33b04ea820f93c6cccee65ba0e577ffe1d6975f80749a0ded6b59ff9bb
+contains exact six-path production39df6d49c, current consumer tests and original
+source21 controls/AST/R0/parser. AST21 remains702/12/6/17 modules with zero parse
+omissions,11.41s/217260KiB RSS/terminal0. R0-21 has the same zero authority-count
+deltas, five composed/settings declarations and155 added code lines. No new
+detector or ignored production path was introduced.
