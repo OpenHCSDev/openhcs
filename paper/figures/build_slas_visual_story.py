@@ -315,6 +315,69 @@ def task_only_story():
         sheet.save()
 
 
+def translocation_repeat():
+    """Plot frozen native well summaries, without rerunning scientific analysis."""
+    source_path = ROOT / "paper/supplementary/task_only_analysis/bbbc013-fresh13-plot-source.json"
+    source = json.loads(source_path.read_text())
+    if source["author_run"] != "BBBC013_FRESH13_88":
+        raise ValueError("Expected the frozen fresh13 translocation author")
+    tables = source["tables"]
+    with plt.rc_context({"font.size": 11, "axes.titlesize": 13,
+                         "axes.spines.top": False, "axes.spines.right": False}):
+        sheet = FigureSheet("translocation_fresh13", "", 6.3)
+        sheet.source(source_path)
+        sheet.source(ROOT / "figure-collection-20261004/BBBC013-FRESH13-DEVELOPMENT-VISUAL-REVIEW.rst")
+        sheet.text(3, 97, "Fresh-context analysis recovers translocation response",
+                   size=16, weight="bold", va="top")
+        for index, (block, unit, color) in enumerate(
+            (("Wortmannin", "nM", BLUE), ("LY294002", "uM", TEAL))
+        ):
+            rows = sorted(
+                (row for row in tables["dose_response"]["rows"]
+                 if row["assay_block"] == block and row["assay_role"] in {"empty", "dose"}),
+                key=lambda row: float(row["concentration"]),
+            )
+            if any(row["concentration_unit"] != unit or row["treatment"] != block
+                   or int(row["finite_wells"]) != 4 for row in rows):
+                raise ValueError("Dose plots require the declared treatment, units and four wells")
+            left = .09 + .49 * index
+            dose_axis = sheet.figure.add_axes((left, .48, .36, .37))
+            positions = list(range(len(rows)))
+            dose_axis.errorbar(
+                positions, [float(row["mean_well_ratio"]) for row in rows],
+                yerr=[float(row["replicate_sd"]) for row in rows],
+                fmt="o-", color=color, capsize=3, linewidth=1.3, markersize=4,
+            )
+            dose_axis.set(
+                title=f"{'AB'[index]}  {block}", ylim=(0, 9),
+                ylabel="Nuclear / cytoplasmic GFP",
+                xlabel=f"Concentration ({'µM' if unit == 'uM' else unit})",
+                xticks=positions,
+                xticklabels=[f"{float(row['concentration']):g}" for row in rows],
+            )
+            dose_axis.tick_params(axis="x", labelrotation=45, labelsize=9)
+            statistics, = (row for row in tables["assay_statistics"]["rows"]
+                           if row["assay_block"] == block)
+            control_axis = sheet.figure.add_axes((left, .13, .36, .21))
+            control_axis.bar(
+                (0, 1), (float(statistics["negative_mean"]), float(statistics["positive_mean"])),
+                yerr=(float(statistics["negative_replicate_sd"]),
+                      float(statistics["positive_replicate_sd"])),
+                color=(MUTED, color), width=.5, capsize=3,
+            )
+            control_axis.set(
+                title=f"{'CD'[index]}  Controls: Z′ = {float(statistics['z_prime']):.3f}",
+                xticks=(0, 1), xticklabels=("Vehicle", "Wortmannin\n150 nM"),
+                ylabel="GFP ratio", ylim=(0, 9),
+            )
+            for axis in (dose_axis, control_axis):
+                axis.grid(axis="y", color="#d9e0e5", linewidth=.6)
+                axis.set_axisbelow(True)
+        sheet.text(50, 3, "Means ± between-well SD; four wells per group. Dose positions equally spaced.",
+                   size=11, ha="center", color=MUTED)
+        sheet.save()
+
+
 def bbbc039_repeat():
     """Compare independent frozen authors using their existing score receipts."""
     from build_slas_task_only import BBBC039_SOURCE

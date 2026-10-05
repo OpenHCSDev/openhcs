@@ -335,7 +335,7 @@ local cytoplasmic measurement regions, not validated whole-cell boundaries.
 The resulting negative/positive control mean GFP ratios were 1.05/7.40 for
 Wortmannin (Z-prime 0.747) and 1.26/7.33 for LY294002 (Z-prime 0.493), with
 four wells per control group. Independent recalculation from all 96 well tables
-reproduced the dose summaries and assay statistics. This fresh-context repeat
+reproduced the dose summaries and assay statistics. This fresh-context repeat (Figure 8)
 supports recovery of the assay response, not exhaustive segmentation accuracy
 or unseen-dataset generalisation; it is distinct from the prospective experiment
 above (Supplementary Data 8).
@@ -367,6 +367,24 @@ do not supply fresh autonomous scores.
 ![Matched whole-field and regional retinal raw images and final outlines.](figures/slas/retinal_fresh_native.png){width=5.3in}
 
 \(A) Whole-field detections against heterogeneous background. (B) Northwest neighbours remain separate. (C) A southeast partition is repaired. Using only the task, MCP and packaged skill, the author caught a pair-merging regression and retained both gains in its final 102-instance candidate. Diffuse regions remain uncertain (Supplementary Figure 14); manual-reference accuracy is unmeasured. Raw RBPMS uses window 0–63, gamma 1. Outline backgrounds use the frozen intensity stretch and display range 0–63/255, giving different brightness at matched positions. Original screenshots are clipped/scaled without retouching. Source: user-provided R0010 retina; physical calibration unverified. Supplementary Data 8 retains exact captures and settings.
+
+### Figure 8. Fresh-context recovery of the public translocation response
+
+![Frozen dose-response summaries and assay controls from the fresh BBBC013 author.](figures/slas/translocation_fresh13.png){width=6in}
+
+\(A, B) Native dose summaries from the treatment-aware 96-well BBBC013 repeat;
+each plotted group contains four wells. Points show means of well-level mean
+cell ratios; error bars are sample standard deviations between wells, not
+between cells. Concentration units differ between drugs. Dose positions are
+equally spaced; connecting lines guide the eye and are not fitted curves.
+(C, D) Each assay block's four vehicle and four Wortmannin 150 nM control wells,
+with the same between-well variability. LY294002's positive control is
+Wortmannin, not another LY294002 dose. Scientific settings were frozen after
+six development wells, before the 90 reserve wells were opened. These results
+support assay-response recovery using local cytoplasmic regions, not validated
+whole-cell boundaries or segmentation accuracy. This fresh-context public repeat
+is distinct from the prospective held-out experiment in Supplementary Figure 7.
+Supplementary Data 8 retains the frozen pipeline and original table identities.
 
 ## Discussion
 
