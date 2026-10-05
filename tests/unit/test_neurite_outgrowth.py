@@ -152,6 +152,7 @@ def test_pixel_recipe_rows_csv_and_native_graph_roi_keep_distinct_source_units(
     tmp_path, spacing
 ):
     import csv
+    from pathlib import Path
     from polystore.roi import load_rois_from_zip
     from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
     from openhcs.core.runtime_image_values import ImagePayloadMetadata
@@ -206,7 +207,7 @@ def test_pixel_recipe_rows_csv_and_native_graph_roi_keep_distinct_source_units(
         path=str(tmp_path / "morphology.roi.zip"), filemanager=manager,
         backends=["disk"], backend_kwargs={},
     )
-    restored = load_rois_from_zip(zip_path)
+    restored = load_rois_from_zip(Path(zip_path))
     saved = ROIArchiveSourceMetadata.decode(restored)
     assert saved.source_voxel_spacing == spacing
     assert saved.source_path == "/engineering/A01_s1_w2.tif"

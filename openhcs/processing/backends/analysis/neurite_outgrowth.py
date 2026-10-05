@@ -247,7 +247,7 @@ class CellProfilerNeuriteEngineProfile:
         nuclear_stain: "MetaXpressNuclearSettings",
         coordinate_spacing: SourceVoxelSpacing,
     ) -> tuple:
-        """One detection, rooted topology and measurement recipe for both metrics."""
+        """One recipe with isotropic XY metrics supplied by the callable declaration."""
         image_array = np.asarray(image)
         if image_array.ndim != 3:
             raise ValueError(
@@ -261,8 +261,6 @@ class CellProfilerNeuriteEngineProfile:
         cell_body.validate()
         outgrowth.validate()
         coordinate_scale = coordinate_spacing.isotropic_xy_spacing
-        if coordinate_scale is None:
-            raise ValueError("2D neurite analysis requires isotropic XY analysis spacing")
 
         body_channel_index = (
             neurite_channel_index
