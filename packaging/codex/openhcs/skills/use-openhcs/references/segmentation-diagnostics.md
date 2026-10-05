@@ -112,6 +112,25 @@ method. Prominence/H-maxima depends on the landscape's numeric units; a toleranc
 from an 8-bit intensity example is not a calibrated distance-map setting.
 Compare both crops after the change, not just the repaired split.
 
+### Ring fragmentation: disconnected support or too many markers?
+
+For complementary crescents inside one raw-supported body, compare the admitted
+foreground components with the markers and unfiltered labels at those same
+coordinates. Several markers dividing one connected support component suggest
+an unclumping problem. Separate support components divided by a missing dim rim
+or interior suggest an admission/connectivity problem instead. In a masked
+watershed, suppressing a marker cannot restore excluded pixels or connect those
+components; one fragment may simply disappear. Hole filling likewise cannot
+close an open ring whose gap remains connected to background.
+
+Choose the next operation from that distinction, using the actual consumed
+support rather than label colours or a smaller total. If raw continuity justifies
+testing local admission, reconstruction or closing, measure the missing gap
+and retain a genuine neighbouring pair and nuisance-only patch as controls:
+joining fragments can also bridge different bodies. Do not fill every ring or
+assume a nuclear anchor proves its body class. Keep supported localisation
+separate from full-envelope area or intensity when extent remains uncertain.
+
 ### A stronger prominence leaves the same false split
 
 Compare the actual marker components and coordinates, not just parameter
