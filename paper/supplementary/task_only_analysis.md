@@ -375,6 +375,29 @@ BBBC013 assay in Supplementary Data 7. The packaged
 retain all twelve supporting capture identities and the nine displayed original
 PNG embeddings; no new scientific execution or scoring was performed.
 
+## Fresh translocation first candidate: complete plate execution
+
+The independent `BBBC013_FRESH13_88` author measured distributed development
+images before choosing its first scientific settings, then froze the pipeline
+before opening 90 reserve wells. It completed all 96 wells without changing
+those scientific parameters. Technical ingestion and typed-table adaptations
+are retained separately; this is not a claim of error-free tool use.
+
+The coordinator inspected nine original development raw/result/combined PNGs,
+finding supported ordinary nuclei, separated close pairs and dim-object
+localisation, with unresolved complex clusters. The fixed ten-pixel expanded
+regions are local photometry proxies rather than whole-cell boundaries.
+Independent arithmetic from 96 saved well tables reproduced all 24 dose
+summary rows and both assay-statistics rows. Four negative and four positive
+control wells gave mean nuclear/cytoplasmic GFP ratios of 1.05 and 7.40 for
+Wortmannin (Z′ 0.747), and 1.26 and 7.33 for LY294002 (Z′ 0.493).
+These assay-quality findings do not establish unbiased whole-cell photometry
+or exhaustive nuclear recall. The
+[development and plate-arithmetic review](../../figure-collection-20261004/BBBC013-FRESH13-DEVELOPMENT-VISUAL-REVIEW.rst)
+records capture/source identities, formulas and limitations. Final reserve
+visual review and lifecycle closure were still in progress at this checkpoint;
+complete autonomous scientific acceptance is not inferred from execution.
+
 ## Translocation recovery: complete coverage and explicit undefined measurements
 
 A separate retained-context continuation, `BBBC013_DEV89`, completed all 96
@@ -668,6 +691,31 @@ change. Original [earlier](task_only_analysis/h004-fresh10/BIO04.py) and
 receipts and [final descriptive metrics](task_only_analysis/h004-fresh10/final-metrics.json)
 are retained without reconstructing outputs. No reference score or accepted
 per-neuron outgrowth total is established by this trial.
+
+## Personal neurite fresh13: nine fields with recovered thin-path support
+
+An independent author completed all nine two-channel fields of the personal
+neurite acquisition and retained labels, spatial graphs, tables and diagnostic
+checkpoints. It identified an early admission loss and reduced the enhanced
+threshold correction factor from 0.85 to 0.10. Sampled thin tracks reappeared
+while a sampled quiet rectangle remained empty. Site5 retained 244 modeled
+body labels; modeled outgrowth increased from 1,238.5 to 18,946.2 micrometres.
+These are algorithmic outputs, not independently verified cell counts or
+complete neurite lengths.
+
+Independent inspection of the final site1/site9 raw-only, result-only and
+combined captures confirmed substantial raw-supported path geometry across
+sparse and dense foreground. Fine branches remained missing, with ambiguous
+partitions in broad bodies and unresolved crossing ownership. All 298 manifest
+entries and the final pipeline hash passed independent verification. The
+[nine-field review](../../figure-collection-20261004/P001-FRESH13-NINE-FIELD-REVIEW.rst)
+identifies the original evidence and scopes those conclusions. Three fields
+received the author's final visual review; six additional fields have saved
+outputs but no demonstrated pixel-level review. Overlapping fields were not
+stitched or deduplicated, so their counts cannot be pooled as unique neurons.
+This fresh-context development repeat used no reference feedback and does
+not establish unseen-data accuracy. The completed run is preserved while its
+display is reused and stitching continues separately.
 
 ## Personal neurite mosaic: technical recovery and retained biological losses
 
