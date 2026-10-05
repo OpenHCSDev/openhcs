@@ -24,6 +24,14 @@ NAMES = ("transport_synthetic_alpha", "transport_synthetic_beta")
 TOKENS = ("alpha_units", "beta_units")
 OUTPUT_LIMIT = 16_384
 
+# Apply explicit source backing before spawn unpickles its product initializer,
+# not only in the producer's __main__ path. Ordinary installed runs omit this.
+dependency_root = os.environ.get("OPENHCS_SOURCE_VALIDATION_EXTERNAL_ROOT")
+if dependency_root:
+    sys.path.insert(0, str(WORKTREE))
+    from openhcs._source_dependencies import ensure_source_checkout_external_paths
+    ensure_source_checkout_external_paths(Path(dependency_root))
+
 
 @pytest.fixture(autouse=True)
 def cleanup_test_runtime_resources():
@@ -96,6 +104,7 @@ def _run_child(env, *arguments):
     output = captured.decode("utf-8", errors="replace")
     assert returncode == 0, f"Child {arguments!r} exited {returncode}:\n{output}"
     assert "transport-ok" in output, output
+    return output
 
 
 def _source(name, token):
@@ -527,8 +536,8 @@ def test_persisted_payload_preserves_nominal_helpers_in_independent_consumer(
 def test_persisted_custom_revision_executes_in_original_spawn_factory(
     tmp_path, transport_environment,
 ):
-    _run_child(transport_environment, "spawn", str(tmp_path / "spawn.pkl"),
-               "reference", "cold", "unchanged")
+    print(_run_child(transport_environment, "spawn", str(tmp_path / "spawn.pkl"),
+                     "reference", "cold", "unchanged"), end="")
 
 
 @pytest.mark.parametrize("mutation", ["changed", "deleted", "renamed"])

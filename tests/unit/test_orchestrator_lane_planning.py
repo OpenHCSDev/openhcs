@@ -57,6 +57,7 @@ from openhcs.core.orchestrator.worker_lanes import (
     CompiledContextLanePlanner,
     ForkInheritedWorkerExecutionState,
     WorkerAssignmentPlan,
+    WorkerLaneExecutionContext,
     WorkerLaneExecutionPlan,
 )
 from openhcs.core.progress import ProgressEvent, ProgressExecutionContext, ProgressPhase
@@ -663,7 +664,11 @@ def test_worker_lane_honours_cancellation_before_next_axis(monkeypatch):
         "_execute_axis_with_sequential_combinations",
         execute_axis,
     )
-    lane_context = SimpleNamespace()
+    lane_context = WorkerLaneExecutionContext(
+        execution_id="cancel-lane", plate_id="synthetic",
+        debug_execution_policy=NoOpDebugExecutionPolicy(), worker_slot="worker_0",
+        worker_assignments={"worker_0": ["A01", "B01"]},
+    )
     lane_axis_contexts = [
         ("A01", [("A01", SimpleNamespace(axis_id="A01"))]),
         ("B01", [("B01", SimpleNamespace(axis_id="B01"))]),

@@ -85,8 +85,8 @@ The original Python3.12 process-pool, queues, spawn and reduction dependencies
 were also read/parsed. The run completed20.22s,550072KiB maximumRSS, zero swaps.
 This is related-family source evidence, not a whole dependency/global R1 claim.
 
-Applicable catalog lessons: BOUND-1 (the worker boundary must receive the facts
-it consumes), IDEN-6 (retain the original nominal/source identity owner), and
+Applicable catalog lessons: IDEN-7 (bootstrap state wider than its actual
+question), BOUND-1 (keep boundary interpretation at its original owner), and
 TIME-3 (delete the removed argument and migrate consumers, not leave an alias).
 No competing export store or copied serializer is added. The error's callable
 name does not justify changing the registry when the failing bootstrap input is
@@ -98,11 +98,66 @@ typed artifact declarations, original helper rows/enums and independent MI
 capabilities cross standard pickle; the worker invokes registered functions,
 returns nominal rows and emits the terminal progress event on the initialized
 queue. A new derived progress context carries an unpicklable local callback
-without requiring a bootstrap consumer change. Qualification has not yet run.
+without requiring a bootstrap consumer change.
 
-Source tests may borrow only the existing receiving08 native tabular binary:
-its original source and this checkout's _tabular_native.cpp both SHA256
+The existing source bootstrap and receiving08 native tabular source agree:
+the original source and this checkout's _tabular_native.cpp both SHA256
 15acc82b8ab64268bd1ea4f83fa7a68f527bf317f002e9f39e15be321e03b28e.
-The original target is read-only; no build, dependency installation or scientific
-package mutation is authorized by this source check. Borrowed dependency paths
-and terminal outcomes must be recorded, not treated as installed PR acceptance.
+The target remained read-only and was not installed or borrowed here. Actual
+source checks reused engineering620/source-controls01.py, engineering599's
+authenticated source-runtime dependencies and the existing paired interpreter.
+The parent bootstrap asserted the unchanged existing build/lib native origin
+(binary SHA7de8f671e79263518e56219b30085b2c39c9518db63739298c4ffc9265196aae).
+The unchanged checkout also retains its older local binary SHA3c2dc1dcaa4cd8cf7f2c8505a673501de4c79f09372d6fef8fb5c044b6df3d56.
+Neither binary was overwritten or rebuilt. These source checks are not whole
+installed-package qualification; the future builder owns that byte proof.
+
+Source qualification and original negatives
+------------------------------------------
+
+Original controls01 failed collection before execution because the foreign
+PolyStore checkout lacks TiffPhotometric. controls02 used the original source
+bootstrap:6 factory/initializer controls passed, but the new spawn fixture could
+not create its basetemp because the receiving parent directory did not exist.
+controls03 reached spawn and exposed the same foreign PolyStore import in the
+child before initializer import. The source-only integration fixture now applies
+the explicitly borrowed original source-dependency bootstrap at module loading,
+before spawn unpickles the initializer, rather than only in __main__. There is
+no product test flag or package mutation.
+
+controls04:37PASS,10 deliberately unrelated transport parametrizations
+deselected, one original stale cancellation fixture failed before its assertion:
+empty SimpleNamespace had no execution_id. That test fixture is now the original
+WorkerLaneExecutionContext; the cancellation-before-B01 assertion and visited
+A01-only assertion are unchanged. Production at the failing line is byte-identical
+to base; no cancellation/product workaround was made.
+
+controls05:2PASS,46 deselected, terminal0,13.21s,310832KiB process maximumRSS,
+zero swaps. This checks the migrated cancellation case and actual spawn again
+with original child output retained. Worker2476635 resolved both durable custom
+sources, executed their tiny2x3 arrays, returned original nominal rows and sent
+the original progress event with exact execution/plate/PID, success/100.
+The executor context joined; worker2476635 is absent. controls04 already passed
+the inline/thread/fork/resource selection, factory initializer, lane planning,
+result collection, settlement and normal executor shutdown controls. No fresh
+interpreter/catalog/native service, UI/viewer, scientific input or provider ran.
+This is real subprocess source acceptance, not public installed execution.
+Reported RSS is process high-water, not a combined cgroup memory measurement.
+
+Original R0-01 measures both changed production files against e30ca5783 using
+the existing audit Repository/Census/Measure, not a copied detector: no parse
+omissions, no positive deltas; none_identity-1, code_lines-5. Dynamic identity
+resolution is exercised by the spawn fixture, not asserted from AST alone.
+No global R1/dependency-universe proof is claimed. The eight foreign modified
+gitlinks and all prior untracked evidence remain untouched and uncommitted.
+
+Remaining installed acceptance
+-----------------------------
+
+Planck owns ONE future whole697/709/706 bundle; Singer owns the affected live
+receiving with that bundle. Use the original public registered synthetic source,
+at least two tiny axis inputs and two spawn workers; validate/compile/execute,
+observe native progress and known terminal status, verify expected pixels/rows
+through original artifact routes, then exact typed closure. No second client,
+overlay, current08 SCI mutation or replay of the retained original job is allowed.
+The separate697 first-terminal STATUS/OUTCOMES acceptance remains distinct.
