@@ -218,3 +218,53 @@ forged original paths, weaker numerical checks or product change is introduced.
 The complete pipeline documents and all expected numeric/source/coordinate
 relations are unchanged. This fixture-only adjustment does not require a new
 wheel or a repeat of source controls.
+
+Final original installed receiving13 acceptance
+----------------------------------------------
+
+This supersedes the earlier source-only disposition, without replacing original
+failures. The ordinary whole candidate source is2f4c68ff05876efb48e14743ac8027064b1b09ab,
+wheel SHA26cdc93a5a5fa5d4357e4e22f7592851a418c2b17abf253eaa6e20b0e221ec54,
+at /home/ts/wt/openhcs-issue-batch-20260929/engineering-pre-first-routing-20261004/receiving13.
+Planck's original READY/freeze qualifies the entire package; it is not a three-file
+overlay. Later invocation changes use the existing RuntimeSliceProjection owner,
+so whole invocation.py byte equality to historical484639 is not claimed.
+
+Original public forward session2 compiled job1 and executed job2
+fe05e57d-c01f-431f-8f15-a63ebef0ea37 COMPLETE/errors[]. Reverse session3 compiled
+job3 and executed job4 1dfca123-5056-480d-8de9-0a06c8377c11 COMPLETE/errors[].
+The checker at056533df03dd8522587a7e279c31effaac200e40 ran once on their actual
+VALUES, through the installed ZMQRuntimeExecutionObservationExport reader:
+process23520 exit0/PASS,4.26s,305680KiB peakRSS, swaps0. Both image orders preserve
+Process/Nuclear contributors, the original twelve-pixel values430/255 and889/255,
+their mean/max checks, exact native-to-CSV source names/channel/paths and relative
+1,1 calibration. Mask remains the separate image source. No common channel is
+fabricated. Both original and staged inputs match their frozen hashes.
+
+Full original checker output is retained in Dewey's existing journal:
+/home/ts/.codex/sessions/2026/10/01/rollout-2026-10-01T06-57-10-01a0f71c-6d9b-7292-9e42-5e32cc5a4d56.jsonl,
+timestamp2026-10-05T12:40:31.545Z, item
+exec-ace54b0a-787b-42ec-8293-590b0e98e755, physical line48297
+(zero-based ordinal48296). Singer read this original event and its exact numeric
+and typed source projections, not a checker rerun. Its captured stdout contains
+the time footer as well as JSON. Initial line-number and mixed-stream JSON read
+mistakes were read-only journal inspection errors, not native product failures.
+
+Original values are public01/forward-values and reverse-values under the HDD
+engineering743 root above, SHA5ae4d86fbc539ee46bc23e7f6459977edae4d6ae9639a6b9c37db450368042bf
+and775b9abdcb7d59ca3add04bfb85a264c20c9af9816003c0324ffd9d020f4e753.
+The original full QUALIFICATION-743.rst, ORIGINAL-CHECKER-23520.rst and
+OWNER-TERMINAL.rst are in receiving13/public95; they retain CSV/journal hashes.
+
+Dewey's exact native2674387/create1791202626.62 closed with typed ACK,
+endpoint_terminated/process_exited/succeeded true, errors[], and independent PID
+absence. No viewer started. Original sole client97761 EOF terminal1 is preserved:
+the existing shell aggregates earlier invalid-query/read-only workspace refusals;
+no later native/close failure is recorded. All three journals are sealed. The
+lease is returned for repaired732's separate incarnation, not silently reused.
+
+This closes743's installed/public scalar provenance boundary. The parent's
+distinct twenty-pixel case remains distinct, and neither case is biological
+accuracy or arbitrary heterogeneous stack acceptance. PR743 and issue742 were
+already merged/closed; this is durable receiving evidence, not another feature
+merge request. No package, test, native/client or scientific operation was rerun.
