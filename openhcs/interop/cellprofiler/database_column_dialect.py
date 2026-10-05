@@ -424,21 +424,10 @@ class CellProfilerDatabaseColumnDialect:
         metadata: SourceMetadataMapping | None,
         source_path: Path | None,
     ) -> dict[str, object]:
-        """Project declared acquisition facts, without inventing absent axes.
-
-        Original extracted fields retain their spelling and values. Canonical
-        source components fill only fields not already supplied by that owner;
-        a represented multi-value domain is not a single acquisition coordinate.
-        """
+        """Project original extraction fields and the declared source path."""
         values: dict[str, object] = {}
         if metadata is not None:
             values.update(SourceMetadataFields.original_items(metadata))
-            for component, domain in SourceMetadataFields.component_domains(metadata).items():
-                values.setdefault(
-                    component.value,
-                    SourceMetadataFields.canonical_component_value(component, domain[0])
-                    if len(domain) == 1 else None,
-                )
         if source_path is not None:
             values.setdefault(
                 CellProfilerSourceMetadataField.FILE_LOCATION.field_name,
@@ -446,12 +435,35 @@ class CellProfilerDatabaseColumnDialect:
             )
         return values
 
+    @staticmethod
+    def source_acquisition_values(
+        metadata: SourceMetadataMapping | None,
+    ) -> dict[str, object]:
+        """Project declared acquisition components, never absent axes.
+
+        A represented multi-value domain is not a single acquisition coordinate.
+        This is distinct from the original extraction-field namespace.
+        """
+        if metadata is None:
+            return {}
+        return {
+            component.value: (
+                SourceMetadataFields.canonical_component_value(component, domain[0])
+                if len(domain) == 1 else None
+            )
+            for component, domain in SourceMetadataFields.component_domains(metadata).items()
+        }
+
     def source_image_file_values(
-        self, source_path: Path, source_image_name: str,
+        self,
+        source_path: Path,
+        source_image_name: str,
     ) -> dict[str, str]:
         """Project a named source identity without reading its image pixels."""
         return {
-            self.source_image_path_field(source_image_name).name: str(source_path.parent),
+            self.source_image_path_field(source_image_name).name: str(
+                source_path.parent
+            ),
             self.source_image_file_field(source_image_name).name: source_path.name,
         }
 

@@ -57,7 +57,9 @@ from openhcs.core.runtime_relationships import (
 from openhcs.core.source_image_provenance import (
     source_component_metadata_consensus,
 )
-from openhcs.interop.cellprofiler.database_column_dialect import CellProfilerDatabaseColumnDialect
+from openhcs.interop.cellprofiler.database_column_dialect import (
+    CellProfilerDatabaseColumnDialect,
+)
 from openhcs.interop.cellprofiler.image_set_numbering import (
     CellProfilerImageSetNumbering,
 )
@@ -378,7 +380,12 @@ def render_spreadsheet_bundle(
     image_numbers = CellProfilerImageSetNumbering(
         artifact_batch.source_image_set_identity_policy
     )
-    tables, object_subjects = _measurement_tables(artifact_batch, image_numbers)
+    tables, object_subjects = _measurement_tables(
+        artifact_batch,
+        image_numbers,
+        add_image_metadata=add_image_metadata,
+        add_image_file_names=add_image_file_names,
+    )
     relationship_rows = _relationship_rows(artifact_batch, image_numbers)
     if relationship_rows:
         tables["Object relationships"] = relationship_rows
@@ -446,6 +453,9 @@ def render_spreadsheet_bundle(
 def _measurement_tables(
     artifact_batch: RuntimeArtifactBatch,
     image_numbers: CellProfilerImageSetNumbering,
+    *,
+    add_image_metadata: bool,
+    add_image_file_names: bool,
 ) -> tuple[
     OrderedDict[str, tuple[Mapping[str, object], ...]],
     tuple[str, ...],
@@ -455,7 +465,7 @@ def _measurement_tables(
     )
     source_metadata_by_image_number: OrderedDict[
         int,
-        list[Mapping[str, object]],
+        list[tuple[Mapping[str, object], Mapping[str, object]]],
     ] = OrderedDict()
     all_tables: list[MeasurementTable] = []
     for spec in artifact_batch.specs_of_type(MeasurementsArtifactType):
@@ -498,22 +508,32 @@ def _measurement_tables(
                     CELLPROFILER_MEASUREMENT_DIALECT
                 ),
             )
-            for image_number, metadata, file_values in _source_metadata_measurement_rows(
+            for (
+                image_number,
+                original_metadata,
+                acquisition,
+                file_values,
+            ) in _source_metadata_measurement_rows(
                 table,
                 row_domain,
                 image_numbers_by_slice,
+                add_image_metadata=add_image_metadata,
+                add_image_file_names=add_image_file_names,
             ):
                 source_metadata_by_image_number.setdefault(
                     image_number,
                     [],
-                ).append(metadata)
+                ).append((original_metadata, acquisition))
                 if file_values:
                     accumulator.add_declared_rows(
                         MeasurementSparseColumnarRows.from_rows(
                             ({slice_axis.value: image_number, **file_values},),
                             fields=(
                                 FieldSpec(slice_axis.value, int),
-                                *(FieldSpec(name, str, required=False) for name in file_values),
+                                *(
+                                    FieldSpec(name, str, required=False)
+                                    for name in file_values
+                                ),
                             ),
                         ),
                         CELLPROFILER_MEASUREMENT_DIALECT,
@@ -541,7 +561,7 @@ def _measurement_tables(
             },
         }
         for image_number, metadata_rows in source_metadata_by_image_number.items()
-        for consensus in (source_component_metadata_consensus(metadata_rows),)
+        for consensus in (_source_metadata_consensus(metadata_rows),)
         if consensus is not None
     )
     if source_metadata_rows:
@@ -577,14 +597,39 @@ def _measurement_tables(
     )
 
 
+def _source_metadata_consensus(
+    rows: Sequence[tuple[Mapping[str, object], Mapping[str, object]]],
+) -> Mapping[str, object] | None:
+    """Fold each existing source role without treating absent extraction as data.
+
+    Original fields previously participated only when extraction existed.
+    Preserve that rule while independently folding requested acquisition facts;
+    original spelling/values remain authoritative when namespaces overlap.
+    """
+    original = source_component_metadata_consensus(
+        tuple(row[0] for row in rows if row[0])
+    )
+    acquisition = source_component_metadata_consensus(tuple(row[1] for row in rows))
+    if original is None and acquisition is None:
+        return None
+    return {**(acquisition or {}), **(original or {})}
+
+
 def _source_metadata_measurement_rows(
     table: MeasurementTable,
     row_domain: MeasurementRowsAxisProjection,
     image_numbers_by_slice: Mapping[int, int],
-) -> tuple[tuple[int, Mapping[str, object], Mapping[str, str]], ...]:
+    *,
+    add_image_metadata: bool,
+    add_image_file_names: bool,
+) -> tuple[
+    tuple[int, Mapping[str, object], Mapping[str, object], Mapping[str, str]], ...
+]:
     """Project producer-owned source metadata into CellProfiler Image rows."""
 
-    rows: list[tuple[int, Mapping[str, object], Mapping[str, str]]] = []
+    rows: list[
+        tuple[int, Mapping[str, object], Mapping[str, object], Mapping[str, str]]
+    ] = []
     dialect = CellProfilerDatabaseColumnDialect()
     image_subject = MeasurementSubject(MeasurementScope.IMAGE, "Image")
     for slice_index in row_domain.present_axis_values(
@@ -593,21 +638,43 @@ def _source_metadata_measurement_rows(
         provenance = table.source_provenance.for_source_plane(slice_index)
         metadata = dialect.source_metadata_values(
             provenance.source_component_metadata,
-            Path(provenance.source_path) if provenance.source_path is not None else None,
+            None,
         )
+        acquisition = {}
+        if add_image_metadata:
+            acquisition.update(
+                dialect.source_acquisition_values(provenance.source_component_metadata)
+            )
+            acquisition.update(
+                dialect.source_metadata_values(
+                    None,
+                    Path(provenance.source_path)
+                    if provenance.source_path is not None else None,
+                )
+            )
         file_values: dict[str, str] = {}
-        for name in provenance.represented_source_image_names:
+        for name in (
+            provenance.represented_source_image_names if add_image_file_names else ()
+        ):
             named_source = provenance.for_source_image(name)
             if named_source.source_path is None:
                 continue
             file_values.update(
-                (dialect.source_measurement_field(image_subject, FieldSpec(field, str)).name, value)
+                (
+                    dialect.source_measurement_field(
+                        image_subject, FieldSpec(field, str)
+                    ).name,
+                    value,
+                )
                 for field, value in dialect.source_image_file_values(
-                    Path(named_source.source_path), name,
+                    Path(named_source.source_path),
+                    name,
                 ).items()
             )
-        if metadata or file_values:
-            rows.append((image_numbers_by_slice[slice_index], metadata, file_values))
+        if metadata or acquisition or file_values:
+            rows.append(
+                (image_numbers_by_slice[slice_index], metadata, acquisition, file_values)
+            )
     return tuple(rows)
 
 
@@ -992,6 +1059,13 @@ def export_to_spreadsheet(
     """Render one plate's exact contract-selected spreadsheet file bundle.
 
     Args:
+        add_image_metadata: Copy Image metadata into object rows, projecting
+            declared acquisition components from sourced measurement tables
+            when requested. Absent coordinates are not synthesized.
+        add_image_file_names: Project named source paths and filenames from
+            measurement provenance and copy them into object rows. Source
+            image pixels are not reloaded. Existing Image features are retained
+            regardless of these flags.
         file_selections: Explicit output files and their measurement subjects
             when automatic export of all measurement types is disabled.
     """

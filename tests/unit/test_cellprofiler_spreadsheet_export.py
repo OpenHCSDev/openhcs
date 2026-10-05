@@ -440,13 +440,17 @@ def test_spreadsheet_projects_source_identity_without_upstream_image_features(
     )
     image, = csv.DictReader(io.StringIO(bundle['Image.csv']))
     cell, = csv.DictReader(io.StringIO(bundle['Cells.csv']))
-    assert image['Metadata_well'] == 'A01'
-    assert image['Metadata_site'] == '2'
-    assert image['Metadata_z_index'] == '4'
-    assert image['Metadata_timepoint'] == '5'
     assert image['Metadata_Treatment'] == 'control'
-    assert image['FileName_Body'] == 'body.tif'
-    assert image['PathName_Body'] == '/acquisition'
+    assert ('Metadata_site' in image) is add_metadata
+    assert ('FileName_Body' in image) is add_files
+    if add_metadata:
+        assert image['Metadata_well'] == 'A01'
+        assert image['Metadata_site'] == '2'
+        assert image['Metadata_z_index'] == '4'
+        assert image['Metadata_timepoint'] == '5'
+    if add_files:
+        assert image['FileName_Body'] == 'body.tif'
+        assert image['PathName_Body'] == '/acquisition'
     assert cell['object_label'] == '7'
     assert cell['Area'] == '12.0'
     assert ('Metadata_site' in cell) is add_metadata
@@ -490,6 +494,58 @@ def test_spreadsheet_preserves_independent_contributor_filenames(names: tuple[st
         assert row[f'Image_PathName_{name}'] == '/acquisition'
     assert 'Metadata_channel' not in row
     assert 'Metadata_z_index' not in row
+
+
+def test_requested_source_columns_preserve_original_extraction_path_template() -> None:
+    image = _measurement_record(
+        'image', axis_id='A01',
+        subject=MeasurementSubject(MeasurementScope.IMAGE, 'Image'),
+        rows=({'slice_index': 0, 'Count_Cells': 1},),
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            component_metadata=({'site': '1', ORIGINAL_SOURCE_METADATA_FIELD: {'Run': 'run1'}},),
+        ),
+    )
+    cells = _measurement_record(
+        'cells', axis_id='A01',
+        subject=MeasurementSubject(MeasurementScope.OBJECT, 'Cells', 'object_number'),
+        rows=({'slice_index': 0, 'object_number': 1, 'Area': 12.0},),
+    )
+    bundle = export_to_spreadsheet(
+        artifact_batch=RuntimeArtifactBatch(
+            input_specs=tuple(ArtifactSpec.input(record.key.name, MeasurementsArtifactType) for record in (image, cells)),
+            records_by_axis={'A01': (image, cells)},
+            source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
+        ),
+        add_image_metadata=True, add_image_file_names=True,
+        output_directory='{Run}', add_filename_prefix=False,
+    )
+    assert set(bundle) == {'run1/Image.csv', 'run1/Cells.csv'}
+    row, = csv.DictReader(io.StringIO(bundle['run1/Cells.csv']))
+    assert row['Metadata_Run'] == 'run1'
+    assert row['Metadata_site'] == '1'
+
+
+def test_spreadsheet_rejects_existing_filename_conflicting_with_provenance() -> None:
+    record = _measurement_record(
+        'image', axis_id='A01',
+        subject=MeasurementSubject(MeasurementScope.IMAGE, 'Image'),
+        rows=({'slice_index': 0, 'FileName_Body': 'other.tif'},),
+        source_image_provenance_planes=SourceImageProvenancePlanes((
+            RuntimeSourceImageProvenancePlane(
+                SourceImageIdentity('/acquisition/body.tif', {'site': '1'}),
+                source_image_name='Body',
+            ),
+        )),
+    )
+    with pytest.raises(ValueError, match='Conflicting sparse measurement values'):
+        export_to_spreadsheet(
+            artifact_batch=RuntimeArtifactBatch(
+                input_specs=(ArtifactSpec.input('image', MeasurementsArtifactType),),
+                records_by_axis={'A01': (record,)},
+                source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
+            ),
+            add_image_file_names=True,
+        )
 
 
 def test_export_to_spreadsheet_bundle_uses_generic_file_materialization() -> None:
