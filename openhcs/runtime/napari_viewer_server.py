@@ -2436,25 +2436,23 @@ class NapariLayerDisplayPipeline:
 
         if not apply or not requests:
             return
-        if any(request.requires_rematerialization for request in requests):
-            # Capture once, before any peer changes native rank. The original
-            # label/selection resolver owns which source frame is current.
-            current_route = self.dimension_label_overlay.route_resolver.resolve().route_key
-            basis = next(
-                (request for request in requests if request.presentation.route_key == current_route),
-                requests[0],
+        # Capture once, before any peer changes native rank or component domain.
+        # The original label/selection resolver owns the current source frame.
+        current_route = self.dimension_label_overlay.route_resolver.resolve().route_key
+        basis = next(
+            (request for request in requests if request.presentation.route_key == current_route),
+            requests[0],
+        )
+        native_frame = self.server.viewer.dims.copy()
+        with basis.original_presentation.preserve_native_axes(
+            native_frame, basis.presentation, basis.items,
+        ):
+            native_frame.ndim = max(native_frame.ndim, len(basis.presentation.axis_labels))
+            offset = native_frame.ndim - len(basis.presentation.axis_labels)
+            native_frame.axis_labels = (
+                *native_frame.axis_labels[:offset], *basis.presentation.axis_labels,
             )
-            native_frame = self.server.viewer.dims.copy()
-            if basis.slots_changed:
-                with basis.original_presentation.preserve_native_axes(
-                    native_frame, basis.presentation, basis.items,
-                ):
-                    native_frame.ndim = max(native_frame.ndim, len(basis.presentation.axis_labels))
-                    offset = native_frame.ndim - len(basis.presentation.axis_labels)
-                    native_frame.axis_labels = (
-                        *native_frame.axis_labels[:offset], *basis.presentation.axis_labels,
-                    )
-            requests = [replace(request, native_frame=native_frame) for request in requests]
+        requests = [replace(request, native_frame=native_frame) for request in requests]
 
         for request in requests:
             if request.requires_rematerialization:
@@ -2467,6 +2465,7 @@ class NapariLayerDisplayPipeline:
                     request.items, request.presentation.payload_axis_labels,
                 )["translate"]
                 request.publish()
+                request.restore_native_frame()
 
     def schedule_layer_update(
         self,
