@@ -2,7 +2,7 @@
   "status": "SAVED_PRODUCTION_PARITY_PASS_PUBLIC_PIPELINE_PENDING",
   "issue": 467,
   "pull_request": 468,
-  "base_main": "f8f39e136",
+  "base_main": "cf2c278b6",
   "saved_frame_count": 21,
   "different_pixels": 0,
   "different_values": 0,
@@ -10,12 +10,12 @@
   "font_sha256": "3fdf69cabf06049ea70a00b5919340e2ce1e6d02b0cc3c4b44fb6801bd1e0d22",
   "upstream_archive_sha256": "2f6e9a7de3ae8e85bdd2fe237e27d868d3ba7a27495e65906455c27722dd1a17",
   "native_binary_sha256": "7d834bf78324fb17bced5034aff2405613b1d67bcead450bdfdfe77be3a9327c",
-  "vendor_files_byte_equal_upstream": 546,
+  "vendor_files_byte_equal_upstream": 524,
   "native_exports": [
     "PyInit__font_raster_native"
   ],
   "shared_freetype_dependency": false,
-  "source_distribution_inputs": "Native bridge, upstream module rules, source trees, and both licenses verified present.",
+  "source_distribution_inputs": "Native bridge, upstream module rules, source trees, and both licenses verified present. Unused upstream src/tools files are excluded from the committed source.",
   "existing_tracking_controls": "18 passed; old roundtrip preparation RED preserved; exact roundtrip passes after normal RegistryService.prepare_in_current_process (1 passed).",
   "preserved_red": [
     "Original 3340 antialiased-text pixel disagreement across 21 frames.",
