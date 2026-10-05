@@ -1051,6 +1051,21 @@ separate assay-statistics records. The positive control in both blocks is
 Wortmannin 150 nM, including the LY294002 block. Plotted variability is the
 native between-well sample SD, not standard error or between-cell variation.
 
+### H002 fresh13: self-directed centre repairs and supported localisation
+
+The later independent author finished with 26 fractional volumetric centres,
+including fifteen flagged at a volume face. It measured internal peaks and
+genuine neighbour spacing, then used hole filling and component-local marker
+exclusion after prominence-only tuning failed. The
+[independent frozen-run review](../../figure-collection-20261004/H002-FRESH13-INDEPENDENT-REVIEW.rst)
+checks all 1,229 payload files, 48 controls and three immutable journal-prefix
+copies, reconciles the count CSV, and opens original XY/XZ/YZ raw/result/combined
+views supporting ordinary-body centre placement. The result is useful
+self-directed localisation, not a validated biological census. The displayed
+markers are rounded centre-image voxels; fractional coordinates remain in the
+CSV, physical calibration is unverified, and predecessor repair chronology
+is retained author evidence rather than an independently reconstructed comparison.
+
 ### Programme-wide evidence scope
 
 [Figure 5 plot data](../figures/slas/task_only_analysis_plot_data.csv) retains
