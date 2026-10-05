@@ -113,9 +113,8 @@ class PipelineOrchestrator:
         self.execution_id = f"local::{plate_path}"
         self.transport_config = transport_config
 
-        # Initialize auto-sync control for pipeline config
+        # Hold the authored declaration before the plate identity is assigned.
         self._pipeline_config = None
-        self._auto_sync_enabled = True
 
         # Context management now handled by contextvars-based system
 
@@ -134,11 +133,6 @@ class PipelineOrchestrator:
         # PipelineConfig should always have None values that resolve through lazy resolution
         # Copying concrete values breaks the placeholder system and makes all fields appear "explicitly set"
 
-        self.pipeline_config = pipeline_config
-
-        # CRITICAL FIX: Expose pipeline config as public attribute for dual-axis resolver discovery
-        # The resolver's _is_context_provider method only finds public attributes (skips _private)
-        # This allows the resolver to discover the orchestrator's pipeline config during context resolution
         self.pipeline_config = pipeline_config
         logger.info(
             "PipelineOrchestrator initialized with PipelineConfig for context discovery."
@@ -1013,22 +1007,17 @@ class PipelineOrchestrator:
 
     @pipeline_config.setter
     def pipeline_config(self, value: Optional["PipelineConfig"]) -> None:
-        """Set pipeline configuration with auto-sync to thread-local context."""
-        self._pipeline_config = value
-        if self._auto_sync_enabled and value is not None:
-            self._sync_to_thread_local()
-
-    def _sync_to_thread_local(self) -> None:
-        """Internal method to sync current pipeline_config to thread-local context."""
-        if self._pipeline_config and self.plate_path is not None:
-            self.apply_pipeline_config(self._pipeline_config)
+        """Replace the declaration through source invalidation once bound to a plate."""
+        if value is None or self.plate_path is None:
+            self._pipeline_config = value
+        else:
+            self.apply_pipeline_config(value)
 
     def apply_pipeline_config(self, pipeline_config: "PipelineConfig") -> None:
         """
-        Apply per-orchestrator configuration using thread-local storage.
+        Replace the declaration and invalidate changed source bindings.
 
-        This method sets the orchestrator's effective config in thread-local storage
-        for step-level lazy configurations to resolve against.
+        Saved inheritance is resolved without modifying global thread-local state.
         """
         # Import PipelineConfig at runtime for isinstance check
         from openhcs.core.config import PipelineConfig
@@ -1061,12 +1050,7 @@ class PipelineOrchestrator:
             previous_source_bindings is not None
             and previous_source_bindings != current_source_bindings
         )
-        # Temporarily disable auto-sync to prevent recursion
-        self._auto_sync_enabled = False
-        try:
-            self._pipeline_config = pipeline_config
-        finally:
-            self._auto_sync_enabled = True
+        self._pipeline_config = pipeline_config
 
         if source_bindings_changed:
             self._invalidate_source_projection()
