@@ -2,7 +2,7 @@
   "status": "PUBLIC_PIPELINE_AND_FULL_NATIVE_SCI_PASS",
   "issue": 467,
   "pull_request": 468,
-  "base_main": "3301c9126",
+  "base_main": "09bce1929",
   "saved_frame_count": 21,
   "different_pixels": 0,
   "different_values": 0,
@@ -72,5 +72,32 @@
     "main_head": "3301c912688254720eed52600ef386966c6fe5cb",
     "delta_scope": "Paper figure/manuscript only; no OpenHCS, benchmark, dependency, native source or binary changes. Every qualified production file/binary hash rechecked unchanged."
   },
-  "owned_cleanup": "All owned PIDs absent; canonical and final-environment leases released; source/input/native/helper/dependency guards PASS."
+  "owned_cleanup": "All owned PIDs absent; canonical and final-environment leases released; source/input/native/helper/dependency guards PASS.",
+  "main794_science_replay": {
+    "status": "PASS",
+    "source_head": "062ae9d8b485c2cadf6a34317baf4802cce6095c",
+    "incoming_main": "09bce1929",
+    "execution_source_head": "5f5adf20522df8ff2c8ae79b27b5b466cbf974e6",
+    "changed_comparison_consumers": [
+      "benchmark/cellprofiler_export_equivalence.py",
+      "openhcs/core/equivalence/measurement_rows.py",
+      "openhcs/core/equivalence/relationships.py"
+    ],
+    "images": "21/21 exact",
+    "participating_table_rows": [
+      [
+        65,
+        21
+      ],
+      [
+        65,
+        21
+      ]
+    ],
+    "correlations_and_inventory": "PASS",
+    "original_science_sha256": "13109d194a303688b662bff657d8ffce790222593bbcc98d35bc4fe1d49d53e8",
+    "replay_science_sha256": "7cfc5f17e7b7aca5503d8fe63eebb927fb600aceee5384ded293efe208004633",
+    "artifact_packet": "/home/ts/.local/state/openhcs-maintenance/20261005/track-renderer-prehint-feasibility-v1/public-ordinary-v1/main794-science-v1",
+    "scope": "Saved outputs replayed through new equivalence consumers only; no new pipeline/native execution or clock; original SCI preserved."
+  }
 }
