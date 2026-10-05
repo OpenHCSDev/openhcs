@@ -317,8 +317,13 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
                 "neurite_secondary_ownership",
                 "neurite_topology_dropped_trace",
                 "neurite_topology_added_trace",
+                "neurite_enhanced_response",
+                "neurite_threshold_support",
+                "neurite_retained_support",
+                "neurite_local_response",
+                "neurite_local_support",
             ),
-            expected[7:12],
+            expected[7:-1],
             strict=True,
         ):
             paths = tuple(tmp_path.rglob(f"*_{artifact_name}.checkpoint.tif"))
@@ -330,7 +335,7 @@ def test_neurite_outgrowth_runs_on_synthetic_plate_as_2d_channel_stack(
                     retained,
                     np.asarray(expected_checkpoint)[0],
                 )
-        assert len({path.name for path in checkpoint_paths}) == 10
+        assert len({path.name for path in checkpoint_paths}) == 20
 
         assert compiled_plan.output_plate_root is not None
         output_plate_root = Path(compiled_plan.output_plate_root)
