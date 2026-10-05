@@ -698,10 +698,10 @@ def test_registered_metadata_preparation_discovers_measurements_before_lookup(
     assert completed.returncode == 0, completed.stderr
 
 
-def test_cpu_only_registry_inventory_does_not_import_gpu_runtimes(
+def test_cpu_only_registry_inventory_preserves_cpu_dependency_policy(
     tmp_path: Path,
 ) -> None:
-    """Catalog inventory honors memory declarations before runtime imports."""
+    """Inventory avoids accelerator imports; admitted CPU solvers keep CPU devices."""
 
     repository_root = Path(__file__).parents[2]
     environment = os.environ.copy()
@@ -714,6 +714,7 @@ def test_cpu_only_registry_inventory_does_not_import_gpu_runtimes(
     )
     script = textwrap.dedent("""
         import json
+        import os
         import sys
 
         from openhcs.processing.backends.lib_registry.openhcs_registry import (
@@ -723,15 +724,32 @@ def test_cpu_only_registry_inventory_does_not_import_gpu_runtimes(
             RegistryService,
         )
 
+        framework_names = ("cupy", "torch", "tensorflow", "jax", "pyclesperanto")
         instances = RegistryService._available_registry_instances()
+        inventory_gpu_modules = tuple(
+            name
+            for name in framework_names
+            if name in sys.modules
+        )
         OpenHCSRegistry().get_modules_to_scan()
         gpu_modules = tuple(
             name
-            for name in ("cupy", "torch", "tensorflow", "jax", "pyclesperanto")
+            for name in framework_names
             if name in sys.modules
         )
+        from openhcs.utils.environment import OpenHCSProcessEnvironment
+
+        # NumPy-transport solvers can use JAX internally. The package's actual
+        # CPU policy must select its CPU backend before dependency admission.
+        jax_platforms = (
+            [] if "jax" not in sys.modules
+            else [device.platform for device in sys.modules["jax"].devices()]
+        )
         print(json.dumps({
+            "inventory_gpu_modules": inventory_gpu_modules,
             "gpu_modules": gpu_modules,
+            "jax_requested_platforms": os.environ[OpenHCSProcessEnvironment.jax_platforms_key],
+            "jax_device_platforms": jax_platforms,
             "registries": [instance.library_name for instance in instances],
         }))
         """)
@@ -748,7 +766,11 @@ def test_cpu_only_registry_inventory_does_not_import_gpu_runtimes(
 
     assert completed.returncode == 0, completed.stderr
     result = json.loads(completed.stdout)
-    assert result["gpu_modules"] == []
+    assert result["inventory_gpu_modules"] == []
+    assert set(result["gpu_modules"]).issubset({"jax"})
+    assert result["jax_requested_platforms"] == "cpu"
+    assert all(platform == "cpu" for platform in result["jax_device_platforms"])
+    assert bool(result["jax_device_platforms"]) == ("jax" in result["gpu_modules"])
     assert set(result["registries"]) == {"openhcs", "skimage"}
 
 
