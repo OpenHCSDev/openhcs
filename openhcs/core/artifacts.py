@@ -946,7 +946,7 @@ class ImageArtifactType(ArtifactType):
             list[StoredRuntimeValue],
         ] = {}
         for record in records:
-            payload = output_plan.materialization_payload(record)
+            payload = record.materialization_payload()
             metadata = image_payload_metadata(payload)
             address = OpenHCSPlaneAddress.from_complete_source_metadata(
                 metadata.source_component_metadata
@@ -1000,9 +1000,9 @@ class ImageArtifactType(ArtifactType):
             )
 
         owner_record = owner_records[0]
-        owner_payload = output_plan.materialization_payload(owner_record)
+        owner_payload = owner_record.materialization_payload()
         for record in records:
-            payload = output_plan.materialization_payload(record)
+            payload = record.materialization_payload()
             if not cls._materialization_payloads_are_equivalent(owner_payload, payload):
                 raise ValueError(
                     "Conflicting scalar image materialization payloads for source "
@@ -3673,23 +3673,11 @@ class ArtifactOutputPlan(ArtifactPlan):
             return False
         return self.materialization.uses_source_identity_filename()
 
-    def materialization_payload(self, value: "RuntimeValue") -> object:
-        """Return this output's payload under its declared filename source context."""
-
-        payload = value.materialization_payload()
-        materialization_source = self.materialization_source()
-        if (
-            materialization_source is None
-            or materialization_source == self.source_context_source()
-        ):
-            return payload
-        return self.materialization_metadata(value).attach_to(payload)
-
     def materialization_metadata(
         self,
         value: "RuntimeValue",
     ) -> "ImagePayloadMetadata":
-        """Return payload metadata with declared materialization-source provenance."""
+        """Derive filename metadata from the declared naming source."""
 
         from openhcs.core.runtime_image_values import image_payload_metadata
 

@@ -421,6 +421,33 @@ def test_opaque_named_bundle_uses_existing_same_slice_mask_composition():
     np.testing.assert_array_equal(image_payload_mask(stack_payload), image_payload_mask(expected))
 
 
+def test_scalar_rgb_occurrences_reload_on_runtime_slice_axis(tmp_path):
+    from openhcs.core.aligned_image_payload import ImagePayloadStackComposition
+    from openhcs.core.steps.function_output_manifest import ProducedOutputSemantics
+    from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
+
+    plan = replace(_runtime().execution_plan, output_dir=tmp_path)
+    context = AlignedImageSliceContext.main_flow("RGBImage", artifact_kind="image")
+    records = tuple(ProducedOutputSemantics.from_output(
+        plan, tmp_path / f"A01_s{site:03d}_w3_z001_t001.tif",
+        FunctionOutputIdentity(
+            component_values={"well": "A01", "site": site, "channel": 3},
+            extension=".tif", source="test",
+        ),
+        output_context=context, main_flow_plane_axis=None,
+    ) for site in (1, 2, 3))
+    payloads = tuple(ImagePayloadMetadata(
+        source_image_names=("RGBImage",), source_channel_axis=-1,
+    ).payload_with(np.full((4, 5, 3), site, dtype=np.float32)) for site in (1, 2, 3))
+    output = ImagePayloadStackComposition.from_loaded_images(
+        payloads, producer_records=records, execution_plan=plan,
+        source_projection=None, workspace_source_lookups=(),
+    )
+    assert image_payload_metadata(output).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert image_payload_metadata(output).source_channel_axis == 3
+    np.testing.assert_array_equal(image_payload_data(output), np.stack([image_payload_data(p) for p in payloads]))
+
+
 def test_input_bundle_composition_retains_lazy_plan_device_resolution(tmp_path, monkeypatch):
     from openhcs.core.steps.function_output_manifest import ProducedOutputSemantics
     from openhcs.core.steps.function_output_identity import FunctionOutputIdentity
@@ -428,6 +455,7 @@ def test_input_bundle_composition_retains_lazy_plan_device_resolution(tmp_path, 
     records = tuple(ProducedOutputSemantics.from_output(
         plan, tmp_path / f"A01_s001_w1_z001_t001_{name}.tif",
         FunctionOutputIdentity(component_values={"well": "A01"}, extension=".tif", source="test"),
+        output_context=AlignedImageSliceContext.main_flow(name),
         main_flow_plane_axis=None,
     ) for name in ("First", "Second"))
     payloads = tuple(ImagePayloadMetadata(source_image_names=(name,)).payload_with(

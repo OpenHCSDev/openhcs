@@ -452,11 +452,16 @@ class ImagePayloadStackComposition(ABC):
             metadata_mode = ImagePayloadMetadataCompositionMode.STACK
             if producer_records:
                 declared_axis = producer_records[0].main_flow_plane_axis
+                # Scalar occurrences of one declared output reconstruct its
+                # runtime axis; distinct output contexts introduce a binding axis.
                 metadata_mode = (
                     ImagePayloadMetadataCompositionMode.BUNDLE
                     if declared_axis is None
+                    and len(
+                        {record.output_context for record in producer_records}
+                    ) > 1
                     else ImagePayloadMetadataCompositionMode.for_plane_axis(
-                        declared_axis
+                        declared_axis or RuntimePlaneAxis.RUNTIME_SLICE
                     )
                 )
             if source_projection is not None and workspace_source_lookups:
