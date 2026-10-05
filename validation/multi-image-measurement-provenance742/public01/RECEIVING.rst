@@ -2,7 +2,7 @@
 =============================================================
 
 Owner: Singer, through installed acceptance and exact closure. Planck owns the
-next ordinary whole package after receiving12/732; Dewey owns the released lane
+next ordinary whole package; Dewey owns the released lane
 and original recorded client. Nothing here starts a process, reserves a port,
 builds a target or changes a scientific bundle. Receiving12 does NOT contain743.
 
@@ -148,6 +148,34 @@ record ACK/process_exited and listener/PID absence, then normal sole-client exit
 record its actual terminal code separately. No viewer or scientific process is
 started or touched. Publish receipt in743 and return the exact lease to Dewey.
 
+Independent qualification disposition, 2026-10-05
+------------------------------------------------
+
+Current main ae14c7071316f70778a78a424818cf118d356fb8 has no changes relative
+to original base e00129f64 in743's three production files: invocation.py,
+module_execution.py and object_measurement_row_policies.py. The qualified
+484639 producer patch is therefore still the exact requested package delta;
+the builder must prove its bytes on the ordinary whole candidate, not assume
+receiving12 contains it. No merge/build/install/test was performed by this review.
+
+Planck's receiving12 case02 has a real acquired-table CSV collision: fixed SITE1
+and SITE3 records resolve to one SITE-dropping path. Preserve its COMPLETE job
+and failed verify03 separately. That defect is not this743 fixture's exporter
+or scope: all743 sources have SITE1; the registered ExportToSpreadsheet step
+uses its declared file bundle and represented typed sources. It does not depend
+on site-free aggregate publication, saved-label reopening, or the acquired-table
+path fallback. This source distinction supports independent qualification; it
+is not an installed proof or a reason to skip either order's native/CSV checks.
+
+Package qualification may proceed without732 scientific acceptance or its
+writer repair. Singer requested Planck's ordinary next candidate inclusion and
+Dewey's precise closure/handoff. The inspected original95 case02 OWNER-EXECUTION
+receipt still declares native/viewer/client owned, not closed. Do not launch on
+that occupied lease or infer closure from completed computation. Once exact
+typed closure is published and a lane handed off, the original launch owner can
+run this prepared headless case on its qualified whole client/native package.
+
 Current disposition: source-reviewed and packet-prepared ONLY. Installed/public
-forward/reverse acceptance remains owned by Singer, pending Planck's ordinary
-next build and Dewey's precise released lease after732. No operation is in flight.
+forward/reverse acceptance remains owned by Singer. The concrete dependencies
+are ordinary whole-package byte qualification and the original lane's exact
+closure/release, not732 scientific acceptance. No743 operation is in flight.
