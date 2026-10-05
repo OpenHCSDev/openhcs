@@ -83,6 +83,27 @@ closure but a recorded MCP-client exit code of 2, whose cause was not
 independently established. Scientific agreement does not erase that operational
 qualification.
 
+### Independent H001 repeat and rejected regression
+
+A later independent repeat, `H001_FRESH19_89`, froze both attempts before
+coordinator scoring against the same pinned notebook reference and unchanged
+scorer. Its first attempt matched 62 of 64 objects, with six excess predictions
+and two misses (precision 91.18%, recall 96.88%, F1 93.94%). The self-directed
+repair retained those 62 matches but added one excess prediction (F1 93.23%).
+Foreground IoU was 98.47% in both attempts. The author rejected the false split
+before scoring; the first candidate remains its preferred provisional result,
+while the actual final attempted pipeline and its rejection remain frozen.
+
+The [repeat evaluation receipt](task_only_analysis/h001-fresh19-postfreeze-evaluation.json)
+records both scorer outputs and source, prediction, reference and freeze hashes.
+The [independent review](../../figure-collection-20261004/H001-FRESH19-REGRESSION-WITNESS.rst)
+retains the original capture-state extraction defect and its narrower original
+viewport acknowledgements. The parent checked all 95 frozen artifact hashes
+and personally opened 15 native captures. These qualifications do not erase
+the computational agreement or certify every biological boundary. No reference
+feedback was supplied to the author. This repeat is separate from Figure 5's
+earlier scored run; neither its first nor its rejected repair replaces that run.
+
 ## BBBC039: paired repair and full-corpus coverage
 
 The original author `BBBC039_FRESH612_96` received the public full-200-field DNA

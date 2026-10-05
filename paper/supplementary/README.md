@@ -1006,6 +1006,17 @@ partitions unchanged. Matched multi-plane review therefore did not accept an
 unqualified biological count. This case has no reference-agreement score and
 does not contribute to the two scored task-only comparisons.
 
+A later independent H001 repeat matched 62 of 64 notebook-reference objects
+on its first attempt, with six excess predictions and two misses (object F1
+0.939; foreground IoU 0.985). Its self-directed repair added one excess
+partition without recovering a miss, lowering F1 to 0.932. The author rejected
+the false split before coordinator scoring. The [repeat evaluation receipt](task_only_analysis/h001-fresh19-postfreeze-evaluation.json)
+preserves both scores and their distinct frozen predictions. The
+[independent native review](../../figure-collection-20261004/H001-FRESH19-REGRESSION-WITNESS.rst)
+retains the stale capture-state extraction qualification, original viewport
+acknowledgements and checked artifact hashes. This computational comparison
+does not establish manual biological accuracy or an isolated skill effect.
+
 A separate public translocation trial, `BBBC013_REPEAT94`, compiled the full
 plate but was terminated at its configured 4.5 GiB scope limit. Complete masks
 survived for 42 of 96 wells; final plate tables and distributed biological review
