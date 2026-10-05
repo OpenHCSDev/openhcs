@@ -1580,9 +1580,6 @@ class SourceUniverseRuntimeState:
     """Resolved source universes assembled from the registered request family."""
 
     load_universe: SourceFileUniverse | None = None
-    step_input_source_paths: Mapping[str, str] = field(
-        default_factory=lambda: MappingProxyType({})
-    )
     source_metadata_by_path: Mapping[str, SourceMetadataMapping] = field(
         default_factory=lambda: MappingProxyType({})
     )
@@ -1746,7 +1743,7 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
                     projected,
                     ImagePayloadSourceMetadataContext(
                         SourceImageIdentity(
-                            member,
+                            projection.logical_path_for(lookup),
                             projection.source_metadata_for(lookup),
                         ),
                         source_projection.ref.backend,
@@ -1874,12 +1871,6 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
         return self.plan.source_universe_plan.uses_pipeline_start_binding_origin
 
     @property
-    def step_input_source_paths(self) -> Mapping[str, str]:
-        if self.source_projection is None:
-            return MappingProxyType({})
-        return self.source_context().source_paths_by_virtual_path
-
-    @property
     def source_metadata_by_path(self) -> Mapping[str, SourceMetadataMapping]:
         projection = self.source_projection
         if projection is None:
@@ -1962,7 +1953,6 @@ class StepInputSourceUniverseRequest(SourceUniverseRequest):
         state = replace(
             state,
             load_universe=state.load_universe or universe,
-            step_input_source_paths=self.step_input_source_paths,
         )
         return SourceUniverseRequest.contribute_runtime_state(self, state, universe)
 

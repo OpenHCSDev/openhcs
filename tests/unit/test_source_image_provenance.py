@@ -368,3 +368,35 @@ def test_declared_source_projection_validates_runtime_plane_cardinality() -> Non
             payload,
             "OrigER",
         )
+
+
+def test_removed_runtime_axis_retains_distinct_current_named_sources() -> None:
+    original = SourceImageIdentity("/site1.tif", {"site": "1"})
+    repeated = SourceImageIdentity("/previous.tif", {"site": "1"})
+    repeated.path = original.path
+    distinct = SourceImageIdentity("/site2.tif", {"site": "2"})
+    planes = SourceImageProvenancePlanes(
+        (
+            RuntimeSourceImageProvenancePlane(original, source_image_name="DNA"),
+            RuntimeSourceImageProvenancePlane(repeated, source_image_name="DNA"),
+            RuntimeSourceImageProvenancePlane(distinct, source_image_name="DNA"),
+            RuntimeSourceImageProvenancePlane(original, source_image_name="RNA"),
+        )
+    )
+    contributors = planes.as_contributors()
+    assert tuple(plane.path for plane in contributors.planes) == (
+        "/site1.tif", "/site2.tif", "/site1.tif"
+    )
+    provenance = SourceImageProvenance.stack(
+        (SourceImageProvenance(source_image_provenance_planes=contributors),)
+    )
+    with pytest.raises(ValueError, match="exactly one identity.*found 2"):
+        provenance.for_source_image("DNA")
+    assert provenance.for_source_image("RNA").source_image_provenance_planes.paths == (
+        "/site1.tif",
+    )
+
+    repeated.component_metadata = {"site": "changed"}
+    assert planes.as_contributors().contributor_count == 4
+    unknown = RuntimeSourceImageProvenancePlane(source_image_name="Unknown")
+    assert SourceImageProvenancePlanes((unknown, unknown)).as_contributors().contributor_count == 2

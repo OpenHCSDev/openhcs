@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1800" height="450" viewBox="0 0 1800 450" role="img" aria-labelledby="title description">
+<title id="title">Final retinal candidate retains uncertain crowded-region partitions</title>
+<desc id="description">Original same-coordinate raw, grayscale labels and red outline screenshots from the northeast region of final candidate10. Dark labels reflect the original native display, not absent numerical results. Display mappings differ; no pixels are retouched.</desc>
+<rect width="1800" height="450" fill="white"/>
+<g font-family="sans-serif" fill="#182438">
+<text x="24" y="36" font-size="36" font-weight="700">Northeast · local repair does not resolve every partition</text>
+<text x="24" y="84" font-size="29">Raw RBPMS</text><text x="620" y="84" font-size="29">Labels only · original native display</text><text x="1216" y="84" font-size="29">Final outlines</text>
+<g transform="translate(24 100) scale(0.9032258064516129)"><defs><clipPath id="NE0"><rect width="620" height="380"/></clipPath></defs><g clip-path="url(#NE0)"><image x="-350" y="-50" width="1440" height="944" xlink:href="retinal_fresh_sources/c10-ne-raw.png"/></g></g>
+<g transform="translate(620 100) scale(0.9032258064516129)"><defs><clipPath id="NE1"><rect width="620" height="380"/></clipPath></defs><g clip-path="url(#NE1)"><image x="-350" y="-50" width="1440" height="944" xlink:href="retinal_fresh_sources/c10-ne-labels.png"/></g></g>
+<g transform="translate(1216 100) scale(0.9032258064516129)"><defs><clipPath id="NE2"><rect width="620" height="380"/></clipPath></defs><g clip-path="url(#NE2)"><image x="-350" y="-50" width="1440" height="944" xlink:href="retinal_fresh_sources/c10-ne-outline.png"/></g></g>
+</g>
+</svg>

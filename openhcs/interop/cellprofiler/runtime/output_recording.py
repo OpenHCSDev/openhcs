@@ -30,7 +30,9 @@ from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
     ImageOutputBundle,
 )
+from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 from openhcs.core.runtime_image_values import (
+    ImagePayloadMetadataCarrier,
     image_payload_data,
     image_payload_mask,
     image_payload_metadata,
@@ -296,17 +298,17 @@ class ImageOutputRecorder(CellProfilerOutputRecorder):
     def raw_runtime_input_value(
         self, spec: ArtifactSpec, value: RuntimeCallableArgument
     ) -> RuntimeCallableArgument:
-        payload = value
+        payload = (
+            value if isinstance(value, ImagePayloadMetadataCarrier)
+            else RuntimeSliceProjection.full_stack_value(value)
+        )
         metadata = image_payload_metadata(payload)
         metadata = metadata.with_source_provenance(
             metadata.source_provenance.with_derived_source_image_names(
                 (spec.name,)
             )
         )
-        return metadata.payload_with(
-            image_payload_data(payload),
-            mask=image_payload_mask(payload),
-        )
+        return metadata.attach_to(payload)
 
     def runtime_input_value(
         self, spec: ArtifactSpec, value: RuntimeCallableArgument
@@ -567,7 +569,18 @@ class SpatialGridOutputRecorder(CellProfilerOutputRecorder):
     artifact_type = SpatialGridArtifactType
 
     def record(self, request: CellProfilerOutputRecordRequest) -> None:
+        module_type = CellProfilerModule.require_callable_contract_owner(
+            request.callable_contract
+        )
+        grid = SpatialGridArtifactType.normalize_runtime_payload(
+            request.spec.name, request.output_value
+        )
         request.adapter.add_spatial_grid(
             request.spec.name,
-            request.output_value,
+            SpatialGridArtifactType.contextualize_output(
+                module_type.source_payload(request),
+                grid,
+                request.output_plan,
+                request.source.plane_projection,
+            ),
         )

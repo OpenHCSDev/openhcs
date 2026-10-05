@@ -358,8 +358,13 @@ class OpenCVMaskedGaussianFilterRequest(MaskedFilterRequest):
         import cv2
 
         image_array = self.image_array
-        mask_array = self.mask_array
+        mask_array = None if self.mask is None else self.mask_array
         kernel = GaussianKernel1D(self.sigma).array.astype(np.float32, copy=False)
+        if mask_array is None:
+            filtered = cv2.sepFilter2D(
+                image_array, cv2.CV_32F, kernel, kernel, borderType=cv2.BORDER_CONSTANT
+            )
+            return self._normalize_full_support(filtered, kernel)
         masked_image = np.zeros(image_array.shape, dtype=np.float32)
         np.copyto(masked_image, image_array, where=mask_array.astype(bool, copy=False))
         filtered = cv2.sepFilter2D(
@@ -369,6 +374,41 @@ class OpenCVMaskedGaussianFilterRequest(MaskedFilterRequest):
             mask_array, cv2.CV_32F, kernel, kernel, borderType=cv2.BORDER_CONSTANT
         )
         return filtered / (weights + np.finfo(np.float32).eps)
+
+    def _normalize_full_support(
+        self, filtered: np.ndarray, kernel: np.ndarray
+    ) -> np.ndarray:
+        import cv2
+
+        width = filtered.shape[1]
+        radius = kernel.size // 2
+        # Full-support interior columns repeat. Filter only the two boundaries
+        # and one interior column, retaining OpenCV's constant-border weights.
+        shape = (filtered.shape[0], min(width, kernel.size), *filtered.shape[2:])
+        weights = cv2.sepFilter2D(
+            np.ones(shape, dtype=np.float32),
+            cv2.CV_32F,
+            kernel,
+            kernel,
+            borderType=cv2.BORDER_CONSTANT,
+        )
+        weights += np.finfo(np.float32).eps
+        if width <= kernel.size:
+            np.divide(filtered, weights, out=filtered)
+        else:
+            np.divide(filtered[:, :radius], weights[:, :radius], out=filtered[:, :radius])
+            np.divide(
+                filtered[:, radius : width - radius],
+                weights[:, radius : radius + 1],
+                out=filtered[:, radius : width - radius],
+            )
+            if radius:
+                np.divide(
+                    filtered[:, width - radius :],
+                    weights[:, radius + 1 :],
+                    out=filtered[:, width - radius :],
+                )
+        return filtered
 
     @classmethod
     def apply_stack(

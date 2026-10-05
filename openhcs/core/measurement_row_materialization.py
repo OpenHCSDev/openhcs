@@ -868,6 +868,10 @@ class WideMeasurementRowAccumulator:
                 if name in source_columns
                 and (
                     name not in eligible
+                    or (
+                        source_columns[name].size
+                        and not source_columns[name].dtype.hasobject
+                    )
                     or any(
                         not is_structural_missing_measurement_cell(value)
                         for value in source_columns[name]

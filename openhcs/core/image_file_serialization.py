@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import logging
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from dataclasses import dataclass, replace
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Callable, ClassVar, Sequence
+from typing import TYPE_CHECKING, Any, Callable, ClassVar, Sequence
 
 import numpy as np
 from arraybridge import MemoryType, detect_memory_type
@@ -15,6 +15,8 @@ from metaclass_registry import AutoRegisterMeta
 from polystore.config import TiffConfig, TiffPhotometric, TiffPlanarConfig
 
 from openhcs.constants.constants import FileFormat
+from openhcs.core.callable_contract import CompilerPreparedAutoRegisterFamily
+from openhcs.core.image_quantization_numba import quantize_image_uint8
 from openhcs.core.registry_strategies import NominalTypeStrategyFamilyMixin
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
@@ -22,6 +24,9 @@ from openhcs.core.runtime_image_values import (
     image_payload_data,
     image_payload_metadata,
 )
+
+if TYPE_CHECKING:
+    from openhcs.core.processing_preparation import PreparationOperation
 
 logger = logging.getLogger(__name__)
 
@@ -210,7 +215,7 @@ class ImageFileRevision:
         )
 
 
-class ImageFileFormat(ABC, metaclass=AutoRegisterMeta):
+class ImageFileFormat(CompilerPreparedAutoRegisterFamily, metaclass=AutoRegisterMeta):
     """Nominal owner of image-file source and serialization semantics."""
 
     __registry_key__ = "format_key"
@@ -218,6 +223,16 @@ class ImageFileFormat(ABC, metaclass=AutoRegisterMeta):
     format_key: ClassVar[str | None] = None
     suffixes: ClassVar[tuple[str, ...]] = ()
     browser_file_format: ClassVar[FileFormat] = FileFormat.TIFF
+
+    @classmethod
+    def cache_preparation_operations(cls) -> tuple[PreparationOperation, ...]:
+        """Derive serialization substrates from the pixel-conversion owner."""
+        return ImagePayloadUint8Strategy.cache_preparation_operations()
+
+    @classmethod
+    def prepare_registered_family(cls) -> None:
+        for operation in cls.cache_preparation_operations():
+            operation.prepare()
 
     @classmethod
     def matches_path(cls, path: str | Path) -> bool:
@@ -624,10 +639,19 @@ class PngImageFileFormat(ImageFileFormat):
 
 class ImagePayloadUint8Strategy(
     NominalTypeStrategyFamilyMixin,
-    ABC,
+    CompilerPreparedAutoRegisterFamily,
     metaclass=AutoRegisterMeta,
 ):
     """Nominal family for dtype-specific uint8 image conversion."""
+
+    @classmethod
+    def prepare_registered_family(cls) -> None:
+        for strategy in cls.registered_strategy_types():
+            strategy.prepare_substrate()
+
+    @classmethod
+    def prepare_substrate(cls) -> None:
+        """Native NumPy conversions require no compiled numerical substrate."""
 
     @classmethod
     def for_dtype(cls, dtype: Any) -> "ImagePayloadUint8Strategy":
@@ -667,10 +691,53 @@ class NumericImagePayloadUint8Strategy(ImagePayloadUint8Strategy):
 
     def prepare(self, array: np.ndarray) -> np.ndarray:
         values = _uint8_conversion_values(array)
-        if _is_unit_interval(values):
-            values = values * _scale_value(values, 255.0)
-        sanitized = np.nan_to_num(values, nan=0.0, posinf=255.0, neginf=0.0)
-        return np.rint(np.clip(sanitized, 0.0, 255.0)).astype(np.uint8)
+        scale = _is_unit_interval(values)
+        # Own the working pixels before reusing them through each conversion phase.
+        working = values.copy(order="K") if values.dtype == array.dtype else values
+        if scale:
+            np.multiply(working, _scale_value(working, 255.0), out=working)
+        np.nan_to_num(working, copy=False, nan=0.0, posinf=255.0, neginf=0.0)
+        np.clip(working, 0.0, 255.0, out=working)
+        np.rint(working, out=working)
+        return working.astype(np.uint8)
+
+
+class CompiledFloatImagePayloadUint8Strategy(NumericImagePayloadUint8Strategy):
+    """Quantize plain NumPy pixels without floating working-pixel copies.
+
+    The public payload conversion admits NumPy pixels with ``np.asarray``.
+    Direct ``NumericImagePayloadUint8Strategy.prepare`` calls retain their NumPy
+    hook behavior. Dtype-specific extensions replace the corresponding leaf in
+    the existing nominal registry.
+    """
+
+    value_type = None
+    value_type_label = None
+
+    @classmethod
+    def prepare_substrate(cls) -> None:
+        scalar_type = cls.value_type
+        for writeable in (True, False):
+            values = np.asarray((0.0, 0.5, 1.0), dtype=scalar_type)
+            values.flags.writeable = writeable
+            quantize_image_uint8(
+                values, np.empty(values.shape, dtype=np.uint8), scalar_type(255.0)
+            )
+
+    def prepare(self, array: np.ndarray) -> np.ndarray:
+        # Normalize byte order only when demanded by the typed kernel ABI.
+        values = np.asarray(array, dtype=array.dtype.type).ravel(order="K")
+        output = np.empty_like(array, dtype=np.uint8, order="K")
+        quantize_image_uint8(values, output.ravel(order="K"), array.dtype.type(255.0))
+        return output
+
+
+class Float32ImagePayloadUint8Strategy(CompiledFloatImagePayloadUint8Strategy):
+    value_type = np.float32
+
+
+class Float64ImagePayloadUint8Strategy(CompiledFloatImagePayloadUint8Strategy):
+    value_type = np.float64
 
 
 def image_file_source_metadata(path: Path | None) -> ImageFileSourceMetadata:

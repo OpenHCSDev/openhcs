@@ -187,7 +187,7 @@ class RuntimeAnalysisConsolidationInputs:
                         "Runtime observation references unknown compiled context "
                         f"{context_observation.context_key!r}."
                     )
-                inputs.append(context_observation.analysis_inputs)
+                inputs.append(context_observation.outputs.analysis_inputs)
         return cls.combine(inputs)
 
     @classmethod

@@ -223,19 +223,29 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
             lambda: tuple((key, repr(value)) for key, value in cls.identity_items(metadata)),
         )
 
-    @classmethod
+    @staticmethod
     def literal_value(
-        cls, metadata: SourceMetadataMapping, key: str
+        metadata: SourceMetadataMapping, key: str
     ) -> SourceMetadataScalar:
+        if isinstance(metadata, SourceMetadataFields):
+            return metadata._literal_value(key)
+        return SourceMetadataFields._literal_value(metadata, key)
+
+    def _literal_value(self, key: str) -> SourceMetadataScalar:
         # Preserve the existing lookup's role-validation order even when the
         # requested literal could be read without the original metadata role.
-        scalars = cls.scalar_items(metadata)
-        original = cls.original_items(metadata)
+        scalars = SourceMetadataFields.scalar_items(self)
+        original = SourceMetadataFields.original_items(self)
         for fields in (original, scalars):
             for candidate_key, value in fields:
                 if str(candidate_key) == key and value is not None:
                     return value
         return None
+
+    @property
+    def _admitted_components_complete(self) -> bool:
+        """Whether retained, already demanded views cover every component slot."""
+        return False
 
     @classmethod
     def literal_field_types(
@@ -386,7 +396,13 @@ class SourceMetadataFields(Mapping[str, SourceMetadataValue]):
     ) -> SourceMetadataMapping:
         merged: dict[str, SourceMetadataValue] | None = None
         current = metadata
-        for component in AllComponents:
+        components = (
+            ()
+            if isinstance(metadata, SourceMetadataFields)
+            and metadata._admitted_components_complete
+            else AllComponents
+        )
+        for component in components:
             if cls.component_value(current, component) is not None:
                 continue
             value = cls.component_value(fallback, component)
@@ -522,6 +538,28 @@ class OwnedSourceMetadataFields(SourceMetadataFields):
         if key not in self._views:
             self._views[key] = derive()
         return self._views[key]
+
+    @property
+    def _admitted_components_complete(self) -> bool:
+        return self._cacheable and all(
+            self._views.get(component) is not None for component in AllComponents
+        )
+
+    def _literal_value(self, key: str) -> SourceMetadataScalar:
+        if not self._cacheable:
+            return super()._literal_value(key)
+
+        def project() -> dict[str, SourceMetadataScalar]:
+            scalars = SourceMetadataFields.scalar_items(self)
+            original = SourceMetadataFields.original_items(self)
+            values: dict[str, SourceMetadataScalar] = {}
+            for fields in (original, scalars):
+                for name, value in fields:
+                    if value is not None:
+                        values.setdefault(str(name), value)
+            return values
+
+        return self._derived_view("literal_values", project).get(key)
 
     def _readonly_snapshot(self) -> SourceMetadataMapping:
         return self

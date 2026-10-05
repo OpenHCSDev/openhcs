@@ -4,7 +4,7 @@ One funded programme, immutable run permissions
 These NEXT versions complete the original Bash/JQ operations family. One fixed
 funding root owns current membership, retained history, desktop protection and
 joint disk admission. Each immutable run owns its author declarations, source,
-configuration, operations, permissions, helpers, recording paths and75min clock.
+configuration, operations, permissions, helpers, recording paths and first-start clock.
 No Python runtime, client timeout, installed science or current packet changes.
 
 Project and publish through the existing projector
@@ -21,6 +21,14 @@ members/retired_members/additional_authors hooks with exact custody receipts.
 The template supplies defaults, not funding membership or current reservations::
 
   bash operations/project-program.sh prepare FUNDING NEXT PACKAGE-QUALIFICATION.json
+
+The successor declaration owns ``task_minutes_from_first_mcp_start``: null or
+an omitted value means no imposed scientific interval. A positive integer
+explicitly declares minutes from that run's first recorded MCP startup.
+The projector does not inherit a historical template's 75-minute cutoff.
+Already funded runs retain their original declaration and clock unchanged;
+elapsed-time evidence, periodic checkpoints and measured resource admission
+remain required for a continuous development phase.
 
 The original successor JQ produces only NEXT's own physical author declarations
 and a funded_members proposal of references. The parent freezes NEXT, including
@@ -94,8 +102,17 @@ introduce MemoryMax or MemorySwapMax. An engineering row without a scientific
 brief cannot launch a paid analysis author. Original
 environment, path masks, first-start clock and10s request idle remain unchanged.
 
-Before scientific actions resource-check.sh FUNDING SLOT UNIQUE_PHASE consumes
-current membership. Ongoing observations measure only the selected run's output;
+Before a coherent bounded read/QA burst, resource-check.sh FUNDING SLOT
+UNIQUE_PHASE ongoing consumes current membership and observes actual resources.
+Related small state reads, display changes, matched captures and owned cleanup
+do not need a full programme observation before every command. Recheck when
+pressure/headroom or work size changes, another allocation begins, or a
+resource/write failure appears. Each tool retains its ordinary path, revision,
+incarnation and uncertain-input custody checks. This is operator planning, not
+a cached grant, timer, poller or new admission mechanism. Cold native startup
+and new/large allocations still require a fresh appropriately sized observation
+through the existing owner before dispatch.
+Ongoing observations measure only the selected run's output;
 ledger/startup observations measure funded runs for cleanup/staging forecasts.
 Closed output paths remain once as custody declarations, without recursively
 inventorying their contents on every action: actual df already charges those
@@ -179,14 +196,17 @@ operation-policy receipt. Missing, repeated or malformed pressure
 measurements reject. Missing, repeated or malformed MemAvailable also rejects.
 For startup/large allocations, available RAM or free HOME below its reserve
 still rejects. Inactive owners and missing custody reject through their original
-owners. The original recorded clock limits scientific dispatch, not settlement:
-expiry rejects ``full``, ``replacement`` and ``bootstrap``. ``ongoing`` records
+owners. When a scientific interval is explicitly declared, the original recorded
+clock limits scientific dispatch, not settlement: expiry rejects ``full``,
+``replacement`` and ``bootstrap``. ``ongoing`` records
 the overrun and permits only observing already-dispatched work, preserving
 evidence/freeze and exact owned cleanup, with its live-client identity and
 resource checks unchanged. ``ledger`` can still report custody/growth but never
 dispatches work. No new candidate, parameter trial or process is authorized
 after expiry; the clock is neither extended nor reset. Unique deadline receipts
 preserve both refusals and settlement observations without replacing history.
+When no interval is declared, the same first-start marker records elapsed time
+without imposing a cutoff. Actual resource and custody checks still apply.
 High pressure alone is not declared safe: insufficient actual host desktop
 headroom stops allocating work, irrespective of whether a former cap matched.
 ``ledger`` remains ledger-only, never

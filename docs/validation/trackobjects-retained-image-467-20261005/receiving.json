@@ -1,0 +1,103 @@
+{
+  "status": "PUBLIC_PIPELINE_AND_FULL_NATIVE_SCI_PASS",
+  "issue": 467,
+  "pull_request": 468,
+  "base_main": "09bce1929",
+  "saved_frame_count": 21,
+  "different_pixels": 0,
+  "different_values": 0,
+  "native_engine": "FreeType 2.6.1, statically linked private symbols",
+  "font_sha256": "3fdf69cabf06049ea70a00b5919340e2ce1e6d02b0cc3c4b44fb6801bd1e0d22",
+  "upstream_archive_sha256": "2f6e9a7de3ae8e85bdd2fe237e27d868d3ba7a27495e65906455c27722dd1a17",
+  "native_binary_sha256": "7d834bf78324fb17bced5034aff2405613b1d67bcead450bdfdfe77be3a9327c",
+  "vendor_files_byte_equal_upstream": 524,
+  "native_exports": [
+    "PyInit__font_raster_native"
+  ],
+  "shared_freetype_dependency": false,
+  "source_distribution_inputs": "Native bridge, upstream module rules, source trees, and both licenses verified present. Unused upstream src/tools files are excluded from the committed source.",
+  "existing_tracking_controls": "18 passed; old roundtrip preparation RED preserved; exact roundtrip passes after normal RegistryService.prepare_in_current_process (1 passed).",
+  "preserved_red": [
+    "Original 3340 antialiased-text pixel disagreement across 21 frames.",
+    "Current FreeType primitive frame0 differs in 16 pixels; wider gate correctly stopped.",
+    "First production bridge returned an immutable bitmap rejected by Agg; mutable bytearray handoff corrected.",
+    "Direct unprepared generated-source fixture failed persistent catalog validation before assertions."
+  ],
+  "limits": [
+    "One ordinary observation and one verified retained native warmed observation; no repeated-sample stability claim.",
+    "Execution clocks have different OH-server versus CP-first-module-through-post-run envelopes; total clocks separately reported.",
+    "Current total ratio is 1.95\u00d7, below the requested 2\u00d7 target; old grayscale/PNG-RED result is not a qualified speedup baseline.",
+    "Linux x86_64 stable-ABI build verified; Windows/macOS build paths not executed.",
+    "No environment downgrade, installed replacement, glyph screenshots, tolerance exclusion, runtime compilation or patch-isolated performance claim."
+  ],
+  "artifact_packet": "/home/ts/.local/state/openhcs-maintenance/20261005/track-renderer-prehint-feasibility-v1",
+  "persisted_formats": "External CellProfiler PNG/measurement formats unchanged; internal native build artifacts rebuilt.",
+  "qualified_source_head": "5f5adf20522df8ff2c8ae79b27b5b466cbf974e6",
+  "public_receiving_packet": "/home/ts/.local/state/openhcs-maintenance/20261005/track-renderer-prehint-feasibility-v1/public-ordinary-v1",
+  "public_scientific": {
+    "images": "21/21 exact PNG and full logical image inventory",
+    "measurements": "Full existing strict measurement and relationship policy PASS",
+    "inventory": "Complete declared scientific output inventory PASS",
+    "native_image_sets": 21,
+    "participating_table_rows": [
+      [
+        65,
+        21
+      ],
+      [
+        65,
+        21
+      ]
+    ]
+  },
+  "ordinary_timing": {
+    "compile_seconds": 0.24450063705444336,
+    "execution_seconds": 4.308444023132324,
+    "pipeline_total_seconds": 4.6566905728541315,
+    "peak_memory_mb": 1927.62890625,
+    "startup_scope": "Normal public server READY/kernel preparation and shutdown excluded."
+  },
+  "retained_native_timing": {
+    "first_module_through_post_run_seconds": 8.91320256376639,
+    "full_warmed_invocation_seconds": 9.083003505598754,
+    "source_head_at_capture": "76ade54345b74e76db8577ab4cca587ce7199ca6",
+    "scope": "Previously captured fresh native Sequence1 21-image-set run; witnesses/output hashes unchanged, not a new native rerun."
+  },
+  "ratios": {
+    "native_over_openhcs_execution": 2.068775297047103,
+    "native_over_openhcs_total": 1.9505276039914525,
+    "two_times_total_target_met": false
+  },
+  "post_receiving_main_sync": {
+    "main_head": "3301c912688254720eed52600ef386966c6fe5cb",
+    "delta_scope": "Paper figure/manuscript only; no OpenHCS, benchmark, dependency, native source or binary changes. Every qualified production file/binary hash rechecked unchanged."
+  },
+  "owned_cleanup": "All owned PIDs absent; canonical and final-environment leases released; source/input/native/helper/dependency guards PASS.",
+  "main794_science_replay": {
+    "status": "PASS",
+    "source_head": "062ae9d8b485c2cadf6a34317baf4802cce6095c",
+    "incoming_main": "09bce1929",
+    "execution_source_head": "5f5adf20522df8ff2c8ae79b27b5b466cbf974e6",
+    "changed_comparison_consumers": [
+      "benchmark/cellprofiler_export_equivalence.py",
+      "openhcs/core/equivalence/measurement_rows.py",
+      "openhcs/core/equivalence/relationships.py"
+    ],
+    "images": "21/21 exact",
+    "participating_table_rows": [
+      [
+        65,
+        21
+      ],
+      [
+        65,
+        21
+      ]
+    ],
+    "correlations_and_inventory": "PASS",
+    "original_science_sha256": "13109d194a303688b662bff657d8ffce790222593bbcc98d35bc4fe1d49d53e8",
+    "replay_science_sha256": "7cfc5f17e7b7aca5503d8fe63eebb927fb600aceee5384ded293efe208004633",
+    "artifact_packet": "/home/ts/.local/state/openhcs-maintenance/20261005/track-renderer-prehint-feasibility-v1/public-ordinary-v1/main794-science-v1",
+    "scope": "Saved outputs replayed through new equivalence consumers only; no new pipeline/native execution or clock; original SCI preserved."
+  }
+}
