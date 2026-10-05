@@ -943,6 +943,14 @@ binds the frozen source and independently checked 283 scientific files, 112
 control files, three completed MCP journals and two retained journal prefixes.
 No reference answers were opened for this review.
 
+A separate fresh public-field author recovered a missed faint process after
+measuring the actual enhanced response and sampled background controls. Eight
+nuclear objects and bounded perinuclear regions remained useful; a raw-pixel
+check exposed wrong-channel photometry, corrected with separate source-bound
+steps. Fragmented weak paths and ambiguous crossings still prevented complete
+outgrowth measurement. Supplementary Data 8 retains this distinct trial and its
+independently checked files, rather than replacing the earlier neurite repeat.
+
 A retained personal-neurite development continuation also analysed a reused
 nine-field mosaic with pooled channel fits. A fixed-DN clipping repair corrected
 unexpected rescaling, but dense nuclear misses and soma underfill prevented
