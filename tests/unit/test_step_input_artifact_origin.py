@@ -133,3 +133,38 @@ def test_existing_alias_and_explicit_selector_must_agree():
     )
     with pytest.raises(ValueError, match="selects no current planes"):
         binding.project_step_input_payload(payload)
+
+
+def test_named_step_input_preserves_all_planes_of_a_multi_plane_image():
+    data = np.stack(tuple(np.full((4, 5), value) for value in (7, 11, 91)))
+    payload = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        source_image_names=("Volume", "Volume", "Other"),
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=("/synthetic/z1.tif", "/synthetic/z2.tif", "/synthetic/other.tif"),
+            component_metadata=({"z_index": "1"}, {"z_index": "2"}, {"z_index": "1"}),
+        ),
+    ).payload_with(data)
+
+    result = NamedSourceBinding(alias="Volume").project_step_input_payload(payload)
+
+    np.testing.assert_array_equal(image_payload_data(result), data[:2])
+    assert image_payload_metadata(result).plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert image_payload_metadata(result).source_provenance.source_plane_count == 2
+
+
+def test_new_alias_without_selectors_still_names_the_complete_current_stack():
+    data = np.ones((2, 4, 5))
+    payload = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        source_image_names=("Raw1", "Raw2"),
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=("/synthetic/ch1.tif", "/synthetic/ch2.tif"),
+        ),
+    ).payload_with(data)
+
+    result = NamedSourceBinding(alias="Response").project_step_input_payload(payload)
+
+    assert image_payload_data(result) is data
+    assert image_payload_metadata(result).source_image_names == ("Response",)
+    assert image_payload_metadata(result).source_provenance.source_plane_count == 2
