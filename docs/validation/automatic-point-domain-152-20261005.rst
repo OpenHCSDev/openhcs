@@ -1,11 +1,12 @@
 Automatic ROI publication: one rendered geometric source domain
 ==============================================================
 
-Source checkpoint only; installed/public acceptance is pending. This branch
-is temporarily based on the published receiving12 integration18b9620, including
-the separate unmerged732 source. It must not bulk-deliver that dependency or
-the historical494 Root stack. Receiving12's immutable installed target is
-unchanged and remains exclusively the732 multisite/publication case.
+Source checkpoint only; installed/public acceptance is pending. Normal merges
+now include qualified732 head2f4c68ff05876efb48e14743ac8027064b1b09ab and actual
+mainf8f39e136098ce528f9847d07116dcb790610c43. The PR is stacked on the original
+732 owner branch while that dependency remains unmerged; it must not bulk-deliver
+732 or the historical494 Root stack. Existing receiving targets and Dewey's
+sole public client remain unchanged.
 
 Determining source and ownership
 -------------------------------
@@ -139,3 +140,29 @@ The separately retained saved two-channel label witness is not claimed repaired:
 its two-dimensional geometry is mislabeled with a SOURCE_BINDING pixel axis.
 That needs the original label producer's plane-versus-contributor declaration,
 not rounding points, inventing scalar channel or weakening native route guards.
+
+Normal current-main integration
+-------------------------------
+
+The qualified732 merge is58a745d1a063d90691ea0584f06d18f157d40f74;
+the subsequent main merge is1435f215c0b02531b888bb4f54a989a9a5498115.
+Neither changed borrowed scripts/blind_analysis operations or external gitlinks.
+Foreign untracked diagnostics and submodule dirt remain untouched.
+
+Original POINT-DOMAIN-INTEGRATION11 completed390PASS in17.76 seconds; the
+same source runner terminated0, elapsed23.25 seconds, peak729892KiB RSS,
+swaps0. It used the retained receiving09 dependency backer, not an overlay on
+receiving13. No test was rerun to relabel an earlier failure.
+
+Original evidence under engineering494::
+
+  POINT-DOMAIN-INTEGRATION11.log  2883cef3e402477f2e53e494288bb65f171a9fedb03de664989ea857c677a522
+  POINT-DOMAIN-INTEGRATION11.time f8972f6ce1bef7ee76b0c96560ddab0c81e063bde5d490fbaf6cdddc724628eb
+
+Singer's remaining522 work is confined to viewer_controls.py and
+napari_viewer_server.py: declared XYZ point-coordinate navigation and its
+handler hook. Existing main source-member selection and retirement are retained.
+This integration does not implement or claim acceptance of those remaining hooks.
+One future ordinary package and exact released incarnation after732 will exercise
+the own tiny four-plane synthetic producer, automatic settlement and saved
+point/label reopening. That public boundary remains unverified.
