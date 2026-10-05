@@ -1,0 +1,215 @@
+{
+  "status": "ORIGINAL_NATIVE_PURE_DRAW_REPLAY",
+  "matplotlib": "3.7.5",
+  "freetype": "2.6.1",
+  "freetype_build": "local",
+  "matplotlibrc": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/lib/python3.9/site-packages/matplotlib/mpl-data/matplotlibrc",
+  "drawing_defaults": {
+    "font.size": 10.0,
+    "font.family": [
+      "sans-serif"
+    ],
+    "font.sans-serif": [
+      "DejaVu Sans",
+      "Bitstream Vera Sans",
+      "Computer Modern Sans Serif",
+      "Lucida Grande",
+      "Verdana",
+      "Geneva",
+      "Lucid",
+      "Arial",
+      "Helvetica",
+      "Avant Garde",
+      "sans-serif"
+    ],
+    "text.hinting": "force_autohint",
+    "text.hinting_factor": 8,
+    "text.kerning_factor": 0,
+    "figure.dpi": 100.0,
+    "image.interpolation": "antialiased"
+  },
+  "actual_fonts": [
+    {
+      "text": "1",
+      "fontsize": 10.0,
+      "fontfamily": [
+        "sans-serif"
+      ],
+      "fontfile": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/lib/python3.9/site-packages/matplotlib/mpl-data/fonts/ttf/DejaVuSans.ttf",
+      "fontproperties": "sans\\-serif:style=normal:variant=normal:weight=normal:stretch=normal:size=10.0",
+      "position": [
+        286.4369616288175,
+        60.96554424432263
+      ]
+    },
+    {
+      "text": "2",
+      "fontsize": 10.0,
+      "fontfamily": [
+        "sans-serif"
+      ],
+      "fontfile": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/lib/python3.9/site-packages/matplotlib/mpl-data/fonts/ttf/DejaVuSans.ttf",
+      "fontproperties": "sans\\-serif:style=normal:variant=normal:weight=normal:stretch=normal:size=10.0",
+      "position": [
+        141.46829640947288,
+        82.90756302521008
+      ]
+    },
+    {
+      "text": "3",
+      "fontsize": 10.0,
+      "fontfamily": [
+        "sans-serif"
+      ],
+      "fontfile": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/lib/python3.9/site-packages/matplotlib/mpl-data/fonts/ttf/DejaVuSans.ttf",
+      "fontproperties": "sans\\-serif:style=normal:variant=normal:weight=normal:stretch=normal:size=10.0",
+      "position": [
+        492.78155339805824,
+        206.21844660194174
+      ]
+    },
+    {
+      "text": "4",
+      "fontsize": 10.0,
+      "fontfamily": [
+        "sans-serif"
+      ],
+      "fontfile": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/lib/python3.9/site-packages/matplotlib/mpl-data/fonts/ttf/DejaVuSans.ttf",
+      "fontproperties": "sans\\-serif:style=normal:variant=normal:weight=normal:stretch=normal:size=10.0",
+      "position": [
+        472.3527204502814,
+        216.46904315196997
+      ]
+    }
+  ],
+  "frames": [
+    {
+      "frame": 0,
+      "native_original_draw_vs_saved_native_pixels": 0,
+      "native_original_vs_OH_draw_pixels": 213,
+      "original_CP_centers_exact": true
+    },
+    {
+      "frame": 1,
+      "native_original_draw_vs_saved_native_pixels": 0,
+      "native_original_vs_OH_draw_pixels": 157,
+      "original_CP_centers_exact": true
+    },
+    {
+      "frame": 2,
+      "native_original_draw_vs_saved_native_pixels": 0,
+      "native_original_vs_OH_draw_pixels": 146,
+      "original_CP_centers_exact": true
+    },
+    {
+      "frame": 3,
+      "native_original_draw_vs_saved_native_pixels": 0,
+      "native_original_vs_OH_draw_pixels": 146,
+      "original_CP_centers_exact": true
+    },
+    {
+      "frame": 4,
+      "native_original_draw_vs_saved_native_pixels": 0,
+      "native_original_vs_OH_draw_pixels": 147,
+      "original_CP_centers_exact": true
+    },
+    {
+      "frame": 5,
+      "native_original_draw_vs_saved_native_pixels": 0,
+      "native_original_vs_OH_draw_pixels": 163,
+      "original_CP_centers_exact": true
+    },
+    {
+      "frame": 6,
+      "native_original_draw_vs_saved_native_pixels": 0,
+      "native_original_vs_OH_draw_pixels": 163,
+      "original_CP_centers_exact": true
+    },
+    {
+      "frame": 7,
+      "native_original_draw_vs_saved_native_pixels": 0,
+      "native_original_vs_OH_draw_pixels": 139,
+      "original_CP_centers_exact": true
+    },
+    {
+      "frame": 8,
+      "native_original_draw_vs_saved_native_pixels": 0,
+      "native_original_vs_OH_draw_pixels": 140,
+      "original_CP_centers_exact": true
+    },
+    {
+      "frame": 9,
+      "native_original_draw_vs_saved_native_pixels": 0,
+      "native_original_vs_OH_draw_pixels": 140,
+      "original_CP_centers_exact": true
+    },
+    {
+      "frame": 10,
+      "native_original_draw_vs_saved_native_pixels": 0,
+      "native_original_vs_OH_draw_pixels": 157,
+      "original_CP_centers_exact": true
+    },
+    {
+      "frame": 11,
+      "native_original_draw_vs_saved_native_pixels": 0,
+      "native_original_vs_OH_draw_pixels": 161,
+      "original_CP_centers_exact": true
+    },
+    {
+      "frame": 12,
+      "native_original_draw_vs_saved_native_pixels": 0,
+      "native_original_vs_OH_draw_pixels": 161,
+      "original_CP_centers_exact": true
+    },
+    {
+      "frame": 13,
+      "native_original_draw_vs_saved_native_pixels": 0,
+      "native_original_vs_OH_draw_pixels": 160,
+      "original_CP_centers_exact": true
+    },
+    {
+      "frame": 14,
+      "native_original_draw_vs_saved_native_pixels": 0,
+      "native_original_vs_OH_draw_pixels": 152,
+      "original_CP_centers_exact": true
+    },
+    {
+      "frame": 15,
+      "native_original_draw_vs_saved_native_pixels": 0,
+      "native_original_vs_OH_draw_pixels": 152,
+      "original_CP_centers_exact": true
+    },
+    {
+      "frame": 16,
+      "native_original_draw_vs_saved_native_pixels": 0,
+      "native_original_vs_OH_draw_pixels": 164,
+      "original_CP_centers_exact": true
+    },
+    {
+      "frame": 17,
+      "native_original_draw_vs_saved_native_pixels": 0,
+      "native_original_vs_OH_draw_pixels": 153,
+      "original_CP_centers_exact": true
+    },
+    {
+      "frame": 18,
+      "native_original_draw_vs_saved_native_pixels": 0,
+      "native_original_vs_OH_draw_pixels": 153,
+      "original_CP_centers_exact": true
+    },
+    {
+      "frame": 19,
+      "native_original_draw_vs_saved_native_pixels": 0,
+      "native_original_vs_OH_draw_pixels": 167,
+      "original_CP_centers_exact": true
+    },
+    {
+      "frame": 20,
+      "native_original_draw_vs_saved_native_pixels": 0,
+      "native_original_vs_OH_draw_pixels": 206,
+      "original_CP_centers_exact": true
+    }
+  ],
+  "exact_all21": true,
+  "scope": "Original CP4.2.8.1 TrackObjects.draw and figure helpers on primitive views of true admitted producer arrays. No pipeline/JVM/full-native run; no global defaults modified, fonts inferred from output or relaxed pixel gate."
+}
