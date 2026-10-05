@@ -53,7 +53,8 @@ implicit mode or tool-name exception list.
 
 Read its actual result before dispatch. The current funding owner owns membership and reservations;
 your immutable run declaration owns source, paths, CPU, deadline and output permissions;
-use one numerical worker/thread. RAM is observed on the host and process family,
+use its declared numerical worker/thread settings, sizing buffers to actual
+host headroom. RAM is observed on the host and process family,
 not restricted by an invented per-author or fleet memory ceiling. Host helper severity is diagnostic,
 not a second admission gate. Failed admission means no SCI. Hold the proposal
 and failed receipt; at a later operational checkpoint make a new named check
