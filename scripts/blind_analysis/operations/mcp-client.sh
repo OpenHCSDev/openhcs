@@ -30,9 +30,7 @@ export OPENHCS_AGENT_WRITE_ROOTS="$FLEET_WORKSPACE/output:$FLEET_ARTIFACT_ROOT:$
 mkdir -p "$XDG_CACHE_HOME" "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_STATE_HOME" "$XDG_RUNTIME_DIR" "$NUMBA_CACHE_DIR" "$MPLCONFIGDIR"
 chmod 700 "$XDG_RUNTIME_DIR"
 cpu=$(jq -er '.proposed_resource_envelope.cpu_quota_per_author_percent' <<< "$FLEET_RUN_PROGRAM")
-if [[ -n "${FLEET_RECOVERY_OBSERVATION:-}" ]]; then
-  fleet_require_closed_controllers
-else
+if [[ -z "${FLEET_RECOVERY_OBSERVATION:-}" ]]; then
   test ! -e "$FLEET_WORKSPACE/output/runtime/first-mcp-started.epoch"
   date -u +%s | tee "$FLEET_WORKSPACE/output/runtime/first-mcp-started.epoch"
 fi
