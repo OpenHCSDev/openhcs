@@ -34,6 +34,7 @@ from openhcs.core.source_bindings import (
 from openhcs.core.runtime_stores import (
     RuntimeArtifactAddress,
     RuntimeArtifactLocation,
+    StoredRuntimeValue,
 )
 
 # ProcessingContext is used in type hints
@@ -59,6 +60,14 @@ class StepExecutionObservation:
     @classmethod
     def empty(cls) -> "StepExecutionObservation":
         return cls(MappingProxyType({}))
+
+    def paths_for(self, record: StoredRuntimeValue) -> tuple[Path, ...]:
+        """Return saved paths for this exact producer value, never its filename."""
+        address = RuntimeArtifactAddress.from_record(record)
+        return tuple(
+            Path(location.path)
+            for location in self.materialized_locations_by_address.get(address, ())
+        )
 
     @classmethod
     def combine(

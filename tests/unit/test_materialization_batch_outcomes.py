@@ -194,7 +194,7 @@ def test_worker_exports_actual_step_outcomes_after_resource_release(
 
     assert context.released
     assert transported.is_success()
-    assert transported.runtime_observation.contexts[0].runtime_export_paths == (path,)
+    assert transported.runtime_observation.contexts[0].outputs.runtime_export_paths == (path,)
     assert transported.runtime_observation.contexts[0].records == ()
     assert RuntimeExportObservation.from_runtime_observations(
         (transported.runtime_observation,)
@@ -208,10 +208,10 @@ def test_parent_and_worker_exports_share_existing_observation_authority(tmp_path
     for path in (worker_path, plate_path, unrelated):
         path.write_text("Area\n42\n")
     worker = RuntimeExecutionObservation(
-        contexts=(RuntimeContextObservation("A01", (), (worker_path,)),)
+        contexts=(RuntimeContextObservation("A01", (), StepExecutionObservation({}, (worker_path,))),)
     )
     parent = RuntimeExecutionObservation(
-        contexts=(RuntimeContextObservation("A01", (), (plate_path,)),)
+        contexts=(RuntimeContextObservation("A01", (), StepExecutionObservation({}, (plate_path,))),)
     )
     results = CompiledPlateExecutionResults(
         {"A01": ExecutionResult.success("A01", runtime_observation=worker)},
