@@ -161,3 +161,7 @@ Retain an acquired label's valid scalar channel and malformed/missing lineage
 negative. This is an acceptance extension, NOT a claim that a new fixture or
 producer fix has already been implemented/installed. Coordinate the152 source
 patch in the shared candidate rather than starting a separate runtime/project.
+This distinct152 label qualification does not expand732's merge gate or hold
+its independently qualified default-publication fix behind another producer
+repair. Record each control's source/candidate and acceptance separately even
+when both can use the same ordinary candidate/receiving family.
