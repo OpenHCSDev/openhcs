@@ -74,7 +74,7 @@ from openhcs.interop.cellprofiler.runtime.artifact_binding import (
 )
 
 if TYPE_CHECKING:
-    from openhcs.core.function_patterns import FunctionInvocation
+    from openhcs.core.function_patterns import NormalizedFunctionItem
     from openhcs.interop.cellprofiler.parser import ModuleBlock
     from openhcs.interop.cellprofiler.settings_binder import SettingsBinder
 
@@ -1317,7 +1317,7 @@ class _ClassificationMethodBehavior(ABC):
     @abstractmethod
     def finalize_mode_blocks(
         self, module_type: type[ClassifyObjectsSingleMeasurementModule],
-        blocks: tuple[ModuleBlock, ...], invocation: FunctionInvocation,
+        blocks: tuple[ModuleBlock, ...], invocation: NormalizedFunctionItem,
     ) -> tuple[ModuleBlock, ...]:
         """Complete this mode after the shared template emits its literal."""
 
@@ -1472,7 +1472,7 @@ class ClassificationMethod(Enum):
 
     def finalize_module_blocks(
         self, module_type: type[ClassifyObjectsSingleMeasurementModule],
-        blocks: tuple[ModuleBlock, ...], invocation: FunctionInvocation,
+        blocks: tuple[ModuleBlock, ...], invocation: NormalizedFunctionItem,
     ) -> tuple[ModuleBlock, ...]:
         blocks = tuple(
             replace(
@@ -2028,7 +2028,7 @@ def object_classification_backend(
     SliceIndexRuntimeParameter,
 )
 def classify_objects_single_measurement(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     labels: ObjectLabelValue,
     measurement_feature: str = "",
     measurement_values: np.ndarray | None = None,

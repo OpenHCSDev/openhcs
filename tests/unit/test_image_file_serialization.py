@@ -1,4 +1,5 @@
 import os
+from contextlib import nullcontext
 from dataclasses import replace
 
 import numpy as np
@@ -13,6 +14,7 @@ from openhcs.core.image_file_serialization import (
     SourceImagePixelSemantics,
     TiffImageFileFormat,
     image_file_source_metadata,
+    image_payload_as_uint8,
     prepare_disk_image_payloads,
     require_image_file_source_metadata,
 )
@@ -39,6 +41,54 @@ def test_png_disk_serialization_preserves_float32_quantization() -> None:
 
     assert prepared.dtype == np.uint8
     np.testing.assert_array_equal(prepared, np.array([[2]], dtype=np.uint8))
+
+
+@pytest.mark.parametrize("dtype", (np.float16, np.float32, np.float64))
+@pytest.mark.parametrize(
+    ("values", "expected"),
+    (
+        ((np.nan, -np.inf, np.inf, 0.0, 0.5, 1.0), (0, 0, 255, 0, 128, 255)),
+        ((np.nan, -np.inf, np.inf, -1.0, 2.5, 3.5, 300.0), (0, 0, 255, 0, 2, 4, 255)),
+    ),
+)
+def test_uint8_conversion_preserves_readonly_pixels_and_rounding(
+    dtype, values, expected
+) -> None:
+    storage = np.zeros((len(values), 2), dtype=dtype)
+    storage[:, 0] = values
+    image = storage[:, 0]
+    original = storage.copy()
+    image.setflags(write=False)
+
+    converted = image_payload_as_uint8(image)
+
+    np.testing.assert_array_equal(converted, np.asarray(expected, dtype=np.uint8))
+    np.testing.assert_array_equal(storage, original)
+    assert not np.shares_memory(image, converted)
+
+
+@pytest.mark.parametrize(
+    "image",
+    (
+        np.asarray((0, 2, 4, 300), dtype=np.int32),
+        np.asarray((0 + 10j, 2.5 + 30j, 3.5 - 3j, 300 + 100j)),
+    ),
+)
+def test_uint8_conversion_owns_cast_pixels(image) -> None:
+    original = image.copy()
+    image.setflags(write=False)
+    warning = (
+        pytest.warns(np.exceptions.ComplexWarning)
+        if np.issubdtype(image.dtype, np.complexfloating)
+        else nullcontext()
+    )
+
+    with warning:
+        converted = image_payload_as_uint8(image)
+
+    np.testing.assert_array_equal(converted, np.asarray((0, 2, 4, 255), dtype=np.uint8))
+    np.testing.assert_array_equal(image, original)
+    assert not np.shares_memory(image, converted)
 
 
 def test_jpeg_disk_serialization_clips_non_unit_float_image_to_uint8() -> None:
@@ -507,3 +557,31 @@ def test_png_image_format_uses_registered_png_leaf() -> None:
 def test_unknown_image_serialization_suffix_fails_loudly(path) -> None:
     with pytest.raises(ValueError, match="image|suffix|format"):
         ImageFileFormat.require_path(path)
+
+
+@pytest.mark.parametrize("channel_axis", (None, -1, 1))
+def test_intrinsic_tiff_write_uses_declared_axes_not_rgb_shaped_dimensions(
+    tmp_path, channel_axis
+):
+    from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
+
+    shape = (
+        (3, 4, 4)
+        if channel_axis is None
+        else ((3, 4, 4, 3) if channel_axis == -1 else (3, 3, 4, 4))
+    )
+    pixels = np.arange(np.prod(shape), dtype=np.uint16).reshape(shape)
+    metadata = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        source_channel_axis=channel_axis,
+        source_spatial_domain=VolumeSourceSpatialDomain(source_depth=3),
+    )
+    path = tmp_path / "volume.tif"
+    image_format = TiffImageFileFormat()
+    image_format.write(path, metadata.payload_with(pixels))
+    np.testing.assert_array_equal(image_format.read(path), pixels)
+    header = image_format.require_source_metadata(path)
+    assert header.source_frame_shape == ((3,) if channel_axis != 1 else None)
+    assert header.pixel_semantics.channel_axis == channel_axis
+    assert header.pixel_semantics.channel_count == (None if channel_axis is None else 3)
+    assert header.image_shape_yx == (4, 4)

@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import inspect
 import re
+import threading
 from abc import ABC, abstractmethod
 from collections.abc import Callable
+from concurrent.futures import CancelledError
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -35,6 +37,8 @@ from openhcs.agent.dto.functions import (
     CustomFunctionRegistrationDestinationRequest,
     CustomFunctionRegistrationRequest,
     CustomFunctionRegistrationResult,
+    CustomFunctionRegistrationHandle,
+    CustomFunctionRegistrationObservation,
     FunctionArtifactSpec,
     FunctionCatalogEntry,
     FunctionCatalogPage,
@@ -550,6 +554,9 @@ PARAMETER_DOCUMENTATION_POLICY = ParameterDocumentationPolicy()
 class FunctionCatalogServiceABC(ABC):
     """Callable-catalog authority consumed by agent authoring services."""
 
+    def __init__(self) -> None:
+        self._state_lock = threading.RLock()
+
     def prepare(
         self,
         *,
@@ -558,11 +565,34 @@ class FunctionCatalogServiceABC(ABC):
     ) -> None:
         """Prepare the authoritative catalog through this service's transport."""
 
-        self.catalog(
-            compact_signatures=True,
-            status_callback=status_callback,
-            cancellation=cancellation,
+        self.prepare_projections(
+            status_callback=status_callback, cancellation=cancellation
         )
+
+    @abstractmethod
+    def projections_current(self) -> bool:
+        """Whether the owned public projections match their current authority."""
+
+    def prepare_projections(
+        self,
+        *,
+        status_callback: Callable[[str], None] | None = None,
+        cancellation: OperationCancellation | None = None,
+    ) -> None:
+        """Prepare both public views against the implementation's authority."""
+        while True:
+            for signature_view in SignatureView:
+                if cancellation is not None and cancellation.requested():
+                    raise CancelledError
+                self.catalog(
+                    compact_signatures=signature_view.compact,
+                    status_callback=status_callback,
+                    cancellation=cancellation,
+                )
+            if cancellation is not None and cancellation.requested():
+                raise CancelledError
+            if self.projections_current():
+                return
 
     @abstractmethod
     def register_custom_function(
@@ -570,6 +600,12 @@ class FunctionCatalogServiceABC(ABC):
         request: CustomFunctionRegistrationRequest,
     ) -> CustomFunctionRegistrationResult:
         """Register one custom declaration through this catalog authority."""
+
+    @abstractmethod
+    def observe_custom_function_registration(
+        self, handle: CustomFunctionRegistrationHandle,
+    ) -> CustomFunctionRegistrationObservation:
+        """Observe exact existing publication/persistence without evaluating source."""
 
     @abstractmethod
     def search(
@@ -636,9 +672,32 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
             status_callback=status_callback,
             cancellation=cancellation,
         )
-        super().prepare(status_callback=status_callback, cancellation=cancellation)
+        self.prepare_projections(
+            status_callback=status_callback, cancellation=cancellation
+        )
+
+    def projections_current(self) -> bool:
+        """Derive readiness from the original registry and cached public views."""
+        from openhcs.processing.custom_functions.runtime_registry import (
+            CustomFunctionRuntimeRegistry,
+        )
+
+        with self._state_lock:
+            metadata = self._projection_metadata
+            if metadata is None or any(
+                (signature_view, SummaryView[signature_view.name]) not in self._projections
+                for signature_view in SignatureView
+            ):
+                return False
+        if metadata != RegistryService.cached_metadata_snapshot():
+            return False
+        manager = custom_function_manager.CustomFunctionManager(create_storage=False)
+        return (
+            manager.source_revision() == CustomFunctionRuntimeRegistry.source_revision()
+        )
 
     def __init__(self, path_policy: AgentPathPolicy | None = None) -> None:
+        super().__init__()
         self._path_policy = path_policy or AgentPathPolicy.from_environment()
         self._projection_metadata: dict[str, FunctionMetadata] | None = None
         self._projections: dict[
@@ -704,6 +763,37 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
             ),
             connection=request.connection,
             server_identity=server_identity,
+            observation_handle=CustomFunctionRegistrationHandle.from_request(request),
+        )
+
+    def observe_custom_function_registration(
+        self, handle: CustomFunctionRegistrationHandle,
+    ) -> CustomFunctionRegistrationObservation:
+        from openhcs.agent.dto.common import AgentWarning
+        from openhcs.processing.custom_functions.runtime_registry import CustomFunctionRuntimeRegistry
+
+        handle.require_current_owner()
+        published = CustomFunctionRuntimeRegistry.published_sources_for_content(
+            handle.content_sha256, function_name=handle.function_name,
+        )
+        persisted = None
+        warnings = ()
+        if handle.persist:
+            manager = custom_function_manager.CustomFunctionManager(create_storage=False)
+            if handle.require_storage_dir().resolve(strict=False) != manager.storage_dir.resolve(strict=False):
+                raise ValueError("Registration observation reached a different native source store.")
+            source = handle.require_named_source()
+            self._path_policy.assert_readable_location(manager.source_path_for_name(manager.storage_dir, source.function_name))
+            try:
+                manager.require_source(source)
+            except (OSError, RuntimeError) as error:
+                warnings = (AgentWarning("registration_source_not_observed", str(error),
+                    "Missing/changed current source is not proof of no original mutation; do not replay."),)
+            else:
+                persisted = source
+        return CustomFunctionRegistrationObservation(
+            schema_version=SCHEMA_VERSION, handle=handle, published_sources=published,
+            persisted_source=persisted, warnings=warnings,
         )
 
     def custom_function_registration_destination(
@@ -796,6 +886,7 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
             signature_view=signature_view,
             summary_view=summary_view,
             status_callback=status_callback,
+            cancellation=cancellation,
         )
         candidates = []
         for projection in projections:
@@ -830,20 +921,24 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
         signature_view: SignatureView,
         summary_view: SummaryView,
         status_callback: Callable[[str], None] | None,
+        cancellation: OperationCancellation | None = None,
     ) -> tuple[CatalogSearchProjection, ...]:
         """Project a registry revision once and reuse it across text queries."""
 
-        if metadata_by_id is not self._projection_metadata:
-            self._projection_metadata = metadata_by_id
-            self._projections.clear()
         cache_key = (signature_view, summary_view)
-        cached = self._projections.get(cache_key)
-        if cached is not None:
-            return cached
+        with self._state_lock:
+            if metadata_by_id is not self._projection_metadata:
+                self._projection_metadata = metadata_by_id
+                self._projections.clear()
+            cached = self._projections.get(cache_key)
+            if cached is not None:
+                return cached
         if status_callback is not None:
             status_callback("Projecting function metadata for the execution endpoint")
         projections = []
         for function_id, metadata in sorted(metadata_by_id.items()):
+            if cancellation is not None and cancellation.requested():
+                raise CancelledError
             contract = CallableContract.from_callable(metadata.func)
             projections.append(
                 CatalogSearchProjection(
@@ -861,8 +956,12 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
                     ),
                 )
             )
+        if cancellation is not None and cancellation.requested():
+            raise CancelledError
         projected = tuple(projections)
-        self._projections[cache_key] = projected
+        with self._state_lock:
+            if metadata_by_id is self._projection_metadata:
+                self._projections[cache_key] = projected
         return projected
 
     def get(

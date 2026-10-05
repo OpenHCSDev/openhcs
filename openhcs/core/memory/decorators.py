@@ -99,6 +99,7 @@ def _attach_openhcs_metadata(
         normalized = runtime_config_parameter(parameter)
         if normalized is not None:
             runtime_config_parameter_names.append(parameter.name)
+            normalized = normalized.replace(default=normalized.annotation())
         normalized_parameter_items.append(
             parameter if normalized is None else normalized
         )

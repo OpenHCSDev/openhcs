@@ -32,7 +32,6 @@ file counters in MCP to paper over ambiguity.
   - `_source_workspace_summary`
 - `openhcs/core/source_binding_selection.py`
   - `SourceUniverseRequest`
-  - `SourceUniverseStrategy`
   - step-input and pipeline-start universe strategies
 - `openhcs/core/source_workspace_projection.py`
   - `VirtualWorkspaceSourceProjection`
@@ -89,8 +88,8 @@ The 2026-06-29 dry run showed `SourceLoadPlan` currently exposes only
 them to that plan.
 
 If implementation needs to enumerate source-universe strategy behavior, iterate
-the nominal `SourceUniverseRequest`/`SourceUniverseStrategy` registration and
-matching machinery. Do not mirror strategy names or physical/virtual/pipeline
+the nominal `SourceUniverseRequest` registration and each request's
+`source_universe()` operation. Do not mirror strategy names or physical/virtual/pipeline
 start categories in MCP.
 
 If implementation needs a generic compiled-context tree, iterate dataclass
@@ -102,7 +101,8 @@ type. Do not use a string allowlist of important `CompiledStepPlan` fields.
 See `docs/plans/mcp_agent_experience_implementation_dry_run_20260629.md`.
 The dry run confirmed the compiled source/artifact fields on `CompiledStepPlan`,
 the three current `CompiledSourceUniversePlan` flags, the two
-`SourceUniverseRequest` types, and six concrete `SourceUniverseStrategy` types.
+`SourceUniverseRequest` types. Those request owners now resolve their universes
+directly; the separate strategy family has been removed.
 It also confirmed `SourceLoadPlan` is currently only `zarr_config`.
 
 ## Implementation Steps
@@ -146,7 +146,7 @@ Audit questions:
 - Does a generic compiled-context projection traverse dataclasses/types instead
   of maintaining a field allowlist?
 - Are source-universe facts projected from `CompiledSourceUniversePlan` and
-  `SourceUniverseRequest`/`SourceUniverseStrategy`, not recomputed in MCP?
+  `SourceUniverseRequest.source_universe()`, not recomputed in MCP?
 - Can an empty count be traced to the authority that was empty?
 
 Hard failures:

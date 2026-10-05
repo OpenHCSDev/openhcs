@@ -5,13 +5,13 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 import logging
-import os
 import time
 from typing import TYPE_CHECKING, Annotated, ClassVar
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
 from numba import njit
 from openhcs.constants.constants import MemoryType
+from openhcs.core.runtime_profile import RuntimeProfiler
 from openhcs.core.aligned_image_payload import AlignedImageStack
 from openhcs.core.artifacts import (
     ArtifactSpec,
@@ -106,24 +106,13 @@ from openhcs.interop.cellprofiler.runtime.artifact_binding import (
 if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.parser import ModuleBlock
 
-_PROFILE_RUNTIME_ENV = "OPENHCS_PROFILE_FUNCTION_RUNTIME"
 logger = logging.getLogger(__name__)
-
-
-def _runtime_profile_enabled() -> bool:
-    return os.environ.get(_PROFILE_RUNTIME_ENV, "").lower() in {"1", "true", "yes"}
-
-
-def _log_runtime_profile(label: str, seconds: float, **fields: object) -> None:
-    if not _runtime_profile_enabled():
-        return
-    field_text = " ".join((f"{key}={value}" for key, value in fields.items()))
-    logger.info("RUNTIME_PROFILE %s %.6fs %s", label, seconds, field_text)
+runtime_profiler = RuntimeProfiler(logger)
 
 
 def _profile_elapsed(label: str, start: float, **fields: object) -> float:
     now = time.perf_counter()
-    _log_runtime_profile(label, now - start, **fields)
+    runtime_profiler.log(label, now - start, **fields)
     return now
 
 
@@ -1037,7 +1026,7 @@ def measure_object_neighbors(
         "measure_object_neighbors.rows", profile_mark, row_count=len(measurements)
     )
     del profile_mark
-    _log_runtime_profile(
+    runtime_profiler.log(
         "measure_object_neighbors.total",
         time.perf_counter() - profile_start,
         final_object_count=final_object_count,
@@ -1431,13 +1420,13 @@ class MeasureObjectNeighborsMeasurementRecordRowsMixin(
         @classmethod
         def for_request(cls, module_type, request):
             planner = NeighborDistancePlanner.for_method(
-                request.call_kwargs["distance_method"]
+                request.kwargs["distance_method"]
             )
             return cls(
                 request.output_value,
                 module_type=module_type,
                 measurement_scale=planner.measurement_scale(
-                    int(request.call_kwargs["neighbor_distance"])
+                    int(request.kwargs["neighbor_distance"])
                 ),
             )
 

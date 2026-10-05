@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from collections.abc import Mapping
+from dataclasses import dataclass, field, replace
 from typing import ClassVar
 
 import numpy as np
@@ -10,18 +11,19 @@ import numpy as np
 from openhcs.core.alias_property import AliasProperty
 from openhcs.core.aligned_image_payload import (
     AlignedImageStack,
-    payload_slices_for_alignment,
+    ImageOutputBundle,
+    ImagePayloadExecutionMode,
 )
 from openhcs.core.equivalence.keys import RuntimeMeasurementSourcePair
 from openhcs.core.measurement_image_alignment import (
     MeasurementImageAlignmentSource,
-    MeasurementImageLabelAlignmentStrategy,
     MeasurementImageReferenceDomain,
     PreparedMeasurementObjectLabels,
 )
+from openhcs.core.function_patterns import InvocationArtifactInputEdgePlan
 from openhcs.core.runtime_adapters import (
+    RuntimeAdapterRequest,
     RuntimeImageExecutionContext,
-    RuntimeImageRequest,
 )
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
@@ -36,8 +38,12 @@ from openhcs.core.runtime_object_labels import (
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxisProjector,
 )
-from openhcs.core.runtime_slice_alignment import RuntimeSliceAlignedValues
+from openhcs.core.runtime_slice_alignment import (
+    RuntimeSliceAlignedValues,
+    RuntimeSliceAlignedValueSet,
+)
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+from openhcs.core.source_image_provenance import SourceImageProvenance
 from openhcs.core.source_spatial_domain import CommonRuntimeValue
 from openhcs.core.steps.function_runtime import RuntimeCallableArgument
 
@@ -97,6 +103,15 @@ class CellProfilerSourceIdentityMixin:
                 f"got {invalid!r}."
             )
 
+    def consumed_input_value(
+        self,
+        edge: InvocationArtifactInputEdgePlan,
+        request: RuntimeAdapterRequest,
+    ) -> RuntimeCallableArgument | None:
+        """Return an actual callable input when this record owns its binding."""
+
+        return None
+
     @classmethod
     def shared_source_image_name(
         cls,
@@ -135,34 +150,133 @@ class CellProfilerSourceIdentityMixin:
             return None
         if mode is None:
             mode = cls.source_metadata_composition_mode(sources)
-        source_payloads = tuple(
-            source_payload
+        scalar_sources = tuple(
+            provenance
             for source in sources
-            for source_payload in payload_slices_for_alignment(source.payload)
+            for provenance in cls.source_provenances(source.payload)
         )
-        source_metadata = tuple(
-            ImagePayloadMetadata(
-                source_provenance=(
-                    ImagePayloadMetadata.compose(
-                        payload_slices_for_alignment(payload),
-                        mode=ImagePayloadMetadataCompositionMode.BUNDLE,
-                    )
-                    .collapse_leading_plane_axis()
-                    .source_provenance
-                    if isinstance(payload, AlignedImageStack)
-                    else image_payload_metadata(payload).source_provenance
-                )
+        if not scalar_sources:
+            raise ValueError("Image metadata composition payloads cannot be empty.")
+        provenances = tuple(
+            (
+                provenance.for_source_plane(0)
+                if provenance.source_plane_count == 1
+                else provenance
             )
-            for payload in source_payloads
+            for provenance in scalar_sources
         )
-        metadata = ImagePayloadMetadata.compose(
-            source_payloads,
-            mode=mode,
-            source_metadata=source_metadata,
+        if not any(provenance.has_values for provenance in provenances):
+            return ImagePayloadMetadata(plane_axis=mode.plane_axis)
+        provenance = (
+            SourceImageProvenance.stack(provenances, scalar_sources=scalar_sources)
+            if mode is ImagePayloadMetadataCompositionMode.STACK
+            else SourceImageProvenance.bundle(
+                provenances, scalar_sources=scalar_sources
+            )
         )
-        if not metadata.has_values:
-            return None
-        return metadata
+        return cls.metadata_for_source_provenance(provenance, mode=mode)
+
+    @staticmethod
+    def metadata_for_source_provenance(
+        provenance: SourceImageProvenance,
+        *,
+        mode: ImagePayloadMetadataCompositionMode,
+    ) -> ImagePayloadMetadata:
+        """Carry a composed source axis without projecting its image pixels."""
+        return ImagePayloadMetadata(
+            source_provenance=provenance,
+            plane_axis=mode.plane_axis,
+        )
+
+    @classmethod
+    def aligned_source_metadata(
+        cls,
+        sources: tuple["CellProfilerSourceIdentityMixin", ...],
+    ) -> ImagePayloadMetadata:
+        """Compose measured images as contributors on their shared slice axis.
+
+        Source aliases distinguish images, not runtime slices. Each image's
+        nominal source roster supplies one entry per local slice; composition
+        retains all images at that slice instead of appending image axes.
+        """
+        if not sources:
+            raise ValueError("Aligned measurement metadata requires source images.")
+        source_axes = tuple(cls.source_provenances(source.payload) for source in sources)
+        planes = tuple(
+            SourceImageProvenance.bundle(
+                tuple(source.with_runtime_planes_as_contributors() for source in plane)
+            ).with_runtime_planes_as_contributors()
+            for plane in zip(*source_axes, strict=True)
+        )
+        if not planes:
+            raise ValueError("Aligned measurement source axes cannot be empty.")
+        provenance = (
+            SourceImageProvenance.stack(planes)
+            if any(plane.has_values for plane in planes)
+            else SourceImageProvenance()
+        )
+        return cls.metadata_for_source_provenance(
+            provenance,
+            mode=ImagePayloadMetadataCompositionMode.STACK,
+        )
+
+    @classmethod
+    def source_provenances(
+        cls, payload: RuntimeCallableArgument
+    ) -> tuple[SourceImageProvenance, ...]:
+        """Read the declared runtime source roster without projecting image pixels."""
+        if isinstance(payload, AlignedImageStack):
+            return tuple(
+                cls.scalar_source_provenance(value) for value in payload.slices
+            )
+        if isinstance(payload, RuntimeSliceAlignedValueSet):
+            return tuple(
+                cls.scalar_source_provenance(payload.value_for_slice(index))
+                for index in range(payload.slice_count)
+            )
+        count = RuntimeSliceProjection.slice_count_from_values((payload,))
+        metadata = image_payload_metadata(payload)
+        provenance = metadata.source_provenance
+        if count is None:
+            return (provenance,)
+        if metadata.source_channel_axis == 0:
+            raise ValueError(
+                "Image metadata cannot declare the same leading axis as both "
+                "plane and channel."
+            )
+        return tuple(provenance.for_source_plane(index) for index in range(count))
+
+    @staticmethod
+    def scalar_source_provenance(
+        payload: RuntimeCallableArgument,
+    ) -> SourceImageProvenance:
+        """Collapse an inner image bundle's source topology at its actual read epoch."""
+        if not isinstance(payload, AlignedImageStack):
+            return image_payload_metadata(payload).source_provenance
+        metadata = tuple(image_payload_metadata(value) for value in payload.slices)
+        provenances = tuple(
+            (
+                fields.source_provenance.for_source_plane(0)
+                if fields.plane_axis is None
+                and fields.source_provenance.source_plane_count == 1
+                else fields.source_provenance
+            )
+            for fields in metadata
+        )
+        preserve_topology = (
+            len(metadata) == 1
+            and metadata[0].plane_axis
+            is ImagePayloadMetadataCompositionMode.BUNDLE.plane_axis
+        )
+        scalar_sources = tuple(fields.source_provenance for fields in metadata)
+        provenance = SourceImageProvenance.bundle(
+            provenances,
+            scalar_sources=scalar_sources,
+            preserve_single_topology=preserve_topology,
+        )
+        return (
+            provenance.with_runtime_planes_as_contributors().with_common_scalar_identity_from_planes()
+        )
 
     @classmethod
     def source_metadata_composition_mode(
@@ -177,16 +291,77 @@ class CellProfilerSourceIdentityMixin:
 @dataclass(frozen=True, slots=True, kw_only=True)
 class CellProfilerImageRequest(
     CellProfilerSourceIdentityMixin,
-    RuntimeImageRequest,
+    RuntimeImageExecutionContext,
 ):
-    """CellProfiler image invocation payload with ordered source-plane aliases."""
+    """CellProfiler image domain, callable kwargs, and ordered source aliases."""
 
     SOURCE_ALIASES_FIELD_NAME: ClassVar[str] = "CellProfilerImageRequest.source_aliases"
 
+    image_count: int
+    payload: RuntimeCallableArgument
     source_aliases: tuple[str, ...] = ()
+    kwargs: Mapping[str, object] = field(default_factory=dict)
+
+    input_binding_request: RuntimeAdapterRequest | None = None
+    input_edges: tuple[InvocationArtifactInputEdgePlan, ...] = ()
+    primary_input_edges: tuple[InvocationArtifactInputEdgePlan, ...] = ()
+    primary_input_payloads: tuple[RuntimeCallableArgument, ...] = ()
 
     def __post_init__(self) -> None:
         self.validate_source_identity()
+        if self.primary_input_payloads and (
+            len(self.primary_input_payloads) != len(self.primary_input_edges)
+        ):
+            raise ValueError("Primary input contexts must preserve exact binding order.")
+
+    def consumed_input_value(
+        self,
+        edge: InvocationArtifactInputEdgePlan,
+        request: RuntimeAdapterRequest,
+    ) -> RuntimeCallableArgument | None:
+        """Project the exact carrier consumed through an unchanged input origin."""
+
+        binding_request = self.input_binding_request
+        if (
+            binding_request is None
+            or request.source_binding_plan is not binding_request.source_binding_plan
+            or not any(bound is edge for bound in self.input_edges)
+        ):
+            return None
+        parameter_name = edge.spec.parameter_name
+        if parameter_name is not None:
+            if parameter_name not in self.kwargs:
+                return None
+            parameter_edges = tuple(
+                bound
+                for bound in self.input_edges
+                if bound.spec.parameter_name == parameter_name
+            )
+            value = self.kwargs[parameter_name]
+            if isinstance(value, tuple):
+                values = value
+            elif len(parameter_edges) > 1 and isinstance(value, AlignedImageStack):
+                values = value.slices
+            elif len(parameter_edges) == 1:
+                return value
+            else:
+                return None
+            if len(values) != len(parameter_edges):
+                return None
+            input_index = next(
+                index for index, bound in enumerate(parameter_edges) if bound is edge
+            )
+            return values[input_index]
+        for index, bound in enumerate(self.primary_input_edges):
+            if bound is not edge:
+                continue
+            if self.primary_input_payloads:
+                return self.primary_input_payloads[index]
+            if isinstance(self.payload, ImageOutputBundle):
+                return self.payload.output_payload(edge.spec.ref())
+            if len(self.primary_input_edges) == 1:
+                return self.payload
+        return None
 
 
 @dataclass(frozen=True, slots=True)
@@ -294,6 +469,13 @@ class CellProfilerMeasurementImage(
                 "CellProfilerMeasurementImageDomain, got "
                 f"{type(self.reference_domain).__name__}."
             )
+        if (
+            self.execution_mode
+            is not ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK
+        ):
+            object.__setattr__(
+                self, "payload", RuntimeSliceProjection.full_stack_value(self.payload)
+            )
 
     @classmethod
     def source_metadata_composition_mode(
@@ -398,12 +580,14 @@ class CellProfilerMeasurementImage(
         plane_projector: RuntimePlaneAxisProjector | None = None,
     ) -> RuntimeCallableArgument:
         """Project this measurement image payload into the supplied label domain."""
-        return MeasurementImageLabelAlignmentStrategy.align(
+        return (
             self.alignment_request(
                 labels=labels,
                 label_payload=label_payload,
                 plane_projector=plane_projector,
             )
+            .aligned()
+            .image
         )
 
 

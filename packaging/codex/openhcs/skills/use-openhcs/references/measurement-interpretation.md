@@ -2,8 +2,9 @@
 
 ## Measure feature scales before choosing parameters
 
-Use this procedure before setting object diameter, seed separation, smoothing,
-background-removal scale, spot/ridge width or a shape prior. Base a starting
+Use this procedure before selecting the detection/declumping method as well as
+setting object diameter, seed separation, smoothing, background-removal scale,
+spot/ridge width or a shape prior. Base a starting
 range on representative raw features in the managed Napari viewer, not a
 remembered cell size or a convenient detector default. These are development
 measurements, not ground truth or an automatically validated parameter choice.
@@ -16,10 +17,16 @@ measurements, not ground truth or an automatically validated parameter choice.
    canvas pixels are not source pixels. World coordinates must be converted
    through the layer transform before becoming index-space sample coordinates.
 2. Choose clear isolated objects, a genuine close pair and faint/small examples
-   across preselected bright/dim, sparse/dense and centre/edge regions. Retain
-   extremes and ambiguity rather than measuring only objects the current
-   detector finds. For 3-D, inspect multiple Z planes and orthogonal views when
-   exposed; a projected width does not establish Z extent.
+   across preselected bright/dim, sparse/dense and centre/edge regions, at context
+   and native feature scales. Measure an envelope of supported widths, sizes
+   and local signal/background values, including narrow and broad structures,
+   clear positives and faint controls. One early feature is not the assay's
+   scale range. Retain extremes and ambiguity rather than measuring only objects
+   the current detector finds. For 3-D, inspect multiple Z planes and orthogonal
+   views when exposed; a projected width does not establish Z extent.
+   Where available, include whole near-background/no-object fields using
+   [the first-candidate and pre-widen control](#include-no-object-fields-before-widening),
+   not only background patches beside positive objects.
 3. Use exposed native measurement capabilities where available and retain their
    receipts. For bounded raw evidence, `openhcs_sample_viewer_window_image`
    takes `route_key`, route-local `axis_indices`, native `y`, `x`, `height`,
@@ -40,9 +47,9 @@ measurements, not ground truth or an automatically validated parameter choice.
    | --- | --- | --- |
    | Object-size range | Long/short raw boundary spans across isolated and touching examples; per-axis extent for 3-D | Calling a current mask's size independent evidence, or confusing radius with diameter |
    | Seed separation | Centre-to-centre distance of genuine neighbours and multiple maxima within one textured object | Using diameter as minimum separation and suppressing real close pairs |
-   | Smoothing/spot/ridge scale | Narrowest supported feature width, noise texture and nearby close-pair/path control | Equating diameter with Gaussian sigma or erasing a faint neurite |
+   | Smoothing/spot/ridge scale | Supported narrow-to-broad width envelope, noise texture, positive/faint-path and close-pair controls | Equating diameter with Gaussian sigma or assuming one scale preserves every supported width |
    | Background-removal scale | Target width plus extent and variation of nearby background in multiple regions | A universal kernel radius or subtracting cell signal as background |
-   | Threshold/prominence | Raw object-versus-local-background values, weak positives, noise and saturation on the consumed channel | Deriving analytical thresholds from contrast limits, gamma or label colours |
+   | Threshold/prominence | Values on the actual consumed alias or response: object/background or peak/valley separation, weak positives, noise and saturation; matched raw views establish biological support | Substituting raw-channel SNR for enhanced-response thresholds, or deriving cutoffs from contrast, gamma or label colours |
    | Roundness/shape prior | Isolated raw contours, elongated/lobed examples and an unsupported-shape control | Forcing every cell to be round or treating a round-looking mask as validation |
 
    Retain native coordinates, measurement method, units and boundary uncertainty.
@@ -54,19 +61,216 @@ measurements, not ground truth or an automatically validated parameter choice.
    neither a major-axis length nor evidence of roundness. ROI contour-member
    count is not necessarily instance count.
 5. Record source/route/axes, witness coordinates, receipt/capture, raw measurement
-   and uncertainty, chosen callable/parameter, unit conversion and rationale in
+   and uncertainty, chosen callable/method/parameter, unit conversion and rationale in
    the trial log. Summarise the observed range and regional variation. Reflect
    the exact registered callable before applying a number: radius versus
    diameter, sigma versus kernel width, anisotropic spacing and intensity units
    differ between algorithms. Keep unsupported precision as an interval or
    limitation. Label mask-derived estimates provisional and check against raw,
    including missed objects; do not tune a detector solely from its own output.
+   A single-scale filter can favour one width class while suppressing another.
+   Inspect its response across the measured envelope before changing downstream
+   thresholds. If discovery returns a compatible multiscale callable, describe
+   its actual scale units, supported arguments and response-combination contract;
+   do not invent a scale-list parameter or assume a single-scale argument accepts
+   one. Estimate intermediate/response memory before a bounded comparison.
+   For a compound detector, relate each measurement to the stage it supports:
+   raw width or local signal/background difference does not by itself justify
+   admission on an enhanced response, seed extraction or final object acceptance.
+   Reflect the effective contract: one width may also control smoothing or
+   background scale, while a size-acceptance bound need not change markers.
+   Before the first proposal, predict both faint-signal recovery and rejection
+   of regional negatives, preserving ordinary/narrow/broad and genuine-pair
+   controls. Inspect the earliest available response/support in the first
+   bounded candidate before interpreting downstream losses; do not automatically
+   lower admission or enlarge width because a plausible raw scalar missed a
+   structure. Use [stage-specific diagnostics](segmentation-diagnostics.md)
+   to distinguish response generation, admission and later acceptance.
 6. Compile one bounded candidate, inspect its earliest changed intermediate,
    then compare matched raw/result/combined at the measured failures and
    regression controls. Revisit distributed regions after every change; a
    local repair can fail elsewhere under uneven illumination. Freeze measurement
    receipts and rationale with the complete candidate before held-out access.
    Expected counts or reference masks must not choose measurements in a blind run.
+   Link the measured envelope and remaining exclusions to the affected phenotype
+   claims through [the analysis strategy](analysis-strategy.md), which owns
+   claim-scoped conclusions rather than blanket abstention.
+
+Worked faint-path contrast: a continuous raw path stands above nearby background,
+but its detector requires enhanced candidate support AND a local-response gate.
+Raw width and contrast can support a scale and provisional local cutoff, not
+calibrate the enhanced admission factor. An unmeasured default remains a trial
+hypothesis. Use the first bounded candidate to compare support along that path
+and a nuisance-only control. If only the intersected mask is exposed, missing
+support locates the loss before rooting but cannot identify which gate rejected
+each pixel. A controlled gate change tests recovery without changing supported
+width/body detection; newly admitted background bridges oppose it. Check optional
+[seed/component retention](segmentation-diagnostics.md#separate-support-recovery-from-rooted-graph-validity)
+before attributing loss to rooting. If support survives the declared admission
+and retention gates but reported paths are absent, investigate rooting/topology
+rather than lowering admission.
+
+### Include no-object fields before widening
+
+Before the FIRST threshold proposal and before widening a positive-only sample,
+inspect whole near-background or apparently no-object fields where the available
+development data includes them. Use faint-preserving raw views at context and
+native scales, across relevant axes, to distinguish no supported target from dim
+objects, debris or an unhelpful display. A percentile, histogram, low count or
+one quiet crop alone does not establish that a whole field is empty. If this
+stratum is unavailable, record that coverage limit rather than inventing it.
+
+An automatic threshold is not an object-presence test. [Otsu's histogram
+partition](https://bioimagebook.github.io/chapters/2-processing/3-thresholding/thresholding.html)
+can separate brighter noise from darker noise even when no target objects are
+present. Successful labels on signal-bearing fields therefore do not establish
+specificity in no-object fields. Inspect threshold support and resulting labels
+against matched raw/result/combined views in both strata before wider execution.
+
+If background partitioning is the failure, a measured lower threshold bound is
+one possible hypothesis only when the reflected callable supports it and the
+[consumed intensity units](#current-processing-intensity-units), acquisition and
+preprocessing mappings are comparable across fields. Measure background and
+genuine dim-positive values on that alias; a source-unit floor cannot be copied
+unchanged onto a normalised or remapped response. Check that the effective bound
+rejects unsupported background while retaining dim-positive support and ordinary
+positive boundaries. Do not infer a universal floor from dtype, an observed
+maximum or a percentile-based blank classification. If the distributions overlap
+or units are incomparable, reconsider the supported admission/preprocessing model
+and retain the uncertainty instead of forcing a blank result.
+
+### Choose the marker landscape before the first candidate
+
+Measuring a body's diameter does not justify a declumping method. Before the
+initial run, connect the bright/dim regional samples above to three decisions:
+whether local body-versus-background contrast supports foreground admission,
+whether intensity peaks represent bodies or texture within them, and whether
+the proposed marker landscape distinguishes a genuine close pair. Use native
+profiles or bounded samples to compare within-body peak distances and valleys
+with the pair's centre spacing, boundary gap/neck and supported widths. Check
+ordinary broad/oval bodies as well as small ones; diameter and seed separation
+answer different questions.
+
+Observed multiple peaks inside one continuous raw body invalidate **unexamined
+intensity-maxima defaults** as a justified starting choice. They do not forbid
+intensity-based markers: those need evidence that smoothing/prominence separates
+within-body texture from genuine neighbours on the consumed image. Where the
+supported foreground's shape better distinguishes compact touching bodies,
+consider a declared distance/shape-based marker method; elongated or lobed
+single bodies can also have multiple distance peaks. Neither landscape is a
+universal watershed mandate. Foreground missing dim bodies needs an admission
+or preprocessing decision, not stronger downstream suppression.
+
+Reflect the callable's effective method and basic/advanced/automatic settings,
+not just the arguments copied from a validated example. In the CellProfiler
+primary-object contract, `use_advanced_settings=False` selects basic threshold
+behavior; it does not justify the inherited declumping choices. Marker extraction
+and watershed dividing-line landscapes are separate controls, and automatic
+smoothing/suppression can override entered sizes. Inspect those effective
+choices before assuming your measured settings are active. Before proposing
+the first method, also justify the boundary landscape on the same isolated
+body and genuine pair: plausible seed positions do not prove that intensity
+or shape-based dividing lines will follow the supported inter-body boundary.
+An internally textured intensity surface can cut one body unevenly even when
+its markers are appropriate; inspect the expected seam as well as peak placement.
+A validated example
+supplies a working contract, not evidence that its intensity landscape matches
+this raw morphology. Choose the method first, then justify smoothing, prominence
+and minimum separation in that method's units, keeping the genuine pair and
+faint body as simultaneous controls. When the callable retains marker or
+landscape artifacts, inspect those alongside support in the first bounded run.
+
+Worked contrast: a broad continuous body has several internal intensity peaks,
+while a genuine close pair has separate supported interiors and an intervening
+valley. Local body/background evidence first supports admission that retains
+the broad body and pair, not just their bright islands. Choosing a distance
+landscape removes direct intensity texture from seed extraction, but lobes or
+waists in that support can still produce several shape maxima inside one body.
+
+Compare within-body and true-pair peaks on the actual smoothed intensity or
+distance alias consumed by the marker extractor. On a distance transform,
+an absolute peak-height cutoff measures distance to background (an inscribed
+radius), not prominence or peak separation; its units follow the transform's
+spacing. Exclusion distance uses the extractor's declared metric and coordinate
+units, not body diameter or screenshot spacing. Propose smoothing, prominence
+or exclusion from the measured nuisance-versus-neighbour landscape, rather than
+assuming a switch to shape seeds establishes one marker per body.
+
+Worked crowded-haze contrast: distinct compact raw bodies can sit inside one
+broad admitted foreground region. Its distance transform measures distance to
+the region's background, not to each raw body's boundary. A broad plateau or
+bridge can therefore dominate shape markers even when the raw diameters and
+entered separation look reasonable. In the first bounded candidate, compare
+the actual support and landscape at the crowded bodies with an isolated body
+and a faint positive. A distance peak spanning several raw bodies, or much
+larger than their supported radii, is evidence against treating that landscape
+as a body-scale measurement. Follow support, emitted markers, unfiltered basins
+and retained labels: maximum-size rejection can hide a large merged basin and
+make the final image look like absent signal.
+
+If diffuse foreground causes the mismatch, test a justified admission or
+background-correction change through the
+[foreground diagnostics](segmentation-diagnostics.md#foreground-before-unclumping)
+before increasing suppression or simply relaxing the size limit. Local
+thresholding alone may retain the same haze; choose its model from measured
+regional classes, not the word adaptive. Keep the faint positive and regional
+nuisance controls, and judge recovered individual bodies rather than increased
+counts or changed secondary-cell partitions. This contrast motivates an early
+diagnostic, not a fixed threshold method, window size or requirement to perfectly
+separate every crowded object before retaining useful detections elsewhere.
+
+For neighbourhood maximum filters, peak-centre spacing alone does not predict
+which seeds survive. A weaker genuine neighbour can lose its seed because the
+footprint includes a brighter body's shoulder, even without including that
+body's peak centre. Inspect the effective footprint and consumed smoothed
+response around the weaker peak; distinguish this from explicit pairwise
+peak-distance pruning. Check both the unequal-brightness pair and continuous
+textured-body control when choosing suppression, rather than only comparing
+their centre distances.
+
+Competition scope is another part of that proposal: where a peak finder
+competes per label, a binary support label groups all foreground together,
+whereas distinct connected-component labels can restrict competition locally.
+Changing that scope and spacing is not a spacing-only repair; a connected
+component can still contain a genuine touching pair. If within-body and real-pair
+peak scales overlap, reconsider a supported body-association/representative rule
+instead of enlarging global exclusion. Predict one representative in the sampled
+continuous body and two retained in the genuine pair, then inspect those local
+controls and their supported dividing boundary in the first bounded candidate.
+This is a morphology-grounded prediction, not a dataset count target or approval
+gate; use [stage-specific diagnostics](segmentation-diagnostics.md) to test it.
+
+Worked unequal-neighbour contrast: in a retained development comparison, a
+distance landscape favoured an admitted bridge between raw-supported interiors.
+A measured intensity response instead had two peaks and emitted distinct
+markers, but the unfiltered basins differed while both witnesses mapped to one
+accepted label. Changing the dividing-line landscape alone recovered their
+local separation. This is a positive stage-linked boundary repair, not evidence
+that intensity markers or dividing lines suit every body. An independent faint
+neighbour remained merged: its raw peak was flattened in the consumed smoothed
+response, and reducing smoothing did not resolve the final merge.
+
+A later hypothesis multiplied distance by smoothed intensity raised to a power.
+Estimated distances and brightness values at body centres and a neck explained
+the proposal; they did **not** measure the consumed response. Neither a larger
+estimated product at a centre nor a changed exponent establishes a local
+maximum in the extractor's neighbourhood. Raw brightness is not its smoothed
+factor, and within-body texture or an admitted bridge can still compete with
+the faint neighbour. The retained final labels alone did not locate that loss.
+
+For such a hypothesis, use the declared diagnostic artifacts and existing
+`openhcs_measure_viewer_polyline` or bounded `openhcs_sample_viewer_window_image`
+operations to link same-coordinate faint interiors, within-body texture and a
+genuine pair to actual support, consumed response, emitted marker IDs,
+unfiltered basins and accepted labels. Keep alias/source/axes and units with
+the receipts. Inspect available factors as well as their combination; a line
+profile alone cannot establish all two-dimensional maxima. Distinguish missing
+admission or response peaks from competition that excludes a peak, then from
+a seeded basin lost during partition or acceptance. If factors or stages are
+not exposed, retain that attribution limit rather than treating formula
+estimates as measurements. An uncomputed response remains a provisional first
+candidate; its bounded diagnostic can guide the next stage-specific repair,
+with the continuous-body and genuine-pair controls where available.
 
 ### Native ruler, profile and independently specified region operations
 
@@ -277,6 +481,21 @@ retain the hierarchy; pooling thousands of pixels or cells does not create
 thousands of independently treated samples. Keep controls and exclusions
 visible. A statistical report must separate effect, variability and independent
 sample size from image-level counts.
+
+When measurements request several sources or slices, reconcile their intended
+coverage with the compiled source bindings, invocation/grouping and typed
+artifact inputs through `openhcs_inspect_pipeline_source_artifact_plan`, then
+discover the exposed export-read or quantitative-results capability and check
+actual source, object and slice identities and own-source values. Successful
+execution can still deliver only one requested source; an unchanged label
+artifact does not establish measurement coverage. Derive expected coverage from
+the callable and export's declared long/wide layout, plane-local versus
+volumetric identity, aggregation and exclusions—not a universal Cartesian grid
+or grouping setting. In a long-format table, blank columns belonging to another
+source can be legitimate when each row's own-source measurement is present.
+Distinguish those blanks from an absent requested source, omitted eligible
+object/slice or genuinely missing value; retain justified exclusions and any
+preview truncation rather than treating a partial table as a complete export.
 
 ## Figures and reporting
 

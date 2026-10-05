@@ -40,12 +40,13 @@ from openhcs.interop.cellprofiler.measurement_dialect import (
 from openhcs.interop.cellprofiler.measurement_lookup import (
     child_count_feature_child_name,
 )
-from openhcs.interop.cellprofiler.runtime.object_measurement_tables import (
-    ObjectMeasurementTableIndex,
+from openhcs.core.measurement_feature_queries import (
+    ColumnarMeasurementTableSchema,
 )
 
 if TYPE_CHECKING:
     from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
+
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ObjectFeatureMeasurementContext(RuntimeObjectSliceMeasurementQuery):
@@ -80,14 +81,13 @@ class ObjectFeatureMeasurementContext(RuntimeObjectSliceMeasurementQuery):
         )
         if not records:
             return ()
-        object_table_index = ObjectMeasurementTableIndex.from_tables(
-            tuple(cast(MeasurementTable, record.value.data) for record in records)
-        )
-        tables = object_table_index.for_object_feature(
+        tables = ColumnarMeasurementTableSchema.tables_for_object_feature(
+            tuple(cast(MeasurementTable, record.data) for record in records),
             self.object_name,
             self.feature_name,
+            dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
         )
-        return () if tables is None else tables
+        return tables
 
 
 @dataclass(frozen=True, slots=True)

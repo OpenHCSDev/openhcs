@@ -75,7 +75,7 @@ class LiveMeasurementTablePreview:
         if record.key.artifact_type is not MeasurementsArtifactType:
             return None
 
-        table = cast(MeasurementTable, record.value.data)
+        table = cast(MeasurementTable, record.data)
         row_preview = _measurement_row_preview(
             table.rows,
             row_limit,
@@ -271,7 +271,9 @@ def _columnar_row_preview(
     column_limit: int,
 ) -> LiveMeasurementRowPreview:
     columns = tuple(str(column) for column in rows.columns)[:column_limit]
-    column_values = tuple((column, rows.column_values(column)) for column in columns)
+    column_values = tuple(
+        (column, rows.bounded_column_values(column, row_limit)) for column in columns
+    )
     row_count = rows.row_count()
     return LiveMeasurementRowPreview(
         rows=tuple(

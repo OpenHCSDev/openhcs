@@ -1,4 +1,7 @@
+from dataclasses import fields
+
 from objectstate import ObjectState
+from pyqt_reactive.services.parameter_help_service import dataclass_parameter_descriptions
 
 from openhcs.agent.dto.knowledge import KnowledgeBaseDocumentRequest
 from openhcs.agent.services.config_reference_service import (
@@ -11,6 +14,24 @@ from openhcs.agent.services.config_service import (
 )
 from openhcs.agent.services.knowledge_base_service import KnowledgeBaseService
 from openhcs.pyqt_gui.config import UIConfig
+from openhcs.core.source_spatial_domain import (
+    SourceSpatialDomain,
+    VolumeSourceSpatialDomain,
+)
+
+
+def test_source_placement_help_is_owned_and_inherited() -> None:
+    base_descriptions = dataclass_parameter_descriptions(SourceSpatialDomain)
+    volume_descriptions = dataclass_parameter_descriptions(VolumeSourceSpatialDomain)
+
+    assert {item.name for item in fields(SourceSpatialDomain)} <= base_descriptions.keys()
+    assert {item.name for item in fields(VolumeSourceSpatialDomain)} <= volume_descriptions.keys()
+    assert all(
+        volume_descriptions[item.name] == base_descriptions[item.name]
+        for item in fields(SourceSpatialDomain)
+    )
+    assert "source pixel row/column" in base_descriptions["origin_yx"]
+    assert "Z planes" in volume_descriptions["source_depth"]
 
 
 def test_every_visible_agent_config_field_has_declaration_help() -> None:

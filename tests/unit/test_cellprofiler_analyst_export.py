@@ -1536,7 +1536,10 @@ def test_module_contract_selects_ordered_tables_and_cpa_images_and_declares_bund
     )
 
 
-def test_raw_callable_uses_batch_source_plan_with_sibling_plate_step() -> None:
+@pytest.mark.parametrize("workspace", [False, True])
+def test_raw_callable_uses_batch_source_plan_with_sibling_plate_step(
+    workspace: bool,
+) -> None:
     store = RuntimeValueStore()
     measurements = _record_measurements(
         store,
@@ -1575,6 +1578,22 @@ def test_raw_callable_uses_batch_source_plan_with_sibling_plate_step() -> None:
         ),
     )
 
+    from openhcs.interop.cellprofiler.workspace_export import (
+        CPAWorkspacePanel,
+        CPAWorkspaceAxis,
+    )
+
+    panels = (
+        (
+            CPAWorkspacePanel.from_settings(
+                "Histogram",
+                CPAWorkspaceAxis.from_settings("Image", "None", "Count", "ImageNumber"),
+                CPAWorkspaceAxis.from_settings("Image", "None", "None", "ImageNumber"),
+            ),
+        )
+        if workspace
+        else ()
+    )
     bundle = export_to_database(
         artifact_batch=batch,
         context=context,
@@ -1582,9 +1601,19 @@ def test_raw_callable_uses_batch_source_plan_with_sibling_plate_step() -> None:
         experiment_name="Example",
         add_table_prefix=True,
         table_prefix="CPA_",
+        wants_workspace_file=workspace,
+        workspace_panels=panels,
     )
 
-    assert tuple(bundle) == ("analysis.sqlite", "analysis_CPA.properties")
+    assert tuple(bundle) == (
+        ("analysis.sqlite", "analysis_CPA.properties", "analysis_CPA.workspace")
+        if workspace
+        else ("analysis.sqlite", "analysis_CPA.properties")
+    )
+    if workspace:
+        assert CPAWorkspacePanel.parse_workspace(bundle["analysis_CPA.workspace"]) == (
+            ("Histogram", (("x-axis", "Image_Count"), ("table", "CPA_Per_Image"))),
+        )
     assert isinstance(bundle["analysis.sqlite"], bytes)
     assert str(bundle["analysis_CPA.properties"]).startswith("db_type = sqlite\n")
 
@@ -1774,3 +1803,47 @@ def _field_rows(
     table: CellProfilerProjectedTable,
 ) -> tuple[dict[str, object], ...]:
     return tuple(dict(row) for row in table.rows)
+
+
+def test_database_projection_includes_derived_grid_measurements() -> None:
+    from openhcs.core.artifacts import SpatialGridArtifactType
+    from openhcs.core.runtime_spatial_grid import SpatialGrid
+    from openhcs.core.source_image_provenance import SourceImageProvenance
+
+    grid = SpatialGrid(
+        name="Grid",
+        rows=8,
+        columns=12,
+        x_spacing=102.5,
+        y_spacing=103.25,
+        x_origin=71,
+        y_origin=57,
+        source_provenance=SourceImageProvenance(
+            source_component_metadata={"site": "1"}
+        ),
+    )
+    plan = ArtifactOutputPlan(
+        name="Grid", path="/memory/Grid.pkl", artifact_type=SpatialGridArtifactType
+    )
+    store = RuntimeValueStore()
+    record = store.record(
+        RuntimeValue.normalize(plan, grid, axis_id=AXIS_ID),
+        path=plan.path,
+        backend="memory",
+    )
+    batch = RuntimeArtifactBatch(
+        input_specs=(ArtifactSpec.input("Grid", SpatialGridArtifactType),),
+        records_by_axis={AXIS_ID: (record,)},
+        source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
+    )
+    projection = _projection_builder().build(batch, _settings(), ())
+    (row,) = _external_rows(projection.image_table)
+    assert row["ImageNumber"] == 1
+    assert {name: value for name, value in row.items() if "DefinedGrid" in name} == {
+        "Image_DefinedGrid_Grid_Columns": 12,
+        "Image_DefinedGrid_Grid_Rows": 8,
+        "Image_DefinedGrid_Grid_XLocationOfLowestXSpot": 71,
+        "Image_DefinedGrid_Grid_XSpacing": 102.5,
+        "Image_DefinedGrid_Grid_YLocationOfLowestYSpot": 57,
+        "Image_DefinedGrid_Grid_YSpacing": 103.25,
+    }

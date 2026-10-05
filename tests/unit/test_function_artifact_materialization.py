@@ -1,5 +1,7 @@
 import importlib
 import json
+import pickle
+import weakref
 from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
@@ -56,11 +58,12 @@ from openhcs.core.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
 )
 from openhcs.core.orchestrator.analysis_consolidation import (
-    execution_analysis_outputs,
+    RuntimeAnalysisConsolidationInputs,
 )
 from openhcs.core.orchestrator.execution_result import (
     RuntimeContextObservation,
     RuntimeExecutionObservation,
+    RuntimeObservationMode,
 )
 from openhcs.core.pipeline.function_contracts import artifact_outputs
 from openhcs.core.runtime_artifact_values import (
@@ -113,30 +116,28 @@ from openhcs.core.source_metadata import (
     SOURCE_PLANE_INDEX_FIELD,
 )
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
+from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.steps.function_artifact_materialization import (
-    ArtifactMaterializationBackendPlan,
     PersistentArtifactMaterializationTargetPlan,
     StreamingOnlyArtifactMaterializationTargetPlan,
     actual_materialization_records,
-    materialize_artifact_outputs,
-    materialized_artifact_output_paths,
-    observed_materialized_artifact_locations_by_address,
-    observed_materialized_artifact_output_paths,
+    preview_reused_step_outputs,
+    RuntimeArtifactMaterialization,
     planned_materialization_preview,
     runtime_artifact_materializations,
     runtime_artifact_materializations_from_records,
-    runtime_export_artifact_output_paths,
 )
 from openhcs.core.steps.function_output_identity import (
     IncompleteFunctionOutputFilenameIdentityError,
 )
-from openhcs.core.steps.function_runtime import FunctionOutputContextStrategy
+
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.core.streaming_config_factory import (
     StreamingViewerRuntimeConfig,
     StreamingViewerSurface,
 )
 from openhcs.microscopes.imagexpress import ImageXpressFilenameParser
+from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.processing.backends.pos_gen.tile_position_artifacts import (
     TILE_POSITIONS_OUTPUT,
 )
@@ -155,6 +156,7 @@ from openhcs.processing.materialization import (
 from openhcs.processing.materialization.core import (
     MaterializationSpec,
     Output,
+    SavedMaterializationOutputs,
     materialization_outputs,
 )
 from openhcs.processing.materialization.options import (
@@ -317,6 +319,14 @@ class FileManagerStub:
 
     def load(self, path, backend):
         return self.memory[path]
+
+    def load_text(self, path, backend):
+        for content, saved_path, saved_backend, _kwargs in reversed(self.saved):
+            if str(saved_path) == str(path) and saved_backend == backend:
+                if not isinstance(content, str):
+                    raise TypeError("Saved output is not text")
+                return content
+        raise FileNotFoundError(path)
 
     def save(self, content, path, backend, **kwargs):
         self.saved.append((content, path, backend, kwargs))
@@ -505,29 +515,51 @@ def test_named_artifact_streaming_respects_compiled_streaming_filter():
     )
     target = StreamingOnlyArtifactMaterializationTargetPlan()
 
-    excluded = target.backend_plan(plan, context, materialization)
+    excluded = target.streaming_viewer_surfaces(plan, context, materialization)
 
-    assert excluded.streaming_viewer_surfaces == {}
+    assert excluded == {}
 
     context.axis_id = "B03"
-    included = target.backend_plan(plan, context, materialization)
+    included = target.streaming_viewer_surfaces(plan, context, materialization)
 
-    assert tuple(included.streaming_viewer_surfaces) == ("napari_stream",)
+    assert tuple(included) == ("napari_stream",)
 
 
 def test_viewer_output_expectation_omits_empty_stream_payload() -> None:
     filemanager = FileManager({"napari_stream": NapariStreamingBackend()})
     context = _context(filemanager)
-    viewer_surface = streaming_config_stub().streaming_viewer_surface(context)
-    backend_plan = ArtifactMaterializationBackendPlan(
-        persistent_backend_kwargs={},
-        streaming_viewer_surfaces={"napari_stream": viewer_surface},
+    output_plan = ArtifactOutputPlan(
+        name="Nuclei",
+        path="/memory/Nuclei.pkl",
+        artifact_type=ObjectLabelsArtifactType,
+        materialization=roi_zip(),
+    )
+    record = context.runtime_value_store.record(
+        RuntimeValue.normalize(
+            output_plan,
+            ObjectLabelPayload(
+                variant_data=ObjectLabelVariantData(
+                    labels=np.zeros((8, 8), dtype=np.int32)
+                ),
+                domain=ObjectLabelDomain(declared_object_count=0),
+            ),
+            axis_id="A01",
+        ),
+        path=output_plan.path,
+        backend="memory",
+    )
+    plan = _plan(
+        output_plan, streaming_configs={"napari_stream": streaming_config_stub()}
+    )
+    materialization = RuntimeArtifactMaterialization.from_record(
+        output_plan=output_plan,
+        record=record,
+        plan=plan,
+        context=context,
     )
 
-    assert not backend_plan.supports_stream_output(
-        filemanager,
-        Output(path="/analysis/A01_neurites.graph.roi.zip", content=[]),
-    )
+    assert materialization.outputs(plan, context)
+    assert materialization.viewer_outputs(plan, context) == ()
 
 
 def test_planned_materialization_preview_uses_declared_candidate_paths():
@@ -582,9 +614,7 @@ def test_slice_aligned_object_label_arrays_preserve_source_slice_metadata():
     )
     label_slices = RuntimeSliceAlignedValues(tuple(expected_labels))
 
-    contextualized = FunctionOutputContextStrategy.for_output_plan(
-        output_plan
-    ).contextualize(
+    contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
         source,
         label_slices,
         output_plan,
@@ -664,9 +694,7 @@ def test_image_outputs_merge_source_provenance_when_output_already_has_metadata(
         metadata=ImagePayloadMetadata(source_dtype="float32"),
     )
 
-    contextualized = FunctionOutputContextStrategy.for_output_plan(
-        output_plan
-    ).contextualize(
+    contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
         source,
         output,
         output_plan,
@@ -722,9 +750,7 @@ def test_object_label_payload_stack_preserves_source_slice_metadata():
         ),
     )
 
-    contextualized = FunctionOutputContextStrategy.for_output_plan(
-        output_plan
-    ).contextualize(
+    contextualized = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output(
         source,
         labels,
         output_plan,
@@ -789,19 +815,14 @@ def test_materialize_artifact_outputs_uses_runtime_store_payload(
 
     def fake_materialize(_spec, data, path, *_args, **_kwargs):
         materialized.append((data, path))
-        return path
+        return SimpleNamespace(save=lambda: SavedMaterializationOutputs({}))
 
     monkeypatch.setattr(
-        "openhcs.processing.materialization.materialize",
+        "openhcs.core.steps.function_artifact_materialization.prepare_materialization",
         fake_materialize,
     )
 
-    materialize_artifact_outputs(
-        filemanager,
-        _plan(output_plan),
-        PersistentArtifactMaterializationTargetPlan("disk"),
-        context,
-    )
+    PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(filemanager, _plan(output_plan), context)
 
     assert materialized == [
         ({"x": "from-runtime"}, "/analysis/A01_positions_step7.roi.zip")
@@ -839,25 +860,20 @@ def test_materialize_artifact_outputs_attaches_image_schema_provenance(monkeypat
 
     def fake_materialize(_spec, data, path, *_args, **_kwargs):
         materialized.append((data, path))
-        return path
+        return SimpleNamespace(save=lambda: SavedMaterializationOutputs({}))
 
     monkeypatch.setattr(
-        "openhcs.processing.materialization.materialize",
+        "openhcs.core.steps.function_artifact_materialization.prepare_materialization",
         fake_materialize,
     )
 
-    materialize_artifact_outputs(
-        filemanager,
-        _plan(
+    PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(filemanager, _plan(
             output_plan,
             variable_components=(
                 VariableComponents.Z_INDEX,
                 VariableComponents.CHANNEL,
             ),
-        ),
-        PersistentArtifactMaterializationTargetPlan("disk"),
-        context,
-    )
+        ), context)
 
     assert len(materialized) == 1
     data, path = materialized[0]
@@ -922,10 +938,10 @@ def test_materialize_artifact_outputs_uses_output_plan_axes_for_source_named_run
                 variable_components=kwargs["variable_components"],
             )
         )
-        return output_paths[0]
+        return SimpleNamespace(save=lambda: SavedMaterializationOutputs({}))
 
     monkeypatch.setattr(
-        "openhcs.processing.materialization.materialize",
+        "openhcs.core.steps.function_artifact_materialization.prepare_materialization",
         fake_materialize,
     )
 
@@ -940,14 +956,16 @@ def test_materialize_artifact_outputs_uses_output_plan_axes_for_source_named_run
     expected_paths = tuple(
         Path(f"/images/A01_s{site:03d}_w1_z001_t001_saved.tif") for site in range(1, 4)
     )
-    assert materialized_artifact_output_paths(plan, context) == expected_paths
-
-    materialize_artifact_outputs(
-        filemanager,
-        plan,
-        PersistentArtifactMaterializationTargetPlan("disk"),
-        context,
+    assert (
+        tuple(
+            Path(output.path)
+            for materialization in runtime_artifact_materializations(plan, context)
+            for output in materialization.outputs(plan, context)
+        )
+        == expected_paths
     )
+
+    PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(filemanager, plan, context)
 
     assert output_paths == [str(path) for path in expected_paths]
 
@@ -963,12 +981,7 @@ def test_materialize_artifact_outputs_requires_runtime_store_record():
     context = _context(filemanager)
 
     with pytest.raises(RuntimeError, match="Missing RuntimeValueStore record"):
-        materialize_artifact_outputs(
-            filemanager,
-            _plan(output_plan),
-            PersistentArtifactMaterializationTargetPlan("disk"),
-            context,
-        )
+        PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(filemanager, _plan(output_plan), context)
 
 
 def test_materialize_artifact_outputs_does_not_require_vfs_payload_for_store_record(
@@ -990,19 +1003,14 @@ def test_materialize_artifact_outputs_does_not_require_vfs_payload_for_store_rec
 
     def fake_materialize(_spec, data, path, *_args, **_kwargs):
         materialized.append((data, path))
-        return path
+        return SimpleNamespace(save=lambda: SavedMaterializationOutputs({}))
 
     monkeypatch.setattr(
-        "openhcs.processing.materialization.materialize",
+        "openhcs.core.steps.function_artifact_materialization.prepare_materialization",
         fake_materialize,
     )
 
-    materialize_artifact_outputs(
-        filemanager,
-        _plan(output_plan),
-        PersistentArtifactMaterializationTargetPlan("disk"),
-        context,
-    )
+    PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(filemanager, _plan(output_plan), context)
 
     assert materialized == [({"x": 1}, "/analysis/A01_positions_step7.roi.zip")]
 
@@ -1045,19 +1053,14 @@ def test_materialize_artifact_outputs_uses_runtime_record_identity_not_final_pat
 
     def fake_materialize(_spec, data, path, *_args, **_kwargs):
         materialized.append((data, path))
-        return path
+        return SimpleNamespace(save=lambda: SavedMaterializationOutputs({}))
 
     monkeypatch.setattr(
-        "openhcs.processing.materialization.materialize",
+        "openhcs.core.steps.function_artifact_materialization.prepare_materialization",
         fake_materialize,
     )
 
-    materialize_artifact_outputs(
-        filemanager,
-        _plan(output_plan),
-        PersistentArtifactMaterializationTargetPlan("disk"),
-        context,
-    )
+    PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(filemanager, _plan(output_plan), context)
 
     assert [(data.row_mappings(), path) for data, path in materialized] == [
         (({"object_id": 1, "area": 42},), "/analysis/measurements_1.roi.zip")
@@ -1099,19 +1102,14 @@ def test_materialize_artifact_outputs_uses_declared_measurement_csv_spec(
 
     def fake_materialize(spec, data, path, *_args, **_kwargs):
         materialized.append((spec, data, path))
-        return path
+        return SimpleNamespace(save=lambda: SavedMaterializationOutputs({}))
 
     monkeypatch.setattr(
-        "openhcs.processing.materialization.materialize",
+        "openhcs.core.steps.function_artifact_materialization.prepare_materialization",
         fake_materialize,
     )
 
-    materialize_artifact_outputs(
-        filemanager,
-        _plan(output_plan),
-        PersistentArtifactMaterializationTargetPlan("disk"),
-        context,
-    )
+    PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(filemanager, _plan(output_plan), context)
 
     spec, data, path = materialized[0]
     assert isinstance(spec.outputs[0], CsvOptions)
@@ -1261,7 +1259,8 @@ def test_multi_plane_measurement_materialization_uses_aggregate_artifact_name():
     )
 
 
-def test_multi_plane_special_output_uses_aggregate_artifact_name():
+@pytest.mark.parametrize("parser_type", [ImageXpressFilenameParser, SourceSchemaFilenameParser])
+def test_multi_plane_special_output_uses_aggregate_artifact_name(parser_type):
     output_plan = ArtifactOutputPlan(
         name="cell_counts",
         path="/memory/cell_counts.pkl",
@@ -1270,7 +1269,7 @@ def test_multi_plane_special_output_uses_aggregate_artifact_name():
     )
     context = _context(FileManagerStub())
     context.microscope_handler = MicroscopeHandlerStub(
-        parser=ImageXpressFilenameParser(),
+        parser=parser_type(),
         metadata_handler=MetadataHandlerStub(),
     )
     context.runtime_value_store.record(
@@ -1311,7 +1310,8 @@ def test_multi_plane_special_output_uses_aggregate_artifact_name():
     )
 
 
-def test_scalar_special_output_preserves_complete_source_identity():
+@pytest.mark.parametrize("parser_type", [ImageXpressFilenameParser, SourceSchemaFilenameParser])
+def test_scalar_special_output_preserves_complete_source_identity(parser_type):
     output_plan = ArtifactOutputPlan(
         name="cell_counts",
         path="/memory/cell_counts.pkl",
@@ -1320,7 +1320,7 @@ def test_scalar_special_output_preserves_complete_source_identity():
     )
     context = _context(FileManagerStub())
     context.microscope_handler = MicroscopeHandlerStub(
-        parser=ImageXpressFilenameParser(),
+        parser=parser_type(),
         metadata_handler=MetadataHandlerStub(),
     )
     context.runtime_value_store.record(
@@ -1354,7 +1354,8 @@ def test_scalar_special_output_preserves_complete_source_identity():
     )
 
 
-def test_incomplete_scalar_special_output_keeps_strict_filename_failure():
+@pytest.mark.parametrize("parser_type", [ImageXpressFilenameParser, SourceSchemaFilenameParser])
+def test_incomplete_scalar_special_output_keeps_strict_filename_failure(parser_type):
     output_plan = ArtifactOutputPlan(
         name="cell_counts",
         path="/memory/cell_counts.pkl",
@@ -1363,7 +1364,7 @@ def test_incomplete_scalar_special_output_keeps_strict_filename_failure():
     )
     context = _context(FileManagerStub())
     context.microscope_handler = MicroscopeHandlerStub(
-        parser=ImageXpressFilenameParser(),
+        parser=parser_type(),
         metadata_handler=MetadataHandlerStub(),
     )
     context.runtime_value_store.record(
@@ -1391,7 +1392,8 @@ def test_incomplete_scalar_special_output_keeps_strict_filename_failure():
         runtime_artifact_materializations(_plan(output_plan), context)
 
 
-def test_grouped_special_output_retains_group_coordinate_in_aggregate_name():
+@pytest.mark.parametrize("parser_type", [ImageXpressFilenameParser, SourceSchemaFilenameParser])
+def test_grouped_special_output_retains_group_coordinate_in_aggregate_name(parser_type):
     output_plan = ArtifactOutputPlan(
         name="cell_counts",
         path="/memory/cell_counts.pkl",
@@ -1402,7 +1404,7 @@ def test_grouped_special_output_retains_group_coordinate_in_aggregate_name():
     )
     context = _context(FileManagerStub())
     context.microscope_handler = MicroscopeHandlerStub(
-        parser=ImageXpressFilenameParser(),
+        parser=parser_type(),
         metadata_handler=MetadataHandlerStub(),
     )
     context.runtime_value_store.record(
@@ -1522,9 +1524,10 @@ def test_multi_plane_roi_aggregate_defers_source_filenames_to_plane_writer(monke
     assert str(materialization.base_path) == (
         "/analysis/A01_z_index-1_timepoint-1_segmentation_masks_step7.roi.zip"
     )
+    roi_outputs = materialization.outputs(plan, context)
     assert tuple(
         output.path
-        for output in materialization.outputs(plan, context)
+        for output in roi_outputs
         if output.path.endswith(".roi.zip")
     ) == tuple(
         (
@@ -1547,18 +1550,8 @@ def test_multi_plane_roi_aggregate_defers_source_filenames_to_plane_writer(monke
         ),
     )
     assert (
-        execution_analysis_outputs(
-            {"A01": context},
-            (
-                RuntimeExecutionObservation(
-                    contexts=(
-                        RuntimeContextObservation(
-                            context_key="A01",
-                            records=context.runtime_value_store.observed_values,
-                        ),
-                    )
-                ),
-            ),
+        RuntimeAnalysisConsolidationInputs.from_reused_outputs(
+            context, plan, materialization, roi_outputs,
         )
         is None
     )
@@ -1711,21 +1704,29 @@ def test_observed_materialized_paths_use_only_caller_owned_execution_records():
     current_execution_records = context.runtime_value_store.observed_values_after(
         current_execution_cursor
     )
-    assert observed_materialized_artifact_output_paths(
-        plan,
-        context,
-        current_execution_records,
+    saved = PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(context.filemanager, plan, context)
+    selected_saved = tuple(
+        artifact for artifact in saved
+        if artifact.materialization.record.key == current_execution_records[0].key
+    )
+    assert len(selected_saved) == 1
+    selected_path = selected_saved[0].outputs_for_backend("disk")[0].path
+    historical_content = "cell_count\r\n99\r\n"
+    context.filemanager.save(historical_content, selected_path, "disk")
+    reused = preview_reused_step_outputs(plan, context, current_execution_records)
+    assert reused.analysis_inputs is not None
+    assert reused.analysis_inputs.outputs_by_directory[Path("/analysis")][0].csv_content == historical_content
+    assert tuple(
+        Path(location.path)
+        for locations in reused.materialized_locations_by_address.values()
+        for location in locations
     ) == (
         Path(
             "/analysis/A01_site-2_z_index-1_timepoint-1_"
             "cell_counts_step7_details.csv"
         ),
     )
-    assert observed_materialized_artifact_locations_by_address(
-        plan,
-        context,
-        current_execution_records,
-    ) == {
+    assert reused.materialized_locations_by_address == {
         RuntimeArtifactAddress.from_record(current_execution_records[0]): (
             RuntimeArtifactLocation(
                 path=(
@@ -1737,19 +1738,7 @@ def test_observed_materialized_paths_use_only_caller_owned_execution_records():
         ),
     }
     context.step_plans = {plan.step_index: plan}
-    consolidation_inputs = execution_analysis_outputs(
-        {"A01": context},
-        (
-            RuntimeExecutionObservation(
-                contexts=(
-                    RuntimeContextObservation(
-                        context_key="A01",
-                        records=current_execution_records,
-                    ),
-                )
-            ),
-        ),
-    )
+    consolidation_inputs = selected_saved[0].observation(plan, context).analysis_inputs
     assert consolidation_inputs is not None
     runtime_output = consolidation_inputs.outputs_by_directory[Path("/analysis")][0]
     assert runtime_output.path == Path(
@@ -1794,13 +1783,10 @@ def test_terminal_persistence_is_reported_without_becoming_declared_export() -> 
         persistent_backend="disk",
     )
 
-    locations = observed_materialized_artifact_locations_by_address(
-        plan,
-        context,
-        (record,),
-    )
-
-    assert locations == {
+    reused = preview_reused_step_outputs(plan, context, (record,))
+    assert reused.runtime_export_paths == ()
+    assert reused.analysis_inputs is None
+    assert reused.materialized_locations_by_address == {
         RuntimeArtifactAddress.from_record(record): (
             RuntimeArtifactLocation(
                 path="/analysis/A01_cell_counts_step7_details.csv",
@@ -1808,7 +1794,6 @@ def test_terminal_persistence_is_reported_without_becoming_declared_export() -> 
             ),
         ),
     }
-    assert runtime_export_artifact_output_paths(plan, context) == ()
     assert not output_plan.materialization.participates_in_runtime_export_observation()
 
 
@@ -1852,19 +1837,10 @@ def test_consolidation_preserves_export_bundle_and_text_tables(options, payload)
         persistent_backend="disk",
     )
     context.step_plans = {plan.step_index: plan}
-    consolidation = execution_analysis_outputs(
-        {"A01": context},
-        (
-            RuntimeExecutionObservation(
-                contexts=(
-                    RuntimeContextObservation(
-                        context_key="A01",
-                        records=context.runtime_value_store.observed_values,
-                    ),
-                ),
-            ),
-        ),
-    )
+    saved = PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(context.filemanager, plan, context)
+    consolidation = StepExecutionObservation.combine(
+        artifact.observation(plan, context) for artifact in saved
+    ).analysis_inputs
     assert consolidation is not None
     outputs = tuple(
         output
@@ -1875,6 +1851,97 @@ def test_consolidation_preserves_export_bundle_and_text_tables(options, payload)
     assert outputs[0].well_id == "A01"
     assert outputs[0].csv_content == "count,intensity\n2,1.25\n"
     assert outputs[0].path.suffix == ".csv"
+
+
+@pytest.mark.parametrize(
+    "observation_mode",
+    (RuntimeObservationMode.OMIT, RuntimeObservationMode.MERGE_INTO_PARENT),
+)
+def test_completed_observation_projects_tables_before_worker_payload_release(
+    observation_mode, monkeypatch,
+):
+    image_plan = ArtifactOutputPlan(
+        name="Corrected", path="/memory/Corrected.pkl", artifact_type=ImageArtifactType,
+    )
+    table_plan = ArtifactOutputPlan(
+        name="cell_counts", path="/memory/cell_counts.pkl",
+        artifact_type=MeasurementsArtifactType, materialization=csv_only(),
+    )
+    context = _context(FileManagerStub())
+    image_step = replace(_plan(image_plan), step_index=5)
+    table_step = _plan(table_plan)
+    table_step.runtime_artifact_materialization = RuntimeArtifactMaterializationPlan(
+        persistent_enabled=True, persistent_backend="disk",
+    )
+    context.step_plans = {image_step.step_index: image_step, table_step.step_index: table_step}
+    pixels = np.ones((8, 8), dtype=np.float32)
+    pixel_reference = weakref.ref(pixels)
+    context.runtime_value_store.record(
+        RuntimeValue.normalize(
+            image_plan,
+            ImageMetadataPayload(
+                data=pixels, metadata=ImagePayloadMetadata(source_dtype="float32"),
+            ),
+            axis_id="A01",
+        ),
+        path=image_plan.path, backend="memory",
+    )
+    context.runtime_value_store.record(
+        RuntimeValue.normalize(
+            table_plan,
+            MeasurementTable(
+                name=table_plan.name,
+                rows=MeasurementSparseColumnarRows.from_rows(
+                    ({"cell_count": 2},), fields=(FieldSpec("cell_count", int),),
+                ),
+                subject=MeasurementSubject(MeasurementScope.ARTIFACT),
+            ),
+            axis_id="A01",
+        ),
+        path=table_plan.path, backend="memory",
+    )
+    saved = PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(context.filemanager, table_step, context)
+    monkeypatch.setattr(
+        RuntimeArtifactMaterialization, "outputs",
+        lambda *_args, **_kwargs: pytest.fail("Saved tables must not render again"),
+    )
+    step_observation = StepExecutionObservation.combine(
+        artifact.observation(table_step, context) for artifact in saved
+    )
+    observation = RuntimeContextObservation.from_context(
+        context_key="A01", context=context,
+        records=context.runtime_value_store.observed_values,
+        runtime_observation_mode=observation_mode,
+        runtime_export_paths=step_observation.runtime_export_paths,
+        analysis_inputs=step_observation.analysis_inputs,
+    )
+    context.runtime_value_store.clear()
+    del pixels
+    assert (pixel_reference() is not None) is (
+        observation_mode is RuntimeObservationMode.MERGE_INTO_PARENT
+    )
+    assert len(observation.records) == (
+        2 if observation_mode is RuntimeObservationMode.MERGE_INTO_PARENT else 0
+    )
+    assert len(observation.runtime_export_paths) == 1
+    assert observation.runtime_export_paths[0].suffix == ".csv"
+    assert observation.analysis_inputs is not None
+    assert observation.analysis_inputs.destination.backend == "disk"
+    assert observation.analysis_inputs.destination.images_dir == "/images"
+    execution_observation = RuntimeExecutionObservation(contexts=(observation,))
+    transported = pickle.loads(pickle.dumps(execution_observation))
+    consolidated = RuntimeAnalysisConsolidationInputs.from_observations(
+        {"A01": context}, (transported, transported),
+    )
+    assert consolidated is not None
+    outputs = consolidated.outputs_by_directory[Path("/analysis")]
+    assert len(outputs) == 1
+    assert outputs[0].well_id == "A01"
+    assert "cell_count" in outputs[0].csv_content
+    assert "2" in outputs[0].csv_content
+    assert outputs[0].path == observation.runtime_export_paths[0]
+    with pytest.raises(KeyError, match="unknown compiled context"):
+        RuntimeAnalysisConsolidationInputs.from_observations({}, (transported,))
 
 
 def test_materialize_artifact_outputs_unions_measurement_subject_records(
@@ -1928,20 +1995,16 @@ def test_materialize_artifact_outputs_unions_measurement_subject_records(
     materialized = []
 
     def fake_materialize(_spec, data, path, *_args, **_kwargs):
+        assert not data.source_provenance.has_values
         materialized.append((tuple(data.iter_row_mappings()), path))
-        return path
+        return SimpleNamespace(save=lambda: SavedMaterializationOutputs({}))
 
     monkeypatch.setattr(
-        "openhcs.processing.materialization.materialize",
+        "openhcs.core.steps.function_artifact_materialization.prepare_materialization",
         fake_materialize,
     )
 
-    materialize_artifact_outputs(
-        filemanager,
-        _plan(output_plan),
-        PersistentArtifactMaterializationTargetPlan("disk"),
-        context,
-    )
+    PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(filemanager, _plan(output_plan), context)
 
     assert materialized == [
         (
@@ -2025,7 +2088,7 @@ def test_fixed_component_scopes_materialize_distinct_measurement_paths() -> None
     materializations = runtime_artifact_materializations(plan, context)
 
     assert len(records) == 2
-    assert tuple(record.value.data.rows.row_count() for record in records) == (2, 1)
+    assert tuple(record.data.rows.row_count() for record in records) == (2, 1)
     assert tuple(
         record.key.scope.value_text_for_component(AllComponents.Z_INDEX)
         for record in records
@@ -2232,21 +2295,16 @@ def test_materialize_tabular_artifact_does_not_build_viewer_stream_kwargs(
         **_kwargs,
     ):
         materialized.append((spec, data, path, backends, backend_kwargs))
-        return path
+        return SimpleNamespace(save=lambda: SavedMaterializationOutputs({}))
 
     monkeypatch.setattr(
-        "openhcs.processing.materialization.materialize",
+        "openhcs.core.steps.function_artifact_materialization.prepare_materialization",
         fake_materialize,
     )
 
-    materialize_artifact_outputs(
-        filemanager,
-        _plan(
+    PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(filemanager, _plan(
             output_plan, streaming_configs={"napari_stream": streaming_config_stub()}
-        ),
-        PersistentArtifactMaterializationTargetPlan("disk"),
-        context,
-    )
+        ), context)
 
     spec, data, path, backends, backend_kwargs = materialized[0]
     assert isinstance(spec.outputs[0], CsvOptions)
@@ -2298,19 +2356,14 @@ def test_materialize_artifact_outputs_uses_actual_group_records(monkeypatch):
 
     def fake_materialize(spec, data, path, *_args, **_kwargs):
         materialized.append((spec, data, path))
-        return path
+        return SimpleNamespace(save=lambda: SavedMaterializationOutputs({}))
 
     monkeypatch.setattr(
-        "openhcs.processing.materialization.materialize",
+        "openhcs.core.steps.function_artifact_materialization.prepare_materialization",
         fake_materialize,
     )
 
-    materialize_artifact_outputs(
-        filemanager,
-        _plan(output_plan),
-        PersistentArtifactMaterializationTargetPlan("disk"),
-        context,
-    )
+    PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(filemanager, _plan(output_plan), context)
 
     assert len(materialized) == 1
     spec, data, path = materialized[0]
@@ -2497,7 +2550,7 @@ def test_actual_materialization_records_uses_dynamic_runtime_groups():
     )
 
     assert tuple(record.key.scope.value_text for record in records) == ("1", "2")
-    assert tuple(record.path for record in records) == (
+    assert tuple(record.location.path for record in records) == (
         "/memory/A01_w1_segmentation_masks_step7.pkl",
         "/memory/A01_w2_segmentation_masks_step7.pkl",
     )
@@ -2578,19 +2631,14 @@ def test_materialize_artifact_outputs_uses_group_measurement_artifact_identity(
 
     def fake_materialize(spec, data, path, *_args, **_kwargs):
         materialized.append((spec, data, path))
-        return path
+        return SimpleNamespace(save=lambda: SavedMaterializationOutputs({}))
 
     monkeypatch.setattr(
-        "openhcs.processing.materialization.materialize",
+        "openhcs.core.steps.function_artifact_materialization.prepare_materialization",
         fake_materialize,
     )
 
-    materialize_artifact_outputs(
-        filemanager,
-        _plan(output_plan),
-        PersistentArtifactMaterializationTargetPlan("disk"),
-        context,
-    )
+    PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(filemanager, _plan(output_plan), context)
 
     assert [path for _spec, _data, path in materialized] == [
         "/analysis/A01_s001_w5_z001_t001_measurements_step7.roi.zip",
@@ -2642,19 +2690,14 @@ def test_materialize_artifact_outputs_keeps_grouped_artifact_record_path(
 
     def fake_materialize(spec, data, path, *_args, **_kwargs):
         materialized.append((spec, data, path))
-        return path
+        return SimpleNamespace(save=lambda: SavedMaterializationOutputs({}))
 
     monkeypatch.setattr(
-        "openhcs.processing.materialization.materialize",
+        "openhcs.core.steps.function_artifact_materialization.prepare_materialization",
         fake_materialize,
     )
 
-    materialize_artifact_outputs(
-        filemanager,
-        _plan(output_plan, group_by_value="channel"),
-        PersistentArtifactMaterializationTargetPlan("disk"),
-        context,
-    )
+    PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(filemanager, _plan(output_plan, group_by_value="channel"), context)
 
     assert [path for _spec, _data, path in materialized] == [
         "/analysis/A01_w2_measurements_step7.roi.zip",
@@ -2708,21 +2751,16 @@ def test_materialize_artifact_outputs_uses_null_component_group_identity_for_str
         **_kwargs,
     ):
         materialized.append((spec, data, path, backends, backend_kwargs))
-        return path
+        return SimpleNamespace(save=lambda: SavedMaterializationOutputs({}))
 
     monkeypatch.setattr(
-        "openhcs.processing.materialization.materialize",
+        "openhcs.core.steps.function_artifact_materialization.prepare_materialization",
         fake_materialize,
     )
 
-    materialize_artifact_outputs(
-        filemanager,
-        _plan(
+    StreamingOnlyArtifactMaterializationTargetPlan().materialize_outputs(filemanager, _plan(
             output_plan, streaming_configs={"napari_stream": streaming_config_stub()}
-        ),
-        StreamingOnlyArtifactMaterializationTargetPlan(),
-        context,
-    )
+        ), context)
 
     _spec, _data, path, _backends, backend_kwargs = materialized[0]
     assert path == "/analysis/A01_s001_w2_z001_t001_Nuclei_step7.roi.zip"
@@ -2778,21 +2816,16 @@ def test_materialize_artifact_outputs_streams_aggregate_artifact_with_incomplete
         **_kwargs,
     ):
         materialized.append((spec, data, path, backends, backend_kwargs))
-        return path
+        return SimpleNamespace(save=lambda: SavedMaterializationOutputs({}))
 
     monkeypatch.setattr(
-        "openhcs.processing.materialization.materialize",
+        "openhcs.core.steps.function_artifact_materialization.prepare_materialization",
         fake_materialize,
     )
 
     streaming_config = streaming_config_stub()
 
-    materialize_artifact_outputs(
-        filemanager,
-        _plan(output_plan, streaming_configs={"napari_stream": streaming_config}),
-        StreamingOnlyArtifactMaterializationTargetPlan(),
-        context,
-    )
+    StreamingOnlyArtifactMaterializationTargetPlan().materialize_outputs(filemanager, _plan(output_plan, streaming_configs={"napari_stream": streaming_config}), context)
 
     _spec, _data, path, _backends, backend_kwargs = materialized[0]
     assert path == "/analysis/A01_Nuclei_step7.roi.zip"
@@ -2928,19 +2961,14 @@ def test_materialize_artifact_outputs_uses_declared_metadata_json_spec(
 
     def fake_materialize(spec, data, path, *_args, **_kwargs):
         materialized.append((spec, data, path))
-        return path
+        return SimpleNamespace(save=lambda: SavedMaterializationOutputs({}))
 
     monkeypatch.setattr(
-        "openhcs.processing.materialization.materialize",
+        "openhcs.core.steps.function_artifact_materialization.prepare_materialization",
         fake_materialize,
     )
 
-    materialize_artifact_outputs(
-        filemanager,
-        _plan(output_plan),
-        PersistentArtifactMaterializationTargetPlan("disk"),
-        context,
-    )
+    PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(filemanager, _plan(output_plan), context)
 
     spec, data, _path = materialized[0]
     assert isinstance(spec.outputs[0], JsonOptions)
@@ -2962,18 +2990,14 @@ def test_materialize_artifact_outputs_skips_special_without_explicit_spec(
 
     def fake_materialize(*args, **kwargs):
         materialized.append((args, kwargs))
+        return SimpleNamespace(save=lambda: SavedMaterializationOutputs({}))
 
     monkeypatch.setattr(
-        "openhcs.processing.materialization.materialize",
+        "openhcs.core.steps.function_artifact_materialization.prepare_materialization",
         fake_materialize,
     )
 
-    materialize_artifact_outputs(
-        filemanager,
-        _plan(output_plan),
-        PersistentArtifactMaterializationTargetPlan("disk"),
-        context,
-    )
+    PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(filemanager, _plan(output_plan), context)
 
     assert materialized == []
 
@@ -3029,17 +3053,14 @@ def test_tile_positions_runtime_materializes_native_json_without_changing_payloa
         analysis_results_dir=str(tmp_path / "results"),
     )
 
-    materialize_artifact_outputs(
-        filemanager,
-        plan,
-        PersistentArtifactMaterializationTargetPlan("disk"),
-        context,
-    )
+    PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(filemanager, plan, context)
 
     (retained,) = tuple((tmp_path / "results").rglob("*.json"))
     assert json.loads(retained.read_text()) == [list(pair) for pair in positions]
     assert positions == [(-1.25, 0.000000001), (921.600000001, -3.5), (1.0, 1843.2)]
-    assert record.value is value
+    assert record.key is value.key
+    assert record.data is value.data
+    assert record.materialization_source_metadata is value.materialization_source_metadata
 
 
 def test_materialize_artifact_outputs_skips_explicitly_disabled_artifact_without_record(
@@ -3057,18 +3078,14 @@ def test_materialize_artifact_outputs_skips_explicitly_disabled_artifact_without
 
     def fake_materialize(*args, **kwargs):
         materialized.append((args, kwargs))
+        return SimpleNamespace(save=lambda: SavedMaterializationOutputs({}))
 
     monkeypatch.setattr(
-        "openhcs.processing.materialization.materialize",
+        "openhcs.core.steps.function_artifact_materialization.prepare_materialization",
         fake_materialize,
     )
 
-    materialize_artifact_outputs(
-        filemanager,
-        _plan(output_plan),
-        PersistentArtifactMaterializationTargetPlan("disk"),
-        context,
-    )
+    PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(filemanager, _plan(output_plan), context)
 
     assert materialized == []
 
@@ -3097,19 +3114,14 @@ def test_materialize_artifact_outputs_uses_declared_object_labels_roi_spec(monke
 
     def fake_materialize(spec, data, path, *_args, **_kwargs):
         materialized.append((spec, data, path))
-        return path
+        return SimpleNamespace(save=lambda: SavedMaterializationOutputs({}))
 
     monkeypatch.setattr(
-        "openhcs.processing.materialization.materialize",
+        "openhcs.core.steps.function_artifact_materialization.prepare_materialization",
         fake_materialize,
     )
 
-    materialize_artifact_outputs(
-        filemanager,
-        _plan(output_plan),
-        PersistentArtifactMaterializationTargetPlan("disk"),
-        context,
-    )
+    PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(filemanager, _plan(output_plan), context)
 
     spec, data, path = materialized[0]
     assert isinstance(spec.outputs[0], ROIOptions)
@@ -3154,19 +3166,14 @@ def test_materialize_artifact_outputs_can_target_streaming_without_persistent_ba
         **_kwargs,
     ):
         materialized.append((spec, data, path, backends, backend_kwargs))
-        return path
+        return SimpleNamespace(save=lambda: SavedMaterializationOutputs({}))
 
     monkeypatch.setattr(
-        "openhcs.processing.materialization.materialize",
+        "openhcs.core.steps.function_artifact_materialization.prepare_materialization",
         fake_materialize,
     )
 
-    materialize_artifact_outputs(
-        filemanager,
-        _plan(output_plan, streaming_configs={"napari_stream": streaming_config}),
-        StreamingOnlyArtifactMaterializationTargetPlan(),
-        context,
-    )
+    StreamingOnlyArtifactMaterializationTargetPlan().materialize_outputs(filemanager, _plan(output_plan, streaming_configs={"napari_stream": streaming_config}), context)
 
     spec, data, path, backends, backend_kwargs = materialized[0]
     assert isinstance(spec.outputs[0], ROIOptions)
@@ -3243,22 +3250,18 @@ def test_main_flow_artifact_persists_without_duplicate_viewer_stream(monkeypatch
         **_kwargs,
     ):
         materialized.append((backends, backend_kwargs))
+        return SimpleNamespace(save=lambda: SavedMaterializationOutputs({}))
 
     monkeypatch.setattr(
-        "openhcs.processing.materialization.materialize",
+        "openhcs.core.steps.function_artifact_materialization.prepare_materialization",
         fake_materialize,
     )
 
-    materialize_artifact_outputs(
-        filemanager,
-        _plan(
+    PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(filemanager, _plan(
             output_plan,
             streaming_configs={"napari_stream": streaming_config_stub()},
             compiled_function_pattern=_main_flow_output_compiled_pattern(output_plan),
-        ),
-        PersistentArtifactMaterializationTargetPlan("disk"),
-        context,
-    )
+        ), context)
 
     assert len(materialized) == 1
     backends, backend_kwargs = materialized[0]
@@ -3307,22 +3310,17 @@ def test_materialize_artifact_outputs_uses_artifact_source_metadata_for_streamin
         **_kwargs,
     ):
         materialized.append((spec, data, path, backends, backend_kwargs))
-        return path
+        return SimpleNamespace(save=lambda: SavedMaterializationOutputs({}))
 
     monkeypatch.setattr(
-        "openhcs.processing.materialization.materialize",
+        "openhcs.core.steps.function_artifact_materialization.prepare_materialization",
         fake_materialize,
     )
 
-    materialize_artifact_outputs(
-        filemanager,
-        _plan(
+    StreamingOnlyArtifactMaterializationTargetPlan().materialize_outputs(filemanager, _plan(
             output_plan,
             streaming_configs={"napari_stream": streaming_config},
-        ),
-        StreamingOnlyArtifactMaterializationTargetPlan(),
-        context,
-    )
+        ), context)
 
     _spec, _data, path, _backends, backend_kwargs = materialized[0]
     assert path == "/analysis/A01_s002_w3_z001_t001_labels_step7.roi.zip"
@@ -3372,8 +3370,12 @@ def test_materialize_artifact_outputs_streams_payload_component_metadata(
     )
     filemanager = FileManagerStub()
     context = _context(filemanager)
+    context.axis_id = "01"
+    context.execution_runtime = SimpleNamespace(execution_axis_values=("01",))
+    plan = _plan(output_plan, streaming_configs={"napari_stream": streaming_config})
+    plan.axis_id = "01"
     context.runtime_value_store.record(
-        RuntimeValue.normalize(output_plan, labels, axis_id="A01"),
+        RuntimeValue.normalize(output_plan, labels, axis_id="01"),
         path=output_plan.path,
         backend="memory",
     )
@@ -3389,19 +3391,14 @@ def test_materialize_artifact_outputs_streams_payload_component_metadata(
         **_kwargs,
     ):
         materialized.append((spec, data, path, backends, backend_kwargs))
-        return path
+        return SimpleNamespace(save=lambda: SavedMaterializationOutputs({}))
 
     monkeypatch.setattr(
-        "openhcs.processing.materialization.materialize",
+        "openhcs.core.steps.function_artifact_materialization.prepare_materialization",
         fake_materialize,
     )
 
-    materialize_artifact_outputs(
-        filemanager,
-        _plan(output_plan, streaming_configs={"napari_stream": streaming_config}),
-        StreamingOnlyArtifactMaterializationTargetPlan(),
-        context,
-    )
+    StreamingOnlyArtifactMaterializationTargetPlan().materialize_outputs(filemanager, plan, context)
 
     _spec, _data, path, _backends, backend_kwargs = materialized[0]
     assert path == "/analysis/01_POS002_D_Nuclei_step7.roi.zip"
@@ -3451,23 +3448,18 @@ def test_materialize_artifact_outputs_uses_runtime_plane_group_identity(
 
     def fake_materialize(_spec, data, path, *_args, **_kwargs):
         materialized.append((data, path))
-        return path
+        return SimpleNamespace(save=lambda: SavedMaterializationOutputs({}))
 
     monkeypatch.setattr(
-        "openhcs.processing.materialization.materialize",
+        "openhcs.core.steps.function_artifact_materialization.prepare_materialization",
         fake_materialize,
     )
 
-    materialize_artifact_outputs(
-        filemanager,
-        _plan(
+    PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(filemanager, _plan(
             output_plan,
             group_by_value="timepoint",
             variable_components=(VariableComponents.TIMEPOINT,),
-        ),
-        PersistentArtifactMaterializationTargetPlan("disk"),
-        context,
-    )
+        ), context)
 
     assert materialized == [
         (
@@ -3522,19 +3514,14 @@ def test_materialize_artifact_outputs_merges_parser_axes_into_source_metadata(
         **_kwargs,
     ):
         materialized.append((spec, data, path, backends, backend_kwargs))
-        return path
+        return SimpleNamespace(save=lambda: SavedMaterializationOutputs({}))
 
     monkeypatch.setattr(
-        "openhcs.processing.materialization.materialize",
+        "openhcs.core.steps.function_artifact_materialization.prepare_materialization",
         fake_materialize,
     )
 
-    materialize_artifact_outputs(
-        filemanager,
-        _plan(output_plan, streaming_configs={"napari_stream": streaming_config}),
-        StreamingOnlyArtifactMaterializationTargetPlan(),
-        context,
-    )
+    StreamingOnlyArtifactMaterializationTargetPlan().materialize_outputs(filemanager, _plan(output_plan, streaming_configs={"napari_stream": streaming_config}), context)
 
     _spec, _data, path, _backends, backend_kwargs = materialized[0]
     assert path == "/analysis/A01_s002_w3_z001_t001_Nuclei_step7.roi.zip"
@@ -3623,23 +3610,18 @@ def test_materialize_artifact_outputs_uses_variable_components_for_streaming_ide
         **_kwargs,
     ):
         materialized.append((spec, data, path, backends, backend_kwargs))
-        return path
+        return SimpleNamespace(save=lambda: SavedMaterializationOutputs({}))
 
     monkeypatch.setattr(
-        "openhcs.processing.materialization.materialize",
+        "openhcs.core.steps.function_artifact_materialization.prepare_materialization",
         fake_materialize,
     )
 
-    materialize_artifact_outputs(
-        filemanager,
-        _plan(
+    StreamingOnlyArtifactMaterializationTargetPlan().materialize_outputs(filemanager, _plan(
             output_plan,
             streaming_configs={"napari_stream": streaming_config},
             variable_components=(VariableComponents.Z_INDEX,),
-        ),
-        StreamingOnlyArtifactMaterializationTargetPlan(),
-        context,
-    )
+        ), context)
 
     _spec, _data, path, _backends, backend_kwargs = materialized[0]
     assert path == "/analysis/A01_Nuclei_step7.roi.zip"
@@ -3699,16 +3681,11 @@ def test_materialize_artifact_outputs_streams_singleton_roi_plane_from_output_pl
         backend="memory",
     )
 
-    materialize_artifact_outputs(
-        filemanager,
-        _plan(
+    StreamingOnlyArtifactMaterializationTargetPlan().materialize_outputs(filemanager, _plan(
             output_plan,
             streaming_configs={"napari_stream": streaming_config_stub()},
             variable_components=(VariableComponents.Z_INDEX,),
-        ),
-        StreamingOnlyArtifactMaterializationTargetPlan(),
-        context,
-    )
+        ), context)
 
     roi_saves = [item for item in filemanager.saved if item[1].endswith(".roi.zip")]
     assert len(roi_saves) == 1
@@ -3795,23 +3772,18 @@ def test_materialize_artifact_outputs_streams_source_binding_roi_plane_metadata(
         **_kwargs,
     ):
         materialized.append((spec, data, path, backends, backend_kwargs))
-        return path
+        return SimpleNamespace(save=lambda: SavedMaterializationOutputs({}))
 
     monkeypatch.setattr(
-        "openhcs.processing.materialization.materialize",
+        "openhcs.core.steps.function_artifact_materialization.prepare_materialization",
         fake_materialize,
     )
 
-    materialize_artifact_outputs(
-        filemanager,
-        _plan(
+    StreamingOnlyArtifactMaterializationTargetPlan().materialize_outputs(filemanager, _plan(
             output_plan,
             streaming_configs={"napari_stream": streaming_config},
             variable_components=(VariableComponents.CHANNEL,),
-        ),
-        StreamingOnlyArtifactMaterializationTargetPlan(),
-        context,
-    )
+        ), context)
 
     _spec, _data, path, _backends, backend_kwargs = materialized[0]
     assert path == "/analysis/A01_segmentation_masks_step7.roi.zip"
@@ -3898,23 +3870,18 @@ def test_materialize_rgb_artifact_streams_filename_channel_identity(
         **_kwargs,
     ):
         materialized.append((spec, data, path, backends, backend_kwargs))
-        return path
+        return SimpleNamespace(save=lambda: SavedMaterializationOutputs({}))
 
     monkeypatch.setattr(
-        "openhcs.processing.materialization.materialize",
+        "openhcs.core.steps.function_artifact_materialization.prepare_materialization",
         fake_materialize,
     )
 
-    materialize_artifact_outputs(
-        filemanager,
-        _plan(
+    StreamingOnlyArtifactMaterializationTargetPlan().materialize_outputs(filemanager, _plan(
             output_plan,
             streaming_configs={"napari_stream": streaming_config},
             variable_components=(VariableComponents.CHANNEL,),
-        ),
-        StreamingOnlyArtifactMaterializationTargetPlan(),
-        context,
-    )
+        ), context)
 
     _spec, _data, path, _backends, backend_kwargs = materialized[0]
     assert path == "/images/A01_s001_w3_z001_t001.TIF"
@@ -3984,19 +3951,14 @@ def test_materialize_image_uses_declared_filename_source_identity(monkeypatch):
 
     def fake_materialize(_spec, _data, path, *_args, **_kwargs):
         materialized.append(path)
-        return path
+        return SimpleNamespace(save=lambda: SavedMaterializationOutputs({}))
 
     monkeypatch.setattr(
-        "openhcs.processing.materialization.materialize",
+        "openhcs.core.steps.function_artifact_materialization.prepare_materialization",
         fake_materialize,
     )
 
-    materialize_artifact_outputs(
-        filemanager,
-        _plan(output_plan, variable_components=(VariableComponents.CHANNEL,)),
-        PersistentArtifactMaterializationTargetPlan("disk"),
-        context,
-    )
+    PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(filemanager, _plan(output_plan, variable_components=(VariableComponents.CHANNEL,)), context)
 
     assert materialized == ["/images/A01_s001_w1_z001_t001.TIF"]
 
@@ -4076,9 +4038,7 @@ def test_compiled_z_axis_reaches_source_named_image_materialization() -> None:
     selected_payload = ImagePayloadMetadata(
         source_image_names=(selected_image.name,),
     ).payload_with(np.ones((2, 5, 7), dtype=np.uint16), None)
-    saved_payload = FunctionOutputContextStrategy.for_output_plan(
-        output_plan,
-    ).contextualize_from_projector(
+    saved_payload = (ImageArtifactType if output_plan is None else output_plan.artifact_type).contextualize_output_from_projector(
         selected_payload,
         ImagePayloadMetadata(
             plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
@@ -4144,7 +4104,11 @@ def test_compiled_z_axis_reaches_source_named_image_materialization() -> None:
     assert image_payload_metadata(saved_payload).plane_axis is (
         RuntimePlaneAxis.RUNTIME_SLICE
     )
-    assert materialized_artifact_output_paths(plan, context) == (
+    assert tuple(
+        Path(output.path)
+        for materialization in runtime_artifact_materializations(plan, context)
+        for output in materialization.outputs(plan, context)
+    ) == (
         Path("/images/A01_s001_w2_z001_t001_NucleiLabels.tif"),
         Path("/images/A01_s001_w2_z002_t001_NucleiLabels.tif"),
     )
@@ -4214,23 +4178,18 @@ def test_materialize_rgb_artifact_keeps_scalar_filename_identity_for_mixed_prove
         **_kwargs,
     ):
         materialized.append((spec, data, path, backends, backend_kwargs))
-        return path
+        return SimpleNamespace(save=lambda: SavedMaterializationOutputs({}))
 
     monkeypatch.setattr(
-        "openhcs.processing.materialization.materialize",
+        "openhcs.core.steps.function_artifact_materialization.prepare_materialization",
         fake_materialize,
     )
 
-    materialize_artifact_outputs(
-        filemanager,
-        _plan(
+    StreamingOnlyArtifactMaterializationTargetPlan().materialize_outputs(filemanager, _plan(
             output_plan,
             streaming_configs={"napari_stream": streaming_config},
             variable_components=(VariableComponents.SITE,),
-        ),
-        StreamingOnlyArtifactMaterializationTargetPlan(),
-        context,
-    )
+        ), context)
 
     _spec, _data, path, _backends, backend_kwargs = materialized[0]
     assert path == "/images/A01_s001_w2_z001_t001.TIF"

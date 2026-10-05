@@ -1,0 +1,83 @@
+{
+  "source_head": "394e9bc74c58a81772e83d25502c53cd754fd00d",
+  "scope": "CPU5, one well/worker/thread, one ordinary candidate observation per case; startup/catalog/kernel preparation excluded. Retained qualified native observations and previous ordinary results. Exact exported images, existing CP measurement tolerances, complete output inventories. Coupled batch plus main743: no individual causal attribution or stable speedup floor.",
+  "comparisons": [
+    {
+      "case": "ExampleSpeckles",
+      "compile_seconds": 0.21866059303283691,
+      "execute_seconds": 0.6749529838562012,
+      "total_seconds": 0.9709084127098322,
+      "previous_execute_seconds": 0.5299422740936279,
+      "previous_total_seconds": 0.8299143039621413,
+      "execute_delta_seconds": 0.14501070976257324,
+      "total_delta_seconds": 0.14099410874769092,
+      "native_execution_seconds": 1.9121274552308023,
+      "native_total_seconds": 2.014032178092748,
+      "execution_speedup": 2.8329787421729233,
+      "total_speedup": 2.0743791605137383,
+      "remaining_seconds_to_2x_total": 0,
+      "scientific_status": "PASS",
+      "native_report_sha256": "d17f44b27d40946965c7f3227f347926fd1d6cc710f83b921699a1a868cd406b"
+    },
+    {
+      "case": "ExampleVitra",
+      "compile_seconds": 0.18397903442382812,
+      "execute_seconds": 1.1804585456848145,
+      "total_seconds": 1.4631884088739753,
+      "previous_execute_seconds": 1.424692153930664,
+      "previous_total_seconds": 1.6862105638720095,
+      "execute_delta_seconds": -0.2442336082458496,
+      "total_delta_seconds": -0.22302215499803424,
+      "native_execution_seconds": 2.7783419392071664,
+      "native_total_seconds": 2.9668581392616034,
+      "execution_speedup": 2.3536124579414,
+      "total_speedup": 2.0276665132584024,
+      "remaining_seconds_to_2x_total": 0,
+      "scientific_status": "PASS",
+      "native_report_sha256": "a11f37b8b4d57d847efa0f854195530ac90a4da72ce751658aa93e1cf00a46af"
+    },
+    {
+      "case": "ExampleWoundHealing",
+      "compile_seconds": 0.09223222732543945,
+      "execute_seconds": 1.0572621822357178,
+      "total_seconds": 1.2061162451282144,
+      "previous_execute_seconds": 1.868335485458374,
+      "previous_total_seconds": 2.020139404106885,
+      "execute_delta_seconds": -0.8110733032226562,
+      "total_delta_seconds": -0.8140231589786708,
+      "native_execution_seconds": 3.7158190980553627,
+      "native_total_seconds": 3.8183068688958883,
+      "execution_speedup": 3.5145673045807637,
+      "total_speedup": 3.1657867840839744,
+      "remaining_seconds_to_2x_total": 0,
+      "scientific_status": "PASS",
+      "native_report_sha256": "f28e45199aa5b554a2f39af5d64960c4fbd027f4ba98407001b290d3d61337bc"
+    },
+    {
+      "case": "ExampleYeastPatches",
+      "compile_seconds": 0.2742898464202881,
+      "execute_seconds": 1.4117457866668701,
+      "total_seconds": 1.8136256281286478,
+      "previous_execute_seconds": 2.0938608646392822,
+      "previous_total_seconds": 2.4683544947765768,
+      "execute_delta_seconds": -0.6821150779724121,
+      "total_delta_seconds": -0.654728866647929,
+      "native_execution_seconds": 4.697637589182705,
+      "native_total_seconds": 4.791621568147093,
+      "execution_speedup": 3.3275378850421937,
+      "total_speedup": 2.6420124935548186,
+      "remaining_seconds_to_2x_total": 0,
+      "scientific_status": "PASS",
+      "native_report_sha256": "e8a4cc7530d776cc984c5b1545df13ba9eaa48fbecadbd7e5ea89793870b254a"
+    }
+  ],
+  "science_sha256": "a86cb7a49463a786fa2ed9950181fd6240ee550719facb7a11debbdd6c2b68b3",
+  "previous_receiving_sha256": "edd15fa0a327bd19ec996f4012ad72ec1a3c3cd899d69e11be6de4bcb66a5e0e",
+  "pr_heads": {
+    "772": "d7c3019abb29f8de6afb9ae084f5cef21dba0201",
+    "775": "dd4cad9762098edd7616191bffea24ba99b6f220",
+    "776": "e6c1a4f8d01dfa78410ec667a71d82814ad02a68"
+  },
+  "grid_cache_boundary_sha256": "ccda32b51096664ebdf779aef56155c22075c6f6012fd14ebb489284ef10b4c0",
+  "evidence_packet": "/home/ts/.local/state/openhcs-maintenance/20261005/runtime-copy-grid-combined-ordinary-v1"
+}

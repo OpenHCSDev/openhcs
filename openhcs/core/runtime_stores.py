@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, field as dataclass_field, replace
+from dataclasses import dataclass, field as dataclass_field
 import inspect
 from pathlib import Path
 from types import MappingProxyType
@@ -44,6 +44,7 @@ from openhcs.core.source_matching import (
     SourceAxisMetadataScope,
     SourceImageSetIdentityCompatibility,
     SourceImageSetIdentityPolicy,
+    semantic_source_metadata_value,
 )
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
 from openhcs.serialization.json import to_jsonable
@@ -115,20 +116,29 @@ class RuntimeArtifactLocationTarget(RuntimeArtifactQueryTarget):
 
 @dataclass(frozen=True, slots=True)
 class RuntimeArtifactDynamicComponentTarget(RuntimeArtifactQueryTarget):
-    """Runtime-artifact query target for all discovered keys of one component."""
+    """Match discovered groups at their compiled producer-owned locations."""
 
-    component: AllComponents
+    input_plan: ArtifactInputPlan = dataclass_field(hash=False)
+    backend: str
 
     def __post_init__(self) -> None:
-        if not isinstance(self.component, AllComponents):
-            raise TypeError(
-                "RuntimeArtifactDynamicComponentTarget.component must be an "
-                "AllComponents value."
+        if not self.backend:
+            raise ValueError(
+                "RuntimeArtifactDynamicComponentTarget.backend cannot be empty."
             )
+        object.__setattr__(
+            self, "input_plan", self.input_plan.runtime_query_snapshot()
+        )
 
     def matches(self, record: "StoredRuntimeValue") -> bool:
         scope = record.key.scope
-        return scope.component is self.component and scope.value_text is not None
+        producer_scope = self.input_plan.producer_group_scope()
+        if scope.component is not producer_scope.component or scope.value_text is None:
+            return False
+        return record.location == RuntimeArtifactLocation(
+            path=self.input_plan.path_for_runtime_query(scope.value_text),
+            backend=self.backend,
+        )
 
 
 def replace_runtime_artifact_payload(
@@ -171,9 +181,7 @@ class RuntimeArtifactQuery:
                 name=input_plan.name,
                 artifact_type=input_plan.artifact_type,
                 axis_id=axis_id,
-                target=RuntimeArtifactDynamicComponentTarget(
-                    input_scope.component,
-                ),
+                target=RuntimeArtifactDynamicComponentTarget(input_plan, backend),
             )
         return cls(
             name=input_plan.name,
@@ -234,24 +242,11 @@ class RuntimeArtifactQuery:
         return True
 
 
-@dataclass(frozen=True, slots=True)
-class StoredRuntimeValue:
+@dataclass(frozen=True, slots=True, kw_only=True)
+class StoredRuntimeValue(RuntimeValue):
     """A validated runtime value with its persistence boundary."""
 
-    value: RuntimeValue
     location: RuntimeArtifactLocation
-
-    @property
-    def key(self) -> ArtifactKey:
-        return self.value.key
-
-    @property
-    def path(self) -> str:
-        return self.location.path
-
-    @property
-    def backend(self) -> str:
-        return self.location.backend
 
 
 @dataclass(frozen=True, slots=True)
@@ -297,15 +292,7 @@ class RuntimeArtifactInput:
         if producer_scope.is_ungrouped:
             return self._records(store, producer_scope, None)
         selection_scope = projection.producer_selection_scope
-        if storage_plan.composes_producer_groups(
-            ComponentSet.coerce(projection.consumer_variable_components)
-        ):
-            return self.all_records(store)
-        if (
-            selection_scope == producer_scope
-            and not selection_scope.is_dynamic
-            and len(selection_scope.keys) > 1
-        ):
+        if self.selects_complete_producer():
             return self.all_records(store)
 
         runtime_key = self.axis_scope.value_text_for_component(
@@ -315,6 +302,136 @@ class RuntimeArtifactInput:
             selection_scope.select_runtime_key(runtime_key)
         )
         return self._records(store, producer_scope, selected_key)
+
+    def selects_complete_producer(self) -> bool:
+        """Derive whole-producer selection from this exact compiled projection."""
+
+        storage_plan = self.edge_plan.storage_plan
+        projection = self.edge_plan.projection
+        producer_scope = storage_plan.producer_group_scope()
+        selection_scope = projection.producer_selection_scope
+        return (
+            projection.selects_declared_complete_producer(self.edge_plan.spec, storage_plan)
+            or storage_plan.composes_producer_groups(
+                ComponentSet.coerce(projection.consumer_variable_components)
+            )
+            or (
+                selection_scope == producer_scope
+                and not selection_scope.is_dynamic
+                and len(selection_scope.keys) > 1
+            )
+        )
+
+    def candidate_execution_scopes(
+        self,
+        store: "RuntimeValueStore",
+        execution_scope: ComponentGroupScope,
+        *,
+        variable_components: ComponentSet,
+    ) -> dict[RuntimeExecutionAxisScope, str]:
+        """Discover correlated consumer coordinates from exact producer records.
+
+        Discovery retains addresses for diagnostics; admission through records()
+        subsequently validates and resolves the current producer value.
+        """
+
+        storage_plan = self.edge_plan.storage_plan
+        producer_scope = storage_plan.producer_group_scope()
+        projection = self.edge_plan.projection
+        selection_scope = projection.producer_selection_scope
+        selects_complete_producer = self.selects_complete_producer()
+        projected_components = projection.projected_variable_components(storage_plan)
+        identity_policy = self._source_context_identity_policy()
+        candidates = tuple(
+            record
+            for group_key in ((None,) if producer_scope.is_dynamic else producer_scope.keys)
+            for record in store.find_matching(
+                RuntimeArtifactQuery.from_input_plan(
+                    storage_plan,
+                    axis_id=self.axis_scope.axis_id,
+                    backend=self.backend,
+                    group_key=group_key,
+                )
+            )
+        )
+        scopes = {}
+        for record in candidates:
+            record_scope = record.key.scope
+            if record_scope.component is not producer_scope.component:
+                continue
+            if not selects_complete_producer and not selection_scope.contains_runtime_key(
+                record_scope.value_text
+            ):
+                continue
+            record_coordinates = dict(record_scope.source_component_values)
+            if selects_complete_producer:
+                record_coordinates.pop(producer_scope.component, None)
+            if projected_components:
+                provenance = image_payload_metadata(record.data).source_provenance
+                plane_metadata = provenance.source_image_provenance_planes.runtime_component_metadata
+                metadata_rows = plane_metadata or (
+                    (provenance.source_component_metadata,)
+                    if provenance.source_component_metadata is not None else ()
+                )
+            else:
+                metadata_rows = (None,)
+            for metadata in metadata_rows:
+                if metadata is None and projected_components:
+                    continue
+                coordinates = dict(record_coordinates)
+                for component in projected_components:
+                    component_scope = projection.component_scope(component)
+                    if component_scope.is_dynamic:
+                        component_value = semantic_source_metadata_value(
+                            metadata, component.value,
+                        )
+                        if component_value is None:
+                            break
+                        component_value = str(component_value)
+                    else:
+                        component_value = component_scope.select_runtime_key(None)
+                    if not SourceAxisMetadataScope.constraint_matches_metadata(
+                        metadata, component.value, component_value,
+                    ):
+                        break
+                    existing_value = coordinates.get(component)
+                    if existing_value is not None and not SourceAxisMetadataScope.constraint_matches_metadata(
+                        metadata, component.value, existing_value,
+                    ):
+                        break
+                    coordinates.setdefault(component, component_value)
+                else:
+                    runtime_value = coordinates.get(execution_scope.component)
+                    if execution_scope.is_dynamic and runtime_value is None:
+                        continue
+                    component_keys = execution_scope.runtime_keys((runtime_value,))
+                    for component_key in component_keys:
+                        if (
+                            not selects_complete_producer
+                            and selection_scope.is_dynamic
+                            and selection_scope.component is execution_scope.component
+                            and record_scope.value_text != component_key
+                        ):
+                            continue
+                        fixed_group_value = coordinates.get(execution_scope.component)
+                        if fixed_group_value is not None and fixed_group_value != component_key:
+                            continue
+                        fixed_values = tuple(
+                            (component, value)
+                            for component, value in coordinates.items()
+                            if component is not execution_scope.component
+                            and not component.is_multiprocessing_axis()
+                            and component not in variable_components
+                            and identity_policy.is_identity_component(component)
+                        )
+                        scope = RuntimeExecutionAxisScope.from_raw(
+                            self.axis_scope.axis_id,
+                            component=execution_scope.component,
+                            value=component_key,
+                            fixed_component_values=fixed_values,
+                        )
+                        scopes.setdefault(scope, record.location.path)
+        return scopes
 
     def all_records(
         self,
@@ -332,12 +449,12 @@ class RuntimeArtifactInput:
             )
         records = tuple(
             record
-            for record in store.find(
-                name=storage_plan.name,
-                artifact_type=storage_plan.artifact_type,
-                axis_id=self.axis_scope.axis_id,
-                group_component=producer_scope.component,
-                match_component=True,
+            for record in store.find_matching(
+                RuntimeArtifactQuery.from_input_plan(
+                    storage_plan,
+                    axis_id=self.axis_scope.axis_id,
+                    backend=self.backend,
+                )
             )
             if self._matches_execution_scope(record)
         )
@@ -374,7 +491,7 @@ class RuntimeArtifactInput:
         """Compose exact records after projecting the runtime-axis coordinate."""
 
         return RuntimeValue.compose(
-            tuple(self._axis_value(record.value) for record in records),
+            tuple(self._axis_value(record) for record in records),
             self._producer_group_composition_scope(),
         )
 
@@ -384,7 +501,7 @@ class RuntimeArtifactInput:
     ) -> tuple[RuntimeValue, ...]:
         """Return exact producer values projected into this consumer scope."""
 
-        return tuple(self._axis_value(record.value) for record in self.records(store))
+        return tuple(self._axis_value(record) for record in self.records(store))
 
     def resolve_value(self, store: "RuntimeValueStore") -> Any:
         """Resolve this compiled input to its invocation value."""
@@ -477,8 +594,8 @@ class RuntimeArtifactInput:
                 f"{metadata_scope.component_values!r} selects multiple producer "
                 f"runtime slices {matching_indices!r}."
             )
-        return replace(
-            value,
+        return RuntimeValue(
+            key=value.key,
             data=RuntimeSliceProjection.value_for_slice(
                 payload,
                 RuntimePlaneAxisValueProjection.from_selected_plane(
@@ -487,6 +604,7 @@ class RuntimeArtifactInput:
                     axis_size=slice_count,
                 ),
             ),
+            materialization_source_metadata=value.materialization_source_metadata,
         )
 
     def _consumer_component_value(self, component: AllComponents) -> str:
@@ -573,17 +691,13 @@ class RuntimeArtifactInput:
         context_components = ComponentSet.collect(
             (component for component, _value in self.axis_scope.fixed_component_values),
             (component for component, _value in record_scope.fixed_component_values),
-        ).excluding(projected_components)
-        # Only a declared source-context relation supplies plane membership.
-        # Unrelated visible bindings must not relax an exact artifact input.
-        context_sources = self.edge_plan.spec.source_context_sources()
-        identity_policy = (
-            SourceImageSetIdentityPolicy.from_source_bindings(
-                self.source_binding_plan.for_artifact_refs(context_sources)
+        ).excluding(
+            ComponentSet.collect(
+                projected_components,
+                (self.edge_plan.storage_plan.producer_group_scope().component,),
             )
-            if context_sources
-            else SourceImageSetIdentityPolicy()
         )
+        identity_policy = self._source_context_identity_policy()
         context_components = (
             context_components
             .intersection(record_scope.source_components)
@@ -603,6 +717,16 @@ class RuntimeArtifactInput:
                 identity_policy, components=context_components,
             ),
         ).matches()
+
+    def _source_context_identity_policy(self) -> SourceImageSetIdentityPolicy:
+        """Derive plane membership only from this edge's context declarations."""
+
+        context_sources = self.edge_plan.spec.source_context_sources()
+        if not context_sources:
+            return SourceImageSetIdentityPolicy()
+        return SourceImageSetIdentityPolicy.from_source_bindings(
+            self.source_binding_plan.for_artifact_refs(context_sources)
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -749,7 +873,7 @@ class RuntimeArtifactAddress:
         return cls(
             key=record.key,
             location=record.location,
-            value_type=type(record.value.data).__qualname__,
+            value_type=type(record.data).__qualname__,
         )
 
     @classmethod
@@ -830,23 +954,6 @@ class RuntimeValueStore:
             type[BoundedCache[Any, Any]],
             BoundedCache[Any, Any],
         ] = {}
-        self._find_cache: dict[
-            tuple[
-                int,
-                str | None,
-                ArtifactType | None,
-                str | None,
-                AllComponents | None,
-                str | None,
-                bool,
-                bool,
-            ],
-            tuple[StoredRuntimeValue, ...],
-        ] = {}
-        self._find_matching_cache: dict[
-            tuple[int, RuntimeArtifactQuery],
-            tuple[StoredRuntimeValue, ...],
-        ] = {}
 
     def query_cache(self, cache_type: type[StoreQueryCacheT]) -> StoreQueryCacheT:
         """Return a bounded derived-value cache owned by this store's lifetime.
@@ -907,7 +1014,9 @@ class RuntimeValueStore:
     ) -> StoredRuntimeValue:
         """Record a validated value and its persistence location."""
         record = StoredRuntimeValue(
-            value=value,
+            key=value.key,
+            data=value.data,
+            materialization_source_metadata=value.materialization_source_metadata,
             location=RuntimeArtifactLocation(path=path, backend=backend),
         )
         existing = self._current_record(value.key)
@@ -933,7 +1042,9 @@ class RuntimeValueStore:
         keeping record() strict for accidental duplicate writes.
         """
         record = StoredRuntimeValue(
-            value=value,
+            key=value.key,
+            data=value.data,
+            materialization_source_metadata=value.materialization_source_metadata,
             location=RuntimeArtifactLocation(path=path, backend=backend),
         )
         self._records_by_location[(value.key, record.location)] = record
@@ -986,7 +1097,8 @@ class RuntimeValueStore:
     ) -> tuple[StoredRuntimeValue, ...]:
         """Return stored records matched by a typed runtime artifact query."""
         cache_key = (self._revision, query)
-        cached = self._find_matching_cache.get(cache_key)
+        cache = self.query_cache(BoundedCache)
+        cached = cache.cached_value(cache_key)
         if cached is not None:
             return cached
         result = tuple(
@@ -994,7 +1106,7 @@ class RuntimeValueStore:
             for record in self._records_by_location.values()
             if query.matches(record)
         )
-        self._find_matching_cache[cache_key] = result
+        cache.store_value(cache_key, result)
         return result
 
     def get(self, key: ArtifactKey) -> StoredRuntimeValue:
@@ -1026,7 +1138,8 @@ class RuntimeValueStore:
             match_component,
             match_group,
         )
-        cached = self._find_cache.get(cache_key)
+        cache = self.query_cache(BoundedCache)
+        cached = cache.cached_value(cache_key)
         if cached is not None:
             return cached
         records: list[StoredRuntimeValue] = []
@@ -1044,7 +1157,7 @@ class RuntimeValueStore:
                 continue
             records.append(record)
         result = tuple(records)
-        self._find_cache[cache_key] = result
+        cache.store_value(cache_key, result)
         return result
 
     def find_by_location(
@@ -1129,8 +1242,6 @@ class RuntimeValueStore:
         self._revision += 1
         for cache in self._query_caches.values():
             cache.clear()
-        self._find_cache.clear()
-        self._find_matching_cache.clear()
 
 
 def _validate_overwrite(

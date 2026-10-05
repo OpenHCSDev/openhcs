@@ -24,8 +24,8 @@ from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_o
 from openhcs.core.runtime_image_values import image_payload_data
 from openhcs.core.runtime_object_labels import ObjectLabelValue
 from openhcs.core.runtime_output_matching import (
+    split_runtime_output,
     RuntimeOutputBundle,
-    RuntimeReturnedOutputMatcher,
 )
 from openhcs.core.runtime_tabular_values import ColumnarRows
 from openhcs.interop.cellprofiler.module_declarations import CellProfilerModule
@@ -171,10 +171,7 @@ def test_cellprofiler_execution_names_each_multi_canonical_stack_slice() -> None
         execution_mode=ImagePayloadExecutionMode.NATURAL,
     )
 
-    resolved = RuntimeReturnedOutputMatcher(
-        callable_contract=contract,
-        returned_output=returned,
-    ).resolve()
+    resolved = contract.resolve_returned_output(returned)
 
     assert tuple(resolved) == (first.ref(), second.ref())
     np.testing.assert_array_equal(resolved[first.ref()], returned.slices[0])
@@ -205,13 +202,10 @@ def test_output_matcher_does_not_duplicate_named_canonical_in_trailing_slot() ->
         artifact_outputs(image, measurements)(lambda value: value)
     )
 
-    matcher = RuntimeReturnedOutputMatcher(
-        callable_contract=contract,
-        returned_output=("image", "measurements"),
-    )
+    matcher_returned_output = ("image", "measurements")
 
-    assert matcher.canonical_output == "image"
-    assert matcher.resolve() == {
+    assert split_runtime_output(matcher_returned_output)[0] == "image"
+    assert contract.resolve_returned_output(matcher_returned_output) == {
         image.ref(): "image",
         measurements.ref(): "measurements",
     }
@@ -279,6 +273,6 @@ def test_generic_function_save_records_canonical_and_trailing_outputs() -> None:
         records = context.runtime_value_store.find(name=spec.name, axis_id="A01")
         assert len(records) == 1
         np.testing.assert_array_equal(
-            image_payload_data(records[0].value.data),
+            image_payload_data(records[0].data),
             expected,
         )

@@ -1,0 +1,61 @@
+{
+  "startup_seconds": 0.807538575027138,
+  "environment": {
+    "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+    "python_version": "3.9.25",
+    "cellprofiler_version": "4.2.8.1",
+    "cellprofiler_core_version": "4.2.8.1",
+    "numpy_version": "1.24.4",
+    "scipy_version": "1.9.0",
+    "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261003/current-3d-speckles-paired-v2/native/ExampleSpeckles/native_tmp"
+  },
+  "request": {
+    "pipeline_path": "/home/ts/.local/state/openhcs-maintenance/20261003/current-3d-speckles-paired-v2/native/ExampleSpeckles/preparation/native_cellprofiler_headless/ExampleSpeckles.cppipe",
+    "input_dir": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleSpeckles/images",
+    "output_root": "/home/ts/.local/state/openhcs-maintenance/20261003/current-3d-speckles-paired-v2/native/ExampleSpeckles/outputs",
+    "expected_image_sets": 1,
+    "repetitions": 2,
+    "file_list_path": "/home/ts/.local/state/openhcs-maintenance/20261003/current-3d-speckles-paired-v2/native/ExampleSpeckles/preparation/native_cellprofiler_file_list.txt",
+    "first_image_set": 1,
+    "last_image_set": null,
+    "report_path": "/home/ts/.local/state/openhcs-maintenance/20261003/current-3d-speckles-paired-v2/native/ExampleSpeckles/native_report.json",
+    "start_barrier_root": null,
+    "start_barrier_job_count": 1,
+    "start_barrier_job_index": 0
+  },
+  "observations": [
+    {
+      "repetition": -1,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261003/current-3d-speckles-paired-v2/native/ExampleSpeckles/outputs/-1",
+      "image_set_count": 1,
+      "invocation_seconds": 3.0011698277667165,
+      "pre_first_module_seconds": 0.301135023124516,
+      "first_module_through_post_run_seconds": 2.7000348046422005,
+      "invocation_started_monotonic_seconds": 3804788.163755448,
+      "first_module_started_monotonic_seconds": 3804788.464890471,
+      "completed_monotonic_seconds": 3804791.164925276
+    },
+    {
+      "repetition": 0,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261003/current-3d-speckles-paired-v2/native/ExampleSpeckles/outputs/0",
+      "image_set_count": 1,
+      "invocation_seconds": 1.9962371489964426,
+      "pre_first_module_seconds": 0.10309637477621436,
+      "first_module_through_post_run_seconds": 1.8931407742202282,
+      "invocation_started_monotonic_seconds": 3804791.164935265,
+      "first_module_started_monotonic_seconds": 3804791.26803164,
+      "completed_monotonic_seconds": 3804793.161172414
+    },
+    {
+      "repetition": 1,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261003/current-3d-speckles-paired-v2/native/ExampleSpeckles/outputs/1",
+      "image_set_count": 1,
+      "invocation_seconds": 1.9122227132320404,
+      "pre_first_module_seconds": 0.07363771507516503,
+      "first_module_through_post_run_seconds": 1.8385849981568754,
+      "invocation_started_monotonic_seconds": 3804793.161182433,
+      "first_module_started_monotonic_seconds": 3804793.234820148,
+      "completed_monotonic_seconds": 3804795.073405146
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "files": {
+    "report.rst": {
+      "sha256": "11de21974ade24d126e635e554c9c9ad984d45aab788780b628361b0d22dafa8",
+      "bytes": 4714
+    },
+    "saved-v10-qualification.json": {
+      "sha256": "c9632c56a642b13a36bec564f2e128ac2a2fadf05d3a86a2e3c5b8b604a4500b",
+      "bytes": 16243
+    },
+    "metrics.csv": {
+      "sha256": "844b51828eafbea34153f1c4d9bcd29f752403fcd297275bc99bea296f1a360c",
+      "bytes": 396
+    },
+    "science-terminal.json": {
+      "sha256": "a9871f40c946d17cd2c5df275dfafe2c058e6270732e0cd51e5b2fb3cd3c5805",
+      "bytes": 2108
+    },
+    "baseline-execution-region.json": {
+      "sha256": "eda84c30eb19709e0fc37a35550a0e5a8e27e97ddd818e9296904203cd9e9e0b",
+      "bytes": 31183
+    },
+    "falsification.json": {
+      "sha256": "4a2010cca8476065b814bc7247ee80737cd29878c023930d8757033bd5f03171",
+      "bytes": 25432
+    },
+    "strict-science.json": {
+      "sha256": "b9a35a8504dc4a2dc96d4e8e4263335be9f8c70f0b14b45e1f92aa3c8d3c6b45",
+      "bytes": 268580
+    },
+    "baseline-compile_only-region.json": {
+      "sha256": "d4cf4157156de4e7a41949e36ee4daed69665ea7b8c6e2ddf5b00613300b6e5a",
+      "bytes": 6874
+    },
+    "original-nine-failures.json": {
+      "sha256": "06ef7de5b4dbaee2784d4233734ae90749802d38b802d66f6622eed4b3ecbbb1",
+      "bytes": 6093
+    },
+    "extended-controls.json": {
+      "sha256": "a7abdc5fdde8525351ab8ce0636d00963793cce71bd2f0d756deb9deb7aec945",
+      "bytes": 81
+    },
+    "consumer-controls.json": {
+      "sha256": "828575a11f53ac5c23865f5d47825874593c1cbd07109a7d4bf57443aa28c2fa",
+      "bytes": 199
+    },
+    "candidate-execution-region.json": {
+      "sha256": "7ec1f4e50610629ec55dc925de3b6a6b32b8b9337729b5117fa7eb57ff5f657f",
+      "bytes": 31198
+    },
+    "candidate-compile_only-region.json": {
+      "sha256": "6dd3985b2d0d394e5e796d7304b03b208657e7d161484c13b3110d6451ff8bdd",
+      "bytes": 6877
+    },
+    "baseline-source-pins.json": {
+      "sha256": "05f6be9206a59e4c392ef3994049287009fbcaa6937799d2fc3c53c2ba3b58be",
+      "bytes": 6814
+    },
+    "candidate-observations.json": {
+      "sha256": "6594071a580a83a5abd4cdb58c399899d046c84eaa52ed1c4f5dc0faab2bf88d",
+      "bytes": 2522
+    },
+    "whole-driver-controller.py": {
+      "sha256": "c140695473eadb961b245c24344acc79778904920ba3725945ec9235354fbb9b",
+      "bytes": 11489
+    },
+    "baseline-observations.json": {
+      "sha256": "a9558f52b6d74972c4244b9af73e03cfe66ecada108d1d2131db5af56c868260",
+      "bytes": 2518
+    },
+    "submitted-input-controls.json": {
+      "sha256": "ab65cac76f849b16a4ad67bf4e9c39818bd82b50c7a55173da42c112a50ecb33",
+      "bytes": 1733
+    },
+    "whole-driver-site.py": {
+      "sha256": "391dc438b0d9d253e3467674c19d37b2670d5d7197400aa45f3c251e84f948c0",
+      "bytes": 10930
+    },
+    "candidate-source-pins.json": {
+      "sha256": "39de2a5b69a560525666431b10b576e9de0e3c08d21ecf1f715bd22d429f541f",
+      "bytes": 6816
+    }
+  },
+  "scope": "Compact rejection/behavior evidence; full warm-state witness is preserved by original byte pin, no copied scientific outputs/environments"
+}

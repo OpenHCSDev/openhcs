@@ -4,13 +4,15 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Callable, ClassVar, Sequence
 
 import numpy as np
+from arraybridge import MemoryType, detect_memory_type
 from metaclass_registry import AutoRegisterMeta
+from polystore.config import TiffConfig, TiffPhotometric, TiffPlanarConfig
 
 from openhcs.constants.constants import FileFormat
 from openhcs.core.registry_strategies import NominalTypeStrategyFamilyMixin
@@ -154,7 +156,8 @@ class ImageFileSourceMetadata:
             raise ValueError("Saved image metadata requires an actual native dtype.")
         native_scale_governs = self.intensity_scale is not None or not values_preserved
         if not values_preserved:
-            metadata = metadata.without_unit_interval_intensity_scale().replace_fields(
+            metadata = metadata.replace_fields(
+                unit_interval_intensity=None,
                 physical_border_edges_yx=None,
                 mask_defines_border=None,
             )
@@ -247,9 +250,52 @@ class ImageFileFormat(ABC, metaclass=AutoRegisterMeta):
             f"No image serialization format is registered for suffix {suffix!r}."
         )
 
-    @abstractmethod
     def prepare(self, payload: Any) -> Any:
-        """Return a payload suitable for this file format."""
+        """Project runtime pixels onto the host before format-specific encoding."""
+        pixels = image_payload_data(payload)
+        host_pixels = MemoryType(detect_memory_type(pixels)).to_numpy(pixels)
+        host_payload = image_payload_metadata(payload).payload_with(host_pixels)
+        return self.prepare_host_payload(host_payload)
+
+    @abstractmethod
+    def prepare_host_payload(self, payload: Any) -> Any:
+        """Encode host pixels while respecting this format's image semantics."""
+
+    def storage_config(
+        self, payload: Any, configured: TiffConfig | None
+    ) -> TiffConfig | None:
+        """Non-TIFF formats retain their existing backend writer configuration."""
+        return None
+
+    @classmethod
+    def storage_write_batches(
+        cls,
+        payloads: Sequence[Any],
+        paths: Sequence[str | Path],
+        configured: TiffConfig | None,
+    ) -> tuple[tuple[tuple[int, ...], TiffConfig | None], ...]:
+        """Batch compatible declared image codecs without changing output order."""
+        if len(payloads) != len(paths):
+            raise ValueError("Image storage payload/path cardinality mismatch.")
+        batches = []
+        for index, (payload, path) in enumerate(zip(payloads, paths, strict=True)):
+            config = (
+                cls.require_path(path).storage_config(
+                    payload,
+                    (
+                        configured
+                        if configured is not None and configured.applies_to_path(path)
+                        else None
+                    ),
+                )
+                if cls.is_image_path(path)
+                else None
+            )
+            if batches and batches[-1][1] == config:
+                batches[-1][0].append(index)
+            else:
+                batches.append(([index], config))
+        return tuple((tuple(indices), config) for indices, config in batches)
 
     def read(self, path: str | Path) -> np.ndarray:
         """Read pixels through this exact registered image-file format."""
@@ -375,7 +421,7 @@ class NumpyImageFileFormat(ImageFileFormat):
         del source_dtype
         return True
 
-    def prepare(self, payload: Any) -> Any:
+    def prepare_host_payload(self, payload: Any) -> Any:
         return image_payload_data(payload)
 
     def read(self, path: str | Path) -> np.ndarray:
@@ -410,8 +456,52 @@ class TiffImageFileFormat(ImageFileFormat):
         del source_dtype
         return True
 
-    def prepare(self, payload: Any) -> Any:
+    def prepare_host_payload(self, payload: Any) -> Any:
         return image_payload_data(payload)
+
+    def storage_config(
+        self, payload: Any, configured: TiffConfig | None
+    ) -> TiffConfig | None:
+        metadata = image_payload_metadata(payload)
+        if not metadata.persists_whole_image():
+            return configured
+        data = image_payload_data(payload)
+        channel_axis = metadata.normalized_source_channel_axis(data)
+        axes = list("ZYX")
+        planarconfig = None
+        photometric = TiffPhotometric.MINISBLACK
+        if channel_axis is not None:
+            if channel_axis < 0:
+                channel_axis += data.ndim
+            if channel_axis not in (data.ndim - 1, data.ndim - 3):
+                raise ValueError(
+                    "Intrinsic TIFF channels must be contiguous or planar before Y/X."
+                )
+            axes.insert(channel_axis, "S")
+            planarconfig = (
+                TiffPlanarConfig.CONTIG
+                if channel_axis == data.ndim - 1
+                else TiffPlanarConfig.SEPARATE
+            )
+            photometric = TiffPhotometric.RGB
+        if len(axes) != data.ndim:
+            raise ValueError(
+                "Intrinsic TIFF pixels must retain exactly their declared Z/Y/X and channel axes."
+            )
+        return replace(
+            configured if configured is not None else TiffConfig(),
+            photometric=photometric,
+            axes="".join(axes),
+            planarconfig=planarconfig,
+        )
+
+    def write(self, path: str | Path, payload: Any) -> None:
+        config = self.storage_config(payload, None)
+        if config is None:
+            return super().write(path, payload)
+        import tifffile
+
+        tifffile.imwrite(path, self.prepare(payload), **config.tifffile_write_kwargs())
 
     def requires_plane_store_decoder(self, path: Path) -> bool:
         import tifffile
@@ -486,7 +576,7 @@ class EightBitRasterImageFileFormat(ImageFileFormat):
     format_key = None
     suffixes = ()
 
-    def prepare(self, payload: Any) -> Any:
+    def prepare_host_payload(self, payload: Any) -> Any:
         return image_payload_as_uint8(require_single_image_payload(payload))
 
     def preserves_pixel_values(self, source_dtype: Any) -> bool:
@@ -522,7 +612,7 @@ class PngImageFileFormat(ImageFileFormat):
     format_key = "png"
     suffixes = (".png",)
 
-    def prepare(self, payload: Any) -> Any:
+    def prepare_host_payload(self, payload: Any) -> Any:
         array = require_single_image_payload(payload)
         if array.dtype == np.uint8 or array.dtype == np.uint16:
             return array
@@ -577,10 +667,15 @@ class NumericImagePayloadUint8Strategy(ImagePayloadUint8Strategy):
 
     def prepare(self, array: np.ndarray) -> np.ndarray:
         values = _uint8_conversion_values(array)
-        if _is_unit_interval(values):
-            values = values * _scale_value(values, 255.0)
-        sanitized = np.nan_to_num(values, nan=0.0, posinf=255.0, neginf=0.0)
-        return np.rint(np.clip(sanitized, 0.0, 255.0)).astype(np.uint8)
+        scale = _is_unit_interval(values)
+        # Own the working pixels before reusing them through each conversion phase.
+        working = values.copy(order="K") if values.dtype == array.dtype else values
+        if scale:
+            np.multiply(working, _scale_value(working, 255.0), out=working)
+        np.nan_to_num(working, copy=False, nan=0.0, posinf=255.0, neginf=0.0)
+        np.clip(working, 0.0, 255.0, out=working)
+        np.rint(working, out=working)
+        return working.astype(np.uint8)
 
 
 def image_file_source_metadata(path: Path | None) -> ImageFileSourceMetadata:

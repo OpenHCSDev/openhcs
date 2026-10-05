@@ -136,7 +136,7 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
         StepSourceBindingsConfig,
     )
     from openhcs.core.source_image_provenance import SourceImageProvenance
-    from openhcs.core.steps.function_outputs import OpenHCSMetadataWriter
+    from openhcs.core.steps.function_outputs import OpenHCSMetadataTarget
     from openhcs.core.steps.function_step import FunctionStep
     from openhcs.core.virtual_workspace_metadata import (
         FIELDS,
@@ -307,14 +307,14 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
     store = context.runtime_value_store
     (primary_record,) = store.find(name="Nuclei", axis_id="A01")
     (secondary_record,) = store.find(name="Cells", axis_id="A01")
-    source_metadata = primary_record.value.data.metadata
+    source_metadata = primary_record.data.metadata
     assert (
-        np.count_nonzero(object_label_dense_array(secondary_record.value.data))
-        >= np.count_nonzero(object_label_dense_array(primary_record.value.data))
+        np.count_nonzero(object_label_dense_array(secondary_record.data))
+        >= np.count_nonzero(object_label_dense_array(primary_record.data))
         > 0
     )
-    primary_labels = object_label_dense_array(primary_record.value.data)
-    secondary_labels = object_label_dense_array(secondary_record.value.data)
+    primary_labels = object_label_dense_array(primary_record.data)
+    secondary_labels = object_label_dense_array(secondary_record.data)
     np.testing.assert_array_equal(
         np.unique(primary_labels), np.unique(secondary_labels)
     )
@@ -337,10 +337,10 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
         )
         (options,) = spec.materialization.outputs
         (plane,) = MaterializationInput.from_runtime_slice_projected_value(
-            record.value.data, options
+            record.data, options
         ).items
         np.testing.assert_array_equal(tifffile.imread(saved_path), plane.data)
-        metadata = image_payload_metadata(record.value.data)
+        metadata = image_payload_metadata(record.data)
         # Sidecars have their own runtime alias, retaining the same source
         # address and pixel contributors as the primary object payload.
         assert metadata.source_provenance.scalar_source_identity == (
@@ -349,14 +349,14 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
         assert metadata.source_image_provenance_planes.as_contributors().identity == (
             source_metadata.source_image_provenance_planes.as_contributors().identity
         )
-        persisted.append(record.value.data)
+        persisted.append(record.data)
     diagnostics = PrimaryObjectDiagnosticPlanes(*persisted)
     np.testing.assert_array_equal(
-        diagnostics.unedited_objects.data, primary_record.value.data.unedited_labels
+        diagnostics.unedited_objects.data, primary_record.data.unedited_labels
     )
     np.testing.assert_array_equal(
         diagnostics.small_removed_objects.data,
-        primary_record.value.data.small_removed_labels,
+        primary_record.data.small_removed_labels,
     )
 
     # A memory-backed first step still owns persistent image artifacts. Later
@@ -364,7 +364,7 @@ def test_normal_compiled_runtime_persists_diagnostics_and_preserves_secondary_bi
     primary_plan = context.step_plans[0]
     assert primary_plan.write_backend == "memory"
     assert primary_plan.materialized_output is None
-    OpenHCSMetadataWriter.finalize_completed_plate(bundle.runtime_contexts)
+    OpenHCSMetadataTarget.finalize_completed_plate(bundle.runtime_contexts)
     metadata_path = METADATA_CONFIG.metadata_path(primary_plan.output_plate_root)
     metadata_document = json.loads(metadata_path.read_text())
     persisted_source_provenance = SourceImageProvenance.from_mapping(

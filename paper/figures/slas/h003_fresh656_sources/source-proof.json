@@ -1,0 +1,15 @@
+{
+  "run": "H003_FRESH656_88",
+  "frozen_manifest_sha256": "66b2c5106c444cb3aa539cc5b044ebeb8547a2f54ce721535e5ffbab60f7d250",
+  "source_receipt": "paper/supplementary/task_only_analysis/h003-fresh656-local-repair.json",
+  "original_capture_root": "/run/media/ts/hdd/openhcs-science/next-h003-fresh88-after656-20261004/H003_FRESH656_88/qa/c04",
+  "view": {"well": "A02", "site": 1, "z": 1, "time": 1, "center_yx": [295, 285], "zoom": 6},
+  "editorial_crop_xyxy": [297, 28, 1250, 430],
+  "scope": "Final-only local evidence; not a before/after image comparison or an independent accuracy score. Original PNGs copied byte-exact; shared crop removes UI chrome and footer. No fluorescence pixels, masks or display windows changed.",
+  "panels": [
+    {"letter": "A", "title": "DNA, native window 0–255", "position": [3, 59], "path": "paper/figures/slas/h003_fresh656_sources/dna.png", "sha256": "9d6ded7c3e4889157498f235ce8eae51d0816b6581dd1ad1b54d8f6dc9e72c9f", "original": "recovered_t01_DNA255/20261004T231216744194Z_napari_6021_OpenHCS_Napari_Visualization.png"},
+    {"letter": "B", "title": "Actin, native window 0–60", "position": [53, 59], "path": "paper/figures/slas/h003_fresh656_sources/actin.png", "sha256": "995ab6c2d64902bab912d0f8fa54ca12bc3809ac3df0ce4c1b4d83dff4a36b5c", "original": "recovered_t01_Actin60/20261004T231225235858Z_napari_6021_OpenHCS_Napari_Visualization.png"},
+    {"letter": "C", "title": "Seeded actin territories", "position": [3, 18], "path": "paper/figures/slas/h003_fresh656_sources/territories.png", "sha256": "2eaaec62e9a5bcb13db7d08046490523bd3dfead85470db245b7df0fad2c73d6", "original": "recovered_t01_result/20261004T231239276091Z_napari_6021_OpenHCS_Napari_Visualization.png"},
+    {"letter": "D", "title": "DNA and native ROI outlines", "position": [53, 18], "path": "paper/figures/slas/h003_fresh656_sources/combined.png", "sha256": "e728a17d5a6d01bcfac622814ee37b0c5bff732438a1ed584ca5884d27ac0158", "original": "recovered_t01_combined/20261004T231245274134Z_napari_6021_OpenHCS_Napari_Visualization.png"}
+  ]
+}

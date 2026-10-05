@@ -42,6 +42,7 @@ logger = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from openhcs.core.config import MaterializationBackend, PipelineConfig
     from openhcs.core.source_bindings import SourceBindingsConfig
+    from openhcs.core.runtime_pattern_cache import RuntimePatternDiscoveryCache
 
 # Dictionary to store registered metadata handlers for auto-detection
 # This will be auto-wrapped with SecondaryRegistryDict by the metaclass
@@ -755,6 +756,7 @@ class MicroscopeHandler(
         extensions=None,
         group_by=None,
         variable_components=None,
+        pattern_cache: "RuntimePatternDiscoveryCache | None" = None,
         **kwargs,
     ):
         """
@@ -784,12 +786,10 @@ class MicroscopeHandler(
         if not filemanager.exists(str(folder_path), backend):
             raise ValueError(f"Folder path does not exist: {folder_path}")
 
-        # Create pattern engine on demand with the provided filemanager
         from openhcs.formats.pattern.pattern_discovery import PatternDiscoveryEngine
 
-        pattern_engine = PatternDiscoveryEngine(self.parser, filemanager)
+        pattern_engine = PatternDiscoveryEngine(self.parser, filemanager, pattern_cache)
 
-        # Get patterns from the pattern engine
         patterns_by_well = pattern_engine.auto_detect_patterns(
             folder_path,
             extensions=extensions,
@@ -813,6 +813,8 @@ class MicroscopeHandler(
         filemanager: FileManager,
         backend: str,
         variable_components: Optional[List[str]] = None,
+        *,
+        pattern_cache: "RuntimePatternDiscoveryCache | None" = None,
     ):
         """
         Delegate to pattern engine.
@@ -848,12 +850,10 @@ class MicroscopeHandler(
         # Allow string patterns with braces - they are used for template matching
         # The pattern engine will handle template expansion to find matching files
 
-        # Create pattern engine on demand with the provided filemanager
         from openhcs.formats.pattern.pattern_discovery import PatternDiscoveryEngine
 
-        pattern_engine = PatternDiscoveryEngine(self.parser, filemanager)
+        pattern_engine = PatternDiscoveryEngine(self.parser, filemanager, pattern_cache)
 
-        # Delegate to the pattern engine
         return pattern_engine.path_list_from_pattern(
             directory_path,
             pattern,

@@ -14,6 +14,7 @@ import numpy as np
 from openhcs.processing.backends.cellprofiler._preparation import (
     CellProfilerCallableKernelPreparation,
 )
+from openhcs.core.runtime_profile import RuntimeProfiler
 from openhcs.core.artifacts import (
     ImageArtifactType,
     ArtifactSpecCollection,
@@ -651,7 +652,6 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import lru_cache
 import logging
-import os
 import time
 from typing import ClassVar
 from metaclass_registry import AutoRegisterMeta
@@ -673,6 +673,9 @@ from openhcs.core.pipeline.function_contracts import (
 )
 from openhcs.core.public_api import public_names_from_objects
 from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from openhcs.processing.backends.cellprofiler.morphology_connected_components_numba import (
+    equal_value_components_numba,
+)
 from openhcs.core.image_shapes import (
     apply_over_trailing_spatial_axes,
     trailing_spatial_factors,
@@ -690,6 +693,7 @@ from openhcs.core.runtime_relationships import (
     object_label_identity_lineage_payload,
     object_label_parent_child_payload,
 )
+from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     image_payload_data,
@@ -745,8 +749,8 @@ MORPHOLOGY_STRATEGY_REGISTRY_KEY = "strategy_label"
 SPARSE_CUBIC_BOOLEAN_RESAMPLE_RADIUS = 2.0
 EIGHT_NEIGHBOR_KERNEL = np.array([[1, 1, 1], [1, 0, 1], [1, 1, 1]], dtype=np.uint8)
 FOUR_CONNECTED_KERNEL = np.array([[0, 1, 0], [1, 0, 1], [0, 1, 0]], dtype=np.uint8)
-PROFILE_RUNTIME_ENV = "OPENHCS_PROFILE_FUNCTION_RUNTIME"
 logger = logging.getLogger(__name__)
+runtime_profiler = RuntimeProfiler(logger)
 
 
 class MorphOperation(Enum):
@@ -1491,7 +1495,7 @@ def _morph_image_pixels(
 
 
 def _morph_image_payload(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     structuring_element: StructuringElement,
     size: int,
     operation: Callable[[np.ndarray, np.ndarray], np.ndarray],
@@ -1508,7 +1512,7 @@ def _morph_image_payload(
 @runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
 @numpy_decorator(contract=ProcessingContract.FLEXIBLE)
 def closing(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     structuring_element: StructuringElementInput = StructuringElement.DISK,
     size: StructuringElementSize = 3,
     morphology_backend_provider: BackendProviderInput = CellProfilerBackendProvider.NATIVE,
@@ -1530,7 +1534,7 @@ def closing(
 @runtime_image_execution_mode(ImagePayloadExecutionMode.FULL_STACK)
 @numpy_decorator(contract=ProcessingContract.FLEXIBLE)
 def opening(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     structuring_element: StructuringElementInput = StructuringElement.DISK,
     size: StructuringElementSize = 3,
     morphology_backend_provider: BackendProviderInput = CellProfilerBackendProvider.NATIVE,
@@ -1912,6 +1916,10 @@ class MorphologyBackendStrategy(
         """Label foreground components in a binary 2-D mask."""
 
     @abstractmethod
+    def label_equal_values(self, values: np.ndarray) -> np.ndarray:
+        """Label equal nonzero values with full trailing spatial connectivity."""
+
+    @abstractmethod
     def disk_footprint(self, radius: float) -> np.ndarray:
         """Return a 2-D disk footprint."""
 
@@ -2058,6 +2066,24 @@ class NumpyMorphologyBackendStrategy(MorphologyBackendStrategy):
     ) -> tuple[np.ndarray, int]:
         return _scipy_connected_components(mask, connectivity=connectivity)
 
+    def prepare_backend(self) -> None:
+        labels = np.array([[[0, 1], [2, 1]]], dtype=np.intp)
+        for writeable in (True, False):
+            labels.flags.writeable = writeable
+            self.label_equal_values(labels)
+
+    def label_equal_values(self, values: np.ndarray) -> np.ndarray:
+        array = np.asarray(values)
+        if array.ndim == 0:
+            raise NotImplementedError("Connected labeling requires a spatial axis.")
+        if array.ndim > 3:
+            return apply_over_trailing_spatial_axes(
+                array, 3, self.label_equal_values, dtype=np.int32
+            )
+        spatial_shape = (1,) * (3 - array.ndim) + array.shape
+        labels = np.ascontiguousarray(array, dtype=np.intp).reshape(spatial_shape)
+        return equal_value_components_numba(labels).reshape(array.shape)
+
     def disk_footprint(self, radius: float) -> np.ndarray:
         return _scipy_disk_footprint(radius)
 
@@ -2074,10 +2100,63 @@ class NumpyMorphologyBackendStrategy(MorphologyBackendStrategy):
         return _scipy_disk_footprint(radius)
 
     def grayscale_closing(self, image: np.ndarray, footprint: np.ndarray) -> np.ndarray:
-        return _skimage_grayscale_closing(image, footprint)
+        return self._grayscale_morphology(image, footprint, first_pass_is_dilation=True)
 
     def grayscale_opening(self, image: np.ndarray, footprint: np.ndarray) -> np.ndarray:
-        return _skimage_grayscale_opening(image, footprint)
+        return self._grayscale_morphology(image, footprint, first_pass_is_dilation=False)
+
+    def _grayscale_morphology(
+        self,
+        image: np.ndarray,
+        footprint: np.ndarray,
+        *,
+        first_pass_is_dilation: bool,
+    ) -> np.ndarray:
+        image_array = np.asarray(image)
+        footprint_array = np.asarray(footprint, dtype=bool)
+        native_operation = (
+            _skimage_grayscale_closing
+            if first_pass_is_dilation
+            else _skimage_grayscale_opening
+        )
+        # Native floating-point ordering is shared by the span filters on
+        # finite values. Keep the provider's original NaN and signed-zero
+        # behavior, unsupported dtypes, and genuinely volumetric footprints.
+        if (
+            image_array.dtype not in (np.dtype(np.float32), np.dtype(np.float64))
+            or image_array.ndim < 2
+            or footprint_array.ndim != image_array.ndim
+            or any(size != 1 for size in footprint_array.shape[:-2])
+            or image_array.size == 0
+            or not footprint_array.any()
+            or footprint_array.all()
+            or not np.isfinite(image_array).all()
+            or np.any((image_array == 0) & np.signbit(image_array))
+        ):
+            return native_operation(image_array, footprint_array)
+
+        from skimage.morphology.footprints import mirror_footprint, pad_footprint
+
+        footprint_2d = pad_footprint(
+            footprint_array.reshape(footprint_array.shape[-2:]), pad_end=False
+        )
+        first_offsets = FootprintOffsetTable.from_footprint(
+            footprint_2d, dimension_policy=FOOTPRINT_OFFSET_2D_POLICY
+        )
+        # Singleton spans eliminate no horizontal neighbor visits. Rectangular
+        # footprints above stay native as well; odd rectangles already use
+        # SciPy's separable filters, while even ones are excluded conservatively.
+        if all(first == last for _, first, last in first_offsets.horizontal_spans()):
+            return native_operation(image_array, footprint_array)
+        second_offsets = FootprintOffsetTable.from_footprint(
+            mirror_footprint(footprint_2d), dimension_policy=FOOTPRINT_OFFSET_2D_POLICY
+        )
+        intermediate = first_offsets.grayscale_extremum(
+            image_array, maximum=first_pass_is_dilation
+        )
+        return second_offsets.grayscale_extremum(
+            intermediate, maximum=not first_pass_is_dilation
+        )
 
     def erode_labeled_objects(
         self, labels: np.ndarray, footprint: np.ndarray
@@ -2236,6 +2315,7 @@ class NumbaNumpyMorphologyBackendStrategy(NumpyMorphologyBackendStrategy):
     is_default_backend = True
 
     def prepare_backend(self) -> None:
+        super().prepare_backend()
         mask = np.array(
             [[False, True, False], [True, True, False], [False, False, True]],
             dtype=np.bool_,
@@ -2245,15 +2325,27 @@ class NumbaNumpyMorphologyBackendStrategy(NumpyMorphologyBackendStrategy):
         footprint = np.ones((3, 3), dtype=np.bool_)
         self.connected_components(mask, connectivity=2)
         self.fill_labeled_holes(labels)
+        for writable_mask in (False, True):
+            hole_mask = mask.copy()
+            hole_mask.flags.writeable = writable_mask
+            _cellprofiler_fill_labeled_holes_2d(labels, mask=hole_mask)
         self.erode_labeled_objects(labels, footprint)
         self.erode_labeled_objects(
             np.stack((labels, labels)), np.ones((3, 3, 3), dtype=np.bool_)
         )
         self.local_maxima_by_label(image, labels, footprint)
-        self.smooth_image_for_declumping(image, mask, 1.0)
-        self.smooth_image_for_declumping(
-            image, np.ones(mask.shape, dtype=np.bool_), 1.0
-        )
+        for dtype in (np.float32, np.float64):
+            for writable_image in (False, True):
+                image = np.arange(9, dtype=dtype).reshape((3, 3))
+                image.flags.writeable = writable_image
+                for full_mask in (False, True):
+                    for writable_mask in (False, True):
+                        smoothing_mask = (
+                            np.ones(mask.shape, dtype=np.bool_)
+                            if full_mask else mask.copy()
+                        )
+                        smoothing_mask.flags.writeable = writable_mask
+                        self.smooth_image_for_declumping(image, smoothing_mask, 1.0)
 
     def connected_components(
         self, mask: np.ndarray, *, connectivity: int = 2
@@ -2974,6 +3066,58 @@ def _scipy_connected_components(
     return (labels.astype(np.int32, copy=False), int(count))
 
 
+@njit(cache=True, inline="always")
+def _labeled_hole_node_at_numba(source, background, offset, y, x):
+    background_node = background[y, x]
+    return (
+        source[y, x]
+        if background_node == 0 else background_node + offset + 1
+    )
+
+
+@njit(cache=True)
+def _labeled_hole_graph_numba(source, background, offset, node_count):
+    height, width = source.shape
+    boundary_nodes = set()
+    areas = np.zeros(node_count, dtype=np.int64)
+    edges = set()
+    for y in range(height):
+        for x in range(width):
+            node = _labeled_hole_node_at_numba(source, background, offset, y, x)
+            areas[node] += 1
+            if node != 0 and (y == 0 or y + 1 == height or x == 0 or x + 1 == width):
+                boundary_nodes.add(node)
+            if y + 1 < height:
+                other = _labeled_hole_node_at_numba(source, background, offset, y + 1, x)
+                if node != other:
+                    edges.add(min(node, other) * node_count + max(node, other))
+            if x + 1 < width:
+                other = _labeled_hole_node_at_numba(source, background, offset, y, x + 1)
+                if node != other:
+                    edges.add(min(node, other) * node_count + max(node, other))
+    encoded = np.empty(len(edges), dtype=np.int64)
+    index = 0
+    for edge in edges:
+        encoded[index] = edge
+        index += 1
+    boundary = np.empty(len(boundary_nodes), dtype=np.int64)
+    index = 0
+    for node in boundary_nodes:
+        boundary[index] = node
+        index += 1
+    return encoded, boundary, areas
+
+
+@njit(cache=True)
+def _write_labeled_holes_numba(source, background, offset, lookup, mask, has_mask):
+    output = np.empty_like(source)
+    for y in range(source.shape[0]):
+        for x in range(source.shape[1]):
+            node = _labeled_hole_node_at_numba(source, background, offset, y, x)
+            output[y, x] = node if has_mask and not mask[y, x] else lookup[node]
+    return output
+
+
 def _cellprofiler_fill_labeled_holes_2d(
     labels: np.ndarray,
     *,
@@ -3011,30 +3155,28 @@ def _cellprofiler_fill_labeled_holes_2d(
         background,
         structure=ndi.generate_binary_structure(2, 1),
     )
-    working = source.copy().astype(np.int64, copy=False)
-    foreground_label_count = int(working.max(initial=0))
-    working[background_labels != 0] = (
-        background_labels[background_labels != 0] + foreground_label_count + 1
+    # The predicate may mutate the caller's labels. Capture pixels at the
+    # original working-plane admission epoch, before graph/predicate work.
+    captured_source = source.copy(order="C").astype(np.int64, copy=False)
+    if captured_source.size == 0:
+        captured_source[0, 0]  # Preserve the original empty-plane IndexError.
+    foreground_label_count = int(captured_source.max(initial=0))
+    node_count = foreground_label_count + int(background_count) + 2
+    minimum_node = int(captured_source.min(initial=0))
+    if minimum_node < -node_count:
+        raise IndexError(
+            f"index {minimum_node} is out of bounds for axis 0 with size {node_count}"
+        )
+    # Source extrema and scipy's component count admit every dynamic node
+    # index once; the matching plane shapes and raster loops bound pixel reads.
+    edges, boundary_nodes, areas = _labeled_hole_graph_numba(
+        captured_source, background_labels, foreground_label_count, node_count
     )
-    maximum_node = foreground_label_count + int(background_count) + 1
-    node_count = maximum_node + 1
-
+    boundary_nodes = np.sort(boundary_nodes)
     is_not_hole = np.zeros(node_count, dtype=bool)
-    boundary_nodes = np.unique(
-        np.concatenate((working[0, :], working[:, 0], working[-1, :], working[:, -1]))
-    )
-    boundary_nodes = boundary_nodes[boundary_nodes != 0]
     is_not_hole[boundary_nodes] = True
     to_visit = [int(node) for node in boundary_nodes]
-
-    first = np.concatenate((working[:-1, :].ravel(), working[:, :-1].ravel()))
-    second = np.concatenate((working[1:, :].ravel(), working[:, 1:].ravel()))
-    differing = first != second
-    adjacent_first = first[differing].astype(np.int64, copy=False)
-    adjacent_second = second[differing].astype(np.int64, copy=False)
-    lower_nodes = np.minimum(adjacent_first, adjacent_second)
-    upper_nodes = np.maximum(adjacent_first, adjacent_second)
-    undirected_edges = np.unique(lower_nodes * node_count + upper_nodes)
+    undirected_edges = np.sort(edges)
     adjacency: list[list[int]] = [[] for _ in range(node_count)]
     for encoded_edge in undirected_edges:
         left, right = divmod(int(encoded_edge), node_count)
@@ -3042,7 +3184,8 @@ def _cellprofiler_fill_labeled_holes_2d(
         adjacency[right].append(left)
 
     if size_predicate is not None:
-        areas = np.bincount(working.ravel(), minlength=node_count)
+        if minimum_node < 0:
+            raise ValueError("'list' argument must have no negative elements")
         for node, area in enumerate(areas):
             if (
                 node > 0
@@ -3088,11 +3231,17 @@ def _cellprofiler_fill_labeled_holes_2d(
     lookup = np.arange(node_count, dtype=np.int64)
     lookup[foreground_label_count + 1 :] = 0
     lookup[~is_not_hole] = adjacent_non_hole[~is_not_hole]
-    if mask_array is None:
-        output = lookup[working]
-    else:
-        output = working.copy()
-        output[mask_array] = lookup[working[mask_array]]
+    if mask_array is not None and mask_array.shape != captured_source.shape:
+        # Boolean indexing historically rejects a predicate-mutated mask shape.
+        np.empty(captured_source.shape)[mask_array]
+    output_mask = (
+        np.empty((0, 0), dtype=np.bool_)
+        if mask_array is None else np.ascontiguousarray(mask_array)
+    )
+    output = _write_labeled_holes_numba(
+        captured_source, background_labels, foreground_label_count, lookup,
+        output_mask, mask_array is not None,
+    )
     return output.astype(source.dtype, copy=False)
 
 
@@ -3474,7 +3623,7 @@ FOOTPRINT_OFFSET_2D_OR_3D_POLICY = FootprintOffsetDimensionPolicy(
 
 @dataclass(frozen=True, slots=True)
 class FootprintOffsetTable:
-    """Contiguous centered offsets for Numba morphology kernels."""
+    """Centered footprint geometry for native and Numba morphology kernels."""
 
     offsets: np.ndarray
 
@@ -3495,6 +3644,57 @@ class FootprintOffsetTable:
     @property
     def x_offsets(self) -> np.ndarray:
         return self.offsets[:, 1]
+
+    def horizontal_spans(self) -> tuple[tuple[int, int, int], ...]:
+        """Group adjacent offsets into exact inclusive horizontal intervals."""
+        spans: list[tuple[int, int, int]] = []
+        for y, x in self.offsets:
+            y, x = int(y), int(x)
+            if spans and spans[-1][0] == y and spans[-1][2] + 1 == x:
+                row, first, _ = spans[-1]
+                spans[-1] = (row, first, x)
+            else:
+                spans.append((y, x, x))
+        return tuple(spans)
+
+    def grayscale_extremum(
+        self, image: np.ndarray, *, maximum: bool
+    ) -> np.ndarray:
+        """Reduce the exact union of spans, sharing each horizontal window."""
+        from scipy.ndimage import maximum_filter1d, minimum_filter1d
+
+        spans = self.horizontal_spans()
+        left = max(0, -min(first for _, first, _ in spans))
+        right = max(0, max(last for _, _, last in spans))
+        padding = [(0, 0)] * image.ndim
+        padding[-1] = (left, right)
+        # All selected windows lie within this native half-sample reflected
+        # extension, including interval centers outside the original image.
+        padded = np.pad(image, padding, mode="symmetric")
+        filter_operation = maximum_filter1d if maximum else minimum_filter1d
+        lengths = sorted({last - first + 1 for _, first, last in spans})
+        horizontal = np.empty_like(padded)
+        height, width = image.shape[-2:]
+        combine = np.maximum if maximum else np.minimum
+        output = None
+        for length in lengths:
+            filter_operation(
+                padded, size=length, axis=-1, mode="reflect", output=horizontal
+            )
+            for row_offset, first, last in spans:
+                if last - first + 1 != length:
+                    continue
+                rows = (np.arange(height) + row_offset) % (2 * height)
+                rows = np.where(rows < height, rows, 2 * height - rows - 1)
+                center = left + first + length // 2
+                values = np.take(
+                    horizontal[..., center : center + width], rows, axis=-2
+                )
+                if output is None:
+                    output = values
+                else:
+                    combine(output, values, out=output)
+        return output
 
 
 def _border_component_ids(component_labels: np.ndarray) -> set[int]:
@@ -6301,17 +6501,6 @@ def filter_physical_border_objects_numba(
     return (output, True)
 
 
-def profile_function_runtime_enabled() -> bool:
-    return os.environ.get(PROFILE_RUNTIME_ENV, "").lower() in {"1", "true", "yes"}
-
-
-def log_function_runtime_profile(label: str, seconds: float, **fields: object) -> None:
-    if not profile_function_runtime_enabled():
-        return
-    field_text = " ".join((f"{key}={value}" for key, value in fields.items()))
-    logger.info("RUNTIME_PROFILE %s %.6fs %s", label, seconds, field_text)
-
-
 @numpy_decorator(contract=ProcessingContract.PURE_2D)
 @special_inputs("labels")
 def erode_objects(
@@ -6347,14 +6536,14 @@ def erode_objects(
     phase_started_at = time.perf_counter()
     input_labels = ObjectLabelIdDomainStrategy.for_value(labels).present_ids(labels)
     input_count = len(input_labels)
-    log_function_runtime_profile(
+    runtime_profiler.log(
         "erode_objects_input_labels", time.perf_counter() - phase_started_at
     )
     phase_started_at = time.perf_counter()
     eroded = MorphologyBackendStrategy.for_memory_type().erode_labeled_objects(
         labels, footprint
     )
-    log_function_runtime_profile(
+    runtime_profiler.log(
         "erode_objects_backend", time.perf_counter() - phase_started_at
     )
     eroded_labels = ObjectLabelIdDomainStrategy.for_value(eroded).present_ids(eroded)
@@ -6367,7 +6556,7 @@ def erode_objects(
         )
         preservation = MidpointPreservationPolicy.for_footprint(footprint)
         eroded = preservation.preserve_missing_labels(labels, eroded, missing_labels)
-        log_function_runtime_profile(
+        runtime_profiler.log(
             "erode_objects_preserve_midpoints",
             time.perf_counter() - phase_started_at,
             missing=len(missing_labels),
@@ -6380,7 +6569,7 @@ def erode_objects(
         phase_started_at = time.perf_counter()
         eroded = relabel(eroded > 0).astype(labels.dtype)
         output_labels = tuple(range(1, int(eroded.max()) + 1))
-        log_function_runtime_profile(
+        runtime_profiler.log(
             "erode_objects_relabel", time.perf_counter() - phase_started_at
         )
     output_count = len(output_labels)
@@ -6404,10 +6593,10 @@ def erode_objects(
         relationship = object_label_identity_lineage_payload(
             source_labels, eroded_value
         )
-    log_function_runtime_profile(
+    runtime_profiler.log(
         "erode_objects_lineage", time.perf_counter() - phase_started_at
     )
-    log_function_runtime_profile(
+    runtime_profiler.log(
         "erode_objects_total", time.perf_counter() - total_started_at
     )
     return (

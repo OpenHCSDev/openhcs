@@ -1,0 +1,507 @@
+{
+  "source_head": "771950f652e5237b71bf0b21b0b8050bda48e011",
+  "cases": {
+    "cp_tutorial_3d_monolayer": {
+      "native_invocation_seconds": [
+        14.757951722946018,
+        14.251339617185295
+      ],
+      "native_mean_seconds": 14.504645670065656,
+      "native_first_module_through_post_run_seconds": [
+        14.628245717845857,
+        14.132655873894691
+      ],
+      "native_first_module_through_post_run_mean_seconds": 14.380450795870274,
+      "ordinary_samples": {
+        "compile_seconds": [
+          1.027512788772583,
+          1.0361676216125488
+        ],
+        "execute_seconds": [
+          5.0158140659332275,
+          6.333127975463867
+        ],
+        "total_seconds": [
+          6.781453618314117,
+          8.065518350806087
+        ]
+      },
+      "ordinary_means": {
+        "compile_seconds": 1.031840205192566,
+        "execute_seconds": 5.674471020698547,
+        "total_seconds": 7.423485984560102
+      },
+      "observed_ranges_seconds": {
+        "native_invocation_seconds": {
+          "minimum": 14.251339617185295,
+          "maximum": 14.757951722946018
+        },
+        "compile_seconds": {
+          "minimum": 1.027512788772583,
+          "maximum": 1.0361676216125488
+        },
+        "execute_seconds": {
+          "minimum": 5.0158140659332275,
+          "maximum": 6.333127975463867
+        },
+        "total_seconds": {
+          "minimum": 6.781453618314117,
+          "maximum": 8.065518350806087
+        }
+      },
+      "other_total_seconds_mean": 0.7171747586689889,
+      "execution_speedup_ratio_of_means": 2.5561229614456793,
+      "total_speedup_ratio_of_means": 1.9538860449435018
+    },
+    "ExampleSpeckles": {
+      "native_invocation_seconds": [
+        2.0039482093416154,
+        1.8744277539663017
+      ],
+      "native_mean_seconds": 1.9391879816539586,
+      "native_first_module_through_post_run_seconds": [
+        1.9125203830190003,
+        1.793057702947408
+      ],
+      "native_first_module_through_post_run_mean_seconds": 1.8527890429832041,
+      "ordinary_samples": {
+        "compile_seconds": [
+          0.4752085208892822,
+          0.48175573348999023
+        ],
+        "execute_seconds": [
+          0.9069628715515137,
+          1.1766977310180664
+        ],
+        "total_seconds": [
+          1.6977782007306814,
+          2.0053355218842626
+        ]
+      },
+      "ordinary_means": {
+        "compile_seconds": 0.47848212718963623,
+        "execute_seconds": 1.04183030128479,
+        "total_seconds": 1.851556861307472
+      },
+      "observed_ranges_seconds": {
+        "native_invocation_seconds": {
+          "minimum": 1.8744277539663017,
+          "maximum": 2.0039482093416154
+        },
+        "compile_seconds": {
+          "minimum": 0.4752085208892822,
+          "maximum": 0.48175573348999023
+        },
+        "execute_seconds": {
+          "minimum": 0.9069628715515137,
+          "maximum": 1.1766977310180664
+        },
+        "total_seconds": {
+          "minimum": 1.6977782007306814,
+          "maximum": 2.0053355218842626
+        }
+      },
+      "other_total_seconds_mean": 0.3312444328330457,
+      "execution_speedup_ratio_of_means": 1.8613280677885282,
+      "total_speedup_ratio_of_means": 1.0473283441506658
+    },
+    "cp_tutorial_beginner_segmentation_final": {
+      "native_invocation_seconds": [
+        15.272316726390272,
+        14.784655185882002
+      ],
+      "native_mean_seconds": 15.028485956136137,
+      "native_first_module_through_post_run_seconds": [
+        15.028584334999323,
+        14.578100933227688
+      ],
+      "native_first_module_through_post_run_mean_seconds": 14.803342634113505,
+      "ordinary_samples": {
+        "compile_seconds": [
+          0.6007773876190186,
+          0.6125655174255371
+        ],
+        "execute_seconds": [
+          3.902729034423828,
+          4.202756643295288
+        ],
+        "total_seconds": [
+          4.9476758115924895,
+          5.297459670342505
+        ]
+      },
+      "ordinary_means": {
+        "compile_seconds": 0.6066714525222778,
+        "execute_seconds": 4.052742838859558,
+        "total_seconds": 5.122567740967497
+      },
+      "observed_ranges_seconds": {
+        "native_invocation_seconds": {
+          "minimum": 14.784655185882002,
+          "maximum": 15.272316726390272
+        },
+        "compile_seconds": {
+          "minimum": 0.6007773876190186,
+          "maximum": 0.6125655174255371
+        },
+        "execute_seconds": {
+          "minimum": 3.902729034423828,
+          "maximum": 4.202756643295288
+        },
+        "total_seconds": {
+          "minimum": 4.9476758115924895,
+          "maximum": 5.297459670342505
+        }
+      },
+      "other_total_seconds_mean": 0.4631534495856613,
+      "execution_speedup_ratio_of_means": 3.7082258987755448,
+      "total_speedup_ratio_of_means": 2.933779837784578
+    }
+  },
+  "clock_definitions": {
+    "native_invocation_seconds": "Full existing native invocation clock: pre-first-module work plus first-module-through-post-run. Process imports, JVM startup, input loading and full warmup excluded. This is the same clock used by V7 ratios.",
+    "native_first_module_through_post_run_seconds": "Separate diagnostic clock, excluding native pre-first-module work. Not used for the plotted speedup ratios.",
+    "openhcs_execute_seconds": "Ordinary pipeline execution including generic runtime plumbing; not pure callable or kernel time.",
+    "openhcs_total_seconds": "Ordinary compilation plus execution and default OUTCOMES/RSS completion. ZMQ server READY startup/shutdown excluded."
+  },
+  "scope": "Three current pipelines, one selected well and one worker; two observations per method. Means and observed min/max are descriptive, not confidence intervals or per-cut causal gains. No full30 or scaling claim. All measured samples shown separately; no synthetic pairing of native and OpenHCS repetitions.",
+  "qualification": {
+    "status": "PASS",
+    "source_head": "771950f652e5237b71bf0b21b0b8050bda48e011",
+    "origin_main": "32ededf2421ac79df147628c1732785c139d0970",
+    "science_path": "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-chains-paired-v11-qualified/strict-science.json",
+    "science_sha256": "608a83ff5903f51652ff3d0d61793cad4efaf27b9085dda958174d1139e60a52",
+    "source_freeze_path": "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-chains-paired-v11-qualified/source-freeze.json",
+    "source_freeze_sha256": "feefec8c0fadd3da87b29c1c61495e939802f5729b274192f99a1e673b044be9",
+    "source_environment_sha256": "b579dda9991d0de75047d9dd84591f556085ef401bafa1f1f8bc9c86ca588ecc",
+    "dependency_heads": {
+      "external/ObjectState": "9fb5b7eeea96f3b7bb0579de30718bbcc0018823",
+      "external/python-introspect": "ed1e4eb15f7a0bf8315274d3e47858fa2b4372bb",
+      "external/arraybridge": "1e53d03d9f468322a1c085c8be29485fb139caf2",
+      "external/metaclass-registry": "393a7e03003cdc56df9013f932ed4f26e632d77a",
+      "external/zmqruntime": "f7b80c871eb4773757368bb21f108920bf461881",
+      "external/pycodify": "108a8edbf25de258168756bac22c7572f018fa90",
+      "external/PolyStore": "89deeef3662eabb11bc520fad9acd976698636bd",
+      "external/pyqt-reactive": "b64ed2eca96fcdad29ba90beb545caa669a4d3d8"
+    },
+    "actual_import_dependency_heads": {
+      "external/ObjectState": "9fb5b7eeea96f3b7bb0579de30718bbcc0018823",
+      "external/PolyStore": "89deeef3662eabb11bc520fad9acd976698636bd",
+      "external/arraybridge": "1e53d03d9f468322a1c085c8be29485fb139caf2",
+      "external/metaclass-registry": "393a7e03003cdc56df9013f932ed4f26e632d77a",
+      "external/pycodify": "108a8edbf25de258168756bac22c7572f018fa90",
+      "external/pyqt-reactive": "b64ed2eca96fcdad29ba90beb545caa669a4d3d8",
+      "external/python-introspect": "ed1e4eb15f7a0bf8315274d3e47858fa2b4372bb",
+      "external/zmqruntime": "f7b80c871eb4773757368bb21f108920bf461881"
+    },
+    "ordered_source_ref_counts": {
+      "cp_tutorial_3d_monolayer": 180,
+      "ExampleSpeckles": 2,
+      "cp_tutorial_beginner_segmentation_final": 10
+    },
+    "comparisons": [
+      {
+        "case": "cp_tutorial_3d_monolayer",
+        "ordinary_repeat": 0,
+        "native_repeat": 0,
+        "measurement_differences": 0,
+        "image_differences": 0,
+        "tables": [
+          7,
+          6
+        ],
+        "physical_images": [
+          2,
+          2
+        ],
+        "logical_images": [
+          2,
+          2
+        ],
+        "known_relationship_keys": [
+          3,
+          3
+        ],
+        "ordinary_receipt_sha256": "465cf0eac54e4ff82845ec3f98f3402d5b7ab802badfb2bc2434753a59b999ad"
+      },
+      {
+        "case": "cp_tutorial_3d_monolayer",
+        "ordinary_repeat": 0,
+        "native_repeat": 1,
+        "measurement_differences": 0,
+        "image_differences": 0,
+        "tables": [
+          7,
+          6
+        ],
+        "physical_images": [
+          2,
+          2
+        ],
+        "logical_images": [
+          2,
+          2
+        ],
+        "known_relationship_keys": [
+          3,
+          3
+        ],
+        "ordinary_receipt_sha256": "465cf0eac54e4ff82845ec3f98f3402d5b7ab802badfb2bc2434753a59b999ad"
+      },
+      {
+        "case": "ExampleSpeckles",
+        "ordinary_repeat": 0,
+        "native_repeat": 0,
+        "measurement_differences": 0,
+        "image_differences": 0,
+        "tables": [
+          3,
+          3
+        ],
+        "physical_images": [
+          0,
+          0
+        ],
+        "logical_images": [
+          0,
+          0
+        ],
+        "known_relationship_keys": [
+          1,
+          1
+        ],
+        "ordinary_receipt_sha256": "3831b86c470132b166b1034305d771dba222c1dd8fb42f54093e3b5eaf6d0cf5"
+      },
+      {
+        "case": "ExampleSpeckles",
+        "ordinary_repeat": 0,
+        "native_repeat": 1,
+        "measurement_differences": 0,
+        "image_differences": 0,
+        "tables": [
+          3,
+          3
+        ],
+        "physical_images": [
+          0,
+          0
+        ],
+        "logical_images": [
+          0,
+          0
+        ],
+        "known_relationship_keys": [
+          1,
+          1
+        ],
+        "ordinary_receipt_sha256": "3831b86c470132b166b1034305d771dba222c1dd8fb42f54093e3b5eaf6d0cf5"
+      },
+      {
+        "case": "cp_tutorial_beginner_segmentation_final",
+        "ordinary_repeat": 0,
+        "native_repeat": 0,
+        "measurement_differences": 0,
+        "image_differences": 0,
+        "tables": [
+          7,
+          7
+        ],
+        "physical_images": [
+          2,
+          2
+        ],
+        "logical_images": [
+          2,
+          2
+        ],
+        "known_relationship_keys": [
+          5,
+          5
+        ],
+        "ordinary_receipt_sha256": "559ecdbb4e6a856c0a911d67e60171458a77e01f8d63f3b49326cc04fd6b2d38"
+      },
+      {
+        "case": "cp_tutorial_beginner_segmentation_final",
+        "ordinary_repeat": 0,
+        "native_repeat": 1,
+        "measurement_differences": 0,
+        "image_differences": 0,
+        "tables": [
+          7,
+          7
+        ],
+        "physical_images": [
+          2,
+          2
+        ],
+        "logical_images": [
+          2,
+          2
+        ],
+        "known_relationship_keys": [
+          5,
+          5
+        ],
+        "ordinary_receipt_sha256": "559ecdbb4e6a856c0a911d67e60171458a77e01f8d63f3b49326cc04fd6b2d38"
+      },
+      {
+        "case": "cp_tutorial_3d_monolayer",
+        "ordinary_repeat": 1,
+        "native_repeat": 0,
+        "measurement_differences": 0,
+        "image_differences": 0,
+        "tables": [
+          7,
+          6
+        ],
+        "physical_images": [
+          2,
+          2
+        ],
+        "logical_images": [
+          2,
+          2
+        ],
+        "known_relationship_keys": [
+          3,
+          3
+        ],
+        "ordinary_receipt_sha256": "9cecd2752cde33d1860a928dc04ccbcf06275e5319a7c586646d3b1e13222742"
+      },
+      {
+        "case": "cp_tutorial_3d_monolayer",
+        "ordinary_repeat": 1,
+        "native_repeat": 1,
+        "measurement_differences": 0,
+        "image_differences": 0,
+        "tables": [
+          7,
+          6
+        ],
+        "physical_images": [
+          2,
+          2
+        ],
+        "logical_images": [
+          2,
+          2
+        ],
+        "known_relationship_keys": [
+          3,
+          3
+        ],
+        "ordinary_receipt_sha256": "9cecd2752cde33d1860a928dc04ccbcf06275e5319a7c586646d3b1e13222742"
+      },
+      {
+        "case": "ExampleSpeckles",
+        "ordinary_repeat": 1,
+        "native_repeat": 0,
+        "measurement_differences": 0,
+        "image_differences": 0,
+        "tables": [
+          3,
+          3
+        ],
+        "physical_images": [
+          0,
+          0
+        ],
+        "logical_images": [
+          0,
+          0
+        ],
+        "known_relationship_keys": [
+          1,
+          1
+        ],
+        "ordinary_receipt_sha256": "5d6d7f02523bba49204b9f6f4626b4b33425690c1ba796423ab47aade5d119c5"
+      },
+      {
+        "case": "ExampleSpeckles",
+        "ordinary_repeat": 1,
+        "native_repeat": 1,
+        "measurement_differences": 0,
+        "image_differences": 0,
+        "tables": [
+          3,
+          3
+        ],
+        "physical_images": [
+          0,
+          0
+        ],
+        "logical_images": [
+          0,
+          0
+        ],
+        "known_relationship_keys": [
+          1,
+          1
+        ],
+        "ordinary_receipt_sha256": "5d6d7f02523bba49204b9f6f4626b4b33425690c1ba796423ab47aade5d119c5"
+      },
+      {
+        "case": "cp_tutorial_beginner_segmentation_final",
+        "ordinary_repeat": 1,
+        "native_repeat": 0,
+        "measurement_differences": 0,
+        "image_differences": 0,
+        "tables": [
+          7,
+          7
+        ],
+        "physical_images": [
+          2,
+          2
+        ],
+        "logical_images": [
+          2,
+          2
+        ],
+        "known_relationship_keys": [
+          5,
+          5
+        ],
+        "ordinary_receipt_sha256": "1595af0e768d7c7b287a6ac21b689f8c6f866b2d5540c751a91e226bad97eb95"
+      },
+      {
+        "case": "cp_tutorial_beginner_segmentation_final",
+        "ordinary_repeat": 1,
+        "native_repeat": 1,
+        "measurement_differences": 0,
+        "image_differences": 0,
+        "tables": [
+          7,
+          7
+        ],
+        "physical_images": [
+          2,
+          2
+        ],
+        "logical_images": [
+          2,
+          2
+        ],
+        "known_relationship_keys": [
+          5,
+          5
+        ],
+        "ordinary_receipt_sha256": "1595af0e768d7c7b287a6ac21b689f8c6f866b2d5540c751a91e226bad97eb95"
+      }
+    ],
+    "scope": "Both ordinary observations versus both native measured observations; full strict files/values/correlation policy; descriptive two-repeat clocks, not full30 acceptance."
+  },
+  "plot_script_sha256": "d6b40f6cb13c5e65b8974371a15b1a22f2a1a3b8eca7e73111332ce82e4980a4",
+  "figure_owner_sha256": "bb1bf777c5c5d95507b0f751310652e29ab8b3919387334871a890bfe667f3c1",
+  "v7_plot_script_sha256": "28f92861b2f69908e44e30ee6dd009ac839d8eb76f32326d18a6a12b87a9dd29",
+  "artifacts": {
+    "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-chains-paired-v11-qualified/figures/metrics.csv": "c8959ed19a6812631a8ca672b608c9ea59803904f64cd9a22cb900c0bbfc030b",
+    "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-chains-paired-v11-qualified/figures/qualification.json": "bf1ad5acbb60be7582d4ef8eaacfff2327f2eaa356866512ca2fa781f034f127",
+    "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-chains-paired-v11-qualified/figures/matched_runtime.png": "0336e6bf17b761fca37440ad6b31e5813fd322ad10987d073511898fa7812224",
+    "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-chains-paired-v11-qualified/figures/matched_runtime.svg": "5421554a3b9ddc6a4d661b2e8c98e79a29673865d0079e7de439e6dfd6781368",
+    "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-chains-paired-v11-qualified/figures/matched_speedup.png": "6058479d8334a1ea073448fd93082b00ecc2cb2269fa711ef6ae7ea2dcf987b1",
+    "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-chains-paired-v11-qualified/figures/matched_speedup.svg": "8fd3e4d1a08db96b277e83d6969805402ea2b73cbea7f95bb627514b5988c8dd",
+    "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-chains-paired-v11-qualified/figures/matched_runtime_samples.png": "7b1dff465d7a416a64dff6d2d6106a3444b2edca441d4f77bb64489132ee412b",
+    "/home/ts/.local/state/openhcs-maintenance/20261004/canonical-runtime-chains-paired-v11-qualified/figures/matched_runtime_samples.svg": "972c877946f42ac06b875f5e9932c5a10784a411d8ba41e157c1fb3f74881c2e"
+  }
+}

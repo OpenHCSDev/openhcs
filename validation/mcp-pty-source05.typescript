@@ -1,0 +1,97 @@
+Script started on 2026-10-02 18:47:27-04:00 [COMMAND="systemd-run --user --scope --unit=dewey-mcp-pty-483-source05 -p MemoryMax=512M -p MemorySwapMax=0 -p CPUQuota=100% /usr/bin/time -f "elapsed=%e maxrss_KiB=%M exit=%x" timeout 60s env PYTHONPATH=/home/ts/wt/openhcs-mcp-affine-progress-436-20261002 PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 /home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/bin/python -B -m pytest --noconftest -p pytest_asyncio.plugin -q --override-ini addopts= --basetemp=validation/mcp-pty-test-scratch05 tests/unit/test_mcp_dev_client_terminal_input.py tests/unit/test_mcp_dev_client_persistent_session.py -k "independent_source_declaration or not terminal"" <not executed on terminal>]
+Running as unit: dewey-mcp-pty-483-source05.scope; invocation ID: 4f00bfb47bd545daa91d43d48dac9c38
+.....F...................                                                [100%]
+=================================== FAILURES ===================================
+______ test_persistent_client_initializes_once_for_distinct_command_specs ______
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f126d9e3b90>
+
+    def test_persistent_client_initializes_once_for_distinct_command_specs(
+        monkeypatch,
+    ) -> None:
+        from openhcs.mcp.dev_client_commands import ui
+    
+        decoded_arguments = []
+        parse_arguments = ui.parse_json_object
+    
+        def count_argument_decode(text):
+            decoded_arguments.append(text)
+            return parse_arguments(text)
+    
+        monkeypatch.setattr(ui, "parse_json_object", count_argument_decode)
+    
+        class FakeMcpDevStdioSession:
+            initialize_count = 0
+            tool_calls: list[str] = []
+    
+            def __init__(self, server_spec, server_stderr) -> None:
+                del server_stderr
+                self.server_spec = server_spec
+    
+            async def __aenter__(self):
+                return self
+    
+            async def __aexit__(self, exc_type, exc_value, traceback) -> None:
+                del exc_type, exc_value, traceback
+    
+            async def initialize(self, *, timeout_seconds: float) -> None:
+                assert timeout_seconds == 30.0
+                type(self).initialize_count += 1
+    
+            async def list_tools(self, *, timeout_seconds: float):
+                assert timeout_seconds == 5.0
+                return (
+                    {
+                        "name": "openhcs_health_check",
+                        "description": "Health",
+                        "inputSchema": {"type": "object"},
+                    },
+                )
+    
+            async def call_tool(
+                self,
+                name: str,
+                arguments,
+                *,
+                timeout_seconds: float,
+            ):
+                assert arguments == {}
+                assert timeout_seconds == 5.0
+                type(self).tool_calls.append(name)
+                return {
+                    "isError": False,
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": json.dumps({"status": "ok"}),
+                        }
+                    ],
+                }
+    
+        monkeypatch.setattr(
+            dev_client,
+            "McpDevStdioSession",
+            FakeMcpDevStdioSession,
+        )
+    
+        with dev_client.McpDevClient(sys.executable) as client:
+            tools = client.execute(("tools", "--json"))
+            health = client.execute(("health", "--json"))
+            raw_health = client.execute(("call", "openhcs_health_check", "--arguments", "{}"))
+    
+        assert FakeMcpDevStdioSession.initialize_count == 1
+        assert FakeMcpDevStdioSession.tool_calls == ["openhcs_health_check"] * 2
+        assert tools.returncode == 0
+        assert tools.payload["tools"][0]["name"] == "openhcs_health_check"
+>       assert health.returncode == 0
+E       assert 1 == 0
+E        +  where 1 = McpDevCommandExecution(argv=('health', '--json'), payload={'server': {'command': '/home/ts/wt/openhcs-paired-raw-insta...talled-parent-20261001/.venv/bin/python",\n    "module": "openhcs.mcp"\n  }\n}', returncode=1, server_stderr_tail=None).returncode
+
+tests/unit/test_mcp_dev_client_persistent_session.py:201: AssertionError
+=========================== short test summary info ============================
+FAILED tests/unit/test_mcp_dev_client_persistent_session.py::test_persistent_client_initializes_once_for_distinct_command_specs
+1 failed, 24 passed, 8 deselected in 16.93s
+Command exited with non-zero status 1
+elapsed=17.86 maxrss_KiB=327644 exit=1
+
+Script done on 2026-10-02 18:47:44-04:00 [COMMAND_EXIT_CODE="1"]

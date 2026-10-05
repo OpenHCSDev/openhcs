@@ -9,7 +9,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from openhcs.core.context.processing_context import ProcessingContext
-from openhcs.core.orchestrator.execution_result import ExecutionResult, ExecutionStatus
+from openhcs.core.orchestrator.execution_result import (
+    ExecutionResult,
+    RuntimeExecutionObservation,
+    ExecutionStatus,
+)
 from openhcs.core.runtime_execution_validation import (
     RuntimeArtifactExecutionExpectation,
     RuntimeArtifactExecutionObservation,
@@ -215,11 +219,12 @@ class ZMQRuntimeExecutionObservationExport:
         compiled_contexts: Mapping[str, ProcessingContext],
         execution_results: Mapping[str, ExecutionResult],
         output_roots: tuple[Path, ...],
+        runtime_observations: tuple[RuntimeExecutionObservation, ...],
         server_environment: RuntimeEnvironmentSnapshot | None = None,
         execution_id: str | None = None,
     ) -> ZMQRuntimeExecutionObservationExport:
         observation = RuntimeArtifactExecutionObservation.from_contexts(
-            compiled_contexts
+            compiled_contexts, runtime_observations=runtime_observations
         )
         return cls(
             schema_version=ZMQ_RUNTIME_OBSERVATION_EXPORT_SCHEMA_VERSION,

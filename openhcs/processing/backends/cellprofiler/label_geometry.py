@@ -357,6 +357,53 @@ def _outline_points_at_positions_numba(
 
 
 @njit(cache=True)
+def _cellprofiler_column_envelope_vertices_numba(
+    row_minimum: np.ndarray,
+    row_maximum: np.ndarray,
+    column_offset: int,
+    vertices: np.ndarray,
+) -> int:
+    """Fill caller-owned vertices using CP's exact ordered envelope walk."""
+    columns = np.flatnonzero(row_minimum != np.iinfo(np.int64).max)
+    vertex_count = 0
+    for k in range(2 * columns.size):
+        if k < columns.size:
+            col = columns[k]
+            y = row_minimum[col]
+        else:
+            col = columns[2 * columns.size - 1 - k]
+            y = row_maximum[col]
+        x = col + column_offset
+        if (
+            vertex_count
+            and vertices[vertex_count - 1, 0] == y
+            and vertices[vertex_count - 1, 1] == x
+        ):
+            continue
+        while vertex_count >= 2:
+            previous_y = vertices[vertex_count - 2, 0]
+            previous_x = vertices[vertex_count - 2, 1]
+            middle_y = vertices[vertex_count - 1, 0]
+            middle_x = vertices[vertex_count - 1, 1]
+            cross = (middle_x - previous_x) * (y - middle_y) - (x - middle_x) * (
+                middle_y - previous_y
+            )
+            if cross > 0 or (cross == 0 and middle_x > previous_x and middle_x > x):
+                break
+            vertex_count -= 1
+        vertices[vertex_count, 0] = y
+        vertices[vertex_count, 1] = x
+        vertex_count += 1
+    if (
+        vertex_count > 1
+        and vertices[vertex_count - 1, 0] == vertices[0, 0]
+        and vertices[vertex_count - 1, 1] == vertices[0, 1]
+    ):
+        vertex_count -= 1
+    return vertex_count
+
+
+@njit(cache=True)
 def _cellprofiler_hull_vertices_numba(
     indexes: np.ndarray,
     offsets: np.ndarray,
@@ -385,43 +432,11 @@ def _cellprofiler_hull_vertices_numba(
             y = point_y[p]
             row_minimum[col] = min(row_minimum[col], y)
             row_maximum[col] = max(row_maximum[col], y)
-        columns = np.flatnonzero(row_minimum != np.iinfo(np.int64).max)
-        vertices = np.empty((2 * columns.size, 2), np.int64)
-        vertex_count = 0
-        for k in range(2 * columns.size):
-            if k < columns.size:
-                col = columns[k]
-                y = row_minimum[col]
-            else:
-                col = columns[2 * columns.size - 1 - k]
-                y = row_maximum[col]
-            x = col + first
-            if (
-                vertex_count
-                and vertices[vertex_count - 1, 0] == y
-                and vertices[vertex_count - 1, 1] == x
-            ):
-                continue
-            while vertex_count >= 2:
-                previous_y = vertices[vertex_count - 2, 0]
-                previous_x = vertices[vertex_count - 2, 1]
-                middle_y = vertices[vertex_count - 1, 0]
-                middle_x = vertices[vertex_count - 1, 1]
-                cross = (middle_x - previous_x) * (y - middle_y) - (x - middle_x) * (
-                    middle_y - previous_y
-                )
-                if cross > 0 or (cross == 0 and middle_x > previous_x and middle_x > x):
-                    break
-                vertex_count -= 1
-            vertices[vertex_count, 0] = y
-            vertices[vertex_count, 1] = x
-            vertex_count += 1
-        if (
-            vertex_count > 1
-            and vertices[vertex_count - 1, 0] == vertices[0, 0]
-            and vertices[vertex_count - 1, 1] == vertices[0, 1]
-        ):
-            vertex_count -= 1
+        column_count = np.count_nonzero(row_minimum != np.iinfo(np.int64).max)
+        vertices = np.empty((2 * column_count, 2), np.int64)
+        vertex_count = _cellprofiler_column_envelope_vertices_numba(
+            row_minimum, row_maximum, first, vertices
+        )
         hull_counts[object_index] = vertex_count
         for p in range(vertex_count):
             output[output_count, 0] = indexes[object_index]
@@ -620,6 +635,7 @@ def _numpy124_partition_indices_numba(
         right = stack_right[stack_size]
         current_depth = stack_depth[stack_size]
     return indices
+
 
 def _numpy124_aquicksort_indices(values: np.ndarray) -> np.ndarray:
     return _numpy124_partition_indices_numba(np.asarray(values))

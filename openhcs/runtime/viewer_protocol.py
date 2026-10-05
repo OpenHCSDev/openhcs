@@ -65,6 +65,7 @@ from zmqruntime.viewer_protocol import (
     ViewerTransportEndpoint,
 )
 
+from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.core.execution_visualizer import ExecutionVisualizerABC
 from openhcs.core.streaming_config_declarations import ViewerType
 from openhcs.core.streaming_config_factory import (
@@ -326,8 +327,15 @@ class ViewerShapeStatistics(ViewerProjectionRecord):
 
 @dataclass(frozen=True, kw_only=True)
 class ViewerSourceSpatialSummary(ViewerProjectionRecord):
+    source_voxel_spacing: SourceVoxelSpacing | None | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+
     spatial_origin_yx: tuple[StrictInt, StrictInt] | None | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
     source_spatial_shape_yx: tuple[StrictInt, StrictInt] | None | ViewerFieldAbsent = VIEWER_FIELD_ABSENT
+
+    @property
+    def voxel_spacing(self) -> SourceVoxelSpacing:
+        """Retain declared calibration, with unspecified spacing for legacy receipts."""
+        return self.optional(self.source_voxel_spacing) or SourceVoxelSpacing()
 
     @property
     def source_domain(self) -> ViewerSourceSpatialDomainPayload:
@@ -491,6 +499,7 @@ class ViewerControlField(str, Enum):
     NATIVE_IMAGE_COLOR = "native_image_color"
     NATIVE_WINDOW = "native_window"
     NATIVE_DIMENSIONS = "native_dimensions"
+    RETIREMENT = "retirement"
     COMPONENT_GROUP_COUNT = "component_group_count"
     COMPONENT_ITEM_COUNT = "component_item_count"
     PROCESS_LAUNCH = "process_launch"
@@ -504,6 +513,7 @@ class OpenHCSViewerControlMessageType(str, Enum):
     MEASURE_REGION = "measure_region"
     IMAGE_COLOR = "image_color"
     WINDOW_PRESENTATION = "window_presentation"
+    RETIRE_LAYERS = "retire_layers"
 
 
 class ViewerLayerIsolationField(str, Enum):
@@ -512,6 +522,15 @@ class ViewerLayerIsolationField(str, Enum):
     APPLIED = "applied"
     CHANGED_ROUTE_COUNT = "changed_route_count"
     MISSING_ROUTE_KEYS = "missing_route_keys"
+
+
+@dataclass(frozen=True, kw_only=True)
+class ViewerLayerRetirementReceipt(ViewerProjectionRecord):
+    """One native retirement observation, projected into the agent envelope."""
+
+    applied: bool = False
+    retired_route_keys: tuple[str, ...] = ()
+    remaining_route_keys: tuple[str, ...] = ()
 
 
 class ViewerIntensityWindowField(str, Enum):

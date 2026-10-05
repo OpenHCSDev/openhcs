@@ -26,6 +26,7 @@ from openhcs.agent.dto.pipeline import (
 )
 from openhcs.mcp.dev_client_commanding import (
     SingleToolCommandSpec,
+    StdinSourceCommandSpec,
     TypedCompositeCommandSpec,
 )
 from openhcs.mcp.dev_client_core import (
@@ -457,7 +458,7 @@ class DraftPipelineStepCommandSpec(TypedCompositeCommandSpec):
         )
 
 
-class ArtifactPlanCommandSpec(SingleToolCommandSpec):
+class ArtifactPlanCommandSpec(StdinSourceCommandSpec, SingleToolCommandSpec):
     capability = agent_capabilities.inspect_pipeline_source_artifact_plan
     default_timeout_seconds: ClassVar[float] = 60.0
 
@@ -504,7 +505,7 @@ class ArtifactPlanCommandSpec(SingleToolCommandSpec):
         )
 
 
-class ExecuteSourceCommandSpec(TypedCompositeCommandSpec):
+class ExecuteSourceCommandSpec(StdinSourceCommandSpec, TypedCompositeCommandSpec):
     command = "execute-source"
     help = "Create and submit a source-backed headless execution session."
     default_timeout_seconds: ClassVar[float] = 120.0

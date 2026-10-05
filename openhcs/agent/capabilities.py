@@ -78,6 +78,8 @@ from openhcs.agent.dto.execution import (
 from openhcs.agent.dto.functions import (
     CustomFunctionRegistrationRequest,
     CustomFunctionRegistrationResult,
+    CustomFunctionRegistrationHandle,
+    CustomFunctionRegistrationObservation,
     FunctionCatalogPage,
     FunctionCatalogPreparationHandle,
     FunctionCatalogPreparationState,
@@ -186,6 +188,8 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowIntensityWindowResult,
     ViewerWindowLayerIsolationRequest,
     ViewerWindowLayerIsolationResult,
+    ViewerWindowLayerRetirementRequest,
+    ViewerWindowLayerRetirementResult,
     ViewerWindowNavigationRequest,
     ViewerWindowNavigationResult,
     ViewerWindowPayloadRequest,
@@ -2033,6 +2037,24 @@ class RegisterCustomFunctionCapability(FunctionCatalogCapability):
     )
 
 
+class ObserveCustomFunctionRegistrationCapability(FunctionCatalogCapability):
+    name = "openhcs_get_custom_function_registration_status"
+    cli_command = "get-custom-function-registration-status"
+    kind = CapabilityKind.TOOL
+    title = "Observe custom registration source"
+    description = "Read exact publication/persistence proofs through the original native owners using observation_handle. Does not evaluate/load source or prepare a catalog. Missing evidence stays not_observed; it never authorizes registration replay or proves original mutation did not occur."
+    service = "function_catalog"
+    exposition = FunctionCatalogCapability.exposition.refine(
+        visibility=CapabilityVisibility.STANDARD,
+    )
+    input_contract = CustomFunctionRegistrationHandle
+    output_contract = CustomFunctionRegistrationObservation
+    request_invocation = AgentDataclassRequestServiceInvocation(
+        service=lambda context: context.function_catalog,
+        method=lambda service, request: service.observe_custom_function_registration(request),
+    )
+
+
 class GetAuthoringContextCapability(KnowledgeCapability):
     name = "openhcs_get_authoring_context"
     cli_command = "authoring-context"
@@ -2090,6 +2112,7 @@ class ListKnowledgeDocumentsCapability(
 
 
 class GetKnowledgeDocumentCapability(
+    MainThreadProgressCapability,
     HostedTransportCapabilityMixin,
     KnowledgeCapability,
 ):
@@ -3375,6 +3398,26 @@ class NavigateViewerWindowCapability(ViewerWindowCliConnectionCapability):
         service=lambda context: context.viewer_window_service,
         method=lambda service, request: service.navigate_window(request),
     )
+
+
+class RetireViewerWindowLayersCapability(ViewerNativePresentationCapability):
+    name = "openhcs_retire_viewer_window_layers"
+    cli_command = "retire-viewer"
+    title = "Retire explicit viewer layers"
+    description = (
+        "After viewer settlement, removes only explicitly selected mounted routes "
+        "and releases their native layers and receiver payload caches. Supply "
+        "expected_producers as a route-key mapping to each route's complete "
+        "producer_identities from viewer state, including invocation_key. The "
+        "whole set is checked before removal. Pending intake/display mutations "
+        "must reach a known terminal state first; known terminal failed candidates "
+        "can be retired. Untargeted routes and persisted source/results remain "
+        "intact. Hiding layers is not retirement."
+    )
+    side_effects = ("retires_explicit_viewer_layers",)
+    data_exposure = ("viewer_layer_retirement",)
+    input_contract = ViewerWindowLayerRetirementRequest
+    output_contract = ViewerWindowLayerRetirementResult
 
 
 class IsolateViewerWindowLayersCapability(ViewerWindowCliConnectionCapability):

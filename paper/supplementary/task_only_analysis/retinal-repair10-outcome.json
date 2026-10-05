@@ -1,0 +1,20 @@
+{
+  "trial": "R0010_REPAIR10_94",
+  "source_root": "/home/ts/wt/openhcs-issue-batch-20260929/next-retina-repair94-pairedfresh95-uncapped10-20261004/R0010_REPAIR10_94/author-workspace/output",
+  "evidence_tier": "same_author_assisted_development_not_fresh_autonomous_pass",
+  "detector_instances": 100,
+  "roi_contours": 102,
+  "validated_biological_rgc_count": null,
+  "reference_accuracy_score": null,
+  "complete_source_shape_yx": [2586, 2586],
+  "scope": "RBPMS soma candidates; Hoechst measurements do not certify cell identity",
+  "measurement_repair_changes_detection": false,
+  "packaging_overrun_seconds_approximate": 72,
+  "recorded_client_exit_code": 2,
+  "source_sha256": {
+    "REPORT.md": "74010c4636580ec4232a2958fdec8b027ea539dafcff656ad55e3051e5054300",
+    "freeze/final_pipeline.py": "74233ede2d51875b64d861a51a10b4e7b9fa7973eb4afbfe62c3b655c6179421",
+    "attempt08b_channel_stack_measurement/staged_nuclear_dual_analysis/results/R0010.czi_w1_Somas_step0.labels.tif": "bdc220ec846e013422e45b25af9303e70937a5157ad85f8f30fa6d09a7f35dac"
+  },
+  "qualification": "Retained report and consumed source hashes matched the original manifest; final label hash checked independently. Selected native views reviewed from original captures. This record is not a complete archive, reference score or new scientific execution."
+}

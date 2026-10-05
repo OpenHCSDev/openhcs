@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Mapping, MutableMapping
+from collections.abc import Iterable, Mapping, MutableMapping
 from dataclasses import dataclass, field
 from enum import Enum
 from functools import lru_cache
@@ -185,10 +185,32 @@ class NominalTypeKeyedStrategyMixin(RegisteredStrategyTypesMixin[_TypeStrategyT]
         value_type: type[object],
     ) -> tuple[type[_TypeStrategyT], ...]:
         """Return registered strategy classes ordered by type MRO specificity."""
+        return cls.order_nominal_strategy_members(
+            value_type, cls.nominal_strategy_members(),
+        )
+
+    @classmethod
+    def nominal_strategy_members(
+        cls: type[_TypeStrategyT],
+    ) -> Iterable[
+        tuple[type[_TypeStrategyT], type[object] | tuple[type[object], ...] | None]
+    ]:
+        """Derive nominal members from the existing registered declarations."""
+        for strategy_type in cls.registered_strategy_types():
+            yield strategy_type, strategy_type.value_type
+
+    @classmethod
+    def order_nominal_strategy_members(
+        cls: type[_TypeStrategyT],
+        value_type: type[object],
+        members: Iterable[
+            tuple[type[_TypeStrategyT], type[object] | tuple[type[object], ...] | None]
+        ],
+    ) -> tuple[type[_TypeStrategyT], ...]:
+        """Order derived operation members using the family's existing MRO law."""
         value_mro = value_type.mro()
         matches: list[tuple[int, type[_TypeStrategyT]]] = []
-        for strategy_type in cls.registered_strategy_types():
-            member = strategy_type.value_type
+        for strategy_type, member in members:
             if _is_nominal_type_member(member) and issubclass(value_type, member):
                 distance = cls.nominal_type_distance(value_mro, member)
                 matches.append((distance, strategy_type))

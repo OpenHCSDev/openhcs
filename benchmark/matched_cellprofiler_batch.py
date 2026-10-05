@@ -62,6 +62,7 @@ from openhcs.core.config import (
 )
 from openhcs.core.equivalence.comparison import runtime_image_differences
 from openhcs.core.equivalence.outputs import RuntimeOutputSnapshot
+from openhcs.core.equivalence.report import RuntimeEquivalenceReport
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.equivalence.policy import normalize_runtime_identifier
 from openhcs.core.input_workspace import InputWorkspacePreparationRequest
@@ -177,27 +178,56 @@ def _require_compared_output_inventory(
     reference_snapshot: RuntimeOutputSnapshot,
     candidate_snapshot: RuntimeOutputSnapshot,
     candidate_managed_files: frozenset[Path] = frozenset(),
+    compared_file_report: RuntimeEquivalenceReport = RuntimeEquivalenceReport(()),
 ) -> None:
     """Reject unqualified output formats and missing scientific output files."""
+    # Validate all explicit edges against their object rows, then compare the
+    # cross-output correlations before using redundant scalar table inventory.
+    from openhcs.core.equivalence.relationships import (
+        ExportedRelationshipMeasurementSemantics,
+    )
+    from openhcs.core.runtime_equivalence import RuntimeMeasurementSnapshot
+
+    measurements = tuple(
+        RuntimeMeasurementSnapshot.from_output_snapshot(snapshot)
+        for snapshot in (reference_snapshot, candidate_snapshot)
+    )
+    correlations = tuple(
+        measurement.required_relationship_correlations() for measurement in measurements
+    )
+    if correlations[0] != correlations[1]:
+        raise RuntimeError("Matched saved output relationship correlations differ.")
+    comparable_tables = tuple(
+        tuple(
+            table
+            for table in snapshot.tables
+            if table.participates_in_comparison
+            and not ExportedRelationshipMeasurementSemantics.supports_table(table)
+        )
+        for snapshot in (reference_snapshot, candidate_snapshot)
+    )
     counts = []
-    for files, exports, snapshot, managed_files in (
-        (reference_files, reference_exports, reference_snapshot, frozenset()),
+    for files, exports, snapshot, managed_files, tables in (
+        (
+            reference_files,
+            reference_exports,
+            reference_snapshot,
+            frozenset(),
+            comparable_tables[0],
+        ),
         (
             candidate_files,
             candidate_exports,
             candidate_snapshot,
             candidate_managed_files,
+            comparable_tables[1],
         ),
     ):
         files = files - managed_files
         compared_files = (
             frozenset(exports.table_outputs)
             | frozenset(exports.image_outputs)
-            | frozenset(
-                path
-                for path in exports.output_files
-                if path.suffix.lower() in {".db", ".properties"}
-            )
+            | (files & compared_file_report.compared_output_files)
         )
         if files != compared_files:
             raise RuntimeError(
@@ -210,7 +240,7 @@ def _require_compared_output_inventory(
             - len(snapshot.tables)
             - len(exports.image_outputs)
             + len(snapshot.images)
-            + sum(table.participates_in_comparison for table in snapshot.tables)
+            + len(tables)
         )
         if count < 1:
             raise RuntimeError("Matched batch has no compared scientific output files.")
@@ -232,10 +262,9 @@ def _require_compared_output_inventory(
                 ),
                 len(table.rows),
             )
-            for table in snapshot.tables
-            if table.participates_in_comparison
+            for table in tables
         )
-        for snapshot in (reference_snapshot, candidate_snapshot)
+        for tables in comparable_tables
     )
     if table_shapes[0] != table_shapes[1]:
         raise RuntimeError(
@@ -836,6 +865,7 @@ def main(argv: list[str] | None = None) -> int:
                 reference_snapshot=native_snapshot,
                 candidate_snapshot=candidate_snapshot,
                 candidate_managed_files=managed_output_files,
+                compared_file_report=database_report,
             )
             result = {
                 "repetition": repetition,

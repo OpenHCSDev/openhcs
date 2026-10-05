@@ -1,0 +1,39 @@
+{
+  "status": "STRICT_SCIENCE_PASS_PERFORMANCE_ROUTE_REJECTED",
+  "session": 68950,
+  "returncode": 0,
+  "source": "9eee98265c939859d49f0c60bd5b3a2168cb29fe",
+  "comparisons": 4,
+  "scope": "Fresh baseline and candidate vs both existing native repetitions, original compare function, original policies; no native rerun and no performance promotion.",
+  "gates": "Exact120 candidate TIFFs against2 native volume TIFFs through existing logical owners; six candidate CSV vs existing native7-table representation; strict schema/discrete/numerical/relationship correlations/full physical inventory; 180 ordered source references; all input/native/output/source hashes unchanged.",
+  "performance_parent_observations": {
+    "baseline_execute_seconds": 8.27651668,
+    "candidate_execute_seconds": 8.97740984,
+    "decision": "STOPPED by root; single source pair descriptive only"
+  },
+  "files": [
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261003/plane-facts-whole-driver-science-v1/compare.py",
+      "sha256": "b28035313a58a2c90d0824a71483f575db9c28c830f9d11f2d962f4ffc978b06",
+      "bytes": 8186
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261003/plane-facts-whole-driver-science-v1/prep.json",
+      "sha256": "99d0f1996e262bb15ed0a2160b29d4f4c0fff42ef1d95ac1a6395cca325a7051",
+      "bytes": 7092
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261003/plane-facts-whole-driver-science-v1/compare.log",
+      "sha256": "7e25cd2d6d31fefea7e748430aef4769062f2220a201c0564c5d67dd8143d624",
+      "bytes": 366
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261003/plane-facts-whole-driver-science-v1/strict-science.json",
+      "sha256": "b9a35a8504dc4a2dc96d4e8e4263335be9f8c70f0b14b45e1f92aa3c8d3c6b45",
+      "bytes": 268580
+    }
+  ],
+  "print_notice": "Original comparator prints its original strict-science destination; write adapter actually stores ONLY this directory strict-science.json. Old native qualification file SHA checked unchanged.",
+  "all_handles_terminal": true,
+  "scratch_bytes": 284224
+}

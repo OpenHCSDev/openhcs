@@ -20,7 +20,12 @@ from openhcs.core.callable_contract import (
     CallableMetadata,
     FunctionStepExecutionScope,
 )
-from openhcs.core.runtime_output_matching import RuntimeReturnedOutputMatcher
+from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payload_data
+from openhcs.core.runtime_plane_projection import (
+    RuntimePlaneAxis,
+    RuntimePlaneAxisValueProjection,
+)
+from openhcs.core.runtime_slice_projection import RuntimeSliceProjectionDeclarationError
 from openhcs.core.function_patterns import (
     CompiledFunctionInvocation,
     FunctionInvocationKey,
@@ -48,15 +53,67 @@ def test_runtime_output_matcher_maps_canonical_and_trailing_slots() -> None:
     image = ArtifactSpec.output("Image", ImageArtifactType)
     measurements = ArtifactSpec.output("Measurements", MeasurementsArtifactType)
 
-    resolved = RuntimeReturnedOutputMatcher(
-        callable_contract=_contract(image, measurements),
-        returned_output=("image", "measurements"),
-    ).resolve()
+    resolved = _contract(image, measurements).resolve_returned_output(
+        ("image", "measurements")
+    )
 
     assert resolved == {
         image.ref(): "image",
         measurements.ref(): "measurements",
     }
+
+
+def test_matcher_contextualizes_declared_axis_before_resolving_complete_abi() -> None:
+    first = ArtifactSpec.output("First", ImageArtifactType)
+    second = ArtifactSpec.output("Second", ImageArtifactType)
+    measurements = ArtifactSpec.output("Measurements", MeasurementsArtifactType)
+    data = np.arange(24, dtype=np.float32).reshape((2, 3, 4))
+    payload = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
+    ).payload_with(data, None)
+    trailing = object()
+    contract = _contract(first, second, measurements)
+    matcher_returned_output = (payload, trailing)
+    projection = RuntimePlaneAxisValueProjection.preserve(
+        axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        axis_size=2,
+    )
+
+    returned = contract.contextualize_returned_canonical_output(
+        matcher_returned_output, plane_projection=projection
+    )
+    resolved = contract.resolve_returned_output(returned)
+
+    assert returned[1] is trailing
+    assert resolved[measurements.ref()] is trailing
+    for index, spec in enumerate((first, second)):
+        selected = image_payload_data(resolved[spec.ref()])
+        np.testing.assert_array_equal(selected, data[index])
+        assert np.shares_memory(selected, data)
+    assert contract.contextualize_returned_canonical_output(returned) is returned
+
+    with pytest.raises(RuntimeSliceProjectionDeclarationError, match="without a compiled"):
+        contract.contextualize_returned_canonical_output(matcher_returned_output)
+    with pytest.raises(RuntimeSliceProjectionDeclarationError, match="already selected"):
+        contract.contextualize_returned_canonical_output(
+            matcher_returned_output, plane_projection=projection.selected_plane(0)
+        )
+    with pytest.raises(ValueError, match="projection declares 3 value"):
+        contract.contextualize_returned_canonical_output(
+            matcher_returned_output,
+            plane_projection=RuntimePlaneAxisValueProjection.preserve(
+                axis=RuntimePlaneAxis.RUNTIME_SLICE,
+                axis_size=3,
+            ),
+        )
+    with pytest.raises(RuntimeSliceProjectionDeclarationError, match="plane axis"):
+        contract.contextualize_returned_canonical_output(
+            matcher_returned_output,
+            plane_projection=RuntimePlaneAxisValueProjection.preserve(
+                axis=RuntimePlaneAxis.SOURCE_BINDING,
+                axis_size=2,
+            ),
+        )
 
 
 def test_runtime_output_matcher_uses_exact_multi_canonical_contexts() -> None:
@@ -77,10 +134,9 @@ def test_runtime_output_matcher_uses_exact_multi_canonical_contexts() -> None:
         ),
     )
 
-    resolved = RuntimeReturnedOutputMatcher(
-        callable_contract=_contract(first, second, measurements),
-        returned_output=(canonical, "measurements"),
-    ).resolve()
+    resolved = _contract(first, second, measurements).resolve_returned_output(
+        (canonical, "measurements")
+    )
 
     assert resolved == {
         first.ref(): "first-value",
@@ -100,10 +156,9 @@ def test_runtime_output_matcher_binds_selected_plans_after_resolving_complete_ab
         artifact_type=measurements.artifact_type,
     )
 
-    resolved, matched_outputs = RuntimeReturnedOutputMatcher(
-        callable_contract=_contract(image, measurements),
-        returned_output=("image", "measurements"),
-    ).resolve_plan_values((measurement_plan,))
+    resolved, matched_outputs = _contract(
+        image, measurements
+    ).resolve_returned_plan_values(("image", "measurements"), (measurement_plan,))
 
     assert resolved == {
         image.ref(): "image",
@@ -136,9 +191,7 @@ def test_runtime_invocation_selects_storage_without_truncating_callable_abi() ->
         ),
         artifact_output_plans=(first_plan, second_plan),
     )
-    runtime = compiled.for_runtime_outputs(
-        output_plans=(second_plan,),
-    )
+    runtime_output_plans = (second_plan,)
     first_value = np.zeros((4, 5), dtype=np.float32)
     second_value = np.ones((4, 5), dtype=np.float32)
     returned_stack = AlignedImageStack(
@@ -155,13 +208,12 @@ def test_runtime_invocation_selects_storage_without_truncating_callable_abi() ->
         ),
     )
 
-    resolved, matched = RuntimeReturnedOutputMatcher(
-        callable_contract=runtime.contract,
-        returned_output=returned_stack,
-    ).resolve_plan_values(runtime.artifact_output_plans)
+    resolved, matched = compiled.contract.resolve_returned_plan_values(
+        returned_stack, runtime_output_plans
+    )
 
-    assert runtime.contract.canonical_return_output_specs.specs == (first, second)
-    assert runtime.contract.artifact_inputs.specs == (first_input, second_input)
+    assert compiled.contract.canonical_return_output_specs.specs == (first, second)
+    assert compiled.contract.artifact_inputs.specs == (first_input, second_input)
     assert resolved == {
         first.ref(): first_value,
         second.ref(): second_value,
@@ -183,20 +235,14 @@ def test_runtime_output_matcher_rejects_trailing_slot_count_mismatch(
         ValueError,
         match=rf"declared trailing output slots: {expected_count} != 1",
     ):
-        RuntimeReturnedOutputMatcher(
-            callable_contract=_contract(measurements),
-            returned_output=returned_output,
-        ).resolve()
+        _contract(measurements).resolve_returned_output(returned_output)
 
 
 def test_runtime_output_matcher_rejects_duplicate_abi_specs() -> None:
     objects = ArtifactSpec.output("Objects", ObjectLabelsArtifactType)
 
     with pytest.raises(ValueError, match="duplicate artifact ref"):
-        RuntimeReturnedOutputMatcher(
-            callable_contract=_contract(objects, objects),
-            returned_output="objects",
-        ).resolve()
+        _contract(objects, objects).resolve_returned_output("objects")
 
 
 def test_runtime_output_matcher_rejects_selected_plan_not_in_abi() -> None:
@@ -209,10 +255,7 @@ def test_runtime_output_matcher_rejects_selected_plan_not_in_abi() -> None:
     )
 
     with pytest.raises(ValueError, match="plan .* is not declared by the callable ABI"):
-        RuntimeReturnedOutputMatcher(
-            callable_contract=_contract(declared),
-            returned_output="declared",
-        ).resolve_plan_values((undeclared_plan,))
+        _contract(declared).resolve_returned_plan_values("declared", (undeclared_plan,))
 
 
 @pytest.mark.parametrize(
@@ -282,10 +325,9 @@ def test_runtime_output_matcher_rejects_context_free_multi_canonical_stack() -> 
     second = ArtifactSpec.output("Second", ImageArtifactType)
 
     with pytest.raises(ValueError, match="require exact AlignedImageStack"):
-        RuntimeReturnedOutputMatcher(
-            callable_contract=_contract(first, second),
-            returned_output=AlignedImageStack(("first", "second")),
-        ).resolve()
+        _contract(first, second).resolve_returned_output(
+            AlignedImageStack(("first", "second"))
+        )
 
 
 def test_plate_scope_uses_first_declared_output_as_canonical() -> None:
@@ -299,10 +341,7 @@ def test_plate_scope_uses_first_declared_output_as_canonical() -> None:
 
     assert contract.canonical_return_output_specs.specs == (measurements,)
     assert contract.trailing_return_output_specs.specs == (image,)
-    assert RuntimeReturnedOutputMatcher(
-        callable_contract=contract,
-        returned_output=("measurements", "image"),
-    ).resolve() == {
+    assert contract.resolve_returned_output(("measurements", "image")) == {
         measurements.ref(): "measurements",
         image.ref(): "image",
     }

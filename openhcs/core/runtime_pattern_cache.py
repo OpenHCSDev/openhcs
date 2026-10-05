@@ -4,9 +4,16 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Hashable, TYPE_CHECKING
 
+from openhcs.constants.constants import AllComponents
+from openhcs.core.components.parser_metaprogramming import FilenameParseResult
 from openhcs.core.function_patterns import FunctionGroupKey
 from openhcs.core.source_binding_selection import SourceCandidatePath
+
+if TYPE_CHECKING:
+    from openhcs.microscopes.microscope_interfaces import FilenameParser
 
 DiscoveredPatternCollection = (
     Sequence[SourceCandidatePath]
@@ -114,6 +121,46 @@ class RuntimePatternDiscoveryCache:
         RuntimePatternDiscoveryCacheKey,
         FrozenPatternDiscoveryResult,
     ] = field(default_factory=dict)
+
+    filename_metadata: dict[
+        tuple["FilenameParser", tuple[Hashable, ...], str],
+        FilenameParseResult | None,
+    ] = field(default_factory=dict)
+    filenames_by_component: dict[
+        tuple["FilenameParser", tuple[Hashable, ...], AllComponents, str], set[str],
+    ] = field(default_factory=dict)
+
+    def metadata_for_filename(
+        self, parser: "FilenameParser", filename: str,
+    ) -> FilenameParseResult | None:
+        """Own each filename result under its actual parser semantics."""
+        semantics = parser.semantic_identity()
+        key = (parser, semantics, filename)
+        if key not in self.filename_metadata:
+            metadata = parser.parse_filename(filename)
+            self.filename_metadata[key] = metadata
+            if metadata is not None:
+                for component, value in metadata.declared_values():
+                    self.filenames_by_component.setdefault(
+                        (parser, semantics, component, str(value)), set(),
+                    ).add(filename)
+        return self.filename_metadata[key]
+
+    def files_for_component(
+        self,
+        parser: "FilenameParser",
+        files: Sequence[str],
+        component: AllComponents,
+        value: object,
+    ) -> list[str]:
+        """Select component membership from the admitted filename inventory."""
+        names = tuple(Path(path).name for path in files)
+        members = self.filenames_by_component.get(
+            (parser, parser.semantic_identity(), component, str(value)), (),
+        )
+        return [
+            path for path, name in zip(files, names, strict=True) if name in members
+        ]
 
     def get(
         self,

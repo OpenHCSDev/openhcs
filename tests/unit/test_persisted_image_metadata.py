@@ -33,7 +33,13 @@ from openhcs.core.source_projection import (
     SourceProjectionMetadataSerializer,
 )
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
-from openhcs.core.virtual_workspace_metadata import FIELDS, AtomicMetadataWriter
+from openhcs.core.virtual_workspace_metadata import (
+    FIELDS,
+    AtomicMetadataWriter,
+    MetadataWriteError,
+    VirtualWorkspaceSourceProjectionEntries,
+)
+from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.serialization.json import to_jsonable
 
 
@@ -103,7 +109,7 @@ def test_saved_format_metadata_is_native_and_does_not_reencode(
     assert restored.source_provenance == metadata.source_provenance
     assert restored.plane_axis is None
     if extension in (".png", ".bmp"):
-        assert restored.unit_interval_intensity.scale is None
+        assert restored.unit_interval_intensity is None
         assert restored.physical_border_edges_yx is None
         assert restored.mask_defines_border is None
     else:
@@ -167,17 +173,9 @@ def test_atomic_perwell_projection_merge_preserves_all_records(tmp_path):
         writer.merge_source_projection_metadata(
             path,
             ".",
-            {
-                FIELDS.WORKSPACE_MAPPING: {
-                    virtual_path: {"backend": "disk", "backend_address": virtual_path}
-                },
-                FIELDS.SOURCE_METADATA: {virtual_path: {"well": well}},
-                FIELDS.SOURCE_PROJECTION: [
-                    SourceProjectionMetadataSerializer(None)._source_projection_payload(
-                        projection, virtual_path
-                    )
-                ],
-            },
+            VirtualWorkspaceSourceProjectionEntries.from_projection_paths(
+                ((projection, virtual_path),)
+            ),
         )
 
     with ThreadPoolExecutor(max_workers=4) as pool:
@@ -187,6 +185,288 @@ def test_atomic_perwell_projection_merge_preserves_all_records(tmp_path):
     assert len(subdir[FIELDS.SOURCE_PROJECTION]) == 4
     assert len(subdir[FIELDS.WORKSPACE_MAPPING]) == 4
     assert len(subdir[FIELDS.SOURCE_METADATA]) == 4
+
+
+def calibrated_projection(well, path, pixel_size):
+    spacing = SourceVoxelSpacing((pixel_size, pixel_size))
+    source_metadata = {}
+    spacing.merge_into(source_metadata, path=path)
+    return SourcePlaneProjection(
+        OpenHCSPlaneAddress.from_values(well, 1, 1, 1, 1),
+        SourcePixelRef("disk", path),
+        source_metadata=source_metadata,
+        image_metadata=metadata_fixture().replace_fields(source_voxel_spacing=spacing),
+    )
+
+
+def publish_projection_inventory(writer, path, projection_metadata, saved_paths):
+    writer.publish_source_projection_metadata(
+        path,
+        "images",
+        projection_metadata,
+        serializer=SourceProjectionMetadataSerializer(SourceSchemaFilenameParser()),
+        saved_image_paths=saved_paths,
+        microscope_handler_name="VirtualWorkspaceMicroscopeHandler",
+        source_filename_parser_name="SourceSchemaFilenameParser",
+        component_labels={},
+        backend="disk",
+        is_main=True,
+        results_dir=None,
+    )
+
+
+@pytest.mark.parametrize(
+    "merge_method", ("merge_subdirectory_metadata", "merge_source_projection_metadata")
+)
+def test_atomic_projection_merge_refreshes_geometry_from_current_document(
+    tmp_path, merge_method
+):
+    path = tmp_path / "openhcs_metadata.json"
+    writer = AtomicMetadataWriter()
+    serializer = SourceProjectionMetadataSerializer(SourceSchemaFilenameParser())
+    first = calibrated_projection("A01", "images/first.tif", 0.5)
+    second = calibrated_projection("A02", "images/second.tif", 2.0)
+    first_fields = serializer.projection_fields(((first, "images/first.tif"),))
+    writer.replace_subdirectory_metadata(path, "images", first_fields)
+    second_fields = serializer.projection_fields(((second, "images/second.tif"),))
+    if merge_method == "merge_subdirectory_metadata":
+        # This API replaces the projection field with the authoritative new list.
+        writer.merge_subdirectory_metadata(path, {"images": second_fields})
+        expected_pixel_size = 2.0
+    else:
+        writer.merge_source_projection_metadata(
+            path, "images",
+            VirtualWorkspaceSourceProjectionEntries.from_projection_paths(
+                ((second, "images/second.tif"),)
+            ),
+        )
+        expected_pixel_size = 1.0  # Conflicting calibration has no physical scalar.
+    subdir = json.loads(path.read_text())[FIELDS.SUBDIRECTORIES]["images"]
+    assert subdir[FIELDS.PIXEL_SIZE] == expected_pixel_size
+
+
+def test_final_publication_prunes_geometry_and_preserves_other_directories(tmp_path):
+    path = tmp_path / "openhcs_metadata.json"
+    writer = AtomicMetadataWriter()
+    serializer = SourceProjectionMetadataSerializer(SourceSchemaFilenameParser())
+    retained = calibrated_projection("A01", "images/retained.tif", 0.5)
+    deleted = calibrated_projection("A02", "images/deleted.tif", 2.0)
+    elsewhere = calibrated_projection("A03", "other/retained.tif", 0.5)
+    projection_paths = (
+        (retained, "images/retained.tif"),
+        (deleted, "images/deleted.tif"),
+        (elsewhere, "other/retained.tif"),
+    )
+    writer.merge_source_projection_metadata(
+        path, "images",
+        VirtualWorkspaceSourceProjectionEntries.from_projection_paths(projection_paths)
+    )
+    before = json.loads(path.read_text())[FIELDS.SUBDIRECTORIES]["images"]
+    assert before[FIELDS.PIXEL_SIZE] == 1.0
+    publish_projection_inventory(writer, path, None, ("images/retained.tif",))
+    subdir = json.loads(path.read_text())[FIELDS.SUBDIRECTORIES]["images"]
+    assert subdir[FIELDS.PIXEL_SIZE] == 0.5
+    assert subdir[FIELDS.IMAGE_FILES] == ["images/retained.tif"]
+    entries = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(subdir).entries
+    assert set(entries) == {"images/retained.tif", "other/retained.tif"}
+    assert entries["images/retained.tif"].image_metadata == retained.image_metadata
+    assert entries["other/retained.tif"].image_metadata == elsewhere.image_metadata
+    # A failed final inventory cannot publish fields or prune existing records.
+    before_bytes = path.read_bytes()
+    with pytest.raises(MetadataWriteError, match="lack typed produced addresses"):
+        publish_projection_inventory(writer, path, None, ("images/unowned.tif",))
+    assert path.read_bytes() == before_bytes
+
+
+def test_concurrent_step_publication_retains_records_outside_partial_inventory(
+    tmp_path,
+):
+    path = tmp_path / "openhcs_metadata.json"
+    writer = AtomicMetadataWriter()
+    serializer = SourceProjectionMetadataSerializer(SourceSchemaFilenameParser())
+    paths = tuple(f"images/{well}.tif" for well in ("A01", "A02", "A03", "A04"))
+
+    def publish(item):
+        index, image_path = item
+        projection = calibrated_projection(f"A0{index + 1}", image_path, 0.5)
+        publish_projection_inventory(
+            writer,
+            path,
+            VirtualWorkspaceSourceProjectionEntries.from_projection_paths(
+                ((projection, image_path),)
+            ),
+            (image_path,),
+        )
+
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        list(pool.map(publish, enumerate(paths)))
+    subdir = json.loads(path.read_text())[FIELDS.SUBDIRECTORIES]["images"]
+    assert set(subdir[FIELDS.WORKSPACE_MAPPING]) == set(paths)
+    assert len(subdir[FIELDS.IMAGE_FILES]) == 1  # Most recent partial step inventory.
+    assert subdir[FIELDS.PIXEL_SIZE] == 0.5
+    publish_projection_inventory(writer, path, None, paths)
+    subdir = json.loads(path.read_text())[FIELDS.SUBDIRECTORIES]["images"]
+    assert subdir[FIELDS.IMAGE_FILES] == list(paths)
+    assert len(subdir[FIELDS.SOURCE_PROJECTION]) == len(paths)
+    assert subdir["wells"] == {f"A0{index + 1}": None for index in range(4)}
+
+
+@pytest.mark.parametrize("publish", (False, True))
+def test_typed_projection_update_admits_only_retained_wire_records(
+    tmp_path, monkeypatch, publish
+):
+    path = tmp_path / "openhcs_metadata.json"
+    writer = AtomicMetadataWriter()
+    retained = calibrated_projection("A01", "images/retained.tif", 0.5)
+    replacement = calibrated_projection("A02", "images/replaced.tif", 0.5)
+    serializer = SourceProjectionMetadataSerializer(SourceSchemaFilenameParser())
+    fields = serializer.projection_fields(((retained, "images/retained.tif"),))
+    fields[FIELDS.SOURCE_PROJECTION].append(
+        {"virtual_path": "images/replaced.tif", "projection_role": "broken"}
+    )
+    writer.replace_subdirectory_metadata(path, "images", fields)
+    updates = VirtualWorkspaceSourceProjectionEntries.from_projection_paths(
+        ((replacement, "images/replaced.tif"),)
+    )
+    admitted_paths = []
+    serialized_paths = []
+    decode = VirtualWorkspaceSourceProjectionEntries._projection_record
+    encode = SourceProjectionMetadataSerializer._source_projection_payload
+
+    def record(cls, wire):
+        admitted_paths.append(wire["virtual_path"])
+        return decode(wire)
+
+    def payload(cls, projection, virtual_path):
+        serialized_paths.append(virtual_path)
+        return encode(projection, virtual_path)
+
+    monkeypatch.setattr(
+        VirtualWorkspaceSourceProjectionEntries,
+        "_projection_record",
+        classmethod(record),
+    )
+    monkeypatch.setattr(
+        SourceProjectionMetadataSerializer,
+        "_source_projection_payload",
+        classmethod(payload),
+    )
+    merged = updates.merged_with_subdirectory(fields)
+    assert merged.entries["images/replaced.tif"] is replacement
+    assert tuple(merged.entries) == ("images/retained.tif", "images/replaced.tif")
+    admitted_paths.clear()
+    if publish:
+        publish_projection_inventory(
+            writer, path, updates, ("images/retained.tif", "images/replaced.tif")
+        )
+    else:
+        writer.merge_source_projection_metadata(path, "images", updates)
+    assert admitted_paths == ["images/retained.tif"]
+    assert serialized_paths == ["images/replaced.tif"]
+    subdir = json.loads(path.read_text())[FIELDS.SUBDIRECTORIES]["images"]
+    restored = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(subdir)
+    assert (
+        restored.entries["images/replaced.tif"].image_metadata
+        == replacement.image_metadata
+    )
+
+
+@pytest.mark.parametrize("publish", (False, True))
+def test_invalid_unreplaced_projection_aborts_typed_transaction(tmp_path, publish):
+    path = tmp_path / "openhcs_metadata.json"
+    writer = AtomicMetadataWriter()
+    writer.replace_subdirectory_metadata(
+        path, "images",
+        {FIELDS.SOURCE_PROJECTION: [{"virtual_path": "images/broken.tif"}]},
+    )
+    replacement = calibrated_projection("A02", "images/new.tif", 0.5)
+    updates = VirtualWorkspaceSourceProjectionEntries.from_projection_paths(
+        ((replacement, "images/new.tif"),)
+    )
+    before = path.read_bytes()
+    with pytest.raises(MetadataWriteError, match="projection_role"):
+        if publish:
+            publish_projection_inventory(writer, path, updates, ("images/new.tif",))
+        else:
+            writer.merge_source_projection_metadata(path, "images", updates)
+    assert path.read_bytes() == before
+
+
+@pytest.mark.parametrize("publish", (False, True))
+def test_typed_transaction_retains_wire_fields_and_derives_workspace_views(
+    tmp_path, publish
+):
+    path = tmp_path / "openhcs_metadata.json"
+    writer = AtomicMetadataWriter()
+    original = calibrated_projection("A01", "images/original.tif", 0.5)
+    fields = SourceProjectionMetadataSerializer.projection_fields(
+        ((original, "images/original.tif"),)
+    )
+    fields[FIELDS.SOURCE_PROJECTION][0]["external_annotation"] = {"version": 7}
+    fields[FIELDS.SOURCE_METADATA]["images/original.tif"] = {
+        "manual_override": "obsolete"
+    }
+    fields[FIELDS.WORKSPACE_MAPPING]["legacy.tif"] = {"opaque": "mapping"}
+    fields[FIELDS.SOURCE_METADATA]["legacy.tif"] = {"opaque": "metadata"}
+    writer.replace_subdirectory_metadata(path, "images", fields)
+    new = calibrated_projection("A02", "images/new.tif", 0.5)
+    updates = VirtualWorkspaceSourceProjectionEntries.from_projection_paths(
+        ((new, "images/new.tif"),)
+    )
+    if publish:
+        publish_projection_inventory(
+            writer, path, updates, ("images/original.tif", "images/new.tif")
+        )
+    else:
+        writer.merge_source_projection_metadata(path, "images", updates)
+    subdir = json.loads(path.read_text())[FIELDS.SUBDIRECTORIES]["images"]
+    assert subdir[FIELDS.SOURCE_PROJECTION][0]["external_annotation"] == {"version": 7}
+    if publish:
+        assert "legacy.tif" not in subdir[FIELDS.WORKSPACE_MAPPING]
+        assert "legacy.tif" not in subdir[FIELDS.SOURCE_METADATA]
+        assert subdir[FIELDS.SOURCE_METADATA]["images/original.tif"]["well"] == "A01"
+        assert "manual_override" not in subdir[FIELDS.SOURCE_METADATA][
+            "images/original.tif"
+        ]
+        assert "well" not in subdir[FIELDS.SOURCE_PROJECTION][0]["source_metadata"]
+        publish_projection_inventory(
+            writer, path, None, ("images/original.tif", "images/new.tif")
+        )
+        reconciled = json.loads(path.read_text())[FIELDS.SUBDIRECTORIES]["images"]
+        assert reconciled[FIELDS.SOURCE_PROJECTION][0]["external_annotation"] == {
+            "version": 7
+        }
+    else:
+        assert subdir[FIELDS.WORKSPACE_MAPPING]["legacy.tif"] == {"opaque": "mapping"}
+        assert subdir[FIELDS.SOURCE_METADATA]["legacy.tif"] == {"opaque": "metadata"}
+        assert subdir[FIELDS.SOURCE_METADATA]["images/original.tif"] == {
+            "manual_override": "obsolete"
+        }
+
+
+def test_typed_transaction_normalizes_legacy_paths_and_rejects_collisions():
+    original = calibrated_projection("A01", "7", 0.5)
+    fields = SourceProjectionMetadataSerializer.projection_fields(((original, "7"),))
+    fields[FIELDS.SOURCE_PROJECTION][0]["virtual_path"] = 7
+    updates = VirtualWorkspaceSourceProjectionEntries.from_projection_paths(
+        ((calibrated_projection("A02", "new.tif", 0.5), "new.tif"),)
+    )
+    assert tuple(updates.merged_with_subdirectory(fields).entries) == ("7", "new.tif")
+    colliding = VirtualWorkspaceSourceProjectionEntries.from_projection_paths(
+        ((calibrated_projection("A02", "7", 0.5), "7"),)
+    )
+    with pytest.raises(RuntimeError, match="duplicate path '7'"):
+        colliding.merged_with_subdirectory(fields)
+
+
+@pytest.mark.parametrize("field", (FIELDS.WORKSPACE_MAPPING, FIELDS.SOURCE_METADATA))
+def test_typed_transaction_preserves_durable_mapping_validation(field):
+    projection = calibrated_projection("A01", "images/current.tif", 0.5)
+    updates = VirtualWorkspaceSourceProjectionEntries.from_projection_paths(
+        ((projection, "images/current.tif"),)
+    )
+    with pytest.raises(TypeError, match="must be a mapping"):
+        updates.merged_with_subdirectory({field: None})
 
 
 def test_metadata_codec_rejects_unknown_declarations():
@@ -209,7 +489,7 @@ def test_absent_native_scale_retains_only_value_preserved_authored_facts():
     changed = header.project_image_metadata(metadata, values_preserved=False)
     assert changed.intensity_scale is None
     assert changed.source_plane_intensity_scales == (None, None)
-    assert changed.unit_interval_intensity.scale is None
+    assert changed.unit_interval_intensity is None
 
 
 @pytest.mark.parametrize("origin", ((0, 0), (7, 11)))
@@ -226,11 +506,11 @@ def test_native_header_reload_preserves_declared_crop_and_alias(tmp_path, origin
     context = ImagePayloadSourceMetadataContext(SourceImageIdentity(str(path), {}))
     from openhcs.core.runtime_image_values import image_payload_metadata
     from openhcs.core.source_bindings import NamedSourceBinding
-    from openhcs.core.source_image_semantics import apply_source_binding_payload
 
     current = image_payload_metadata(
-        apply_source_binding_payload(
-            reloaded, NamedSourceBinding(alias="neurite"), context
+        NamedSourceBinding(alias="neurite").apply_loaded_payload(
+            reloaded,
+            context,
         )
     )
     assert current.source_dtype == "float32"
@@ -248,7 +528,6 @@ def test_native_mosaic_replaces_incompatible_old_tile_domain_without_losing_sour
 ):
     from openhcs.core.runtime_image_values import image_payload_metadata
     from openhcs.core.source_bindings import NamedSourceBinding
-    from openhcs.core.source_image_semantics import apply_source_binding_payload
 
     metadata = metadata_fixture().replace_fields(
         source_spatial_domain=SourceSpatialDomain((0, 0), (4, 6))
@@ -261,9 +540,8 @@ def test_native_mosaic_replaces_incompatible_old_tile_domain_without_losing_sour
         image_format.read(path), image_format.persisted_metadata(path, payload)
     )
     current = image_payload_metadata(
-        apply_source_binding_payload(
+        NamedSourceBinding(alias="neurite").apply_loaded_payload(
             reloaded,
-            NamedSourceBinding(alias="neurite"),
             ImagePayloadSourceMetadataContext(SourceImageIdentity(str(path), {})),
         )
     )
@@ -361,7 +639,6 @@ def test_native_headerless_hwc_replay_retains_declared_channel_semantics(
 
     from openhcs.core.runtime_image_values import image_payload_metadata
     from openhcs.core.source_bindings import NamedSourceBinding
-    from openhcs.core.source_image_semantics import apply_source_binding_payload
 
     pixels = np.arange(60, dtype=np.uint8).reshape(4, 5, 3)
     metadata = metadata_fixture().replace_fields(
@@ -397,9 +674,8 @@ def test_native_headerless_hwc_replay_retains_declared_channel_semantics(
         json.loads(json.dumps(to_jsonable(restored)))
     )
     assert restored.source_channel_axis == -1
-    bound = apply_source_binding_payload(
+    bound = NamedSourceBinding(alias="neurite").apply_loaded_payload(
         ImageMetadataPayload(loaded, restored),
-        NamedSourceBinding(alias="neurite"),
         context,
     )
     current = image_payload_metadata(bound)
@@ -420,7 +696,7 @@ def test_lossy_jpeg_clears_exact_value_proofs_even_for_uint8(tmp_path):
     image_format.write(path, payload)
     assert np.any(image_format.read(path) != pixels)
     restored = image_format.persisted_metadata(path, payload)
-    assert restored.unit_interval_intensity.scale is None
+    assert restored.unit_interval_intensity is None
     assert restored.physical_border_edges_yx is None
     assert restored.mask_defines_border is None
     assert restored.source_provenance == metadata.source_provenance
@@ -465,7 +741,7 @@ def test_mixed_zarr_batch_preserves_lineage_but_not_quantized_value_proofs(tmp_p
         ),
     )
     assert restored.source_dtype == "uint8"
-    assert restored.unit_interval_intensity.scale is None
+    assert restored.unit_interval_intensity is None
     assert restored.physical_border_edges_yx is None
     assert restored.mask_defines_border is None
     assert restored.source_provenance == metadata.source_provenance

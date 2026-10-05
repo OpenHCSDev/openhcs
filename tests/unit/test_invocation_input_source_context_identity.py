@@ -98,7 +98,7 @@ def test_compiled_input_edges_own_exact_main_flow_membership() -> None:
 
     assert tuple(edge.spec for edge in edges) == (plate_template, combined_image)
     assert tuple(edge.storage_plan for edge in edges) == (None, None)
-    assert tuple(edge.consumes_main_flow for edge in edges) == (False, True)
+    assert tuple((edge.main_flow_projection is not None) for edge in edges) == (False, True)
     assert tuple(edge.main_flow_projection for edge in edges) == (
         None,
         MainFlowInputProjection.COMPLETE_PAYLOAD,
@@ -147,12 +147,12 @@ def test_implicit_native_main_flow_consumes_complete_payload_not_source_alias() 
         adapter=adapter,
         kwargs={},
         current_image=source_payload,
-    ).artifact_request(edge)
+    ).artifact_value(edge)
 
-    assert edge.consumes_main_flow is True
+    assert (edge.main_flow_projection is not None) is True
     assert edge.main_flow_projection is MainFlowInputProjection.COMPLETE_PAYLOAD
-    assert request.value is source_payload
-    assert image_payload_metadata(request.value).source_image_names == ("Hoechst",)
+    assert request is source_payload
+    assert image_payload_metadata(request).source_image_names == ("Hoechst",)
 
 
 def test_multiple_main_flow_images_keep_declared_source_projection() -> None:
@@ -232,22 +232,22 @@ def test_primary_workspace_role_does_not_override_compiled_input_ownership(
         ValueError,
         match="does not represent declared source image 'PlateTemplate'",
     ):
-        request.artifact_request(
+        request.artifact_value(
             replace(
                 edges_by_ref[plate_template.ref()],
-                consumes_main_flow=True,
+                main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
             )
         )
 
-    source_request = request.artifact_request(edges_by_ref[plate_template.ref()])
-    main_flow_request = request.artifact_request(edges_by_ref[combined_image.ref()])
+    source_request = request.artifact_value(edges_by_ref[plate_template.ref()])
+    main_flow_request = request.artifact_value(edges_by_ref[combined_image.ref()])
 
-    np.testing.assert_array_equal(image_payload_data(source_request.value), 7.0)
-    np.testing.assert_array_equal(image_payload_data(main_flow_request.value), 11.0)
-    assert image_payload_metadata(source_request.value).source_image_names == (
+    np.testing.assert_array_equal(image_payload_data(source_request), 7.0)
+    np.testing.assert_array_equal(image_payload_data(main_flow_request), 11.0)
+    assert image_payload_metadata(source_request).source_image_names == (
         plate_template.name,
     )
-    assert image_payload_metadata(main_flow_request.value).source_image_names == (
+    assert image_payload_metadata(main_flow_request).source_image_names == (
         combined_image.name,
     )
 
@@ -260,7 +260,7 @@ def test_storage_backed_input_keeps_exact_runtime_authority() -> None:
     edge = next(edge for edge in edges if edge.spec == combined_image)
 
     assert edge.storage_plan is not None
-    assert edge.consumes_main_flow is False
+    assert (edge.main_flow_projection is not None) is False
 
     stored_payload = ImagePayloadMetadata(
         source_image_names=(combined_image.name,),
@@ -295,10 +295,10 @@ def test_storage_backed_input_keeps_exact_runtime_authority() -> None:
         current_image=current_payload,
     )
 
-    runtime_request = request.artifact_request(edge)
+    runtime_request = request.artifact_value(edge)
 
-    np.testing.assert_array_equal(image_payload_data(runtime_request.value), 13.0)
-    assert image_payload_metadata(runtime_request.value).source_image_names == (
+    np.testing.assert_array_equal(image_payload_data(runtime_request), 13.0)
+    assert image_payload_metadata(runtime_request).source_image_names == (
         combined_image.name,
     )
 
@@ -349,9 +349,9 @@ def test_compiled_producer_edge_overrides_matching_source_binding() -> None:
         ).payload_with(np.full((2, 3), 23.0, dtype=np.float32), None),
     )
 
-    runtime_request = request.artifact_request(edge)
+    runtime_request = request.artifact_value(edge)
 
-    np.testing.assert_array_equal(image_payload_data(runtime_request.value), 19.0)
-    assert image_payload_metadata(runtime_request.value).source_image_names == (
+    np.testing.assert_array_equal(image_payload_data(runtime_request), 19.0)
+    assert image_payload_metadata(runtime_request).source_image_names == (
         combined_image.name,
     )

@@ -50,6 +50,7 @@ from metaclass_registry import AutoRegisterMeta
 from numba import njit
 from openhcs.core.memory.decorators import numpy as numpy_decorator
 from openhcs.core.public_api import public_names_from_objects
+from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     image_payload_data,
     image_payload_mask,
@@ -508,7 +509,7 @@ def _native_kirsch(image: np.ndarray) -> np.ndarray:
 
 @numpy_decorator(contract=ProcessingContract.PURE_2D)
 def enhance_edges(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     method: EdgeMethod = EdgeMethod.SOBEL,
     direction: EdgeDirection = EdgeDirection.ALL,
     edge_backend_provider: BackendProviderInput = DEFAULT_CELLPROFILER_BACKEND_SELECTION,

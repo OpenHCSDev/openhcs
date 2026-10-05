@@ -145,7 +145,7 @@ def test_diagnostic_contract_has_source_producer_stage_identity_not_new_objects(
 
 def test_ordinary_image_contextualization_preserves_unexecuted_masks():
     from openhcs.core.artifacts import ArtifactOutputPlan
-    from openhcs.core.steps.function_runtime import FunctionOutputContextStrategy
+
 
     source = _source()
     objects = _objects(source)
@@ -164,7 +164,7 @@ def test_ordinary_image_contextualization_preserves_unexecuted_masks():
             artifact_type=spec.artifact_type, sidecar_role=spec.sidecar_role,
             relations=spec.relations,
         )
-        value = FunctionOutputContextStrategy.for_output_plan(plan).contextualize(
+        value = (ImageArtifactType if plan is None else plan.artifact_type).contextualize_output(
             source, plane, plan, None
         )
         np.testing.assert_array_equal(value.mask, plane.mask)
@@ -191,10 +191,27 @@ def test_existing_pure2d_aggregation_retains_stage_pixels_masks_and_plane_identi
     value = Pure2DAuxiliaryOutputAggregator.aggregate(
         planes, "numpy", plane_axis=RuntimePlaneAxis.RUNTIME_SLICE
     )
-    np.testing.assert_array_equal(value.data, np.stack([first.data, second.data]))
-    np.testing.assert_array_equal(value.mask, np.stack([first.mask, second.mask]))
+    import pickle
+    from openhcs.core.aligned_image_payload import ProducedImageStack
+    from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+
+    assert isinstance(value, ProducedImageStack)
+    assert value._composed_payload is None
+    assert value.shape == (2, *first.data.shape)
+    value = pickle.loads(pickle.dumps(value))
+    assert value._composed_payload is None
+    composed = RuntimeSliceProjection.full_stack_value(value)
+    assert RuntimeSliceProjection.full_stack_value(value) is composed
+    np.testing.assert_array_equal(composed.data, np.stack([first.data, second.data]))
+    np.testing.assert_array_equal(composed.mask, np.stack([first.mask, second.mask]))
     assert value.metadata.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
     assert value.metadata.source_provenance.source_plane_count == 2
+    reloaded = pickle.loads(pickle.dumps(value))
+    assert np.shares_memory(reloaded.slices[0].data, reloaded.compose().data)
+    assert np.shares_memory(reloaded.slices[0].mask, reloaded.compose().mask)
+    independent = value.copy_input_cohort(memory_type="numpy", device_id=None)
+    assert not np.shares_memory(independent.slices[0].data, composed.data)
+    assert not np.shares_memory(independent.slices[0].mask, composed.mask)
 
 
 def test_typed_stage_payloads_roundtrip_existing_pickle_boundary():

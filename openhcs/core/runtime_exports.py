@@ -28,7 +28,6 @@ from openhcs.processing.materialization import (
 from openhcs.processing.materialization.core import materialization_is_empty
 
 if TYPE_CHECKING:
-    from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.orchestrator.execution_result import RuntimeExecutionObservation
 
 
@@ -112,26 +111,6 @@ class RuntimeExportObservation:
     table_headers_by_path: Mapping[Path, tuple[str, ...]]
     table_row_counts_by_path: Mapping[Path, int]
     output_files: tuple[Path, ...] = ()
-
-    @classmethod
-    def from_execution_contexts(
-        cls,
-        execution_contexts: Mapping[str, ProcessingContext],
-    ) -> RuntimeExportObservation:
-        """Read contract-owned export paths without retaining runtime values."""
-        from openhcs.core.steps.function_artifact_materialization import (
-            runtime_export_artifact_output_paths,
-        )
-
-        return cls.from_output_paths(
-            tuple(
-                path
-                for context in execution_contexts.values()
-                for plan in context.step_plans.values()
-                if plan.owns_runtime_outputs
-                for path in runtime_export_artifact_output_paths(plan, context)
-            )
-        )
 
     @classmethod
     def from_runtime_observations(
@@ -410,7 +389,7 @@ def _file_bundle_failures(
 ) -> tuple[str, ...]:
     failures: list[str] = []
     for record in _runtime_records_for_specs(output_specs, runtime_records_by_axis):
-        payload = record.value.materialization_payload()
+        payload = record.materialization_payload()
         if type(payload) is not dict:
             failures.append(
                 f"materialized file-bundle artifact {record.key.name!r} has "
@@ -462,7 +441,7 @@ def _table_schema_field_failures(
     if record.key.artifact_type is not MeasurementsArtifactType:
         return ()
     expected_fields = tuple(
-        field.name for field in cast(MeasurementTable, record.value.data).rows.fields
+        field.name for field in cast(MeasurementTable, record.data).rows.fields
     )
     if not expected_fields:
         return ()
@@ -488,7 +467,7 @@ def _table_row_count_failures(
     table_outputs: tuple[Path, ...],
     row_counts_by_path: Mapping[Path, int],
 ) -> tuple[str, ...]:
-    if materialization_is_empty(record.value.materialization_payload()):
+    if materialization_is_empty(record.materialization_payload()):
         return ()
     return tuple(
         f"table output {path} has no data rows"

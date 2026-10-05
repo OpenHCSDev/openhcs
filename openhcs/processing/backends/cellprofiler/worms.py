@@ -141,7 +141,7 @@ from openhcs.processing.backends.cellprofiler.distance_propagation_numba import 
     _propagate_labels_and_distances_zero_image_numba,
 )
 from openhcs.processing.backends.cellprofiler.object_images import (
-    object_label_colormap,
+    ColorImageModeRenderer,
 )
 from openhcs.processing.backends.cellprofiler.worm_geometry import (
     branchpoints,
@@ -1709,7 +1709,7 @@ class UntangleWormsExecution:
 
 
 def _execute_untangle_worms(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     min_worm_area: float = 100.0,
     max_worm_area: float = 5000.0,
     num_control_points: int = 21,
@@ -1868,7 +1868,7 @@ def _execute_untangle_worms(
 
 
 def _untangle_worms_output(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     *,
     expected_style: OverlapStyle,
     overlap_style: OverlapStyle,
@@ -1940,7 +1940,7 @@ def _untangle_worms_output(
 
 @numpy(contract=ProcessingContract.PURE_2D)
 def untangle_worms(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     overlap_style: OverlapStyle = OverlapStyle.WITHOUT_OVERLAP,
     min_worm_area: float = 100.0,
     max_worm_area: float = 5000.0,
@@ -1993,7 +1993,7 @@ def untangle_worms(
 
 @numpy(contract=ProcessingContract.PURE_2D)
 def untangle_worms_with_overlap(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     overlap_style: OverlapStyle = OverlapStyle.WITH_OVERLAP,
     min_worm_area: float = 100.0,
     max_worm_area: float = 5000.0,
@@ -2046,7 +2046,7 @@ def untangle_worms_with_overlap(
 
 @numpy(contract=ProcessingContract.PURE_2D)
 def untangle_worms_both(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     overlap_style: OverlapStyle = OverlapStyle.BOTH,
     min_worm_area: float = 100.0,
     max_worm_area: float = 5000.0,
@@ -2112,7 +2112,7 @@ del _function_name
 @special_inputs("worm_labels")
 @runtime_bound_parameters(_StraightenWormControlPointsRuntimeParameter)
 def straighten_worms(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     worm_labels: ObjectLabelValue,
     control_points: np.ndarray | None = None,
     worm_width: int = 20,
@@ -2226,7 +2226,7 @@ def straighten_worms(
 
 @numpy(contract=ProcessingContract.PURE_2D)
 def identify_dead_worms(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     worm_width: int = 10,
     worm_length: int = 100,
     angle_count: int = 32,
@@ -2989,7 +2989,7 @@ def _overlapping_worm_outline(
     resolved_colormap = (
         "viridis" if colormap_name.strip().casefold() == "default" else colormap_name
     )
-    colors = object_label_colormap(resolved_colormap, max_label)
+    colors = ColorImageModeRenderer.palette(resolved_colormap, max_label)
     output = np.zeros((*image_shape, 3), dtype=np.float32)
     label_ids = row_array[:, rows.label_column].astype(int, copy=False)
     for label_id in np.unique(label_ids[label_ids > 0]):

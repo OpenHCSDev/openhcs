@@ -29,6 +29,7 @@ from openhcs.core.pipeline.function_contracts import (
     special_inputs,
 )
 from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
+from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.runtime_image_values import (
     image_payload_data,
     image_payload_metadata,
@@ -492,7 +493,7 @@ class DisplayDataOnImageRenderer:
 @special_inputs("labels")
 @runtime_bound_parameters(_DisplayMeasurementsRuntimeParameter)
 def display_data_on_image(
-    image: np.ndarray,
+    image: RuntimeArrayData,
     labels: Optional[ObjectLabelValue] = None,
     measurements: Optional[np.ndarray] = None,
     measurement_feature: Optional[str] = None,

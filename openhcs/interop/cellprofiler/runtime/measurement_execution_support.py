@@ -24,7 +24,10 @@ from openhcs.core.runtime_tabular_values import (
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
 )
-from openhcs.core.runtime_batch_contracts import RuntimeBatchInvocationRequest
+from openhcs.core.runtime_batch_contracts import (
+    RuntimeBatchExecutionDomain,
+    RuntimeBatchInvocationRequest,
+)
 from openhcs.interop.cellprofiler.runtime.adapter import CellProfilerRuntimeAdapter
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import (
     _execute_runtime_batch_invocation,
@@ -36,7 +39,6 @@ from openhcs.interop.cellprofiler.runtime.object_measurement_execution import (
 from openhcs.interop.cellprofiler.runtime.measurement_rows import (
     measurement_table_rows,
 )
-from openhcs.core.runtime_output_matching import RuntimeReturnedOutputMatcher
 from openhcs.core.steps.function_runtime import (
     RuntimeCallableArgument,
     RuntimeFunctionOutput,
@@ -212,111 +214,6 @@ class PreparedObjectMeasurementInvocation(RuntimeBatchInvocationRequest):
     invocation: "ObjectMeasurementInvocation"
     completion_label_payload: RuntimeCallableArgument
 
-    def record_output(
-        self,
-        output_recorder: "ObjectMeasurementOutputRecorder",
-        raw_output: RuntimeCallableArgument,
-    ) -> None:
-        """Record one raw invocation output through the shared recorder."""
-        output_recorder.record(
-            raw_output,
-            measurement_image=self.measurement_image,
-            object_spec=self.object_spec,
-            completion_label_payload=self.completion_label_payload,
-            invocation=self.invocation,
-        )
-
-
-@dataclass(frozen=True, slots=True)
-class PreparedObjectMeasurementInvocationBatch:
-    """Execute prepared object-measurement invocations in declared batch order."""
-
-    callable_contract: CallableContract
-    func: Callable[..., RuntimeFunctionOutput]
-    function_name: str
-    invocations: tuple[PreparedObjectMeasurementInvocation, ...]
-    batch_executor: ObjectMeasurementBatchExecutor | None
-
-    def execute(
-        self,
-        output_recorder: "ObjectMeasurementOutputRecorder",
-    ) -> float:
-        """Execute all invocations, record outputs, and return contract seconds."""
-        if self.batch_executor is not None:
-            return self._execute_batched(output_recorder)
-        return self._execute_serial(output_recorder)
-
-    def _execute_serial(
-        self,
-        output_recorder: "ObjectMeasurementOutputRecorder",
-    ) -> float:
-        contract_execute_seconds = 0.0
-        for prepared_invocation in self.invocations:
-            contract_started_at = time.perf_counter()
-            raw_output = _execute_runtime_batch_invocation(
-                self.callable_contract,
-                self.func,
-                prepared_invocation,
-            )
-            contract_execute_seconds += time.perf_counter() - contract_started_at
-            prepared_invocation.record_output(output_recorder, raw_output)
-        return contract_execute_seconds
-
-    def _execute_batched(
-        self,
-        output_recorder: "ObjectMeasurementOutputRecorder",
-    ) -> float:
-        batch_requests = tuple(
-            invocation.batch_executor_request() for invocation in self.invocations
-        )
-        if any(request is None for request in batch_requests):
-            return self._execute_serial(output_recorder)
-        executable_requests = tuple(
-            request for request in batch_requests if request is not None
-        )
-        contract_started_at = time.perf_counter()
-        raw_outputs = tuple(
-            self.require_batch_executor()(
-                self.func,
-                executable_requests,
-                partial(
-                    _execute_runtime_batch_invocation,
-                    self.callable_contract,
-                ),
-            )
-        )
-        contract_execute_seconds = time.perf_counter() - contract_started_at
-        if len(raw_outputs) != len(self.invocations):
-            raise ValueError(
-                f"{self.function_name} measurement-image batch executor returned "
-                f"{len(raw_outputs)} outputs for {len(self.invocations)} requests."
-            )
-
-        ordered_batch_outputs = {
-            prepared_invocation.batch_index: (
-                raw_output,
-                prepared_invocation,
-            )
-            for raw_output, prepared_invocation in zip(
-                raw_outputs,
-                self.invocations,
-                strict=True,
-            )
-        }
-        for order_index in range(len(ordered_batch_outputs)):
-            raw_output, prepared_invocation = ordered_batch_outputs[order_index]
-            prepared_invocation.record_output(output_recorder, raw_output)
-        return contract_execute_seconds
-
-    def require_batch_executor(self) -> ObjectMeasurementBatchExecutor:
-        """Return the declared batch executor for the batched path."""
-        if self.batch_executor is None:
-            raise RuntimeError(
-                "PreparedObjectMeasurementInvocationBatch requires a batch executor "
-                "for batched execution."
-            )
-        return self.batch_executor
-
 
 def object_label_stage_event(
     stage: str,
@@ -381,45 +278,111 @@ class CellProfilerRuntimeProfiler:
 
 
 @dataclass(slots=True)
-class ObjectMeasurementOutputTimings:
-    """Mutable timings for per-object measurement output handling."""
-
-    split_seconds: float = 0.0
-    complete_rows_seconds: float = 0.0
-    annotate_seconds: float = 0.0
-
-
-@dataclass(frozen=True, slots=True)
 class ObjectMeasurementOutputRecorder:
-    """Record one per-object CellProfiler measurement output."""
+    """Execute and record an ordered object-measurement roster."""
 
     callable_contract: CallableContract
     measurement_output_plan: ArtifactOutputPlan
     row_policy: "CellProfilerObjectMeasurementRowPolicy"
     module_type: type["CellProfilerModule"]
-    func: Callable[..., RuntimeFunctionOutput]
-    adapter: CellProfilerRuntimeAdapter
     measurement_images: tuple["CellProfilerMeasurementImage", ...]
     object_inputs: tuple[ArtifactSpec, ...]
     image_measurement_rows: list[ColumnarRows]
     columnar_rows: list[ColumnarRows]
-    timings: ObjectMeasurementOutputTimings
+    split_seconds: float = 0.0
+    complete_rows_seconds: float = 0.0
+    annotate_seconds: float = 0.0
+
+    def execute(
+        self,
+        invocations: tuple[PreparedObjectMeasurementInvocation, ...],
+    ) -> float:
+        """Execute all invocations, record outputs, and return contract seconds."""
+        batch_executor = self.callable_contract.runtime_batch_executor(
+            RuntimeBatchExecutionDomain.MEASUREMENT_IMAGES
+        )
+        if batch_executor is not None:
+            return self._execute_batched(invocations, batch_executor)
+        return self._execute_serial(invocations)
+
+    def _execute_serial(
+        self,
+        invocations: tuple[PreparedObjectMeasurementInvocation, ...],
+    ) -> float:
+        func = self.callable_contract.resolve_canonical_raw_callable()
+        contract_execute_seconds = 0.0
+        for prepared_invocation in invocations:
+            contract_started_at = time.perf_counter()
+            raw_output = _execute_runtime_batch_invocation(
+                self.callable_contract,
+                func,
+                prepared_invocation,
+            )
+            contract_execute_seconds += time.perf_counter() - contract_started_at
+            self.record(raw_output, prepared_invocation)
+        return contract_execute_seconds
+
+    def _execute_batched(
+        self,
+        invocations: tuple[PreparedObjectMeasurementInvocation, ...],
+        batch_executor: ObjectMeasurementBatchExecutor,
+    ) -> float:
+        func = self.callable_contract.resolve_canonical_raw_callable()
+        batch_requests = tuple(
+            invocation.batch_executor_request() for invocation in invocations
+        )
+        if any(request is None for request in batch_requests):
+            return self._execute_serial(invocations)
+        executable_requests = tuple(
+            request for request in batch_requests if request is not None
+        )
+        contract_started_at = time.perf_counter()
+        raw_outputs = tuple(
+            batch_executor(
+                func,
+                executable_requests,
+                partial(
+                    _execute_runtime_batch_invocation,
+                    self.callable_contract,
+                ),
+            )
+        )
+        contract_execute_seconds = time.perf_counter() - contract_started_at
+        if len(raw_outputs) != len(invocations):
+            raise ValueError(
+                f"{self.callable_contract.function_name} measurement-image batch executor returned "
+                f"{len(raw_outputs)} outputs for {len(invocations)} requests."
+            )
+
+        ordered_batch_outputs = {
+            prepared_invocation.batch_index: (
+                raw_output,
+                prepared_invocation,
+            )
+            for raw_output, prepared_invocation in zip(
+                raw_outputs,
+                invocations,
+                strict=True,
+            )
+        }
+        for order_index in range(len(ordered_batch_outputs)):
+            raw_output, prepared_invocation = ordered_batch_outputs[order_index]
+            self.record(raw_output, prepared_invocation)
+        return contract_execute_seconds
 
     def record(
         self,
         raw_output: RuntimeCallableArgument,
-        *,
-        measurement_image: "CellProfilerMeasurementImage",
-        object_spec: ArtifactSpec,
-        completion_label_payload: RuntimeCallableArgument,
-        invocation: "ObjectMeasurementInvocation",
+        prepared_invocation: PreparedObjectMeasurementInvocation,
     ) -> None:
         split_started_at = time.perf_counter()
-        _returned_values, matched_outputs = RuntimeReturnedOutputMatcher(
-            callable_contract=self.callable_contract,
-            returned_output=raw_output,
-        ).resolve_plan_values((self.measurement_output_plan,))
-        self.timings.split_seconds += time.perf_counter() - split_started_at
+        _returned_values, matched_outputs = (
+            self.callable_contract.resolve_returned_plan_values(
+                raw_output,
+                (self.measurement_output_plan,),
+            )
+        )
+        self.split_seconds += time.perf_counter() - split_started_at
         _output_plan, _output_spec, output_value = matched_outputs[0]
         emitted_measurement_rows = measurement_table_rows(output_value)
         CellProfilerRuntimeProfileLogger.log_module_profile(
@@ -431,23 +394,23 @@ class ObjectMeasurementOutputRecorder:
         )
         raw_measurement_rows = self.row_policy.project_rows(
             emitted_measurement_rows,
-            invocation,
+            prepared_invocation.invocation,
         )
         object_measurement_rows, non_object_measurement_rows = (
             self.row_policy.split_scoped_rows(raw_measurement_rows)
         )
         measurement_rows = self.completed_measurement_rows(
             object_measurement_rows,
-            completion_label_payload,
+            prepared_invocation.completion_label_payload,
         )
         self.record_non_object_rows(
             non_object_measurement_rows,
-            measurement_image,
+            prepared_invocation.measurement_image,
         )
         self.record_object_rows(
             measurement_rows,
-            object_spec,
-            measurement_image,
+            prepared_invocation.object_spec,
+            prepared_invocation.measurement_image,
         )
 
     def completed_measurement_rows(
@@ -460,9 +423,7 @@ class ObjectMeasurementOutputRecorder:
             object_measurement_rows,
             label_payload=completion_label_payload,
         )
-        self.timings.complete_rows_seconds += (
-            time.perf_counter() - complete_rows_started_at
-        )
+        self.complete_rows_seconds += time.perf_counter() - complete_rows_started_at
         return measurement_rows
 
     def project_owned_rows(
@@ -500,7 +461,7 @@ class ObjectMeasurementOutputRecorder:
             row_object_name=None,
         )
         self.image_measurement_rows.append(projected_rows)
-        self.timings.annotate_seconds += time.perf_counter() - annotate_started_at
+        self.annotate_seconds += time.perf_counter() - annotate_started_at
 
     def record_object_rows(
         self,
@@ -515,4 +476,4 @@ class ObjectMeasurementOutputRecorder:
             row_object_name=object_spec.name,
         )
         self.columnar_rows.append(projected_rows)
-        self.timings.annotate_seconds += time.perf_counter() - annotate_started_at
+        self.annotate_seconds += time.perf_counter() - annotate_started_at

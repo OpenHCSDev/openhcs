@@ -1,0 +1,474 @@
+{
+  "source_scope": "step-scope-3",
+  "produced": [
+    {
+      "path": "/var/tmp/openhcs-publication435-complete-20261004/test_saved_roles_publish_once_5/images/A01_s001_w1_z000_t001_fixture_image_494.tif",
+      "identity": {
+        "origin": "pipeline",
+        "output_kind": "main",
+        "output_key": "fixture_image_494",
+        "projection_key": "main",
+        "step_name": "Derived role images",
+        "pipeline_position": 3,
+        "step_scope_id": "step-scope-3",
+        "invocation_key": null,
+        "artifact_kind": "image"
+      },
+      "address": {
+        "site": "1",
+        "channel": "1",
+        "z_index": "0",
+        "timepoint": "1",
+        "well": "A01"
+      }
+    }
+  ],
+  "materialized": [
+    {
+      "path": "/var/tmp/openhcs-publication435-complete-20261004/test_saved_roles_publish_once_5/images/A01_s001_w1_z000_t001_fixture_image_494.tif",
+      "role": "fixture_image_494",
+      "producer_scope": "step-scope-3",
+      "stored_key": "ArtifactKey(name='fixture_image_494', artifact_type=<class 'openhcs.core.artifacts.ImageArtifactType'>, scope=RuntimeExecutionAxisScope(axis_id='A01', component=<AllComponents.CHANNEL: 'channel'>, value='1', fixed_component_values=((<AllComponents.SITE: 'site'>, '1'), (<AllComponents.TIMEPOINT: 'timepoint'>, '1'))), semantic_id=None)"
+    }
+  ],
+  "artifact_projections": [
+    {
+      "path": "images/A01_s001_w1_z000_t001_fixture_image_494.tif",
+      "role": "source_artifact",
+      "address": null,
+      "alias": "fixture_image_494",
+      "kind": "image"
+    }
+  ],
+  "pre_join_main_flow": [
+    {
+      "virtual_path": "images/A01_s001_w1_z000_t001_fixture_image_494.tif",
+      "address": null,
+      "ref": {
+        "backend": "disk",
+        "backend_address": "images/A01_s001_w1_z000_t001_fixture_image_494.tif",
+        "source_axis_indices": []
+      },
+      "projection_role": "source_artifact",
+      "source_alias": "fixture_image_494",
+      "source_metadata": {
+        "extension": ".tif",
+        "site": "1",
+        "channel": "1",
+        "timepoint": "1",
+        "well": "A01",
+        "OpenHCSSourceVoxelSpacingZYX": "2,0.65000000000000002,0.65000000000000002",
+        "OpenHCSSourceVoxelSpacingUnit": "micrometers"
+      },
+      "execution_scope": {
+        "axis_id": "A01",
+        "component": "channel",
+        "value": "1",
+        "fixed_component_values": [
+          [
+            "site",
+            "1"
+          ],
+          [
+            "timepoint",
+            "1"
+          ]
+        ]
+      },
+      "artifact_kind": "image",
+      "image_metadata": {
+        "source_voxel_spacing": {
+          "values_zyx": [
+            2.0,
+            0.65,
+            0.65
+          ],
+          "unit": "micrometers"
+        },
+        "source_spatial_domain": {
+          "origin_yx": null,
+          "source_shape_yx": null,
+          "fill_value": 0,
+          "value_name": "Dense array",
+          "spatial_dimensions": 2
+        },
+        "source_provenance": {
+          "source_path": null,
+          "source_component_metadata": {
+            "well": "A01",
+            "site": "1",
+            "channel": "1",
+            "timepoint": "1",
+            "extension": ".tif"
+          },
+          "source_image_provenance_planes": [
+            {
+              "path": "/var/tmp/openhcs-publication435-complete-20261004/test_saved_roles_publish_once_5/physical_source/A01_s001_w1_z000_t001.tif",
+              "component_metadata": {
+                "well": "A01",
+                "site": "1",
+                "channel": "1",
+                "z_index": "0",
+                "timepoint": "1",
+                "extension": ".tif"
+              },
+              "identity_kind": "runtime_plane",
+              "source_image_name": "fixture_image_494",
+              "contributors": []
+            },
+            {
+              "path": "/var/tmp/openhcs-publication435-complete-20261004/test_saved_roles_publish_once_5/physical_source/A01_s001_w1_z001_t001.tif",
+              "component_metadata": {
+                "well": "A01",
+                "site": "1",
+                "channel": "1",
+                "z_index": "1",
+                "timepoint": "1",
+                "extension": ".tif"
+              },
+              "identity_kind": "runtime_plane",
+              "source_image_name": "fixture_image_494",
+              "contributors": []
+            },
+            {
+              "path": "/var/tmp/openhcs-publication435-complete-20261004/test_saved_roles_publish_once_5/physical_source/A01_s001_w1_z002_t001.tif",
+              "component_metadata": {
+                "well": "A01",
+                "site": "1",
+                "channel": "1",
+                "z_index": "2",
+                "timepoint": "1",
+                "extension": ".tif"
+              },
+              "identity_kind": "runtime_plane",
+              "source_image_name": "fixture_image_494",
+              "contributors": []
+            },
+            {
+              "path": "/var/tmp/openhcs-publication435-complete-20261004/test_saved_roles_publish_once_5/physical_source/A01_s001_w1_z003_t001.tif",
+              "component_metadata": {
+                "well": "A01",
+                "site": "1",
+                "channel": "1",
+                "z_index": "3",
+                "timepoint": "1",
+                "extension": ".tif"
+              },
+              "identity_kind": "runtime_plane",
+              "source_image_name": "fixture_image_494",
+              "contributors": []
+            }
+          ],
+          "source_image_names": [
+            "fixture_image_494"
+          ]
+        },
+        "intensity_scale": 65535.0,
+        "source_dtype": "uint16",
+        "unit_interval_intensity": null,
+        "source_plane_intensity_scales": [
+          65535.0,
+          65535.0,
+          65535.0,
+          65535.0
+        ],
+        "source_plane_dtypes": [
+          "uint16",
+          "uint16",
+          "uint16",
+          "uint16"
+        ],
+        "physical_border_edges_yx": null,
+        "mask_defines_border": null,
+        "source_channel_axis": 0,
+        "plane_axis": "runtime_slice"
+      }
+    }
+  ],
+  "pre_join_artifacts": [
+    {
+      "virtual_path": "images/A01_s001_w1_z000_t001_fixture_image_494.tif",
+      "address": null,
+      "ref": {
+        "backend": "disk",
+        "backend_address": "images/A01_s001_w1_z000_t001_fixture_image_494.tif",
+        "source_axis_indices": []
+      },
+      "projection_role": "source_artifact",
+      "source_alias": "fixture_image_494",
+      "source_metadata": {
+        "well": "A01",
+        "site": "1",
+        "channel": "1",
+        "timepoint": "1",
+        "extension": ".tif",
+        "OpenHCSSourceVoxelSpacingZYX": "2,0.65000000000000002,0.65000000000000002",
+        "OpenHCSSourceVoxelSpacingUnit": "micrometers"
+      },
+      "execution_scope": {
+        "axis_id": "A01",
+        "component": "channel",
+        "value": "1",
+        "fixed_component_values": [
+          [
+            "site",
+            "1"
+          ],
+          [
+            "timepoint",
+            "1"
+          ]
+        ]
+      },
+      "artifact_kind": "image",
+      "image_metadata": {
+        "source_voxel_spacing": {
+          "values_zyx": [
+            2.0,
+            0.65,
+            0.65
+          ],
+          "unit": "micrometers"
+        },
+        "source_spatial_domain": {
+          "origin_yx": null,
+          "source_shape_yx": null,
+          "fill_value": 0,
+          "value_name": "Dense array",
+          "spatial_dimensions": 2
+        },
+        "source_provenance": {
+          "source_path": null,
+          "source_component_metadata": {
+            "well": "A01",
+            "site": "1",
+            "channel": "1",
+            "timepoint": "1",
+            "extension": ".tif"
+          },
+          "source_image_provenance_planes": [
+            {
+              "path": "/var/tmp/openhcs-publication435-complete-20261004/test_saved_roles_publish_once_5/physical_source/A01_s001_w1_z000_t001.tif",
+              "component_metadata": {
+                "well": "A01",
+                "site": "1",
+                "channel": "1",
+                "z_index": "0",
+                "timepoint": "1",
+                "extension": ".tif"
+              },
+              "identity_kind": "runtime_plane",
+              "source_image_name": "fixture_image_494",
+              "contributors": []
+            },
+            {
+              "path": "/var/tmp/openhcs-publication435-complete-20261004/test_saved_roles_publish_once_5/physical_source/A01_s001_w1_z001_t001.tif",
+              "component_metadata": {
+                "well": "A01",
+                "site": "1",
+                "channel": "1",
+                "z_index": "1",
+                "timepoint": "1",
+                "extension": ".tif"
+              },
+              "identity_kind": "runtime_plane",
+              "source_image_name": "fixture_image_494",
+              "contributors": []
+            },
+            {
+              "path": "/var/tmp/openhcs-publication435-complete-20261004/test_saved_roles_publish_once_5/physical_source/A01_s001_w1_z002_t001.tif",
+              "component_metadata": {
+                "well": "A01",
+                "site": "1",
+                "channel": "1",
+                "z_index": "2",
+                "timepoint": "1",
+                "extension": ".tif"
+              },
+              "identity_kind": "runtime_plane",
+              "source_image_name": "fixture_image_494",
+              "contributors": []
+            },
+            {
+              "path": "/var/tmp/openhcs-publication435-complete-20261004/test_saved_roles_publish_once_5/physical_source/A01_s001_w1_z003_t001.tif",
+              "component_metadata": {
+                "well": "A01",
+                "site": "1",
+                "channel": "1",
+                "z_index": "3",
+                "timepoint": "1",
+                "extension": ".tif"
+              },
+              "identity_kind": "runtime_plane",
+              "source_image_name": "fixture_image_494",
+              "contributors": []
+            }
+          ],
+          "source_image_names": [
+            "fixture_image_494"
+          ]
+        },
+        "intensity_scale": 65535.0,
+        "source_dtype": "uint16",
+        "unit_interval_intensity": null,
+        "source_plane_intensity_scales": [
+          65535.0,
+          65535.0,
+          65535.0,
+          65535.0
+        ],
+        "source_plane_dtypes": [
+          "uint16",
+          "uint16",
+          "uint16",
+          "uint16"
+        ],
+        "physical_border_edges_yx": null,
+        "mask_defines_border": null,
+        "source_channel_axis": 0,
+        "plane_axis": "runtime_slice"
+      }
+    }
+  ],
+  "produced_records": [
+    {
+      "component_values": {
+        "site": 1,
+        "channel": 1,
+        "timepoint": 1,
+        "well": "A01"
+      },
+      "extension": ".tif",
+      "source": "multi-plane payload provenance over identity components ('z_index',)",
+      "filename_component_values": {
+        "site": 1,
+        "channel": 1,
+        "z_index": 0,
+        "timepoint": 1,
+        "well": "A01"
+      },
+      "filename_qualifier": null,
+      "producer_identity": {
+        "origin": "pipeline",
+        "output_kind": "main",
+        "output_key": "fixture_image_494",
+        "projection_key": "main",
+        "step_name": "Derived role images",
+        "pipeline_position": 3,
+        "step_scope_id": "step-scope-3",
+        "invocation_key": null,
+        "artifact_kind": "image"
+      },
+      "output_path": "/var/tmp/openhcs-publication435-complete-20261004/test_saved_roles_publish_once_5/images/A01_s001_w1_z000_t001_fixture_image_494.tif",
+      "relative_output_path": "A01_s001_w1_z000_t001_fixture_image_494.tif",
+      "image_metadata": {
+        "source_voxel_spacing": {
+          "values_zyx": [
+            2.0,
+            0.65,
+            0.65
+          ],
+          "unit": "micrometers"
+        },
+        "source_spatial_domain": {
+          "origin_yx": null,
+          "source_shape_yx": null,
+          "fill_value": 0,
+          "value_name": "Dense array",
+          "spatial_dimensions": 2
+        },
+        "source_provenance": {
+          "source_path": null,
+          "source_component_metadata": {
+            "well": "A01",
+            "site": "1",
+            "channel": "1",
+            "timepoint": "1",
+            "extension": ".tif"
+          },
+          "source_image_provenance_planes": [
+            {
+              "path": "/var/tmp/openhcs-publication435-complete-20261004/test_saved_roles_publish_once_5/physical_source/A01_s001_w1_z000_t001.tif",
+              "component_metadata": {
+                "well": "A01",
+                "site": "1",
+                "channel": "1",
+                "z_index": "0",
+                "timepoint": "1",
+                "extension": ".tif"
+              },
+              "identity_kind": "runtime_plane",
+              "source_image_name": "fixture_image_494",
+              "contributors": []
+            },
+            {
+              "path": "/var/tmp/openhcs-publication435-complete-20261004/test_saved_roles_publish_once_5/physical_source/A01_s001_w1_z001_t001.tif",
+              "component_metadata": {
+                "well": "A01",
+                "site": "1",
+                "channel": "1",
+                "z_index": "1",
+                "timepoint": "1",
+                "extension": ".tif"
+              },
+              "identity_kind": "runtime_plane",
+              "source_image_name": "fixture_image_494",
+              "contributors": []
+            },
+            {
+              "path": "/var/tmp/openhcs-publication435-complete-20261004/test_saved_roles_publish_once_5/physical_source/A01_s001_w1_z002_t001.tif",
+              "component_metadata": {
+                "well": "A01",
+                "site": "1",
+                "channel": "1",
+                "z_index": "2",
+                "timepoint": "1",
+                "extension": ".tif"
+              },
+              "identity_kind": "runtime_plane",
+              "source_image_name": "fixture_image_494",
+              "contributors": []
+            },
+            {
+              "path": "/var/tmp/openhcs-publication435-complete-20261004/test_saved_roles_publish_once_5/physical_source/A01_s001_w1_z003_t001.tif",
+              "component_metadata": {
+                "well": "A01",
+                "site": "1",
+                "channel": "1",
+                "z_index": "3",
+                "timepoint": "1",
+                "extension": ".tif"
+              },
+              "identity_kind": "runtime_plane",
+              "source_image_name": "fixture_image_494",
+              "contributors": []
+            }
+          ],
+          "source_image_names": [
+            "fixture_image_494"
+          ]
+        },
+        "intensity_scale": null,
+        "source_dtype": null,
+        "unit_interval_intensity": null,
+        "source_plane_intensity_scales": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "source_plane_dtypes": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "physical_border_edges_yx": null,
+        "mask_defines_border": null,
+        "source_channel_axis": null,
+        "plane_axis": "runtime_slice"
+      },
+      "main_flow_plane_axis": "runtime_slice"
+    }
+  ]
+}

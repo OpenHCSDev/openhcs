@@ -23,6 +23,10 @@ from openhcs.core.callable_contract import FunctionStepExecutionScope
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.native_threading import configure_native_thread_count
+from openhcs.core.runtime_profile import RuntimeProfileLogger
+from openhcs.core.orchestrator.analysis_consolidation import (
+    RuntimeAnalysisConsolidationInputs,
+)
 from openhcs.core.orchestrator.execution_result import (
     ExecutionResult,
     RuntimeContextObservation,
@@ -41,18 +45,21 @@ from openhcs.core.orchestrator.worker_lanes import (
 )
 from openhcs.core.orchestrator.worker_profiling import CProfileWorkerProfilingPolicy
 from openhcs.core.progress import emit, ProgressPhase, ProgressStatus
-from openhcs.core.progress import ProgressExecutionContext, ProgressQueue
+from openhcs.core.progress import ProgressQueue
 from openhcs.core.progress.live_measurements import (
     live_measurement_context_for_records,
 )
 from openhcs.core.progress.runtime_artifacts import (
     runtime_artifact_context_for_records,
 )
-from openhcs.core.runtime_stores import StoredRuntimeValue
+from openhcs.core.runtime_stores import (
+    StoredRuntimeValue,
+    RuntimeArtifactAddress,
+    RuntimeArtifactLocation,
+)
 from openhcs.core.steps.abstract import AbstractStep, StepExecutionObservation
 from openhcs.core.steps.function_artifact_materialization import (
-    observed_materialized_artifact_locations_by_address,
-    observed_runtime_export_artifact_output_paths,
+    preview_reused_step_outputs,
 )
 from openhcs.utils.environment import OpenHCSProcessEnvironment
 
@@ -63,21 +70,16 @@ PIPELINE_PROGRESS_STEP_NAME = "pipeline"
 def _runtime_observation_progress_context(
     records: tuple[StoredRuntimeValue, ...],
     *,
-    plan: CompiledStepPlan,
-    context: ProcessingContext,
+    materialized_locations_by_address: Mapping[
+        RuntimeArtifactAddress, tuple[RuntimeArtifactLocation, ...]
+    ],
 ) -> dict | None:
     """Project one RuntimeValueStore observation delta through owned payloads."""
 
     runtime_artifacts = runtime_artifact_context_for_records(records)
     live_measurements = live_measurement_context_for_records(
         records,
-        materialized_locations_by_address=(
-            observed_materialized_artifact_locations_by_address(
-                plan,
-                context,
-                records,
-            )
-        ),
+        materialized_locations_by_address=materialized_locations_by_address,
     )
     if runtime_artifacts is None:
         return live_measurements
@@ -121,23 +123,16 @@ class WorkerExecutorResources(ABC):
             fork_inherited_execution=self.uses_fork_inherited_contexts,
         ).plan(contexts_snapshot, worker_assignments)
 
-    def contexts_snapshot(
-        self,
-        execution_bundle: CompiledExecutionBundle,
-    ) -> Dict[str, ProcessingContext]:
-        raw_contexts = self.raw_contexts_snapshot(execution_bundle)
-        return FunctionStepTransportAuthority.normalize_contexts(dict(raw_contexts))
-
     @property
     @abstractmethod
     def uses_fork_inherited_contexts(self) -> bool:
         """Whether lane planning receives fork-inherited runtime context keys."""
 
     @abstractmethod
-    def raw_contexts_snapshot(
+    def contexts_snapshot(
         self,
         execution_bundle: CompiledExecutionBundle,
-    ) -> Mapping[str, ProcessingContext]:
+    ) -> Dict[str, ProcessingContext]:
         """Return the context map consumed by lane planning for this mode."""
 
     @abstractmethod
@@ -170,11 +165,11 @@ class InlineWorkerExecutorResources(WorkerExecutorResources):
     def uses_fork_inherited_contexts(self) -> bool:
         return False
 
-    def raw_contexts_snapshot(
+    def contexts_snapshot(
         self,
         execution_bundle: CompiledExecutionBundle,
-    ) -> Mapping[str, ProcessingContext]:
-        return execution_bundle.transport_contexts
+    ) -> Dict[str, ProcessingContext]:
+        return dict(execution_bundle.runtime_contexts)
 
     def run_worker_lanes(
         self,
@@ -201,11 +196,11 @@ class ForkInheritedWorkerExecutorResources(WorkerExecutorResources):
     def uses_fork_inherited_contexts(self) -> bool:
         return True
 
-    def raw_contexts_snapshot(
+    def contexts_snapshot(
         self,
         execution_bundle: CompiledExecutionBundle,
-    ) -> Mapping[str, ProcessingContext]:
-        return execution_bundle.runtime_contexts
+    ) -> Dict[str, ProcessingContext]:
+        return dict(execution_bundle.runtime_contexts)
 
     def install_execution_bundle(
         self, execution_bundle: CompiledExecutionBundle
@@ -245,11 +240,11 @@ class PooledWorkerExecutorResources(WorkerExecutorResources):
     def execution_context(self):
         return self._executor
 
-    def raw_contexts_snapshot(
+    def contexts_snapshot(
         self,
         execution_bundle: CompiledExecutionBundle,
-    ) -> Mapping[str, ProcessingContext]:
-        return execution_bundle.transport_contexts
+    ) -> Dict[str, ProcessingContext]:
+        return dict(execution_bundle.transport_contexts)
 
     def run_worker_lanes(
         self,
@@ -293,6 +288,17 @@ class PooledWorkerExecutorResources(WorkerExecutorResources):
             logger.warning(f"ORCHESTRATOR: Executor shutdown failed: {exc}")
 
 
+@dataclass(frozen=True, slots=True)
+class ThreadedWorkerExecutorResources(PooledWorkerExecutorResources):
+    """Thread workers share the prepared in-process execution graph."""
+
+    def contexts_snapshot(
+        self,
+        execution_bundle: CompiledExecutionBundle,
+    ) -> Dict[str, ProcessingContext]:
+        return dict(execution_bundle.runtime_contexts)
+
+
 class WorkerExecutorFactory:
     """Create the worker resources matching the effective runtime config."""
 
@@ -301,12 +307,10 @@ class WorkerExecutorFactory:
         *,
         log_file_base: str | None,
         progress_queue: ProgressQueue,
-        progress_context: ProgressExecutionContext,
         cancellation: ExecutionCancellationSignal,
     ) -> None:
         self._log_file_base = log_file_base
         self._progress_queue = progress_queue
-        self._progress_context = progress_context
         self._cancellation = cancellation
 
     def create(
@@ -338,18 +342,21 @@ class WorkerExecutorFactory:
             executor = concurrent.futures.ThreadPoolExecutor(
                 max_workers=actual_max_workers
             )
-        else:
-            executor = self._process_pool_executor(
-                multiprocessing_context,
-                actual_max_workers,
+            return ThreadedWorkerExecutorResources(
+                multiprocessing_context=multiprocessing_context,
+                use_multiprocessing=False,
+                _executor=executor,
+                cancellation=self._cancellation,
             )
+        executor = self._process_pool_executor(
+            multiprocessing_context,
+            actual_max_workers,
+        )
         return PooledWorkerExecutorResources(
             multiprocessing_context=multiprocessing_context,
-            use_multiprocessing=not runtime_environment.use_threading,
+            use_multiprocessing=True,
             _executor=executor,
-            cancellation=(
-                self._cancellation if runtime_environment.use_threading else None
-            ),
+            cancellation=None,
         )
 
     def _process_pool_executor(
@@ -364,7 +371,6 @@ class WorkerExecutorFactory:
             initargs=(
                 self._log_file_base,
                 self._progress_queue,
-                self._progress_context,
             ),
         )
 
@@ -397,7 +403,6 @@ def _configure_worker_logging(log_file_base: str) -> None:
 def _configure_worker_process(
     log_file_base: str | None,
     progress_queue: ProgressQueue | None = None,
-    progress_context: ProgressExecutionContext | None = None,
 ) -> None:
     """Prepare process-local registries, logging, and progress transport."""
 
@@ -425,7 +430,7 @@ def _configure_worker_process(
 
     configure_native_thread_count(1)
 
-    if progress_queue is not None and progress_context is not None:
+    if progress_queue is not None:
         from openhcs.core.progress import set_progress_queue
 
         set_progress_queue(progress_queue)
@@ -795,43 +800,41 @@ def _execute_axis_with_sequential_combinations(
                 pipeline_definition,
                 frozen_context,
                 lane_context,
+                context_key=context_key,
                 cancellation=cancellation,
             )
             observed_records = runtime_store.observed_values_after(
                 execution_observation_cursor
             )
             runtime_export_paths = tuple(
-                dict.fromkeys(
-                    path
-                    for step_plan in frozen_context.step_plans.values()
-                    if step_plan.owns_runtime_outputs
-                    for path in observed_runtime_export_artifact_output_paths(
-                        step_plan,
-                        frozen_context,
-                        observed_records,
-                    )
-                )
+                path
+                for observation in result.runtime_observation.contexts
+                for path in observation.runtime_export_paths
+            )
+            observation = RuntimeContextObservation.from_context(
+                context_key=context_key,
+                context=frozen_context,
+                records=observed_records,
+                runtime_observation_mode=runtime_observation_mode,
+                runtime_export_paths=runtime_export_paths,
+                analysis_inputs=RuntimeAnalysisConsolidationInputs.combine(
+                    item.analysis_inputs for item in result.runtime_observation.contexts
+                ),
             )
         finally:
             # This cache is context-local even when lanes share a process.
-            # Runtime observations remain owned by the value store below.
+            # Required records and table projections now belong to the observation.
             frozen_context.release_execution_image_cache()
             if release_axis_resources:
                 _release_runtime_resources((frozen_context,), owner=f"axis {axis_id}")
-        retained_records = runtime_observation_mode.retain_records(
-            observed_records,
-            frozen_context,
-        )
-        if retained_records or runtime_export_paths:
-            runtime_observations.append(
-                RuntimeContextObservation(
-                    context_key=context_key,
-                    records=retained_records,
-                    runtime_export_paths=runtime_export_paths,
-                )
-            )
-        if runtime_observation_mode.releases_worker_records:
             frozen_context.runtime_value_store.clear()
+        if (
+            observation.records
+            or observation.runtime_export_paths
+            or observation.analysis_inputs
+        ):
+            runtime_observations.append(observation)
+        del observed_records
 
         if not result.is_success():
             logger.error(
@@ -932,6 +935,8 @@ def _execute_single_axis_static(
     pipeline_definition: List[AbstractStep],
     frozen_context: ProcessingContext,
     lane_context: WorkerLaneExecutionContext,
+    *,
+    context_key: str,
     cancellation: ExecutionCancellationSignal | None = None,
 ) -> ExecutionResult:
     """Execute one frozen axis context against the compiled pipeline."""
@@ -952,6 +957,8 @@ def _execute_single_axis_static(
     frozen_context.bind_execution_runtime(lane_context)
     lane_context.install_debug_sink(frozen_context)
     runtime_value_store = frozen_context.runtime_value_store
+    runtime_export_paths = []
+    analysis_inputs = []
 
     for step_index, step in enumerate(pipeline_definition):
         if cancellation is not None:
@@ -979,11 +986,15 @@ def _execute_single_axis_static(
                 observed_records = runtime_value_store.observed_values_after(
                     observation_cursor
                 )
+                reused_outputs = preview_reused_step_outputs(
+                    step_plan, frozen_context, observed_records,
+                )
                 runtime_progress_context = _runtime_observation_progress_context(
                     observed_records,
-                    plan=step_plan,
-                    context=frozen_context,
+                    materialized_locations_by_address=reused_outputs.materialized_locations_by_address,
                 )
+                runtime_export_paths.extend(reused_outputs.runtime_export_paths)
+                analysis_inputs.append(reused_outputs.analysis_inputs)
                 emit(
                     execution_id=lane_context.execution_id,
                     plate_id=lane_context.plate_id,
@@ -1016,12 +1027,13 @@ def _execute_single_axis_static(
         )
 
         observation_cursor = runtime_value_store.observation_cursor()
-        step.process(frozen_context, step_index)
+        step_observation = step.process(frozen_context, step_index)
+        runtime_export_paths.extend(step_observation.runtime_export_paths)
+        analysis_inputs.append(step_observation.analysis_inputs)
         observed_records = runtime_value_store.observed_values_after(observation_cursor)
         runtime_progress_context = _runtime_observation_progress_context(
             observed_records,
-            plan=step_plan,
-            context=frozen_context,
+            materialized_locations_by_address=step_observation.materialized_locations_by_address,
         )
 
         emit(
@@ -1044,7 +1056,19 @@ def _execute_single_axis_static(
         ):
             break
 
-    return ExecutionResult.success(axis_id=axis_id)
+    return ExecutionResult.success(
+        axis_id=axis_id,
+        runtime_observation=RuntimeExecutionObservation(
+            contexts=(
+                RuntimeContextObservation(
+                    context_key=context_key,
+                    records=(),
+                    runtime_export_paths=tuple(dict.fromkeys(runtime_export_paths)),
+                    analysis_inputs=RuntimeAnalysisConsolidationInputs.combine(analysis_inputs),
+                ),
+            )
+        ),
+    )
 
 
 def execute_worker_lane(
@@ -1057,19 +1081,24 @@ def execute_worker_lane(
 ) -> Dict[str, ExecutionResult]:
     """Execute a deterministic worker lane: wells sequentially within one slot."""
 
-    lane_results: Dict[str, ExecutionResult] = {}
-    for axis_id, axis_contexts in lane_axis_contexts:
-        if cancellation is not None:
-            cancellation.raise_if_requested(f"before axis {axis_id}")
-        lane_results[axis_id] = _execute_axis_with_sequential_combinations(
-            pipeline_definition=pipeline_definition,
-            axis_contexts=axis_contexts,
-            lane_context=lane_context,
-            runtime_observation_mode=runtime_observation_mode,
-            cancellation=cancellation,
-            release_axis_resources=release_axis_resources,
-        )
-    return lane_results
+    with RuntimeProfileLogger.run(
+        execution_id=lane_context.execution_id,
+        worker_slot=lane_context.worker_slot,
+        owned_wells=tuple(lane_context.owned_wells),
+    ):
+        lane_results: Dict[str, ExecutionResult] = {}
+        for axis_id, axis_contexts in lane_axis_contexts:
+            if cancellation is not None:
+                cancellation.raise_if_requested(f"before axis {axis_id}")
+            lane_results[axis_id] = _execute_axis_with_sequential_combinations(
+                pipeline_definition=pipeline_definition,
+                axis_contexts=axis_contexts,
+                lane_context=lane_context,
+                runtime_observation_mode=runtime_observation_mode,
+                cancellation=cancellation,
+                release_axis_resources=release_axis_resources,
+            )
+        return lane_results
 
 
 def _execute_fork_inherited_worker_lane_static(

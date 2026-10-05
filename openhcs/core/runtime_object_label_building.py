@@ -142,18 +142,9 @@ class SourceImageObjectLabelBuildRequest:
                 )
             return None
         metadata = self.metadata
-        declared_projection = RuntimePlaneAxisValueProjection.from_source_declaration(
+        projection.validate_source_declaration(
             metadata.plane_axis, metadata.source_provenance,
         )
-        if declared_projection is not None:
-            if (
-                projection.axis is not declared_projection.axis
-                or projection.axis_size != declared_projection.axis_size
-            ):
-                raise ValueError(
-                    "Object-label plane projection conflicts with the source-image "
-                    "axis declaration."
-                )
         label_array = np.asarray(self.labels)
         projection.validate_shape(
             label_array.shape,

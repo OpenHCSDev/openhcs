@@ -29,8 +29,16 @@ from zmqruntime.viewer_protocol import (
 )
 
 from openhcs.constants.constants import AllComponents, get_multiprocessing_axis
+from openhcs.core.config import FijiDimensionMode, NapariDimensionMode
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
+from openhcs.core.runtime_slice_projection import (
+    RuntimeProjectionData,
+    RuntimeProjectedPayloadItem,
+    RuntimeProjectionSourceIdentityRequest,
+    RuntimeProjectionSourceIdentityRequirement,
+)
 
 from openhcs.core.source_image_provenance import (
     SourceComponentMetadata,
@@ -61,6 +69,47 @@ StreamComponentDomainMetadataItems: TypeAlias = tuple[dict[str, ComponentValue],
 
 class StreamImagePayloadMetadataProjector:
     """Project image-axis declarations into viewer batch-item fields."""
+
+    @classmethod
+    def payload_items_for_display(
+        cls,
+        payload: RuntimeProjectionData,
+        *,
+        metadata: ImagePayloadMetadata,
+        plane_components: tuple[AllComponents, ...],
+        component_modes: Mapping[str, str],
+        source_description: str,
+    ) -> tuple[RuntimeProjectedPayloadItem, ...]:
+        """Project declared planes when their display requires scalar identities."""
+        item_fields = cls.item_fields_for_plane_components(metadata, plane_components)
+        component_values = item_fields.get(
+            ViewerWireField.PLANE_COMPONENT_VALUES.value, {}
+        )
+        scalar_modes = (
+            NapariDimensionMode.LAYER.value,
+            FijiDimensionMode.WINDOW.value,
+        )
+        if not any(
+            mode in scalar_modes
+            for component, mode in component_modes.items()
+            if component in component_values
+        ):
+            return (RuntimeProjectedPayloadItem(payload, source_description),)
+        projection = RuntimePlaneAxisValueProjection.preserve(
+            axis=metadata.plane_axis,
+            axis_size=metadata.source_provenance.source_plane_count,
+        )
+        source_identity = (
+            RuntimeProjectionSourceIdentityRequirement.REQUIRED_COMPONENT_METADATA
+        )
+        return source_identity.project_payload_items(
+            RuntimeProjectionSourceIdentityRequest(
+                value=metadata.attach_to(payload),
+                source_description=source_description,
+                variable_components=plane_components,
+                plane_projection=projection,
+            )
+        )
 
     @classmethod
     def partition_indices(
@@ -353,6 +402,32 @@ class StreamSourceComponentMetadataItems:
         values: Iterable[StreamComponentMetadata],
     ) -> "StreamSourceComponentMetadataItems":
         return cls(tuple(values))
+
+    @classmethod
+    def from_image_metadata(
+        cls,
+        metadata: ImagePayloadMetadata,
+        *,
+        fallback_source_identity: SourceImageIdentity | None = None,
+    ) -> "StreamSourceComponentMetadataItems":
+        """Observe exact retained planes, not only their common scalar address.
+
+        These are domain observations, not one route address per emitted image.
+        A collapsed image's contributor provenance must not recreate a pixel axis.
+        """
+        provenance = metadata.source_provenance
+        identities = (
+            tuple(
+                provenance.for_source_plane(index).scalar_source_identity
+                for index in range(provenance.source_plane_count)
+            )
+            if metadata.plane_axis is not None and provenance.source_plane_count
+            else (provenance.scalar_source_identity,)
+        )
+        return cls.from_source_identities(
+            identities,
+            fallback_source_identity=fallback_source_identity,
+        )
 
     @classmethod
     def from_source_identities(

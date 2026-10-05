@@ -16,6 +16,8 @@ class FunctionContractAttribute:
         "__openhcs_declared_processing_contract__"
     )
     raw_processing_function: ClassVar[str] = "__openhcs_raw_processing_function__"
+    canonical_signature: ClassVar[str] = "__openhcs_canonical_signature__"
+    raw_runtime_signature: ClassVar[str] = "__openhcs_raw_runtime_signature__"
     processing_prepare: ClassVar[str] = "__openhcs_prepare__"
     runtime_adapter: ClassVar[str] = "__runtime_adapter__"
     runtime_image_execution_mode: ClassVar[str] = (

@@ -122,3 +122,47 @@ def test_image_morphology_stack_matches_planewise_reference(
     )
 
     np.testing.assert_array_equal(observed, expected)
+
+
+@pytest.mark.parametrize("dtype", (np.float32, np.float64))
+def test_native_span_morphology_preserves_asymmetric_and_even_footprints(dtype):
+    image = np.random.default_rng(41).uniform(-3, 3, (2, 4, 7)).astype(dtype)
+    image.setflags(write=False)
+    source = image.copy()
+    backend = NumpyMorphologyBackendStrategy()
+    footprints = (
+        disk(7)[None],
+        np.array([[0, 1], [1, 1]], dtype=bool)[None],
+        np.array([[1, 0, 1, 1], [0, 1, 0, 1]], dtype=bool)[None],
+    )
+    for footprint in footprints:
+        for operation, reference in (
+            (backend.grayscale_closing, skimage_closing),
+            (backend.grayscale_opening, skimage_opening),
+        ):
+            observed = operation(image, footprint)
+            expected = reference(image, footprint)
+            np.testing.assert_array_equal(observed, expected)
+            assert observed.dtype == dtype
+            assert not np.shares_memory(observed, image)
+    np.testing.assert_array_equal(image, source)
+
+
+def test_native_span_morphology_keeps_native_special_value_and_volume_laws():
+    backend = NumpyMorphologyBackendStrategy()
+    cases = (
+        (np.array([[1, np.nan], [2, 3]], dtype=np.float32), disk(1)),
+        (np.array([[1, -0.0], [0.0, -2]], dtype=np.float32), disk(1)),
+        (np.array([[1, 4], [2, 3]], dtype=np.int32), disk(1)),
+        (np.arange(27, dtype=np.float32).reshape(3, 3, 3), np.ones((3, 3, 3), dtype=bool)),
+    )
+    for image, footprint in cases:
+        for operation, reference in (
+            (backend.grayscale_closing, skimage_closing),
+            (backend.grayscale_opening, skimage_opening),
+        ):
+            observed = operation(image, footprint)
+            expected = reference(image, footprint)
+            assert observed.dtype == expected.dtype == image.dtype
+            # Equality must include the native sign-bit and NaN representation.
+            assert observed.tobytes() == expected.tobytes()

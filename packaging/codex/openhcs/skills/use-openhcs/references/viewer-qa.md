@@ -41,15 +41,6 @@ If remote-desktop compression is suspected, open a native MCP PNG capture at
 the same viewport before attributing absent paths to the transport. Distinguish
 hidden raw signal from paths actually missing in a saved processing stage.
 
-For feature-bearing 3-D point results, check the persisted point coordinates
-against the viewer's native point geometry, declared Z domain, and selected
-feature row. Select a point by its data index through MCP and verify that the
-same row and exact Z coordinate remain attached. A result-only Points layer
-may have a native slice range determined solely by its points, so a displayed
-integer Z label or `current_step` alone does not establish the point's Z or
-its alignment with raw planes. Confirm that alignment in the combined view;
-record any disagreement rather than treating a visible point as a QA pass.
-
 ## Choose a distributed, multiscale sample
 
 Inspect the whole field raw-only, with results hidden, for illumination, tissue,
@@ -123,6 +114,12 @@ At the same position, Z/time and camera scale, capture:
 3. **Raw plus result:** restore raw and result. Inspect biological support and
    alignment, with the same raw window as the first view.
 
+When using `openhcs_isolate_viewer_window_layers`, select the intended visible
+result route for **result only**, not the hidden raw route: isolation includes
+the selected route in its effective visible set. Keep raw mounted but hidden.
+Check the acknowledgement's `visible_route_keys`, not just `applied=true`,
+before capturing; selecting raw can otherwise turn result-only into combined.
+
 Toggle visibility through MCP without changing the candidate's arrays or result
 identity during the matched set. This comparison control does not prohibit
 analytical preprocessing in a subsequent candidate.
@@ -130,6 +127,110 @@ Open all bitmaps yourself. If canvas, coordinates, axes, camera or presentation
 changed during capture, re-establish state and recapture the matched set before
 comparison. Repeat at necessary field, context and object scales; no single
 view is an acceptance witness.
+
+### Points and centres
+
+Point results need the same three-view comparison; selected raw-plus-points
+captures or point counts alone are insufficient. Identify the intended final
+Points layer and its persisted result/source identity, excluding earlier result
+versions and unrelated Labels, Shapes or Points from the matched set.
+
+- **Raw only:** hide the point result and other result layers.
+- **Point only:** hide **every image layer**, not just the selected raw image,
+  and show only the intended final Points result. Keep raw mounted but hidden
+  so its source/domain context remains available; do not unload it for this
+  comparison.
+- **Combined:** restore the matching raw image and that same Points layer,
+  retaining the raw window and the set's native coordinates, camera and axes.
+
+For feature-bearing points, select by the final layer's `data_index` through
+MCP and verify the attached feature row against the persisted point and native
+geometry. For 3-D results record the exact, possibly fractional, Z coordinate
+and declared source Z domain, not only the displayed integer slice label.
+Visibility or selection changes can alter a point-only view's native slice
+range. Read back camera, axes and coordinates after each transition; restore
+the matched view if they changed. Keeping raw mounted is not proof that the
+viewer preserved that state. Inspect genuine XY/XZ/YZ views when the source
+and exposed contracts support them; record unavailable views without inventing
+a projection or source domain.
+
+Open all three captures and judge raw support, placement and separation at
+distributed positions and scales. Relate points to masks or structures only
+when that association belongs to the intended measurement; there is no
+universal requirement that every centroid lie inside a mask. Record geometry,
+row or alignment disagreements instead of treating a visible point as a pass.
+
+## Keep iterative review within its resource budget
+
+Treat durable candidate evidence and the active viewer scene separately.
+After a candidate's execution and captures are settled, retain its source,
+result/intermediate paths, matched PNGs, state and decision on disk. Keep the
+current matched raw/result routes and any raw references or regression routes
+still needed for the next comparison; previous candidates need not all remain
+mounted to preserve their evidence.
+
+Before adding another candidate, read the unfiltered viewer state through
+`openhcs_get_viewer_window_state` and check mounted routes, component groups and
+the trial's actual memory/output headroom. A route-filtered layer count is not
+the whole scene. Hiding a route with `openhcs_navigate_viewer_window` or showing
+only chosen routes with `openhcs_isolate_viewer_window_layers` changes visibility,
+not buffer lifetime. A new execution's stream reset is not selective retirement
+of earlier mounted results. Do not budget hidden layers as released memory.
+
+Discover the installed selective-retirement capability and reflect its request
+before using it. When the compatible `openhcs_retire_viewer_window_layers`
+contract is exposed:
+
+1. Preserve durable candidate files, source/declarations, captures and decisions.
+   Resolve execution/stream mutations to a known terminal disposition and let
+   receiver work settle before retirement. UNKNOWN, pending or in-flight work
+   is not permission to discard a route. A known failed terminal candidate can
+   be explicitly retired once no mutation is outstanding and its evidence is
+   retained; failure does not require keeping its buffers forever.
+2. Read fresh, unfiltered viewer state on the same viewer incarnation. Choose
+   only explicitly superseded routes; retain the current matched candidate,
+   raw/source domain and reference routes still needed for the next comparison.
+   Select only entries with `mounted=true` and a nonempty `producer_identities`
+   array. State can also list declared, unmounted routes with empty arrays;
+   omit those placeholders from the retirement mapping, rather than sending
+   `[]` or inventing an identity for them.
+   Build `expected_producers` by mapping each chosen **exact `route_key`** to
+   its **complete `producer_identities` array** from that readback, including
+   `invocation_key`; preserve `null` when that is the returned value. It is a
+   valid optional identity field, not a missing producer. Do not shorten,
+   fabricate or substitute identities from a
+   previous candidate, title or port. The receiving owner checks the whole set
+   before removal; a changed producer requires a fresh disposition/readback,
+   not a weaker identity check.
+3. Submit that explicit mapping once. Retain the typed acknowledgement and
+   check `observed`, `applied`, errors, exact `retired_route_keys` and untargeted
+   `remaining_route_keys`. After a timeout or error, preserve the original
+   reply/disposition and inspect actual state read-only; do not assume rollback
+   or replay the mutation. This operation releases the selected scene/cache
+   entries, not persisted files or scientific history.
+4. Read back survivor payload/source identities, domain, native calibration,
+   axes, camera and presentation, then verify the current matched comparison.
+   Check selected feature-row indices too: preserving the active layer/style
+   does not establish preserved Points/Shapes `selected_data`. Record a lost
+   or changed row as a receiving discrepancy, not another object's evidence.
+
+Compare permitted **actual memory telemetry** for the same native process or
+scope before and after settled retirement. A removed/hidden layer count is not
+an RSS/PSS measurement. Native cache/scene release and lower process RSS are
+different observations: allocators may retain released memory, and a small
+retirement need not show a measurable RSS drop. Record the measured change or
+missing attribution and keep resource accounting conservative; do not assume
+reclaimed headroom from the UI. Do not use blanket scene clearing, history
+deletion or viewer restarts as an iteration policy.
+
+If no compatible retirement operation is exposed, record that contract gap
+and request its original runtime owner; do not invent a remove-layer command,
+invoke private control messages or manipulate the viewer outside MCP. Continue
+only the work that fits the remaining authorised resources, rather than adding
+candidate buffers without accounting for them. Keep frozen witnesses and
+UNKNOWN operations intact. Scope OOM, layer counts and retained output bytes
+are different observations: none alone identifies a memory leak or the
+responsible process. Record actual memory attribution or its absence.
 
 ## Diagnose one failure and preserve a regression control
 
@@ -140,18 +241,36 @@ Compare foreground and markers before changing watershed. For secondary objects,
 inspect body-channel support and growth beyond each object's own primary seed;
 matching counts or retained seed IDs do not prove cell bodies. For neurites,
 inspect faint supported soma-to-process continuity, endpoints, crossings,
-branches and background bridges. Reject the candidate for clear supported
-misses, erased paths or induced background bridges/artifacts; saturation of
+branches and background bridges. Assess supported misses, erased paths and
+induced bridges/artifacts by their distributed extent and effect on the claim,
+using the linked claim-scoped criteria rather than a zero-error rule; saturation of
 bright somas alone is not a diagnostic or segmentation rejection gate. Triage
 ambiguous debris separately so it does not prevent review of clear supported
-misses.
+misses. Apply [claim-scoped conclusions](analysis-strategy.md#scope-conclusions-to-the-evidence)
+to retain supported findings and identify which objects or relationships remain
+uncertain, rather than converting every result into a blanket abstention.
 
 Use [segmentation diagnostics](segmentation-diagnostics.md) for the earliest
 failed stage and [preprocessing](image-preprocessing.md) for its nuisance model.
 Change one semantic operation or parameter group, then recheck failure and
 regression-control crops against raw. Also revisit the preselected distributed
-bright/dim and centre/edge witnesses: a local repair cannot pass if it adds
-misses, merges or background elsewhere. For uneven illumination or denoising,
+bright/dim and centre/edge witnesses: assess whether a local repair introduces
+material misses, merges or background elsewhere, not just whether it changes
+one object. Reuse the recorded native crop, Z/time, orientation, camera scale
+and raw window for both the predecessor and revised candidate. Restore and
+read back that state before capture; a repeated field name with a shifted
+viewport is not the same regression witness. If the canvas changed, compare
+the same native region rather than screen-pixel positions.
+
+At those coordinates compare recovered and lost structures, separation and
+mask footprints: a revision can find more objects while eroding supported
+boundaries, merging neighbours or truncating paths elsewhere. Record the
+benefit and regression separately, and choose the candidate against the
+task's measurement claims. More labels or longer graphs alone do not establish
+a task-wide improvement; useful supported findings do not require every
+ambiguous object to be resolved.
+
+For uneven illumination or denoising,
 inspect the correction field or residual and processed pixels before downstream
 labels; an independently auto-stretched display can conceal the regression.
 Reconcile persisted labels/ROIs,

@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-from dataclasses import dataclass, fields, is_dataclass, replace
+from dataclasses import dataclass, field, fields, is_dataclass, replace
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Mapping, MutableMapping, Sequence, get_type_hints
 
@@ -11,22 +10,32 @@ from objectstate import DataclassFieldAccess
 
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.context.processing_context import ProcessingContext
-from openhcs.core.pipeline.step_snapshot import (
-    StepSnapshot,
-    build_step_snapshots,
-)
-from openhcs.core.source_metadata import SourceMetadataMapping
+from openhcs.core.source_metadata import SourceMetadataFields, SourceMetadataMapping
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.steps.abstract import AbstractStep
+from openhcs.core.steps.function_step import FunctionStep
+from openhcs.core.function_patterns import (
+    normalize_function_pattern,
+    NormalizedFunctionItem,
+    strip_disabled_functions,
+)
+from openhcs.core.invocation_artifacts import (
+    InvocationContractProvider,
+    InvocationContractPlan,
+    ArtifactDeclarationStepContext,
+    InvocationArtifactDeclarationProviderLike,
+    callable_contract_artifact_declarations,
+    PipelineInvocationContractProviderAuthority,
+)
 from openhcs.core.vfs_protocol import (
     FileManagerLike,
     PlatePathDeclaration,
 )
 
 if TYPE_CHECKING:
-    from objectstate import ObjectState
-
     from openhcs.core.config import GlobalPipelineConfig
+    from openhcs.core.pipeline.artifact_planning import ArtifactGraph
+    from openhcs.core.artifacts import ArtifactSpecRef
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
 
 
@@ -156,21 +165,223 @@ def resolve_declared_dataclass_paths(
     return replace(value, **replacements) if replacements else value
 
 
+@dataclass(frozen=True, slots=True)
+class ResolvedPipelineDefinition(InvocationContractProvider):
+    """Capture enabled saved declarations and their scope/provenance facts.
+
+    Axis sessions derive metadata kwargs from this view and share its provider;
+    authored FunctionSteps keep their public function-pattern syntax.
+    """
+
+    steps: Sequence[AbstractStep]
+    step_scope_ids: Mapping[int, str]
+    step_provenance: Mapping[int, Mapping[str, tuple[str | None, type | None]]]
+    declaration_provider: InvocationArtifactDeclarationProviderLike = field(
+        default=callable_contract_artifact_declarations, repr=False, compare=False
+    )
+    _artifact_graphs: tuple[ArtifactGraph, ...] | None = field(
+        default=None, init=False, repr=False, compare=False
+    )
+    _artifact_contexts: tuple[ArtifactDeclarationStepContext, ...] = field(
+        default=(), init=False, repr=False, compare=False
+    )
+    _future_artifact_inputs: tuple[frozenset[ArtifactSpecRef], ...] = field(
+        default=(), init=False, repr=False, compare=False
+    )
+
+    def _admit_artifact_graphs(self) -> None:
+        """Admit fixed contracts and forward topology once, before axis fanout."""
+        if self._artifact_graphs is not None:
+            return
+        from openhcs.constants import GroupBy
+        from openhcs.core.callable_contract import FunctionStepExecutionScope
+        from openhcs.core.pipeline.artifact_planning import (
+            ArtifactGraph,
+            extract_artifact_declarations,
+        )
+        from openhcs.core.pipeline.funcstep_contract_validator import (
+            FuncStepContractValidator,
+        )
+
+        provider = PipelineInvocationContractProviderAuthority.provider_for_pipeline(
+            self
+        )
+        graphs: list[ArtifactGraph] = []
+        contexts: list[ArtifactDeclarationStepContext] = []
+        context = ArtifactDeclarationStepContext.empty()
+        for index, step in enumerate(self.steps):
+            group_by = (
+                FuncStepContractValidator.normalized_group_by(
+                    step.processing_config.group_by,
+                    step.processing_config.variable_components,
+                    step.name,
+                    step.func,
+                )
+                if isinstance(step, FunctionStep)
+                else GroupBy.NONE
+            )
+            context = replace(
+                context, step_name=step.name, step_index=index
+            ).with_source_binding_scope(
+                source_bindings=step.source_bindings,
+                group_by=group_by,
+                input_source=step.processing_config.input_source,
+                source_groups=(None,),
+            )
+            contexts.append(context)
+            graph = (
+                extract_artifact_declarations(
+                    step.func,
+                    declaration_provider=self.declaration_provider,
+                    invocation_contract_provider=provider,
+                    step_context=context,
+                )
+                if isinstance(step, FunctionStep)
+                else ArtifactGraph.empty()
+            )
+            for item in () if graph.pattern is None else graph.pattern.iter_items():
+                item.contract.validate_artifact_input_parameter_bindings()
+                graph.invocation_declarations[
+                    item.key
+                ].validate_artifact_output_declarations()
+            previous = graphs[-1] if graphs else None
+            previous_pattern = None if previous is None else previous.pattern
+            dependency = graph.resolve_main_input_dependency(
+                step,
+                index,
+                execution_scope=FunctionStepExecutionScope.require_uniform(
+                    () if graph.pattern is None else (
+                        item.contract for item in graph.pattern.iter_items()
+                    )
+                ),
+                source_bindings=step.source_bindings,
+                context=context,
+                declared={},
+                step_scope_ids=self.step_scope_ids,
+                previous_dependency=(
+                    None if previous is None else previous.main_input_dependency
+                ),
+                previous_preserves_input_main_flow=(
+                    bool(previous_pattern)
+                    and all(
+                        bool(group.items)
+                        and all(
+                            item.contract.preserves_input_main_flow()
+                            for item in group.items
+                        )
+                        for group in previous_pattern.groups
+                    )
+                ),
+            )
+            graph = graph.with_source_binding_plan(
+                step.source_bindings, dependency, context
+            )
+            graph.config_parameters_for_step(step.name)
+            graph.input_lineage_order
+            graphs.append(graph)
+            context = graph.advance_declaration_context(context)
+        future_inputs: set[ArtifactSpecRef] = set()
+        future: list[frozenset[ArtifactSpecRef]] = []
+        for graph in reversed(graphs):
+            future.append(frozenset(future_inputs))
+            future_inputs.update(
+                consumer.spec.ref()
+                for consumer in (
+                    *graph.consumers,
+                    *graph.non_plan_consumers,
+                )
+            )
+        # Publish all admitted state together; no factory/provider can observe a
+        # partially admitted graph through the pipeline's public provider view.
+        object.__setattr__(self, "_artifact_contexts", tuple(contexts))
+        object.__setattr__(self, "_future_artifact_inputs", tuple(reversed(future)))
+        object.__setattr__(self, "_artifact_graphs", tuple(graphs))
+
+    @property
+    def artifact_graphs(self) -> tuple[ArtifactGraph, ...]:
+        self._admit_artifact_graphs()
+        return self._artifact_graphs
+
+    @property
+    def artifact_contexts(self) -> tuple[ArtifactDeclarationStepContext, ...]:
+        self._admit_artifact_graphs()
+        return self._artifact_contexts
+
+    @property
+    def future_artifact_inputs(self) -> tuple[frozenset[ArtifactSpecRef], ...]:
+        self._admit_artifact_graphs()
+        return self._future_artifact_inputs
+
+    @property
+    def invocation_contract_provider(self) -> InvocationContractProvider:
+        """Use admitted occurrence plans; temporary provider factories are released."""
+        self._admit_artifact_graphs()
+        return self
+
+    def __call__(
+        self,
+        invocation: NormalizedFunctionItem,
+        step_context: ArtifactDeclarationStepContext,
+    ) -> InvocationContractPlan | None:
+        self._admit_artifact_graphs()
+        return self._artifact_graphs[step_context.step_index].invocation_contract_plans[
+            invocation.key
+        ]
+
+    def __post_init__(self) -> None:
+        missing_scopes = [
+            index
+            for index in range(len(self.steps))
+            if index not in self.step_scope_ids or index not in self.step_provenance
+        ]
+        if missing_scopes:
+            raise ValueError(
+                f"Resolved pipeline missing scope/provenance facts for steps {missing_scopes}."
+            )
+        object.__setattr__(
+            self,
+            "step_provenance",
+            {
+                index: dict(self.step_provenance[index])
+                for index in range(len(self.steps))
+            },
+        )
+        object.__setattr__(
+            self,
+            "step_scope_ids",
+            dict(self.step_scope_ids),
+        )
+        object.__setattr__(
+            self,
+            "steps",
+            tuple(
+                (
+                    step.with_function_spec(
+                        normalize_function_pattern(
+                            strip_disabled_functions(step.func) or []
+                        )
+                    )
+                    if isinstance(step, FunctionStep)
+                    else step
+                )
+                for step in self.steps
+            ),
+        )
+
+
 @dataclass(slots=True)
 class CompilationSession:
     """Compiler boundary for one ProcessingContext.
 
     The session is not a dict wrapper. It owns the invariants tying together the
-    resolved step list, ObjectState map, StepSnapshot tuple, context, and mutable
+    resolved pipeline declaration, context, and mutable
     compiled-plan map for one axis or sequential-combination context.
     """
 
     context: ProcessingContext
-    steps: Sequence[AbstractStep]
+    pipeline: ResolvedPipelineDefinition
     orchestrator: "PipelineOrchestrator"
     global_config: "GlobalPipelineConfig"
-    step_state_map: Mapping[int, "ObjectState"]
-    snapshots: tuple[StepSnapshot, ...]
     plans: MutableMapping[int, CompiledStepPlan]
     source_workspace_projection: VirtualWorkspaceSourceProjection
     path_resolver: CompilationPathResolver | None = None
@@ -178,16 +389,18 @@ class CompilationSession:
     plate_scope: CompilationPlateScope | None = None
     is_zmq_execution: bool = False
 
+    _source_literal_field_types: Mapping[str, type[object] | None] | None = field(
+        default=None, init=False, repr=False
+    )
+
     @classmethod
     def from_context(
         cls,
         *,
         context: ProcessingContext,
-        steps: Sequence[AbstractStep],
+        pipeline: ResolvedPipelineDefinition,
         orchestrator: "PipelineOrchestrator",
         global_config: "GlobalPipelineConfig",
-        step_state_map: Mapping[int, "ObjectState"],
-        snapshots: tuple[StepSnapshot, ...] | None = None,
         source_workspace_projection: VirtualWorkspaceSourceProjection | None = None,
         path_resolver: CompilationPathResolver | None = None,
         metadata_writer: bool = False,
@@ -196,15 +409,11 @@ class CompilationSession:
     ) -> "CompilationSession":
         if context.step_plans is None:
             raise ValueError("CompilationSession requires context.step_plans.")
-        if snapshots is None:
-            snapshots = build_step_snapshots(steps, step_state_map)
         return cls(
             context=context,
-            steps=steps,
+            pipeline=pipeline,
             orchestrator=orchestrator,
             global_config=global_config,
-            step_state_map=step_state_map,
-            snapshots=snapshots,
             plans=context.step_plans,
             source_workspace_projection=(
                 VirtualWorkspaceSourceProjection.empty(context.plate_path)
@@ -224,33 +433,6 @@ class CompilationSession:
     def __post_init__(self) -> None:
         if self.plate_scope is None and self.context.plate_path is not None:
             self.plate_scope = CompilationPlateScope.from_context(self.context)
-        if len(self.steps) != len(self.snapshots):
-            raise ValueError(
-                "CompilationSession requires one StepSnapshot per step: "
-                f"{len(self.snapshots)} snapshots for {len(self.steps)} steps."
-            )
-        missing_states = [
-            index
-            for index in range(len(self.steps))
-            if index not in self.step_state_map
-        ]
-        if missing_states:
-            raise ValueError(
-                f"CompilationSession missing ObjectState entries for steps "
-                f"{missing_states}."
-            )
-        for expected_index, (snapshot, step) in enumerate(
-            zip(self.snapshots, self.steps, strict=True)
-        ):
-            if snapshot.index != expected_index:
-                raise ValueError(
-                    f"StepSnapshot index mismatch: expected {expected_index}, "
-                    f"got {snapshot.index}."
-                )
-            if snapshot.step is not step:
-                raise ValueError(
-                    f"StepSnapshot {expected_index} does not reference its resolved step."
-                )
 
     @property
     def axis_id(self) -> str:
@@ -273,35 +455,25 @@ class CompilationSession:
         )
         return metadata or None
 
-    def step(self, index: int) -> AbstractStep:
-        return self.steps[index]
-
-    def snapshot(self, index: int) -> StepSnapshot:
-        return self.snapshots[index]
+    @property
+    def source_literal_field_types(self) -> Mapping[str, type[object] | None]:
+        """Admit literal types once from this session's captured source projection."""
+        if self._source_literal_field_types is None:
+            self._source_literal_field_types = SourceMetadataFields.literal_field_types(
+                self.realized_source_metadata or ()
+            )
+        return self._source_literal_field_types
 
     @property
     def step_count(self) -> int:
-        return len(self.snapshots)
-
-    def indexed_snapshots(self) -> Iterator[tuple[int, StepSnapshot]]:
-        return iter(enumerate(self.snapshots))
-
-    def reverse_snapshot_indices(self) -> range:
-        return range(self.step_count - 1, -1, -1)
-
-    def step_state(self, index: int) -> "ObjectState":
-        try:
-            return self.step_state_map[index]
-        except KeyError as exc:
-            raise ValueError(f"Missing ObjectState for step {index}.") from exc
+        return len(self.pipeline.steps)
 
     def plan(self, index: int) -> CompiledStepPlan:
         try:
             return self.plans[index]
         except KeyError as exc:
-            snapshot = self.snapshot(index)
             raise ValueError(
-                f"Missing compiled plan for step {index} ({snapshot.step.name})."
+                f"Missing compiled plan for step {index} ({self.pipeline.steps[index].name})."
             ) from exc
 
     def main_flow_plan_ancestry(
@@ -325,12 +497,3 @@ class CompilationSession:
             if source_step_index is None:
                 return tuple(ancestry)
             current_index = source_step_index
-
-
-@dataclass(frozen=True, slots=True)
-class ResolvedPipelineDefinition:
-    """ObjectState-resolved pipeline declaration shared by all axis sessions."""
-
-    steps: Sequence[AbstractStep]
-    step_state_map: Mapping[int, "ObjectState"]
-    snapshots: tuple[StepSnapshot, ...]

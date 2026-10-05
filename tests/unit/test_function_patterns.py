@@ -27,6 +27,7 @@ from openhcs.core.config import DtypeConfig
 from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
 from openhcs.core.function_patterns import (
+    MainFlowInputProjection,
     FunctionInvocationKey,
     InvocationArtifactInputEdgePlan,
     InvocationArtifactInputProjectionKey,
@@ -55,7 +56,6 @@ from openhcs.core.artifact_key_selection import AdapterRecordedArtifactOutputPol
 from openhcs.core.runtime_adapters import runtime_adapter
 from openhcs.core.runtime_object_labels import ObjectLabelValue
 from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
-from openhcs.core.steps.function_runtime import ComponentArtifactPlans
 from openhcs.processing.materialization import csv_only
 
 
@@ -632,7 +632,7 @@ def test_source_bound_input_edge_keeps_source_anchored_runtime_domain():
         spec=source_spec,
         storage_plan=None,
         projection=None,
-        consumes_main_flow=True,
+        main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
     )
     invocation = invocation.with_artifact_input_edges((edge,))
     group = replace(compiled.default_group, invocations=(invocation,))
@@ -669,7 +669,7 @@ def test_unstored_positional_artifact_does_not_override_compiled_main_flow() -> 
         spec=source,
         storage_plan=None,
         projection=None,
-        consumes_main_flow=False,
+
     )
     group = replace(
         compiled.default_group,
@@ -727,7 +727,7 @@ def test_component_projection_uses_compiled_per_group_source_lineage() -> None:
                 spec=source,
                 storage_plan=None,
                 projection=None,
-                consumes_main_flow=True,
+                main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
             )
             for edge_key, source in zip(
                 InvocationArtifactInputProjectionKey.for_input_count(
@@ -751,11 +751,51 @@ def test_component_projection_uses_compiled_per_group_source_lineage() -> None:
     assert group.main_flow_input_refs_for_component(execution_scope, "2") == (
         green.ref(),
     )
-    green_projection = invocation.for_component_execution(execution_scope, "2")
-    assert green_projection is not None
+    green_outputs = invocation.output_plans_for_component(execution_scope, "2")
+    assert green_outputs is not None
     assert tuple(
-        edge.key.input_index for edge in green_projection.artifact_input_edges
+        edge.key.input_index
+        for edge in invocation.input_edges_for_outputs(green_outputs)
     ) == (1,)
+
+    storage_plans = {
+        source.ref(): ArtifactInputPlan(
+            name=source.name,
+            artifact_type=source.artifact_type,
+            path=f"/memory/{source.name}.pkl",
+            source_step_id=0,
+        )
+        for source in (blue, green)
+    }
+    stored_invocation = invocation.with_artifact_input_edges(tuple(
+        replace(
+            edge,
+            storage_plan=storage_plans[edge.spec.ref()],
+            projection=ArtifactInputProjectionPlan(
+                invocation_scope=execution_scope,
+                producer_selection_scope=storage_plans[edge.spec.ref()].producer_group_scope(),
+            ),
+        )
+        for edge in invocation.artifact_input_edges
+    ))
+    selected_inputs = stored_invocation.select_inputs(
+        storage_plans, active_output_plans=green_outputs,
+    )
+    selected_outputs = stored_invocation.select_outputs(
+        {plan.ref(): plan for plan in green_outputs},
+        compiled_output_plans=green_outputs,
+    )
+    assert tuple(key.input_index for key in selected_inputs) == (1,)
+    assert tuple(selected_outputs.values()) == green_outputs
+    assert stored_invocation.artifact_output_plans == (output_plan,)
+
+    # Sparse admission still validates the complete compiled producer owner at
+    # this epoch, including a producer whose output lineage is inactive here.
+    storage_plans.pop(blue.ref())
+    with pytest.raises(ValueError, match="input plan.*unavailable"):
+        stored_invocation.select_inputs(
+            storage_plans, active_output_plans=green_outputs,
+        )
 
 
 def test_unscoped_active_output_retains_complete_compiled_invocation_inputs() -> None:
@@ -812,11 +852,11 @@ def test_unscoped_active_output_retains_complete_compiled_invocation_inputs() ->
         spec=source,
         storage_plan=None,
         projection=None,
-        consumes_main_flow=True,
+        main_flow_projection=MainFlowInputProjection.DECLARED_SOURCE_IMAGE,
     )
     invocation = invocation.with_artifact_input_edges((edge,))
 
-    projection = invocation.for_component_execution(
+    active_outputs = invocation.output_plans_for_component(
         ComponentGroupScope.from_raw(
             ("1", "2"),
             component=AllComponents.CHANNEL,
@@ -824,11 +864,9 @@ def test_unscoped_active_output_retains_complete_compiled_invocation_inputs() ->
         "2",
     )
 
-    assert projection is not None
-    assert tuple(plan.name for plan in projection.artifact_output_plans) == (
-        "Aggregate",
-    )
-    assert projection.artifact_input_edges == (edge,)
+    assert active_outputs is not None
+    assert tuple(plan.name for plan in active_outputs) == ("Aggregate",)
+    assert invocation.input_edges_for_outputs(active_outputs) == (edge,)
 
 
 def test_shared_output_plan_uses_each_invocation_declared_group_lineage() -> None:
@@ -889,10 +927,10 @@ def test_shared_output_plan_uses_each_invocation_declared_group_lineage() -> Non
         component=AllComponents.CHANNEL,
     )
 
-    assert blue_invocation.for_component_execution(execution_scope, "1") is not None
-    assert blue_invocation.for_component_execution(execution_scope, "2") is None
-    assert green_invocation.for_component_execution(execution_scope, "1") is None
-    assert green_invocation.for_component_execution(execution_scope, "2") is not None
+    assert blue_invocation.output_plans_for_component(execution_scope, "1") is not None
+    assert blue_invocation.output_plans_for_component(execution_scope, "2") is None
+    assert green_invocation.output_plans_for_component(execution_scope, "1") is None
+    assert green_invocation.output_plans_for_component(execution_scope, "2") is not None
 
 
 def test_artifact_only_group_preserves_empty_explicit_main_flow_refs() -> None:
@@ -910,6 +948,27 @@ def test_artifact_only_group_preserves_empty_explicit_main_flow_refs() -> None:
     compiled = compile_function_pattern(consume, {}, {})
 
     assert compiled.default_group.main_flow_input_refs == ()
+    from openhcs.core.compiled_step_plan import CompiledStepPlan
+    from openhcs.core.pipeline.framework_device_assignment import (
+        assign_framework_devices,
+    )
+
+    plan = CompiledStepPlan(
+        step_index=0,
+        step_name="consume",
+        step_type="FunctionStep",
+        axis_id="A01",
+        compiled_function_pattern=compiled,
+    )
+    assign_framework_devices({0: plan})
+    (placed,) = tuple(plan.compiled_function_pattern.iter_invocations())
+    assert placed.input_memory_type is None
+    assert placed.output_memory_type is None
+    assert placed.input_device_id is None
+    assert (
+        placed.artifact_input_edges
+        == compiled.default_group.invocations[0].artifact_input_edges
+    )
 
 
 def test_special_input_edges_use_nominal_artifact_payload_types() -> None:
@@ -1036,13 +1095,8 @@ def test_adapter_managed_invocation_rejects_partial_component_inputs():
         second_spec,
     )
     with pytest.raises(ValueError, match="input plan.*unavailable"):
-        ComponentArtifactPlans(
-            inputs={first_plan.ref(): first_plan},
-            outputs={},
-        ).select_for_invocation(
-            invocation,
-            execution_scope=ComponentGroupScope.ungrouped(),
-            component_key=None,
+        invocation.select_inputs(
+            {first_plan.ref(): first_plan},
         )
 
 
@@ -1153,16 +1207,9 @@ def test_adapter_managed_invocation_rejects_cross_component_input_loss():
             ),
         )
     )
-    scoped_artifacts = ComponentArtifactPlans(
-        inputs={current_channel_plan.ref(): current_channel_plan.for_group("1")},
-        outputs={},
-    )
-
     with pytest.raises(ValueError, match="input plan.*unavailable"):
-        scoped_artifacts.select_for_invocation(
-            invocation,
-            execution_scope=ComponentGroupScope.ungrouped(),
-            component_key=None,
+        invocation.select_inputs(
+            {current_channel_plan.ref(): current_channel_plan.for_group("1")},
         )
 
 
@@ -1652,6 +1699,14 @@ def test_compile_function_pattern_moves_runtime_config_kwargs_to_bindings():
     binding = invocation.runtime_parameter_bindings[0]
     assert binding.parameter_name == DtypeConversionConfig.require_parameter_name()
     assert binding.value is explicit_config
+    assert dict(invocation.runtime_kwargs) == {
+        "sigma": 2,
+        "dtype_config": explicit_config,
+    }
+    first_call_kwargs = dict(invocation.runtime_kwargs)
+    first_call_kwargs["sigma"] = 3
+    assert dict(invocation.runtime_kwargs)["sigma"] == 2
+    assert invocation.kwargs_dict == {"sigma": 2}
 
 
 def test_compile_function_pattern_keeps_undeclared_runtime_config_kwargs_user_owned():
@@ -1715,3 +1770,47 @@ def test_inject_artifact_input_values_replaces_serialized_placeholders():
         pattern,
         {"grid_dimensions": (3, 4)},
     ) == (needs_grid, {"grid_dimensions": (3, 4), "sigma": 2})
+
+
+def test_artifact_binding_owner_does_not_erase_undeclared_raw_image_demand():
+    source = ArtifactSpec.input("Source", ImageArtifactType)
+
+    @artifact_inputs(source)
+    @runtime_adapter("runtime", lambda _request: object(), manages_artifact_inputs=True)
+    def consume(image, *, runtime):
+        return image
+
+    compiled = compile_function_pattern(consume, {}, {})
+    invocation = compiled.default_group.invocations[0]
+    edge = exact_input_edge(
+        invocation, input_index=0, spec=source,
+        storage_plan=ArtifactInputPlan(source.name, "/memory/source", artifact_type=ImageArtifactType),
+        parameter_name=None,
+    )
+    invocation = invocation.with_artifact_input_edges((edge,))
+    group = replace(compiled.default_group, invocations=(invocation,))
+    assert invocation.adapter_manages_artifact_inputs
+    assert invocation.contract.accepts_implicit_main_flow_input
+    assert group.stored_primary_input_edges_for_component(ComponentGroupScope.ungrouped(), None) is None
+    primary = replace(edge, main_flow_projection=MainFlowInputProjection.COMPLETE_PAYLOAD)
+    group = replace(group, invocations=(invocation.with_artifact_input_edges((primary,)),))
+    assert group.stored_primary_input_edges_for_component(ComponentGroupScope.ungrouped(), None) == (primary,)
+
+
+def test_table_context_cannot_stand_in_for_an_image_cohort():
+    table = ArtifactSpec.input("Measurements", MeasurementsArtifactType)
+
+    @artifact_inputs(table)
+    @runtime_adapter("runtime", lambda _request: object(), manages_artifact_inputs=True)
+    def consume(*, runtime):
+        return None
+
+    compiled = compile_function_pattern(consume, {}, {})
+    invocation = compiled.default_group.invocations[0]
+    edge = exact_input_edge(
+        invocation, input_index=0, spec=table,
+        storage_plan=ArtifactInputPlan(table.name, "/memory/table", artifact_type=MeasurementsArtifactType),
+        parameter_name=None,
+    )
+    group = replace(compiled.default_group, invocations=(invocation.with_artifact_input_edges((edge,)),))
+    assert group.stored_primary_input_edges_for_component(ComponentGroupScope.ungrouped(), None) is None

@@ -9,13 +9,15 @@ from openhcs.core.aligned_image_payload import ImagePayloadExecutionMode
 from openhcs.core.artifacts import ArtifactSpec, ObjectLabelsArtifactType
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.runtime_measurements import MeasurementRowAxisField
 from openhcs.core.runtime_object_label_building import SourceImageObjectLabelBuildRequest
 from openhcs.core.runtime_object_label_domains import ObjectLabelDomainScope
+from openhcs.core.runtime_tabular_values import MeasurementObjectRowIdentity
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneAxisValueProjection
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.interop.cellprofiler.runtime.artifact_binding import (
-    RuntimeArtifactInputRequest, RuntimeArtifactTypeStrategy,
+from openhcs.interop.cellprofiler.runtime.output_recording import (
+    CellProfilerOutputRecorder,
 )
 from openhcs.interop.cellprofiler.runtime.function_contract_execution import CellProfilerFunctionContractExecutor
 from openhcs.processing.backends.cellprofiler.shape import MeasureObjectSizeShapeModule, measure_object_size_shape
@@ -36,9 +38,37 @@ def _source(labels, *, axis=RuntimePlaneAxis.RUNTIME_SLICE, plane_count=None, sp
 
 def _saved_label_input(source):
     spec = ArtifactSpec.input("saved_labels", ObjectLabelsArtifactType, parameter_name="labels")
-    return RuntimeArtifactTypeStrategy.for_artifact_type(spec.artifact_type).runtime_input_value(
-        RuntimeArtifactInputRequest(spec=spec, value=source)
+    return CellProfilerOutputRecorder.for_artifact_type(spec.artifact_type).runtime_input_value(
+        spec=spec, value=source
     )
+
+
+@pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
+@pytest.mark.parametrize("plane_count", (1, 2))
+def test_explicit_object_projection_preserves_axis_without_acquisition_provenance(
+    axis, plane_count,
+):
+    labels = np.ones((plane_count, 6, 7), dtype=np.int32)
+    source = ImagePayloadMetadata(plane_axis=axis).payload_with(labels)
+    projection = RuntimePlaneAxisValueProjection.preserve(
+        axis=axis, axis_size=plane_count,
+    )
+    payload = SourceImageObjectLabelBuildRequest(
+        image=source, labels=labels, plane_projection=projection,
+    ).payload()
+
+    assert payload.plane_axis is axis
+    assert payload.domain.declared_object_id_domains == ((1,),) * plane_count
+    assert payload.source_provenance == source.metadata.source_provenance
+    np.testing.assert_array_equal(payload.labels, labels)
+    other_axis = next(member for member in RuntimePlaneAxis if member is not axis)
+    with pytest.raises(ValueError, match="conflicts with the source-image axis"):
+        SourceImageObjectLabelBuildRequest(
+            image=source, labels=labels,
+            plane_projection=RuntimePlaneAxisValueProjection.preserve(
+                axis=other_axis, axis_size=plane_count,
+            ),
+        ).payload()
 
 
 @pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
@@ -49,8 +79,8 @@ def test_original_artifact_admission_and_full_stack_shape_keep_2d_planes(axis):
     source = _source(labels, axis=axis)
     source_bytes = labels.tobytes()
     spec = ArtifactSpec.input("saved_labels", ObjectLabelsArtifactType, parameter_name="labels")
-    value = RuntimeArtifactTypeStrategy.for_artifact_type(spec.artifact_type).runtime_input_value(
-        RuntimeArtifactInputRequest(spec=spec, value=source)
+    value = CellProfilerOutputRecorder.for_artifact_type(spec.artifact_type).runtime_input_value(
+        spec=spec, value=source
     )
     assert value.domain.scope is ObjectLabelDomainScope.PLANE
     assert value.plane_axis is axis
@@ -69,13 +99,17 @@ def test_original_artifact_admission_and_full_stack_shape_keep_2d_planes(axis):
         execution_mode=ImagePayloadExecutionMode.FULL_STACK,
     )
     area = MeasureObjectSizeShapeModule.MeasurementFeature.AREA.value
-    # The original AreaShape owner declares ROW_SEQUENCE and a dense extent
-    # through each plane's maximum ID, not two sparse-ID measurement rows.
-    # Check the entire existing vector, including every missing-value slot.
-    expected_area = np.full(29 + 106, np.nan)
-    expected_area[0] = 6.0
-    expected_area[29] = 12.0
-    np.testing.assert_array_equal(tuple(row[area] for row in rows), expected_area)
+    # Raw shape rows retain the exact authored label domain of each plane.
+    # Export completion separately projects that domain to CP row ordinals.
+    assert rows.object_row_identity is MeasurementObjectRowIdentity.LABEL_ID
+    assert tuple(
+        (
+            row[MeasurementRowAxisField.SLICE_INDEX.value],
+            row[MeasurementRowAxisField.OBJECT_LABEL.value],
+            row[area],
+        )
+        for row in rows
+    ) == ((0, 29, 6.0), (1, 106, 12.0))
     assert "AreaShape_Volume" not in tuple(field.name for field in rows.fields)
     assert labels.tobytes() == source_bytes
 
@@ -259,7 +293,9 @@ def test_explicit_plane_domain_still_requires_projection_and_rejects_global_coun
 
 @pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
 def test_generic_output_context_uses_execution_projection_not_image_storage_axis(axis):
-    from openhcs.core.steps.function_runtime import NumpyArrayObjectLabelOutputValueContextStrategy
+    from openhcs.core.projected_image_output import (
+    NumpyArrayObjectLabelOutputValueContextStrategy,
+)
 
     labels = np.zeros((2, 6, 7), dtype=np.int32)
     labels[0, 1:3, 2:4] = 29

@@ -522,7 +522,12 @@ class ViewerStreamingSource(ViewerStreamSourceIdentity):
             metadata = None if projection is None else projection.image_metadata
             if metadata is not None and metadata.plane_axis is not None:
                 values.extend(
-                    metadata.source_image_provenance_planes.runtime_component_metadata
+                    StreamSourceComponentMetadataItems.from_image_metadata(
+                        metadata,
+                        fallback_source_identity=SourceImageIdentity(
+                            component_metadata=metadata_by_path[path],
+                        ),
+                    ).values
                 )
             else:
                 values.append(metadata_by_path[path])
@@ -846,7 +851,7 @@ class StreamingService:
                 point_domain = ROIFractionalZ.source_component_domain(rois, metadata)
                 if point_domain is not None:
                     point_domains[filename] = point_domain
-            data_list.append(ROIArchiveSourceMetadata.geometry(rois))
+            data_list.append(rois)
             paths.append(filename)
             loaded_indices.append(i - 1)
 

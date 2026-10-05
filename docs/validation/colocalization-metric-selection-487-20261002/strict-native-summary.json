@@ -1,0 +1,31 @@
+{
+  "scope": "Independent readonly summary of full strict original native comparison; no exclusions or waiver. Narrow487 selection correctness PASS; wholecase remainsRED63missingparentmeans trackedseparately479.",
+  "receipt": "/var/tmp/openhcs-beginner-metric-487-strict-native-science-v1-20261002/receipt.json",
+  "receipt_sha256": "517795a672df2e99a8b8163f0e8365b82b041e94bfd08bc6fe61c9db70a76697",
+  "source": "d567d4d7a7cbe67a9263d052c176cd6e184e6247",
+  "repetitions": [
+    {
+      "repetition": 0,
+      "difference_count": 63,
+      "all_missing_nuclei_nucleoli_means": true,
+      "zero_costes_or_numeric_or_correlation_differences": true,
+      "image_differences": 0,
+      "inventory_error": null,
+      "full_science_equivalent": false
+    },
+    {
+      "repetition": 1,
+      "difference_count": 63,
+      "all_missing_nuclei_nucleoli_means": true,
+      "zero_costes_or_numeric_or_correlation_differences": true,
+      "image_differences": 0,
+      "inventory_error": null,
+      "full_science_equivalent": false
+    }
+  ],
+  "source_join": "Exact10 physicalsource hashes and ordered source occurrences/address/ref/alias match retained native witness; authored CPPipe SHA unchanged.",
+  "unchanged": {
+    "source": true,
+    "outputs": true
+  }
+}

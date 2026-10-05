@@ -1,9 +1,8 @@
 """Function-level artifact contract decorators for the pipeline compiler."""
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import replace
 from enum import Enum
-from functools import lru_cache
 import inspect
 from types import UnionType
 from typing import (
@@ -34,6 +33,8 @@ from openhcs.core.callable_contract import (
     ImagePayloadConsumption,
 )
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
+from openhcs.core.image_payload_execution_mode import ImagePayloadExecutionMode
+from openhcs.core.runtime_plane_projection import RuntimePlaneAxisValueProjection
 from openhcs.core.variable_component_stack_requirement import (
     AlwaysRequiresVariableComponentStack,
     VariableComponentStackRequirement,
@@ -43,11 +44,43 @@ from openhcs.processing.materialization import MaterializationSpec
 F = TypeVar("F", bound=Callable)
 
 
-@lru_cache(maxsize=256)
+def runtime_context_parameter(parameter_name: str | None) -> Callable[[F], F]:
+    """Declare context injection, or disable it while retaining the public ABI."""
+
+    if parameter_name is not None and not isinstance(parameter_name, str):
+        raise TypeError("runtime_context_parameter must be a parameter name or None.")
+
+    def decorator(func: F) -> F:
+        if (
+            parameter_name is not None
+            and parameter_name not in inspect.signature(func).parameters
+        ):
+            raise ValueError(
+                f"Callable {func.__name__!r} does not declare parameter "
+                f"{parameter_name!r}."
+            )
+        namespace = vars(func)
+        namespace.pop(FunctionContractAttribute.canonical_signature, None)
+        namespace.pop(FunctionContractAttribute.raw_runtime_signature, None)
+        namespace[FunctionContractAttribute.runtime_context_parameter] = parameter_name
+        return func
+
+    return decorator
+
+
 def resolved_callable_type_hints(func: Callable) -> dict[str, Any]:
     """Return the callable's resolved type contract or propagate its error."""
 
-    return get_type_hints(func)
+    signature = CallableMetadata.prepared_callable_signature(func)
+    if signature is None:
+        return get_type_hints(func)
+    from typing import _strip_annotations
+
+    return {
+        **{name: _strip_annotations(parameter.annotation) for name, parameter in signature.parameters.items()
+           if parameter.annotation is not inspect.Parameter.empty},
+        **({} if signature.return_annotation is inspect.Signature.empty else {"return": _strip_annotations(signature.return_annotation)}),
+    }
 
 
 def annotation_accepts_runtime_type(annotation: object, value_type: type[Any]) -> bool:
@@ -101,7 +134,7 @@ def resolved_callable_parameter(
 ) -> inspect.Parameter:
     """Return one callable parameter with its runtime type hint resolved."""
 
-    signature = inspect.signature(func)
+    signature = CallableMetadata.callable_signature(func)
     parameter = signature.parameters.get(parameter_name)
     if parameter is None:
         raise ValueError(
@@ -128,6 +161,34 @@ class ObjectLabelInputExecutionMode(str, Enum):
         return self is self.FULL_STACK or (
             self is self.MATCH_IMAGE_STACK and image_stack_required
         )
+
+    def invocation_kwargs(
+        self,
+        kwargs: Mapping[str, Any],
+        *,
+        execution_mode: ImagePayloadExecutionMode,
+        image_projection: RuntimePlaneAxisValueProjection | None,
+        runtime_projection: RuntimePlaneAxisValueProjection | None,
+        semantic_controls: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        """Match scalar images to their declared singleton runtime root.
+
+        Explicit full-stack label consumers keep their domain. Matching labels
+        can consume a singleton root only after the image's final execution
+        mode and retained plane projection have been resolved.
+        """
+        if (
+            self is self.MATCH_IMAGE_STACK
+            and execution_mode is ImagePayloadExecutionMode.NATURAL
+            and image_projection is None
+        ):
+            if runtime_projection is not None and runtime_projection.axis_size == 1:
+                from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+
+                kwargs = RuntimeSliceProjection.kwargs_for_slice(
+                    kwargs, runtime_projection.selected_plane(0)
+                )
+        return {**kwargs, **semantic_controls}
 
 
 def _artifact_spec_from_output_declaration(
@@ -429,7 +490,7 @@ def special_input_parameters_from_callable(
     """Return special-input parameters in their canonical signature order."""
 
     declared_names = special_input_names_from_callable(func)
-    signature = inspect.signature(func)
+    signature = CallableMetadata.callable_signature(func)
     missing = tuple(name for name in declared_names if name not in signature.parameters)
     if missing:
         raise ValueError(

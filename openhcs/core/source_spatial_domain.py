@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields, replace
 from typing import Any, ClassVar, Generic, Self, TypeVar
 
 from metaclass_registry import AutoRegisterMeta, RegistryFamily, RegistryKeyAttribute
@@ -18,6 +18,7 @@ from zmqruntime.viewer_protocol import (
 )
 
 from openhcs.core.registry_strategies import NominalTypeKeyedStrategyMixin
+from openhcs.serialization.json import to_jsonable
 
 SourceSpatialAliasValueT = TypeVar("SourceSpatialAliasValueT")
 
@@ -61,13 +62,73 @@ class SpatialShapeYX:
 
 
 @dataclass(frozen=True, slots=True)
-class SourceSpatialDomain:
-    """Dense XY placement contract for a source-image coordinate domain."""
+class SourceSpatialDomain(metaclass=AutoRegisterMeta):
+    """Dense XY placement contract for a source-image coordinate domain.
+
+    Args:
+        origin_yx: Optional crop origin in source pixel row/column coordinates.
+            Together with source_shape_yx, places the current array inside the
+            full source domain; this is not a physical calibration or scale.
+        source_shape_yx: Optional full source height/width in pixels, independent
+            of the current crop dimensions. Complete placement must contain the
+            crop at origin_yx.
+        fill_value: Value used outside the crop when materializing the full
+            dense source domain. It does not change pixels inside the crop.
+        value_name: Descriptive payload name used in placement validation errors.
+    """
 
     origin_yx: tuple[int, int] | None = None
     source_shape_yx: tuple[int, int] | None = None
     fill_value: Any = 0
     value_name: str = "Dense array"
+
+    __registry_family__ = RegistryFamily("spatial_rank")
+    spatial_rank: ClassVar[int] = 2
+
+    @classmethod
+    def from_mapping(cls, values: Mapping[str, Any]) -> "SourceSpatialDomain":
+        """Decode the declared spatial owner, retaining its intrinsic dimensions."""
+        payload = dict(values)
+        dimensions = payload.pop("spatial_dimensions", 2)
+        owner = cls.__registry__.get(dimensions)
+        if owner is None:
+            raise ValueError(f"Unsupported source spatial dimensions {dimensions!r}.")
+        return owner(**payload).normalized()
+
+    def to_mapping(self) -> dict[str, Any]:
+        """Serialize placement fields with the nominal spatial declaration."""
+        return {
+            **{
+                item.name: to_jsonable(getattr(self, item.name))
+                for item in fields(self)
+            },
+            "spatial_dimensions": self.spatial_rank,
+        }
+
+    def for_intrinsic_plane(self) -> "SourceSpatialDomain":
+        """An ordinary source plane retains its XY placement owner."""
+        return self
+
+    def admit_source_cohort(
+        self,
+        domain: "SourceSpatialDomain",
+        *,
+        depth: int,
+    ) -> "SourceSpatialDomain":
+        """Ordinary source stacks retain their existing spatial domain."""
+        return domain
+
+    def intrinsic_plane_count(
+        self,
+        shape: Sequence[int],
+        fallback: int,
+    ) -> int:
+        """Return the execution plane count independently of storage layout."""
+        return fallback
+
+    def persists_whole_image(self) -> bool:
+        """An ordinary XY domain does not consume a runtime-slice axis."""
+        return False
 
     @property
     def has_values(self) -> bool:
@@ -104,7 +165,9 @@ class SourceSpatialDomain:
 
     def with_missing_from(self, fallback: "SourceSpatialDomain") -> Self:
         """Fill missing spatial placement values from another source domain."""
-        return type(self)(
+        owner = fallback if fallback.spatial_rank > self.spatial_rank else self
+        return replace(
+            owner,
             origin_yx=(
                 self.origin_yx if self.origin_yx is not None else fallback.origin_yx
             ),
@@ -147,7 +210,7 @@ class SourceSpatialDomain:
             try:
                 candidate.require_image_window(image_shape_yx)
             except ValueError:
-                return native_domain
+                return native_domain.with_missing_from(self)
         return candidate
 
     @classmethod
@@ -163,6 +226,18 @@ class SourceSpatialDomain:
         domains_tuple = tuple(domains)
         if not domains_tuple:
             return cls(fill_value=fill_value, value_name=value_name)
+        owner = type(domains_tuple[0])
+        if (
+            cls is SourceSpatialDomain
+            and owner is not cls
+            and all(type(domain) is owner for domain in domains_tuple)
+        ):
+            return owner.common_from_domains(
+                domains_tuple,
+                expand_varying_domains=expand_varying_domains,
+                fill_value=fill_value,
+                value_name=value_name,
+            )
 
         source_shape = CommonRuntimeValue.from_values(
             domain.source_shape_yx for domain in domains_tuple
@@ -201,42 +276,22 @@ class SourceSpatialDomain:
 
     def with_origin_yx(self, origin_yx: tuple[int, int] | None) -> Self:
         """Return this domain with a replacement source-image origin."""
-        return type(self)(
-            origin_yx=origin_yx,
-            source_shape_yx=self.source_shape_yx,
-            fill_value=self.fill_value,
-            value_name=self.value_name,
-        )
+        return replace(self, origin_yx=origin_yx)
 
     def with_source_shape_yx(
         self,
         source_shape_yx: tuple[int, int] | None,
     ) -> Self:
         """Return this domain with a replacement full source-image shape."""
-        return type(self)(
-            origin_yx=self.origin_yx,
-            source_shape_yx=source_shape_yx,
-            fill_value=self.fill_value,
-            value_name=self.value_name,
-        )
+        return replace(self, source_shape_yx=source_shape_yx)
 
     def with_value_name(self, value_name: str) -> Self:
         """Return this domain with a consumer-specific value label."""
-        return type(self)(
-            origin_yx=self.origin_yx,
-            source_shape_yx=self.source_shape_yx,
-            fill_value=self.fill_value,
-            value_name=value_name,
-        )
+        return replace(self, value_name=value_name)
 
     def with_fill_value(self, fill_value: Any) -> Self:
         """Return this domain with a replacement dense materialization fill."""
-        return type(self)(
-            origin_yx=self.origin_yx,
-            source_shape_yx=self.source_shape_yx,
-            fill_value=fill_value,
-            value_name=self.value_name,
-        )
+        return replace(self, fill_value=fill_value)
 
     def normalized(self) -> Self:
         """Return this domain with canonical tuple metadata values."""
@@ -253,11 +308,10 @@ class SourceSpatialDomain:
                 "source_spatial_shape_yx",
             )
         )
-        return type(self)(
+        return replace(
+            self,
             origin_yx=origin_yx,
             source_shape_yx=source_shape_yx,
-            fill_value=self.fill_value,
-            value_name=self.value_name,
         )
 
     def physical_border_edges_for_shape(
@@ -292,14 +346,13 @@ class SourceSpatialDomain:
         source_shape = (
             self.source_shape_yx if self.source_shape_yx is not None else input_shape
         )
-        return type(self)(
+        return replace(
+            self,
             origin_yx=(
                 int(parent_origin[0]) + int(offset_yx[0]),
                 int(parent_origin[1]) + int(offset_yx[1]),
             ),
             source_shape_yx=source_shape,
-            fill_value=self.fill_value,
-            value_name=self.value_name,
         )
 
     def with_spatial_resize(
@@ -309,11 +362,10 @@ class SourceSpatialDomain:
         """Return the local coordinate domain established by a spatial resize."""
 
         output_shape = self._shape_yx(output_shape_yx, "output_shape_yx")
-        return type(self)(
+        return replace(
+            self,
             origin_yx=(0, 0),
             source_shape_yx=output_shape,
-            fill_value=self.fill_value,
-            value_name=self.value_name,
         )
 
     def as_materialized_source_domain(
@@ -326,11 +378,10 @@ class SourceSpatialDomain:
             raise ValueError(
                 f"{self.value_name} source-domain materialization requires shape."
             )
-        return type(self)(
+        return replace(
+            self,
             origin_yx=(0, 0),
             source_shape_yx=source_shape,
-            fill_value=self.fill_value,
-            value_name=self.value_name,
         )
 
     @staticmethod
@@ -352,6 +403,98 @@ class SourceSpatialDomain:
             fill_value=self.fill_value,
             value_name=self.value_name,
         )
+
+
+@dataclass(frozen=True, slots=True)
+class VolumeSourceSpatialDomain(SourceSpatialDomain):
+    """Intrinsic Z/Y/X image placement, independent of runtime slice transport.
+
+    Args:
+        source_depth: Optional positive depth of the original intrinsic source
+            volume in Z planes; it is independent of current resampled pixels.
+        origin_z: Optional nonnegative source-plane offset of the volume. Zero
+            places its first plane at the start of the original Z domain.
+    """
+
+    spatial_rank: ClassVar[int] = 3
+    source_depth: int | None = None
+    origin_z: int | None = 0
+
+    @property
+    def has_values(self) -> bool:
+        """The intrinsic Z dimension remains semantic without XY placement."""
+        return True
+
+    def normalized(self) -> Self:
+        domain = super(VolumeSourceSpatialDomain, self).normalized()
+        if domain.source_depth is not None and domain.source_depth <= 0:
+            raise ValueError("Intrinsic source volume depth must be positive.")
+        if domain.origin_z is not None and domain.origin_z < 0:
+            raise ValueError("Intrinsic source volume origin must be nonnegative.")
+        return domain
+
+    def admit_source_cohort(
+        self,
+        domain: SourceSpatialDomain,
+        *,
+        depth: int,
+    ) -> "VolumeSourceSpatialDomain":
+        if domain.spatial_rank >= self.spatial_rank:
+            return domain
+        return replace(
+            self,
+            origin_yx=domain.origin_yx,
+            source_shape_yx=domain.source_shape_yx,
+            fill_value=domain.fill_value,
+            value_name=domain.value_name,
+            source_depth=depth,
+        ).normalized()
+
+    def intrinsic_plane_count(self, shape: Sequence[int], fallback: int) -> int:
+        if len(shape) < 3 or shape[0] <= 0:
+            raise ValueError("An intrinsic volume must retain its Z pixel axis.")
+        return int(shape[0])
+
+    def persists_whole_image(self) -> bool:
+        return True
+
+    def for_intrinsic_plane(self) -> SourceSpatialDomain:
+        """Explicit Z selection consumes the intrinsic volume dimension."""
+        return SourceSpatialDomain(
+            origin_yx=self.origin_yx,
+            source_shape_yx=self.source_shape_yx,
+            fill_value=self.fill_value,
+            value_name=self.value_name,
+        )
+
+    def require_image_window(self, image_shape_yx: Sequence[int]) -> None:
+        # Source depth describes original placement, independently of current
+        # resampled pixels. XY placement retains its existing crop validation.
+        shape = tuple(image_shape_yx)
+        super(VolumeSourceSpatialDomain, self).require_image_window(shape[-2:])
+
+    @classmethod
+    def common_from_domains(
+        cls,
+        domains: Iterable[SourceSpatialDomain],
+        **kwargs: Any,
+    ) -> "VolumeSourceSpatialDomain":
+        values = tuple(domains)
+        domain = super(VolumeSourceSpatialDomain, cls).common_from_domains(
+            values, **kwargs
+        )
+        return replace(
+            domain,
+            source_depth=CommonRuntimeValue.from_values(
+                value.source_depth for value in values
+            ).single,
+            origin_z=CommonRuntimeValue.from_values(
+                value.origin_z for value in values
+            ).single,
+        )
+
+
+to_jsonable.register(SourceSpatialDomain, SourceSpatialDomain.to_mapping)
 
 
 @dataclass(frozen=True, slots=True)
@@ -540,10 +683,14 @@ class SourceSpatialDomainAdapter(
         source_shape = cls.common_source_shape_yx(adapters)
         if source_shape is None:
             return None
-        return SourceSpatialDomain(
-            source_shape_yx=source_shape,
-            fill_value=fill_value,
-            value_name=value_name,
+        return (
+            SourceSpatialDomain.common_from_domains(
+                (adapter.domain for adapter in adapters),
+                fill_value=fill_value,
+                value_name=value_name,
+            )
+            .with_origin_yx(None)
+            .with_source_shape_yx(source_shape)
         )
 
     @classmethod

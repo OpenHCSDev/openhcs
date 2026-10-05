@@ -28,7 +28,6 @@ from openhcs.interop.cellprofiler_setting_normalization import (
     normalize_cellprofiler_setting_name,
 )
 from openhcs.interop.cellprofiler.setting_names import (
-    setting_name_matches,
     setting_names,
     setting_values,
 )
@@ -122,39 +121,6 @@ class CellProfilerModuleArtifactContracts:
             for value in setting_values(module, binding.setting_name)
             for name in split_symbol_names(value)
         )
-
-    @classmethod
-    def split_invocation_blocks_for_binding(
-        cls,
-        modules: tuple["ModuleBlock", ...],
-        binding: SettingToKeywordBinding,
-    ) -> tuple["ModuleBlock", ...]:
-        """Split repeated artifact selections into exact scalar invocations."""
-
-        split_blocks: list[ModuleBlock] = []
-        for module in modules:
-            names = cls.artifact_names_for_binding(module, binding)
-            if len(names) <= 1:
-                split_blocks.append(module)
-                continue
-            retained_records = tuple(
-                record
-                for record in module.iter_settings()
-                if not setting_name_matches(record.name, binding.setting_name)
-            )
-            split_blocks.extend(
-                replace(
-                    module,
-                    setting_records=[
-                        *retained_records,
-                        *binding.records_from_kwargs(
-                            {binding.require_parameter_name(): name}
-                        ),
-                    ],
-                )
-                for name in names
-            )
-        return tuple(split_blocks)
 
     @classmethod
     def main_flow_output_specs(
@@ -1067,16 +1033,24 @@ class CellProfilerModuleArtifactContracts:
 
         del module, binding, name, step_context, output_position
         primary_images = cls.primary_image_inputs(
-            cls.require_callable(invocation_key.function_name),
+            CallableContract.from_prepared_callable(
+                cls.require_callable(invocation_key.function_name)
+            ),
             artifact_inputs.specs,
+        )
+        contextual_inputs = tuple(
+            spec
+            for spec in artifact_inputs
+            if spec.artifact_type.carries_source_image_context
         )
         lineage_inputs = ArtifactSpecCollection(
             primary_images
             or tuple(
                 spec
-                for spec in artifact_inputs
-                if spec.artifact_type.carries_source_image_context
+                for spec in contextual_inputs
+                if spec.artifact_type.participates_in_main_flow_output
             )
+            or contextual_inputs
         )
         source = cls.single_artifact_lineage_input(lineage_inputs)
         return (
@@ -1192,7 +1166,7 @@ class CellProfilerModuleArtifactContracts:
             group_key=invocation_key.group_key,
         )
         func = cls.require_callable(invocation_key.function_name)
-        callable_contract = CallableContract.from_callable(func)
+        callable_contract = CallableContract.from_prepared_callable(func)
         inputs = cls.artifact_contract_inputs(
             module,
             invocation_key=invocation_key,
@@ -1205,7 +1179,7 @@ class CellProfilerModuleArtifactContracts:
             artifact_inputs=ArtifactSpecCollection(inputs),
         )
         remaining_inputs = list(inputs)
-        primary_image_inputs = cls.primary_image_inputs(func, inputs)
+        primary_image_inputs = cls.primary_image_inputs(callable_contract, inputs)
         for primary_image_input in primary_image_inputs:
             remaining_inputs.remove(primary_image_input)
         artifact_inputs = ArtifactSpecCollection(

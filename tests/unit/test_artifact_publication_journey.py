@@ -44,7 +44,7 @@ from openhcs.core.source_projection import (
     SourceProjectionSet,
 )
 from openhcs.core.steps.function_step import FunctionStep
-from openhcs.core.steps.function_outputs import OpenHCSMetadataWriter
+from openhcs.core.steps.function_outputs import OpenHCSMetadataTarget
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.processing.backends.cellprofiler.object_images import (
     ImageMode,
@@ -163,7 +163,7 @@ def test_converted_checkpoint_has_typed_address_on_final_reconciliation(tmp_path
     for context in bundle.runtime_contexts.values():
         for index, step in enumerate(steps):
             step.process(context, index)
-    OpenHCSMetadataWriter.finalize_completed_plate(bundle.runtime_contexts)
+    OpenHCSMetadataTarget.finalize_completed_plate(bundle.runtime_contexts)
     saved = tmp_path / "source_out" / "converted"
     files = tuple(saved.glob("*.tif"))
     assert len(files) == 1

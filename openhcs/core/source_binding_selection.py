@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Iterator
 from dataclasses import dataclass, field, replace
 from enum import Enum
 from functools import lru_cache
@@ -14,10 +13,7 @@ from typing import ClassVar, Mapping, Sequence, TYPE_CHECKING
 from metaclass_registry import AutoRegisterMeta
 
 from openhcs.constants.constants import Backend
-from openhcs.core.registry_strategies import (
-    EnumKeyedStrategyMixin,
-    MostDerivedContextStrategyMixin,
-)
+from openhcs.core.registry_strategies import EnumKeyedStrategyMixin
 from openhcs.core.path_pattern_matching import PathPatternTemplateMatcher
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
@@ -25,16 +21,17 @@ from openhcs.core.source_bindings import (
     NamedSourceBinding,
     SourceBindingMatchMethod,
     SourceBindingMatchPlan,
-    SourceBindingRuntimeContext,
     SourceSetRole,
+    SourceProjectionRole,
 )
 from openhcs.core.source_image_provenance import (
     SourceImageIdentity,
     SourceImageProvenance,
 )
 from openhcs.core.source_metadata import (
+    SourceMetadataFields,
     SourceMetadataMapping,
-    SourceMetadataRoleView,
+    SourceMetadataRecord,
     SourceMetadataValue,
 )
 from openhcs.core.source_matching import (
@@ -57,11 +54,26 @@ from openhcs.core.source_path_identity import (
     source_paths_equal,
 )
 from openhcs.core.source_projection import SourceProjection
-from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
+from openhcs.core.source_workspace_projection import (
+    VirtualWorkspacePathLookup,
+    VirtualWorkspaceSourceProjection,
+    VirtualWorkspaceSourceProjectionAuthority,
+)
+from openhcs.core.aligned_image_payload import stack_image_payloads
+from openhcs.core.runtime_image_values import (
+    ImagePayloadMetadataCompositionMode,
+    image_payload_metadata,
+)
+from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.steps.function_io import get_all_image_paths
+from openhcs.core.runtime_array_values import RuntimeArrayData
+from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 
 if TYPE_CHECKING:
+    from openhcs.core.runtime_adapters import RuntimeAdapterRequest
+    from openhcs.core.runtime_source_binding_cache import RuntimeSourceResolutionSnapshot
+    from polystore.filemanager import FileManager
     from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.microscopes.microscope_interfaces import FilenameParser
 
@@ -77,27 +89,48 @@ def _cached_source_candidate_pattern_keys(pattern_path: str) -> tuple[str, ...]:
     return tuple(dict.fromkeys((pattern_path, path.as_posix(), path.name)))
 
 
-@dataclass(frozen=True, slots=True)
-class SourceMetadataRecord(Mapping[str, SourceMetadataValue]):
-    """Normalized source metadata carried across source-binding selection."""
-
-    fields: tuple[tuple[str, SourceMetadataValue], ...]
+@dataclass(frozen=True, slots=True, eq=False)
+class DeclaredSourceMetadataRecord(SourceMetadataRecord):
+    """Live declared metadata that still requires path-specific fallbacks."""
 
     @classmethod
-    def from_mapping(cls, metadata: SourceMetadataMapping) -> "SourceMetadataRecord":
+    def from_mapping(
+        cls, metadata: SourceMetadataMapping
+    ) -> "DeclaredSourceMetadataRecord":
         return cls(tuple((str(key), value) for key, value in metadata.items()))
 
-    def __getitem__(self, key: str) -> SourceMetadataValue:
-        for field_key, value in self.fields:
-            if field_key == key:
-                return value
-        raise KeyError(key)
-
-    def __iter__(self) -> Iterator[str]:
-        return (key for key, _value in self.fields)
-
-    def __len__(self) -> int:
-        return len(self.fields)
+    def resolve(
+        self,
+        path: str,
+        parser: "FilenameParser",
+        metadata_rules: tuple[MetadataExtractionRule, ...],
+    ) -> "SourceMetadataRecord | None":
+        """Fill parser and extraction-rule fields absent from declarations."""
+        metadata: dict[str, SourceMetadataValue] = {}
+        merge_source_metadata(metadata, self, path=path)
+        parsed_metadata = parser.parse_filename(path)
+        if parsed_metadata is not None:
+            merge_source_metadata(
+                metadata,
+                {
+                    key: value
+                    for key, value in parsed_metadata.wire_mapping().items()
+                    if key not in metadata
+                },
+                path=path,
+            )
+        rule_metadata = metadata_from_rules(path, metadata_rules)
+        if rule_metadata:
+            merge_source_metadata(
+                metadata,
+                {
+                    key: value
+                    for key, value in rule_metadata.items()
+                    if key not in metadata
+                },
+                path=path,
+            )
+        return self.from_mapping(metadata) if metadata else None
 
 
 @dataclass(frozen=True, slots=True)
@@ -159,6 +192,7 @@ class SourcePatternResolutionContext:
     source_projections_by_virtual_path: Mapping[str, SourceProjection] = field(
         default_factory=dict
     )
+    resolution_snapshot: RuntimeSourceResolutionSnapshot | None = None
 
     @classmethod
     def from_sources(
@@ -176,7 +210,7 @@ class SourcePatternResolutionContext:
                 str(path): (
                     metadata
                     if isinstance(metadata, SourceMetadataRecord)
-                    else SourceMetadataRecord.from_mapping(metadata)
+                    else DeclaredSourceMetadataRecord.from_mapping(metadata)
                 )
                 for path, metadata in source_metadata_by_path.items()
             }
@@ -184,23 +218,6 @@ class SourcePatternResolutionContext:
             parser=parser,
             source_paths_by_virtual_path=source_paths_by_virtual_path,
             source_metadata_by_path=metadata_by_path,
-            metadata_rules=metadata_rules,
-        )
-
-    @classmethod
-    def from_runtime_context(
-        cls,
-        *,
-        parser: "FilenameParser",
-        runtime_context: SourceBindingRuntimeContext,
-        metadata_rules: tuple[MetadataExtractionRule, ...] = (),
-    ) -> "SourcePatternResolutionContext":
-        """Build the generic selector context from compiled runtime source state."""
-
-        return cls.from_sources(
-            parser=parser,
-            source_paths_by_virtual_path=runtime_context.step_input_source_paths,
-            source_metadata_by_path=runtime_context.source_metadata_by_path,
             metadata_rules=metadata_rules,
         )
 
@@ -244,9 +261,9 @@ class SourcePatternResolutionContext:
             dict.fromkeys(
                 source_filter_path
                 for metadata in self.metadata_for_paths(resolution.metadata_paths())
-                for source_filter_path in SourceMetadataRoleView(
+                for source_filter_path in SourceMetadataFields.source_filter_paths(
                     metadata
-                ).source_filter_paths()
+                )
             )
         )
         if source_filter_paths:
@@ -257,22 +274,33 @@ class SourcePatternResolutionContext:
         self,
         pattern: SourceCandidatePath,
     ) -> SourceCandidatePathResolution:
+        if self.resolution_snapshot is not None:
+            admitted = self.resolution_snapshot.path_resolutions.get(pattern)
+            if admitted is not None:
+                return admitted
         keys = _cached_source_candidate_pattern_keys(pattern)
         exact_virtual_path = next(
             (key for key in keys if key in self.source_paths_by_virtual_path),
             None,
         )
-        virtual_matches = (
-            (exact_virtual_path,)
-            if exact_virtual_path is not None
-            else tuple(
+        if exact_virtual_path is not None:
+            projection = self.source_projections_by_virtual_path.get(exact_virtual_path)
+            virtual_matches = (
+                tuple(
+                    path
+                    for path, declared in self.source_projections_by_virtual_path.items()
+                    if declared is projection
+                )
+                if projection is not None else (exact_virtual_path,)
+            )
+        else:
+            virtual_matches = tuple(
                 dict.fromkeys(
                     virtual_path
                     for key in keys
                     for virtual_path in self._matching_virtual_paths(key)
                 )
             )
-        )
         mapped = tuple(
             self.source_paths_by_virtual_path[key]
             for key in (*keys, *virtual_matches)
@@ -337,18 +365,29 @@ class SourcePatternResolutionContext:
         """Project exact physical spellings onto their declared workspace positions.
 
         Workspace positions are not physical-file identities: several positions
-        may address different planes in one store. Keep every declared position,
-        and replace only a physical address explicitly mapped to those positions.
-        No basename, filesystem resolution or metadata inference participates.
+        may address different planes in one store. Lookup spellings backed by
+        the same nominal projection are aliases of one position. Mapping-only
+        declarations and distinct projections retain their separate positions.
+        No basename, filesystem resolution or physical-ref equality participates.
         """
+        projection_positions: dict[int, SourceCandidatePath] = {}
+        for position, projection in self.source_projections_by_virtual_path.items():
+            projection_positions.setdefault(id(projection), position)
         positions: list[SourceCandidatePath] = []
         for candidate, virtual_paths in zip(
             candidates, self.virtual_paths_for_sources(candidates), strict=True
         ):
-            if candidate in self.source_paths_by_virtual_path:
-                positions.append(candidate)
-            else:
-                positions.extend(virtual_paths or (candidate,))
+            declared_positions = (
+                (candidate,)
+                if candidate in self.source_paths_by_virtual_path
+                else virtual_paths or (candidate,)
+            )
+            for position in declared_positions:
+                projection = self.source_projections_by_virtual_path.get(position)
+                positions.append(
+                    projection_positions[id(projection)]
+                    if projection is not None else position
+                )
         return tuple(dict.fromkeys(positions))
 
     def runtime_paths_for_candidate(
@@ -404,35 +443,10 @@ class SourcePatternResolutionContext:
         )
 
     def metadata_for_path(self, path: str) -> SourceMetadataRecord | None:
-        metadata: dict[str, SourceMetadataValue] = {}
-        declared_metadata = self.source_metadata_by_path.get(path)
-        if declared_metadata is not None:
-            merge_source_metadata(metadata, declared_metadata, path=path)
-        parsed_metadata = self.parser.parse_filename(path)
-        if parsed_metadata is not None:
-            merge_source_metadata(
-                metadata,
-                {
-                    key: value
-                    for key, value in parsed_metadata.wire_mapping().items()
-                    if key not in metadata
-                },
-                path=path,
-            )
-        rule_metadata = metadata_from_rules(path, self.metadata_rules)
-        if rule_metadata:
-            merge_source_metadata(
-                metadata,
-                {
-                    key: value
-                    for key, value in rule_metadata.items()
-                    if key not in metadata
-                },
-                path=path,
-            )
-        if metadata:
-            return SourceMetadataRecord.from_mapping(metadata)
-        return None
+        record = self.source_metadata_by_path.get(path)
+        if record is None:
+            record = DeclaredSourceMetadataRecord(())
+        return record.resolve(path, self.parser, self.metadata_rules)
 
     def merged_metadata_for_paths(
         self,
@@ -445,7 +459,7 @@ class SourcePatternResolutionContext:
             if path_metadata is not None:
                 merge_source_metadata(metadata, path_metadata, path=path)
         if metadata:
-            return SourceMetadataRecord.from_mapping(metadata)
+            return DeclaredSourceMetadataRecord.from_mapping(metadata)
         return None
 
     def source_metadata_by_paths(
@@ -547,33 +561,7 @@ class SourceBindingCandidateMatcher:
         if not selector.components and not selector.metadata:
             return True
 
-        metadata_candidates = source_context.candidate_metadata(candidate)
-        for component_selector in selector.components:
-            if not any(
-                source_metadata_values_equal(value, str(component_selector.value))
-                for metadata in metadata_candidates
-                for value in source_component_metadata_values(
-                    metadata,
-                    component_selector.component,
-                )
-            ):
-                return False
-
-        for metadata_selector in selector.metadata:
-            if not any(
-                value is not None
-                and source_metadata_values_equal(value, metadata_selector.value)
-                for metadata in metadata_candidates
-                for value in (
-                    semantic_source_metadata_value(
-                        metadata,
-                        metadata_selector.field,
-                    ),
-                )
-            ):
-                return False
-
-        return True
+        return selector.metadata_candidates_match(source_context.candidate_metadata(candidate))
 
     @classmethod
     def compatible_candidates(
@@ -1142,6 +1130,11 @@ class SourceIdentityResolutionContext(SourcePatternResolutionContext):
     ) -> tuple[tuple[SourceCandidatePath, ...], ...]:
         """Resolve a batch without rescanning unrelated paths for each identity."""
 
+        if self.resolution_snapshot is not None:
+            return self.resolution_snapshot.matching_candidates_for_source_identities(
+                identities, candidates,
+            )
+
         candidates = self.declared_positions_for_candidates(candidates)
         candidates_by_path: dict[str, list[SourceCandidatePath]] = {}
         for candidate in candidates:
@@ -1204,6 +1197,7 @@ class SourceBindingMatchedImageSet(SourceIdentityResolutionContext):
             source_projections_by_virtual_path=(
                 source_context.source_projections_by_virtual_path
             ),
+            resolution_snapshot=source_context.resolution_snapshot,
             bindings=tuple(bindings),
             match_plan=match_plan,
             identity_policy=identity_policy,
@@ -1369,11 +1363,11 @@ class SourceBindingMatchedImageSet(SourceIdentityResolutionContext):
         metadata = (
             metadata_candidates.values[0]
             if metadata_candidates.values
-            else SourceMetadataRecord(())
+            else DeclaredSourceMetadataRecord(())
         )
         return SourceImageSetIdentity.from_metadata(
             metadata,
-            fallback_source_path=candidate,
+            fallback_source_path=self.source_path_for(candidate),
             policy=self.identity_policy,
         )
 
@@ -1537,21 +1531,58 @@ class SourceFileUniverse:
     files: tuple[str, ...]
     backend: Backend
 
+    def load_images(
+        self,
+        filemanager: "FileManager",
+        *,
+        zarr_config: Mapping[str, object] | None = None,
+    ) -> list[RuntimeArrayData]:
+        """Load this exact source cohort, retaining its execution-local memory copy."""
+        if self.backend is Backend.MEMORY:
+            return filemanager.load_batch(list(self.files), self.backend.value)
+        missing = tuple(dict.fromkeys(
+            path for path in self.files
+            if not filemanager.exists(path, Backend.MEMORY.value)
+        ))
+        loaded_by_path = {}
+        if missing:
+            pixels = filemanager.load_batch(
+                list(missing), self.backend.value,
+                **({"zarr_config": zarr_config} if self.backend is Backend.ZARR else {}),
+            )
+            loaded_by_path.update(
+                (path, ImagePayloadSourceMetadataContext(
+                    SourceImageIdentity(path),
+                    read_backend=self.backend.value,
+                    filemanager=filemanager,
+                ).payload(image))
+                for path, image in zip(missing, pixels, strict=True)
+            )
+            for parent in dict.fromkeys(str(Path(path).parent) for path in missing):
+                filemanager.ensure_directory(parent, Backend.MEMORY.value)
+            filemanager.save_batch(
+                list(loaded_by_path.values()), list(loaded_by_path), Backend.MEMORY.value,
+            )
+        retained = tuple(dict.fromkeys(
+            path for path in self.files if path not in loaded_by_path
+        ))
+        if retained:
+            loaded_by_path.update(zip(
+                retained,
+                filemanager.load_batch(list(retained), Backend.MEMORY.value),
+                strict=True,
+            ))
+        return [loaded_by_path[path] for path in self.files]
+
 
 @dataclass(frozen=True, slots=True)
 class SourceUniverseRuntimeState:
     """Resolved source universes assembled from the registered request family."""
 
-    step_input_universe: SourceFileUniverse | None = None
-    pipeline_start_universe: SourceFileUniverse | None = None
     load_universe: SourceFileUniverse | None = None
-    step_input_source_paths: Mapping[str, str] = field(
-        default_factory=lambda: MappingProxyType({})
-    )
     source_metadata_by_path: Mapping[str, SourceMetadataMapping] = field(
         default_factory=lambda: MappingProxyType({})
     )
-    pipeline_source_candidate_files: tuple[str, ...] = ()
 
     def with_source_metadata(
         self,
@@ -1570,49 +1601,10 @@ class SourceUniverseRuntimeState:
         merged.update(source_metadata_by_path)
         return replace(self, source_metadata_by_path=MappingProxyType(merged))
 
-    def require_step_input_universe(self) -> SourceFileUniverse:
-        if self.step_input_universe is None:
-            raise RuntimeError(
-                "Source universe runtime state has no step-input universe."
-            )
-        return self.step_input_universe
-
-    def require_pipeline_start_universe(self) -> SourceFileUniverse:
-        if self.pipeline_start_universe is None:
-            raise RuntimeError(
-                "Source universe runtime state has no pipeline-start universe."
-            )
-        return self.pipeline_start_universe
-
     def require_load_universe(self) -> SourceFileUniverse:
         if self.load_universe is None:
             raise RuntimeError("Source universe runtime state has no load universe.")
         return self.load_universe
-
-    def runtime_context(
-        self,
-        request: "SourceBindingRuntimeContextRequest",
-        source_metadata_by_path: Mapping[str, SourceMetadataMapping],
-    ) -> SourceBindingRuntimeContext:
-        """Build the runtime context from source-universe contributions."""
-        step_input_universe = self.require_step_input_universe()
-        pipeline_source_universe = self.require_pipeline_start_universe()
-        return SourceBindingRuntimeContext(
-            step_input_files=step_input_universe.files,
-            current_step_input_files=request.current_step_input_files(
-                step_input_universe
-            ),
-            current_image_files=request.matching_files,
-            step_input_dir=str(request.plan.input_dir),
-            step_input_source_backend=request.plan.read_backend,
-            step_input_storage_backend=Backend.MEMORY.value,
-            step_input_source_paths=self.step_input_source_paths,
-            source_metadata_by_path=source_metadata_by_path,
-            source_metadata_is_normalized=True,
-            pipeline_input_files=pipeline_source_universe.files,
-            pipeline_source_candidate_files=self.pipeline_source_candidate_files,
-            pipeline_input_backend=pipeline_source_universe.backend.value,
-        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -1630,6 +1622,179 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
     source_projection: VirtualWorkspaceSourceProjection | None
 
     @classmethod
+    def from_context(
+        cls,
+        *,
+        context: "ProcessingContext",
+        plan: "CompiledStepPlan",
+        matching_files: Sequence[str],
+        source_projection: VirtualWorkspaceSourceProjection | None,
+    ) -> "SourceUniverseRequest":
+        if not isinstance(plan, CompiledStepPlan):
+            raise TypeError(
+                "SourceUniverseRequest requires CompiledStepPlan, got "
+                f"{type(plan).__name__}."
+            )
+        plan.require_function_execution_ready()
+        source_backend = Backend(
+            context.microscope_handler.get_primary_backend(
+                context.input_dir,
+                context.filemanager,
+            )
+        )
+        return cls(
+            context=context,
+            plan=plan,
+            matching_files=tuple(matching_files),
+            source_backend=source_backend,
+            source_projection=source_projection,
+        )
+
+    @classmethod
+    def source_artifact_payload(
+        cls, request: RuntimeAdapterRequest, binding: NamedSourceBinding,
+    ) -> object:
+        """Resolve original source pixels in this origin's workspace universe."""
+
+        ref = binding.input_spec().ref()
+        source_payload = request.source_payload
+        source_provenance = (
+            None
+            if source_payload is None
+            else image_payload_metadata(source_payload).source_provenance
+        )
+        if source_provenance is not None and not source_provenance.has_values:
+            raise ValueError(
+                f"Source-bound artifact {ref!r} requires main-flow source provenance."
+            )
+
+        cache = request.context.runtime_source_workspace_projection_cache
+        projection = VirtualWorkspaceSourceProjectionAuthority.from_context(
+            request.context,
+            cache=cache,
+        ).projection_if_available()
+        if projection is None:
+            raise ValueError(
+                f"Source-bound artifact {ref!r} requires a virtual-workspace "
+                "source projection."
+            )
+        projection = cache.filtered_by_axis(
+            projection,
+            axis_id=request.axis_scope.axis_id,
+        )
+        source_context = (
+            request.context.runtime_source_binding_context_cache.source_pattern_context(
+                parser=request.context.microscope_handler.parser,
+                projection=projection,
+                metadata_rules=request.source_binding_plan.metadata_rules,
+            )
+        )
+        matched_set = SourceBindingMatchedImageSet.from_plan(
+            bindings=request.source_binding_plan.binding_declarations,
+            match_plan=request.source_binding_plan.match_plan,
+            source_context=source_context,
+            identity_policy=request.context.source_image_set_identity_policy,
+        )
+        source_universe = tuple(
+            dict.fromkeys(
+                source_path
+                for declared_binding in request.source_binding_plan.binding_declarations
+                for source_path in projection.files_for_projection_role(
+                    declared_binding.projection_role,
+                    axis_id=request.axis_scope.axis_id,
+                )
+            )
+        )
+        members = matched_set.members_for_binding(
+            binding,
+            anchor_provenance=(
+                source_provenance
+                if source_provenance is not None
+                else SourceImageProvenance()
+            ),
+            source_universe=source_universe,
+        )
+        if not members:
+            raise ValueError(
+                f"Source-bound artifact {ref!r} resolved no workspace members."
+            )
+
+        payloads = request.context.filemanager.load_batch(
+            list(members),
+            Backend.VIRTUAL_WORKSPACE.value,
+        )
+        if len(payloads) != len(members):
+            raise ValueError(
+                f"Source-bound artifact {ref!r} loaded {len(payloads)} payloads "
+                f"for {len(members)} workspace members."
+            )
+        projected_payloads = []
+        for member, payload in zip(members, payloads, strict=True):
+            lookup = VirtualWorkspacePathLookup.from_paths(member, member)
+            source_projection = projection.require_source_projection_for(lookup)
+            if not source_projection.matches_binding(binding):
+                raise ValueError(
+                    f"Workspace projection for {member!r} does not match compiled "
+                    f"source artifact {ref!r}."
+                )
+            projected = projection.project_payload(lookup, payload)
+            projected_payloads.append(
+                binding.apply_loaded_payload(
+                    projected,
+                    ImagePayloadSourceMetadataContext(
+                        SourceImageIdentity(
+                            member,
+                            projection.source_metadata_for(lookup),
+                        ),
+                        source_projection.ref.backend,
+                        request.context.filemanager,
+                        source_projection.ref.backend_address,
+                    ),
+                )
+            )
+        payload = (
+            projected_payloads[0]
+            if len(projected_payloads) == 1
+            and image_payload_metadata(projected_payloads[0]).persists_whole_image()
+            else stack_image_payloads(
+                projected_payloads,
+                metadata_mode=ImagePayloadMetadataCompositionMode.for_plane_axis(
+                    RuntimePlaneAxis.RUNTIME_SLICE
+                ),
+            )
+        )
+        metadata = image_payload_metadata(payload)
+        domain = request.source_binding_plan.source_spatial_domain.admit_source_cohort(
+            metadata.source_spatial_domain,
+            depth=len(members),
+        )
+        return metadata.replace_fields(source_spatial_domain=domain).attach_to(payload)
+
+    @classmethod
+    def for_binding(cls, binding: NamedSourceBinding) -> type[SourceUniverseRequest]:
+        """Select the already registered owner of a binding's origin."""
+        return cls.__registry__[binding.origin.value]
+
+    def runtime_universe_state(self) -> SourceUniverseRuntimeState:
+        """Return cached source-universe state for this request."""
+        cache = self.context.runtime_source_binding_context_cache
+        cached = cache.runtime_universe_state(
+            plan=self.plan,
+            matching_files=self.matching_files,
+            source_backend=self.source_backend,
+            source_projection=self.source_projection,
+        )
+        if cached is not None:
+            return cached
+        return cache.store_runtime_universe_state(
+            SourceUniverseRequest.runtime_state(self),
+            plan=self.plan,
+            matching_files=self.matching_files,
+            source_backend=self.source_backend,
+            source_projection=self.source_projection,
+        )
+
+    @classmethod
     def registered_request_types(cls) -> tuple[type["SourceUniverseRequest"], ...]:
         """Return registered concrete runtime plan request classes."""
         request_types: list[type[SourceUniverseRequest]] = []
@@ -1639,11 +1804,11 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
         return tuple(request_types)
 
     @classmethod
-    def from_runtime_context(
+    def from_request(
         cls,
-        request: "SourceBindingRuntimeContextRequest",
+        request: "SourceUniverseRequest",
     ) -> "SourceUniverseRequest":
-        """Build this registered request type from the runtime context request."""
+        """Build a registered source-universe role from its parent request."""
         return cls(
             context=request.context,
             plan=request.plan,
@@ -1655,15 +1820,28 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
     @classmethod
     def runtime_state(
         cls,
-        request: "SourceBindingRuntimeContextRequest",
+        request: "SourceUniverseRequest",
     ) -> SourceUniverseRuntimeState:
         """Resolve every registered source-universe request into runtime state."""
         state = SourceUniverseRuntimeState()
         for request_type in cls.registered_request_types():
-            universe_request = request_type.from_runtime_context(request)
-            universe = SourceUniverseStrategy.universe(universe_request)
+            universe_request = request_type.from_request(request)
+            universe = universe_request.source_universe()
             state = universe_request.contribute_runtime_state(state, universe)
         return state
+
+    def source_universe(self) -> SourceFileUniverse:
+        """Resolve current-axis files through their declared source backend."""
+        return SourceFileUniverse(
+            files=(
+                self.require_source_projection().pipeline_start_files(
+                    axis_id=self.plan.axis_id,
+                )
+                if self.uses_virtual_workspace_projection
+                else self.axis_files()
+            ),
+            backend=self.source_backend,
+        )
 
     def contribute_runtime_state(
         self,
@@ -1693,12 +1871,6 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
         return self.plan.source_universe_plan.uses_pipeline_start_binding_origin
 
     @property
-    def step_input_source_paths(self) -> Mapping[str, str]:
-        if self.source_projection is None:
-            return MappingProxyType({})
-        return self.source_context().source_paths_by_virtual_path
-
-    @property
     def source_metadata_by_path(self) -> Mapping[str, SourceMetadataMapping]:
         projection = self.source_projection
         if projection is None:
@@ -1708,7 +1880,7 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
     def source_context(self) -> SourcePatternResolutionContext:
         metadata_rules = self.plan.source_binding_plan.metadata_rules
         if self.source_projection is not None:
-            return SourcePatternResolutionContext.from_projection(
+            return self.context.runtime_source_binding_context_cache.source_pattern_context(
                 parser=self.context.microscope_handler.parser,
                 projection=self.source_projection,
                 metadata_rules=metadata_rules,
@@ -1756,6 +1928,23 @@ class StepInputSourceUniverseRequest(SourceUniverseRequest):
 
     universe_request_kind = "step_input"
 
+    @classmethod
+    def source_artifact_payload(
+        cls, request: RuntimeAdapterRequest, binding: NamedSourceBinding,
+    ) -> object:
+        """Resolve primary planes from current pixels; companions from source."""
+        if binding.projection_role is SourceProjectionRole.SOURCE_ARTIFACT:
+            return SourceUniverseRequest.source_artifact_payload(request, binding)
+        if request.source_payload is None:
+            raise ValueError(f"STEP_INPUT binding {binding.alias!r} requires current pixels.")
+        return binding.project_step_input_payload(request.source_payload)
+
+    def source_universe(self) -> SourceFileUniverse:
+        """Expand source selectors; otherwise retain the selected pattern files."""
+        if not self.requires_step_input_selector_resolution:
+            return SourceFileUniverse(self.matching_files, self.source_backend)
+        return SourceUniverseRequest.source_universe(self)
+
     def contribute_runtime_state(
         self,
         state: SourceUniverseRuntimeState,
@@ -1763,9 +1952,7 @@ class StepInputSourceUniverseRequest(SourceUniverseRequest):
     ) -> SourceUniverseRuntimeState:
         state = replace(
             state,
-            step_input_universe=universe,
             load_universe=state.load_universe or universe,
-            step_input_source_paths=self.step_input_source_paths,
         )
         return SourceUniverseRequest.contribute_runtime_state(self, state, universe)
 
@@ -1776,6 +1963,25 @@ class PipelineStartSourceUniverseRequest(SourceUniverseRequest):
 
     universe_request_kind = "pipeline_start"
 
+    def source_universe(self) -> SourceFileUniverse:
+        """Resolve the declared original-source scope independently of step input."""
+        if not self.requires_full_pipeline_source_universe:
+            return SourceUniverseRequest.source_universe(self)
+        if self.source_projection is not None:
+            return SourceFileUniverse(
+                self.source_projection.pipeline_start_files(), self.source_backend,
+            )
+        backend = self.physical_full_universe_backend()
+        return SourceFileUniverse(
+            files=tuple(
+                str(path)
+                for path in self.context.filemanager.list_files(
+                    str(self.context.input_dir), backend.value, recursive=True,
+                )
+            ),
+            backend=backend,
+        )
+
     def contribute_runtime_state(
         self,
         state: SourceUniverseRuntimeState,
@@ -1784,8 +1990,6 @@ class PipelineStartSourceUniverseRequest(SourceUniverseRequest):
         load_universe = self.load_universe()
         state = replace(
             state,
-            pipeline_start_universe=universe,
-            pipeline_source_candidate_files=universe.files,
             load_universe=(
                 state.load_universe if load_universe is None else load_universe
             ),
@@ -1850,308 +2054,3 @@ class VirtualWorkspacePipelineStartListingBackendPolicy(
     """Virtual-workspace pipeline-start fan-out lists disk files."""
 
     source_backend = Backend.VIRTUAL_WORKSPACE
-
-
-class SourceUniverseStrategy(
-    MostDerivedContextStrategyMixin[SourceUniverseRequest],
-    ABC,
-):
-    """Registered source-universe selection for source-binding runtime scopes."""
-
-    __registry_key__ = "strategy_key"
-    __skip_if_no_key__ = True
-
-    strategy_key: ClassVar[str | None] = None
-
-    @classmethod
-    def universe(cls, request: SourceUniverseRequest) -> SourceFileUniverse:
-        strategy = cls.for_context(
-            request,
-            error_subject="Source universe",
-        )
-        if strategy is None:
-            raise ValueError("Source universe requires a strategy.")
-        return strategy.source_universe(request)
-
-    @abstractmethod
-    def source_universe(self, request: SourceUniverseRequest) -> SourceFileUniverse:
-        """Return source files and backend for pipeline-start bindings."""
-
-
-class StepInputSourceUniverseStrategy(SourceUniverseStrategy, ABC):
-    """Source-universe strategy branch for current step input."""
-
-    def matches(self, request: SourceUniverseRequest) -> bool:
-        return isinstance(
-            request,
-            StepInputSourceUniverseRequest,
-        ) and self.matches_step_input(request)
-
-    @abstractmethod
-    def matches_step_input(self, request: StepInputSourceUniverseRequest) -> bool:
-        """Return whether this strategy owns one step-input request."""
-
-
-class PipelineStartSourceUniverseStrategy(SourceUniverseStrategy, ABC):
-    """Source-universe strategy branch for original pipeline input."""
-
-    def matches(self, request: SourceUniverseRequest) -> bool:
-        return isinstance(
-            request,
-            PipelineStartSourceUniverseRequest,
-        ) and self.matches_pipeline_start(request)
-
-    @abstractmethod
-    def matches_pipeline_start(
-        self,
-        request: PipelineStartSourceUniverseRequest,
-    ) -> bool:
-        """Return whether this strategy owns one pipeline-start request."""
-
-
-class AxisFilesSourceUniverseStrategy(SourceUniverseStrategy):
-    """Source-universe strategy that uses current-axis files from the source backend."""
-
-    def source_universe(self, request: SourceUniverseRequest) -> SourceFileUniverse:
-        return SourceFileUniverse(
-            files=request.axis_files(),
-            backend=request.source_backend,
-        )
-
-
-class StepInputAxisFilesSourceUniverseStrategy(
-    AxisFilesSourceUniverseStrategy,
-    StepInputSourceUniverseStrategy,
-    ABC,
-):
-    """Axis-file universe strategy branch for current step input."""
-
-
-class PipelineStartAxisFilesSourceUniverseStrategy(
-    AxisFilesSourceUniverseStrategy,
-    PipelineStartSourceUniverseStrategy,
-    ABC,
-):
-    """Axis-file universe strategy branch for original pipeline input."""
-
-
-class CurrentPatternStepInputSourceUniverseStrategy(StepInputSourceUniverseStrategy):
-    """Use the already-loaded pattern files when selectors do not need fan-out."""
-
-    strategy_key = "step_input_current_pattern"
-
-    def matches_step_input(self, request: StepInputSourceUniverseRequest) -> bool:
-        return not request.requires_step_input_selector_resolution
-
-    def source_universe(self, request: SourceUniverseRequest) -> SourceFileUniverse:
-        return SourceFileUniverse(
-            files=request.matching_files,
-            backend=request.source_backend,
-        )
-
-
-class VirtualWorkspaceStepInputSourceUniverseStrategy(StepInputSourceUniverseStrategy):
-    """Use source-schema virtual files when selector resolution must span sources."""
-
-    strategy_key = "step_input_virtual_workspace_source_projection"
-
-    def matches_step_input(self, request: StepInputSourceUniverseRequest) -> bool:
-        return (
-            request.requires_step_input_selector_resolution
-            and request.uses_virtual_workspace_projection
-        )
-
-    def source_universe(self, request: SourceUniverseRequest) -> SourceFileUniverse:
-        return SourceFileUniverse(
-            files=request.require_source_projection().pipeline_start_files(
-                axis_id=request.plan.axis_id
-            ),
-            backend=request.source_backend,
-        )
-
-
-class PhysicalAxisStepInputSourceUniverseStrategy(
-    StepInputAxisFilesSourceUniverseStrategy,
-):
-    """Use physical axis files when source selectors need fan-out outside VWS."""
-
-    strategy_key = "step_input_physical_axis"
-
-    def matches_step_input(self, request: StepInputSourceUniverseRequest) -> bool:
-        return (
-            request.requires_step_input_selector_resolution
-            and not request.uses_virtual_workspace_projection
-        )
-
-
-class AxisScopedPipelineStartSourceUniverseStrategy(
-    PipelineStartAxisFilesSourceUniverseStrategy,
-):
-    """Use the current axis source files when full pipeline fan-out is unnecessary."""
-
-    strategy_key = "axis_scoped"
-
-    def matches_pipeline_start(
-        self,
-        request: PipelineStartSourceUniverseRequest,
-    ) -> bool:
-        return not request.requires_full_pipeline_source_universe
-
-    def source_universe(self, request: SourceUniverseRequest) -> SourceFileUniverse:
-        if request.uses_virtual_workspace_projection:
-            return SourceFileUniverse(
-                files=request.require_source_projection().pipeline_start_files(
-                    axis_id=request.plan.axis_id
-                ),
-                backend=request.source_backend,
-            )
-        return SourceFileUniverse(
-            files=request.axis_files(),
-            backend=request.source_backend,
-        )
-
-
-class VirtualWorkspacePipelineStartSourceUniverseStrategy(
-    PipelineStartSourceUniverseStrategy,
-):
-    """Use declared virtual-workspace source paths for pipeline-start fan-out."""
-
-    strategy_key = "virtual_workspace_source_projection"
-
-    def matches_pipeline_start(
-        self,
-        request: PipelineStartSourceUniverseRequest,
-    ) -> bool:
-        return (
-            request.requires_full_pipeline_source_universe
-            and request.source_projection is not None
-        )
-
-    def source_universe(self, request: SourceUniverseRequest) -> SourceFileUniverse:
-        projection = request.require_source_projection()
-        return SourceFileUniverse(
-            files=projection.pipeline_start_files(),
-            backend=request.source_backend,
-        )
-
-
-class PhysicalPipelineStartSourceUniverseStrategy(PipelineStartSourceUniverseStrategy):
-    """Use a file listing backend for full pipeline fan-out outside VWS."""
-
-    strategy_key = "physical_full_universe"
-
-    def matches_pipeline_start(
-        self,
-        request: PipelineStartSourceUniverseRequest,
-    ) -> bool:
-        return (
-            request.requires_full_pipeline_source_universe
-            and request.source_projection is None
-        )
-
-    def source_universe(self, request: SourceUniverseRequest) -> SourceFileUniverse:
-        universe_backend = request.physical_full_universe_backend()
-        return SourceFileUniverse(
-            files=tuple(
-                str(path)
-                for path in request.context.filemanager.list_files(
-                    str(request.context.input_dir),
-                    universe_backend.value,
-                    recursive=True,
-                )
-            ),
-            backend=universe_backend,
-        )
-
-
-@dataclass(frozen=True, slots=True)
-class SourceBindingRuntimeContextRequest:
-    """Build the source-binding runtime context from one resolved source universe."""
-
-    context: "ProcessingContext"
-    plan: "CompiledStepPlan"
-    matching_files: tuple[str, ...]
-    source_backend: Backend
-    source_projection: VirtualWorkspaceSourceProjection | None
-
-    def __post_init__(self) -> None:
-        if not isinstance(self.plan, CompiledStepPlan):
-            raise TypeError(
-                "SourceBindingRuntimeContextRequest requires CompiledStepPlan, got "
-                f"{type(self.plan).__name__}."
-            )
-        self.plan.require_function_execution_ready()
-
-    @classmethod
-    def from_context(
-        cls,
-        *,
-        context: "ProcessingContext",
-        plan: "CompiledStepPlan",
-        matching_files: Sequence[str],
-        source_projection: VirtualWorkspaceSourceProjection | None,
-    ) -> "SourceBindingRuntimeContextRequest":
-        source_backend = Backend(
-            context.microscope_handler.get_primary_backend(
-                context.input_dir,
-                context.filemanager,
-            )
-        )
-        return cls(
-            context=context,
-            plan=plan,
-            matching_files=tuple(matching_files),
-            source_backend=source_backend,
-            source_projection=source_projection,
-        )
-
-    def runtime_context(self) -> SourceBindingRuntimeContext:
-        cache = self.context.runtime_source_binding_context_cache
-        cached = cache.runtime_context(
-            plan=self.plan,
-            matching_files=self.matching_files,
-            source_backend=self.source_backend,
-            source_projection=self.source_projection,
-        )
-        if cached is not None:
-            return cached
-        universe_state = self.runtime_universe_state()
-        source_metadata_by_path = cache.normalized_source_metadata(
-            universe_state.source_metadata_by_path
-        )
-        return cache.store_runtime_context(
-            universe_state.runtime_context(
-                self,
-                source_metadata_by_path,
-            ),
-            plan=self.plan,
-            matching_files=self.matching_files,
-            source_backend=self.source_backend,
-            source_projection=self.source_projection,
-        )
-
-    def runtime_universe_state(self) -> SourceUniverseRuntimeState:
-        """Return cached source-universe state for this request."""
-        cache = self.context.runtime_source_binding_context_cache
-        cached = cache.runtime_universe_state(
-            plan=self.plan,
-            matching_files=self.matching_files,
-            source_backend=self.source_backend,
-            source_projection=self.source_projection,
-        )
-        if cached is not None:
-            return cached
-        return cache.store_runtime_universe_state(
-            SourceUniverseRequest.runtime_state(self),
-            plan=self.plan,
-            matching_files=self.matching_files,
-            source_backend=self.source_backend,
-            source_projection=self.source_projection,
-        )
-
-    def current_step_input_files(
-        self,
-        step_input_universe: SourceFileUniverse,
-    ) -> tuple[str, ...]:
-        del step_input_universe
-        return self.matching_files

@@ -1226,31 +1226,25 @@ _inject_all_pending_fields()
 def runtime_config_parameter(
     parameter: inspect.Parameter,
 ) -> inspect.Parameter | None:
-    """Resolve a callable parameter owned by an exact PipelineConfig field."""
-    from dataclasses import fields as dataclass_fields
+    """Resolve config parameter schema without constructing a config value."""
     from objectstate.lazy_factory import LazyDataclass
 
-    matching_fields = tuple(
-        config_field
-        for config_field in dataclass_fields(PipelineConfig)
-        if config_field.name == parameter.name
-        and isinstance(config_field.type, type)
-        and issubclass(config_field.type, LazyDataclass)
-    )
-    if not matching_fields:
+    config_field = PipelineConfig.__dataclass_fields__.get(parameter.name)
+    if config_field is None:
         return None
-    if len(matching_fields) != 1:
-        raise TypeError(
-            f"PipelineConfig declares multiple runtime config fields named "
-            f"{parameter.name!r}."
-        )
-    config_type = matching_fields[0].type
-    if not isinstance(parameter.annotation, type) or not issubclass(
-        config_type,
-        parameter.annotation,
+    config_type = config_field.type
+    if (
+        not isinstance(config_type, type)
+        or not issubclass(config_type, LazyDataclass)
+        or not isinstance(parameter.annotation, type)
+        or not issubclass(config_type, parameter.annotation)
     ):
         return None
-    return parameter.replace(annotation=config_type, default=config_type())
+    return (
+        parameter
+        if parameter.annotation is config_type
+        else parameter.replace(annotation=config_type)
+    )
 
 
 SourceBindingsConfig = source_binding_configs.SourceBindingsConfig

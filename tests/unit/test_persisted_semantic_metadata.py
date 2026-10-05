@@ -17,7 +17,6 @@ from openhcs.core.runtime_image_values import (
     image_payload_metadata,
 )
 from openhcs.core.source_binding_selection import SourcePatternResolutionContext
-from openhcs.core.source_bindings import SourceBindingRuntimeContext
 from openhcs.core.source_image_provenance import (
     SourceImageProvenance,
     SourceImageProvenancePlanes,
@@ -94,14 +93,10 @@ def _resolve_persisted_nested_metadata_in_spawned_runtime(
     projection = VirtualWorkspaceSourceProjection.from_openhcs_metadata(
         Path("/plate"), document
     )
-    runtime_context = SourceBindingRuntimeContext(
-        step_input_files=(VIRTUAL_PATH,),
-        step_input_source_paths={VIRTUAL_PATH: VIRTUAL_PATH},
-        source_metadata_by_path=projection.source_metadata_by_path,
-    )
-    selection_context = SourcePatternResolutionContext.from_runtime_context(
+    selection_context = SourcePatternResolutionContext.from_sources(
         parser=SourceSchemaFilenameParser(),
-        runtime_context=runtime_context,
+        source_paths_by_virtual_path={VIRTUAL_PATH: VIRTUAL_PATH},
+        source_metadata_by_path=projection.source_metadata_by_path,
     )
     metadata = selection_context.metadata_for_path(VIRTUAL_PATH)
     if metadata is None:

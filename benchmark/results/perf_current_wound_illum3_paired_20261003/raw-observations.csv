@@ -1,0 +1,9 @@
+case,method,repeat,compile_seconds,execute_seconds,total_seconds,native_invocation_seconds,image_sets
+ExampleIlluminationCorrection_Example3,OpenHCS,0,0.5973958969116211,0.6867749691009521,1.7173079238273203,,1
+ExampleIlluminationCorrection_Example3,OpenHCS,1,0.5914797782897949,0.38519740104675293,1.3618650771677494,,1
+ExampleIlluminationCorrection_Example3,Native CP,0,,0.5970225902274251,,0.6704615103080869,1
+ExampleIlluminationCorrection_Example3,Native CP,1,,0.6568904407322407,,0.7205826421268284,1
+ExampleWoundHealing,OpenHCS,0,0.34695887565612793,2.856407642364502,3.471247054170817,,2
+ExampleWoundHealing,OpenHCS,1,0.34340977668762207,3.1452507972717285,3.7725879549980164,,2
+ExampleWoundHealing,Native CP,0,,4.377218026202172,,4.462228200864047,2
+ExampleWoundHealing,Native CP,1,,4.129441360011697,,4.201918839942664,2

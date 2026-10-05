@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from openhcs.core.aligned_image_payload import (
     ObjectLabelPayloadSourceSpatialDomainAdapter,
@@ -16,6 +17,7 @@ from openhcs.core.runtime_object_label_building import (
 from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
 from openhcs.core.source_spatial_domain import (
     SourceSpatialDomain,
+    VolumeSourceSpatialDomain,
     SourceSpatialDomainAdapter,
     dense_array_in_source_spatial_domain,
 )
@@ -116,3 +118,34 @@ def test_sparse_object_label_projection_preserves_all_declared_variants():
             dtype=np.int32,
         ),
     )
+
+
+@pytest.mark.parametrize("as_labels", (False, True))
+def test_xy_alignment_preserves_intrinsic_volume_owner(as_labels):
+    pixels = np.arange(3 * 6 * 7, dtype=np.int32).reshape(3, 6, 7)
+    mask = np.ones(pixels.shape, dtype=bool)
+    mask[:, 0, 0] = False
+    source = ImagePayloadMetadata(
+        source_spatial_domain=VolumeSourceSpatialDomain(
+            source_depth=3, origin_yx=(0, 0), source_shape_yx=(6, 7)
+        ),
+    ).payload_with(pixels, mask)
+    value = (
+        SourceImageObjectLabelBuildRequest(image=source, labels=pixels).label_set(name="Objects")
+        if as_labels else source
+    )
+    target = ImagePayloadMetadata(
+        source_spatial_domain=SourceSpatialDomain(
+            origin_yx=(1, 2), source_shape_yx=(6, 7)
+        ),
+    ).payload_with(np.zeros((3, 2, 3)), None)
+    result = SourceSpatialDomainAdapter.for_value(value).value_in_payload_domain(
+        SourceSpatialDomainAdapter.for_value(target)
+    )
+    adapter = SourceSpatialDomainAdapter.for_value(result)
+    assert isinstance(adapter.domain, VolumeSourceSpatialDomain)
+    assert adapter.domain.source_depth == 3
+    assert adapter.domain.origin_yx == (1, 2)
+    np.testing.assert_array_equal(adapter.array, pixels[:, 1:3, 2:5])
+    if not as_labels:
+        np.testing.assert_array_equal(result.mask, mask[:, 1:3, 2:5])

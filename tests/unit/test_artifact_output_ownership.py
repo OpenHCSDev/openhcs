@@ -1,5 +1,7 @@
 """Compile invariants apply independently of artifact recording ownership."""
 
+from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
+
 from dataclasses import replace
 from types import SimpleNamespace
 
@@ -41,6 +43,35 @@ def test_adapter_declaration_requires_a_concrete_output_policy(invalid_policy):
             lambda request: object(),
             artifact_output_policy=invalid_policy,
         )
+
+
+@pytest.mark.parametrize(
+    "output_policy",
+    [NativeReturnArtifactOutputPolicy, AdapterRecordedArtifactOutputPolicy],
+)
+@pytest.mark.parametrize("has_trailing_labels", [False, True])
+def test_arbitrary_return_owner_does_not_inherit_cellprofiler_passthrough(
+    output_policy, has_trailing_labels,
+):
+    outputs = (
+        (
+            ArtifactSpec.output("Measurements", MeasurementsArtifactType),
+            ArtifactSpec.output("Labels", ObjectLabelsArtifactType),
+        )
+        if has_trailing_labels
+        else ()
+    )
+
+    @runtime_adapter(
+        "runtime", lambda request: object(), artifact_output_policy=output_policy
+    )
+    @artifact_outputs(*outputs)
+    def replace_image(image, *, runtime):
+        return image + 1
+
+    contract = CallableContract.from_callable(replace_image)
+    assert not contract.canonical_return_output_specs
+    assert not contract.preserves_input_main_flow()
 
 
 @pytest.fixture
@@ -163,7 +194,12 @@ def test_scalar_input_ambiguity_precedes_dependent_output_subject_validation(
         compile_function_pattern(measure, {}, {})
 
     # Output obligations remain mandatory once input selection is unambiguous.
-    with pytest.raises(ValueError, match="multiple measurement subjects"):
+    obligation = (
+        "declared measurement_feature_owner"
+        if output_policy is CellProfilerRecordedArtifactOutputPolicy
+        else "multiple measurement subjects"
+    )
+    with pytest.raises(ValueError, match=obligation):
         CallableContract.from_callable(measure).validate_artifact_output_declarations()
 
 
@@ -266,6 +302,42 @@ def test_cellprofiler_row_owner_preserves_distinct_named_image_subjects():
     assert compiled is not None
 
 
+@pytest.mark.parametrize("policy", [
+    NativeReturnArtifactOutputPolicy,
+    AdapterRecordedArtifactOutputPolicy,
+    CellProfilerRecordedArtifactOutputPolicy,
+])
+def test_measurement_row_owner_controls_named_object_roster_admission(policy):
+    from openhcs.core.artifacts import ArtifactSpecRelation
+    from openhcs.processing.backends.cellprofiler.intensity import MeasureObjectIntensityModule
+
+    objects = tuple(
+        ArtifactSpec.input(name, ObjectLabelsArtifactType)
+        for name in ("Nuclei", "Cells")
+    )
+    measurements = ArtifactSpec.output(
+        "Measurements", MeasurementsArtifactType,
+        relations=tuple(ObjectMeasurementSubjectRelation(spec.ref()) for spec in objects),
+        measurement_feature_owner=MeasureObjectIntensityModule,
+    )
+
+    @runtime_adapter("runtime", lambda request: object(), artifact_output_policy=policy)
+    @artifact_inputs(*objects)
+    @artifact_outputs(measurements)
+    def measure(image, *, runtime):
+        raise AssertionError("Compile admission must not execute a callable")
+
+    if policy is not CellProfilerRecordedArtifactOutputPolicy:
+        with pytest.raises(ValueError, match="multiple measurement subjects"):
+            compile_function_pattern(measure, {}, {})
+        return
+    compiled = compile_function_pattern(measure, {}, {})
+    subjects = ArtifactSpecRelation.measurement_subjects_for_output(measurements)
+    assert tuple(subject.name for subject in subjects) == ("Nuclei", "Cells")
+    assert len({subject.row_identity_domain for subject in subjects}) == 2
+    assert compiled.default_group.invocations[0].contract.artifact_outputs.specs == (measurements,)
+
+
 def test_real_cellprofiler_declaration_compiles_without_a_table_wide_subject():
     """The real module/provider declares the owner, not a compiler exemption."""
     from openhcs.core.compiled_step_plan import CompiledStepPlan
@@ -273,7 +345,6 @@ def test_real_cellprofiler_declaration_compiles_without_a_table_wide_subject():
     from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.invocation_artifacts import ArtifactDeclarationStepContext
     from openhcs.core.pipeline.compilation_session import CompilationSession
-    from openhcs.core.pipeline.step_snapshot import StepSnapshot
     from openhcs.core.source_bindings import (
         NamedSourceBinding,
         StepSourceBindingsConfig,
@@ -327,14 +398,16 @@ def test_real_cellprofiler_declaration_compiles_without_a_table_wide_subject():
                 ),
             },
         ),
-        steps=[step],
         orchestrator=SimpleNamespace(pipeline_config=PipelineConfig()),
         global_config=GlobalPipelineConfig(),
-        step_state_map={0: object()},
-        snapshots=(StepSnapshot(index=0, scope_id="test::cp-output-owner", step=step),),
+        pipeline=ResolvedPipelineDefinition(
+            steps=(step,),
+            step_scope_ids={0: "plate::functionstep_0"},
+            step_provenance={0: {}},
+        ),
     )
-    provider = CellProfilerInvocationContractProviderFactory.provider_for_session(
-        session
+    provider = CellProfilerInvocationContractProviderFactory.provider_for_pipeline(
+        session.pipeline
     )
     authored = next(normalize_function_pattern(step.func).iter_items())
     contract = provider.plans[(0, authored.key)].contract

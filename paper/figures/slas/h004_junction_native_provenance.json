@@ -1,0 +1,73 @@
+{
+  "generator_sha256": "01cec69fdfa7ff16402062e88957b9ee14b230dd3f139d031eb81ebcc8a2576c",
+  "source_sha256": {
+    "figure-collection-20261004/H004-FRESH10-NATIVE-REVIEW.rst": "de23b37f39f73dede57cc20540e9535b3c7c640ee2922ba9ec866564a5057bb2",
+    "paper/supplementary/task_only_analysis/h004-fresh10/final-metrics.json": "cf43da8dfda6399b28c5b76940dd7047dfd3423a0a5a3dd2d3c5167d31c89d75",
+    "paper/supplementary/task_only_analysis/h004-fresh10/BIO04.py": "02ef0b203b028be4d55b845a516d60f8e6a096a0ef8b6e083503a3945de91cee",
+    "paper/supplementary/task_only_analysis/h004-fresh10/BIO06.py": "17e2e861200ac90dee075354e817a3710b43b43840a479bd8ea83c46ec49885e",
+    "paper/figures/slas/h004_junction_sources/raw.png": "735e7f1d8a37f51e8a61304ddffa7dc60706ab2615dee8243350ff4bc650b5e6",
+    "paper/figures/slas/h004_junction_sources/before.png": "4c4c44002486bb7cb32cc017fa56ee738cb32fba02eca68baa6a84bab3969214",
+    "paper/figures/slas/h004_junction_sources/final.png": "becb75bdcf6775ff5b71720dd30e2e28c95b11a5475f9268f9f1e2626102da83",
+    "paper/figures/slas/h004_junction_sources/combined.png": "e4a9b45d4eb0cf247dc3d0ed165261398ce58bd96a55bd7ac9e6588fd05a3e75"
+  },
+  "ui_crops": [
+    {
+      "source": "paper/figures/slas/h004_junction_sources/raw.png",
+      "xyxy_pixels": [
+        297,
+        28,
+        1250,
+        430
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h004_junction_sources/before.png",
+      "xyxy_pixels": [
+        297,
+        28,
+        1250,
+        430
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h004_junction_sources/final.png",
+      "xyxy_pixels": [
+        297,
+        28,
+        1250,
+        430
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    },
+    {
+      "source": "paper/figures/slas/h004_junction_sources/combined.png",
+      "xyxy_pixels": [
+        297,
+        28,
+        1250,
+        430
+      ],
+      "source_size": [
+        1440,
+        944
+      ]
+    }
+  ],
+  "output_sha256": {
+    "h004_junction_native.png": "587e55c5df3f579ae084452cba02cbde434becc2b2fc9626de0462316f344b42",
+    "h004_junction_native.pdf": "24a100103b254782f876b6822212c9d1f2ad2c7757955bec2e3b1a38293a32e7",
+    "h004_junction_native.svg": "ec726794c413a1f01194fe560242976fe2667d2f349a1f9ec24b8e9d4ae6f74c"
+  },
+  "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
+}
