@@ -16,6 +16,17 @@ Working author-review draft for **SLAS Technology**:
   revision, reference inventory and checksums.
 - [Bibliographic metadata](openhcs_references.json) and [citation style](styles/README.md).
 
+## Editorial guidance
+
+Use the canonical paper-writing style guide in the sibling `papers` repository:
+`docs/papers/writing_style_guide.md`. Keep that guide as the substantive source
+rather than copying it here. For this experimental software paper, apply its
+plain-language, evidence-order, stable-vocabulary and claim-scope rules to the
+text, tables and captions. Theory-specific theorem and proof organisation does
+not determine the SLAS manuscript structure. Keep run history and detailed
+verification records in the supplementary evidence, with the results needed
+to understand the scientific findings in the main text.
+
 ## Figures and validation
 
 The nine main figures show the shared workflow, matching UI/code/MCP authoring,
