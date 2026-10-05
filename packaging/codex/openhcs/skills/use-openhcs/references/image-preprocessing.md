@@ -203,6 +203,20 @@ labels or traces; follow the linked measurement-image guidance. NLM reduces
 noise; it does not estimate a shading field or justify a globally tuned threshold
 on uneven illumination.
 
+## Weak rims and morphological gap repair
+
+For a supported body whose rim is broken, closing is one hypothesis, not an
+automatic way to obtain a cell envelope. Measure the within-body gap AND the
+smallest supported gap between genuine neighbouring bodies on the consumed
+response. A footprint smaller than the body radius can still bridge neighbours;
+cell diameter alone does not justify its scale. Inspect the actual grayscale
+or binary operation and its threshold order: their effects are not equivalent.
+Compare foreground connectivity, markers and final labels at the broken rim
+and the close pair. If the rim improves but the pair joins, retain that failed
+trial and compare a smaller footprint or the unclosed support. Inspect
+marker/partition behavior or another evidenced admission model rather than
+assuming more closing is needed.
+
 ## Local contrast and local thresholds
 
 CLAHE can reveal local structure but can also amplify noise and alter intensity
