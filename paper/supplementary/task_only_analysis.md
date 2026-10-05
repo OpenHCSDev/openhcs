@@ -375,6 +375,29 @@ BBBC013 assay in Supplementary Data 7. The packaged
 retain all twelve supporting capture identities and the nine displayed original
 PNG embeddings; no new scientific execution or scoring was performed.
 
+## Fresh translocation first candidate: complete plate execution
+
+The independent `BBBC013_FRESH13_88` author measured distributed development
+images before choosing its first scientific settings, then froze the pipeline
+before opening 90 reserve wells. It completed all 96 wells without changing
+those scientific parameters. Technical ingestion and typed-table adaptations
+are retained separately; this is not a claim of error-free tool use.
+
+The coordinator inspected nine original development raw/result/combined PNGs,
+finding supported ordinary nuclei, separated close pairs and dim-object
+localisation, with unresolved complex clusters. The fixed ten-pixel expanded
+regions are local photometry proxies rather than whole-cell boundaries.
+Independent arithmetic from 96 saved well tables reproduced all 24 dose
+summary rows and both assay-statistics rows. Four negative and four positive
+control wells gave mean nuclear/cytoplasmic GFP ratios of 1.05 and 7.40 for
+Wortmannin (Z′ 0.747), and 1.26 and 7.33 for LY294002 (Z′ 0.493).
+These assay-quality findings do not establish unbiased whole-cell photometry
+or exhaustive nuclear recall. The
+[development and plate-arithmetic review](../../figure-collection-20261004/BBBC013-FRESH13-DEVELOPMENT-VISUAL-REVIEW.rst)
+records capture/source identities, formulas and limitations. Final reserve
+visual review and lifecycle closure were still in progress at this checkpoint;
+complete autonomous scientific acceptance is not inferred from execution.
+
 ## Translocation recovery: complete coverage and explicit undefined measurements
 
 A separate retained-context continuation, `BBBC013_DEV89`, completed all 96

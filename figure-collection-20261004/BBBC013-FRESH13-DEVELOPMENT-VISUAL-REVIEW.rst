@@ -71,3 +71,41 @@ supported local nuclear segmentation. It does not certify reference parity,
 all-well counts, unbiased ratio magnitudes, dose-response fitting or final
 assay statistics. Those require the original reserve execution and final
 artifact/claim review, which remain assigned to the active author.
+
+Subsequent frozen plate execution and arithmetic check
+-----------------------------------------------------
+
+The original finalstatus09.json receipt records job-7 complete, sequence1263,
+terminal status ok and no job error. This updates execution coverage, not
+the unfinished final reserve-label review or lifecycle closure.
+
+The coordinator read the frozen final PipelineDocument with Python AST and
+literal-evaluated its declared public_layout; no author source was executed.
+All 96 saved well-table CSVs contain one row, with exactly the 96 declared
+well identities and finite mean ratios. Independent stdlib arithmetic from
+those rows reproduced all 24 dose-table rows: wells present/finite counts,
+mean, sample between-well SD and standard error. Both assay rows' Z-prime,
+declared replicate-SD V-factor and number of curve levels matched to 1e-12
+relative/absolute tolerance. These computations do not rerun segmentation.
+
+Wortmannin negative/positive control mean ratios were 1.0459212737991468
+and 7.396750666634699, Z-prime0.747241932867265, replicate-SD V-factor
+0.6003763080817637 over11 curve levels. LY294002 control means were
+1.2640299921979108 and 7.330033021311369, Z-prime0.4925629984068619,
+replicate-SD V-factor0.7290714708945047 over10 levels. Each control group
+has four wells. The different concentration units remain nM and uM;
+neither compounds nor individual cells were pooled as independent replicates.
+
+Saved table root is the HDD owner root above, acquisition_final01/results.
+A01_dose_response_table_step3_details.csv SHA256 is
+978eeaa3ce3089375e6f4cd4411e0320227b9c744923a7e4afd1571a2d5f4372;
+A01_assay_statistics_step4_details.csv SHA256 is
+e1e0613caa7f5754a502646f364f1b65bc0d4e8bc63afa3bef126183b03e182e.
+
+Z-prime is computed as 1-3(SDpositive+SDnegative)/absolute control-mean
+difference. The separately named V-factor is the author's explicitly declared
+1-6*mean(dose replicate SD)/range(dose means), using sample SD. Arithmetic
+agreement is not equivalence to another publication's V-factor definition.
+Likewise it does not prove unbiased compartment photometry or complete
+nuclear detection. The control-separation finding is useful within this
+fixed local-ROI method while reserve visual review remains active.
