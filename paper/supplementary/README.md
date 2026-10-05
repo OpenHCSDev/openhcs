@@ -1169,18 +1169,22 @@ retains twelve original raw/result/combined captures and the independently
 verified 1,083-file freeze. This is a first-method result after technical repair,
 with image review and later reference scoring retained separately.
 
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
 After both paired-field authors froze their results, their unchanged masks were
 compared with the matching BBBC007 manual outlines. Pixel identity establishes
 the curated field as official f9620/POS0005, rather than matching its renamed
 filename. One-to-one assignment accepts intersection over union at least 0.5.
 The earlier method and the repeat's final candidate give:
 
-| Frozen result | Channel | Predictions | Matches | Closed reference regions | Object F1 |
+| Result | Channel | Predictions | Matches | Closed regions | Object F1 |
 | --- | --- | ---: | ---: | ---: | ---: |
-| Earlier method | DNA | 55 | 42 | 47 | 0.824 |
-| Independent repeat, final | DNA | 53 | 37 | 47 | 0.740 |
-| Earlier method | Actin | 55 | 38 | 54 | 0.697 |
-| Independent repeat, final | Actin | 53 | 36 | 54 | 0.673 |
+| Earlier | DNA | 55 | 42 | 47 | 0.824 |
+| Repeat | DNA | 53 | 37 | 47 | 0.740 |
+| Earlier | Actin | 55 | 38 | 54 | 0.697 |
+| Repeat | Actin | 53 | 36 | 54 | 0.673 |
 
 The directed fraction of adjacent-cell boundary pixels within two pixels of an
 original manual stroke was 0.695 and 0.715. The repeat improved that boundary
