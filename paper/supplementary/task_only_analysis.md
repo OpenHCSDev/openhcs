@@ -747,6 +747,35 @@ The [completion record](task_only_analysis/bbbc039-fresh08-completion18.rst)
 identifies the source phases, original terminal receipt and independent checks.
 These outputs do not replace Figure 7's separately scored trial.
 
+## Retinal fresh09: local repair with a retained neighbour control
+
+The independent author `R0010_FRESH09_96` analysed the released R0010 field
+without earlier retinal outputs, reference masks or supplied parameter
+corrections. Candidate08 repaired a southeast continuous-body partition but
+merged a genuine northwest pair; candidate09 retained that regression.
+The author independently identified it and changed marker suppression in
+candidate10. Parent review of matched raw/result/outline triples confirmed
+separate northwest neighbours and a continuous southeast envelope together
+in the final candidate. Southwest views retained plausible isolated-body
+detections, while diffuse northeast support left some boundaries and identities
+uncertain. These are regional visual judgements, not a field-wide error rate.
+
+Independent table reconciliation found 102 object rows with unique labels
+1–102 and an image-level detector count of102. The frozen pipeline SHA256 is
+`59f48a9ff4ee70f988f2ff0fed1eadf7df97a8de3bad8d9753e6432635b0e0a0`.
+The retained source manifest binds these tables to R0010.czi/site1/Z1/time1,
+RBPMS AF647 channel1; the CSVs themselves lack acquisition/source columns.
+Exact owned native and viewer exits were acknowledged and independently
+confirmed by absent process IDs. The original client exit2 and missed final
+sealing deadline remain recorded separately from completed numerical outputs
+and visual acceptance. No manual retinal count or mask score was obtained.
+
+The [independent final review](../../figure-collection-20261004/R0010-C10-INDEPENDENT-LOCAL-REPAIR-REVIEW.rst)
+and [intermediate tradeoff](../../figure-collection-20261004/R0010-C08-REGIONAL-TRADEOFF-REVIEW.rst)
+retain original capture identities, table checks and lifecycle qualifications.
+Figure9 continues to show its distinct109-instance predecessor; it has not
+been relabelled as this102-instance repeat.
+
 ## Scope and retained evidence
 
 ### H003 fresh09: nuclear instances and associated-region geometry

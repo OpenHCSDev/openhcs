@@ -294,6 +294,15 @@ A fresh retinal author independently revised its foreground model after measurin
 
 A subsequent independent retinal author retained separation of a conspicuous bright pair and repaired an additional body split by increasing marker smoothing. Its final pipeline produced 118 detector instances. Distributed review still showed excess partitions and uncertain weak-body admission, so the useful local segmentation gains were reported separately from the unresolved whole-field count. No manual-reference accuracy was measured; this repeat illustrates partial autonomous success rather than either a complete cell census or a wholly unusable analysis (Supplementary Data 8).
 
+The latest independent retinal repeat recovered a continuous soma envelope
+while retaining a genuine neighbouring pair in another region. An intermediate
+repair had merged that pair; the author detected the regression and revised
+marker suppression before freezing its final 102-instance output. Matched
+native views confirmed both local gains in the same candidate. Diffuse and
+lobed regions retained uncertain identities and boundaries, assessed separately
+from the clearer body detections. This provides evidence of autonomous repair
+with a regression control, not manual-reference accuracy (Supplementary Data 8).
+
 A fresh whole-volume nucleus-centre trial matched all 15 manual reference
 centres at the predeclared 30-voxel tolerance, with 10 unmatched predictions;
 at 10 voxels it matched 14 of 15. The reference was not established as
