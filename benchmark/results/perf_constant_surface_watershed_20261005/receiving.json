@@ -52,5 +52,19 @@
     "Processing-contract profile tags alone do not cover every processing callable; no generic-plumbing claim derived by subtracting them."
   ],
   "packet": "/home/ts/.local/state/openhcs-maintenance/20261004/constant-surface-watershed-ordinary-v1",
-  "frontier_packet": "/home/ts/.local/state/openhcs-maintenance/20261004/constant-surface-watershed-frontier-v1"
+  "frontier_packet": "/home/ts/.local/state/openhcs-maintenance/20261004/constant-surface-watershed-frontier-v1",
+  "processing_envelope": {
+    "scope": "Mutually exclusive regular-image and per-object executor contracts; includes admission/projection and is not pure math. SaveImages outer invocation envelopes bound additional unprofiled processing.",
+    "baseline_3d_seconds": 2.283263,
+    "candidate_3d_seconds": 2.069866,
+    "baseline_3d_outside_interval_seconds": [
+      1.773693,
+      1.775443
+    ],
+    "candidate_3d_outside_interval_seconds": [
+      1.761787,
+      1.763547
+    ],
+    "evidence": "Saved current matched profiles; 26 regular plus3 per-object CP invocations and2 SaveImages invocations; module_execution branch and output_recorder timing scopes checked."
+  }
 }
