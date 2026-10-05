@@ -669,6 +669,31 @@ receipts and [final descriptive metrics](task_only_analysis/h004-fresh10/final-m
 are retained without reconstructing outputs. No reference score or accepted
 per-neuron outgrowth total is established by this trial.
 
+## Personal neurite fresh13: nine fields with recovered thin-path support
+
+An independent author completed all nine two-channel fields of the personal
+neurite acquisition and retained labels, spatial graphs, tables and diagnostic
+checkpoints. It identified an early admission loss and reduced the enhanced
+threshold correction factor from 0.85 to 0.10. Sampled thin tracks reappeared
+while a sampled quiet rectangle remained empty. Site5 retained 244 modeled
+body labels; modeled outgrowth increased from 1,238.5 to 18,946.2 micrometres.
+These are algorithmic outputs, not independently verified cell counts or
+complete neurite lengths.
+
+Independent inspection of the final site1/site9 raw-only, result-only and
+combined captures confirmed substantial raw-supported path geometry across
+sparse and dense foreground. Fine branches remained missing, with ambiguous
+partitions in broad bodies and unresolved crossing ownership. All 298 manifest
+entries and the final pipeline hash passed independent verification. The
+[nine-field review](../../figure-collection-20261004/P001-FRESH13-NINE-FIELD-REVIEW.rst)
+identifies the original evidence and scopes those conclusions. Three fields
+received the author's final visual review; six additional fields have saved
+outputs but no demonstrated pixel-level review. Overlapping fields were not
+stitched or deduplicated, so their counts cannot be pooled as unique neurons.
+This fresh-context development repeat used no reference feedback and does
+not establish unseen-data accuracy. The completed run is preserved while its
+display is reused and stitching continues separately.
+
 ## Personal neurite mosaic: technical recovery and retained biological losses
 
 The retained same-author continuation `P001_STITCH_DEV94` used a previously
