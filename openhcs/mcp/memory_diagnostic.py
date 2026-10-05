@@ -311,7 +311,10 @@ class MemoryDiagnosticMcpClient:
         from openhcs.agent.dto.mcp import McpServerHealthResult
 
         result = await self.call(agent_capabilities.health_check.name, {})
-        return dataclass_from_mapping(McpServerHealthResult, result.payloads[0])
+        health = result.decoded_payload_as(McpServerHealthResult)
+        if health is None:
+            raise RuntimeError("Diagnostic health returned no declared health result")
+        return health
 
     async def sample(self, *, collect: bool) -> ProcessMemoryReceipt:
         result = await self.call(PROBE_TOOL, {"collect": collect})

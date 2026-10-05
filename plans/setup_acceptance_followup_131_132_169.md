@@ -1,9 +1,8 @@
 # Complete the original setup and receiving obligations: #131, #132, #169
 
-This draft owns the unfinished acceptance of all three issues. It is not ready
-to merge. The linked source fixes are already merged; they do not establish the
+This document retains the unfinished acceptance of all three issues. The
+qualified diagnostic repair may ship independently; it does not establish the
 remaining long-lived MCP, real Java/CZI, or continuous desktop receiving results.
-No new run, environment change, or performance result accompanies this plan.
 Keep each issue open until its section below has a determining final receipt.
 
 ## Existing implementation and evidence
@@ -246,7 +245,7 @@ in the repair.
 The production consumers of any follow-up change are named above: the actual
 MCP diagnostic/public request path, physical Java workspace ingress and ROI
 writer/readers, and the installed desktop restart/history flow. This document
-adds no runtime behavior or persisted format. Any future format change must
+records those acceptance boundaries separately from the diagnostic repair. Any future format change must
 declare its external/internal status and migration under the repository rules.
 
 Attach each determining packet to this draft with source/import identities,
@@ -254,7 +253,7 @@ exact admitted requests, original failures/uncertainties, received pixel/geometr
 history observables and identity-proved teardown. Retain unresolved obligations
 as unresolved; do not interpret one lane's success as all three passing. Sync
 current main before concrete implementation and again before qualification.
-Mark ready and merge only when all three original scopes have final acceptance,
-or split any genuinely independent completion into its own closing-linked PR
-while this draft continues to own the remainder. No original issue closes from
-this plan-only checkpoint.
+Merge a qualified useful diagnostic repair without waiting on unrelated CZI or
+desktop acceptance. Close an original issue only when its determining scope has
+final acceptance; a plan, short diagnostic or another lane's success is not that
+evidence. All unresolved obligations remain with their named owners.
