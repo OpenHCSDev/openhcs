@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, FancyArrowPatch, FancyBboxPatch, Rectangle
 from PIL import Image
 
-from build_slas_agent import ROOT, OUTPUT, digest
+from build_slas_agent import ROOT, OUTPUT, digest, normalize_generated_svg
 
 GALLERY = ROOT / "website/assets/gallery"
 INK = "#203044"
@@ -218,6 +218,8 @@ class FigureSheet:
         for extension in ("png", "pdf", "svg"):
             path = OUTPUT / f"{self.stem}.{extension}"
             self.figure.savefig(path, dpi=300)
+            if extension == "svg":
+                normalize_generated_svg(path)
             outputs.append(path)
         plt.close(self.figure)
         receipt = {

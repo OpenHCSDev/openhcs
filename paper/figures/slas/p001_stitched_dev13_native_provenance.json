@@ -1,5 +1,5 @@
 {
-  "generator_sha256": "6cfc06348739f13b738f06c118799aec85d684f416b57ff70d059e7b1635abe6",
+  "generator_sha256": "4b33caf0c841c1a4f22084f7a4b026aed1eacb6268c1b5db0b2fb9ca7acafcc1",
   "source_sha256": {
     "figure-collection-20261004/P001-STITCHED-DEV13-INDEPENDENT-REVIEW.rst": "3ff181682839408f4a66653821657224c9061523530e37eadc0d0a77a2f0f6ba",
     "paper/figures/slas/p001_stitched_dev13_sources/capture-records.json": "0c392201d6104c2b727a570249de19addcbc2ea55a9376c53d973a78c087b1af",
@@ -92,8 +92,8 @@
   ],
   "output_sha256": {
     "p001_stitched_dev13_native.png": "7805e95e313169db5e091d6269a029ce501206b5bc2b4b8ae369af1bb399e234",
-    "p001_stitched_dev13_native.pdf": "8db211c40e1b1e65db64698bee4572cdf2781997734c3158c4a939505f91832e",
-    "p001_stitched_dev13_native.svg": "6bc98577f5acabefa849c7723d149a843c28eb62dc0c2cc8966d9d526e1a2773"
+    "p001_stitched_dev13_native.pdf": "d9cd692dc6d74b1834955ee4aa1a7c44c4f6c024bba533b9ced3d56480e8a268",
+    "p001_stitched_dev13_native.svg": "c3938571251511f9238b5cf750186b29e90de8972c694567ffc3ffbedbf0fd30"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
