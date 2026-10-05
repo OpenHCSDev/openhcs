@@ -1,0 +1,35 @@
+{
+  "status": "SAVED_CONSUMER_PASS",
+  "base_revision": "76ade54345b74e76db8577ab4cca587ce7199ca6",
+  "production_threshold_source_sha256": "c98d087a31720d16befa5299b0cdce370efcb3e40f29c4e620a4dc8b4a1d4814",
+  "receiving_scope": "Authentic separate-process imports, retained original Closing oracle and actual Resize/Threshold settings; untimed production receiving. Original intermediate input was reconstructed from the saved causal branch, not a new pre-call capture.",
+  "exact_matching_fields": [
+    "tolerance",
+    "li_threshold",
+    "measurement_rows",
+    "mask_present",
+    "image_shape",
+    "image_dtype",
+    "image_sha256",
+    "mask_sha256",
+    "labels_sha256",
+    "adversarial"
+  ],
+  "metadata_pickle_bytes_exact": true,
+  "adversarial_cases": 15,
+  "source_inputs_dependencies_guards": "PASS",
+  "private_whole_li_seconds": {
+    "baseline": 0.147988,
+    "prototype": 0.021163
+  },
+  "private_full_no_witness_scan_seconds": 0.007233206648379564,
+  "ordinary_pipeline_gain": "NOT_YET_QUALIFIED",
+  "native_build_custody": "Prior saved Threshold receiving arms had unrelated median/tabular/granularity binary differences, not consumed by this branch. Before ordinary qualification, all three candidate native build artifacts were aligned byte-for-byte to the qualified main build at the same source revision.",
+  "artifacts": {
+    "production_receiving.py": "4f50772ce18580544a2ca4304a1a66b9b1653132e899d808460b687e416eadb2",
+    "production-baseline/receiving.json": "a05c57eb822ca97ab22bac37a85578fc1c8820a112e62409550d3a3ea5c3285f",
+    "production-candidate/receiving.json": "402307f887ed089a72c872b6341a28ec09eb15ed608cbb501a9e9c23e26baf80",
+    "decision.json": "3b128d86bc55096c556846d9a2448f12db63200d26736e5015072846da110a3c",
+    "native-build-alignment.json": "c1f4df835b5fd61d666519201fe0a66518a11c37123da45f3d19d0ef79c137cd"
+  }
+}
