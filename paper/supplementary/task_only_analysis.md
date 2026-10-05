@@ -394,9 +394,14 @@ Wortmannin (Z′ 0.747), and 1.26 and 7.33 for LY294002 (Z′ 0.493).
 These assay-quality findings do not establish unbiased whole-cell photometry
 or exhaustive nuclear recall. The
 [development and plate-arithmetic review](../../figure-collection-20261004/BBBC013-FRESH13-DEVELOPMENT-VISUAL-REVIEW.rst)
-records capture/source identities, formulas and limitations. Final reserve
-visual review and lifecycle closure were still in progress at this checkpoint;
-complete autonomous scientific acceptance is not inferred from execution.
+records capture/source identities, formulas and limitations. Subsequent
+independent inspection of nine original reserve views in B01 and F12 supported
+ordinary nuclear localisation, with faint unlabelled support and ambiguous
+clusters remaining. GFP sampling regions included some weak/extracellular
+signal and did not delineate whole cells. The review also verified 367 complete
+handoff-control files and the intact recorded prefix of one subsequently
+appended outer journal. These bounded witnesses do not establish exhaustive
+reserve recall, numeric segmentation accuracy or unbiased absolute photometry.
 
 ## Translocation recovery: complete coverage and explicit undefined measurements
 
@@ -1045,6 +1050,21 @@ panels use the ten `empty`/`dose` groups for each drug; control panels use the
 separate assay-statistics records. The positive control in both blocks is
 Wortmannin 150 nM, including the LY294002 block. Plotted variability is the
 native between-well sample SD, not standard error or between-cell variation.
+
+### H002 fresh13: self-directed centre repairs and supported localisation
+
+The later independent author finished with 26 fractional volumetric centres,
+including fifteen flagged at a volume face. It measured internal peaks and
+genuine neighbour spacing, then used hole filling and component-local marker
+exclusion after prominence-only tuning failed. The
+[independent frozen-run review](../../figure-collection-20261004/H002-FRESH13-INDEPENDENT-REVIEW.rst)
+checks all 1,229 payload files, 48 controls and three immutable journal-prefix
+copies, reconciles the count CSV, and opens original XY/XZ/YZ raw/result/combined
+views supporting ordinary-body centre placement. The result is useful
+self-directed localisation, not a validated biological census. The displayed
+markers are rounded centre-image voxels; fractional coordinates remain in the
+CSV, physical calibration is unverified, and predecessor repair chronology
+is retained author evidence rather than an independently reconstructed comparison.
 
 ### Programme-wide evidence scope
 

@@ -11,6 +11,7 @@ from concurrent.futures import TimeoutError as FutureTimeoutError
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
+from threadpoolctl import threadpool_info
 from zmqruntime import OperationCancellation
 from zmqruntime.startup import EndpointStartupPhase, EndpointStartupStatus
 
@@ -269,6 +270,9 @@ class FunctionCatalogPreparation:
                 status_callback=report,
                 cancellation=self._cancellation,
             )
+            if self._cancellation.requested():
+                raise CancelledError
+            threadpool_info()
             if self._cancellation.requested():
                 raise CancelledError
         except CancelledError:

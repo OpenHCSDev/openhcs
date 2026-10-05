@@ -22,7 +22,7 @@ from zmqruntime.viewer_protocol import ViewerComponentMode, ViewerWireField
 from openhcs.constants import AllComponents
 from openhcs.core.artifacts import ObjectArtifactSubjectBinding
 from openhcs.core.config import NapariDisplayConfig
-from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
+from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata, ROIPlaneMetadata
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
 )
@@ -632,7 +632,7 @@ class NapariAggregateAxisBindingSet:
     ) -> ComponentMap:
         if not self.bindings:
             return dict(item.address.components)
-        plane_indices = NapariShapePlaneMetadata(shape_dict).indices()
+        plane_indices = ROIPlaneMetadata.from_shape_payload(shape_dict).indices()
         return self.item_component_values(item, plane_indices)
 
 
@@ -791,61 +791,10 @@ class NapariAggregateAxisBindingAuthority:
     def _shape_aggregate_extents(data: LayerData) -> tuple[int, ...]:
         if not isinstance(data, Sequence) or isinstance(data, (str, bytes)):
             return ()
-        shapes: list[tuple[int, ...]] = []
-        missing_plane_metadata = 0
-        for shape_dict in data:
-            if not isinstance(shape_dict, Mapping):
-                continue
-            plane_metadata = NapariShapePlaneMetadata(shape_dict)
-            if plane_metadata.has_plane_metadata():
-                shapes.append(plane_metadata.shape())
-            else:
-                missing_plane_metadata += 1
-        if not shapes:
-            return ()
-        if missing_plane_metadata:
-            raise ValueError(
-                "Napari shape payload mixes plane-indexed and unindexed shapes; "
-                "all shapes in an aggregate stack route must carry plane metadata."
-            )
-        first = shapes[0]
-        if any(shape != first for shape in shapes):
-            raise ValueError(
-                "Napari shape payload has inconsistent plane_shape metadata: "
-                f"{shapes!r}."
-            )
-        return first
-
-
-@dataclass(frozen=True, slots=True)
-class NapariShapePlaneMetadata:
-    """Plane-index metadata carried by one serialized ROI shape."""
-
-    shape_dict: ShapePayloadMap
-
-    @property
-    def metadata(self) -> Mapping[str, ShapePayloadValue]:
-        metadata = self.shape_dict.get("metadata")
-        if not isinstance(metadata, Mapping):
-            return {}
-        return metadata
-
-    def has_plane_metadata(self) -> bool:
-        return "plane_indices" in self.metadata and "plane_shape" in self.metadata
-
-    def indices(self) -> tuple[int, ...]:
-        return self._tuple_field("plane_indices")
-
-    def shape(self) -> tuple[int, ...]:
-        return self._tuple_field("plane_shape")
-
-    def _tuple_field(self, field: str) -> tuple[int, ...]:
-        value = self.metadata.get(field)
-        if not isinstance(value, Sequence) or isinstance(value, (str, bytes)):
-            raise ValueError(
-                f"Napari shape plane metadata field {field!r} must be a sequence."
-            )
-        return tuple(int(item) for item in value)
+        return ROIPlaneMetadata.common_shape(tuple(
+            ROIPlaneMetadata.from_shape_payload(shape_dict).metadata
+            for shape_dict in data if isinstance(shape_dict, Mapping)
+        ))
 
 
 NapariLayerCreator: TypeAlias = Callable[

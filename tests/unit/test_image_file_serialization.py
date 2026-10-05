@@ -585,3 +585,52 @@ def test_intrinsic_tiff_write_uses_declared_axes_not_rgb_shaped_dimensions(
     assert header.pixel_semantics.channel_axis == channel_axis
     assert header.pixel_semantics.channel_count == (None if channel_axis is None else 3)
     assert header.image_shape_yx == (4, 4)
+
+
+@pytest.mark.parametrize("plane_count", (1, 3, 4, 5))
+@pytest.mark.parametrize("dtype", (np.uint16, np.int32))
+@pytest.mark.parametrize("channel_axis", (None, -1, 1))
+def test_runtime_plane_tiff_write_retains_scalar_frames_and_declared_channels(
+    tmp_path, plane_count, dtype, channel_axis
+):
+    from polystore.config import TiffCompression, TiffConfig, TiffPhotometric
+    from openhcs.processing.materialization.core import Output, RawBackendKwargs
+
+    shape = (
+        (plane_count, 5, 7) if channel_axis is None
+        else ((plane_count, 5, 7, 3) if channel_axis == -1 else (plane_count, 3, 5, 7))
+    )
+    pixels = np.arange(np.prod(shape), dtype=dtype).reshape(shape)
+    metadata = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        source_channel_axis=channel_axis,
+    )
+    path = tmp_path / "artifact.labels.tif"
+    configured = TiffConfig(compression=TiffCompression.DEFLATE, compression_level=1)
+    (batch, kwargs), = RawBackendKwargs(tiff_config=configured).filemanager_batches(
+        (Output(str(path), pixels, metadata),)
+    )
+    assert len(batch) == 1 and batch[0].content is pixels
+    config = kwargs['tiff_config']
+    assert config.compression is TiffCompression.DEFLATE
+    assert config.compression_level == 1
+    assert config.photometric is (TiffPhotometric.MINISBLACK if channel_axis is None else TiffPhotometric.RGB)
+    assert config.axes == ('QYX' if channel_axis is None else ('QYXS' if channel_axis == -1 else 'QSYX'))
+    tifffile.imwrite(path, pixels, **config.tifffile_write_kwargs())
+    np.testing.assert_array_equal(tifffile.imread(path), pixels)
+    with tifffile.TiffFile(path) as tif:
+        assert tif.series[0].axes == config.axes
+        assert len(tif.pages) == plane_count
+        assert tif.pages[0].samplesperpixel == (1 if channel_axis is None else 3)
+    header = TiffImageFileFormat().require_source_metadata(path)
+    assert header.pixel_semantics.channel_axis == channel_axis
+    assert header.pixel_semantics.channel_count == (None if channel_axis is None else 3)
+    assert header.image_shape_yx == (5, 7)
+
+
+def test_runtime_plane_tiff_rejects_undeclared_extra_payload_axis(tmp_path):
+    metadata = ImagePayloadMetadata(plane_axis=RuntimePlaneAxis.RUNTIME_SLICE)
+    with pytest.raises(ValueError, match='declared plane'):
+        TiffImageFileFormat().write(
+            tmp_path / 'invalid.tif', metadata.payload_with(np.zeros((4, 5, 7, 2)))
+        )
