@@ -370,6 +370,15 @@ isolated mottled nucleus while a dim neighbour stayed joined. It identified
 both failures in its final review. These cases show useful stage-specific
 diagnosis and partial recovery, with inconsistent completion of the repair.
 
+A later independent paired-field author retained its first scientific method
+and produced 55 nuclear instances after self-directed technical repairs.
+Matched DNA/actin review showed intact textured nuclei, a separated close pair
+and growth into supported actin regions (Supplementary Figure 23). Every nuclear
+pixel lay inside the body mask with the same label. Two body estimates contained
+only their nuclear seeds; the author identified both rather than presenting
+them as complete cells. This is useful autonomous nuclear segmentation and
+provisional body geometry, without a manual-reference accuracy estimate.
+
 A separate retinal author smoothed fragmented body outlines while preserving
 an inspected bright neighbouring pair (Supplementary Figure 22). The matched
 raw captures were byte-identical before and after repair, separating the

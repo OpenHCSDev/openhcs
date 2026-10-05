@@ -442,6 +442,31 @@ are retained in the [retinal comparison](../../figure-collection-20261004/R0010-
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
+## Supplementary Figure 23. Paired-channel support and a seed-only exception
+
+![Matched DNA and actin views with a separate unsupported-body witness.](../figures/slas/h003_fresh19_matched.png){width=6in}
+
+(A–C) DNA, nuclear labels and combined outlines in a dense region. (D–F) Actin,
+seeded body labels and combined outlines at the same native coordinates.
+(G–I) A separate actin crop containing body ID 11, whose mask contains only its
+nuclear seed. Cyan outlines mark nuclei and yellow outlines mark body estimates;
+the continuous label colormap represents instance IDs, not intensity or class.
+Each triplet retains the same camera, crop and display window: DNA 0–151,
+actin 0–104, gamma 1, with equivalent normalized RGB limits for the combined
+views. Panel crops remove viewer controls without changing analytical pixels.
+The fresh, uncoached author retained its first scientific method through enum,
+channel-consumption and presentation repairs. The final field contains 55
+nuclear labels and 55 seeded body estimates, including two seed-only regions.
+The selected views support nuclear separation and useful body geometry, not
+complete cell boundaries or a numerical accuracy score. The
+[independent review](../../figure-collection-20261004/H003-FRESH19-INDEPENDENT-REVIEW.rst)
+identifies original capture and artifact checks; the figure receipt records
+the byte-identical source PNGs and editorial crops.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
 ## Supplementary Table 1. Reusable libraries and their roles
 
 | Library | Role in OpenHCS |

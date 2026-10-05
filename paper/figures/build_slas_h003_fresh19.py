@@ -14,6 +14,7 @@ def main():
         for item in json.loads(proof.read_text())["views"]
     }
     sheet = FigureSheet("h003_fresh19_matched", "", 7.4)
+    sheet.source(Path(__file__))
     sheet.source(proof)
     sheet.source(ROOT / "figure-collection-20261004/H003-FRESH19-INDEPENDENT-REVIEW.rst")
     sheet.text(3, 97, "Autonomous paired-channel analysis: support and uncertainty",
