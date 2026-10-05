@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from _thread import LockType
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field, fields, replace
 from enum import Enum
+from threading import Lock
 from typing import Any, ClassVar, Mapping, TYPE_CHECKING
 
 import numpy as np
@@ -1407,7 +1409,10 @@ class ProducedImageStack(AlignedImageStack):
     memory_type: str
     plane_axis: RuntimePlaneAxis
     _metadata: ImagePayloadMetadata = field(init=False, repr=False)
-    _composed_payload: Any = field(default=None, init=False, repr=False)
+    _composed_payload: RuntimeArrayData | None = field(default=None, init=False, repr=False)
+    _realization_lock: LockType = field(
+        default_factory=Lock, init=False, repr=False, compare=False,
+    )
 
     def __post_init__(self) -> None:
         super(ProducedImageStack, self).__post_init__()
@@ -1463,17 +1468,20 @@ class ProducedImageStack(AlignedImageStack):
 
     def __getstate__(self) -> dict[str, Any]:
         """Transport one pixel representation, never dense data plus slice copies."""
-        state = {
-            declaration.name: getattr(self, declaration.name)
-            for declaration in fields(self)
-        }
-        if self._composed_payload is not None:
-            del state["slices"]
-        return state
+        with self._realization_lock:
+            state = {
+                declaration.name: getattr(self, declaration.name)
+                for declaration in fields(self)
+            }
+            del state["_realization_lock"]
+            if self._composed_payload is not None:
+                del state["slices"]
+            return state
 
     def __setstate__(self, state: dict[str, Any]) -> None:
         for name, value in state.items():
             setattr(self, name, value)
+        self._realization_lock = Lock()
         if self._composed_payload is not None:
             self._retain_composed_slices()
 
@@ -1496,17 +1504,18 @@ class ProducedImageStack(AlignedImageStack):
     def compose(
         self, *, memory_type: str | None = None, device_id: int | None = None,
     ) -> Any:
-        if self._composed_payload is None:
-            data = stack_runtime_slices(
-                tuple(image_payload_data(payload) for payload in self.slices),
-                self.memory_type, 0,
-            )
-            masks = tuple(image_payload_mask(payload) for payload in self.slices)
-            mask = None if masks[0] is None else stack_runtime_slices(
-                masks, self.memory_type, 0,
-            )
-            self._composed_payload = self._metadata.payload_with(data, mask)
-            self._retain_composed_slices()
+        with self._realization_lock:
+            if self._composed_payload is None:
+                data = stack_runtime_slices(
+                    tuple(image_payload_data(payload) for payload in self.slices),
+                    self.memory_type, 0,
+                )
+                masks = tuple(image_payload_mask(payload) for payload in self.slices)
+                mask = None if masks[0] is None else stack_runtime_slices(
+                    masks, self.memory_type, 0,
+                )
+                self._composed_payload = self._metadata.payload_with(data, mask)
+                self._retain_composed_slices()
         if memory_type is None:
             return self._composed_payload
         target = MemoryType(memory_type)
