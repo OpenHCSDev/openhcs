@@ -161,7 +161,8 @@ pipeline snapshot, MCP event record, materialized output, score report, and
 same-coordinate raw/result overlay at several percentile clips. Keep
 independent ground truth, deterministic parity, and visual QC as separate
 evidence classes.
-# BBBC007 manual outline policy
+
+## BBBC007 manual outline policy
 
 Official TIFF nonzero pixels are outline strokes, not filled objects. Instance
 diagnostics use four-connected zero-valued interiors that do not meet the frame;
