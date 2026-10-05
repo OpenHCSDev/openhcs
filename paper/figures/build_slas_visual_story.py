@@ -341,7 +341,7 @@ def translocation_repeat():
                    or int(row["finite_wells"]) != 4 for row in rows):
                 raise ValueError("Dose plots require the declared treatment, units and four wells")
             left = .09 + .49 * index
-            dose_axis = sheet.figure.add_axes((left, .48, .36, .37))
+            dose_axis = sheet.figure.add_axes((left, .52, .36, .33))
             positions = list(range(len(rows)))
             dose_axis.errorbar(
                 positions, [float(row["mean_well_ratio"]) for row in rows],
@@ -371,6 +371,7 @@ def translocation_repeat():
                 ylabel="GFP ratio", ylim=(0, 9),
             )
             for axis in (dose_axis, control_axis):
+                axis.set_yticks((0, 2, 4, 6, 8))
                 axis.grid(axis="y", color="#d9e0e5", linewidth=.6)
                 axis.set_axisbelow(True)
         sheet.text(50, 3, "Means ± between-well SD; four wells per group. Dose positions equally spaced.",
