@@ -394,9 +394,14 @@ Wortmannin (Z′ 0.747), and 1.26 and 7.33 for LY294002 (Z′ 0.493).
 These assay-quality findings do not establish unbiased whole-cell photometry
 or exhaustive nuclear recall. The
 [development and plate-arithmetic review](../../figure-collection-20261004/BBBC013-FRESH13-DEVELOPMENT-VISUAL-REVIEW.rst)
-records capture/source identities, formulas and limitations. Final reserve
-visual review and lifecycle closure were still in progress at this checkpoint;
-complete autonomous scientific acceptance is not inferred from execution.
+records capture/source identities, formulas and limitations. Subsequent
+independent inspection of nine original reserve views in B01 and F12 supported
+ordinary nuclear localisation, with faint unlabelled support and ambiguous
+clusters remaining. GFP sampling regions included some weak/extracellular
+signal and did not delineate whole cells. The review also verified 367 complete
+handoff-control files and the intact recorded prefix of one subsequently
+appended outer journal. These bounded witnesses do not establish exhaustive
+reserve recall, numeric segmentation accuracy or unbiased absolute photometry.
 
 ## Translocation recovery: complete coverage and explicit undefined measurements
 

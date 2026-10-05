@@ -109,3 +109,63 @@ agreement is not equivalence to another publication's V-factor definition.
 Likewise it does not prove unbiased compartment photometry or complete
 nuclear detection. The control-separation finding is useful within this
 fixed local-ROI method while reserve visual review remains active.
+
+Post-freeze reserve witnesses and retained controls
+--------------------------------------------------
+
+The coordinator subsequently opened nine original reserve PNGs: raw-only,
+result-only and combined for B01 DNA, B01 GFP local compartments and F12 DNA.
+All nine files matched their original capture-receipt sizes and SHA256 hashes.
+These are bounded post-freeze witnesses, not an inspection of all 90 reserve
+wells. No pipeline, parameters or scientific arrays were changed, and no
+finding was sent to current fresh authors.
+
+The original viewport and intensity acknowledgements identify B01 at
+centre(0,330,370), zoom2, DNA limits(0,100) and GFP limits(0,139); F12 is at
+centre(0,350,350), zoom2, DNA limits(0,64). Both channels are site1/Z1/T1.
+The corresponding isolation receipts report exactly raw, result and their
+union as the visible routes. The intensity receipts identify the actual
+B01/F12 source components, rather than inferring channel from a layer title.
+
+B01 ordinary nuclei have aligned support. A faint central oval remains
+unlabelled, with uncertain identity and size eligibility; a textured core
+is not independently resolved as a genuine pair. F12 ordinary and elongated
+bodies generally retain aligned masks, including separated neighbours, but
+some faint support is unlabelled. These views support useful localisation,
+not exhaustive recall, a manual count or a numeric segmentation accuracy.
+B01 GFP regions overlap cytoplasmic signal but also extend into weak or
+extracellular signal and omit distal cell extent. They remain fixed local
+measurement compartments, not inferred whole-cell boundaries.
+
+Capture groups under the native PNG root above are:
+
+* reserveB01DNAdetail01: raw145749928171, result145756671799,
+  combined145804587846;
+* reserveB01shell01: raw150147690344, result150155317925,
+  combined150202803464;
+* reserveF12DNAdetail01: raw145915652984, result145922967601,
+  combined145930161255.
+
+Each timestamp has prefix20261005T and suffixZ, followed by the same native
+filename suffix used above. Camera and window receipts are the corresponding
+output/receipts/<group>view.json and <group>win.json; visibility receipts use
+rawiso, resultiso and combinediso. In the B01 DNA result/combined screenshots,
+the raw-layer title instead says GFP/G06. The typed visible-route and intensity
+identities select DNA/B01, and the displayed raw structures match the B01
+raw-only image. This is a retained presentation-identity discrepancy, not
+evidence that the scientific arrays were channel-swapped. Its source cause
+is assigned separately to the viewer owner; no new capture was requested.
+
+Independent handoff verification found 367 complete author-control files
+unchanged and one append-only outer native journal with an intact recorded
+42,477,117-byte prefix. At review the journal was42,494,204 bytes, an append
+of17,087 bytes; its full SHA256 was
+38d50748c9c1b749824e73479a6a7ebbde0ca4767f26459657f65c63f81d188f.
+The prefix SHA256 still matched the original handoff manifest. That manifest
+explicitly delegates the final outer-writer seal to the harness after author
+exit. This is not a claim that all368 current complete files match their old
+hashes. The original manifest and journal were left unchanged.
+
+This extends the development and arithmetic evidence with supported reserve
+localisation and explicit compartment limitations. It does not promote the
+pipeline to a universal recipe or establish unbiased absolute photometry.
