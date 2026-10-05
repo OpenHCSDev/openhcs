@@ -219,6 +219,15 @@ counts or changed secondary-cell partitions. This contrast motivates an early
 diagnostic, not a fixed threshold method, window size or requirement to perfectly
 separate every crowded object before retaining useful detections elsewhere.
 
+For neighbourhood maximum filters, peak-centre spacing alone does not predict
+which seeds survive. A weaker genuine neighbour can lose its seed because the
+footprint includes a brighter body's shoulder, even without including that
+body's peak centre. Inspect the effective footprint and consumed smoothed
+response around the weaker peak; distinguish this from explicit pairwise
+peak-distance pruning. Check both the unequal-brightness pair and continuous
+textured-body control when choosing suppression, rather than only comparing
+their centre distances.
+
 Competition scope is another part of that proposal: where a peak finder
 competes per label, a binary support label groups all foreground together,
 whereas distinct connected-component labels can restrict competition locally.
