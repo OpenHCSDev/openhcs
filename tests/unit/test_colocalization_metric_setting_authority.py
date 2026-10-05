@@ -105,7 +105,7 @@ def test_recorded_source_pair_features_exclude_disabled_metrics(disabled, famili
     )
     from openhcs.processing.backends.cellprofiler.colocalization import (
         ColocalizationMeasurements,
-        MeasureColocalizationObjectMeasurementRowPolicy,
+        MeasureColocalizationMeasurementRowPolicy,
         ObjectColocalizationMetricArrays,
     )
 
@@ -131,7 +131,7 @@ def test_recorded_source_pair_features_exclude_disabled_metrics(disabled, famili
         kwargs={disabled: False},
         source_pair=source_pair,
     )
-    projected = MeasureColocalizationObjectMeasurementRowPolicy().project_rows(
+    projected = MeasureColocalizationMeasurementRowPolicy().project_rows(
         ConcatenatedColumnarRows((image_rows, object_rows)),
         invocation,
     )

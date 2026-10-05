@@ -31,7 +31,7 @@ from openhcs.interop.cellprofiler.runtime.measurement_rows import (
 from openhcs.processing.backends.cellprofiler.colocalization import (
     ColocalizationMeasurements,
     MeasureColocalizationModule,
-    MeasureColocalizationObjectMeasurementRowPolicy,
+    MeasureColocalizationMeasurementRowPolicy,
     ObjectColocalizationMeasurements,
     ObjectColocalizationMetricArrays,
 )
@@ -70,7 +70,7 @@ def test_colocalization_slope_is_image_only() -> None:
     source_pair = measurement_image.source_image_pairs()[0]
     object_rows.metrics.correlation[0] = 0.5
     projected_object_rows = (
-        MeasureColocalizationObjectMeasurementRowPolicy.project_source_pair_columnar_rows(
+        MeasureColocalizationMeasurementRowPolicy.project_source_pair_columnar_rows(
             object_rows,
             source_pair,
         )
@@ -82,13 +82,13 @@ def test_colocalization_slope_is_image_only() -> None:
         row_type=ColocalizationMeasurements,
     )
     projected_image_rows = (
-        MeasureColocalizationObjectMeasurementRowPolicy.project_source_pair_columnar_rows(
+        MeasureColocalizationMeasurementRowPolicy.project_source_pair_columnar_rows(
             image_rows,
             source_pair,
         )
     )
     projected_combined_rows = (
-        MeasureColocalizationObjectMeasurementRowPolicy.project_source_pair_columnar_rows(
+        MeasureColocalizationMeasurementRowPolicy.project_source_pair_columnar_rows(
             ConcatenatedColumnarRows((image_rows, object_rows)),
             source_pair,
         )
