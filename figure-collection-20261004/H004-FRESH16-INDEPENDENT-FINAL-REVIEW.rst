@@ -2,8 +2,9 @@ H004 fresh16 continuation: supported bodies and incomplete fine processes
 ========================================================================
 
 Independent post-freeze review, 2026-10-05. This is the retained recovery01
-continuation, not a new fresh autonomous pass. No reference answer was opened,
-new science executed, or parameter correction sent to the scientific author.
+continuation, not a new fresh autonomous pass. The native image review used no
+reference answer; the later reference comparison is recorded below. No new
+science was executed or parameter correction sent to the scientific author.
 
 Evidence owners
 ---------------
@@ -91,3 +92,31 @@ subsequent absence checks. Its client/recorder exit status remains 2, not 0.
 Execution success, scientific scope, lifecycle closure and CLI exit status are
 separate facts. The frozen continuation can support a qualified figure while
 the next task-only author tests the improved packaged route independently.
+
+Post-freeze reference-count comparison
+-------------------------------------
+
+After the scientific freeze and native review, the parent consulted the
+published-reference extraction retained in
+``paper/supplementary/neuroncyto_reference_audit.md`` and the manuscript
+supplement. Supplement 9 lists eight manually traced entries for image 1;
+it supplies neither spatial cell identifiers nor an exhaustive-coverage claim.
+The original source-document checksum and table-extraction provenance remain
+in that reference audit. The parent did not independently re-extract the DOCX
+table in this comparison or supply its values to any analysis author.
+
+The parent streamed the exact ``Testing image/CrossOvers_Images/1_w1.tif`` and
+``1_w2.tif`` members from the existing official testing archive to SHA256.
+Their hashes match both original H004 input TIFFs: respectively
+``2fdef90d08c132fb8de02a03071b03caed38cdd8d41cd048371dc17592b574e7`` and
+``ddd9f8a9edd0837275d6967fd746bdd424bb7a642139073e443a07eca0271847``.
+All 293 scientific-freeze entries were rechecked successfully, and the actual
+attempt05 per-cell CSV independently contains eight data rows.
+
+Thus the eight saved cell rows agree in count with the eight published traced
+entries for these same input images. This is a useful aggregate comparison,
+not one-to-one spatial matching, precision/recall or complete arbor recovery.
+Do not turn the numerical proximity of computational path length to the
+published unspecified-unit length into a percentage accuracy score. Native
+review already establishes missing fine paths; count agreement does not
+erase that limitation. The original images and frozen science remain unchanged.
