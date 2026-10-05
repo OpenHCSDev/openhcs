@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import time
+import threading
 import subprocess
 import sys
 
@@ -9,6 +10,26 @@ import pytest
 
 from benchmark.metrics import memory as memory_module
 from benchmark.metrics.memory import MemoryMetric
+
+
+def test_memory_metric_teardown_wakes_sampler_and_retains_peak(monkeypatch) -> None:
+    metric = MemoryMetric(interval_seconds=60)
+    waiting = threading.Event()
+    wait = metric._stop_event.wait
+
+    def observe_wait(timeout=None):
+        waiting.set()
+        return wait(timeout)
+
+    monkeypatch.setattr(metric._stop_event, "wait", observe_wait)
+    monkeypatch.setattr(
+        metric, "_sample_process_tree_rss", lambda: (2 * 1024 * 1024, ())
+    )
+    with metric:
+        assert waiting.wait(timeout=1)
+
+    assert not metric._thread.is_alive()
+    assert metric.get_result() == 2.0
 
 
 @pytest.mark.skipif(sys.platform != "linux", reason="Linux descendant discovery")
