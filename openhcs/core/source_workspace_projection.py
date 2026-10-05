@@ -171,6 +171,26 @@ class VirtualWorkspaceSourceProjection:
             lookup,
         )
 
+    def logical_path_for(self, lookup: VirtualWorkspacePathLookup) -> str:
+        """Use the declared workspace identity independently of I/O spelling."""
+
+        projection = self.require_source_projection_for(lookup)
+        for path in lookup.candidates():
+            if self.source_projections_by_virtual_path.get(path) is not projection:
+                continue
+            declared_path = source_path_identity(path)
+            if self.workspace_root is not None and declared_path.is_relative_to(
+                self.workspace_root
+            ):
+                relative_path = str(declared_path.relative_to(self.workspace_root))
+                if (
+                    self.source_projections_by_virtual_path.get(relative_path)
+                    is projection
+                ):
+                    return relative_path
+            return path
+        raise RuntimeError("Admitted workspace projection has no declared path.")
+
     def resolved_source_path_for(
         self,
         lookup: VirtualWorkspacePathLookup,

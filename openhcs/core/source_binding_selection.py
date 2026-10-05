@@ -1743,7 +1743,7 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
                     projected,
                     ImagePayloadSourceMetadataContext(
                         SourceImageIdentity(
-                            member,
+                            projection.logical_path_for(lookup),
                             projection.source_metadata_for(lookup),
                         ),
                         source_projection.ref.backend,

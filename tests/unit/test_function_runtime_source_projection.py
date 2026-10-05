@@ -335,6 +335,34 @@ def test_workspace_source_files_select_exact_projection_roles(
     ) == (str(plate_path / artifact_path),)
 
 
+def test_workspace_logical_identity_requires_paired_projection_declaration(
+    tmp_path: Path,
+) -> None:
+    path = "A01_s001_w1_z001_t001.tif"
+    full_path = str(tmp_path / path)
+    first = SourcePlaneProjection(
+        address=OpenHCSPlaneAddress.from_values("A01", 1, 1, 1, 1),
+        ref=SourcePixelRef("disk", "/physical/shared.tif"),
+        source_alias="Original",
+    )
+    declarations = {path: first, full_path: first}
+    projection = VirtualWorkspaceSourceProjection(
+        source_refs_by_virtual_path={path: first.ref, full_path: first.ref},
+        source_metadata_by_path={},
+        source_projections_by_virtual_path=declarations,
+        workspace_root=str(tmp_path),
+    )
+    lookup = VirtualWorkspacePathLookup.from_paths(full_path, full_path)
+    assert projection.logical_path_for(lookup) == path
+
+    # Sharing a backend reference does not prove a shared logical declaration.
+    declarations[full_path] = replace(
+        first, address=OpenHCSPlaneAddress.from_values("B01", 1, 1, 1, 1)
+    )
+    assert projection.logical_path_for(lookup) == full_path
+    assert projection.source_path_for(lookup) == "/physical/shared.tif"
+
+
 def test_workspace_source_projection_carries_exact_aliases_into_stack_provenance(
     tmp_path: Path,
 ) -> None:

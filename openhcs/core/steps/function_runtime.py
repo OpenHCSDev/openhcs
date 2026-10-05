@@ -990,7 +990,7 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
         return self._apply_source_binding_payload(
             payload,
             source_metadata=source_projection.source_metadata_for(lookup),
-            source_path=lookup.full_virtual_path,
+            source_path=source_projection.logical_path_for(lookup),
             source_address=projection.ref.backend_address,
             read_backend=projection.ref.backend,
         )
