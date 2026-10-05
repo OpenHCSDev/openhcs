@@ -8,7 +8,7 @@ import threading
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from concurrent.futures import CancelledError
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -330,6 +330,7 @@ class CatalogSearchProjection:
     metadata: FunctionMetadata
     entry: FunctionCatalogEntry
     parameters: tuple[FunctionParameterSpec, ...]
+    compact_entry: FunctionCatalogEntry
 
 
 class ParameterDocumentationPolicy:
@@ -390,13 +391,9 @@ class ParameterDocumentationPolicy:
             return False
         return parameter.kind not in self.variadic_kinds
 
-    def display_signature(
-        self,
-        func: Callable,
-        display_name: str,
-        view: SignatureView,
-        contract: CallableContract | None = None,
-    ) -> str:
+    def visible_signature(
+        self, func: Callable, contract: CallableContract | None = None
+    ) -> inspect.Signature:
         sig = inspect.signature(func)
         supplied_by = self.supplied_by(func, contract)
         hidden_names = parameter_exclusions(func)
@@ -410,6 +407,13 @@ class ParameterDocumentationPolicy:
                 and supplied_by.get(name) is FunctionParameterSource.AGENT
             )
         )
+        return sig.replace(parameters=visible_parameters)
+
+    @staticmethod
+    def render_signature(
+        signature: inspect.Signature, display_name: str, view: SignatureView
+    ) -> str:
+        visible_parameters = tuple(signature.parameters.values())
         if view.compact and len(visible_parameters) > view.parameter_limit:
             parameter_names = ", ".join(
                 (
@@ -418,8 +422,7 @@ class ParameterDocumentationPolicy:
                 )
             )
             return f"{display_name}({parameter_names}, ...)"
-        visible_signature = sig.replace(parameters=visible_parameters)
-        return f"{display_name}{visible_signature}"
+        return f"{display_name}{signature}"
 
     def parameter_specs(
         self, func: Callable, contract: CallableContract | None = None
@@ -684,10 +687,7 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
 
         with self._state_lock:
             metadata = self._projection_metadata
-            if metadata is None or any(
-                (signature_view, SummaryView[signature_view.name]) not in self._projections
-                for signature_view in SignatureView
-            ):
+            if metadata is None or self._projections is None:
                 return False
         if metadata != RegistryService.cached_metadata_snapshot():
             return False
@@ -700,10 +700,7 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
         super().__init__()
         self._path_policy = path_policy or AgentPathPolicy.from_environment()
         self._projection_metadata: dict[str, FunctionMetadata] | None = None
-        self._projections: dict[
-            tuple[SignatureView, SummaryView],
-            tuple[CatalogSearchProjection, ...],
-        ] = {}
+        self._projections: tuple[CatalogSearchProjection, ...] | None = None
 
     def register_custom_function(
         self, request: CustomFunctionRegistrationRequest
@@ -873,24 +870,20 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
         """Return ranked entries selected from the authoritative registry."""
         query_filter = CatalogFilterText.from_request(query)
         library_filter = CatalogFilterText.from_request(library)
-        signature_view = (
-            SignatureView.COMPACT if compact_signatures else SignatureView.FULL
-        )
-        summary_view = SummaryView.COMPACT if compact_signatures else SummaryView.FULL
         metadata_by_id = self._all_metadata(
             status_callback=status_callback,
             cancellation=cancellation,
         )
         projections = self._search_projections(
             metadata_by_id,
-            signature_view=signature_view,
-            summary_view=summary_view,
             status_callback=status_callback,
             cancellation=cancellation,
         )
         candidates = []
+        catalog_entries = []
         for projection in projections:
-            entry = projection.entry
+            entry = projection.compact_entry if compact_signatures else projection.entry
+            catalog_entries.append(entry)
             if not library_filter.accepts_library_or_tag(
                 entry.library,
                 entry.backend_tags,
@@ -912,25 +905,22 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
                 )
             )
         )
-        return tuple(projection.entry for projection in projections), matching_entries
+        return tuple(catalog_entries), matching_entries
 
     def _search_projections(
         self,
         metadata_by_id: dict[str, FunctionMetadata],
         *,
-        signature_view: SignatureView,
-        summary_view: SummaryView,
         status_callback: Callable[[str], None] | None,
         cancellation: OperationCancellation | None = None,
     ) -> tuple[CatalogSearchProjection, ...]:
         """Project a registry revision once and reuse it across text queries."""
 
-        cache_key = (signature_view, summary_view)
         with self._state_lock:
             if metadata_by_id is not self._projection_metadata:
                 self._projection_metadata = metadata_by_id
-                self._projections.clear()
-            cached = self._projections.get(cache_key)
+                self._projections = None
+            cached = self._projections
             if cached is not None:
                 return cached
         if status_callback is not None:
@@ -940,19 +930,30 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
             if cancellation is not None and cancellation.requested():
                 raise CancelledError
             contract = CallableContract.from_callable(metadata.func)
+            signature = PARAMETER_DOCUMENTATION_POLICY.visible_signature(
+                metadata.func, contract
+            )
+            entry = self._entry(
+                function_id, metadata, SignatureView.FULL, SummaryView.FULL,
+                contract=contract, visible_signature=signature,
+            )
             projections.append(
                 CatalogSearchProjection(
                     metadata=metadata,
-                    entry=self._entry(
-                        function_id,
-                        metadata,
-                        signature_view,
-                        summary_view,
-                        contract=contract,
-                    ),
+                    entry=entry,
                     parameters=PARAMETER_DOCUMENTATION_POLICY.parameter_specs(
                         metadata.func,
                         contract,
+                    ),
+                    compact_entry=replace(
+                        entry,
+                        signature=PARAMETER_DOCUMENTATION_POLICY.render_signature(
+                            signature, entry.name, SignatureView.COMPACT
+                        ),
+                        summary=(
+                            None if entry.summary is None
+                            else _bounded_summary(entry.summary, SummaryView.COMPACT)
+                        ),
                     ),
                 )
             )
@@ -961,7 +962,7 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
         projected = tuple(projections)
         with self._state_lock:
             if metadata_by_id is self._projection_metadata:
-                self._projections[cache_key] = projected
+                self._projections = projected
         return projected
 
     def get(
@@ -1011,15 +1012,7 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
         if not requested_import_path:
             return None
         for function_id, metadata in sorted(self._all_metadata().items()):
-            entry = self._entry(
-                function_id,
-                metadata,
-                signature_view=(
-                    SignatureView.COMPACT if compact_signature else SignatureView.FULL
-                ),
-                summary_view=SummaryView.COMPACT,
-            )
-            if requested_import_path in _import_path_candidates(entry, metadata):
+            if requested_import_path in _import_path_candidates(function_id, metadata):
                 return self.get(
                     function_id,
                     max_doc_chars=max_doc_chars,
@@ -1119,13 +1112,18 @@ class FunctionCatalogService(FunctionCatalogServiceABC):
         signature_view: SignatureView = SignatureView.FULL,
         summary_view: SummaryView = SummaryView.FULL,
         contract: CallableContract | None = None,
+        visible_signature: inspect.Signature | None = None,
     ) -> FunctionCatalogEntry:
         name = _metadata_display_name(function_id, metadata)
         module = _metadata_module(metadata)
         library = metadata.get_registry_name()
         callable_contract = contract or CallableContract.from_callable(metadata.func)
-        signature = PARAMETER_DOCUMENTATION_POLICY.display_signature(
-            metadata.func, name, signature_view, callable_contract
+        if visible_signature is None:
+            visible_signature = PARAMETER_DOCUMENTATION_POLICY.visible_signature(
+                metadata.func, callable_contract
+            )
+        signature = PARAMETER_DOCUMENTATION_POLICY.render_signature(
+            visible_signature, name, signature_view
         )
         summary = PARAMETER_DOCUMENTATION_POLICY.summary(
             metadata.func, metadata.doc, summary_view, callable_contract
@@ -1179,18 +1177,19 @@ def _import_path(module: str, name: str) -> str:
 
 
 def _import_path_candidates(
-    entry: FunctionCatalogEntry, metadata: FunctionMetadata
+    function_id: str, metadata: FunctionMetadata
 ) -> frozenset[str]:
     func = metadata.func
+    module = _metadata_module(metadata)
     return frozenset(
         (
             candidate
             for candidate in (
-                entry.import_path,
+                _import_path(module, _metadata_display_name(function_id, metadata)),
                 _import_path(func.__module__, func.__name__),
                 _import_path(func.__module__, func.__qualname__),
-                _import_path(entry.module, func.__name__),
-                _import_path(entry.module, func.__qualname__),
+                _import_path(module, func.__name__),
+                _import_path(module, func.__qualname__),
             )
             if candidate
         )
