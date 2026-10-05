@@ -1057,6 +1057,44 @@ records MCP-client exit 2 separately from completed scientific execution.
 This repeat demonstrates self-directed repair, but not improved first-attempt
 accuracy, a causal skill gain or exhaustive field-wide biological acceptance.
 
+### H003 fresh16: useful first-method segmentation after technical repair
+
+The independent task-only author `H003_FRESH16_94` analysed the released
+400 × 400-pixel DNA/actin field without reference labels, a target count or
+scientific coaching. It reviewed both physical channels and the validated
+ExampleHuman workflow before proposing its method. Raw measurements distinguished
+internal nuclear texture peaks 7–9 pixels apart from resolved neighbours about
+32 pixels apart. Nuclear positive cores averaged approximately 92–101 native
+uint8 units, compared with adjacent background below 1; actin-positive interiors
+averaged about 30, compared with local background around 3–5.
+
+Its first scientific settings used nuclear threshold 30/255, smoothing 1,
+diameter inclusion 10–45 pixels, shape markers and division, and an 8-pixel
+marker-suppression footprint. Seeded actin propagation used threshold 12/255
+and regularization 0.05. Transport-enum and pipeline-source binding repairs
+were technical changes; the final measurement-only QC did not alter the
+segmentation. Original upstream and final integer masks were byte-identical.
+This distinguishes a useful first scientific method from an error-free first
+execution or a segmentation improved through later revisions.
+
+The final output contained 55 nuclear candidates, 53 expanded associated
+regions and two seed-only regions. Independent review of twelve original native
+PNGs supports ordinary-body nuclear localisation and growth around visible
+actin support. In the matched weak-support crop, clear DNA bodies lacked
+resolved outer actin envelopes even at a 0–15 display window; retaining their
+regions as seeds was supported rather than forcing expansion. Crowded actin
+partitions and one elongated nuclear identity remain uncertain. Counts are
+algorithmic candidates, not an exhaustive biological census, and geometry is
+in pixels rather than verified physical units.
+
+The [independent final review](../../figure-collection-20261004/H003-FRESH16-INDEPENDENT-FINAL-REVIEW.rst)
+records original capture identities, camera and contrast settings, and successful
+verification of all 1,083 frozen scientific/control files. Its twelve captures
+are a subset of the author's 131 retained views, not an independent review of
+every view. Exact viewer/native closure is recorded separately from the MCP
+client's exit 2. No manual-reference accuracy, improvement over previous runs,
+causal skill effect or untouched-reserve generalization is inferred.
+
 ### H002 fresh10: ordinary-body repair and unresolved cluster identity
 
 The independent task-only author `H002_FRESH10_89` analysed the complete
