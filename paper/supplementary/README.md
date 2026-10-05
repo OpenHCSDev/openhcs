@@ -1060,6 +1060,17 @@ or a fresh autonomous pass. The
 records original capture identities, display windows, table recalculation and
 terminal artifact checks without changing the scientific outputs.
 
+A further independent paired-channel analysis completed all 16 DNA/actin fields,
+using 12 for development and four for review after pipeline freeze. Its 1,413
+nuclear detections retained corresponding seeded regions. A self-directed
+repair recovered a faint pair without splitting a textured single nucleus.
+Independent native-image review found broad ordinary-nucleus localization and
+cell-region growth, with a remaining apparent nuclear merge and uncertain
+boundaries in diffuse actin support. These outputs support exploratory
+detected-object measurements; reference-relative accuracy remains unmeasured.
+The [completion record](task_only_analysis/bbbc007-fresh19-qualified-completion.rst)
+identifies the immutable artifacts and verification scope.
+
 The report also records a same-author retinal continuation with 100 inspectable
 RBPMS soma-detector instances. Matched views show useful local improvements,
 but residual dim-body misses and uncertain dense partitions prevent treating
