@@ -302,7 +302,7 @@ def task_only_story():
                    size=14, ha="center", color=MUTED)
         axes = (sheet.figure.add_axes((.09, .37, .35, .23)),
                 sheet.figure.add_axes((.60, .37, .35, .23)),
-                sheet.figure.add_axes((.09, .08, .86, .19)))
+                sheet.figure.add_axes((.09, .12, .86, .15)))
         first, final = h001["attempts"]
         plot_pair(axes[0], first["derived_f1"], final["derived_f1"],
                   "B  H001: same whole image", "Notebook-derived reference", font_size=16)
@@ -314,6 +314,9 @@ def task_only_story():
         for axis in axes:
             axis.grid(axis="y", color="#d9e0e5", linewidth=.6)
             axis.set_axisbelow(True)
+        sheet.text(50, 2,
+                   "Independent full-200 repeat: caption and Supplementary Figure 20",
+                   size=12, ha="center", color=MUTED)
         sheet.save()
 
 

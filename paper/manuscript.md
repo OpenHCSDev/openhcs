@@ -362,6 +362,11 @@ do not supply fresh autonomous scores.
 
 \(A) Matched H001 raw and first/final overlays show an elongated-body split repaired without reference feedback. Screenshots are clipped/scaled, not retouched; colours do not identify objects across attempts. Supplementary Figure 18 retains wider views and capture records. (B) Whole-image H001 object F1 against a notebook-derived reference: excess predictions fall from four to two, with 59/64 matches and five misses unchanged. (C) BBBC039 pooled object F1 on the same three development fields against independent annotations. (D) Final scores across all 200 fields, including three annotation-empty fields and the low-score tail. The dashed line is pooled, not mean field F1. Matching requires intersection over union at least 0.5. First is the initial completed scientific prediction (H001 a01; final a04). These comparisons do not establish first-200 accuracy, an isolated skill effect or held-out generalization.
 
+The independent full-200 repeat reached pooled F1 0.898 versus 0.906 for the
+run plotted above: 61 fields improved, 123 decreased and 16 were unchanged
+(Supplementary Figure 20). This repeat retains useful agreement but shows that
+within-run repair does not guarantee a better result from the next fresh author.
+
 ### Figure 6. Autonomous local repair with a retained merge
 
 ![Matched first/final nuclear overlays and a final-only faint-pair failure control.](figures/slas/h003_native_repair.png){width=6in}
