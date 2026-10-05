@@ -363,12 +363,14 @@ class ImageOutputRecorder(CellProfilerOutputRecorder):
         )
         output_value = module_type.output_value(request)
         source_payload = module_type.source_payload(request)
-        value = request.output_plan.artifact_type.contextualize_output(
-            source_payload,
-            output_value,
-            request.output_plan,
-            request.source.plane_projection,
-        )
+        if request.source.plane_projection is None:
+            value = request.output_plan.artifact_type.contextualize_output(
+                source_payload, output_value, request.output_plan, None,
+            )
+        else:
+            value = request.output_plan.artifact_type.contextualize_output_from_projector(
+                source_payload, output_value, request.output_plan, request.adapter,
+            )
         request.adapter.add_image(
             request.spec.name,
             value,
