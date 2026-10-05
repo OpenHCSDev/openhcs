@@ -88,9 +88,10 @@ The original closure receipt confirms viewer/native exit, and independent
 process checks find neither original PID 1601805 nor 1590675 present. The
 author preserves client exit status 1 and is sealing its original journal;
 that exit status is distinct from the three completed scientific executions.
-A complete-file freeze verification remains required before merging the
-publication update. Existing evidence is not replaced and the run is not
-restarted.
+Complete-bundle sealing and its verification remain a separate pending custody
+step. The publication checkpoint reports the independently checked tables,
+documents and images above, not a completed journal seal. Existing evidence is
+not replaced and the run is not restarted.
 
 Publication qualification
 -------------------------
