@@ -850,7 +850,11 @@ class WideMeasurementRowAccumulator:
             for name, _values in wide_measurement_feature_columns(
                 {
                     name: chain.from_iterable(
-                        columns[name] for _count, columns in batches if name in columns
+                        tuple(
+                            columns[name]
+                            for _count, columns in batches
+                            if name in columns
+                        )
                     )
                     for name in names
                 },

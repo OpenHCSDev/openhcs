@@ -695,6 +695,33 @@ def test_concatenated_measurement_rows_preserve_structural_missing_cells() -> No
     )
 
 
+def test_declared_wide_admission_preserves_features_before_absent_object_column() -> None:
+    from openhcs.core.equivalence.policy import DEFAULT_RUNTIME_MEASUREMENT_DIALECT
+
+    rows = MeasurementSparseColumnarRows.from_rows(
+        ({"slice_index": 1, "contrast": 0.25, "entropy": 0.75},),
+        fields=(
+            FieldSpec("slice_index", int),
+            FieldSpec("contrast", float),
+            FieldSpec("entropy", float),
+            FieldSpec("object_label", int),
+        ),
+    )
+    accumulator = WideMeasurementRowAccumulator(
+        DEFAULT_RUNTIME_MEASUREMENT_ROW_IDENTITY_CONTRACT
+    )
+    accumulator.add_declared_rows(
+        rows,
+        DEFAULT_RUNTIME_MEASUREMENT_DIALECT,
+        default_subject="Image",
+        default_scope=MeasurementScope.IMAGE,
+    )
+
+    assert accumulator.row_mappings_by_subject()["Image"] == (
+        {"slice_index": 1, "contrast": 0.25, "entropy": 0.75},
+    )
+
+
 def test_long_form_projection_omits_structurally_missing_qualifiers() -> None:
     base_fields = (
         FieldSpec("slice_index", int),
