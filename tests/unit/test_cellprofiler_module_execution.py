@@ -12084,6 +12084,75 @@ def test_object_label_output_recorder_uses_output_label_domain() -> None:
     np.testing.assert_array_equal(recorded_payload.labels, output_labels)
 
 
+@pytest.mark.parametrize("carrier_axis", tuple(RuntimePlaneAxis))
+@pytest.mark.parametrize("module_name", (
+    "ExpandOrShrinkObjects", "DilateObjects", "ShrinkToObjectCenters",
+))
+def test_object_transform_uses_label_planes_instead_of_carrier_axis(
+    carrier_axis, module_name,
+) -> None:
+    labels = np.zeros((2, 7, 7), dtype=np.int32)
+    labels[0, 2, 2] = 1
+    labels[1, 4, 4] = 4
+    input_payload = ObjectLabelSet(
+        name="InputObjects",
+        variant_data=ObjectLabelVariantData(labels=labels),
+        domain=ObjectLabelDomain(
+            declared_object_id_domains=((1,), (4,)),
+            scope=ObjectLabelDomainScope.PLANE,
+        ),
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=("/input/site-1.tif", "/input/site-2.tif"),
+            component_metadata=({"site": "1"}, {"site": "2"}),
+        ),
+    )
+    input_spec = ArtifactSpec.input(
+        "InputObjects", ObjectLabelsArtifactType, parameter_name="labels"
+    )
+    runtime = _FakeCellProfilerRuntime(
+        {}, objects={"InputObjects": input_payload},
+        artifact_input_edges=(_artifact_input_edge_for_test(input_spec),),
+        plane_projection=RuntimePlaneProjection.stack(2),
+    )
+    output_spec = _output_from_input("ExpandedObjects", "InputObjects")
+    measurement_spec = ArtifactSpec.output(
+        f"{module_name}_measurements", MeasurementsArtifactType,
+        relations=(ArtifactSpecRelation(source=output_spec.ref()),),
+    )
+    executor = _module_executor(_compiled_callable_contract(
+        CellProfilerModule.require_module(module_name).require_callable(),
+        artifact_inputs=(input_spec,), artifact_outputs=(measurement_spec, output_spec),
+    ))
+    runtime.request = replace(runtime.request, artifact_outputs={
+        spec.ref(): _artifact_output_plan(spec)
+        for spec in executor.callable_contract.artifact_outputs
+    })
+    # The image only carries main flow; its three planes do not define the
+    # independent two-plane object-transform domain.
+    carrier = ImagePayloadMetadata(plane_axis=carrier_axis).payload_with(
+        np.zeros((3, 7, 7), dtype=np.float32)
+    )
+    result = _run_module(
+        executor, carrier, cellprofiler_runtime=runtime,
+        dtype_config=DtypeConfig(),
+    )
+    recorded = runtime.objects[0][1]
+    assert result is carrier
+    assert recorded.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
+    assert recorded.domain.declared_object_id_domains == ((1,), (4,))
+    assert (
+        recorded.source_image_provenance_planes
+        == input_payload.source_image_provenance_planes
+    )
+    expected = labels.copy()
+    if module_name != "ShrinkToObjectCenters":
+        for plane, coordinate, object_id in ((0, 2, 1), (1, 4, 4)):
+            expected[plane, coordinate - 1:coordinate + 2, coordinate] = object_id
+            expected[plane, coordinate, coordinate - 1:coordinate + 2] = object_id
+    np.testing.assert_array_equal(recorded.labels, expected)
+
+
 def test_expand_or_shrink_executor_preserves_declared_object_domain() -> None:
     input_labels = np.zeros((7, 7), dtype=np.int32)
     input_labels[3, 3] = 4

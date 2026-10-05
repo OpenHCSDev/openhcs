@@ -147,6 +147,8 @@ class ClosingModule(ImageStructuringElementModule):
 
 
 class ObjectTransformContractModule(
+    ObjectLabelDrivenPrimaryImageInputPolicy,
+    LabelsObjectInputPolicy,
     PlaneRuntimeArtifactModule,
     MeasurementArtifactOutputModule,
     ObjectArtifactInputModule,
@@ -7139,8 +7141,6 @@ class MorphologicalskeletonModule(
 
 class ShrinkToObjectCentersModule(
     ZStackFunctionVariantModule,
-    ObjectLabelDrivenPrimaryImageInputPolicy,
-    LabelsObjectInputPolicy,
     ObjectTransformContractModule,
 ):
     module_name = "ShrinkToObjectCenters"
