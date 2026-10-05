@@ -926,7 +926,7 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
         )
         source_context = SourcePatternResolutionContext.from_sources(
             parser=self.context.microscope_handler.parser,
-            source_paths_by_virtual_path=universe_state.step_input_source_paths,
+            source_paths_by_virtual_path={},
             source_metadata_by_path=source_metadata,
             metadata_rules=self.source_binding_plan.metadata_rules,
         )
