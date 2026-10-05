@@ -359,3 +359,34 @@ a03ddd1f91be288d3d0cb7604df8aedaeb7d094415d8b925d4e6f37728885b49;
 the original earlier archives,
 failures and loose originals remain intact under engineering-neurite-units-
 20261003. The current source checkpoint changes no shared Root implementation.
+
+Current unit-owner continuation after522 source repair
+-----------------------------------------------------
+
+522's coherent repair is published atd4ff1cbbf; Planck explicitly uses its exact
+Git export and holds no mutable source checkout borrower. Singer reuses this
+same checkout for541, normally integrating mainb461 at221357aca without conflict.
+Eight foreign gitlink worktrees and all untracked evidence remain unchanged.
+Active727's declared files do not overlap this unit/graph/materialization family;
+closed394 is not a continuing exclusive claim.
+
+Original Package caller source-family04 was reused, not copied into a new
+scanner. Current source-family08.jsonl parses702 production/12python-introspect/
+6metaclass-registry/17arraybridge modules with zero parse omissions; terminal0,
+9.59s/208644KiB maxRSS/process swaps0. Full related ASTs and exact dependency
+Git identities are retained under engineering-neurite-units-20261003; SHA256
+72fbefe68c7ae93c99ed435bba870bf38d1d03fc8ba3a11dcdd953d0c87d8038.
+This is source evidence, not current installed dependency or global R1 proof.
+
+The registered pixel-rooted route remains unimplemented. The next owner batch
+must distinguish analysis metric units from acquisition/native calibration:
+SourceVoxelSpacing owns declared units; SpatialGraph still carries a bare
+coordinate_spacing tuple and physical radius convention. The ROI writer builds
+SourceVoxelSpacing(graph.coordinate_spacing), implicitly asserting micrometers;
+SWC also exports scaled coordinates/radii without unit admission. A pixel
+analysis must not relabel an acquisition's spacing, assert1um, or silently emit
+physical SWC. Settings, hidden input/provider, measurement rows, graph and both
+export consumers must use the same declared coordinate contract and shared
+analysis implementation. The original physical negative remains required.
+No541 production edit, test, package/runtime action or scientific feedback is
+claimed by this continuation checkpoint; semantic consumer review is active.
