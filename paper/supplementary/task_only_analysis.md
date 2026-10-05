@@ -560,6 +560,19 @@ repair or a validated reusable parameter recipe. Its recorded client exit
 exceeded the 75-minute deadline by about eight seconds; that operational
 qualification remains separate from scientific completion and rejection.
 
+## Paired-channel repeat with a four-field reserve
+
+A later independent author completed all 16 paired DNA/actin fields, developing
+on 12 and reviewing four reserved fields only after freezing its pipeline.
+The final exports contained 1,413 nuclear detections and corresponding seeded
+regions. The author repaired a faint-pair merge while retaining a textured
+single nucleus; independent review confirmed useful ordinary-body localization
+and growth beyond nuclear seeds. Reserved-field review retained dim misses,
+possible nuclear merges and uncertain crowded actin boundaries. The result
+supports exploratory detected-object measurements rather than an exhaustive
+cell census. The [completion record](task_only_analysis/bbbc007-fresh19-qualified-completion.rst)
+identifies the frozen source, original artifacts and independent checks.
+
 ## Later full-field paired-channel repeat: diagnosed support failure and partial recovery
 
 The independent author `BBBC007_FRESH08_96` processed all 16 released DNA/actin
