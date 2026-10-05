@@ -325,7 +325,7 @@ ordinary nuclei. A bright lobed complex and cropped border supports retained
 identity uncertainty. This trial demonstrates useful measurement-first
 localisation. After the workflow was frozen, one-to-one matching recovered
 all 15 manually annotated centres within the predeclared 30-voxel distance,
-with a mean localisation error of 4.80 voxels. All 15 also matched within
+with a mean localisation error of 4.80 voxels (Figure 9). All 15 also matched within
 20 voxels, and 14 matched within 10 voxels. Eleven of the 26 predictions were
 unmatched to these annotations. Their coverage was not established as
 exhaustive, so unmatched predictions do not establish false biological
@@ -433,6 +433,27 @@ support assay-response recovery using local cytoplasmic regions, not validated
 whole-cell boundaries or segmentation accuracy. This fresh-context public repeat
 is distinct from the prospective held-out experiment in Supplementary Figure 7.
 Supplementary Data 8 retains the frozen pipeline and original table identities.
+
+### Figure 9. Measurement-first autonomous localisation in three dimensions
+
+![Original native XY, XZ and YZ views and independent annotated-centre matching.](figures/slas/h002_measurement_first.png){width=6in}
+
+\(A–C) Retained native image/Points views from one fresh task-only author.
+XY uses Z index 34, XZ uses Y index 157 and YZ uses X index 80; all are voxel
+indices. Green points are the original fractional predicted centres, not added
+annotations. Out-of-plane Points are hidden, so a body without a visible point
+in one slice is not necessarily missed. Crops are scaled without image or point
+retouching. \(D) Independent postfreeze one-to-one matching recovered 14 of
+15 manual centres within 10 voxels and all 15 within the predeclared 30-voxel
+primary distance. Mean matched error at the primary distance was 4.80 voxels;
+11 of 26 predictions were unmatched to annotations whose coverage was not
+established as exhaustive. No new scorer or scientific execution was used to
+assemble the figure. The first scientific settings were unchanged through a
+technical rerun; this is localisation evidence, not boundary accuracy or a
+complete biological census. A lobed chromatin complex remains unresolved in
+the broader review. Physical calibration is unverified. Source: Allen Institute
+for Cell Science cells3d, through the pinned Haase notebook-derived task.
+Supplementary Data 8 retains capture hashes, crop coordinates and evaluation.
 
 ## Discussion
 
