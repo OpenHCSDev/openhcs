@@ -117,7 +117,6 @@ from openhcs.core.runtime_image_values import (
     image_payload_data,
     image_payload_mask,
     image_payload_metadata,
-    with_image_payload_data,
 )
 from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.runtime_array_values import RuntimeArrayData
@@ -1957,11 +1956,10 @@ class FunctionCoreExecutor:
         *,
         debug_sink: DebugEventSink | None = None,
     ) -> RuntimePayload | NoMainFlowOutput:
-        converted_data = self.invocation.convert_input(
-            image_payload_data(self.main_data_arg),
+        source_payload = self.invocation.convert_input(
+            self.main_data_arg,
             self.source_memory_type,
         )
-        source_payload = with_image_payload_data(self.main_data_arg, converted_data)
         main_data_arg = self.invocation.main_flow_call_argument(source_payload)
         final_kwargs = dict(self.invocation.runtime_kwargs)
         loads_artifact_inputs = self.should_load_artifact_inputs()
