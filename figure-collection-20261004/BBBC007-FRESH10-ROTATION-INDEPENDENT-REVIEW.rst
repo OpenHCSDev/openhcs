@@ -61,6 +61,18 @@ Foreground admission, marker formation and later size filtering still need
 discrimination through the persisted intermediate stages. The visual symptom
 alone does not establish which stage caused each missing object.
 
+One loss is independently localised in the persisted A02 intermediate arrays.
+The small_removed_objects checkpoint contains 15526 foreground pixels; the
+final labels contain 13865. Exactly 1661 pixels are lost, with none added.
+All belong to checkpoint basin61, bounding box Y169:214/X381:437 (exclusive
+upper bounds); its entire support disappears. Area-equivalent diameter is
+45.9875 pixels, just above the pipeline's configured maximum45, with size
+exclusion enabled and border exclusion disabled. This is consistent with an
+oversized basin being removed after the small-object stage. It does not prove
+the number or identities of nuclei within that basin. A marker/partition
+diagnostic is needed before treating a raised size limit as a biological repair;
+other dim losses may occur earlier and require separate witnesses.
+
 Candidate03 completed all 16 source sets, but final A04 QA was absent and
 A03 actin QA ran after the recorded 75-minute deadline. Those later captures
 remain preserved and excluded from the original timed outcome. Earlier
