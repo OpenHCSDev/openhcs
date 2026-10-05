@@ -29,6 +29,7 @@ TASKS = (
     ("graded segmentation quality", "openhcs_autonomous_analysis_strategy"),
     ("channel identity RGB composite", "openhcs_image_interpretation"),
     ("uneven background additive subtraction", "openhcs_image_preprocessing"),
+    ("weak troughs hysteresis connected support", "openhcs_image_preprocessing"),
     ("nucleus split watershed", "openhcs_segmentation_diagnostics"),
     ("ring fragmentation disconnected support", "openhcs_segmentation_diagnostics"),
     ("zero growth cytoplasm", "openhcs_segmentation_diagnostics"),
