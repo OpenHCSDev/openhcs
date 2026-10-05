@@ -24,6 +24,8 @@ from benchmark.validation.corpus import (
     verify_frozen_pipeline,
 )
 from benchmark.validation.references import (
+    Bbbc007ManualOutlineReference,
+    closed_outline_interiors,
     decode_bbbc007_outline,
     decode_bbbc039_mask,
 )
@@ -307,12 +309,12 @@ def test_instance_metrics_detect_split_and_merge():
 
 
 def test_bbbc007_outline_decoder_and_published_two_pixel_boundary_metric(tmp_path):
-    outline = np.ones((20, 20), dtype=np.uint8)
-    outline[3:17, 3] = 0
-    outline[3:17, 16] = 0
-    outline[3, 3:17] = 0
-    outline[16, 3:17] = 0
-    outline[3:17, 10] = 0
+    outline = np.zeros((20, 20), dtype=bool)
+    outline[3:17, 3] = True
+    outline[3:17, 16] = True
+    outline[3, 3:17] = True
+    outline[16, 3:17] = True
+    outline[3:17, 10] = True
     path = tmp_path / "outline.tif"
     iio.imwrite(path, outline)
 
@@ -322,7 +324,7 @@ def test_bbbc007_outline_decoder_and_published_two_pixel_boundary_metric(tmp_pat
     predicted[4:16, 10:16] = 2
     metrics = boundary_segmentation_metrics(
         predicted,
-        reference,
+        Bbbc007ManualOutlineReference().load_boundary(path),
         source_set_id="A01_1",
         channel="ACTIN",
     )

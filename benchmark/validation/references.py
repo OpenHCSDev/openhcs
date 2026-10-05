@@ -12,7 +12,7 @@ import imageio.v3 as iio
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
 from skimage.measure import label
-from skimage.segmentation import relabel_sequential
+from skimage.segmentation import find_boundaries, relabel_sequential
 
 from benchmark.contracts.validation import (
     ValidationEvidenceKind,
@@ -57,6 +57,10 @@ class ValidationReferenceStrategy(ABC, metaclass=AutoRegisterMeta):
     def load(self, path: Path) -> np.ndarray:
         """Load one prepared reference as an instance-label array."""
 
+    def load_boundary(self, path: Path) -> np.ndarray:
+        """Derive boundaries for references that declare filled instance labels."""
+        return find_boundaries(self.load(path), mode="inner")
+
 
 class Bbbc039InstanceMaskReference(ValidationReferenceStrategy):
     """Apply the pinned BBBC039 author's first-channel component decoder."""
@@ -83,7 +87,7 @@ class Bbbc039InstanceMaskReference(ValidationReferenceStrategy):
 
 
 class Bbbc007ManualOutlineReference(ValidationReferenceStrategy):
-    """Preserve manual outline pixels and decode closed regions for object metrics."""
+    """Preserve nonzero outline strokes; score only enclosed interiors as regions."""
 
     evidence_kind = ValidationEvidenceKind.MANUAL_OUTLINES
 
@@ -103,6 +107,15 @@ class Bbbc007ManualOutlineReference(ValidationReferenceStrategy):
     def load(self, path: Path) -> np.ndarray:
         return decode_bbbc007_outline(path)
 
+    def load_boundary(self, path: Path) -> np.ndarray:
+        """Use the original strokes, including open contours and contacts."""
+        image = np.asarray(iio.imread(path))
+        if image.ndim != 2:
+            raise ValidationReferenceError(
+                f"Invalid BBBC007 outline shape {image.shape!r}."
+            )
+        return image != 0
+
 
 def decode_bbbc039_mask(path: Path) -> np.ndarray:
     """Decode a BBBC039 colour mask using the pinned author's stated procedure."""
@@ -115,16 +128,24 @@ def decode_bbbc039_mask(path: Path) -> np.ndarray:
 
 
 def decode_bbbc007_outline(path: Path) -> np.ndarray:
-    """Convert closed white regions separated by manual black outlines to labels."""
+    """Label closed interiors of official nonzero strokes, not the strokes.
 
-    image = np.asarray(iio.imread(path))
-    if image.ndim != 2:
-        raise ValidationReferenceError(
-            f"Invalid BBBC007 outline shape {image.shape!r}."
-        )
-    regions = label(image != 0, connectivity=1)
+    Open/frame-connected regions are excluded, without closing gaps or assigning
+    shared strokes to objects. These interiors are not exhaustive cell truth.
+    """
+
+    strokes = Bbbc007ManualOutlineReference().load_boundary(path)
+    return closed_outline_interiors(strokes)[0]
+
+
+def closed_outline_interiors(outlines: np.ndarray) -> tuple[np.ndarray, int]:
+    """Decode four-connected interiors; never bridge gaps or count frame regions."""
+    strokes = np.asarray(outlines)
+    if strokes.ndim != 2 or 0 in strokes.shape:
+        raise ValidationReferenceError(f"Invalid outline shape {strokes.shape!r}.")
+    regions = label(strokes == 0, connectivity=1)
     border_labels = np.unique(
         np.concatenate((regions[0], regions[-1], regions[:, 0], regions[:, -1]))
     )
     regions[np.isin(regions, border_labels[border_labels != 0])] = 0
-    return relabel_sequential(regions)[0]
+    return relabel_sequential(regions)[0], int(np.count_nonzero(border_labels))

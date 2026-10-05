@@ -12,7 +12,7 @@ from typing import ClassVar
 import imageio.v3 as iio
 import numpy as np
 from metaclass_registry import AutoRegisterMeta
-from scipy.ndimage import binary_dilation, distance_transform_edt
+from scipy.ndimage import binary_erosion, distance_transform_edt
 from scipy.optimize import linear_sum_assignment
 from skimage.segmentation import find_boundaries, relabel_sequential
 
@@ -74,6 +74,7 @@ class BoundarySegmentationMetrics:
     boundary_precision_within_two_pixels: float
     boundary_recall_within_two_pixels: float
     boundary_f1_within_two_pixels: float
+    correspondence: str = "nearest_union_of_manual_outline_strokes"
 
 
 @dataclass(frozen=True, slots=True)
@@ -181,7 +182,11 @@ class InstanceSegmentationScorer(ValidationScoringStrategy):
 
 
 class BoundaryAndInstanceScorer(ValidationScoringStrategy):
-    """Score BBBC007 full manual outlines at boundary and object levels."""
+    """Score original strokes and non-frame-connected closed interiors.
+
+    Interior metrics exclude open/frame regions and stroke pixels; they are not
+    an exhaustive biological object count. Boundary metrics retain all strokes.
+    """
 
     metric_profile = ValidationMetricProfile.BOUNDARY_AND_INSTANCE
 
@@ -203,9 +208,11 @@ class BoundaryAndInstanceScorer(ValidationScoringStrategy):
             predicted_labels = _load_label_array(
                 _resolved_result_artifact(result_path, prediction.relative_path)
             )
-            reference_labels = ValidationReferenceStrategy.for_evidence(
+            reference_strategy = ValidationReferenceStrategy.for_evidence(
                 ValidationEvidenceKind.MANUAL_OUTLINES
-            ).load(scoring_root / references[key].relative_path)
+            )
+            reference_path = scoring_root / references[key].relative_path
+            reference_labels = reference_strategy.load(reference_path)
             instance_results.append(
                 instance_segmentation_metrics(
                     predicted_labels,
@@ -217,7 +224,7 @@ class BoundaryAndInstanceScorer(ValidationScoringStrategy):
             boundary_results.append(
                 boundary_segmentation_metrics(
                     predicted_labels,
-                    reference_labels,
+                    reference_strategy.load_boundary(reference_path),
                     source_set_id=source_set_id,
                     channel=channel,
                 )
@@ -379,23 +386,32 @@ def instance_segmentation_metrics(
 
 def boundary_segmentation_metrics(
     predicted_labels: np.ndarray,
-    reference_labels: np.ndarray,
+    reference_boundary: np.ndarray,
     *,
     source_set_id: str,
     channel: str,
 ) -> BoundarySegmentationMetrics:
-    """Compute BBBC007's directed <=2 px score and symmetric diagnostics."""
+    """Compare predicted boundaries directly to official manual stroke pixels.
+
+    The directed BBBC007 metric excludes background/frame-adjacent predicted
+    boundaries. Monochrome strokes do not identify corresponding objects;
+    nearest-union distance and symmetric diagnostics retain that limitation.
+    """
 
     predicted = _canonical_labels(predicted_labels)
-    reference = _canonical_labels(reference_labels)
+    reference = np.asarray(reference_boundary)
+    if reference.dtype != np.bool_ or reference.ndim != 2:
+        raise ValidationScoringError("Reference boundary must be a 2-D boolean stroke mask.")
     if predicted.shape != reference.shape:
         raise ValidationScoringError(
             f"Prediction/reference shapes differ: {predicted.shape} != {reference.shape}."
         )
     predicted_boundary = find_boundaries(predicted, mode="inner")
-    reference_boundary = find_boundaries(reference, mode="inner")
-    adjacent_to_background = binary_dilation(predicted == 0, structure=np.ones((3, 3)))
-    relevant = predicted_boundary & ~adjacent_to_background
+    if not np.any(reference_boundary):
+        raise ValidationScoringError("Manual outline strokes are empty.")
+    relevant = predicted_boundary & binary_erosion(
+        predicted > 0, structure=np.ones((3, 3)), border_value=0
+    )
     distance_to_reference = distance_transform_edt(~reference_boundary)
     distance_to_prediction = distance_transform_edt(~predicted_boundary)
     relevant_score = _masked_fraction(distance_to_reference <= 2.0, relevant)
