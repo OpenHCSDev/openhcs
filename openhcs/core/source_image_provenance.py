@@ -967,6 +967,32 @@ class SourceImageProvenance:
             )
         return self.source_identity
 
+    def required_scalar_components(
+        self, component_order: Iterable[str]
+    ) -> tuple[str, ...]:
+        """Exclude only coordinates proven reduced into pixel contributors.
+
+        Contributors do not own a projectable runtime axis. A component that
+        varies across their complete source addresses therefore has no scalar
+        address on the derived image. Absent or incomplete contributor evidence
+        cannot exempt an acquired plane from its required coordinates.
+        """
+        contributors = self.source_image_provenance_planes.contributors
+        scalar_metadata = self.scalar_source_identity.component_metadata or {}
+        reduced = set()
+        for component in AllComponents:
+            if source_component_metadata_raw_value(scalar_metadata, component) is not None:
+                continue
+            values = tuple(
+                source_component_metadata_raw_value(
+                    contributor.component_metadata or {}, component
+                )
+                for contributor in contributors
+            )
+            if values and all(value is not None for value in values) and len(set(values)) > 1:
+                reduced.add(component.value)
+        return tuple(component for component in component_order if component not in reduced)
+
     def image_set_identities(
         self,
         policy: SourceImageSetIdentityPolicy,
