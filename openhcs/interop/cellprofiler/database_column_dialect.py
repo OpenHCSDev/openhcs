@@ -6,6 +6,7 @@ from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from enum import Enum
 from hashlib import md5
+from pathlib import Path
 import re
 from types import MappingProxyType
 from typing import Any, ClassVar
@@ -15,6 +16,7 @@ from openhcs.core.runtime_measurements import (
     ObjectCoreMeasurementFeature,
 )
 from openhcs.core.runtime_tabular_values import FieldSpec
+from openhcs.core.source_metadata import SourceMetadataFields, SourceMetadataMapping
 from openhcs.interop.cellprofiler.source_metadata import (
     CellProfilerSourceMetadataField,
 )
@@ -416,6 +418,42 @@ class CellProfilerDatabaseColumnDialect:
         """Return CellProfiler's source-plane metadata default values."""
 
         return CellProfilerSourceMetadataField.static_defaults()
+
+    @staticmethod
+    def source_metadata_values(
+        metadata: SourceMetadataMapping | None,
+        source_path: Path | None,
+    ) -> dict[str, object]:
+        """Project declared acquisition facts, without inventing absent axes.
+
+        Original extracted fields retain their spelling and values. Canonical
+        source components fill only fields not already supplied by that owner;
+        a represented multi-value domain is not a single acquisition coordinate.
+        """
+        values: dict[str, object] = {}
+        if metadata is not None:
+            values.update(SourceMetadataFields.original_items(metadata))
+            for component, domain in SourceMetadataFields.component_domains(metadata).items():
+                values.setdefault(
+                    component.value,
+                    SourceMetadataFields.canonical_component_value(component, domain[0])
+                    if len(domain) == 1 else None,
+                )
+        if source_path is not None:
+            values.setdefault(
+                CellProfilerSourceMetadataField.FILE_LOCATION.field_name,
+                source_path.as_uri() if source_path.is_absolute() else str(source_path),
+            )
+        return values
+
+    def source_image_file_values(
+        self, source_path: Path, source_image_name: str,
+    ) -> dict[str, str]:
+        """Project a named source identity without reading its image pixels."""
+        return {
+            self.source_image_path_field(source_image_name).name: str(source_path.parent),
+            self.source_image_file_field(source_image_name).name: source_path.name,
+        }
 
     def image_table_name(self) -> str:
         return f"{self.table_prefix}Per_Image"

@@ -9,7 +9,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
 from numbers import Real
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 from typing import cast, TYPE_CHECKING, ClassVar, TypeVar
 
 from openhcs.core._tabular_native import render_csv as _render_native_csv
@@ -41,6 +41,7 @@ from openhcs.core.runtime_tabular_values import (
 from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
     MeasurementScope,
+    MeasurementSubject,
     measurement_axis_integer_value,
 )
 from openhcs.core.runtime_identifier import (
@@ -56,9 +57,7 @@ from openhcs.core.runtime_relationships import (
 from openhcs.core.source_image_provenance import (
     source_component_metadata_consensus,
 )
-from openhcs.core.source_metadata import (
-    SourceMetadataFields,
-)
+from openhcs.interop.cellprofiler.database_column_dialect import CellProfilerDatabaseColumnDialect
 from openhcs.interop.cellprofiler.image_set_numbering import (
     CellProfilerImageSetNumbering,
 )
@@ -499,7 +498,7 @@ def _measurement_tables(
                     CELLPROFILER_MEASUREMENT_DIALECT
                 ),
             )
-            for image_number, metadata in _source_metadata_measurement_rows(
+            for image_number, metadata, file_values in _source_metadata_measurement_rows(
                 table,
                 row_domain,
                 image_numbers_by_slice,
@@ -508,6 +507,19 @@ def _measurement_tables(
                     image_number,
                     [],
                 ).append(metadata)
+                if file_values:
+                    accumulator.add_declared_rows(
+                        MeasurementSparseColumnarRows.from_rows(
+                            ({slice_axis.value: image_number, **file_values},),
+                            fields=(
+                                FieldSpec(slice_axis.value, int),
+                                *(FieldSpec(name, str, required=False) for name in file_values),
+                            ),
+                        ),
+                        CELLPROFILER_MEASUREMENT_DIALECT,
+                        default_subject="Image",
+                        default_scope=MeasurementScope.IMAGE,
+                    )
     for table in CellProfilerModule.derive_experiment_measurement_tables(all_tables):
         accumulator.add_declared_rows(
             table.rows,
@@ -569,21 +581,33 @@ def _source_metadata_measurement_rows(
     table: MeasurementTable,
     row_domain: MeasurementRowsAxisProjection,
     image_numbers_by_slice: Mapping[int, int],
-) -> tuple[tuple[int, Mapping[str, object]], ...]:
+) -> tuple[tuple[int, Mapping[str, object], Mapping[str, str]], ...]:
     """Project producer-owned source metadata into CellProfiler Image rows."""
 
-    rows: list[tuple[int, Mapping[str, object]]] = []
+    rows: list[tuple[int, Mapping[str, object], Mapping[str, str]]] = []
+    dialect = CellProfilerDatabaseColumnDialect()
+    image_subject = MeasurementSubject(MeasurementScope.IMAGE, "Image")
     for slice_index in row_domain.present_axis_values(
         MeasurementRowAxisField.SLICE_INDEX.value
     ):
-        metadata = table.source_provenance.for_source_plane(
-            slice_index
-        ).source_component_metadata
-        if metadata is None:
-            continue
-        original_metadata = dict(SourceMetadataFields.original_items(metadata))
-        if original_metadata:
-            rows.append((image_numbers_by_slice[slice_index], original_metadata))
+        provenance = table.source_provenance.for_source_plane(slice_index)
+        metadata = dialect.source_metadata_values(
+            provenance.source_component_metadata,
+            Path(provenance.source_path) if provenance.source_path is not None else None,
+        )
+        file_values: dict[str, str] = {}
+        for name in provenance.represented_source_image_names:
+            named_source = provenance.for_source_image(name)
+            if named_source.source_path is None:
+                continue
+            file_values.update(
+                (dialect.source_measurement_field(image_subject, FieldSpec(field, str)).name, value)
+                for field, value in dialect.source_image_file_values(
+                    Path(named_source.source_path), name,
+                ).items()
+            )
+        if metadata or file_values:
+            rows.append((image_numbers_by_slice[slice_index], metadata, file_values))
     return tuple(rows)
 
 

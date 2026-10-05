@@ -54,7 +54,12 @@ from openhcs.core.runtime_tabular_values import ColumnarRows
 from openhcs.core.runtime_relationships import (
     ObjectRelationship,
 )
-from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
+from openhcs.core.source_image_provenance import (
+    SourceImageProvenancePlanes,
+    RuntimeSourceImageProvenancePlane,
+    SourceImageProvenanceContributor,
+    SourceImageIdentity,
+)
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.source_bindings import (
     ComponentSelector,
@@ -402,6 +407,89 @@ def test_export_to_spreadsheet_renders_only_declared_batch_records() -> None:
     assert relationship_rows[0]["target_role"] == "child"
     assert "Leaked" not in bundle["Run1/Image.csv"]
     assert "Ignored" not in bundle["Run1/Cells.csv"]
+
+
+@pytest.mark.parametrize("add_metadata", (False, True))
+@pytest.mark.parametrize("add_files", (False, True))
+def test_spreadsheet_projects_source_identity_without_upstream_image_features(
+    add_metadata: bool, add_files: bool,
+) -> None:
+    provenance = SourceImageProvenancePlanes((
+        RuntimeSourceImageProvenancePlane(
+            SourceImageIdentity('/acquisition/body.tif', {
+                'well': 'A01', 'site': '2', 'channel': '3', 'z_index': '4',
+                'timepoint': '5', ORIGINAL_SOURCE_METADATA_FIELD: {'Treatment': 'control'},
+            }),
+            source_image_name='Body',
+        ),
+    ))
+    cells = _measurement_record(
+        'cells', axis_id='A01',
+        subject=MeasurementSubject(MeasurementScope.OBJECT, 'Cells', 'object_number'),
+        rows=({'slice_index': 0, 'object_number': 7, 'Area': 12.0},),
+        source_image_provenance_planes=provenance,
+    )
+    bundle = export_to_spreadsheet(
+        artifact_batch=RuntimeArtifactBatch(
+            input_specs=(ArtifactSpec.input('cells', MeasurementsArtifactType),),
+            records_by_axis={'A01': (cells,)},
+            source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
+        ),
+        add_image_metadata=add_metadata, add_image_file_names=add_files,
+        add_filename_prefix=False,
+    )
+    image, = csv.DictReader(io.StringIO(bundle['Image.csv']))
+    cell, = csv.DictReader(io.StringIO(bundle['Cells.csv']))
+    assert image['Metadata_well'] == 'A01'
+    assert image['Metadata_site'] == '2'
+    assert image['Metadata_z_index'] == '4'
+    assert image['Metadata_timepoint'] == '5'
+    assert image['Metadata_Treatment'] == 'control'
+    assert image['FileName_Body'] == 'body.tif'
+    assert image['PathName_Body'] == '/acquisition'
+    assert cell['object_label'] == '7'
+    assert cell['Area'] == '12.0'
+    assert ('Metadata_site' in cell) is add_metadata
+    assert ('Image_FileName_Body' in cell) is add_files
+    if add_files:
+        assert cell['Image_FileName_Body'] == 'body.tif'
+        assert cell['Image_PathName_Body'] == '/acquisition'
+
+
+@pytest.mark.parametrize('names', (('Body', 'Nuclear'), ('Nuclear', 'Body')))
+def test_spreadsheet_preserves_independent_contributor_filenames(names: tuple[str, ...]) -> None:
+    provenance = SourceImageProvenancePlanes((
+        RuntimeSourceImageProvenancePlane(
+            SourceImageIdentity(component_metadata={'well': 'A01', 'site': '2'}),
+            contributors=tuple(
+                SourceImageProvenanceContributor(
+                    SourceImageIdentity(f'/acquisition/{name}.tif', {'well': 'A01', 'site': '2'}),
+                    source_image_name=name,
+                )
+                for name in names
+            ),
+        ),
+    ))
+    record = _measurement_record(
+        'cells', axis_id='A01',
+        subject=MeasurementSubject(MeasurementScope.OBJECT, 'Cells', 'object_number'),
+        rows=({'slice_index': 0, 'object_number': 1, 'Area': 12.0},),
+        source_image_provenance_planes=provenance,
+    )
+    bundle = export_to_spreadsheet(
+        artifact_batch=RuntimeArtifactBatch(
+            input_specs=(ArtifactSpec.input('cells', MeasurementsArtifactType),),
+            records_by_axis={'A01': (record,)},
+            source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
+        ),
+        add_image_metadata=True, add_image_file_names=True, add_filename_prefix=False,
+    )
+    row, = csv.DictReader(io.StringIO(bundle['Cells.csv']))
+    for name in names:
+        assert row[f'Image_FileName_{name}'] == f'{name}.tif'
+        assert row[f'Image_PathName_{name}'] == '/acquisition'
+    assert 'Metadata_channel' not in row
+    assert 'Metadata_z_index' not in row
 
 
 def test_export_to_spreadsheet_bundle_uses_generic_file_materialization() -> None:
