@@ -30,6 +30,7 @@ TASKS = (
     ("channel identity RGB composite", "openhcs_image_interpretation"),
     ("uneven background additive subtraction", "openhcs_image_preprocessing"),
     ("nucleus split watershed", "openhcs_segmentation_diagnostics"),
+    ("ring fragmentation disconnected support", "openhcs_segmentation_diagnostics"),
     ("zero growth cytoplasm", "openhcs_segmentation_diagnostics"),
     ("all foreground threshold units", "openhcs_segmentation_diagnostics"),
     ("strong seed component retention", "openhcs_segmentation_diagnostics"),
