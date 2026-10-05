@@ -30,6 +30,15 @@ long-form CSV preserves each pair, and the figures include arithmetic averages
 across the supplied pipelines. Speedups use the ratio of each engine's independent
 median, as persisted in the converted summary.
 
+The same command writes a cumulative distribution and summary statistics
+(minimum, maximum, median, mean, and standard deviation) for each measured mode.
+Each pipeline contributes one speedup; native baseline and Average rows are
+excluded. Thus the minimum reports the weakest pipeline in the supplied cohort,
+and the distribution median is the median of per-pipeline ratios, not a ratio of
+pooled engine timings. The generated caption records the supplied modes and
+these aggregation rules. Distribution plots show the percentage of pipelines
+at or above each speedup threshold.
+
 The summary fields `median_native_execution_seconds`,
 `median_openhcs_execution_seconds`, and `median_speedup` hold the selected clock's
 converted values. For execution these are native pipeline-call through post-run
