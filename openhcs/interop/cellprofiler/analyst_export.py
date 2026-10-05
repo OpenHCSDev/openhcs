@@ -30,7 +30,7 @@ from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactSpec,
     ImageArtifactType,
-    MeasurementsArtifactType,
+    MeasurementBearingArtifactType,
     RelationshipsArtifactType,
 )
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
@@ -40,6 +40,7 @@ from openhcs.core.measurement_row_materialization import (
     WideMeasurementRowAccumulator,
 )
 from openhcs.core.equivalence import measurement_qualifier_field_names
+from openhcs.core.equivalence.relationships import RuntimeScopedMeasurementTable
 from openhcs.core.runtime_tabular_values import (
     FieldSpec,
 )
@@ -1223,12 +1224,32 @@ class CellProfilerAnalystProjectionBuilder:
             tuple[str, str, str, int | None],
         ] = {}
 
-        measurement_records = artifact_batch.records_of_type(MeasurementsArtifactType)
+        measurement_inputs = frozenset(
+            (spec.name, spec.artifact_type)
+            for spec in artifact_batch.input_specs
+            if issubclass(spec.artifact_type, MeasurementBearingArtifactType)
+        )
+        measurement_tables = {
+            axis_id: tuple(
+                RuntimeScopedMeasurementTable(
+                    table,
+                    record_identity=record.location.path,
+                    execution_scope=record.key.scope,
+                )
+                for record in records
+                if (record.key.name, record.key.artifact_type) in measurement_inputs
+                for table in record.key.artifact_type.measurement_tables(
+                    record,
+                    CELLPROFILER_MEASUREMENT_DIALECT,
+                )
+            )
+            for axis_id, records in artifact_batch.records_by_axis.items()
+        }
         image_records = artifact_batch.records_of_type(ImageArtifactType)
         relationship_records = artifact_batch.records_of_type(RelationshipsArtifactType)
         for axis_id in artifact_batch.records_by_axis:
             image_columns, experiment_columns = self._collect_measurements(
-                records=measurement_records[axis_id],
+                tables=measurement_tables[axis_id],
                 row_projection=row_projection,
                 image_rows_by_number=image_rows_by_number,
                 image_columns=image_columns,
@@ -1238,7 +1259,7 @@ class CellProfilerAnalystProjectionBuilder:
                 object_columns_by_subject=object_columns_by_subject,
             )
             self._collect_measurement_provenance(
-                records=measurement_records[axis_id],
+                tables=measurement_tables[axis_id],
                 image_channels=image_channels,
                 settings=settings,
                 row_projection=row_projection,
@@ -1275,9 +1296,9 @@ class CellProfilerAnalystProjectionBuilder:
                     ),
                 )
         all_measurement_tables = tuple(
-            cast(MeasurementTable, record.data)
-            for records in measurement_records.values()
-            for record in records
+            scoped_table.table
+            for tables in measurement_tables.values()
+            for scoped_table in tables
         )
         for table in CellProfilerModule.derive_experiment_measurement_tables(
             all_measurement_tables
@@ -1372,7 +1393,7 @@ class CellProfilerAnalystProjectionBuilder:
     def _collect_measurements(
         self,
         *,
-        records: Sequence[StoredRuntimeValue],
+        tables: Sequence[RuntimeScopedMeasurementTable],
         row_projection: CPATableRowProjection,
         image_rows_by_number: dict[int, dict[str, Any]],
         object_rows_by_subject: dict[
@@ -1387,11 +1408,11 @@ class CellProfilerAnalystProjectionBuilder:
             tuple[FieldSpec, ...],
         ],
     ) -> tuple[tuple[FieldSpec, ...], tuple[FieldSpec, ...]]:
-        for record in records:
-            table = cast(MeasurementTable, record.data)
+        for scoped_table in tables:
+            table = scoped_table.table
             image_columns, experiment_columns = self._collect_measurement_table(
                 table=table,
-                scope=record.key.scope,
+                scope=scoped_table.execution_scope,
                 row_projection=row_projection,
                 image_rows_by_number=image_rows_by_number,
                 image_columns=image_columns,
@@ -1569,7 +1590,7 @@ class CellProfilerAnalystProjectionBuilder:
     @staticmethod
     def _collect_measurement_provenance(
         *,
-        records: Sequence[StoredRuntimeValue],
+        tables: Sequence[RuntimeScopedMeasurementTable],
         image_channels: Sequence[CPAImageChannelSpec],
         settings: CellProfilerDatabaseExportSettings,
         row_projection: CPATableRowProjection,
@@ -1580,8 +1601,8 @@ class CellProfilerAnalystProjectionBuilder:
         ],
     ) -> None:
         channel_aliases = frozenset(channel.alias for channel in image_channels)
-        for record in records:
-            table = cast(MeasurementTable, record.data)
+        for scoped_table in tables:
+            table = scoped_table.table
             provenance = table.source_provenance
             for source_image_name in provenance.represented_source_image_names:
                 if source_image_name not in channel_aliases:
@@ -1594,7 +1615,7 @@ class CellProfilerAnalystProjectionBuilder:
                 )
                 row_projection.collect_image_provenance(
                     selected_provenance,
-                    scope=record.key.scope,
+                    scope=scoped_table.execution_scope,
                     source_image_name=source_image_name,
                     image_rows_by_number=image_rows_by_number,
                     source_metadata_by_image_number=source_metadata_by_image_number,
