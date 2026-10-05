@@ -330,6 +330,27 @@ ordinary-body repairs and the unresolved global count separately.
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
+## Supplementary Figure 18. Native H001 repair from the scored task-only run
+
+![Matched native raw, first and final H001 views.](../figures/slas/h001_scored_native.png){width=5.3in}
+
+\(A) Overview of the same bright-object field used in Figure 5A. (B) An elongated
+body represented by two first-attempt labels becomes one in the final candidate.
+Both rows show raw, first and final views from the same unguided author, not the
+separate assisted H001 development example. Raw display windows are 8–152 (A)
+and 8–248 (B), gamma 1; filled ROI opacity is 0.7. Colours are not stable
+cross-candidate identities. Object F1 against the notebook-derived computational
+reference rises from 0.929 to 0.944, with five missed reference objects unchanged.
+A possible merge and ambiguous small foci remain; the reference is not manual
+biological annotation. Original native screenshots are clipped/scaled without
+retouching; physical calibration is unverified. Source: Robert Haase and
+BioImageAnalysisNotebooks contributors, algorithm-validation collection.
+Supplementary Data 8 retains the score and source review.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
 ## Supplementary Table 1. Reusable libraries and their roles
 
 | Library | Role in OpenHCS |

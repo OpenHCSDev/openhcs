@@ -207,6 +207,19 @@ biology elsewhere; retain a faint-path regression control.
 
 ### Separate support recovery from rooted graph validity
 
+If a raw-supported junction disappears from a ridge-enhanced candidate, compare
+the raw pixels, enhanced response and admitted mask at that junction and an
+ordinary path. More permissive thresholding cannot recover pixels absent from
+the response. Where measured source/background separation supports it and the
+registry exposes the required operations, test combining enhanced support with
+a separately justified strong raw-signal mask. Keep processing units explicit;
+do not copy a raw threshold from another image. Inspect isolated bright puncta,
+near-track halos, false bridges and a faint-path control after the union. Apply
+the same soma-exclusion and graph stages when comparing candidates, so added
+support is not confused with a simultaneous loop-removal repair. Recovered
+junction pixels establish local support, not anatomical connectivity, crossing
+ownership or complete neurite length; retain any remaining gaps separately.
+
 Where the declared detector uses optional strong-seed/component retention,
 permissive admission is not the last support gate. A connected candidate can
 be discarded in full if it contains no qualifying seed, even when raw evidence
