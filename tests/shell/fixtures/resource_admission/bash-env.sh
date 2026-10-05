@@ -1,5 +1,10 @@
 #!/bin/bash
 # Only external host observations are controlled; original admission runs intact.
+date() {
+  if [[ "$*" == '-u +%s' && -n "${CONTROLLED_NOW:-}" ]]; then
+    printf '%s\n' "$CONTROLLED_NOW"
+  else command date "$@"; fi
+}
 systemctl() {
   if [[ "$2" == is-active ]]; then
     if [[ "$4" == *-mcp.scope ]]; then

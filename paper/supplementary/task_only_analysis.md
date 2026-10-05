@@ -579,6 +579,57 @@ qualification is retained separately from complete execution and scientific
 rejection. This trial improves diagnosis coverage but does not establish better
 task-wide accuracy, a causal skill benefit or a reusable parameter recipe.
 
+## Fresh public neurite field: measured faint-process recovery
+
+The independent author `H004_FRESH08_95` processed the complete paired
+800 x 800-pixel field through the packaged skill and MCP. Morphology supported
+one process/body channel and one nuclear-like channel; stain identity and
+physical calibration were not established. The final pipeline retained eight
+nuclear objects and eight associated perinuclear candidates. Their total areas
+were 5,394 and 9,505 pixel² respectively. The latter are bounded operational
+regions, not validated complete anatomical soma boundaries.
+
+The first completed modular candidate missed a faint diagonal. The author
+measured its enhanced-response peak at 0.006434, compared with sampled negative
+maxima of 0.001519 and 0.002260. The original effective admission was 0.023596.
+Its revised admission of approximately 0.002949 recovered supported samples
+along the ridge; both sampled 2,601-pixel negative regions admitted zero pixels.
+These local controls support this repair, not field-wide specificity or a
+universal threshold. Independent review of original matched raw/result/combined
+captures confirms local faint-path recovery and bright-trunk support, with
+remaining fragments and weak-path gaps.
+
+The author also rejected a multi-image photometry table after raw-pixel checks
+showed both named images receiving the same source values. Reordering image
+settings did not repair it. Separate source-bound single-image steps restored
+the distinct raw-channel values. Original failed tables and sources remain
+preserved; issue #722 tracks the underlying implementation defect. Descriptive
+photometry is on the original uint8/255 planes; saturation limits interpretation.
+
+The final candidate contained 33,201 foreground pixels, 27,856 outside the
+operational perinuclear regions, and 6,678 skeleton pixels. These are method
+descriptors, not diagonal-corrected length or complete per-neuron outgrowth.
+Distributed review retained useful nuclear detections and recovered processes,
+but weak fragments, crossings and field truncation left anatomical topology
+unresolved. No manual tracing, reference-answer scoring or accuracy percentage
+was available for this fresh development repeat.
+
+The final source SHA256 is
+`635703013f51d1d2a5d4de204f854ce2d0fe4ef2a071dea6955103b9c6484733`,
+executed as `0f0ec761-7d11-4220-bdb3-ffd166f36f2b`. The final report retains
+57 native screenshots. Independent verification matched 3,471 complete files
+(105,146,494 bytes); one still-growing outer author transcript matched its
+recorded 3,374,616-byte prefix rather than a final whole-file hash. Exact native
+and viewer closure was acknowledged and their old PIDs were independently
+absent. The recorded client exited with code 2, preserving earlier command
+errors, after 4,025 seconds. This operational qualification is separate from
+successful final execution and the scoped scientific findings.
+
+Original source, report, freeze, capture receipts and scientific files remain
+under `next-public03988-h00495-after08-20261004/H004_FRESH08_95` in the retained
+programme archive. This result does not replace the earlier neurite repeat or
+constitute evidence of a causal skill effect across fresh authors.
+
 ## Personal neurite mosaic: technical recovery and retained biological losses
 
 The retained same-author continuation `P001_STITCH_DEV94` used a previously

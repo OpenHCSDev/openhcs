@@ -328,6 +328,17 @@ geometry while rejecting whole-field outgrowth and branch ownership as biologica
 measurements. This distinguishes useful autonomous correction from complete
 neurite analysis (Supplementary Data 8).
 
+A separate fresh author measured the enhanced response along a missed faint
+process and in background controls before revising foreground admission. The
+repair recovered that process while preserving bright trunks. It retained
+eight nuclear objects and associated bounded perinuclear regions, and corrected
+wrong-channel photometry after comparing exported measurements with raw pixels.
+Fragmented weak paths and ambiguous crossings still prevented complete
+outgrowth and per-neuron topology measurements. This trial demonstrates useful
+empirically selected recovery and measurement checking, rather than complete
+tracing or a quantified improvement in general autonomous reliability
+(Supplementary Data 8).
+
 A retained personal-neurite development continuation analysed a nine-field
 stitched mosaic with shared channel fits. It corrected an unintended intensity
 rescaling and retained source-linked paths across sampled tile joins, but dense
