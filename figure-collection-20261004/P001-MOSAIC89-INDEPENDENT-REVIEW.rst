@@ -86,12 +86,17 @@ and 33878551fb313936a0a5ea7fda953df2ca3ca5cb2ea8785640bc989abdce59ea.
 
 The original closure receipt confirms viewer/native exit, and independent
 process checks find neither original PID 1601805 nor 1590675 present. The
-author preserves client exit status 1 and is sealing its original journal;
-that exit status is distinct from the three completed scientific executions.
-Complete-bundle sealing and its verification remain a separate pending custody
-step. The publication checkpoint reports the independently checked tables,
-documents and images above, not a completed journal seal. Existing evidence is
-not replaced and the run is not restarted.
+author preserves client exit status 1; that status is distinct from the three
+completed scientific executions and terminal outer-author exit 0.
+
+Subsequent completed custody check: FROZEN_MOSAIC_DEV89.json is present.
+All 348 complete-file control seals and three exact-byte-prefix journal seals
+match their original size/hash declarations. Every one of the 77 scientific
+artifacts (1,152,433,485 bytes) in artifacts-verified-MOSAIC_DEV89.json matches
+its declared size and SHA256. The separate terminal outer-journal receipt
+OWNER-TERMINAL-CLOSED-JOURNALS.sha256 verifies all six closed author/history
+files. Prefix and complete-file seals remain distinct; no original freeze
+was rewritten. Existing evidence is not replaced and the run is not restarted.
 
 Publication qualification
 -------------------------
