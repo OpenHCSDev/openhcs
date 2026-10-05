@@ -60,3 +60,17 @@ This review qualifies source selection for a native panel tied to the existing
 score, not a new rendered figure or whole-image manual accuracy claim. A later
 layout must retain the original PNG bytes, declare any clipping/scaling, keep
 the computational-reference scope, and leave the original freeze unchanged.
+
+Figure assembly follow-up
+-------------------------
+
+Supplementary Figure 18 uses six byte-identical copies under
+paper/figures/slas/h001_scored_sources. overview_raw/first/final correspond to
+the three overview paths above; detail_raw/final correspond to the regional
+raw/final paths above. detail_first is the original combined view at
+qa/a01_ur_combined_8_248/20261004T052553788306Z_napari_6017_OpenHCS_Napari_Visualization.png,
+also personally opened for layout review. It replaces the result-only regional
+view in the figure, not in the immutable source review. All six original/copy
+byte identities were checked. The existing FigureSheet owner records source
+hashes and editorial crops: overview (553,40,995,478), detail (297,28,1037,492),
+in screenshot XYXY pixels. No screenshot is overwritten or recoloured.

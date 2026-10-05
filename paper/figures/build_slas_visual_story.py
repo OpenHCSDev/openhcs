@@ -233,6 +233,44 @@ class FigureSheet:
         print(f"Rendered {self.stem}")
 
 
+def h001_scored():
+    """Native witnesses from the exact fresh author evaluated in Figure 5A."""
+    sheet = FigureSheet("h001_scored_native", "", 6.4)
+    sheet.source(
+        ROOT / "figure-collection-20261004/H001-FRESH586-SCORED-NATIVE-REVIEW.rst"
+    )
+    evaluation_path = (
+        ROOT / "paper/supplementary/task_only_analysis/h001-fresh586-postfreeze-evaluation.json"
+    )
+    sheet.source(evaluation_path)
+    evaluation = json.loads(evaluation_path.read_text())
+    first, final = evaluation["attempts"]
+    sheet.text(
+        3, 97, "H001: native views from the scored task-only run",
+        size=18, weight="bold", va="top",
+    )
+    for y, title, prefix, crop, bottom, height in (
+        (89, "A  Matched overview", "overview", (553, 40, 995, 478), 47, 36),
+        (41, "B  Elongated-body false split repaired", "detail", (297, 28, 1037, 492), 9, 26),
+    ):
+        sheet.text(3, y, title, size=15, weight="bold")
+        for x, stage, label in (
+            (3, "raw", "Raw"), (35, "first", "First, a01"), (67, "final", "Final, a04")
+        ):
+            sheet.text(x, y - 5, label, size=14)
+            sheet.source_image(
+                OUTPUT / "h001_scored_sources" / f"{prefix}_{stage}.png",
+                (x, bottom, 29, height), crop=crop,
+            )
+    sheet.text(
+        3, 3,
+        f"Object F1 {first['derived_f1']:.3f} → {final['derived_f1']:.3f}; "
+        f"{final['score']['false_negative_objects']} reference misses remain.",
+        size=14,
+    )
+    sheet.save()
+
+
 def architecture():
     sheet = FigureSheet(
         "shared_workflow", "OpenHCS: one editable workflow from images to results", 8.1
