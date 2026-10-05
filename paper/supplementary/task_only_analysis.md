@@ -1026,6 +1026,18 @@ saved-mask checks confirmed matching IDs and containment, not biological
 accuracy. The original timed trial stays frozen; separately assigned development
 continuation does not convert its rejected outcome into an autonomous pass.
 
+The subsequent assisted `BBBC007_RETAINED_DEV13_94` continuation completed all
+16 fields with 1,483 paired nucleus and seeded-cell labels. It repaired the
+checked oversized-basin loss, texture splits and faint/elongated admission
+through marker, watershed and foreground changes. The
+[independent development review](../../figure-collection-20261004/BBBC007-RETAINED-DEV13-REPAIR-REVIEW.rst)
+verifies all 664 payload files and twelve frozen handoff references, and opens
+matched native views showing recovered DNA support and a corresponding actin
+territory. Crowded actin boundaries remain uncertain: the author's A02 audit
+reports no cell growth beyond the nucleus for 24 of 78 masks. This is useful
+assisted repair evidence, not a fresh autonomous success, reference-based
+accuracy estimate or validated acquisition-wide cell-area measurement.
+
 ### Programme-wide evidence scope
 
 [Figure 5 plot data](../figures/slas/task_only_analysis_plot_data.csv) retains
