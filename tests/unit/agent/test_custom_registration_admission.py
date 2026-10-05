@@ -15,6 +15,7 @@ from openhcs.agent.dto.common import SCHEMA_VERSION
 from openhcs.agent.dto.functions import (
     CustomFunctionRegistrationDestination,
     CustomFunctionRegistrationDestinationRequest,
+    CustomFunctionRegistrationHandle,
     CustomFunctionRegistrationRequest,
     CustomFunctionRegistrationResult,
     FunctionCatalogNotReadyError,
@@ -105,12 +106,13 @@ def test_write_escape_rejects_before_endpoint_dispatch(tmp_path, escape):
 
 @pytest.mark.parametrize(
     "wrong_store, timeout",
-    ((False, False), (True, False), (False, True), (False, "owner_closed")),
+    ((False, False), (True, False), (False, True), (False, "owner_closed"), (False, "native_error")),
 )
 def test_exact_owned_route_and_store_precede_mutation(tmp_path, wrong_store, timeout):
     root = tmp_path / "custom"
     mutations = []
     endpoints = []
+    native_identity = replace(ProcessIdentity.current(), pid=1986611, create_time=1791240410.93)
 
     class Client:
         def custom_function_registration_destination(
@@ -119,7 +121,7 @@ def test_exact_owned_route_and_store_precede_mutation(tmp_path, wrong_store, tim
             assert probe.function_name == "boundary_probe"
             native = tmp_path / "foreign" if wrong_store else root
             return CustomFunctionRegistrationDestination(
-                str(native), str(native / "boundary_probe.py")
+                str(native), str(native / "boundary_probe.py"), native_identity
             )
 
         def register_custom_function(self, admitted, *, operation_deadline=None):
@@ -129,7 +131,11 @@ def test_exact_owned_route_and_store_precede_mutation(tmp_path, wrong_store, tim
                 )
             mutations.append(admitted)
             assert admitted.admission_policy == policy(tmp_path)
-            assert admitted.server_identity == ProcessIdentity.current()
+            assert admitted.server_identity == native_identity
+            if timeout == "native_error":
+                return CustomFunctionRegistrationResult.uncertain(
+                    admitted, ValueError("native declaration admission refused")
+                )
             if timeout:
                 raise TimeoutError("controlled post-dispatch observation")
             return CustomFunctionRegistrationResult(
@@ -167,11 +173,17 @@ def test_exact_owned_route_and_store_precede_mutation(tmp_path, wrong_store, tim
         ):
             catalog.register_custom_function(request(root))
         assert not mutations
+    elif timeout == "native_error":
+        result = catalog.register_custom_function(request(root))
+        assert result.errors[0].exception_type == "ValueError"
+        assert result.errors[0].message == "native declaration admission refused"
+        assert result.observation_handle.server_identity == native_identity
+        assert len(mutations) == 1
     elif timeout:
         result = catalog.register_custom_function(request(root))
         assert result.errors[0].code == "custom_function_registration_uncertain"
         assert result.errors[0].exception_type == "TimeoutError"
-        assert result.observation_handle.server_identity == ProcessIdentity.current()
+        assert result.observation_handle.server_identity == native_identity
         assert len(mutations) == 1
         assert catalog._config_provider().default_port == 15993
     else:
@@ -300,13 +312,14 @@ def test_native_destination_file_must_match_admitted_name(tmp_path):
 
 def test_wrong_owner_mutation_receipt_is_uncertain_not_replayed(tmp_path):
     mutations = []
+    native_identity = replace(ProcessIdentity.current(), pid=1986611, create_time=1791240410.93)
 
     class Client:
         def custom_function_registration_destination(
             self, probe, *, operation_deadline=None
         ):
             return CustomFunctionRegistrationDestination(
-                str(tmp_path), str(tmp_path / "boundary_probe.py")
+                str(tmp_path), str(tmp_path / "boundary_probe.py"), native_identity
             )
 
         def register_custom_function(self, admitted, *, operation_deadline=None):
@@ -336,11 +349,47 @@ def test_wrong_owner_mutation_receipt_is_uncertain_not_replayed(tmp_path):
         result = catalog.register_custom_function(request(tmp_path))
         assert result.errors[0].code == "custom_function_registration_uncertain"
         assert result.errors[0].message == "Registration returned a different execution owner."
-        assert result.observation_handle.server_identity == ProcessIdentity.current()
+        assert result.observation_handle.server_identity == native_identity
         assert len(mutations) == 1
         assert catalog._config_provider().default_port == 15993
     finally:
         catalog.close()
+
+
+def test_remote_handle_projects_selected_identity_without_native_admission(tmp_path):
+    selected = replace(ProcessIdentity.current(), pid=1986611, create_time=1791240410.93)
+    admitted = request(tmp_path, server_identity=selected).admitted(policy(tmp_path))
+    handle = CustomFunctionRegistrationHandle.from_request(admitted)
+    assert handle.server_identity == selected
+    assert handle.connection == admitted.connection
+    assert handle.storage_dir == admitted.storage_dir
+    assert handle.function_name == admitted.function_name
+    assert handle.content_sha256 == CustomFunctionRegistrationHandle.from_request(
+        replace(admitted, server_identity=ProcessIdentity.current())
+    ).content_sha256
+    # Projection is not permission to evaluate source in the caller, nor to
+    # observe a foreign native store through the local service.
+    with pytest.raises(ValueError, match="no source was evaluated"):
+        admitted.require_server_identity()
+    with pytest.raises(RuntimeError, match="owner changed"):
+        handle.require_current_owner()
+
+
+def test_remote_uncertainty_retains_original_error_and_owner(tmp_path):
+    selected = replace(ProcessIdentity.current(), pid=1986611, create_time=1791240410.93)
+    admitted = request(tmp_path, server_identity=selected).admitted(policy(tmp_path))
+    cause = TimeoutError("original source exchange response was not observed")
+    result = CustomFunctionRegistrationResult.uncertain(admitted, cause)
+    assert result.server_identity == selected
+    assert result.observation_handle == CustomFunctionRegistrationHandle.from_request(admitted)
+    assert result.errors[0].exception_type == "TimeoutError"
+    assert result.errors[0].message == str(cause)
+    assert result.errors[0].code == "custom_function_registration_uncertain"
+
+
+def test_registration_handle_requires_an_admitted_owner(tmp_path):
+    with pytest.raises(ValueError, match="no admitted server identity"):
+        CustomFunctionRegistrationHandle.from_request(request(tmp_path))
 
 
 @pytest.mark.parametrize(

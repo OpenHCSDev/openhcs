@@ -141,7 +141,7 @@ class CustomFunctionRegistrationHandle(FunctionCatalogOperationHandle):
     @classmethod
     def from_request(cls, request: CustomFunctionRegistrationRequest) -> Self:
         return cls(
-            connection=request.connection, server_identity=request.require_server_identity(),
+            connection=request.connection, server_identity=request.require_selected_server_identity(),
             content_sha256=CustomFunctionSource.content_digest(request.source_code.encode("utf-8")),
             function_name=request.function_name, persist=request.persist,
             storage_dir=request.storage_dir,
@@ -310,6 +310,17 @@ class CustomFunctionRegistrationRequest(FunctionCatalogControlRequestABC):
             policy.assert_writable(root)
             policy.assert_writable(CustomFunctionManager.source_path_for_name(root, self.function_name))
         return replace(self, admission_policy=policy)
+
+    def require_selected_server_identity(self) -> ProcessIdentity:
+        """Project the admitted endpoint owner without claiming local execution.
+
+        Error recovery and observation handles are built in the caller too.
+        Their native identity must survive an uncertain source-bearing exchange;
+        projecting that identity is not admission to evaluate source here.
+        """
+        if self.server_identity is None:
+            raise ValueError("Custom registration has no admitted server identity.")
+        return self.server_identity
 
     def require_server_identity(self) -> ProcessIdentity:
         """Require the same native owner that supplied the admission destination."""
