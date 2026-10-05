@@ -1689,7 +1689,6 @@ class ObjectFeatureValueTable:
                     feature_name,
                     np.asarray(values),
                     self.python_feature_values(values),
-                    self.feature_missing_value(feature_name).scalar,
                     self.feature_value_indexes(feature_name, np.asarray(values)),
                 )
                 for feature_name, values in self.feature_values.items()
@@ -1705,7 +1704,6 @@ class ObjectFeatureValueTable:
                 feature_name,
                 values,
                 python_values,
-                missing_value,
                 value_indexes,
             ) in feature_items:
                 if values.ndim == 0:
@@ -1713,7 +1711,8 @@ class ObjectFeatureValueTable:
                     continue
                 value_index = value_indexes.get(object_id)
                 row[feature_name] = (
-                    missing_value if value_index is None else python_values[value_index]
+                    self.feature_missing_value(feature_name, object_id=object_id).scalar
+                    if value_index is None else python_values[value_index]
                 )
             self.complete_row(row)
             rows.append(row)
@@ -1789,8 +1788,11 @@ class ObjectFeatureValueTable:
         """Add table-specific axis/value fields after feature projection."""
         del row
 
-    def feature_missing_value(self, feature_name: str) -> ObjectFeatureMissingValue:
-        """Return the declared missing-value policy for one feature."""
+    def feature_missing_value(
+        self, feature_name: str, *, object_id: int,
+    ) -> ObjectFeatureMissingValue:
+        """Return the declared missing-value policy for one feature/object row."""
+        del object_id
         return self.feature_missing_values.get(
             feature_name, ObjectFeatureMissingValue.NAN
         )
