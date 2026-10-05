@@ -249,133 +249,93 @@ On the complete 254 x 256-pixel H001 image, the first completed prediction match
 
 The BBBC039 author improved object F1 from 0.908 to 0.934 on its original three fields, reducing missed reference nuclei from 39 to 25 while retaining 14 excess predictions (Figure 7B). Its final pipeline then covered all 200 fields: 20,521 of 23,615 reference nuclei matched, with precision 0.947, recall 0.869 and pooled object F1 0.906. Field F1 reached at least 0.90 in 135 fields; ten fields remained below 0.80 (Figure 7C). This distribution retains difficult fields and three annotation-empty fields rather than selecting only favorable examples. No first-attempt score across 200 fields is inferred from the three initial outputs.
 
-A later independent BBBC039 repeat corrected noise-only foreground admission but
-completed only 156 of 200 fields before cleanup. On those completed fields,
-precision was 0.942, recall 0.838 and pooled object F1 0.887. The earlier complete
-run scored 0.909 on exactly the same 156 fields. Thus a useful local repair did
-not establish improved overall performance; the 44 incomplete fields remain
-outside this comparison (Supplementary Data 8).
+Independent repeats exposed variability beyond the within-run improvements.
+On 156 completed BBBC039 fields, a later author achieved precision 0.942,
+recall 0.838 and pooled F1 0.887, compared with 0.909 for the earlier pipeline
+on exactly those fields. Correcting noise-only foreground admission therefore
+did not improve overall reference agreement. Another repeat completed all
+200 fields across two execution phases with unchanged scientific parameters;
+its regional review retained useful detections and unresolved splits or merges,
+but no reference score was obtained. Execution coverage and segmentation
+quality are reported separately (Supplementary Data 8).
 
-A separate fresh-context BBBC039 repeat retained outputs for 182 fields before
-its execution was stopped. A same-author continuation completed the remaining
-18 fields with unchanged scientific parameters, giving inspectable coverage
-of all 200 fields across two execution phases. Independent reconciliation of
-the additional outputs found 2,136 object rows with consistent detector counts
-and object identities. This resolves batch coverage, not segmentation accuracy:
-regional review retained both useful detections and unresolved splits or merges,
-and no reference score was obtained for this repeat (Supplementary Data 8).
+### Image review supports local repair with regression controls
 
-These trials show that agents can choose useful initial settings and improve segmentation without reference-score feedback. The matched images and retained attempts distinguish recovered objects from excess partitions, missed objects and uncertain biological boundaries. Repeated trials across new datasets are needed to estimate how often this succeeds (Supplementary Data 8).
+In a released DNA/actin field, a fresh author separated a joined nuclear pair
+through its own review and exported 55 nuclear instances with linked actin
+territories (Figure 8). A faint pair remained merged. An independent repeat
+recovered three missed nuclei by detecting bright cores before growing their
+boundaries; its 54 nuclear instances included a dim nucleus and clipped edge
+object lost during its first repair (Supplementary Figure 13). A further author
+measured nuclear texture, neighbour separation and actin support before choosing
+its method. Boundary revision reduced assigned actin area from 55,903 to
+52,787 pixels while preserving 55 instances. A nucleus with unsupported actin
+extent and uncertain crowded interfaces remained. These trials demonstrate
+useful nuclear recovery and boundary revision, assessed independently of
+whether each linked territory represents a physical cell.
 
-Matched native views complement these numerical results. Supplementary Figure 9 shows the H001 elongated-object repair, a retained separated-pair control and a small-focus exclusion from the defined cohort. Supplementary Figure 10 separately illustrates the unresolved volumetric-centroid development case. Supplementary Figures 11 and 12 retain retinal soma development and a local BBBC013 nuclear repair alongside residual misses and compartment limitations. These same-author development cases are not fresh autonomous results or accuracy comparisons.
+Retinal authors used measured background and weak-body support to select
+smoothing, background subtraction and foreground admission. Earlier repeats
+retained useful soma detections but uncertain ring-shaped partitions and weak
+boundaries. In the independent trial shown in Figure 9, an intermediate repair
+joined a genuine northwest pair while correcting a southeast body split.
+The author detected that regression and adjusted marker suppression.
+Matched final views confirmed separate northwest neighbours and one southeast
+envelope in the same 102-instance candidate. Diffuse and lobed regions still
+had uncertain identities and extent (Supplementary Figure 14). The result
+supports autonomous local repair with a retained neighbour control;
+manual-reference accuracy remains unmeasured.
 
-A separate fresh-context author repaired a joined nuclear pair in a released DNA/actin field through its own review, without reference feedback (Figure 8). The final pipeline exported 55 nuclear instances and 55 associated actin territories, with reconciled object identities. A faint neighbouring pair remained merged, and unresolved actin interfaces limited interpretation of the territories as physical cell boundaries. This run demonstrates local autonomous repair and useful linked outputs, not an exact cell census (Supplementary Data 8).
+Whole-volume analysis also separated useful localisation from instance
+identity. One fresh nucleus-centre trial matched all 15 manual reference
+centres within 30 voxels, with ten unmatched predictions; at ten voxels it
+matched 14 of 15. The reference was not established as exhaustive, so unmatched
+centres were not automatically treated as spurious cells. The author's
+bright-core adjustment left first and final geometries unchanged. A separate
+fresh author repaired duplicate centres within one continuous body after
+rejecting an ineffective marker adjustment. Native XY and orthogonal views
+supported one representative, while a positive control stayed unchanged.
+Its 26 provisional centres retained unresolved associations and border
+supports. Supplementary Data 8 preserves these distinct trials and their
+remaining whole-volume uncertainties.
 
-A subsequent independent author on the same released field recovered three
-missed nuclei by separating high-threshold core detection from lower-threshold
-boundary growth. This also restored a dim nucleus and clipped edge object lost
-during its first repair. The final 54 nuclear instances and associated actin
-territories retained one no-growth candidate and uncertain crowded cell-body
-divisions. Nuclear recovery therefore succeeded locally even where cell-body
-interpretation remained unresolved; no manual-reference accuracy score was
-calculated for this repeat (Supplementary Figure 13; Supplementary Data 8).
+### Recovery and self-diagnosis vary between images
 
-A later independent repeat measured nuclear texture, true-neighbour separation
-and actin support before selecting its first method. Its final pipeline
-retained 55 nuclear instances while reducing assigned actin area from 55,903
-to 52,787 pixels through its own boundary review. Unchanged instance counts
-did not capture this geometric change: one nucleus lacked supported actin
-extent and crowded interfaces remained uncertain. Nuclear localisation and
-associated-region geometry were therefore assessed separately, retaining the
-useful nuclear result without treating every linked region as a validated
-cell boundary (Supplementary Data 8).
+Crowded DNA/actin fields exposed failures that consistent object tables did
+not resolve. One fresh BBBC007 author processed all 16 paired fields but left
+many bright nuclei without outlines in a dense cluster. An independent author
+traced similar losses to broad foreground support, sparse shape markers and
+size-filtered merged basins. Its threshold repair recovered several nuclear
+anchors while preserving inspected dim and textured bodies, but clear misses
+and seed-sized secondary objects remained. A separate paired-field author
+repaired a cluster and close pair, then introduced an apparent split in an
+isolated mottled nucleus while a dim neighbour stayed joined. It identified
+both failures in its final review. These cases show useful stage-specific
+diagnosis and partial recovery, with inconsistent completion of the repair.
 
-A fresh retinal author independently revised its foreground model after measuring background admission and weak-body support. Smoothing followed by broad-background subtraction improved local signal discrimination, and the completed final pipeline exported 109 detector instances. Distributed review still found partial faint-body recovery and uncertain ring-shaped partitions; a saved response below the cutoff localized one plausible miss to foreground admission rather than watershed. This is evidence of autonomous diagnosis and useful candidate output, not a validated retinal ganglion-cell count (Supplementary Data 8).
+Public neurite-field authors recovered clear process segments while weak
+paths and ambiguous crossings remained difficult. One corrected false nuclear
+splits and traced a segment to the boundary but admitted nearby fragments.
+Another measured the enhanced response along a missed faint process and in
+background controls, recovered the process while preserving bright trunks,
+and corrected wrong-channel photometry by checking exported values against
+raw pixels. Both retained eight nuclear objects. Discontinuous paths and
+uncertain crossings prevented complete outgrowth and per-neuron topology
+measurements. A separate retained-context personal-neurite continuation
+processed a nine-field mosaic with shared channel fits and paths across sampled
+joins, but incomplete nuclear and soma detection limited its morphology
+measurements. That assisted continuation is distinct from fresh autonomous
+authoring.
 
-A subsequent independent retinal author retained separation of a conspicuous bright pair and repaired an additional body split by increasing marker smoothing. Its final pipeline produced 118 detector instances. Distributed review still showed excess partitions and uncertain weak-body admission, so the useful local segmentation gains were reported separately from the unresolved whole-field count. No manual-reference accuracy was measured; this repeat illustrates partial autonomous success rather than either a complete cell census or a wholly unusable analysis (Supplementary Data 8).
-
-The latest independent retinal repeat recovered a continuous soma envelope
-while retaining a genuine neighbouring pair in another region (Figure 9). An intermediate
-repair had merged that pair; the author detected the regression and revised
-marker suppression before freezing its final 102-instance output. Matched
-native views confirmed both local gains in the same candidate. Diffuse and
-lobed regions retained uncertain identities and boundaries, assessed separately
-from the clearer body detections. The author therefore repaired one body while
-checking that a genuine pair remained separate. The evidence supports these
-local detections and repairs; manual-reference accuracy remains unmeasured.
-Supplementary Figure 14 shows the remaining crowded-region uncertainty
-alongside the corresponding raw image and labels (Supplementary Data 8).
-
-A fresh whole-volume nucleus-centre trial matched all 15 manual reference
-centres at the predeclared 30-voxel tolerance, with 10 unmatched predictions;
-at 10 voxels it matched 14 of 15. The reference was not established as
-exhaustive, so unmatched candidates were not automatically classified as
-spurious cells. First and final geometries and reference scores were identical:
-the author detected that its local bright-core repair had not changed the
-condensed structure. Useful annotated-centre coverage was therefore distinct
-from successful repair, a complete cell census and native point interaction
-(Supplementary Data 8).
-
-A later fresh volumetric author repaired two centres within one continuous
-body after rejecting an ineffective marker adjustment. Measured basin-contact
-separation motivated the repair; native XY and orthogonal views supported one
-representative, while a positive control's centre remained unchanged. The
-frozen result retained 26 provisional centres, but a second association,
-border supports and obscured final field views remained unresolved. This is
-a successful local autonomous repair, not a validated whole-volume count
-(Supplementary Data 8).
-
-Not every completed trial improved its biological result. A separate fresh
-BBBC007 author processed all 16 paired DNA/actin fields and conserved 1,335
-nuclear-to-secondary label identities, but its final review identified many
-bright nuclei without outlines in a dense field. Changing the marker method
-did not recover that cluster. The author rejected population-level use rather
-than treating consistent tables as accurate detection; independent post-freeze
-image review confirmed the missing cluster (Supplementary Data 8).
-
-A later independent author processed the same 16 released pairs and traced
-crowded-region losses to broad foreground support, sparse shape markers and
-size-filtered merged basins. Its threshold-method repair recovered several
-previously missed nuclear anchors while retaining inspected dim and textured
-bodies. Clear crowded-region misses remained. The final 1,363 nuclear and
-associated cell-label identities therefore provide reproducible candidate
-outputs and partial autonomous recovery, not a validated population count;
-81 secondary objects remained seed-sized (Supplementary Data 8).
-
-A separate fresh paired-field author separated a crowded cluster and a
-genuine close pair after inspecting its marker and partition stages. Reducing
-marker smoothing in the last repair still failed to separate a dim neighbour
-and introduced an apparent split within an isolated mottled nucleus. The author
-identified both problems through raw/result review and retained the unsuccessful
-final attempt rather than substituting an earlier result. This demonstrates
-stage-specific autonomous diagnosis and local gains, but not consistent repair
-or a validated cell count (Supplementary Data 8).
-
-A fresh public neurite-field author corrected false nuclear splits and retained
-eight compact nuclear objects. It traced a clear segment to the field boundary,
-but recovery of faint processes remained discontinuous and permissive admission
-introduced nearby fragments. The author therefore retained the local segment
-geometry while rejecting whole-field outgrowth and branch ownership as biological
-measurements. This distinguishes useful autonomous correction from complete
-neurite analysis (Supplementary Data 8).
-
-A separate fresh author measured the enhanced response along a missed faint
-process and in background controls before revising foreground admission. The
-repair recovered that process while preserving bright trunks. It retained
-eight nuclear objects and associated bounded perinuclear regions, and corrected
-wrong-channel photometry after comparing exported measurements with raw pixels.
-Fragmented weak paths and ambiguous crossings still prevented complete
-outgrowth and per-neuron topology measurements. This trial demonstrates useful
-empirically selected recovery and measurement checking, rather than complete
-tracing or a quantified improvement in general autonomous reliability
-(Supplementary Data 8).
-
-A retained personal-neurite development continuation analysed a nine-field
-stitched mosaic with shared channel fits. It corrected an unintended intensity
-rescaling and retained source-linked paths across sampled tile joins, but dense
-nuclear misses and incomplete soma boundaries prevented complete counting or
-morphology claims. This same-author continuation is not a fresh autonomous
-success (Supplementary Data 8).
+Together, the task-only trials demonstrate useful initial choices, local
+recovery and self-diagnosis without reference-score feedback. Their quantitative
+comparisons and matched views distinguish detection, object separation,
+boundary extent and execution coverage. Performance on one repaired region
+does not predict performance throughout an image or on a new dataset.
+Supplementary Data 8 retains the individual attempts, pipeline freezes and
+reference definitions. Supplementary Figures 9–12 separately show task-only
+local controls and same-author development cases; those development cases
+do not supply fresh autonomous scores.
 
 ### Figure 7. Task-only analysis: within-run revision and final coverage
 
