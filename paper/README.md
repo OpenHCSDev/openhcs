@@ -32,7 +32,7 @@ to understand the scientific findings in the main text.
 The seven main figures show the shared workflow, matching UI/code/MCP authoring,
 the recorded agent analysis and benchmark results, followed by task-only
 first/final analysis, full-corpus coverage and native views of autonomous local
-repair and fresh retinal detection. Sixteen supplementary figures explain runtime composition,
+repair and fresh retinal detection. Seventeen supplementary figures explain runtime composition,
 process boundaries, compiler preparation, connected outputs and custom functions.
 They also report historical timing observations and three prospective
 agent-authored assays on held-out public data. The two newer native-view figures
@@ -46,6 +46,8 @@ crowded-region uncertainty in the independent retinal result shown in main
 Figure 7. Figures 15–16 retain the source-derived CellProfiler import example
 and native Fiji/napari viewer demonstrations. Supplementary Table 1 retains the
 reusable-library roles and source links.
+Figure 17 adds native XY/XZ/YZ review of an independent volume result, retaining
+ordinary-body support and unresolved multi-lobed identity separately.
 
 [Supplementary Data 8](supplementary/task_only_analysis.md) retains the newer
 task-only authoring results separately from those prospective held-out assays.

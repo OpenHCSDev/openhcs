@@ -271,6 +271,13 @@ Its 26 provisional centres retained unresolved associations and border
 supports. Supplementary Data 8 preserves these distinct trials and their
 remaining whole-volume uncertainties.
 
+A later independent volume author removed sampled internal-peak duplicates
+using measured component-local spacing while retaining a genuine neighbour
+pair. Its 22 provisional centres included an unresolved bright multi-lobed
+cluster. Native XY, XZ and YZ review separated useful ordinary-body support
+from that identity uncertainty (Supplementary Figure 17); no global biological
+count or new reference score was established.
+
 ### Recovery and self-diagnosis vary between images
 
 Crowded DNA/actin fields exposed failures that consistent object tables did
