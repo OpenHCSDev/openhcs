@@ -1,7 +1,8 @@
 Automatic ROI publication: one rendered geometric source domain
 ==============================================================
 
-Source checkpoint only; installed/public acceptance is pending. Normal merges
+Historical source checkpoint; completed installed/public delivery is recorded
+in the final section below. At this checkpoint, normal merges
 now include qualified732 head2f4c68ff05876efb48e14743ac8027064b1b09ab and actual
 mainf8f39e136098ce528f9847d07116dcb790610c43. The PR is stacked on the original
 732 owner branch while that dependency remains unmerged; it must not bulk-deliver
@@ -166,3 +167,70 @@ This integration does not implement or claim acceptance of those remaining hooks
 One future ordinary package and exact released incarnation after732 will exercise
 the own tiny four-plane synthetic producer, automatic settlement and saved
 point/label reopening. That public boundary remains unverified.
+
+Completed installed and public delivery
+--------------------------------------
+
+PR748 merged reviewed source5fb7e1450fb418bdd545abff9785f374346b06f8 as
+main9f1e0bf739e02c4d5c6cc3d6744cef4c2a43b9e0. The preceding source-only
+and pending statements describe their original checkpoints, not current status.
+This delivery contains its own geometry and TIFF owner family, not historical
+Root ancestry or separately released Singer522 selection hooks.
+
+The original saved scalar label failure contained correct int32 values but
+encoded four planes as SYX/RGB/SEPARATE samples on one page. The reader correctly
+identified colour and the strict aggregate projection rejected its missing
+local frame domain. TiffImageFileFormat.storage_config now applies its existing
+semantic storage configuration to declared runtime plane stacks: QYX for scalar
+frames, the original channel configuration for declared colour, and unchanged
+ZYX for intrinsic volumes. Q is a container frame, not a fabricated physical Z.
+Source domains retain physical coordinates and calibration; compression and
+undeclared-rank rejection remain intact. No reader or native guard was weakened.
+
+Original writer-family controls51704 terminated0 with153PASS. The ordinary
+receiving15 package pins543bf34669f25e4e8c86ac0007ac9f4cc68f3cc0, including
+the reviewed748 owner and separately released522 hooks. Build31920 terminated0;
+whole919 RECORD entries,816 tracked sources,791 Python files and all13 packaged
+skill files were qualified. Original affected installed controls23130 terminated0
+with232PASS and explicit receiving15 module-origin assertions. This package uses
+the retained actual Napari0.6.1; it is not a supported0.7.1-stack claim.
+
+Original public client17936/native648055/create1791215470.77 completed compilejob1
+and executionjob2/8c48fe80-a0de-4883-9d1e-3b68527afba9 with errors[]. Automatic
+settlement and same-viewer mixed scalar TIFF, fractional Points ZIP and two
+plane-anchored Shapes ZIP reopen completed with errors[] and no skipped records.
+The new scalar TIFF has four MINISBLACK single-sample pages, QYX/int32/4x5x7;
+all140 values equal the original fixture, including eight label7 voxels on Z1/2.
+Points retain object7, centreZYX1.5/1.5/2.5, complete sourceZ0..3 and
+spacing2/.65/.65. The reopened scalar and Points native transforms preserve
+that scale. Shapes retain their exact sourceZ1/2 and native translations2/4.
+
+Planck personally opened all14 retained native PNGs: Points XY/XZ/YZ triplets,
+Shapes XY triplet, scalar-only and scalar+Points+Shapes XY. Orthogonal placement
+aligns with the synthetic source. The size3 point glyph occludes the tiny XY raw
+square; numerical coordinates and orthogonal/raw captures carry placement, not
+an unobscured XY claim. An initial single-plane Shapes ordinal1 request was
+explicitly rejected and retained; the corrected known route-local ordinal0
+request succeeded. No UNKNOWN input or old failed reopening was replayed.
+
+Independent original archive-reader verification16 terminated0/PASS and checks
+raw bytes, all label values/header semantics, CSV/fractional geometry, source
+paths/domain/calibration and reopened native transforms. Initial verifier15's
+unconditional query of optional plane_indices failed and remains preserved;
+verification16 uses ROIPlaneMetadata.has_plane_metadata without inventing a
+domain or weakening validation. Exact evidence is under::
+
+  engineering494/public748-after-writer95-attempt02/
+    OWNER-748-SAVED-REOPEN-ACCEPTANCE15.rst
+    OWNER-EXECUTION-COMPLETE15.json
+    OWNER-SCALAR-TIFF15.json
+    OWNER-SAVED-REOPEN15.json
+    OWNER-SAVED-STATE15.json
+    OWNER-SAVED-CAPTURE-OPERATIONS15.json
+    PERSISTED-AND-NATIVE-READBACK16.json
+    PLANCK-PUBLIC-ACCEPTANCE16.rst
+
+The original client continues separate522 receiving; final lease closure and
+whole-journal sealing are not claimed in this checkpoint. This proves the
+scoped synthetic automatic/saved geometry path, not biological accuracy,
+whole historical494 acceptance or522 selected-source survivor behaviour.
