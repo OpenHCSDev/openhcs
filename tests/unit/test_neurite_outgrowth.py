@@ -80,12 +80,22 @@ def _cell_body_count_implementation():
 
 
 @pytest.mark.parametrize("branched", [False, True])
-def test_pixel_recipe_matches_physical_detection_and_declares_metric_units(branched):
+@pytest.mark.parametrize("with_nuclei", [False, True])
+def test_pixel_recipe_matches_physical_detection_and_declares_metric_units(
+    branched, with_nuclei
+):
     image = _draw_fluorescent_neuron(branched=branched)
+    if with_nuclei:
+        body_and_process = _with_separate_body_channel(image)
+        nuclei = np.zeros_like(image[0])
+        rows, columns = disk((64, 20), 4, shape=nuclei.shape)
+        nuclei[rows, columns] = 1000
+        image = np.concatenate((body_and_process, nuclei[None]), axis=0)
     before = image.copy()
     pixel_body = PixelCellBodySettings(
         approximate_max_width=30, minimum_area=100,
         intensity_above_local_background=100,
+        channel_index=0 if with_nuclei else None,
     )
     pixel_growth = PixelOutgrowthSettings(
         maximum_width=3, intensity_above_local_background=100,
@@ -96,18 +106,27 @@ def test_pixel_recipe_matches_physical_detection_and_declares_metric_units(branc
     assert "pixel_size" not in signature(contract.resolve_raw_runtime_callable()).parameters
     pixel = contract.resolve_raw_runtime_callable()(
         image, cell_body=pixel_body, outgrowth=pixel_growth,
+        neurite_channel_index=1 if with_nuclei else 0,
+        use_nuclear_stain=with_nuclei,
+        nuclear_stain=PixelNuclearSettings(channel_index=2),
     )
     physical = _implementation()(
         image,
         cell_body=MetaXpressCellBodySettings(
             approximate_max_width=15, minimum_area=25,
             intensity_above_local_background=100,
+            channel_index=0 if with_nuclei else None,
         ),
         outgrowth=MetaXpressOutgrowthSettings(
             maximum_width=1.5, intensity_above_local_background=100,
             minimum_cell_growth_to_log_as_significant=10,
         ),
         pixel_size=0.5,
+        neurite_channel_index=1 if with_nuclei else 0,
+        use_nuclear_stain=with_nuclei,
+        nuclear_stain=MetaXpressNuclearSettings(
+            channel_index=2, approx_min_width=2.5, approx_max_width=15
+        ),
     )
     assert pixel[0] is physical[0] is image
     np.testing.assert_array_equal(image, before)
@@ -1632,6 +1651,8 @@ def test_transmission_mode_detects_dark_cell_and_neurite():
 
 
 def test_cell_rows_do_not_remeasure_owned_paths_with_cp_seed_propagation(monkeypatch):
+    from importlib import import_module
+
     image = _with_separate_body_channel(_draw_fluorescent_neuron())
 
     def forbidden_remeasurement(*args, **kwargs):
@@ -1640,7 +1661,8 @@ def test_cell_rows_do_not_remeasure_owned_paths_with_cp_seed_propagation(monkeyp
         )
 
     monkeypatch.setattr(
-        "openhcs.processing.backends.cellprofiler.skeleton.measure_object_skeleton",
+        import_module("openhcs.processing.backends.cellprofiler.skeleton"),
+        "measure_object_skeleton",
         forbidden_remeasurement,
     )
     _, summary_rows, cell_rows, _, _, _, _, *_ = _implementation()(
