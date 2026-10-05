@@ -173,6 +173,14 @@ def test_relationship_recording_uses_exact_artifact_relation() -> None:
             (1, 4, 5, 3),
             RuntimePlaneAxis.RUNTIME_SLICE,
         ),
+        (
+            RuntimePlaneAxisValueProjection.preserve(
+                axis=RuntimePlaneAxis.SOURCE_BINDING,
+                axis_size=3,
+            ),
+            (3, 4, 5, 3),
+            RuntimePlaneAxis.RUNTIME_SLICE,
+        ),
     ),
 )
 def test_image_output_recording_uses_exact_invocation_projection_for_rgb(
@@ -197,7 +205,8 @@ def test_image_output_recording_uses_exact_invocation_projection_for_rgb(
     source_slice = ImagePayloadMetadata(
         source_image_names=(measured_objects.name,),
     ).payload_with(np.zeros((4, 5), dtype=np.float32))
-    source_payload = RuntimeSliceAlignedValues((source_slice,))
+    source_count = output_shape[0] if len(output_shape) == 4 else 1
+    source_payload = RuntimeSliceAlignedValues((source_slice,) * source_count)
     output_value = np.zeros(output_shape, dtype=np.float32)
     adapter = Mock(spec=CellProfilerRuntimeAdapter)
 

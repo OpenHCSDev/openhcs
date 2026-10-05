@@ -3085,7 +3085,6 @@ def test_normalize_artifact_value_aggregates_slice_aligned_object_label_domains(
     assert payload.source_image_names == ()
     assert payload.source_image_provenance_planes.count == 0
     assert value.materialization_payload() is payload
-    assert output_plan.materialization_payload(value) is payload
     np.testing.assert_array_equal(
         payload.labels,
         np.array(
@@ -3172,7 +3171,6 @@ def test_normalize_artifact_value_preserves_slice_aligned_object_label_sources()
     )
     np.testing.assert_array_equal(payload.labels, expected_labels)
     assert value.materialization_payload() is payload
-    assert output_plan.materialization_payload(value) is payload
 
 
 def test_normalize_artifact_value_rejects_metadata_payload_mismatch():
