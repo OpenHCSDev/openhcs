@@ -1125,6 +1125,18 @@ than a whole-volume census or boundary accuracy. The
 [evaluation receipt](task_only_analysis/h002-fresh15-postfreeze-evaluation.json)
 retains all four distance thresholds and exact input identities.
 
+A later independent retinal trial retained 145 candidate soma instances after
+self-directed interior, edge and marker repairs. Independent full-field,
+central, northeast and southwest raw/result/combined review supports bright-body
+localisation, a separated neighbouring pair and intact isolated-body controls.
+Open rims, a lobed body and crowded divisions remain uncertain. The
+[independent final review](../../figure-collection-20261004/R0010-FRESH18-INDEPENDENT-FINAL-REVIEW.rst)
+records twelve personally opened original captures, all 154 verified payload
+entries, and the final pipeline and registered-callable hashes. The saved dense
+labels and linked measurement table each contain 145 instances. These are
+detector outputs, with clipped and class-uncertain objects retained; there is no
+manual-reference accuracy estimate for this field.
+
 A fresh-context paired DNA/actin author also retained 55 nuclei and 55
 source-linked actin territories after repairing a local nuclear merge. A
 faint-neighbour merge, clipped objects and one no-growth territory remained

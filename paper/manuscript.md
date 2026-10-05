@@ -296,6 +296,14 @@ had uncertain identities and extent (Supplementary Figure 14). The result
 supports autonomous local repair with a retained neighbour control;
 manual-reference accuracy remains unmeasured.
 
+A later independent retinal author repaired fragmented interiors and a merged
+neighbouring pair, retaining 145 candidate soma instances. Independent full-field
+and regional raw/result review supported bright-body localisation, separate
+neighbours and intact isolated bodies against noisy background. Faint open rims
+and lobed or crowded objects retained uncertain extent and identity. This result
+adds evidence of self-directed repair; the detector total is not a manual cell
+count (Supplementary Data 8).
+
 Whole-volume analysis also separated useful localisation from instance
 identity. One fresh nucleus-centre trial matched all 15 manual reference
 centres within 30 voxels, with ten unmatched predictions; at ten voxels it
