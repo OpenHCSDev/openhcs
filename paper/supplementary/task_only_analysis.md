@@ -900,6 +900,15 @@ pipeline, callable, QA audit and reconciliation remain under
 `/home/ts/wt/openhcs-issue-batch-20260929/next-h002-fresh10-89-20261005/H002_FRESH10_89/author-workspace/output`;
 canonical payloads remain on HDD at the paths in the source proof.
 
+### BBBC007 fresh10 rotation: coverage failure with consistent exports
+
+The [independent frozen-run review](../../figure-collection-20261004/BBBC007-FRESH10-ROTATION-INDEPENDENT-REVIEW.rst)
+retains complete 16-field execution and 1311 site-local nucleus/cell pairs,
+alongside observed missed groups and incomplete final-candidate QA. Direct
+saved-mask checks confirmed matching IDs and containment, not biological
+accuracy. The original timed trial stays frozen; separately assigned development
+continuation does not convert its rejected outcome into an autonomous pass.
+
 ### Programme-wide evidence scope
 
 [Figure 5 plot data](../figures/slas/task_only_analysis_plot_data.csv) retains
