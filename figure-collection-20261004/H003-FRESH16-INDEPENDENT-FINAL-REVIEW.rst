@@ -37,16 +37,16 @@ Presentation and integrity
 --------------------------
 
 The retained ledger records the same camera within each triplet and between
-the two channels: whole-field centre y/x=199.5/199.5, zoom1; weak crop
-65/337, zoom3. Canvas is953 by420, displayed axes y/x, angles0/0/90.
-Raw and combined views retain gamma1, DNA limits0--80, whole Actin0--65
-and weak Actin0--15. Screenshots visibly agree with the named channel, framing
+the two channels: whole-field centre y/x=199.5/199.5, zoom 1; weak crop
+65/337, zoom 3. Canvas is 953 by 420, displayed axes y/x, angles 0/0/90.
+Raw and combined views retain gamma 1, DNA limits 0--80, whole Actin 0--65
+and weak Actin 0--15. Screenshots visibly agree with the named channel, framing
 and layer toggles. These are saved state receipts, not fresh live readback.
 
 The parent reran the complete original frozen-manifest SHA256 check:
-all1083 scientific/control files passed, exit0. The manifest declares
+all 1,083 scientific/control files passed, exit 0. The manifest declares
 92,553,397 bytes. This verifies artifact identity, not biological truth.
-The original terminal record separately retains author exit0, client exit2,
+The original terminal record separately retains author exit 0, client exit 2,
 exact process/listener absence and final pipeline SHA256
 01990144c9a04fd3639ce727c98420a2f930e3d41be247a26cd8496ae1e0ca88.
 Original failures and journal dispositions were not rewritten.
@@ -78,5 +78,4 @@ Control root is
 ``/home/ts/wt/openhcs-issue-batch-20260929/next-h003-fresh16-94-after-h004dev-20261005``.
 Read sources: ``OWNER-TERMINAL.rst`` and the author's ``report.md``,
 ``qa-notes.rst``, ``qa-ledger.json`` and ``frozen-manifest.json``.
-This pass covers twelve captures, not all131 reviewed by the author.
-
+This pass covers twelve captures, not all 131 reviewed by the author.
