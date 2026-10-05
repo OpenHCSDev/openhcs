@@ -1038,6 +1038,14 @@ reports no cell growth beyond the nucleus for 24 of 78 masks. This is useful
 assisted repair evidence, not a fresh autonomous success, reference-based
 accuracy estimate or validated acquisition-wide cell-area measurement.
 
+Main Figure 8 reads the [retained native table projection](task_only_analysis/bbbc013-fresh13-plot-source.json)
+without executing the pipeline or accessing scientific images. That projection
+retains every native CSV row and each original table's path and SHA-256. Dose
+panels use the ten `empty`/`dose` groups for each drug; control panels use the
+separate assay-statistics records. The positive control in both blocks is
+Wortmannin 150 nM, including the LY294002 block. Plotted variability is the
+native between-well sample SD, not standard error or between-cell variation.
+
 ### Programme-wide evidence scope
 
 [Figure 5 plot data](../figures/slas/task_only_analysis_plot_data.csv) retains
