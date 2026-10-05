@@ -1006,6 +1006,17 @@ identifies the immutable source, terminal journals and original scorer. The
 incomplete subset is not random or unseen validation; missing fields are not
 silently treated as correct predictions.
 
+A subsequent independent BBBC039 author completed all 200 fields and reached
+pooled F1 0.9036, precision 0.9444 and recall 0.8663: 20,457 matched annotated
+nuclei, 1,205 unmatched predictions and 3,158 missed annotations. On its same
+six development fields, F1 increased from 0.8262 to 0.8405. All three
+annotation-empty fields had no detections. The
+[detailed outcome](task_only_analysis.md#bbbc039-fresh13-full-corpus-agreement-and-six-field-repair)
+and [complete evaluation receipt](task_only_analysis/bbbc039-fresh13-postfreeze-evaluation.json)
+retain every field, the six-field comparison and original scorer identities.
+This is repeatability near the earlier full-corpus F1 of 0.9062, not improved
+overall accuracy or a first-attempt evaluation across 200 fields.
+
 Another fresh-context BBBC039 repeat retained 182 completed fields. A separate
 same-author continuation subsequently completed the missing 18 fields without
 changing the scientific parameter file. Independent checks found all 18 label
