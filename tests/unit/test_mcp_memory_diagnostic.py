@@ -15,6 +15,8 @@ from python_introspect import dataclass_from_mapping
 import openhcs
 from openhcs.mcp.memory_diagnostic import (
     DiagnosticSourceIdentity,
+    MemoryDiagnosticReport,
+    MemoryDiagnosticMcpClient,
     ProcessMemoryReceipt,
     RetentionMetric,
     read_request_sequence,
@@ -35,6 +37,11 @@ def test_process_receipt_uses_current_process_and_reports_gc_boundary():
     assert after.swap_kib >= 0
     assert after.threads >= 1
     assert after.monotonic_seconds >= before.monotonic_seconds
+    assert before.host_mem_available_kib > 0
+    assert before.host_swap_used_kib >= 0
+    assert before.host_full_psi_avg10 >= 0
+    assert before.host_full_psi_avg60 >= 0
+    assert before.host_full_psi_avg300 >= 0
 
 
 def test_slope_distinguishes_warmup_from_repeated_request_growth():
@@ -74,6 +81,46 @@ def test_new_metric_requires_only_its_receipt_field_declaration():
     assert "private_clean_kib" not in ProcessMemoryReceipt.retention_slopes(
         [baseline] * 3
     )
+    assert ExtendedReceipt.retention_changes(repeated[0], repeated[-1])["private_clean_kib"] == 10
+    assert "host_mem_available_kib" not in slopes
+
+
+def test_natural_retention_and_gc_sensitivity_are_separate():
+    baseline = ProcessMemoryReceipt.capture(collect=False)
+    natural = [replace(baseline, rss_kib=value) for value in (100, 130, 160)]
+    collected = replace(natural[-1], rss_kib=120)
+    report = MemoryDiagnosticReport(3, (), round_interval_seconds=75, gc_at_end=True)
+    report.post_warmup_slopes_kib_per_round = ProcessMemoryReceipt.retention_slopes(natural)
+    report.post_gc_change_kib = ProcessMemoryReceipt.retention_changes(natural[-1], collected)
+    assert report.post_warmup_slopes_kib_per_round["rss_kib"] == 30
+    assert report.post_gc_change_kib["rss_kib"] == -40
+    assert MemoryDiagnosticReport(100, ()).rounds == 100
+    with pytest.raises(ValueError, match="at least two"):
+        MemoryDiagnosticReport(1, ())
+    for interval in (-1, float("inf"), float("nan")):
+        with pytest.raises(ValueError, match="finite and nonnegative"):
+            MemoryDiagnosticReport(2, (), round_interval_seconds=interval)
+    for timeout in (0, -1, float("inf"), float("nan")):
+        with pytest.raises(ValueError, match="finite and positive"):
+            MemoryDiagnosticMcpClient(None, timeout)
+
+
+def test_large_process_low_host_memory_sample_is_observation_not_veto():
+    import asyncio
+    from openhcs.mcp.dev_client_core import McpDevToolResult
+
+    sample = replace(ProcessMemoryReceipt.capture(collect=False),
+                     rss_kib=4 * 1024**2, host_mem_available_kib=512 * 1024)
+
+    class RecordedClient(MemoryDiagnosticMcpClient):
+        async def call(self, name, arguments):
+            assert arguments == {"collect": False}
+            return McpDevToolResult.from_payload(name, {
+                "content": [{"type": "text", "text": json.dumps(asdict(sample))}],
+                "isError": False,
+            })
+
+    assert asyncio.run(RecordedClient(None, 30).sample(collect=False)) == sample
 
 
 def test_request_sequence_decodes_existing_owner_and_rejects_mutations(tmp_path):
