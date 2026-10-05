@@ -358,7 +358,6 @@ def bbbc039_repeat():
         scatter.set(title="A  Paired field scores", xlabel="Earlier author F1 (%)",
                     ylabel="Independent repeat F1 (%)", xlim=(-3, 103), ylim=(-3, 103))
         scatter.set_aspect("equal", adjustable="box")
-        scatter.legend(frameon=False, fontsize=11, loc="lower right")
         for offset, record, color, label in (
             (-.18, earlier, BLUE, "Earlier author"),
             (.18, repeat, TEAL, "Independent repeat"),

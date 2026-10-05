@@ -382,8 +382,9 @@ Data 8 links the retained pipelines and independent source review.
 
 \(A) Each point compares final object F1 on the same field for the earlier
 author and an independent repeat. The dashed line marks equal scores. All
-200 fields are included; the three annotation-empty fields coincide at the
-origin. (B) Pooled precision, recall and F1 against the same 23,615 reference
+200 fields are included: blue points are annotated fields, and the three orange
+annotation-empty fields coincide at the origin. (B) Pooled precision, recall
+and F1 against the same 23,615 reference
 instances, using intersection over union at least 0.5. The repeat matched
 20,207 objects with 1,164 excess predictions and 3,408 misses; the earlier
 author matched 20,521 with 1,153 excess predictions and 3,094 misses.
