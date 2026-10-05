@@ -96,3 +96,72 @@ same process identity. A region request missing singleton route axes was also
 rejected before correction. Neither event changed scientific settings; neither
 is biological acceptance evidence. The existing foreign-endpoint rejection
 fix (#464/PR465) must not be confused with choosing the intended default owner.
+
+Post-freeze final comparison
+----------------------------
+
+This later section preserves the FIRST assessment above. The parent personally
+opened the final raw-only/result-only/combined triplets at the same northwest,
+southeast and border locations. The capture index confirms the same canvas,
+XY scale/translation, raw 0--42 window, gamma 1 and zoom 8.095, with matched
+camera centres (apart from floating-point roundoff). More strongly, each final
+raw PNG has the same SHA256 as the corresponding FIRST raw PNG above. Changes
+in mask appearance therefore do not depend on a changed raw presentation.
+
+* Northwest: final footprints are more coherent and less ragged. The two
+  conspicuous neighbouring bodies remain separate; the repair did not simply
+  trade that useful separation for fewer labels.
+* Southeast: diffuse body-like positives retain smoother footprints and much
+  of the punctate background stays unlabelled. The long lobed right-hand
+  footprint remains ambiguous, and the small bright profile above it is still
+  omitted. Smoother geometry is not a completeness score.
+* Border: the lower lace-like footprint becomes a more coherent supported
+  region. The upper ring-like envelope still has adjacent separate footprints;
+  the possible false split has not been demonstrated resolved. Broad raw
+  extent and weak-body coverage remain uncertain.
+
+Accept useful regional body localisation and the visible reduction in
+fragmented geometry. Keep missed-object, instance-identity and full-envelope
+limitations separate rather than rejecting every detection or claiming a
+complete retinal census. This is a self-directed repair of a retained run,
+not evidence of improved first-attempt accuracy, a new fresh autonomous trial
+or agreement with manual counts. No reference answer was opened and no
+dataset-specific correction was supplied to the scientific author.
+
+The author's final report identifies 110 image-level candidate instances
+(FIRST had 130), including eleven source-edge labels. Those counts are
+algorithm outputs, not a biological accuracy estimate. It records a threshold
+smoothing change from 4 to 12 pixels and a separate photometry-routing repair;
+the latter retained the repaired label TIFF byte-identically. This review
+corroborates the local visual change, not an independent causal re-execution
+or exhaustive check of fluorescence tables.
+
+The parent independently verified all 170 SHA256 entries in the original
+``continuation01/FINAL-MANIFEST.json``. The final candidate remains frozen at
+``attempts/REPAIR01/technical02/pipeline.py`` in the author's continuation
+control directory. Original source, failed attempts, captures and journals
+were not modified or copied into another payload tree.
+
+Final witness stems below use the same filename suffix as the FIRST table,
+under ``qa/continuation01/FINAL/REGION/VIEW``. Their individual hashes remain in
+the verified original manifest.
+
+.. list-table:: Personally opened final native captures
+   :header-rows: 1
+
+   * - Region
+     - Raw stem
+     - Result stem
+     - Combined stem
+   * - nw
+     - 20261005T193315651262
+     - 20261005T193317642846
+     - 20261005T193318936057
+   * - se
+     - 20261005T193324784587
+     - 20261005T193326185394
+     - 20261005T193327597963
+   * - edge
+     - 20261005T193333270792
+     - 20261005T193334622202
+     - 20261005T193335942373
