@@ -391,9 +391,9 @@ success (Supplementary Data 8).
 
 ### Figure 9. Autonomous retinal repair preserves a neighbouring pair
 
-![Matched whole-field and regional retinal raw images and final outlines.](figures/slas/retinal_fresh_native.png){width=6in}
+![Matched whole-field and regional retinal raw images and final outlines.](figures/slas/retinal_fresh_native.png){width=5.3in}
 
-\(A) Whole-field detections against heterogeneous background. (B) Northwest neighbours remain separate. (C) A southeast envelope has one footprint after repair of an earlier partition. The independent author caught a regression that merged the pair and retained both local gains in its final 102-instance candidate, using only the task brief, MCP and packaged skill. Diffuse regions remain uncertain (Supplementary Figure 14); no manual-reference accuracy is reported. Raw RBPMS AF647 uses window 0–63, gamma 1. Outline backgrounds use the frozen intensity stretch and display range 0–63/255, so brightness differs despite matched positions. Original screenshots are clipped/scaled without pixel retouching. Source: user-provided retinal whole mount R0010; physical calibration is unverified. Supplementary Data 8 retains exact captures, settings and coordinates.
+\(A) Whole-field detections against heterogeneous background. (B) Northwest neighbours remain separate. (C) A southeast partition is repaired. Using only the task, MCP and packaged skill, the author caught a pair-merging regression and retained both gains in its final 102-instance candidate. Diffuse regions remain uncertain (Supplementary Figure 14); manual-reference accuracy is unmeasured. Raw RBPMS uses window 0–63, gamma 1. Outline backgrounds use the frozen intensity stretch and display range 0–63/255, giving different brightness at matched positions. Original screenshots are clipped/scaled without retouching. Source: user-provided R0010 retina; physical calibration unverified. Supplementary Data 8 retains exact captures and settings.
 
 ## Discussion
 
