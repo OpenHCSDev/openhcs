@@ -161,3 +161,16 @@ Controls03 terminal0:9.08s wall,362832KiB process maximum RSS, zero swaps;
 this is not a combined cgroup memory measurement. Observed worker3058583 is
 absent after the original executor context joined. No receiving09 journal,
 scientific source, saved output or UNKNOWN input was overwritten or deleted.
+
+Normal main integration
+-----------------------
+
+Current main07222c9e572a2b1147f75adbe0384f8a4260ce21 was inspected and merged
+normally at26b140443995ec3540d688842ab6642c2935c484. Its changes are disjoint
+skill/manuscript/operations and shell-control surfaces, not the callable metadata
+or task-transport family. Exact git diff of both production files, the qualified
+compiled-source fixture and original audit driver against qualified1e0 is empty.
+No rerun, rebuild, installed overlay or new runtime was performed for this merge.
+The eight foreign modified gitlinks and all prior untracked evidence remain
+untouched. Source/process checkpoint is ready for source merge; fresh whole
+installed public two-axis/two-worker execution remains the separate next boundary.
