@@ -422,6 +422,26 @@ are retained in the [stitched-development record](../../figure-collection-202610
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
+## Supplementary Figure 22. Matched retinal views before and after repair
+
+![Unchanged raw presentation, first outlines and repaired outlines at two retinal locations.](../figures/slas/retina_fresh16_repair.png){width=6in}
+
+(A–C) Bright neighbouring bodies in the northwest region; (D–F) the source
+border region. The raw PNGs are byte-identical between the first and final
+capture sets. All panels retain the same native crop and raw display window
+(0–42, gamma 1); colours identify instances, not biological classes.
+The author increased threshold smoothing from 4 to 12 pixels. The repaired
+outlines are smoother, and the prominent neighbouring bodies remain separate.
+At the border, two adjacent footprints within a ring-like raw envelope retain
+possible instance-splitting uncertainty. This is a self-directed repair of a
+retained interrupted run, rather than a new fresh autonomous trial or a
+manual-count comparison. The independent review and original capture hashes
+are retained in the [retinal comparison](../../figure-collection-20261004/R0010-FRESH16-INDEPENDENT-FIRST-REVIEW.rst).
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
 ## Supplementary Table 1. Reusable libraries and their roles
 
 | Library | Role in OpenHCS |

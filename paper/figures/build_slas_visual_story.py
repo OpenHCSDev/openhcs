@@ -375,6 +375,36 @@ def h002_measurement_first():
         sheet.save()
 
 
+def retina_matched_repair():
+    """Same raw presentation before and after a retained retinal repair."""
+    source_root = OUTPUT / "retina_fresh16_sources"
+    sheet = FigureSheet("retina_fresh16_repair", "", 5.4)
+    sheet.source(ROOT / "figure-collection-20261004/R0010-FRESH16-INDEPENDENT-FIRST-REVIEW.rst")
+    sheet.text(3, 97, "Retinal body outlines: local repair and remaining ambiguity",
+               size=16, weight="bold", va="top")
+    for row, (region, title) in enumerate((
+        ("nw", "Bright neighbouring bodies remain separate"),
+        ("edge", "Border outlines smooth; possible split remains"),
+    )):
+        y = 53 - row * 38
+        sheet.text(3, y + 35, title, size=13, weight="bold")
+        for column, (view, label) in enumerate((
+            ("raw", "Raw RBPMS"),
+            ("first", "First candidate + raw"),
+            ("final", "Repaired candidate + raw"),
+        )):
+            x = 3 + column * 32
+            letter = chr(ord("A") + 3 * row + column)
+            sheet.text(x, y + 28, f"{letter}  {label}", size=11, weight="bold")
+            sheet.source_image(source_root / f"{region}-{view}.png",
+                               (x, y, 30, 26), crop=(297, 28, 1250, 470))
+    sheet.text(50, 5, "Matched pixels and display • self-directed retained-run repair",
+               size=12, ha="center", color=MUTED)
+    sheet.text(50, 1, "Local geometry improvement; no manual-count accuracy estimate",
+               size=11, ha="center", color=MUTED)
+    sheet.save()
+
+
 def translocation_repeat():
     """Plot frozen native well summaries, without rerunning scientific analysis."""
     source_path = ROOT / "paper/supplementary/task_only_analysis/bbbc013-fresh13-plot-source.json"
