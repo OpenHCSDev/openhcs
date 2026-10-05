@@ -16,6 +16,17 @@ histograms and the threshold's assumptions; use the preprocessing guide when
 the foreground failure is illumination, noise or contrast. Record connectivity:
 4/8 in 2-D and 6/26 in 3-D produce different connected objects.
 
+Before the first crowded-body method, consider where hole filling belongs in
+the declared chain. Filling enclosed gaps in a multi-body foreground before
+declumping can admit unsupported interbody background and change the distance
+landscape that places shape markers. Compare threshold support, filled support
+and the consumed landscape against raw at a crowded group and an isolated body
+with genuine interior holes. If predeclump filling causes that failure, test
+postdeclump filling while retaining threshold and marker settings, then check
+pair separation and isolated-body extent. Filling supported nuclear interiors
+can still be useful; this is an ordering diagnostic, not a universal prohibition
+or instruction to copy a benchmark's hole-filling default.
+
 For all-foreground or empty support, compare the reported threshold with values
 from the **current processing alias**, not only the physical source or viewer
 window. Check [current processing intensity units](measurement-interpretation.md#current-processing-intensity-units)

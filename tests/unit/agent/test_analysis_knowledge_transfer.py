@@ -31,6 +31,7 @@ TASKS = (
     ("uneven background additive subtraction", "openhcs_image_preprocessing"),
     ("weak troughs hysteresis connected support", "openhcs_image_preprocessing"),
     ("nucleus split watershed", "openhcs_segmentation_diagnostics"),
+    ("predeclump hole filling landscape", "openhcs_segmentation_diagnostics"),
     ("ring fragmentation disconnected support", "openhcs_segmentation_diagnostics"),
     ("zero growth cytoplasm", "openhcs_segmentation_diagnostics"),
     ("all foreground threshold units", "openhcs_segmentation_diagnostics"),
