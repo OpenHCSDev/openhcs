@@ -242,12 +242,13 @@ independently chosen settings.
 
 | Independent author | Matched nuclei | Precision | Recall | Object F1 |
 |---|---:|---:|---:|---:|
-| Figure 5 run | 20,521 | 0.947 | 0.869 | 0.906 |
-| Supplementary Figure 20 repeat | 20,207 | 0.946 | 0.856 | 0.898 |
-| Subsequent repeat | 20,457 | 0.944 | 0.866 | 0.904 |
+| Figure 5 | 20,521 | 0.947 | 0.869 | 0.906 |
+| Repeat A | 20,207 | 0.946 | 0.856 | 0.898 |
+| Repeat B | 20,457 | 0.944 | 0.866 | 0.904 |
 
 Table 1. Post-freeze reference agreement for three independent BBBC039 authors
-with scored complete-corpus outputs. Each row includes all 200 fields,
+with scored complete-corpus outputs. Repeat A is illustrated in Supplementary
+Figure 20; Repeat B is the subsequent author. Each row includes all 200 fields,
 including three annotation-empty fields; one-to-one matching requires
 intersection over union at least 0.5. Scores were not supplied to the authors.
 Supplementary Data 8 retains per-field results, source identities and
