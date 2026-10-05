@@ -670,7 +670,25 @@ class SourceImageProvenancePlanes:
                     )
                 )
             runtime_index += 1
-        return type(self)(tuple(contributors))
+        unique_contributors: list[SourceImageProvenanceContributor] = []
+        for contributor in contributors:
+            # A derived image and its original can name the same source at this
+            # runtime slice. Removed axes represent source identities, not the
+            # number of routes through which those sources contributed pixels.
+            # Read current addresses; the identity snapshot can predate edits.
+            if (
+                contributor.source_image_name is not None
+                and contributor.source_identity.addressable
+                and any(
+                    existing.source_image_name == contributor.source_image_name
+                    and existing.path == contributor.path
+                    and existing.component_metadata == contributor.component_metadata
+                    for existing in unique_contributors
+                )
+            ):
+                continue
+            unique_contributors.append(contributor)
+        return type(self)(tuple(unique_contributors))
 
     def with_missing_from(
         self,
