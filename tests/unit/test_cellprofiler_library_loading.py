@@ -1154,7 +1154,7 @@ def test_measure_colocalization_objects_emits_and_splits_both_scopes():
         CellProfilerMeasurementTargetScope,
     )
     from openhcs.processing.backends.cellprofiler.colocalization import (
-        MeasureColocalizationObjectMeasurementRowPolicy,
+        MeasureColocalizationMeasurementRowPolicy,
     )
 
     image = np.stack(
@@ -1179,7 +1179,7 @@ def test_measure_colocalization_objects_emits_and_splits_both_scopes():
         do_overlap=False,
     )
     object_rows, image_rows = (
-        MeasureColocalizationObjectMeasurementRowPolicy().split_scoped_rows(rows)
+        MeasureColocalizationMeasurementRowPolicy().split_scoped_rows(rows)
     )
 
     assert image_rows.row_count() == 1

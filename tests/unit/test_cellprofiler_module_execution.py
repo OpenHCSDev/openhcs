@@ -270,6 +270,7 @@ from openhcs.processing.backends.cellprofiler.classification import (
     ClassifyObjectsSingleMeasurementModule,
 )
 from openhcs.processing.backends.cellprofiler.colocalization import (
+    ColocalizationMeasurements,
     MeasureColocalizationModule,
     ObjectColocalizationMeasurements,
 )
@@ -11763,7 +11764,10 @@ def test_colocalization_object_row_policy_projects_source_pair_features() -> Non
     assert policy.table_source_image_name((measurement_image,), "DNA__ER__RNA") is None
 
 
-def test_colocalization_record_builder_derives_source_pair_table_identity() -> None:
+@pytest.mark.parametrize("channel_indexes", ((0, 1), (1, 0)))
+def test_colocalization_record_builder_derives_source_pair_table_identity(
+    channel_indexes: tuple[int, int],
+) -> None:
     def measure_colocalization(
         image: np.ndarray,
     ) -> tuple[np.ndarray, dict[str, float]]:
@@ -11796,25 +11800,35 @@ def test_colocalization_record_builder_derives_source_pair_table_identity() -> N
             adapter=None,
             spec=ArtifactSpec.output("Coloc", MeasurementsArtifactType),
             output_value=MeasurementSparseColumnarRows.from_rows(
-                ({"slice_index": 0, "correlation": 0.5, "manders_m1": 0.7},),
-                fields=(
-                    FieldSpec("slice_index", int),
-                    FieldSpec("correlation", float),
-                    FieldSpec("manders_m1", float),
+                (
+                    {
+                        **{
+                            field.name: 0.0
+                            for field in FieldSpec.from_dataclass_type(
+                                ColocalizationMeasurements
+                            )
+                        },
+                        "slice_index": 0,
+                        "correlation": 0.5,
+                        "manders_m1": 0.7,
+                    },
                 ),
+                fields=FieldSpec.from_dataclass_type(ColocalizationMeasurements),
             ),
-            kwargs={},
+            kwargs=dict(zip(("channel_1", "channel_2"), channel_indexes)),
             source_aliases=("DNA", "ER"),
         )
     )
 
-    assert table.rows.row_mappings() == (
-        {
-            "slice_index": 0,
-            "correlation": 0.5,
-            "manders_m1": 0.7,
-        },
-    )
+    (row,) = table.rows.row_mappings()
+    assert row["slice_index"] == 0
+    first, second = (("DNA", "ER")[index] for index in channel_indexes)
+    assert row[f"Correlation_Correlation_{first}_{second}"] == 0.5
+    assert row[f"Correlation_Manders_{first}_{second}"] == 0.7
+    assert row[f"Correlation_Slope_{first}_{second}"] == 0.0
+    assert "correlation" not in row
+    assert "costes_threshold_1" not in row
+    assert "costes_threshold_2" not in row
     assert (
         table.source_image_name == RuntimeMeasurementSourcePair("DNA", "ER").source_name
     )
