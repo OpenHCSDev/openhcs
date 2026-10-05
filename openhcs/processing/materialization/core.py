@@ -27,6 +27,7 @@ from polystore.config import TiffConfig
 from polystore.streaming.viewer_transport import (
     PathMappedViewerStreamSourceMetadata,
     ViewerStreamBackendKwargs,
+    ViewerDisplayConfigABC,
 )
 from zmqruntime.viewer_protocol import ViewerWireValue
 
@@ -81,6 +82,7 @@ from openhcs.core.steps.function_output_identity import (
 from openhcs.core.steps.stream_component_semantics import (
     StreamImagePayloadMetadataProjector,
     StreamViewerComponentMetadataProjector,
+    StreamScopedDisplayConfig,
 )
 from openhcs.processing.materialization.constants import (
     MaterializationFormat,
@@ -318,6 +320,16 @@ class Output:
     @property
     def viewer_stream_requires_source_metadata(self) -> bool:
         return True
+
+    def viewer_display_config(
+        self, base: ViewerDisplayConfigABC
+    ) -> ViewerDisplayConfigABC:
+        """Project display scope from this output's own optional source payload."""
+        if self.metadata is None:
+            return base
+        return StreamScopedDisplayConfig.for_source_provenance(
+            base, self.metadata.source_provenance
+        )
 
     def require_text_content(self) -> str:
         """Return declared text content or reject a non-text output."""
@@ -1588,11 +1600,20 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
         output_fields = self._output_fields(projected_outputs[0])
         if output_fields is None:
             return self.values.to_kwargs()
-        component_metadata, item_fields = output_fields
-        return self.values.with_single_item_source(
+        component_metadata, item_fields, display_config = output_fields
+        return self._stream_kwargs(display_config, item_fields).with_single_item_source(
             component_metadata,
             item_fields,
         ).to_kwargs()
+
+    def _stream_kwargs(
+        self,
+        display_config: ViewerDisplayConfigABC,
+        item_fields: Mapping[str, ViewerWireValue],
+    ) -> ViewerStreamBackendKwargs:
+        """Apply one source-owned display scope to the original typed request."""
+        request = self.values.with_item_fields(item_fields).stream_request
+        return ViewerStreamBackendKwargs(replace(request, display_config=display_config))
 
     def filemanager_batches(
         self,
@@ -1601,6 +1622,7 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
         grouped: list[
             tuple[
                 dict[str, ViewerWireValue],
+                ViewerDisplayConfigABC,
                 list[Output],
                 list[dict[str, MaterializationValue]],
             ]
@@ -1611,21 +1633,22 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
             if output_fields is None:
                 unprojected_outputs.append(output)
                 continue
-            component_metadata, item_fields = output_fields
+            component_metadata, item_fields, display_config = output_fields
             group = next(
-                (candidate for candidate in grouped if candidate[0] == item_fields),
+                (candidate for candidate in grouped
+                 if candidate[0] == item_fields and candidate[1] == display_config),
                 None,
             )
             if group is None:
-                group = (item_fields, [], [])
+                group = (item_fields, display_config, [], [])
                 grouped.append(group)
-            group[1].append(output)
-            group[2].append(component_metadata)
+            group[2].append(output)
+            group[3].append(component_metadata)
 
         batches: list[tuple[tuple[Output, ...], dict]] = []
         if unprojected_outputs:
             batches.append((tuple(unprojected_outputs), self.values.to_kwargs()))
-        for item_fields, batch_outputs, component_metadata in grouped:
+        for item_fields, display_config, batch_outputs, component_metadata in grouped:
             metadata_by_path = dict(
                 zip(
                     (output.path for output in batch_outputs),
@@ -1637,7 +1660,7 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
                 raise ValueError(
                     "Viewer materialization batch requires unique output paths."
                 )
-            stream_request = self.values.with_item_fields(item_fields).stream_request
+            stream_request = self._stream_kwargs(display_config, item_fields).stream_request
             stream_request = replace(
                 stream_request,
                 source=replace(
@@ -1698,7 +1721,11 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
     def _output_fields(
         self,
         output: Output,
-    ) -> tuple[dict[str, MaterializationValue], dict[str, ViewerWireValue]] | None:
+    ) -> tuple[
+        dict[str, MaterializationValue],
+        dict[str, ViewerWireValue],
+        ViewerDisplayConfigABC,
+    ] | None:
         source_identity = output.source_identity
         if source_identity is not None:
             source_identity = source_identity.with_parsed_path_components(
@@ -1720,12 +1747,14 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
                 output.variable_components,
             )
         )
-        display_semantics = self.values.stream_request.display_semantics
+        display_config = output.viewer_display_config(
+            self.values.stream_request.display_config
+        )
         projected_metadata = StreamViewerComponentMetadataProjector.for_item_fields(
-            display_semantics.component_order,
+            display_config.COMPONENT_ORDER,
             item_fields,
         ).project_required(index=0, metadata=component_metadata)
-        return projected_metadata, item_fields
+        return projected_metadata, item_fields, display_config
 
 
 EMPTY_BACKEND_CALL_KWARGS = RawBackendKwargs()

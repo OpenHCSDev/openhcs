@@ -43,6 +43,7 @@ from openhcs.core.runtime_slice_projection import (
 from openhcs.core.source_image_provenance import (
     SourceComponentMetadata,
     SourceImageIdentity,
+    SourceImageProvenance,
 )
 from openhcs.core.source_matching import (
     source_component_metadata_raw_value,
@@ -245,6 +246,17 @@ class StreamScopedDisplayConfig(ViewerDisplayConfigABC):
 
     base: ViewerDisplayConfigABC
     component_order: tuple[str, ...]
+
+    @classmethod
+    def for_source_provenance(
+        cls,
+        base: ViewerDisplayConfigABC,
+        provenance: SourceImageProvenance,
+    ) -> ViewerDisplayConfigABC:
+        """Consume the source owner's scalar-coordinate requirements."""
+        order = tuple(str(component) for component in base.COMPONENT_ORDER)
+        required = provenance.required_scalar_components(order)
+        return base if required == order else cls(base, required)
 
     @property
     def COMPONENT_ORDER(self) -> tuple[str, ...]:

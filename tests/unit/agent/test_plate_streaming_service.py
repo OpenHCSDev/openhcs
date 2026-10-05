@@ -18,6 +18,7 @@ from openhcs.agent.services.plate_streaming_service import PlateStreamingService
 from openhcs.constants.constants import Backend, FileFormat
 from openhcs.core.plate_image_inventory import (
     PlateFileInventory,
+    PlateFileRecord,
     PlateFileKind,
     PlateImageRecord,
     PlateResultFileRecord,
@@ -56,6 +57,83 @@ class FakeHandler:
     def get_primary_backend(self, plate_path, filemanager):
         del plate_path, filemanager
         return "disk"
+
+
+def test_saved_site_free_image_inventory_and_loading_preserve_original_scope(tmp_path):
+    from types import SimpleNamespace
+    from openhcs.core.artifacts import ImageArtifactType
+    from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+    from openhcs.core.plate_image_inventory import PlateImageInventory
+    from openhcs.core.runtime_image_values import ImagePayloadMetadata, image_payload_metadata
+    from openhcs.core.source_image_provenance import (
+        SourceImageIdentity, SourceImageProvenance, SourceImageProvenanceContributor,
+    )
+    from openhcs.core.source_projection import SourceArtifactProjection
+    from openhcs.core.source_metadata import SourceVoxelSpacing
+    from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjectionBuilder
+    from openhcs.core.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
+    from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+
+    filename = "A01_s001_w1_z001_t001.tif"
+    pixels = np.concatenate((
+        np.full((4, 6), 11, dtype=np.uint16),
+        np.full((4, 6), 13, dtype=np.uint16),
+    ), axis=1)
+    tifffile.imwrite(tmp_path / filename, pixels)
+    components = {"well": "A01", "channel": "1", "z_index": "1", "timepoint": "1"}
+    contributors = tuple(
+        SourceImageProvenanceContributor(
+            SourceImageIdentity(
+                str(tmp_path / f"original-s{site}.tif"),
+                {**components, "site": site},
+            ),
+        ) for site in ("1", "3")
+    )
+    metadata = ImagePayloadMetadata(
+        source_provenance=SourceImageProvenance(
+            source_component_metadata=components,
+            source_image_provenance_planes=SourceImageProvenancePlanes(contributors),
+        ),
+        source_voxel_spacing=SourceVoxelSpacing((0.25, 0.5)),
+    )
+    ref = SourcePixelRef(backend="disk", backend_address=filename)
+    source = SourceArtifactProjection(
+        address=None, ref=ref, source_alias="Signal", artifact_kind=ImageArtifactType,
+        source_metadata=components, image_metadata=metadata,
+        execution_scope=RuntimeExecutionAxisScope.from_raw(
+            "A01", component="channel", value="1",
+            fixed_component_values=(("z_index", "1"), ("timepoint", "1")),
+        ),
+    )
+    builder = VirtualWorkspaceSourceProjectionBuilder(tmp_path)
+    builder.record_workspace_source_path(filename, ref)
+    builder.record_source_metadata(filename, components)
+    builder.ingest_source_projections(VirtualWorkspaceSourceProjectionEntries({filename: source}))
+    filemanager = FileManager({"disk": DiskStorageBackend()})
+    handler = SimpleNamespace(parse_image_path=SourceSchemaFilenameParser().parse_filename)
+    record = PlateImageInventory._record(
+        plate_path=tmp_path, image_file=filename, handler=handler,
+        projection=builder.projection(), filemanager=filemanager, backend="disk",
+    )
+    assert "site" not in record.metadata
+    context = PlateInspectionContext(
+        plate_path=tmp_path, filemanager=filemanager, handler=handler, parser=None,
+    )
+    projection = PlateStreamingService._inventory_source_projection(
+        (PlateFileRecord.from_image(record),), context,
+    )
+    stream_source = ViewerStreamingSource(
+        plate_path=tmp_path, filemanager=filemanager, microscope_handler=handler,
+    )
+    actual = stream_source.load_image(
+        filename, "disk", source_projection=projection, component_metadata=record.metadata,
+    )
+    np.testing.assert_array_equal(image_payload_data(actual), pixels)
+    actual_metadata = image_payload_metadata(actual)
+    assert "site" not in actual_metadata.source_component_metadata
+    assert actual_metadata.plane_axis is None
+    assert actual_metadata.source_voxel_spacing.values_zyx == (0.25, 0.5)
+    assert actual_metadata.source_provenance.source_image_provenance_planes == metadata.source_provenance.source_image_provenance_planes
 
 
 class FakeInspectionService:
@@ -442,7 +520,7 @@ def test_inventory_source_projection_loads_exact_ome_stack_planes(tmp_path):
             component_metadata=record.metadata,
         )
         np.testing.assert_array_equal(image_payload_data(image), pixels[index])
-        assert record.metadata["z_index"] == index + 1
+        assert record.metadata["z_index"] == str(index + 1)
 
     table = MeasurementTable(
         name="centres",

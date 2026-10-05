@@ -23,6 +23,7 @@ from openhcs.core.config import (
     ProcessingConfig,
 )
 from openhcs.core.execution_state import ExecutionOutputPlateSummary
+from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.orchestrator.compiled_plate_execution import (
     CompiledPlateExecutionResults,
 )
@@ -264,7 +265,7 @@ def test_server_exports_outcomes_without_projecting_compiled_values(
                             RuntimeContextObservation(
                                 "context",
                                 (),
-                                runtime_export_paths=(declared_output,),
+                                outputs=StepExecutionObservation({}, (declared_output,)),
                             ),
                         )
                     ),

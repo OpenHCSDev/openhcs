@@ -24,9 +24,6 @@ from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.function_step_transport import FunctionStepTransportAuthority
 from openhcs.core.native_threading import configure_native_thread_count
 from openhcs.core.runtime_profile import RuntimeProfileLogger
-from openhcs.core.orchestrator.analysis_consolidation import (
-    RuntimeAnalysisConsolidationInputs,
-)
 from openhcs.core.orchestrator.execution_result import (
     ExecutionResult,
     RuntimeContextObservation,
@@ -806,19 +803,13 @@ def _execute_axis_with_sequential_combinations(
             observed_records = runtime_store.observed_values_after(
                 execution_observation_cursor
             )
-            runtime_export_paths = tuple(
-                path
-                for observation in result.runtime_observation.contexts
-                for path in observation.runtime_export_paths
-            )
             observation = RuntimeContextObservation.from_context(
                 context_key=context_key,
                 context=frozen_context,
                 records=observed_records,
                 runtime_observation_mode=runtime_observation_mode,
-                runtime_export_paths=runtime_export_paths,
-                analysis_inputs=RuntimeAnalysisConsolidationInputs.combine(
-                    item.analysis_inputs for item in result.runtime_observation.contexts
+                outputs=StepExecutionObservation.combine(
+                    item.outputs for item in result.runtime_observation.contexts
                 ),
             )
         finally:
@@ -830,8 +821,8 @@ def _execute_axis_with_sequential_combinations(
             frozen_context.runtime_value_store.clear()
         if (
             observation.records
-            or observation.runtime_export_paths
-            or observation.analysis_inputs
+            or observation.outputs.runtime_export_paths
+            or observation.outputs.analysis_inputs
         ):
             runtime_observations.append(observation)
         del observed_records
@@ -957,8 +948,7 @@ def _execute_single_axis_static(
     frozen_context.bind_execution_runtime(lane_context)
     lane_context.install_debug_sink(frozen_context)
     runtime_value_store = frozen_context.runtime_value_store
-    runtime_export_paths = []
-    analysis_inputs = []
+    step_observations = []
 
     for step_index, step in enumerate(pipeline_definition):
         if cancellation is not None:
@@ -993,8 +983,7 @@ def _execute_single_axis_static(
                     observed_records,
                     materialized_locations_by_address=reused_outputs.materialized_locations_by_address,
                 )
-                runtime_export_paths.extend(reused_outputs.runtime_export_paths)
-                analysis_inputs.append(reused_outputs.analysis_inputs)
+                step_observations.append(reused_outputs)
                 emit(
                     execution_id=lane_context.execution_id,
                     plate_id=lane_context.plate_id,
@@ -1028,8 +1017,7 @@ def _execute_single_axis_static(
 
         observation_cursor = runtime_value_store.observation_cursor()
         step_observation = step.process(frozen_context, step_index)
-        runtime_export_paths.extend(step_observation.runtime_export_paths)
-        analysis_inputs.append(step_observation.analysis_inputs)
+        step_observations.append(step_observation)
         observed_records = runtime_value_store.observed_values_after(observation_cursor)
         runtime_progress_context = _runtime_observation_progress_context(
             observed_records,
@@ -1063,8 +1051,7 @@ def _execute_single_axis_static(
                 RuntimeContextObservation(
                     context_key=context_key,
                     records=(),
-                    runtime_export_paths=tuple(dict.fromkeys(runtime_export_paths)),
-                    analysis_inputs=RuntimeAnalysisConsolidationInputs.combine(analysis_inputs),
+                    outputs=StepExecutionObservation.combine(step_observations),
                 ),
             )
         ),

@@ -66,6 +66,9 @@ from openhcs.core.orchestrator.execution_result import (
     RuntimeObservationMode,
 )
 from openhcs.core.pipeline.function_contracts import artifact_outputs
+from openhcs.core.pipeline.artifact_planning import (
+    AutomaticMeasurementsArtifactOutputMaterializationStrategy,
+)
 from openhcs.core.runtime_artifact_values import (
     RuntimeValue,
 )
@@ -1063,7 +1066,7 @@ def test_materialize_artifact_outputs_uses_runtime_record_identity_not_final_pat
     PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(filemanager, _plan(output_plan), context)
 
     assert [(data.row_mappings(), path) for data, path in materialized] == [
-        (({"object_id": 1, "area": 42},), "/analysis/measurements_1.roi.zip")
+        (({"object_id": 1, "area": 42},), "/analysis/A01_channel-1_measurements_step7.roi.zip")
     ]
 
 
@@ -1753,6 +1756,93 @@ def test_observed_materialized_paths_use_only_caller_owned_execution_records():
     assert consolidation_inputs.destination.images_dir == "/images"
 
 
+@pytest.mark.parametrize("sites", [("1", "3"), ("3", "1")])
+@pytest.mark.parametrize("automatic", [True, False])
+def test_scalar_acquired_tables_keep_fixed_site_addresses_on_shared_runtime_path(sites, automatic):
+    output_plan = ArtifactOutputPlan(
+        name="AcquiredFieldMeasurements",
+        path="/memory/A01_w1_AcquiredFieldMeasurements_step0.pkl",
+        artifact_type=MeasurementsArtifactType,
+        materialization=(
+            AutomaticMeasurementsArtifactOutputMaterializationStrategy().materialization()
+            if automatic else csv_only()
+        ),
+        variable_components=(AllComponents.Z_INDEX,),
+    )
+    context = _context(FileManagerStub())
+    plan = _plan(
+        output_plan,
+        group_by_value="channel",
+        variable_components=(VariableComponents.Z_INDEX,),
+    )
+    plan.runtime_artifact_materialization = RuntimeArtifactMaterializationPlan(
+        persistent_enabled=True,
+        persistent_backend="disk",
+    )
+    for site in sites:
+        metadata = {
+            "well": "A01", "site": site, "channel": "1",
+            "z_index": "1", "timepoint": "1",
+        }
+        context.runtime_value_store.record(
+            RuntimeValue.normalize_for_execution_scope(
+                output_plan,
+                MeasurementTable(
+                    name=output_plan.name,
+                    rows=MeasurementSparseColumnarRows.from_rows(
+                        ({"intensity": 10 + int(site)},),
+                        fields=(FieldSpec("intensity", int),),
+                    ),
+                    source_image_provenance_planes=(
+                        SourceImageProvenancePlanes.from_components(
+                            paths=(f"/input/A01_s{site}_w1_z1_t1.tif",),
+                            component_metadata=(metadata,),
+                        )
+                    ),
+                    subject=MeasurementSubject(MeasurementScope.ARTIFACT),
+                ),
+                execution_scope=RuntimeExecutionAxisScope.from_raw(
+                    "A01", component=AllComponents.CHANNEL, value="1",
+                    fixed_component_values=(
+                        (AllComponents.SITE, site),
+                        (AllComponents.TIMEPOINT, "1"),
+                    ),
+                ),
+            ),
+            path=output_plan.path,
+            backend="memory",
+        )
+
+    records = context.runtime_value_store.values()
+    assert len(records) == 2
+    assert len({record.location.path for record in records}) == 1
+    saved = PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(
+        context.filemanager, plan, context,
+    )
+    assert len(saved) == 2
+    saved_paths = set()
+    for item in saved:
+        record = item.materialization.record
+        observation = item.observation(plan, context)
+        site = record.key.scope.value_text_for_component(AllComponents.SITE)
+        paths = observation.paths_for(record)
+        expected_stem = (
+            f"A01_site-{site}_channel-1_timepoint-1"
+            if automatic else f"A01_s{int(site):03d}_w1_z001_t001"
+        )
+        assert paths == (
+            Path(
+                f"/analysis/{expected_stem}_"
+                "AcquiredFieldMeasurements_step7_details.csv"
+            ),
+        )
+        saved_paths.update(paths)
+        assert context.filemanager.load_text(str(paths[0]), "disk") == (
+            f"intensity\r\n{10 + int(site)}\r\n"
+        )
+    assert len(saved_paths) == 2
+
+
 def test_terminal_persistence_is_reported_without_becoming_declared_export() -> None:
     output_plan = ArtifactOutputPlan(
         name="cell_counts",
@@ -1912,8 +2002,7 @@ def test_completed_observation_projects_tables_before_worker_payload_release(
         context_key="A01", context=context,
         records=context.runtime_value_store.observed_values,
         runtime_observation_mode=observation_mode,
-        runtime_export_paths=step_observation.runtime_export_paths,
-        analysis_inputs=step_observation.analysis_inputs,
+        outputs=step_observation,
     )
     context.runtime_value_store.clear()
     del pixels
@@ -1923,11 +2012,11 @@ def test_completed_observation_projects_tables_before_worker_payload_release(
     assert len(observation.records) == (
         2 if observation_mode is RuntimeObservationMode.MERGE_INTO_PARENT else 0
     )
-    assert len(observation.runtime_export_paths) == 1
-    assert observation.runtime_export_paths[0].suffix == ".csv"
-    assert observation.analysis_inputs is not None
-    assert observation.analysis_inputs.destination.backend == "disk"
-    assert observation.analysis_inputs.destination.images_dir == "/images"
+    assert len(observation.outputs.runtime_export_paths) == 1
+    assert observation.outputs.runtime_export_paths[0].suffix == ".csv"
+    assert observation.outputs.analysis_inputs is not None
+    assert observation.outputs.analysis_inputs.destination.backend == "disk"
+    assert observation.outputs.analysis_inputs.destination.images_dir == "/images"
     execution_observation = RuntimeExecutionObservation(contexts=(observation,))
     transported = pickle.loads(pickle.dumps(execution_observation))
     consolidated = RuntimeAnalysisConsolidationInputs.from_observations(
@@ -1939,7 +2028,7 @@ def test_completed_observation_projects_tables_before_worker_payload_release(
     assert outputs[0].well_id == "A01"
     assert "cell_count" in outputs[0].csv_content
     assert "2" in outputs[0].csv_content
-    assert outputs[0].path == observation.runtime_export_paths[0]
+    assert outputs[0].path == observation.outputs.runtime_export_paths[0]
     with pytest.raises(KeyError, match="unknown compiled context"):
         RuntimeAnalysisConsolidationInputs.from_observations({}, (transported,))
 
@@ -2012,7 +2101,7 @@ def test_materialize_artifact_outputs_unions_measurement_subject_records(
                 {"image_area": 100.0, "source_image_name": "OrigBlue"},
                 {"object_label": 1, "area": 42.0, "object_name": "Nuclei"},
             ),
-            "/analysis/A01_w1_measurements_step7.roi.zip",
+            "/analysis/A01_channel-1_measurements_step7.roi.zip",
         )
     ]
 
@@ -2144,7 +2233,7 @@ def test_artifact_name_materialization_ignores_incomplete_source_identity() -> N
     )
 
     assert tuple(str(item.base_path) for item in materializations) == (
-        "/analysis/SavedImage.roi.zip",
+        "/analysis/A01_channel-3_z_index-1_SavedImage_step7.roi.zip",
     )
 
 
@@ -2370,7 +2459,7 @@ def test_materialize_artifact_outputs_uses_actual_group_records(monkeypatch):
     assert isinstance(spec.outputs[0], CsvOptions)
     assert isinstance(data, MeasurementTable)
     assert data.row_mappings() == ({"site": "1", "area": 42},)
-    assert path == "/analysis/A01_w1_measurements_step7.roi.zip"
+    assert path == "/analysis/A01_channel-1_measurements_step7.roi.zip"
 
 
 def _duplicate_scalar_image_context(
@@ -2650,7 +2739,7 @@ def test_materialize_artifact_outputs_uses_group_measurement_artifact_identity(
     ]
 
 
-def test_materialize_artifact_outputs_keeps_grouped_artifact_record_path(
+def test_materialize_artifact_outputs_uses_grouped_scope_not_record_location(
     monkeypatch,
 ):
     output_plan = ArtifactOutputPlan(
@@ -2700,7 +2789,7 @@ def test_materialize_artifact_outputs_keeps_grouped_artifact_record_path(
     PersistentArtifactMaterializationTargetPlan("disk").materialize_outputs(filemanager, _plan(output_plan, group_by_value="channel"), context)
 
     assert [path for _spec, _data, path in materialized] == [
-        "/analysis/A01_w2_measurements_step7.roi.zip",
+        "/analysis/A01_channel-2_measurements_step7.roi.zip",
     ]
     assert not context.runtime_value_store.values()[0].key.scope.has_fixed_components
 

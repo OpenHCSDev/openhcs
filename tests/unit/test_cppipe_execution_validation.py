@@ -35,7 +35,12 @@ from openhcs.core.runtime_measurements import (
     MeasurementScope,
     MeasurementSubject,
 )
-from openhcs.core.runtime_stores import RuntimeValueStore
+from openhcs.core.runtime_stores import (
+    RuntimeArtifactAddress,
+    RuntimeArtifactLocation,
+    RuntimeValueStore,
+)
+from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.processing.materialization import (
     CsvOptions,
     FileBundleOptions,
@@ -61,6 +66,7 @@ def test_cppipe_execution_validation_rejects_header_only_csv(
                 rows=({"slice_index": 0},),
             ),
             tmp_path,
+            table_path=csv_path,
         )
 
 
@@ -74,6 +80,7 @@ def test_cppipe_execution_validation_accepts_header_only_empty_csv(
         _measurement_output_specs(),
         _successful_execution_with_measurement_record(),
         tmp_path,
+        table_path=csv_path,
     )
 
     assert observation.exports.table_row_counts_by_path[csv_path] == 0
@@ -89,6 +96,7 @@ def test_cppipe_execution_validation_accepts_csv_with_data_rows(
         _measurement_output_specs(),
         _successful_execution_with_measurement_record(rows=({"slice_index": 0},)),
         tmp_path,
+        table_path=csv_path,
     )
 
     assert observation.exports.table_row_counts_by_path[csv_path] == 1
@@ -284,6 +292,8 @@ def _validate(
     output_specs: tuple[ArtifactSpec, ...],
     store: RuntimeValueStore,
     output_root: Path,
+    *,
+    table_path: Path | None = None,
 ):
     expectation = RuntimeArtifactExecutionExpectation.from_output_specs(
         output_specs,
@@ -293,7 +303,22 @@ def _validate(
         schema_version=ZMQ_RUNTIME_OBSERVATION_EXPORT_SCHEMA_VERSION,
         expectation=expectation,
         records_by_axis={"A01": tuple(store.observed_values)},
-        exports=RuntimeExportObservation.from_output_roots((output_root,)),
+        exports=RuntimeExportObservation.from_output_roots(
+            (output_root,),
+            outputs=(
+                StepExecutionObservation(
+                    {
+                        RuntimeArtifactAddress.from_record(record): (
+                            RuntimeArtifactLocation(str(table_path), "disk"),
+                        )
+                        for record in store.observed_values
+                    },
+                    (table_path,),
+                )
+                if table_path is not None
+                else StepExecutionObservation.empty()
+            ),
+        ),
         output_roots=(output_root,),
         execution_success_by_axis={"A01": True},
     ).require_valid_observation()
