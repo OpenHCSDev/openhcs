@@ -5,14 +5,17 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
+import math
 from typing import Annotated, Any, ClassVar, NamedTuple, TYPE_CHECKING
 
 import numpy as np
-from matplotlib import colormaps, colors, transforms
-from matplotlib.backends.backend_agg import FigureCanvasAgg
+from matplotlib import colormaps, colors, transforms, font_manager
+from matplotlib.backends.backend_agg import FigureCanvasAgg, RendererAgg
 from matplotlib.figure import Figure
 from metaclass_registry import AutoRegisterMeta
 from numba import njit
+
+from openhcs.processing.backends.cellprofiler._font_raster_native import rasterize
 
 from openhcs.constants.constants import MemoryType, VariableComponents
 from openhcs.core.artifacts import (
@@ -640,6 +643,44 @@ class TrackingDisplayMode(Enum):
     COLOR_AND_NUMBER = "Color and Number"
 
 
+class CellProfilerRendererAgg(RendererAgg):
+    """Keep the native CellProfiler plaintext metrics and pre-hint grid local."""
+
+    def _text_bitmap(self, text, properties):
+        pixels, facts = rasterize(
+            font_manager.findfont(properties), properties.get_size_in_points(),
+            self.dpi, text,
+        )
+        return np.frombuffer(pixels, dtype=np.uint8).reshape(facts[1], facts[0]), facts
+
+    def get_text_width_height_descent(self, text, properties, ismath):
+        if ismath:
+            return super().get_text_width_height_descent(text, properties, ismath)
+        _, facts = self._text_bitmap(text, properties)
+        return facts[2] / 64, facts[3] / 64, facts[4] / 64
+
+    def draw_text(self, gc, x, y, text, properties, angle, ismath=False, mtext=None):
+        if ismath:
+            return self.draw_mathtext(gc, x, y, text, properties, angle)
+        bitmap, facts = self._text_bitmap(text, properties)
+        descent = facts[4] / 64
+        x = round(x + facts[5] / 64 + descent * math.sin(math.radians(angle)))
+        y = round(y + descent * math.cos(math.radians(angle)))
+        self._renderer.draw_text_image(bitmap, x, y + 1, angle, gc)
+
+
+class CellProfilerFigureCanvasAgg(FigureCanvasAgg):
+    """Use the compatible renderer without changing process-wide Matplotlib."""
+
+    def get_renderer(self):
+        width, height = self.get_width_height(physical=True)
+        key = width, height, self.figure.dpi
+        if self._lastKey != key:
+            self.renderer = CellProfilerRendererAgg(width, height, self.figure.dpi)
+            self._lastKey = key
+        return self.renderer
+
+
 class TrackingImageDisplayStrategy(
     EnumKeyedStrategyMixin[TrackingDisplayMode], ABC, metaclass=AutoRegisterMeta
 ):
@@ -662,7 +703,7 @@ class TrackingImageDisplayStrategy(
         bits = (indexer & powers).astype(bool)
         indexer = np.sum(bits.transpose() * (2 ** np.arange(7, -1, -1)), axis=1)
         figure = Figure()
-        canvas = FigureCanvasAgg(figure)
+        canvas = CellProfilerFigureCanvasAgg(figure)
         axes = figure.add_subplot(1, 1, 1)
         colormap = colormaps.get_cmap("jet").with_extremes(bad=(0, 0, 0))
         axes.imshow(

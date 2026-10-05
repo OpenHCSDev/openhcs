@@ -4,3 +4,6 @@ include scripts/smoke_native_granularity_wheel.py
 prune openhcs/omero/plugin/build
 prune openhcs/omero/plugin/omero_openhcs.egg-info
 include scripts/build_median_network.py
+include scripts/build_freetype_sources.py
+include openhcs/processing/backends/cellprofiler/_font_raster.c
+recursive-include vendor/freetype-2.6.1 *
