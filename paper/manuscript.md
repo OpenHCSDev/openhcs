@@ -280,9 +280,15 @@ measuring nuclear texture, neighbour spacing and weak actin support. Its
 55 nuclear candidates and 53 expanded associated regions had useful ordinary-body
 coverage in independent matched-channel review; two unsupported regions remained
 seed-sized. Transport and source-binding repairs were required, but did not
-change the segmentation. This is a useful first-method outcome, not a
-manual-reference accuracy score or evidence that every crowded boundary is
-correct (Supplementary Data 8).
+change the segmentation. Postfreeze comparison with closed manual nuclear
+interiors matched 42 of 47 regions at intersection over union at least 0.5,
+giving precision 0.764, recall 0.894 and object F1 0.824. An independent repeat's
+final result matched 37 regions, with F1 0.740. Cell-region F1 was 0.697 and
+0.673, respectively, while adjacent-cell boundary agreement was 0.695 and
+0.715. The repeat's boundary gain therefore did not imply better object
+correspondence. Open or frame-connected reference interiors are excluded,
+and tiny closed annotation regions remain included; these single-field scores
+do not establish an exhaustive biological census (Supplementary Data 8).
 
 Retinal authors used measured background and weak-body support to select
 smoothing, background subtraction and foreground admission. Earlier repeats
@@ -295,6 +301,14 @@ envelope in the same 102-instance candidate. Diffuse and lobed regions still
 had uncertain identities and extent (Supplementary Figure 14). The result
 supports autonomous local repair with a retained neighbour control;
 manual-reference accuracy remains unmeasured.
+
+A later independent retinal author repaired fragmented interiors and a merged
+neighbouring pair, retaining 145 candidate soma instances. Independent full-field
+and regional raw/result review supported bright-body localisation, separate
+neighbours and intact isolated bodies against noisy background. Faint open rims
+and lobed or crowded objects retained uncertain extent and identity. This result
+adds evidence of self-directed repair; the detector total is not a manual cell
+count (Supplementary Data 8).
 
 Whole-volume analysis also separated useful localisation from instance
 identity. One fresh nucleus-centre trial matched all 15 manual reference

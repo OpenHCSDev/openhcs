@@ -37,6 +37,8 @@ from polystore.disk import DiskStorageBackend
 import tifffile
 import imageio.v3 as iio
 
+from benchmark.validation.references import closed_outline_interiors
+
 
 class DatasetId(str, Enum):
     NUCLEI_039 = "BBBC039"
@@ -975,19 +977,6 @@ def instance_score(
         int(np.count_nonzero((overlap_p >= 0.1).sum(axis=0) >= 2)),
         n_p - n_t,
     )
-
-
-def closed_outline_interiors(outlines: np.ndarray) -> tuple[np.ndarray, int]:
-    """Do not bridge open contours; exclude every component meeting the frame."""
-    components, _ = ndimage.label(
-        ~outlines.astype(bool), structure=ndimage.generate_binary_structure(2, 1)
-    )
-    border = np.unique(
-        np.r_[components[0], components[-1], components[:, 0], components[:, -1]]
-    )
-    components[np.isin(components, border)] = 0
-    closed = label(components, connectivity=1, background=0)
-    return closed, len(border) - (0 in border)
 
 
 def boundary_score_007(

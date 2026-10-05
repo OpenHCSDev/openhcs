@@ -161,3 +161,25 @@ pipeline snapshot, MCP event record, materialized output, score report, and
 same-coordinate raw/result overlay at several percentile clips. Keep
 independent ground truth, deterministic parity, and visual QC as separate
 evidence classes.
+
+## BBBC007 manual outline policy
+
+Official TIFF nonzero pixels are outline strokes, not filled objects. Instance
+diagnostics use four-connected zero-valued interiors that do not meet the frame;
+they omit stroke pixels, do not bridge gaps, and do not infer ownership at
+contacts. Closed regions are annotation-derived regions, not an exhaustive cell
+count. Open/frame-connected interiors are excluded without discarding their
+strokes from boundary evaluation. No size filter or morphological repair is
+applied to the annotations.
+
+Boundary diagnostics compare directly with the original stroke union. The
+published directed metric excludes predicted boundaries adjacent to background
+or the frame and uses two-pixel Euclidean distance. Monochrome strokes cannot
+establish object correspondence; nearest-union distance is an explicit limit.
+See https://bbbc.broadinstitute.org/BBBC007.
+
+Scores previously produced by the reversed-polarity independent-validation
+decoder are invalid. This does not invalidate the separate historical
+`annotated_validation` scores: that path already inverted the outlines and used
+their original union. Its closed-interior decoder now comes from this shared
+reference owner, with the same four-connectivity/frame-exclusion semantics.

@@ -1,5 +1,9 @@
 # Benchmark Manifests
 
+Before running native CellProfiler, follow the
+[headless oracle bootstrap guide](../../docs/cellprofiler_headless_environment.md)
+and retain its environment receipt with new benchmark evidence.
+
 `official30_portable_axis1.json` is the reproducible 30-case CP-vs-OpenHCS
 benchmark manifest. It avoids case-level absolute paths by declaring named,
 self-materializing roots:

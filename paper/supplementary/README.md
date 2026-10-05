@@ -1125,6 +1125,18 @@ than a whole-volume census or boundary accuracy. The
 [evaluation receipt](task_only_analysis/h002-fresh15-postfreeze-evaluation.json)
 retains all four distance thresholds and exact input identities.
 
+A later independent retinal trial retained 145 candidate soma instances after
+self-directed interior, edge and marker repairs. Independent full-field,
+central, northeast and southwest raw/result/combined review supports bright-body
+localisation, a separated neighbouring pair and intact isolated-body controls.
+Open rims, a lobed body and crowded divisions remain uncertain. The
+[independent final review](../../figure-collection-20261004/R0010-FRESH18-INDEPENDENT-FINAL-REVIEW.rst)
+records twelve personally opened original captures, all 154 verified payload
+entries, and the final pipeline and registered-callable hashes. The saved dense
+labels and linked measurement table each contain 145 instances. These are
+detector outputs, with clipped and class-uncertain objects retained; there is no
+manual-reference accuracy estimate for this field.
+
 A fresh-context paired DNA/actin author also retained 55 nuclei and 55
 source-linked actin territories after repairing a local nuclear merge. A
 faint-neighbour merge, clipped objects and one no-growth territory remained
@@ -1155,7 +1167,38 @@ repairs did not change the segmentation masks. The
 [final image review](../../figure-collection-20261004/H003-FRESH16-INDEPENDENT-FINAL-REVIEW.rst)
 retains twelve original raw/result/combined captures and the independently
 verified 1,083-file freeze. This is a first-method result after technical repair,
-not a manual-reference accuracy estimate.
+with image review and later reference scoring retained separately.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
+After both paired-field authors froze their results, their unchanged masks were
+compared with the matching BBBC007 manual outlines. Pixel identity establishes
+the curated field as official f9620/POS0005, rather than matching its renamed
+filename. One-to-one assignment accepts intersection over union at least 0.5.
+The earlier method and the repeat's final candidate give:
+
+| Result | Channel | Predictions | Matches | Closed regions | Object F1 |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Earlier | DNA | 55 | 42 | 47 | 0.824 |
+| Repeat | DNA | 53 | 37 | 47 | 0.740 |
+| Earlier | Actin | 55 | 38 | 54 | 0.697 |
+| Repeat | Actin | 53 | 36 | 54 | 0.673 |
+
+The directed fraction of adjacent-cell boundary pixels within two pixels of an
+original manual stroke was 0.695 and 0.715. The repeat improved that boundary
+measure but matched fewer closed regions. Reference interiors exclude open or
+frame-connected components without repairing gaps or assigning shared strokes;
+two nuclear and seven actin interiors have only one or two pixels and remain
+included. Predicted clipped objects are retained. These region diagnostics are
+not an exhaustive biological cell census, and nearest-outline boundary agreement
+can reward incomplete segmentation. No reference results reached the authors.
+The [postfreeze comparison](task_only_analysis/h003-fresh16-postfreeze-reference-comparison.json)
+retains exact input/reference identity, original freeze and scored-mask hashes,
+merged scorer identity and all metrics. The earlier reversed-polarity diagnostic
+was invalidated before publication; the historical held-out scores in
+Supplementary Data 7 used the already-correct outline interpretation.
 
 The fresh BBBC007 repeat covered all 16 DNA/actin pairs.
 Its final 1,335 primary and secondary label identities reconcile, but dense
