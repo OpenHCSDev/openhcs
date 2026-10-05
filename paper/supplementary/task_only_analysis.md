@@ -500,6 +500,38 @@ repair or a validated reusable parameter recipe. Its recorded client exit
 exceeded the 75-minute deadline by about eight seconds; that operational
 qualification remains separate from scientific completion and rejection.
 
+## Later full-field paired-channel repeat: diagnosed support failure and partial recovery
+
+The independent author `BBBC007_FRESH08_96` processed all 16 released DNA/actin
+pairs without reference outlines, earlier analysis solutions or score feedback.
+Its first complete candidate missed distinct bright nuclear bodies in the
+crowded A02 field. Retained support, marker and unedited-object diagnostics
+localized the failure to broad admitted haze, sparse shape markers and merged
+basins removed by size filtering. A local minimum-cross-entropy threshold
+changed partitions but did not recover the anchors; the author rejected that
+repair despite the A02 count increasing from 22 to 50.
+
+Changing the primary method to local Otsu at the same neighbourhood scale
+recovered several nuclear anchors and retained the inspected faint-positive
+and textured-body controls. Several clear bright bodies remained without their
+own nuclear label in the crowded witness. These local gains do not establish
+whole-field coverage or a general preference for Otsu. The final pipeline
+completed all 16 fields, exporting 1,363 nuclear and 1,363 cell rows; 81 secondary
+areas equalled their primary areas. Original CSV review confirmed these counts,
+unique source/object keys and matching identity sets. They do not establish
+pixelwise containment or biological cell boundaries.
+
+The coordinator independently verified 815 frozen artifact entries
+(797,409,650 bytes), five recorded journal prefixes and the final pipeline
+digest. It opened original crowded predecessor/repair views and matched faint
+and textured raw/combined crops. The native and viewer closure acknowledgements
+were checked against process absence; recorded client exit 2 remains distinct
+from scientific completion. The [outcome record](task_only_analysis/bbbc007-fresh08-outcome.json)
+binds this evidence to the original run. No manual-reference score or unseen
+validation claim is made. Supported local detections and partial self-directed
+recovery are retained separately from the unresolved crowded-region coverage,
+seed-sized cells and body-boundary interpretation.
+
 ## Fresh paired-field repeat: local separation gains and a caught regression
 
 The fresh author `H003_FRESH656_96` analysed only the released paired 400 x 400
