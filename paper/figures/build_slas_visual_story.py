@@ -361,7 +361,7 @@ def h002_measurement_first():
         for index, matched in enumerate(matches):
             axis.text(index, matched + .3, f"{matched}/{total}", ha="center", size=13)
         axis.set(xticks=(0, 1), xticklabels=(f"{thresholds[0]} voxels", f"{thresholds[1]} voxels\n(primary)"),
-                 ylim=(0, total+2), yticks=(0, 5, 10, 15), ylabel="Matched manual centres")
+                 ylim=(0, total+2), yticks=(0, 5, 10, 15), ylabel="Matched centres")
         axis.set_title("D  Postfreeze one-to-one matching", size=13)
         axis.grid(axis="y", color="#d9e0e5", linewidth=.6)
         axis.set_axisbelow(True)
