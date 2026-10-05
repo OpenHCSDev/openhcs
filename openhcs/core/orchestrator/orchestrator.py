@@ -113,8 +113,9 @@ class PipelineOrchestrator:
         self.execution_id = f"local::{plate_path}"
         self.transport_config = transport_config
 
-        # Initialize auto-sync control for pipeline config
+        # Hold the authored declaration before the plate identity is assigned.
         self._pipeline_config = None
+
         # Context management now handled by contextvars-based system
 
         # Initialize per-orchestrator configuration
