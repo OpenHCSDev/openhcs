@@ -819,6 +819,7 @@ class ImageArtifactType(ArtifactType):
     ) -> object:
         """Apply the declared image identity without discarding payload context."""
 
+        from openhcs.core.aligned_image_payload import AlignedImageStack
         from openhcs.core.runtime_image_values import (
             image_payload_data,
             image_payload_mask,
@@ -838,6 +839,10 @@ class ImageArtifactType(ArtifactType):
                 image_payload_mask(payload),
             )
 
+        if isinstance(value, AlignedImageStack):
+            return value.with_slices(
+                tuple(named_payload(payload) for payload in value.slices)
+            )
         if isinstance(value, RuntimeSliceAlignedValueSet):
             return RuntimeSliceAlignedValues(
                 tuple(
