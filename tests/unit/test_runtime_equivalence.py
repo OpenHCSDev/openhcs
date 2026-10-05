@@ -11402,3 +11402,50 @@ def test_runtime_reference_artifact_equivalence_ignores_duplicate_object_rows(
     )
 
     assert report.is_equivalent
+
+
+@pytest.mark.parametrize("object_id_field", ("Number_Object_Number", "custom_identity"))
+def test_exported_relationships_consume_declared_object_identity(
+    object_id_field: str,
+) -> None:
+    from dataclasses import replace
+
+    from openhcs.core.equivalence.tables import RuntimeTableSnapshot
+    from openhcs.core.runtime_measurements import RuntimeMeasurementRowIdentityContract
+
+    dialect = replace(
+        CELLPROFILER_MEASUREMENT_DIALECT,
+        row_identity_contract=RuntimeMeasurementRowIdentityContract(
+            object_identity_fields=(object_id_field,)
+        ),
+    )
+    policy = RuntimeEquivalencePolicy(measurement_dialect=dialect)
+    parents = RuntimeTableSnapshot(
+        Path("Per_Parents.csv"),
+        ("ImageNumber", object_id_field, "Children_Children_Count"),
+        (("1", "7", "1"),),
+        ("Parents",) * 3,
+    )
+    children = RuntimeTableSnapshot(
+        Path("Per_Children.csv"),
+        ("ImageNumber", object_id_field, "Parent_Parents"),
+        (("1", "11", "7"),),
+        ("Children",) * 3,
+    )
+    snapshot = RuntimeMeasurementSnapshot.from_output_snapshot(
+        RuntimeOutputSnapshot(tables=(parents, children)), policy=policy
+    )
+    relationship, = snapshot.correlated_relationships.values()
+    assert relationship.source_keys == (ObjectInstanceKey(7, 0),)
+    assert relationship.target_keys == (ObjectInstanceKey(11, 0),)
+
+    missing_parent = replace(children, rows=(("1", "11", "8"),))
+    with pytest.raises(ValueError, match="absent parent endpoint"):
+        RuntimeMeasurementSnapshot.from_output_snapshot(
+            RuntimeOutputSnapshot(tables=(parents, missing_parent)), policy=policy
+        )
+    nonintegral_child = replace(children, rows=(("1", "11.5", "7"),))
+    with pytest.raises(ValueError, match="integral endpoint|integer"):
+        RuntimeMeasurementSnapshot.from_output_snapshot(
+            RuntimeOutputSnapshot(tables=(parents, nonintegral_child)), policy=policy
+        )

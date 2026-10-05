@@ -114,6 +114,30 @@ class MedianNativeExtension(OpenHCSNativeExtension):
         ])
 
 
+class FontRasterNativeExtension(OpenHCSNativeExtension):
+    """Keep the CellProfiler-compatible font engine local to its native module."""
+
+    @property
+    def qualified_module_name(self) -> str:
+        return "openhcs.processing.backends.cellprofiler._font_raster_native"
+
+    def prepare_build_sources(self, build_root: Path) -> None:
+        project_root = Path(__file__).resolve().parent
+        helper = project_root / "scripts/build_freetype_sources.py"
+        vendor = project_root / "vendor/freetype-2.6.1"
+        declarations = runpy.run_path(str(helper))
+        self.sources.append(str(Path(*self.qualified_module_name.split(".")).with_name("_font_raster.c")))
+        self.sources.extend(
+            Path(source).relative_to(project_root).as_posix()
+            for source in declarations["freetype_sources"](vendor)
+        )
+        self.include_dirs.append(str(vendor / "include"))
+        self.define_macros.append(("FT2_BUILD_LIBRARY", None))
+        self.depends.extend([str(helper), *map(str, vendor.rglob("*.h"))])
+        if os.name != "nt":
+            self.extra_compile_args.append("-fvisibility=hidden")
+
+
 class BuildNativeExtensions(_build_ext):
     """Prepare declared native sources without executing runtime compilation."""
 

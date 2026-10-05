@@ -24,12 +24,20 @@ test ! -e "$receipt.output"
 test ! -e "$receipt.deadline"
 if [[ -e "$runtime/first-mcp-started.epoch" ]]; then
   started=$(<"$runtime/first-mcp-started.epoch")
-  minutes=$(jq -er '.task_minutes_from_first_mcp_start' "$FLEET_RUN_ROOT/program.json")
+  minutes=$(jq -cr '.task_minutes_from_first_mcp_start |
+    if . == null then null
+    elif type=="number" then
+      if .>0 and .==floor then . else error("invalid declared scientific interval") end
+    else error("invalid declared scientific interval") end' "$FLEET_RUN_ROOT/program.json")
   elapsed=$(($(date -u +%s)-started))
-  printf 'Deadline elapsed=%s allowed=%s seconds; mode=%s policy=%s\n' "$elapsed" "$((minutes*60))" "$mode" "$deadline_policy" | tee "$receipt.deadline"
-  if [[ "$elapsed" -ge "$((minutes*60))" ]]; then
-    printf 'Scientific interval expired: no new scientific work or process startup. Existing-client observation, evidence freeze and exact owned cleanup remain permitted; ledger is not dispatch permission.\n' | tee -a "$receipt.deadline"
-    [[ "$deadline_policy" != reject ]]
+  if [[ "$minutes" == null ]]; then
+    printf 'Recorded elapsed=%s seconds; scientific interval undeclared; mode=%s. Preserve checkpoints and continue through measured resource admission.\n' "$elapsed" "$mode" | tee "$receipt.deadline"
+  else
+    printf 'Deadline elapsed=%s allowed=%s seconds; mode=%s policy=%s\n' "$elapsed" "$((minutes*60))" "$mode" "$deadline_policy" | tee "$receipt.deadline"
+    if [[ "$elapsed" -ge "$((minutes*60))" ]]; then
+      printf 'Scientific interval expired: no new scientific work or process startup. Existing-client observation, evidence freeze and exact owned cleanup remain permitted; ledger is not dispatch permission.\n' | tee -a "$receipt.deadline"
+      [[ "$deadline_policy" != reject ]]
+    fi
   fi
 fi
 # Ongoing means an already recorded live client, not permission to bootstrap
