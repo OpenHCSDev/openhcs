@@ -1,0 +1,162 @@
+{
+  "errors": [],
+  "results": [
+    {
+      "mcp_error": false,
+      "payloads": [
+        {
+          "capture_scope": "widget",
+          "captured": true,
+          "connection": {
+            "host": "localhost",
+            "persistent": true,
+            "port": 6023,
+            "transport_mode": "tcp"
+          },
+          "errors": [],
+          "frame_condition": "render_complete",
+          "height": 944,
+          "observation": {
+            "baseline_inactive": true,
+            "completed_at_monotonic": 649886.730655267,
+            "condition": "render_complete",
+            "configured_flash_duration_s": 0,
+            "flash_start_count": 0,
+            "frame": null,
+            "observation_budget_s": 2.4897357650334015,
+            "operation_deadline": {
+              "expires_at": 649891.680025052,
+              "operation": "viewer control request",
+              "timeout_ms": 5000
+            },
+            "painted_frame_count": 1,
+            "render_frame": {
+              "completed_at_monotonic": 649886.730626713,
+              "renderer_identity": 140643867166480,
+              "window_identity": 140643887676976
+            },
+            "started_at_monotonic": 649886.700450176,
+            "trace": [],
+            "window_identity": 140643887676976
+          },
+          "observation_timeout_s": 2.5,
+          "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-h004-fresh10-89-20261005/H004_FRESH10_89/qa/BIO06_central_native_result",
+          "resource": {
+            "mime_type": "image/png",
+            "path": "/run/media/ts/hdd/openhcs-science/next-h004-fresh10-89-20261005/H004_FRESH10_89/qa/BIO06_central_native_result/20261005T042407584470Z_napari_6023_OpenHCS_Napari_Visualization.png",
+            "sha256": "becb75bdcf6775ff5b71720dd30e2e28c95b11a5475f9268f9f1e2626102da83",
+            "size_bytes": 86777,
+            "title": "OpenHCS Napari Visualization",
+            "uri": "file:///run/media/ts/hdd/openhcs-science/next-h004-fresh10-89-20261005/H004_FRESH10_89/qa/BIO06_central_native_result/20261005T042407584470Z_napari_6023_OpenHCS_Napari_Visualization.png"
+          },
+          "response": {
+            "height": 944,
+            "native_dimensions": {
+              "camera_angles": [
+                0,
+                0,
+                90
+              ],
+              "canvas_size": [
+                953,
+                442
+              ],
+              "displayed_axes": [
+                "y",
+                "x"
+              ],
+              "ndisplay": 2,
+              "order": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6
+              ],
+              "point": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                399,
+                399
+              ]
+            },
+            "observation": {
+              "baseline_inactive": true,
+              "completed_at_monotonic": 649886.730655267,
+              "condition": "render_complete",
+              "configured_flash_duration_s": 0,
+              "flash_start_count": 0,
+              "frame": null,
+              "observation_budget_s": 2.4897357650334015,
+              "operation_deadline": {
+                "expires_at": 649891.680025052,
+                "operation": "viewer control request",
+                "timeout_ms": 5000
+              },
+              "painted_frame_count": 1,
+              "render_frame": {
+                "completed_at_monotonic": 649886.730626713,
+                "renderer_identity": 140643867166480,
+                "window_identity": 140643887676976
+              },
+              "started_at_monotonic": 649886.700450176,
+              "trace": [],
+              "window_identity": 140643887676976
+            },
+            "resource": {
+              "mime_type": "image/png",
+              "path": "/run/media/ts/hdd/openhcs-science/next-h004-fresh10-89-20261005/H004_FRESH10_89/qa/BIO06_central_native_result/20261005T042407584470Z_napari_6023_OpenHCS_Napari_Visualization.png",
+              "sha256": "becb75bdcf6775ff5b71720dd30e2e28c95b11a5475f9268f9f1e2626102da83",
+              "size_bytes": 86777,
+              "title": "OpenHCS Napari Visualization",
+              "uri": "file:///run/media/ts/hdd/openhcs-science/next-h004-fresh10-89-20261005/H004_FRESH10_89/qa/BIO06_central_native_result/20261005T042407584470Z_napari_6023_OpenHCS_Napari_Visualization.png"
+            },
+            "snapshot": {
+              "capture_scope": "widget",
+              "connection": {
+                "host": "localhost",
+                "persistent": true,
+                "port": 6023,
+                "transport_mode": "tcp"
+              },
+              "frame_condition": "render_complete",
+              "include_response": true,
+              "observation_timeout_s": 2.5,
+              "operation_deadline": {
+                "expires_at": 649891.680025052,
+                "operation": "viewer control request",
+                "timeout_ms": 5000
+              },
+              "output_dir_path": "/run/media/ts/hdd/openhcs-science/next-h004-fresh10-89-20261005/H004_FRESH10_89/qa/BIO06_central_native_result",
+              "timeout_ms": 5000
+            },
+            "status": "success",
+            "type": "screenshot_ack",
+            "viewer": {
+              "title": "OpenHCS Napari Visualization",
+              "type": "napari"
+            },
+            "width": 1440
+          },
+          "schema_version": "openhcs.agent.v1",
+          "viewer": {
+            "title": "OpenHCS Napari Visualization",
+            "viewer_type": "napari"
+          },
+          "warnings": [],
+          "width": 1440
+        }
+      ],
+      "tool": "openhcs_viewer_snapshot_window"
+    }
+  ],
+  "server": {
+    "command": "/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/bin/python",
+    "module": "openhcs.mcp"
+  }
+}
