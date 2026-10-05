@@ -112,6 +112,25 @@ method. Prominence/H-maxima depends on the landscape's numeric units; a toleranc
 from an 8-bit intensity example is not a calibrated distance-map setting.
 Compare both crops after the change, not just the repaired split.
 
+### A stronger prominence leaves the same false split
+
+Compare the actual marker components and coordinates, not just parameter
+values or total counts. If a prominence change leaves them unchanged, inspect
+the declared neighbourhood used to find regional maxima and the connectivity
+used to label those maxima into markers. One plateau connected under the first
+operation can become several markers under the second. This is distinct from
+several genuine peaks or a foreground bridge between different bodies.
+
+Where that mismatch is demonstrated, test compatible maxima-component
+connectivity while retaining foreground and watershed semantics; those stages
+need not all use the same neighbourhood. Recheck the continuous-body witness
+through Z where present, a genuine close pair and distributed support. Do not
+prescribe full connectivity universally or infer successful body separation
+from fewer markers alone. A repair can remove one duplicate while another
+landscape or support failure remains. Preserve that partial improvement and
+diagnose the remaining split rather than discarding it or repeating an
+ineffective suppression change.
+
 For point-only counts of extended objects, maxima are candidate landmarks, not
 automatically distinct bodies. Track candidate multiplicity within each sampled
 raw body across the axes present; in 3-D, inspect through Z and orthogonal views,
