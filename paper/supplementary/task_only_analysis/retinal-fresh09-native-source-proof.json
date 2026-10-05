@@ -1,0 +1,503 @@
+{
+  "author_run": "R0010_FRESH09_96",
+  "tier": "Fresh task-only author; final local repair without supplied corrections or reference feedback.",
+  "pipeline_sha256": "59f48a9ff4ee70f988f2ff0fed1eadf7df97a8de3bad8d9753e6432635b0e0a0",
+  "input_source": "User-provided retinal whole mount R0010.czi; site 1, Z 1, time 1, channel 1 RBPMS AF647.",
+  "input_sha256": "3609adc418bb772307804aac1fbecc40d7da54b16cd2a5e3ab8aedbb4d83a851",
+  "detector_instances": 102,
+  "source_shape_yx": [
+    2586,
+    2586
+  ],
+  "physical_scale": "Source metadata reports 0.12353054911059548 micrometers per pixel; independent physical calibration not verified.",
+  "display": {
+    "raw_window": [
+      0,
+      63
+    ],
+    "raw_gamma": 1,
+    "overlay": "Frozen pipeline stretches source intensity to UnitRBPMS, then applies manual display range [0,63/255] to [0,1] and red object outlines. This background is brighter than native raw; matched geometry does not imply identical photometry.",
+    "analysis": "Gaussian Smooth object sizes 35 and 350 pixels, subtraction, manual response threshold 2/255, object diameters 45..220 pixels, shape watershed with marker suppression 85 pixels. These are this frozen author's choices, not general recipes."
+  },
+  "crops_xywh": {
+    "overview": [
+      564,
+      39,
+      419,
+      419
+    ],
+    "northwest": [
+      590,
+      90,
+      600,
+      330
+    ],
+    "southeast": [
+      540,
+      85,
+      600,
+      330
+    ],
+    "northeast": [
+      350,
+      50,
+      620,
+      380
+    ]
+  },
+  "native_cameras_zyx_zoom": {
+    "overview": [
+      0,
+      159.66,
+      159.66,
+      1.314
+    ],
+    "northwest": [
+      0,
+      86.47,
+      101.3,
+      8
+    ],
+    "southeast": [
+      0,
+      290,
+      270,
+      15
+    ],
+    "northeast": [
+      0,
+      43,
+      285,
+      6
+    ]
+  },
+  "native_camera_source": "Author FINAL-QA.rst and original MCP viewport receipts; capture-index entries below retain independent dimensions.",
+  "captures": [
+    {
+      "resource": {
+        "mime_type": "image/png",
+        "path": "/run/media/ts/hdd/openhcs-science/next-r0010-fresh09-96-20261005/R0010_FRESH09_96/screenshots/c10-nw-raw/20261005T013751612287Z_napari_6017_OpenHCS_Napari_Visualization.png",
+        "sha256": "5194f9149b26d812aa26a6a9d2911b7156b53611aec5ad5ef496993ef3b87138",
+        "size_bytes": 703909,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///run/media/ts/hdd/openhcs-science/next-r0010-fresh09-96-20261005/R0010_FRESH09_96/screenshots/c10-nw-raw/20261005T013751612287Z_napari_6017_OpenHCS_Napari_Visualization.png"
+      },
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          442
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          159.60146945088937,
+          159.60146945088937
+        ]
+      },
+      "scope": "widget",
+      "condition": "render_complete",
+      "figure_asset": "paper/figures/slas/retinal_fresh_sources/c10-nw-raw.png"
+    },
+    {
+      "resource": {
+        "mime_type": "image/png",
+        "path": "/run/media/ts/hdd/openhcs-science/next-r0010-fresh09-96-20261005/R0010_FRESH09_96/screenshots/c10-nw-outline/20261005T013804944894Z_napari_6017_OpenHCS_Napari_Visualization.png",
+        "sha256": "29f9b046d5c4e7eb2ec8fa1fd147794a03b9deba1bdb096bfc55377c422c4604",
+        "size_bytes": 737774,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///run/media/ts/hdd/openhcs-science/next-r0010-fresh09-96-20261005/R0010_FRESH09_96/screenshots/c10-nw-outline/20261005T013804944894Z_napari_6017_OpenHCS_Napari_Visualization.png"
+      },
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          442
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          159.60146945088937,
+          159.60146945088937
+        ]
+      },
+      "scope": "widget",
+      "condition": "render_complete",
+      "figure_asset": "paper/figures/slas/retinal_fresh_sources/c10-nw-outline.png"
+    },
+    {
+      "resource": {
+        "mime_type": "image/png",
+        "path": "/run/media/ts/hdd/openhcs-science/next-r0010-fresh09-96-20261005/R0010_FRESH09_96/screenshots/c10-se-raw/20261005T013815070337Z_napari_6017_OpenHCS_Napari_Visualization.png",
+        "sha256": "f20ae6f6a8a82c200caade473f7306db8ce55c8eb0c2b2c97b3f2dfd096088b9",
+        "size_bytes": 258045,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///run/media/ts/hdd/openhcs-science/next-r0010-fresh09-96-20261005/R0010_FRESH09_96/screenshots/c10-se-raw/20261005T013815070337Z_napari_6017_OpenHCS_Napari_Visualization.png"
+      },
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          442
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          159.60146945088937,
+          159.60146945088937
+        ]
+      },
+      "scope": "widget",
+      "condition": "render_complete",
+      "figure_asset": "paper/figures/slas/retinal_fresh_sources/c10-se-raw.png"
+    },
+    {
+      "resource": {
+        "mime_type": "image/png",
+        "path": "/run/media/ts/hdd/openhcs-science/next-r0010-fresh09-96-20261005/R0010_FRESH09_96/screenshots/c10-se-outline/20261005T013829510820Z_napari_6017_OpenHCS_Napari_Visualization.png",
+        "sha256": "e5555ec6be84fc5839452dc00e01a8dde9ce1b63f98066ddc872bd0e9385da19",
+        "size_bytes": 264772,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///run/media/ts/hdd/openhcs-science/next-r0010-fresh09-96-20261005/R0010_FRESH09_96/screenshots/c10-se-outline/20261005T013829510820Z_napari_6017_OpenHCS_Napari_Visualization.png"
+      },
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          442
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          159.60146945088937,
+          159.60146945088937
+        ]
+      },
+      "scope": "widget",
+      "condition": "render_complete",
+      "figure_asset": "paper/figures/slas/retinal_fresh_sources/c10-se-outline.png"
+    },
+    {
+      "resource": {
+        "mime_type": "image/png",
+        "path": "/run/media/ts/hdd/openhcs-science/next-r0010-fresh09-96-20261005/R0010_FRESH09_96/screenshots/c10-overview-raw/20261005T013846308381Z_napari_6017_OpenHCS_Napari_Visualization.png",
+        "sha256": "6b96975c9904db26b760793b5adad4c022a3249619a44289af5139f7d534b268",
+        "size_bytes": 406770,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///run/media/ts/hdd/openhcs-science/next-r0010-fresh09-96-20261005/R0010_FRESH09_96/screenshots/c10-overview-raw/20261005T013846308381Z_napari_6017_OpenHCS_Napari_Visualization.png"
+      },
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          442
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          159.60146945088937,
+          159.60146945088937
+        ]
+      },
+      "scope": "widget",
+      "condition": "render_complete",
+      "figure_asset": "paper/figures/slas/retinal_fresh_sources/c10-overview-raw.png"
+    },
+    {
+      "resource": {
+        "mime_type": "image/png",
+        "path": "/run/media/ts/hdd/openhcs-science/next-r0010-fresh09-96-20261005/R0010_FRESH09_96/screenshots/c10-overview-outline/20261005T013900711532Z_napari_6017_OpenHCS_Napari_Visualization.png",
+        "sha256": "69354cda3b3c54da63c99973313d7ec62e386813be147a7a86158384d94087b5",
+        "size_bytes": 434602,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///run/media/ts/hdd/openhcs-science/next-r0010-fresh09-96-20261005/R0010_FRESH09_96/screenshots/c10-overview-outline/20261005T013900711532Z_napari_6017_OpenHCS_Napari_Visualization.png"
+      },
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          442
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          159.60146945088937,
+          159.60146945088937
+        ]
+      },
+      "scope": "widget",
+      "condition": "render_complete",
+      "figure_asset": "paper/figures/slas/retinal_fresh_sources/c10-overview-outline.png"
+    },
+    {
+      "resource": {
+        "mime_type": "image/png",
+        "path": "/run/media/ts/hdd/openhcs-science/next-r0010-fresh09-96-20261005/R0010_FRESH09_96/screenshots/c10-ne-raw/20261005T013911251473Z_napari_6017_OpenHCS_Napari_Visualization.png",
+        "sha256": "756e48ab44c39c70bc22368ea04fa4022b2784df8f967c09105a02dcde279a92",
+        "size_bytes": 564807,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///run/media/ts/hdd/openhcs-science/next-r0010-fresh09-96-20261005/R0010_FRESH09_96/screenshots/c10-ne-raw/20261005T013911251473Z_napari_6017_OpenHCS_Napari_Visualization.png"
+      },
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          442
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          159.60146945088937,
+          159.60146945088937
+        ]
+      },
+      "scope": "widget",
+      "condition": "render_complete",
+      "figure_asset": "paper/figures/slas/retinal_fresh_sources/c10-ne-raw.png"
+    },
+    {
+      "resource": {
+        "mime_type": "image/png",
+        "path": "/run/media/ts/hdd/openhcs-science/next-r0010-fresh09-96-20261005/R0010_FRESH09_96/screenshots/c10-ne-labels/20261005T013918442694Z_napari_6017_OpenHCS_Napari_Visualization.png",
+        "sha256": "314daba62ca03a77d556af3a19ec9258051bf20287628c80e4e802c98ecd18e8",
+        "size_bytes": 88352,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///run/media/ts/hdd/openhcs-science/next-r0010-fresh09-96-20261005/R0010_FRESH09_96/screenshots/c10-ne-labels/20261005T013918442694Z_napari_6017_OpenHCS_Napari_Visualization.png"
+      },
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          442
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          159.60146945088937,
+          159.60146945088937
+        ]
+      },
+      "scope": "widget",
+      "condition": "render_complete",
+      "figure_asset": "paper/figures/slas/retinal_fresh_sources/c10-ne-labels.png"
+    },
+    {
+      "resource": {
+        "mime_type": "image/png",
+        "path": "/run/media/ts/hdd/openhcs-science/next-r0010-fresh09-96-20261005/R0010_FRESH09_96/screenshots/c10-ne-outline/20261005T013925501405Z_napari_6017_OpenHCS_Napari_Visualization.png",
+        "sha256": "233f52ed64f3894b6382ae02738f04e8e719e8fcb0c00ab512e4ed2b9e1f124c",
+        "size_bytes": 587506,
+        "title": "OpenHCS Napari Visualization",
+        "uri": "file:///run/media/ts/hdd/openhcs-science/next-r0010-fresh09-96-20261005/R0010_FRESH09_96/screenshots/c10-ne-outline/20261005T013925501405Z_napari_6017_OpenHCS_Napari_Visualization.png"
+      },
+      "native_dimensions": {
+        "camera_angles": [
+          0,
+          0,
+          90
+        ],
+        "canvas_size": [
+          953,
+          442
+        ],
+        "displayed_axes": [
+          "y",
+          "x"
+        ],
+        "ndisplay": 2,
+        "order": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "point": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          159.60146945088937,
+          159.60146945088937
+        ]
+      },
+      "scope": "widget",
+      "condition": "render_complete",
+      "figure_asset": "paper/figures/slas/retinal_fresh_sources/c10-ne-outline.png"
+    }
+  ],
+  "interpretation": "Northwest pair stays separated (label probes 30 and 35); southeast continuous envelope has one instance (both probes 97). Diffuse/lobed regions remain uncertain. No manual-reference accuracy or complete biological cell census follows.",
+  "rendering": "Original screenshots copied byte-for-byte, clipped/scaled by native SVG and rendered with existing rsvg-convert. No scientific execution, relabeling, pixel retouching or new contrast adjustment during figure preparation.",
+  "predecessor": "Separate 109-instance run remains documented in retinal-fresh-native-source-proof.json and its original retained PNGs; it is not relabeled as this repeat."
+}
