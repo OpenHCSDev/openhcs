@@ -372,7 +372,6 @@ def test_executor_factory_uses_inline_lane_for_single_threaded_worker(monkeypatc
     resources = WorkerExecutorFactory(
         log_file_base=None,
         progress_queue="queue",
-        progress_context=PROGRESS_CONTEXT,
         cancellation=ExecutionCancellationSignal(),
     ).create(
         runtime_environment=_runtime_environment(
@@ -435,7 +434,6 @@ def test_executor_factory_uses_inline_lane_for_single_fork_worker(monkeypatch):
     resources = WorkerExecutorFactory(
         log_file_base="/tmp/worker",
         progress_queue="queue",
-        progress_context=PROGRESS_CONTEXT,
         cancellation=ExecutionCancellationSignal(),
     ).create(
         runtime_environment=_runtime_environment(
@@ -474,7 +472,6 @@ def test_executor_factory_creates_thread_pool_for_multi_worker_threading(monkeyp
     resources = WorkerExecutorFactory(
         log_file_base=None,
         progress_queue="queue",
-        progress_context=PROGRESS_CONTEXT,
         cancellation=ExecutionCancellationSignal(),
     ).create(
         runtime_environment=_runtime_environment(
@@ -502,7 +499,6 @@ def test_executor_factory_uses_fork_inherited_lane_without_pool(monkeypatch):
     resources = WorkerExecutorFactory(
         log_file_base="/tmp/worker",
         progress_queue="queue",
-        progress_context=PROGRESS_CONTEXT,
         cancellation=ExecutionCancellationSignal(),
     ).create(
         runtime_environment=_runtime_environment(
@@ -545,7 +541,6 @@ def test_executor_factory_creates_process_pool_with_worker_initializer(monkeypat
     resources = WorkerExecutorFactory(
         log_file_base="/tmp/worker-log",
         progress_queue="queue",
-        progress_context=PROGRESS_CONTEXT,
         cancellation=ExecutionCancellationSignal(),
     ).create(
         runtime_environment=runtime_environment,
@@ -559,7 +554,6 @@ def test_executor_factory_creates_process_pool_with_worker_initializer(monkeypat
     assert created["initargs"] == (
         "/tmp/worker-log",
         "queue",
-        PROGRESS_CONTEXT,
     )
     assert isinstance(resources, PooledWorkerExecutorResources)
     assert resources.uses_fork_inherited_contexts is False

@@ -64,3 +64,45 @@ state must need only its own declaration: bootstrap must not consume it.
 
 This initial checkpoint is source diagnosis, not behavioral or installed/native
 acceptance. The original failed job and live author's frozen bundle are intact.
+
+Implemented source checkpoint
+-----------------------------
+
+The unused bootstrap context has now been deleted from WorkerExecutorFactory,
+its stored fields, ProcessPoolExecutor initargs, _configure_worker_process and
+the sole execution-coordinator caller. All five factory fixtures migrated;
+there is no optional legacy argument or context alias. The initializer now
+installs the original queue whenever a queue is supplied. It does not invent a
+second execution identity; worker task/lane progress already owns that fact.
+Existing executor-resource inheritance and mode-specific hooks are unchanged.
+No ornamental capability or new generic consumer type dispatch was needed.
+
+Complete source evidence uses the existing refactor-audit Package/ParsedModule
+parser in validation/custom-worker-bootstrap708/source_family.py. At pinned
+e3866e0c9 it parsed all701 production modules and705 test modules without parse
+omissions;42 production and57 test modules selected for complete relevant AST.
+The original Python3.12 process-pool, queues, spawn and reduction dependencies
+were also read/parsed. The run completed20.22s,550072KiB maximumRSS, zero swaps.
+This is related-family source evidence, not a whole dependency/global R1 claim.
+
+Applicable catalog lessons: BOUND-1 (the worker boundary must receive the facts
+it consumes), IDEN-6 (retain the original nominal/source identity owner), and
+TIME-3 (delete the removed argument and migrate consumers, not leave an alias).
+No competing export store or copied serializer is added. The error's callable
+name does not justify changing the registry when the failing bootstrap input is
+the unrelated rich execution graph.
+
+Focused qualification adds a real spawn-factory control to the existing
+persisted-custom-source integration fixture. Two durable source revisions,
+typed artifact declarations, original helper rows/enums and independent MI
+capabilities cross standard pickle; the worker invokes registered functions,
+returns nominal rows and emits the terminal progress event on the initialized
+queue. A new derived progress context carries an unpicklable local callback
+without requiring a bootstrap consumer change. Qualification has not yet run.
+
+Source tests may borrow only the existing receiving08 native tabular binary:
+its original source and this checkout's _tabular_native.cpp both SHA256
+15acc82b8ab64268bd1ea4f83fa7a68f527bf317f002e9f39e15be321e03b28e.
+The original target is read-only; no build, dependency installation or scientific
+package mutation is authorized by this source check. Borrowed dependency paths
+and terminal outcomes must be recorded, not treated as installed PR acceptance.
