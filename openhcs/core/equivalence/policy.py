@@ -686,9 +686,7 @@ class RuntimeMeasurementDialect:
             return "_".join(
                 ("spatial_grid", normalized_grid_name, normalized_field_name)
             )
-        return normalize_runtime_identifier(
-            provider(normalized_grid_name, normalized_field_name)
-        )
+        return provider(grid_name, normalized_field_name)
 
     def resolved_primary_category_prefixes(self) -> tuple[tuple[str, ...], ...]:
         """Return category prefixes declared canonical by their nominal owners."""

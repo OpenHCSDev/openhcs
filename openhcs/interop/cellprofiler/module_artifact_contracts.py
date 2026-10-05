@@ -1038,13 +1038,19 @@ class CellProfilerModuleArtifactContracts:
             ),
             artifact_inputs.specs,
         )
+        contextual_inputs = tuple(
+            spec
+            for spec in artifact_inputs
+            if spec.artifact_type.carries_source_image_context
+        )
         lineage_inputs = ArtifactSpecCollection(
             primary_images
             or tuple(
                 spec
-                for spec in artifact_inputs
-                if spec.artifact_type.carries_source_image_context
+                for spec in contextual_inputs
+                if spec.artifact_type.participates_in_main_flow_output
             )
+            or contextual_inputs
         )
         source = cls.single_artifact_lineage_input(lineage_inputs)
         return (

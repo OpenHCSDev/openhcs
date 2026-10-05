@@ -1283,6 +1283,16 @@ class ImagePayloadMetadataCarrier(ABC):
     def image_data(self) -> Any:
         """Return concrete pixels in the payload's declared image domain."""
 
+    def image_geometry(self) -> ArrayGeometry:
+        """Inspect the image domain; structured owners may derive it from slices."""
+        return ArrayGeometry.require_from_value(
+            self.image_data(), value_name="Image payload",
+        )
+
+    def image_mask(self) -> Any | None:
+        """Return an authoritative validity mask when this owner carries one."""
+        return None
+
     @property
     @abstractmethod
     def metadata(self) -> ImagePayloadMetadata:
@@ -1366,6 +1376,9 @@ class MaskedImagePayload(DataBackedRuntimeArrayPayload, ImagePayloadMetadataCarr
         """Return the concrete image pixels carried by this payload."""
         return self.data
 
+    def image_mask(self) -> Any:
+        return self.mask
+
     def with_data(self, data: Any, mask: Any | None = None) -> "MaskedImagePayload":
         """Return the same semantic image mask attached to replacement data."""
         return type(self)(
@@ -1388,17 +1401,15 @@ def image_payload_geometry(
     value_name: str = "Image payload",
 ) -> ArrayGeometry:
     """Return declared array geometry without moving device data to the host."""
-
-    return ArrayGeometry.require_from_value(
-        image_payload_data(payload),
-        value_name=value_name,
-    )
+    if isinstance(payload, ImagePayloadMetadataCarrier):
+        return payload.image_geometry()
+    return ArrayGeometry.require_from_value(payload, value_name=value_name)
 
 
 def image_payload_mask(payload: Any) -> Any | None:
     """Return a runtime image mask when present."""
-    if isinstance(payload, MaskedImagePayload):
-        return payload.mask
+    if isinstance(payload, ImagePayloadMetadataCarrier):
+        return payload.image_mask()
     return None
 
 

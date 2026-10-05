@@ -10,6 +10,7 @@ from openhcs.core.artifacts import ArtifactSpec
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
 )
+from openhcs.core.runtime_array_values import RuntimeArrayPayload
 from openhcs.core.runtime_image_values import (
     image_payload_data,
 )
@@ -75,6 +76,14 @@ def cellprofiler_profile_payload_fields(
     value: RuntimeCallableArgument,
 ) -> dict[str, RuntimeProfileFieldValue]:
     """Return cheap payload shape/size fields for CellProfiler runtime profiling."""
+    if isinstance(value, RuntimeArrayPayload):
+        # Structured array owners declare geometry without materializing pixels.
+        shape = tuple(value.shape)
+        return {
+            f"{prefix}_type": type(value).__name__,
+            f"{prefix}_shape": shape,
+            f"{prefix}_nbytes": int(np.prod(shape)) * np.dtype(value.dtype).itemsize,
+        }
     data = image_payload_data(value)
     data_array = data if isinstance(data, np.ndarray) else None
     return {

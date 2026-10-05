@@ -786,23 +786,9 @@ class ImagePayloadPure2DAuxiliaryOutputAggregator(
         *,
         plane_axis: RuntimePlaneAxis,
     ) -> Any:
-        data_values = [image_payload_data(value) for value in values]
-        data = stack_runtime_slices(data_values, memory_type, 0)
-        masks = [image_payload_mask(value) for value in values]
-        present_masks = [mask for mask in masks if mask is not None]
-        if present_masks and len(present_masks) != len(masks):
-            raise ValueError(
-                "Cannot aggregate a mix of masked and unmasked image payloads."
-            )
-        mask = (
-            None
-            if not present_masks
-            else stack_runtime_slices(present_masks, memory_type, 0)
+        return AlignedImageStack.from_output_slices(
+            values, memory_type=memory_type, plane_axis=plane_axis,
         )
-        return ImagePayloadMetadata.compose(
-            tuple(values),
-            mode=ImagePayloadMetadataCompositionMode.for_plane_axis(plane_axis),
-        ).payload_with(data, mask)
 
 
 class MaskedImagePayloadPure2DAuxiliaryOutputAggregator(
@@ -866,8 +852,8 @@ class NumPyPure2DAuxiliaryOutputAggregator(Pure2DAuxiliaryOutputAggregator):
         *,
         plane_axis: RuntimePlaneAxis,
     ) -> Any:
-        return ImagePayloadMetadata(plane_axis=plane_axis).payload_with(
-            stack_runtime_slices(values, memory_type, 0)
+        return AlignedImageStack.from_output_slices(
+            values, memory_type=memory_type, plane_axis=plane_axis,
         )
 
 
