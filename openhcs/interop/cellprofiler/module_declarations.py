@@ -24,6 +24,7 @@ from openhcs.core.artifacts import ArtifactSpec, ArtifactSpecRef
 from openhcs.core.callable_contract import (
     CallableContract,
     CallableImportIdentity,
+    CompilerPreparedAutoRegisterFamily,
     FunctionStepExecutionScope,
 )
 from openhcs.core.config import ProcessingConfig, StepSourceBindingsConfig
@@ -146,6 +147,7 @@ class CellProfilerModule(
     CellProfilerModuleSettings,
     TableMeasurementRecordRowsMixin,
     CellProfilerMeasurementFeatureOwner,
+    CompilerPreparedAutoRegisterFamily,
     ABC,
     metaclass=AutoRegisterMeta,
     registry_config=RegistryConfig(
@@ -177,6 +179,13 @@ class CellProfilerModule(
     contracts can opt into explicit dict-pattern emission at the declaration
     boundary.
     """
+
+    @classmethod
+    def prepare_registered_family(cls) -> None:
+        """Discover measurement declarations before execution readiness."""
+        # Selected callable imports do not complete this lazy registry.
+        # Keep discovery on its owner, including later plugin registration.
+        tuple(cls.__registry__.values())
 
     @staticmethod
     def number_step_invocation_blocks(

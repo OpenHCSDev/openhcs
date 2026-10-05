@@ -86,6 +86,22 @@ a plausible miss and a regression-control close pair or faint path. Make a
 specific prediction about the earliest failed stage and change one operation or
 parameter group. Retain its source, parameters and diagnostic intermediate.
 
+Before widening a measurement batch or adding a late aggregate, discover the
+current artifact-planning and persistence capabilities and inspect the compiled
+plan for the selected outputs. Distinguish runtime-only measurements from saved
+checkpoints, including their source/object identities and output scope. A global
+materialisation flag alone does not prove that every declared output is saved;
+retained label images do not establish retained photometry.
+
+When a downstream join or aggregate can fail after expensive upstream work,
+retain the minimal per-unit measurements and identities needed to diagnose and
+reproduce it through the registered persistence/export route. Check a bounded
+saved sample's rows, scope and source identity before expanding. Do not save every
+array. If the installed contract cannot retain the required output, report that
+specific gap and keep supported analysis moving; distinguish saved results from
+runtime-only evidence that may disappear on closure. Preserve failed checkpoints
+and uncertain attempts rather than replaying them to reconstruct missing output.
+
 Use the canonical `image_analysis_workflow` and `viewer_review` contexts for
 native-coordinate raw-only, result-only and combined inspection, numeric display
 windows and viewer-state checks; follow [the viewer QA procedure](viewer-qa.md)

@@ -12,6 +12,7 @@ from openhcs.core.alias_property import AliasProperty
 from openhcs.core.aligned_image_payload import (
     AlignedImageStack,
     ImageOutputBundle,
+    ImagePayloadExecutionMode,
 )
 from openhcs.core.equivalence.keys import RuntimeMeasurementSourcePair
 from openhcs.core.measurement_image_alignment import (
@@ -467,6 +468,13 @@ class CellProfilerMeasurementImage(
                 "CellProfilerMeasurementImage.reference_domain must be "
                 "CellProfilerMeasurementImageDomain, got "
                 f"{type(self.reference_domain).__name__}."
+            )
+        if (
+            self.execution_mode
+            is not ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK
+        ):
+            object.__setattr__(
+                self, "payload", RuntimeSliceProjection.full_stack_value(self.payload)
             )
 
     @classmethod

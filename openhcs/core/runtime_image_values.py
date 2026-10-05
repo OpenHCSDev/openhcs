@@ -214,17 +214,25 @@ class ImagePayloadIntensityFields(ABC):
             )
         )
 
+    @staticmethod
+    def normalization_dtype(source_dtype: Any, dtype: Any) -> np.dtype | None:
+        """Admit one real-valued intensity conversion before touching its domain."""
+        target_dtype = np.dtype(np.float32 if dtype is None else dtype)
+        if not (
+            np.issubdtype(source_dtype, np.number)
+            or np.issubdtype(source_dtype, np.bool_)
+        ) or np.issubdtype(source_dtype, np.complexfloating):
+            return None
+        return target_dtype
+
     def normalize_intensity_payload(
         self, payload: Any, *, dtype: Any = None, channel_index: int = 0,
     ) -> Any:
         """Normalize the declared current domain, independently of storage dtype."""
         data = image_payload_data(payload)
         array = np.asarray(MemoryType(detect_memory_type(data)).to_numpy(data))
-        target_dtype = np.dtype(np.float32 if dtype is None else dtype)
-        if not (
-            np.issubdtype(array.dtype, np.number)
-            or np.issubdtype(array.dtype, np.bool_)
-        ) or np.issubdtype(array.dtype, np.complexfloating):
+        target_dtype = self.normalization_dtype(array.dtype, dtype)
+        if target_dtype is None:
             return payload
         if self.has_normalized_intensity:
             return self.payload_with(
@@ -235,18 +243,19 @@ class ImagePayloadIntensityFields(ABC):
                 raise ValueError(
                     "Image intensity scales must match the declared leading plane axis."
                 )
-            planes = tuple(
-                self.for_leading_source_plane(index).normalize_intensity_payload(
-                    plane, dtype=target_dtype,
-                )
-                for index, plane in enumerate(array)
+            metadata, planes = self.normalized_intensity_planes(
+                tuple(array), dtype=target_dtype,
             )
-            proof = _ImagePayloadMetadataComposer.composed_unit_interval_intensity(
-                tuple(image_payload_metadata(plane) for plane in planes)
+            from openhcs.core.aligned_image_payload import ProducedImageStack
+
+            projector = ImagePayloadSliceProjector(image_payload_mask(payload), metadata)
+            slices = tuple(
+                projector.payload_for_slice(image_payload_data(plane), index)
+                for index, plane in enumerate(planes)
             )
-            return self.replace_fields(unit_interval_intensity=proof).payload_with(
-                np.stack(tuple(image_payload_data(plane) for plane in planes)),
-                image_payload_mask(payload),
+            return ProducedImageStack(
+                slices, memory_type="numpy", plane_axis=metadata.plane_axis,
+                source_metadata=metadata,
             )
         scale = self.intensity_scale_for_source_plane(channel_index)
         if scale is None:
@@ -264,6 +273,45 @@ class ImagePayloadIntensityFields(ABC):
         return self.with_unit_interval_intensity_scale(proof_scale).payload_with(
             normalized, image_payload_mask(payload),
         )
+
+    def normalized_intensity_planes(
+        self, payloads: Sequence[Any], *, dtype: Any = None, channel_index: int = 0,
+    ) -> tuple["ImagePayloadMetadata", tuple[Any, ...]] | None:
+        """Apply the same current-domain recipe before literal planes lose layout."""
+        arrays = tuple(
+            np.asarray(MemoryType(detect_memory_type(image_payload_data(payload))).to_numpy(
+                image_payload_data(payload),
+            ))
+            for payload in payloads
+        )
+        source_dtype = np.result_type(*(array.dtype for array in arrays))
+        target_dtype = self.normalization_dtype(source_dtype, dtype)
+        if target_dtype is None:
+            return None
+        if not self.has_normalized_intensity and self.source_plane_intensity_scales and (
+            len(self.source_plane_intensity_scales) != len(arrays)
+        ):
+            raise ValueError("Image intensity scales must match the declared leading plane axis.")
+        normalized = tuple(
+            self.for_leading_source_plane(index).normalize_intensity_payload(
+                array.astype(source_dtype, copy=False), dtype=target_dtype,
+                channel_index=(0 if self.source_plane_intensity_scales else channel_index),
+            )
+            for index, array in enumerate(arrays)
+        )
+        if self.has_normalized_intensity:
+            metadata = self
+        elif self.source_plane_intensity_scales:
+            metadata = self.replace_fields(
+                unit_interval_intensity=_ImagePayloadMetadataComposer.composed_unit_interval_intensity(
+                    tuple(image_payload_metadata(payload) for payload in normalized),
+                ),
+            )
+        else:
+            metadata = self.replace_fields(
+                unit_interval_intensity=image_payload_metadata(normalized[0]).unit_interval_intensity,
+            )
+        return metadata, normalized
 
     @classmethod
     def intensity_coherent_payloads(cls, payloads: Sequence[Any]) -> tuple[Any, ...]:
@@ -478,8 +526,10 @@ class ImagePayloadMetadata(
 
     def attach_to(self, payload: Any) -> RuntimeArrayData:
         """Attach this metadata to an existing image payload."""
+        if isinstance(payload, ImagePayloadMetadataCarrier):
+            return payload.with_metadata(self)
         return self.payload_with(
-            image_payload_data(payload), image_payload_mask(payload)
+            image_payload_data(payload), image_payload_mask(payload),
         )
 
     def attach_source_context_to(self, payload: Any) -> RuntimeArrayData:
@@ -1283,6 +1333,32 @@ class ImagePayloadMetadataCarrier(ABC):
     def image_data(self) -> Any:
         """Return concrete pixels in the payload's declared image domain."""
 
+    def image_geometry(self) -> ArrayGeometry:
+        """Inspect the image domain; structured owners may derive it from slices."""
+        return ArrayGeometry.require_from_value(
+            self.image_data(), value_name="Image payload",
+        )
+
+    def image_mask(self) -> Any | None:
+        """Return an authoritative validity mask when this owner carries one."""
+        return None
+
+    def image_memory_type(self) -> str:
+        """Return the actual pixel placement; structured owners may derive it."""
+        return detect_memory_type(self.image_data())
+
+    def with_metadata(self, metadata: ImagePayloadMetadata) -> Any:
+        """Retarget admitted metadata onto this owner's existing pixels and mask."""
+        return metadata.payload_with(self.image_data(), self.image_mask())
+
+    def normalize_intensity_payload(
+        self, *, dtype: Any = None, channel_index: int = 0,
+    ) -> Any:
+        """Normalize through the metadata-owned numerical policy."""
+        return self.metadata.normalize_intensity_payload(
+            self, dtype=dtype, channel_index=channel_index,
+        )
+
     @property
     @abstractmethod
     def metadata(self) -> ImagePayloadMetadata:
@@ -1366,6 +1442,9 @@ class MaskedImagePayload(DataBackedRuntimeArrayPayload, ImagePayloadMetadataCarr
         """Return the concrete image pixels carried by this payload."""
         return self.data
 
+    def image_mask(self) -> Any:
+        return self.mask
+
     def with_data(self, data: Any, mask: Any | None = None) -> "MaskedImagePayload":
         """Return the same semantic image mask attached to replacement data."""
         return type(self)(
@@ -1388,17 +1467,15 @@ def image_payload_geometry(
     value_name: str = "Image payload",
 ) -> ArrayGeometry:
     """Return declared array geometry without moving device data to the host."""
-
-    return ArrayGeometry.require_from_value(
-        image_payload_data(payload),
-        value_name=value_name,
-    )
+    if isinstance(payload, ImagePayloadMetadataCarrier):
+        return payload.image_geometry()
+    return ArrayGeometry.require_from_value(payload, value_name=value_name)
 
 
 def image_payload_mask(payload: Any) -> Any | None:
     """Return a runtime image mask when present."""
-    if isinstance(payload, MaskedImagePayload):
-        return payload.mask
+    if isinstance(payload, ImagePayloadMetadataCarrier):
+        return payload.image_mask()
     return None
 
 
@@ -2028,6 +2105,8 @@ def normalize_image_payload_intensity(
     channel_index: int = 0,
 ) -> Any:
     """Enter the metadata-owned normalization recipe once at the array boundary."""
+    if isinstance(payload, ImagePayloadMetadataCarrier):
+        return payload.normalize_intensity_payload(dtype=dtype, channel_index=channel_index)
     return image_payload_metadata(payload).normalize_intensity_payload(
         payload, dtype=dtype, channel_index=channel_index,
     )

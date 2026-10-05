@@ -584,10 +584,7 @@ class AlignedImageStackRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStra
         resolver: AlignedImageStackKwargResolver,
     ) -> Any:
         return resolver.resolve(
-            value.aligned_slice(
-                resolver.projection_axis.require_plane_index(),
-                resolver.projection_axis.axis_size,
-            )
+            self.value_for_slice(value, resolver.projection_axis)
         )
 
     def full_stack_value(self, value: RuntimeProjectionData) -> RuntimeProjectionData:
@@ -599,7 +596,7 @@ class AlignedImageStackRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStra
         context: RuntimePlaneAxisValueProjection,
     ) -> RuntimeProjectionData:
         aligned = cast(AlignedImageStack, value)
-        if context.axis is RuntimePlaneAxis.RUNTIME_SLICE:
+        if context.axis is aligned.composition_metadata_mode.plane_axis:
             return aligned.aligned_slice(
                 context.require_plane_index(),
                 context.axis_size,
@@ -623,7 +620,7 @@ class AlignedImageStackRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStra
         self,
         value: RuntimeProjectionData,
     ) -> int | None:
-        return len(cast(AlignedImageStack, value).slices)
+        return cast(AlignedImageStack, value).runtime_slice_count
 
 
 class ImageOutputBundleRuntimeSliceProjectionStrategy(
@@ -967,17 +964,13 @@ class ObjectLabelValueRuntimeSliceProjectionStrategy(
                 "Object-label source provenance must be absent or exactly match "
                 f"the declared plane axis: {source_plane_count} != {context.axis_size}."
             )
-        dense_labels = object_label_dense_array(labels)
         context.validate_shape(
-            dense_labels.shape,
+            labels.shape,
             value_name="Object-label payload",
         )
         plane_index = context.require_plane_index()
-        context.validate_plane_index(plane_index, dense_labels.shape)
-        return labels.with_source_plane_measurement_labels(
-            dense_labels[plane_index],
-            plane_index,
-        )
+        context.validate_plane_index(plane_index, labels.shape)
+        return labels.project_source_plane(plane_index)
 
 
 class SequenceRuntimeSliceProjectionStrategy(RuntimeSliceProjectionStrategy):

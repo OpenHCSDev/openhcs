@@ -24,6 +24,7 @@ from openhcs.constants.constants import (
 from openhcs.core.aligned_image_payload import (
     AlignedImageSliceContext,
     AlignedImageStack,
+    ProducedImageStack,
     ImageOutputBundle,
     ImagePayloadBundleContext,
     ImagePayloadExecutionMode,
@@ -447,7 +448,6 @@ def _module_executor(
     module_type = _module_type_for_contract(contract)
     assert executor.raw_func is module_type.require_callable(contract.function_name)
     return executor
-
 
 
 def test_compiled_image_request_does_not_repeat_authored_callable_preparation(
@@ -8082,6 +8082,8 @@ def test_cellprofiler_auxiliary_payload_stack_preserves_metadata() -> None:
         "numpy",
     )
 
+    assert isinstance(stacked, AlignedImageStack)
+    stacked = RuntimeSliceProjection.full_stack_value(stacked)
     assert isinstance(stacked, ImageMetadataPayload)
     assert image_payload_data(stacked).shape == (2, 1, 4, 5)
     assert (
@@ -8096,6 +8098,7 @@ def test_cellprofiler_image_aggregation_uses_nominal_image_payload_type() -> Non
         MemoryType.NUMPY.value,
     )
 
+    aggregated = RuntimeSliceProjection.full_stack_value(aggregated)
     assert image_payload_data(aggregated).shape == (1, 4, 5)
     assert image_payload_metadata(aggregated).plane_axis is (
         RuntimePlaneAxis.RUNTIME_SLICE
@@ -8126,11 +8129,11 @@ def test_cellprofiler_aligned_main_output_aggregation_transposes_surfaces() -> N
     assert isinstance(aggregated, AlignedImageStack)
     assert len(aggregated.slices) == 2
     np.testing.assert_array_equal(
-        image_payload_data(aggregated.slices[0])[:, 0, 0],
+        image_payload_data(RuntimeSliceProjection.full_stack_value(aggregated.slices[0]))[:, 0, 0],
         np.asarray((1.0, 2.0)),
     )
     np.testing.assert_array_equal(
-        image_payload_data(aggregated.slices[1])[:, 0, 0],
+        image_payload_data(RuntimeSliceProjection.full_stack_value(aggregated.slices[1]))[:, 0, 0],
         np.asarray((10.0, 20.0)),
     )
 
@@ -12611,11 +12614,45 @@ def test_object_only_measurement_carrier_preserves_aligned_stack() -> None:
         source_aliases=(),
         payload=payload,
         reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+        execution_mode=ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK,
     )
 
     assert carrier.payload is payload
     assert isinstance(carrier.payload, AlignedImageStack)
     assert len(carrier.payload.slices) == 2
+
+
+@pytest.mark.parametrize(
+    "execution_mode",
+    (ImagePayloadExecutionMode.NATURAL, ImagePayloadExecutionMode.FULL_STACK),
+)
+def test_literal_measurement_stack_preserves_pixels_in_object_reference_domain(
+    execution_mode: ImagePayloadExecutionMode,
+) -> None:
+    pixels = np.arange(20, dtype=np.float32).reshape(4, 5) / 20
+    mask = np.ones(pixels.shape, dtype=bool)
+    mask[0, 0] = False
+    metadata = ImagePayloadMetadata(
+        source_path="/inputs/source.tif",
+        source_spatial_domain=SourceSpatialDomain(source_shape_yx=pixels.shape),
+    )
+    stack = ProducedImageStack(
+        (metadata.payload_with(pixels, mask),),
+        memory_type="numpy", plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+    )
+    labels = ObjectLabelPayload(
+        variant_data=ObjectLabelVariantData(labels=np.ones(pixels.shape, dtype=np.int32)),
+    )
+    carrier = CellProfilerMeasurementImage(
+        source_image_name="Source", payload=stack,
+        reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+        execution_mode=execution_mode,
+    )
+    prepared = carrier.prepare_object_labels(labels)
+    np.testing.assert_array_equal(image_payload_data(prepared.aligned_image), pixels)
+    np.testing.assert_array_equal(image_payload_mask(prepared.aligned_image), mask)
+    assert image_payload_metadata(prepared.aligned_image).source_path == metadata.source_path
+    np.testing.assert_array_equal(prepared.measurement_labels, labels.labels)
 
 
 def test_filterobjects_binds_selection_measurement_values_to_label_slices() -> None:
@@ -14338,13 +14375,34 @@ def test_define_grid_automatic_uses_integer_lowest_spot_origin() -> None:
 
 
 def test_spatial_grid_output_recorder_accepts_pure_2d_grid_sequence() -> None:
-    grid_spec = ArtifactSpec.output("Grid", SpatialGridArtifactType)
-    runtime = _FakeCellProfilerRuntime({})
+    source_spec = ArtifactSpec.input("SourceImage", ImageArtifactType)
+    grid_spec = ArtifactSpec.output(
+        "Grid",
+        SpatialGridArtifactType,
+        relations=(SourceStackLineageSourceRelation(source=source_spec.ref()),),
+    )
+    source_payload = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        source_image_names=(source_spec.name,),
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=("/input/site1.tif", "/input/site2.tif"),
+            component_metadata=({"site": "1"}, {"site": "2"}),
+        ),
+    ).payload_with(np.zeros((2, 4, 5), dtype=np.float32), None)
+    runtime = _FakeCellProfilerRuntime({source_spec.name: source_payload})
     request = _cellprofiler_output_record_request(
         callable_contract=_compiled_callable_contract(
             CellProfilerModule.require_module("DefineGridManual").require_callable(),
-            artifact_inputs=(),
+            artifact_inputs=(source_spec,),
             artifact_outputs=(grid_spec,),
+        ),
+        artifact_input_edges=(_artifact_input_edge_for_test(source_spec),),
+        source=CellProfilerMeasurementImage(
+            source_image_name=source_spec.name,
+            payload=source_payload,
+            plane_projection=RuntimePlaneAxisValueProjection.preserve(
+                axis=RuntimePlaneAxis.RUNTIME_SLICE, axis_size=2
+            ),
         ),
         output_plans=tuple(_artifact_output_plan(item) for item in ((grid_spec,))),
         adapter=runtime,

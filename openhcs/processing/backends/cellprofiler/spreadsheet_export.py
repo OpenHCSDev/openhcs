@@ -18,7 +18,7 @@ from openhcs.core.artifacts import (
     ArtifactSpec,
     ArtifactSpecCollection,
     ArtifactType,
-    MeasurementsArtifactType,
+    MeasurementBearingArtifactType,
     RelationshipsArtifactType,
     SpecialArtifactType,
 )
@@ -468,22 +468,27 @@ def _measurement_tables(
         list[tuple[Mapping[str, object], Mapping[str, object]]],
     ] = OrderedDict()
     all_tables: list[MeasurementTable] = []
-    for spec in artifact_batch.specs_of_type(MeasurementsArtifactType):
+    for spec in artifact_batch.input_specs:
+        if not issubclass(spec.artifact_type, MeasurementBearingArtifactType):
+            continue
         records_by_axis = artifact_batch.records(spec.ref())
         records = tuple(
             record
             for axis_records in records_by_axis.values()
             for record in axis_records
         )
-        tables = tuple(cast(MeasurementTable, record.data) for record in records)
+        record_tables = tuple(
+            (record, table)
+            for record in records
+            for table in spec.artifact_type.measurement_tables(
+                record, CELLPROFILER_MEASUREMENT_DIALECT
+            )
+        )
+        tables = tuple(table for _record, table in record_tables)
         all_tables.extend(tables)
         slice_axis = MeasurementRowAxisField.SLICE_INDEX
         MeasurementTable.shared_row_axis_domain(spec.name, tables, slice_axis)
-        for record, table in zip(
-            records,
-            tables,
-            strict=True,
-        ):
+        for record, table in record_tables:
             image_numbers_by_slice = image_numbers.for_source_slices(
                 scope=record.key.scope,
                 provenance=table.source_provenance,
@@ -1380,8 +1385,8 @@ class ExportToSpreadsheetModule(ArtifactExportModule):
         return ArtifactSpecCollection(
             spec.for_plan_type(ArtifactInputPlan)
             for spec in step_context.available_artifacts.specs
-            if spec.artifact_type
-            in (MeasurementsArtifactType, RelationshipsArtifactType)
+            if issubclass(spec.artifact_type, MeasurementBearingArtifactType)
+            or spec.artifact_type is RelationshipsArtifactType
         ).unique(conflict_context="ExportToSpreadsheet input")
 
     @classmethod

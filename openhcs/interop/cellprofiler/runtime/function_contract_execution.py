@@ -23,6 +23,7 @@ from openhcs.core.runtime_batch_contracts import (
     SliceIndexRuntimeParameter,
 )
 from openhcs.core.runtime_image_values import (
+    ImagePayloadMetadataCarrier,
     image_payload_data,
     image_payload_mask,
     image_payload_metadata,
@@ -450,8 +451,14 @@ class CellProfilerFunctionContractExecutor:
             f"CellProfiler module {callable_contract.module_name!r} callable "
             f"{function_name!r}"
         )
-        image_data = image_payload_data(image)
-        if not isinstance(image_data, np.ndarray):
+        memory_type = (
+            image.image_memory_type()
+            if isinstance(image, ImagePayloadMetadataCarrier)
+            else (
+                "numpy" if isinstance(image_payload_data(image), np.ndarray) else None
+            )
+        )
+        if memory_type != "numpy":
             return _CELLPROFILER_RUNTIME_CALLABLE_POLICY.contract_invocation(
                 callable_contract,
                 func,
@@ -460,7 +467,6 @@ class CellProfilerFunctionContractExecutor:
             ).call()
 
         prepare_started_at = time.perf_counter()
-        memory_type = detect_memory_type(image_data)
         if self.plane_projection is None:
             declared_kwarg_slice_count = RuntimeSliceProjection.slice_count_from_values(
                 kwargs.values()

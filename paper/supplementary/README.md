@@ -267,6 +267,107 @@ Source: BBBC007v1 A02, Sabatini laboratory, Whitehead Institute; CC0.
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
+## Supplementary Figure 14. Remaining crowded-region uncertainty in the retinal result
+
+![Matched northeast raw, label-only and outline views from the final retinal candidate.](../figures/slas/retinal_fresh09_detail.png){width=6in}
+
+The same final candidate shown in main Figure 7 retains uncertain object
+partitions in a different region. The upper elongated footprint spans vertically
+adjacent fluorescence bodies; the lower-right lobed region has uncertain
+identity and boundary extent. These local observations separate useful
+body detection from a complete cell census. The three panels retain the same
+native camera and crop. Grayscale labels are dark in the original native
+display; darkness does not indicate absent numerical labels. Raw RBPMS uses
+window 0–63, gamma 1. The outline background uses the frozen pipeline's
+intensity stretch and display range 0–63/255, as in main Figure 7. Original
+screenshots were clipped/scaled without pixel retouching. This is regional
+visual evidence, not a manual-reference error rate. Source: user-provided
+retinal whole mount R0010. The [shared native source proof](task_only_analysis/retinal-fresh09-native-source-proof.json)
+retains capture hashes, display choices and crop coordinates for both figures;
+Supplementary Data 8 records the independently checked tables and final scope.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
+## Supplementary Figure 15. A familiar CellProfiler pipeline expressed as OpenHCS steps
+
+![CellProfiler modules, imported function steps and named-object relationships.](../figures/slas/cellprofiler_translation.png){width=5.3in}
+
+\(A) The public ExampleCometAssay pipeline maps image loading to source bindings and processing to 12 function steps. Rows align original modules and imported functions; multiplicity marks repeated calls. Spreadsheet export runs plate-wide. (B) MeasureObjectSizeShape applies the same function to Comet, CometHead and CometTail within one step. (C) Masking the comet with its head, with inversion enabled, defines CometTail. The diagram is derived from the source pipeline and importer; function identities, parameters and counts are checked against its retained mapping.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
+## Supplementary Figure 16. Image and object inspection in Fiji and napari
+
+![Recorded image and ROI inspection in two viewers.](../figures/slas/inspectable_results.png){width=5.5in}
+
+\(A) Fiji displays a single NeuronCyto II field 1 nuclear plane with nine corresponding native ROI Manager entries. (B) A separate three-plane napari demonstration shows segmented objects, a selected ROI-list entry and the displayed channel/Z coordinates. Its accompanying recording shows selection navigating between planes. These are retained viewer demonstrations, separate from the unattended analysis in Figure 3; their segmentation outputs are not compared with each other. Details enlarge the ROI entries and a nuclear outline in A, and the selected object, highlighted list entry and coordinates in B. The full captures and checksum records are retained in the gallery archive.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
+## Supplementary Figure 17. Native volume review distinguishes body support from unresolved identity
+
+![Matched raw and final body-centre views in XY, XZ and YZ.](../figures/slas/h002_fresh10_native.png){width=5.2in}
+
+\(A) One centre in a textured continuous body, native XY. (B) Central body,
+genuine XZ. (C) One centre in a multi-lobed cluster of unresolved identity,
+genuine YZ. This independent task-only author's 22 provisional centres are
+an algorithmic output, not a biological census or reference score. These
+final-only views do not show the repair chronology. Points have fractional
+coordinates and slice-local visibility; yellow rings are native selection
+highlights. Matched cameras, axes and windows are retained: 901–27267 (A),
+711–27219 (B), and 901–53727 (C), gamma 1. Screenshots are clipped/scaled
+without retouching; physical calibration is unverified. The [native source proof](task_only_analysis/h002-fresh10-native-source-proof.json)
+binds original captures and the pipeline. Supplementary Data 8 retains
+ordinary-body repairs and the unresolved global count separately.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
+## Supplementary Figure 18. Native H001 repair from the scored task-only run
+
+![Matched native raw, first and final H001 views.](../figures/slas/h001_scored_native.png){width=5.3in}
+
+\(A) Overview of the same bright-object field used in Figure 5A. (B) An elongated
+body represented by two first-attempt labels becomes one in the final candidate.
+Both rows show raw, first and final views from the same unguided author, not the
+separate assisted H001 development example. Raw display windows are 8–152 (A)
+and 8–248 (B), gamma 1; filled ROI opacity is 0.7. Colours are not stable
+cross-candidate identities. Object F1 against the notebook-derived computational
+reference rises from 0.929 to 0.944, with five missed reference objects unchanged.
+A possible merge and ambiguous small foci remain; the reference is not manual
+biological annotation. Original native screenshots are clipped/scaled without
+retouching; physical calibration is unverified. Source: Robert Haase and
+BioImageAnalysisNotebooks contributors, algorithm-validation collection.
+Supplementary Data 8 retains the score and source review.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
+## Supplementary Table 1. Reusable libraries and their roles
+
+| Library | Role in OpenHCS |
+| --- | --- |
+| [metaclass-registry](https://github.com/OpenHCSDev/metaclass-registry) | Discovers classes implementing a shared interface and makes them available for selection. |
+| [python-introspect](https://github.com/OpenHCSDev/python-introspect) | Reads a function's parameters, types, defaults and documentation. |
+| [ObjectState](https://github.com/OpenHCSDev/objectstate) | Tracks editable settings and resolves shared defaults and local overrides. |
+| [pyqt-reactive](https://github.com/OpenHCSDev/pyqt-reactive) | Generates parameter controls and updates them as settings change. |
+| [pycodify](https://github.com/OpenHCSDev/pycodify) | Generates editable Python representations and manages their imports. |
+| [ArrayBridge](https://github.com/OpenHCSDev/arraybridge) | Converts arrays between supported libraries and manages their computational resources. |
+| [PolyStore](https://github.com/OpenHCSDev/PolyStore) | Reads, writes and streams data through supported storage interfaces. |
+| [ZMQRuntime](https://github.com/OpenHCSDev/zmqruntime) | Coordinates communication, startup, shutdown and progress between processes. |
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
 ## Supplementary Data 1. CellProfiler workflow comparison
 
 This supplement indexes source tables and evaluation records. Figure scripts

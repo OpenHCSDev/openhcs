@@ -7,6 +7,8 @@ OpenHCS adds only runtime composition helpers and callable metadata adapters.
 from collections.abc import Sequence
 from typing import Any
 
+from arraybridge import ArrayGeometry
+
 # Re-export from arraybridge
 from arraybridge import (
     # Converters
@@ -57,13 +59,27 @@ def stack_runtime_slices(
         MemoryType(detect_memory_type(value)).convert_to(value, target, gpu_id)
         for value in slice_values
     ]
-    shapes = tuple(tuple(value.shape) for value in prepared_slices)
+    runtime_slice_stack_geometry(prepared_slices)
+    return target.stack_arrays(prepared_slices, gpu_id)
+
+
+def runtime_slice_stack_geometry(slices: Sequence[Any]) -> ArrayGeometry:
+    """Validate the geometry shared by deferred and concrete slice stacks."""
+    from openhcs.core.runtime_array_values import RuntimeArrayPayload
+
+    shapes = tuple(
+        tuple(value.shape) if isinstance(value, RuntimeArrayPayload)
+        else ArrayGeometry.require_from_value(value).shape
+        for value in slices
+    )
+    if not shapes:
+        raise ValueError("Runtime-slice stacking requires at least one slice.")
     if any(shape != shapes[0] for shape in shapes[1:]):
         raise ValueError(
             "Runtime slices must have one exact shape before stacking; "
             f"got {shapes!r}."
         )
-    return target.stack_arrays(prepared_slices, gpu_id)
+    return ArrayGeometry((len(shapes), *shapes[0]))
 
 
 def unstack_runtime_slices(
