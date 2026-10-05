@@ -737,14 +737,48 @@ def generate_measured_batch_figures(
     output_dir.mkdir(parents=True, exist_ok=True)
     csv_path = output_dir / f"measured_{scope}_metrics_long.csv"
     _write_metric_rows(csv_path, rows)
+    caption_path = output_dir / f"measured_{scope}_caption.md"
+    caption_path.write_text(
+        f"Measured batch {scope} comparison. Modes: "
+        + "; ".join(source.label for source in summary_sources)
+        + ". Each pipeline contributes one speedup: its native CellProfiler "
+        "median divided by its OpenHCS median in the same measured mode. "
+        "Distribution statistics exclude the plotted Average row and native "
+        "baseline rows. Grouped Average bars are arithmetic averages across "
+        "the supplied pipeline cohort. Qualification, clock boundaries, and "
+        "repetition selection are established by the matched-report producer, "
+        "not by plotting. No RAM measurements are supplied.\n",
+        encoding="utf-8",
+    )
     return (
         csv_path,
+        caption_path,
         *generate_grouped_benchmark_metric_figures(
             rows,
             metrics=metrics,
             methods=methods,
             pipeline_names=tuple(dict.fromkeys(row.pipeline_name for row in rows)),
             output_dir=output_dir,
+            output_formats=output_formats,
+        ),
+        *generate_speedup_distribution_artifacts(
+            tuple(
+                SpeedupDistributionSeries(
+                    source.candidate_method,
+                    tuple(
+                        row.speedup
+                        for row in rows
+                        if row.method == source.candidate_method
+                        and row.pipeline_name in pipeline_names
+                        and row.speedup is not None
+                    ),
+                )
+                for source in summary_sources
+            ),
+            output_dir=output_dir,
+            filename_prefix=f"measured_{scope}_speedup",
+            title=f"Measured batch {scope} speedup distribution",
+            xlabel=f"{scope.title()} speedup versus native CellProfiler (x)",
             output_formats=output_formats,
         ),
     )
@@ -1570,7 +1604,7 @@ class SpeedupDistributionReport:
             axis.spines["right"].set_visible(False)
             axis.spines["left"].set_color(FIGURE_STYLE.spine_color)
             axis.spines["bottom"].set_color(FIGURE_STYLE.spine_color)
-            axis.legend(frameon=False, loc="upper right")
+            axis.legend(frameon=False, loc="upper left", bbox_to_anchor=(1.02, 1.0))
             outputs: list[Path] = []
             suffix = (
                 "_cumulative_distribution_log" if log_x else "_cumulative_distribution"
