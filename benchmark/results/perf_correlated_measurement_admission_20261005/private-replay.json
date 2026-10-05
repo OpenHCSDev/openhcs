@@ -1,0 +1,45 @@
+{
+  "baseline": {
+    "status": "PASS",
+    "seconds": 0.9599612639285624,
+    "source_head": "53a0c0a056a90707fc0d8247a2f9c11acaf17818",
+    "input_sha256": {
+      "actual-builder-inputs": "ef8fa8048f339c71a73d13205f46d31903d7c549e3a40353a1d85e32828244ce",
+      "builder-context": "55f122e2a88ea1656dd5aa1b05443b0ba29604bf3eaba6c074b01a180311e076",
+      "actual-final-projection": "2534b8ebb3ff2d7656e880cc5bbd57d704b1c77dea86e69ec237b5cb220e7b80"
+    },
+    "exact_projection": true,
+    "scope": "One unprofiled authentic postconsumer captured builder invocation; imports, transport, constructor, checks outside clock. Not ordinary end-to-end timing; no pending/cold adapter epoch reconstructed."
+  },
+  "candidate": {
+    "status": "PASS",
+    "seconds": 0.7281566760502756,
+    "source_head": "154566ed5713e4d59cccebfbebdd898a41e25ac7",
+    "source_status": " M openhcs/core/equivalence/policy.py\n M openhcs/core/measurement_row_materialization.py\n M openhcs/interop/cellprofiler/analyst_export.py\n M openhcs/interop/cellprofiler/module_measurement_features.py\n M tests/unit/test_cellprofiler_analyst_export.py\n",
+    "input_sha256": {
+      "actual-builder-inputs": "ef8fa8048f339c71a73d13205f46d31903d7c549e3a40353a1d85e32828244ce",
+      "builder-context": "55f122e2a88ea1656dd5aa1b05443b0ba29604bf3eaba6c074b01a180311e076",
+      "actual-final-projection": "2534b8ebb3ff2d7656e880cc5bbd57d704b1c77dea86e69ec237b5cb220e7b80"
+    },
+    "exact_projection": true,
+    "dependency_guard": true,
+    "scope": "One unprofiled authentic postconsumer captured builder invocation; imports, transport, constructor, checks outside clock. Not ordinary end-to-end timing; no pending/cold adapter epoch reconstructed."
+  },
+  "delta_seconds": 0.23180458787828684,
+  "ratio": 1.3183443831561903,
+  "status": "PRIVATE_CONSUMER_PASS_PRODUCTION_PENDING",
+  "limits": [
+    "One observation per arm; no ordinary pipeline saving or stable-floor claim.",
+    "Baseline source/native/input guards are explicit; the separate captured eight-dependency roster was added for candidate without rerunning baseline.",
+    "Candidate selected producer/projection/policy/native owners matched source53a baseline before prototype; unrelated main changes are not all-source equivalence.",
+    "Postconsumer transport does not replay original cold/pending-error producer epochs.",
+    "Rejected native query component absent from reported candidate."
+  ],
+  "log_sha256": {
+    "builder-baseline.log": "4910faad5680fddab1d91b4f378ee94a91067946c8ea79e6f56ce47c81546186",
+    "builder-declaration-candidate.log": "3703290dde19374a0364920374758bd84c1f6b30a2865cd8855a5f563bfe30d9",
+    "declaration-controls.log": "908c81086849e8886c2436593fa73da6af11be61e84d292e085ff8e9a0f7ccc6",
+    "field-error-order-control.log": "1de35c6705200f587263c83005e9f31ab13478c878f7a3eb315d8c44fbbc91cc",
+    "custom-field-owner-control.log": "1de35c6705200f587263c83005e9f31ab13478c878f7a3eb315d8c44fbbc91cc"
+  }
+}
