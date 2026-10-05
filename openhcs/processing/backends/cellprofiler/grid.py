@@ -1585,15 +1585,19 @@ class GridKernelPreparation(
             declared_object_count=2,
             declared_object_ids=(1, 2),
         ).payload()
-        define_grid_automatic.__wrapped__(image, labels=guide_payload)
-        for shape_choice in ShapeChoice:
-            strategy = GridShapeStrategy.for_enum_member(shape_choice)
-            topology_inputs = (grid, guide_payload) if strategy.requires_guides else (grid,)
-            identify_objects_in_grid.__wrapped__(
-                image,
-                topology_inputs=topology_inputs,
-                shape_choice=shape_choice,
-            )
+        for writable in (True, False):
+            guide_labels.setflags(write=writable)
+            define_grid_automatic.__wrapped__(image, labels=guide_payload)
+            for shape_choice in ShapeChoice:
+                strategy = GridShapeStrategy.for_enum_member(shape_choice)
+                topology_inputs = (
+                    (grid, guide_payload) if strategy.requires_guides else (grid,)
+                )
+                identify_objects_in_grid.__wrapped__(
+                    image,
+                    topology_inputs=topology_inputs,
+                    shape_choice=shape_choice,
+                )
 
 
 def prepare_grid_kernels() -> None:
