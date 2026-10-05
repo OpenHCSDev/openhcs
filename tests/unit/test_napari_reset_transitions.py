@@ -869,6 +869,18 @@ def test_last_source_frame_retains_points_and_shapes_during_domain_pruning(
                 voxel_spacing=spacing,
             )
     advance_in_qt(receiver, raw, update)
+    # The actual installed scene also had an unrelated saved A01 Points route
+    # selected, then hidden before A03 became current. It is not rematerialized.
+    untouched, update = enqueue(
+        receiver, [{"type": "points", "coordinates": [[1.5, 2.5]],
+                    "metadata": {"label": 7, ROIFractionalZ.FIELD: 1.5}}],
+        producer="saved-A01", data_type=StreamingDataType.POINTS,
+        z_domain=list(range(4)), z_index=0, voxel_spacing=spacing,
+    )
+    advance_in_qt(receiver, untouched, update)
+    untouched_layer = receiver.layer_route_state.layer(untouched)
+    untouched_layer.selected_data = {0}
+    untouched_layer.visible = False
     routes = []
     for data_type, name in ((StreamingDataType.POINTS, "centres"),
                             (StreamingDataType.SHAPES, "outlines")):
@@ -916,6 +928,8 @@ def test_last_source_frame_retains_points_and_shapes_during_domain_pruning(
         retirement_request(receiver, middle)
     )
     assert result.applied and not result.errors
+    assert receiver.layer_route_state.layer(untouched) is untouched_layer
+    assert untouched_layer.selected_data == {0} and not untouched_layer.visible
     assert middle not in receiver.layer_route_state.layers
     assert receiver.layer_route_state.layer(raw).data.shape[-3:] == (2, 5, 7)
     for route, (old, identity) in retained.items():
