@@ -281,6 +281,15 @@ cluster. Native XY, XZ and YZ review separated useful ordinary-body support
 from that identity uncertainty (Supplementary Figure 17); no global biological
 count or new reference score was established.
 
+A fresh public neurite-field author identified bright junction pixels lost
+after ridge enhancement and restored them by combining enhanced support with
+a separately measured strong-raw threshold (Supplementary Figure 19).
+In a selected junction tile, 19 of 291 strong raw pixels were absent before
+the repair and none afterward; a sampled quiet tile remained empty.
+Faint branches still terminated prematurely, and shared-marker crossings did
+not establish per-neuron ownership. The trial separates a useful image-support
+repair from the unresolved requirements for complete outgrowth measurement.
+
 ### Recovery and self-diagnosis vary between images
 
 Crowded DNA/actin fields exposed failures that consistent object tables did

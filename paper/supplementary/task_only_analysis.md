@@ -641,6 +641,20 @@ under `next-public03988-h00495-after08-20261004/H004_FRESH08_95` in the retained
 programme archive. This result does not replace the earlier neurite repeat or
 constitute evidence of a causal skill effect across fresh authors.
 
+## Fresh public neurite field: bright-junction support repair
+
+Supplementary Figure 19 shows an independent author recovering a bright
+junction after enhanced support omitted raw-supported pixels. The final
+candidate retains weak-path gaps and uncertain crossings. The
+[independent native review](../../figure-collection-20261004/H004-FRESH10-NATIVE-REVIEW.rst)
+identifies the original captures, journal-prefix qualification and a direct
+read of materialized TIFFs confirming the local 19-to-zero missing-pixel
+change. Original [earlier](task_only_analysis/h004-fresh10/BIO04.py) and
+[final](task_only_analysis/h004-fresh10/BIO06.py) pipelines, native state/capture
+receipts and [final descriptive metrics](task_only_analysis/h004-fresh10/final-metrics.json)
+are retained without reconstructing outputs. No reference score or accepted
+per-neuron outgrowth total is established by this trial.
+
 ## Personal neurite mosaic: technical recovery and retained biological losses
 
 The retained same-author continuation `P001_STITCH_DEV94` used a previously
