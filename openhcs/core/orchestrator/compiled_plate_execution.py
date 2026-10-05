@@ -220,7 +220,6 @@ def execute_compiled_plate_request(
         executor_resources = WorkerExecutorFactory(
             log_file_base=request.log_file_base,
             progress_queue=validated.progress_queue,
-            progress_context=validated,
             cancellation=cancellation,
         ).create(
             runtime_environment=validated.runtime_environment,

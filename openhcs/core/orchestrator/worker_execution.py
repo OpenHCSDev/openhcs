@@ -45,7 +45,7 @@ from openhcs.core.orchestrator.worker_lanes import (
 )
 from openhcs.core.orchestrator.worker_profiling import CProfileWorkerProfilingPolicy
 from openhcs.core.progress import emit, ProgressPhase, ProgressStatus
-from openhcs.core.progress import ProgressExecutionContext, ProgressQueue
+from openhcs.core.progress import ProgressQueue
 from openhcs.core.progress.live_measurements import (
     live_measurement_context_for_records,
 )
@@ -307,12 +307,10 @@ class WorkerExecutorFactory:
         *,
         log_file_base: str | None,
         progress_queue: ProgressQueue,
-        progress_context: ProgressExecutionContext,
         cancellation: ExecutionCancellationSignal,
     ) -> None:
         self._log_file_base = log_file_base
         self._progress_queue = progress_queue
-        self._progress_context = progress_context
         self._cancellation = cancellation
 
     def create(
@@ -373,7 +371,6 @@ class WorkerExecutorFactory:
             initargs=(
                 self._log_file_base,
                 self._progress_queue,
-                self._progress_context,
             ),
         )
 
@@ -406,7 +403,6 @@ def _configure_worker_logging(log_file_base: str) -> None:
 def _configure_worker_process(
     log_file_base: str | None,
     progress_queue: ProgressQueue | None = None,
-    progress_context: ProgressExecutionContext | None = None,
 ) -> None:
     """Prepare process-local registries, logging, and progress transport."""
 
@@ -434,7 +430,7 @@ def _configure_worker_process(
 
     configure_native_thread_count(1)
 
-    if progress_queue is not None and progress_context is not None:
+    if progress_queue is not None:
         from openhcs.core.progress import set_progress_queue
 
         set_progress_queue(progress_queue)
