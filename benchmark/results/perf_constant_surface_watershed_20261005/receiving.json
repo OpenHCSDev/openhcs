@@ -1,0 +1,56 @@
+{
+  "issue": 746,
+  "source_main": "68f60c89a26e7a706cf620928be193da36f1a051",
+  "scope": "ONE matched two-case public ordinary ZMQ INLINE1w1t pair; server startup and catalogue/kernel warmup excluded",
+  "results": {
+    "baseline": {
+      "ExampleIlluminationCorrection_Example3": {
+        "compile_seconds": 0.23608851432800293,
+        "execute_seconds": 0.2619004249572754,
+        "total_seconds": 0.594817569013685,
+        "watershed_initial_seconds": []
+      },
+      "cp_tutorial_3d_monolayer": {
+        "compile_seconds": 0.5046391487121582,
+        "execute_seconds": 4.058706045150757,
+        "total_seconds": 4.720366831868887,
+        "watershed_initial_seconds": [
+          0.081217,
+          0.253087
+        ]
+      }
+    },
+    "candidate": {
+      "ExampleIlluminationCorrection_Example3": {
+        "compile_seconds": 0.24151349067687988,
+        "execute_seconds": 0.2648742198944092,
+        "total_seconds": 0.6133860740810633,
+        "watershed_initial_seconds": []
+      },
+      "cp_tutorial_3d_monolayer": {
+        "compile_seconds": 0.5074954032897949,
+        "execute_seconds": 3.8334128856658936,
+        "total_seconds": 4.4916239422746,
+        "watershed_initial_seconds": [
+          0.083728,
+          0.099918
+        ]
+      }
+    }
+  },
+  "science": "4/4 strict baseline/candidate native comparisons PASS; exact 3D images, existing CP measurement tolerances, inventories and required correlations checked",
+  "controls": "10 affected watershed controls PASS, including signed/wide labels, native delegation, mask/connectivity, unsupported modes",
+  "readiness": "Actual registered CallablePreparation warms canonical int32 kernel; prepared signatures unchanged across real frontier replay",
+  "retained_native_fullrun_seconds": {
+    "ExampleIlluminationCorrection_Example3": 0.6728667258,
+    "cp_tutorial_3d_monolayer": 13.5919506354
+  },
+  "native_scope": "Retained qualified native fullrun; excludes Python/import/JVM/pipeline-file startup, includes pipeline setup/input processing/configured exports/postrun/measurements closure",
+  "limits": [
+    "One matched pair, not a variability bound. Illumination is an unaffected negative control and has no gain in this pair.",
+    "Earlier private replay48.876ms; first int64 production192.379ms; corrected int32 production47.935ms. Native standalone timing varied266\u2192510ms; do not infer standalone difference as full-pipeline saving.",
+    "Processing-contract profile tags alone do not cover every processing callable; no generic-plumbing claim derived by subtracting them."
+  ],
+  "packet": "/home/ts/.local/state/openhcs-maintenance/20261004/constant-surface-watershed-ordinary-v1",
+  "frontier_packet": "/home/ts/.local/state/openhcs-maintenance/20261004/constant-surface-watershed-frontier-v1"
+}
