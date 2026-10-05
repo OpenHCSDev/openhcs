@@ -4,6 +4,500 @@ Selective managed-viewer retirement519: original-owner source checkpoint
 Scope and custody
 -----------------
 
+Exact selection-retention integration release to Planck551
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Actual main78f2f0b31 contains merged549's current-slice selection authority,
+but not522's selectable presentation/source-member retention family. Singer
+releases that complete family at4245a9f73 to Planck's existing551 shared-axis/
+footer integration: NapariStreamLayerItem.element_identity/feature declaration,
+original Shapes feature-column writer/caller, Points member/coordinate stamps,
+NapariSelectablePresentationRetention and both registered geometry handler MROs,
+NapariResultSelectionController.preserve_selection/_element_identities, and
+their direct builder/remount/cooperative fixture consumers. No branch ancestry,
+foreign gitlink or Root shared producer/unit file is released or reapplied.
+
+Planck must reuse main549's displayed_indices/select_indices, not restore the
+old selection writes. Rank-changing remount must establish the existing semantic
+viewer frame before native displayed-membership admission, preserving exact
+source-member selection or reporting the original owner error. It must not drop
+selection or bypass eligibility. The existing original handler rematerialize
+and cooperative presentation capabilities carry the work. Singer will not
+compete on551's layout/footer or copied selection mechanism.
+
+This is an affirmative integration release, not a claim that551 is implemented,
+installed or live-qualified. Singer's separate fractionalXYZ declaration hooks
+and remaining public receiving stay on522;541 remains Root-unit/frame dependent.
+Source, current archives and frozen targets are unchanged. This checkpoint
+requires no test/build/install or new lane; independent authors remain unblocked.
+
+Shared native selection projection received (2026-10-03)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Singer receives only Planck549f1b9607f0's two released source/fixture hunks,
+not its branch ancestry, after reading current claims. Normal maineda0121a8
+integration changes only the disjoint operational funding family. Root394
+c50a947f4 still owns publication/source-frame/unit integration; its relevant
+viewer and unit-source diff from74693f589 is empty. The named receiving
+dependency is394comment5971678466;541's unit/frame request5970482598 remains
+unreleased. No native/installed change or new worktree.
+
+NapariResultElementSelectionAuthority now owns both current-slice projection
+and the exact native selection assignment/readback. Logical subject membership
+remains on the existing group index. Controller synchronization and remount
+restore use that one owner. Premature expansion and failure-finally replay are
+deleted, as are both controller-native selected_data writes and the restore's
+copied readback check. A remapped retained member outside the native slice is
+explicitly rejected before native assignment, not silently dropped. Legitimate
+empty native selection remains supported. No new registry, selection store,
+layer-kind switch or alternate frame/camera authority is introduced.
+
+Original Napari Points/Shapes _indices_view owns visible row membership; Shapes
+multi-member interaction_box calls create_box on displayed vertices and fails
+if they are empty. Both original implementations were read. IMPL-12 and BOUND-2
+apply to the deleted writer/readback copies; IDEN-6 applies to preserving source
+member identity instead of its former native row. Existing independent
+selectable/presentation capabilities and cooperative MRO remain load bearing.
+
+The existing audit caller before01 parses704 production/675tests/401dependencies,
+zero omissions, selected71/53/43, pinned872d42940/Rootc50a947f4. Original sources,
+imports, declarations, checks, native writes and consumers are recorded in
+projection-family-before01.stdout. Terminal0,19.513s,94.5MiB,Swap0. This is
+complete family source evidence, not complete NRA/R1 proof; the historical
+global OOM remains a limitation.
+
+Dalton's20:32:53Z read-only capacity check confirms one serial512MiB/CPU1/Swap0/
+60s source scope fits inside the same common slice and conservative remaining
+science growth, with10MiB evidence allowance. Source controls follow the
+coherent implementation; results will be recorded without rewriting negatives.
+Public selected Points/Shapes remount remains the sole native receiving gate,
+with Root's producer prerequisite and parent funding/custody. New three-author
+launches do not wait on522/541. No scientific author was contacted.
+
+Terminal shared-selection qualification
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Productione31eda7f0 is unchanged at fixture-corrected3ba4da613. Original
+projection-controls01 is retained43PASS/2FAIL/26deselected. One received fixture
+attached a group binding without its declared owner feature; another old
+cooperative-hook fixture selected an off-slice native Points row before its
+source frame. The corrected fixtures declare the feature and use the original
+navigation prepare/viewer_step, respectively. Assertions, native admission and
+stored geometry are unchanged; production was not revised in response.
+
+projection-controls02 is terminal45PASS/26deselected in5.89s; whole scope12.363s,
+cgroup347475968B/Swap0/OOM0, CPU1/512MiB/60s in the existing common slice.
+It exercises genuine Shapes empty-interaction-box failure and its projected
+linked selection, mixed Points/Shapes logical versus displayed membership,
+queued navigation before expansion, exact assignments, both geometry-family
+remount rejection before an off-slice selection write, valid empty selection,
+source row reordering, real typed retirement/domain pruning, fractionalXYZ,
+strict Shapes/acquisition laws and independent cooperative presentation hooks.
+No consumer edit is needed for the new registered presentation capability.
+
+The existing source-control caller receives Planck's explicit source04 peer
+bootstrap mode. Read-only target08 supplies unchanged peer dependencies; all
+THREE changed production modules are loaded by their exact source paths and
+hashes printed in the raw reply. Original paired Qt snapshot binding remains
+read-only. This is source + real Qt + ViewerModel, not an installed MCP/server
+or detached native rendering acceptance. Both fixture files are collected by
+the existing pytest owner; no second runner or product bootstrap is added.
+
+projection-family-after01 pins3ba4da613/Rootc50a947f4:704production/675tests/
+401dependencies, selected71/53/43, zero parse omissions; terminal0/20.692s/
+91.8MiB/Swap0. The shared audit AST facts include declaration/import/base,
+write/read/call/check closure, with original native Points/Shapes consumers.
+One selected_data assignment remains in NapariResultElementSelectionAuthority;
+both controller copies are gone. Projection, source identities and logical
+subject membership remain distinct authorities, not duplicated stores.
+
+Original pinned R0 projection-r0-01 is terminalPASS26.113s/78.8MiB/Swap0,
+detector3b03785f unchanged, base maineda0121a8/head3ba4da613. All THREE actual
+production deltas are included: napari_viewer_server.py,
+napari_streaming_handlers.py and viewer_controls.py. Positive deltas are empty;
+no omission/waiver/cap increase or full NRA/R1 claim. Full global NRA's earlier
+OOM remains retained. Production/fixture/receipt diff-check is clean; raw logs
+are not rewritten to remove authentic whitespace.
+
+Byte-exact18-member archive,1126237bytes, tar compare terminal0:
+viewer-selective-retirement-522-shared-selection-20261003.tar.gz, SHA256
+04cbde5af7c74ad751b090562905d056fa1aee62ae17474547cf04b8c4e1b5b0.
+It includes current three production files, both fixtures, all original callers
+and the complete before/after/R0/failed-and-passing raw logs. Older archives,
+untracked ledgers and all seven foreign gitlinks remain preserved. All five
+source scopes are terminal; no owned runtime/client or UNKNOWN source handle.
+
+Remaining acceptance is unchanged: ONE parent-reviewed ordinary installed
+Points AND Shapes selected-member remount/fractional navigation journey after
+Root's published grouped-producer checkpoint and fresh measured native release.
+No slot is reserved and no client is launched. Separate541 still needs Root's
+named unit/frame release; it is not an excuse to hold the independent new fleet.
+
+Resumed spatial-point selection owner (2026-10-03)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Singer resumed after the recorded CLI pause. PR5222ce107dad, PR541ba8aa341e,
+main0332a696f and Root39461ab83842 were read before editing. Planck confirmed
+successor08 is source/package preparation only and claims no navigation hunk.
+Root's source-frame, point-producer, graph, persistence and materialization
+owners remain protected. PR541 still requires the narrow shared-unit release
+requested in394 comment5970482598; no unit/calibration bypass is implemented.
+Normal merge5f8d153ed receives0332 without changing any foreign worktree or
+the seven recorded external gitlinks. Original failures and retained untracked
+ledgers remain in place. No build, install, provider, native or viewer operation.
+
+The independent determining witness is the frozen target07 public point-row
+selection failure in original H002_THIRD95 output/runtime/mcp.stdout at70625,
+70672 and72365: XY accepts the same row; XZ/YZ reject its fractional hidden
+X/Y coordinate. Planck's394 comment5969244906 records this consumer defect
+separately from producer152/494. No scientific input or reference answer was
+read, changed, replayed or sent to an author.
+
+The existing ViewerResultElementCoordinateAuthority still owns coordinate-row
+admission and slice derivation. Its numeric admission is shared by the strict
+parent and the renamed ViewerPointCoordinateAuthority leaf. That leaf rounds
+only axes supplied by the original NapariAxisPresentation.spatial_axis_labels;
+acquisition indices delegate through cooperative super and remain integral.
+It does not round stored geometry, infer axes from rank, or relax Shapes.
+NapariLayerDisplayHandler declares the strict owner; the Points member declares
+its spatial coordinate owner. The existing handler registry resolves the routed
+source item's type. Navigation no longer switches on a concrete Points class.
+The old Z-only class, direct ancestor call and duplicated finite/numeric checks
+are deleted, with both original direct fixture consumers migrated.
+
+Applicable catalog patterns: IMPL-3/4 concrete dispatch outside an existing
+family; IMPL-12 copied numeric admission; BOUND-2 bypassing original route/axis
+contracts; IDEN-1 distinguishing a navigation slice from stored geometry.
+Existing selectable/common presentation capabilities and their cooperative MRO
+remain unchanged. A new source case needs only its registered handler declaration
+and coordinate hook; the fixture adds an independent admission-recording
+capability and exercises cooperative super through the unchanged consumer.
+
+Existing complete AST caller extended its selected symbols, not its scanner:
+before01 parses704 production/675tests/401dependencies, selected71/53/42,
+zero parse omissions; source5f8d153ed/Root61ab83842,23.952s/maxRSS84084KiB,
+cgroup86.8MiB/Swap0. Original audit ParsedModule/FunctionFacts/Repository
+provide declarations, imports, reads/writes, checks and bases; this is not
+global NRA proof. The earlier full NRA/R1 OOM remains preserved, not repeated.
+
+Dalton's persistent SINGER522-ONE-SERIAL-SOURCE-CAPACITY-READONLY-20261003-1714.rst
+confirms one serial CPU1/512MiB/Swap0/60s source check fits the original common
+slice, physical headroom and conservative remaining disk reservations. It is
+not admission for a build/native fleet. New raw before01 and controls01 logs
+are retained under validation/viewer-retirement-519; final controls and changed
+source R0/after-AST outcomes will be appended at their actual terminal strength.
+
+Actual public selected Points/Shapes rematerialization and fractional X/Y
+navigation remain parent receiving work after a fresh qualified target and
+resource release. Target07 is immutable; no claimed installed fix or new lane.
+
+Terminal spatial-point source qualification
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Productiona2762b832/e4db2163b is unchanged between the two heads; e4db only
+corrects the new fixture's mistaken trailing-axis assumption. Original
+fractional-controls01 retains27PASS/4FAIL/62deselected,12.217s/maxRSS467852KiB,
+cgroup339.9MiB/Swap0/OOM0. The failing comparison included WELL, whose index
+correctly changes during pruning; the registered axis order is not trailingZYX.
+No scientific coordinate, source guard or expected geometry was relaxed.
+The fixture now obtains spatial columns from the original presentation owner.
+
+fractional-controls02 is terminal31PASS/62deselected,10.261s/
+maxRSS465352KiB/cgroup280825856B/Swap0/OOM0. It uses the original source
+bootstrap/run_source_controls.py, real Qt scheduling and ViewerModel, plugin/
+conftest/provider-free, CPU1/512MiB/60s in openhcs-blindsol3phase03.slice.
+The original mixed-Qt snapshot owner remains borrowed read-only. No MCP,
+native server, GL canvas or scientific input was launched.
+
+The three orthogonal cases select the same source member before/after actual
+typed retirement, interior well-domain pruning3to2 and native rematerialization.
+Source items are reordered; the same source member moves row1to0. Stored Z/Y/X,
+source payload, native selection and0.65 calibration remain exact. Both explicit
+display pair and implicit actual native displayed dimensions agree. The new
+registered point declaration composes independent coordinate-admission recording
+with the point owner through cooperative super, and all three spatial hooks
+execute through the unchanged generic navigation consumer. Existing Points/
+Shapes survivor, linked-selection, empty-selection and no-late-navigation
+controls are included, alongside strict acquisition and hidden-Shape guards.
+
+fractional-family-after01 names e4db2163b and pinned Root61ab83842;
+704production/675tests/401dependencies,71/53/42 selected, zero parse omissions,
+23.734s/maxRSS84032KiB/cgroup76.6MiB/Swap0. Declaration/read/write/import/base
+closure confirms one shared coordinate algorithm, handler-owned leaf selection,
+and no remaining production import/use of the old Z-only authority or concrete
+Points switch in result_element_axis_indices. Dynamic registration is exercised
+by the new-case control; AST alone is not executed proof.
+
+Original Git-pinned R0 fractional-r0-01 names main0332a696f/e4db2163b, ALL THREE
+actual production delta paths: napari_streaming_handlers.py,
+napari_viewer_server.py and viewer_controls.py. TerminalPASS24.412s/
+maxRSS87008KiB/cgroup76MiB/Swap0; positive deltas are empty. Detector3b03785f
+and run_pinned_r0_419.py are unchanged, with no omitted path, raised threshold
+or full NRA/R1 claim. Production/tests/docs diff-check is clean; original raw
+failure-log whitespace is archived byte-exact rather than rewritten.
+
+Root advanced to74693f589 during qualification. Exact61abto74693 source diff
+is EMPTY for all three viewer owners and the two protected source-metadata/
+graph-unit files. Other Root changes remain its qualification responsibility;
+this receipt does not relabel the AST's pinned Root revision or receive394.
+PR541's shared release is still absent in current comments. All source units
+are terminal; no runtime/client/UNKNOWN source operation remains active.
+
+Byte-exact new source archive:
+viewer-selective-retirement-522-fractional-spatial-20261003.tar.gz,
+1124614bytes/19members, SHA256
+22d65ada8008f1237f7ec8a333ebcdb1ad172d5218980c9aeddf6cd9b4f6030e.
+It contains all three actual production delta files, three current fixture
+files, the three original callers, both original control outcomes, before/after
+AST and original R0 raw stdout/stderr. GNU tar diff against each original is
+quiet/terminal0. Prior source archives and loose untracked originals are
+unchanged. New raw evidence plus this archive remains within the10MiB allowance.
+
+New95 source packet and migrated consumer family
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+See viewer-retirement-519-selection95/CHECKPOINT.rst and RECEIVING.rst for the
+direct published packet, not a secondhand ready claim. Planck7cfcf1713/945b959
+fixture-only changes are received on522; normal merge130ef9d36 integrates
+parent-reviewed mainb1e9/524 without combined-package ancestry. Both original
+native builders byte-match qualified07/8168; all three migrated tests match
+Planck945b959. No tests/build/install/runtime or original R0 repeated.
+Original current07 READY42 records104 tools/fresh health/1816files/832caches/
+88+24+3 installed PASS, original40 failures retained, target immutable.
+The new public geometry-survivor remount remains NOT RUN. The precise packet
+dependency is grouped endpoint publication: manual archive singleton routes
+only translate, and Root435 publication is not part of main07. No fabricated
+receipt/group or competing Root implementation removes that limitation.
+
+Current-head selection qualification and received live proof
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Published production/fixtures a78b0d68da141a2923d05deb8e92d45293f9ded2 are frozen
+for this checkpoint. Later receipt-only commits do not invalidate these bytes.
+Selection14 and changed-builder9 are terminal PASS, not repeated old33 controls:
+selection04 10.03s/maxRSS507916KiB/cgroup315.5MiB; builders01 8.01s/
+maxRSS444524KiB/cgroup270MiB. Both CPU1/512MiB/Swap0/60s, original paired
+bootstrap and environment, plugin/conftest/provider-free. Explicit deselections
+21 and139 remain in original raw stdout, not a full-suite claim.
+
+Existing complete-family audit caller before/after parses704 production/669tests/
+401 actual dependency modules, zero parse omissions, selected69/51/42. After
+selection-family02 names actual current a78b0d68d/Root4c0d62e45;17.03s/
+maxRSS85432KiB/cgroup81.9MiB/Swap0. Source declaration search names exactly ONE
+production literal openhcs_source_element: NapariStreamLayerItem's ClassVar.
+Its existing native builders and controller read that declaration; no second
+identity roster, body/object-ID counter, coordinate/camera authority or codec.
+There was no old row-retention algorithm to relocate: the missing bridge is
+implemented on the original controller; obsolete replaced-layer callbacks and
+their original weak derived indices are removed in the same recipe.
+
+Original pinned R0 selection-r0-08 is terminal PASS on actual a78b0d68d versus
+mainf7de, ALL9 changed production paths, positive delta map EMPTY.28.81s/
+maxRSS87148KiB/cgroup75.8MiB/Swap0; unchanged original Git-pinned detector
+3b03785f45df2ef5dc62ba6aed99294192ecbb01 and caller run_pinned_r0_419.py.
+No detector copy, omitted changed file, waived positive delta or widened bound.
+Production/test/docs diff-check passes; authentic raw log whitespace remains.
+
+One actual latest NRA full/raw-record context attempt is UNQUALIFIED:
+selection-r1-01.json is original EMPTY output; stderr records hard cgroup
+OOM-kill at5.889s/peak512MiB/Swap0 before any findings. It used both changed
+files, full OpenHCS production plus original ZMQ/metaclass/paired Qt/PolyStore
+and actual complete Napari source context, parse/analysis workers1,
+--no-auto-context-root --no-cache --json --raw-findings --json-payload full,
+original CPU1/512MiB/Swap0/60s. No product module/provider/native execution,
+runtime mutation or uncertain external side effect. No retry, limit increase,
+copied scanner or falsely clean R1. Complete AST and R0 above remain qualified
+at their own strength; complete NRA raw findings are the explicit remaining
+structural limit, not represented by a local partial result.
+
+Singer read the complete ORIGINAL parent standalone95-live30/ACTUAL-RECEIVING.rst
+under engineering494 and verified its byte SHA256
+c8dace4508bd7ebee524245a4dba94b77af5a6b7d737e54d084aa807d00cc25c.
+The frozen complete public stdout SHA256 is
+1acda7973aee96bcd1bdc3fb6f86c5930a7ca16ff05b270f35ec4474a29340ae.
+Target06/d92 actual canonical9-field public point retirement succeeded;
+raw-only survivor source/payload/calibration/domain/camera unchanged;
+same-native saved ZIP reopened;9 matched XY/XZ/YZ raw/point/combined captures
+personally reviewed by parent. No process-RSS drop or biological claim.
+Original geometry rejection remains. Typed close returned ACK/process_exited/
+endpoint_terminated/succeededtrue; independent native/MCP/port absence proven,
+original parent client63937 terminal1 at10:08:33 (retained aggregate error,
+not a failed close). No replay or runtime operation by Singer.
+
+Parent requests ONE NEW normal package07 source-only future projection,
+coordinated directly with Planck. Immutable borrowed06 does NOT contain a78.
+Parent owns review/funding/normal MCP health and fresh installed selected-row
+receiving; no new source install/build/runtime here, no science contact or hot
+skill/package sync. Native row-survivor preservation remains pending actual
+receiving, not a permanent guide caveat or an old06 success claim.
+
+Byte-exact final selection archive
+viewer-selective-retirement-519-selection-qualified-20261003.tar.gz contains33
+members/1197812bytes, SHA256
+4c1dfc06901cbead1578539fd330fab36a3121a6e638285aa35691419ff2ca48.
+ALL9 current changed production files/two actual fixtures, existing original
+bootstrap/AST/R0 callers, original before/after family logs, ALL01..04 selection
+logs including failures/RSS-limit misses, changed-builder/R0 logs, original EMPTY
+NRA output and OOM stderr, and received parent ACTUAL-RECEIVING.rst are included.
+Each of33 tar members was byte-compared against its actual original, including
+the parent's closed receipt. Historical archives and untracked raw originals
+remain unchanged; no evidence-only warning/whitespace rewriting or deletion.
+
+Survivor row-selection source checkpoint (2026-10-03)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Parent assigns Singer the remaining Points/Shapes selected_data defect on522;
+Planck explicitly confirms no competing selection hunk. His point-calibration
+and sole parent TCP95 receiving packet remain disjoint. Root394 checked at
+4c0d62e45c8afb85e34b69d7279cd00710f519b5; no producer/persistence edits.
+Guide526 has separately merged532b13f5; no guide, target06, scientific borrower,
+package, runtime, foreign gitlink or original journal changes in this worker.
+
+Original NapariResultSelectionController now owns one transient
+preserve_selection(route_key) context. It resolves both native layers through
+its original route-state store. NapariStreamLayerItem derives source-member
+identity from its complete producer, component address, path and unchanged
+payload member/coordinate positions. Existing Points and Shapes builders project
+that opaque identity into native features in their existing assembly loops.
+This is not a new object-ID authority, persistent selection roster, transport
+codec, coordinate heuristic or restored old table index. Native feature order
+may change without selecting a different source member. Edited/replaced source
+payloads are not a promise to retain arbitrary native manual edits.
+
+The controller maps only selected source identities onto new native rows,
+preserves original declared linked-subject binding, disconnects replaced native
+callbacks/removes their derived weak lookups, and suppresses navigation during
+restoration through its original synchronization/generation owners. Empty
+selection remains empty; missing/duplicate source identities refuse before
+remount. NapariSelectablePresentationRetention composes that independent
+capability with the existing common-presentation ancestor through cooperative
+super(). Points/Shapes leaves declare it only; generic reconciliation and
+registry consumers are unchanged. No second algorithm or row cache is added.
+
+Latest NRA/current authoritative audit ZIP and applicable IDEN-1/6, BOUND-2,
+IMPL-12/13, MEMB-1/2 and TIME-9 catalog entries informed this original-owner
+choice. Existing audit caller selection-family01 parses704 production/669tests/
+401 actual dependencies (including native Points/Shapes/base/events), zero
+parse omissions, selected69/51/42 modules; before-source1df1c98c. Static source
+facts and semantically read consumers are not a global NRA R1 clean claim.
+
+Actual real Qt/ViewerModel selection-controls04:14PASS/21explicitdeselections,
+10.03s/maxRSS507916KiB/cgroup315.5MiB/Swap0, CPU1/512MiB/60s. Tests exercise
+both native families after registered retirement prunes an interior shared
+domain; source-item order reversal changes native row indices while exact
+selected source identities survive, empty/multirow selection, original linked
+groups, active layer/calibration/domain/style/camera, canceled queued navigation
+even without unmount, stale removed callback detachment, and an independent
+declaration's executed cooperative enter/exit hooks without consumer edits.
+Original source bootstrap, dependency env and paired Qt owner reused.
+
+Original selection-controls01 retains33PASS/two Shapes visibility failures:
+an earlier accepted row-selection timer ran before retirement dispatch and
+made the layer visible before capture. The fixture now settles that original
+action before selecting the presentation to retain; a separate original queued
+callback control tests cancellation without unmount. Original01/02/03 logs
+remain byte-exact. All completed within original cgroup512MiB/Swap0, but01
+maxRSS583980KiB and02/03 537564/539012KiB exceeded requested RSS; they are NOT
+qualified bounded receipts. Small04 removes needless eager MCP construction
+imports from model-only tests: those original imports now live only inside
+the unchanged actual-SDK test, which still constructs/dispatches when selected.
+No test assertions or limits were relaxed; discarded fixture-GC experiment is
+not retained in source.
+
+Final changed-builder controls/after-AST/original R0 remain pending at this
+working checkpoint. Parent reports standalone95-live30 actual target06 public
+typed point retirement,9 opened matched XY/XZ/YZ raw/point/combined captures,
+unchanged raw source/payload/calibration/domain/camera and same-native ZIP
+reopen. This is received detached public proof, not independently replayed here,
+not biological acceptance, and NOT selected_data-survivor proof (raw-only
+survivor). New source row fix still needs parent review and separately qualified
+installed/live receiving; current06 stays immutable.
+
+Final target06 semantic checkpoint received
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Planck completed and published original engineering494/MCP-SEMANTICS28.rst,
+READY-MCP28.json and PACKAGE28-QUALIFICATION.json; Singer read those complete
+receipts plus actual construction27/health27/installed26 logs. Source d92fd0b8c
+and this branch's4414159b6 have byte-identical retirement production/fixture
+files. No additional source change, build, install or runtime in this worker.
+
+NEW ordinary immutable target06/wheels05 (not04/05 overlay) SHA256
+46070edad4363d406b47ea771d07e795bff5eb268c4fa58d564881b5ec48ca04 qualifies
+815 tracked source inputs/90 assets/13 skill members/two native extensions,
+original RECORD/scripts/dependency APIs and347 original-source-compiled caches:
+1331 actual files accounted, none ignored. Original shared dependency/source
+absence and earlier qualification failures remain preserved. This is received
+owner whole-package proof, not an independently repeated audit.
+
+Actual104-tool build_server constructs the original nine-field identity schema;
+fresh non-resident stdio health27 returns status=ok/errors=[]/resources-ready at
+exact target06 source. Owner child exited, no native/viewer/catalog/science run.
+Installed26 is30PASS/11.67s/377876480B peak, CPU1/1GiB/Swap0/60s: actual SDK
+admission matches original from_payload semantics for bool/int/string coercion,
+unknown identity keys, optional-empty normalization and required/null/invalid
+integer rejection; top-level unknown tool keys remain forbidden. Original
+SDK-to-serialized-Qt-queue action and surviving raw object/backing array controls
+also pass. This is not external detached TCP or process-RSS release evidence.
+SCHEMA-FAMILY27-FINAL.json expands the received original AST context to704
+production+162 actual introspect/PolyStore/Pydantic/FastMCP modules, zero parse
+omissions; dynamic relationships are read semantically, not global equivalence.
+
+Parent's latest release permits healthy corrected06 scientific startup and
+ordinary baseline analysis after its original resource guard and source/packet
+freeze. Detached public retirement/shared-domain survivor/reopen qualification
+remains a separate FEATURE-MERGE gap, not a universal fresh-SCI gate. Singer
+does not release or contact scientists; frozen04/05 and original failures stay
+intact. Untargeted geometry row-selection limitation remains recorded below.
+
+One final ORIGINAL pinned R0 on frozen af293bb9ed32ab4fc311b141d1f2e1b429029a73
+production (including final4414 annotations) passes: ALL9 changed production
+files, positive delta mapping empty, terminal0/28.76s/maxRSS87008KiB/
+cgroup75.7M/Swap0. Unchanged run_pinned_r0_419.py and original detector Git
+3b03785f45df2ef5dc62ba6aed99294192ecbb01, existing3.14 -I -B, base mainf7de,
+CPU1/512MiB/60s; no copied detector, omitted changed path, waived delta or widened
+bound. Only newly changed source was guarded; installed/Qt/package suites were
+not repeated. Original critical disk/swap advisory remains (home4.5GiB,
+root7.5GiB,swap14.6GiB,availableRAM19.2GiB); no native admission inferred.
+
+Final additional byte-exact archive
+viewer-selective-retirement-519-semantic-qualified-20261003.tar.gz contains13
+members: two final production/two fixture files, two original R0 logs and seven
+original owner target06 receipts/AST/construction/health/control files.186986bytes,
+SHA2563277a792721e1819e721fbaae8a45843a7794a6f377a03418b370bc6a6bfeca8.
+Tar comparison passed all original members, including the owning issue-batch
+paths. Earlier archives/raw failures/SCI UNKNOWN dispositions remain intact.
+
+Decoder-parity correction received: qualification pending
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Parent requires original admission semantics, not merely a constructible SDK
+schema. Plain91d/dataclass and target05 permit some required-empty identities
+and differ from original numeric/bool/optional-empty normalization. Their actual
+construction/health/queue controls remain valid at that strength, but do not
+establish complete decoder parity. They are not merge-ready receipts.
+
+Planck published d92fd0b8c786d52c4290bf764b3cc3a84da9b600 and opened issue528.
+Singer receives only its two-file change as normal cherry-pick4414159b62ae92a901e37861cbe85856ae48f750.
+The canonical DTO now declares Annotated[StreamProducerIdentity,
+BeforeValidator(StreamProducerIdentity.from_payload)] inside the route mapping.
+This calls the existing behavior owner before Pydantic constructs the dataclass;
+there is no new validator body, field list, TypedDict, alias/codec, PolyStore edit
+or generic consumer branch. Original get_type_hints(include_extras=True) already
+carries that declared annotation. The new fixture compares original decoder
+versus actual SDK admission for numeric/bool/string positions and identity
+fields, optional empty values, ignored unknown identity keys and original
+required-empty/null/invalid-integer failures.
+
+All two production/two fixture files are byte-identical to Planck's d92 source;
+no combined ancestry is imported. Owner's new ordinary target06 whole-package,
+actual MCP construction/health/decoder-parity controls are still qualifying;
+actual detached public receiving remains required before merge or fresh SCI.
+No replay, hot target04/05 edit or further install/runtime in this worker.
+The one R0 below remains pinned to5354, before this subsequent annotation change,
+not claimed as a completed current4414 guard. Existing failure and qualification
+archives remain byte-exact; no unchanged test or package work is repeated here.
+
 Actual MCP construction correction received (2026-10-03)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -34,7 +528,7 @@ typed-or-original StreamProducerPayloadMapping acceptance is now annotated
 honestly. The generic generated tool binding/codec, retirement whole-set and
 invocation guards, receipt MRO and deadlines are unchanged. No central leaf
 switch, field/schema roster, anonymous/named JSON replacement, compatibility
-reader, Any escape or larger recursion/timeout limit. BOUND-2/8 and MEMB-5 apply:
+reader, Any escape or larger recursion/timeout limit. BOUND-2 and MEMB-5 apply:
 carry the original identity, derive schema from its declaration, delete the
 overly broad producer record annotation.
 
@@ -386,7 +880,7 @@ Source evidence and proof limits
 Read latest NRA skill and authoritative nominal-refactor-advisor/skills/
 refactor-audit.skill SKILL/catalog README plus full identity, membership,
 implementation, boundaries and over-time pattern files. Applicable patterns:
-IDEN-1/6 (route versus generation/visibility), BOUND-2/8 (typed source/domain/
+IDEN-1/6 (route versus generation/visibility), BOUND-2 (typed source/domain/
 producer facts across request/reply), IMPL-12/13 (copied purge/settlement loops),
 MEMB-1/2 (parallel tool/route rosters), TIME-9 (alternate codec/compatibility).
 Existing behavior-owning classes and shared registered ABCs remain load bearing;
