@@ -58,6 +58,15 @@ final report retains uncertain lobed groups, possible merges, small-focus
 exclusions and truncated border objects. Its 61 instances are a defined
 bright-object estimate rather than an exhaustive biological census.
 
+Supplementary Figure 18 shows native raw/first/final witnesses from this same
+scored author. The overview uses raw window 8–152; the upper-right detail uses
+8–248, gamma 1, with filled ROI opacity 0.7. It makes the local elongated-body
+false-split repair visible without substituting another trial's result. The
+[independent source review](../../figure-collection-20261004/H001-FRESH586-SCORED-NATIVE-REVIEW.rst)
+records original capture hashes, matched native states and the independent
+verification of all 417 frozen file sizes and hashes. Clipping and scaling are
+recorded in the figure receipt; original PNG bytes remain alongside the figure.
+
 An earlier independent author, `H001_FRESH10_96`, scored 62.65% on its first
 prediction and 91.34% on its final prediction using the same reference and
 scorer. Different packaged versions and independently selected settings

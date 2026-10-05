@@ -221,6 +221,9 @@ On the complete 254 x 256-pixel H001 image, the first completed prediction match
 
 The BBBC039 author improved object F1 from 0.908 to 0.934 on its original three fields, reducing missed reference nuclei from 39 to 25 while retaining 14 excess predictions (Figure 5B). Its final pipeline then covered all 200 fields: 20,521 of 23,615 reference nuclei matched, with precision 0.947, recall 0.869 and pooled object F1 0.906. Field F1 reached at least 0.90 in 135 fields; ten fields remained below 0.80 (Figure 5C). This distribution retains difficult fields and three annotation-empty fields rather than selecting only favorable examples. No first-attempt score across 200 fields is inferred from the three initial outputs.
 
+Native H001 views show the elongated-body false-split repair in the same scored
+run, alongside its remaining possible merge (Supplementary Figure 18).
+
 Independent repeats exposed variability beyond the within-run improvements.
 On 156 completed BBBC039 fields, a later author achieved precision 0.942,
 recall 0.838 and pooled F1 0.887, compared with 0.909 for the earlier pipeline
