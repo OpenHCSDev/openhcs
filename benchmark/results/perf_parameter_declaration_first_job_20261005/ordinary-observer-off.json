@@ -1,0 +1,199 @@
+{
+  "status": "PASS",
+  "case": "ExampleIlluminationCorrection_Example3",
+  "source_head": "92c22aa3589c6c040f4103e1f730c8a79a63403e",
+  "scope": "ONE current candidate ordinary observation with default internal runtime profiling OFF. Normal full public READY/startup and shutdown excluded. Retained October3 native comparisons are older and unpaired.",
+  "ordinary": {
+    "compile_seconds": 0.20653533935546875,
+    "execute_seconds": 0.26493215560913086,
+    "total_seconds": 0.5658956840634346,
+    "prepare_seconds": 0.0,
+    "outside_compile_execution_seconds": 0.09442818909883499,
+    "status": "success",
+    "successful_wells": 1,
+    "well_count": 1,
+    "worker_count": 1,
+    "runtime_profile_log_present": false,
+    "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261005/parameter-owner-illum3-default-ordinary-v1/candidate/ordinary/ExampleIlluminationCorrection_Example3/wells_1/workers_1/ordinary_run_evidence/ExampleIlluminationCorrection_Example3-1w_1t-1791218192068689748/measured_pipeline_receipt.json",
+    "receipt_sha256": "6cbb4d3237dcea6284d1d70686b22523a8a3d2fb50b8b84577b984dc2564f423"
+  },
+  "native": {
+    "observations": [
+      {
+        "repetition": 0,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/0",
+        "image_set_count": 1,
+        "invocation_seconds": 0.6704615103080869,
+        "pre_first_module_seconds": 0.07343892008066177,
+        "first_module_through_post_run_seconds": 0.5970225902274251,
+        "invocation_started_monotonic_seconds": 3808407.099707816,
+        "first_module_started_monotonic_seconds": 3808407.173146736,
+        "completed_monotonic_seconds": 3808407.770169326
+      },
+      {
+        "repetition": 1,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261003/current-wound-illum3-paired-v1/native/ExampleIlluminationCorrection_Example3/outputs/1",
+        "image_set_count": 1,
+        "invocation_seconds": 0.7205826421268284,
+        "pre_first_module_seconds": 0.06369220139458776,
+        "first_module_through_post_run_seconds": 0.6568904407322407,
+        "invocation_started_monotonic_seconds": 3808407.770178504,
+        "first_module_started_monotonic_seconds": 3808407.833870705,
+        "completed_monotonic_seconds": 3808408.490761146
+      }
+    ],
+    "full_invocation_mean_seconds": 0.6955220762174577,
+    "first_module_through_post_run_mean_seconds": 0.6269565154798329,
+    "custody_scope": "October3 older unpaired retained native outputs and clocks; no fresh native observation.",
+    "authenticated_declared_output_count": 4
+  },
+  "absolute_ratios": {
+    "native_full_over_ordinary_total": 1.2290641116455174,
+    "native_full_over_ordinary_execute": 2.6252837245003966,
+    "two_times_full_total_budget_seconds": 0.3477610381087288,
+    "remaining_total_cut_seconds": 0.21813464595470577,
+    "two_times_total_target_met": false
+  },
+  "science": {
+    "status": "PASS",
+    "native_repeats": [
+      0,
+      1
+    ],
+    "declared_images_per_repeat": [
+      2,
+      2
+    ],
+    "compared_pixels_per_repeat": [
+      426886,
+      426886
+    ],
+    "max_abs_pixel_difference": 2.9802322387695312e-08,
+    "out_of_tolerance_pixels": 0,
+    "policy": "existing atol=1e-6, rtol=1e-6; no exclusions; two nonempty declared images; image-only plan has no tables",
+    "complete_inventory": [
+      "PASS",
+      "PASS"
+    ],
+    "measurements": [
+      "PASS",
+      "PASS"
+    ],
+    "receipt_sha256": "e6cca5f8985da8a093ffd04046b47cdef766b98a9e0381d8c3b45e8a828f263e"
+  },
+  "custody": {
+    "guards": {
+      "source": "PASS",
+      "inputs": "PASS",
+      "native": "PASS",
+      "helpers": "PASS",
+      "dependencies": "PASS"
+    },
+    "lingering_owned_pids": [],
+    "source_clean_at_preparation": true,
+    "dependency_versions": {
+      "python-introspect": "0.2.0",
+      "objectstate": "1.3.0",
+      "polystore": "0.3.3",
+      "arraybridge": "0.3.6",
+      "metaclass-registry": "0.2.2",
+      "pycodify": "0.1.3",
+      "pyqt-reactive": "0.3.27",
+      "zmqruntime": "0.4.0",
+      "matplotlib": "3.11.2",
+      "numpy": "2.5.3",
+      "numba": "0.67.0"
+    },
+    "private_dependency_origins": {
+      "python_introspect": "/home/ts/.local/state/openhcs-maintenance/20261004/parameter-declaration-presentation-v1/candidate-site/python_introspect/__init__.py",
+      "objectstate": "/home/ts/.local/state/openhcs-maintenance/20261004/parameter-declaration-presentation-v1/candidate-site/objectstate/__init__.py"
+    },
+    "private_wheels": {
+      "status": "PASS",
+      "private_site": "/home/ts/.local/state/openhcs-maintenance/20261004/parameter-declaration-presentation-v1/candidate-site",
+      "sources": [
+        {
+          "package": "python_introspect",
+          "source_head": "2ab81400bff025beeae6bcddc6157b7f1f7b8ad6",
+          "wheel": "/home/ts/.local/state/openhcs-maintenance/20261004/parameter-declaration-presentation-v1/wheels/python_introspect-0.2.0-py3-none-any.whl",
+          "wheel_sha256": "c151e79c729df0ccd58bfa5b0df22f6eab37e39dc35b6d1a55847669c1ac36cd",
+          "wheel_bytes": 37000,
+          "all_python_source_and_private_installed_bytes_match": true,
+          "package_files": {
+            "python_introspect/__init__.py": "b7deba6f98c76b4b072dd26846ab233472f623a8df916aa030150ef7aa08acd1",
+            "python_introspect/annotation_types.py": "dc126879a8a581cea0758eec4df18ec20c47ca4b1e135abde23699b65b790bde",
+            "python_introspect/callable_declaration.py": "3bb8b474624fe6b2964a5c1f9a6aa540b2703500bfa124e7808995cb789d6951",
+            "python_introspect/dataclass_projection.py": "d2be277051b070d73503025a3addcde8016787e18a369c45b60be0c0edb65fea",
+            "python_introspect/docstring_annotations.py": "444e8064f833f1a044208bd4a15107a6b688b597e36ab78ac58bee6996b51fc9",
+            "python_introspect/enableable.py": "025eadd64a6a6f1648bc36fbd1724f6049355a0b9b1a259443248d70170b8eb6",
+            "python_introspect/environment_projection.py": "8ab7d1e01e9a4529ea0b77d8996a5feeb94bdc2e905dd6263afb28d11bc217a0",
+            "python_introspect/exceptions.py": "4c6f15a3625d02b05b2fc8651e67e6b77d4bb442ad180b85121d91874ec3407b",
+            "python_introspect/runtime_parameter.py": "59fed2d467e751686447322f8e19a8633d964741d3d8afccb850dc504a619897",
+            "python_introspect/signature_analyzer.py": "0e515ac6e741f9d00d574143f4c98b25676fc412a86c96ed127e67ead75ad895",
+            "python_introspect/unified_parameter_analyzer.py": "430dfd990b180d8ab9cc4881e802d1a19ab041e6783c99a5905c694da2a471c8",
+            "python_introspect/validation.py": "46fba78bd068c75c89b91baa4a5cbe8cdca9692e75a285eaf76311183df77b64"
+          }
+        },
+        {
+          "package": "objectstate",
+          "source_head": "7bdbcfc8ce215fbe2530155b28b17f6fba744ae5",
+          "wheel": "/home/ts/.local/state/openhcs-maintenance/20261004/parameter-declaration-presentation-v1/wheels/objectstate-1.3.0-py3-none-any.whl",
+          "wheel_sha256": "8a65b68bd1363352cf90cd582a61b09bb31d0586df1b64357731368ae57fdeea",
+          "wheel_bytes": 138167,
+          "all_python_source_and_private_installed_bytes_match": true,
+          "package_files": {
+            "objectstate/__init__.py": "1b5b5f0038d679bd5eb86bef1c1defa137ca2475daaea95472b6ece492e55203",
+            "objectstate/collection_containers.py": "a939d07f5dc391b7131f7ffaa7d1390b0449b4931d54ed5b09b27f59056b6e9b",
+            "objectstate/config.py": "6db2d9de077872009f1d6defe351cf8f40e441a0de31ff574b02741cefb4ffe3",
+            "objectstate/construction_binding.py": "9cfed94cad1cc9d5cf2cf0f7e8f534f72192168bdf3ba90b2b8d7ee57f4950d3",
+            "objectstate/context_manager.py": "25b1a7aa1dc6abc96b6ff91dd14e27fc3804c06f8c45a2c7a3ca6a3dd01b35a0",
+            "objectstate/dual_axis_resolver.py": "17fcda62912050bdcdd018bee2fca5f81c2f4940c5f27f2af3dc19b7691e1fb0",
+            "objectstate/edit_session.py": "003cfaff8d3687b0fa115e051c3cf833a3cbb21ad9d9becfe16c59359d656350",
+            "objectstate/field_access.py": "77f483322a504c392c0ca41cc3ee6b691d258396f70f00a61b98d9f4bc03d43a",
+            "objectstate/global_config.py": "a8187811f87806579640a8147f287114e7127401530178dd37e8d28ed788a6ae",
+            "objectstate/history_migration.py": "1c24097040e38c159ea7e809424c0b94ec6c34efa3dc84cd664ff6a2f790815f",
+            "objectstate/lazy_factory.py": "64ae924c176757863a84eef19b9df0eff516e32443c2661134ec2ae72f234bf9",
+            "objectstate/live_context_resolver.py": "bd169b0bf2e9eea833ffc1d28331d320b2386193652fca041387f32bf018d71e",
+            "objectstate/object_state.py": "03f818c3045b6a07024444ab2b5552fb6be9eab32dd151bb165b6f904d2863a3",
+            "objectstate/object_state_metadata.py": "4c5be42e313e3f896f2db0d3f89ca18ca6ab09b9d25f202a7b2af9e59a099ddb",
+            "objectstate/object_state_registry.py": "f848746a9c2a023a616c37531691073ea7bdb8d28d7db3bca5c8a3dcb176107a",
+            "objectstate/parameter_owner.py": "908606ec2da70f223a93071e92ca24affb3f172f7df14c64dfd27974f1fbb85c",
+            "objectstate/parameter_structure.py": "105b42eb2d273f4305c5b96cb07bf40910b1ba82d963559177e9c0fa12cb85e9",
+            "objectstate/parametric_axes.py": "7229b518f8d5cca522a3020361c16a601f3084bc5a7d34ef92a2fef11619e40c",
+            "objectstate/placeholder.py": "4e057cf3225dd38ef3859f20fcd1305526829f044af45ef616381ea734df8f67",
+            "objectstate/reified_generics.py": "39ad0897ec45ba929c0fae694dd870df987c06e2b005644189212fe224eceab2",
+            "objectstate/snapshot_model.py": "001cc83d354b040763b2da9aad0014619fdee22c82dce622dbd93ecfba780681",
+            "objectstate/subfield_semantics.py": "97aa6a7f2659260b1950c068f47d9bccec15087ed1852f1dd182272c8230c14a",
+            "objectstate/time_travel_profile.py": "c59d157f9cb85ee29aa64e18393d916ded656c6ce88bb46782f44e2463fcd007",
+            "objectstate/token_cache.py": "d6b7cdb71c15e13e8bab7271d70e0b96ccbe0825004c45c4e88851ee30a9435f",
+            "objectstate/transaction_checkpoint.py": "4c105f2078bf23c9312c600543623b9456de256c7093b9cb8a9b753b49b67530",
+            "objectstate/ui_visibility.py": "be0c60b66b86ebb696583ee394c0d45b05fd1f68a609a6aa0c29aa1098dc2592",
+            "objectstate/value_semantics.py": "4b8a43ca8667c592b74f0d46b8507ef8331402e376230dd7cac217870b2ae2f9"
+          }
+        }
+      ],
+      "scope": "Existing exact candidate wheels remain byte-identical to clean held source heads and private-site Python payloads. No rebuild, shared installation or release."
+    },
+    "four_native_abis": {
+      "/var/tmp/openhcs-cp-compiled-contract-reuse-20261004/openhcs/core/_tabular_native.abi3.so": "657448f5ac704ba664b684d30ec80a209663d1c0bc73999eff07ac20fa27ee7e",
+      "/var/tmp/openhcs-cp-compiled-contract-reuse-20261004/openhcs/processing/backends/cellprofiler/_font_raster_native.abi3.so": "7d834bf78324fb17bced5034aff2405613b1d67bcead450bdfdfe77be3a9327c",
+      "/var/tmp/openhcs-cp-compiled-contract-reuse-20261004/openhcs/processing/backends/cellprofiler/_granularity_native.abi3.so": "9223bf2c69c35455b033a0346def94fb4de731cc655be8c8554e54523d452d2f",
+      "/var/tmp/openhcs-cp-compiled-contract-reuse-20261004/openhcs/processing/backends/cellprofiler/_median_native.abi3.so": "b201d7a367d90a0416e434e7ddfc6640f0a0849e9fc38954fb64b434313a8877"
+    },
+    "prepared_sha256": "d0324c62062febdacb9a8ec1616e8bf6d41cf167fb259caa85cdad3686448371",
+    "terminal_sha256": "ccb94e0108305f9c38532b90da13db3612ebc41c840ac4c2a8b813a0a9dbb7da"
+  },
+  "limitations": [
+    "No controlled baseline with profiling OFF was run; no causal subtraction from prior profile-ON .628203-second observation.",
+    "This whole-run observation does not isolate PI/ObjectState patch causality.",
+    "The 2x full-native total-time target remains unmet.",
+    "No shared dependency install, release, tag, or merge performed.",
+    "Initial missing-parent-environment preflight RED retained; corrected task environment passed before any server launch."
+  ],
+  "release": {
+    "cpu5_and_memory_gate": "RELEASED",
+    "source_and_private_site_freeze": "RELEASED",
+    "ordinary_handle": 56747,
+    "science_handle": 96586
+  }
+}
