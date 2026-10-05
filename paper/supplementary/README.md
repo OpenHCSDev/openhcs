@@ -984,6 +984,16 @@ same-author recovery, not a fresh autonomous pass. Its
 [development coverage record](task_only_analysis/bbbc013-dev89-outcome.json)
 identifies the independently verified freeze and diagnostic comparison.
 
+A separate fresh15 translocation author completed 96 wells before a CLI
+interruption, then finished native review in a recorded same-author continuation.
+The parent independently summed the 96 well tables: 18,331 seed rows, 14,496
+defined ratios and 3,835 undefined zero-cytoplasm ratios. Matched native images
+show useful prominent detections together with a clear miss and incomplete
+compartment extent. This is a qualified exploratory result, not a fresh
+autonomous pass supplied by the continuation or an improvement over the earlier
+fresh13 repeat. The [coverage and review record](task_only_analysis/bbbc013-fresh15-qualified-repeat.rst)
+identifies the frozen artifacts, independent checks and evidence boundaries.
+
 The report also records a same-author retinal continuation with 100 inspectable
 RBPMS soma-detector instances. Matched views show useful local improvements,
 but residual dim-body misses and uncertain dense partitions prevent treating
