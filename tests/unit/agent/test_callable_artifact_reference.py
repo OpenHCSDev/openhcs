@@ -59,6 +59,8 @@ DOCUMENT_PATH = "docs/source/development/callable_artifact_authoring.rst"
 DOCUMENT_ID = "openhcs_callable_artifact_authoring"
 REFERENCE_BLOCKS = (
     "callable-artifact-reference",
+    "callable-artifact-points-reference",
+    "callable-artifact-diagnostic-reference",
     "callable-artifact-input-reference",
     "callable-artifact-plate-reference",
 )
@@ -171,6 +173,87 @@ def test_reference_executes_and_compiles_actual_function_step(reference_namespac
         "pixel_count"
     )
     assert not namespace["FixtureFeatureOwner"].owns_measurement_feature_name("unknown")
+
+
+def test_diagnostic_reference_uses_one_canonical_slot_and_exact_trailing_artifacts(
+    reference_namespace,
+):
+    namespace = reference_namespace
+    function = namespace["inspect_label_fixture_with_diagnostic"]
+    contract = CallableContract.from_callable(function)
+    pixels = np.zeros((8, 8), dtype=np.uint16)
+    pixels[2:6, 3:7] = 7
+    returned = function(pixels)
+    assert len(returned) == 3
+    assert contract.canonical_return_output_specs.names() == (
+        "fixture_image", "fixture_diagnostic",
+    )
+    assert contract.trailing_return_output_specs.names() == (
+        "fixture_labels", "fixture_object_rows",
+    )
+    matched = contract.resolve_returned_output(returned)
+    np.testing.assert_array_equal(matched[namespace["FIXTURE_IMAGE"].ref()], pixels)
+    np.testing.assert_array_equal(
+        matched[namespace["FIXTURE_DIAGNOSTIC"].ref()], pixels > 0,
+    )
+    assert matched[namespace["FIXTURE_ROWS"].ref()].row_mappings() == (
+        {"slice_index": 0, "object_label": 7, "pixel_count": 16},
+    )
+    with pytest.raises(ValueError, match="trailing return count"):
+        contract.resolve_returned_output((pixels, pixels > 0, returned[1], returned[2]))
+
+
+def test_points_declaration_materializes_fractional_geometry_and_full_source_domain(
+    reference_namespace, tmp_path,
+):
+    from openhcs.core.roi_point_metadata import ROIFractionalZ
+    from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
+    from openhcs.core.runtime_measurements import MeasurementTable
+    from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
+    from polystore.roi import PointShape
+
+    namespace = reference_namespace
+    spec = namespace["CENTRE_ROWS"]
+    labels = namespace["CENTRE_LABELS"]
+    plan = ArtifactOutputPlan(
+        name=spec.name, path="/synthetic/centre_rows", artifact_type=spec.artifact_type,
+        relations=spec.relations,
+    )
+    assert plan.object_subject_binding().source == labels.ref()
+    row = namespace["CentreRow"](7, 1.5, 1.25, 2.5)
+    carrier = namespace["DataclassMeasurementColumnarRows"](
+        (row,), row_type=namespace["CentreRow"],
+    )
+    # Direct materialization supplies the same nominal context normally owned
+    # by runtime contextualization, without inventing an archive/CSV writer.
+    table = MeasurementTable(
+        name=spec.name, rows=carrier, subject=plan.measurement_subject(),
+        measurement_feature_owner=namespace["CentreFeatureOwner"],
+        source_path="/synthetic/volume.tif",
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=("/synthetic/volume.tif",) * 4,
+            component_metadata=tuple(
+                {"well": "A01", "site": 1, "channel": 1, "z_index": z, "timepoint": 1}
+                for z in range(4)
+            ),
+        ),
+    )
+    materialize(
+        spec.materialization, data=table, path=str(tmp_path / "centres"),
+        filemanager=FileManager({"disk": DiskStorageBackend()}),
+        backends=["disk"], backend_kwargs={},
+    )
+    assert (tmp_path / "centres.csv").read_text().splitlines() == [
+        "object_label,center_z,center_y,center_x", "7,1.5,1.25,2.5",
+    ]
+    rois = load_rois_from_zip(tmp_path / "centres_points.roi.zip")
+    assert rois[0].shapes == [PointShape(y=1.25, x=2.5)]
+    assert rois[0].metadata["object_label"] == 7
+    assert ROIFractionalZ.decode(rois[0].metadata) == ROIFractionalZ(1.5)
+    metadata = ROIArchiveSourceMetadata.decode(rois)
+    domain = ROIFractionalZ.source_component_domain(rois, metadata)
+    assert tuple(plane["z_index"] for plane in domain) == (0, 1, 2, 3)
+    assert metadata.source_path == "/synthetic/volume.tif"
 
 
 def test_input_reference_compiles_nominal_binding_and_repairs_wrong_annotation(
@@ -502,3 +585,18 @@ def test_packaged_knowledge_projection_retains_executable_reference(tmp_path):
     source_path = "packaging/codex/openhcs/skills/use-openhcs/references/custom-function-authoring.md"
     assert (destination / source_path).read_bytes() == (ROOT / source_path).read_bytes()
     assert "Summarize declared measurements once per" in route.content
+    for section_id in (
+        "materialize-typed-3d-centres-as-feature-bearing-points",
+        "return-diagnostic-images-without-flattening-the-abi",
+    ):
+        selected = service.get_document(KnowledgeBaseDocumentRequest.from_fields(
+            document_id=DOCUMENT_ID, section_id=section_id, max_chars=10_000,
+        ))
+        assert not selected.errors and not selected.truncated
+        assert selected.selected_section_id == section_id
+        original = KnowledgeBaseService(repo_root=ROOT).get_document(
+            KnowledgeBaseDocumentRequest.from_fields(
+                document_id=DOCUMENT_ID, section_id=section_id, max_chars=10_000,
+            )
+        )
+        assert selected.content == original.content

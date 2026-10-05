@@ -79,8 +79,9 @@ runtime loader or default value for it.
 
 Image outputs that retain the current stack's axes should use
 ``MainFlowStackOutputSpec.output(name, ImageArtifactType, ...)``. The compiler
-binds its lineage to the current image input. Declare the image before any
-trailing table outputs so the returned image participates in main flow.
+binds their lineage to the current image input. Declare main-flow images before
+trailing typed artifacts; multiple images share one aligned canonical return
+slot, as described under **Return diagnostic images without flattening the ABI**.
 For a cropped subset, return ``SelectedPlaneImageOutput(array, source_indices)``
 in that image slot; the source indices must match the array's leading axis.
 It is an array-compatible runtime payload: ``numpy.asarray(result)`` exposes
@@ -235,14 +236,13 @@ normal plate compilation/execution supplies image-source and runtime context.
    :name: callable-artifact-reference-check
 
    from openhcs.core.callable_contract import CallableContract
-   from openhcs.core.runtime_output_matching import RuntimeReturnedOutputMatcher
    from openhcs.core.steps import FunctionStep
 
    fixture = np.zeros((8, 8), dtype=np.uint16)
    fixture[2:6, 3:7] = 1
    returned = inspect_label_fixture(fixture)
    contract = CallableContract.from_callable(inspect_label_fixture)
-   matched = RuntimeReturnedOutputMatcher(contract, returned).resolve()
+   matched = contract.resolve_returned_output(returned)
    assert np.array_equal(matched[FIXTURE_IMAGE.ref()], fixture)
    assert matched[FIXTURE_LABELS.ref()].dtype == np.int32
    assert matched[FIXTURE_ROWS.ref()].row_mappings() == (
@@ -266,6 +266,152 @@ declaration deliberately uses evaluated annotations, without a future-annotation
 import, so its dataclass schema is valid in the custom execution namespace as
 well as in an ordinary module. Persist the source when it must survive a new
 process; session-only registration does not make a spawned worker import it.
+
+Materialize typed 3D centres as feature-bearing Points
+----------------------------------------------------
+
+Points are a materialization of ``MeasurementsArtifactType``, not a missing
+``PointsArtifactType`` or a centre-voxel image. Attach ``PointROIOptions`` to the
+same object-measurement output as ``CsvOptions``. The existing writer projects
+the contextualized table into source-bearing point ROIs; reopening that archive
+uses the native Points route and retains row features, including object identity.
+A CSV alone is not that native geometry declaration.
+
+This declaration block is for an operation that already produces labels and
+3D centre rows. It specifies their ABI, not how to detect or choose a centre:
+
+.. code-block:: python
+   :name: callable-artifact-points-reference
+
+   from dataclasses import dataclass
+
+   from openhcs.core.artifacts import (
+       ImageArtifactType, MainFlowStackOutputSpec, MeasurementsArtifactType,
+       ObjectLabelsArtifactType, ObjectMeasurementSubjectRelation,
+   )
+   from openhcs.core.measurement_row_materialization import (
+       DataclassMeasurementColumnarRows,
+   )
+   from openhcs.core.runtime_measurements import (
+       ObjectCoreMeasurementFeature, RuntimeMeasurementFeatureOwner,
+   )
+   from openhcs.processing.materialization import (
+       CsvOptions, MaterializationSpec, PointROIOptions,
+   )
+
+   class CentreFeatureOwner(RuntimeMeasurementFeatureOwner):
+       @classmethod
+       def owns_measurement_feature_name(cls, feature_name: str) -> bool:
+           return any(feature.feature_name == feature_name
+                      for feature in ObjectCoreMeasurementFeature)
+
+       @classmethod
+       def owns_primary_measurement_feature_name(cls, feature_name: str) -> bool:
+           return cls.owns_measurement_feature_name(feature_name)
+
+   @dataclass(frozen=True)
+   class CentreRow:
+       object_label: int
+       center_z: float
+       center_y: float
+       center_x: float
+
+   CENTRE_IMAGE = MainFlowStackOutputSpec.output("centre_image", ImageArtifactType)
+   CENTRE_LABELS = MainFlowStackOutputSpec.output(
+       "centre_labels", ObjectLabelsArtifactType,
+   )
+   CENTRE_ROWS = MainFlowStackOutputSpec.output(
+       "centre_rows", MeasurementsArtifactType,
+       measurement_feature_owner=CentreFeatureOwner,
+       relations=(ObjectMeasurementSubjectRelation(
+           source=CENTRE_LABELS.ref(), id_field="object_label",
+       ),),
+       materialization=MaterializationSpec(
+           CsvOptions(),
+           PointROIOptions(
+               z_feature=ObjectCoreMeasurementFeature.CENTER_Z,
+               y_feature=ObjectCoreMeasurementFeature.CENTER_Y,
+               x_feature=ObjectCoreMeasurementFeature.CENTER_X,
+           ),
+       ),
+   )
+
+On the existing centre-producing callable, declare
+``@artifact_outputs(CENTRE_IMAGE, CENTRE_LABELS, CENTRE_ROWS)`` and return
+``image, labels, DataclassMeasurementColumnarRows(rows, row_type=CentreRow)``.
+Use the existing memory/processing decorators, as in the executable reference;
+``PURE_3D`` is appropriate only for an actual volumetric calculation. Retain
+the complete source bindings and compiled ZYX grouping: the decorator alone
+does not establish axis order. The row's representative rule (peak, body centre
+or another task-defined location) remains the analysis contract, not the writer.
+
+Coordinates are floating source-grid Z/Y/X locations, not calibrated world
+coordinates and not a manually rescaled display array. Keep the full declared
+source Z domain, including planes without objects, and its source paths,
+spatial frame and voxel spacing through the compiled source/subject relations.
+The writer rejects missing source provenance, missing/foreign coordinate fields,
+duplicate object IDs and non-finite coordinates. It currently rejects an empty
+Points archive; empty measurement rows retain their table schema but do not
+establish successful point materialization.
+
+Fractional Z is geometry. An integer navigation slice, a rounded centre-voxel
+marker image and a fractional point table describe different things. Do not
+round the table to fit a viewer slice or infer its Z domain from occupied
+labels/rounded markers. Compare the persisted table/archive and native Points
+at matched raw coordinates, full Z extent and orthogonal views; inspect object
+IDs/features and source calibration, not just point count. Verify that the
+installed version exposes the required point producer/domain and viewer geometry
+contracts before relying on automatic streaming or archive reopening. Declaration
+and direct-call checks do not prove that live path.
+
+Return diagnostic images without flattening the ABI
+--------------------------------------------------
+
+``MainFlowStackOutputSpec`` declares source lineage; it does not give every
+Image its own outer tuple slot. ``CallableContract`` groups the consecutive
+leading main-flow Image declarations into one canonical return slot. Labels,
+measurements and other remaining artifact declarations each have one trailing
+slot in their exact order. Inspect ``canonical_return_output_specs`` and
+``trailing_return_output_specs`` before extending a callable's returns.
+
+For example, to extend the executable 2D reference with an aligned diagnostic,
+keep its labels/rows declarations and replace its image declarations/decorator:
+
+.. code-block:: python
+   :name: callable-artifact-diagnostic-reference
+
+   from openhcs.core.aligned_image_payload import (
+       AlignedImageSliceContext, pack_aligned_image_outputs,
+   )
+
+   FIXTURE_DIAGNOSTIC = MainFlowStackOutputSpec.output(
+       "fixture_diagnostic", ImageArtifactType,
+   )
+
+   @numpy(contract=ProcessingContract.PURE_2D)
+   @artifact_outputs(
+       FIXTURE_IMAGE, FIXTURE_DIAGNOSTIC, FIXTURE_LABELS, FIXTURE_ROWS,
+   )
+   def inspect_label_fixture_with_diagnostic(image: np.ndarray):
+       image, labels, rows = inspect_label_fixture(image)
+       image_specs = (FIXTURE_IMAGE, FIXTURE_DIAGNOSTIC)
+       main_images = pack_aligned_image_outputs(
+           (image, (labels > 0).astype(np.uint8)),
+           slice_contexts=AlignedImageSliceContext.main_flow_for_artifact_specs(
+               image_specs,
+           ),
+       )
+       return main_images, labels, rows
+
+The diagnostic here is only the synthetic fixture's foreground indicator.
+The helper retains exact named slice contexts; it is not ``np.stack`` of
+scientific Z planes and introduces no new return codec. With five leading
+main-flow Images followed by three typed artifacts, the outer return has four
+positions (one aligned image bundle plus three artifacts), not eight. A
+``trailing return count`` error is repaired against this declared partition,
+not by dropping useful diagnostics or weakening the matcher. Validate/compile
+the corrected complete document and inspect its materialization/streaming plan;
+this ABI repair does not itself settle a viewer or validate the analysis.
 
 Consume a nominal artifact input
 -------------------------------
