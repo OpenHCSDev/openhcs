@@ -228,3 +228,24 @@ packet is not part of the earlier byte-exact archive and does not alter its hash
 Planck received a separate release of his original projected-Z message-extra
 and source-metadata producer hunks; no competing Points guard/fallback fix was
 started here. Coordinate any SourceImageProvenance/shared-scope crossing.
+
+Saved label receiving scope correction
+--------------------------------------
+
+The parent supplied the closed P001 assisted output-plate label request as a
+new read-only determining witness. Exact REPORT/journal/log/source metadata
+relationship is retained in the existing receiving packet's Saved-label section.
+Actual napari6013.log43..58 names a FIELD site5 label failing scalar CHANNEL,
+not a site-free mosaic. Saved metadata declares two channel source planes with
+empty contributors and a2D source spatial domain, while its scalar source
+metadata lacks CHANNEL. This is a producer/plane-versus-contributor route
+contract, not407 typed presentation or a transport timeout.
+
+732's current production does not alter the manual saved-image path or turn
+those declared source planes into contributors. No installed fix is claimed.
+Planck/Dewey existing152 producer ownership was contacted with the exact source
+sites and receiving requirement; Singer retains integration/control custody.
+The same tiny ordinary installed packet now explicitly requires saved-label
+reopening qualification after the existing producer owner supplies the correct
+nominal declaration. No new production patch, runtime, scientific replay,
+source-receipt fabrication or repeated test batch occurred.

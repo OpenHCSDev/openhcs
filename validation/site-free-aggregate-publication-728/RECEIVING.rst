@@ -108,3 +108,56 @@ it does not replace those controls or manufacture a runtime failure as design.
 Planck's independent projected-Z producer work is separate; its genuine guard
 and existing source metadata owners remain intact. Coordinate any crossed
 SourceImageProvenance/StreamScopedDisplayConfig hunk before changing production.
+
+Retained saved-label reopening witness
+--------------------------------------
+
+The closed assisted technical review supplied an additional receiving case,
+not a new scientific attempt. Exact original root under the issue batch:
+next-p001-assisted-viewer-review94-after10-20261005/P001_ASSISTED_REVIEW10_94/
+author-workspace/output. REPORT.md and runtime/mcp.stdin:64 preserve the
+ordinary output-plate selected label request. The explicit result-directory
+request at stdin:17 was separately refused because its raw receipt did not bind
+that label; it is not evidence of a native mount or a receipt guard defect.
+
+runtime/data/openhcs/logs/napari_detached_port_6013.log:43..58 identifies the
+FIELD site5 ``neurons_step0.labels.tif``. It reaches
+NapariComponentAwareDisplayCoordinator -> NapariStreamLayerContext.layer_route
+-> original PolyStore build_route_key and fails required scalar CHANNEL.
+It is not the raw site-free mosaic or a failed screenshot/timeout.
+
+The saved output plate's original openhcs_metadata.json results.source_projection
+entry declares a two-dimensional source spatial domain, plane_axis SOURCE_BINDING,
+and two runtime-plane source identities DAPI/channel1 and FITC/channel2, each with
+empty contributors. Its scalar well/site5/Z1/T1 identity has no channel.
+No acquisition pixels, reference answers or scientific settings were inspected
+for this diagnosis. The metadata file and original requests were read-only.
+
+Current ViewerStreamingSource.image_source_metadata_items observes metadata's
+declared planes. StreamComponentMessageExtraAuthority keeps CHANNEL because
+those source identities supply it; the downstream scalar route key cannot
+represent both. The saved producer/plane-versus-contributor declaration is the
+boundary needing qualification. It must not be repaired by inventing a scalar
+channel, parsing a filename, dropping the guard or projecting two source
+identities as two label pixel planes without an actual output-axis declaration.
+
+732's current required_scalar_components exemption concerns actual contributor
+reduction and is used by Output's publication adapter. This manual saved-label
+path bypasses that adapter, and these retained planes have empty contributors.
+Therefore732 does NOT currently claim to repair this label reopening case.
+407 concerns typed DTO presentation and is unrelated. Historical515 is CLOSED
+and cannot serve as a current fix owner. The existing152 producer family is
+actively coordinated with Planck and Dewey; Singer retains receiving integration.
+No competing producer or Napari fallback implementation was started.
+
+Add one tiny saved-label control to the same next ordinary receiving packet
+after the original producer owner establishes its declaration: a channel-
+combined two-dimensional ObjectLabels output with exact two-channel source
+provenance, plus its matched raw routes. Reopen through ordinary output-plate
+inventory (not an invented historical source receipt). Require exact label
+pixels, producer identity, physical calibration, real source contributors and
+native settlement; never synthesize a scalar channel or duplicate label arrays.
+Retain an acquired label's valid scalar channel and malformed/missing lineage
+negative. This is an acceptance extension, NOT a claim that a new fixture or
+producer fix has already been implemented/installed. Coordinate the152 source
+patch in the shared candidate rather than starting a separate runtime/project.
