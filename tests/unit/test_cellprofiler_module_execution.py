@@ -12087,8 +12087,9 @@ def test_object_label_output_recorder_uses_output_label_domain() -> None:
 @pytest.mark.parametrize("carrier_axis", tuple(RuntimePlaneAxis))
 @pytest.mark.parametrize("module_name", (
     "ExpandOrShrinkObjects", "DilateObjects", "ShrinkToObjectCenters",
+    "ClassifyObjectsSingleMeasurement",
 ))
-def test_object_transform_uses_label_planes_instead_of_carrier_axis(
+def test_object_only_module_uses_label_planes_instead_of_carrier_axis(
     carrier_axis, module_name,
 ) -> None:
     labels = np.zeros((2, 7, 7), dtype=np.int32)
@@ -12116,29 +12117,51 @@ def test_object_transform_uses_label_planes_instead_of_carrier_axis(
         plane_projection=RuntimePlaneProjection.stack(2),
     )
     output_spec = _output_from_input("ExpandedObjects", "InputObjects")
+    classification = module_name == "ClassifyObjectsSingleMeasurement"
     measurement_spec = ArtifactSpec.output(
         f"{module_name}_measurements", MeasurementsArtifactType,
-        relations=(ArtifactSpecRelation(source=output_spec.ref()),),
+        relations=(ArtifactSpecRelation(
+            source=input_spec.ref() if classification else output_spec.ref()
+        ),),
     )
     executor = _module_executor(_compiled_callable_contract(
         CellProfilerModule.require_module(module_name).require_callable(),
-        artifact_inputs=(input_spec,), artifact_outputs=(measurement_spec, output_spec),
+        artifact_inputs=(input_spec,),
+        artifact_outputs=(measurement_spec,) if classification else (measurement_spec, output_spec),
     ))
     runtime.request = replace(runtime.request, artifact_outputs={
         spec.ref(): _artifact_output_plan(spec)
         for spec in executor.callable_contract.artifact_outputs
     })
     # The image only carries main flow; its three planes do not define the
-    # independent two-plane object-transform domain.
+    # independent two-plane object domain.
     carrier = ImagePayloadMetadata(plane_axis=carrier_axis).payload_with(
         np.zeros((3, 7, 7), dtype=np.float32)
     )
     result = _run_module(
         executor, carrier, cellprofiler_runtime=runtime,
         dtype_config=DtypeConfig(),
+        **({
+            "measurement_values": RuntimeSliceAlignedValues(slices=(
+                np.array([0.25]), np.array([0.75, 0.75, 0.75, 0.75]),
+            )),
+            "bin_count": 2,
+        } if classification else {}),
     )
-    recorded = runtime.objects[0][1]
     assert result is carrier
+    if classification:
+        rows = tuple(runtime.measurements[0].rows.row_mappings())
+        feature = ClassifyObjectsSingleMeasurementModule.MeasurementFeatureTemplate.OBJECT_CLASS
+        first_bin = feature.feature_name(bin_name="Bin_1")
+        second_bin = feature.feature_name(bin_name="Bin_2")
+        classified = tuple(
+            (row["slice_index"], row["object_label"], row[first_bin], row[second_bin])
+            for row in rows
+            if row.get(first_bin, 0) or row.get(second_bin, 0)
+        )
+        assert classified == ((0, 1, 1, 0), (1, 4, 0, 1))
+        return
+    recorded = runtime.objects[0][1]
     assert recorded.plane_axis is RuntimePlaneAxis.RUNTIME_SLICE
     assert recorded.domain.declared_object_id_domains == ((1,), (4,))
     assert (
