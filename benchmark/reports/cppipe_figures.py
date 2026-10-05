@@ -73,6 +73,10 @@ class SummarySource:
         """Historical variants share their first CellProfiler baseline."""
         return CELLPROFILER_LABEL
 
+    @property
+    def candidate_method(self) -> str:
+        return self.label
+
     def metric_rows(
         self,
         pipeline_name: str,
@@ -101,7 +105,7 @@ class SummarySource:
             ),
             BenchmarkMetricRow(
                 pipeline_name=pipeline_name,
-                method=self.label,
+                method=self.candidate_method,
                 assay_category=category.assay,
                 module_category=category.module,
                 accuracy_fraction=SUMMARY_ROW_NUMERICS.optional_float(
@@ -125,6 +129,10 @@ class MeasuredBatchSummarySource(SummarySource):
     @property
     def native_method(self) -> str:
         return f"CP ({self.label})"
+
+    @property
+    def candidate_method(self) -> str:
+        return f"OH ({self.label})"
 
 
 @dataclass(frozen=True)
@@ -677,7 +685,7 @@ def generate_measured_batch_figures(
     methods = tuple(
         method
         for source in summary_sources
-        for method in (source.native_method, source.label)
+        for method in (source.native_method, source.candidate_method)
     )
     if len(set(methods)) != len(methods):
         raise ValueError("Measured mode method labels must be distinct.")

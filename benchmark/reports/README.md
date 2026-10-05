@@ -10,7 +10,7 @@ For the singlewell execution headline:
 
 ```sh
 openhcs-benchmark plot-measured \
-  --summary-source 'OH 1well / 1worker=execution_summary.csv' \
+  --summary-source '1 well / 1 worker=execution_summary.csv' \
   --scope execution --output-dir figures/execution
 ```
 
@@ -18,8 +18,8 @@ For actual multiwell batch totals, supply one converted summary per measured mod
 
 ```sh
 openhcs-benchmark plot-measured \
-  --summary-source 'OH 1well / 1worker=1w_1t/total_summary.csv' \
-  --summary-source 'OH 8wells / 2workers=8w_2c/total_summary.csv' \
+  --summary-source '1 well / 1 worker=1w_1t/total_summary.csv' \
+  --summary-source '8 wells / 2 workers=8w_2c/total_summary.csv' \
   --scope total --output-dir figures/total
 ```
 
