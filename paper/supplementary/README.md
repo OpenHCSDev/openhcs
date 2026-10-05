@@ -1167,7 +1167,38 @@ repairs did not change the segmentation masks. The
 [final image review](../../figure-collection-20261004/H003-FRESH16-INDEPENDENT-FINAL-REVIEW.rst)
 retains twelve original raw/result/combined captures and the independently
 verified 1,083-file freeze. This is a first-method result after technical repair,
-not a manual-reference accuracy estimate.
+with image review and later reference scoring retained separately.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
+After both paired-field authors froze their results, their unchanged masks were
+compared with the matching BBBC007 manual outlines. Pixel identity establishes
+the curated field as official f9620/POS0005, rather than matching its renamed
+filename. One-to-one assignment accepts intersection over union at least 0.5.
+The earlier method and the repeat's final candidate give:
+
+| Result | Channel | Predictions | Matches | Closed regions | Object F1 |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Earlier | DNA | 55 | 42 | 47 | 0.824 |
+| Repeat | DNA | 53 | 37 | 47 | 0.740 |
+| Earlier | Actin | 55 | 38 | 54 | 0.697 |
+| Repeat | Actin | 53 | 36 | 54 | 0.673 |
+
+The directed fraction of adjacent-cell boundary pixels within two pixels of an
+original manual stroke was 0.695 and 0.715. The repeat improved that boundary
+measure but matched fewer closed regions. Reference interiors exclude open or
+frame-connected components without repairing gaps or assigning shared strokes;
+two nuclear and seven actin interiors have only one or two pixels and remain
+included. Predicted clipped objects are retained. These region diagnostics are
+not an exhaustive biological cell census, and nearest-outline boundary agreement
+can reward incomplete segmentation. No reference results reached the authors.
+The [postfreeze comparison](task_only_analysis/h003-fresh16-postfreeze-reference-comparison.json)
+retains exact input/reference identity, original freeze and scored-mask hashes,
+merged scorer identity and all metrics. The earlier reversed-polarity diagnostic
+was invalidated before publication; the historical held-out scores in
+Supplementary Data 7 used the already-correct outline interpretation.
 
 The fresh BBBC007 repeat covered all 16 DNA/actin pairs.
 Its final 1,335 primary and secondary label identities reconcile, but dense

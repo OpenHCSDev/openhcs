@@ -1,0 +1,117 @@
+{
+  "evaluation": "Postfreeze comparison of two independent H003 authors on the same BBBC007 field",
+  "date_utc": "2026-10-05",
+  "reference_feedback_to_authors": false,
+  "scientific_inputs_or_predictions_changed": false,
+  "observation_session": 64028,
+  "observation_exit_code": 0,
+  "merged_scorer_commit": "e99736388140e7ed910b413222a53501ec7d4a0d",
+  "scorer_source_sha256": {
+    "benchmark/validation/references.py": "099d1ad37058bb41a3cad9456d74fa08d32cfb4549a155e7efb124149a7f92c8",
+    "benchmark/validation/scoring.py": "57c23fe3efd4964d3ab353e5c156080d12e1289694952ce0a8ac4762251c4da1"
+  },
+  "scorer_source_exactly_matches_merged_commit": true,
+  "scorer_functions": ["Bbbc007ManualOutlineReference.load", "Bbbc007ManualOutlineReference.load_boundary", "instance_segmentation_metrics", "boundary_segmentation_metrics"],
+  "instance_match_iou": 0.5,
+  "instance_assignment": "one-to-one maximum-IoU Hungarian assignment, accepted at IoU >= 0.5",
+  "boundary_distance_pixels": 2.0,
+  "reference": {
+    "source_set_id": "BBBC007/f9620/POS0005",
+    "primary_page": "https://bbbc.broadinstitute.org/BBBC007",
+    "cache_root": "/run/media/ts/hdd/openhcs-science/trusted-reference-cache/BBBC007",
+    "identity_receipt": "H003-PIXEL-IDENTITY.rst",
+    "identity_receipt_sha256": "db1f0a44f43d6a469a18fbad048002399190180a579ab020b4255bd0e80139ac",
+    "image_archive_sha256": "b7009e2fce0a3152a5c9adda916eaa699d09696f4bd02a7d05d12d041e30c6d1",
+    "outline_archive_sha256": "6a5246f9a9d743d22eafdb409fae638a8461af97e9ff9c4a92f25eba236224d3",
+    "pixel_identity": "Both curated 400x400 uint8 channels equal component 0 of their official 400x400x3 TIFF pixel-for-pixel; no registration, resizing or cropping",
+    "DNA": {
+      "image_member": "BBBC007_v1_images/f9620/20P1_POS0005_D_1UL.tif",
+      "curated_file_sha256": "cb97674830100b30b15c13677a8753d5bc6b0c5773ce9c125914207eb8766607",
+      "decoded_pixel_sha256": "39e8fe4339fedd87740fa30a1b492d636b0aae6ecfd080a5ede5df2ea6a7d40d",
+      "outline_member": "BBBC007_v1_outlines/f9620/20P1_POS0005_D_1UL.tif",
+      "selected_outline_sha256": "a64948d4d3bac0c32a44a4c2f137ca4f9bf152f9dc4a8b2a6a4399588cc95103",
+      "closed_interiors": 47,
+      "excluded_frame_connected_components": 1,
+      "one_or_two_pixel_interiors": 2
+    },
+    "ACTIN": {
+      "image_member": "BBBC007_v1_images/f9620/20P1_POS0005_F_2UL.tif",
+      "curated_file_sha256": "74753e8d820a6982f0871a91643ae1883552977ab5d341a24ab0f07abc7f00f1",
+      "decoded_pixel_sha256": "4a4645ca78f974f57c44baa357961251bc3148d8b48921240a1f8a27917a9dbc",
+      "outline_member": "BBBC007_v1_outlines/f9620/20P1_POS0005_F_2UL.tif",
+      "selected_outline_sha256": "7832d385000b2aabe7c33cffdefa6313fba90cbd67ad9e2e9564742b30fd5b8f",
+      "closed_interiors": 54,
+      "excluded_frame_connected_components": 2,
+      "one_or_two_pixel_interiors": 7
+    },
+    "instance_policy": "Four-connected zero interiors; exclude frame-connected components and stroke pixels; no annotation size filtering, gap closing or contact ownership inference",
+    "boundary_policy": "Original nonzero stroke union, including open/frame contours; relevant predicted boundaries exclude background/frame adjacency; nearest-union correspondence",
+    "limitations": ["Closed regions are not a certified exhaustive biological cell census", "Tiny annotation regions remain included", "Predicted clipped objects are not filtered to match reference exclusions", "Directed boundary agreement can reward incomplete segmentation", "One shared field does not estimate population-level repeat reliability", "Published BBBC007 comparisons may condition on manual foreground/seeds and are not like-for-like autonomous baselines"]
+  },
+  "runs": [
+    {
+      "run": "H003_FRESH16_94",
+      "control_output": "/home/ts/wt/openhcs-issue-batch-20260929/next-h003-fresh16-94-after-h004dev-20261005/H003_FRESH16_94/author-workspace/output",
+      "result_root": "/run/media/ts/hdd/openhcs-science/next-h003-fresh16-94-after-h004dev-20261005/H003_FRESH16_94/source_final/results",
+      "pipeline": "attempts/final/pipeline.py",
+      "pipeline_sha256": "01990144c9a04fd3639ce727c98420a2f930e3d41be247a26cd8496ae1e0ca88",
+      "freeze_manifest": "frozen-manifest.json",
+      "freeze_manifest_sha256": "97b5121f1adf855865f418470ce096f409cfa019217cb5d3ce2b5aa048ae0240",
+      "handoff": "final-handoff.json",
+      "handoff_sha256": "bae887f2f992b911c092a92bfa8185463eaed9cb5e253dfae2da06e9007141d0",
+      "execution_id": "ca17b8eb-ee1a-47ba-b1a9-95eb93e49e19",
+      "execution_status": "complete",
+      "scored_labels_verified_against_original_manifest": true,
+      "scientific_method_changed_after_first": false,
+      "technical_repairs": "transport/source binding and final artifact publication; earlier visual review retains provenance",
+      "channels": [
+        {
+          "channel": "DNA",
+          "labels_filename": "A02_channel-1_z_index-1_timepoint-1_Nuclei_step0.labels.tif",
+          "labels_sha256": "10c29b33c39e0b49981787e1d4704e1bdb65340a7000641f51f2e1343c4e7ce5",
+          "instance": {"reference_count":47,"predicted_count":55,"true_positive_count":42,"false_positive_count":13,"false_negative_count":5,"precision":0.7636363636363637,"recall":0.8936170212765957,"f1":0.8235294117647058,"mean_matched_iou":0.6617482389307009,"panoptic_quality":0.5449691379429301,"aggregated_jaccard_index":0.5412773958516952,"split_reference_count":3,"merged_prediction_count":3,"count_error":8,"relative_count_error":0.1702127659574468},
+          "boundary": {"relevant_predicted_boundary_pixels":120,"relevant_boundary_within_two_pixels":0.7416666666666667,"boundary_precision_within_two_pixels":0.8328162702516374,"boundary_recall_within_two_pixels":0.8968139029688631,"boundary_f1_within_two_pixels":0.8636311060527816,"correspondence":"nearest_union_of_manual_outline_strokes"}
+        },
+        {
+          "channel": "ACTIN",
+          "labels_filename": "A02_channel-2_z_index-1_timepoint-1_Cells_step1.labels.tif",
+          "labels_sha256": "6df9ba238447c030515c213ac02d9d1a753ae4d4da21fa0bdd26d75f3b110e04",
+          "instance": {"reference_count":54,"predicted_count":55,"true_positive_count":38,"false_positive_count":17,"false_negative_count":16,"precision":0.6909090909090909,"recall":0.7037037037037037,"f1":0.6972477064220184,"mean_matched_iou":0.6747455678681121,"panoptic_quality":0.47046479961446347,"aggregated_jaccard_index":0.5308035376823645,"split_reference_count":31,"merged_prediction_count":29,"count_error":1,"relative_count_error":0.018518518518518517},
+          "boundary": {"relevant_predicted_boundary_pixels":3180,"relevant_boundary_within_two_pixels":0.6949685534591195,"boundary_precision_within_two_pixels":0.6545060802931867,"boundary_recall_within_two_pixels":0.6363031177188505,"boundary_f1_within_two_pixels":0.6452762501195244,"correspondence":"nearest_union_of_manual_outline_strokes"}
+        }
+      ]
+    },
+    {
+      "run": "H003_FRESH16_NEXT94",
+      "control_output": "/home/ts/wt/openhcs-issue-batch-20260929/next-h003-fresh16-94-after-recovery-20261005/H003_FRESH16_NEXT94/author-workspace/output",
+      "result_root": "/run/media/ts/hdd/openhcs-science/next-h003-fresh16-94-after-recovery-20261005/H003_FRESH16_NEXT94/candidate05/raw-workspace_analysis01/results",
+      "pipeline": "final-pipeline.py",
+      "pipeline_sha256": "6814f6c73242e665fc47e1c93177260358dfd1281cdd07949072d748a1b04d27",
+      "freeze_manifest": "payload-manifest.json",
+      "freeze_manifest_sha256": "5077095a8acc50c3a59df3f71f4bd93b33cc3126408f216865c6f77a89e53907",
+      "handoff": "final-freeze.json",
+      "handoff_sha256": "59914f15371d79e46f0abb759a20f4e9bfe13fe946e31a150c4d1a581fb2de59",
+      "execution_id": "0d5e94af-4fab-4a1c-8fa9-62beaffc8e07",
+      "execution_status": "completed",
+      "scored_labels_verified_against_original_manifest": true,
+      "final_candidate": "candidate05",
+      "scientific_method_changed_after_first": true,
+      "channels": [
+        {
+          "channel": "DNA",
+          "labels_filename": "A02_site-1_z_index-1_timepoint-1_Nuclei_step0.labels.tif",
+          "labels_sha256": "003c20787adcd0a4f8e70c23912600f1452e1462fcd5f0d0295e4e477425f3de",
+          "instance": {"reference_count":47,"predicted_count":53,"true_positive_count":37,"false_positive_count":16,"false_negative_count":10,"precision":0.6981132075471698,"recall":0.7872340425531915,"f1":0.74,"mean_matched_iou":0.6016536857308601,"panoptic_quality":0.4452237274408365,"aggregated_jaccard_index":0.48315419594873915,"split_reference_count":0,"merged_prediction_count":1,"count_error":6,"relative_count_error":0.1276595744680851},
+          "boundary": {"relevant_predicted_boundary_pixels":132,"relevant_boundary_within_two_pixels":0.5833333333333334,"boundary_precision_within_two_pixels":0.800327868852459,"boundary_recall_within_two_pixels":0.833816075307748,"boundary_f1_within_two_pixels":0.8167288383018338,"correspondence":"nearest_union_of_manual_outline_strokes"}
+        },
+        {
+          "channel": "ACTIN",
+          "labels_filename": "A02_site-1_z_index-1_timepoint-1_Cells_step1.labels.tif",
+          "labels_sha256": "83ee8c9631c48c2adbc360dc511dfa8df06b5156e753adb2cda0c464fe395da6",
+          "instance": {"reference_count":54,"predicted_count":53,"true_positive_count":36,"false_positive_count":17,"false_negative_count":18,"precision":0.6792452830188679,"recall":0.6666666666666666,"f1":0.6728971962616822,"mean_matched_iou":0.6738672678423968,"panoptic_quality":0.4534433951836689,"aggregated_jaccard_index":0.5358937544867193,"split_reference_count":30,"merged_prediction_count":29,"count_error":-1,"relative_count_error":0.018518518518518517},
+          "boundary": {"relevant_predicted_boundary_pixels":3047,"relevant_boundary_within_two_pixels":0.7148014440433214,"boundary_precision_within_two_pixels":0.6685073339085419,"boundary_recall_within_two_pixels":0.6308665261289249,"boundary_f1_within_two_pixels":0.649141732653342,"correspondence":"nearest_union_of_manual_outline_strokes"}
+        }
+      ]
+    }
+  ]
+}
