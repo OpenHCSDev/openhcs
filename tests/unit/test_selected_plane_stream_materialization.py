@@ -47,9 +47,13 @@ from openhcs.core.steps.function_artifact_materialization import (
     runtime_artifact_materializations,
 )
 from openhcs.processing.backends.analysis.neurite_outgrowth import (
+    NeuriteAdmissionPlanes,
     neurite_outgrowth_metaxpress,
     NeuriteOutgrowthSummary,
     NeuriteOutgrowthCellResult,
+)
+from openhcs.processing.backends.cellprofiler.primary_object_diagnostics import (
+    SelectedDiagnosticPlaneImageOutput,
 )
 from openhcs.processing.materialization import materialize
 
@@ -87,14 +91,22 @@ def _source_stack(axis, component="channel"):
 
 
 @pytest.mark.parametrize("axis", tuple(RuntimePlaneAxis))
+@pytest.mark.parametrize(
+    "output_type,artifact_name,dtype",
+    (
+        (SelectedPlaneImageOutput, "neurite_candidate_mask", np.uint16),
+        (SelectedDiagnosticPlaneImageOutput, "neurite_enhanced_response", np.float32),
+    ),
+)
 def test_public_selected_checkpoint_materializes_and_streams_without_storage_axes(
     axis,
+    output_type, artifact_name, dtype,
     tmp_path,
     monkeypatch,
 ):
     source = _source_stack(axis)
-    pixels = np.arange(56, dtype=np.uint16).reshape(1, 7, 8)
-    selected = SelectedPlaneImageOutput(pixels, (1,))
+    pixels = np.arange(56, dtype=dtype).reshape(1, 7, 8)
+    selected = output_type(pixels, (1,))
     payload = ImageArtifactType.contextualize_output(
         source,
         selected,
@@ -106,7 +118,7 @@ def test_public_selected_checkpoint_materializes_and_streams_without_storage_axe
         for spec in CallableContract.from_callable(
             neurite_outgrowth_metaxpress
         ).artifact_outputs
-        if spec.name == "neurite_candidate_mask"
+        if spec.name == artifact_name
     )
     viewer = NapariStreamingBackend()
     filemanager = FileManager(
@@ -235,6 +247,40 @@ def test_independent_leaf_and_capabilities_execute_cooperative_selection_hooks()
     np.testing.assert_array_equal(np.asarray(payload), selected.data)
 
 
+def test_new_diagnostic_leaf_composes_cooperative_hooks_without_consumer_edits():
+    calls = []
+
+    class ObservedProjection:
+        def resolve_source_context(self, source, projection):
+            calls.append("before")
+            result = super().resolve_source_context(source, projection)
+            calls.append("after")
+            return result
+
+        def selected_source_plane_indices(self):
+            calls.append("selection")
+            return super().selected_source_plane_indices()
+
+    class DeclaredResponse(ObservedProjection, SelectedDiagnosticPlaneImageOutput):
+        pass
+
+    source = _source_stack(RuntimePlaneAxis.SOURCE_BINDING)
+    pixels = np.full((1, 7, 8), .75, dtype=np.float32)
+    response = DeclaredResponse(pixels, (1,))
+    calls.clear()
+    payload = ImageArtifactType.contextualize_output(
+        source, response, None,
+        RuntimePlaneAxisValueProjection.preserve(
+            axis=RuntimePlaneAxis.SOURCE_BINDING, axis_size=2
+        ),
+    )
+    assert calls == ["before", "selection", "after"]
+    np.testing.assert_array_equal(np.asarray(payload), pixels[0])
+    assert image_payload_metadata(payload).source_image_names == ("FITC",)
+    assert image_payload_metadata(payload).intensity_scale is None
+    assert image_payload_metadata(payload).source_dtype == "float32"
+
+
 def test_all_public_declared_outputs_persist_with_selected_qa_streams(
     tmp_path, monkeypatch, viewer_ack_return_route
 ):
@@ -279,6 +325,11 @@ def test_all_public_declared_outputs_persist_with_selected_qa_streams(
             SelectedPlaneImageOutput((labels[1] > 0).astype(np.uint8)[None], (1,))
             for _ in range(5)
         ),
+        *NeuriteAdmissionPlanes(
+            np.asarray(source)[1].astype(np.float32),
+            labels[1] > 0, labels[1] > 0,
+            np.asarray(source)[1].astype(np.float32), labels[1] > 0,
+        ).selected_outputs(1),
         graph,
     )
     specs = CallableContract.from_callable(
@@ -341,7 +392,7 @@ def test_all_public_declared_outputs_persist_with_selected_qa_streams(
         assert {item.output_plan.name for item in materializations} == set(
             specs.names()
         )
-        assert len(materializations) == 12
+        assert len(materializations) == 12 + len(NeuriteAdmissionPlanes._fields)
         for item in materializations:
             outputs = item.outputs(plan, context)
             assert outputs
@@ -351,7 +402,7 @@ def test_all_public_declared_outputs_persist_with_selected_qa_streams(
             for data, paths, request in saved_streams
             if paths[0].endswith(".checkpoint.tif")
         ]
-        assert len(checkpoints) == 5
+        assert len(checkpoints) == 5 + len(NeuriteAdmissionPlanes._fields)
         for (data,), (path,), request in checkpoints:
             assert (
                 request.source.metadata.component_metadata_for_item(path, 0)["channel"]
