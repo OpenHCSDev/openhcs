@@ -13,7 +13,7 @@ import subprocess
 from collections import Counter
 from collections.abc import Mapping
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import replace
+from dataclasses import asdict, replace
 from pathlib import Path
 from typing import Any
 
@@ -38,6 +38,11 @@ from benchmark.cellprofiler_export_equivalence import (
 )
 from benchmark.control import inspect_measured_pipeline_run
 from benchmark.file_digest import sha256_file
+from benchmark.native_batch_contracts import (
+    NativeBatchEnvironment,
+    NativeBatchReport,
+    NativeBatchRequest,
+)
 from benchmark.openhcs_measured_run import (
     _ZMQProgressTimingObserver,
     execute_measured_openhcs_pipeline_on_client,
@@ -133,6 +138,11 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--openhcs-workers", type=int, default=1)
     parser.add_argument("--native-jobs", type=int, default=1)
     parser.add_argument("--native-python", type=Path, required=True)
+    parser.add_argument(
+        "--native-reference-root",
+        type=Path,
+        help="Existing cases root with genuine native reports; missing cases run fresh.",
+    )
     return parser
 
 
@@ -432,6 +442,162 @@ def _invoke_native_worker(
     return json.loads(report_path.read_text())
 
 
+def _probe_native_environment(
+    native_python: Path,
+    native_worker: Path,
+) -> NativeBatchEnvironment:
+    """Consume the native report owner's capture without Java or pipeline execution."""
+    result = subprocess.run(
+        (str(native_python), str(native_worker), "--environment"),
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=60,
+    )
+    return NativeBatchEnvironment(**json.loads(result.stdout))
+
+
+def _native_reference_inventory(paths: frozenset[Path]) -> tuple[dict[str, str], ...]:
+    return tuple(
+        {"path": str(path), "sha256": sha256_file(path)} for path in sorted(paths)
+    )
+
+
+def _reuse_native_report(
+    reference_case: Path,
+    *,
+    native_payload: Mapping[str, object],
+    native_python: Path,
+    native_worker: Path,
+    provenance: dict[str, object],
+) -> dict[str, object]:
+    """Qualify native measurements independently of the candidate's source revision."""
+    if sha256_file(native_worker) != provenance["native_worker_sha256"]:
+        raise RuntimeError("Current native worker differs from its declared source.")
+    if (
+        sha256_file(native_worker.with_name("native_batch_contracts.py"))
+        != provenance["native_contract_sha256"]
+    ):
+        raise RuntimeError(
+            "Current native report contract differs from its declared source."
+        )
+    report_path = reference_case / "native_report.json"
+    origin_path = reference_case / "pilot_provenance.json"
+    request_path = reference_case / "native_request.json"
+    report = json.loads(report_path.read_text())
+    typed_report = NativeBatchReport.from_payload(report)
+    origin = json.loads(origin_path.read_text())
+    request = typed_report.request
+    original_request = NativeBatchRequest(**json.loads(request_path.read_text()))
+    if request != original_request:
+        raise RuntimeError("Retained native report differs from its original request.")
+    request.require_same_workload(NativeBatchRequest(**native_payload))
+    for key in (
+        "case",
+        "wells",
+        "selected_source_wells",
+        "assignment_scope",
+        "cppipe_sha256",
+        "native_worker_sha256",
+        "native_contract_sha256",
+        "native_job_count",
+        "thread_environment",
+    ):
+        if origin[key] != json.loads(json.dumps(provenance[key])):
+            raise RuntimeError(f"Retained native reference differs in {key}.")
+    if origin["native_job_count"] != 1:
+        raise RuntimeError(
+            "Retained native shards require barrier-specific qualification."
+        )
+    # Exact prepared bytes reject unsupported path-dependent differences rather
+    # than normalizing arbitrary CPPipe fields or accepting a changed input role.
+    original_pipeline = Path(request.pipeline_path)
+    current_pipeline = Path(native_payload["pipeline_path"])
+    if sha256_file(original_pipeline) != sha256_file(current_pipeline):
+        raise RuntimeError("Retained native effective CPPipe bytes differ.")
+    original_file_list = request.file_list_path
+    current_file_list = native_payload["file_list_path"]
+    if (original_file_list is None) != (current_file_list is None) or (
+        original_file_list is not None
+        and Path(original_file_list).read_bytes()
+        != Path(current_file_list).read_bytes()
+    ):
+        raise RuntimeError("Retained native ordered source file list differs.")
+    current_inventory = json.loads(json.dumps(provenance["native_input_inventory"]))
+    original_inventory = json.loads(
+        json.dumps(_source_input_inventory(Path(request.input_dir)))
+    )
+    if (
+        original_inventory != origin["native_input_inventory"]
+        or original_inventory != current_inventory
+    ):
+        raise RuntimeError("Retained native source images or metadata differ.")
+    typed_report.environment.require_equivalent(
+        _probe_native_environment(native_python, native_worker)
+    )
+    typed_report.require_complete(int(native_payload["repetitions"]))
+    if any(
+        row["image_set_count"] != origin["native_image_set_count"]
+        for row in report["observations"]
+    ):
+        raise RuntimeError(
+            "Retained native image-set domain changed between observations."
+        )
+    outputs = frozenset(
+        path
+        for row in report["observations"]
+        for path in Path(row["output_root"]).rglob("*")
+        if path.is_file()
+    )
+    candidate_path = reference_case / "candidate_report.json"
+    if candidate_path.is_file():
+        for row in json.loads(candidate_path.read_text()):
+            run_root = Path(request.output_root) / str(row["repetition"])
+            files = frozenset(path for path in run_root.rglob("*") if path.is_file())
+            if (
+                json.loads(json.dumps(_output_inventory(run_root, files)))
+                != row["native_output_inventory"]
+            ):
+                raise RuntimeError("Previously inventoried native outputs changed.")
+    source_files = {report_path, origin_path, request_path, original_pipeline}
+    if original_file_list is not None:
+        source_files.add(Path(original_file_list))
+    provenance.update(
+        native_reference_report_path=str(report_path),
+        native_reference_report_sha256=sha256_file(report_path),
+        native_reference_source_commit=origin.get(
+            "native_reference_source_commit", origin["source_commit"]
+        ),
+        native_reference_file_inventory=_native_reference_inventory(
+            outputs | frozenset(source_files)
+        ),
+    )
+    return report
+
+
+def _require_native_reference_unchanged(provenance: Mapping[str, object]) -> None:
+    """Retained inputs and outputs stay untouched throughout fresh scientific checks."""
+    if "native_reference_file_inventory" not in provenance:
+        return
+    before = provenance["native_reference_file_inventory"]
+    paths = frozenset(Path(row["path"]) for row in before)
+    report = NativeBatchReport.from_payload(
+        json.loads(Path(provenance["native_reference_report_path"]).read_text())
+    )
+    paths |= frozenset(
+        path
+        for observation in report.observations
+        for path in Path(observation.output_root).rglob("*")
+        if path.is_file()
+    )
+    if json.loads(json.dumps(_native_reference_inventory(paths))) != json.loads(
+        json.dumps(before)
+    ):
+        raise RuntimeError(
+            "Retained native reference files changed during qualification."
+        )
+
+
 def _worker_axis_evidence(
     events: tuple[ProgressEvent, ...],
     *,
@@ -549,6 +715,11 @@ def main(argv: list[str] | None = None) -> int:
         raise ValueError(
             "Native and OpenHCS worker counts must match in a concurrency pilot."
         )
+    if args.native_reference_root is not None:
+        if args.native_jobs != 1:
+            raise ValueError("Retained native shard reuse is not supported.")
+        if not args.native_reference_root.expanduser().is_dir():
+            raise FileNotFoundError("Native reference cases root does not exist.")
     if args.repeat_assignments is not None and args.repeat_assignments < 1:
         raise ValueError("Repeated assignment count must be positive.")
     cases = load_comparison_cases(args.manifest.expanduser().resolve())
@@ -559,7 +730,9 @@ def main(argv: list[str] | None = None) -> int:
         raise ValueError(f"No manifest case matches {args.case!r}.")
     output_root = args.output_dir.expanduser().resolve()
     if output_root.exists() and any(output_root.iterdir()):
-        raise FileExistsError(f"Matched pilot output directory must be empty: {output_root}")
+        raise FileExistsError(
+            f"Matched pilot output directory must be empty: {output_root}"
+        )
     port = DataControlPortPairAuthority.acquire(
         OPENHCS_ZMQ_CONFIG,
         transport_mode=OPENHCS_ZMQ_CONFIG.transport_mode,
@@ -568,7 +741,9 @@ def main(argv: list[str] | None = None) -> int:
         for case in selected_cases:
             case_args = argparse.Namespace(**vars(args))
             case_args.case = case.name
-            case_args.output_dir = output_root / case.name if args.all_cases else output_root
+            case_args.output_dir = (
+                output_root / case.name if args.all_cases else output_root
+            )
             _run_case(case_args, client)
     return 0
 
@@ -654,6 +829,9 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
         "native_worker_sha256": sha256_file(
             project_root / "benchmark/native_cellprofiler_batch_worker.py"
         ),
+        "native_contract_sha256": sha256_file(
+            project_root / "benchmark/native_batch_contracts.py"
+        ),
         "source_commit": source_commit,
         "source_dirty": source_dirty,
         "native_job_count": args.native_jobs,
@@ -726,15 +904,34 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
     native_request_path.write_text(json.dumps(native_payload, indent=2))
     native_python = _native_python_executable(args.native_python, project_root)
     native_worker = project_root / "benchmark/native_cellprofiler_batch_worker.py"
-    native_report = _invoke_native_worker(
-        native_python=native_python,
-        worker_script=native_worker,
-        request_path=native_request_path,
-        evidence_prefix=root / "native",
-        project_root=project_root,
-        repetitions=args.repetitions,
-        timeout_seconds=native_request.timeout_seconds,
+    reference_case = (
+        args.native_reference_root.expanduser().resolve() / case.name
+        if args.native_reference_root is not None
+        else None
     )
+    if reference_case is not None and reference_case.exists():
+        native_report = _reuse_native_report(
+            reference_case,
+            native_payload=native_payload,
+            native_python=native_python,
+            native_worker=native_worker,
+            provenance=provenance,
+        )
+        native_request_path.write_text(
+            json.dumps(
+                asdict(NativeBatchReport.from_payload(native_report).request), indent=2
+            )
+        )
+    else:
+        native_report = _invoke_native_worker(
+            native_python=native_python,
+            worker_script=native_worker,
+            request_path=native_request_path,
+            evidence_prefix=root / "native",
+            project_root=project_root,
+            repetitions=args.repetitions,
+            timeout_seconds=native_request.timeout_seconds,
+        )
     (root / "native_report.json").write_text(json.dumps(native_report, indent=2))
     native_image_set_counts = {
         observation["image_set_count"] for observation in native_report["observations"]
@@ -772,7 +969,14 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
         )
     provenance["native_image_set_count"] = native_image_set_count
     (root / "pilot_provenance.json").write_text(json.dumps(provenance, indent=2))
-    print("Native warm-up and observed batches complete.", flush=True)
+    print(
+        (
+            "Validated retained genuine native batches."
+            if "native_reference_report_path" in provenance
+            else "Native warm-up and observed batches complete."
+        ),
+        flush=True,
+    )
 
     policy = _strict_cellprofiler_runtime_equivalence_policy()
     (root / "equivalence_policy.json").write_text(
@@ -1047,7 +1251,7 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
             if owned_exports is not None
             else RuntimeExportObservation.from_output_roots(completed.output_roots)
         )
-        native_root = root / "native" / str(repetition)
+        native_root = Path(native_report["observations"][repetition + 1]["output_root"])
         declared_output_files = (
             frozenset(Path(path) for path in owned_exports.output_files)
             if owned_exports is not None
@@ -1211,9 +1415,7 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
             "receipt_path": str(evidence_dir / "measured_pipeline_receipt.json"),
         }
         observations.append(result)
-        (root / "candidate_report.json").write_text(
-            json.dumps(observations, indent=2)
-        )
+        (root / "candidate_report.json").write_text(json.dumps(observations, indent=2))
         print(
             f"OpenHCS batch {repetition}: {completed.axis_count} axes, "
             f"{len(result['database_differences'])} database and "
@@ -1243,6 +1445,7 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
     final_input_inventory = _source_input_inventory(native_domain.input_dir)
     if final_input_inventory != provenance["native_input_inventory"]:
         raise RuntimeError("Native source images or metadata changed during pilot.")
+    _require_native_reference_unchanged(provenance)
     provenance["native_input_inventory_after"] = final_input_inventory
     (root / "pilot_provenance.json").write_text(json.dumps(provenance, indent=2))
 
@@ -1257,6 +1460,12 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
             "and full invocation are separate; OpenHCS worker execution and complete "
             "client operation are separate. Repeated assignments are independently "
             "executed source copies, not projected timings or additional genuine wells."
+            + (
+                " Native timings and output roots were reused from genuine retained "
+                "observations; their original source and report SHA are recorded separately."
+                if "native_reference_report_path" in provenance
+                else ""
+            )
         ),
     }
     (root / "report.json").write_text(json.dumps(report, indent=2))
