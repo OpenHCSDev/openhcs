@@ -1241,6 +1241,16 @@ records exact scorer, reference and prediction hashes, coordinate columns and
 all four evaluations. The [postfreeze comparison](../../figure-collection-20261004/H002-FRESH15-POSTFREEZE-LOCALISATION.rst)
 records its independent execution and reproduction procedure.
 
+Main Figure 9 combines three original native image/Points captures with the
+10-voxel and primary 30-voxel comparisons from that receipt. Its
+[source record](../figures/slas/h002_firstmethod_sources/source-receipt.json)
+retains their original paths, sizes and frozen-manifest hashes. The
+[figure receipt](../figures/slas/h002_measurement_first_provenance.json)
+records source, generator and output hashes plus editorial crop coordinates.
+Points and image pixels are not retouched; the figure does not show mask
+boundaries or establish whole-volume counting accuracy. Original raw-only and
+point-only controls remain identified in the independent review.
+
 The final pipeline SHA-256 is
 `41dc592d5cfa21e9cfa2ff0242626051363bc6ddede401d5e1e4bf9201d51d44`;
 the registered custom callable SHA-256 is

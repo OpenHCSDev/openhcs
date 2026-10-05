@@ -320,6 +320,61 @@ def task_only_story():
         sheet.save()
 
 
+def h002_measurement_first():
+    """Retained native views and postfreeze centre agreement, without scoring."""
+    source_root = OUTPUT / "h002_firstmethod_sources"
+    source_path = source_root / "source-receipt.json"
+    evaluation_path = ROOT / "paper/supplementary/task_only_analysis/h002-fresh15-postfreeze-evaluation.json"
+    sources = json.loads(source_path.read_text())
+    evaluation = json.loads(evaluation_path.read_text())
+    if sources["author_run"] != evaluation["author_run"]:
+        raise ValueError("Native captures and evaluation name different authors")
+    with plt.rc_context({"font.size": 13, "axes.spines.top": False,
+                         "axes.spines.right": False}):
+        sheet = FigureSheet("h002_measurement_first", "", 7.3)
+        sheet.source(source_path)
+        sheet.source(evaluation_path)
+        sheet.source(ROOT / "figure-collection-20261004/H002-FRESH15-INDEPENDENT-CENTRES-REVIEW.rst")
+        sheet.text(3, 98, "Measurement-first autonomous 3D localisation",
+                   size=17, weight="bold", va="top")
+        sheet.text(3, 93, "A  XY: native image and predicted centres", size=13, weight="bold")
+        sheet.text(55, 93, "B  XZ: ordinary-body centre", size=13, weight="bold")
+        sheet.text(55, 65, "C  YZ: ordinary-body centre", size=13, weight="bold")
+        for name, bounds, crop in (
+            ("xy", (3, 42, 47, 49), (560, 35, 985, 468)),
+            ("xz", (55, 73, 42, 18), (690, 185, 1215, 320)),
+            ("yz", (55, 45, 42, 18), (690, 185, 1215, 320)),
+        ):
+            path = source_root / f"{name}.png"
+            if digest(path) != sources["captures"][name]["sha256"]:
+                raise ValueError(f"Frozen native capture changed: {name}")
+            sheet.source_image(path, bounds, crop=crop)
+        sheet.text(55, 70, "Y = 157 voxels", size=11, color=MUTED)
+        sheet.text(55, 42, "X = 80 voxels", size=11, color=MUTED)
+        sheet.text(3, 38, "Green points are original native predictions; out-of-plane points are hidden",
+                   size=11, color=MUTED)
+        axis = sheet.figure.add_axes((.12, .14, .39, .18))
+        thresholds = (10, evaluation["primary_threshold_voxels"])
+        matches = [evaluation["scores"][str(value)]["true_positives"] for value in thresholds]
+        total = evaluation["scores"][str(thresholds[-1])]["reference_points"]
+        axis.bar((0, 1), matches, color=(BLUE, TEAL), width=.5)
+        for index, matched in enumerate(matches):
+            axis.text(index, matched + .3, f"{matched}/{total}", ha="center", size=13)
+        axis.set(xticks=(0, 1), xticklabels=(f"{thresholds[0]} voxels", f"{thresholds[1]} voxels\n(primary)"),
+                 ylim=(0, total+2), yticks=(0, 5, 10, 15), ylabel="Matched manual centres")
+        axis.set_title("D  Postfreeze one-to-one matching", size=13)
+        axis.grid(axis="y", color="#d9e0e5", linewidth=.6)
+        axis.set_axisbelow(True)
+        primary = evaluation["scores"][str(thresholds[-1])]
+        sheet.text(58, 31, f"{primary['predicted_points']} candidate centres", size=15, weight="bold")
+        sheet.text(58, 26, f"Mean matched error: {primary['mean_localisation_error_voxels']:.2f} voxels", size=12)
+        sheet.text(58, 21, f"{primary['false_positives']} predictions unmatched to annotations", size=12)
+        sheet.text(58, 15, "Annotation completeness is unestablished;\nunmatched does not mean biologically false", size=11, color=MUTED)
+        sheet.text(50, 3, "One scientific method • technical rerun only • localisation, not boundary accuracy",
+                   size=11, ha="center", color=MUTED)
+        sheet.save()
+
+
 def translocation_repeat():
     """Plot frozen native well summaries, without rerunning scientific analysis."""
     source_path = ROOT / "paper/supplementary/task_only_analysis/bbbc013-fresh13-plot-source.json"
