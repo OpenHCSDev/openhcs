@@ -6776,6 +6776,55 @@ def test_resolved_measurement_image_preserves_runtime_slice_projection() -> None
     )
 
 
+@pytest.mark.parametrize("aliases", (("Process", "Nuclear"), ("Nuclear", "Process")))
+def test_multi_image_photometry_consumes_each_named_current_source(aliases):
+    from openhcs.processing.backends.cellprofiler.intensity import (
+        ObjectIntensityPreparedLabels,
+        object_intensity_backend,
+    )
+
+    images = {name: np.zeros((4, 5), dtype=np.uint8) for name in aliases}
+    images["Process"][1, 2] = 221
+    images["Nuclear"][2, 3] = 255
+    payload = ImagePayloadMetadata(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        source_image_names=aliases,
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=tuple(f"/synthetic/{name}.tif" for name in aliases),
+            component_metadata=tuple({"channel": str(index + 1)} for index in range(2)),
+        ),
+    ).payload_with(np.stack(tuple(images[name] for name in aliases)))
+    image_specs = tuple(ArtifactSpec.input(name, ImageArtifactType) for name in aliases)
+    contract = _compiled_callable_contract(
+        MeasureObjectIntensityModule.require_callable(), artifact_inputs=image_specs,
+    )
+    executor = _module_executor(contract)
+    runtime = _FakeCellProfilerRuntime(
+        {}, callable_contract=contract,
+        source_bindings=tuple(NamedSourceBinding(alias=name) for name in aliases),
+        artifact_input_edges=tuple(_artifact_input_edge_for_test(spec, stored=False) for spec in image_specs),
+    )
+    measurement_images = executor._resolved_measurement_images(
+        image_specs, runtime, payload,
+        reference_domain=CellProfilerMeasurementImageDomain.OBJECT_LABELS,
+    )
+    labels = ObjectLabelSet(
+        name="Cells", variant_data=ObjectLabelVariantData(labels=np.ones((4, 5), dtype=np.int32)),
+        domain=ObjectLabelDomain(declared_object_count=1),
+    )
+    for source in measurement_images:
+        prepared = source.prepare_object_labels(labels, plane_projector=runtime)
+        image = image_payload_data(prepared.aligned_image)
+        np.testing.assert_allclose(image, images[source.source_image_name] / 255.0)
+        arrays = object_intensity_backend().measure_prepared(
+            image, ObjectIntensityPreparedLabels.from_source(prepared.completion_payload, prepared.measurement_labels),
+        )
+        expected = {"Process": (221 / 255.0, 1, 2), "Nuclear": (1.0, 2, 3)}[source.source_image_name]
+        np.testing.assert_allclose(arrays.max_intensity, (expected[0],))
+        np.testing.assert_allclose(arrays.max_intensity_y, (expected[1],))
+        np.testing.assert_allclose(arrays.max_intensity_x, (expected[2],))
+
+
 def test_object_intensity_measurement_image_batch_preserves_request_labels() -> None:
     from openhcs.core.runtime_batch_contracts import RuntimeBatchInvocationRequest
     from openhcs.processing.backends.cellprofiler._backend import (
