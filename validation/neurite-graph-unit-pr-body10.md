@@ -26,3 +26,9 @@ Earlier graph/unit archives and scientific records remain intact.
 One ordinary whole candidate must expose the registered pixel callable through MCP, compile/execute on a tiny source with no asserted physical calibration, read unit-bearing CSV/graph ROI, and reopen that saved graph at original source coordinates/native calibration. Physical calibration negatives and no pixel SWC must remain strict. The ordinary all-output streaming fixture needs its matching environment. Source execution/writer proof is **not** installed/native or biological acceptance.
 
 All original owned source-check handles are terminal, no UNKNOWN replay. No new build/install/native/viewer/client/provider or current scientist contact/hotpatch. CI deferred; receiving remains named and active, not a historical owner hold.
+
+### Current ordinary receiving handoff
+
+Planck's existing receiving17 `SOURCE-NEXT02.json` already includes this exact pending #541 source. Its main-only build01 is **not** #541 installed proof. Original PI0.2.1/ZMQ0.4.1 wheels are qualified; Root's original ObjectState1.3.1 wheel/SHA handoff remains missing (release endpoint404, ObjectState25 comment6001052886). Original qualified private artifact handoff, not queued CI completion, unblocks Planck's one whole candidate. Dewey owns the released native/viewer lane; no second client or old16 overlay.
+
+[Prepared public receiving packet](validation/neurite-pixel-public541/RECEIVING.rst): original tiny branched fixture, complete registered pixel document, exact CSV/ROI/native-reopen/ACK expectations, and original ACK-fixture helper closure. Syntax parsing only is qualified for the two prepared scripts; installed validation/execution remains pending. Production bytes and all archived failures are unchanged.

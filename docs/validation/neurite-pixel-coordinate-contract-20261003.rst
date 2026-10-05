@@ -691,3 +691,43 @@ source21 controls/AST/R0/parser. AST21 remains702/12/6/17 modules with zero pars
 omissions,11.41s/217260KiB RSS/terminal0. R0-21 has the same zero authority-count
 deltas, five composed/settings declarations and155 added code lines. No new
 detector or ignored production path was introduced.
+
+Ordinary installed receiving handoff
+-----------------------------------
+
+At the receiving-owner check, Planck's original receiving17/SOURCE-NEXT02.json
+already names published541 head1d6673d95 as pending normal whole integration.
+It explicitly excludes this branch from main-only build01. No current target
+therefore proves541 installed acceptance. Its dependency-artifacts02 receipt
+qualifies original PythonIntrospect0.2.1 and ZMQRuntime0.4.1 wheels. The remaining
+ObjectState1.3.1 release endpoint returns404; Root's original qualified wheel
+and source/SHA handoff was requested in ObjectState25 comment6001052886.
+The source runtime difference tag1d36774-to-c75a457 is already determined as
+release-script/test-only, not an excuse to invent wheel byte provenance.
+
+Planck owns the one ordinary whole candidate; Dewey owns exact recorded
+native/viewer launch and custody. This is a concrete original dependency
+artifact handoff, not a hosted-CI or historical394 implementation hold. No old
+16 target overlay, receiver dependency build, current scientific mutation or
+second client was dispatched.
+
+The committed validation/neurite-pixel-public541 packet now provides the tiny
+original branched-neuron source generator, complete pixel PipelineDocument and
+exact installed/native acceptance relations. It preserves UNKNOWN acquisition
+spacing while requiring pixel-labelled analysis rows/edges, all twelve outputs,
+source-bearing graph ROI and saved public raw/ROI reopening. Scripts passed
+stdlib AST syntax parsing only; neither is represented as installed validation.
+Both are unexecuted and require the receiving owner's actual admitted paths.
+
+The original ACK fixture's dependency closure is also explicit: byte-exact
+tests/conftest.py plus three current helper/test modules, staged outside a
+source checkout and run against the asserted installed target with conftest
+enabled. No stand-in ACK fixture or new protocol is introduced. Native stream
+settlement/close ACK remains a separate actual public acceptance, not inferred
+from that nominal message-construction fixture.
+
+All prior source failures/archives remain unchanged. Original source handles
+are terminal; no public541 operation or UNKNOWN outcome exists. Production
+remains39df6d49c. The next action is Root's original binary handoff to Planck,
+then the coalesced whole build/qualification and Dewey's exact released lane;
+Singer follows this packet through execution/reopen/ACK and merge without CI.
