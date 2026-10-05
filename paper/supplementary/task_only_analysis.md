@@ -972,6 +972,48 @@ are supported; crowded actin boundaries and an elongated nuclear identity remain
 uncertain. No manual-reference accuracy or exhaustive biological count is claimed.
 These are the author's own revisions, not externally corrected analysis.
 
+### H003 fresh15: measured first choices and self-directed landscape repair
+
+The independent task-only author `H003_FRESH15_96` analysed the same released
+400 x 400-pixel DNA/actin field without reference labels, a target count or
+scientific coaching. Before choosing its first method it retrieved the validated
+ExampleHuman workflow and conditional marker guidance, then measured internal
+texture, unequal neighbours, faint actin support and a quiet nuisance patch.
+Retrieval and raw measurements did not ensure a successful first prediction:
+broad admitted nuclear haze produced one distance maximum over three crowded
+interiors, and the resulting oversized basin disappeared during size filtering.
+
+| Scientific attempt | Nuclei / seeded regions | Author's local finding |
+| --- | ---: | --- |
+| First completed method | 53 / 53 | Three crowded interiors missed |
+| Narrower nuclear foreground | 55 / 55 | Extra shape marker in the bridge |
+| Smoothed intensity markers, shape division | 52 / 52 | Weak seeds lost their bodies to neighbours |
+| Intensity division | 56 / 56 | A continuous textured body was split |
+| Larger marker-suppression footprint | 54 / 54 | Local recovery with an upper-edge possible merge |
+| Final technical repeat, unchanged scientific settings | 54 / 54 | Same qualified geometry, not independent biological validation |
+
+These counts and attempt diagnoses are author-reported, not reference scores
+or a target-count optimization. The author retained the genuine unequal pair,
+recovered the three crowded interiors and repaired the internal split through
+its own stage-specific revisions. Independent review of nine original native
+PNGs supports useful nuclear localisation and actin-region growth, while an
+elongated nuclear mask extends into diffuse haze and crowded body boundaries
+remain uncertain. It does not independently verify every reported local repair.
+The author flags two seed-only regions, twelve nuclear border objects and
+seventeen region border objects. Neither 54 regions nor the 52 growing beyond
+their seeds establishes a complete-cell census. Geometry is in relative pixels,
+not verified physical units; this development field has no untouched reserve.
+
+The [independent review](../../figure-collection-20261004/H003-FRESH15-INDEPENDENT-REVIEW.rst)
+records matched-channel views and independent verification of all 410 payload
+and 210 control whole-file hashes. Original first and failed attempts remain
+preserved. The author records an admission-procedure deviation before the last
+repair and a fresh final technical repeat; the latter does not erase the former.
+The subsequent completion receipt confirms exact viewer/native closure and
+records MCP-client exit 2 separately from completed scientific execution.
+This repeat demonstrates self-directed repair, but not improved first-attempt
+accuracy, a causal skill gain or exhaustive field-wide biological acceptance.
+
 ### H002 fresh10: ordinary-body repair and unresolved cluster identity
 
 The independent task-only author `H002_FRESH10_89` analysed the complete
