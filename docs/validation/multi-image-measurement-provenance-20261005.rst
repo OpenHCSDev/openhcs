@@ -165,3 +165,31 @@ It must compare both selected source identities and numeric values in the
 native measurement table and exported photometry through the normal registered
 pipeline, including reversed image order. No package or runtime was built or
 started for this source checkpoint; current scientific bundles remain immutable.
+
+Prepared normal receiving follow-through
+-----------------------------------------
+
+Singer retains ownership through installed acceptance, not a source-only stop.
+Planck was directly given the unchanged production pin and the separate next
+whole-package requirement after receiving12/732. His current receiving12 target
+is not743 proof and is not overlaid or delayed by this independent case.
+
+The prepared packet is validation/multi-image-measurement-provenance742/public01:
+two complete pipeline-forward.py/pipeline-reverse.py documents, RECEIVING.rst,
+manual PUBLIC.commands and verify-public01.py. It reuses the original registered
+receiving11 declarations and three immutable engineering TIFFs; only the output
+directory changes relative to each respective complete source. Source inspection
+found no additional defect in the covered per-object resolution/alignment/table
+projection path. The receipt describes the exact limits of that review and the
+source versus native multi-slice evidence separately.
+
+The prepared checker adapts the original typed VALUES reader and CSV verifier;
+it has not been run against any old target or reported as acceptance. It requires
+both native measured sources at the shared local slice, their exact components
+and calibration, all three exported source identities including Mask, original
+distinct numerical values and unchanged input hashes in BOTH orders. Filenames
+are checked against original typed provenance, not guessed physical paths.
+Installed execution, normal compile, public exports and exact close remain the
+only delivery boundary, pending Planck's ordinary build and Dewey's lease. No
+runtime/client/provider/viewer, test, build or environment was started here; all
+foreign gitlinks and original source/failed journals remain untouched.
