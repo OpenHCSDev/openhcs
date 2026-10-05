@@ -697,7 +697,7 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
         _replicate_source_binding_workspace_wells(
             prepared.materialization.metadata_path,
             wells,
-            source_well_filter=list(source_wells),
+            source_well_filter=WellFilterConfig(well_filter=list(source_wells)),
         )
     provenance["native_input_inventory"] = _source_input_inventory(
         native_domain.input_dir
