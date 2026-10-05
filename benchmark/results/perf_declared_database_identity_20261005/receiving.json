@@ -1,0 +1,81 @@
+{
+  "status": "PASS",
+  "case": "cp_tutorial_advanced_segmentation_final",
+  "production_source_head": "5dde7cbc1acb7a6f41b0f9f9d3367370579b59f3",
+  "comparator_base_head": "cf2c278b6a9d70b1aaf951d0ec1b984f95124da1",
+  "comparator_files": {
+    "benchmark/cellprofiler_export_equivalence.py": "f20d663733daa7691255d28b5677939d22fedf3892c358ca004380e264d2ac92",
+    "openhcs/core/equivalence/measurement_rows.py": "c6151523ffbc7be19b8800a8ec35bb9a91dc8dedd4636b97232f0343ad6af7ba",
+    "openhcs/core/equivalence/relationships.py": "58f690f24243ad7b62154e18606beb19215282ca1d658d39e9ce89c91f177ad0"
+  },
+  "guarded_output_files": {
+    "/home/ts/.local/state/openhcs-maintenance/20261005/collective-measurement-advanced-ordinary-v3/native/cp_tutorial_advanced_segmentation_final/outputs/0/BBBC022_Nuclei.properties": "6eb4ddeef080a4a2518b1eacacafb61496710ca1297dd757b4d6236bc824ca77",
+    "/home/ts/.local/state/openhcs-maintenance/20261005/collective-measurement-advanced-ordinary-v3/native/cp_tutorial_advanced_segmentation_final/outputs/0/BBBC022_Mitochondria.properties": "0b0427635d3bf73a93afc34dff8aab7c922347a896c9999f93b595b77d185328",
+    "/home/ts/.local/state/openhcs-maintenance/20261005/collective-measurement-advanced-ordinary-v3/native/cp_tutorial_advanced_segmentation_final/outputs/0/BBBC022_Nucleoli.properties": "e74bf936f9b21501c080de51556fbfd5b4c596b7da6fa15eda2f106076e99df7",
+    "/home/ts/.local/state/openhcs-maintenance/20261005/collective-measurement-advanced-ordinary-v3/native/cp_tutorial_advanced_segmentation_final/outputs/0/BBBC022_Cells.properties": "fa83d8a8c246daaeecc213637debba36229612aac8557a3dc0925b43286d2a9a",
+    "/home/ts/.local/state/openhcs-maintenance/20261005/collective-measurement-advanced-ordinary-v3/native/cp_tutorial_advanced_segmentation_final/outputs/0/BBBC022_MitochondriaChildObjects.properties": "a4a2121e046968a620f299883453ef0c84138b1a1d8a2939d55978d121028dc9",
+    "/home/ts/.local/state/openhcs-maintenance/20261005/collective-measurement-advanced-ordinary-v3/native/cp_tutorial_advanced_segmentation_final/outputs/0/BBBC022_Cytoplasm.properties": "0145461027e152f990f5427a6d46e96a5a52bd9f676060ca8da75dc145514171",
+    "/home/ts/.local/state/openhcs-maintenance/20261005/collective-measurement-advanced-ordinary-v3/native/cp_tutorial_advanced_segmentation_final/outputs/0/BBBC022_NucleoliChildObjects.properties": "6ba0cd0596e4737a8c6307c8afaaa7001198791d88b53ed65602206075a5969e",
+    "/home/ts/.local/state/openhcs-maintenance/20261005/collective-measurement-advanced-ordinary-v3/native/cp_tutorial_advanced_segmentation_final/outputs/0/BBBC022.db": "b45eb21952dc84f21930f56d05e5b9502016eb2f0c4f1915b93f6ea589a86ac9",
+    "/home/ts/.local/state/openhcs-maintenance/20261005/collective-measurement-advanced-ordinary-v3/candidate/ordinary/cp_tutorial_advanced_segmentation_final/wells_1/workers_1/BBBC022_20585_AE_BBBC022_Analysis_Final_source_workspace_well_throughput/results/BBBC022_Mitochondria.properties": "b26b97ac9ff178897630e3fcf00ca2c9d5b88736e622b4a037f3ef1f2d6fde36",
+    "/home/ts/.local/state/openhcs-maintenance/20261005/collective-measurement-advanced-ordinary-v3/candidate/ordinary/cp_tutorial_advanced_segmentation_final/wells_1/workers_1/BBBC022_20585_AE_BBBC022_Analysis_Final_source_workspace_well_throughput/results/BBBC022.db": "140db8f6ccefd380d119cbbe96691e9947d03363cea5cdb56fdb614d5034c3c4",
+    "/home/ts/.local/state/openhcs-maintenance/20261005/collective-measurement-advanced-ordinary-v3/candidate/ordinary/cp_tutorial_advanced_segmentation_final/wells_1/workers_1/BBBC022_20585_AE_BBBC022_Analysis_Final_source_workspace_well_throughput/results/BBBC022_Cells.properties": "67c99c34da28c429ed4dbbfcee7cd9c6f465e5dff1d4f4b022aa8f16683a6022",
+    "/home/ts/.local/state/openhcs-maintenance/20261005/collective-measurement-advanced-ordinary-v3/candidate/ordinary/cp_tutorial_advanced_segmentation_final/wells_1/workers_1/BBBC022_20585_AE_BBBC022_Analysis_Final_source_workspace_well_throughput/results/BBBC022_Nuclei.properties": "c91acc838935779c5ac4d9fa66d1cec3b486410bc3f87456929b6aebd27669f0",
+    "/home/ts/.local/state/openhcs-maintenance/20261005/collective-measurement-advanced-ordinary-v3/candidate/ordinary/cp_tutorial_advanced_segmentation_final/wells_1/workers_1/BBBC022_20585_AE_BBBC022_Analysis_Final_source_workspace_well_throughput/results/BBBC022_NucleoliChildObjects.properties": "7fb43675c621ea19b88c4eb5f6fe578ff167c598d1aad572d7b872ac3089f974",
+    "/home/ts/.local/state/openhcs-maintenance/20261005/collective-measurement-advanced-ordinary-v3/candidate/ordinary/cp_tutorial_advanced_segmentation_final/wells_1/workers_1/BBBC022_20585_AE_BBBC022_Analysis_Final_source_workspace_well_throughput/results/BBBC022_Nucleoli.properties": "e0564820ef3c932cf3079fc7707e324c6e9e4e416f0eb77b6c958801da652a80",
+    "/home/ts/.local/state/openhcs-maintenance/20261005/collective-measurement-advanced-ordinary-v3/candidate/ordinary/cp_tutorial_advanced_segmentation_final/wells_1/workers_1/BBBC022_20585_AE_BBBC022_Analysis_Final_source_workspace_well_throughput/results/BBBC022_MitochondriaChildObjects.properties": "02abe9f8f1021e970cb8732b2528503f0431269f8e85d2f45a0ff869614cbb5b",
+    "/home/ts/.local/state/openhcs-maintenance/20261005/collective-measurement-advanced-ordinary-v3/candidate/ordinary/cp_tutorial_advanced_segmentation_final/wells_1/workers_1/BBBC022_20585_AE_BBBC022_Analysis_Final_source_workspace_well_throughput/openhcs_metadata.json": "71582c62cabb2571ebf8a0de57f92fdf82c55a7ece3dac0bf2a6eca95cad84c9",
+    "/home/ts/.local/state/openhcs-maintenance/20261005/collective-measurement-advanced-ordinary-v3/candidate/ordinary/cp_tutorial_advanced_segmentation_final/wells_1/workers_1/BBBC022_20585_AE_BBBC022_Analysis_Final_source_workspace_well_throughput/results/BBBC022_Cytoplasm.properties": "35675c65b7af10a7cda91c004de825ec59758ac21c73af79102e5c9daf91387f",
+    "/home/ts/.local/state/openhcs-maintenance/20261005/collective-measurement-advanced-ordinary-v3/candidate/ordinary/cp_tutorial_advanced_segmentation_final/wells_1/workers_1/BBBC022_20585_AE_BBBC022_Analysis_Final_source_workspace_well_throughput/openhcs_metadata.json.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "database_table_rows": [
+    {
+      "database": "/home/ts/.local/state/openhcs-maintenance/20261005/collective-measurement-advanced-ordinary-v3/native/cp_tutorial_advanced_segmentation_final/outputs/0/BBBC022.db",
+      "table_rows": {
+        "Experiment": 1,
+        "Experiment_Properties": 0,
+        "Per_Cells": 136,
+        "Per_Cytoplasm": 136,
+        "Per_Experiment": 1,
+        "Per_Image": 2,
+        "Per_Mitochondria": 1330,
+        "Per_MitochondriaChildObjects": 1330,
+        "Per_Nuclei": 136,
+        "Per_Nucleoli": 194,
+        "Per_NucleoliChildObjects": 194,
+        "Per_RelationshipTypes": 7,
+        "Per_Relationships": 12114,
+        "Per_RelationshipsView": 12114
+      }
+    },
+    {
+      "database": "/home/ts/.local/state/openhcs-maintenance/20261005/collective-measurement-advanced-ordinary-v3/candidate/ordinary/cp_tutorial_advanced_segmentation_final/wells_1/workers_1/BBBC022_20585_AE_BBBC022_Analysis_Final_source_workspace_well_throughput/results/BBBC022.db",
+      "table_rows": {
+        "Experiment": 1,
+        "Experiment_Properties": 0,
+        "Per_Cells": 136,
+        "Per_Cytoplasm": 136,
+        "Per_Experiment": 1,
+        "Per_Image": 2,
+        "Per_Mitochondria": 1330,
+        "Per_MitochondriaChildObjects": 1330,
+        "Per_Nuclei": 136,
+        "Per_Nucleoli": 194,
+        "Per_NucleoliChildObjects": 194,
+        "Per_RelationshipTypes": 7,
+        "Per_Relationships": 12114,
+        "Per_RelationshipsView": 12114
+      }
+    }
+  ],
+  "database_compared_file_count": 16,
+  "native_report_sha256": "d314eb25265d3aeff70526ca07cad7901d914472126d7489c4db813e368aa9dd",
+  "ordinary_receipt_sha256": "78b84926b73b26000cc3bfac32e71f87e2b5ce48d01478f2f7c8da7d8b5d702c",
+  "strict_receipt_sha256": "9998c346d8a6e391d6438cbf036a68734e6a3daf5cbdc1d1e63bff8eaa5839e2",
+  "receipt_namespace": "/home/ts/.local/state/openhcs-maintenance/20261005/declared-row-identity-receiving-v2",
+  "source_input_dependency_output_guards": "PASS",
+  "science_scope": "Complete CPA-declared SQLite tables, exact relational identities and parent correlations, existing CellProfiler measurement tolerances, nonempty declared tables and complete physical output inventory. This workload declares SQLite/CPA exports, not image or CSV outputs.",
+  "negative_receipt": "declared-row-identity-receiving-v1/strict-comparison.log: table-isolated absent-parent failure after identity repair",
+  "local_controls": "48 existing database/workspace controls; six focused object/relationship controls; one complete SQLite cohort regression. All PASS.",
+  "timing_claim": "None: saved outputs reused; no pipeline/native execution or timing rerun."
+}
