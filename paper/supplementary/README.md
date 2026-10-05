@@ -1279,6 +1279,23 @@ The [nine-field development review](../../figure-collection-20261004/P001-DEV89-
 records the frozen pipeline, per-field row counts, original capture identities
 and the scope of independent checks. No reference answers were used.
 
+A subsequent same-author phase reused the pooled-normalized 2,858 x 2,858-pixel
+DAPI/FITC mosaic and one shared placement artifact. The selected checkpoint
+retained 1,567 body labels and an assigned outgrowth sum of 161,590 micrometres,
+using the declared 1.3556-micrometre pixel spacing. Independent recalculation
+from all 1,567 per-cell rows reproduced that length, 824,576 square micrometres
+of body area, 9,457 processes and 4,548 branches. These are algorithm-defined
+measurements on a single canvas, not independently validated neuron counts,
+complete arbor lengths or nine replicate observations. Matched source-only,
+result-only and combined views supported bright geometry while exposing faint
+gaps. A lower local-response threshold increased the length to 190,454
+micrometres but introduced an unsupported near-track branch; that final trial
+was rejected and retained separately. The
+[independent mosaic review](../../figure-collection-20261004/P001-MOSAIC89-INDEPENDENT-REVIEW.rst)
+records original table identities, reconciliation and twelve personally opened
+native captures. This is retained-context development, not a fresh autonomous
+evaluation.
+
 ## Software snapshots and evidence
 
 | Evidence | Software identity | What the record establishes |
