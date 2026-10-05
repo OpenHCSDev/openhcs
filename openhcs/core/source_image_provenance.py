@@ -978,18 +978,25 @@ class SourceImageProvenance:
         cannot exempt an acquired plane from its required coordinates.
         """
         contributors = self.source_image_provenance_planes.contributors
-        scalar_metadata = self.scalar_source_identity.component_metadata or {}
+        scalar_components = SourceMetadataFields.component_domains(
+            self.scalar_source_identity.component_metadata or {}
+        )
+        contributor_components = tuple(
+            SourceMetadataFields.component_domains(contributor.component_metadata or {})
+            for contributor in contributors
+        )
         reduced = set()
         for component in AllComponents:
-            if source_component_metadata_raw_value(scalar_metadata, component) is not None:
+            if component in scalar_components:
                 continue
-            values = tuple(
-                source_component_metadata_raw_value(
-                    contributor.component_metadata or {}, component
-                )
-                for contributor in contributors
+            if not contributor_components or not all(
+                component in values for values in contributor_components
+            ):
+                continue
+            values = frozenset(
+                value for values in contributor_components for value in values[component]
             )
-            if values and all(value is not None for value in values) and len(set(values)) > 1:
+            if len(values) > 1:
                 reduced.add(component.value)
         return tuple(component for component in component_order if component not in reduced)
 

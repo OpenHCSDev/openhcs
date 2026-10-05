@@ -321,6 +321,16 @@ class Output:
     def viewer_stream_requires_source_metadata(self) -> bool:
         return True
 
+    def viewer_display_config(
+        self, base: ViewerDisplayConfigABC
+    ) -> ViewerDisplayConfigABC:
+        """Project display scope from this output's own optional source payload."""
+        if self.metadata is None:
+            return base
+        return StreamScopedDisplayConfig.for_source_provenance(
+            base, self.metadata.source_provenance
+        )
+
     def require_text_content(self) -> str:
         """Return declared text content or reject a non-text output."""
 
@@ -1737,11 +1747,9 @@ class ViewerStreamBackendCallKwargs(BackendCallKwargs):
                 output.variable_components,
             )
         )
-        display_config = self.values.stream_request.display_config
-        if output.metadata is not None:
-            display_config = StreamScopedDisplayConfig.for_source_provenance(
-                display_config, output.metadata.source_provenance
-            )
+        display_config = output.viewer_display_config(
+            self.values.stream_request.display_config
+        )
         projected_metadata = StreamViewerComponentMetadataProjector.for_item_fields(
             display_config.COMPONENT_ORDER,
             item_fields,
