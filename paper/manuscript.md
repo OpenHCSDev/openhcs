@@ -217,7 +217,9 @@ relevant illustrative endpoint: exhaustive filopodial tracing is not required.
 Additional threshold lowering can add uncertain short twigs without improving
 that endpoint. Crossings remain a limitation for assigning length to individual
 neurons. The representative shaft result is not presented as a manual-trace
-accuracy measurement.
+accuracy measurement. Its inputs matched the published NeuronCyto II image-1
+field, but the manual-reference tables did not specify length units and the
+available reference lacked spatial traces for matching (Supplementary Data 8).
 
 A separate autonomous author analysed all nine fields of the laboratory neurite
 dataset using only its task brief, MCP and packaged guidance. During image
@@ -235,8 +237,9 @@ Supplementary Data 8 separately reports an assisted stitched-mosaic analysis of 
 
 The public BBBC013 translocation analysis completed all 96 wells. It retained
 14,631 of 17,320 detected nuclei with eligible cytoplasmic compartments (84.5%).
-The endpoint is each well's median eligible-cell log2 nuclear-to-cytoplasmic
-GFP ratio. Four wells contribute to each treatment group. Control Z-prime was
+The agent selected each well's median eligible-cell log2 nuclear-to-cytoplasmic
+GFP ratio; the task brief did not prescribe this summary. All 96 wells include
+the four development wells. Four wells contribute to each treatment group. Control Z-prime was
 0.849 for the LY294002 block and 0.726 for the Wortmannin block (Figure 4).
 Eligibility varies with treatment, so the response describes contributing cells,
 not an unbiased estimate for every detected cell. Supplementary Figure 6 shows complementary

@@ -693,7 +693,7 @@ endpoints; the status ticks alone do not establish client/server version compati
 These captures are distinct from the original unattended agent run.
 
 `paper/figures/build_slas_visual_story.py` checks the published media hashes and
-records any UI-detail crop rectangles before assembling Figures 1 and 2 and Supplementary Figure 14.
+records any UI-detail crop rectangles used in the shared-workflow figure and Supplementary Figure 14.
 `paper/figures/build_slas_agent.py` additionally derives the two displayed step
 labels from the original saved pipeline, without importing or executing it.
 
@@ -901,8 +901,10 @@ retain the plotted rows and source/output hashes.
 
 ## Supplementary Data 8. Autonomous analysis evidence
 
-Supplementary Figures 8–12 group native views by assay. Main Figures 10 and 11
-show compartment analysis and the personal neurite mosaic. Reference evaluation
+Supplementary Figures 8–12 group native views by assay. Main Figure 4 shows
+translocation and volume localisation; main Figure 5 shows public and personal
+field-by-field neurite analysis. The assisted mosaic appears only in
+Supplementary Figure 12. Reference evaluation
 follows pipeline selection; examples lacking exhaustive annotations do not
 receive an accuracy percentage.
 
@@ -963,7 +965,8 @@ the recorded inputs, metadata and software version. Preserve scientific
 settings while relocating destinations and use an isolated viewer endpoint.
 These are frozen analysis artifacts, not additions to the processing library.
 The retinal and volume sources in this table correspond to Data 8's named
-trials, not the different trials illustrated in main Figures 7 and 9.
+trials, not the different retinal trial in Supplementary Figure 10 or the
+volume trial in main Figure 4.
 
 The personal mosaic and explicitly labelled development examples retain assisted
 provenance; they are not counted as fresh unguided trials. Recovery of principal
@@ -982,6 +985,15 @@ shaft recall, neuron ownership or calibrated length accuracy. The
 [reference audit](neuroncyto_reference_audit.md) retains the source-table
 checksums, image correspondence and interpretation. The manual-reference
 construction is described by [Ong et al. (2016)](https://doi.org/10.1002/cyto.a.22872).
+
+The [image-1 length comparison](neuroncyto_length_evaluation/conclusion.rst)
+verifies that the H004 first prediction used the same source field. It reports
+4,085.1925 pixels of rooted outgrowth; the published manual total is 3,832.601
+in unspecified units. These values are descriptive, not an accuracy ratio:
+the length definitions and units have not been aligned, and the retained
+reference has no spatial traces or cell correspondences. The
+[aggregate table](neuroncyto_length_evaluation/aggregate_lengths.csv) keeps the
+first prediction separate from the final candidate illustrated beside it.
 
 ## Software snapshots and evidence
 
