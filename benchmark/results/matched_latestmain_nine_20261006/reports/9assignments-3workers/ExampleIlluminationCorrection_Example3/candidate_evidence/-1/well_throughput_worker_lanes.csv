@@ -1,0 +1,4 @@
+case_name,worker_count,well_count,worker_slot,axis_count,started_at,completed_at,lane_seconds
+ExampleIlluminationCorrection_Example3,3,9,worker_0,3,1791321867.4842024,1791321868.0736032,0.5894007682800293
+ExampleIlluminationCorrection_Example3,3,9,worker_1,3,1791321867.4988818,1791321868.0827603,0.5838785171508789
+ExampleIlluminationCorrection_Example3,3,9,worker_2,3,1791321867.5220194,1791321868.1041784,0.5821590423583984

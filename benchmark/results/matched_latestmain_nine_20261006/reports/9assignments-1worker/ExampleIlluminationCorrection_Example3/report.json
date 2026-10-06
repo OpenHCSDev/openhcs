@@ -1,0 +1,2723 @@
+{
+  "case": "ExampleIlluminationCorrection_Example3",
+  "wells": [
+    "W001",
+    "W002",
+    "W003",
+    "W004",
+    "W005",
+    "W006",
+    "W007",
+    "W008",
+    "W009"
+  ],
+  "selected_source_wells": [
+    "A01"
+  ],
+  "assignment_scope": "independent repeated source assignments",
+  "manifest_sha256": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
+  "cppipe_sha256": "f7ec9eb561730cc567986e6a50504a69f23a3ca78a1a033faba0b2fea52759fb",
+  "driver_sha256": "1dec916be91d9ad3827d96b67afb59bc72109e9e255de2e9968542957629dafc",
+  "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
+  "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
+  "source_commit": "71aded26c26ec3d462ce7f622dd9d76eec737d01",
+  "source_dirty": false,
+  "native_job_count": 1,
+  "candidate_worker_count": 1,
+  "candidate_worker_start_method": "fork",
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0"
+  },
+  "native_input_inventory": [
+    {
+      "path": "ADSAStaphInfection2_A01_w2247376DD-6ADD-442D-AE47-F54A05F3EA94.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/ADSAStaphInfection2_A01_w2247376DD-6ADD-442D-AE47-F54A05F3EA94.tif",
+      "size_bytes": 451368,
+      "sha256": "5a57b7557bb0da5e241b48851b82d936c7ec36ede7aaca5e77b28ac4bfebf502"
+    }
+  ],
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native_report.json",
+  "native_reference_report_sha256": "3ae3e4627fa188da60d63a35180495a4df00e8d76a081684d3789ddbd2f7ec2a",
+  "native_reference_source_commit": "56c3da776ccc12688b4566f7b0c0ef728e6bc7c6",
+  "native_reference_file_inventory": [
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native_report.json",
+      "sha256": "3ae3e4627fa188da60d63a35180495a4df00e8d76a081684d3789ddbd2f7ec2a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native_request.json",
+      "sha256": "82a18941420ae4932bc030eb4bbbaff1c58d0fa8e7a7378bff3c3de5b1abef95"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/pilot_provenance.json",
+      "sha256": "caec073caf5266711df53d6e000e8be97207f7c4b864a4438d15d043d309cfb2"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W001/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W001/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W002/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W002/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W003/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W003/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W004/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W004/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W005/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W005/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W006/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W006/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W007/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W007/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W008/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W008/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W009/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W009/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W001/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W001/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W002/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W002/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W003/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W003/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W004/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W004/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W005/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W005/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W006/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W006/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W007/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W007/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W008/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W008/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W009/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W009/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W001/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W001/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W002/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W002/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W003/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W003/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W004/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W004/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W005/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W005/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W006/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W006/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W007/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W007/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W008/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W008/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W009/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W009/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W001/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W001/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W002/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W002/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W003/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W003/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W004/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W004/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W005/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W005/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W006/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W006/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W007/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W007/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W008/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W008/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W009/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W009/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native_preparation/native_cellprofiler_file_list.txt",
+      "sha256": "84cdf25570fc4ed34acee7d8b83a456d2dbe7ba5f87d8c2d59f52501e2ff8e1b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native_preparation/native_cellprofiler_headless/ExampleIlluminationCorrection_Example3.cppipe",
+      "sha256": "313e72af5e42332d46c8035ff72c25b6d18ac66bfe3426d72f8badfe8271d8f7"
+    }
+  ],
+  "native_image_set_count": 9,
+  "native_input_inventory_after": [
+    {
+      "path": "ADSAStaphInfection2_A01_w2247376DD-6ADD-442D-AE47-F54A05F3EA94.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/ADSAStaphInfection2_A01_w2247376DD-6ADD-442D-AE47-F54A05F3EA94.tif",
+      "size_bytes": 451368,
+      "sha256": "5a57b7557bb0da5e241b48851b82d936c7ec36ede7aaca5e77b28ac4bfebf502"
+    }
+  ],
+  "native": {
+    "startup_seconds": 0.8896761178039014,
+    "environment": {
+      "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+      "python_version": "3.9.25",
+      "cellprofiler_version": "4.2.8.1",
+      "cellprofiler_core_version": "4.2.8.1",
+      "numpy_version": "1.24.4",
+      "scipy_version": "1.9.0",
+      "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native_tmp",
+      "temporary_device": 66306,
+      "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+      "host_node": "ts-gaming",
+      "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+      "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+      "cpu_affinity": [
+        5
+      ]
+    },
+    "request": {
+      "pipeline_path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native_preparation/native_cellprofiler_headless/ExampleIlluminationCorrection_Example3.cppipe",
+      "input_dir": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images",
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native",
+      "expected_image_sets": null,
+      "repetitions": 3,
+      "file_list_path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native_preparation/native_cellprofiler_file_list.txt",
+      "first_image_set": 1,
+      "last_image_set": null,
+      "report_path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native_report.json",
+      "start_barrier_root": null,
+      "start_barrier_job_count": 1,
+      "start_barrier_job_index": 0,
+      "assignment_output_subdirectories": [
+        "W001",
+        "W002",
+        "W003",
+        "W004",
+        "W005",
+        "W006",
+        "W007",
+        "W008",
+        "W009"
+      ]
+    },
+    "observations": [
+      {
+        "repetition": -1,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1",
+        "image_set_count": 9,
+        "invocation_seconds": 5.598549274262041,
+        "pre_pipeline_seconds": 0.0018311291933059692,
+        "pipeline_execution_seconds": 5.596718145068735,
+        "invocation_started_monotonic_seconds": 4073451.924557475,
+        "pipeline_started_monotonic_seconds": 4073451.926388604,
+        "completed_monotonic_seconds": 4073457.523106749,
+        "assignment_image_set_counts": [
+          [
+            "W001",
+            1
+          ],
+          [
+            "W002",
+            1
+          ],
+          [
+            "W003",
+            1
+          ],
+          [
+            "W004",
+            1
+          ],
+          [
+            "W005",
+            1
+          ],
+          [
+            "W006",
+            1
+          ],
+          [
+            "W007",
+            1
+          ],
+          [
+            "W008",
+            1
+          ],
+          [
+            "W009",
+            1
+          ]
+        ]
+      },
+      {
+        "repetition": 0,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0",
+        "image_set_count": 9,
+        "invocation_seconds": 4.017462409101427,
+        "pre_pipeline_seconds": 0.0007347441278398037,
+        "pipeline_execution_seconds": 4.016727664973587,
+        "invocation_started_monotonic_seconds": 4073457.52311794,
+        "pipeline_started_monotonic_seconds": 4073457.523852684,
+        "completed_monotonic_seconds": 4073461.540580349,
+        "assignment_image_set_counts": [
+          [
+            "W001",
+            1
+          ],
+          [
+            "W002",
+            1
+          ],
+          [
+            "W003",
+            1
+          ],
+          [
+            "W004",
+            1
+          ],
+          [
+            "W005",
+            1
+          ],
+          [
+            "W006",
+            1
+          ],
+          [
+            "W007",
+            1
+          ],
+          [
+            "W008",
+            1
+          ],
+          [
+            "W009",
+            1
+          ]
+        ]
+      },
+      {
+        "repetition": 1,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1",
+        "image_set_count": 9,
+        "invocation_seconds": 3.6318474048748612,
+        "pre_pipeline_seconds": 0.0007213279604911804,
+        "pipeline_execution_seconds": 3.63112607691437,
+        "invocation_started_monotonic_seconds": 4073461.540589907,
+        "pipeline_started_monotonic_seconds": 4073461.541311235,
+        "completed_monotonic_seconds": 4073465.172437312,
+        "assignment_image_set_counts": [
+          [
+            "W001",
+            1
+          ],
+          [
+            "W002",
+            1
+          ],
+          [
+            "W003",
+            1
+          ],
+          [
+            "W004",
+            1
+          ],
+          [
+            "W005",
+            1
+          ],
+          [
+            "W006",
+            1
+          ],
+          [
+            "W007",
+            1
+          ],
+          [
+            "W008",
+            1
+          ],
+          [
+            "W009",
+            1
+          ]
+        ]
+      },
+      {
+        "repetition": 2,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2",
+        "image_set_count": 9,
+        "invocation_seconds": 3.558732535690069,
+        "pre_pipeline_seconds": 0.0007226006127893925,
+        "pipeline_execution_seconds": 3.55800993507728,
+        "invocation_started_monotonic_seconds": 4073465.172447291,
+        "pipeline_started_monotonic_seconds": 4073465.173169892,
+        "completed_monotonic_seconds": 4073468.731179827,
+        "assignment_image_set_counts": [
+          [
+            "W001",
+            1
+          ],
+          [
+            "W002",
+            1
+          ],
+          [
+            "W003",
+            1
+          ],
+          [
+            "W004",
+            1
+          ],
+          [
+            "W005",
+            1
+          ],
+          [
+            "W006",
+            1
+          ],
+          [
+            "W007",
+            1
+          ],
+          [
+            "W008",
+            1
+          ],
+          [
+            "W009",
+            1
+          ]
+        ]
+      }
+    ]
+  },
+  "native_shards": [],
+  "native_shard_equivalence": [],
+  "candidate": [
+    {
+      "repetition": -1,
+      "execution_id": "1375b88b-2c74-46b0-bd34-861bf5f0940c",
+      "compile_artifact_id": "552139d2-0be1-4a49-9447-ebe05426815e",
+      "endpoint_pid": 3170533,
+      "axis_count": 9,
+      "observation_scope": "outcomes",
+      "assignment_scope": "independent repeated source assignments",
+      "compared_assignments": [
+        "W001",
+        "W002",
+        "W003",
+        "W004",
+        "W005",
+        "W006",
+        "W007",
+        "W008",
+        "W009"
+      ],
+      "worker_process_ids": [
+        3170533
+      ],
+      "worker_interval_overlap_seconds": 1.5423479080200195,
+      "axis_events": [
+        {
+          "axis_id": "W001",
+          "phase": "axis_started",
+          "timestamp": 1791321324.959614,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W001",
+          "phase": "axis_completed",
+          "timestamp": 1791321325.1390476,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W002",
+          "phase": "axis_started",
+          "timestamp": 1791321325.1390843,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W002",
+          "phase": "axis_completed",
+          "timestamp": 1791321325.3110254,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W003",
+          "phase": "axis_started",
+          "timestamp": 1791321325.3110628,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W003",
+          "phase": "axis_completed",
+          "timestamp": 1791321325.4801314,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W004",
+          "phase": "axis_started",
+          "timestamp": 1791321325.4801698,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W004",
+          "phase": "axis_completed",
+          "timestamp": 1791321325.6479511,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W005",
+          "phase": "axis_started",
+          "timestamp": 1791321325.6479876,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W005",
+          "phase": "axis_completed",
+          "timestamp": 1791321325.8148818,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W006",
+          "phase": "axis_started",
+          "timestamp": 1791321325.8149214,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W006",
+          "phase": "axis_completed",
+          "timestamp": 1791321325.988677,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W007",
+          "phase": "axis_started",
+          "timestamp": 1791321325.9887166,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W007",
+          "phase": "axis_completed",
+          "timestamp": 1791321326.159695,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W008",
+          "phase": "axis_started",
+          "timestamp": 1791321326.1597335,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W008",
+          "phase": "axis_completed",
+          "timestamp": 1791321326.3312018,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W009",
+          "phase": "axis_started",
+          "timestamp": 1791321326.3312418,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W009",
+          "phase": "axis_completed",
+          "timestamp": 1791321326.501962,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        }
+      ],
+      "server_job_started_at_epoch_seconds": 1791321324.9316947,
+      "first_axis_started_at_epoch_seconds": 1791321324.959614,
+      "server_job_completed_at_epoch_seconds": 1791321326.5173411,
+      "server_job_seconds": 1.585646390914917,
+      "execution_seconds": 1.5423479080200195,
+      "compile_seconds": 0.2897932529449463,
+      "total_seconds": 1.9735677451826632,
+      "first_axis_through_server_completion_seconds": 1.5577270984649658,
+      "native_image_count": 18,
+      "candidate_image_count": 18,
+      "native_physical_image_count": 18,
+      "candidate_physical_image_count": 18,
+      "native_output_file_count": 18,
+      "candidate_output_file_count": 20,
+      "declared_output_file_count": 18,
+      "native_output_inventory": [
+        {
+          "path": "W001/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W001/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        },
+        {
+          "path": "W002/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W002/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        },
+        {
+          "path": "W003/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W003/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        },
+        {
+          "path": "W004/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W004/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        },
+        {
+          "path": "W005/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W005/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        },
+        {
+          "path": "W006/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W006/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        },
+        {
+          "path": "W007/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W007/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        },
+        {
+          "path": "W008/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W008/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        },
+        {
+          "path": "W009/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W009/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        }
+      ],
+      "candidate_output_inventory": [
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+          "sha256": "74ae6756f3b6db1057b64e114885ee106e7827047b9a289afbf08ff759d97b0d"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W001/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W001/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W002/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W002/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W003/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W003/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W004/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W004/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W005/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W005/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W006/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W006/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W007/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W007/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W008/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W008/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W009/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W009/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        }
+      ],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "database_differences": [],
+      "csv_differences": [],
+      "image_differences": [],
+      "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261006/runtime-artifact-last-consumer-resumed-singlewell-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/-1/measured_pipeline_receipt.json"
+    },
+    {
+      "repetition": 0,
+      "execution_id": "d2893c9d-d3c5-4a10-8333-a93dec0344b3",
+      "compile_artifact_id": "5187ec20-1465-4f75-a834-3e5c60f112b2",
+      "endpoint_pid": 3170533,
+      "axis_count": 9,
+      "observation_scope": "outcomes",
+      "assignment_scope": "independent repeated source assignments",
+      "compared_assignments": [
+        "W001",
+        "W002",
+        "W003",
+        "W004",
+        "W005",
+        "W006",
+        "W007",
+        "W008",
+        "W009"
+      ],
+      "worker_process_ids": [
+        3170533
+      ],
+      "worker_interval_overlap_seconds": 1.5298395156860352,
+      "axis_events": [
+        {
+          "axis_id": "W001",
+          "phase": "axis_started",
+          "timestamp": 1791321327.0748918,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W001",
+          "phase": "axis_completed",
+          "timestamp": 1791321327.2477944,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W002",
+          "phase": "axis_started",
+          "timestamp": 1791321327.2478335,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W002",
+          "phase": "axis_completed",
+          "timestamp": 1791321327.4171672,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W003",
+          "phase": "axis_started",
+          "timestamp": 1791321327.4172056,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W003",
+          "phase": "axis_completed",
+          "timestamp": 1791321327.5858858,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W004",
+          "phase": "axis_started",
+          "timestamp": 1791321327.5859249,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W004",
+          "phase": "axis_completed",
+          "timestamp": 1791321327.757317,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W005",
+          "phase": "axis_started",
+          "timestamp": 1791321327.7573574,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W005",
+          "phase": "axis_completed",
+          "timestamp": 1791321327.9260263,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W006",
+          "phase": "axis_started",
+          "timestamp": 1791321327.9260652,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W006",
+          "phase": "axis_completed",
+          "timestamp": 1791321328.0983832,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W007",
+          "phase": "axis_started",
+          "timestamp": 1791321328.0984228,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W007",
+          "phase": "axis_completed",
+          "timestamp": 1791321328.26965,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W008",
+          "phase": "axis_started",
+          "timestamp": 1791321328.2696877,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W008",
+          "phase": "axis_completed",
+          "timestamp": 1791321328.437522,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W009",
+          "phase": "axis_started",
+          "timestamp": 1791321328.437561,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W009",
+          "phase": "axis_completed",
+          "timestamp": 1791321328.6047313,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        }
+      ],
+      "server_job_started_at_epoch_seconds": 1791321327.0480046,
+      "first_axis_started_at_epoch_seconds": 1791321327.0748918,
+      "server_job_completed_at_epoch_seconds": 1791321328.6269875,
+      "server_job_seconds": 1.5789828300476074,
+      "execution_seconds": 1.5298395156860352,
+      "compile_seconds": 0.29399704933166504,
+      "total_seconds": 1.9655789686366916,
+      "first_axis_through_server_completion_seconds": 1.552095651626587,
+      "native_image_count": 18,
+      "candidate_image_count": 18,
+      "native_physical_image_count": 18,
+      "candidate_physical_image_count": 18,
+      "native_output_file_count": 18,
+      "candidate_output_file_count": 20,
+      "declared_output_file_count": 18,
+      "native_output_inventory": [
+        {
+          "path": "W001/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W001/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        },
+        {
+          "path": "W002/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W002/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        },
+        {
+          "path": "W003/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W003/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        },
+        {
+          "path": "W004/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W004/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        },
+        {
+          "path": "W005/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W005/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        },
+        {
+          "path": "W006/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W006/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        },
+        {
+          "path": "W007/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W007/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        },
+        {
+          "path": "W008/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W008/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        },
+        {
+          "path": "W009/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W009/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        }
+      ],
+      "candidate_output_inventory": [
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+          "sha256": "74ae6756f3b6db1057b64e114885ee106e7827047b9a289afbf08ff759d97b0d"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W001/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W001/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W002/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W002/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W003/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W003/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W004/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W004/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W005/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W005/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W006/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W006/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W007/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W007/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W008/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W008/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W009/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W009/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        }
+      ],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "database_differences": [],
+      "csv_differences": [],
+      "image_differences": [],
+      "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261006/runtime-artifact-last-consumer-resumed-singlewell-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/0/measured_pipeline_receipt.json"
+    },
+    {
+      "repetition": 1,
+      "execution_id": "31f2cb56-016b-4b36-9249-9854a614c0f6",
+      "compile_artifact_id": "44c3d05d-ade8-4b79-a690-42e37de4f2f2",
+      "endpoint_pid": 3170533,
+      "axis_count": 9,
+      "observation_scope": "outcomes",
+      "assignment_scope": "independent repeated source assignments",
+      "compared_assignments": [
+        "W001",
+        "W002",
+        "W003",
+        "W004",
+        "W005",
+        "W006",
+        "W007",
+        "W008",
+        "W009"
+      ],
+      "worker_process_ids": [
+        3170533
+      ],
+      "worker_interval_overlap_seconds": 1.6214251518249512,
+      "axis_events": [
+        {
+          "axis_id": "W001",
+          "phase": "axis_started",
+          "timestamp": 1791321329.182092,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W001",
+          "phase": "axis_completed",
+          "timestamp": 1791321329.352275,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W002",
+          "phase": "axis_started",
+          "timestamp": 1791321329.3523169,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W002",
+          "phase": "axis_completed",
+          "timestamp": 1791321329.5225515,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W003",
+          "phase": "axis_started",
+          "timestamp": 1791321329.522593,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W003",
+          "phase": "axis_completed",
+          "timestamp": 1791321329.6921349,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W004",
+          "phase": "axis_started",
+          "timestamp": 1791321329.6921735,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W004",
+          "phase": "axis_completed",
+          "timestamp": 1791321329.8576584,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W005",
+          "phase": "axis_started",
+          "timestamp": 1791321329.8576963,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W005",
+          "phase": "axis_completed",
+          "timestamp": 1791321330.0342016,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W006",
+          "phase": "axis_started",
+          "timestamp": 1791321330.0342422,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W006",
+          "phase": "axis_completed",
+          "timestamp": 1791321330.2044513,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W007",
+          "phase": "axis_started",
+          "timestamp": 1791321330.2044892,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W007",
+          "phase": "axis_completed",
+          "timestamp": 1791321330.3748991,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W008",
+          "phase": "axis_started",
+          "timestamp": 1791321330.3749382,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W008",
+          "phase": "axis_completed",
+          "timestamp": 1791321330.6331396,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W009",
+          "phase": "axis_started",
+          "timestamp": 1791321330.633179,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W009",
+          "phase": "axis_completed",
+          "timestamp": 1791321330.803517,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        }
+      ],
+      "server_job_started_at_epoch_seconds": 1791321329.1545045,
+      "first_axis_started_at_epoch_seconds": 1791321329.182092,
+      "server_job_completed_at_epoch_seconds": 1791321330.8231523,
+      "server_job_seconds": 1.6686477661132812,
+      "execution_seconds": 1.6214251518249512,
+      "compile_seconds": 0.2895679473876953,
+      "total_seconds": 2.0492625809274614,
+      "first_axis_through_server_completion_seconds": 1.6410603523254395,
+      "native_image_count": 18,
+      "candidate_image_count": 18,
+      "native_physical_image_count": 18,
+      "candidate_physical_image_count": 18,
+      "native_output_file_count": 18,
+      "candidate_output_file_count": 20,
+      "declared_output_file_count": 18,
+      "native_output_inventory": [
+        {
+          "path": "W001/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W001/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        },
+        {
+          "path": "W002/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W002/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        },
+        {
+          "path": "W003/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W003/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        },
+        {
+          "path": "W004/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W004/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        },
+        {
+          "path": "W005/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W005/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        },
+        {
+          "path": "W006/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W006/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        },
+        {
+          "path": "W007/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W007/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        },
+        {
+          "path": "W008/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W008/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        },
+        {
+          "path": "W009/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W009/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        }
+      ],
+      "candidate_output_inventory": [
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+          "sha256": "74ae6756f3b6db1057b64e114885ee106e7827047b9a289afbf08ff759d97b0d"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W001/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W001/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W002/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W002/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W003/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W003/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W004/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W004/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W005/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W005/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W006/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W006/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W007/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W007/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W008/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W008/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W009/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W009/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        }
+      ],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "database_differences": [],
+      "csv_differences": [],
+      "image_differences": [],
+      "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261006/runtime-artifact-last-consumer-resumed-singlewell-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/1/measured_pipeline_receipt.json"
+    },
+    {
+      "repetition": 2,
+      "execution_id": "ddf9ca56-8710-4139-aa05-974d8d7f84da",
+      "compile_artifact_id": "eb32fe7c-ef6c-4108-b0f8-ac200a11c0b9",
+      "endpoint_pid": 3170533,
+      "axis_count": 9,
+      "observation_scope": "outcomes",
+      "assignment_scope": "independent repeated source assignments",
+      "compared_assignments": [
+        "W001",
+        "W002",
+        "W003",
+        "W004",
+        "W005",
+        "W006",
+        "W007",
+        "W008",
+        "W009"
+      ],
+      "worker_process_ids": [
+        3170533
+      ],
+      "worker_interval_overlap_seconds": 1.5340757369995117,
+      "axis_events": [
+        {
+          "axis_id": "W001",
+          "phase": "axis_started",
+          "timestamp": 1791321331.4222283,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W001",
+          "phase": "axis_completed",
+          "timestamp": 1791321331.594819,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W002",
+          "phase": "axis_started",
+          "timestamp": 1791321331.5948575,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W002",
+          "phase": "axis_completed",
+          "timestamp": 1791321331.7651749,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W003",
+          "phase": "axis_started",
+          "timestamp": 1791321331.7652123,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W003",
+          "phase": "axis_completed",
+          "timestamp": 1791321331.9361,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W004",
+          "phase": "axis_started",
+          "timestamp": 1791321331.9361396,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W004",
+          "phase": "axis_completed",
+          "timestamp": 1791321332.105794,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W005",
+          "phase": "axis_started",
+          "timestamp": 1791321332.105834,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W005",
+          "phase": "axis_completed",
+          "timestamp": 1791321332.2754767,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W006",
+          "phase": "axis_started",
+          "timestamp": 1791321332.275515,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W006",
+          "phase": "axis_completed",
+          "timestamp": 1791321332.444451,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W007",
+          "phase": "axis_started",
+          "timestamp": 1791321332.4444902,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W007",
+          "phase": "axis_completed",
+          "timestamp": 1791321332.6135116,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W008",
+          "phase": "axis_started",
+          "timestamp": 1791321332.6135507,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W008",
+          "phase": "axis_completed",
+          "timestamp": 1791321332.7834601,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W009",
+          "phase": "axis_started",
+          "timestamp": 1791321332.783499,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        },
+        {
+          "axis_id": "W009",
+          "phase": "axis_completed",
+          "timestamp": 1791321332.956304,
+          "pid": 3170533,
+          "worker_slot": "worker_0",
+          "owned_wells": [
+            "W001",
+            "W002",
+            "W003",
+            "W004",
+            "W005",
+            "W006",
+            "W007",
+            "W008",
+            "W009"
+          ]
+        }
+      ],
+      "server_job_started_at_epoch_seconds": 1791321331.3741376,
+      "first_axis_started_at_epoch_seconds": 1791321331.4222283,
+      "server_job_completed_at_epoch_seconds": 1791321332.982678,
+      "server_job_seconds": 1.6085402965545654,
+      "execution_seconds": 1.5340757369995117,
+      "compile_seconds": 0.28984522819519043,
+      "total_seconds": 1.9870728477835655,
+      "first_axis_through_server_completion_seconds": 1.5604496002197266,
+      "native_image_count": 18,
+      "candidate_image_count": 18,
+      "native_physical_image_count": 18,
+      "candidate_physical_image_count": 18,
+      "native_output_file_count": 18,
+      "candidate_output_file_count": 20,
+      "declared_output_file_count": 18,
+      "native_output_inventory": [
+        {
+          "path": "W001/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W001/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        },
+        {
+          "path": "W002/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W002/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        },
+        {
+          "path": "W003/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W003/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        },
+        {
+          "path": "W004/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W004/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        },
+        {
+          "path": "W005/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W005/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        },
+        {
+          "path": "W006/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W006/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        },
+        {
+          "path": "W007/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W007/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        },
+        {
+          "path": "W008/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W008/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        },
+        {
+          "path": "W009/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "W009/reference_image__PolynomialCorrected.npy",
+          "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+        }
+      ],
+      "candidate_output_inventory": [
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json",
+          "sha256": "74ae6756f3b6db1057b64e114885ee106e7827047b9a289afbf08ff759d97b0d"
+        },
+        {
+          "path": "source_workspace_matched_pilot/openhcs_metadata.json.lock",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W001/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W001/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W002/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W002/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W003/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W003/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W004/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W004/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W005/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W005/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W006/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W006/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W007/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W007/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W008/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W008/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W009/reference_image__ConvexHullCorrWorm.npy",
+          "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+        },
+        {
+          "path": "source_workspace_matched_pilot/results/W009/reference_image__PolynomialCorrected.npy",
+          "sha256": "8875da63a072c8f2de4f5cb707d779a064b663bf69aa0f304fe6fa74d4ff57a6"
+        }
+      ],
+      "unexpected_output_files": [],
+      "missing_declared_output_files": [],
+      "database_differences": [],
+      "csv_differences": [],
+      "image_differences": [],
+      "receipt_path": "/home/ts/.local/state/openhcs-maintenance/20261006/runtime-artifact-last-consumer-resumed-singlewell-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/2/measured_pipeline_receipt.json"
+    }
+  ],
+  "timing_claim": "Observed complete selected batches: native pipeline-start through post-run and full invocation are separate; OpenHCS worker execution and complete client operation are separate. Repeated assignments are independently executed source copies, not projected timings or additional genuine wells. Native timings and output roots were reused from genuine retained observations; their original source and report SHA are recorded separately."
+}

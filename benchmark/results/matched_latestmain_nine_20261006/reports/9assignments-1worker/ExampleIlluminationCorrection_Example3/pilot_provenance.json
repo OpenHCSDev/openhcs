@@ -1,0 +1,367 @@
+{
+  "case": "ExampleIlluminationCorrection_Example3",
+  "wells": [
+    "W001",
+    "W002",
+    "W003",
+    "W004",
+    "W005",
+    "W006",
+    "W007",
+    "W008",
+    "W009"
+  ],
+  "selected_source_wells": [
+    "A01"
+  ],
+  "assignment_scope": "independent repeated source assignments",
+  "manifest_sha256": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
+  "cppipe_sha256": "f7ec9eb561730cc567986e6a50504a69f23a3ca78a1a033faba0b2fea52759fb",
+  "driver_sha256": "1dec916be91d9ad3827d96b67afb59bc72109e9e255de2e9968542957629dafc",
+  "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
+  "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
+  "source_commit": "71aded26c26ec3d462ce7f622dd9d76eec737d01",
+  "source_dirty": false,
+  "native_job_count": 1,
+  "candidate_worker_count": 1,
+  "candidate_worker_start_method": "fork",
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0"
+  },
+  "native_input_inventory": [
+    {
+      "path": "ADSAStaphInfection2_A01_w2247376DD-6ADD-442D-AE47-F54A05F3EA94.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/ADSAStaphInfection2_A01_w2247376DD-6ADD-442D-AE47-F54A05F3EA94.tif",
+      "size_bytes": 451368,
+      "sha256": "5a57b7557bb0da5e241b48851b82d936c7ec36ede7aaca5e77b28ac4bfebf502"
+    }
+  ],
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native_report.json",
+  "native_reference_report_sha256": "3ae3e4627fa188da60d63a35180495a4df00e8d76a081684d3789ddbd2f7ec2a",
+  "native_reference_source_commit": "56c3da776ccc12688b4566f7b0c0ef728e6bc7c6",
+  "native_reference_file_inventory": [
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native_report.json",
+      "sha256": "3ae3e4627fa188da60d63a35180495a4df00e8d76a081684d3789ddbd2f7ec2a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native_request.json",
+      "sha256": "82a18941420ae4932bc030eb4bbbaff1c58d0fa8e7a7378bff3c3de5b1abef95"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/pilot_provenance.json",
+      "sha256": "caec073caf5266711df53d6e000e8be97207f7c4b864a4438d15d043d309cfb2"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W001/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W001/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W002/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W002/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W003/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W003/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W004/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W004/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W005/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W005/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W006/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W006/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W007/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W007/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W008/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W008/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W009/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/-1/W009/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W001/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W001/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W002/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W002/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W003/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W003/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W004/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W004/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W005/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W005/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W006/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W006/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W007/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W007/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W008/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W008/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W009/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/0/W009/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W001/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W001/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W002/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W002/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W003/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W003/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W004/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W004/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W005/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W005/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W006/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W006/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W007/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W007/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W008/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W008/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W009/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/1/W009/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W001/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W001/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W002/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W002/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W003/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W003/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W004/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W004/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W005/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W005/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W006/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W006/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W007/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W007/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W008/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W008/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W009/reference_image__ConvexHullCorrWorm.npy",
+      "sha256": "9ba1259e4ca007c06f14be6946e32a86307ec2dfb9952b73fa2cc253ccae8b3a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native/2/W009/reference_image__PolynomialCorrected.npy",
+      "sha256": "588e6f9951aa7ad220678dbb0053e98fb6d324e71aab089d1d828d891ee32f54"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native_preparation/native_cellprofiler_file_list.txt",
+      "sha256": "84cdf25570fc4ed34acee7d8b83a456d2dbe7ba5f87d8c2d59f52501e2ff8e1b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native_preparation/native_cellprofiler_headless/ExampleIlluminationCorrection_Example3.cppipe",
+      "sha256": "313e72af5e42332d46c8035ff72c25b6d18ac66bfe3426d72f8badfe8271d8f7"
+    }
+  ],
+  "native_image_set_count": 9,
+  "native_input_inventory_after": [
+    {
+      "path": "ADSAStaphInfection2_A01_w2247376DD-6ADD-442D-AE47-F54A05F3EA94.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/ADSAStaphInfection2_A01_w2247376DD-6ADD-442D-AE47-F54A05F3EA94.tif",
+      "size_bytes": 451368,
+      "sha256": "5a57b7557bb0da5e241b48851b82d936c7ec36ede7aaca5e77b28ac4bfebf502"
+    }
+  ]
+}
