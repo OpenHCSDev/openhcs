@@ -72,6 +72,25 @@ Determining dispositions
 * Haase/Liz preparation scripts and preset notes are unpublished acquisition
   provenance, not fixes for runtime preparation cost or viewer QA issues.
 
+Dependency source dispositions
+------------------------------
+
+Current main pins python-introspect 83c1efe5ff9933b0fbd8586d2af5c9e7dbbe80ff.
+Reading that exact upstream source confirms DocstringExtractor.extract consumes
+inspect.getdoc and calls _parse_docstring directly, without reading source.
+Its history contains 4e8f8bde5f750d9a50eacac80acd3806123addd8 (PR3), which removed
+the same redundant source/AST parsing as the dirty patch. Upstream comparison
+establishes that the pinned commit descends from that implementation. The old
+production edit is integrated, not an outstanding startup-performance fix.
+The local source-unavailability test remains safely in the archival patch.
+
+Current main pins PolyStore a03ce43969170c1974d048668d1cb43d5febfb8f. Its exact
+upstream roi.py still exposes load_rois_from_zip(zip_path) without parent-label
+selection. Thus the archived selective-reader addition is not integrated there;
+its value and callers must be considered separately from existing archive
+identity repairs. Do not change borrowed submodule checkouts to perform this
+comparison: their checked-out revisions differ from main's pinned revisions.
+
 Recovered scientific tools
 --------------------------
 
