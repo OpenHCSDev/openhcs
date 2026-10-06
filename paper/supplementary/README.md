@@ -213,7 +213,7 @@ and Supplementary Data 8.
 
 ## Supplementary Figure 16. Matched single-core amortization
 
-![Execution, total and nonexecution time per assignment at actual single-core workload sizes.](../figures/slas/matched_postexport_20261006/single-core-amortization/measured_single_core_amortization.png){width=6in}
+![Execution, total and nonexecution time per assignment at actual single-core workload sizes.](../figures/slas/matched_final_20261006/single-core-amortization/measured_single_core_amortization.png){width=6in}
 
 The three selected workflows retain the prior single-sample execution frontier
 (Vitra), total-time frontier (illumination correction Example 3) and representative
@@ -225,17 +225,17 @@ is the difference between the declared total and execution clocks. OpenHCS total
 includes compilation and client coordination; native total excludes one-time
 pipeline loading and JVM initialization. Endpoint, library and kernel readiness
 and post-run scientific comparison are outside both clocks. All observations
-passed the declared-output comparisons on source revision `56c3da776`.
+passed the declared-output comparisons on source revision `e905e7705`.
 
 ## Supplementary Figure 17. Matched workload comparisons across worker counts
 
-![Nine assignments: execution on one and three workers.](../figures/slas/matched_postexport_20261006/matched-nine-execution/measured_execution_seconds.png){width=6in}
+![Nine assignments: execution on one and three workers.](../figures/slas/matched_final_20261006/matched-nine-execution/measured_execution_seconds.png){width=6in}
 
-![Nine assignments: total on one and three workers.](../figures/slas/matched_postexport_20261006/matched-nine-total/measured_total_seconds.png){width=6in}
+![Nine assignments: total on one and three workers.](../figures/slas/matched_final_20261006/matched-nine-total/measured_total_seconds.png){width=6in}
 
-![Sixteen assignments: execution on one and four workers.](../figures/slas/matched_postexport_20261006/matched-sixteen-execution/measured_execution_seconds.png){width=6in}
+![Sixteen assignments: execution on one and four workers.](../figures/slas/matched_final_20261006/matched-sixteen-execution/measured_execution_seconds.png){width=6in}
 
-![Sixteen assignments: total on one and four workers.](../figures/slas/matched_postexport_20261006/matched-sixteen-total/measured_total_seconds.png){width=6in}
+![Sixteen assignments: total on one and four workers.](../figures/slas/matched_final_20261006/matched-sixteen-total/measured_total_seconds.png){width=6in}
 
 The same three-workflow cohort and source revision as Supplementary Figure 16
 are used. Each condition completed warmup and three measured repetitions with
@@ -245,13 +245,20 @@ from separate runs. OpenHCS execution includes the complete server job and plate
 exports. The Average category is an arithmetic summary of workflow bars.
 
 For the same assignment count, execution efficiency is the one-worker median
-divided by the worker count times the parallel median. OpenHCS efficiencies for
-Vitra, illumination and 3D were 64.3%, 59.5% and 71.1% at three workers, and 55.3%,
-62.4% and 69.4% at four workers. These observations do not establish near-linear
-scaling. The four-worker execution speedups over native CellProfiler were 1.93-,
-2.22- and 4.14-fold, respectively, so the single-sample minimum speedup does not
-apply to every parallel condition. Exact timings, native baselines, inventories
-and provenance accompany the [matched checkpoint](../../benchmark/results/matched_postexport_20261006/README.md).
+divided by the product of worker count and parallel median. OpenHCS efficiencies
+for Vitra, illumination and 3D were 78.5%, 72.8% and 78.2% at three workers, and
+58.7%, 60.5% and 69.6% at four workers. Native efficiencies were 82.6%, 54.3% and
+92.7% at three workers, and 67.4%, 64.5% and 84.2% at four workers.
+
+Dividing OpenHCS efficiency by native efficiency separates additional scaling
+loss from loss against ideal scaling. At three workers, the additional execution
+loss was 4.9% for Vitra and 15.7% for 3D; illumination scaled better than native.
+At four workers, the additional losses were 12.9%, 6.1% and 17.4%, respectively.
+These observations do not establish near-linear scaling. The four-worker execution
+speedups over native CellProfiler were 2.13-, 2.15- and 4.14-fold, respectively;
+total speedups were 1.96-, 1.47- and 3.67-fold. The single-sample minimum speedup
+does not apply to every parallel condition. Exact timings, native baselines,
+inventories and provenance accompany the [matched checkpoint](../../benchmark/results/matched_final_20261006/README.md).
 
 ```{=openxml}
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
