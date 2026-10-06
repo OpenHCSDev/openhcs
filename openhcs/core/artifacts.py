@@ -3347,6 +3347,27 @@ class ArtifactPlan(ABC, metaclass=AutoRegisterMeta):
     sidecar_role: ArtifactSidecarRole | None = None
 
     _missing_group_uses_default_path: ClassVar[bool] = False
+    relations: tuple[ArtifactSpecRelation, ...] = ()
+
+    def source_context_source(self) -> ArtifactSpecRef | None:
+        """Return the original producer's sole declared runtime-context source."""
+
+        if not self.artifact_type.carries_source_image_context:
+            return None
+        sources = tuple(
+            dict.fromkeys(
+                source
+                for relation in self.relations
+                for source in (relation.source_context_source(),)
+                if source is not None
+            )
+        )
+        if len(sources) > 1:
+            raise ValueError(
+                f"Artifact plan {self.ref()!r} declares multiple runtime-context "
+                f"sources: {sources!r}."
+            )
+        return sources[0] if sources else None
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -3567,7 +3588,6 @@ class ArtifactOutputPlan(ArtifactPlan):
 
     materialization: ArtifactMaterializationPayload | None = None
     viewer_streaming: ArtifactViewerStreaming = ArtifactViewerStreaming.AUTOMATIC
-    relations: tuple[ArtifactSpecRelation, ...] = ()
     group_scope_sources_by_group: Mapping[
         str | None,
         tuple[ArtifactSpecRef, ...],
@@ -3736,26 +3756,6 @@ class ArtifactOutputPlan(ArtifactPlan):
         if selected is None and group_key is not None:
             selected = source_map.get(None)
         return declared if selected is None else selected
-
-    def source_context_source(self) -> ArtifactSpecRef | None:
-        """Return the sole declared runtime-context source for this output."""
-
-        if not self.artifact_type.carries_source_image_context:
-            return None
-        sources = tuple(
-            dict.fromkeys(
-                source
-                for relation in self.relations
-                for source in (relation.source_context_source(),)
-                if source is not None
-            )
-        )
-        if len(sources) > 1:
-            raise ValueError(
-                f"Artifact output {self.ref()!r} declares multiple runtime-context "
-                f"sources: {sources!r}."
-            )
-        return sources[0] if sources else None
 
     def measurement_subject(self) -> "MeasurementSubject | None":
         """Return the sole measurement subject declared by this output."""

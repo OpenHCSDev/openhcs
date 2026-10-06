@@ -719,15 +719,16 @@ class RuntimeArtifactInput:
         ).matches()
 
     def _source_context_identity_policy(self) -> SourceImageSetIdentityPolicy:
-        """Derive image-set membership from the compiled invocation's sources.
+        """Use declared consumer context, otherwise the stored producer's context."""
 
-        An edge's context relation can name a produced image rather than a raw
-        alias. Filtering raw bindings by that produced name discards the source
-        lineage already resolved by the compiler and mistakes a plane coordinate
-        for the whole image-set identity.
-        """
+        context_sources = self.edge_plan.spec.source_context_sources()
+        if not context_sources and self.edge_plan.storage_plan is not None:
+            producer_source = self.edge_plan.storage_plan.source_context_source()
+            context_sources = () if producer_source is None else (producer_source,)
+        if not context_sources:
+            return SourceImageSetIdentityPolicy()
         return SourceImageSetIdentityPolicy.from_source_bindings(
-            self.source_binding_plan
+            self.source_binding_plan.for_artifact_refs(context_sources)
         )
 
 

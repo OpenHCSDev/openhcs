@@ -425,6 +425,11 @@ def test_exact_secondary_selector_survives_authoring_compile_and_execution(tmp_p
     assert edge.spec.name == "Cells"
     assert edge.spec.parameter_name == "labels"
     assert edge.storage_plan.source_step_id == 1
+    producer_output = next(
+        output for output in secondary_invocation.artifact_output_plans
+        if output.ref() == edge.spec.ref().for_plan_type(ArtifactOutputPlan)
+    )
+    assert edge.storage_plan.relations == producer_output.relations
     assert selector not in invocation.kwargs_dict
     assert "labels" not in invocation.kwargs_dict
 

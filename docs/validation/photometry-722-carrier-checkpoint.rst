@@ -1,7 +1,7 @@
 Photometry image carrier and invocation domain
 ==============================================
 
-Owner: Planck. Issue722. Production checkpoint 210f9c99c is published;
+Owner: Planck. Issue722. Normal main integration 941641c7b is published;
 source qualification is in progress and installed acceptance is not yet claimed.
 Base: ca29edea4. No current open PR claims this image-carrier seam; PR926
 owns sparse-label profile geometry, PR910 owns viewer settlement custody.
@@ -231,12 +231,10 @@ SourceBindingMatchedImageSet resolver, limited to its exact predecessor records.
 PatternGroupExecutionRequest loads those current transformed outputs and their
 original correlated metadata together; no original-pixel reload is introduced.
 
-RuntimeArtifactInput derives image-set membership from the compiled source
-binding context rather than filtering raw aliases by a produced image name.
 Artifact-managed requests retain the compiler-resolved producer source lineage
-when their direct input names are not raw aliases. Empty binding declarations
-still leave every component in image-set identity; exact producer addresses,
-projection selection, well/site/time constraints and absence guards remain.
+when their direct input names are not raw aliases. Qualification06 below exposed
+two strict-context regressions in the first implementation; its broad visible
+source-membership policy is superseded, not accepted.
 
 CompiledSourceBindingPlan.for_main_flow_scope owns the distinction between
 explicit consumed image refs and implicit component dispatch. Both source
@@ -251,3 +249,33 @@ asserts exact groups 1/2 versus None, one anchor per group, exact table cardinal
 and scope, and all unchanged intensity features for both named object sets/images.
 It does not merge or drop legitimate producer groups to satisfy the old assertion.
 This successor awaits its batched behavioral qualification and installed case.
+
+Qualification06 and producer-context correction
+------------------------------------------------
+
+Original controls06 at 941641c7b is terminal exit1: 177 passed, five failed.
+All seven photometry cases pass, including transformed current STEP_INPUT,
+produced-only DNAHalf and both mixed raw/produced orders. Both grouped roster
+cases pass. Two empty-binding adapter requests exposed an unnecessary component
+projection; one measurement-observation fixture omitted the current required
+dialect. Two genuine context-negative failures exposed overly broad image-set
+membership. All original responses and assertions are preserved.
+
+The compiler kept original source-context relations on ArtifactOutputPlan but
+dropped them when projecting ArtifactInputPlan. The relations and their sole-source
+query now belong to their existing shared ArtifactPlan owner; both compiler input
+projection paths carry the original producer relations unchanged. RuntimeArtifactInput
+uses explicit consumer context when declared, otherwise that stored producer's
+context. It never borrows the complete visible binding roster. Missing context
+remains strict, and explicitly unrelated consumer context cannot borrow a valid
+producer relation. No alternate lineage graph or metadata reconstruction exists.
+
+Implicit empty binding plans now remain empty before component dispatch; explicit
+image rosters do not perform an unused dispatch projection. The observation fixture
+passes the original RuntimeMeasurementDialect required by the current API.
+New controls cover producer-relation snapshot retention and explicit consumer
+context precedence; the integration fixture compares original producer relations
+with their consumed storage projection. Qualification07 and installed95 are pending.
+
+AST-LINEAGE-BEFORE07.json: 1409 modules,2455 selected sites,zero parse omissions.
+Source syntax evidence does not prove dynamic runtime dispatch or live readiness.

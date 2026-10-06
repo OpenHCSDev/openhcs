@@ -2416,15 +2416,14 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
         channel. Implicit image arguments still follow component dispatch.
         """
 
-        component_plan = (
-            self
-            if group_key is None
-            else self.for_component_group(component, group_key)
-        )
         if main_flow_refs == ():
             return None
         if main_flow_refs is None:
-            return component_plan
+            return (
+                self
+                if not self.has_primary_content or group_key is None
+                else self.for_component_group(component, group_key)
+            )
         declared_main_flow_plan = self.for_artifact_refs(main_flow_refs)
         if not declared_main_flow_plan.binding_declarations:
             return None
