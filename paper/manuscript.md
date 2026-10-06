@@ -206,7 +206,7 @@ lobed-body ambiguity; a separate author repaired an internal partition without
 merging the neighbouring body (Supplementary Figure 9).
 
 Paired DNA/actin analysis separates nuclear detection from supported cell-body
-growth (Supplementary Figure 11 and additional matched inspection views). A completed autonomous field analysis
+growth (Supplementary Figure 11). A completed autonomous field analysis
 recovered 56 nuclei and retained 54 actin-supported cells after removing two
 seed-only candidates. Every retained cell contains all pixels of its associated
 nucleus. This is a geometric consistency check, not proof of biological identity
@@ -214,7 +214,7 @@ or complete cell boundaries. Local controls include recovered crowded nuclei
 and unsupported body candidates.
 
 In the noisy retinal images, agents detected bright RBPMS-positive cell bodies
-against heterogeneous background. The supplementary matched inspection views show an agent
+against heterogeneous background. Supplementary Figure 10 shows an agent
 repairing a divided cell body while keeping a neighbouring pair separate;
 its final segmentation contained 102 objects. A separate completed analysis
 retained 136 candidates, including ten touching the image border
@@ -251,7 +251,7 @@ The endpoint is each well's median eligible-cell log2 nuclear-to-cytoplasmic
 GFP ratio. Four wells contribute to each treatment group. Control Z-prime was
 0.849 for the LY294002 block and 0.726 for the Wortmannin block (Figure 4).
 Eligibility varies with treatment, so the response describes contributing cells,
-not an unbiased estimate for every detected cell. Supplementary matched views show complementary
+not an unbiased estimate for every detected cell. Supplementary Figure 6 shows complementary
 compartment-level inspection from assisted development. Frozen records and
 individual unsuccessful attempts remain in Supplementary Data 8 rather than
 being treated as additional experiments.

@@ -1,102 +1,5 @@
 # OpenHCS supplementary material
 
-## Additional matched inspection views
-
-### Earlier prospective held-out results
-
-The three prospectively authored workflows were applied without scientific parameter changes after their held-out partitions were disclosed (Supplementary Figure 6 and Supplementary Data 7). On the 50 BBBC039 fields, 4,733 of 5,720 reference nuclei matched at intersection over union at least 0.5. Pooled precision was 0.680, recall was 0.827 and object F1 was 0.746; mean field foreground Dice was 0.935. The workflow predicted 6,964 nuclei, 1,244 more than the reference, and the overlap diagnostic identified more split reference instances than merged predictions. The first blind pipeline therefore recovered nuclear foreground well while over-segmenting instances.
-
-On the 12 BBBC007 fields, 29,450 of 43,875 relevant predicted adjacent-cell boundary pixels were within two pixels of a manual outline, a pooled fraction of 0.671. The workflow predicted 1,274 nuclei and 1,273 cells; every predicted nucleus overlapped a cell and one cell shared two nuclei. The manual outlines enclosed 1,082 closed nuclear interiors, while 12 open or frame-connected regions were excluded. Because the boundary score is directed from predictions to the outline union, it can reward an incomplete segmentation and does not establish object correspondence.
-
-The BBBC013 run produced matched nuclear and cytoplasmic measurements for 14,262 cells across all 92 held-out wells. Wortmannin controls separated with Z-prime 0.751 and mean nuclear-to-cytoplasmic GFP ratios of 7.235 and 0.915 for positive and negative controls. LY294002 controls gave Z-prime 0.554 and means of 7.219 and 1.127. Both held-out dose series showed the expected increase in nuclear translocation. This result evaluates recovery of the assay response; BBBC013 does not supply manual masks with which to score segmentation.
-
-### Assisted laboratory neurite mosaic
-
-### Neurite analysis across an overlapping nine-field mosaic
-
-![Matched seam and field-core raw, body/path result and combined views.](../figures/slas/p001_stitched_dev13_native.png){width=6in}
-
-(A–C) Sampled overlap region; (D–F) lower-right field core in an acquisition-placed
-nine-field mosaic. Each triplet uses the same native crop, with raw FITC,
-body envelopes plus process paths, and their combination. The analysis fits
-one pooled percentile pair per complete nine-field channel stack before
-assembly, rather than fitting fields separately. Supported long paths remain
-visible; faint segments and crowded ownership remain incomplete. The displayed
-mosaic is an assisted retained-context example, not a fresh unguided trial.
-Original captures, the precise selected pipeline and the development history
-remain in the [source record](../../figure-collection-20261004/P001-STITCHED-DEV13-INDEPENDENT-REVIEW.rst).
-The completed all-channel continuation is recorded separately in Supplementary
-Data 8; its aggregate measurements are not assigned to these earlier panels.
-
-
-An assisted analysis of the same dataset assembled the nine overlapping fields
-into a mosaic (Figure 5). A shared percentile fit across the complete stack preserves a
-common channel scale before mosaic analysis. The completed retained-context
-workflow produced 1,740 soma candidates and 123,054 micrometres of computed total
-outgrowth at the declared spacing. These are algorithmic outputs, not a unique
-biological cell census or calibrated ground-truth length. The workflow is
-assisted development, distinct from the fresh unguided trials.
-
-
-### An agent separates crowded nuclei but misses a faint pair
-
-![Matched first/final nuclear overlays and a final-only faint-pair failure control.](../figures/slas/h003_native_repair.png){width=6in}
-
-\(A) Matched raw DNA images and initial/final overlays show separation of a joined nuclear pair while a compact neighbour remains separate. Diffuse signal remains in the lower region. (B) Final raw, segmentation-only and combined views reveal a faint pair that remains merged. The autonomous author revised its pipeline without reference feedback. These examples demonstrate a useful correction and a remaining failure, not exhaustive detection accuracy or validation of actin-defined cell boundaries. Contrast windows differ between regions to reveal their local signal; colours do not identify objects across attempts. Capture and display settings are retained in Supplementary Data 8. Source: BBBC007v1 A02, Sabatini laboratory, Whitehead Institute; CC0.
-
-### Autonomous retinal repair preserves a neighbouring pair
-
-![Matched whole-field and regional retinal raw images and final outlines.](../figures/slas/retinal_fresh_native.png){width=5.3in}
-
-\(A) Whole-field detections against heterogeneous retinal background. (B) Northwest neighbours remain separate. (C) A southeast partition is repaired. Using only the task, MCP and packaged skill, the author recognised a pair-merging regression and retained both corrections in its final 102-instance segmentation. Diffuse regions remain uncertain (Supplementary Figure 10), and accuracy against a manual reference is unmeasured. Raw and outlined views use different intensity stretches, so brightness differs at matched positions. Supplementary Data 8 retains the original captures and display settings. Source: user-provided R0010 RBPMS-labelled retina; physical calibration is unverified.
-
-### Nuclear detection improves while cytoplasmic boundaries remain uncertain
-
-![Same-author BBBC013 development views of a dim-nucleus repair, a crowded after-only control and uncertain GFP compartments.](../figures/slas/bbbc013_development_repair.png){width=6in}
-
-\(A) Matched H12 views before and after a foreground-admission adjustment show
-recovery of a dim broad profile and retained separation of nearby regions. The
-minimum-size rule was unchanged; retained intermediate measurements support
-threshold-shrunken support as the earlier loss mechanism. (B) An after-only
-bright crowded A01 control shows separate supported regions at the reviewed
-position, with touching or lobed identities still uncertain. (C) Corrected D06
-GFP views show unresolved propagated-compartment extent and ownership. Numeric
-raw windows are 0–60, 0–123 and 0–111 in A, B and C, respectively; gamma is 1.
-Colours are not cross-candidate identities. Physical calibration is unverified.
-These same-author development witnesses support a local nuclear repair, not
-exhaustive accuracy, validated translocation measurements, complete plate
-execution or fresh autonomous success. The full-plate continuation remained
-interrupted. The [source proof](task_only_analysis/bbbc013-development-source-proof.json)
-and [render receipt](task_only_analysis/bbbc013-development-render-receipt.json)
-retain the original capture, source, presentation and unchanged embed identities.
-Source: Ilya Ravkin, [Broad Bioimage Benchmark Collection BBBC013v1](https://bbbc.broadinstitute.org/BBBC013),
-[CC BY 3.0](https://creativecommons.org/licenses/by/3.0/). Adaptations comprise
-OpenHCS-derived overlays, native display windows and screenshot cropping/scaling.
-
-
-## Historical performance protocols
-
-### Matched scaling and archived comparisons
-
-Actual single-core measurements at 1, 9 and 16 repeated source assignments separate execution from compilation and client coordination (Supplementary Figure 16). Balanced comparisons at nine assignments on one/three workers and sixteen assignments on one/four workers retain measured native parallel clocks and matched outputs (Supplementary Figure 17). Four-worker OpenHCS execution efficiencies ranged from 58.7% to 69.6% of ideal scaling, compared with 64.5% to 84.2% for native CellProfiler. OpenHCS retained 82.6% to 93.9% of native execution scaling efficiency, with execution speedups of 2.13- to 4.14-fold in these matched four-worker workloads. These measurements distinguish loss against ideal scaling from additional loss relative to native CellProfiler and do not establish near-linear scaling.
-
-The earlier analysis-focused throughput and memory measurements remain archived in Supplementary Data 3 and Supplementary Figure 7. Their configured worker and output policies differ from this output-complete matched evaluation, so their rates and memory values are not combined with the fresh timing distributions.
-
-### Archived protocols
-
-Archived May development runs measured throughput and peak memory by assigning the same source images to multiple well identifiers, creating repeated analysis work. Queue depth specifies how many assignments were supplied per configured worker. Each condition has one recorded run per workflow. The retained rows report completed assignments but do not preserve worker-process traces or per-run output inventories.
-
-Throughput varied the configured worker maximum over two, three and four,
-with four assignments per worker. The memory sweep fixed four workers and
-varied assignments per worker over one, two, three, four, six and eight.
-
-Throughput uses execution time after initialization and compilation. The recorded configuration disables default saving of named results and return of detailed worker records, and requests removal of unused steps whose outputs are not saved. Supplementary Data 3 identifies these settings, the individual runs and the limits of their historical output-policy provenance. These rows characterize that archived analysis-focused workload, not the current output-complete CellProfiler translation. Measurements cover CPU execution on local or explicitly mounted image sources; GPU and cloud or network-storage performance were not measured.
-
-The archived single-sample benchmark specifies one thread/core, CPU-only execution and no batching, with one retained comparison observation per workflow. The harness committed with the tables times the native CellProfiler command from subprocess launch through completion, including its startup. It times OpenHCS execution after initialization and compilation. Total-phase values also include different work, including benchmark validation and comparison on the OpenHCS path. Supplementary Figure 5 and Supplementary Data 1 report these observations with their timer definitions; they do not establish a like-for-like speed comparison. The wound-healing native duration equals the 900-s timeout ceiling without an explicit completion flag and is excluded from timing statistics.
-
-The supplementary package separates the release CI comparison records from the earlier performance measurements. Its software-snapshot table identifies the revision and evidence for each evaluation. Figure scripts regenerate panels from saved CSVs and record source and output checksums. Supplementary Data 6 links automated tests of workflow editing and pre-execution validation to their source and CI jobs.
-
-
 ## Supplementary Figure 1. Runtime composition
 
 ![Array axes, function patterns, named results and scheduling.](../figures/slas/runtime_composition.png){width=4.9in}
@@ -185,6 +88,29 @@ Supplementary Data 1.
 
 ## Supplementary Figure 6. Held-out results from prospectively authored workflows
 
+### Nuclear detection improves while cytoplasmic boundaries remain uncertain
+
+![Same-author BBBC013 development views of a dim-nucleus repair, a crowded after-only control and uncertain GFP compartments.](../figures/slas/bbbc013_development_repair.png){width=6in}
+
+\(A) Matched H12 views before and after a foreground-admission adjustment show
+recovery of a dim broad profile and retained separation of nearby regions. The
+minimum-size rule was unchanged; retained intermediate measurements support
+threshold-shrunken support as the earlier loss mechanism. (B) An after-only
+bright crowded A01 control shows separate supported regions at the reviewed
+position, with touching or lobed identities still uncertain. (C) Corrected D06
+GFP views show unresolved propagated-compartment extent and ownership. Numeric
+raw windows are 0–60, 0–123 and 0–111 in A, B and C, respectively; gamma is 1.
+Colours are not cross-candidate identities. Physical calibration is unverified.
+These same-author development witnesses support a local nuclear repair, not
+exhaustive accuracy, validated translocation measurements, complete plate
+execution or fresh autonomous success. The full-plate continuation remained
+interrupted. The [source proof](task_only_analysis/bbbc013-development-source-proof.json)
+and [render receipt](task_only_analysis/bbbc013-development-render-receipt.json)
+retain the original capture, source, presentation and unchanged embed identities.
+Source: Ilya Ravkin, [Broad Bioimage Benchmark Collection BBBC013v1](https://bbbc.broadinstitute.org/BBBC013),
+[CC BY 3.0](https://creativecommons.org/licenses/by/3.0/). Adaptations comprise
+OpenHCS-derived overlays, native display windows and screenshot cropping/scaling.
+
 ![Held-out segmentation, boundary and translocation results from three public assays.](../figures/slas/independent_agent_validation.png){width=6in}
 
 Four development fields or wells were available to each fresh agent before its
@@ -238,6 +164,12 @@ Upper: raw, initial labels, repaired labels and combined view at Z index 36. Loc
 
 ## Supplementary Figure 10. Retinal soma localisation
 
+### Autonomous retinal repair preserves a neighbouring pair
+
+![Matched whole-field and regional retinal raw images and final outlines.](../figures/slas/retinal_fresh_native.png){width=5.3in}
+
+\(A) Whole-field detections against heterogeneous retinal background. (B) Northwest neighbours remain separate. (C) A southeast partition is repaired. Using only the task, MCP and packaged skill, the author recognised a pair-merging regression and retained both corrections in its final 102-instance segmentation. Diffuse regions remain uncertain (Supplementary Figure 10), and accuracy against a manual reference is unmeasured. Raw and outlined views use different intensity stretches, so brightness differs at matched positions. Supplementary Data 8 retains the original captures and display settings. Source: user-provided R0010 RBPMS-labelled retina; physical calibration is unverified.
+
 ![Matched assay evidence.](../figures/slas/retina_assay_review.png){width=6in}
 
 Upper: matched raw, initial and repaired outlines at neighbouring bodies and the acquisition border. Lower: raw and candidate support from assisted development. Useful soma localisation is possible despite acquisition noise; faint profiles and crowded boundaries remain uncertain. Original windows are 0–42 and 0–55, gamma 1. The independent autonomous and assisted examples are not a single continuous trial or manual-count accuracy assessment. Native captures retain their original crop, presentation and scientific pixels. Source identities and pipelines are linked in Supplementary Data 8.
@@ -248,6 +180,12 @@ Upper: matched raw, initial and repaired outlines at neighbouring bodies and the
 
 ## Supplementary Figure 11. Paired nuclear and cell-body analysis
 
+### An agent separates crowded nuclei but misses a faint pair
+
+![Matched first/final nuclear overlays and a final-only faint-pair failure control.](../figures/slas/h003_native_repair.png){width=6in}
+
+\(A) Matched raw DNA images and initial/final overlays show separation of a joined nuclear pair while a compact neighbour remains separate. Diffuse signal remains in the lower region. (B) Final raw, segmentation-only and combined views reveal a faint pair that remains merged. The autonomous author revised its pipeline without reference feedback. These examples demonstrate a useful correction and a remaining failure, not exhaustive detection accuracy or validation of actin-defined cell boundaries. Contrast windows differ between regions to reveal their local signal; colours do not identify objects across attempts. Capture and display settings are retained in Supplementary Data 8. Source: BBBC007v1 A02, Sabatini laboratory, Whitehead Institute; CC0.
+
 ![Matched assay evidence.](../figures/slas/h003_assay_review.png){width=6in}
 
 Upper: matched DNA, actin, seeded territories and combined outlines following autonomous nuclear repair. Lower: separate nuclear and body-support triplets, with an unsupported seed-only candidate as a negative witness. These are independent authors. Nuclear separation and supported cell-body extent are distinct decisions. Original windows are 0–255/0–60 (upper) and 0–151/0–104 (lower), gamma 1. Source: BBBC007v1 A02, Sabatini laboratory, Whitehead Institute; CC0. Native captures retain their original crop, presentation and scientific pixels. Source identities and pipelines are linked in Supplementary Data 8.
@@ -257,6 +195,31 @@ Upper: matched DNA, actin, seeded territories and combined outlines following au
 ```
 
 ## Supplementary Figure 12. Neurite main-shaft recovery
+
+### Assisted laboratory neurite mosaic
+
+![Matched seam and field-core raw, body/path result and combined views.](../figures/slas/p001_stitched_dev13_native.png){width=6in}
+
+(A–C) Sampled overlap region; (D–F) lower-right field core in an acquisition-placed
+nine-field mosaic. Each triplet uses the same native crop, with raw FITC,
+body envelopes plus process paths, and their combination. The analysis fits
+one pooled percentile pair per complete nine-field channel stack before
+assembly, rather than fitting fields separately. Supported long paths remain
+visible; faint segments and crowded ownership remain incomplete. The displayed
+mosaic is an assisted retained-context example, not a fresh unguided trial.
+Original captures, the precise selected pipeline and the development history
+remain in the [source record](../../figure-collection-20261004/P001-STITCHED-DEV13-INDEPENDENT-REVIEW.rst).
+The completed all-channel continuation is recorded separately in Supplementary
+Data 8; its aggregate measurements are not assigned to these earlier panels.
+
+
+An assisted analysis of the same dataset assembled the nine overlapping fields
+into a mosaic (shown above). A shared percentile fit across the complete stack preserves a
+common channel scale before mosaic analysis. The completed retained-context
+workflow produced 1,740 soma candidates and 123,054 micrometres of computed total
+outgrowth at the declared spacing. These are algorithmic outputs, not a unique
+biological cell census or calibrated ground-truth length. The workflow is
+assisted development, distinct from the fresh unguided trials.
 
 ![Matched assay evidence.](../figures/slas/h004_assay_review.png){width=6in}
 
@@ -604,6 +567,28 @@ current-version compatibility matrix.
 
 ## Supplementary Data 3. Worker and memory measurements
 
+### Historical performance protocols
+
+#### Matched scaling and archived comparisons
+
+Actual single-core measurements at 1, 9 and 16 repeated source assignments separate execution from compilation and client coordination (Supplementary Figure 16). Balanced comparisons at nine assignments on one/three workers and sixteen assignments on one/four workers retain measured native parallel clocks and matched outputs (Supplementary Figure 17). Four-worker OpenHCS execution efficiencies ranged from 58.7% to 69.6% of ideal scaling, compared with 64.5% to 84.2% for native CellProfiler. OpenHCS retained 82.6% to 93.9% of native execution scaling efficiency, with execution speedups of 2.13- to 4.14-fold in these matched four-worker workloads. These measurements distinguish loss against ideal scaling from additional loss relative to native CellProfiler and do not establish near-linear scaling.
+
+The earlier analysis-focused throughput and memory measurements remain archived in Supplementary Data 3 and Supplementary Figure 7. Their configured worker and output policies differ from this output-complete matched evaluation, so their rates and memory values are not combined with the fresh timing distributions.
+
+#### Archived protocols
+
+Archived May development runs measured throughput and peak memory by assigning the same source images to multiple well identifiers, creating repeated analysis work. Queue depth specifies how many assignments were supplied per configured worker. Each condition has one recorded run per workflow. The retained rows report completed assignments but do not preserve worker-process traces or per-run output inventories.
+
+Throughput varied the configured worker maximum over two, three and four,
+with four assignments per worker. The memory sweep fixed four workers and
+varied assignments per worker over one, two, three, four, six and eight.
+
+Throughput uses execution time after initialization and compilation. The recorded configuration disables default saving of named results and return of detailed worker records, and requests removal of unused steps whose outputs are not saved. Supplementary Data 3 identifies these settings, the individual runs and the limits of their historical output-policy provenance. These rows characterize that archived analysis-focused workload, not the current output-complete CellProfiler translation. Measurements cover CPU execution on local or explicitly mounted image sources; GPU and cloud or network-storage performance were not measured.
+
+The archived single-sample benchmark specifies one thread/core, CPU-only execution and no batching, with one retained comparison observation per workflow. The harness committed with the tables times the native CellProfiler command from subprocess launch through completion, including its startup. It times OpenHCS execution after initialization and compilation. Total-phase values also include different work, including benchmark validation and comparison on the OpenHCS path. Supplementary Figure 5 and Supplementary Data 1 report these observations with their timer definitions; they do not establish a like-for-like speed comparison. The wound-healing native duration equals the 900-s timeout ceiling without an explicit completion flag and is excluded from timing statistics.
+
+The supplementary package separates the release CI comparison records from the earlier performance measurements. Its software-snapshot table identifies the revision and evidence for each evaluation. Figure scripts regenerate panels from saved CSVs and record source and output checksums. Supplementary Data 6 links automated tests of workflow editing and pre-execution validation to their source and CI jobs.
+
 - [Core-count sweep](../../benchmark/results/labmeeting_20260513/official30_well_throughput/data/core_scaling_well_throughput.csv).
 - [Two-, three- and four-worker queue-depth conditions](../../benchmark/results/labmeeting_20260513/official30_well_throughput/data/wells_per_core_2c3c4c.csv).
 - [Four-worker conditions with six and eight wells per worker](../../benchmark/results/labmeeting_20260513/official30_well_throughput/data/wells_per_core_4c_6wpc_8wpc.csv).
@@ -880,6 +865,14 @@ and value comparisons are provided by the separate Official30 job in
 Supplementary Data 1.
 
 ## Supplementary Data 7. Prospective agent-authored assay validation
+
+### Earlier prospective held-out results
+
+The three prospectively authored workflows were applied without scientific parameter changes after their held-out partitions were disclosed (Supplementary Figure 6 and Supplementary Data 7). On the 50 BBBC039 fields, 4,733 of 5,720 reference nuclei matched at intersection over union at least 0.5. Pooled precision was 0.680, recall was 0.827 and object F1 was 0.746; mean field foreground Dice was 0.935. The workflow predicted 6,964 nuclei, 1,244 more than the reference, and the overlap diagnostic identified more split reference instances than merged predictions. The first blind pipeline therefore recovered nuclear foreground well while over-segmenting instances.
+
+On the 12 BBBC007 fields, 29,450 of 43,875 relevant predicted adjacent-cell boundary pixels were within two pixels of a manual outline, a pooled fraction of 0.671. The workflow predicted 1,274 nuclei and 1,273 cells; every predicted nucleus overlapped a cell and one cell shared two nuclei. The manual outlines enclosed 1,082 closed nuclear interiors, while 12 open or frame-connected regions were excluded. Because the boundary score is directed from predictions to the outline union, it can reward an incomplete segmentation and does not establish object correspondence.
+
+The BBBC013 run produced matched nuclear and cytoplasmic measurements for 14,262 cells across all 92 held-out wells. Wortmannin controls separated with Z-prime 0.751 and mean nuclear-to-cytoplasmic GFP ratios of 7.235 and 0.915 for positive and negative controls. LY294002 controls gave Z-prime 0.554 and means of 7.219 and 1.127. Both held-out dose series showed the expected increase in nuclear translocation. This result evaluates recovery of the assay response; BBBC013 does not supply manual masks with which to score segmentation.
 
 The [validation report](independent_agent_validation.md) records the prospective
 design, quantitative results, limitations, prediction-manifest hashes and
