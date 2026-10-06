@@ -1,0 +1,2 @@
+case_name,worker_count,well_count,worker_slot,axis_count,started_at,completed_at,lane_seconds
+cp4_supplement_combine_objects,1,1,worker_0,1,1791320591.2830517,1791320591.3236372,0.04058551788330078

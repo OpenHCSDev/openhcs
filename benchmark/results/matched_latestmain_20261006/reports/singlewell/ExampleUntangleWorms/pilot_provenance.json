@@ -1,0 +1,171 @@
+{
+  "case": "ExampleUntangleWorms",
+  "wells": [
+    "A01"
+  ],
+  "selected_source_wells": [
+    "A01"
+  ],
+  "assignment_scope": "genuine source wells",
+  "manifest_sha256": "1d1b016aea7ff2ac0bc2441fff1140bb492bbf3b86048f8565694ccd45e4dff1",
+  "cppipe_sha256": "ca13e640fe5981ccff352e0d410e712a74d0f7687e45407d0d802bdb3bed2385",
+  "driver_sha256": "1dec916be91d9ad3827d96b67afb59bc72109e9e255de2e9968542957629dafc",
+  "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
+  "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
+  "source_commit": "bb3180e04372a1ba33a269fe37b6512c1dc18da7",
+  "source_dirty": false,
+  "native_job_count": 1,
+  "candidate_worker_count": 1,
+  "candidate_worker_start_method": "fork",
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0"
+  },
+  "native_input_inventory": [
+    {
+      "path": "1649_1109_0003_Amp5-1_B_20070424_C01_w1_10E01AFB-34C4-416E-A9D3-51B90AB53728.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleUntangleWorms/images/1649_1109_0003_Amp5-1_B_20070424_C01_w1_10E01AFB-34C4-416E-A9D3-51B90AB53728.tif",
+      "size_bytes": 726060,
+      "sha256": "3a08ff2e3f2096d039e9da70f23e8284d109a96b172ba7676dbf3b96a08bc034"
+    },
+    {
+      "path": "1649_1109_0003_Amp5-1_B_20070424_C01_w2_CB2F18CD-EDF0-4BCD-98CF-3A07E5A582FF.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleUntangleWorms/images/1649_1109_0003_Amp5-1_B_20070424_C01_w2_CB2F18CD-EDF0-4BCD-98CF-3A07E5A582FF.tif",
+      "size_bytes": 726082,
+      "sha256": "9e13c07ce69d3ab619c086c4aec8b3c865235514583378a66cd1972e2fb2d49f"
+    },
+    {
+      "path": "1649_1109_0003_Amp5-1_B_20070424_C20_w1_0F5A41CB-2646-49E5-9281-F5B1F655B7BC.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleUntangleWorms/images/1649_1109_0003_Amp5-1_B_20070424_C20_w1_0F5A41CB-2646-49E5-9281-F5B1F655B7BC.tif",
+      "size_bytes": 726060,
+      "sha256": "630050bca7d937017f10f3e3988b4a42dcaaac8d64bf6d9e5b8e5a43a0019584"
+    },
+    {
+      "path": "1649_1109_0003_Amp5-1_B_20070424_C20_w2_5F64C597-735E-435D-B49C-2A07B9D6DFC3.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleUntangleWorms/images/1649_1109_0003_Amp5-1_B_20070424_C20_w2_5F64C597-735E-435D-B49C-2A07B9D6DFC3.tif",
+      "size_bytes": 726082,
+      "sha256": "f1f9acc9ade3eedc3442ac980aaf91f49175ce5b71b88d0441672de839f478ab"
+    }
+  ],
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleUntangleWorms/native_report.json",
+  "native_reference_report_sha256": "da2105df44032e32e8c03b2eefc6132055021a473d28db6fb824623fb3269084",
+  "native_reference_source_commit": "65bc037274d2b769943139a858723999690e9a26",
+  "native_reference_file_inventory": [
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/-1/1649_1109_0003_Amp5-1_B_20070424_C01_w2_CB2F18CD-EDF0-4BCD-98CF-3A07E5A582FFoutlines.png",
+      "sha256": "3af795fe333ba75a120324267162f6e647dd48ba938d7f68af9e2a951aaa9cbd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/-1/1649_1109_0003_Amp5-1_B_20070424_C20_w2_5F64C597-735E-435D-B49C-2A07B9D6DFC3outlines.png",
+      "sha256": "5fb364ee092cbb112b0a790067d15814595f8f31e81889f5feaa5f58702556a0"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/-1/Image.csv",
+      "sha256": "666590d051a3266922dbb8623b63b8e65efc4b9a87e8337c7628af4ec64376c1"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/-1/OverlappingWorms.csv",
+      "sha256": "b3d754b7df1cf265875977067e251ea209e505ee0dcbcf4752fab500ffaf8ed0"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/0/1649_1109_0003_Amp5-1_B_20070424_C01_w2_CB2F18CD-EDF0-4BCD-98CF-3A07E5A582FFoutlines.png",
+      "sha256": "3af795fe333ba75a120324267162f6e647dd48ba938d7f68af9e2a951aaa9cbd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/0/1649_1109_0003_Amp5-1_B_20070424_C20_w2_5F64C597-735E-435D-B49C-2A07B9D6DFC3outlines.png",
+      "sha256": "5fb364ee092cbb112b0a790067d15814595f8f31e81889f5feaa5f58702556a0"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/0/Image.csv",
+      "sha256": "666590d051a3266922dbb8623b63b8e65efc4b9a87e8337c7628af4ec64376c1"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/0/OverlappingWorms.csv",
+      "sha256": "b3d754b7df1cf265875977067e251ea209e505ee0dcbcf4752fab500ffaf8ed0"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/1/1649_1109_0003_Amp5-1_B_20070424_C01_w2_CB2F18CD-EDF0-4BCD-98CF-3A07E5A582FFoutlines.png",
+      "sha256": "3af795fe333ba75a120324267162f6e647dd48ba938d7f68af9e2a951aaa9cbd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/1/1649_1109_0003_Amp5-1_B_20070424_C20_w2_5F64C597-735E-435D-B49C-2A07B9D6DFC3outlines.png",
+      "sha256": "5fb364ee092cbb112b0a790067d15814595f8f31e81889f5feaa5f58702556a0"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/1/Image.csv",
+      "sha256": "666590d051a3266922dbb8623b63b8e65efc4b9a87e8337c7628af4ec64376c1"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/1/OverlappingWorms.csv",
+      "sha256": "b3d754b7df1cf265875977067e251ea209e505ee0dcbcf4752fab500ffaf8ed0"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/2/1649_1109_0003_Amp5-1_B_20070424_C01_w2_CB2F18CD-EDF0-4BCD-98CF-3A07E5A582FFoutlines.png",
+      "sha256": "3af795fe333ba75a120324267162f6e647dd48ba938d7f68af9e2a951aaa9cbd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/2/1649_1109_0003_Amp5-1_B_20070424_C20_w2_5F64C597-735E-435D-B49C-2A07B9D6DFC3outlines.png",
+      "sha256": "5fb364ee092cbb112b0a790067d15814595f8f31e81889f5feaa5f58702556a0"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/2/Image.csv",
+      "sha256": "666590d051a3266922dbb8623b63b8e65efc4b9a87e8337c7628af4ec64376c1"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native/2/OverlappingWorms.csv",
+      "sha256": "b3d754b7df1cf265875977067e251ea209e505ee0dcbcf4752fab500ffaf8ed0"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native_preparation/native_cellprofiler_file_list.txt",
+      "sha256": "f9f2a939f212b570addf2e4217842844c5bbe4b646fcb76707705d8bc78d9b02"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWorms/native_preparation/native_cellprofiler_headless/ExampleUntangleWorms.cppipe",
+      "sha256": "9fc8c49624dbb6796afa37794a957eb95177f0632891dc48f2ab12d7d2381c17"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleUntangleWorms/native_report.json",
+      "sha256": "da2105df44032e32e8c03b2eefc6132055021a473d28db6fb824623fb3269084"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleUntangleWorms/native_request.json",
+      "sha256": "b2bceeceed902645d379e5a1364423f4b8721d6954f52a4cfd2bced5389440f4"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/singlewell/capture/cases/ExampleUntangleWorms/pilot_provenance.json",
+      "sha256": "f46d95789a339af8a2d3b1e954af9cc6d175ac8314acf17f89850ebbf69b19aa"
+    }
+  ],
+  "native_image_set_count": 2,
+  "native_input_inventory_after": [
+    {
+      "path": "1649_1109_0003_Amp5-1_B_20070424_C01_w1_10E01AFB-34C4-416E-A9D3-51B90AB53728.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleUntangleWorms/images/1649_1109_0003_Amp5-1_B_20070424_C01_w1_10E01AFB-34C4-416E-A9D3-51B90AB53728.tif",
+      "size_bytes": 726060,
+      "sha256": "3a08ff2e3f2096d039e9da70f23e8284d109a96b172ba7676dbf3b96a08bc034"
+    },
+    {
+      "path": "1649_1109_0003_Amp5-1_B_20070424_C01_w2_CB2F18CD-EDF0-4BCD-98CF-3A07E5A582FF.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleUntangleWorms/images/1649_1109_0003_Amp5-1_B_20070424_C01_w2_CB2F18CD-EDF0-4BCD-98CF-3A07E5A582FF.tif",
+      "size_bytes": 726082,
+      "sha256": "9e13c07ce69d3ab619c086c4aec8b3c865235514583378a66cd1972e2fb2d49f"
+    },
+    {
+      "path": "1649_1109_0003_Amp5-1_B_20070424_C20_w1_0F5A41CB-2646-49E5-9281-F5B1F655B7BC.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleUntangleWorms/images/1649_1109_0003_Amp5-1_B_20070424_C20_w1_0F5A41CB-2646-49E5-9281-F5B1F655B7BC.tif",
+      "size_bytes": 726060,
+      "sha256": "630050bca7d937017f10f3e3988b4a42dcaaac8d64bf6d9e5b8e5a43a0019584"
+    },
+    {
+      "path": "1649_1109_0003_Amp5-1_B_20070424_C20_w2_5F64C597-735E-435D-B49C-2A07B9D6DFC3.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleUntangleWorms/images/1649_1109_0003_Amp5-1_B_20070424_C20_w2_5F64C597-735E-435D-B49C-2A07B9D6DFC3.tif",
+      "size_bytes": 726082,
+      "sha256": "f1f9acc9ade3eedc3442ac980aaf91f49175ce5b71b88d0441672de839f478ab"
+    }
+  ]
+}

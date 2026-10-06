@@ -1,0 +1,14 @@
+case_name,worker_count,well_count,worker_slot,axis_id,step_name,started_at,completed_at,step_seconds
+ExampleUntangleAndStraightenWorms,1,1,worker_0,A01,CorrectIlluminationCalculate,1791321016.9721606,1791321017.0389855,0.06682491302490234
+ExampleUntangleAndStraightenWorms,1,1,worker_0,A01,CorrectIlluminationApply,1791321017.039192,1791321017.0510232,0.011831283569335938
+ExampleUntangleAndStraightenWorms,1,1,worker_0,A01,ImageMath,1791321017.051279,1791321017.056246,0.0049669742584228516
+ExampleUntangleAndStraightenWorms,1,1,worker_0,A01,Threshold,1791321017.0565002,1791321017.0696955,0.013195276260375977
+ExampleUntangleAndStraightenWorms,1,1,worker_0,A01,UntangleWorms,1791321017.069964,1791321017.2564442,0.18648028373718262
+ExampleUntangleAndStraightenWorms,1,1,worker_0,A01,OverlayOutlines,1791321017.2568007,1791321017.2994857,0.04268503189086914
+ExampleUntangleAndStraightenWorms,1,1,worker_0,A01,StraightenWorms,1791321017.299808,1791321017.3378868,0.03807878494262695
+ExampleUntangleAndStraightenWorms,1,1,worker_0,A01,IdentifyPrimaryObjects,1791321017.338219,1791321017.377543,0.039324045181274414
+ExampleUntangleAndStraightenWorms,1,1,worker_0,A01,RelateObjects,1791321017.37802,1791321017.3893588,0.01133871078491211
+ExampleUntangleAndStraightenWorms,1,1,worker_0,A01,GrayToColor,1791321017.3896155,1791321017.3960886,0.006473064422607422
+ExampleUntangleAndStraightenWorms,1,1,worker_0,A01,GrayToColor,1791321017.396502,1791321017.4122145,0.015712499618530273
+ExampleUntangleAndStraightenWorms,1,1,worker_0,A01,OverlayOutlines,1791321017.4124844,1791321017.4365613,0.02407693862915039
+ExampleUntangleAndStraightenWorms,1,1,,,ExportToSpreadsheet,1791321017.4385948,1791321017.452067,0.01347208023071289
