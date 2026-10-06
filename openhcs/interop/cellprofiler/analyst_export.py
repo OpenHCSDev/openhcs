@@ -1054,6 +1054,7 @@ class CPATableRowProjection:
         self,
         *,
         source_binding_plan: CompiledSourceBindingPlan,
+        image_inputs: ArtifactSpecCollection,
         image_channels: Sequence[CPAImageChannelSpec],
         axis_id: str,
         settings: CellProfilerDatabaseExportSettings,
@@ -1065,11 +1066,15 @@ class CPATableRowProjection:
         """Project declared source occurrences for image sets actually exported."""
 
         channel_aliases = frozenset(channel.alias for channel in image_channels)
-        source_bindings = tuple(
-            binding
-            for binding in source_binding_plan.binding_declarations
-            if binding.alias in channel_aliases
-            and binding.artifact_kind is ImageArtifactType
+        selected_images = ArtifactSpecCollection(tuple(
+            image_inputs.require_by_name_and_artifact_type(name, ImageArtifactType)
+            for name in chain(
+                (channel.alias for channel in image_channels),
+                settings.thumbnail_image_names if settings.write_image_thumbnails else (),
+            )
+        ))
+        source_bindings = source_binding_plan.bindings_for_artifact_refs(
+            selected_images.ref_set(),
         )
         if not source_bindings:
             return
@@ -1121,14 +1126,15 @@ class CPATableRowProjection:
                         f"CPA source image {binding.alias!r} requires format-owned "
                         "Frame/Series projection for its embedded source selection."
                     )
-                self.collect_image_provenance(
-                    provenance,
-                    scope=scope,
-                    source_image_name=binding.alias,
-                    image_rows_by_number=image_rows_by_number,
-                    source_metadata_by_image_number=source_metadata_by_image_number,
-                    source_axis_indices=projection.ref.source_axis_indices,
-                )
+                if binding.alias in channel_aliases:
+                    self.collect_image_provenance(
+                        provenance,
+                        scope=scope,
+                        source_image_name=binding.alias,
+                        image_rows_by_number=image_rows_by_number,
+                        source_metadata_by_image_number=source_metadata_by_image_number,
+                        source_axis_indices=projection.ref.source_axis_indices,
+                    )
 
                 if (
                     settings.write_image_thumbnails
@@ -1289,6 +1295,10 @@ class CellProfilerAnalystProjectionBuilder:
                 "CellProfilerDatabaseExportSettings."
             )
         self._validate_image_channels(artifact_batch, image_channels)
+        image_inputs = ArtifactSpecCollection(artifact_batch.specs_of_type(ImageArtifactType))
+        if settings.write_image_thumbnails:
+            for image_name in settings.thumbnail_image_names:
+                image_inputs.require_by_name_and_artifact_type(image_name, ImageArtifactType)
 
         dialect = self._dialect(settings)
         row_projection = CPATableRowProjection(
@@ -1402,6 +1412,7 @@ class CellProfilerAnalystProjectionBuilder:
             )
             row_projection.collect_source_bound_image_provenance(
                 source_binding_plan=self.source_binding_plan,
+                image_inputs=image_inputs,
                 image_channels=image_channels,
                 axis_id=axis_id,
                 settings=settings,
@@ -1410,7 +1421,7 @@ class CellProfilerAnalystProjectionBuilder:
             )
             if settings.write_image_thumbnails:
                 self._collect_image_thumbnails(
-                    artifact_batch=artifact_batch,
+                    image_inputs=image_inputs,
                     records=image_records[axis_id],
                     settings=settings,
                     row_projection=row_projection,
@@ -1758,15 +1769,14 @@ class CellProfilerAnalystProjectionBuilder:
     def _collect_image_thumbnails(
         self,
         *,
-        artifact_batch: RuntimeArtifactBatch,
+        image_inputs: ArtifactSpecCollection,
         records: Sequence[StoredRuntimeValue],
         settings: CellProfilerDatabaseExportSettings,
         row_projection: CPATableRowProjection,
         image_rows_by_number: dict[int, dict[str, Any]],
     ) -> None:
-        inputs = ArtifactSpecCollection(artifact_batch.input_specs)
         for image_name in settings.thumbnail_image_names:
-            spec = inputs.require_by_name_and_artifact_type(image_name, ImageArtifactType)
+            spec = image_inputs.require_by_name_and_artifact_type(image_name, ImageArtifactType)
             if self.source_binding_plan.declares_artifact_ref(spec.ref()):
                 continue  # The declared source-occurrence owner projects these pixels.
             for record in records:

@@ -2040,3 +2040,22 @@ def test_produced_thumbnail_uses_named_pixels_not_measurement_source(tmp_path, m
     assert len(pixels) == 1
     assert np.array_equal(pixels[0], np.zeros((8, 8), dtype=np.uint8))
     assert _external_rows(projection.image_table)[0]["Image_Thumbnail_DNA"] == encode(pixels[0], auto_scale=False)
+
+
+def test_source_bound_thumbnail_only_ref_preserves_executed_sites(tmp_path):
+    builder, batch, _channels, calibration, _document = _borrowed_source_export_fixture(tmp_path)
+    builder.context.filemanager.load_batch = lambda paths, _backend: [
+        np.load(calibration) for _path in paths
+    ]
+    builder.context.filemanager.physical_source_path = lambda address, _backend, *, base_path: address
+    settings = replace(
+        _settings(), write_image_thumbnails=True, thumbnail_image_names=("IllumDNA",),
+        auto_scale_thumbnail_intensities=False,
+    )
+    projection = builder.build(batch, settings, ())
+    rows = _external_rows(projection.image_table)
+    assert len(rows) == 2  # The third declared source occurrence was not executed.
+    assert all(row["Image_Thumbnail_IllumDNA"] for row in rows)
+    assert all("Image_FileName_IllumDNA" not in row for row in rows)
+    disabled = replace(settings, write_image_thumbnails=False, thumbnail_image_names=("Missing",))
+    assert len(_external_rows(builder.build(batch, disabled, ()).image_table)) == 2
