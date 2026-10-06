@@ -167,9 +167,9 @@ The UI submits work to a separate execution server using ZeroMQ messaging. The s
 
 ### Figure 2. Forms, Python and MCP edit the same analysis
 
-![Matching main window, recorded MCP edits, parameter controls and Python code.](figures/slas/editable_analyses.png){width=6in}
+![Main workflow, ZeroMQ server browser, parameter controls and matching Python code.](figures/slas/editable_analyses.png){width=6in}
 
-\(A) Full NeuronCyto II main window, with enlarged step and connection details. (B) MCP applies edited Python to the step and checks the updated control, then edits the field and checks regenerated Python. (C, D) Same-session crops show matching controls and code, with high percentile restored to 99.8 and parameters in signature order. Captures use OpenHCS 0.8.5; Figure 3 shows the current replay and retained measurements.
+\(A) NeuronCyto II workflow and enlarged pipeline steps. (B) The ZeroMQ server browser lists the execution server and UI bridge, with status and management controls. This panel was captured separately in OpenHCS 0.8.7. (C, D) Matching controls and Python show the high percentile restored to 99.8 and parameters in signature order after MCP edits. Panels A, C and D come from the same OpenHCS 0.8.5 editing session; Figure 3 shows the subsequent replay and measurements.
 
 ### An agent constructs a neurite-outgrowth analysis
 

@@ -861,13 +861,13 @@ def authoring():
         raise ValueError("Recorded final field and control do not agree")
 
     sheet.panel("A", "Main window: the complete workflow", 3, 90)
-    sheet.native_image("authoring_main_verified_capture", (3, 49, 60, 39))
-    sheet.panel("B", "ZeroMQ server browser", 66, 90)
-    sheet.native_image("authoring_server_browser_verified_capture", (66, 49, 31, 39))
-    sheet.text(3, 46, "Detail from A: the two analysis steps", size=10, color=MUTED)
+    sheet.native_image("authoring_main_verified_capture", (3, 53, 60, 35))
+    sheet.text(66, 86, "Detail from A: pipeline steps", size=10, color=MUTED)
     sheet.native_image(
-        "authoring_main_verified_capture", (3, 35, 62, 9), crop=(516, 230, 1024, 320)
+        "authoring_main_verified_capture", (66, 63, 31, 20), crop=(516, 230, 1024, 320)
     )
+    sheet.panel("B", "ZeroMQ server browser", 3, 49)
+    sheet.native_image("authoring_server_browser_verified_capture", (3, 32, 94, 15))
     sheet.panel("C", "Function controls", 3, 29)
     sheet.panel("D", "Matching Python code", 54, 29)
     sheet.native_image(
