@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "<stdin>", line 8, in <module>
+  File "<stdin>", line 8, in <genexpr>
+  File "/home/ts/.local/share/uv/python/cpython-3.12-linux-x86_64-gnu/lib/python3.12/dataclasses.py", line 1581, in replace
+    return obj.__class__(**changes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 9, in __init__
+  File "/home/ts/code/projects/papers/paper_build/declarations.py", line 65, in __post_init__
+    raise ValueError("Document sources must be relative to the local declaration")
+ValueError: Document sources must be relative to the local declaration

@@ -5,7 +5,6 @@
     "benchmark/results/official30_matched_20261006/data/8assignments-1worker/summary_custody.json": "d875f402a5c391168ddff5f4a42d63e9132eba0491b710b0d9fcaffd54715d8f",
     "benchmark/results/official30_matched_20261006/data/8assignments-2workers/summary_custody.json": "006c020d91a16a0b27b34d4d43f6ad888c51ab80e41ad0281adae9958e369463",
     "benchmark/results/official30_matched_20261006/protocol/selected-three-case-manifest.json": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
-    "/home/ts/.local/state/openhcs-maintenance/20261006/final-measured-publication-v15/selected-three-case-manifest.json": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
     "benchmark/reports/cppipe_figures.py": "e4b1f9707ce292563949ae00e33ef77c42440049640585563025a82ed295c9db"
   },
   "generator_sha256": "75259b57e2929990e24de603f1c150a5c5a9b5c8f4ca20587420542e50bf4910",
@@ -6751,5 +6750,13 @@
     "ExampleIlluminationCorrection_Example3",
     "cp_tutorial_3d_monolayer"
   ],
-  "interpretation": "Qualified matched measurements rendered by the existing measured benchmark owner. Original clock boundaries, repetitions and source custody remain in matched_report_provenance. Each mode owns its actual native baseline; no projected throughput or RAM is supplied."
+  "interpretation": "Qualified matched measurements rendered by the existing measured benchmark owner. Original clock boundaries, repetitions and source custody remain in matched_report_provenance. Each mode owns its actual native baseline; no projected throughput or RAM is supplied.",
+  "source_path_origins": {
+    "benchmark/results/official30_matched_20261006/protocol/selected-three-case-manifest.json": "/home/ts/.local/state/openhcs-maintenance/20261006/final-measured-publication-v15/selected-three-case-manifest.json"
+  },
+  "provenance_normalization": {
+    "original_receipt_sha256": "c134df9f1151f16f963c2228bb6e97b99c0b2a2e0c2bd7cc8bd813811dbff88d",
+    "writer_sha256": "a8afc37c09bf2ab678d595b9e4dc6db68d2b0361a6d6471518d95735ca67d348",
+    "scope": "Path-only correction to byte-identical retained inputs; original generator/output hashes preserved; no rerender or benchmark execution."
+  }
 }
