@@ -871,10 +871,12 @@ def _generate_measured_amortization_figures(
         "Single-core measured amortization", "Seconds per assignment", minimum_ylim=0.0,
     )
     with FIGURE_STYLE.context():
-        fig, axes = plt.subplots(1, len(pipeline_names), squeeze=False,
-                                 figsize=(5 * len(pipeline_names), SINGLE_PANEL_HEIGHT_INCHES))
+        columns = min(2, len(pipeline_names))
+        rows = math.ceil(len(pipeline_names) / columns)
+        fig, axes = plt.subplots(rows, columns, squeeze=False,
+                                 figsize=(7.2, 3.4 * rows))
         for index, name in enumerate(pipeline_names):
-            axis = axes[0, index]
+            axis = axes.flat[index]
             series = points[name]
             counts = tuple(count for count, _ in series)
             for method_index, method in enumerate(series[0][1]):
@@ -884,12 +886,16 @@ def _generate_measured_amortization_figures(
                           color=FIGURE_STYLE.color_for_method(method_index))
             FIGURE_STYLE.decorate_axis(axis, metric=metric, panel_index=index)
             axis.set_title(PIPELINE_LABEL_LAYOUT.split_label(name), loc="left", pad=10)
-            axis.set_xlabel("Measured repeated assignments (one worker)")
+            axis.set_xlabel("Measured repeated assignments\n(one worker)")
             axis.set_ylabel(metric.ylabel)
             axis.set_xticks(counts)
+            axis.tick_params(labelsize=9)
             axis.set_ylim(bottom=0)
-        FIGURE_STYLE.decorate_legend(axes[0, -1])
-        fig.tight_layout()
+        for axis in tuple(axes.flat)[len(pipeline_names):]:
+            axis.set_visible(False)
+        handles, labels = axes.flat[0].get_legend_handles_labels()
+        fig.legend(handles, labels, frameon=False, loc="lower center", ncol=len(labels))
+        fig.tight_layout(rect=(0, 0.07, 1, 1))
         for extension in output_formats:
             path = output_dir / f"{metric.filename_stem}.{extension}"
             FIGURE_STYLE.save(fig, path)
