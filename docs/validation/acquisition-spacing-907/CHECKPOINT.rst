@@ -58,21 +58,13 @@ origin assertion failed because receiving28 was cold-relocated under HDD; no
 product failure. Both logs remain beside source03. Correct source03 resolves
 the original target path and uses the existing qualified backing, no overlay.
 
-Remaining affected user path
+Installed affected user path
 ----------------------------
 
-Ordinary whole-candidate/public saved reopening remains required before closing
-907. Planck is the existing whole-builder owner; Dewey owns the recorded runtime
-lane/handoff. No old scientific client, saved viewer or UNKNOWN operation is
-borrowed/replayed. No arbitrary memory cap is imposed.
-
-Reuse original engineering541/public88-receiving17 saved raw/GraphROI fixture:
-public inventory -> original returned paths -> ordinary stream -> native state/
-payload summaries -> matched raw/result/combined snapshots -> exact typed close.
-Unknown source must remain empty acquisition spacing and pixel native units,
-with unchanged source paths/geometry and pixel graph features. Pair it with the
-existing explicitly calibrated engineering source; its declared physical scale
-and units must remain unchanged. Do not infer physical calibration from graph
-analysis-unit fields or rerun the detector. Keep all old archive/input hashes.
-
-This checkpoint is implemented/source-qualified, not installed/live acceptance.
+Completed by Singer using the original receiving28 whole-builder/materializer/
+verifier and recorded dev_client owner, with a fresh isolated target and one
+recorded client. No historical fleet lane or runtime was adopted. See
+LIVE-ACCEPTANCE01.rst and the retained original journals in live01.tar.gz.
+The saved raw/GraphROI unknown-spacing path and explicit physical raw/ROI
+control passed, then both native viewers acknowledged close/process exit and
+the client exited0. No detector execution, global install or dependency edit.
