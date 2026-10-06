@@ -77,8 +77,24 @@ final views support ordinary soma localization, raw-aligned major trunks and
 some recovered side paths; short near-track branches remain ambiguous.
 Capture identities and declared windows are in QA-INDEX. The final full set
 uses center 399.5,399.5, zoom 0.49875 and raw window 0..100; the bottom set
-uses center 680,365, zoom 2 and raw window 0..12. Those index declarations
-were not separately reconciled with every capture-time viewer-state receipt.
+uses center 680,365, zoom 2 and raw window 0..12. Subsequent independent
+read-only review reconciled these settings with the original applied controls
+before each triplet. Immediately preceding isolation acknowledgements establish
+raw-only, soma-and-neurite-result-only and combined visible routes. All six
+PNG sizes/hashes match both their original resource acknowledgements and
+QA-INDEX; independent bitmap review confirms the matched field/detail geometry
+and intended visibility modes. No rejected control, timeout or UNKNOWN appears
+in these reviewed sequences. The intervening gap-detail triplet was not used
+as the full-field or bottom-detail state.
+
+The original command sequences are runtime/mcp.stdin lines309--316 and
+325--331; snapshot identities occur in runtime/mcp.stdout at lines87239,
+87331,87424,87923,88015 and88108. These compact snapshot receipts do not retain
+a separate capture-synchronous full viewer-state readback, canvas geometry or
+complete layer transforms. Raw PNGs visibly show gamma1.00; combined views
+do not independently expose raw-layer gamma. This review strengthens custody
+of the existing useful major-shaft witnesses, not complete tracing accuracy.
+No original record, image, pipeline or scientific execution was changed.
 
 Exact viewer, native and MCP exits were independently verified. Original
 client exit 2 remains distinct from the four completed scientific executions.
