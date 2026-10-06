@@ -340,6 +340,21 @@ correspondence. Open or frame-connected reference interiors are excluded,
 and tiny closed annotation regions remain included; these single-field scores
 do not establish an exhaustive biological census (Supplementary Data 8).
 
+In another fresh repeat, the author distinguished marker extraction from
+division after its first method missed three joined nuclei. Intensity markers
+alone still merged the group and a genuine pair; changing the dividing landscape
+recovered the three cores and separated the pair while retaining textured-single
+controls. The final 55-instance result included two seed-only actin regions and
+an ambiguous adjacent-nucleus group. The author retained these uncertainties
+after matched review at nine positions in both channels. Independent checks
+confirmed label-to-table agreement and unchanged exports after a technical
+integrity audit. Postfreeze reference comparison found essentially unchanged
+nuclear object F1 (0.747 to 0.745), with recall rising from 0.787 to 0.809;
+actin-region F1 improved from 0.642 to 0.661. Directed adjacent nuclear-boundary
+agreement worsened. Visible local recovery therefore did not establish a
+whole-field nuclear accuracy gain or exact biological counts (Supplementary
+Data 8).
+
 Retinal authors used measured background and weak-body support to select
 smoothing, background subtraction and foreground admission. In the independent
 trial shown in Figure 7, an intermediate repair
@@ -359,7 +374,12 @@ admission and replaced it with body-scale background subtraction. The final
 141-instance candidate retained the clear neighbouring pair, but weak southwest
 bodies still received incomplete masks. The author also detected invalid
 label-derived fluorescence measurements and corrected their source binding
-without changing the segmentation. Across these trials, matched regional
+without changing the segmentation. In another independent repeat, changing
+foreground threshold and smoothing joined a fragmented central body while
+preserving a genuine neighbouring pair and bright regional controls. Its final
+110-instance candidate still incompletely covered weak bodies; a separate
+source-binding repair restored fluorescence measurements without changing the
+labels. Across these trials, matched regional
 controls support self-directed preprocessing, instance and measurement repair.
 Manual-reference accuracy remains unmeasured: the detector totals are not
 validated retinal cell counts
@@ -499,6 +519,12 @@ bodies and process segments alongside faint gaps and incomplete body association
 in a dense cluster. The overlapping fields were not summed as unique cells or
 independent replicates; fieldwise coverage is distinct from stitched analysis
 and complete outgrowth measurement (Supplementary Data 8).
+
+A separate saved-output review found a process-bearing soma with zero reported
+outgrowth because its continuations were already absent from the candidate
+mask. Inspected raw-mosaic junctions remained locally continuous. Useful raw
+assembly therefore did not imply complete process extraction or cell-specific
+measurement (Supplementary Data 8).
 
 A subsequent development phase analysed the assembled canvas rather than
 summing overlapping fields. Its selected checkpoint retained 1,567 body labels

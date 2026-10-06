@@ -1242,6 +1242,7 @@ class PipelineCompiler:
                 main_flow_refs = group.main_flow_input_refs_for_component(
                     execution_scope,
                     component_value,
+                    source_bindings=declared_plan,
                 )
                 source_binding_plan = declared_plan.for_main_flow_scope(
                     component=execution_scope.component,

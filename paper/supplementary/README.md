@@ -1389,6 +1389,15 @@ route prevented result and seam review; this is an operationally blocked
 checkpoint, neither a biological failure nor an autonomous scientific pass.
 The frozen outputs remain available for separately recorded development.
 
+The later [saved-result review](task_only_analysis/p001-saved-review23-qualified-completion.rst)
+reopened those immutable outputs and inspected field, object and raw-mosaic
+junction views. It found useful local bodies and paths but a clear zero-outgrowth
+miss already present in the candidate mask. Acquisition-based raw joins were
+qualitatively useful; complete per-cell outgrowth was rejected. All 70 review
+files and eight terminal files were independently hash-checked. The operational
+review blocker was resolved for this phase without replaying the earlier UNKNOWN
+or claiming a new autonomous success; retained-context development continues.
+
 A later independent full-plate translocation author retained all 19,732 nuclear
 rows, with 8,655 contributing ratios and 9,661 rows lacking supported cytoplasm.
 The [qualified completion record](task_only_analysis/bbbc013-fresh20-qualified-completion.rst)
@@ -1405,6 +1414,18 @@ completeness. The [repeat completion and comparison](task_only_analysis/h002-fre
 records all distance thresholds, source identities and technical delivery
 failures without interpreting unmatched predictions as false biological cells.
 
+A fresh paired-channel author recovered three missed nuclear cores and a
+genuine pair by distinguishing intensity marker extraction from the dividing
+landscape, while retaining textured-single controls. The final 55-instance
+candidate retains seed-only actin regions and ambiguous nuclear identity.
+The [qualified scientific completion record](task_only_analysis/h003-fresh23-development-checkpoint.rst)
+reports the author's 108 matched final captures, independent frozen-file checks
+and byte-identical label/table exports after a technical integrity audit.
+The separate [postfreeze comparison](task_only_analysis/h003-fresh23-postfreeze-reference-comparison.json)
+found essentially unchanged nuclear object F1 and modestly better actin-region
+F1, with worse directed nuclear contact-boundary agreement. No reference
+feedback reached the authors; runtime retirement is a separate handoff.
+
 A fresh retinal author replaced grain-scale foreground admission with
 body-scale contrast after rejecting nuisance flooding and dim-body losses.
 The final 141-instance candidate preserves a clear neighbouring pair, while
@@ -1413,6 +1434,14 @@ binding leaves the label array unchanged. The
 [qualified completion record](task_only_analysis/retinal-fresh22-qualified-completion.rst)
 retains all four attempts, the independently checked 903-file freeze and the
 distinction between useful localisation and unmeasured manual-reference accuracy.
+
+Another fresh retinal repeat corrected fragmented foreground while preserving
+a genuine pair, retaining 110 algorithm-defined regions, including nine
+border-censored objects. Its separate source-binding correction left labels
+unchanged. The [qualified repeat record](task_only_analysis/retinal-fresh23-qualified-completion.rst)
+reports independent saved-array/CSV reconciliation, all 313 declared file hashes
+and exact runtime disposition. Weak-object sensitivity and boundary accuracy
+remain unmeasured; this is useful detection coverage, not an exact cell census.
 
 A retained personal-neurite development continuation also analysed a reused
 nine-field mosaic with pooled channel fits. A fixed-DN clipping repair corrected

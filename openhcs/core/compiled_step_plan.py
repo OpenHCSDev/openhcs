@@ -333,6 +333,7 @@ class CompiledStepPlan:
             return None
         edges = group.stored_primary_input_edges_for_component(
             self.execution_group_scope, component_key,
+            source_bindings=self.source_binding_plan,
         )
         if edges and any(
             edge.storage_plan.source_step_scope_id == self.step_scope_id
