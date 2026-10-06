@@ -634,6 +634,17 @@ compartment loss. The reported responses therefore describe the contributing
 cohorts, not unbiased whole-population translocation; Supplementary Data 8
 retains each pipeline, coverage denominator and failed predecessor.
 
+Another independent author completed all 96 wells after its own image review
+and repairs, retaining 14,631 eligible measurements from 17,320 detected
+nuclear identities (84.5%). Well-median log2 nuclear-to-cytoplasmic GFP ratios
+rose across both dose series and approached a plateau, with four wells per
+dose. Control Z-prime was 0.849 for LY294002 and 0.726 for Wortmannin.
+Independent recalculation reproduced all well summaries and control statistics.
+Matched images showed useful cytoplasmic support with some faint extensions
+missed. Eligibility varied with treatment, so these responses describe the
+measured cohort. This completed self-repaired analysis adds a reproducible assay
+result without requiring every faint boundary to be resolved (Supplementary Data 8).
+
 Table 2 summarizes the different endpoints supported by these task-only
 trials. The measures are not interchangeable: object matching, directed
 boundary agreement, centre localisation and assay-response separation answer
