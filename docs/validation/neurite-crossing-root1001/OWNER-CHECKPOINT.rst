@@ -63,3 +63,29 @@ and forwarding core renderer are deleted. Empty/combined topology and all
 explicit test constructors migrate together. Scientific detection/admission,
 root-distance rule and output artifact ABI are unchanged; geometry after
 repair is intentionally corrected, not claimed invariant.
+
+Parent review corrections (before acceptance)
+--------------------------------------------
+
+Shared core projection now rejects an incoming raster identity absent from
+that resolved crossing's original arm owners. Repair retains the original
+regional core values before temporary projection and restores them exactly,
+rather than clearing or silently clobbering another owner. Renumbering the two
+owners reverses spatial processing order in the real repair control; an
+unrelated foreign body/raster identity99 is also exercised at the core.
+
+Per-owner core bounds come from the topology's small coordinate lists.
+Repair/final topology project only their original regional slices, without a
+full-mosaic mask or argwhere per owner. The publication-wide core mask remains
+a derived global view needed once by the existing recipe, not a cached owner
+authority. An8MP/1000-owner real repair control checks exact output and that
+every core projection has at most4 pixels; no hardware-dependent timing gate.
+
+controls04 hit its60s deadline in the first full-detector test before any
+assertion result; original logs remain. The narrowed direct owner batch
+controls05 returned19PASS/4FAIL. All failures were the new final-endpoint
+assertion: a soma-internal terminal became internal after legitimate centroid
+root connection. The test now follows the profile's explicit body exclusion
+and asserts every outside-body trace owner and both rooted subjects instead.
+No original crossing/distance assertions were removed or weakened. controls06
+will exercise the coherent regional/foreign-owner correction; not yet claimed.
