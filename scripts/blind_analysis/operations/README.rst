@@ -38,6 +38,11 @@ file in the run freeze. The authorized publisher uses its reviewed revision::
 
   FLEET_PARENT_RELEASED=1 bash operations/project-program.sh publish FUNDING NEXT EXPECTED_SHA256
 
+During preparation the same projector copies each new author's declared brief
+from its input root into its workspace. A missing or unreadable input brief
+fails preparation through the copy operation; stderr is not brief content.
+Provision the actual input contract before preparing and freezing a new run.
+
 Publication and admission share program.lock at FUNDING. Publication exclusively
 commits membership and FULL retired output roots together using atomic rename;
 admission reads one shared-locked revision. Missing custody, stale revision,
