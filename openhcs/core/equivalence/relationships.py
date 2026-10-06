@@ -1083,8 +1083,8 @@ class ExportedRelationshipMeasurementSemantics(RelationshipMeasurementSemantics)
         cls,
         tables: tuple[RuntimeTableSnapshot, ...],
         policy: RuntimeEquivalencePolicy,
-    ) -> tuple[RuntimeTableSnapshot, ...]:
-        """Consume every edge table before exposing its redundant scalar projection."""
+    ) -> tuple[tuple[RuntimeScopedMeasurementTable, ...], RuntimeImageNumberOffset]:
+        """Admit every edge against the same subject-owned tables used downstream."""
         ordinary = tuple(table for table in tables if not cls.supports_table(table))
         object_tables = tuple(
             RuntimeScopedMeasurementTable(measurement)
@@ -1107,7 +1107,7 @@ class ExportedRelationshipMeasurementSemantics(RelationshipMeasurementSemantics)
         for relationship in relationships:
             relationship.validate_recorded_measurements()
             relationship.validate_reciprocal_declarations(relationships)
-        return ordinary
+        return object_tables, image_offset
 
     @classmethod
     def from_table(

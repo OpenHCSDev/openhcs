@@ -1732,17 +1732,10 @@ class RuntimeMeasurementSnapshot:
             policy=policy,
             known_source_names=known_source_names,
         )
-        tables = tuple(
-            RuntimeScopedMeasurementTable(measurement_table)
-            for table in ExportedRelationshipMeasurementSemantics.validated_output_tables(
+        tables, image_offset = (
+            ExportedRelationshipMeasurementSemantics.validated_output_tables(
                 snapshot.tables, policy
             )
-            for measurement_table in table.measurement_tables(
-                policy.measurement_dialect
-            )
-        )
-        image_offset = RuntimeImageNumberOffset.from_runtime_rows(
-            row for table in tables for row in table.table.rows.iter_row_mappings()
         )
         correlations = (
             ExportedRelationshipMeasurementSemantics.correlated_object_relationships(
