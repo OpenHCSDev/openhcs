@@ -47,3 +47,36 @@ reports execution minimum/median 2.955/4.401 and total minimum/median
 
 The author deferred declarations and prohibited Zenodo upload on 6 October.
 These remain pending; local archive preparation does not authorize publication.
+
+Frozen local author-review package
+---------------------------------
+
+The accepted paired build is run-20261006T183154-e5c4a120. Its rendered
+abstract, results and Figure 2 caption resolve the final execution and total
+speedup claims above; no pending benchmark token or raw claim markup remains.
+The manuscript contains 6,681 extracted words including references. The shared
+builder reports current with no changed dependencies, and both PDF/DOCX pairs
+pass its artifact, citation and packaged-link checks.
+
+The existing snapshot command created the immutable reading copy
+paper/review/20261006T183624-slas-author-review-27e5df2e. Its dependency
+inventory, not a second figure list, owns the packaged support. The local
+48 MiB archive is stored on the HDD, not in home:
+
+  /run/media/ts/hdd/openhcs-slas-author-review-20261006/reading-copy-and-final-record.tgz
+
+SHA256: 553ee1e93db6b2900a1521223192875310936fd420ae0b72ded5fda303e3b45e.
+GNU tar --compare verified every archived member against its original;
+the archive contains 1,404 members including directories. It includes the
+snapshot, the final benchmark record named by the snapshot's generated include,
+manuscript/supplement sources, and the build declaration and requirements.
+It is a local author-review package, not a public deposit or a claim that every
+historical scientific source remains available. No Zenodo request was made.
+The main source checkpoint is published as 7adee52e4 on main.
+
+Remaining submission gaps are author-confirmed declarations and DOI publication
+(both explicitly deferred), compatible NeuronCyto manual-reference units and
+length definitions, and actual trial billing amounts absent from retained
+records. The BBBC039 retrospective subset excludes images viewed by any of
+the three analysis agents; it does not prove that no human author ever viewed
+those fields. These gaps are not solved by another segmentation run.
