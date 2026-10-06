@@ -516,6 +516,12 @@ in a dense cluster. The overlapping fields were not summed as unique cells or
 independent replicates; fieldwise coverage is distinct from stitched analysis
 and complete outgrowth measurement (Supplementary Data 8).
 
+A separate saved-output review found a process-bearing soma with zero reported
+outgrowth because its continuations were already absent from the candidate
+mask. Inspected raw-mosaic junctions remained locally continuous. Useful raw
+assembly therefore did not imply complete process extraction or cell-specific
+measurement (Supplementary Data 8).
+
 A subsequent development phase analysed the assembled canvas rather than
 summing overlapping fields. Its selected checkpoint retained 1,567 body labels
 and assigned process geometry across the mosaic. Independent recalculation

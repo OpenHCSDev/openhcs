@@ -1389,6 +1389,15 @@ route prevented result and seam review; this is an operationally blocked
 checkpoint, neither a biological failure nor an autonomous scientific pass.
 The frozen outputs remain available for separately recorded development.
 
+The later [saved-result review](task_only_analysis/p001-saved-review23-qualified-completion.rst)
+reopened those immutable outputs and inspected field, object and raw-mosaic
+junction views. It found useful local bodies and paths but a clear zero-outgrowth
+miss already present in the candidate mask. Acquisition-based raw joins were
+qualitatively useful; complete per-cell outgrowth was rejected. All 70 review
+files and eight terminal files were independently hash-checked. The operational
+review blocker was resolved for this phase without replaying the earlier UNKNOWN
+or claiming a new autonomous success; retained-context development continues.
+
 A later independent full-plate translocation author retained all 19,732 nuclear
 rows, with 8,655 contributing ratios and 9,661 rows lacking supported cytoplasm.
 The [qualified completion record](task_only_analysis/bbbc013-fresh20-qualified-completion.rst)
