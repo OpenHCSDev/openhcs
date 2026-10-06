@@ -385,6 +385,14 @@ detections. These unscaled voxel distances assess centre placement rather
 than physical distance, segmentation boundaries or a whole-volume census
 (Supplementary Data 8).
 
+A subsequent independent volume author repaired internal-peak duplication
+while retaining separate neighbours. Post-freeze matching again recovered all
+15 annotated centres within 20 and 30 voxels, and 14 within 10 voxels; mean
+localisation error at 30 voxels was 4.82. Its 26 candidates included 16
+border-touching basins and 11 predictions unmatched to the incomplete reference.
+This repeats annotated-centre localisation rather than improving it or
+establishing a complete nucleus census (Supplementary Data 8).
+
 A fresh public neurite-field author identified bright junction pixels lost
 after ridge enhancement and restored them by combining enhanced support with
 a separately measured strong-raw threshold (Supplementary Figure 19).
