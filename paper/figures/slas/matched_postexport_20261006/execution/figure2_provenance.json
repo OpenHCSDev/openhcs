@@ -2,29 +2,29 @@
   "source_sha256": {
     "benchmark/results/matched_postexport_20261006/data/singlewell/execution_summary.csv": "ea97e2d9bea9189476cc23fdf85f055173d12c204906b3ffc15238bf6213d937",
     "benchmark/results/matched_postexport_20261006/data/singlewell/summary_custody.json": "3dd3bb8e78a7cf04a92fdbae36484bbf10daac92a9c1ddb1094fab022b0a1309",
-    "benchmark/reports/cppipe_figures.py": "8b8bb58e69b8ae4224613ea2b9f72012d040b5cf905614c9bf15c4d195404ba2"
+    "benchmark/reports/cppipe_figures.py": "e4b1f9707ce292563949ae00e33ef77c42440049640585563025a82ed295c9db"
   },
   "generator_sha256": "75259b57e2929990e24de603f1c150a5c5a9b5c8f4ca20587420542e50bf4910",
   "output_sha256": {
     "measured_execution_metrics_long.csv": "d47c9bb945f8ad8e7e90c4734b16c70d328fdffde89b92cf210d63d19e8fe0af",
     "measured_execution_caption.md": "0720484fa2812b5a6b3f0eafc6f7d954ecedd10ee89f2ffb8e12fc5a60cf0fa9",
     "qualified_science_pass.png": "ff5ef66ef8e17a60e9ecb6518c5d517f074f9b6ac2530e9f7e05f550c831951a",
-    "qualified_science_pass.svg": "fc0f15faa6d290acd46d357ee492349ead14e21a43c1e9504a1e1d6df77e10fd",
+    "qualified_science_pass.svg": "d31c8aa912e13c8189d4998ae3523c87e0df5fe9937e38a51bc3fb215b94d883",
     "measured_execution_seconds.png": "27e80ec300b34cc8cffcc1b9efedb59ed763316995b8762084f66321f79844ca",
-    "measured_execution_seconds.svg": "52c3a82cc9abb282b66b1a098d82b60c2bad53a35f5517430a523234b14de1fe",
+    "measured_execution_seconds.svg": "00ea2fe8fa21338901da49ece9cbbe9bcb33e97b91182efef5f3671849df9a99",
     "measured_execution_seconds_log.png": "7816dbabfdb5601e98b0ec5880cd724013c3eaba8fd2191fae0007e9912d8b21",
-    "measured_execution_seconds_log.svg": "014c82134b7c607faa8bce4d299871e49b77de6af26bb777197140a6c07b1807",
+    "measured_execution_seconds_log.svg": "f918be7c33a934a5a22fd7d5c4cbd01b10f2278ae864cdc936d00c0b7fffa0c1",
     "measured_execution_speedup.png": "c4f4e606de7ff9a820dc23e6bf471d0ae7f0941dc8e795a3b1c5748702b799e6",
-    "measured_execution_speedup.svg": "7f7b230a718ba4c482d4145362b44fb1bb04d9d7c6e5bd7de009deda12a90c0f",
+    "measured_execution_speedup.svg": "e64309c70763d943d631f91245cc18d496144d168d258f475a24319476152116",
     "measured_execution_speedup_log.png": "3a5da7fa9aadf8761e22b43ba43852deac969750f660e5286f4266ec97706fd8",
-    "measured_execution_speedup_log.svg": "1203009a88a5f3ff885f4e3a85696cee1dd4244b8b6ab4f0aeda0b92110cfb5d",
+    "measured_execution_speedup_log.svg": "150bdad0951c05d733d63cc967d9971e5707e1daa7a2c0c340ca0059bf61a240",
     "measured_execution_speedup_summary_statistics.csv": "3c110f9d60f4867e067cbbc87b0d600eb895542f07f67ce400d4ef8d3bc424aa",
     "measured_execution_speedup_summary_statistics.md": "e37c5250e85c4a9ddb32f6e50d1bd9fdc77ea48c11bd78a5a9d4d64b18113b75",
     "measured_execution_speedup_cumulative_distribution.csv": "f42ddba3d6e2b9c0aa81b345e357e908e13efd86ac14d8ab056ecf5c22b9183d",
     "measured_execution_speedup_cumulative_distribution.png": "530cc4eb5fbf9873d410c3a63df6f1c021cef766dcf761843d778df948c1d96d",
-    "measured_execution_speedup_cumulative_distribution.svg": "314417c4fc8254e96aafee6214b60c7b8283e38f94d27baa1d33534c40cb1bc1",
+    "measured_execution_speedup_cumulative_distribution.svg": "7cc023fb9c4f94d2c15eb5764ff427c02a06786d8caa66fa677b7b294910d9e1",
     "measured_execution_speedup_cumulative_distribution_log.png": "eae660e03800056a574044d40cf2645556c6ece211b1ed2a4bb313d392e29ac1",
-    "measured_execution_speedup_cumulative_distribution_log.svg": "4e557d448281db9d87fc6b744af67b6df19b0e3d6356fcf5f71722c80bc718a1"
+    "measured_execution_speedup_cumulative_distribution_log.svg": "9d38421c72bb18f5609af25c6f2d6346b96abcdaac75defccfa178c4254d6617"
   },
   "benchmark_mode": "measured",
   "scope": "execution",

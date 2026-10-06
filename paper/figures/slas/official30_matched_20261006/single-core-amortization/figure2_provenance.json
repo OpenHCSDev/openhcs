@@ -7,12 +7,12 @@
     "benchmark/results/official30_matched_20261006/protocol/selected-three-case-manifest.json": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
     "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/official30-prioritized-manifest.json": "1d1b016aea7ff2ac0bc2441fff1140bb492bbf3b86048f8565694ccd45e4dff1",
     "/home/ts/.local/state/openhcs-maintenance/20261006/final-measured-publication-v15/selected-three-case-manifest.json": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
-    "benchmark/reports/cppipe_figures.py": "8b8bb58e69b8ae4224613ea2b9f72012d040b5cf905614c9bf15c4d195404ba2"
+    "benchmark/reports/cppipe_figures.py": "e4b1f9707ce292563949ae00e33ef77c42440049640585563025a82ed295c9db"
   },
   "generator_sha256": "75259b57e2929990e24de603f1c150a5c5a9b5c8f4ca20587420542e50bf4910",
   "output_sha256": {
-    "measured_single_core_amortization.png": "731e8444a21fc0e3d43a7c54a5cd3b9b8b12411375b200c9fa0b77e293657714",
-    "measured_single_core_amortization.svg": "a61d1b921380c6c54cb11a4965d82e6efbabf3fddced8b3eccbb16e47eb76d14",
+    "measured_single_core_amortization.png": "52930dca269fe40f0b4edbc0ad58fff67b9fa7b74c7dc6793044690a413f9222",
+    "measured_single_core_amortization.svg": "4fb6e1c585733b7a89700f52b0732a7bc908f4563d3d5572e265166e829be5fa",
     "measured_single_core_amortization_caption.md": "658015ebfbd1b23e3575baf657462d7ae5fb2b3247667fb8beb0f87d50fc5b4a"
   },
   "benchmark_mode": "measured",
