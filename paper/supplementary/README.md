@@ -1085,6 +1085,13 @@ along with all candidate scores, source hashes, independently reconciled
 areas and terminal evidence. The repeat is not an accuracy gain over the
 earlier best result.
 
+A subsequent fresh H001 author recovered two size-rejected bright foci through
+its own stage diagnosis. Its independently selected final result matched 62 of
+64 notebook-reference objects, versus 60 initially (object F1 0.939 versus
+0.923). The [paired comparison and custody record](task_only_analysis/h001-fresh25-postfreeze-comparison.rst)
+retains both scores, distributed native review, exact source/output hashes and
+successful scientific execution separately from the recorded client exit2.
+
 A separate public translocation trial, `BBBC013_REPEAT94`, compiled the full
 plate but was terminated at its configured 4.5 GiB scope limit. Complete masks
 survived for 42 of 96 wells; final plate tables and distributed biological review
