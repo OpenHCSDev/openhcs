@@ -228,6 +228,17 @@ with correct detection of a regression; it does not establish a monotonic
 improvement between authors or a skill-only effect. Supplementary Data 8 retains
 both post-freeze scores and the capture-provenance qualification.
 
+A further independent H001 author retained its first segmentation after
+rejecting an intensity-marker revision from distributed raw-image review.
+First and final matched 58 of 64 notebook-reference objects, with six excess
+and six missed partitions: object F1 was 0.906 and foreground IoU was 0.980.
+The rejected revision matched the same 58 objects with three excess partitions,
+giving higher reference F1 (0.928), despite the author's observed local merge
+and split regressions. Visual preference and computational-reference agreement
+therefore did not rank these candidates identically. The repeat retains useful
+bright-body coverage but lower instance agreement than the earlier best run;
+it is not evidence of an accuracy gain (Supplementary Data 8).
+
 The BBBC039 author improved object F1 from 0.908 to 0.934 on its original three fields, reducing missed reference nuclei from 39 to 25 while retaining 14 excess predictions (Figure 5C). Its final pipeline then covered all 200 fields: 20,521 of 23,615 reference nuclei matched, with precision 0.947, recall 0.869 and pooled object F1 0.906. Field F1 reached at least 0.90 in 135 fields; ten fields remained below 0.80 (Figure 5D). This distribution retains difficult fields and three annotation-empty fields rather than selecting only favorable examples. No first-attempt score across 200 fields is inferred from the three initial outputs.
 
 Native H001 views show the elongated-body false-split repair in the same scored
