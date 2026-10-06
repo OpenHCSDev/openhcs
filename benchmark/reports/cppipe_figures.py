@@ -135,11 +135,52 @@ class MeasuredBatchSummarySource(SummarySource):
     def candidate_method(self) -> str:
         return f"OH ({self.label})"
 
+    @property
+    def custody_path(self) -> Path:
+        return self.path.parent / "summary_custody.json"
+
+    def qualified_custody(self) -> dict:
+        """The original converter, not publication, qualifies observations."""
+        custody = json.loads(self.custody_path.read_text())
+        if custody["status"] != "PASS":
+            raise ValueError("Measured publication requires qualified matched custody")
+        return custody
+
+    def publication_values(
+        self, total: MeasuredBatchSummarySource, *, record_name: str, frozen: bool,
+    ) -> dict[str, str]:
+        """One projection supplies every manuscript and caption claim.
+
+        A qualified capture is not an owner's final publication freeze. Until
+        that explicit freeze, numeric claims remain placeholders even though
+        checkpoint figures can show the saved observations.
+        """
+        custody = self.qualified_custody()
+        if total.qualified_custody()["source_head"] != custody["source_head"]:
+            raise ValueError("Execution and total claims require the same source revision")
+        tables = (_load_summary_table(self), _load_summary_table(total))
+        if set(tables[0]) != set(tables[1]):
+            raise ValueError("Execution and total claims require the same pipeline cohort")
+        values = {
+            "record_name": record_name,
+            "source_revision": custody["source_head"],
+            "status": "frozen" if frozen else "pending-final-freeze",
+            "case_count": str(len(tables[0])),
+        }
+        for scope, source, table in zip(("execution", "total"), (self, total), tables, strict=True):
+            ratios = tuple(SUMMARY_ROW_NUMERICS.speedup_from_summary_row(row) for row in table.values())
+            if any(value is None or value <= 0 for value in ratios):
+                raise ValueError("Publication requires positive finite speedups for every case")
+            statistics = SpeedupSummaryStatistics.from_series(
+                SpeedupDistributionSeries(source.candidate_method, ratios)
+            )
+            values[scope + "_min"] = f"{statistics.minimum:.3f}" if frozen else "PENDING"
+            values[scope + "_median"] = f"{statistics.median:.3f}" if frozen else "PENDING"
+        return values
+
     def amortization_points(self, pipeline_name: str) -> tuple[int, dict[str, float]]:
         """Derive single-core per-assignment clocks from qualified paired observations."""
-        custody = json.loads((self.path.parent / "summary_custody.json").read_text())
-        if custody["status"] != "PASS":
-            raise ValueError("Amortization requires qualified matched custody")
+        custody = self.qualified_custody()
         cases = tuple(case for case in custody["cases"] if case["case"] == pipeline_name)
         if len(cases) != 1:
             raise ValueError(f"Custody must own exactly one case {pipeline_name!r}")
@@ -851,7 +892,7 @@ def _generate_measured_amortization_figures(
 ) -> tuple[Path, ...]:
     """Present actual single-core batch sizes using the existing manuscript style."""
     heads = {
-        json.loads((source.path.parent / "summary_custody.json").read_text())["source_head"]
+        source.qualified_custody()["source_head"]
         for source in sources
     }
     if len(heads) != 1:
