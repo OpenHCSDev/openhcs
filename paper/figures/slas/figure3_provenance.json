@@ -13,10 +13,10 @@
     "mcp_outputs/slas-validation-20260915/neurite/current-replay-20260915-fourth/outputs/plate_openhcs/images_results/1_site-1_z_index-1_timepoint-1_cell_bodies_step1.labels.tif": "f81c3114dd4bf4797d79cd8aec29696d81a5725baecfe1e7cdd2b1bf8cfd6c55",
     "mcp_outputs/slas-validation-20260915/neurite/current-replay-20260915-fourth/outputs/plate_openhcs/images_results/1_site-1_z_index-1_timepoint-1_neurons_step1.labels.tif": "19659c41a8006e1d4bd51a300d25b32a440becbcd68f4a89235e48661a85f711"
   },
-  "generator_sha256": "a8315f9f435a36c30115a5655f040180e95db2022466ec3731dcd0e0c62040e9",
+  "generator_sha256": "88aa622cc09a96b702dc138dc64571df0239cae4a7c11f43fa274629628f5edc",
   "replay_execution_id": "e5d9067c-334b-46b7-853b-ca986f94137d",
   "image_display": "Original uint8 TIFF pixels displayed linearly at 0..255",
-  "viewer_display": "Panel C and the crossing detail are native Qt captures; the crossing detail is an unchanged canvas crop using xyxy=(580, 40, 1753, 720). Panel D is a deterministic overlay of retained input pixels and labels.",
+  "viewer_display": "Panel C is an unchanged native canvas crop using xyxy=(594, 55, 2294, 942); application controls are omitted. The crossing detail is a native Qt capture; the crossing detail is an unchanged canvas crop using xyxy=(580, 40, 1753, 720). Panel D is a deterministic overlay of retained input pixels and labels.",
   "soma_assignment_overlay": {
     "cell_body_label": 8,
     "nucleus_label": 8,
@@ -49,8 +49,8 @@
     "Total path": "2556.1 px"
   },
   "output_sha256": {
-    "figure3_agent_workflow.png": "9cacbe660cf64649c7596802d852c383f54766442003f5d1b3837dea314ebd42",
-    "figure3_agent_workflow.pdf": "9e2329abde34358b0d057024da006e8fabd6c08f43f9e69caec87528f1748e6c",
-    "figure3_agent_workflow.svg": "8b933465f4d8a59fc8a5e9957dfc48906fe262c86346b23bf7cf8606599c0a51"
+    "figure3_agent_workflow.png": "e0987928482ca731ecdee3f406df0a043472210f48299a5da63697ea532c67d9",
+    "figure3_agent_workflow.pdf": "2d7a66c1642fec11be7d7e2517ae0734d31a83439a428b88920a3b9cefce4c84",
+    "figure3_agent_workflow.svg": "cac363477d73d8d2e98a101ae83840d99853eea40a590d1543851e55a4773413"
   }
 }

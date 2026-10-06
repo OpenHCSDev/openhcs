@@ -1542,7 +1542,30 @@ records original table identities, reconciliation and twelve personally opened
 native captures. This is retained-context development, not a fresh autonomous
 evaluation.
 
+A later independent retinal author completed a 136-region candidate after
+repairing fragmented rims and size-based omissions. Independent matched
+central and whole-field views support useful bright-body localisation in the
+heavily noisy acquisition; weak rims and some instance divisions remain
+ambiguous. The [qualified completion record](task_only_analysis/retinal-fresh26-qualified-completion.rst)
+retains the source, freeze and scope of review without asserting manual-count
+accuracy or requiring perfect boundaries for useful segmentation.
+
+An assisted personal-neurite continuation completed both-channel shared
+normalization, all nine fields and new analysis of the retained 2,868-square
+mosaic. Its 1,740 software identities and graph summaries reconcile with the
+cell tables. The [all-channel completion record](task_only_analysis/p001-allchannel25-qualified-completion.rst)
+distinguishes body-geometry review from complete arbor validation, and reused
+assembly from autonomous stitching discovery.
+
 ## Software snapshots and evidence
+
+A subsequent independent paired DNA/actin author recovered three crowded
+nuclear omissions and excluded two cell candidates with no growth beyond their
+nuclear seeds. Its final 56 nuclei and 54 retained cell regions have reconciled
+labels, areas and parent relationships. The
+[qualified completed repair](task_only_analysis/h003-fresh26-qualified-completion.rst)
+records independent matched-view review and full own-nucleus containment,
+without treating uncertain cell boundaries as a failure of useful localisation.
 
 | Evidence | Software identity | What the record establishes |
 |------------------------------|------------------------------|----------------------------------------|
