@@ -35,7 +35,7 @@ from openhcs.core.source_matching import (
     source_metadata_values_equal,
 )
 from openhcs.core.source_path_identity import source_path_identity_key
-from openhcs.core.source_projection import SourceProjection
+from openhcs.core.source_projection import SourceProjection, SourceProjectionMetadataSerializer
 from openhcs.core.virtual_workspace_metadata import (
     OpenHCSMetadataPayload,
     OpenHCSMetadataSubdirectories,
@@ -789,11 +789,12 @@ class VirtualWorkspaceSourceProjectionAuthority:
         *,
         cache: VirtualWorkspaceSourceProjectionCache | None = None,
     ) -> "VirtualWorkspaceSourceProjectionAuthority":
-        return cls.from_plate_metadata(
+        return RuntimeVirtualWorkspaceSourceProjectionAuthority(
             plate_path=Path(context.plate_path),
             metadata_handler=context.microscope_handler.metadata_handler,
             filemanager=context.filemanager,
-            cache=cache,
+            cache=DEFAULT_SOURCE_PROJECTION_CACHE if cache is None else cache,
+            context=context,
             source_bindings=context.microscope_handler.source_admission_config(),
         )
 
@@ -881,6 +882,58 @@ class VirtualWorkspaceSourceProjectionAuthority:
         if projection is not None:
             return projection
         return VirtualWorkspaceSourceProjection.empty(self.plate_path)
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeVirtualWorkspaceSourceProjectionAuthority(
+    VirtualWorkspaceSourceProjectionAuthority
+):
+    """Read completed same-plate outputs from their execution observation owner."""
+
+    context: "ProcessingContext" = field(kw_only=True, compare=False, repr=False)
+
+    def is_bound_to_context(self, context: "ProcessingContext") -> bool:
+        return self.context is context and super(
+            RuntimeVirtualWorkspaceSourceProjectionAuthority, self
+        ).is_bound_to_context(context)
+
+    def projection_if_available(self) -> VirtualWorkspaceSourceProjection | None:
+        projection = super(
+            RuntimeVirtualWorkspaceSourceProjectionAuthority, self
+        ).projection_if_available()
+        produced_entries = tuple(
+            entries
+            for target, entries in (
+                self.context.completed_step_outputs.source_projection_entries_by_target.items()
+            )
+            if source_path_identity_key(target.plate_root)
+            == source_path_identity_key(self.plate_path)
+            and not entries.is_empty
+        )
+        if not produced_entries:
+            return projection
+        builder = VirtualWorkspaceSourceProjectionBuilder(self.plate_path)
+        if projection is not None:
+            builder.ingest_workspace_mapping(
+                VirtualWorkspaceMapping(projection.source_refs_by_virtual_path)
+            )
+            builder.ingest_source_projections(
+                VirtualWorkspaceSourceProjectionEntries(
+                    projection.source_projections_by_virtual_path
+                )
+            )
+            builder.ingest_source_metadata(
+                VirtualWorkspaceSourceMetadataEntries(projection.source_metadata_by_path)
+            )
+        for entries in produced_entries:
+            fields = SourceProjectionMetadataSerializer.workspace_fields(
+                entries.projection_paths
+            )
+            builder.ingest_workspace_mapping(
+                VirtualWorkspaceMapping.from_subdirectory(fields)
+            )
+            builder.ingest_admitted_subdirectory(fields, entries)
+        return builder.projection()
 
 
 @dataclass(slots=True)

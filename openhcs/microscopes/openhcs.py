@@ -407,12 +407,29 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
                 for directory in self.analysis_result_directories(plate_root)
             )
         document = OpenHCSMetadataSubdirectories.from_path(metadata_path)
+        admitted_entries = {
+            name: VirtualWorkspaceSourceProjectionEntries.from_subdirectory(subdirectory)
+            for name, subdirectory in document.items()
+        }
+        return self.reconciliation_directories_from_document(
+            plate_root, backend, document, admitted_entries
+        )
+
+    def reconciliation_directories_from_document(
+        self,
+        plate_path: Union[str, Path],
+        backend: str,
+        document: OpenHCSMetadataSubdirectories,
+        admitted_entries: Mapping[str, VirtualWorkspaceSourceProjectionEntries],
+    ) -> tuple[Path, ...]:
+        """Select destinations from the current transaction's admitted entries."""
+        plate_root = Path(plate_path)
         admitted = tuple(
             (
                 subdirectory,
-                VirtualWorkspaceSourceProjectionEntries.from_subdirectory(subdirectory),
+                admitted_entries[name],
             )
-            for _name, subdirectory in document.items()
+            for name, subdirectory in document.items()
         )
         directories = tuple(
             plate_root / directory

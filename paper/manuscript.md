@@ -392,51 +392,43 @@ Manual-reference accuracy remains unmeasured: the detector totals are not
 validated retinal cell counts
 (Supplementary Data 8).
 
-Whole-volume trials combined annotated-centre localisation with native
-instance review. An early fresh nucleus-centre trial matched all 15 manual reference
-centres within 30 voxels, with ten unmatched predictions; at ten voxels it
-matched 14 of 15. The reference was not established as exhaustive, so unmatched
-centres were not automatically treated as spurious cells. Its bright-core
-adjustment left first and final geometries unchanged. Another fresh author measured nuclear dimensions, background intensity
-and neighbour separation before selecting a shape-based marker method. Its
-first scientific method produced 26 candidate centres; a technical rerun
-changed output delivery while retaining the same detector. Independent raw,
-point-only and combined XY/XZ/YZ review supported centre placement inside
-ordinary nuclei. A bright lobed complex and cropped border supports retained
-identity uncertainty. After the workflow was frozen, one-to-one matching recovered
-all 15 manually annotated centres within the predeclared 30-voxel distance,
-with a mean localisation error of 4.80 voxels (Figure 9). All 15 also matched within
-20 voxels, and 14 matched within 10 voxels. Eleven of the 26 predictions were
-unmatched to these annotations. Their coverage was not established as
-exhaustive, so unmatched predictions do not establish false biological
-detections.
+Whole-volume trials tested whether agents could locate nuclei and repair
+duplicate detections without reference feedback. One fresh author measured
+nuclear dimensions, background intensity and neighbour separation before
+choosing shape-based markers. Its first scientific method produced 26 centres;
+a technical rerun changed output delivery without changing the detector.
+Matched raw, point-only and combined XY/XZ/YZ views supported placement inside
+ordinary nuclei. After freezing, one-to-one matching recovered all 15 manual
+reference centres within the predeclared 30-voxel distance, with a mean
+localisation error of 4.80 voxels (Figure 9). All 15 also matched within
+20 voxels, and 14 within 10 voxels. Eleven predictions were unmatched. The
+annotations were not established as exhaustive, so unmatched predictions do
+not establish false biological detections. Distances are in unscaled voxels
+and assess centre placement rather than physical distance or mask boundaries.
 
-A subsequent independent volume author repaired internal-peak duplication
-while retaining separate neighbours (Supplementary Figure 25). Post-freeze matching again recovered all
-15 annotated centres within 20 and 30 voxels, and 14 within 10 voxels; mean
-localisation error at 30 voxels was 4.82. Its 26 candidates included 16
-border-touching basins and 11 predictions unmatched to the incomplete reference.
-This repeats annotated-centre localisation rather than improving it or
-establishing a complete nucleus census. Separate fresh trials retained 26 and
-22 provisional centres after repairing sampled internal-peak duplicates;
-native XY, XZ and YZ views supported ordinary-body placement and retained
-neighbour controls, while bright multi-lobed complexes and border supports
-remained uncertain (Supplementary Figure 17). These unscaled voxel distances
-assess centre placement, not physical distance or segmentation boundaries.
-Supplementary Data 8 preserves the distinct trials, local repairs and
-remaining whole-volume uncertainties.
+Independent repeats supported similar localisation with variable instance
+separation. An early trial matched 15 centres within 30 voxels and 14 within
+10 voxels, with ten unmatched predictions; its bright-core adjustment left
+first and final geometries unchanged. Another author repaired internal-peak
+duplication while retaining neighbours (Supplementary Figure 25). Its 26
+candidates included 16 border-touching basins and 11 unmatched predictions;
+all 15 reference centres matched within 20 and 30 voxels, and 14 within
+10 voxels, with a mean error of 4.82 voxels at 30 voxels. Two further trials
+retained 26 and 22 provisional centres after local duplicate repairs
+(Supplementary Figure 17). Native views supported ordinary-body placement,
+while bright lobed complexes and cropped objects retained uncertain identity.
 
-A further independent volume author reduced 31 first-attempt centres to 26
-after diagnosing duplicated markers on connected distance plateaus and
-associating nearby seeds within admitted components. Matched native XY, XZ
-and YZ review supported repaired ordinary-body placement while retaining a
-clear pair and a dim nucleus. A fragmented bright group and cropped objects
-remained uncertain. This is self-directed repair without reference feedback;
-the reduced count alone does not establish an exhaustive nucleus census
-(Supplementary Data 8). Independent post-freeze matching recovered all 15
-annotated centres within 20 and 30 voxels in both candidates; mean localization
-error decreased from 5.37 to 4.86 voxels. Unmatched predictions decreased from
-16 to 11, but the incomplete reference does not establish these as false cells.
+A later author improved its own result after diagnosing duplicated markers
+on connected distance plateaus. Associating nearby seeds within admitted
+components reduced 31 first-attempt centres to 26. Matched XY/XZ/YZ review
+supported repaired placement while retaining a clear pair and a dim nucleus;
+a fragmented bright group and cropped objects remained uncertain.
+Post-freeze matching recovered all 15 annotated centres within 20 and
+30 voxels in both candidates. Mean localisation error decreased from
+5.37 to 4.86 voxels, and unmatched predictions decreased from 16 to 11.
+The paired comparison demonstrates self-directed localisation repair;
+complete nucleus counts remain unvalidated. Supplementary Data 8 retains
+the distinct trials, first/final comparisons and remaining uncertainties.
 
 A fresh public neurite-field author identified bright junction pixels lost
 after ridge enhancement and restored them by combining enhanced support with

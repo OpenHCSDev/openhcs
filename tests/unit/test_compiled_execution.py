@@ -194,37 +194,6 @@ def test_consolidation_does_not_require_parent_payload_records(
     assert RuntimeObservationMode.for_compiled_bundle(bundle) is RuntimeObservationMode.OMIT
 
 
-def test_plate_input_retention_uses_compiled_consumer_types() -> None:
-    plate_input = SimpleNamespace(artifact_type=MeasurementsArtifactType)
-    plate_plan = SimpleNamespace(
-        execution_scope=FunctionStepExecutionScope.PLATE,
-        compiled_function_pattern=SimpleNamespace(
-            default_group=SimpleNamespace(
-                invocations=(
-                    SimpleNamespace(
-                        contract=SimpleNamespace(artifact_inputs=(plate_input,))
-                    ),
-                )
-            )
-        ),
-    )
-    context = ProcessingContext(axis_id="A01", step_plans={0: plate_plan})
-    image_record = SimpleNamespace(key=SimpleNamespace(artifact_type=ImageArtifactType))
-    measurement_record = SimpleNamespace(
-        key=SimpleNamespace(artifact_type=MeasurementsArtifactType)
-    )
-    records = (image_record, measurement_record)
-
-    assert RuntimeObservationMode.MERGE_PLATE_INPUTS.retain_records(
-        records, context
-    ) == (measurement_record,)
-    assert (
-        RuntimeObservationMode.MERGE_INTO_PARENT.retain_records(records, context)
-        == records
-    )
-    assert RuntimeObservationMode.OMIT.retain_records(records, context) == ()
-
-
 def test_runtime_observation_mode_can_only_be_strengthened() -> None:
     assert (
         RuntimeObservationMode.OMIT.including_parent_requirement(True)
@@ -316,7 +285,7 @@ def test_runtime_execution_observation_merges_into_parent_contexts():
         path="/memory/measurements.pkl",
         backend="memory",
     )
-    parent_context = SimpleNamespace(runtime_value_store=RuntimeValueStore())
+    parent_context = ProcessingContext(axis_id="A01")
 
     RuntimeExecutionObservation(
         contexts=(

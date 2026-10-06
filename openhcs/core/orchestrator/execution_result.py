@@ -11,8 +11,9 @@ from enum import Enum
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Mapping, Optional
 
+from openhcs.constants.constants import Backend
 from openhcs.core.context.processing_context import ProcessingContext
-from openhcs.core.runtime_stores import StoredRuntimeValue
+from openhcs.core.runtime_stores import RuntimeArtifactQuery, StoredRuntimeValue
 from openhcs.core.steps.abstract import StepExecutionObservation
 
 if TYPE_CHECKING:
@@ -86,12 +87,28 @@ class RuntimeExecutionObservation:
 
     contexts: tuple[RuntimeContextObservation, ...] = field(default_factory=tuple)
 
+    @classmethod
+    def from_completed_outputs(
+        cls, contexts: Mapping[str, ProcessingContext]
+    ) -> "RuntimeExecutionObservation":
+        """Project saved facts independently of retained runtime pixel records."""
+        return cls(contexts=tuple(
+            RuntimeContextObservation(
+                context_key=context_key,
+                records=(),
+                outputs=context.completed_step_outputs,
+            )
+            for context_key, context in contexts.items()
+            if not context.completed_step_outputs.is_empty
+        ))
+
     def merge_into(self, execution_contexts: Mapping[str, ProcessingContext]) -> None:
         """Merge returned runtime records into parent-owned compiled contexts."""
         for context_observation in self.contexts:
             context = execution_contexts[context_observation.context_key]
             store = context.runtime_value_store
             store.merge_observed_values(context_observation.records)
+            context.record_completed_step_outputs(context_observation.outputs)
 
 
 class RuntimeObservationMode(Enum):
@@ -140,15 +157,33 @@ class RuntimeObservationMode(Enum):
             return ()
         if self is RuntimeObservationMode.MERGE_INTO_PARENT:
             return records
-        required_types = {
-            spec.artifact_type
-            for plan in context.step_plans.values()
-            if plan.execution_scope.requires_parent_runtime_observation
-            for invocation in plan.compiled_function_pattern.default_group.invocations
-            for spec in invocation.contract.artifact_inputs
-        }
+        selected_addresses = set()
+        for plan in context.step_plans.values():
+            if not plan.execution_scope.requires_parent_runtime_observation:
+                continue
+            for invocation in plan.compiled_function_pattern.default_group.invocations:
+                input_edges = {
+                    edge.spec.ref(): edge
+                    for edge in invocation.select_inputs(plan.artifact_inputs).values()
+                    if edge.storage_plan is not None
+                }
+                for spec in invocation.contract.artifact_inputs:
+                    edge = input_edges.get(spec.ref())
+                    if edge is None:
+                        continue
+                    selected_addresses.update(
+                        (record.key, record.location)
+                        for record in RuntimeArtifactQuery.records_for_input_edge(
+                            edge,
+                            records,
+                            axis_id=context.require_axis_id(),
+                            backend=Backend.MEMORY.value,
+                        )
+                    )
         return tuple(
-            record for record in records if record.key.artifact_type in required_types
+            record
+            for record in records
+            if (record.key, record.location) in selected_addresses
         )
 
 
@@ -183,6 +218,9 @@ class ExecutionResult:
         """Check if execution failed."""
         return self.status == ExecutionStatus.ERROR
 
+    def is_cancelled(self) -> bool:
+        return self.status == ExecutionStatus.CANCELLED
+
     @classmethod
     def success(
         cls,
@@ -202,6 +240,7 @@ class ExecutionResult:
         axis_id: str,
         failed_combination: Optional[str] = None,
         error_message: Optional[str] = None,
+        runtime_observation: RuntimeExecutionObservation | None = None,
     ) -> "ExecutionResult":
         """Create an error execution result."""
         return cls(
@@ -209,4 +248,27 @@ class ExecutionResult:
             axis_id=axis_id,
             failed_combination=failed_combination,
             error_message=error_message,
+            runtime_observation=(
+                RuntimeExecutionObservation()
+                if runtime_observation is None else runtime_observation
+            ),
+        )
+
+    @classmethod
+    def cancelled(
+        cls,
+        axis_id: str,
+        *,
+        error_message: str,
+        runtime_observation: RuntimeExecutionObservation | None = None,
+    ) -> "ExecutionResult":
+        """Return completed outputs from a cooperative cancellation boundary."""
+        return cls(
+            status=ExecutionStatus.CANCELLED,
+            axis_id=axis_id,
+            error_message=error_message,
+            runtime_observation=(
+                RuntimeExecutionObservation()
+                if runtime_observation is None else runtime_observation
+            ),
         )

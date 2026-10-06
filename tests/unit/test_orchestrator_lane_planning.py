@@ -674,16 +674,18 @@ def test_worker_lane_honours_cancellation_before_next_axis(monkeypatch):
         ("B01", [("B01", SimpleNamespace(axis_id="B01"))]),
     ]
 
-    with pytest.raises(ExecutionCancelledError, match="before axis B01"):
-        worker_execution_module.execute_worker_lane(
-            pipeline_definition=[],
-            lane_axis_contexts=lane_axis_contexts,
-            lane_context=lane_context,
-            runtime_observation_mode=RuntimeObservationMode.OMIT,
-            cancellation=cancellation,
-        )
+    results = worker_execution_module.execute_worker_lane(
+        pipeline_definition=[],
+        lane_axis_contexts=lane_axis_contexts,
+        lane_context=lane_context,
+        runtime_observation_mode=RuntimeObservationMode.OMIT,
+        cancellation=cancellation,
+    )
 
     assert visited == ["A01"]
+    assert results["A01"].is_success()
+    assert results["B01"].is_cancelled()
+    assert "before axis B01" in results["B01"].error_message
 
 
 def test_cancellation_authority_preserves_pre_entry_request_for_exact_scope():
@@ -1134,7 +1136,7 @@ def test_compiled_execution_returns_settled_nonpersistent_viewer_state_before_cl
     monkeypatch.setattr(
         compiled_plate_execution_module.OpenHCSMetadataTarget,
         "finalize_completed_plate",
-        lambda _contexts: events.append("metadata"),
+        lambda _contexts, *, runtime_observations: events.append("metadata"),
     )
     response = ViewerControlResponse(
         payload={

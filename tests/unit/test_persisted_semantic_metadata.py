@@ -7,6 +7,7 @@ from collections.abc import Mapping
 from pathlib import Path
 
 import numpy as np
+import pytest
 from polystore.virtual_workspace import SourcePixelRef
 
 from openhcs.constants.constants import AllComponents
@@ -32,6 +33,7 @@ from openhcs.core.source_workspace_projection import (
     VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjection,
 )
+from openhcs.core.virtual_workspace_metadata import VirtualWorkspaceSourceProjectionEntries
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.serialization.json import to_jsonable
 
@@ -127,6 +129,28 @@ def test_source_projection_serialization_decodes_typed_image_metadata() -> None:
 
     assert projection.address.value_for(AllComponents.SITE) == "1"
     assert projection.image_metadata == _collapsed_metadata()
+
+
+def test_publication_retains_typed_provenance_and_exact_wire_document() -> None:
+    subdirectory = _serialized_metadata(_collapsed_metadata())["subdirectories"]["."]
+    original = json.dumps(subdirectory)
+    typed = VirtualWorkspaceSourceProjectionEntries.from_subdirectory(subdirectory)
+    retained = typed.publish_into_subdirectory(
+        subdirectory, saved_image_paths=(VIRTUAL_PATH,), reconcile_directory=".",
+        admitted_entries=typed,
+    )
+
+    assert retained.entries[VIRTUAL_PATH].image_metadata == _collapsed_metadata()
+    assert json.dumps(subdirectory) == original
+
+
+def test_retained_corrupt_provenance_fails_at_admission() -> None:
+    subdirectory = _serialized_metadata(_collapsed_metadata())["subdirectories"]["."]
+    subdirectory["source_projection"][0]["image_metadata"]["source_provenance"][
+        "source_image_provenance_planes"
+    ][0]["undeclared_field"] = "corrupt"
+    with pytest.raises(ValueError, match="undeclared field"):
+        VirtualWorkspaceSourceProjectionEntries.from_subdirectory(subdirectory)
 
 
 def test_image_artifact_projection_round_trips_typed_pixel_metadata() -> None:
