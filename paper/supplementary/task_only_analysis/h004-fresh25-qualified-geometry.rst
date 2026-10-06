@@ -72,6 +72,24 @@ better coverage. Rooted-geometry decisions require investigation under issue
 disconnection or true neuron ownership. Nonzero feature response at these
 witnesses does not prove feature preservation everywhere.
 
+A subsequent engineering reconstruction called the original medial-axis,
+topology, secondary-adoption, repair and publication owners on saved candidate,
+local-response, secondary and body stages. It reproduced both complete saved
+thin-trace arrays with zero differing pixels, without rerunning enhancement,
+thresholding, body/nuclear detection or a scientific pipeline. Both medial
+axes retain the branch. Initial topology assigns it owner6 in04 and owner4
+in05; secondary adoption leaves these positive assignments unchanged. Signal
+repair then removes the distal05 chain before final graph publication.
+This identifies the loss stage, not a justified biological owner or a proven
+defective routine: saved secondary support assigns owner2 and connects to soma2,
+whereas the05 candidate component connects somas4/6/8. Restoring owner6 solely
+because04 used it would therefore not establish correctness. The root/transition
+and recovery investigation remains separate from this frozen scientific result.
+The reconstruction source SHA256 is
+``761dc03bf62da8dd2dd533f48bfae6c6551994bd959f8d50244c9b5c4a894204``;
+its ownership receipt, probe and original logs are retained under
+``/home/ts/wt/openhcs-issue-batch-20260929/engineering1001`` and issue1001.
+
 Custody and operational limits
 ------------------------------
 

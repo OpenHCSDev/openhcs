@@ -557,6 +557,14 @@ other gaps and near-track spurs remained. Thus the repeated result supports
 soma localisation and useful principal-process geometry, not stable fine-branch
 quantification (Supplementary Data 8).
 
+A further independent repeat recovered measured faint support but rejected a
+longer-trace candidate after finding that it lost a raw-visible branch. Saved
+feature responses and admission masks retained that branch; reconstruction
+through the original processing stages located its deletion in downstream
+signal repair, before graph publication. This separates a geometry failure
+from preprocessing loss without establishing the true owner at the crossing
+(Supplementary Data 8).
+
 A separate retained-context personal-neurite continuation
 processed a nine-field mosaic with shared channel fits and paths across sampled
 joins, but incomplete nuclear and soma detection limited its morphology
