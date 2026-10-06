@@ -867,3 +867,60 @@ def test_initial_source_input_uses_loaded_declared_cohort_without_workspace_read
         source_step_index=0, source_step_scope_id="predecessor",
     )
     assert edge.resolve_unstored_payload(executor, payload, request=adapter) is original
+
+
+def test_original_source_admission_retains_singleton_alignment_and_label_projection():
+    from openhcs.core.aligned_image_payload import (
+        AlignedImageStack, aligned_image_stack_kwargs, stack_image_payloads,
+    )
+    from openhcs.core.callable_contract import ImagePayloadConsumption
+    from openhcs.core.runtime_image_values import ImagePayloadMetadataCompositionMode
+    from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
+    from openhcs.core.runtime_object_labels import ObjectLabelSet, ObjectLabelVariantData
+    from openhcs.core.runtime_object_label_domains import ObjectLabelDomain, ObjectLabelDomainScope
+    from openhcs.core.source_binding_selection import SourceUniverseRequest
+    from openhcs.core.source_spatial_domain import VolumeSourceSpatialDomain
+
+    plan = CompiledSourceBindingPlan.empty()
+    pixels = np.arange(12, dtype=np.uint16).reshape(3, 4)
+    mask = pixels > 2
+    scalar = ImagePayloadMetadata(
+        source_path="source.tif", source_image_names=("Original",),
+    ).payload_with(pixels, mask)
+    original = stack_image_payloads(
+        (scalar,), metadata_mode=ImagePayloadMetadataCompositionMode.STACK,
+    )
+    held = SourceUniverseRequest.admit_source_artifact_cohort(
+        scalar, source_binding_plan=plan, member_count=1,
+    )
+    np.testing.assert_array_equal(image_payload_data(held), image_payload_data(original))
+    np.testing.assert_array_equal(image_payload_mask(held), image_payload_mask(original))
+    assert image_payload_metadata(held) == image_payload_metadata(original)
+    composition = ImagePayloadConsumption.COMPOSED.compose_image_payload(
+        "two original sources", (held, held),
+    )
+    assert isinstance(composition.payload, AlignedImageStack)
+    labels = ObjectLabelSet(
+        name="Objects", variant_data=ObjectLabelVariantData(labels=(pixels > 5)[None].astype(np.int32)),
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+        domain=ObjectLabelDomain(scope=ObjectLabelDomainScope.PLANE, declared_object_id_domains=((1,),)),
+    )
+    projected = aligned_image_stack_kwargs(
+        {"object_labels": labels}, 0, 1, reference_payload=composition.payload.slices[0],
+    )["object_labels"]
+    assert projected.shape == (3, 4)
+    assert projected.plane_axis is None
+    # Already held multi-plane cohorts retain their pixel buffer, and literal
+    # whole-image volumes retain their intrinsic axes independently of transport.
+    retained = SourceUniverseRequest.admit_source_artifact_cohort(
+        original, source_binding_plan=plan, member_count=1,
+    )
+    assert np.shares_memory(image_payload_data(retained), image_payload_data(original))
+    volume = ImagePayloadMetadata(
+        source_spatial_domain=VolumeSourceSpatialDomain(source_depth=2),
+    ).payload_with(np.stack((pixels, pixels)), None)
+    admitted_volume = SourceUniverseRequest.admit_source_artifact_cohort(
+        volume, source_binding_plan=plan, member_count=1,
+    )
+    assert image_payload_data(admitted_volume).shape == (2, 3, 4)
+    assert image_payload_metadata(admitted_volume).plane_axis is None
