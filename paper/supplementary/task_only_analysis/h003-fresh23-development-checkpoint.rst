@@ -6,7 +6,8 @@ and artifacts on 6 October 2026 at 02:25:56 UTC. It accepted useful DNA-defined
 instances and nucleus-seeded actin regions, not an exact biological census or
 complete-cell morphology. No reference answers were opened for these checks,
 and no parent scientific steering was sent to the author. Runtime retirement
-is a separate operational handoff, not a new autonomous accuracy score.
+is a separate operational handoff. The parent's later reference comparison
+below is separate from the author's blinded decision.
 
 Run and candidate
 -----------------
@@ -109,6 +110,44 @@ Cells.csv and Image.csv. Every pair was byte-identical to the reviewed candidate
 The final decision and review_flags.csv retain seed-only regions, ambiguous
 identity and censored borders. These records support self-directed detection
 repair and internally consistent exports on one development field. They do
-not establish held-out/manual-reference accuracy or exhaustive whole-cell
+not establish held-out accuracy or exhaustive whole-cell
 envelope agreement. Final native/viewer retirement and terminal journal seals
 are not claimed by this scientific record.
+
+Postfreeze reference comparison
+-------------------------------
+
+After scientific freeze, the parent applied the existing merged BBBC007 manual
+outline decoder and scorer, unchanged from commit
+``e99736388140e7ed910b413222a53501ec7d4a0d``. Both staged raw channels were
+independently compared pixel-for-pixel to component 0 of the corresponding
+official TIFFs. All four scored label hashes matched the original manifests.
+The separate h003-fresh23-postfreeze-reference-comparison.json retains exact
+paths, source hashes, policies and measurements. No score or reference was
+provided to an analysis author or included in the skill.
+
+One-to-one matching uses IoU at least 0.5 against 47 nuclear and 54 actin closed
+reference interiors. Frame-connected regions and strokes are excluded; tiny
+interiors remain included. Clipped predictions are not filtered to mirror those
+reference exclusions. These are annotated-interior comparisons, not a certified
+exhaustive biological census.
+
+======== ======= ======== ======= ========== ====== ==================
+Stage    Channel Predicted Matches Reference  F1     Relevant boundary
+======== ======= ======== ======= ========== ====== ==================
+FIRST    DNA     52       37      47         0.747  0.739
+FINAL    DNA     55       38      47         0.745  0.521
+FIRST    ACTIN   52       34      54         0.642  0.703
+FINAL    ACTIN   55       36      54         0.661  0.700
+======== ======= ======== ======= ========== ====== ==================
+
+The last column is the fraction of non-background/frame-adjacent predicted
+boundaries within two pixels of any original manual stroke. Symmetric
+whole-boundary F1 is a different endpoint: DNA 0.810 to 0.818 and actin
+0.663 to 0.668. Nuclear reference recall rose from 0.787 to 0.809 while
+precision fell from 0.712 to 0.691. Thus visible local detection recovery
+coexists with essentially unchanged nuclear object F1 and worse directed
+contact-boundary agreement. Actin-region object agreement improved modestly.
+This trial does not demonstrate a whole-field nuclear accuracy gain or an
+isolated effect of the skill. Unmatched predictions/reference regions express
+disagreement under this policy, not automatically false biological cells.

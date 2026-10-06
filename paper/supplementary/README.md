@@ -1421,7 +1421,10 @@ candidate retains seed-only actin regions and ambiguous nuclear identity.
 The [qualified scientific completion record](task_only_analysis/h003-fresh23-development-checkpoint.rst)
 reports the author's 108 matched final captures, independent frozen-file checks
 and byte-identical label/table exports after a technical integrity audit.
-Reference accuracy remains unmeasured; runtime retirement is a separate handoff.
+The separate [postfreeze comparison](task_only_analysis/h003-fresh23-postfreeze-reference-comparison.json)
+found essentially unchanged nuclear object F1 and modestly better actin-region
+F1, with worse directed nuclear contact-boundary agreement. No reference
+feedback reached the authors; runtime retirement is a separate handoff.
 
 A fresh retinal author replaced grain-scale foreground admission with
 body-scale contrast after rejecting nuisance flooding and dim-body losses.
