@@ -183,6 +183,42 @@ def test_image_bundle_stacks_on_the_payload_framework_device(monkeypatch) -> Non
     assert observed == [(payloads, MemoryType.CUPY.value, 7)]
 
 
+@pytest.mark.parametrize('mask_kind', ('full', 'channel-free', 'absent'))
+@pytest.mark.parametrize('destination', ('numpy', 'cupy'))
+def test_mixed_channel_bundle_promotes_masks_in_the_output_domain(
+    declared_cupy_leaf, mask_kind, destination,
+):
+    DeviceArray, state = declared_cupy_leaf
+    gray = np.arange(6, dtype=np.uint8).reshape(2, 3)
+    color = np.repeat(gray[..., None], 3, axis=2)
+    spatial = gray % 2 == 0
+    color_mask = (
+        None if mask_kind == 'absent' else DeviceArray(
+            np.repeat(spatial[..., None], 3, axis=2)
+            if mask_kind == 'full' else spatial,
+        )
+    )
+    inputs = (
+        ImagePayloadMetadata(source_channel_axis=2).payload_with(
+            DeviceArray(color), color_mask,
+        ),
+        ImagePayloadMetadata().payload_with(DeviceArray(gray), DeviceArray(spatial)),
+    )
+    result = ImagePayloadBundleContext.from_payloads(inputs).compose(
+        memory_type=destination, device_id=1 if destination == 'cupy' else None,
+    )
+    if destination == 'cupy':
+        assert not state['downloads']
+    owner = MemoryType(destination)
+    data, mask = image_payload_data(result), image_payload_mask(result)
+    assert owner.device_id_of(mask) == owner.device_id_of(data)
+    np.testing.assert_array_equal(owner.to_numpy(data), np.stack((color, color)))
+    expected = np.stack((np.ones_like(spatial) if mask_kind == 'absent' else spatial, spatial))
+    if mask_kind == 'full':
+        expected = np.repeat(expected[..., None], 3, axis=3)
+    np.testing.assert_array_equal(owner.to_numpy(mask), expected)
+
+
 def test_independent_cohort_copy_retains_nested_named_bundle_domains():
     from openhcs.core.aligned_image_payload import (
         AlignedImageSliceContext, AlignedImageStack, ImageOutputBundle,
