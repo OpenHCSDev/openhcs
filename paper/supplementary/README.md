@@ -790,7 +790,8 @@ statement. The official testing archive contains the two source images but no
 manual spatial tracing files. Aggregate agreement therefore does not establish
 shaft recall, neuron ownership or calibrated length accuracy. The
 [reference audit](neuroncyto_reference_audit.md) retains the source-table
-checksums, image correspondence and interpretation [@NeuronCytoII].
+checksums, image correspondence and interpretation. The manual-reference
+construction is described by [Ong et al. (2016)](https://doi.org/10.1002/cyto.a.22872).
 
 ## Software snapshots and evidence
 
