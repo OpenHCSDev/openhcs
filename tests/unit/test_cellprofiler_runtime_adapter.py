@@ -588,6 +588,7 @@ class ContextStub:
         self.global_config = SimpleNamespace(zarr_config=None)
         self.microscope_handler = SimpleNamespace(
             parser=ImageXpressFilenameParser(),
+            source_admission_config=lambda: None,
             get_primary_backend=lambda plate_path, filemanager: "memory",
         )
 

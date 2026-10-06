@@ -1,5 +1,6 @@
 """Completed persisted facts survive cleanup, failure and deferred publication."""
 from pathlib import Path
+from dataclasses import replace
 import pickle
 from types import MappingProxyType, SimpleNamespace
 import weakref
@@ -144,3 +145,29 @@ def test_runtime_overlay_excludes_another_output_plate_and_other_context(tmp_pat
     other.filemanager = context.filemanager
     assert authority.is_bound_to_context(context)
     assert not authority.is_bound_to_context(other)
+
+
+def test_runtime_axis_query_is_explicit_and_full_plate_outputs_remain_available(tmp_path):
+    context = _context(tmp_path, 1)
+    first = _facts(tmp_path)
+    target, entries = next(iter(first.source_projection_entries_by_target.items()))
+    projection, _ = entries.projection_paths[0]
+    second = replace(projection, address=OpenHCSPlaneAddress.from_values("A02", 1, 0, 1, 1))
+    outputs = replace(first, source_projection_entries_by_target=MappingProxyType({
+        target: VirtualWorkspaceSourceProjectionEntries.from_projection_paths((
+            (projection, "images/A01.tif"), (second, "images/A02.tif"),
+        )),
+    }))
+    context.record_completed_step_outputs(outputs)
+    authority = context.runtime_source_workspace_projection_authority
+    full = authority.projection_or_empty()
+    axis = authority.projection_or_empty(axis_id="A01")
+    assert set(full.pipeline_start_files()) == {str(tmp_path / "images/A01.tif"), str(tmp_path / "images/A02.tif")}
+    assert axis.pipeline_start_files() == (str(tmp_path / "images/A01.tif"),)
+    # Another context shares declaration admission, never the completed facts.
+    other = _context(tmp_path, 1)
+    other.filemanager = context.filemanager
+    other.microscope_handler = context.microscope_handler
+    assert other.runtime_source_workspace_projection_authority.projection_if_available() is None
+    context.reset_completed_step_outputs()
+    assert authority.projection_if_available(axis_id="A01") is None

@@ -524,13 +524,12 @@ class FunctionStepExecutor:
     def source_pattern_context(self) -> SourcePatternResolutionContext:
         """Return source-path context used to filter source-bound anchors."""
 
-        projection = self.context.runtime_source_workspace_projection_authority.projection_or_empty()
+        projection = self.context.runtime_source_workspace_projection_authority.projection_or_empty(
+            axis_id=self.plan.axis_id,
+        )
         return self.context.runtime_source_binding_context_cache.source_pattern_context(
             parser=self.context.microscope_handler.parser,
-            projection=self.context.runtime_source_workspace_projection_cache.filtered_by_axis(
-                projection,
-                axis_id=self.plan.axis_id,
-            ),
+            projection=projection,
             metadata_rules=self.plan.source_binding_plan.metadata_rules,
         )
 

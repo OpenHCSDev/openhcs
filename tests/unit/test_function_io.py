@@ -447,7 +447,6 @@ def test_virtual_pipeline_source_universe_does_not_mix_physical_paths(
             step_type="FunctionStep",
             axis_id="A01",
             source_universe_plan=CompiledSourceUniversePlan(
-                requires_full_pipeline_source_universe=False,
                 uses_pipeline_start_binding_origin=True,
             ),
         ),

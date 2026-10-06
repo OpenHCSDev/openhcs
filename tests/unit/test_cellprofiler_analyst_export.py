@@ -358,6 +358,7 @@ def _export_context() -> ProcessingContext:
     context.plate_path = Path("/")
     context.microscope_handler = SimpleNamespace(
         metadata_handler=_MetadataHandlerStub(),
+        source_admission_config=lambda: None,
     )
     return context
 
@@ -859,6 +860,7 @@ def _borrowed_source_export_fixture(
     context = _export_context()
     context.plate_path = tmp_path
     context.microscope_handler = SimpleNamespace(
+        source_admission_config=lambda: None,
         metadata_handler=SimpleNamespace(
             source_workspace_metadata_document=lambda _plate_path: document,
         )

@@ -135,12 +135,12 @@ def _anchor_executor(
         plate_path=Path("."),
         microscope_handler=SimpleNamespace(
             parser=parser,
+            source_admission_config=lambda: None,
             metadata_handler=SimpleNamespace(
                 source_workspace_metadata_document=lambda _path: None
             ),
         ),
         filemanager=SimpleNamespace(exists=lambda *_args: False),
-        runtime_source_workspace_projection_cache=source_workspace_projection_cache,
         runtime_source_binding_context_cache=RuntimeSourceBindingContextCache(),
     )
     executor.context.runtime_source_workspace_projection_authority = (
@@ -4107,7 +4107,7 @@ def test_producer_anchored_pipeline_start_paths_use_exact_source_projection_bund
         "source_workspace_projection_authority",
         lambda _self: SimpleNamespace(
             projection_if_available=lambda: projection,
-            projection_or_empty=lambda: projection,
+            projection_or_empty=lambda *, axis_id=None: projection.filtered_by_axis(axis_id=axis_id),
         ),
     )
 
@@ -4133,9 +4133,6 @@ def test_producer_anchored_pipeline_start_paths_use_exact_source_projection_bund
         runtime_image_stack_cache=RuntimeImageStackCache(),
         runtime_pattern_discovery_cache=RuntimePatternDiscoveryCache(),
         runtime_source_binding_context_cache=RuntimeSourceBindingContextCache(),
-        runtime_source_workspace_projection_cache=(
-            VirtualWorkspaceSourceProjectionCache()
-        ),
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
     )
     runtime = function_runtime.PatternGroupExecutionRequest(
