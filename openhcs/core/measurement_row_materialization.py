@@ -896,10 +896,10 @@ def wide_measurement_feature_columns(
 
 @dataclass(slots=True)
 class WideMeasurementRowAccumulator:
-    """Consolidate measurement columns directly into final subject-owned rows."""
+    """Admit projected batches and derive each completed subject once on consumption."""
 
     row_identity_contract: RuntimeMeasurementRowIdentityContract
-    _rows_by_subject: dict[str, ColumnarRows] = field(
+    _batches_by_subject: dict[str, list[ColumnarRows]] = field(
         default_factory=dict, init=False, repr=False
     )
     _object_subjects: list[str] = field(default_factory=list, init=False, repr=False)
@@ -1245,22 +1245,29 @@ class WideMeasurementRowAccumulator:
                 fields=tuple(FieldSpec(name, required=False) for name in output),
                 missing_cell=missing_cell,
             )
-            previous = self._rows_by_subject.get(subject)
-            batches = (batch,) if previous is None else (previous, batch)
+            self._batches_by_subject.setdefault(subject, []).append(batch)
+
+    def columnar_rows_by_subject(self) -> dict[str, ColumnarRows]:
+        """Coalesce admitted batches in first-seen subject and identity order.
+
+        Cross-batch duplicate values are validated by the columnar join when the
+        completed table is consumed, before any exporter can render or persist it.
+        """
+        result: dict[str, ColumnarRows] = {}
+        for subject, batches in self._batches_by_subject.items():
             names = frozenset(name for value in batches for name in value.columns)
             image_names = self.row_identity_contract.selected_image_identity_fields(
                 frozenset(normalize_runtime_identifier(name) for name in names)
             )
             identities = tuple(
-                name
-                for value in batches
-                for name in value.columns
-                if normalize_runtime_identifier(name) in image_names
-            )
-            identities = tuple(
                 dict.fromkeys(
                     (
-                        *identities,
+                        *(
+                            name
+                            for value in batches
+                            for name in value.columns
+                            if normalize_runtime_identifier(name) in image_names
+                        ),
                         *(
                             (self.row_identity_contract.object_identity_output_field,)
                             if self.row_identity_contract.object_identity_output_field
@@ -1270,15 +1277,10 @@ class WideMeasurementRowAccumulator:
                     )
                 )
             )
-            self._rows_by_subject[subject] = (
-                MeasurementSparseColumnarRows.from_columnar_batches(
-                    batches, identity_fields=identities
-                )
+            result[subject] = MeasurementSparseColumnarRows.from_columnar_batches(
+                batches, identity_fields=identities
             )
-
-    def columnar_rows_by_subject(self) -> dict[str, ColumnarRows]:
-        """Derive final correlated columns in first-seen subject/identity order."""
-        return dict(self._rows_by_subject)
+        return result
 
     def row_mappings_by_subject(self) -> dict[str, tuple[Mapping[str, object], ...]]:
         """Materialize mappings only for consumers requesting the row boundary."""

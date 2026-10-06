@@ -599,6 +599,87 @@ def test_export_to_spreadsheet_bundle_uses_generic_file_materialization() -> Non
     assert filemanager.load(primary_path, "memory") == b"image_number,Count\n1,3\n2,7\n"
 
 
+def test_columnar_aggregates_preserve_missing_cells_and_exclude_non_numeric_values():
+    image = _measurement_record(
+        "image",
+        axis_id="A01",
+        subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+        rows=({"slice_index": 0, "Count": 3},),
+    )
+    object_rows = (
+        {
+            "slice_index": 0,
+            "object_number": 2,
+            "Numeric": 2.0,
+            "WithNone": None,
+            "WithNaN": float("nan"),
+            "Boolean": True,
+        },
+        {
+            "slice_index": 0,
+            "object_number": 17,
+            "Numeric": 4.0,
+            "WithNone": 4.0,
+            "WithNaN": 4.0,
+            "Boolean": False,
+            "Sparse": 3.0,
+        },
+        {
+            "slice_index": 0,
+            "object_number": 32,
+            "Numeric": 6.0,
+            "WithNone": 6.0,
+            "WithNaN": 6.0,
+            "Boolean": True,
+            "Sparse": 5.0,
+        },
+    )
+    objects = _measurement_record(
+        "objects",
+        axis_id="A01",
+        subject=MeasurementSubject(MeasurementScope.OBJECT, "Cells", "object_number"),
+        rows=MeasurementSparseColumnarRows.from_rows(
+            object_rows,
+            fields=tuple(
+                (
+                    FieldSpec(name, int)
+                    if name in ("slice_index", "object_number")
+                    else FieldSpec(name, required=False)
+                )
+                for name in dict.fromkeys(name for row in object_rows for name in row)
+            ),
+        ),
+    )
+    batch = RuntimeArtifactBatch(
+        input_specs=(
+            ArtifactSpec.input("image", MeasurementsArtifactType),
+            ArtifactSpec.input("objects", MeasurementsArtifactType),
+        ),
+        records_by_axis={"A01": (image, objects)},
+        source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
+    )
+    bundle = export_to_spreadsheet(
+        artifact_batch=batch,
+        calculate_aggregate_means=True,
+        export_all_measurement_types=False,
+        file_selections=(
+            SpreadsheetFileSelection(("Image",), "Image.csv"),
+            SpreadsheetFileSelection(("Cells",), "Cells.csv"),
+        ),
+        add_filename_prefix=False,
+    )
+    row = next(csv.DictReader(io.StringIO(bundle["Image.csv"])))
+    assert row["Mean_Cells_Numeric"] == "4.0"
+    assert row["Mean_Cells_Sparse"] == "4.0"
+    assert row["Mean_Cells_WithNaN"] == "NaN"
+    assert not any(
+        name in row for name in ("Mean_Cells_WithNone", "Mean_Cells_Boolean")
+    )
+    object_rows = tuple(csv.DictReader(io.StringIO(bundle["Cells.csv"])))
+    assert tuple(row["object_number"] for row in object_rows) == ("2", "17", "32")
+    assert object_rows[0]["Sparse"] == ""
+
+
 def test_export_to_spreadsheet_rejects_append_order_slice_synthesis() -> None:
     records = tuple(
         _measurement_record(
