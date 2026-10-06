@@ -86,6 +86,12 @@ recorded interactive client with tools.exec_command tty=true::
 
   bash "$FLEET_OPERATIONS/recorded-mcp.sh" "$FLEET_ROOT" "$FLEET_SLOT" startup01
 
+The CLI's final answer is recorded as ``author-final-answer.rst`` under the
+existing ``FLEET_RECORD_RUNTIME`` observation directory. It never writes the
+author's scientific ``output/FINAL.rst`` report. Scientific reports and their
+frozen manifests remain author-owned; the controller answer has separate custody
+for both fresh launches and recovery observations.
+
 Known-closed controller recovery
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
