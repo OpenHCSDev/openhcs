@@ -1,0 +1,1114 @@
+{
+  "schema": "openhcs.publication.bbbc039.image-uninspected-field-score.v1",
+  "scope": "Retrospective image-uninspected frozen-field subsets; not prospective held-out or wholly data-unseen evaluation.",
+  "viewer_population": "Only the three named analysis agents' original author journals were audited. No claim is made that human authors, reviewers or other agents never viewed these fields.",
+  "audited_authors": [
+    "BBBC039_FRESH612_96",
+    "BBBC039_FRESH10_COVERAGE_96",
+    "BBBC039_FRESH13_88"
+  ],
+  "scientific_selection": {
+    "fresh612": "Authored final_full200, not supplemental round-object diagnostic.",
+    "fresh10": "Authored FULL200 final using retained FIRST scientific method, not rejected REPAIR candidates.",
+    "fresh13": "Authored repair05 scientific selection with frozen full200-technical01 materialisation; not latest repair15 or evaluator-best selection."
+  },
+  "exposure_definition": "Exclude the whole field if any raw/result/combined/diagnostic full-field image or crop was successfully delivered as an input_image to that author's original native journal. Capture/navigation alone is not proof of opening. Any-time exposure through original author completion is excluded, including post-method-freeze QA.",
+  "numerical_exposure_qualification": "Image-uninspected does not mean no numerical data exposure. Original authors sampled numerical image summaries and/or inspected automated output summaries without necessarily opening bitmaps.",
+  "exclusions_per_author": {
+    "fresh612": [
+      "20585_F14_7",
+      "20586_A06_6",
+      "20586_L10_6",
+      "20596_I12_1",
+      "20625_F12_8",
+      "20630_A02_1",
+      "20633_K12_7"
+    ],
+    "fresh10": [
+      "20586_A06_6",
+      "20592_A21_1",
+      "20594_L06_4",
+      "20626_B21_4",
+      "20630_A02_1",
+      "20630_A09_1",
+      "20639_H06_4",
+      "20641_L17_1"
+    ],
+    "fresh13": [
+      "20585_A24_9",
+      "20585_F14_7",
+      "20585_N18_2",
+      "20586_A06_6",
+      "20586_L10_6",
+      "20589_J11_2",
+      "20592_F13_7",
+      "20594_E08_2",
+      "20595_F21_1",
+      "20607_C18_1",
+      "20625_K01_3",
+      "20626_L01_2",
+      "20630_H06_6",
+      "20646_N12_7",
+      "20646_N21_1"
+    ]
+  },
+  "all_author_opened_union": [
+    "20585_A24_9",
+    "20585_F14_7",
+    "20585_N18_2",
+    "20586_A06_6",
+    "20586_L10_6",
+    "20589_J11_2",
+    "20592_A21_1",
+    "20592_F13_7",
+    "20594_E08_2",
+    "20594_L06_4",
+    "20595_F21_1",
+    "20596_I12_1",
+    "20607_C18_1",
+    "20625_F12_8",
+    "20625_K01_3",
+    "20626_B21_4",
+    "20626_L01_2",
+    "20630_A02_1",
+    "20630_A09_1",
+    "20630_H06_6",
+    "20633_K12_7",
+    "20639_H06_4",
+    "20641_L17_1",
+    "20646_N12_7",
+    "20646_N21_1"
+  ],
+  "common_all_author_uninspected_fields": 175,
+  "authors": {
+    "fresh612": {
+      "author_output_root": "/home/ts/wt/openhcs-issue-batch-20260929/next-bbbc01395-after612-20261004/BBBC039_FRESH612_96/author-workspace/output",
+      "original_journal": {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-bbbc01395-after612-20261004/BBBC039_FRESH612_96/author-workspace/output/native-sessions/2026/10/04/rollout-2026-10-04T08-24-13-01a106df-3413-7cb3-bfc4-092e079c57cc.jsonl",
+        "bytes": 26221585,
+        "sha256": "c943c0377c5e921c9eb505505aa105b53209826ebf2b0c26bbbf6678ec1fd02b"
+      },
+      "successful_image_open_calls": [
+        {
+          "call_id": "call_zOGKugxQfAXc6LmhiRXDYTdg",
+          "call_line": 347,
+          "output_line": 353,
+          "delivered_images": 1
+        },
+        {
+          "call_id": "call_uusjAbSnaBeSWzj0tCVdTFBj",
+          "call_line": 359,
+          "output_line": 366,
+          "delivered_images": 1
+        },
+        {
+          "call_id": "call_UP29cq1tvNwtEGS0gBQcXHMn",
+          "call_line": 391,
+          "output_line": 407,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_HdEX7y1EEjWBX2tCZm64NLHE",
+          "call_line": 686,
+          "output_line": 695,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_ClhqS2YG0dU39l35GwroDUKp",
+          "call_line": 719,
+          "output_line": 740,
+          "delivered_images": 5
+        },
+        {
+          "call_id": "call_SMOlmUT9mtYiZmZ22HtGe0Hq",
+          "call_line": 774,
+          "output_line": 781,
+          "delivered_images": 1
+        },
+        {
+          "call_id": "call_5GlRpM3d17TDTmwVWw0UtiYv",
+          "call_line": 810,
+          "output_line": 825,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_IZd68gMfQmf2Ba1Nd1CSFO3S",
+          "call_line": 837,
+          "output_line": 857,
+          "delivered_images": 4
+        },
+        {
+          "call_id": "call_NnhAdfrPF7WNC30Y2UD5LgYI",
+          "call_line": 1084,
+          "output_line": 1097,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_q3Yi0NqPnnHCJyldPIr8mwHE",
+          "call_line": 1160,
+          "output_line": 1179,
+          "delivered_images": 4
+        },
+        {
+          "call_id": "call_AitYfD8gjjtJ5YNO68nnBmrA",
+          "call_line": 1375,
+          "output_line": 1380,
+          "delivered_images": 1
+        },
+        {
+          "call_id": "call_cL4mzex6w4EvpJr07zpSRQTN",
+          "call_line": 1423,
+          "output_line": 1438,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_poDXcdmpjuDOx9XHist5zuBB",
+          "call_line": 1442,
+          "output_line": 1456,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_23Ro2ryYUcIfdy9OaJbCrpyK",
+          "call_line": 1458,
+          "output_line": 1471,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_LsCTjpwBM0FVx1ahvTnOoveA",
+          "call_line": 1477,
+          "output_line": 1490,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_gkJRpBu4hsCMPs2tNfavnY55",
+          "call_line": 1494,
+          "output_line": 1508,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_yzLWRRueZlM0jDRtfESiqBEw",
+          "call_line": 1512,
+          "output_line": 1526,
+          "delivered_images": 3
+        }
+      ],
+      "source_records": [
+        {
+          "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-bbbc01395-after612-20261004/BBBC039_FRESH612_96/author-workspace/output/freeze_manifest.json",
+          "bytes": 2514472,
+          "sha256": "b4dd04fc1b897fca1257aead36d43b2938358df78adf254231923c5ccd917ac2"
+        },
+        {
+          "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-bbbc01395-after612-20261004/BBBC039_FRESH612_96/author-workspace/output/final_full200/pipeline.py",
+          "bytes": 5694,
+          "sha256": "eb3a043f81c7e1508f036bbeb5c6f74aaf586f2fef8622c519eb5ad5072105e9"
+        }
+      ],
+      "original_evaluation": {
+        "path": "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/paper/supplementary/task_only_analysis/bbbc039-fresh612-postfreeze-evaluation.json",
+        "bytes": 326819,
+        "sha256": "b491df2f50f0f9a3b1d1f72c940f1a0103c0c74764c4c80852f456da2d1702b2"
+      }
+    },
+    "fresh10": {
+      "author_output_root": "/home/ts/wt/openhcs-issue-batch-20260929/next-h00488-h00389-bbbc03996-fresh10-after-capacity-20261005/BBBC039_FRESH10_COVERAGE_96/author-workspace/output",
+      "original_journal": {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h00488-h00389-bbbc03996-fresh10-after-capacity-20261005/BBBC039_FRESH10_COVERAGE_96/author-workspace/output/native-sessions/2026/10/05/rollout-2026-10-05T07-54-38-01a10bea-7ba8-7931-bfb9-f4306dea4292.jsonl",
+        "bytes": 26521688,
+        "sha256": "b7fb042f97d44b90e0e4da67fa73f18d20e44b862787c1dff77ea99314b10b2d"
+      },
+      "successful_image_open_calls": [
+        {
+          "call_id": "call_sbtDdjVY6YcOKWhmHZoRWBws",
+          "call_line": 308,
+          "output_line": 311,
+          "delivered_images": 1
+        },
+        {
+          "call_id": "call_dVInHg8x7p9Xiq5IAMiKYJqg",
+          "call_line": 331,
+          "output_line": 335,
+          "delivered_images": 1
+        },
+        {
+          "call_id": "call_9WaPVNYarTQ3shV9Tb66ctJ3",
+          "call_line": 350,
+          "output_line": 356,
+          "delivered_images": 1
+        },
+        {
+          "call_id": "call_UqvuMIfHvHwuyHcYQ7sZogSw",
+          "call_line": 370,
+          "output_line": 385,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_cefQwkVum8LmW0A7lpArkfFS",
+          "call_line": 403,
+          "output_line": 417,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_EazDQFvvXdVzk0hEloSGbYoE",
+          "call_line": 688,
+          "output_line": 692,
+          "delivered_images": 1
+        },
+        {
+          "call_id": "call_vwgb9Zfpszr3AAbkAQfzh0Li",
+          "call_line": 791,
+          "output_line": 797,
+          "delivered_images": 1
+        },
+        {
+          "call_id": "call_u8UdfCdjAJariVTOHTkXvMoJ",
+          "call_line": 814,
+          "output_line": 827,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_9RfD5KL4n9y8PgID8wibgGXO",
+          "call_line": 872,
+          "output_line": 884,
+          "delivered_images": 2
+        },
+        {
+          "call_id": "call_3TMTMUFdpeWUJVpKLfdS3BOL",
+          "call_line": 945,
+          "output_line": 953,
+          "delivered_images": 1
+        },
+        {
+          "call_id": "call_ooQLHBwuEeTVQiyjreeV65vf",
+          "call_line": 957,
+          "output_line": 969,
+          "delivered_images": 2
+        },
+        {
+          "call_id": "call_SnMVoKdCoLItxMb1MkadGlLx",
+          "call_line": 1008,
+          "output_line": 1016,
+          "delivered_images": 1
+        },
+        {
+          "call_id": "call_6uzpcPMf1ZA1UtmAEDsefvQF",
+          "call_line": 1095,
+          "output_line": 1098,
+          "delivered_images": 1
+        },
+        {
+          "call_id": "call_YCtpRX9eTzjE4iyrkvp5dz3O",
+          "call_line": 1198,
+          "output_line": 1203,
+          "delivered_images": 1
+        },
+        {
+          "call_id": "call_0m5KK4S9gGJgsTY5FnLV3FJ1",
+          "call_line": 1218,
+          "output_line": 1224,
+          "delivered_images": 2
+        },
+        {
+          "call_id": "call_TdXEli9RtsIr1DAvwOxZyvpu",
+          "call_line": 1304,
+          "output_line": 1311,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_jWqZXI4QWRdtGgKUM3XJHNsR",
+          "call_line": 1386,
+          "output_line": 1396,
+          "delivered_images": 6
+        },
+        {
+          "call_id": "call_jCnoYK5BXStNdYcCiOr2g0Nz",
+          "call_line": 1447,
+          "output_line": 1454,
+          "delivered_images": 3
+        }
+      ],
+      "source_records": [
+        {
+          "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h00488-h00389-bbbc03996-fresh10-after-capacity-20261005/BBBC039_FRESH10_COVERAGE_96/author-workspace/output/freeze.json",
+          "bytes": 1775,
+          "sha256": "eb2fa3acec42eea0abb09e361d68ce819ef8bcca73df03e59b342d98c499e350"
+        },
+        {
+          "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h00488-h00389-bbbc03996-fresh10-after-capacity-20261005/BBBC039_FRESH10_COVERAGE_96/author-workspace/output/manifest.json",
+          "bytes": 1517955,
+          "sha256": "4c4f4fa04259be461fd0715d28320c8e3a28ed43f90a0caf1821b136ca992110"
+        },
+        {
+          "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-h00488-h00389-bbbc03996-fresh10-after-capacity-20261005/BBBC039_FRESH10_COVERAGE_96/author-workspace/output/pipeline.py",
+          "bytes": 3626,
+          "sha256": "0824f47839bfe4a5ac05592d8e57f4c548c68517ea46f7ea7765d0921b9f6b1a"
+        }
+      ],
+      "original_evaluation": {
+        "path": "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/figure-collection-20261004/bbbc039-fresh10coverage-postfreeze-evaluation.json",
+        "bytes": 453601,
+        "sha256": "e257a17d67662967ba9af16a9a94aa78756b47a889c3e093a0cf1abe640f828e"
+      }
+    },
+    "fresh13": {
+      "author_output_root": "/home/ts/wt/openhcs-issue-batch-20260929/next-bbbc039-fresh13-88-after-bbbc013-20261005/BBBC039_FRESH13_88/author-workspace/output",
+      "original_journal": {
+        "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-bbbc039-fresh13-88-after-bbbc013-20261005/BBBC039_FRESH13_88/author-workspace/output/native-sessions/2026/10/05/rollout-2026-10-05T11-34-25-01a10cb3-b39d-7c61-badd-3d3e3ceb1973.jsonl",
+        "bytes": 96836613,
+        "sha256": "238b492a68e64f2d0fb3dfa2cc3cd857aa762e2698b48dc90e8018d7037e2305"
+      },
+      "successful_image_open_calls": [
+        {
+          "call_id": "call_OLnzcjQXOP8RqeE3XrX1EGEq",
+          "call_line": 246,
+          "output_line": 249,
+          "delivered_images": 1
+        },
+        {
+          "call_id": "call_jAZin5wHHU9tqVNnb1uf7wt5",
+          "call_line": 265,
+          "output_line": 269,
+          "delivered_images": 1
+        },
+        {
+          "call_id": "call_G4tBXh0HM5sr4m3EMLLa896t",
+          "call_line": 347,
+          "output_line": 355,
+          "delivered_images": 5
+        },
+        {
+          "call_id": "call_UcF6oSYIVMUQ1lkdAhzJ30jP",
+          "call_line": 374,
+          "output_line": 379,
+          "delivered_images": 1
+        },
+        {
+          "call_id": "call_opD7B0vQOMq64yn5pt0X6gdK",
+          "call_line": 625,
+          "output_line": 631,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_RpegWFlBNKQPzGKNKsMmrTVb",
+          "call_line": 646,
+          "output_line": 652,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_hGor5Rm4Nl7SgxOC0q3Djfbo",
+          "call_line": 662,
+          "output_line": 674,
+          "delivered_images": 9
+        },
+        {
+          "call_id": "call_Nj9dOmkR6yNCbwl4nALZ6A3W",
+          "call_line": 678,
+          "output_line": 687,
+          "delivered_images": 6
+        },
+        {
+          "call_id": "call_nxSOccg7hSmA32T10P37wJ0B",
+          "call_line": 693,
+          "output_line": 701,
+          "delivered_images": 4
+        },
+        {
+          "call_id": "call_iVO69ON30vk8BrtjzvZxXJTQ",
+          "call_line": 712,
+          "output_line": 721,
+          "delivered_images": 5
+        },
+        {
+          "call_id": "call_41LmE3BDLCXpzaHovzB6J4hq",
+          "call_line": 725,
+          "output_line": 733,
+          "delivered_images": 4
+        },
+        {
+          "call_id": "call_iuL3p80vGok8tqS8v9lmWh32",
+          "call_line": 771,
+          "output_line": 780,
+          "delivered_images": 6
+        },
+        {
+          "call_id": "call_SPJSsYAFz9OBp61BpjGZhNvM",
+          "call_line": 843,
+          "output_line": 850,
+          "delivered_images": 4
+        },
+        {
+          "call_id": "call_TfXMHXV4BJDHJ13fBg8XQP4d",
+          "call_line": 862,
+          "output_line": 870,
+          "delivered_images": 4
+        },
+        {
+          "call_id": "call_deh8Qh4nhbqc3EAd2i0wWTJz",
+          "call_line": 882,
+          "output_line": 892,
+          "delivered_images": 6
+        },
+        {
+          "call_id": "call_dKqD6JeCH5eDMHTTSNrYJJeu",
+          "call_line": 959,
+          "output_line": 966,
+          "delivered_images": 4
+        },
+        {
+          "call_id": "call_rxIkq2EMAO5u9TztePMtM2gP",
+          "call_line": 979,
+          "output_line": 991,
+          "delivered_images": 9
+        },
+        {
+          "call_id": "call_fCppLHlaW1gQGND8zGIKxYsA",
+          "call_line": 995,
+          "output_line": 1007,
+          "delivered_images": 9
+        },
+        {
+          "call_id": "call_rRCI7NiswsssxMPg1rRARmTF",
+          "call_line": 1042,
+          "output_line": 1055,
+          "delivered_images": 10
+        },
+        {
+          "call_id": "call_aBZIgBTgxK2bST2xL6p0o7Kj",
+          "call_line": 1098,
+          "output_line": 1105,
+          "delivered_images": 4
+        },
+        {
+          "call_id": "call_fvXNCK5xSaq37E4TvYEHNzBK",
+          "call_line": 1116,
+          "output_line": 1123,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_f7d8fPjkcDNgDpWBLWxlbOPC",
+          "call_line": 1172,
+          "output_line": 1186,
+          "delivered_images": 10
+        },
+        {
+          "call_id": "call_EeHaUwXoV5FnxnzjwQfP7SLU",
+          "call_line": 1236,
+          "output_line": 1245,
+          "delivered_images": 6
+        },
+        {
+          "call_id": "call_ct2y0AdGVrjwvFAvJS1PX0rb",
+          "call_line": 1361,
+          "output_line": 1373,
+          "delivered_images": 9
+        },
+        {
+          "call_id": "call_Px564JsNaDPHJ7iLC6GgNEuM",
+          "call_line": 1452,
+          "output_line": 1464,
+          "delivered_images": 9
+        },
+        {
+          "call_id": "call_RAYn0shAlNTbH2tNBKob6SdO",
+          "call_line": 1555,
+          "output_line": 1564,
+          "delivered_images": 6
+        },
+        {
+          "call_id": "call_7isWrU7QSoQ8LGktuqu4lnHN",
+          "call_line": 1738,
+          "output_line": 1747,
+          "delivered_images": 6
+        },
+        {
+          "call_id": "call_76cHIsahFgRd6aJw63wLwN7M",
+          "call_line": 1860,
+          "output_line": 1869,
+          "delivered_images": 6
+        },
+        {
+          "call_id": "call_ChxljWZXY51kynpwgSP0OnjO",
+          "call_line": 1957,
+          "output_line": 1967,
+          "delivered_images": 6
+        },
+        {
+          "call_id": "call_cbe9rIzqFdTfrjN7LhPr10xh",
+          "call_line": 2043,
+          "output_line": 2053,
+          "delivered_images": 6
+        },
+        {
+          "call_id": "call_kSIPXbq1ifEjpXlLB8A6qO5D",
+          "call_line": 2073,
+          "output_line": 2079,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_ifxPz9nuhnkyUe3kpkETxUGG",
+          "call_line": 2085,
+          "output_line": 2092,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_DmTw4uMPMiyBoPNinoA5YQ0r",
+          "call_line": 2218,
+          "output_line": 2224,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_mcTKzPfms56D1dtm2Pp13Czq",
+          "call_line": 2228,
+          "output_line": 2234,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_JsJPs5z2le1jFlyHV1nWgqYA",
+          "call_line": 2260,
+          "output_line": 2265,
+          "delivered_images": 1
+        },
+        {
+          "call_id": "call_jrfHzBxY3i2gUu6lbkEeNJ8a",
+          "call_line": 2329,
+          "output_line": 2335,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_t0oi1vyzBa21xwdNy2tKttwr",
+          "call_line": 2339,
+          "output_line": 2346,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_7tNUUk38l2LldhSkdYhvIlyv",
+          "call_line": 2427,
+          "output_line": 2433,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_C5Dg8OwYfX5XXU7jw129C9gx",
+          "call_line": 2451,
+          "output_line": 2458,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_TBsS2uJYqQVnouTv53dVJDLl",
+          "call_line": 2462,
+          "output_line": 2468,
+          "delivered_images": 2
+        },
+        {
+          "call_id": "call_KbfzwWcDIodvutvdBw8euNup",
+          "call_line": 3127,
+          "output_line": 3133,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_d8nRlgbsB2LAGjNikwaeesir",
+          "call_line": 3135,
+          "output_line": 3140,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_UFnKPew3HbRBVHdgAHTTb5M8",
+          "call_line": 3142,
+          "output_line": 3147,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_n1xDMpXW9N3Rk4NXAdbHaasd",
+          "call_line": 3151,
+          "output_line": 3157,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_6zPHHcYngVPDwQSL1ojLGnYB",
+          "call_line": 3159,
+          "output_line": 3164,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_zaH5INR0TfL0vOAn1aGfXURC",
+          "call_line": 3166,
+          "output_line": 3171,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_MakhTUnHaci1BQLR7Ea27erv",
+          "call_line": 3177,
+          "output_line": 3182,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_sCDi1YDa4yp3EEb7SidiKlbp",
+          "call_line": 3184,
+          "output_line": 3189,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_elrWxOZbGcrMHWw1IrnoaeHM",
+          "call_line": 3191,
+          "output_line": 3196,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_IYwmAcU7uDaUeOcKc8ha7MTR",
+          "call_line": 3198,
+          "output_line": 3203,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_8pEJUQr2PkILiAuelnq7YshX",
+          "call_line": 3205,
+          "output_line": 3210,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_0e9a3sBVCClmMkUE57LMUZGc",
+          "call_line": 3212,
+          "output_line": 3217,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_IHfsy9nFzxyGvhX3ytKmo6Yv",
+          "call_line": 3219,
+          "output_line": 3224,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_hXewgeRu1QcXaLfVwboF5IWk",
+          "call_line": 3226,
+          "output_line": 3231,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_hOw5QHtbwBQOgjUpmp0QxVDi",
+          "call_line": 3233,
+          "output_line": 3238,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_fvv3oz33oAlzZFCFO1hYOghR",
+          "call_line": 3264,
+          "output_line": 3270,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_GRfmIc6VkBR0tvrIV1U68660",
+          "call_line": 3272,
+          "output_line": 3277,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_BNZJUop1TxQjSu2Q88k7IEc7",
+          "call_line": 3279,
+          "output_line": 3284,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_oH759f9p5qXIbGXkYM0hPK7I",
+          "call_line": 3286,
+          "output_line": 3291,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_Y0pemgpodEfBjQXQxKf59S9v",
+          "call_line": 3293,
+          "output_line": 3298,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_hCu0G1T8GJTO61XcKiontKo1",
+          "call_line": 3300,
+          "output_line": 3305,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_7BFZfjFchKzNiqprWDy6YqPf",
+          "call_line": 3309,
+          "output_line": 3314,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_hyNOrKoekeNoWDdONctZ5V4e",
+          "call_line": 3316,
+          "output_line": 3321,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_IM3F6aUn2Y9W7mnftnROenIO",
+          "call_line": 3323,
+          "output_line": 3328,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_46cXtTtpivurfk2SWSp7D2S0",
+          "call_line": 3330,
+          "output_line": 3335,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_DWHKAMM5sWRzH1lva83IJ3PE",
+          "call_line": 3339,
+          "output_line": 3344,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_dzNyjlDLvepvl9bqQq9NAWWe",
+          "call_line": 3346,
+          "output_line": 3351,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_DLxvUehTJCADIg73JeMqC2NG",
+          "call_line": 3353,
+          "output_line": 3358,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_DI0HYWXiyfJSXe05NlgyzlwG",
+          "call_line": 3360,
+          "output_line": 3365,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_l5PQ7tY218fldSLqcZT0aQND",
+          "call_line": 3367,
+          "output_line": 3372,
+          "delivered_images": 3
+        },
+        {
+          "call_id": "call_optXKgwdr9xVmEUPhgO4BCmx",
+          "call_line": 3374,
+          "output_line": 3379,
+          "delivered_images": 3
+        }
+      ],
+      "source_records": [
+        {
+          "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-bbbc039-fresh13-88-after-bbbc013-20261005/BBBC039_FRESH13_88/author-workspace/output/provenance/final-method-freeze.json",
+          "bytes": 2546,
+          "sha256": "9ee81f44f3b5a7ec79c67ea409493630569e0b2bdcffd7449f4fe38433fd1321"
+        },
+        {
+          "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-bbbc039-fresh13-88-after-bbbc013-20261005/BBBC039_FRESH13_88/author-workspace/output/provenance/final-technical-freeze.json",
+          "bytes": 3140,
+          "sha256": "a99ced83b16179887221763c49a725ff5d4f47c5ea7a279809735dd0c7fe2551"
+        },
+        {
+          "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-bbbc039-fresh13-88-after-bbbc013-20261005/BBBC039_FRESH13_88/author-workspace/output/provenance/payload-manifest.json",
+          "bytes": 2194496,
+          "sha256": "6d75bff081f37b5c24471fcacad0a68cca78ea4c519bafde47286aead5a447b1"
+        },
+        {
+          "path": "/home/ts/wt/openhcs-issue-batch-20260929/next-bbbc039-fresh13-88-after-bbbc013-20261005/BBBC039_FRESH13_88/author-workspace/output/final_pipeline.py",
+          "bytes": 6687,
+          "sha256": "1e3cf2fb760dd04a44d0fa9ebb902440236d67a6064d73619019e2f8813446bd"
+        }
+      ],
+      "original_evaluation": {
+        "path": "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/paper/supplementary/task_only_analysis/bbbc039-fresh13-postfreeze-evaluation.json",
+        "bytes": 330467,
+        "sha256": "4faf5b440323b0d95b2d3de2b712d81542115f6f5f8bdbb5a1d76d6bc22db3bc"
+      }
+    }
+  },
+  "scoring": {
+    "reference_manifest": {
+      "path": "/home/ts/.cache/openhcs/independent_validation/prepared_20260917_0355/BBBC039_nuclei_segmentation/trusted_scoring/reference_manifest.csv",
+      "bytes": 30483,
+      "sha256": "080d05c17687641dab035c6437c0d03db3e2ad06a6379244938edc6278e6015a"
+    },
+    "scoring_owner": {
+      "path": "/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/benchmark/validation/scoring.py",
+      "bytes": 23685,
+      "sha256": "6e9c7a4be22be553f02642ea0375604a890047cf40cea5429b7720804aa75e93"
+    },
+    "reference_loading_owner": {
+      "path": "/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/lib/python3.12/site-packages/benchmark/validation/references.py",
+      "bytes": 4211,
+      "sha256": "d3257c514ae6d4f64f46d513d63dabacfe04cc36bed05373b7a3055438928c90"
+    },
+    "aggregation_owner": {
+      "path": "/home/ts/wt/openhcs-artifact-planning-publication-315-20260930/figure-collection-20261004/bbbc039-fresh10coverage-postfreeze-evaluate.py",
+      "bytes": 14148,
+      "sha256": "16f54ccd639f1105f8c3bc39cbb3a62cef82e53abe57058ad798eb803ab1418c"
+    },
+    "interpreter": "/home/ts/wt/openhcs-paired-raw-installed-parent-20261001/.venv/bin/python",
+    "match_iou": 0.5,
+    "reference_feedback_to_authors": false,
+    "pipeline_or_detector_execution": false,
+    "verification": {
+      "included_author_field_pairs": 570,
+      "recomputed_metrics_exactly_equal_original_evaluation": true,
+      "included_prediction_sha256_checks_passed": 570,
+      "common_reference_sha256_checks_passed": 175,
+      "original_fresh10_reference_hashes_used": true,
+      "scorer_sha256": "6e9c7a4be22be553f02642ea0375604a890047cf40cea5429b7720804aa75e93",
+      "observed_wall_seconds": 24.01,
+      "observed_peak_rss_mib": 9416.87109375
+    }
+  },
+  "score_summaries": {
+    "fresh612": {
+      "per_author": {
+        "fields": 193,
+        "reference_objects": 22876,
+        "predicted_objects": 20974,
+        "true_positives": 19877,
+        "false_positives": 1097,
+        "false_negatives": 2999,
+        "precision": 0.9476971488509583,
+        "recall": 0.8689019059276097,
+        "micro_f1": 0.9065906499429874,
+        "macro_f1": 0.895905538100183,
+        "mean_panoptic_quality": 0.7906576555109399,
+        "tp_weighted_mean_matched_iou": 0.8832265946078888,
+        "split_reference_count": 3505,
+        "merged_prediction_count": 4112,
+        "signed_count_error": -1902
+      },
+      "common_all_author_uninspected": {
+        "fields": 175,
+        "reference_objects": 20905,
+        "predicted_objects": 19195,
+        "true_positives": 18244,
+        "false_positives": 951,
+        "false_negatives": 2661,
+        "precision": 0.9504558478770513,
+        "recall": 0.8727098780196125,
+        "micro_f1": 0.909925187032419,
+        "macro_f1": 0.9078011479297041,
+        "mean_panoptic_quality": 0.801827880568244,
+        "tp_weighted_mean_matched_iou": 0.883544757261181,
+        "split_reference_count": 3186,
+        "merged_prediction_count": 3758,
+        "signed_count_error": -1710
+      }
+    },
+    "fresh10": {
+      "per_author": {
+        "fields": 192,
+        "reference_objects": 22700,
+        "predicted_objects": 20526,
+        "true_positives": 19395,
+        "false_positives": 1131,
+        "false_negatives": 3305,
+        "precision": 0.9448991522946507,
+        "recall": 0.8544052863436123,
+        "micro_f1": 0.8973765789108407,
+        "macro_f1": 0.8843041274357476,
+        "mean_panoptic_quality": 0.7744520112992,
+        "tp_weighted_mean_matched_iou": 0.876621465841723,
+        "split_reference_count": 3291,
+        "merged_prediction_count": 4146,
+        "signed_count_error": -2174
+      },
+      "common_all_author_uninspected": {
+        "fields": 175,
+        "reference_objects": 20905,
+        "predicted_objects": 18782,
+        "true_positives": 17976,
+        "false_positives": 806,
+        "false_negatives": 2929,
+        "precision": 0.9570865722500266,
+        "recall": 0.8598899784740492,
+        "micro_f1": 0.9058885781238188,
+        "macro_f1": 0.9012709251969927,
+        "mean_panoptic_quality": 0.790354850012776,
+        "tp_weighted_mean_matched_iou": 0.8773805017617383,
+        "split_reference_count": 2968,
+        "merged_prediction_count": 3761,
+        "signed_count_error": -2123
+      }
+    },
+    "fresh13": {
+      "per_author": {
+        "fields": 185,
+        "reference_objects": 22189,
+        "predicted_objects": 20409,
+        "true_positives": 19294,
+        "false_positives": 1115,
+        "false_negatives": 2895,
+        "precision": 0.9453672399431623,
+        "recall": 0.8695299472711704,
+        "micro_f1": 0.9058641250762947,
+        "macro_f1": 0.9042685163860052,
+        "mean_panoptic_quality": 0.8143968837655656,
+        "tp_weighted_mean_matched_iou": 0.901331442937993,
+        "split_reference_count": 3626,
+        "merged_prediction_count": 4004,
+        "signed_count_error": -1780
+      },
+      "common_all_author_uninspected": {
+        "fields": 175,
+        "reference_objects": 20905,
+        "predicted_objects": 19195,
+        "true_positives": 18162,
+        "false_positives": 1033,
+        "false_negatives": 2743,
+        "precision": 0.9461839020578275,
+        "recall": 0.8687873714422387,
+        "micro_f1": 0.9058354114713217,
+        "macro_f1": 0.9032319509558647,
+        "mean_panoptic_quality": 0.8139831485504413,
+        "tp_weighted_mean_matched_iou": 0.9019183386794446,
+        "split_reference_count": 3345,
+        "merged_prediction_count": 3711,
+        "signed_count_error": -1710
+      }
+    }
+  },
+  "csv": {
+    "path": "bbbc039-uninspected-fields.csv",
+    "rows": 600,
+    "sha256": "548749c6764453a7171f657a3ff07fcfa613fc943104da2fe1eb67d93f31e3f0",
+    "description": "Original fixed-score rows for all 200 fields of each author, with audited image-exposure flags. Select opened_by_this_author=False for each author's score; opened_by_any_of_three_authors=False for the common 175. The 30 per-author excluded rows are retained for audit, not included or newly recomputed."
+  },
+  "exclusions_rationale": {
+    "fresh612": {
+      "initial_three": {
+        "stream_call_line": 292,
+        "source_ids": [
+          "20585_F14_7",
+          "20630_A02_1",
+          "20586_A06_6"
+        ],
+        "successful_open_call_lines": [
+          347,
+          359,
+          391,
+          686,
+          719,
+          774,
+          810,
+          837,
+          1084,
+          1160,
+          1375
+        ]
+      },
+      "extra_four": {
+        "stream_call_line": 1407,
+        "result_binding_call_line": 1415,
+        "source_ids": [
+          "20586_L10_6",
+          "20596_I12_1",
+          "20625_F12_8",
+          "20633_K12_7"
+        ],
+        "successful_open_call_lines": [
+          1423,
+          1442,
+          1458,
+          1477,
+          1494,
+          1512
+        ]
+      }
+    },
+    "fresh10": {
+      "initial_six": {
+        "stream_call_line": 244,
+        "source_ids": [
+          "20592_A21_1",
+          "20586_A06_6",
+          "20641_L17_1",
+          "20639_H06_4",
+          "20626_B21_4",
+          "20594_L06_4"
+        ],
+        "successful_open_call_lines": [
+          308,
+          331,
+          350,
+          370,
+          403
+        ]
+      },
+      "extra_two": {
+        "source_ids": [
+          "20630_A09_1",
+          "20630_A02_1"
+        ],
+        "capture_binding_call_lines": [
+          1189,
+          1207,
+          1356
+        ],
+        "successful_open_call_lines": [
+          1198,
+          1218,
+          1386
+        ]
+      },
+      "qualification": "Failed early layer isolation is not used as an accepted QA witness; those development fields remain excluded from uninspected scoring."
+    },
+    "fresh13": {
+      "initial_six": {
+        "stream_call_line": 310,
+        "axis_binding_call_line": 332,
+        "source_ids": [
+          "20586_A06_6",
+          "20585_A24_9",
+          "20630_H06_6",
+          "20594_E08_2",
+          "20595_F21_1",
+          "20589_J11_2"
+        ],
+        "successful_open_call_lines": [
+          246,
+          265,
+          347,
+          374
+        ]
+      },
+      "zero_control_three": {
+        "list_definition_call_line": 3127,
+        "source_ids": [
+          "20592_F13_7",
+          "20626_L01_2",
+          "20586_L10_6"
+        ],
+        "successful_open_call_lines": [
+          3127,
+          3135,
+          3142
+        ]
+      },
+      "whole_field_twelve": {
+        "list_definition_call_line": 3151,
+        "source_ids": [
+          "20585_N18_2",
+          "20607_C18_1",
+          "20646_N12_7",
+          "20585_F14_7",
+          "20625_K01_3",
+          "20646_N21_1",
+          "20586_A06_6",
+          "20585_A24_9",
+          "20594_E08_2",
+          "20595_F21_1",
+          "20630_H06_6",
+          "20589_J11_2"
+        ],
+        "successful_open_call_lines": [
+          3151,
+          3159,
+          3166,
+          3177,
+          3184,
+          3191,
+          3198,
+          3205,
+          3212,
+          3219,
+          3226,
+          3233
+        ]
+      },
+      "qualification": "Initial six are contained in final twelve. Failed call 2443 delivered zero images and is not an exposure witness. Successful later opens, not QA-plan creation alone, establish exposure."
+    }
+  }
+}
