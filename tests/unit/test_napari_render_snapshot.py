@@ -2,6 +2,7 @@
 
 import pickle
 import queue
+from concurrent.futures import Future
 from types import SimpleNamespace
 
 import pytest
@@ -66,7 +67,7 @@ def queued_viewer():
 
 
 def enqueue(server, capture):
-    reply = queue.Queue(maxsize=1)
+    reply = Future()
     message = pickle.loads(pickle.dumps({"type": "screenshot", "payload": capture}))
     server.accepted_control_requests.put(NapariAcceptedControlRequest(message, reply))
     server.process_messages()
@@ -90,9 +91,9 @@ def test_default_render_condition_flows_through_registered_queue_and_real_paint(
         NapariControlMessageAction
     ) < action.__class__.__mro__.index(ViewerWindowSnapshotService)
     reply = enqueue(server, request)
-    assert reply.empty() and not tuple(tmp_path.glob("*.png"))
+    assert not reply.done() and not tuple(tmp_path.glob("*.png"))
     app.processEvents()
-    response = pickle.loads(reply.get_nowait())
+    response = pickle.loads(reply.result(timeout=0))
     assert response["status"] == "success"
     assert response["snapshot"].same_capture_contract(request)
     receipt = response["observation"]
@@ -101,7 +102,7 @@ def test_default_render_condition_flows_through_registered_queue_and_real_paint(
     assert QImage(response["resource"]["path"]).pixelColor(30, 30) == QColor("blue")
     assert response["native_dimensions"]["ndisplay"] == server.viewer.dims.ndisplay
     app.processEvents()
-    assert reply.empty()  # Exactly one reply despite grab repainting the canvas.
+    assert reply.done()  # One immutable result despite grab repainting the canvas.
 
 
 def test_explicit_immediate_still_uses_shared_capture_contract(queued_viewer, tmp_path):
@@ -111,7 +112,7 @@ def test_explicit_immediate_still_uses_shared_capture_contract(queued_viewer, tm
         output_dir_path=str(tmp_path),
         frame_condition=WindowSnapshotFrameCondition.IMMEDIATE,
     )
-    response = pickle.loads(enqueue(server, request).get_nowait())
+    response = pickle.loads(enqueue(server, request).result(timeout=0))
     assert response["status"] == "success" and response["observation"] is None
     assert response["snapshot"].same_capture_contract(request)
 
@@ -125,7 +126,7 @@ def test_queued_destroyed_owner_preserves_failure_receipt(queued_viewer, tmp_pat
     reply = enqueue(server, request)
     canvas.deleteLater()
     app.sendPostedEvents(None, QEvent.Type.DeferredDelete)
-    response = pickle.loads(reply.get_nowait())
+    response = pickle.loads(reply.result(timeout=0))
     assert response["status"] == "error"
     assert response["observation"].render_frame is None
     assert "destroyed" in response["message"]
@@ -162,20 +163,20 @@ def test_real_vispy_native_binding_through_original_registered_queue(
             observation_timeout_s=0.02,
         ).start_operation()
         reply = enqueue(server, request)
-        assert reply.empty(), "Observation must arm, not reject the real Qt parent"
+        assert not reply.done(), "Observation must arm, not reject the real Qt parent"
         timer = native.findChild(QtCore.QTimer)
         assert timer is not None and timer.parent() is native
         end = time.monotonic() + request.timeout_ms / 1000
-        while reply.empty() and time.monotonic() < end:
+        while not reply.done() and time.monotonic() < end:
             app.processEvents()
-        response = pickle.loads(reply.get_nowait())
+        response = pickle.loads(reply.result(timeout=0))
         assert response["status"] == "error" and "not observed" in response["message"]
         assert response["observation"].render_frame is None
         assert response["observation"].operation_deadline == request.operation_deadline
         assert not tuple(tmp_path.glob("*.png"))
         native.frameSwapped.emit()  # Late signal cleanup, not a fake render proof.
         app.processEvents()
-        assert reply.empty() and not tuple(tmp_path.glob("*.png"))
+        assert reply.done() and not tuple(tmp_path.glob("*.png"))
     finally:
         canvas.close()
 
@@ -190,7 +191,7 @@ def test_new_control_case_requires_only_registered_declaration_and_hook(queued_v
             return {"status": "success", "token": message["payload"]}
 
     try:
-        reply = queue.Queue(maxsize=1)
+        reply = Future()
         server.accepted_control_requests.put(
             NapariAcceptedControlRequest(
                 {"type": DeclarationOnlyControl.message_type, "payload": 17},
@@ -198,6 +199,65 @@ def test_new_control_case_requires_only_registered_declaration_and_hook(queued_v
             )
         )
         server.process_messages()
-        assert pickle.loads(reply.get_nowait()) == {"status": "success", "token": 17}
+        assert pickle.loads(reply.result(timeout=0)) == {"status": "success", "token": 17}
     finally:
         NapariControlMessageAction.__registry__.pop(DeclarationOnlyControl.message_type)
+
+
+def test_deferred_reply_projection_error_completes_accepted_request(
+    queued_viewer, tmp_path, monkeypatch
+):
+    app, _, server = queued_viewer
+
+    def reject_native_projection(server, response):
+        raise ValueError("native dimension projection failed")
+
+    monkeypatch.setattr(
+        NapariScreenshotControlMessageAction, "_native_reply",
+        staticmethod(reject_native_projection),
+    )
+    request = ViewerWindowSnapshotRequest.from_fields(
+        connection=ExecutionConnectionSpec(port=5584),
+        output_dir_path=str(tmp_path),
+        observation_timeout_s=0.5,
+    )
+    reply = enqueue(server, request)
+    app.processEvents()
+    response = pickle.loads(reply.result(timeout=0))
+    assert response["status"] == "error"
+    assert "native dimension projection failed" in response["message"]
+
+
+def test_snapshot_original_deadline_releases_transport_without_cancelling_qt_work(
+    queued_viewer, tmp_path
+):
+    import threading
+    from openhcs.runtime.napari_viewer_server import NapariControlTransportPump
+
+    app, _, server = queued_viewer
+    server._running = True
+    pump = NapariControlTransportPump(server)
+    request = ViewerWindowSnapshotRequest.from_fields(
+        connection=ExecutionConnectionSpec(port=5584),
+        output_dir_path=str(tmp_path), timeout_ms=150, observation_timeout_s=0.02,
+    ).start_operation()
+    replies = Future()
+
+    def receive():
+        replies.set_result(pump._response_payload(
+            pickle.dumps({"type": "screenshot", "payload": request})
+        ))
+
+    thread = threading.Thread(target=receive)
+    thread.start()
+    # Deliberately no Qt dispatch before the ORIGINAL request deadline.
+    response = pickle.loads(replies.result(timeout=2))
+    thread.join(timeout=1)
+    assert not thread.is_alive() and response["status"] == "error"
+    assert not server.accepted_control_requests.empty()  # Not cancelled/not-started claim.
+    assert not tuple(tmp_path.glob("*.png"))
+    server.process_messages()
+    app.processEvents()
+    assert not tuple(tmp_path.glob("*.png"))
+    assert pickle.loads(replies.result()) == response  # Late callback cannot replace it.
+    server._running = False
