@@ -591,14 +591,77 @@ class MeasurementSparseColumnarRows(ColumnarRows):
         *,
         declared_object_measurement_domain_covered: bool = False,
         missing_cell: object = MEASUREMENT_SPARSE_CELL,
+        identity_fields: Sequence[str] | None = None,
+        values_equal: Callable[[object, object], bool] | None = None,
     ) -> "MeasurementSparseColumnarRows":
         """Return sparse rows coalesced across columnar batches."""
         fields = FieldSpec.merge_exact(
             (batch.fields for batch in batches),
             context="columnar batch fields",
         )
-        return cls.from_rows(
-            tuple(row for batch in batches for row in batch.iter_row_mappings()),
+        names = tuple(field.name for field in fields)
+        identities = (
+            tuple(field.value for field in MeasurementRowAxisField if field.value in names)
+            if identity_fields is None
+            else tuple(identity_fields)
+        )
+        undeclared = tuple(name for name in identities if name not in names)
+        if undeclared:
+            raise ValueError(f"Columnar join identities are undeclared: {undeclared!r}.")
+        equal = _measurement_sparse_cell_values_equal if values_equal is None else values_equal
+        row_domain: dict[tuple[tuple[str, object], ...], int] = {}
+        segments: list[tuple[np.ndarray, Mapping[str, Sequence[object]]]] = []
+        passthrough = 0
+        for batch in batches:
+            for count, columns in batch.columnar_row_batches():
+                identity_columns = tuple((name, columns[name]) for name in identities if name in columns)
+                destinations = np.empty(count, dtype=np.intp)
+                for index in range(count):
+                    identity = tuple(
+                        (name, values[index])
+                        for name, values in identity_columns
+                        if not is_structural_missing_measurement_cell(values[index])
+                    )
+                    if not identity:
+                        identity = (("__row_index__", passthrough),)
+                        passthrough += 1
+                    destinations[index] = row_domain.setdefault(identity, len(row_domain))
+                segments.append((destinations, columns))
+        columns = {name: np.full(len(row_domain), missing_cell, dtype=object) for name in names}
+        for destinations, source_columns in segments:
+            for name, values in source_columns.items():
+                values = np.asarray(values)
+                present = (
+                    np.ones(len(values), dtype=bool)
+                    if not values.dtype.hasobject and missing_cell is MEASUREMENT_SPARSE_CELL
+                    else np.fromiter(
+                        (value is not missing_cell and not is_structural_missing_measurement_cell(value) for value in values),
+                        dtype=bool,
+                        count=len(values),
+                    )
+                )
+                indexes = destinations[present]
+                admitted = values[present]
+                unique, first, inverse = np.unique(indexes, return_index=True, return_inverse=True)
+                selected = admitted[first]
+                if not equal(admitted, selected[inverse]):
+                    for value, previous in zip(admitted, selected[inverse], strict=True):
+                        if not equal(previous, value):
+                            raise ValueError(f"Conflicting sparse measurement values for field {name!r}: {previous!r} vs {value!r}.")
+                target = columns[name]
+                previous = target[unique]
+                overlap = np.fromiter(
+                    (not is_structural_missing_measurement_cell(value) and value is not missing_cell for value in previous),
+                    dtype=bool,
+                    count=len(previous),
+                )
+                if not equal(previous[overlap], selected[overlap]):
+                    for left, right in zip(previous[overlap], selected[overlap], strict=True):
+                        if not equal(left, right):
+                            raise ValueError(f"Conflicting sparse measurement values for field {name!r}: {left!r} vs {right!r}.")
+                target[unique] = selected
+        return cls(
+            MappingProxyType(columns),
             fields=fields,
             declared_object_measurement_domain_covered=(
                 declared_object_measurement_domain_covered
