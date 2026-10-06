@@ -454,6 +454,22 @@ branch, exactly the299 excluded data/result paths remain, and all three original
 dependency HEADs remain unchanged with clean worktrees. No new source inventory,
 data rewrite, environment, worktree or contributor PR was created for this audit.
 
+Two independently filed issues appeared during the final census. Issue1079
+has active draft PR1080 on fix/native-payload-domain-composition-20261006,
+owned by the existing native-composition workflow. Main still has host NumPy
+composition/mask projections in aligned_image_payload; the PR migrates those
+consumers through the declared device operations and depends on its companion
+ArrayBridge native-geometry change. Its reported CPU/GPU checks are not treated
+as merged delivery or complete mixed-mask acceptance. No competing patch was
+started. Issue1081 is a distinct current alignment regression introduced by
+70a79fa389: the bundle strategy inherits aligned-argument resolution that invokes
+ordinary runtime-plane projection before selecting the outer named carrier.
+The existing aligned-bundle control requires retaining the selected2x3x4 image,
+whereas ordinary projection must retain both named outputs with3x4 planes.
+The current declarations and original control confirm that distinction; the
+issue remains open for the existing nominal strategy repair, not a per-function
+workaround. Neither new issue is an unpreserved historical checkout edit.
+
 Next delivery
 -------------
 
