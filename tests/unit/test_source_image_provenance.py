@@ -400,3 +400,83 @@ def test_removed_runtime_axis_retains_distinct_current_named_sources() -> None:
     assert planes.as_contributors().contributor_count == 4
     unknown = RuntimeSourceImageProvenancePlane(source_image_name="Unknown")
     assert SourceImageProvenancePlanes((unknown, unknown)).as_contributors().contributor_count == 2
+
+
+def test_factored_provenance_preserves_current_facts_and_independent_wire_occurrences():
+    from openhcs.serialization.json import to_jsonable
+
+    shared = SourceImageIdentity("birth.tif", {"source_metadata": {"site": "001"}})
+    birth = shared.identity
+    shared.path = "current.tif"
+    equal_current = SourceImageIdentity("current.tif", shared.component_metadata)
+    planes = SourceImageProvenancePlanes(
+        (
+            RuntimeSourceImageProvenancePlane(
+                shared,
+                (
+                    SourceImageProvenanceContributor(
+                        shared, source_image_name="original"
+                    ),
+                    SourceImageProvenanceContributor(
+                        equal_current, source_image_name="rescaled"
+                    ),
+                ),
+                "saved",
+            ),
+        )
+    )
+    wire = to_jsonable(planes)
+    assert len(wire["identities"]) == 1
+    assert shared.identity == birth and equal_current.identity != birth
+    restored = SourceImageProvenancePlanes.from_mapping(wire)
+    runtime = restored.planes[0]
+    occurrences = (runtime, *runtime.contributors)
+    assert tuple(p.source_image_name for p in occurrences) == (
+        "saved",
+        "original",
+        "rescaled",
+    )
+    assert all(p.path == "current.tif" for p in occurrences)
+    assert len({id(p.source_identity) for p in occurrences}) == 3
+    assert len({id(p.component_metadata["source_metadata"]) for p in occurrences}) == 3
+    runtime.component_metadata["source_metadata"]["site"] = "002"
+    assert (
+        runtime.contributors[0].component_metadata["source_metadata"]["site"] == "001"
+    )
+    assert shared.component_metadata["source_metadata"]["site"] == "001"
+    historic = [
+        {
+            "path": "current.tif",
+            "component_metadata": wire["identities"][0]["component_metadata"],
+            "identity_kind": "runtime_plane",
+            "source_image_name": "saved",
+            "contributors": [
+                {
+                    "path": "current.tif",
+                    "component_metadata": wire["identities"][0]["component_metadata"],
+                    "identity_kind": "pixel_contributor",
+                    "source_image_name": name,
+                    "contributors": [],
+                }
+                for name in ("original", "rescaled")
+            ],
+        }
+    ]
+    assert to_jsonable(SourceImageProvenancePlanes.from_mapping(historic)) == wire
+
+
+@pytest.mark.parametrize(
+    "wire",
+    (
+        {"identities": [], "planes": [{"identity": 0, "identity_kind": "runtime_plane"}]},
+        {"identities": [{}], "planes": [{"identity": True, "identity_kind": "runtime_plane"}]},
+        {"identities": [{}], "planes": [{"identity": -1, "identity_kind": "runtime_plane"}]},
+        {"identities": [{}], "planes": [{"identity": 0, "identity_kind": "unknown"}]},
+        {"identities": [{"extra": "unreferenced"}], "planes": []},
+        {"identities": [{}], "planes": [{"identity": 0, "path": "extra.tif"}]},
+        {"identities": [], "planes": [], "extra": True},
+    ),
+)
+def test_factored_provenance_rejects_invalid_identity_and_plane_declarations(wire):
+    with pytest.raises((ValueError, TypeError)):
+        SourceImageProvenancePlanes.from_mapping(wire)

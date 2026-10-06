@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Sequence, Mapping
 from dataclasses import InitVar, dataclass, field, replace
@@ -12,7 +13,6 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, Self, TypeVar, get_type_hints
 
 from metaclass_registry import AutoRegisterMeta
-from python_introspect import dataclass_from_mapping
 from python_introspect.validation import validate_annotation_value
 from openhcs.serialization.json import to_jsonable
 
@@ -103,6 +103,24 @@ class SourceImageIdentity:
             self.path,
             _component_metadata_identity(self.component_metadata),
         )
+
+    @classmethod
+    def from_mapping(cls, values: Mapping[str, object]) -> "SourceImageIdentity":
+        """Admit current wire facts, with independent nested metadata ownership."""
+        if not isinstance(values, Mapping):
+            raise TypeError("Source image identity must be a mapping.")
+        unknown = set(values) - {"path", "component_metadata"}
+        if unknown:
+            raise ValueError(f"Unknown source identity fields: {sorted(unknown)!r}.")
+        path = values.get("path")
+        metadata = values.get("component_metadata")
+        validate_annotation_value(str | None, path, path="SourceImageIdentity.path")
+        validate_annotation_value(
+            SourceComponentMetadata | None,
+            metadata,
+            path="SourceImageIdentity.component_metadata",
+        )
+        return cls(path, to_jsonable(metadata))
 
     @property
     def addressable(self) -> bool:
@@ -201,6 +219,54 @@ class SourceImageProvenancePlane(ABC, metaclass=AutoRegisterMeta):
                 "Source-image provenance contributors must use the nominal "
                 "SourceImageProvenanceContributor type."
             )
+
+    @classmethod
+    def from_mapping(
+        cls,
+        values: Mapping[str, object],
+        identities: Sequence[Mapping[str, object]] | None = None,
+    ) -> "SourceImageProvenancePlane":
+        """Decode nominal planes from current references or historic flat facts."""
+        if not isinstance(values, Mapping):
+            raise TypeError("Source provenance plane must be a mapping.")
+        fields = {"identity_kind", "source_image_name", "contributors"}
+        fields.update(
+            {"path", "component_metadata"} if identities is None else {"identity"}
+        )
+        unknown = set(values) - fields
+        if unknown:
+            raise ValueError(f"Unknown provenance plane fields: {sorted(unknown)!r}.")
+        kind = values.get(
+            "identity_kind",
+            RuntimeSourceImageProvenancePlane.identity_kind if identities is None else None,
+        )
+        if not isinstance(kind, str) or kind not in cls.__registry__:
+            raise ValueError(f"Unknown source-image provenance identity kind {kind!r}.")
+        name = values.get("source_image_name")
+        validate_annotation_value(
+            str | None, name, path="SourceProvenancePlane.source_image_name"
+        )
+        contributors = values.get("contributors", ())
+        if not isinstance(contributors, Sequence) or isinstance(
+            contributors, (str, bytes, bytearray)
+        ):
+            raise TypeError("Source provenance contributors must be a sequence.")
+        if identities is None:
+            facts = {
+                key: values[key] for key in ("path", "component_metadata") if key in values
+            }
+        else:
+            index = values.get("identity")
+            if type(index) is not int or not 0 <= index < len(identities):
+                raise ValueError(
+                    f"Invalid source-image provenance identity index {index!r}."
+                )
+            facts = identities[index]
+        return cls.__registry__[kind](
+            SourceImageIdentity.from_mapping(facts),
+            tuple(cls.from_mapping(item, identities) for item in contributors),
+            name,
+        )
 
     @property
     def path(self) -> str | None:
@@ -307,33 +373,6 @@ class SourceImageProvenanceContributor(SourceImageProvenancePlane):
             self.source_identity.with_missing_from(fallback.source_identity),
             source_image_name=self.source_image_name or fallback.source_image_name,
         )
-
-
-@dataclass(slots=True)
-class SourceImageProvenancePlaneRecord:
-    """Serialized source-image provenance plane for runtime payload tables."""
-
-    path: str | None = None
-    component_metadata: SourceComponentMetadata | None = None
-    identity_kind: str = RuntimeSourceImageProvenancePlane.identity_kind
-    source_image_name: str | None = None
-    contributors: Sequence["SourceImageProvenancePlaneRecord"] = ()
-
-    def plane(self) -> SourceImageProvenancePlane:
-        plane_type = SourceImageProvenancePlane.__registry__.get(self.identity_kind)
-        if plane_type is None:
-            raise ValueError(
-                "Unknown source-image provenance identity kind "
-                f"{self.identity_kind!r}."
-            )
-        return plane_type(
-            SourceImageIdentity(self.path, self.component_metadata),
-            tuple(contributor.plane() for contributor in self.contributors),
-            self.source_image_name,
-        )
-
-
-SourceImageProvenancePlaneRecords = Sequence[SourceImageProvenancePlaneRecord]
 
 
 @dataclass(slots=True)
@@ -478,52 +517,67 @@ class SourceImageProvenancePlanes:
         )
 
     @classmethod
-    def from_records(
-        cls,
-        records: (
-            SourceImageProvenancePlaneRecords | "SourceImageProvenancePlanes" | None
-        ),
-    ) -> "SourceImageProvenancePlanes":
-        if records is None:
-            return cls()
-        if isinstance(records, cls):
-            return records
-        if isinstance(records, Sequence) and not isinstance(
-            records,
-            (str, bytes, bytearray),
-        ):
-            return cls(tuple(cls.plane_from_record(record) for record in records))
-        raise TypeError(
-            "source_image_provenance_planes must be a sequence of mappings, "
-            f"got {type(records).__name__}."
-        )
-
-    @staticmethod
-    def plane_from_record(
-        record: SourceImageProvenancePlaneRecord,
-    ) -> SourceImageProvenancePlane:
-        return record.plane()
-
-    @property
-    def records(self) -> tuple[SourceImageProvenancePlaneRecord, ...]:
-        return tuple(
-            SourceImageProvenancePlaneRecord(
-                plane.path,
-                plane.component_metadata,
-                identity_kind=plane.identity_kind or "",
-                source_image_name=plane.source_image_name,
-                contributors=tuple(
-                    SourceImageProvenancePlaneRecord(
-                        contributor.path,
-                        contributor.component_metadata,
-                        identity_kind=contributor.identity_kind or "",
-                        source_image_name=contributor.source_image_name,
-                    )
-                    for contributor in plane.contributors
-                ),
+    def from_mapping(cls, values: object) -> "SourceImageProvenancePlanes":
+        """Admit factored current wire or the historic flat persisted sequence."""
+        if isinstance(values, Mapping):
+            if set(values) != {"identities", "planes"}:
+                raise ValueError(
+                    "Factored provenance requires exactly identities and planes."
+                )
+            identities = values["identities"]
+            planes = values["planes"]
+            if not isinstance(identities, Sequence) or isinstance(
+                identities, (str, bytes, bytearray)
+            ):
+                raise TypeError("Source provenance identities must be a sequence.")
+            # Validate even unreferenced facts; references never weaken admission.
+            for facts in identities:
+                SourceImageIdentity.from_mapping(facts)
+        else:
+            identities = None
+            planes = values
+        if not isinstance(planes, Sequence) or isinstance(planes, (str, bytes, bytearray)):
+            raise TypeError("Source provenance planes must be a sequence.")
+        return cls(
+            tuple(
+                SourceImageProvenancePlane.from_mapping(item, identities) for item in planes
             )
-            for plane in self.planes
         )
+
+    def to_mapping(self) -> dict[str, object]:
+        """Snapshot current identity facts once locally, retaining ordered aliases.
+
+        The mutable birth fingerprint is intentionally not a wire grouping key.
+        Full current JSON facts decide equality only within this serialization.
+        """
+        object_indices: dict[int, int] = {}
+        fact_indices: dict[str, int] = {}
+        identities: list[dict[str, object]] = []
+
+        def record(plane: SourceImageProvenancePlane) -> dict[str, object]:
+            identity = plane.source_identity
+            marker = id(identity)
+            if marker not in object_indices:
+                facts = {
+                    "path": identity.path,
+                    "component_metadata": to_jsonable(identity.component_metadata),
+                }
+                canonical = json.dumps(facts, sort_keys=True, separators=(",", ":"))
+                if canonical not in fact_indices:
+                    fact_indices[canonical] = len(identities)
+                    identities.append(facts)
+                object_indices[marker] = fact_indices[canonical]
+            return {
+                "identity": object_indices[marker],
+                "identity_kind": plane.identity_kind,
+                "source_image_name": plane.source_image_name,
+                "contributors": [record(item) for item in plane.contributors],
+            }
+
+        return {
+            "identities": identities,
+            "planes": [record(plane) for plane in self.planes],
+        }
 
     @property
     def paths(self) -> SourceImageProvenancePlanePathValues:
@@ -893,11 +947,8 @@ class SourceImageProvenance:
         decoded = dict(values)
         plane_field = "source_image_provenance_planes"
         if plane_field in decoded:
-            decoded[plane_field] = SourceImageProvenancePlanes.from_records(
-                tuple(
-                    dataclass_from_mapping(SourceImageProvenancePlaneRecord, record)
-                    for record in decoded[plane_field]
-                )
+            decoded[plane_field] = SourceImageProvenancePlanes.from_mapping(
+                decoded[plane_field]
             )
         result = cls(**decoded)
         annotations = get_type_hints(cls.__init__)
@@ -2169,4 +2220,4 @@ def _jsonable_source_provenance(value: SourceImageProvenance):
 
 @to_jsonable.register(SourceImageProvenancePlanes)
 def _jsonable_source_provenance_planes(value: SourceImageProvenancePlanes):
-    return to_jsonable(value.records)
+    return value.to_mapping()

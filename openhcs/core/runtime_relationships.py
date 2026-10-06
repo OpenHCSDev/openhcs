@@ -403,7 +403,7 @@ class ObjectRelationship(
             table["source_component_metadata"] = self.source_component_metadata
         if self.source_image_provenance_planes.has_values:
             table["source_image_provenance_planes"] = (
-                self.source_image_provenance_planes.records
+                self.source_image_provenance_planes
             )
         return table
 
