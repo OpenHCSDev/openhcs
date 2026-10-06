@@ -300,6 +300,7 @@ class CompiledStepPlan:
     artifact_outputs: OrderedDict[ArtifactSpecRef, ArtifactOutputPlan] = field(
         default_factory=OrderedDict
     )
+    future_artifact_inputs: frozenset[ArtifactSpecRef] | None = None
     execution_group_scope: ComponentGroupScope = field(
         default_factory=ComponentGroupScope.ungrouped
     )
