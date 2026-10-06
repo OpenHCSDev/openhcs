@@ -6,6 +6,7 @@ from the published gallery authority; no UI state or scientific image is invente
 
 from __future__ import annotations
 
+import csv
 import json
 from io import BytesIO
 from pathlib import Path
@@ -567,6 +568,42 @@ def h004_junction():
         size=14,
     )
     sheet.text(3, 1, "Local support recovery is not complete tracing or neuron ownership.", size=14)
+    sheet.save()
+
+
+def h004_faint_path():
+    """Independent local recovery with visible sensitivity costs."""
+    sheet = FigureSheet("h004_fresh20_faint_path", "", 6.3)
+    sources = OUTPUT / "h004_fresh20_sources"
+    index_path = sources / "QA-INDEX.json"
+    measurements_path = sources / "ATTEMPT-MEASUREMENTS.csv"
+    sheet.source(index_path)
+    sheet.source(measurements_path)
+    sheet.source(ROOT / "paper/supplementary/task_only_analysis/h004-fresh20-qualified-completion.rst")
+    captures = {item["capture_group"]: item for item in json.loads(index_path.read_text())}
+    with measurements_path.open(newline="") as stream:
+        measurements = {row["attempt"]: row for row in csv.DictReader(stream)}
+    first, final = measurements["first"], measurements["repair03"]
+    sheet.text(3, 97, "Faint-path recovery adds uncertain short branches", size=17, weight="bold", va="top")
+    for x, y, name, heading in (
+        (3, 53, "first-bottom-raw", "A  Raw process-rich channel"),
+        (52, 53, "first-bottom-result", "B  First result"),
+        (3, 12, "repair03-bottom-result", "C  Final result"),
+        (52, 12, "repair03-bottom-combined", "D  Final raw + result"),
+    ):
+        path = sources / f"{name}.png"
+        if digest(path) != captures[name]["sha256"]:
+            raise ValueError(f"Retained capture hash mismatch: {name}")
+        sheet.text(x, y + 35, heading, size=13, weight="bold")
+        sheet.source_image(path, (x, y, 45, 32), crop=(297, 28, 1250, 410))
+    sheet.text(
+        3, 5,
+        f"Whole-field graph length: {float(first['total_outgrowth']):,.0f} → "
+        f"{float(final['total_outgrowth']):,.0f} px; algorithm branches: "
+        f"{first['total_branches']} → {final['total_branches']}.",
+        size=13,
+    )
+    sheet.text(3, 1, "Eight soma candidates retained; neuron-specific topology remains uncertain.", size=13)
     sheet.save()
 
 
