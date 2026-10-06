@@ -280,8 +280,20 @@ that endpoint. Crossings remain a limitation for assigning length to individual
 neurons. The representative shaft result is not presented as a manual-trace
 accuracy measurement.
 
-The laboratory neurite example extends the workflow to nine overlapping fields
-(Figure 11). A shared percentile fit across the complete stack preserves a
+A separate autonomous author analysed all nine fields of the laboratory neurite
+dataset using only its task brief, MCP and packaged guidance. During image
+review, it detected that its initial settings excluded thin processes and
+adjusted neurite admission while retaining the same cell-body labels in the
+reviewed field. The final analysis recovered many raw-visible paths in sampled
+sparse and dense regions, although some fine branches and cell assignments at
+crossings remained uncertain. Fields were analysed separately; overlapping
+positions were not deduplicated, so their counts do not represent unique
+neurons. The frozen pipeline, outputs and independent image review are linked
+in Supplementary Data 8. This trial used development images rather than an
+unseen test set.
+
+An assisted analysis of the same dataset assembled the nine overlapping fields
+into a mosaic (Figure 11). A shared percentile fit across the complete stack preserves a
 common channel scale before mosaic analysis. The completed retained-context
 workflow produced 1,740 soma candidates and 123,054 micrometres of computed total
 outgrowth at the declared spacing. These are algorithmic outputs, not a unique
@@ -307,6 +319,7 @@ being treated as additional experiments.
 | H002 3-D centres | 15 manual centres; Figure 9 trial | 15/15 matched within 20 voxels, mean error 4.80 voxels; annotations not established as exhaustive |
 | R0010 retinal somata | Distributed matched raw/result review | Autonomous repair retained neighbours and reduced nuisance masks; manual-reference accuracy unmeasured |
 | H004 public neurites | Matched raw shafts and nuisance controls | Principal-shaft and junction recovery; fine protrusions and per-neuron crossing ownership unresolved |
+| Laboratory neurites, nine fields | Matched raw/path review in three sampled fields | Autonomous completion and recovery of thin paths after self-directed repair; overlapping fields not stitched or deduplicated, per-neuron ownership unresolved |
 | BBBC013 translocation | Well-level control and dose summaries; 96 wells | Assay responses recovered in contributing cohorts; compartment coverage varied and whole-cell accuracy unmeasured |
 
 Table 2. Results and evaluation methods for autonomous image analysis.
