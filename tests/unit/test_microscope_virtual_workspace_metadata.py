@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import pytest
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -61,6 +61,88 @@ def test_virtual_workspace_metadata_records_parser_owned_axis_values(
     assert projection.pipeline_start_files(axis_id="R02C03") == (
         str(tmp_path / virtual_b),
     )
+
+
+def test_compiler_source_queries_borrow_config_while_public_queries_stay_live(
+    tmp_path, monkeypatch
+):
+    from unittest.mock import Mock
+    from objectstate.lazy_factory import ensure_global_config_context
+    from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+    from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
+    from openhcs.core.source_bindings import (
+        SourceBindingsConfig,
+        LazySourceBindingsConfig,
+        SourceFilterClause,
+        SourceFilterMatchType,
+        SourceFilterSubject,
+    )
+
+    source_handler = OperaPhenixHandler(SimpleNamespace())
+    (tmp_path / "Images").mkdir()
+    monkeypatch.setattr(
+        source_handler.metadata_handler, "get_grid_dimensions", lambda _: (3, 3)
+    )
+    monkeypatch.setattr(source_handler.metadata_handler, "get_pixel_size", lambda _: 1.0)
+    source_handler.save_virtual_workspace_metadata(
+        tmp_path,
+        {
+            "Images/r01c01f001p001-ch1sk1fk1fl1.tiff": SourcePixelRef(
+                "disk", "/source/source-a.tiff"
+            ),
+            "Images/r02c03f001p001-ch1sk1fk1fl1.tiff": SourcePixelRef(
+                "disk", "/source/source-b.tiff"
+            ),
+        },
+    )
+    metadata_path = tmp_path / "openhcs_metadata.json"
+    metadata_document = json.loads(metadata_path.read_text())
+    subdirectory = metadata_document[FIELDS.SUBDIRECTORIES]["Images"]
+    subdirectory[FIELDS.IMAGE_FILES] = list(subdirectory[FIELDS.WORKSPACE_MAPPING])
+    metadata_path.write_text(json.dumps(metadata_document))
+    source_a = SourceBindingsConfig(source_filters=(
+        SourceFilterClause(
+            SourceFilterSubject.FILE, SourceFilterMatchType.CONTAINS, "source-a"
+        ),
+    ))
+    source_b = SourceBindingsConfig(source_filters=(
+        SourceFilterClause(
+            SourceFilterSubject.FILE, SourceFilterMatchType.CONTAINS, "source-b"
+        ),
+    ))
+    held_config = GlobalPipelineConfig(source_bindings_config=source_a)
+    ensure_global_config_context(GlobalPipelineConfig, held_config)
+    owner = PipelineOrchestrator(
+        tmp_path,
+        pipeline_config=PipelineConfig(
+            source_bindings_config=LazySourceBindingsConfig(
+                source_filters=source_a.source_filters
+            )
+        ),
+        resolved_config=held_config,
+    )
+    owner.initialize(resolved_config=held_config)
+    live_config = Mock(wraps=owner.get_effective_config)
+    monkeypatch.setattr(owner, "get_effective_config", live_config)
+
+    assert owner.get_component_keys(
+        AllComponents.WELL, resolved_config=held_config
+    ) == ["R01C01"]
+    live_config.assert_not_called()
+    owner.pipeline_config = replace(
+        owner.pipeline_config,
+        source_bindings_config=LazySourceBindingsConfig(
+            source_filters=source_b.source_filters
+        ),
+    )
+    owner.initialize()
+    live_config.reset_mock()
+    assert owner.get_component_keys(AllComponents.WELL) == ["R02C03"]
+    assert live_config.call_count == 1
+    assert owner.get_component_keys(
+        AllComponents.WELL, resolved_config=held_config
+    ) == ["R01C01"]
+    assert live_config.call_count == 1
 
 
 @pytest.mark.parametrize(

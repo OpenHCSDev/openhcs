@@ -389,7 +389,8 @@ class PipelineCompiler:
             for seq_component in seq_config.sequential_components
             if len(
                 session.orchestrator.get_component_keys(
-                    AllComponents(seq_component.value)
+                    AllComponents(seq_component.value),
+                    resolved_config=session.global_config,
                 )
             )
             > 1
@@ -504,7 +505,9 @@ class PipelineCompiler:
 
         context = session.context
         orchestrator = session.orchestrator
-        all_wells = orchestrator.get_component_keys(get_multiprocessing_axis())
+        all_wells = orchestrator.get_component_keys(
+            get_multiprocessing_axis(), resolved_config=session.global_config
+        )
 
         # Access config from merged config (pipeline + global) for proper inheritance
         vfs_config = session.global_config.vfs_config
@@ -690,7 +693,9 @@ class PipelineCompiler:
                 component_enum = AllComponents(seq_comp)
 
                 # Get component values from orchestrator's cache (populated from filename parsing)
-                component_values = orchestrator.get_component_keys(component_enum)
+                component_values = orchestrator.get_component_keys(
+                    component_enum, resolved_config=global_config
+                )
 
                 if not component_values:
                     logger.warning(f"No {seq_comp} values found in orchestrator cache")
@@ -907,7 +912,7 @@ class PipelineCompiler:
         )
         if well_filter_config and well_filter_config.well_filter is not None:
             available_wells = orchestrator.get_component_keys(
-                get_multiprocessing_axis()
+                get_multiprocessing_axis(), resolved_config=effective_config
             )
             resolved_wells = WellFilterProcessor.resolve_filter_with_mode(
                 well_filter_config.well_filter,
@@ -931,6 +936,7 @@ class PipelineCompiler:
         return orchestrator.get_component_keys(
             get_multiprocessing_axis(),
             resolved_axis_filter,
+            resolved_config=effective_config,
         )
 
     @staticmethod
@@ -994,6 +1000,7 @@ class PipelineCompiler:
             pipeline,
             temp_context,
             orchestrator,
+            global_config,
         )
         return temp_context.step_axis_filters
 
@@ -1657,11 +1664,13 @@ class PipelineCompiler:
                     filemanager=orchestrator.filemanager,
                     input_dir=orchestrator.input_dir,
                     available_axis_values=orchestrator.get_component_keys(
-                        get_multiprocessing_axis()
+                        get_multiprocessing_axis(), resolved_config=effective_config
                     ),
                 ),
                 source_projections_by_axis=DEFAULT_SOURCE_PROJECTION_CACHE.partition_by_axes(
-                    orchestrator.source_workspace_projection(),
+                    orchestrator.source_workspace_projection(
+                        resolved_config=effective_config
+                    ),
                     axis_ids=axis_values_to_process,
                 ),
                 enable_visualizer_override=enable_visualizer_override,
@@ -1734,6 +1743,7 @@ def _resolve_step_axis_filters(
     pipeline: ResolvedPipelineDefinition,
     context,
     orchestrator,
+    global_config: GlobalPipelineConfig,
 ):
     """
     Resolve axis filters for steps with any WellFilterConfig instances.
@@ -1750,7 +1760,9 @@ def _resolve_step_axis_filters(
 
     # Get available axis values from orchestrator using multiprocessing axis
 
-    available_axis_values = orchestrator.get_component_keys(get_multiprocessing_axis())
+    available_axis_values = orchestrator.get_component_keys(
+        get_multiprocessing_axis(), resolved_config=global_config
+    )
     if not available_axis_values:
         logger.warning("No available axis values found for axis filter resolution")
         return
