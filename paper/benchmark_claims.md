@@ -5,7 +5,7 @@ This projection does not run benchmarks, change records, warm kernels or
 compile a function catalog. A qualified dated checkpoint is not automatically
 the final publication freeze.
 
-## Regenerate Figure 4 and the claim include
+## Regenerate Figure 2 and the claim include
 
 Use the existing figure script and installed numerical environment:
 
@@ -29,7 +29,7 @@ and packages this include; changed active inputs require regeneration.
 
 ## Manuscript contract for the prose owner
 
-Use ordinary Pandoc spans in abstract, methods, results and Figure 4 caption:
+Use ordinary Pandoc spans in abstract, methods, results and Figure 2 caption:
 
 ```markdown
 Execution speedup had minimum [pending]{.benchmark-claim key=execution_min}×
@@ -42,7 +42,12 @@ publication status [pending]{.benchmark-claim key=status}.
 ```
 
 `case_count` is also derived from the matched execution/total cohort. The two
-Figure 4 image paths are stable generated paths:
+Final Figure 2 is one composite (A declared-output parity, B execution CDF,
+C total CDF), using the existing measured renderer/CDF painter:
+
+* `figures/slas/benchmark-publication/measured_benchmark_publication.png`
+
+Separate clock panels are also retained at stable generated paths:
 
 * `figures/slas/benchmark-publication/execution/measured_execution_speedup_cumulative_distribution_log.png`
 * `figures/slas/benchmark-publication/total/measured_total_speedup_cumulative_distribution_log.png`

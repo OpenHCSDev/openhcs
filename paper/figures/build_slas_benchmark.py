@@ -48,9 +48,10 @@ def write_provenance(
     interpretation: dict[str, object],
 ) -> None:
     """Record the existing manuscript source/output checksum contract."""
+    sources = tuple(path.resolve() for path in sources)
     receipt = {
         "source_sha256": {
-            str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else str(path):
+            str(path.relative_to(ROOT)):
             sha256(path)
             for path in sources
         },
@@ -152,7 +153,7 @@ def build_measured(
 
 
 def build_publication(record: Path, output_dir: Path, *, frozen: bool = False) -> None:
-    """Regenerate Figure 4 and its single claim include from saved summaries only."""
+    """Regenerate Figure 2 and its single claim include from saved summaries only."""
     from benchmark.reports import cppipe_figures
     from benchmark.reports.cppipe_figures import MeasuredBatchSummarySource
 
@@ -163,10 +164,21 @@ def build_publication(record: Path, output_dir: Path, *, frozen: bool = False) -
     output_dir.mkdir(parents=True, exist_ok=True)
     include = output_dir / "benchmark_claims.json"
     include.write_text(json.dumps(values, indent=2) + "\n", encoding="utf-8")
+    composite = execution.publication_figure(total, output_dir=output_dir)
+    caption = output_dir / "measured_benchmark_publication_caption.md"
+    caption.write_text(
+        "(A) Workflows passing the qualified declared-output comparison; this is not biological accuracy. "
+        "(B) Execution and (C) total speedup distributions from the same saved cohort, "
+        "using ratios of independent engine medians. Dashed lines denote 2× execution and 1× total parity. "
+        f"Record {values['record_name']}, production source {values['source_revision']}, "
+        f"publication status {values['status']}. Execution minimum/median "
+        f"{values['execution_min']}/{values['execution_median']}×; total minimum/median "
+        f"{values['total_min']}/{values['total_median']}×.\n", encoding="utf-8")
     write_provenance(
         output_dir, (execution.path, total.path, execution.custody_path,
                      Path(cppipe_figures.__file__), Path(__file__).resolve()),
-        (include,), {"interpretation": "Single measured-owner projection; final claims require explicit owner freeze."},
+        (include, *composite, caption),
+        {"interpretation": "Single measured-owner projection; final claims require explicit owner freeze."},
     )
     for scope, source in (("execution", execution), ("total", total)):
         build_measured((f"{source.label}={source.path}",), scope, output_dir / scope,
@@ -612,7 +624,7 @@ if __name__ == "__main__":
     inputs.add_argument("--summary-source", action="append",
                         help="Measured MODE_LABEL=qualified_summary.csv; repeat for modes.")
     inputs.add_argument("--publication-record", type=Path,
-                        help="Saved record root: derive Figure 4 and the single manuscript claim include.")
+                        help="Saved record root: derive Figure 2 and the single manuscript claim include.")
     parser.add_argument("--frozen", action="store_true",
                         help="Use only after the benchmark owner explicitly freezes this final publication record.")
     parser.add_argument("--scope", choices=("execution", "total", "amortization"),

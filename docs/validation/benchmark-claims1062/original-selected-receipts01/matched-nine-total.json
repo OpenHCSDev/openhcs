@@ -1,31 +1,31 @@
 {
   "source_sha256": {
-    "benchmark/results/matched_final_20261006/data/16assignments-1worker/total_summary.csv": "6e29d2aae7d8926158475babf172f3a0f9602a7d825a03c9f4996aba128ff932",
-    "benchmark/results/matched_final_20261006/data/16assignments-4workers/total_summary.csv": "223750bc84176a66f25fb2f5ccb6309a90a232cef0d9d5fc6918882b7b1dbc9a",
-    "benchmark/results/matched_final_20261006/data/16assignments-1worker/summary_custody.json": "1114e4c0e7fc32831873818ad8401a5f68520d770efe6ff7ef288356646de368",
-    "benchmark/results/matched_final_20261006/data/16assignments-4workers/summary_custody.json": "878c21bf18b4e43a503b5d129a2169eb834100a4c4dbda2eab1a593292212db2",
-    "benchmark/results/matched_final_20261006/protocol/9assignments-1worker/selected-three-case-manifest.json": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
+    "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/9assignments-1worker/total_summary.csv": "b0ffdbe65ce5d21c3afe0293a24f1b8a7784f9907bb62dd98ffa1d245f8df4de",
+    "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/9assignments-3workers/total_summary.csv": "583f1b9dccfe40fb9e8022105a1e09a8dd5edc80fbd484f05f80bca08c522510",
+    "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/9assignments-1worker/summary_custody.json": "8dee34e964504a71cdafc1bf9d104549fcca8d1c185d3f33beb88854430a04b3",
+    "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/9assignments-3workers/summary_custody.json": "0c2f8ee3f5ddccf6fe1897056da04a6d2f5752f6348bd5592da0fdf48ab6107d",
+    "/home/ts/.local/state/openhcs-maintenance/20261006/final-measured-publication-v15/selected-three-case-manifest.json": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
     "benchmark/reports/cppipe_figures.py": "87ceb84ff6d8c4ab6aa8bd0a07ffb8411e730cc7b7c699e76a383be7d1581e76"
   },
   "generator_sha256": "75259b57e2929990e24de603f1c150a5c5a9b5c8f4ca20587420542e50bf4910",
   "output_sha256": {
-    "measured_total_metrics_long.csv": "dab187c942b29cf5c00ff09561811759af534d3e3833e18bde4f8e487d7e7f2a",
-    "measured_total_caption.md": "3943bc672120a15c5658d17d1eff5e365661f8883b7cf817aa863d2fc25b805f",
-    "measured_total_seconds.png": "33352ace8c4fb25afe51c097a21a762eeec52685aeccc2d13e72832b3542ebab",
-    "measured_total_seconds.svg": "3db61cc4be884834d507d3be12e50432fe24df3d29f29e3fca84cdca7e20a592",
-    "measured_total_seconds_log.png": "892d29404bc0722c7ba7cfc36e077931e49d6ef271b820905da1f61a99d128d6",
-    "measured_total_seconds_log.svg": "d0c83f7601e91b61664d51e776b34099f19b6cb1d3e86486edb11252e663405b",
-    "measured_total_speedup.png": "005949b7d829c76e78a99832c29de2c216e7e967dbc194b7639f70a5b55f08a6",
-    "measured_total_speedup.svg": "30061e14b93211b87c2e3d6a467f845f95009afb05cae9bade5e3dc8bade36de",
-    "measured_total_speedup_log.png": "1c6d03f01b70a2f27b6261c3e139bbd479f1f6c17c5e9609e278e8eaf43da06f",
-    "measured_total_speedup_log.svg": "c0aaa4da57ce4b91eff0283d6c8598cb49fd3ff1f9dbc7fe5c1f46e10dd9e21a",
-    "measured_total_speedup_summary_statistics.csv": "770c90b4f14d70a894b43de02cc6cea2f8ce37f9dfbe3943c572b4c0fffc08b1",
-    "measured_total_speedup_summary_statistics.md": "71cecf30d23e4e677cf78bd4006c8565389d0a6084ad3ac855823b5293c11540",
-    "measured_total_speedup_cumulative_distribution.csv": "3a164053ef983266ae88b6e6a01e9c66c844bbe565013cc2990d5b0a319c22b8",
-    "measured_total_speedup_cumulative_distribution.png": "96998eb56fc0bff8b7d957ac2cc124ae5bd6c3faaf97314e8b84dcf53feb67ed",
-    "measured_total_speedup_cumulative_distribution.svg": "53ff553dd2228cdfe28a734c9d4d6fbc9a8c2a2af88e7b4f5734283244dd025e",
-    "measured_total_speedup_cumulative_distribution_log.png": "0669c2e8f0ac50142f07694eb2f49be3a3c4955bd64eed7756b4a9fcdf3e3c46",
-    "measured_total_speedup_cumulative_distribution_log.svg": "72ccc727750dda93282ed32b1c50f7186566f636bdb5a0695c06cfb0c4581bc1"
+    "measured_total_metrics_long.csv": "3b3bacab31c9181411695a5cbb8302dba831925bb3932e1e1d378bcb1d473918",
+    "measured_total_caption.md": "18670c5a952920ef83a0a6c22325d668ed2c3f38241809013a5e142a742b5ec4",
+    "measured_total_seconds.png": "93ac614341aaa681bd75b1e894f52fb3bfd76ac2cbb5d04a146c95d2cde11e09",
+    "measured_total_seconds.svg": "fbb4cf56c26cb8662db35a794e185c56ea450d87aeeea911033c00cb334d3342",
+    "measured_total_seconds_log.png": "97673f0e79b71523a7ae19dbfbe55855f7a9e7630204d23279e90b0bc0a0be9b",
+    "measured_total_seconds_log.svg": "7da45d6b4b01be2f2b2480fc01db7ac5a8cac32c5848c10658735e75037a7d13",
+    "measured_total_speedup.png": "19dc66ffa2d34081e6a333ab088f081a297dd186c76fba66f3f6d859b186e45d",
+    "measured_total_speedup.svg": "4c2824aca70e27ca9712e0d04c274d450e9ed5b632c5445e651e239783fd8814",
+    "measured_total_speedup_log.png": "db7e1d5ef1cf15421c2111d90dfb8373f944f69548e1d5574e5f5ac21caa3c11",
+    "measured_total_speedup_log.svg": "65cd8eee95336af8f22e26aaabe45f0e1bb58cb647770da597abe12a27f55ab9",
+    "measured_total_speedup_summary_statistics.csv": "6f78df699fd36f197975edcc16b489cd1f6ca87568e310e7281dfcb90f7d88d1",
+    "measured_total_speedup_summary_statistics.md": "d30c16e81c022e9997982e4f8762e4ab095eccab6546e332edf6ed0f0816acb3",
+    "measured_total_speedup_cumulative_distribution.csv": "170c439823c7266555931946c0f4deeb45fa7d4319806b13c725ff8657a503f4",
+    "measured_total_speedup_cumulative_distribution.png": "6458bbb68def9123b5f93bdf68db3ea3e726edee5e5b142a4d8445385ff30ce8",
+    "measured_total_speedup_cumulative_distribution.svg": "77134be0f750a8513bfd4f07cf298f3442ead048a2bced3f7bf55600a254dd9c",
+    "measured_total_speedup_cumulative_distribution_log.png": "6ba223eebd13446fab84e5bb74eaebde54533805e52a488dc4849c1326dc5ef5",
+    "measured_total_speedup_cumulative_distribution_log.svg": "ebcc3291ee7aa58288eacc03e9fd57ba7c2159a4bdaad2b4f0884dbd54ce30a8"
   },
   "benchmark_mode": "measured",
   "scope": "total",
@@ -34,7 +34,7 @@
       "status": "PASS",
       "source_head": "e905e77057e588f48df141634b4eb5b4a765095a",
       "suite_terminal": {
-        "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/terminal.json",
+        "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/terminal.json",
         "sha256": "ce713f64583d9d0cfb13dcac492a12c7cd6b7ddf07d2166e1d2f4c132f135195"
       },
       "manifest": {
@@ -53,61 +53,61 @@
           "rows": [
             {
               "repetition": 0,
-              "native_execution_seconds": 42.77746718283743,
-              "native_total_seconds": 42.96775637380779,
-              "openhcs_execution_seconds": 16.009257793426514,
-              "openhcs_total_seconds": 16.59649509191513,
-              "openhcs_compile_seconds": 0.500770092010498,
-              "openhcs_axis_only_seconds": 13.518306493759155,
-              "openhcs_first_axis_to_completion_seconds": 15.972854614257812
+              "native_execution_seconds": 24.13621953316033,
+              "native_total_seconds": 24.136970807798207,
+              "openhcs_execution_seconds": 8.784714460372925,
+              "openhcs_total_seconds": 9.23240344086662,
+              "openhcs_compile_seconds": 0.35622143745422363,
+              "openhcs_axis_only_seconds": 7.3613059520721436,
+              "openhcs_first_axis_to_completion_seconds": 8.749178171157837
             },
             {
               "repetition": 1,
-              "native_execution_seconds": 39.09286248823628,
-              "native_total_seconds": 39.09363173786551,
-              "openhcs_execution_seconds": 15.955950260162354,
-              "openhcs_total_seconds": 16.539272542577237,
-              "openhcs_compile_seconds": 0.5013442039489746,
-              "openhcs_axis_only_seconds": 13.417534589767456,
-              "openhcs_first_axis_to_completion_seconds": 15.920290470123291
+              "native_execution_seconds": 24.397809374146163,
+              "native_total_seconds": 24.39857318205759,
+              "openhcs_execution_seconds": 8.994373083114624,
+              "openhcs_total_seconds": 9.452576354611665,
+              "openhcs_compile_seconds": 0.35222721099853516,
+              "openhcs_axis_only_seconds": 7.5710837841033936,
+              "openhcs_first_axis_to_completion_seconds": 8.95945429801941
             },
             {
               "repetition": 2,
-              "native_execution_seconds": 36.5375687670894,
-              "native_total_seconds": 36.53834931831807,
-              "openhcs_execution_seconds": 15.91708517074585,
-              "openhcs_total_seconds": 16.526342715602368,
-              "openhcs_compile_seconds": 0.5293257236480713,
-              "openhcs_axis_only_seconds": 13.391565561294556,
-              "openhcs_first_axis_to_completion_seconds": 15.880471467971802
+              "native_execution_seconds": 23.93496127706021,
+              "native_total_seconds": 23.935723972972482,
+              "openhcs_execution_seconds": 9.101614475250244,
+              "openhcs_total_seconds": 9.534308557864279,
+              "openhcs_compile_seconds": 0.35143089294433594,
+              "openhcs_axis_only_seconds": 7.684359073638916,
+              "openhcs_first_axis_to_completion_seconds": 9.069913148880005
             }
           ],
           "receipts": [
             {
-              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/cases/ExampleVitra/candidate_evidence/0/measured_pipeline_receipt.json",
-              "sha256": "8f77680280f2b8580f1b5279d489287e46cdfe6fd68221a669cf06eac5cfd111",
-              "execution_id": "7b42b553-262d-4140-9d89-13d518b2b551"
+              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/cases/ExampleVitra/candidate_evidence/0/measured_pipeline_receipt.json",
+              "sha256": "1a60800acd5babec43a8fadf9d60d7413d9b0afa1ba55ed96c34c14fa56a58d4",
+              "execution_id": "cfd9fc3b-201e-4ded-b62c-91d512a4b90b"
             },
             {
-              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/cases/ExampleVitra/candidate_evidence/1/measured_pipeline_receipt.json",
-              "sha256": "fdc92b2de3de54bf6488566d7c728133701fdd8b282ee4f0aeb81953ab92648a",
-              "execution_id": "9231b62d-986c-47c5-bb57-6c0b3145d06c"
+              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/cases/ExampleVitra/candidate_evidence/1/measured_pipeline_receipt.json",
+              "sha256": "aae6d8647a6a71af333e0123f8c42e9ed149c1981c6dfb9a3ba626ac5553203d",
+              "execution_id": "3d9be6fe-ec58-4be4-9ea9-c8e0469e64e7"
             },
             {
-              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/cases/ExampleVitra/candidate_evidence/2/measured_pipeline_receipt.json",
-              "sha256": "c2f0ac471c182d7f1f0a8f7f2e774ff8e43c9db43239e0cc94c152ad9a9d55c2",
-              "execution_id": "188cc732-8bba-4092-9ba5-df6ba34ff63e"
+              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/cases/ExampleVitra/candidate_evidence/2/measured_pipeline_receipt.json",
+              "sha256": "d01bd91e755d91791294d556f7cd4607e282ca966f0b5c28e08ae5adec2eca10",
+              "execution_id": "8e8dd7f8-c1fc-4538-ae9a-278413d74104"
             }
           ],
           "raw_inputs": {
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/cases/ExampleVitra/pilot_provenance.json": "48ebb39073b20c2401536fa48a79e3ba9551fc0874eb6d2d89269d621a06956b",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/cases/ExampleVitra/native_report.json": "01cf63e5f601ec3244fe5af687797cd864f7016e063025c443a0fdd262f31a07",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/cases/ExampleVitra/candidate_report.json": "de95804eda63e7f3126729710a70af12334d0b63b1b13d404817f98d44e3e1df",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/cases/ExampleVitra/native_request.json": "ebefc6867ae23387c0e68f7a73b5ee1adf42f189fe8b19369b6816b4d9effef5",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/cases/ExampleVitra/candidate_evidence/-1/well_throughput_progress_events.csv": "fed565109569fe6cf8d5b5b94afc4730c65aea17520e6bc82d7bf4bd3ccacc34",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/cases/ExampleVitra/candidate_evidence/0/well_throughput_progress_events.csv": "384ae2c214d3ae2bde5e76a23a958e2791c94c8d867f74236ba62dc09d0fb759",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/cases/ExampleVitra/candidate_evidence/1/well_throughput_progress_events.csv": "fe7a4296d1be82057b4a8341d5f6f4ea958045b32dbde658dda51a3da6c16212",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/cases/ExampleVitra/candidate_evidence/2/well_throughput_progress_events.csv": "f3bdaff0be2d112d63edceae4ee8d16eba8bf7f1d7bd3b8b6dfd4827bfd1819c"
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/cases/ExampleVitra/pilot_provenance.json": "8c9611b39afacd5dedcdfade00cd2b84dca3d14fed7420dcd9ec5fb0c5cfaaeb",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/cases/ExampleVitra/native_report.json": "e931eabcb67d7e6fb7f5de8654ee54e44e009944d250d64fcc9471233c7691b8",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/cases/ExampleVitra/candidate_report.json": "709554685b2514caf9984e5687a8b6de4ae9d9f3b50dfac27d8b430adb710287",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/cases/ExampleVitra/native_request.json": "68bc5d6e1e3199ee0e57f4aab75aeacec2e486d8e76a4515199a0095ced492d8",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/cases/ExampleVitra/candidate_evidence/-1/well_throughput_progress_events.csv": "f0df6a8cda8bea3d69d1a7e9dcfaaf692c65d022b9ac2212d6b11584ae88127b",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/cases/ExampleVitra/candidate_evidence/0/well_throughput_progress_events.csv": "915c3bfe21a26d6e5cfe8cdb48452a9e139e367526afe5e2935f8d625d260b54",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/cases/ExampleVitra/candidate_evidence/1/well_throughput_progress_events.csv": "199d9e1d84bbfde055ecca2cf20187778d021276eed260b679c07d1d4d0a3667",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/cases/ExampleVitra/candidate_evidence/2/well_throughput_progress_events.csv": "7a5f160ed31663e6cc4d8f36aec47d85f0a7a63953e2cb2800f0a1cff9c737ed"
           },
           "server_environment": {
             "installed_distributions": [
@@ -1097,7 +1097,7 @@
             "cellprofiler_core_version": "4.2.8.1",
             "numpy_version": "1.24.4",
             "scipy_version": "1.9.0",
-            "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-1worker/capture/cases/ExampleVitra/native_tmp",
+            "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleVitra/native_tmp",
             "temporary_device": 66306,
             "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
             "host_node": "ts-gaming",
@@ -1126,14 +1126,7 @@
               "W006",
               "W007",
               "W008",
-              "W009",
-              "W010",
-              "W011",
-              "W012",
-              "W013",
-              "W014",
-              "W015",
-              "W016"
+              "W009"
             ],
             "selected_source_wells": [
               "A01"
@@ -1151,61 +1144,61 @@
           "rows": [
             {
               "repetition": 0,
-              "native_execution_seconds": 6.352977660950273,
-              "native_total_seconds": 6.353707235772163,
-              "openhcs_execution_seconds": 2.7960457801818848,
-              "openhcs_total_seconds": 3.3207680378109217,
-              "openhcs_compile_seconds": 0.43344902992248535,
-              "openhcs_axis_only_seconds": 2.7434275150299072,
-              "openhcs_first_axis_to_completion_seconds": 2.768033981323242
+              "native_execution_seconds": 4.016727664973587,
+              "native_total_seconds": 4.017462409101427,
+              "openhcs_execution_seconds": 1.6305031776428223,
+              "openhcs_total_seconds": 2.012111513875425,
+              "openhcs_compile_seconds": 0.2975451946258545,
+              "openhcs_axis_only_seconds": 1.585397720336914,
+              "openhcs_first_axis_to_completion_seconds": 1.6008646488189697
             },
             {
               "repetition": 1,
-              "native_execution_seconds": 6.389422342181206,
-              "native_total_seconds": 6.390171512961388,
-              "openhcs_execution_seconds": 2.7864608764648438,
-              "openhcs_total_seconds": 3.2877339543774724,
-              "openhcs_compile_seconds": 0.41334009170532227,
-              "openhcs_axis_only_seconds": 2.734250068664551,
-              "openhcs_first_axis_to_completion_seconds": 2.7591216564178467
+              "native_execution_seconds": 3.63112607691437,
+              "native_total_seconds": 3.6318474048748612,
+              "openhcs_execution_seconds": 1.5561316013336182,
+              "openhcs_total_seconds": 1.9364764960482717,
+              "openhcs_compile_seconds": 0.29853367805480957,
+              "openhcs_axis_only_seconds": 1.5141267776489258,
+              "openhcs_first_axis_to_completion_seconds": 1.5287675857543945
             },
             {
               "repetition": 2,
-              "native_execution_seconds": 6.637960647698492,
-              "native_total_seconds": 6.6386792520061135,
-              "openhcs_execution_seconds": 2.7750861644744873,
-              "openhcs_total_seconds": 3.295241101179272,
-              "openhcs_compile_seconds": 0.4367387294769287,
-              "openhcs_axis_only_seconds": 2.7234833240509033,
-              "openhcs_first_axis_to_completion_seconds": 2.747838020324707
+              "native_execution_seconds": 3.55800993507728,
+              "native_total_seconds": 3.558732535690069,
+              "openhcs_execution_seconds": 1.5613515377044678,
+              "openhcs_total_seconds": 1.9460866805166006,
+              "openhcs_compile_seconds": 0.3071784973144531,
+              "openhcs_axis_only_seconds": 1.5198695659637451,
+              "openhcs_first_axis_to_completion_seconds": 1.5344159603118896
             }
           ],
           "receipts": [
             {
-              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/0/measured_pipeline_receipt.json",
-              "sha256": "fe48aec96dbe325827b722092b999118548d34b9286d81c2ed8064531a1ec30e",
-              "execution_id": "11080124-47e0-4015-b2ef-40c06d3b48a6"
+              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/0/measured_pipeline_receipt.json",
+              "sha256": "171d3e46b852422df37733f7f37bd4231842e460278ec6f10b4ad6e617e2281e",
+              "execution_id": "536d3b62-1319-43cc-a8e7-888b872b3a34"
             },
             {
-              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/1/measured_pipeline_receipt.json",
-              "sha256": "3e6647943efe030814097c88bfee213e107dd27842ccec7b10511e3b6a1ce17e",
-              "execution_id": "bb884d3f-1702-4960-8ec3-d4e3e881b3f2"
+              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/1/measured_pipeline_receipt.json",
+              "sha256": "b73cb6d7668186c77218c186389adb0bca25c557eb70a31e27e393bdbed9e418",
+              "execution_id": "84fdb0b2-4863-4c2b-be54-9ba42d336217"
             },
             {
-              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/2/measured_pipeline_receipt.json",
-              "sha256": "3c31f61c3c42e23b151958658d42f121711ff6348a2d018dcd5fb3d8905e3cfc",
-              "execution_id": "a39faa6b-dab9-4e07-b585-ceb6a042ee5f"
+              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/2/measured_pipeline_receipt.json",
+              "sha256": "a99064d541b84e6a6ffe3c549a0fe39b199b10d8cfd09efddb5e5c006da198cf",
+              "execution_id": "3bbd934d-e3c1-4a0d-8fd6-b423232db4bf"
             }
           ],
           "raw_inputs": {
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/pilot_provenance.json": "16701d5fdce921e2ac49bbfedbaffe47f51bdae2755f9b7313fde3f3964422f1",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native_report.json": "cbdbdbf12a94f740792d8b027fc6864c677b25e3d22147677ec0ab57299c02fd",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/candidate_report.json": "af91bc0a1bd1ef664a3cbf83c3fecdb37e895fc2ae504a4c3f1e8d61af64f0a5",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native_request.json": "3af5016515952bea0365079e16cc446c12a9ef0973ee96078ce1a5d627566416",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/-1/well_throughput_progress_events.csv": "5e91f219db5b5e4fea563b182efe8586be691bd92f6faa450d84f4b50bd2cc81",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/0/well_throughput_progress_events.csv": "8e0cd8730c238cc61b6e5aab24c750c6ef460faa1a030335e2fcd473b125a33f",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/1/well_throughput_progress_events.csv": "c3b3db8f3d0232081130080b6c58b5d3a89c5ea368f11c826ed1713e4d0f6aae",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/2/well_throughput_progress_events.csv": "aa81d14348c412b0d36470cdf765b5f47b64eb1024faa7f5c2a93d867fc8cc8c"
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/pilot_provenance.json": "ea50028a74af6ec0c44b405aee44d0ff2a0f8a6d24e199c89bb9e5972076fb20",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native_report.json": "3ae3e4627fa188da60d63a35180495a4df00e8d76a081684d3789ddbd2f7ec2a",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/candidate_report.json": "e870cf26fb972e9cac16b05421c4a698d235d4feb28e3ee1d754d0a030cf3129",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native_request.json": "82a18941420ae4932bc030eb4bbbaff1c58d0fa8e7a7378bff3c3de5b1abef95",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/-1/well_throughput_progress_events.csv": "3a87443d63ce668d297fc4510ffa2405b17f349cd59667a5d33fe06b505326da",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/0/well_throughput_progress_events.csv": "f8e423910abfacf95c7d17329a81caada130e312afa3bb704d4779be8bcdd442",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/1/well_throughput_progress_events.csv": "672100594c299bca1e24289118f7a32e850720b354ec4ca800b2eec10ad1afd3",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/2/well_throughput_progress_events.csv": "294b94964b68985acde3b05044bc9009667c5a2a611efa9bd6e9a93573f54bdd"
           },
           "server_environment": {
             "installed_distributions": [
@@ -2195,7 +2188,7 @@
             "cellprofiler_core_version": "4.2.8.1",
             "numpy_version": "1.24.4",
             "scipy_version": "1.9.0",
-            "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native_tmp",
+            "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/ExampleIlluminationCorrection_Example3/native_tmp",
             "temporary_device": 66306,
             "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
             "host_node": "ts-gaming",
@@ -2224,14 +2217,7 @@
               "W006",
               "W007",
               "W008",
-              "W009",
-              "W010",
-              "W011",
-              "W012",
-              "W013",
-              "W014",
-              "W015",
-              "W016"
+              "W009"
             ],
             "selected_source_wells": [
               "A01"
@@ -2249,61 +2235,61 @@
           "rows": [
             {
               "repetition": 0,
-              "native_execution_seconds": 242.94057180639356,
-              "native_total_seconds": 242.94132639840245,
-              "openhcs_execution_seconds": 50.042672634124756,
-              "openhcs_total_seconds": 52.58360228082165,
-              "openhcs_compile_seconds": 2.394482374191284,
-              "openhcs_axis_only_seconds": 49.218751668930054,
-              "openhcs_first_axis_to_completion_seconds": 49.924230098724365
+              "native_execution_seconds": 143.95640057465062,
+              "native_total_seconds": 143.95716867083684,
+              "openhcs_execution_seconds": 27.168588161468506,
+              "openhcs_total_seconds": 28.980996603146195,
+              "openhcs_compile_seconds": 1.4741923809051514,
+              "openhcs_axis_only_seconds": 26.584836959838867,
+              "openhcs_first_axis_to_completion_seconds": 27.09239673614502
             },
             {
               "repetition": 1,
-              "native_execution_seconds": 245.8032439951785,
-              "native_total_seconds": 245.80418001906946,
-              "openhcs_execution_seconds": 49.028281688690186,
-              "openhcs_total_seconds": 51.71279228059575,
-              "openhcs_compile_seconds": 2.5308878421783447,
-              "openhcs_axis_only_seconds": 48.26301670074463,
-              "openhcs_first_axis_to_completion_seconds": 48.970638275146484
+              "native_execution_seconds": 127.80388973513618,
+              "native_total_seconds": 127.80510546499863,
+              "openhcs_execution_seconds": 26.960612535476685,
+              "openhcs_total_seconds": 28.428460652939975,
+              "openhcs_compile_seconds": 1.3139607906341553,
+              "openhcs_axis_only_seconds": 26.393481969833374,
+              "openhcs_first_axis_to_completion_seconds": 26.915692806243896
             },
             {
               "repetition": 2,
-              "native_execution_seconds": 274.45978583209217,
-              "native_total_seconds": 274.4674678267911,
-              "openhcs_execution_seconds": 48.92068791389465,
-              "openhcs_total_seconds": 51.587734908331186,
-              "openhcs_compile_seconds": 2.513392210006714,
-              "openhcs_axis_only_seconds": 47.92415690422058,
-              "openhcs_first_axis_to_completion_seconds": 48.86321496963501
+              "native_execution_seconds": 125.5196695048362,
+              "native_total_seconds": 125.52049955818802,
+              "openhcs_execution_seconds": 27.00552725791931,
+              "openhcs_total_seconds": 28.40347898704931,
+              "openhcs_compile_seconds": 1.2472009658813477,
+              "openhcs_axis_only_seconds": 26.540746688842773,
+              "openhcs_first_axis_to_completion_seconds": 26.96100163459778
             }
           ],
           "receipts": [
             {
-              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/0/measured_pipeline_receipt.json",
-              "sha256": "e6485a5643dc62636cf640defec5486bfce5a2ef2bfe3b11271fe5327f517cd1",
-              "execution_id": "2196bc2f-8992-4598-a41a-fba47b71e04e"
+              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/0/measured_pipeline_receipt.json",
+              "sha256": "3fe599a9c275bc3319db610e91e3ea08dcdfcfcd49e6df0b76aa4519cecdfdf9",
+              "execution_id": "291d69c5-cbf1-484d-8c7c-27fc6be954aa"
             },
             {
-              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/1/measured_pipeline_receipt.json",
-              "sha256": "1c53dcec4665be60c7e9ddf70fccf11c76daab4f32a1e22635fd7b616f53887a",
-              "execution_id": "edfbaed2-2703-4be1-b60c-2c63dd70cee0"
+              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/1/measured_pipeline_receipt.json",
+              "sha256": "8bb44e120b003262d70668782c1b751da310276df0db81ba59d7e652230ede46",
+              "execution_id": "686d7e20-72e2-4788-b10f-2b3f9502c57f"
             },
             {
-              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/2/measured_pipeline_receipt.json",
-              "sha256": "cc154c2fe7bb0b1221d834c97ac2e717bb815df025c36611a60025e4ebd7bfe5",
-              "execution_id": "2b8904d8-a5d6-4054-8f13-24a06945e28a"
+              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/2/measured_pipeline_receipt.json",
+              "sha256": "b1c31ef8b60907cc70a258c248590cd6cf121eaec4d86ccef383e3d4d139b841",
+              "execution_id": "9d8c8560-cab0-4d38-8b53-76ef24982a20"
             }
           ],
           "raw_inputs": {
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/pilot_provenance.json": "91126fe3f59afff8ce2d138a447831e987a8dd02f6913cda00ce8e32d18e7bd9",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native_report.json": "735944875e16f0bd59ad11a0ebbc670e177e1a8fe4c10826ef9d4b8376aa0cbb",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/candidate_report.json": "8559e43f22a4dadee548600e951d682020ad511d91f9ba5d956db783c51a6e45",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native_request.json": "3816ae0b0ce5f04360ca19d082c50378565ce5036b71ec3c9fa7ff779c0ad286",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/-1/well_throughput_progress_events.csv": "47f15887f9d7e0e07e106fa0ebf911a21feb42c51c19fe70bcb389eb5d6563c7",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/0/well_throughput_progress_events.csv": "7a121f9b9185f93e06d8bc84425f4dbb7918460b001eaf565a6bd8f250696d50",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/1/well_throughput_progress_events.csv": "b88345bb26cca07c79661e3a382dc81fc18c37f4de2d87881f0ec304b841b877",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/2/well_throughput_progress_events.csv": "6a40885dc2437ad34b31d5b3daf48ed43e773d93b4324d4e41ad24d5b5bc6efe"
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/pilot_provenance.json": "01318ef2df9f0a3610c671c4e2102409713bef2767a57e131cbe0ce858d34efe",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native_report.json": "95d0a7edb05a9ae26373c47d463e7d94953b515347e6dee94ccf4a388b469187",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/candidate_report.json": "a7ff50634382d1a99a8c24c1a3fcc8ac629f6835956e8054cddf1d1254ebe545",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native_request.json": "d3f250f7aa510f876cc49d23443090ac118fdf000f986372455ccfffae5e5060",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/-1/well_throughput_progress_events.csv": "880ba22136ea34187d566ac95f6b9ba02cb6c391fe76fea6bc64d754ec9ecfc4",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/0/well_throughput_progress_events.csv": "326193cba672df563766e42117b9aa45bcf8f54b7d565e7ce02fc4e8976ad38b",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/1/well_throughput_progress_events.csv": "13939b4a5f9befee6b1c023244f9119674504bcac90275fa1465c445cf474afa",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/2/well_throughput_progress_events.csv": "5d3833af493f55f08cbd467d935481cb0e8fc8adb1edad3deea2cc90843a9d47"
           },
           "server_environment": {
             "installed_distributions": [
@@ -3293,7 +3279,7 @@
             "cellprofiler_core_version": "4.2.8.1",
             "numpy_version": "1.24.4",
             "scipy_version": "1.9.0",
-            "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native_tmp",
+            "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture/cases/cp_tutorial_3d_monolayer/native_tmp",
             "temporary_device": 66306,
             "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
             "host_node": "ts-gaming",
@@ -3322,14 +3308,7 @@
               "W006",
               "W007",
               "W008",
-              "W009",
-              "W010",
-              "W011",
-              "W012",
-              "W013",
-              "W014",
-              "W015",
-              "W016"
+              "W009"
             ],
             "selected_source_wells": [
               "A01"
@@ -3348,7 +3327,7 @@
       "status": "PASS",
       "source_head": "e905e77057e588f48df141634b4eb5b4a765095a",
       "suite_terminal": {
-        "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/terminal.json",
+        "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/terminal.json",
         "sha256": "ce713f64583d9d0cfb13dcac492a12c7cd6b7ddf07d2166e1d2f4c132f135195"
       },
       "manifest": {
@@ -3367,83 +3346,78 @@
           "rows": [
             {
               "repetition": 0,
-              "native_execution_seconds": 14.508274315856397,
-              "native_total_seconds": 14.509019039105624,
-              "openhcs_execution_seconds": 6.139867067337036,
-              "openhcs_total_seconds": 6.732168708462268,
-              "openhcs_compile_seconds": 0.5010251998901367,
-              "openhcs_axis_only_seconds": 4.8422698974609375,
-              "openhcs_first_axis_to_completion_seconds": 6.098707437515259
+              "native_execution_seconds": 10.314509059302509,
+              "native_total_seconds": 10.315214568283409,
+              "openhcs_execution_seconds": 3.819622755050659,
+              "openhcs_total_seconds": 4.259641092270613,
+              "openhcs_compile_seconds": 0.35463929176330566,
+              "openhcs_axis_only_seconds": 3.0878548622131348,
+              "openhcs_first_axis_to_completion_seconds": 3.7817273139953613
             },
             {
               "repetition": 1,
-              "native_execution_seconds": 14.503735558129847,
-              "native_total_seconds": 14.504493967164308,
-              "openhcs_execution_seconds": 6.799968957901001,
-              "openhcs_total_seconds": 7.382045701611787,
-              "openhcs_compile_seconds": 0.49221014976501465,
-              "openhcs_axis_only_seconds": 5.431527376174927,
-              "openhcs_first_axis_to_completion_seconds": 6.756080389022827
+              "native_execution_seconds": 9.742641963995993,
+              "native_total_seconds": 9.743396325036883,
+              "openhcs_execution_seconds": 3.8164680004119873,
+              "openhcs_total_seconds": 4.260757280513644,
+              "openhcs_compile_seconds": 0.35230231285095215,
+              "openhcs_axis_only_seconds": 3.0694236755371094,
+              "openhcs_first_axis_to_completion_seconds": 3.7765955924987793
             },
             {
               "repetition": 2,
-              "native_execution_seconds": 14.284886311739683,
-              "native_total_seconds": 14.285624291747808,
-              "openhcs_execution_seconds": 6.958594083786011,
-              "openhcs_total_seconds": 7.5530522568151355,
-              "openhcs_compile_seconds": 0.5025384426116943,
-              "openhcs_axis_only_seconds": 5.676412105560303,
-              "openhcs_first_axis_to_completion_seconds": 6.915515184402466
+              "native_execution_seconds": 9.349630871322006,
+              "native_total_seconds": 9.35037102503702,
+              "openhcs_execution_seconds": 4.217951536178589,
+              "openhcs_total_seconds": 4.65059270337224,
+              "openhcs_compile_seconds": 0.3522460460662842,
+              "openhcs_axis_only_seconds": 3.084069013595581,
+              "openhcs_first_axis_to_completion_seconds": 4.178339719772339
             }
           ],
           "receipts": [
             {
-              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/candidate_evidence/0/measured_pipeline_receipt.json",
-              "sha256": "e4d8b4e374c729f020fc8d3c1903fc44d6d9c205e2f34d9dc522fa6f3af9021c",
-              "execution_id": "5dedaf03-b274-4e46-9e4b-9baf58dc3f3e"
+              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/candidate_evidence/0/measured_pipeline_receipt.json",
+              "sha256": "f18ded9adcfb522a8320015dd13567d0aa42a964aa5d60be175ae351381a43ca",
+              "execution_id": "c31650f7-a319-42e1-8470-a47ec80a359c"
             },
             {
-              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/candidate_evidence/1/measured_pipeline_receipt.json",
-              "sha256": "914d7ba3de451a5c7c735298b756adca27d79a65fadb756e31a534baa3baad32",
-              "execution_id": "2c17344d-1e26-4ea5-8c46-f63fcd47aeef"
+              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/candidate_evidence/1/measured_pipeline_receipt.json",
+              "sha256": "a97bde5f60b18c8df4256c36e99a60648e07289e1618adca7484965b958104e3",
+              "execution_id": "d4b77ed9-6657-47b8-a1e9-8a14451306b0"
             },
             {
-              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/candidate_evidence/2/measured_pipeline_receipt.json",
-              "sha256": "0045a0173f278c6d817c5677a7a087e04f1268b5020fde48541d56208d420898",
-              "execution_id": "e7682cdc-558b-43eb-81d5-223d581a4fff"
+              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/candidate_evidence/2/measured_pipeline_receipt.json",
+              "sha256": "3227f1bc76e9d5af231774ef31b16138a5b1311dee98152280a3f8ec0942ad04",
+              "execution_id": "d45c3ade-134a-4ce4-a7c4-92d8eec0df83"
             }
           ],
           "raw_inputs": {
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/pilot_provenance.json": "d8c2b88daf8911639c6de9f58d9687883df9df57542511a9cd0ca430fa3d06c9",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/native_report.json": "34190adc6d22886c3f3ad00ca40b7a8f1ccd35da3d383c46fed94aaf25b08d50",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/candidate_report.json": "eda88dba3099924700019ccbc1d32383f65688525c3c722c26fc5c60f22d0f0f",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/native_request.json": "1958c8935e39d08a97ee9f9741293b70e6e24b80a6cc4be7d8299ddd750c309f",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/native_shards/reports.json": "d761b31a24a54d29df4b9ceb9fc112382a4bc6ae2b5e71439e50c45e28eaaf92",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/native_shards/equivalence.json": "49bfa071e2f73e9046b25f180234e79efead7d47e1bfc472d446c6c14bd218c0",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/native_shards/0_report.json": "2091172d113f2cff9389219ec0410fa5d3ec77874aaac422230f75afe2ff9d8a",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/native_shards/1_report.json": "afa7e04814c3a1a2c287f88bab96c6384fb257afaa36eb3a4f241b37af19cdaf",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/native_shards/2_report.json": "4d93f3833b2d5e3f7942f9ed2f6689cfc9bf5d3637569cf337f2aff7bef32402",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/native_shards/3_report.json": "661cf984b34000b154fddf5b5ec04231c800df0e8507ffcfe03f868f5d737ab8",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/native_shards/request_0.json": "c847f024d9ac84df0d27910e683ae2006f97108a0192aa334542f3b21869bb77",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/native_shards/request_1.json": "28a85bf90424667d821559e3089335c89b02901cc718b9c3a877c674ab6bb27b",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/native_shards/request_2.json": "b6032ec6f5d995edf5015daf43e3c98c1fcfddd0c5da4a3d581c0a5a4991b02f",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/native_shards/request_3.json": "bacc99f4ac39eda0c2e90f85762c7f475a745b6fbd87b7f4be74534851a5fbe7",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_0_job_0.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_0_job_1.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_0_job_2.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_0_job_3.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_1_job_0.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_1_job_1.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_1_job_2.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_1_job_3.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_2_job_0.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_2_job_1.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_2_job_2.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_2_job_3.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/candidate_evidence/-1/well_throughput_progress_events.csv": "31bc43abf61966210701153be86f7676400b5e5cab5e8f801478d573b641359a",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/candidate_evidence/0/well_throughput_progress_events.csv": "19d425dae11feeb1dc190b7ab63421f7c46bdba4d54313bddb7fc409d459b865",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/candidate_evidence/1/well_throughput_progress_events.csv": "ea8cf436db52a9d9962da091eb209979384a046626f18e0191a7801def1ddb9c",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/candidate_evidence/2/well_throughput_progress_events.csv": "7df666649b7617564f68324ab52b97bd16665c3f55621020669b3c0a13d698b0"
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/pilot_provenance.json": "959117037dde8b695d0642420969d79e3877a24d21b7c29973641f7b183e29ec",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_report.json": "a4a935cfc47a19e2f52e64127bc50e7014841fb811d717085c671499cd8a7018",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/candidate_report.json": "4ec31cf4444097a7dadeed2137b57162601c66229c251a0b571f7a3ea1456234",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_request.json": "c261633595629b51f7a7f7c2fb9389c7c539a0e7ff5607d95ed1108c86052000",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/reports.json": "06fd127c661b8df9e409872c91acaca5a7214523be4b410c59e8a5c6ce646481",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/equivalence.json": "073dd919001ad5c66a1109e813c89ff6e8aca0a7dfc973c1f8be963d192d1c59",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0_report.json": "66b4e0f0e3f0910762bc3c3496df1e07941394f7e705924b41fa3dae9f3954ad",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1_report.json": "3e4aad5bd8dd6054ba110eba7297e5314fd10b8867d853c2ef738262382ba59b",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2_report.json": "138675c67b5d9d6e444d8770cbb4ed08b20dd37abd2cb129a785b29155026ce0",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/request_0.json": "1183bf0ee015c1961d90c89e8cb99b684a320fd804ba3ff87e0f0f8569be0ada",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/request_1.json": "1db5bd6b04cf045e8115861125a4799f9666d7db4f9faf971da0370b1fa65475",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/request_2.json": "51c843d64a0785716cd5c2181c01cd33086d710fd9ab750aa316839fe987fb9b",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_0_job_0.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_0_job_1.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_0_job_2.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_1_job_0.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_1_job_1.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_1_job_2.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_2_job_0.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_2_job_1.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_2_job_2.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/candidate_evidence/-1/well_throughput_progress_events.csv": "686e665a3389fa91e65ff465b08864b01de9fcdaeacb7f1528ac1c1a4c334e4f",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/candidate_evidence/0/well_throughput_progress_events.csv": "4a455017ca57628a6a54c6c6d316d0fd923e4800753634a97aa5d7296df732a7",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/candidate_evidence/1/well_throughput_progress_events.csv": "f190ef8026a0d30d992c7806a35728c5ed2c6132003574138e697d0df0b2ce3e",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/candidate_evidence/2/well_throughput_progress_events.csv": "98d07774ca5552e64b714dae68fe8bbd037d3d9d44147105b9b4254497d13e58"
           },
           "server_environment": {
             "installed_distributions": [
@@ -4433,7 +4407,7 @@
             "cellprofiler_core_version": "4.2.8.1",
             "numpy_version": "1.24.4",
             "scipy_version": "1.9.0",
-            "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/native_tmp",
+            "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_tmp",
             "temporary_device": 66306,
             "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
             "host_node": "ts-gaming",
@@ -4441,7 +4415,6 @@
             "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
             "cpu_affinity": [
               1,
-              2,
               4,
               5
             ]
@@ -4465,21 +4438,14 @@
               "W006",
               "W007",
               "W008",
-              "W009",
-              "W010",
-              "W011",
-              "W012",
-              "W013",
-              "W014",
-              "W015",
-              "W016"
+              "W009"
             ],
             "selected_source_wells": [
               "A01"
             ],
             "assignment_scope": "independent repeated source assignments",
-            "native_job_count": 4,
-            "candidate_worker_count": 4,
+            "native_job_count": 3,
+            "candidate_worker_count": 3,
             "candidate_worker_start_method": "fork"
           },
           "native_shard_environments": [
@@ -4490,7 +4456,7 @@
               "cellprofiler_core_version": "4.2.8.1",
               "numpy_version": "1.24.4",
               "scipy_version": "1.9.0",
-              "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/native_shards/0_tmp",
+              "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0_tmp",
               "temporary_device": 66306,
               "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
               "host_node": "ts-gaming",
@@ -4498,7 +4464,6 @@
               "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
               "cpu_affinity": [
                 1,
-                2,
                 4,
                 5
               ]
@@ -4510,7 +4475,7 @@
               "cellprofiler_core_version": "4.2.8.1",
               "numpy_version": "1.24.4",
               "scipy_version": "1.9.0",
-              "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/native_shards/1_tmp",
+              "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1_tmp",
               "temporary_device": 66306,
               "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
               "host_node": "ts-gaming",
@@ -4518,7 +4483,6 @@
               "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
               "cpu_affinity": [
                 1,
-                2,
                 4,
                 5
               ]
@@ -4530,7 +4494,7 @@
               "cellprofiler_core_version": "4.2.8.1",
               "numpy_version": "1.24.4",
               "scipy_version": "1.9.0",
-              "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/native_shards/2_tmp",
+              "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2_tmp",
               "temporary_device": 66306,
               "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
               "host_node": "ts-gaming",
@@ -4538,27 +4502,6 @@
               "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
               "cpu_affinity": [
                 1,
-                2,
-                4,
-                5
-              ]
-            },
-            {
-              "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
-              "python_version": "3.9.25",
-              "cellprofiler_version": "4.2.8.1",
-              "cellprofiler_core_version": "4.2.8.1",
-              "numpy_version": "1.24.4",
-              "scipy_version": "1.9.0",
-              "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleVitra/native_shards/3_tmp",
-              "temporary_device": 66306,
-              "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
-              "host_node": "ts-gaming",
-              "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
-              "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
-              "cpu_affinity": [
-                1,
-                2,
                 4,
                 5
               ]
@@ -4571,83 +4514,78 @@
           "rows": [
             {
               "repetition": 0,
-              "native_execution_seconds": 2.6562089370563626,
-              "native_total_seconds": 2.6569133643060923,
-              "openhcs_execution_seconds": 1.1505167484283447,
-              "openhcs_total_seconds": 1.6452321447432041,
-              "openhcs_compile_seconds": 0.4132516384124756,
-              "openhcs_axis_only_seconds": 1.0587754249572754,
-              "openhcs_first_axis_to_completion_seconds": 1.1149046421051025
+              "native_execution_seconds": 2.371115478221327,
+              "native_total_seconds": 2.371839521918446,
+              "openhcs_execution_seconds": 0.714968204498291,
+              "openhcs_total_seconds": 1.1142385825514793,
+              "openhcs_compile_seconds": 0.31388092041015625,
+              "openhcs_axis_only_seconds": 0.643449068069458,
+              "openhcs_first_axis_to_completion_seconds": 0.6795680522918701
             },
             {
               "repetition": 1,
-              "native_execution_seconds": 2.4780917172320187,
-              "native_total_seconds": 2.4787810062989593,
-              "openhcs_execution_seconds": 1.2703213691711426,
-              "openhcs_total_seconds": 1.763880061917007,
-              "openhcs_compile_seconds": 0.4095926284790039,
-              "openhcs_axis_only_seconds": 1.1808624267578125,
-              "openhcs_first_axis_to_completion_seconds": 1.2355456352233887
+              "native_execution_seconds": 2.2305072909221053,
+              "native_total_seconds": 2.231199855916202,
+              "openhcs_execution_seconds": 0.6976263523101807,
+              "openhcs_total_seconds": 1.0642646816559136,
+              "openhcs_compile_seconds": 0.29985880851745605,
+              "openhcs_axis_only_seconds": 0.6260483264923096,
+              "openhcs_first_axis_to_completion_seconds": 0.6639437675476074
             },
             {
               "repetition": 2,
-              "native_execution_seconds": 2.3666276140138507,
-              "native_total_seconds": 2.3673280039802194,
-              "openhcs_execution_seconds": 1.104834794998169,
-              "openhcs_total_seconds": 1.6912345457822084,
-              "openhcs_compile_seconds": 0.5042476654052734,
-              "openhcs_axis_only_seconds": 1.0208606719970703,
-              "openhcs_first_axis_to_completion_seconds": 1.0689241886138916
+              "native_execution_seconds": 2.051751964725554,
+              "native_total_seconds": 2.052436053752899,
+              "openhcs_execution_seconds": 0.7154858112335205,
+              "openhcs_total_seconds": 1.0941514042206109,
+              "openhcs_compile_seconds": 0.30449438095092773,
+              "openhcs_axis_only_seconds": 0.640425443649292,
+              "openhcs_first_axis_to_completion_seconds": 0.6788978576660156
             }
           ],
           "receipts": [
             {
-              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/0/measured_pipeline_receipt.json",
-              "sha256": "397e1e580e7c73393d8f9a2eff2366948a7317b30b8bb5279b02380d0bb5711e",
-              "execution_id": "95b99799-e4a2-430b-9d50-4aba88eb9074"
+              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/0/measured_pipeline_receipt.json",
+              "sha256": "fccf379807873e21a0004f5e52c32a37ee2c555f30800f05bb2da389ea9d4875",
+              "execution_id": "b1b205c6-41e0-41d6-a316-0d40ee4217cb"
             },
             {
-              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/1/measured_pipeline_receipt.json",
-              "sha256": "a9cf836400f3eee2fe061fd7e9e8431a2b0a7bad3a97d6aea7b4a283596f53d6",
-              "execution_id": "d1453c33-357a-44b7-84e0-6ae421a5b1a8"
+              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/1/measured_pipeline_receipt.json",
+              "sha256": "9b1c5a133245c9950653130df256eed9bd2a6e84310defe20ce1c13c9bec937b",
+              "execution_id": "61325049-0123-4262-9b18-d4909c4e29f9"
             },
             {
-              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/2/measured_pipeline_receipt.json",
-              "sha256": "43bf8d3f1d039ab0f0708766e326f8dd84ac7f4aec67ef15215743a9b5a3224a",
-              "execution_id": "2b58f324-0fba-4bd3-bde6-7853b5b945a5"
+              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/2/measured_pipeline_receipt.json",
+              "sha256": "4790c178e8d2ac6380a999b5ad90afe1bc6ceed2fdde79d850ce5355596e56a0",
+              "execution_id": "ba2b180d-85ec-49b9-980b-99d521417161"
             }
           ],
           "raw_inputs": {
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/pilot_provenance.json": "d364ba0945969f8ae170a83b1dcdfdf3911c6db169fff0e73ebb1ad3ab9a367d",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_report.json": "98cb4434ec8d8bed16aff97493e2578bbca18d08ee2167562c413a879fa436b0",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/candidate_report.json": "9ed9ae754e56a0ca5ca4750a1e6836bf8a4296968a26963e45b970e405072587",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_request.json": "07f19db5866fa212a9facdeb4490483f9861887091b935745be688c2105c2551",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/reports.json": "aa711adecc59b981fc8448d26a05721843efeff4d33a5c9aafbfd5c91211cea0",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/equivalence.json": "2865ea86b9157ab25bb464d5bf510bd38ea8297bcac3221afa40926bb581646d",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/0_report.json": "f89c15f10517b23383cff7fd072d15e053c35b31076ca4605ac0c2becfec47ec",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/1_report.json": "101bf616b9619005de96e578424f2818c12fca783103dbf208630ff554bc2b8c",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/2_report.json": "0bc05f584ca0f1d9adda2008c65cdfb0202fffd3a43ac638dc92c3f7a99207b2",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/3_report.json": "c1ba9ad950d29b1436821959da89cdb47c41c7bd455ed59996fb4d9d9231c56d",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/request_0.json": "1917ab995bda12a0be4b2d9a34a3464eeb0a08c363a22c8893ef598c560bd878",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/request_1.json": "8e53106ecb43c24acee4d0875ed051fb59b493d3c6848dbff953b30ae723bcfc",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/request_2.json": "2bfe9a5941420562afe13cf539e843fde1f42cc25745ff6ba274c7710b2328a0",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/request_3.json": "01fc5b9b9182f8412952d3dc873592888302c4eda6fde14fea0fac957d657b61",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier/repetition_0_job_0.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier/repetition_0_job_1.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier/repetition_0_job_2.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier/repetition_0_job_3.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier/repetition_1_job_0.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier/repetition_1_job_1.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier/repetition_1_job_2.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier/repetition_1_job_3.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier/repetition_2_job_0.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier/repetition_2_job_1.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier/repetition_2_job_2.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier/repetition_2_job_3.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/-1/well_throughput_progress_events.csv": "57facca58a9fe0b6f1143902b8cb22125b402d2c0cc705ad88aa152a8bde1b77",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/0/well_throughput_progress_events.csv": "6577a20c90a00a91ca29011bd255db7bd42f05746a99efdb840747b57e49ce38",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/1/well_throughput_progress_events.csv": "bf093da870f9b0f9e3157258bd39013d9dd4a571b133e877d2d5912c7e73f6c2",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/2/well_throughput_progress_events.csv": "2673a39fb66e27b5c70be103ce72a7c14f7c787f3f5f99f936db4382b1fee01c"
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/pilot_provenance.json": "e0c1ff91ce5cd285808ab880a1a74bccad6883f913d1330a68d262f009302613",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_report.json": "e7a8ae30512c84bb0b1ecd58617a7e4bd10a66214cd82672d9e6e3db8182f784",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/candidate_report.json": "4b23271f3aebeed8874c56fc18fa52e9e007f66e310267493792985767a308cd",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_request.json": "109f2e7618e9415780aedf816eefea9ea4aba73752795cdc9601f0ba0b175952",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/reports.json": "2ab8727e7aec99fa328cae91e60ea6956fe5798dc043895bf4930bd70b68201b",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/equivalence.json": "de5eeadefeec2a97d30e80dd8b624538ad09f8a6c4c117c1fa6c46d3d171974f",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/0_report.json": "1bcb3d74e92365e95234cf7bfc06519b4979a8242913e3befd98176b76769cef",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/1_report.json": "2e8de0bfeb5d508b8d4c5ce754f186fd7765085417ee4f754bb3f2dbccf5dd77",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/2_report.json": "864f4e8e3c15c73f38afd1e71df1b811aa5789b2eebe693603cc49336f7870f8",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/request_0.json": "3afa0697a79204932b7d83d51adc8a2ad52b5e96a375cf13e783ceb289e8bc86",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/request_1.json": "6879d1b6f80097542c9ac9bb2bd269790473b0550ccee3e2b22f94e6f4d8f583",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/request_2.json": "93a06b799a197842285f0b318f46eaf19312b6388755de073897aeb67d05e080",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier/repetition_0_job_0.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier/repetition_0_job_1.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier/repetition_0_job_2.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier/repetition_1_job_0.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier/repetition_1_job_1.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier/repetition_1_job_2.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier/repetition_2_job_0.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier/repetition_2_job_1.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier/repetition_2_job_2.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/-1/well_throughput_progress_events.csv": "f7fd0ad2adab3689c863d09d6dcd74f698589dfbe9a3a894987cbc0794f06b61",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/0/well_throughput_progress_events.csv": "582d888f0caf975faf1261904a4341c8d219eac048ad7316346bd5a237dcea22",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/1/well_throughput_progress_events.csv": "dd6774321dff8ee74be82f4a297aee8dbd3e43a98727a9a56a7ecba5e5cb037e",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/2/well_throughput_progress_events.csv": "ff03ca57997727ed27d2cc85d4d1787e7845791ee1f3bea2cb77317c9373bbb4"
           },
           "server_environment": {
             "installed_distributions": [
@@ -5637,7 +5575,7 @@
             "cellprofiler_core_version": "4.2.8.1",
             "numpy_version": "1.24.4",
             "scipy_version": "1.9.0",
-            "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_tmp",
+            "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_tmp",
             "temporary_device": 66306,
             "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
             "host_node": "ts-gaming",
@@ -5645,7 +5583,6 @@
             "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
             "cpu_affinity": [
               1,
-              2,
               4,
               5
             ]
@@ -5669,21 +5606,14 @@
               "W006",
               "W007",
               "W008",
-              "W009",
-              "W010",
-              "W011",
-              "W012",
-              "W013",
-              "W014",
-              "W015",
-              "W016"
+              "W009"
             ],
             "selected_source_wells": [
               "A01"
             ],
             "assignment_scope": "independent repeated source assignments",
-            "native_job_count": 4,
-            "candidate_worker_count": 4,
+            "native_job_count": 3,
+            "candidate_worker_count": 3,
             "candidate_worker_start_method": "fork"
           },
           "native_shard_environments": [
@@ -5694,7 +5624,7 @@
               "cellprofiler_core_version": "4.2.8.1",
               "numpy_version": "1.24.4",
               "scipy_version": "1.9.0",
-              "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/0_tmp",
+              "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/0_tmp",
               "temporary_device": 66306,
               "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
               "host_node": "ts-gaming",
@@ -5702,7 +5632,6 @@
               "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
               "cpu_affinity": [
                 1,
-                2,
                 4,
                 5
               ]
@@ -5714,7 +5643,7 @@
               "cellprofiler_core_version": "4.2.8.1",
               "numpy_version": "1.24.4",
               "scipy_version": "1.9.0",
-              "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/1_tmp",
+              "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/1_tmp",
               "temporary_device": 66306,
               "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
               "host_node": "ts-gaming",
@@ -5722,7 +5651,6 @@
               "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
               "cpu_affinity": [
                 1,
-                2,
                 4,
                 5
               ]
@@ -5734,7 +5662,7 @@
               "cellprofiler_core_version": "4.2.8.1",
               "numpy_version": "1.24.4",
               "scipy_version": "1.9.0",
-              "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/2_tmp",
+              "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/2_tmp",
               "temporary_device": 66306,
               "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
               "host_node": "ts-gaming",
@@ -5742,27 +5670,6 @@
               "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
               "cpu_affinity": [
                 1,
-                2,
-                4,
-                5
-              ]
-            },
-            {
-              "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
-              "python_version": "3.9.25",
-              "cellprofiler_version": "4.2.8.1",
-              "cellprofiler_core_version": "4.2.8.1",
-              "numpy_version": "1.24.4",
-              "scipy_version": "1.9.0",
-              "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/3_tmp",
-              "temporary_device": 66306,
-              "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
-              "host_node": "ts-gaming",
-              "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
-              "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
-              "cpu_affinity": [
-                1,
-                2,
                 4,
                 5
               ]
@@ -5775,83 +5682,78 @@
           "rows": [
             {
               "repetition": 0,
-              "native_execution_seconds": 63.33758952282369,
-              "native_total_seconds": 63.33833392523229,
-              "openhcs_execution_seconds": 17.614147424697876,
-              "openhcs_total_seconds": 19.891185029875487,
-              "openhcs_compile_seconds": 2.1196062564849854,
-              "openhcs_axis_only_seconds": 16.3656485080719,
-              "openhcs_first_axis_to_completion_seconds": 17.545069932937622
+              "native_execution_seconds": 45.97763208905235,
+              "native_total_seconds": 45.97839789232239,
+              "openhcs_execution_seconds": 11.518024682998657,
+              "openhcs_total_seconds": 12.987121930811554,
+              "openhcs_compile_seconds": 1.3182621002197266,
+              "openhcs_axis_only_seconds": 10.858260154724121,
+              "openhcs_first_axis_to_completion_seconds": 11.46435022354126
             },
             {
               "repetition": 1,
-              "native_execution_seconds": 72.98590561235324,
-              "native_total_seconds": 72.98669708427042,
-              "openhcs_execution_seconds": 17.391413688659668,
-              "openhcs_total_seconds": 19.61009455099702,
-              "openhcs_compile_seconds": 2.0764665603637695,
-              "openhcs_axis_only_seconds": 16.02577519416809,
-              "openhcs_first_axis_to_completion_seconds": 17.324132442474365
+              "native_execution_seconds": 45.03852380486205,
+              "native_total_seconds": 45.03928797412664,
+              "openhcs_execution_seconds": 12.237109422683716,
+              "openhcs_total_seconds": 13.696839414071292,
+              "openhcs_compile_seconds": 1.3229031562805176,
+              "openhcs_axis_only_seconds": 11.533836126327515,
+              "openhcs_first_axis_to_completion_seconds": 12.179996252059937
             },
             {
               "repetition": 2,
-              "native_execution_seconds": 149.85518083814532,
-              "native_total_seconds": 149.8561439733021,
-              "openhcs_execution_seconds": 18.406994581222534,
-              "openhcs_total_seconds": 20.628144410904497,
-              "openhcs_compile_seconds": 2.06573224067688,
-              "openhcs_axis_only_seconds": 17.16662859916687,
-              "openhcs_first_axis_to_completion_seconds": 18.338022232055664
+              "native_execution_seconds": 49.13787537813187,
+              "native_total_seconds": 49.138633565977216,
+              "openhcs_execution_seconds": 11.408650636672974,
+              "openhcs_total_seconds": 12.878151164855808,
+              "openhcs_compile_seconds": 1.3193364143371582,
+              "openhcs_axis_only_seconds": 10.657816886901855,
+              "openhcs_first_axis_to_completion_seconds": 11.354835271835327
             }
           ],
           "receipts": [
             {
-              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/0/measured_pipeline_receipt.json",
-              "sha256": "12fcfa442c9cf8aa300e49d1e14046a26ea84eb15c85e0d5a8eb29b9dd3da5f9",
-              "execution_id": "7f1acf7a-66b4-4320-b0f3-b42bb943cd10"
+              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/0/measured_pipeline_receipt.json",
+              "sha256": "260d6e1e701d8dfbacc82ed4cfcdc4700bb4e687c8bf13e63405cd6b816f6e4b",
+              "execution_id": "1d001677-eda2-49fe-96b2-8255651367c2"
             },
             {
-              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/1/measured_pipeline_receipt.json",
-              "sha256": "129bf9cb368dadec6bcea70f1a37d052a7ef27ca5130606fa948b9515a74b7f1",
-              "execution_id": "2e0e6021-3d92-4f5d-a049-cac309e1d8b3"
+              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/1/measured_pipeline_receipt.json",
+              "sha256": "5e544b80a05823fc3567116830ab29d9d2d28c59be2e38db80b408e4fc1c445e",
+              "execution_id": "36f50012-4617-4367-94bc-9153b2c43b8c"
             },
             {
-              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/2/measured_pipeline_receipt.json",
-              "sha256": "04cfa2609e79893f3a5f0e363e9921f0f78fb203766ee12ab5697447c212f9e7",
-              "execution_id": "e049cceb-df5b-4c8d-adce-69713b14b23f"
+              "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/2/measured_pipeline_receipt.json",
+              "sha256": "4de7599cd9a8807cd11512db38f3113569f2ba223991ce752ac44390e4cd1592",
+              "execution_id": "4653eae1-3dd6-4adc-a446-0611a925fe8e"
             }
           ],
           "raw_inputs": {
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/pilot_provenance.json": "33d811fa0f1da56a58bf435eac727d443253a7e39f121723a8cf68bc3608ebd7",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_report.json": "35c3779c3afdb78df8eac83cead51de345d8d5739970d0fb32a0c2e22c7c4890",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/candidate_report.json": "410d428deca61d32fbf6fae086bcc5ff64e5fa67e5a47ed8e79ee6ef7064937f",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_request.json": "ec08a1360392e186e2786e79502e0ddb23a89491fd63c1ae4dc0f3a19c3567b7",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/reports.json": "86869f29dd53fcab1ffb925008398e4c3c67f94c75293c80d1dee48bc8846462",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/equivalence.json": "d0a5989f056a05f9b30d778e67066ca536a27d59be9d53f8b2e3e96024a32a1b",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/0_report.json": "06239bca0b6dbbc39e3708feb85ecc14c1c4476fdb54ca3edddedd96f625244d",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/1_report.json": "df150db5ff82af6f5b4d2dc951e924720c4cedd6bee3158c9c6dcb4dac54dffa",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/2_report.json": "4113f41b0a701a9a55fdd6b203581597b1ecdc617f5709a150d53bf12a1dd18f",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/3_report.json": "324a7832dc4c012612a5a3d5223ce43e40088fa3af13620b59e6705ac2b856e0",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/request_0.json": "47757f11c545dbac27b45ef29deb5fa4f251acdbf14840b508186028834bd72c",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/request_1.json": "54df9253a86e757b46f614255c2a669f1e439d1dbb1fc46eeca5cbe34fe3489f",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/request_2.json": "1dfdf4c49a24e5b5afecb377551854a63cc515fc69ca037e0c231bb1044a84b7",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/request_3.json": "daab7842c067d45131d2f25b5591c7ef042febb3d74e967742318763f0ceb850",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/start_barrier/repetition_0_job_0.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/start_barrier/repetition_0_job_1.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/start_barrier/repetition_0_job_2.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/start_barrier/repetition_0_job_3.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/start_barrier/repetition_1_job_0.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/start_barrier/repetition_1_job_1.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/start_barrier/repetition_1_job_2.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/start_barrier/repetition_1_job_3.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/start_barrier/repetition_2_job_0.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/start_barrier/repetition_2_job_1.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/start_barrier/repetition_2_job_2.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/start_barrier/repetition_2_job_3.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/-1/well_throughput_progress_events.csv": "c93da0da25640a9e744736222604b26b25e36645ecc377ca548a64c68e0f39c7",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/0/well_throughput_progress_events.csv": "ffce29d58dcb3f677805503a5cc0fa8e1ae39e583f6c2a2a34c8c45afe7d35e7",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/1/well_throughput_progress_events.csv": "11900478f162c95352c066bd3125108d550ab3a1d281b18d35b6e3ddc97ca59e",
-            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/2/well_throughput_progress_events.csv": "ec84effc78e1e2cab2d36050f41447be6890d7fd77007f2f5fae64e6cb7c994e"
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/pilot_provenance.json": "e22478cda1ed7068e70bbeb960c343d36c53bf6f736e31eb2187201cb003dd9a",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_report.json": "c59831f79775394aa15262ba214ce8a2b30b867f2df42a760a5d99a5c2b794a5",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/candidate_report.json": "3e1f2950a6f11dc8ab7badb1b37e82a84cd5d41d76de797090cd415c629559ec",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_request.json": "e180bed7d72a50b34d1a6d3a491e00c6fa41108f4c630f0f6f9654c3511fe5a1",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/reports.json": "821c6e799ee8067a6b46ea60bb87f754f3a46fdd1b086fba6861c9f24e3b6d8d",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/equivalence.json": "92273a2b321a2ceefdb66a05bb139bec4a1a038e19bd2979cc01676fe0accb58",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/0_report.json": "babc866bb9f826274a6b2a7b8ee99b69e52d7165d2ef1447509e68f1124e2136",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/1_report.json": "78e94c8ccda0616c666cea6a5e8d31f01f61813ce9f29509580ac8ece96f0488",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/2_report.json": "0322533359fc76777b952b8e6629475968161fbae600d7935373d49c4616f2e8",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/request_0.json": "a54a736f6295853416e8419ab7dcd22ca10010da154d6df5fb44b7d0107364f8",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/request_1.json": "0cc90924b89401454e87ed3b50d0e22a10379e52393e3badb8ac897775e57d64",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/request_2.json": "20ff5757384b6f17591bbd5f1d260981dc5a975807fa20b05a8ded700480aead",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/start_barrier/repetition_0_job_0.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/start_barrier/repetition_0_job_1.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/start_barrier/repetition_0_job_2.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/start_barrier/repetition_1_job_0.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/start_barrier/repetition_1_job_1.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/start_barrier/repetition_1_job_2.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/start_barrier/repetition_2_job_0.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/start_barrier/repetition_2_job_1.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/start_barrier/repetition_2_job_2.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/-1/well_throughput_progress_events.csv": "81b78f69b0d29bb0bbd9fb20b8612491e59a7492437ca0f242db9428cfeb26e6",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/0/well_throughput_progress_events.csv": "afcb7fa3b780ee711bccd38ca78f276c01d525cc2ae9b5433fd2eb638fc29d4c",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/1/well_throughput_progress_events.csv": "08169a2774bf46543e126e494808bcb450016fbd26a8b27af7547e169f9ebd7b",
+            "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/2/well_throughput_progress_events.csv": "126dfce92914048fe5f3c686cc639a2f878b0d20664fb4978135f5c3f1e97763"
           },
           "server_environment": {
             "installed_distributions": [
@@ -6841,7 +6743,7 @@
             "cellprofiler_core_version": "4.2.8.1",
             "numpy_version": "1.24.4",
             "scipy_version": "1.9.0",
-            "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_tmp",
+            "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_tmp",
             "temporary_device": 66306,
             "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
             "host_node": "ts-gaming",
@@ -6849,7 +6751,6 @@
             "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
             "cpu_affinity": [
               1,
-              2,
               4,
               5
             ]
@@ -6873,21 +6774,14 @@
               "W006",
               "W007",
               "W008",
-              "W009",
-              "W010",
-              "W011",
-              "W012",
-              "W013",
-              "W014",
-              "W015",
-              "W016"
+              "W009"
             ],
             "selected_source_wells": [
               "A01"
             ],
             "assignment_scope": "independent repeated source assignments",
-            "native_job_count": 4,
-            "candidate_worker_count": 4,
+            "native_job_count": 3,
+            "candidate_worker_count": 3,
             "candidate_worker_start_method": "fork"
           },
           "native_shard_environments": [
@@ -6898,7 +6792,7 @@
               "cellprofiler_core_version": "4.2.8.1",
               "numpy_version": "1.24.4",
               "scipy_version": "1.9.0",
-              "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/0_tmp",
+              "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/0_tmp",
               "temporary_device": 66306,
               "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
               "host_node": "ts-gaming",
@@ -6906,7 +6800,6 @@
               "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
               "cpu_affinity": [
                 1,
-                2,
                 4,
                 5
               ]
@@ -6918,7 +6811,7 @@
               "cellprofiler_core_version": "4.2.8.1",
               "numpy_version": "1.24.4",
               "scipy_version": "1.9.0",
-              "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/1_tmp",
+              "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/1_tmp",
               "temporary_device": 66306,
               "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
               "host_node": "ts-gaming",
@@ -6926,7 +6819,6 @@
               "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
               "cpu_affinity": [
                 1,
-                2,
                 4,
                 5
               ]
@@ -6938,7 +6830,7 @@
               "cellprofiler_core_version": "4.2.8.1",
               "numpy_version": "1.24.4",
               "scipy_version": "1.9.0",
-              "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/2_tmp",
+              "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/2_tmp",
               "temporary_device": 66306,
               "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
               "host_node": "ts-gaming",
@@ -6946,27 +6838,6 @@
               "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
               "cpu_affinity": [
                 1,
-                2,
-                4,
-                5
-              ]
-            },
-            {
-              "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
-              "python_version": "3.9.25",
-              "cellprofiler_version": "4.2.8.1",
-              "cellprofiler_core_version": "4.2.8.1",
-              "numpy_version": "1.24.4",
-              "scipy_version": "1.9.0",
-              "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/3_tmp",
-              "temporary_device": 66306,
-              "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
-              "host_node": "ts-gaming",
-              "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
-              "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
-              "cpu_affinity": [
-                1,
-                2,
                 4,
                 5
               ]
@@ -6982,17 +6853,5 @@
     "ExampleIlluminationCorrection_Example3",
     "cp_tutorial_3d_monolayer"
   ],
-  "interpretation": "Qualified matched measurements rendered by the existing measured benchmark owner. Original clock boundaries, repetitions and source custody remain in matched_report_provenance. Each mode owns its actual native baseline; no projected throughput or RAM is supplied.",
-  "source_path_origins": {
-    "benchmark/results/matched_final_20261006/data/16assignments-1worker/total_summary.csv": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/16assignments-1worker/total_summary.csv",
-    "benchmark/results/matched_final_20261006/data/16assignments-4workers/total_summary.csv": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/16assignments-4workers/total_summary.csv",
-    "benchmark/results/matched_final_20261006/data/16assignments-1worker/summary_custody.json": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/16assignments-1worker/summary_custody.json",
-    "benchmark/results/matched_final_20261006/data/16assignments-4workers/summary_custody.json": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/16assignments-4workers/summary_custody.json",
-    "benchmark/results/matched_final_20261006/protocol/9assignments-1worker/selected-three-case-manifest.json": "/home/ts/.local/state/openhcs-maintenance/20261006/final-measured-publication-v15/selected-three-case-manifest.json"
-  },
-  "provenance_normalization": {
-    "original_receipt_sha256": "3c6105fd805824a955b5df33e9af553658015c1a57d7ce4ee6ca252095cc9f56",
-    "writer_sha256": "a8afc37c09bf2ab678d595b9e4dc6db68d2b0361a6d6471518d95735ca67d348",
-    "scope": "Path-only correction to byte-identical retained inputs; original generator/output hashes preserved; no rerender or benchmark execution."
-  }
+  "interpretation": "Qualified matched measurements rendered by the existing measured benchmark owner. Original clock boundaries, repetitions and source custody remain in matched_report_provenance. Each mode owns its actual native baseline; no projected throughput or RAM is supplied."
 }

@@ -1,10 +1,10 @@
 {
   "source_sha256": {
-    "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/9assignments-1worker/total_summary.csv": "b0ffdbe65ce5d21c3afe0293a24f1b8a7784f9907bb62dd98ffa1d245f8df4de",
-    "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/9assignments-3workers/total_summary.csv": "583f1b9dccfe40fb9e8022105a1e09a8dd5edc80fbd484f05f80bca08c522510",
-    "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/9assignments-1worker/summary_custody.json": "8dee34e964504a71cdafc1bf9d104549fcca8d1c185d3f33beb88854430a04b3",
-    "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/9assignments-3workers/summary_custody.json": "0c2f8ee3f5ddccf6fe1897056da04a6d2f5752f6348bd5592da0fdf48ab6107d",
-    "/home/ts/.local/state/openhcs-maintenance/20261006/final-measured-publication-v15/selected-three-case-manifest.json": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
+    "benchmark/results/matched_final_20261006/data/9assignments-1worker/total_summary.csv": "b0ffdbe65ce5d21c3afe0293a24f1b8a7784f9907bb62dd98ffa1d245f8df4de",
+    "benchmark/results/matched_final_20261006/data/9assignments-3workers/total_summary.csv": "583f1b9dccfe40fb9e8022105a1e09a8dd5edc80fbd484f05f80bca08c522510",
+    "benchmark/results/matched_final_20261006/data/9assignments-1worker/summary_custody.json": "8dee34e964504a71cdafc1bf9d104549fcca8d1c185d3f33beb88854430a04b3",
+    "benchmark/results/matched_final_20261006/data/9assignments-3workers/summary_custody.json": "0c2f8ee3f5ddccf6fe1897056da04a6d2f5752f6348bd5592da0fdf48ab6107d",
+    "benchmark/results/matched_final_20261006/protocol/9assignments-1worker/selected-three-case-manifest.json": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
     "benchmark/reports/cppipe_figures.py": "87ceb84ff6d8c4ab6aa8bd0a07ffb8411e730cc7b7c699e76a383be7d1581e76"
   },
   "generator_sha256": "75259b57e2929990e24de603f1c150a5c5a9b5c8f4ca20587420542e50bf4910",
@@ -6853,5 +6853,17 @@
     "ExampleIlluminationCorrection_Example3",
     "cp_tutorial_3d_monolayer"
   ],
-  "interpretation": "Qualified matched measurements rendered by the existing measured benchmark owner. Original clock boundaries, repetitions and source custody remain in matched_report_provenance. Each mode owns its actual native baseline; no projected throughput or RAM is supplied."
+  "interpretation": "Qualified matched measurements rendered by the existing measured benchmark owner. Original clock boundaries, repetitions and source custody remain in matched_report_provenance. Each mode owns its actual native baseline; no projected throughput or RAM is supplied.",
+  "source_path_origins": {
+    "benchmark/results/matched_final_20261006/data/9assignments-1worker/total_summary.csv": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/9assignments-1worker/total_summary.csv",
+    "benchmark/results/matched_final_20261006/data/9assignments-3workers/total_summary.csv": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/9assignments-3workers/total_summary.csv",
+    "benchmark/results/matched_final_20261006/data/9assignments-1worker/summary_custody.json": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/9assignments-1worker/summary_custody.json",
+    "benchmark/results/matched_final_20261006/data/9assignments-3workers/summary_custody.json": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/9assignments-3workers/summary_custody.json",
+    "benchmark/results/matched_final_20261006/protocol/9assignments-1worker/selected-three-case-manifest.json": "/home/ts/.local/state/openhcs-maintenance/20261006/final-measured-publication-v15/selected-three-case-manifest.json"
+  },
+  "provenance_normalization": {
+    "original_receipt_sha256": "45dba561b071465c71455d649fae3e79d2b9a038f6fe915c001431892832b787",
+    "writer_sha256": "a8afc37c09bf2ab678d595b9e4dc6db68d2b0361a6d6471518d95735ca67d348",
+    "scope": "Path-only correction to byte-identical retained inputs; original generator/output hashes preserved; no rerender or benchmark execution."
+  }
 }
