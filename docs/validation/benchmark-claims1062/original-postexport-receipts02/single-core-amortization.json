@@ -7,7 +7,8 @@
     "benchmark/results/matched_postexport_20261006/data/9assignments-1worker/summary_custody.json": "238689638f795cb0e10aa1c842f1bd63cb38cf9eb5aaf893aa6e29b94621d5b3",
     "benchmark/results/matched_postexport_20261006/data/16assignments-1worker/summary_custody.json": "2002376d84245f37619cab991612b28c00e4e29299084a9eaa2267a604f62a76",
     "benchmark/results/matched_postexport_20261006/protocol/selected-three-case-manifest.json": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
-    "benchmark/results/matched_final_20261006/protocol/singlewell/official30-prioritized-manifest.json": "1d1b016aea7ff2ac0bc2441fff1140bb492bbf3b86048f8565694ccd45e4dff1",
+    "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/official30-prioritized-manifest.json": "1d1b016aea7ff2ac0bc2441fff1140bb492bbf3b86048f8565694ccd45e4dff1",
+    "/home/ts/.local/state/openhcs-maintenance/20261006/final-measured-publication-v15/selected-three-case-manifest.json": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
     "benchmark/reports/cppipe_figures.py": "e4b1f9707ce292563949ae00e33ef77c42440049640585563025a82ed295c9db"
   },
   "generator_sha256": "75259b57e2929990e24de603f1c150a5c5a9b5c8f4ca20587420542e50bf4910",
@@ -38961,14 +38962,5 @@
     "ExampleIlluminationCorrection_Example3",
     "cp_tutorial_3d_monolayer"
   ],
-  "interpretation": "Qualified matched measurements rendered by the existing measured benchmark owner. Original clock boundaries, repetitions and source custody remain in matched_report_provenance. Each mode owns its actual native baseline; no projected throughput or RAM is supplied.",
-  "source_path_origins": {
-    "benchmark/results/matched_final_20261006/protocol/singlewell/official30-prioritized-manifest.json": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/official30-prioritized-manifest.json",
-    "benchmark/results/matched_postexport_20261006/protocol/selected-three-case-manifest.json": "/home/ts/.local/state/openhcs-maintenance/20261006/final-measured-publication-v15/selected-three-case-manifest.json"
-  },
-  "provenance_normalization": {
-    "original_receipt_sha256": "469d96b928914514bacc3b33de8c56ac6d9d5da192e973c5b3c50a95b1cadbc1",
-    "writer_sha256": "a8afc37c09bf2ab678d595b9e4dc6db68d2b0361a6d6471518d95735ca67d348",
-    "scope": "Path-only correction to byte-identical retained inputs; original generator/output hashes preserved; no rerender or benchmark execution."
-  }
+  "interpretation": "Qualified matched measurements rendered by the existing measured benchmark owner. Original clock boundaries, repetitions and source custody remain in matched_report_provenance. Each mode owns its actual native baseline; no projected throughput or RAM is supplied."
 }
