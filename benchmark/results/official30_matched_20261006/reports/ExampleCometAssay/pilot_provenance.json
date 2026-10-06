@@ -12,7 +12,7 @@
   "driver_sha256": "8b987409c66e29fdc1dc18e61bd31a07c631750cc9bb9224a6bfff37a8c9a3a9",
   "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
   "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
-  "source_commit": "bf90fda611527b388b49123dcbd776f103aa04d3",
+  "source_commit": "d8678dbd443d78e0c4e5d90f4c2e867af61af80b",
   "source_dirty": false,
   "native_job_count": 1,
   "candidate_worker_count": 1,
@@ -40,21 +40,21 @@
       "sha256": "1d46e6d0b28b98d13df9b4ac9884c33a841173b6aa5376e98606dcd5f0a95f93"
     }
   ],
-  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleCometAssay/native_report.json",
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleCometAssay/native_report.json",
   "native_reference_report_sha256": "6b37902c62233dc0d6a4c095bc78a2793e44b74ab037d3028a829bdd9ee0c8da",
   "native_reference_source_commit": "ee0b125de9d5df66d85b038b74d9ce2d7acc1b3b",
   "native_reference_file_inventory": [
     {
-      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleCometAssay/native_report.json",
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleCometAssay/native_report.json",
       "sha256": "6b37902c62233dc0d6a4c095bc78a2793e44b74ab037d3028a829bdd9ee0c8da"
     },
     {
-      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleCometAssay/native_request.json",
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleCometAssay/native_request.json",
       "sha256": "54133189bf75a2194417d0fb1f7ab99f8ee42710c2a1dec8ff98fbaec1edee6a"
     },
     {
-      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleCometAssay/pilot_provenance.json",
-      "sha256": "88d659c1e0b58ecef4436d7dd3154614bf68406eb2c01d9e2f6b4f790ab7ebd8"
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleCometAssay/pilot_provenance.json",
+      "sha256": "5d1ead2890c86bac910bee274a3e73e0aeac600cdd9c461a80bee984ac3c6528"
     },
     {
       "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleCometAssay/native/-1/Comet.csv",

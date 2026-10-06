@@ -1,27 +1,27 @@
 {
-  "compile_artifact_id": "8b2b76e1-d0db-4d41-8769-997b918e189e",
-  "completed_at_epoch_seconds": 1791252967.6425586,
+  "compile_artifact_id": "4301c725-b2b2-41f6-a9a3-cdb0186a004d",
+  "completed_at_epoch_seconds": 1791272222.920944,
   "endpoint_provenance": {
     "client_openhcs_file": "/var/tmp/openhcs-cp-compiled-contract-reuse-20261004/openhcs/__init__.py",
     "client_openhcs_version": "0.8.7",
     "client_python_executable": "/home/ts/code/projects/openhcs/.venv/bin/python",
     "endpoint_application_identifier": "openhcs",
-    "endpoint_create_time_epoch_seconds": 1791252911.33,
-    "endpoint_log_file_path": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1791252911427497655.log",
+    "endpoint_create_time_epoch_seconds": 1791272184.1,
+    "endpoint_log_file_path": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1791272184193110110.log",
     "endpoint_openhcs_version": "0.8.7",
-    "endpoint_pid": 2230587,
+    "endpoint_pid": 3992264,
     "endpoint_port": 7777
   },
-  "execution_id": "6afac904-0ee4-43d8-b937-fed4913cce34",
-  "execution_plate_id": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/cp_tutorial_3d_monolayer/source_workspace",
+  "execution_id": "fde2626d-a7e8-461c-aa8c-58f754ddb43b",
+  "execution_plate_id": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/cp_tutorial_3d_monolayer/source_workspace",
   "expected_axis_count": 1,
-  "global_config_source_sha256": "1b89505bbd69ef8a1ab0f6917c1c86a6ff77e20a52715bb7cc26225363cf42dc",
-  "observation_export_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/cp_tutorial_3d_monolayer/candidate_evidence/0/observation.pkl",
+  "global_config_source_sha256": "f88a3bec536903aa359079cc9b6d794b491c67ba4cdf611307262f4cdab82037",
+  "observation_export_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/cp_tutorial_3d_monolayer/candidate_evidence/0/observation.pkl",
   "observation_export_scope": "outcomes",
-  "observation_export_sha256": "d4a235775f6d30e0ff73997e757be64bbf75d7d90aa422e6eaaa8e2b5f882ff5",
+  "observation_export_sha256": "aa7344a2b8915d6e586c60f58814cff12ae366199c5043bce63bccef2893e0cb",
   "observed_axis_count": 1,
   "output_roots": [
-    "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/cp_tutorial_3d_monolayer/candidate/0/source_workspace_matched_pilot"
+    "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/cp_tutorial_3d_monolayer/candidate/0/source_workspace_matched_pilot"
   ],
   "phase_timings": [
     {
@@ -29,7 +29,7 @@
       "phase": "SUBMIT_OPENHCS",
       "pipeline_name": "cp_tutorial_3d_monolayer",
       "run_id": "cp_tutorial_3d_monolayer-0",
-      "seconds": 0.1410937514156103,
+      "seconds": 0.12795396288856864,
       "tool": "OpenHCS"
     },
     {
@@ -37,7 +37,7 @@
       "phase": "WAIT_OPENHCS",
       "pipeline_name": "cp_tutorial_3d_monolayer",
       "run_id": "cp_tutorial_3d_monolayer-0",
-      "seconds": 0.47749641817063093,
+      "seconds": 0.5027071610093117,
       "tool": "OpenHCS"
     },
     {
@@ -45,7 +45,7 @@
       "phase": "SUBMIT_OPENHCS",
       "pipeline_name": "cp_tutorial_3d_monolayer",
       "run_id": "cp_tutorial_3d_monolayer-0",
-      "seconds": 0.010911344084888697,
+      "seconds": 0.010889654979109764,
       "tool": "OpenHCS"
     },
     {
@@ -53,7 +53,7 @@
       "phase": "WAIT_OPENHCS",
       "pipeline_name": "cp_tutorial_3d_monolayer",
       "run_id": "cp_tutorial_3d_monolayer-0",
-      "seconds": 5.442754008807242,
+      "seconds": 2.7442197618074715,
       "tool": "OpenHCS"
     },
     {
@@ -61,7 +61,7 @@
       "phase": "SERVER_COMPILATION_JOB",
       "pipeline_name": "cp_tutorial_3d_monolayer",
       "run_id": "cp_tutorial_3d_monolayer-0",
-      "seconds": 0.47844386100769043,
+      "seconds": 0.5034546852111816,
       "tool": "OpenHCS"
     },
     {
@@ -69,7 +69,7 @@
       "phase": "SERVER_PIPELINE_JOB",
       "pipeline_name": "cp_tutorial_3d_monolayer",
       "run_id": "cp_tutorial_3d_monolayer-0",
-      "seconds": 5.439428806304932,
+      "seconds": 2.7359564304351807,
       "tool": "OpenHCS"
     },
     {
@@ -77,7 +77,7 @@
       "phase": "COMPILE_OPENHCS",
       "pipeline_name": "cp_tutorial_3d_monolayer",
       "run_id": "cp_tutorial_3d_monolayer-0",
-      "seconds": 0.4659736156463623,
+      "seconds": 0.4911997318267822,
       "tool": "OpenHCS"
     },
     {
@@ -85,7 +85,7 @@
       "phase": "EXECUTE_OPENHCS",
       "pipeline_name": "cp_tutorial_3d_monolayer",
       "run_id": "cp_tutorial_3d_monolayer-0",
-      "seconds": 3.671929121017456,
+      "seconds": 2.616382360458374,
       "tool": "OpenHCS"
     },
     {
@@ -93,15 +93,15 @@
       "phase": "VALIDATE_RUNTIME",
       "pipeline_name": "cp_tutorial_3d_monolayer",
       "run_id": "cp_tutorial_3d_monolayer-0",
-      "seconds": 5.689915269613266e-06,
+      "seconds": 6.321817636489868e-06,
       "tool": "OpenHCS"
     }
   ],
   "pipeline_name": "cp_tutorial_3d_monolayer",
-  "pipeline_source_sha256": "2b477bc318f66b85d14fcf5068eeb0c00e3b70772452ada0f7540aab0326cedf",
+  "pipeline_source_sha256": "219dcaca50de970874eb1fab617cccd702dfccb7ea7ddc760e94097f4e840868",
   "plate_id": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/3d_monolayer/images",
-  "results_summary_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/cp_tutorial_3d_monolayer/candidate_evidence/0/zmq_results_summary.json",
-  "results_summary_sha256": "25f3b830282fb2081d9401b2188fcd1db39e062aac1a62cd4e7fa4fc36408f83",
+  "results_summary_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/cp_tutorial_3d_monolayer/candidate_evidence/0/zmq_results_summary.json",
+  "results_summary_sha256": "879a9d3c049248da77048194e8fa64fd7dbef802e8c100c84af6caf773deaf7a",
   "run_id": "cp_tutorial_3d_monolayer-0",
   "schema_version": "openhcs.benchmark.measured-pipeline.v2",
   "selected_pipeline_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/3d_monolayer/3d_monolayer_final.cppipe",

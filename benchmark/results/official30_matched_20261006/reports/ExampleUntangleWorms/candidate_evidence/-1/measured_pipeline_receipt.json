@@ -1,27 +1,27 @@
 {
-  "compile_artifact_id": "f91cca0f-7a09-4e8b-9701-581b77103e12",
-  "completed_at_epoch_seconds": 1791253270.5625367,
+  "compile_artifact_id": "ca019684-e060-4f3d-81c1-6be056c49561",
+  "completed_at_epoch_seconds": 1791272512.909865,
   "endpoint_provenance": {
     "client_openhcs_file": "/var/tmp/openhcs-cp-compiled-contract-reuse-20261004/openhcs/__init__.py",
     "client_openhcs_version": "0.8.7",
     "client_python_executable": "/home/ts/code/projects/openhcs/.venv/bin/python",
     "endpoint_application_identifier": "openhcs",
-    "endpoint_create_time_epoch_seconds": 1791252911.33,
-    "endpoint_log_file_path": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1791252911427497655.log",
+    "endpoint_create_time_epoch_seconds": 1791272184.1,
+    "endpoint_log_file_path": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1791272184193110110.log",
     "endpoint_openhcs_version": "0.8.7",
-    "endpoint_pid": 2230587,
+    "endpoint_pid": 3992264,
     "endpoint_port": 7777
   },
-  "execution_id": "1a0a69c8-b90b-4ae9-ab37-9301f649331b",
-  "execution_plate_id": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleUntangleWorms/source_workspace",
+  "execution_id": "5a4151d3-2241-41c9-87d9-b343a32996aa",
+  "execution_plate_id": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleUntangleWorms/source_workspace",
   "expected_axis_count": 1,
-  "global_config_source_sha256": "34e4e8fd73f6f828c919dc4c163940143a93ae3df91744353be81cfc2ff4dcbc",
-  "observation_export_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleUntangleWorms/candidate_evidence/-1/observation.pkl",
+  "global_config_source_sha256": "5bff8993a3e3ab1e2c5e4691928996ed2e8b9c88855c65aea8a44795a6c8720d",
+  "observation_export_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleUntangleWorms/candidate_evidence/-1/observation.pkl",
   "observation_export_scope": "outcomes",
-  "observation_export_sha256": "f3bf7bf5c48c312ad9fdc2f42773dc7c4c68772e98d66970fe9a5c01c3282763",
+  "observation_export_sha256": "a56b8b9471d7c09652914574d6a25c47f881f2d5ef4411659776715dc9bf1a03",
   "observed_axis_count": 1,
   "output_roots": [
-    "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleUntangleWorms/candidate/-1/source_workspace_matched_pilot"
+    "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleUntangleWorms/candidate/-1/source_workspace_matched_pilot"
   ],
   "phase_timings": [
     {
@@ -29,7 +29,7 @@
       "phase": "SUBMIT_OPENHCS",
       "pipeline_name": "ExampleUntangleWorms",
       "run_id": "ExampleUntangleWorms--1",
-      "seconds": 0.08196492306888103,
+      "seconds": 0.0803809049539268,
       "tool": "OpenHCS"
     },
     {
@@ -37,7 +37,7 @@
       "phase": "WAIT_OPENHCS",
       "pipeline_name": "ExampleUntangleWorms",
       "run_id": "ExampleUntangleWorms--1",
-      "seconds": 0.20994918094947934,
+      "seconds": 0.24893632903695107,
       "tool": "OpenHCS"
     },
     {
@@ -45,7 +45,7 @@
       "phase": "SUBMIT_OPENHCS",
       "pipeline_name": "ExampleUntangleWorms",
       "run_id": "ExampleUntangleWorms--1",
-      "seconds": 0.010797117836773396,
+      "seconds": 0.010764579754322767,
       "tool": "OpenHCS"
     },
     {
@@ -53,7 +53,7 @@
       "phase": "WAIT_OPENHCS",
       "pipeline_name": "ExampleUntangleWorms",
       "run_id": "ExampleUntangleWorms--1",
-      "seconds": 0.9505435791797936,
+      "seconds": 0.9177345661446452,
       "tool": "OpenHCS"
     },
     {
@@ -61,7 +61,7 @@
       "phase": "SERVER_COMPILATION_JOB",
       "pipeline_name": "ExampleUntangleWorms",
       "run_id": "ExampleUntangleWorms--1",
-      "seconds": 0.21158790588378906,
+      "seconds": 0.24208283424377441,
       "tool": "OpenHCS"
     },
     {
@@ -69,7 +69,7 @@
       "phase": "SERVER_PIPELINE_JOB",
       "pipeline_name": "ExampleUntangleWorms",
       "run_id": "ExampleUntangleWorms--1",
-      "seconds": 0.9492297172546387,
+      "seconds": 0.912738561630249,
       "tool": "OpenHCS"
     },
     {
@@ -77,7 +77,7 @@
       "phase": "COMPILE_OPENHCS",
       "pipeline_name": "ExampleUntangleWorms",
       "run_id": "ExampleUntangleWorms--1",
-      "seconds": 0.19899702072143555,
+      "seconds": 0.22884511947631836,
       "tool": "OpenHCS"
     },
     {
@@ -85,7 +85,7 @@
       "phase": "EXECUTE_OPENHCS",
       "pipeline_name": "ExampleUntangleWorms",
       "run_id": "ExampleUntangleWorms--1",
-      "seconds": 0.8724536895751953,
+      "seconds": 0.8345155715942383,
       "tool": "OpenHCS"
     },
     {
@@ -93,15 +93,15 @@
       "phase": "VALIDATE_RUNTIME",
       "pipeline_name": "ExampleUntangleWorms",
       "run_id": "ExampleUntangleWorms--1",
-      "seconds": 5.700625479221344e-06,
+      "seconds": 5.749985575675964e-06,
       "tool": "OpenHCS"
     }
   ],
   "pipeline_name": "ExampleUntangleWorms",
-  "pipeline_source_sha256": "3da0f0ae666e1029282271c68b6e648348e01c2cf6ec97d55167b64b1a596ca5",
+  "pipeline_source_sha256": "4cdf58bfd1b6b6fae525b79b07ccb9dd5e57d27927ef872eaf4cd0fae0c770a2",
   "plate_id": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleUntangleWorms/images",
-  "results_summary_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleUntangleWorms/candidate_evidence/-1/zmq_results_summary.json",
-  "results_summary_sha256": "7ce43be3c4d321ae57cb63db9460059609e9745c1b781c42fd858648c3182369",
+  "results_summary_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleUntangleWorms/candidate_evidence/-1/zmq_results_summary.json",
+  "results_summary_sha256": "ccd51c4bf4777a977efffe29aeb0ca7b9518f7ff57ca89c91daf5836626bc0d6",
   "run_id": "ExampleUntangleWorms--1",
   "schema_version": "openhcs.benchmark.measured-pipeline.v2",
   "selected_pipeline_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleUntangleWorms/ExampleUntangleWorms.cppipe",

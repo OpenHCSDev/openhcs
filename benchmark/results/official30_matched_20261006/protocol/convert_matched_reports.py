@@ -1,6 +1,6 @@
 """Derive existing SummarySource CSV inputs from qualified matched reports.
 Default: full-manifest singlewell headline. Explicit --scaling: actual repeated
-assignments with concurrent native/OH workers, never projected native timings.
+assignments with one or concurrent native/OH workers, never projected native timings.
 No execution, projection or figure generation. Reads the existing suite terminal.
 """
 import argparse
@@ -47,16 +47,21 @@ def scaling_native_rows(case_dir, provenance, repetitions, command, native):
     wells = tuple(provenance['wells'])
     require(assignments == len(wells) and len(set(wells)) == assignments, 'Assignment count differs from command')
     require(workers == jobs == provenance['candidate_worker_count'] == provenance['native_job_count'], 'Actual native/OH worker counts differ')
-    require(jobs > 1 and assignments >= jobs and assignments % jobs == 0, 'Scaling requires actual evenly partitioned concurrent workers')
+    require(jobs >= 1 and assignments >= jobs and assignments % jobs == 0, 'Scaling requires actual evenly partitioned workers')
     require(provenance['assignment_scope'] == 'independent repeated source assignments' and len(provenance['selected_source_wells']) == 1, 'Scaling requires one selected source well and explicit repeated assignments')
     serial = NativeBatchReport.from_payload(native)
     require(serial.request == NativeBatchRequest(**load(case_dir / 'native_request.json')), 'Serial request/report differ')
     directories = tuple(OpenHCSPlaneAddress.component_token(well) for well in wells)
     require(serial.request.assignment_output_subdirectories == directories, 'Serial assignment roles differ from declared wells')
     require(serial.request.first_image_set == 1 and serial.request.last_image_set is None and serial.request.start_barrier_root is None, 'Serial baseline has a different image-set/barrier scope')
+    serial.require_complete(repetitions)
     serial_domains = tuple(tuple((directory, count) for directory, count in row.assignment_image_set_counts) for row in serial.observations)
     require(len(set(serial_domains)) == 1 and len({count for _, count in serial_domains[0]}) == 1, 'Serial assignments do not execute equal independent source domains')
     require(all(row.image_set_count == provenance['native_image_set_count'] for row in serial.observations), 'Serial image-set count differs from provenance')
+    require(all(tuple(directory for directory, _ in domain) == directories for domain in serial_domains), 'Serial observations do not cover exact assignment roles')
+    if jobs == 1:
+        require(not (case_dir / 'native_shards' / 'reports.json').exists(), 'Serial mode must not borrow native shard timings')
+        return None, {str(case_dir / 'native_request.json'): sha(case_dir / 'native_request.json')}, ()
     shards_path = case_dir / 'native_shards' / 'reports.json'
     equivalence_path = case_dir / 'native_shards' / 'equivalence.json'
     shards = tuple(load(shards_path))
@@ -174,10 +179,10 @@ def convert(case_dir, source_commit, repetitions, *, scaling=False, command=None
     execution['meets_total_phase_speedup_target'] = execution['median_total_phase_speedup'] >= SPEEDUP_TARGET
     total = {**execution,'median_native_execution_seconds':execution['median_native_total_phase_seconds'],'median_openhcs_execution_seconds':execution['median_openhcs_total_phase_seconds'],'median_speedup':execution['median_total_phase_speedup']}
     metadata = {'case':provenance['case'],'source_commit':source_commit,'rows':rows,'receipts':receipts,'raw_inputs':{str(p):sha(p) for p in (provenance_path,native_path,candidate_path)},'server_environment':environments[0],'native_environment':native['environment'],'thread_environment':provenance['thread_environment']}
+    metadata['mode'] = {key: provenance[key] for key in ('wells', 'selected_source_wells', 'assignment_scope', 'native_job_count', 'candidate_worker_count', 'candidate_worker_start_method')}
     if scaling:
         metadata['raw_inputs'].update(shard_inputs)
         metadata['native_shard_environments'] = [report['environment'] for report in shard_reports]
-        metadata['mode'] = {key: provenance[key] for key in ('wells', 'selected_source_wells', 'assignment_scope', 'native_job_count', 'candidate_worker_count', 'candidate_worker_start_method')}
     return execution,total,metadata
 
 def main():
@@ -213,8 +218,9 @@ def main():
             writer=csv.DictWriter(handle,fieldnames=list(rows[0]));writer.writeheader();writer.writerows(rows)
     manifest={'status':'PASS','source_head':source_commit,'suite_terminal':{'path':str(terminal_path),'sha256':sha(terminal_path)},'manifest':{'path':str(manifest_path),'sha256':sha(manifest_path)},'converter_sha256':sha(Path(__file__)),'execution_clock':'CP pipeline call including prepare_run, prepare_group, modules and post_run / OH full SERVER_PIPELINE_JOB including plate exports','total_clock':'CP measured invocation / OH sum of disjoint compile+execute SUBMIT+WAIT phases, excluding startup and SCI','speedup_definition':'Ratio of per-engine medians; warmup repetition -1 excluded','memory':'Not measured in matched reports; left absent','cases':[m for _,_,m in converted]}
     if args.scaling:
-        manifest['execution_clock'] = 'CP actual concurrent pipeline-start through post-run makespan / OH full SERVER_PIPELINE_JOB including plate exports'
-        manifest['total_clock'] = 'CP actual concurrent invocation-through-completion makespan / OH sum of disjoint compile+execute SUBMIT+WAIT phases, excluding startup and SCI'
+        if int(argv[argv.index('--native-jobs') + 1]) > 1:
+            manifest['execution_clock'] = 'CP actual concurrent pipeline-start through post-run makespan / OH full SERVER_PIPELINE_JOB including plate exports'
+            manifest['total_clock'] = 'CP actual concurrent invocation-through-completion makespan / OH sum of disjoint compile+execute SUBMIT+WAIT phases, excluding startup and SCI'
         manifest['assignment_scope'] = 'Independent repeated source assignments, not additional genuine wells'
     (args.output_dir/'summary_custody.json').write_text(json.dumps(manifest,indent=2)+'\n')
     print(json.dumps({'status':'PASS','cases':len(converted),'output_dir':str(args.output_dir)}))

@@ -12,7 +12,7 @@
   "driver_sha256": "8b987409c66e29fdc1dc18e61bd31a07c631750cc9bb9224a6bfff37a8c9a3a9",
   "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
   "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
-  "source_commit": "bf90fda611527b388b49123dcbd776f103aa04d3",
+  "source_commit": "d8678dbd443d78e0c4e5d90f4c2e867af61af80b",
   "source_dirty": false,
   "native_job_count": 1,
   "candidate_worker_count": 1,
@@ -40,21 +40,21 @@
       "sha256": "6bda0e7a09686b00c6651d2108ca064b2670c6708e20df43eb5e055b5b112033"
     }
   ],
-  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleTumor/native_report.json",
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleTumor/native_report.json",
   "native_reference_report_sha256": "5f5813598fe6e06dfbba1f5a43046fcc033d00ed9df1967dfd63d8336455ca82",
   "native_reference_source_commit": "354be9f9ff71cc8f6f2bb89b21c92eeea12504c5",
   "native_reference_file_inventory": [
     {
-      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleTumor/native_report.json",
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleTumor/native_report.json",
       "sha256": "5f5813598fe6e06dfbba1f5a43046fcc033d00ed9df1967dfd63d8336455ca82"
     },
     {
-      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleTumor/native_request.json",
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleTumor/native_request.json",
       "sha256": "49112487b2886a7facb26bdcee62cf8b53234dc8541b11abb35df74f58acf784"
     },
     {
-      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleTumor/pilot_provenance.json",
-      "sha256": "24411891e9ea526cb2883143ed74c78e2fccb6987b58f5eee1b5bb1fec6a47b3"
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleTumor/pilot_provenance.json",
+      "sha256": "89d8c75cf83a27fbadfe2b9c56adb4a84de56db7269efc4781589f82e60da6d0"
     },
     {
       "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleTumor/native/-1/30-2A1f_Tumors.png",

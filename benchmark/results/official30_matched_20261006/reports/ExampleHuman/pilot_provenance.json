@@ -12,7 +12,7 @@
   "driver_sha256": "8b987409c66e29fdc1dc18e61bd31a07c631750cc9bb9224a6bfff37a8c9a3a9",
   "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
   "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
-  "source_commit": "bf90fda611527b388b49123dcbd776f103aa04d3",
+  "source_commit": "d8678dbd443d78e0c4e5d90f4c2e867af61af80b",
   "source_dirty": false,
   "native_job_count": 1,
   "candidate_worker_count": 1,
@@ -46,21 +46,21 @@
       "sha256": "607300fa55d9ae7a722b6e0c7e2e38cad8584a2b94c3a0a0ed486c94832254d1"
     }
   ],
-  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleHuman/native_report.json",
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleHuman/native_report.json",
   "native_reference_report_sha256": "8753426a8423efc29755a014e553e3548ec4a47109b2c15c7faee9a1e3e556bf",
   "native_reference_source_commit": "6fb8212c26dee2349425f4593e8c115d38a5c755",
   "native_reference_file_inventory": [
     {
-      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleHuman/native_report.json",
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleHuman/native_report.json",
       "sha256": "8753426a8423efc29755a014e553e3548ec4a47109b2c15c7faee9a1e3e556bf"
     },
     {
-      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleHuman/native_request.json",
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleHuman/native_request.json",
       "sha256": "01acf1391862474d5c572ebd7e592a575714b59e19522be7f1b400db22a7a398"
     },
     {
-      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleHuman/pilot_provenance.json",
-      "sha256": "907ef0d253a89a3ac99f701773eab159deaa79d4178e227a8a047b8d64ebbaa9"
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleHuman/pilot_provenance.json",
+      "sha256": "424d1963ec4e381c8c5a5fc120f9bdc7e31d9dd822ca6e70c6846d430d9a7f66"
     },
     {
       "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleHuman/native/-1/AS_09125_050116030001_D03f00d0_Overlay.png",

@@ -12,7 +12,7 @@
   "driver_sha256": "8b987409c66e29fdc1dc18e61bd31a07c631750cc9bb9224a6bfff37a8c9a3a9",
   "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
   "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
-  "source_commit": "bf90fda611527b388b49123dcbd776f103aa04d3",
+  "source_commit": "d8678dbd443d78e0c4e5d90f4c2e867af61af80b",
   "source_dirty": false,
   "native_job_count": 1,
   "candidate_worker_count": 1,
@@ -154,21 +154,21 @@
       "sha256": "f94235beb2e7992aa3f55fddb5baa3d81a549d3f26aa516d2650aaa4a3eb93a6"
     }
   ],
-  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleTrackObjects/native_report.json",
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleTrackObjects/native_report.json",
   "native_reference_report_sha256": "400967fc5fca054c6859d5a2409013d5646d8852a916871f97db5afae2c899be",
   "native_reference_source_commit": "354be9f9ff71cc8f6f2bb89b21c92eeea12504c5",
   "native_reference_file_inventory": [
     {
-      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleTrackObjects/native_report.json",
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleTrackObjects/native_report.json",
       "sha256": "400967fc5fca054c6859d5a2409013d5646d8852a916871f97db5afae2c899be"
     },
     {
-      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleTrackObjects/native_request.json",
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleTrackObjects/native_request.json",
       "sha256": "3f0013667a0387aa102902501c1bb63156d37c411879ee22f792f5932733cf50"
     },
     {
-      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleTrackObjects/pilot_provenance.json",
-      "sha256": "c6db6c4a5ec6c3d46d1c37640adb829bae182d38d1730fbb71ae030c4977b240"
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleTrackObjects/pilot_provenance.json",
+      "sha256": "fdd2d3c277919ce366471d37429f8a2da5f337220b9e96eb3ab8a07b46e86e35"
     },
     {
       "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleTrackObjects/native/-1/Sequence1/DrosophilaEmbryo-0000.png",

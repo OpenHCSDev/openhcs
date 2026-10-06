@@ -1,27 +1,27 @@
 {
-  "compile_artifact_id": "0aecb055-9b65-43ba-89eb-61525bc7e797",
-  "completed_at_epoch_seconds": 1791253324.0033977,
+  "compile_artifact_id": "0aee7e2a-0035-4ffc-8358-b4c1b8f7d2a8",
+  "completed_at_epoch_seconds": 1791272565.8479757,
   "endpoint_provenance": {
     "client_openhcs_file": "/var/tmp/openhcs-cp-compiled-contract-reuse-20261004/openhcs/__init__.py",
     "client_openhcs_version": "0.8.7",
     "client_python_executable": "/home/ts/code/projects/openhcs/.venv/bin/python",
     "endpoint_application_identifier": "openhcs",
-    "endpoint_create_time_epoch_seconds": 1791252911.33,
-    "endpoint_log_file_path": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1791252911427497655.log",
+    "endpoint_create_time_epoch_seconds": 1791272184.1,
+    "endpoint_log_file_path": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1791272184193110110.log",
     "endpoint_openhcs_version": "0.8.7",
-    "endpoint_pid": 2230587,
+    "endpoint_pid": 3992264,
     "endpoint_port": 7777
   },
-  "execution_id": "e01c2da0-6f7a-461e-a10f-09b03ff914e1",
-  "execution_plate_id": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleYeastColonies/source_workspace",
+  "execution_id": "bed03a2a-f7c3-491a-a7eb-59eab4d1f006",
+  "execution_plate_id": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleYeastColonies/source_workspace",
   "expected_axis_count": 1,
-  "global_config_source_sha256": "ce16183a0b3f19021809c2b0629c1f99ac327ebe00c8ea2c4c7cf4a2bf18e386",
-  "observation_export_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleYeastColonies/candidate_evidence/1/observation.pkl",
+  "global_config_source_sha256": "b5f1676625f05ec34afd127322967bb422264d2cf5e629d47e8707391a47fda4",
+  "observation_export_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleYeastColonies/candidate_evidence/1/observation.pkl",
   "observation_export_scope": "outcomes",
-  "observation_export_sha256": "9333e242653aa2b4b823d0616b4e4f317d37b1715bf98a59a5de68e9a12f284d",
+  "observation_export_sha256": "916b3abdc93c5fe802af938cd6c3b6ef2a9f27ec797c107802cadcd393f1d7a3",
   "observed_axis_count": 1,
   "output_roots": [
-    "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleYeastColonies/candidate/1/source_workspace_matched_pilot"
+    "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleYeastColonies/candidate/1/source_workspace_matched_pilot"
   ],
   "phase_timings": [
     {
@@ -29,7 +29,7 @@
       "phase": "SUBMIT_OPENHCS",
       "pipeline_name": "ExampleYeastColonies",
       "run_id": "ExampleYeastColonies-1",
-      "seconds": 0.09984358493238688,
+      "seconds": 0.09848845098167658,
       "tool": "OpenHCS"
     },
     {
@@ -37,7 +37,7 @@
       "phase": "WAIT_OPENHCS",
       "pipeline_name": "ExampleYeastColonies",
       "run_id": "ExampleYeastColonies-1",
-      "seconds": 0.27517680218443274,
+      "seconds": 0.28201160999014974,
       "tool": "OpenHCS"
     },
     {
@@ -45,7 +45,7 @@
       "phase": "SUBMIT_OPENHCS",
       "pipeline_name": "ExampleYeastColonies",
       "run_id": "ExampleYeastColonies-1",
-      "seconds": 0.010805824771523476,
+      "seconds": 0.010790267959237099,
       "tool": "OpenHCS"
     },
     {
@@ -53,7 +53,7 @@
       "phase": "WAIT_OPENHCS",
       "pipeline_name": "ExampleYeastColonies",
       "run_id": "ExampleYeastColonies-1",
-      "seconds": 1.8591020596213639,
+      "seconds": 1.8085781689733267,
       "tool": "OpenHCS"
     },
     {
@@ -61,7 +61,7 @@
       "phase": "SERVER_COMPILATION_JOB",
       "pipeline_name": "ExampleYeastColonies",
       "run_id": "ExampleYeastColonies-1",
-      "seconds": 0.2681267261505127,
+      "seconds": 0.28078365325927734,
       "tool": "OpenHCS"
     },
     {
@@ -69,7 +69,7 @@
       "phase": "SERVER_PIPELINE_JOB",
       "pipeline_name": "ExampleYeastColonies",
       "run_id": "ExampleYeastColonies-1",
-      "seconds": 1.8562653064727783,
+      "seconds": 1.7983465194702148,
       "tool": "OpenHCS"
     },
     {
@@ -77,7 +77,7 @@
       "phase": "COMPILE_OPENHCS",
       "pipeline_name": "ExampleYeastColonies",
       "run_id": "ExampleYeastColonies-1",
-      "seconds": 0.2568650245666504,
+      "seconds": 0.26973605155944824,
       "tool": "OpenHCS"
     },
     {
@@ -85,7 +85,7 @@
       "phase": "EXECUTE_OPENHCS",
       "pipeline_name": "ExampleYeastColonies",
       "run_id": "ExampleYeastColonies-1",
-      "seconds": 1.559190034866333,
+      "seconds": 1.4792382717132568,
       "tool": "OpenHCS"
     },
     {
@@ -93,15 +93,15 @@
       "phase": "VALIDATE_RUNTIME",
       "pipeline_name": "ExampleYeastColonies",
       "run_id": "ExampleYeastColonies-1",
-      "seconds": 4.8889778554439545e-06,
+      "seconds": 6.131362169981003e-06,
       "tool": "OpenHCS"
     }
   ],
   "pipeline_name": "ExampleYeastColonies",
-  "pipeline_source_sha256": "7b7ab6333b5057916b69d1356cd6a0f19b3cc06892f318a4d994f545ee1b6ba2",
+  "pipeline_source_sha256": "3243e48eba2101a203ead06272057ab8ee0ed9eef9ed50b6317e248dde1b1eeb",
   "plate_id": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleYeastColonies/images",
-  "results_summary_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleYeastColonies/candidate_evidence/1/zmq_results_summary.json",
-  "results_summary_sha256": "bbeff0a38dfd7f3e0b84b2c9082c545385774bfa21a5273f9bfacb7034b1a5bd",
+  "results_summary_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleYeastColonies/candidate_evidence/1/zmq_results_summary.json",
+  "results_summary_sha256": "19aeb37a58fc8be3cdebba205e3be0b824c97075b7a9bb99632a52479e6b3e72",
   "run_id": "ExampleYeastColonies-1",
   "schema_version": "openhcs.benchmark.measured-pipeline.v2",
   "selected_pipeline_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleYeastColonies/ExampleYeastColonies.cppipe",

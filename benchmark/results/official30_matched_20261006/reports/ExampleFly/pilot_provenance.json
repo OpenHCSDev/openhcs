@@ -12,7 +12,7 @@
   "driver_sha256": "8b987409c66e29fdc1dc18e61bd31a07c631750cc9bb9224a6bfff37a8c9a3a9",
   "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
   "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
-  "source_commit": "bf90fda611527b388b49123dcbd776f103aa04d3",
+  "source_commit": "d8678dbd443d78e0c4e5d90f4c2e867af61af80b",
   "source_dirty": false,
   "native_job_count": 1,
   "candidate_worker_count": 1,
@@ -82,21 +82,21 @@
       "sha256": "477e9bd9609514d82bdece1491d17d45c9bc96f3a4423560f348c0f67cf79f7b"
     }
   ],
-  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleFly/native_report.json",
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleFly/native_report.json",
   "native_reference_report_sha256": "e961adeee684cf2de350267f7884aa569e7d4fba233cac1cf603c147bfaa1dc7",
   "native_reference_source_commit": "ee0b125de9d5df66d85b038b74d9ce2d7acc1b3b",
   "native_reference_file_inventory": [
     {
-      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleFly/native_report.json",
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleFly/native_report.json",
       "sha256": "e961adeee684cf2de350267f7884aa569e7d4fba233cac1cf603c147bfaa1dc7"
     },
     {
-      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleFly/native_request.json",
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleFly/native_request.json",
       "sha256": "16618a927ecbe63d62b93766fbf68a2103d29f0efe5abe4a2aede4dfc0bf6dd4"
     },
     {
-      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleFly/pilot_provenance.json",
-      "sha256": "21c498961c747f48c2bcadb4cf517b72fb729c1d0e6ba91b407b3964a2f51f66"
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleFly/pilot_provenance.json",
+      "sha256": "63a52f78911ab5fc30a45d25d2e87d007dba529df69f5bf216698d5e38720fb3"
     },
     {
       "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleFly/native/-1/01_POS002_DRGB.tiff",

@@ -12,7 +12,7 @@
   "driver_sha256": "8b987409c66e29fdc1dc18e61bd31a07c631750cc9bb9224a6bfff37a8c9a3a9",
   "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
   "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
-  "source_commit": "bf90fda611527b388b49123dcbd776f103aa04d3",
+  "source_commit": "d8678dbd443d78e0c4e5d90f4c2e867af61af80b",
   "source_dirty": false,
   "native_job_count": 1,
   "candidate_worker_count": 1,
@@ -46,21 +46,21 @@
       "sha256": "0bcd92b613c40a21d9d4e909cef9b373b20d4b026da54710240916e0061fd83c"
     }
   ],
-  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleUntangleAndStraightenWorms/native_report.json",
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleUntangleAndStraightenWorms/native_report.json",
   "native_reference_report_sha256": "03fe6c7c658001768259672c4a9f58440ca2e86be946d4ca839ffe6f9612a520",
   "native_reference_source_commit": "354be9f9ff71cc8f6f2bb89b21c92eeea12504c5",
   "native_reference_file_inventory": [
     {
-      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleUntangleAndStraightenWorms/native_report.json",
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleUntangleAndStraightenWorms/native_report.json",
       "sha256": "03fe6c7c658001768259672c4a9f58440ca2e86be946d4ca839ffe6f9612a520"
     },
     {
-      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleUntangleAndStraightenWorms/native_request.json",
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleUntangleAndStraightenWorms/native_request.json",
       "sha256": "038de3d380b4c7f164e80719e0ac526efa1f63654e90a5f70cd0f2aab2dbf609"
     },
     {
-      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleUntangleAndStraightenWorms/pilot_provenance.json",
-      "sha256": "541d6b37db112e9ec44093bef9b982aff2cecfa72a7a32999a9c30b32e4c12f9"
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleUntangleAndStraightenWorms/pilot_provenance.json",
+      "sha256": "b096fc2d8fc6e0e17db8589d5c1c207f304d26b9a7d2ce084a39594425eba5a9"
     },
     {
       "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v8/cases/ExampleUntangleAndStraightenWorms/native/-1/StraightenedWorms.csv",

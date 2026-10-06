@@ -1,27 +1,27 @@
 {
-  "compile_artifact_id": "f96a8186-7980-4950-89ea-dd1822a94617",
-  "completed_at_epoch_seconds": 1791253854.3331172,
+  "compile_artifact_id": "254be1ee-4c42-4a1e-9087-20faaf0247e2",
+  "completed_at_epoch_seconds": 1791273093.5625908,
   "endpoint_provenance": {
     "client_openhcs_file": "/var/tmp/openhcs-cp-compiled-contract-reuse-20261004/openhcs/__init__.py",
     "client_openhcs_version": "0.8.7",
     "client_python_executable": "/home/ts/code/projects/openhcs/.venv/bin/python",
     "endpoint_application_identifier": "openhcs",
-    "endpoint_create_time_epoch_seconds": 1791252911.33,
-    "endpoint_log_file_path": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1791252911427497655.log",
+    "endpoint_create_time_epoch_seconds": 1791272184.1,
+    "endpoint_log_file_path": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1791272184193110110.log",
     "endpoint_openhcs_version": "0.8.7",
-    "endpoint_pid": 2230587,
+    "endpoint_pid": 3992264,
     "endpoint_port": 7777
   },
-  "execution_id": "7f61c450-4717-4b5d-a0c8-4b96cf5b6170",
-  "execution_plate_id": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleNeighbors/source_workspace",
+  "execution_id": "6f48916c-95c4-491c-b643-f50f015d0b82",
+  "execution_plate_id": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleNeighbors/source_workspace",
   "expected_axis_count": 1,
-  "global_config_source_sha256": "e2654ebd8a261b472a463eb1acd5ea7d6154346af60cc69fe5f5d8113285af3f",
-  "observation_export_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleNeighbors/candidate_evidence/0/observation.pkl",
+  "global_config_source_sha256": "89f71ad9946e327556995fb7bb665fa3240159547e1aea69982719731126b5d2",
+  "observation_export_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleNeighbors/candidate_evidence/0/observation.pkl",
   "observation_export_scope": "outcomes",
-  "observation_export_sha256": "5858554c8e206a4b9fbd7fff8eb4ea98e76d944b012cc4448e5718aebed834a9",
+  "observation_export_sha256": "2ef01dc9450dd3a2335c629f296cd65a9dd6f4a39fbd9a0ad98bb0c6df0cec0d",
   "observed_axis_count": 1,
   "output_roots": [
-    "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleNeighbors/candidate/0/source_workspace_matched_pilot"
+    "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleNeighbors/candidate/0/source_workspace_matched_pilot"
   ],
   "phase_timings": [
     {
@@ -29,7 +29,7 @@
       "phase": "SUBMIT_OPENHCS",
       "pipeline_name": "ExampleNeighbors",
       "run_id": "ExampleNeighbors-0",
-      "seconds": 0.06095017399638891,
+      "seconds": 0.06429147021844983,
       "tool": "OpenHCS"
     },
     {
@@ -37,7 +37,7 @@
       "phase": "WAIT_OPENHCS",
       "pipeline_name": "ExampleNeighbors",
       "run_id": "ExampleNeighbors-0",
-      "seconds": 0.15430960711091757,
+      "seconds": 0.17627651477232575,
       "tool": "OpenHCS"
     },
     {
@@ -45,7 +45,7 @@
       "phase": "SUBMIT_OPENHCS",
       "pipeline_name": "ExampleNeighbors",
       "run_id": "ExampleNeighbors-0",
-      "seconds": 0.010777204763144255,
+      "seconds": 0.010844951029866934,
       "tool": "OpenHCS"
     },
     {
@@ -53,7 +53,7 @@
       "phase": "WAIT_OPENHCS",
       "pipeline_name": "ExampleNeighbors",
       "run_id": "ExampleNeighbors-0",
-      "seconds": 1.0705952430143952,
+      "seconds": 1.1968179498799145,
       "tool": "OpenHCS"
     },
     {
@@ -61,7 +61,7 @@
       "phase": "SERVER_COMPILATION_JOB",
       "pipeline_name": "ExampleNeighbors",
       "run_id": "ExampleNeighbors-0",
-      "seconds": 0.15555143356323242,
+      "seconds": 0.16243529319763184,
       "tool": "OpenHCS"
     },
     {
@@ -69,7 +69,7 @@
       "phase": "SERVER_PIPELINE_JOB",
       "pipeline_name": "ExampleNeighbors",
       "run_id": "ExampleNeighbors-0",
-      "seconds": 1.0652377605438232,
+      "seconds": 1.1899142265319824,
       "tool": "OpenHCS"
     },
     {
@@ -77,7 +77,7 @@
       "phase": "COMPILE_OPENHCS",
       "pipeline_name": "ExampleNeighbors",
       "run_id": "ExampleNeighbors-0",
-      "seconds": 0.1444694995880127,
+      "seconds": 0.15252113342285156,
       "tool": "OpenHCS"
     },
     {
@@ -85,7 +85,7 @@
       "phase": "EXECUTE_OPENHCS",
       "pipeline_name": "ExampleNeighbors",
       "run_id": "ExampleNeighbors-0",
-      "seconds": 0.508859395980835,
+      "seconds": 0.6149389743804932,
       "tool": "OpenHCS"
     },
     {
@@ -93,15 +93,15 @@
       "phase": "VALIDATE_RUNTIME",
       "pipeline_name": "ExampleNeighbors",
       "run_id": "ExampleNeighbors-0",
-      "seconds": 5.891080945730209e-06,
+      "seconds": 5.820766091346741e-06,
       "tool": "OpenHCS"
     }
   ],
   "pipeline_name": "ExampleNeighbors",
-  "pipeline_source_sha256": "1766e86381675983fcd32010e836892569957000bd04b457d109fcd28cd547c7",
+  "pipeline_source_sha256": "fbbdc1a9e4c52b45caa09fb176e3c22d404437ebdde6631823179150875875ce",
   "plate_id": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleNeighbors/images",
-  "results_summary_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleNeighbors/candidate_evidence/0/zmq_results_summary.json",
-  "results_summary_sha256": "22678dd672bf4a00816ed54f8c927386aa750a2a74d5bdcac45de3fc77d06d8f",
+  "results_summary_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleNeighbors/candidate_evidence/0/zmq_results_summary.json",
+  "results_summary_sha256": "2025ffa8b520aa014c61eca9841a801d06e8bf325e6c0e2d4d78b9646421096f",
   "run_id": "ExampleNeighbors-0",
   "schema_version": "openhcs.benchmark.measured-pipeline.v2",
   "selected_pipeline_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleNeighbors/ExampleNeighbors.cppipe",

@@ -1,27 +1,27 @@
 {
-  "compile_artifact_id": "42cba803-a371-4bf6-bff7-a104b6dfb50d",
-  "completed_at_epoch_seconds": 1791253640.7394702,
+  "compile_artifact_id": "d0c1e40d-1ea1-45d5-b42d-c9216da47587",
+  "completed_at_epoch_seconds": 1791272879.9007428,
   "endpoint_provenance": {
     "client_openhcs_file": "/var/tmp/openhcs-cp-compiled-contract-reuse-20261004/openhcs/__init__.py",
     "client_openhcs_version": "0.8.7",
     "client_python_executable": "/home/ts/code/projects/openhcs/.venv/bin/python",
     "endpoint_application_identifier": "openhcs",
-    "endpoint_create_time_epoch_seconds": 1791252911.33,
-    "endpoint_log_file_path": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1791252911427497655.log",
+    "endpoint_create_time_epoch_seconds": 1791272184.1,
+    "endpoint_log_file_path": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1791272184193110110.log",
     "endpoint_openhcs_version": "0.8.7",
-    "endpoint_pid": 2230587,
+    "endpoint_pid": 3992264,
     "endpoint_port": 7777
   },
-  "execution_id": "467f35b5-44a9-40d3-9d0f-acee2e7ff4b9",
-  "execution_plate_id": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleImagingFlowCytometryObjectsInGrid/source_workspace",
+  "execution_id": "3c305bee-c4e4-49d9-b248-68e87ae16572",
+  "execution_plate_id": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleImagingFlowCytometryObjectsInGrid/source_workspace",
   "expected_axis_count": 1,
-  "global_config_source_sha256": "0c74235792a4871f4f9a4c33d381b140336998a23dbd3a574e1cf6fa9f2bc0d4",
-  "observation_export_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleImagingFlowCytometryObjectsInGrid/candidate_evidence/0/observation.pkl",
+  "global_config_source_sha256": "9fb7371e4930d6ec2bd8d8a45b135b43157fe76f1cfbcfb7df672af38a2692b5",
+  "observation_export_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleImagingFlowCytometryObjectsInGrid/candidate_evidence/0/observation.pkl",
   "observation_export_scope": "outcomes",
-  "observation_export_sha256": "0117b32aa2dabbeca137de2adbdf9370945b19f4e4aa12f1f6070648dd6a3791",
+  "observation_export_sha256": "02fba55a8e2a833b5216150d29f3853981d54186d702194482b3609f7f36d2a9",
   "observed_axis_count": 1,
   "output_roots": [
-    "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleImagingFlowCytometryObjectsInGrid/candidate/0/source_workspace_matched_pilot"
+    "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleImagingFlowCytometryObjectsInGrid/candidate/0/source_workspace_matched_pilot"
   ],
   "phase_timings": [
     {
@@ -29,7 +29,7 @@
       "phase": "SUBMIT_OPENHCS",
       "pipeline_name": "ExampleImagingFlowCytometryObjectsInGrid",
       "run_id": "ExampleImagingFlowCytometryObjectsInGrid-0",
-      "seconds": 0.12255290802568197,
+      "seconds": 0.12981224292889237,
       "tool": "OpenHCS"
     },
     {
@@ -37,7 +37,7 @@
       "phase": "WAIT_OPENHCS",
       "pipeline_name": "ExampleImagingFlowCytometryObjectsInGrid",
       "run_id": "ExampleImagingFlowCytometryObjectsInGrid-0",
-      "seconds": 0.42461386509239674,
+      "seconds": 0.4708267040550709,
       "tool": "OpenHCS"
     },
     {
@@ -45,7 +45,7 @@
       "phase": "SUBMIT_OPENHCS",
       "pipeline_name": "ExampleImagingFlowCytometryObjectsInGrid",
       "run_id": "ExampleImagingFlowCytometryObjectsInGrid-0",
-      "seconds": 0.01061526034027338,
+      "seconds": 0.010853677056729794,
       "tool": "OpenHCS"
     },
     {
@@ -53,7 +53,7 @@
       "phase": "WAIT_OPENHCS",
       "pipeline_name": "ExampleImagingFlowCytometryObjectsInGrid",
       "run_id": "ExampleImagingFlowCytometryObjectsInGrid-0",
-      "seconds": 11.05578352836892,
+      "seconds": 12.722687228117138,
       "tool": "OpenHCS"
     },
     {
@@ -61,7 +61,7 @@
       "phase": "SERVER_COMPILATION_JOB",
       "pipeline_name": "ExampleImagingFlowCytometryObjectsInGrid",
       "run_id": "ExampleImagingFlowCytometryObjectsInGrid-0",
-      "seconds": 0.41788291931152344,
+      "seconds": 0.470578670501709,
       "tool": "OpenHCS"
     },
     {
@@ -69,7 +69,7 @@
       "phase": "SERVER_PIPELINE_JOB",
       "pipeline_name": "ExampleImagingFlowCytometryObjectsInGrid",
       "run_id": "ExampleImagingFlowCytometryObjectsInGrid-0",
-      "seconds": 11.036563873291016,
+      "seconds": 12.721721172332764,
       "tool": "OpenHCS"
     },
     {
@@ -77,7 +77,7 @@
       "phase": "COMPILE_OPENHCS",
       "pipeline_name": "ExampleImagingFlowCytometryObjectsInGrid",
       "run_id": "ExampleImagingFlowCytometryObjectsInGrid-0",
-      "seconds": 0.40504884719848633,
+      "seconds": 0.4568593502044678,
       "tool": "OpenHCS"
     },
     {
@@ -85,7 +85,7 @@
       "phase": "EXECUTE_OPENHCS",
       "pipeline_name": "ExampleImagingFlowCytometryObjectsInGrid",
       "run_id": "ExampleImagingFlowCytometryObjectsInGrid-0",
-      "seconds": 9.537248134613037,
+      "seconds": 10.827643871307373,
       "tool": "OpenHCS"
     },
     {
@@ -93,15 +93,15 @@
       "phase": "VALIDATE_RUNTIME",
       "pipeline_name": "ExampleImagingFlowCytometryObjectsInGrid",
       "run_id": "ExampleImagingFlowCytometryObjectsInGrid-0",
-      "seconds": 5.681067705154419e-06,
+      "seconds": 5.720648914575577e-06,
       "tool": "OpenHCS"
     }
   ],
   "pipeline_name": "ExampleImagingFlowCytometryObjectsInGrid",
-  "pipeline_source_sha256": "a8a502ef42eb17d77425fbc1eebdcbdf143217b5b43a92898b8dab039ba8646c",
+  "pipeline_source_sha256": "268707e75a3b6c72475c92415ae7737cdab4201e136a5fdb10ca563a3d9baa3c",
   "plate_id": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleImagingFlowCytometryObjectsInGrid/images",
-  "results_summary_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleImagingFlowCytometryObjectsInGrid/candidate_evidence/0/zmq_results_summary.json",
-  "results_summary_sha256": "aea39f71ff57ebff2d086f58b7480ef5b9e30bc4ce497b3ea4f8920dace466e2",
+  "results_summary_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleImagingFlowCytometryObjectsInGrid/candidate_evidence/0/zmq_results_summary.json",
+  "results_summary_sha256": "46f692959bf083103160d28606d62bc59399cc8b8c36361be523e76c012de2b7",
   "run_id": "ExampleImagingFlowCytometryObjectsInGrid-0",
   "schema_version": "openhcs.benchmark.measured-pipeline.v2",
   "selected_pipeline_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleImagingFlowCytometryObjectsInGrid/ExampleImagingFlowCytometryObjectsInGrid.cppipe",

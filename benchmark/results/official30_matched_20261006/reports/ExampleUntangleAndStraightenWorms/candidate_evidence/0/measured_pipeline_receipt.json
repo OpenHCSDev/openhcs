@@ -1,27 +1,27 @@
 {
-  "compile_artifact_id": "a3fcdaec-bb55-4a7b-85c7-e7ae35226ef7",
-  "completed_at_epoch_seconds": 1791253935.280952,
+  "compile_artifact_id": "51a5db55-33ba-4c82-8067-f3c669915496",
+  "completed_at_epoch_seconds": 1791273174.4085774,
   "endpoint_provenance": {
     "client_openhcs_file": "/var/tmp/openhcs-cp-compiled-contract-reuse-20261004/openhcs/__init__.py",
     "client_openhcs_version": "0.8.7",
     "client_python_executable": "/home/ts/code/projects/openhcs/.venv/bin/python",
     "endpoint_application_identifier": "openhcs",
-    "endpoint_create_time_epoch_seconds": 1791252911.33,
-    "endpoint_log_file_path": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1791252911427497655.log",
+    "endpoint_create_time_epoch_seconds": 1791272184.1,
+    "endpoint_log_file_path": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1791272184193110110.log",
     "endpoint_openhcs_version": "0.8.7",
-    "endpoint_pid": 2230587,
+    "endpoint_pid": 3992264,
     "endpoint_port": 7777
   },
-  "execution_id": "ee772d52-4c32-42b5-9f9d-536426c2ae00",
-  "execution_plate_id": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleUntangleAndStraightenWorms/source_workspace",
+  "execution_id": "5d799512-e00c-4a9d-926e-cea113140206",
+  "execution_plate_id": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleUntangleAndStraightenWorms/source_workspace",
   "expected_axis_count": 1,
-  "global_config_source_sha256": "7283b08a0296b41087d8456d8770fcba60e464c559ed2ca588a39cdaab7a3c04",
-  "observation_export_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleUntangleAndStraightenWorms/candidate_evidence/0/observation.pkl",
+  "global_config_source_sha256": "d84b1a76e042441543d6dd5f79ac9eb4ef4335d91889ca6a5c925019a5051178",
+  "observation_export_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleUntangleAndStraightenWorms/candidate_evidence/0/observation.pkl",
   "observation_export_scope": "outcomes",
-  "observation_export_sha256": "a00964c50bdb60c81381b53127a496e9416d62da7a283df6c72ad2000e4cd31c",
+  "observation_export_sha256": "e49f014c2dd7fdf9fc2f20801f76cc7b0fe4ec1cd45b6a8535e6841a6c275c68",
   "observed_axis_count": 1,
   "output_roots": [
-    "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleUntangleAndStraightenWorms/candidate/0/source_workspace_matched_pilot"
+    "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleUntangleAndStraightenWorms/candidate/0/source_workspace_matched_pilot"
   ],
   "phase_timings": [
     {
@@ -29,7 +29,7 @@
       "phase": "SUBMIT_OPENHCS",
       "pipeline_name": "ExampleUntangleAndStraightenWorms",
       "run_id": "ExampleUntangleAndStraightenWorms-0",
-      "seconds": 0.07833033194765449,
+      "seconds": 0.07939729327335954,
       "tool": "OpenHCS"
     },
     {
@@ -37,7 +37,7 @@
       "phase": "WAIT_OPENHCS",
       "pipeline_name": "ExampleUntangleAndStraightenWorms",
       "run_id": "ExampleUntangleAndStraightenWorms-0",
-      "seconds": 0.2130606290884316,
+      "seconds": 0.2514092279598117,
       "tool": "OpenHCS"
     },
     {
@@ -45,7 +45,7 @@
       "phase": "SUBMIT_OPENHCS",
       "pipeline_name": "ExampleUntangleAndStraightenWorms",
       "run_id": "ExampleUntangleAndStraightenWorms-0",
-      "seconds": 0.01079827407374978,
+      "seconds": 0.01077394699677825,
       "tool": "OpenHCS"
     },
     {
@@ -53,7 +53,7 @@
       "phase": "WAIT_OPENHCS",
       "pipeline_name": "ExampleUntangleAndStraightenWorms",
       "run_id": "ExampleUntangleAndStraightenWorms-0",
-      "seconds": 0.5357280848547816,
+      "seconds": 0.5311056296341121,
       "tool": "OpenHCS"
     },
     {
@@ -61,7 +61,7 @@
       "phase": "SERVER_COMPILATION_JOB",
       "pipeline_name": "ExampleUntangleAndStraightenWorms",
       "run_id": "ExampleUntangleAndStraightenWorms-0",
-      "seconds": 0.20760321617126465,
+      "seconds": 0.24416804313659668,
       "tool": "OpenHCS"
     },
     {
@@ -69,7 +69,7 @@
       "phase": "SERVER_PIPELINE_JOB",
       "pipeline_name": "ExampleUntangleAndStraightenWorms",
       "run_id": "ExampleUntangleAndStraightenWorms-0",
-      "seconds": 0.5310020446777344,
+      "seconds": 0.5236694812774658,
       "tool": "OpenHCS"
     },
     {
@@ -77,7 +77,7 @@
       "phase": "COMPILE_OPENHCS",
       "pipeline_name": "ExampleUntangleAndStraightenWorms",
       "run_id": "ExampleUntangleAndStraightenWorms-0",
-      "seconds": 0.1946403980255127,
+      "seconds": 0.23148345947265625,
       "tool": "OpenHCS"
     },
     {
@@ -85,7 +85,7 @@
       "phase": "EXECUTE_OPENHCS",
       "pipeline_name": "ExampleUntangleAndStraightenWorms",
       "run_id": "ExampleUntangleAndStraightenWorms-0",
-      "seconds": 0.47942399978637695,
+      "seconds": 0.4599635601043701,
       "tool": "OpenHCS"
     },
     {
@@ -93,15 +93,15 @@
       "phase": "VALIDATE_RUNTIME",
       "pipeline_name": "ExampleUntangleAndStraightenWorms",
       "run_id": "ExampleUntangleAndStraightenWorms-0",
-      "seconds": 4.899222403764725e-06,
+      "seconds": 5.689915269613266e-06,
       "tool": "OpenHCS"
     }
   ],
   "pipeline_name": "ExampleUntangleAndStraightenWorms",
-  "pipeline_source_sha256": "9a1aec75f3d871e2097049854836628cb3dc1ec84ef380a406400b98b36d9efd",
+  "pipeline_source_sha256": "13c684c860fabee9d96c82982c5843740dfe200f67552c8e7c7d6f6a14be1d5b",
   "plate_id": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleStraightenWorms/images",
-  "results_summary_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleUntangleAndStraightenWorms/candidate_evidence/0/zmq_results_summary.json",
-  "results_summary_sha256": "334101b1174da5bee375183ae2163af482cdf3340452c9d3fd0331badf8b482d",
+  "results_summary_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleUntangleAndStraightenWorms/candidate_evidence/0/zmq_results_summary.json",
+  "results_summary_sha256": "e46e42afc6dd6bdfeff8c6bba9e72293c0c9c9bad1318f21b5a271ac03915e6f",
   "run_id": "ExampleUntangleAndStraightenWorms-0",
   "schema_version": "openhcs.benchmark.measured-pipeline.v2",
   "selected_pipeline_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleStraightenWorms/ExampleUntangleAndStraightenWorms.cppipe",

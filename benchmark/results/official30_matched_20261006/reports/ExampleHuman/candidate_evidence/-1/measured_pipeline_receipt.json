@@ -1,27 +1,27 @@
 {
-  "compile_artifact_id": "90d8abe5-b6cd-4423-8cc8-d0086e90ac4e",
-  "completed_at_epoch_seconds": 1791253484.938497,
+  "compile_artifact_id": "c925ee62-b9d6-4b10-b7b8-d9cdcce45082",
+  "completed_at_epoch_seconds": 1791272725.593393,
   "endpoint_provenance": {
     "client_openhcs_file": "/var/tmp/openhcs-cp-compiled-contract-reuse-20261004/openhcs/__init__.py",
     "client_openhcs_version": "0.8.7",
     "client_python_executable": "/home/ts/code/projects/openhcs/.venv/bin/python",
     "endpoint_application_identifier": "openhcs",
-    "endpoint_create_time_epoch_seconds": 1791252911.33,
-    "endpoint_log_file_path": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1791252911427497655.log",
+    "endpoint_create_time_epoch_seconds": 1791272184.1,
+    "endpoint_log_file_path": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1791272184193110110.log",
     "endpoint_openhcs_version": "0.8.7",
-    "endpoint_pid": 2230587,
+    "endpoint_pid": 3992264,
     "endpoint_port": 7777
   },
-  "execution_id": "536bc95e-b0ed-4082-a03e-22a7cda01931",
-  "execution_plate_id": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleHuman/source_workspace",
+  "execution_id": "2f2681c4-fbc7-49af-9ac0-2c4117e24771",
+  "execution_plate_id": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleHuman/source_workspace",
   "expected_axis_count": 1,
-  "global_config_source_sha256": "2e2e250f3c061b103d3c77b7d8be8a9f148fc4fd5bac285617399410d748a40a",
-  "observation_export_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleHuman/candidate_evidence/-1/observation.pkl",
+  "global_config_source_sha256": "0066c2f299d1eb885d1597e2770858e55b7c70936043695bdce44ae89dff0359",
+  "observation_export_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleHuman/candidate_evidence/-1/observation.pkl",
   "observation_export_scope": "outcomes",
-  "observation_export_sha256": "5de51222a9def0e5c87082b7de780e2e60d4068f65a523c45aab5dd56ec9bf75",
+  "observation_export_sha256": "9ae468673e360a2a97ddfd40b4b731159ce6d5cd259403a0a8211566993bd812",
   "observed_axis_count": 1,
   "output_roots": [
-    "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleHuman/candidate/-1/source_workspace_matched_pilot"
+    "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleHuman/candidate/-1/source_workspace_matched_pilot"
   ],
   "phase_timings": [
     {
@@ -29,7 +29,7 @@
       "phase": "SUBMIT_OPENHCS",
       "pipeline_name": "ExampleHuman",
       "run_id": "ExampleHuman--1",
-      "seconds": 0.06369111593812704,
+      "seconds": 0.062052953988313675,
       "tool": "OpenHCS"
     },
     {
@@ -37,7 +37,7 @@
       "phase": "WAIT_OPENHCS",
       "pipeline_name": "ExampleHuman",
       "run_id": "ExampleHuman--1",
-      "seconds": 0.18584061600267887,
+      "seconds": 0.21344308787956834,
       "tool": "OpenHCS"
     },
     {
@@ -45,7 +45,7 @@
       "phase": "SUBMIT_OPENHCS",
       "pipeline_name": "ExampleHuman",
       "run_id": "ExampleHuman--1",
-      "seconds": 0.010801059193909168,
+      "seconds": 0.010929288808256388,
       "tool": "OpenHCS"
     },
     {
@@ -53,7 +53,7 @@
       "phase": "WAIT_OPENHCS",
       "pipeline_name": "ExampleHuman",
       "run_id": "ExampleHuman--1",
-      "seconds": 0.7810614011250436,
+      "seconds": 0.7551739518530667,
       "tool": "OpenHCS"
     },
     {
@@ -61,7 +61,7 @@
       "phase": "SERVER_COMPILATION_JOB",
       "pipeline_name": "ExampleHuman",
       "run_id": "ExampleHuman--1",
-      "seconds": 0.1830613613128662,
+      "seconds": 0.20614385604858398,
       "tool": "OpenHCS"
     },
     {
@@ -69,7 +69,7 @@
       "phase": "SERVER_PIPELINE_JOB",
       "pipeline_name": "ExampleHuman",
       "run_id": "ExampleHuman--1",
-      "seconds": 0.7738769054412842,
+      "seconds": 0.7536153793334961,
       "tool": "OpenHCS"
     },
     {
@@ -77,7 +77,7 @@
       "phase": "COMPILE_OPENHCS",
       "pipeline_name": "ExampleHuman",
       "run_id": "ExampleHuman--1",
-      "seconds": 0.1730949878692627,
+      "seconds": 0.19616413116455078,
       "tool": "OpenHCS"
     },
     {
@@ -85,7 +85,7 @@
       "phase": "EXECUTE_OPENHCS",
       "pipeline_name": "ExampleHuman",
       "run_id": "ExampleHuman--1",
-      "seconds": 0.6100356578826904,
+      "seconds": 0.5766425132751465,
       "tool": "OpenHCS"
     },
     {
@@ -93,15 +93,15 @@
       "phase": "VALIDATE_RUNTIME",
       "pipeline_name": "ExampleHuman",
       "run_id": "ExampleHuman--1",
-      "seconds": 6.010755896568298e-06,
+      "seconds": 6.042420864105225e-06,
       "tool": "OpenHCS"
     }
   ],
   "pipeline_name": "ExampleHuman",
-  "pipeline_source_sha256": "3b2d4aaa60a97766ead143d2d10feebe6d7c14a56366a68c034c7121da2aded2",
+  "pipeline_source_sha256": "fb2e565980705a39924ced3b3608a9c07261fd664fabd22bd388be6ca34d8aa0",
   "plate_id": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleHuman/images",
-  "results_summary_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleHuman/candidate_evidence/-1/zmq_results_summary.json",
-  "results_summary_sha256": "7eac8231b87d9129572c0616ef689ac1138bdda1b4fc93e6369e53f74562d7a2",
+  "results_summary_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleHuman/candidate_evidence/-1/zmq_results_summary.json",
+  "results_summary_sha256": "b6c0463445556d73b1ea949432b224b592daee8f5de78609efe031c9e86a65bb",
   "run_id": "ExampleHuman--1",
   "schema_version": "openhcs.benchmark.measured-pipeline.v2",
   "selected_pipeline_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleHuman/ExampleHuman.cppipe",

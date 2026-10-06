@@ -1,27 +1,27 @@
 {
-  "compile_artifact_id": "729fa441-8976-40e3-b66a-3c83a59a1f48",
-  "completed_at_epoch_seconds": 1791253359.031707,
+  "compile_artifact_id": "47fb0592-9b33-4d95-893b-f8a1f0f65e7b",
+  "completed_at_epoch_seconds": 1791272599.613992,
   "endpoint_provenance": {
     "client_openhcs_file": "/var/tmp/openhcs-cp-compiled-contract-reuse-20261004/openhcs/__init__.py",
     "client_openhcs_version": "0.8.7",
     "client_python_executable": "/home/ts/code/projects/openhcs/.venv/bin/python",
     "endpoint_application_identifier": "openhcs",
-    "endpoint_create_time_epoch_seconds": 1791252911.33,
-    "endpoint_log_file_path": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1791252911427497655.log",
+    "endpoint_create_time_epoch_seconds": 1791272184.1,
+    "endpoint_log_file_path": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1791272184193110110.log",
     "endpoint_openhcs_version": "0.8.7",
-    "endpoint_pid": 2230587,
+    "endpoint_pid": 3992264,
     "endpoint_port": 7777
   },
-  "execution_id": "bb19b989-ba94-4d04-a7e8-dd84115c6dfb",
-  "execution_plate_id": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleWoundHealing/source_workspace",
+  "execution_id": "4bdb11d9-764a-427f-bef9-5f55ce66c9ab",
+  "execution_plate_id": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleWoundHealing/source_workspace",
   "expected_axis_count": 1,
-  "global_config_source_sha256": "392446685db052d2edb8dfd1d552d43e918a81bbfb2a707c0516772e8eb4f6c4",
-  "observation_export_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleWoundHealing/candidate_evidence/1/observation.pkl",
+  "global_config_source_sha256": "22d586025043dd98a9872e214344a1ed7313101b245c752d489fbd9ce3b6c740",
+  "observation_export_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleWoundHealing/candidate_evidence/1/observation.pkl",
   "observation_export_scope": "outcomes",
-  "observation_export_sha256": "1c2aafb01d715ecc623515592f5b30e456d7046fc6da20fc6fd8556206cea217",
+  "observation_export_sha256": "3e67e5b61238fd49f26db8f7daef606b25f45041cf995a5d3fc2f2f2e980962d",
   "observed_axis_count": 1,
   "output_roots": [
-    "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleWoundHealing/candidate/1/source_workspace_matched_pilot"
+    "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleWoundHealing/candidate/1/source_workspace_matched_pilot"
   ],
   "phase_timings": [
     {
@@ -29,7 +29,7 @@
       "phase": "SUBMIT_OPENHCS",
       "pipeline_name": "ExampleWoundHealing",
       "run_id": "ExampleWoundHealing-1",
-      "seconds": 0.03624149598181248,
+      "seconds": 0.035601576790213585,
       "tool": "OpenHCS"
     },
     {
@@ -37,7 +37,7 @@
       "phase": "WAIT_OPENHCS",
       "pipeline_name": "ExampleWoundHealing",
       "run_id": "ExampleWoundHealing-1",
-      "seconds": 0.09486181568354368,
+      "seconds": 0.10535795614123344,
       "tool": "OpenHCS"
     },
     {
@@ -45,7 +45,7 @@
       "phase": "SUBMIT_OPENHCS",
       "pipeline_name": "ExampleWoundHealing",
       "run_id": "ExampleWoundHealing-1",
-      "seconds": 0.01080767810344696,
+      "seconds": 0.010734411887824535,
       "tool": "OpenHCS"
     },
     {
@@ -53,7 +53,7 @@
       "phase": "WAIT_OPENHCS",
       "pipeline_name": "ExampleWoundHealing",
       "run_id": "ExampleWoundHealing-1",
-      "seconds": 1.3212262797169387,
+      "seconds": 0.7600083937868476,
       "tool": "OpenHCS"
     },
     {
@@ -61,7 +61,7 @@
       "phase": "SERVER_COMPILATION_JOB",
       "pipeline_name": "ExampleWoundHealing",
       "run_id": "ExampleWoundHealing-1",
-      "seconds": 0.08432817459106445,
+      "seconds": 0.09581613540649414,
       "tool": "OpenHCS"
     },
     {
@@ -69,7 +69,7 @@
       "phase": "SERVER_PIPELINE_JOB",
       "pipeline_name": "ExampleWoundHealing",
       "run_id": "ExampleWoundHealing-1",
-      "seconds": 1.319309949874878,
+      "seconds": 0.7554545402526855,
       "tool": "OpenHCS"
     },
     {
@@ -77,7 +77,7 @@
       "phase": "COMPILE_OPENHCS",
       "pipeline_name": "ExampleWoundHealing",
       "run_id": "ExampleWoundHealing-1",
-      "seconds": 0.07654500007629395,
+      "seconds": 0.08803296089172363,
       "tool": "OpenHCS"
     },
     {
@@ -85,7 +85,7 @@
       "phase": "EXECUTE_OPENHCS",
       "pipeline_name": "ExampleWoundHealing",
       "run_id": "ExampleWoundHealing-1",
-      "seconds": 1.2884790897369385,
+      "seconds": 0.7183947563171387,
       "tool": "OpenHCS"
     },
     {
@@ -93,15 +93,15 @@
       "phase": "VALIDATE_RUNTIME",
       "pipeline_name": "ExampleWoundHealing",
       "run_id": "ExampleWoundHealing-1",
-      "seconds": 5.1800161600112915e-06,
+      "seconds": 5.349982529878616e-06,
       "tool": "OpenHCS"
     }
   ],
   "pipeline_name": "ExampleWoundHealing",
-  "pipeline_source_sha256": "a006584dab1b032f27160927d7b85fd9e17e5e2bac96da03bce4cea164648087",
+  "pipeline_source_sha256": "e368d7bcfc2dd92add20748eb312e80069796f8d6b7356abf83e78aba4b6895c",
   "plate_id": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleWoundHealing/images",
-  "results_summary_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleWoundHealing/candidate_evidence/1/zmq_results_summary.json",
-  "results_summary_sha256": "df3a9dc52906518f26a8c804804d75cdb8ee91b859e243f32e259a9513513ea2",
+  "results_summary_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleWoundHealing/candidate_evidence/1/zmq_results_summary.json",
+  "results_summary_sha256": "31524a6669c9c65f0da1f35ec27fd5aaf768a751c843f636b0bb6bc2a4507234",
   "run_id": "ExampleWoundHealing-1",
   "schema_version": "openhcs.benchmark.measured-pipeline.v2",
   "selected_pipeline_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleWoundHealing/ExampleWoundHealing.cppipe",

@@ -1,27 +1,27 @@
 {
-  "compile_artifact_id": "3042f07d-ad32-4273-8561-ca4ab96c1940",
-  "completed_at_epoch_seconds": 1791253267.9055037,
+  "compile_artifact_id": "02043da4-59c3-4f08-b1fe-418577bcf769",
+  "completed_at_epoch_seconds": 1791272510.314846,
   "endpoint_provenance": {
     "client_openhcs_file": "/var/tmp/openhcs-cp-compiled-contract-reuse-20261004/openhcs/__init__.py",
     "client_openhcs_version": "0.8.7",
     "client_python_executable": "/home/ts/code/projects/openhcs/.venv/bin/python",
     "endpoint_application_identifier": "openhcs",
-    "endpoint_create_time_epoch_seconds": 1791252911.33,
-    "endpoint_log_file_path": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1791252911427497655.log",
+    "endpoint_create_time_epoch_seconds": 1791272184.1,
+    "endpoint_log_file_path": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1791272184193110110.log",
     "endpoint_openhcs_version": "0.8.7",
-    "endpoint_pid": 2230587,
+    "endpoint_pid": 3992264,
     "endpoint_port": 7777
   },
-  "execution_id": "0c0d53aa-5c87-4555-bd5b-9e4438ea2e07",
-  "execution_plate_id": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/cp_tutorial_translocation_start/source_workspace",
+  "execution_id": "8ddefb0a-db04-4fe5-96f0-b1f11a7c205d",
+  "execution_plate_id": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/cp_tutorial_translocation_start/source_workspace",
   "expected_axis_count": 1,
-  "global_config_source_sha256": "435d2612a3a8142df8bd788535d9cb0a370714ac7d53363858e40cb3698aa96f",
-  "observation_export_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/cp_tutorial_translocation_start/candidate_evidence/1/observation.pkl",
+  "global_config_source_sha256": "33c65b93196948fac3fa88a9040e871bdd1fc5c033428b97aa66346540ccf69d",
+  "observation_export_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/cp_tutorial_translocation_start/candidate_evidence/1/observation.pkl",
   "observation_export_scope": "outcomes",
-  "observation_export_sha256": "b0243e0aba168a0f4708d3176b0d20cca203188f25ed43eb1106ef7770855872",
+  "observation_export_sha256": "f6262807086eb82f7474302d0f39c8907ddb72a8e7bcd6efb299cbb5ec79270f",
   "observed_axis_count": 1,
   "output_roots": [
-    "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/cp_tutorial_translocation_start/candidate/1/source_workspace_matched_pilot"
+    "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/cp_tutorial_translocation_start/candidate/1/source_workspace_matched_pilot"
   ],
   "phase_timings": [
     {
@@ -29,7 +29,7 @@
       "phase": "SUBMIT_OPENHCS",
       "pipeline_name": "cp_tutorial_translocation_start",
       "run_id": "cp_tutorial_translocation_start-1",
-      "seconds": 0.03177146892994642,
+      "seconds": 0.03213127190247178,
       "tool": "OpenHCS"
     },
     {
@@ -37,7 +37,7 @@
       "phase": "WAIT_OPENHCS",
       "pipeline_name": "cp_tutorial_translocation_start",
       "run_id": "cp_tutorial_translocation_start-1",
-      "seconds": 0.08508507814258337,
+      "seconds": 0.08840055484324694,
       "tool": "OpenHCS"
     },
     {
@@ -45,7 +45,7 @@
       "phase": "SUBMIT_OPENHCS",
       "pipeline_name": "cp_tutorial_translocation_start",
       "run_id": "cp_tutorial_translocation_start-1",
-      "seconds": 0.010778823867440224,
+      "seconds": 0.010766082908958197,
       "tool": "OpenHCS"
     },
     {
@@ -53,7 +53,7 @@
       "phase": "WAIT_OPENHCS",
       "pipeline_name": "cp_tutorial_translocation_start",
       "run_id": "cp_tutorial_translocation_start-1",
-      "seconds": 0.18063280498608947,
+      "seconds": 0.16884723398834467,
       "tool": "OpenHCS"
     },
     {
@@ -61,7 +61,7 @@
       "phase": "SERVER_COMPILATION_JOB",
       "pipeline_name": "cp_tutorial_translocation_start",
       "run_id": "cp_tutorial_translocation_start-1",
-      "seconds": 0.07659435272216797,
+      "seconds": 0.08591341972351074,
       "tool": "OpenHCS"
     },
     {
@@ -69,7 +69,7 @@
       "phase": "SERVER_PIPELINE_JOB",
       "pipeline_name": "cp_tutorial_translocation_start",
       "run_id": "cp_tutorial_translocation_start-1",
-      "seconds": 0.17033672332763672,
+      "seconds": 0.16164541244506836,
       "tool": "OpenHCS"
     },
     {
@@ -77,7 +77,7 @@
       "phase": "COMPILE_OPENHCS",
       "pipeline_name": "cp_tutorial_translocation_start",
       "run_id": "cp_tutorial_translocation_start-1",
-      "seconds": 0.06890106201171875,
+      "seconds": 0.07830262184143066,
       "tool": "OpenHCS"
     },
     {
@@ -85,7 +85,7 @@
       "phase": "EXECUTE_OPENHCS",
       "pipeline_name": "cp_tutorial_translocation_start",
       "run_id": "cp_tutorial_translocation_start-1",
-      "seconds": 0.13982367515563965,
+      "seconds": 0.12865376472473145,
       "tool": "OpenHCS"
     },
     {
@@ -93,15 +93,15 @@
       "phase": "VALIDATE_RUNTIME",
       "pipeline_name": "cp_tutorial_translocation_start",
       "run_id": "cp_tutorial_translocation_start-1",
-      "seconds": 4.879198968410492e-06,
+      "seconds": 5.119945853948593e-06,
       "tool": "OpenHCS"
     }
   ],
   "pipeline_name": "cp_tutorial_translocation_start",
-  "pipeline_source_sha256": "cafb6b50536fa16bfc0623996d0bced81f3ac7a2d89e95c1a5577b6120bd5d79",
+  "pipeline_source_sha256": "c1fb7595570882604d3552b95a0e8574eb4e976d722283bb272016f92b79188c",
   "plate_id": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/Translocation/TranslocationData",
-  "results_summary_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/cp_tutorial_translocation_start/candidate_evidence/1/zmq_results_summary.json",
-  "results_summary_sha256": "b9765b7803585730cf5cb45c61be0ff6dbce8f3a7e3eac9e94d1a09f755066f7",
+  "results_summary_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/cp_tutorial_translocation_start/candidate_evidence/1/zmq_results_summary.json",
+  "results_summary_sha256": "03faa9706053bf6497da56c7a96fda2abad95074a83a77cb3ba40a3a256a0bdb",
   "run_id": "cp_tutorial_translocation_start-1",
   "schema_version": "openhcs.benchmark.measured-pipeline.v2",
   "selected_pipeline_path": "/home/ts/code/projects/openhcs/benchmark/reference_exports/official30_value_completion_20260914/cp_tutorial_translocation_start.cppipe",

@@ -1,27 +1,27 @@
 {
-  "compile_artifact_id": "3263a72e-f116-4230-bf5c-001b066e56c1",
-  "completed_at_epoch_seconds": 1791253102.587853,
+  "compile_artifact_id": "74c9eec7-6515-4779-b16d-b85666aacdbd",
+  "completed_at_epoch_seconds": 1791272344.5382528,
   "endpoint_provenance": {
     "client_openhcs_file": "/var/tmp/openhcs-cp-compiled-contract-reuse-20261004/openhcs/__init__.py",
     "client_openhcs_version": "0.8.7",
     "client_python_executable": "/home/ts/code/projects/openhcs/.venv/bin/python",
     "endpoint_application_identifier": "openhcs",
-    "endpoint_create_time_epoch_seconds": 1791252911.33,
-    "endpoint_log_file_path": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1791252911427497655.log",
+    "endpoint_create_time_epoch_seconds": 1791272184.1,
+    "endpoint_log_file_path": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1791272184193110110.log",
     "endpoint_openhcs_version": "0.8.7",
-    "endpoint_pid": 2230587,
+    "endpoint_pid": 3992264,
     "endpoint_port": 7777
   },
-  "execution_id": "618bd2a9-2e15-49ae-9197-9a0e00bddefe",
-  "execution_plate_id": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/cp_tutorial_quality_control/source_workspace",
+  "execution_id": "86fda3a1-ca1e-4071-9263-388e983594c4",
+  "execution_plate_id": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/cp_tutorial_quality_control/source_workspace",
   "expected_axis_count": 1,
-  "global_config_source_sha256": "bf9184a3687ab9e26c836aa6e2c9b953b8a2f9525077443d1712c8df822e2918",
-  "observation_export_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/cp_tutorial_quality_control/candidate_evidence/2/observation.pkl",
+  "global_config_source_sha256": "1195e842b86b7626c954ab1946a29941d3907be1107b1881805a489906ddb03d",
+  "observation_export_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/cp_tutorial_quality_control/candidate_evidence/2/observation.pkl",
   "observation_export_scope": "outcomes",
-  "observation_export_sha256": "f3382309c27ad1ef1ce4b0d1b3f6ea872d0b11a7b7ff6e7a58d29d87aba823eb",
+  "observation_export_sha256": "5f126a90df51b8b4c0172a59f53dd5f6b2ec7144e87630f983ca6cda58c582e1",
   "observed_axis_count": 1,
   "output_roots": [
-    "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/cp_tutorial_quality_control/candidate/2/source_workspace_matched_pilot"
+    "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/cp_tutorial_quality_control/candidate/2/source_workspace_matched_pilot"
   ],
   "phase_timings": [
     {
@@ -29,7 +29,7 @@
       "phase": "SUBMIT_OPENHCS",
       "pipeline_name": "cp_tutorial_quality_control",
       "run_id": "cp_tutorial_quality_control-2",
-      "seconds": 0.05585913127288222,
+      "seconds": 0.055499312933534384,
       "tool": "OpenHCS"
     },
     {
@@ -37,7 +37,7 @@
       "phase": "WAIT_OPENHCS",
       "pipeline_name": "cp_tutorial_quality_control",
       "run_id": "cp_tutorial_quality_control-2",
-      "seconds": 0.3231482720002532,
+      "seconds": 0.4155179769732058,
       "tool": "OpenHCS"
     },
     {
@@ -45,7 +45,7 @@
       "phase": "SUBMIT_OPENHCS",
       "pipeline_name": "cp_tutorial_quality_control",
       "run_id": "cp_tutorial_quality_control-2",
-      "seconds": 0.0108001041226089,
+      "seconds": 0.010701670777052641,
       "tool": "OpenHCS"
     },
     {
@@ -53,7 +53,7 @@
       "phase": "WAIT_OPENHCS",
       "pipeline_name": "cp_tutorial_quality_control",
       "run_id": "cp_tutorial_quality_control-2",
-      "seconds": 1.039302142802626,
+      "seconds": 0.7198174530640244,
       "tool": "OpenHCS"
     },
     {
@@ -61,7 +61,7 @@
       "phase": "SERVER_COMPILATION_JOB",
       "pipeline_name": "cp_tutorial_quality_control",
       "run_id": "cp_tutorial_quality_control-2",
-      "seconds": 0.31888532638549805,
+      "seconds": 0.405444860458374,
       "tool": "OpenHCS"
     },
     {
@@ -69,7 +69,7 @@
       "phase": "SERVER_PIPELINE_JOB",
       "pipeline_name": "cp_tutorial_quality_control",
       "run_id": "cp_tutorial_quality_control-2",
-      "seconds": 1.0382630825042725,
+      "seconds": 0.718494176864624,
       "tool": "OpenHCS"
     },
     {
@@ -77,7 +77,7 @@
       "phase": "COMPILE_OPENHCS",
       "pipeline_name": "cp_tutorial_quality_control",
       "run_id": "cp_tutorial_quality_control-2",
-      "seconds": 0.30964183807373047,
+      "seconds": 0.39621829986572266,
       "tool": "OpenHCS"
     },
     {
@@ -85,7 +85,7 @@
       "phase": "EXECUTE_OPENHCS",
       "pipeline_name": "cp_tutorial_quality_control",
       "run_id": "cp_tutorial_quality_control-2",
-      "seconds": 0.877147912979126,
+      "seconds": 0.6069865226745605,
       "tool": "OpenHCS"
     },
     {
@@ -93,15 +93,15 @@
       "phase": "VALIDATE_RUNTIME",
       "pipeline_name": "cp_tutorial_quality_control",
       "run_id": "cp_tutorial_quality_control-2",
-      "seconds": 5.2996911108493805e-06,
+      "seconds": 5.739741027355194e-06,
       "tool": "OpenHCS"
     }
   ],
   "pipeline_name": "cp_tutorial_quality_control",
-  "pipeline_source_sha256": "265a7cb604a7df49cef0e288af12d737d36e5fa609e4676e57facbde4329b894",
+  "pipeline_source_sha256": "94b43a12e13ff922fd3931314dfa17eec43141a11c4233e45c0c7b7b98b79ec9",
   "plate_id": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/QualityControl/BBBC022_20585_AE",
-  "results_summary_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/cp_tutorial_quality_control/candidate_evidence/2/zmq_results_summary.json",
-  "results_summary_sha256": "d8d93a13773eb51af4a399aab87c42ac89b1829d24651ce3f7719e9318a7a6ec",
+  "results_summary_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/cp_tutorial_quality_control/candidate_evidence/2/zmq_results_summary.json",
+  "results_summary_sha256": "0d77144d0ea2135d5096da22cc4949b5e8ee156ac4e092ef1c3f23268ca5b3fd",
   "run_id": "cp_tutorial_quality_control-2",
   "schema_version": "openhcs.benchmark.measured-pipeline.v2",
   "selected_pipeline_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/QualityControl/BBBC022_QC.cppipe",

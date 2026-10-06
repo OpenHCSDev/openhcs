@@ -1,27 +1,27 @@
 {
-  "compile_artifact_id": "25550f25-df94-4501-986e-342610fe351f",
-  "completed_at_epoch_seconds": 1791253440.2643504,
+  "compile_artifact_id": "7e44e46c-82b4-41bd-b775-79bd5df34d69",
+  "completed_at_epoch_seconds": 1791272680.2486024,
   "endpoint_provenance": {
     "client_openhcs_file": "/var/tmp/openhcs-cp-compiled-contract-reuse-20261004/openhcs/__init__.py",
     "client_openhcs_version": "0.8.7",
     "client_python_executable": "/home/ts/code/projects/openhcs/.venv/bin/python",
     "endpoint_application_identifier": "openhcs",
-    "endpoint_create_time_epoch_seconds": 1791252911.33,
-    "endpoint_log_file_path": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1791252911427497655.log",
+    "endpoint_create_time_epoch_seconds": 1791272184.1,
+    "endpoint_log_file_path": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1791272184193110110.log",
     "endpoint_openhcs_version": "0.8.7",
-    "endpoint_pid": 2230587,
+    "endpoint_pid": 3992264,
     "endpoint_port": 7777
   },
-  "execution_id": "5d4cbd1b-5626-47cd-a248-29465942c035",
-  "execution_plate_id": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleColocalization/source_workspace",
+  "execution_id": "b8ec12c3-5110-4489-81b4-190ed91daa0e",
+  "execution_plate_id": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleColocalization/source_workspace",
   "expected_axis_count": 1,
-  "global_config_source_sha256": "a8e1c7da74a46b83d0f6a4520eb5cb401c048717cb1f125eae66e30a4c3c3989",
-  "observation_export_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleColocalization/candidate_evidence/1/observation.pkl",
+  "global_config_source_sha256": "b7fe45a87f248f14a4dfdce067387e31ae3c2997229cf6abc09153455a86240f",
+  "observation_export_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleColocalization/candidate_evidence/1/observation.pkl",
   "observation_export_scope": "outcomes",
-  "observation_export_sha256": "c99b0ed22a38e36272e49789aa7e16f0b0b562fdcb60a0bf89b0e1d9effba8c9",
+  "observation_export_sha256": "713e677724ec8f13c5f2e1016aaa9d561fe4e161ec8a6a09539a6b8e8ac73c4b",
   "observed_axis_count": 1,
   "output_roots": [
-    "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleColocalization/candidate/1/source_workspace_matched_pilot"
+    "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleColocalization/candidate/1/source_workspace_matched_pilot"
   ],
   "phase_timings": [
     {
@@ -29,7 +29,7 @@
       "phase": "SUBMIT_OPENHCS",
       "pipeline_name": "ExampleColocalization",
       "run_id": "ExampleColocalization-1",
-      "seconds": 0.0958288749679923,
+      "seconds": 0.08911449974402785,
       "tool": "OpenHCS"
     },
     {
@@ -37,7 +37,7 @@
       "phase": "WAIT_OPENHCS",
       "pipeline_name": "ExampleColocalization",
       "run_id": "ExampleColocalization-1",
-      "seconds": 0.26954714208841324,
+      "seconds": 0.3959208270534873,
       "tool": "OpenHCS"
     },
     {
@@ -45,7 +45,7 @@
       "phase": "SUBMIT_OPENHCS",
       "pipeline_name": "ExampleColocalization",
       "run_id": "ExampleColocalization-1",
-      "seconds": 0.01079942611977458,
+      "seconds": 0.010790097992867231,
       "tool": "OpenHCS"
     },
     {
@@ -53,7 +53,7 @@
       "phase": "WAIT_OPENHCS",
       "pipeline_name": "ExampleColocalization",
       "run_id": "ExampleColocalization-1",
-      "seconds": 2.9655581559054554,
+      "seconds": 3.1704197200015187,
       "tool": "OpenHCS"
     },
     {
@@ -61,7 +61,7 @@
       "phase": "SERVER_COMPILATION_JOB",
       "pipeline_name": "ExampleColocalization",
       "run_id": "ExampleColocalization-1",
-      "seconds": 0.26482725143432617,
+      "seconds": 0.3915858268737793,
       "tool": "OpenHCS"
     },
     {
@@ -69,7 +69,7 @@
       "phase": "SERVER_PIPELINE_JOB",
       "pipeline_name": "ExampleColocalization",
       "run_id": "ExampleColocalization-1",
-      "seconds": 2.959296703338623,
+      "seconds": 3.1634886264801025,
       "tool": "OpenHCS"
     },
     {
@@ -77,7 +77,7 @@
       "phase": "COMPILE_OPENHCS",
       "pipeline_name": "ExampleColocalization",
       "run_id": "ExampleColocalization-1",
-      "seconds": 0.25384068489074707,
+      "seconds": 0.3812296390533447,
       "tool": "OpenHCS"
     },
     {
@@ -85,7 +85,7 @@
       "phase": "EXECUTE_OPENHCS",
       "pipeline_name": "ExampleColocalization",
       "run_id": "ExampleColocalization-1",
-      "seconds": 2.3694231510162354,
+      "seconds": 2.3544793128967285,
       "tool": "OpenHCS"
     },
     {
@@ -93,15 +93,15 @@
       "phase": "VALIDATE_RUNTIME",
       "pipeline_name": "ExampleColocalization",
       "run_id": "ExampleColocalization-1",
-      "seconds": 5.401205271482468e-06,
+      "seconds": 5.420297384262085e-06,
       "tool": "OpenHCS"
     }
   ],
   "pipeline_name": "ExampleColocalization",
-  "pipeline_source_sha256": "5bdcd4fb33e702e336b08a68d8b0dafb8d6e553202fed873a7c8ec782f870b4e",
+  "pipeline_source_sha256": "235d842c11f6efb3f80eda24a10bd117b114399776fd9db436c330a528f284ff",
   "plate_id": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleColocalization/images",
-  "results_summary_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleColocalization/candidate_evidence/1/zmq_results_summary.json",
-  "results_summary_sha256": "c2af5712bb916319f2c30783ec24f738a12a2d62f10b86bec5f40f459adb40f3",
+  "results_summary_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleColocalization/candidate_evidence/1/zmq_results_summary.json",
+  "results_summary_sha256": "7c82426bdb890f657b1e351b0078c97a5b84c87bc2fa34c467798f47dc7edc2c",
   "run_id": "ExampleColocalization-1",
   "schema_version": "openhcs.benchmark.measured-pipeline.v2",
   "selected_pipeline_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleColocalization/ExampleColocalization.cppipe",

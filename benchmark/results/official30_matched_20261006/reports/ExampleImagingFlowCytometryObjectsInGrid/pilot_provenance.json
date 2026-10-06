@@ -12,7 +12,7 @@
   "driver_sha256": "8b987409c66e29fdc1dc18e61bd31a07c631750cc9bb9224a6bfff37a8c9a3a9",
   "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
   "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
-  "source_commit": "bf90fda611527b388b49123dcbd776f103aa04d3",
+  "source_commit": "d8678dbd443d78e0c4e5d90f4c2e867af61af80b",
   "source_dirty": false,
   "native_job_count": 1,
   "candidate_worker_count": 1,
@@ -64,21 +64,21 @@
       "sha256": "117482f9e0dca2e47d5716da2ecf2653e2c097a7619f7e671741c3a2f4468a53"
     }
   ],
-  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleImagingFlowCytometryObjectsInGrid/native_report.json",
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleImagingFlowCytometryObjectsInGrid/native_report.json",
   "native_reference_report_sha256": "a035e50171096c8497d33f309a5ba393211a893d03e6e1e5ce81c3708120323b",
   "native_reference_source_commit": "6fb8212c26dee2349425f4593e8c115d38a5c755",
   "native_reference_file_inventory": [
     {
-      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleImagingFlowCytometryObjectsInGrid/native_report.json",
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleImagingFlowCytometryObjectsInGrid/native_report.json",
       "sha256": "a035e50171096c8497d33f309a5ba393211a893d03e6e1e5ce81c3708120323b"
     },
     {
-      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleImagingFlowCytometryObjectsInGrid/native_request.json",
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleImagingFlowCytometryObjectsInGrid/native_request.json",
       "sha256": "f93352f51cbc778247d5c69942107aa8722c1bea2ef2dd61de047d363b04f41c"
     },
     {
-      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleImagingFlowCytometryObjectsInGrid/pilot_provenance.json",
-      "sha256": "fa89ac2eec767494d7634593d8ccf47a0c7aaec3aac4842775537861bc68afba"
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleImagingFlowCytometryObjectsInGrid/pilot_provenance.json",
+      "sha256": "9f9f62c8808cb5b719bd3690f34619154755dfe9a339eee6584101b8a5816902"
     },
     {
       "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleImagingFlowCytometryObjectsInGrid/native/-1/BF_cells_on_grid.csv",

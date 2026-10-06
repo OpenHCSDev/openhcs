@@ -1,27 +1,27 @@
 {
-  "compile_artifact_id": "7a4a2a9b-91db-4bbd-ac39-26deb3a809c7",
-  "completed_at_epoch_seconds": 1791253003.799518,
+  "compile_artifact_id": "652d4232-6092-4792-b675-878081933092",
+  "completed_at_epoch_seconds": 1791272252.334254,
   "endpoint_provenance": {
     "client_openhcs_file": "/var/tmp/openhcs-cp-compiled-contract-reuse-20261004/openhcs/__init__.py",
     "client_openhcs_version": "0.8.7",
     "client_python_executable": "/home/ts/code/projects/openhcs/.venv/bin/python",
     "endpoint_application_identifier": "openhcs",
-    "endpoint_create_time_epoch_seconds": 1791252911.33,
-    "endpoint_log_file_path": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1791252911427497655.log",
+    "endpoint_create_time_epoch_seconds": 1791272184.1,
+    "endpoint_log_file_path": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1791272184193110110.log",
     "endpoint_openhcs_version": "0.8.7",
-    "endpoint_pid": 2230587,
+    "endpoint_pid": 3992264,
     "endpoint_port": 7777
   },
-  "execution_id": "e01459f4-2029-46b5-b5e4-5ca664d3b2e4",
-  "execution_plate_id": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/cp_tutorial_advanced_segmentation_final/source_workspace",
+  "execution_id": "01c563a2-88e2-4bae-accb-74bf0d42ee58",
+  "execution_plate_id": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/cp_tutorial_advanced_segmentation_final/source_workspace",
   "expected_axis_count": 1,
-  "global_config_source_sha256": "86ad71ba0398b024efab38d83b2cea0d5738a162259799f467a9ef1839fae182",
-  "observation_export_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/cp_tutorial_advanced_segmentation_final/candidate_evidence/-1/observation.pkl",
+  "global_config_source_sha256": "9e67eae884488655db056fd9050e7f1dde8e7e2c898fbd84d6f728e1a0b245ff",
+  "observation_export_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/cp_tutorial_advanced_segmentation_final/candidate_evidence/-1/observation.pkl",
   "observation_export_scope": "outcomes",
-  "observation_export_sha256": "44ea3f48e7fe9ea16cc444ce9d94efec59fbcb697d01d2bc7be4d472276a13fc",
+  "observation_export_sha256": "99254b74cf0d4a22910ac4118cec2c3d4e1667886b4c028488beba4cb9c61438",
   "observed_axis_count": 1,
   "output_roots": [
-    "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/cp_tutorial_advanced_segmentation_final/candidate/-1/source_workspace_matched_pilot"
+    "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/cp_tutorial_advanced_segmentation_final/candidate/-1/source_workspace_matched_pilot"
   ],
   "phase_timings": [
     {
@@ -29,7 +29,7 @@
       "phase": "SUBMIT_OPENHCS",
       "pipeline_name": "cp_tutorial_advanced_segmentation_final",
       "run_id": "cp_tutorial_advanced_segmentation_final--1",
-      "seconds": 0.1125341490842402,
+      "seconds": 0.11251719621941447,
       "tool": "OpenHCS"
     },
     {
@@ -37,7 +37,7 @@
       "phase": "WAIT_OPENHCS",
       "pipeline_name": "cp_tutorial_advanced_segmentation_final",
       "run_id": "cp_tutorial_advanced_segmentation_final--1",
-      "seconds": 1.4325860561802983,
+      "seconds": 1.5339948097243905,
       "tool": "OpenHCS"
     },
     {
@@ -45,7 +45,7 @@
       "phase": "SUBMIT_OPENHCS",
       "pipeline_name": "cp_tutorial_advanced_segmentation_final",
       "run_id": "cp_tutorial_advanced_segmentation_final--1",
-      "seconds": 0.01061196019873023,
+      "seconds": 0.010740173980593681,
       "tool": "OpenHCS"
     },
     {
@@ -53,7 +53,7 @@
       "phase": "WAIT_OPENHCS",
       "pipeline_name": "cp_tutorial_advanced_segmentation_final",
       "run_id": "cp_tutorial_advanced_segmentation_final--1",
-      "seconds": 7.711491017136723,
+      "seconds": 5.849033562000841,
       "tool": "OpenHCS"
     },
     {
@@ -61,7 +61,7 @@
       "phase": "SERVER_COMPILATION_JOB",
       "pipeline_name": "cp_tutorial_advanced_segmentation_final",
       "run_id": "cp_tutorial_advanced_segmentation_final--1",
-      "seconds": 1.4349794387817383,
+      "seconds": 1.5270633697509766,
       "tool": "OpenHCS"
     },
     {
@@ -69,7 +69,7 @@
       "phase": "SERVER_PIPELINE_JOB",
       "pipeline_name": "cp_tutorial_advanced_segmentation_final",
       "run_id": "cp_tutorial_advanced_segmentation_final--1",
-      "seconds": 7.7008020877838135,
+      "seconds": 5.840945243835449,
       "tool": "OpenHCS"
     },
     {
@@ -77,7 +77,7 @@
       "phase": "COMPILE_OPENHCS",
       "pipeline_name": "cp_tutorial_advanced_segmentation_final",
       "run_id": "cp_tutorial_advanced_segmentation_final--1",
-      "seconds": 1.42142653465271,
+      "seconds": 1.5131468772888184,
       "tool": "OpenHCS"
     },
     {
@@ -85,7 +85,7 @@
       "phase": "EXECUTE_OPENHCS",
       "pipeline_name": "cp_tutorial_advanced_segmentation_final",
       "run_id": "cp_tutorial_advanced_segmentation_final--1",
-      "seconds": 5.974707126617432,
+      "seconds": 4.59877610206604,
       "tool": "OpenHCS"
     },
     {
@@ -93,15 +93,15 @@
       "phase": "VALIDATE_RUNTIME",
       "pipeline_name": "cp_tutorial_advanced_segmentation_final",
       "run_id": "cp_tutorial_advanced_segmentation_final--1",
-      "seconds": 5.300156772136688e-06,
+      "seconds": 5.641020834445953e-06,
       "tool": "OpenHCS"
     }
   ],
   "pipeline_name": "cp_tutorial_advanced_segmentation_final",
-  "pipeline_source_sha256": "52ca084d0acada69cd4582d04947b07c92b01f5821cdc6a9bb6a2f2be3643181",
+  "pipeline_source_sha256": "230428f6783bf66894771e96adf6e38714e99c4dc496e97c3ea3aa6ee39317af",
   "plate_id": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_20585_AE",
-  "results_summary_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/cp_tutorial_advanced_segmentation_final/candidate_evidence/-1/zmq_results_summary.json",
-  "results_summary_sha256": "c0ae9e652444a01317082b4f8607213b6456b3b73dc4aaf2a602983f550764ca",
+  "results_summary_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/cp_tutorial_advanced_segmentation_final/candidate_evidence/-1/zmq_results_summary.json",
+  "results_summary_sha256": "0b4117e8c4023838611f112638f2d59ddde8f527d6d2a3d04da918ceadae616a",
   "run_id": "cp_tutorial_advanced_segmentation_final--1",
   "schema_version": "openhcs.benchmark.measured-pipeline.v2",
   "selected_pipeline_path": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/AdvancedSegmentation/BBBC022_Analysis_Final.cppipe",

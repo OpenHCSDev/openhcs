@@ -12,7 +12,7 @@
   "driver_sha256": "8b987409c66e29fdc1dc18e61bd31a07c631750cc9bb9224a6bfff37a8c9a3a9",
   "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
   "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
-  "source_commit": "bf90fda611527b388b49123dcbd776f103aa04d3",
+  "source_commit": "d8678dbd443d78e0c4e5d90f4c2e867af61af80b",
   "source_dirty": false,
   "native_job_count": 1,
   "candidate_worker_count": 1,
@@ -124,7 +124,7 @@
       "sha256": "195317f99bde79a1ca4e024becc7a445337540f3c3830ac37287a3827b50e02a"
     }
   ],
-  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native_report.json",
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/cp_tutorial_advanced_segmentation_final/native_report.json",
   "native_reference_report_sha256": "3b411d6ec8471dd4784a163cc3a049a78f730c5dcaa3b1dc63af14442892bb91",
   "native_reference_source_commit": "5ad1e69565493220572de0a9c1af29f558b5f920",
   "native_reference_file_inventory": [
@@ -261,16 +261,16 @@
       "sha256": "cf77de35d244d264a64e87b37bd5da3871c64b227c8f297b2be39d87d315f582"
     },
     {
-      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native_report.json",
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/cp_tutorial_advanced_segmentation_final/native_report.json",
       "sha256": "3b411d6ec8471dd4784a163cc3a049a78f730c5dcaa3b1dc63af14442892bb91"
     },
     {
-      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/native_request.json",
-      "sha256": "e5101ac4beb2d893acd08cd38c5fe274337f9c42f7f59935ee76773dd0b59a84"
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/cp_tutorial_advanced_segmentation_final/native_request.json",
+      "sha256": "a976326a1ae22341785c5905eb8b2d118f21a43d1ca4b917a27107447ca5cd63"
     },
     {
-      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_advanced_segmentation_final/pilot_provenance.json",
-      "sha256": "a997af41a560988be4cb326caab41f23efe6dde2d9d0542cb9631e19387460d6"
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/cp_tutorial_advanced_segmentation_final/pilot_provenance.json",
+      "sha256": "8486448215bdf88daa7566f803f637fce43ad0aef08d10b2dc66367a4e3f8b1f"
     }
   ],
   "native_image_set_count": 2,

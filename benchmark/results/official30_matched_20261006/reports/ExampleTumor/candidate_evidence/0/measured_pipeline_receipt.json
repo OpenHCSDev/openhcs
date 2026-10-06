@@ -1,27 +1,27 @@
 {
-  "compile_artifact_id": "9b04b396-6a65-4180-bfe8-e22655714cd5",
-  "completed_at_epoch_seconds": 1791253930.0670438,
+  "compile_artifact_id": "7f2ca857-da19-4b95-8127-2e43270eb0d4",
+  "completed_at_epoch_seconds": 1791273169.1327472,
   "endpoint_provenance": {
     "client_openhcs_file": "/var/tmp/openhcs-cp-compiled-contract-reuse-20261004/openhcs/__init__.py",
     "client_openhcs_version": "0.8.7",
     "client_python_executable": "/home/ts/code/projects/openhcs/.venv/bin/python",
     "endpoint_application_identifier": "openhcs",
-    "endpoint_create_time_epoch_seconds": 1791252911.33,
-    "endpoint_log_file_path": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1791252911427497655.log",
+    "endpoint_create_time_epoch_seconds": 1791272184.1,
+    "endpoint_log_file_path": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1791272184193110110.log",
     "endpoint_openhcs_version": "0.8.7",
-    "endpoint_pid": 2230587,
+    "endpoint_pid": 3992264,
     "endpoint_port": 7777
   },
-  "execution_id": "3da158e0-4302-480d-859e-99291e727e99",
-  "execution_plate_id": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleTumor/source_workspace",
+  "execution_id": "c7e7b481-7948-4d94-8b32-aae5bf0b7f06",
+  "execution_plate_id": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleTumor/source_workspace",
   "expected_axis_count": 1,
-  "global_config_source_sha256": "9105c58c515dd0849f9a7071aeff2e605008604f3b294415aa251616725b1903",
-  "observation_export_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleTumor/candidate_evidence/0/observation.pkl",
+  "global_config_source_sha256": "4ea71b1e5b023a792cdaaf1a958c12da8afe51dcd28af012069d4d7c1a21c81f",
+  "observation_export_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleTumor/candidate_evidence/0/observation.pkl",
   "observation_export_scope": "outcomes",
-  "observation_export_sha256": "402bca811d20afb50aeeb2777a995e00a78d1fae802ca3c42d2a2cfe491433eb",
+  "observation_export_sha256": "9f2c1fb7c524c387baeeb3770d46cdf84db58984e4451d0d9b4efcaac6415934",
   "observed_axis_count": 1,
   "output_roots": [
-    "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleTumor/candidate/0/source_workspace_matched_pilot"
+    "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleTumor/candidate/0/source_workspace_matched_pilot"
   ],
   "phase_timings": [
     {
@@ -29,7 +29,7 @@
       "phase": "SUBMIT_OPENHCS",
       "pipeline_name": "ExampleTumor",
       "run_id": "ExampleTumor-0",
-      "seconds": 0.05034557497128844,
+      "seconds": 0.049094432964921,
       "tool": "OpenHCS"
     },
     {
@@ -37,7 +37,7 @@
       "phase": "WAIT_OPENHCS",
       "pipeline_name": "ExampleTumor",
       "run_id": "ExampleTumor-0",
-      "seconds": 0.11971356999129057,
+      "seconds": 0.14146016724407673,
       "tool": "OpenHCS"
     },
     {
@@ -45,7 +45,7 @@
       "phase": "SUBMIT_OPENHCS",
       "pipeline_name": "ExampleTumor",
       "run_id": "ExampleTumor-0",
-      "seconds": 0.010870310012251139,
+      "seconds": 0.010752916801720858,
       "tool": "OpenHCS"
     },
     {
@@ -53,7 +53,7 @@
       "phase": "WAIT_OPENHCS",
       "pipeline_name": "ExampleTumor",
       "run_id": "ExampleTumor-0",
-      "seconds": 0.6186043978668749,
+      "seconds": 0.6026109540835023,
       "tool": "OpenHCS"
     },
     {
@@ -61,7 +61,7 @@
       "phase": "SERVER_COMPILATION_JOB",
       "pipeline_name": "ExampleTumor",
       "run_id": "ExampleTumor-0",
-      "seconds": 0.11441612243652344,
+      "seconds": 0.13094019889831543,
       "tool": "OpenHCS"
     },
     {
@@ -69,7 +69,7 @@
       "phase": "SERVER_PIPELINE_JOB",
       "pipeline_name": "ExampleTumor",
       "run_id": "ExampleTumor-0",
-      "seconds": 0.6102230548858643,
+      "seconds": 0.5965075492858887,
       "tool": "OpenHCS"
     },
     {
@@ -77,7 +77,7 @@
       "phase": "COMPILE_OPENHCS",
       "pipeline_name": "ExampleTumor",
       "run_id": "ExampleTumor-0",
-      "seconds": 0.10588765144348145,
+      "seconds": 0.12194490432739258,
       "tool": "OpenHCS"
     },
     {
@@ -85,7 +85,7 @@
       "phase": "EXECUTE_OPENHCS",
       "pipeline_name": "ExampleTumor",
       "run_id": "ExampleTumor-0",
-      "seconds": 0.5681126117706299,
+      "seconds": 0.5544710159301758,
       "tool": "OpenHCS"
     },
     {
@@ -93,15 +93,15 @@
       "phase": "VALIDATE_RUNTIME",
       "pipeline_name": "ExampleTumor",
       "run_id": "ExampleTumor-0",
-      "seconds": 5.631241947412491e-06,
+      "seconds": 5.199108272790909e-06,
       "tool": "OpenHCS"
     }
   ],
   "pipeline_name": "ExampleTumor",
-  "pipeline_source_sha256": "89189413c48c7ea63df6b0f218b8f09188176bcf55c10eed253a12a00aff83ae",
+  "pipeline_source_sha256": "a4bca476d50afdd7b369c02dd4e9cc9453bfff0a9b432db718a1a2aa713c51cd",
   "plate_id": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleTumor/images",
-  "results_summary_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleTumor/candidate_evidence/0/zmq_results_summary.json",
-  "results_summary_sha256": "cc06c88a2ec79d6e08be8b6ea5e16ce72288593801b0cc4d05ad8e6a9be27a41",
+  "results_summary_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleTumor/candidate_evidence/0/zmq_results_summary.json",
+  "results_summary_sha256": "c736594a622f18468385284e29d1c12862554d07b710e113f5ed2f7ca7f4477d",
   "run_id": "ExampleTumor-0",
   "schema_version": "openhcs.benchmark.measured-pipeline.v2",
   "selected_pipeline_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleTumor/ExampleTumor.cppipe",

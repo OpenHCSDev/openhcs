@@ -1,5 +1,5 @@
 {
-  "status": "PREPARED_NOT_LAUNCHED",
+  "status": "FROZEN_MERGED_MAIN_READY",
   "argv": [
     "taskset",
     "-c",
@@ -22,11 +22,11 @@
     "--native-python",
     "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
     "--output-dir",
-    "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases",
+    "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases",
     "--native-reference-root",
-    "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases"
+    "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases"
   ],
-  "protocol": "All30 manifest cases; no exclusions; one owned prepared server; one warmup and three measured repetitions per engine per case; internal profiling off; native pipeline call includes prepare_run/prepare_group/modules/post_run, OH full server job; disjoint client total vs native invocation; startup excluded; reuse genuine retained complete native observations via original case directories only after workload/source/environment/hardware/input/output guards pass; missing native cases run fresh; order-only derived manifest runs nine not-yet-qualified cases first then all twenty-one previously receiving-qualified cases, all30 declarations exactly unchanged",
-  "source_freeze_head": "bf90fda611527b388b49123dcbd776f103aa04d3",
-  "native_reference_scope": "All30 genuine completed native observations from v10/cases, only after existing strict workload/source/environment/hardware/input/output custody guards pass; no native timing projection."
+  "protocol": "All30 original authored manifest cases unchanged, warmup plus3 ordinary repetitions; one prepared service, CPU5 one worker. Complete OH SERVER_PIPELINE_JOB execution vs genuine CP fullpipeline execution; OH compile+execute disjoint client total vs genuine prepared CP invocation. Server/catalog/kernel/import/JVM readiness excluded. Retained genuine native v11 observations require existing strict workload/environment/source/input/output guards; no projected times. Final source must include main981 spatial-axis law,1025 source-cohort repair and1029 compiler snapshot reuse. Derive fresh frontier only after complete30 SCI/custody/clean-source qualification.",
+  "source_freeze_head": "d8678dbd443d78e0c4e5d90f4c2e867af61af80b",
+  "native_reference_scope": "All30 genuine completed native observations v11/cases, original strict workload/source/environment/input/output guards; no projected native timing."
 }

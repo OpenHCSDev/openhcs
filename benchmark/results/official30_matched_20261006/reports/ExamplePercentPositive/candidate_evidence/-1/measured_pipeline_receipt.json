@@ -1,27 +1,27 @@
 {
-  "compile_artifact_id": "f6f3fa4d-6ca1-43f9-9a01-877d70427059",
-  "completed_at_epoch_seconds": 1791253901.0935013,
+  "compile_artifact_id": "d6251535-c372-43fa-9418-31db982e0948",
+  "completed_at_epoch_seconds": 1791273141.0446217,
   "endpoint_provenance": {
     "client_openhcs_file": "/var/tmp/openhcs-cp-compiled-contract-reuse-20261004/openhcs/__init__.py",
     "client_openhcs_version": "0.8.7",
     "client_python_executable": "/home/ts/code/projects/openhcs/.venv/bin/python",
     "endpoint_application_identifier": "openhcs",
-    "endpoint_create_time_epoch_seconds": 1791252911.33,
-    "endpoint_log_file_path": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1791252911427497655.log",
+    "endpoint_create_time_epoch_seconds": 1791272184.1,
+    "endpoint_log_file_path": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1791272184193110110.log",
     "endpoint_openhcs_version": "0.8.7",
-    "endpoint_pid": 2230587,
+    "endpoint_pid": 3992264,
     "endpoint_port": 7777
   },
-  "execution_id": "9aa2d101-ff5e-49bd-a8f2-01325b1586e9",
-  "execution_plate_id": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExamplePercentPositive/source_workspace",
+  "execution_id": "a542d0f5-d42c-4ace-8059-5e6bb3589e93",
+  "execution_plate_id": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExamplePercentPositive/source_workspace",
   "expected_axis_count": 1,
-  "global_config_source_sha256": "5ded4cfa3b2f35ec0bd42ccaf5cebf83696fdac24a3622b60ae266556d5c5bd0",
-  "observation_export_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExamplePercentPositive/candidate_evidence/-1/observation.pkl",
+  "global_config_source_sha256": "8af77649dcc9b17f898061d4812e3f88bc7d8d7e186b3fe16860f2e70e292681",
+  "observation_export_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExamplePercentPositive/candidate_evidence/-1/observation.pkl",
   "observation_export_scope": "outcomes",
-  "observation_export_sha256": "b6ad7d4ca8989321c2a656920e45d63f8cd9d87c6cf2cfd37442cb030be7d90b",
+  "observation_export_sha256": "970513e47f06330ea65d412c703cd0cb9169f6e24f8f74bb546c04109dc6d5c1",
   "observed_axis_count": 1,
   "output_roots": [
-    "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExamplePercentPositive/candidate/-1/source_workspace_matched_pilot"
+    "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExamplePercentPositive/candidate/-1/source_workspace_matched_pilot"
   ],
   "phase_timings": [
     {
@@ -29,7 +29,7 @@
       "phase": "SUBMIT_OPENHCS",
       "pipeline_name": "ExamplePercentPositive",
       "run_id": "ExamplePercentPositive--1",
-      "seconds": 0.06716377520933747,
+      "seconds": 0.06405063578858972,
       "tool": "OpenHCS"
     },
     {
@@ -37,7 +37,7 @@
       "phase": "WAIT_OPENHCS",
       "pipeline_name": "ExamplePercentPositive",
       "run_id": "ExamplePercentPositive--1",
-      "seconds": 0.1637045368552208,
+      "seconds": 0.18518295511603355,
       "tool": "OpenHCS"
     },
     {
@@ -45,7 +45,7 @@
       "phase": "SUBMIT_OPENHCS",
       "pipeline_name": "ExamplePercentPositive",
       "run_id": "ExamplePercentPositive--1",
-      "seconds": 0.009910812135785818,
+      "seconds": 0.009935318026691675,
       "tool": "OpenHCS"
     },
     {
@@ -53,7 +53,7 @@
       "phase": "WAIT_OPENHCS",
       "pipeline_name": "ExamplePercentPositive",
       "run_id": "ExamplePercentPositive--1",
-      "seconds": 0.28745314572006464,
+      "seconds": 0.2922577247954905,
       "tool": "OpenHCS"
     },
     {
@@ -61,7 +61,7 @@
       "phase": "SERVER_COMPILATION_JOB",
       "pipeline_name": "ExamplePercentPositive",
       "run_id": "ExamplePercentPositive--1",
-      "seconds": 0.1656033992767334,
+      "seconds": 0.18706226348876953,
       "tool": "OpenHCS"
     },
     {
@@ -69,7 +69,7 @@
       "phase": "SERVER_PIPELINE_JOB",
       "pipeline_name": "ExamplePercentPositive",
       "run_id": "ExamplePercentPositive--1",
-      "seconds": 0.28519105911254883,
+      "seconds": 0.28801679611206055,
       "tool": "OpenHCS"
     },
     {
@@ -77,7 +77,7 @@
       "phase": "COMPILE_OPENHCS",
       "pipeline_name": "ExamplePercentPositive",
       "run_id": "ExamplePercentPositive--1",
-      "seconds": 0.15612411499023438,
+      "seconds": 0.17775416374206543,
       "tool": "OpenHCS"
     },
     {
@@ -85,7 +85,7 @@
       "phase": "EXECUTE_OPENHCS",
       "pipeline_name": "ExamplePercentPositive",
       "run_id": "ExamplePercentPositive--1",
-      "seconds": 0.2263956069946289,
+      "seconds": 0.2149522304534912,
       "tool": "OpenHCS"
     },
     {
@@ -93,15 +93,15 @@
       "phase": "VALIDATE_RUNTIME",
       "pipeline_name": "ExamplePercentPositive",
       "run_id": "ExamplePercentPositive--1",
-      "seconds": 5.431007593870163e-06,
+      "seconds": 6.181187927722931e-06,
       "tool": "OpenHCS"
     }
   ],
   "pipeline_name": "ExamplePercentPositive",
-  "pipeline_source_sha256": "3cdff25760c103a7a6938a1b08e7b5d5617e66bcee0b6d49da79f5378eb740dc",
+  "pipeline_source_sha256": "cec94294dee424126df25a87589cc114dcf204d6f5d74b22f12a1a1316d4bf7d",
   "plate_id": "/home/ts/.cache/openhcs/cellprofiler_examples/ExamplePercentPositive/images",
-  "results_summary_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExamplePercentPositive/candidate_evidence/-1/zmq_results_summary.json",
-  "results_summary_sha256": "17da776e02c015c69c425245cd48538b07f94de506e322110cca1ac25f4a40ba",
+  "results_summary_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExamplePercentPositive/candidate_evidence/-1/zmq_results_summary.json",
+  "results_summary_sha256": "0b160fa915a4114c153aa5ed41c6a961f0526ad8c83844f4b4b1e31fa32a0f71",
   "run_id": "ExamplePercentPositive--1",
   "schema_version": "openhcs.benchmark.measured-pipeline.v2",
   "selected_pipeline_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExamplePercentPositive/ExamplePercentPositive.cppipe",

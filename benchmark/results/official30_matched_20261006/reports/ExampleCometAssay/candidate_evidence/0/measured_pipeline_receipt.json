@@ -1,27 +1,27 @@
 {
-  "compile_artifact_id": "0230d9b0-53ba-430e-a0ae-bcc1485e433e",
-  "completed_at_epoch_seconds": 1791253451.0653815,
+  "compile_artifact_id": "939ff09e-9f29-4d3e-8991-0a9bfd4cb9f3",
+  "completed_at_epoch_seconds": 1791272691.7540565,
   "endpoint_provenance": {
     "client_openhcs_file": "/var/tmp/openhcs-cp-compiled-contract-reuse-20261004/openhcs/__init__.py",
     "client_openhcs_version": "0.8.7",
     "client_python_executable": "/home/ts/code/projects/openhcs/.venv/bin/python",
     "endpoint_application_identifier": "openhcs",
-    "endpoint_create_time_epoch_seconds": 1791252911.33,
-    "endpoint_log_file_path": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1791252911427497655.log",
+    "endpoint_create_time_epoch_seconds": 1791272184.1,
+    "endpoint_log_file_path": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1791272184193110110.log",
     "endpoint_openhcs_version": "0.8.7",
-    "endpoint_pid": 2230587,
+    "endpoint_pid": 3992264,
     "endpoint_port": 7777
   },
-  "execution_id": "6f66fb58-c282-4f76-a9b3-0ff7dc902330",
-  "execution_plate_id": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleCometAssay/source_workspace",
+  "execution_id": "3df81fce-60d8-42e9-856e-84ad6c3e133a",
+  "execution_plate_id": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleCometAssay/source_workspace",
   "expected_axis_count": 1,
-  "global_config_source_sha256": "9e16568373d7ca097065b5264d73a644875a9ba52b4482707e94b162b9d0f060",
-  "observation_export_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleCometAssay/candidate_evidence/0/observation.pkl",
+  "global_config_source_sha256": "d282e6fbccc75b8aa0a8c68b62c486bb14a22733005c831afc76edf1933b7f07",
+  "observation_export_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleCometAssay/candidate_evidence/0/observation.pkl",
   "observation_export_scope": "outcomes",
-  "observation_export_sha256": "26d4191fbb2d77b9a97d356cd654769d908b11c01af33481e599c3a45ac9faf0",
+  "observation_export_sha256": "2fd41614719da10d0a0147bdec6d85122ff79a62d7a6f9d1ee60102fd376de95",
   "observed_axis_count": 1,
   "output_roots": [
-    "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleCometAssay/candidate/0/source_workspace_matched_pilot"
+    "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleCometAssay/candidate/0/source_workspace_matched_pilot"
   ],
   "phase_timings": [
     {
@@ -29,7 +29,7 @@
       "phase": "SUBMIT_OPENHCS",
       "pipeline_name": "ExampleCometAssay",
       "run_id": "ExampleCometAssay-0",
-      "seconds": 0.06765583204105496,
+      "seconds": 0.0691347592510283,
       "tool": "OpenHCS"
     },
     {
@@ -37,7 +37,7 @@
       "phase": "WAIT_OPENHCS",
       "pipeline_name": "ExampleCometAssay",
       "run_id": "ExampleCometAssay-0",
-      "seconds": 0.190473189111799,
+      "seconds": 0.19481813674792647,
       "tool": "OpenHCS"
     },
     {
@@ -45,7 +45,7 @@
       "phase": "SUBMIT_OPENHCS",
       "pipeline_name": "ExampleCometAssay",
       "run_id": "ExampleCometAssay-0",
-      "seconds": 0.010755783878266811,
+      "seconds": 0.010806138161569834,
       "tool": "OpenHCS"
     },
     {
@@ -53,7 +53,7 @@
       "phase": "WAIT_OPENHCS",
       "pipeline_name": "ExampleCometAssay",
       "run_id": "ExampleCometAssay-0",
-      "seconds": 2.081878562923521,
+      "seconds": 2.2069333433173597,
       "tool": "OpenHCS"
     },
     {
@@ -61,7 +61,7 @@
       "phase": "SERVER_COMPILATION_JOB",
       "pipeline_name": "ExampleCometAssay",
       "run_id": "ExampleCometAssay-0",
-      "seconds": 0.18452715873718262,
+      "seconds": 0.19202566146850586,
       "tool": "OpenHCS"
     },
     {
@@ -69,7 +69,7 @@
       "phase": "SERVER_PIPELINE_JOB",
       "pipeline_name": "ExampleCometAssay",
       "run_id": "ExampleCometAssay-0",
-      "seconds": 2.0731639862060547,
+      "seconds": 2.2034974098205566,
       "tool": "OpenHCS"
     },
     {
@@ -77,7 +77,7 @@
       "phase": "COMPILE_OPENHCS",
       "pipeline_name": "ExampleCometAssay",
       "run_id": "ExampleCometAssay-0",
-      "seconds": 0.175248384475708,
+      "seconds": 0.18232512474060059,
       "tool": "OpenHCS"
     },
     {
@@ -85,7 +85,7 @@
       "phase": "EXECUTE_OPENHCS",
       "pipeline_name": "ExampleCometAssay",
       "run_id": "ExampleCometAssay-0",
-      "seconds": 2.0172510147094727,
+      "seconds": 2.13596510887146,
       "tool": "OpenHCS"
     },
     {
@@ -93,15 +93,15 @@
       "phase": "VALIDATE_RUNTIME",
       "pipeline_name": "ExampleCometAssay",
       "run_id": "ExampleCometAssay-0",
-      "seconds": 5.150213837623596e-06,
+      "seconds": 5.480833351612091e-06,
       "tool": "OpenHCS"
     }
   ],
   "pipeline_name": "ExampleCometAssay",
-  "pipeline_source_sha256": "41fd510e5e3c8c35e045f550135c44db2d66da6a37dc2434c9eac06ba0159e85",
+  "pipeline_source_sha256": "d25255c6529eb8f26e6aa35fad56da037a7fcc25d7058c05bb670cb395298d43",
   "plate_id": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleCometAssay/images",
-  "results_summary_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleCometAssay/candidate_evidence/0/zmq_results_summary.json",
-  "results_summary_sha256": "51c6e8b2a0cf32b1eb9fa04e1ff013f2134e94c71938974d2a1bb8267ab1faca",
+  "results_summary_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleCometAssay/candidate_evidence/0/zmq_results_summary.json",
+  "results_summary_sha256": "2360e1172d577dfa7bc016dc215cf1fca34c003a9da758495c2faefaa0150419",
   "run_id": "ExampleCometAssay-0",
   "schema_version": "openhcs.benchmark.measured-pipeline.v2",
   "selected_pipeline_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleCometAssay/ExampleCometAssay.cppipe",

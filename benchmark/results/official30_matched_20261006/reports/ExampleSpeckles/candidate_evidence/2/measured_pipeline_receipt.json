@@ -1,27 +1,27 @@
 {
-  "compile_artifact_id": "d520d79d-14e6-4b5c-b490-2f6a2a990634",
-  "completed_at_epoch_seconds": 1791253365.6944165,
+  "compile_artifact_id": "f0972d3b-2b84-4488-9c80-9145351f3a00",
+  "completed_at_epoch_seconds": 1791272605.6159947,
   "endpoint_provenance": {
     "client_openhcs_file": "/var/tmp/openhcs-cp-compiled-contract-reuse-20261004/openhcs/__init__.py",
     "client_openhcs_version": "0.8.7",
     "client_python_executable": "/home/ts/code/projects/openhcs/.venv/bin/python",
     "endpoint_application_identifier": "openhcs",
-    "endpoint_create_time_epoch_seconds": 1791252911.33,
-    "endpoint_log_file_path": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1791252911427497655.log",
+    "endpoint_create_time_epoch_seconds": 1791272184.1,
+    "endpoint_log_file_path": "/tmp/openhcs-benchmark-xdg-data/openhcs/logs/openhcs_zmq_server_port_7777_1791272184193110110.log",
     "endpoint_openhcs_version": "0.8.7",
-    "endpoint_pid": 2230587,
+    "endpoint_pid": 3992264,
     "endpoint_port": 7777
   },
-  "execution_id": "7ddb328e-24a6-42b7-836b-cfb84a185a87",
-  "execution_plate_id": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleSpeckles/source_workspace",
+  "execution_id": "c65e2fa9-ef3c-4aa4-85e8-6ee7ea165063",
+  "execution_plate_id": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleSpeckles/source_workspace",
   "expected_axis_count": 1,
-  "global_config_source_sha256": "71130bda327c4edfe15535202b23ddbe3154cc0818b7ade1d59080b4bfccc0b6",
-  "observation_export_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleSpeckles/candidate_evidence/2/observation.pkl",
+  "global_config_source_sha256": "257d52a522165115df833947fdde570168727dc8c0a1b7b3c32b4317d418bf70",
+  "observation_export_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleSpeckles/candidate_evidence/2/observation.pkl",
   "observation_export_scope": "outcomes",
-  "observation_export_sha256": "a9a5d3160e0c89b6781032204411eaee35c5bb538f791018a9f009b30e6b8b72",
+  "observation_export_sha256": "2bcf7123c81ff05a27fc32cda1d7223ec50ecd1e338d812461d186bec4e15cea",
   "observed_axis_count": 1,
   "output_roots": [
-    "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleSpeckles/candidate/2/source_workspace_matched_pilot"
+    "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleSpeckles/candidate/2/source_workspace_matched_pilot"
   ],
   "phase_timings": [
     {
@@ -29,7 +29,7 @@
       "phase": "SUBMIT_OPENHCS",
       "pipeline_name": "ExampleSpeckles",
       "run_id": "ExampleSpeckles-2",
-      "seconds": 0.04276814730837941,
+      "seconds": 0.04466640530154109,
       "tool": "OpenHCS"
     },
     {
@@ -37,7 +37,7 @@
       "phase": "WAIT_OPENHCS",
       "pipeline_name": "ExampleSpeckles",
       "run_id": "ExampleSpeckles-2",
-      "seconds": 0.14821422239765525,
+      "seconds": 0.17101233080029488,
       "tool": "OpenHCS"
     },
     {
@@ -45,7 +45,7 @@
       "phase": "SUBMIT_OPENHCS",
       "pipeline_name": "ExampleSpeckles",
       "run_id": "ExampleSpeckles-2",
-      "seconds": 0.010871531907469034,
+      "seconds": 0.0109186302870512,
       "tool": "OpenHCS"
     },
     {
@@ -53,7 +53,7 @@
       "phase": "WAIT_OPENHCS",
       "pipeline_name": "ExampleSpeckles",
       "run_id": "ExampleSpeckles-2",
-      "seconds": 0.42898389929905534,
+      "seconds": 0.44044088665395975,
       "tool": "OpenHCS"
     },
     {
@@ -61,7 +61,7 @@
       "phase": "SERVER_COMPILATION_JOB",
       "pipeline_name": "ExampleSpeckles",
       "run_id": "ExampleSpeckles-2",
-      "seconds": 0.13790178298950195,
+      "seconds": 0.16037225723266602,
       "tool": "OpenHCS"
     },
     {
@@ -69,7 +69,7 @@
       "phase": "SERVER_PIPELINE_JOB",
       "pipeline_name": "ExampleSpeckles",
       "run_id": "ExampleSpeckles-2",
-      "seconds": 0.42777204513549805,
+      "seconds": 0.4386284351348877,
       "tool": "OpenHCS"
     },
     {
@@ -77,7 +77,7 @@
       "phase": "COMPILE_OPENHCS",
       "pipeline_name": "ExampleSpeckles",
       "run_id": "ExampleSpeckles-2",
-      "seconds": 0.129136323928833,
+      "seconds": 0.15142130851745605,
       "tool": "OpenHCS"
     },
     {
@@ -85,7 +85,7 @@
       "phase": "EXECUTE_OPENHCS",
       "pipeline_name": "ExampleSpeckles",
       "run_id": "ExampleSpeckles-2",
-      "seconds": 0.37840914726257324,
+      "seconds": 0.37905192375183105,
       "tool": "OpenHCS"
     },
     {
@@ -93,15 +93,15 @@
       "phase": "VALIDATE_RUNTIME",
       "pipeline_name": "ExampleSpeckles",
       "run_id": "ExampleSpeckles-2",
-      "seconds": 5.309935659170151e-06,
+      "seconds": 5.9818848967552185e-06,
       "tool": "OpenHCS"
     }
   ],
   "pipeline_name": "ExampleSpeckles",
-  "pipeline_source_sha256": "79ef5059924f0eebaf02a9a035d2c4a695aca1178812c30af1499c585b362979",
+  "pipeline_source_sha256": "50d31c21656359a16586fdef49664650e6ebe1307740dec233008eb564320e3b",
   "plate_id": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleSpeckles/images",
-  "results_summary_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleSpeckles/candidate_evidence/2/zmq_results_summary.json",
-  "results_summary_sha256": "0e4f0408f1b11c70271baefa2e44430166aa08a326b0dc4f634cc1cbc82ac47d",
+  "results_summary_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v15/cases/ExampleSpeckles/candidate_evidence/2/zmq_results_summary.json",
+  "results_summary_sha256": "427273836ef3e063fb3d4f4988de2adb100ecbb3ca9cd70ed8a7966cc6cf9f2e",
   "run_id": "ExampleSpeckles-2",
   "schema_version": "openhcs.benchmark.measured-pipeline.v2",
   "selected_pipeline_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleSpeckles/ExampleSpeckles.cppipe",
