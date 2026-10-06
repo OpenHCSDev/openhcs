@@ -143,6 +143,27 @@ method. Prominence/H-maxima depends on the landscape's numeric units; a toleranc
 from an 8-bit intensity example is not a calibrated distance-map setting.
 Compare both crops after the change, not just the repaired split.
 
+### Markers exist but the partition still collapses
+
+Two markers inside a genuine pair do not establish two viable object regions.
+At the same coordinates, compare marker positions, the actual watershed
+landscape, unfiltered basin areas and retained labels. Marker extraction and
+the dividing landscape can use different responses: moving intensity markers
+away from distance peaks can leave one tiny basin and one basin spanning both
+bodies, even when the total marker count is unchanged.
+
+Trace each basin spatially through minimum/maximum-size rejection and subsequent
+hole filling or relabelling; IDs need not stay comparable across these stages.
+A minimum-size rule may remove the tiny basin, and later filling may absorb its
+pixels into the surviving neighbour. A large merged basin may instead exceed
+the maximum and disappear entirely. Neither outcome proves missing foreground
+or an inappropriate size policy. If support is unchanged and this partition
+failure is demonstrated, test a raw-justified marker/dividing-landscape choice
+while retaining support and size rules, rather than simply adding markers or
+relaxing filters. No particular landscape is universally preferred. Check a
+genuine pair, a textured isolated body and distributed controls before keeping
+the repair, including downstream cell growth when these labels supply seeds.
+
 ### Ring fragmentation: disconnected support or too many markers?
 
 For complementary crescents inside one raw-supported body, compare the admitted
