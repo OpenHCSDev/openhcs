@@ -41,7 +41,8 @@ Catalog leads IDEN-1 (provisional/logical versus physical rooted ownership),
 BOUND-2 (lost original relationship), IMPL-12 (one repair recipe). No global
 NRA/dependency dynamic proof is claimed. Tests come after coherent migration.
 
-Source checkpoint in progress; not yet source-qualified or installed-ready.
+Initial checkpoint was not yet source-qualified or installed-ready. Current
+source qualification and the remaining installed boundary are recorded below.
 Acceptance includes original curved-support/foreign-owner negatives, resolved
 single/multi-owner crossing with attached distal paths, no synthetic owner
 restoration, saved same-input branch reconstruction, and ordinary registered
@@ -88,7 +89,7 @@ assertion: a soma-internal terminal became internal after legitimate centroid
 root connection. The test now follows the profile's explicit body exclusion
 and asserts every outside-body trace owner and both rooted subjects instead.
 No original crossing/distance assertions were removed or weakened. controls06
-will exercise the coherent regional/foreign-owner correction; not yet claimed.
+was the next planned batch at that checkpoint; its outcome is recorded below.
 
 Final source qualification and remaining installed boundary
 ----------------------------------------------------------
@@ -198,3 +199,19 @@ all five witnesses,04 remains6, and both have no failed owner4 root connection.
 This supersedes the earlier25-control checkpoint; it is not a further
 scientific attempt or a search for favorable assay settings. No current
 author receives the private diagnostic coordinates or ownership assignments.
+
+Final qualified production is cce0b838d365c12fe47fdb6fb534aa633950a0e6.
+source-final23 reuses the original complete Package/Repository projection at
+that exact head:702 parsed/zero omissions, with the complete changed member/
+consumer closure and original Skan path-coordinate AST/source hash recorded.
+R0-final22 uses the unchanged original census: zero positive debt metric
+deltas, none_identity-1, one relationship class and16 net code lines. No
+global/dependency R1 completion or installed/native success is claimed.
+Both source archives preserve all prior failures byte-exactly; final21 archive
+SHA167d0fd5e454e4dc329ea7057ce2f6f42a66c6de8ef6cc54f9ae2d7d9a3755c1.
+
+Current status: source-ready; installed/public/native acceptance remains
+assigned to Singer through Planck's existing whole builder and Dewey's exact
+lane handoff. No native/client operation is currently owned or in flight here.
+The original ordinary receiving packet is PUBLIC-RECEIVING.rst beside this
+receipt. Merge/issue closure follows that qualified installed path, not CI.
