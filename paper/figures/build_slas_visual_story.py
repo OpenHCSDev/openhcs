@@ -352,7 +352,7 @@ def h002_measurement_first():
             sheet.source_image(path, bounds, crop=crop)
         sheet.text(55, 70, "Y = 157 voxels", size=11, color=MUTED)
         sheet.text(55, 42, "X = 80 voxels", size=11, color=MUTED)
-        sheet.text(3, 38, sources["presentation_note"],
+        sheet.text(3, 36, sources["presentation_note"],
                    size=11, color=MUTED)
         axis = sheet.figure.add_axes((.12, .14, .39, .18))
         thresholds = (10, evaluation["primary_threshold_voxels"])

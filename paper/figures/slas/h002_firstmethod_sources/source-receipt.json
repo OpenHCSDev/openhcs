@@ -30,21 +30,39 @@
       "panel_heading": "C  YZ: ordinary-body centre"
     },
     "xy": {
-      "path": "/run/media/ts/hdd/openhcs-science/next-h002-fresh15-89-after-retina-20261005/H002_FRESH15_89/qa/v1-z34-combined-corrected/20261005T174038325557Z_napari_6023_OpenHCS_Napari_Visualization.png",
-      "size_bytes": 192031,
-      "sha256": "2740b7b1fb3da7476d09c2c4c014002e0038d0d045c590d6f9e5b13e0dabf5f9",
-      "asset": "xy.png",
+      "path": "/run/media/ts/hdd/openhcs-engineering/figure9-h002-fresh15-review28-public95/xy-combined/20261006T071926033620Z_napari_6015_OpenHCS_Napari_Visualization.png",
+      "size_bytes": 259915,
+      "sha256": "ba6eeae49a49d91c5abd510be52d122761cf0d01ddb6e970d4515a69e5c67fb8",
+      "asset": "xy-review28.png",
       "crop_xyxy": [
         560,
-        35,
-        985,
-        468
+        38,
+        987,
+        465
       ],
-      "panel_heading": "A  XY: native image and predicted centres"
+      "panel_heading": "A  XY: saved nuclear ROIs + raw"
     }
   },
-  "presentation_note": "Green points are original native predictions; out-of-plane points are hidden",
-  "presentation_phase": "original_captures_retained_pending_native_review",
+  "presentation_note": "XY: same-run nuclear ROI extents, not validated cell borders.\nXZ/YZ: original centres; out-of-plane points are hidden.",
+  "presentation_phase": "same_run_xy_roi_readability_checkpoint",
+  "native_presentation_review": {
+    "slot": "HYPATIA_H002_FRESH15_FIGURE9_95",
+    "journal": "/home/ts/wt/openhcs-issue-batch-20260929/figure9-h002-saved-review28-20261006/public95-fresh15/HYPATIA_H002_FRESH15_FIGURE9_95/author-workspace/output/runtime/mcp.stdout",
+    "xy_raw_capture": "/run/media/ts/hdd/openhcs-engineering/figure9-h002-fresh15-review28-public95/xy-raw/20261006T071918473279Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "xy_result_capture": "/run/media/ts/hdd/openhcs-engineering/figure9-h002-fresh15-review28-public95/xy-result/20261006T071926268921Z_napari_6015_OpenHCS_Napari_Visualization.png",
+    "xy_source_component_z": 35,
+    "xy_zero_based_z_index": 34,
+    "raw_contrast_limits": [2513.0, 31882.274999999863],
+    "raw_gamma": 1.0,
+    "xy_camera_center": [0.0, 127.5, 127.5],
+    "xy_camera_zoom": 1.6625,
+    "xy_raw_visible_combined": true,
+    "xy_points_visible_combined": false,
+    "xy_shapes_visible_combined": true,
+    "roi_style": "native filled categorical polygons with edges; no style setter exposed",
+    "orthogonal_checkpoint": "New native XZ/YZ raw/result/combined controls retained, but no mask outlines or readable centre improvement; original same-run centre panels retained",
+    "reexecuted": false
+  },
   "frozen_scientific_inputs": {
     "raw": {
       "path": "/run/media/ts/hdd/openhcs-science/next-h002-fresh15-89-after-retina-20261005/H002_FRESH15_89/plate/image.ome.tif",
@@ -65,6 +83,11 @@
       "path": "/run/media/ts/hdd/openhcs-science/next-h002-fresh15-89-after-retina-20261005/H002_FRESH15_89/attempt02/plate_v1t2/checkpoints_results/image.ome.tif_site-1_channel-1_timepoint-1_h002_labels_step0.labels.tif",
       "size_bytes": 15739430,
       "sha256": "dffdc99120aedf28863af31ae0efb097ad3cc23e85fb446856242a0e5e101b8a"
+    },
+    "xy_saved_roi_projection": {
+      "path": "/run/media/ts/hdd/openhcs-science/next-h002-fresh15-89-after-retina-20261005/H002_FRESH15_89/attempt02/plate_v1t2/checkpoints_results/image.ome.tif_s001_w1_z035_t001_h002_labels_step0_rois.roi.zip",
+      "size_bytes": 24022,
+      "sha256": "9023fb405d653abe237f5bac0e079c41d15a208d215412f66757b4d6f7cafaf0"
     }
   },
   "scientific_scope": {

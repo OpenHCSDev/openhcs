@@ -1,21 +1,21 @@
 {
-  "generator_sha256": "9a9274505beb342c83b7520e31904e2606d7dab1cf3751a03e50214cd6c687f5",
+  "generator_sha256": "6f7847878fe31960fe30a38e77b54228bc9a80c3faab5e43aba8c33bef73d2e7",
   "source_sha256": {
-    "paper/figures/slas/h002_firstmethod_sources/source-receipt.json": "de1cb0cba6e9343ffbed17baeb4c712b70c29235b027a98d2f1cce8d4d134e2d",
+    "paper/figures/slas/h002_firstmethod_sources/source-receipt.json": "b8d5a3b6c5a86b02e82a174e7f5c5ed1f4f699bbf14d3b6629b47680928584d3",
     "paper/supplementary/task_only_analysis/h002-fresh15-postfreeze-evaluation.json": "ca34ddcfaea7dcdc16c4813f8665e3295bab08c3167571fdff4cc6d06984027d",
     "figure-collection-20261004/H002-FRESH15-INDEPENDENT-CENTRES-REVIEW.rst": "7d07eb56a73d8e738a915d82f65679a84f412978dc463a1b000bfe332b03c2db",
-    "paper/figures/slas/h002_firstmethod_sources/xy.png": "2740b7b1fb3da7476d09c2c4c014002e0038d0d045c590d6f9e5b13e0dabf5f9",
+    "paper/figures/slas/h002_firstmethod_sources/xy-review28.png": "ba6eeae49a49d91c5abd510be52d122761cf0d01ddb6e970d4515a69e5c67fb8",
     "paper/figures/slas/h002_firstmethod_sources/xz.png": "f666af3514bdac000b9720a0396c6d6f4ccf0c1a9696c105c207470e5d21c879",
     "paper/figures/slas/h002_firstmethod_sources/yz.png": "65525b52c29bac6aefae077a85a9f6ca5f33fb9499e29dc97acc92fceb5a1b82"
   },
   "ui_crops": [
     {
-      "source": "paper/figures/slas/h002_firstmethod_sources/xy.png",
+      "source": "paper/figures/slas/h002_firstmethod_sources/xy-review28.png",
       "xyxy_pixels": [
         560,
-        35,
-        985,
-        468
+        38,
+        987,
+        465
       ],
       "source_size": [
         1440,
@@ -50,9 +50,9 @@
     }
   ],
   "output_sha256": {
-    "h002_measurement_first.png": "41a4496d661a1246e2f99b1207a427263ef061957f685ebc5c896e06c1c5368f",
-    "h002_measurement_first.pdf": "ad1efc8cd72e00e2c31ead6fd4ab4c5070c1acd95a0cec2c02941db47e921988",
-    "h002_measurement_first.svg": "bcc7c47740b83c3e1e9740ec3fddcf8bed827b4a7306cdacbef3a0f9560df3cd"
+    "h002_measurement_first.png": "0def5e8e148395c16df186349490f3eb571dcd0581a44c305179c475f89c02a6",
+    "h002_measurement_first.pdf": "3bff32dc511e41217e870e45445c2a477734a76513474e9f9722460cb3d776fe",
+    "h002_measurement_first.svg": "9f8d6d5bc1d448510592f2d55e91e6aec1b6aeb2974c3511cc5839dca10b50ea"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
