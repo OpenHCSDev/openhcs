@@ -229,50 +229,84 @@ class SpreadsheetFileSelection:
         if len(selected_tables) == 1:
             return selected_tables[0][1]
         image_field = CellProfilerSpreadsheetRowField.IMAGE_NUMBER.value
-        grouped: list[tuple[str, OrderedDict[object, list[Mapping[str, object]]]]] = []
-        image_order: list[object] = []
+        grouped: list[tuple[str, ColumnarRows, OrderedDict[object, list[int]]]] = []
+        image_counts: OrderedDict[object, int] = OrderedDict()
         for subject, rows in selected_tables:
-            rows_by_image: OrderedDict[object, list[Mapping[str, object]]] = (
-                OrderedDict()
+            rows_by_image: OrderedDict[object, list[int]] = OrderedDict()
+            if image_field not in rows.columns and len(rows):
+                raise ValueError(
+                    "Combined spreadsheet subjects require a producer-declared "
+                    f"{image_field!r} on every {subject!r} row."
+                )
+            image_numbers = (
+                rows.column_values(image_field) if image_field in rows.columns else ()
             )
-            for row in rows.iter_row_mappings():
-                if image_field not in row:
+            for index, image_number in enumerate(image_numbers):
+                if is_structural_missing_measurement_cell(image_number):
                     raise ValueError(
                         "Combined spreadsheet subjects require a producer-declared "
                         f"{image_field!r} on every {subject!r} row."
                     )
-                image_number = row[image_field]
-                rows_by_image.setdefault(image_number, []).append(row)
-                if image_number not in image_order:
-                    image_order.append(image_number)
-            grouped.append((subject, rows_by_image))
+                indexes = rows_by_image.setdefault(image_number, [])
+                indexes.append(index)
+                image_counts[image_number] = max(
+                    image_counts.get(image_number, 0), len(indexes)
+                )
+            grouped.append((subject, rows, rows_by_image))
 
-        combined: list[Mapping[str, object]] = []
-        for image_number in image_order:
-            row_count = max(
-                (
-                    len(rows_by_image.get(image_number, ()))
-                    for _, rows_by_image in grouped
-                ),
-                default=0,
+        offsets: dict[object, int] = {}
+        image_values: list[object] = []
+        for image_number, count in image_counts.items():
+            offsets[image_number] = len(image_values)
+            image_values.extend([image_number] * count)
+        columns: dict[str, np.ndarray] = {}
+        if image_values:
+            columns[image_field] = ColumnarRows.column_array(image_values)
+        for subject, rows, rows_by_image in grouped:
+            source_indexes = np.asarray(
+                [index for indexes in rows_by_image.values() for index in indexes],
+                dtype=np.intp,
             )
-            for row_index in range(row_count):
-                row: dict[str, object] = {image_field: image_number}
-                for subject, rows_by_image in grouped:
-                    subject_rows = rows_by_image.get(image_number, ())
-                    if row_index >= len(subject_rows):
-                        continue
-                    for field_name, value in subject_rows[row_index].items():
-                        if field_name == image_field:
-                            continue
-                        row[f"{subject}_{field_name}"] = value
-                combined.append(row)
-        names = tuple(dict.fromkeys(name for row in combined for name in row))
+            target_indexes = np.asarray(
+                [
+                    offsets[image_number] + ordinal
+                    for image_number, indexes in rows_by_image.items()
+                    for ordinal in range(len(indexes))
+                ],
+                dtype=np.intp,
+            )
+            for field_name in rows.columns:
+                if field_name == image_field:
+                    continue
+                values = ColumnarRows.column_array(rows.column_values(field_name))[
+                    source_indexes
+                ]
+                present = np.fromiter(
+                    (not is_structural_missing_measurement_cell(value) for value in values),
+                    dtype=bool,
+                    count=len(values),
+                )
+                if not np.any(present):
+                    continue
+                name = f"{subject}_{field_name}"
+                if name not in columns:
+                    columns[name] = np.empty(len(image_values), dtype=object)
+                    columns[name].fill(MEASUREMENT_SPARSE_CELL)
+                columns[name][target_indexes[present]] = values[present]
+        # Native headers follow the first row where a field is present, then
+        # the declared subject/field order within that row.
+        names = tuple(
+            sorted(
+                columns,
+                key=lambda name: next(
+                    index
+                    for index, value in enumerate(columns[name])
+                    if not is_structural_missing_measurement_cell(value)
+                ),
+            )
+        )
         return MeasurementSparseColumnarRows(
-            {
-                name: tuple(row.get(name, MEASUREMENT_SPARSE_CELL) for row in combined)
-                for name in names
-            },
+            {name: columns[name] for name in names},
             fields=tuple(FieldSpec(name, required=False) for name in names),
         )
 
