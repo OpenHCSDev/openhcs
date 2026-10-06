@@ -1482,6 +1482,13 @@ records useful bright-body localisation separately from the rejected complete
 instance inventory, with independent matched-view checks and frozen-artifact
 scope. This repeat is not a manual-reference accuracy estimate.
 
+A fresh H001 repeat retained 62 bright-object instances after autonomous
+partition repair, with unchanged foreground compared with its 66-object FIRST.
+The [independent qualified review](task_only_analysis/h001-fresh25-qualified-review.rst)
+records useful compact-body coverage, unresolved lobed-object splits/merges and
+small-focus misses, native label/area reconciliation and the checked freeze.
+It does not infer cell identity or reference accuracy from algorithm counts.
+
 A retained personal-neurite development continuation also analysed a reused
 nine-field mosaic with pooled channel fits. A fixed-DN clipping repair corrected
 unexpected rescaling, but dense nuclear misses and soma underfill prevented
