@@ -54,10 +54,21 @@ Determining dispositions
 * ROI parent-label archive filtering is unpublished. Native data_index selection
   after loading is not an equivalent implementation. No specific open bug has
   been established as fixed by this capability.
-* Historical singleton checkpoint replay, sparse route-local index translation
-  and settlement-cycle error isolation remain candidate regressions. Preserve
-  their exact tests; determine whether current producers/owners still expose
-  the reported behavior before adapting old code.
+* The historical singleton checkpoint reader workaround is superseded for the
+  original selected-plane producer: bb76b5e44 consumes the explicitly selected
+  singleton at SourcePlaneSelectionImageOutput.resolve_source_context, returning
+  the plane with its provenance instead of persisting a redundant leading axis.
+  Current source retains that behavior and the affected materialization test.
+  The old reader inferred an axis from remaining metadata; do not restore that
+  inference for an output the current producer no longer emits. Any independently
+  created legacy checkpoint remains archived, not silently migrated.
+* Sparse route-local index translation and settlement-cycle error isolation are
+  unpublished historical patches. Their old methods are absent from main; that
+  alone does not establish a current user failure. Preserve their exact tests
+  and establish current consumers before considering integration.
+* The old ROI summary correction is superseded by 6dce327e6: current materializer
+  reports parent labels, not cells. Archive member count and biological count
+  remain distinct. No wording transplant is needed.
 * Round-object component inspection is unpublished. Its production split-stage
   diagnostic needs current-owner adaptation, not wholesale old-file copying.
 * Strict workload-count finalization is a historical unpublished benchmark/MCP
@@ -130,6 +141,17 @@ checkout change. Determine that remaining path before recording full closure.
 Issues131 and580 retain specific causal-memory and upstream triangulation/
 orthogonal acceptance gaps. Related merges alone do not close those gaps.
 The rest of the open-issue census is still under commit-level audit.
+
+Issues445 and152 CLOSED after reading current main6c388681f and subsequent owner
+history, not just original PR associations. Physical acquisition inventory and
+sampling retain exact source references independently of pipeline projection;
+PR454's installed C1/C3 and composite acceptance covers the original access
+defect. Native navigation derives display order from semantic presentation and
+validates the visible graph before mutation. PR748's installed saved scalar/
+fractional-Points journey exercised XY/XZ/YZ with source transforms intact.
+The actual native stack was Napari0.6.1. Unsupported planar Shapes cross-sections,
+simultaneous linked canvases and separate late-WM/triangulation failures are not
+claimed fixed. The closure comments retain these precise limits.
 
 Next delivery
 -------------
