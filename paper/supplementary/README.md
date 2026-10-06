@@ -1437,6 +1437,14 @@ including the weaker LY294002 control separation. It distinguishes complete
 measurement coverage from GFP-dependent population selection and does not claim
 exhaustive biological segmentation or fully sealed runtime closure.
 
+The [later completed translocation analysis](task_only_analysis/bbbc013-fresh23-qualified-completion.rst)
+retained 14,631 eligible rows from 17,320 nuclear identities across all 96 wells.
+Both nine-dose series showed increasing well-median log2 ratios followed by a
+plateau; control Z-prime was 0.849 for LY294002 and 0.726 for Wortmannin.
+Independent all-well recalculation and scientific-file verification supported
+this completed result. Treatment-dependent eligibility remains a qualification,
+while scattered faint misses do not invalidate the measured assay response.
+
 An independent volume repeat repaired internal-peak duplicates before freezing
 26 candidate centres. The existing post-freeze matcher recovered all 15 manual
 centres within 20 and 30 voxels, with mean error 4.82 voxels, and 14 within
