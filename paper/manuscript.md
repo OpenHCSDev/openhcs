@@ -433,7 +433,10 @@ and YZ review supported repaired ordinary-body placement while retaining a
 clear pair and a dim nucleus. A fragmented bright group and cropped objects
 remained uncertain. This is self-directed repair without reference feedback;
 the reduced count alone does not establish an exhaustive nucleus census
-(Supplementary Data 8).
+(Supplementary Data 8). Independent post-freeze matching recovered all 15
+annotated centres within 20 and 30 voxels in both candidates; mean localization
+error decreased from 5.37 to 4.86 voxels. Unmatched predictions decreased from
+16 to 11, but the incomplete reference does not establish these as false cells.
 
 A fresh public neurite-field author identified bright junction pixels lost
 after ridge enhancement and restored them by combining enhanced support with

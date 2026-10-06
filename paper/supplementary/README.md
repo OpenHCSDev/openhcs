@@ -1040,6 +1040,13 @@ retain the plotted rows and source/output hashes.
 
 ## Supplementary Data 8. Task-only authoring and independent repair
 
+The [fresh23 paired volume-localization comparison](task_only_analysis/h002-fresh23-paired-localisation.rst)
+evaluates the author's frozen FIRST and final choices without reference feedback.
+Both match all 15 annotations within 20 voxels; mean error decreases from 5.37
+to 4.86 voxels and unmatched predictions from 16 to 11. Annotation coverage is
+not established as exhaustive, so those unmatched predictions are not biological
+false-cell counts.
+
 The [task-only evaluation report](task_only_analysis.md) distinguishes first
 completed scientific predictions from final independent repairs on the same
 inputs. H001 compares notebook-derived computational partitions, whereas
