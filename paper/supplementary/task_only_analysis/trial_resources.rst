@@ -90,13 +90,44 @@ revision, or model release date. The earlier prospective study's
 ``gpt-5.6-sol`` is identified as paper-reported; its bound archive contains
 MCP transcripts but no located author/provider usage receipt.
 
-Every provider-billed USD field is ``not_recorded``. Every listed-API-price
-estimate is ``not_calculated``. Neither means zero cost or free operation.
-No current price is applied retrospectively. The missing dependencies for an
-actual cost table are original billing/credit receipts with a trial or
-invocation allocation, a demonstrated billing route, and any applicable
-historical rates; subscription allocation cannot be invented from tokens.
-No such billing owner receipt was supplied by the bound trial records.
+Every provider-billed USD field in the original CSV is ``not_recorded``;
+its original listed-API-price field remains ``not_calculated``. Neither means
+zero cost or free operation. The original counters and billing fields have
+not been rewritten. The reader-facing table now reports separate rate scenarios
+at the author's request, rather than requiring billing receipts before reporting
+useful computational usage.
+
+Rate-scenario definition, observed 6 October 2026
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For the exact recorded model gpt-6.1-sol, the official OpenAI API pricing page
+lists Standard short-context input, cached-input and output rates of
+USD 2.00, 0.10 and 10.00 per million tokens, respectively:
+https://developers.openai.com/api/docs/pricing.
+The official Codex credit table lists Standard-speed input, cached-input and
+output rates of 50, 2.5 and 250 credits per million tokens:
+https://learn.chatgpt.com/docs/pricing.
+These are the source rates for the separate scenarios, not inferred charges.
+
+Let I be recorded total input tokens, C its cached subset and O total output.
+The API read-token scenario is ((I-C)*2 + C*0.10 + O*10)/1,000,000 USD.
+The Standard credit equivalent is ((I-C)*50 + C*2.5 + O*250)/1,000,000.
+Calculations use the exact CSV counters before rounding. Reasoning output is
+already included in O. Local MCP operations are not priced as hosted API tools.
+
+The API scenario assumes Standard short-context rates and no separately
+charged cache writes, hosted-tool charges, regional uplifts or other fees.
+Request-level context tiers and cache-write usage have not been reconstructed;
+their charges are excluded rather than asserted absent. The credit equivalent
+assumes Standard speed; it does not reconstruct Fast-mode charges, included
+subscription quota consumption or purchased credits actually deducted.
+The official credit documentation distinguishes included subscription limits
+from token-rate credit billing. Neither scenario is an actual historical bill.
+
+Usage tokens remain the primary reported resource measure. The selected
+independent rows' scenarios are illustrative; retained-context cumulative
+development rows are not priced as isolated phases. Older rows lacking counters
+remain missing, not zero. No additional author or API run was needed.
 
 Selected examples and explicit repeats
 --------------------------------------

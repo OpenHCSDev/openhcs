@@ -38,9 +38,29 @@ Groups below are derived from the CSV's observed UTC date, literal model/provide
 
 The three September prospective rows have paper-reported `gpt-5.6-sol` and observed OpenHCS 0.8.5, but no located original author/provider usage or task-delivery/completion journal. Their task walltimes, CLI and provider are not recorded. Other historical gpt-5.6 workflows outside these three prospective records are not covered by this catalogue; their identities, walltimes and usage are not inferred. Later rows record `gpt-6.1-sol` and provider label `openai`, not an immutable backend model revision or proof of a billed API route. Model/CLI release dates were not recorded.
 
-## Billing limitations and projection provenance
+## Recorded tokens and rate-scenario equivalents
 
-Provider-billed USD is `not_recorded` for every row; listed-API-price estimates are `not_calculated`. Missing costs do not mean zero cost. Actual attribution requires original billing/credit receipts and a demonstrated invocation allocation; no current price is applied retrospectively. Retained-context token totals may include ancestors and are not incremental phase usage. Cached input and reasoning output remain subsets of input and output respectively, not additional tokens.
+The primary resource measurement is recorded tokens, available for every retained invocation with counters in the resource CSV. The following selected rows correspond to the clock table above. M denotes million tokens and k thousand tokens; calculations use exact counters, not these rounded displays. Cached input is part of total input, not additional usage. Reasoning output is already included in output.
+
+| Trial | Input (M) | Cached input (M) | Output (k) | API scenario (USD) | Credit equivalent |
+| :--- | ---: | ---: | ---: | ---: | ---: |
+| H001 fresh586 | 16.95 | 16.49 | 45.0 | 3.03 | 75.7 |
+| H002 fresh15 | 20.64 | 20.16 | 47.1 | 3.45 | 86.4 |
+| H003 fresh26 | 25.36 | 24.51 | 76.1 | 4.91 | 122.8 |
+| Retina fresh09 | 18.93 | 18.35 | 67.6 | 3.67 | 91.8 |
+| Retina fresh26 | 23.44 | 22.88 | 61.6 | 4.03 | 100.7 |
+| Public neurite fresh20 | 15.64 | 15.16 | 46.7 | 2.94 | 73.5 |
+| BBBC039 fresh612 | 20.51 | 19.83 | 55.3 | 3.89 | 97.2 |
+| BBBC039 fresh10 | 20.31 | 19.42 | 57.8 | 4.30 | 107.6 |
+| BBBC039 fresh13 | 57.45 | 55.89 | 180.3 | 10.51 | 262.6 |
+| BBBC007 fresh26 | 34.48 | 33.37 | 105.3 | 6.60 | 165.1 |
+| BBBC013 fresh23 | 77.74 | 75.85 | 295.7 | 14.32 | 357.9 |
+| Personal neurite fresh13 | 18.62 | 17.66 | 56.5 | 4.25 | 106.2 |
+| Personal neurite dev25 (assisted) | 85.64 | 82.55 | 268.1 | Not phase usage | Not phase usage |
+
+Rates and formulas are specified in [the accounting reference](trial_resources.rst#rate-scenario-definition-observed-6-october-2026), using the [official API prices](https://developers.openai.com/api/docs/pricing) and [Codex credit rates](https://learn.chatgpt.com/docs/pricing) observed on 6 October 2026 for the exact recorded model. The API column is a Standard short-context read-token scenario, excluding unmeasured cache-write and other API fees; request-level context tiers have not been reconstructed. The credit column is a Standard-speed token equivalent, not purchased credits deducted or included subscription quota consumed. These are scenario estimates, not actual historical charges.
+
+Provider-billed USD remains `not_recorded` in the unchanged source CSV. Missing bills do not mean zero cost. Retained-context totals may include ancestors and are not incremental phase usage; the assisted row's token counters are reported but no phase-cost estimate is assigned. Older trials lacking counters cannot be priced from these records. Additional runs could supply prospective accounting, but are not required to report the existing usage.
 
 Projection source: `trial_resources.csv`, SHA256 `ea2b2deae4b5cf82efb1e0c1c1803e595765b1a99f471ea7ced81bdaf961f3d9`. Selected trial identifiers, unrounded seconds, UTC boundaries, original usage scopes and source identities remain in that CSV. No new scientific execution, scoring, provider run or package installation was performed.
 

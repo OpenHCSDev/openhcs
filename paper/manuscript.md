@@ -122,8 +122,12 @@ were not opened by the analysis agents. Original image-delivery records excluded
 25 fields opened by at least one of the three agents, leaving a common 175-field
 comparison. This retrospective subset is distinct from the prospectively
 withheld images above. Supplementary Data 8 records the exclusions, frozen
-predictions and each trial's wall time, model and software versions. Billing
-amounts were not recorded.
+predictions and each trial's wall time, model and software versions. We report
+recorded input, cached-input and output tokens as computational usage. For
+selected independent trials, the supplement also estimates API-dollar and
+Codex-credit equivalents at published rates observed on 6 October 2026.
+These rate scenarios are not actual subscription charges; billing amounts
+were not recorded.
 
 ### Performance measurements and reproducibility
 
