@@ -272,20 +272,23 @@ class AtomicMetadataWriter:
                 self._update_projection_geometry(
                     subdirectories[name], admitted[name].entries.values()
                 )
+            reconciliation_contexts = {}
             for owner, context in target_contexts.items():
                 for target in owner.reconciliation_targets(
                     context, document=document, admitted_entries=admitted
                 ):
-                    if target.contains_outputs(context):
-                        admitted[target.sub_dir] = target.write(
-                            context,
-                            metadata_writer=self,
-                            metadata_document=data,
-                            admitted_entries=admitted.get(
-                                target.sub_dir,
-                                VirtualWorkspaceSourceProjectionEntries(MappingProxyType({})),
-                            ),
-                        )
+                    reconciliation_contexts.setdefault(target, context)
+            for target, context in reconciliation_contexts.items():
+                if target.contains_outputs(context):
+                    admitted[target.sub_dir] = target.write(
+                        context,
+                        metadata_writer=self,
+                        metadata_document=data,
+                        admitted_entries=admitted.get(
+                            target.sub_dir,
+                            VirtualWorkspaceSourceProjectionEntries(MappingProxyType({})),
+                        ),
+                    )
             return data
 
         self._execute_update(metadata_path, update)
