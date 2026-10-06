@@ -99,6 +99,76 @@ def test_zmq_execution_context_seeds_saved_global_config_for_compilation() -> No
     assert saved_global_config.processing_config.group_by is GroupBy.CHANNEL
 
 
+@pytest.mark.parametrize("failed", [False, True])
+def test_axis_outcomes_qualify_server_terminal_after_export(monkeypatch, failed):
+    server = ZMQExecutionServer(port=5555)
+    record = ExecutionRecord(
+        execution_id="axis-outcome-check",
+        plate_id="/tmp/plate",
+        client_address=None,
+        status=ExecutionStatus.QUEUED.value,
+    )
+    server._lifecycle.enqueue(record)
+    results = CompiledPlateExecutionResults(
+        {
+            "A01": ExecutionResult.success("A01"),
+            "A02": (
+                ExecutionResult.error("A02", error_message="producer lineage missing")
+                if failed
+                else ExecutionResult.success("A02")
+            ),
+        }
+    )
+    exported = []
+    monkeypatch.setattr(
+        zmq_execution_server_module,
+        "ZMQWorkerExecutionRequest",
+        lambda **kwargs: SimpleNamespace(execute=lambda: results),
+    )
+    monkeypatch.setattr(
+        server,
+        "_export_runtime_observation",
+        lambda **kwargs: exported.append(kwargs["execution_results"]),
+    )
+    context = SimpleNamespace(
+        compile_only=False,
+        execution_id=record.execution_id,
+        auxiliary_params=SimpleNamespace(
+            runtime_observation_mode_for=lambda bundle: RuntimeObservationMode.OMIT
+        ),
+    )
+    monkeypatch.setattr(
+        server,
+        "execute_task",
+        lambda execution_id, request: server._finish_compilation_or_execute(
+            request_context=context,
+            orchestrator=None,
+            compilation=SimpleNamespace(execution_bundle=object()),
+            progress_context={},
+            debug_execution_policy=None,
+        ),
+    )
+    monkeypatch.setattr(server, "_kill_worker_processes", lambda: 0)
+    server.run_execution(
+        record.execution_id,
+        ExecuteRequest(plate_id=record.plate_id, pipeline_code="pass"),
+        record,
+    )
+    terminal = server.progress_queue.get_nowait()[MessageFields.EXECUTION]
+    assert terminal[MessageFields.STATUS] == (
+        ExecutionStatus.FAILED.value if failed else ExecutionStatus.COMPLETE.value
+    )
+    assert exported == [results]
+    assert results["A01"].is_success()
+    if failed:
+        assert "A02: error: producer lineage missing" in terminal[MessageFields.ERROR]
+    else:
+        assert terminal[MessageFields.RESULTS_SUMMARY][MessageFields.WELLS] == [
+            "A01",
+            "A02",
+        ]
+
+
 @pytest.mark.parametrize("invalid_output_metadata", (False, True))
 def test_terminal_notification_contains_openhcs_summary_before_cleanup(
     monkeypatch, caplog, invalid_output_metadata

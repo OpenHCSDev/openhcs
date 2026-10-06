@@ -5,7 +5,9 @@ from types import MappingProxyType
 
 import pytest
 
-from openhcs.core.orchestrator.compiled_plate_execution import CompiledPlateExecutionResults
+from openhcs.core.orchestrator.compiled_plate_execution import (
+    CompiledPlateExecutionResults,
+)
 
 from openhcs.core.orchestrator.execution_result import ExecutionResult
 
@@ -26,7 +28,8 @@ def test_plate_terminal_outcome_preserves_individual_axes(failed: bool) -> None:
     successful = ExecutionResult.success("A01")
     other = (
         ExecutionResult.error("A02", error_message="producer lineage missing")
-        if failed else ExecutionResult.success("A02")
+        if failed
+        else ExecutionResult.success("A02")
     )
     results = CompiledPlateExecutionResults({"A01": successful, "A02": other})
     assert results.is_success() is not failed

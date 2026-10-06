@@ -947,10 +947,16 @@ def test_analysis_consolidation_propagates_runtime_failures(monkeypatch):
 def test_execution_state_projector_maps_success_and_failure():
     orchestrator = SimpleNamespace(_state=None)
 
-    project_execution_state(orchestrator, CompiledPlateExecutionResults({"A01": ExecutionResult.success("A01")}))
+    project_execution_state(
+        orchestrator,
+        CompiledPlateExecutionResults({"A01": ExecutionResult.success("A01")}),
+    )
     assert orchestrator._state is orchestrator_module.OrchestratorState.COMPLETED
 
-    project_execution_state(orchestrator, CompiledPlateExecutionResults({"A01": ExecutionResult.error("A01")}))
+    project_execution_state(
+        orchestrator,
+        CompiledPlateExecutionResults({"A01": ExecutionResult.error("A01")}),
+    )
     assert orchestrator._state is orchestrator_module.OrchestratorState.EXEC_FAILED
 
 

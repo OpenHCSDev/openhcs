@@ -34,8 +34,11 @@ Those views do not need local failed-axis overrides.
 
 The existing audit.measures.measure_source parsed 64 files in orchestrator,
 runtime, progress and vendored ZMQ execution before edits, with zero omissions.
-This is scoped AST evidence, not a completed global NRA proof. GUI consumers
-were additionally located by source search; their full AST census is pending.
+This is scoped AST evidence, not a completed global NRA proof. After migration,
+the expanded family (including agent and actual pyqt_gui roots) parsed 215 files
+with zero omissions. Source reads confirmed ExecutionJobRecord.status derives
+status/errors from the terminal response; the GUI completion callback parses
+that same terminal status into TerminalExecutionStatus.completion_payload.
 
 Crossings and acceptance
 ------------------------
@@ -50,7 +53,14 @@ The initial source pytest collection could not import TiffPhotometric from the
 foreign PolyStore checkout. The reused interpreter's baseline installed wheel
 also lacks it. Neither package nor dirty submodule has been changed.
 
-Pending: focused checks with an already-qualified dependency target, then a
+Focused checks passed 62 tests in 6.60 seconds using the existing receiving26
+dependency target and reused interpreter. Source package search includes this
+branch; dependency imports use the qualified installed target, not the foreign
+externals. Tests cover original server run_execution and terminal publication
+for failed/all-success aggregates, export ordering, and retained successful
+axis results. Controlled worker responses are not installed public-MCP proof.
+
+Pending: a
 distinct tiny registered public MCP failing-axis and all-success pair on an
 owned reused engineering route coordinated with Dewey. Original science,
 UNKNOWN inputs and active blind-author packages remain untouched. Hosted CI
