@@ -133,3 +133,12 @@ and a label-only stored cohort. Installed/public MCP acceptance remains pending.
 Original receipts are retained under:
 /home/ts/wt/openhcs-issue-batch-20260929/engineering-photometry-722-20261005/
 controls01.log, controls01.time, AST-BEFORE.json and AST-AFTER.json.
+
+Controls02 pinned 5f5300ba9 and ended exit 1: eight passed, eight failed.
+Single raw alias and both mixed raw/produced orders passed. The remaining
+failures distinguish missing current Actin planes, produced-image fixed-channel
+scope mismatch, stale custom registration, a negative dictionary index, and
+the unmatched two-anchor expectation. These are not declared passed or erased.
+The next fixture revision explicitly declares its CHANNEL source stack through
+SourceBindingsConfig, retains one module-lifetime custom declaration, and uses
+the actual compiled-step dictionary key. Production bytes remain df283098a.

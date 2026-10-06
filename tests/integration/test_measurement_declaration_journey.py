@@ -149,7 +149,7 @@ def half_current_pixels(image):
     return image / 2
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def registered_current_transform():
     registered = register_custom_function(half_current_pixels)
     try:
@@ -245,6 +245,7 @@ def _document(*, selected=True, two_producers=True, same_source=False):
         pipeline_config=PipelineConfig(
             microscope=Microscope.SOURCE_BINDINGS,
             source_bindings_config=LazySourceBindingsConfig(
+                source_stack_components=(AllComponents.CHANNEL,),
                 bindings=(_source("DNA", "1"),) if same_source else (
                     _source("DNA", "1"), _source("Actin", "2"),
                 ),
@@ -368,7 +369,7 @@ def test_label_only_measurement_keeps_stored_cohort(tmp_path):
     document = PipelineDocumentAuthority.from_source(PipelineDocumentAuthority.render(document))
     bundle = _compile(tmp_path, document, GlobalPipelineConfig(num_workers=1, use_threading=True))
     context = bundle.runtime_contexts["A01"]
-    plan = context.step_plans[-1]
+    plan = context.step_plans[len(document.pipeline_steps) - 1]
     group = plan.compiled_function_pattern.default_group
     cohort = plan.stored_primary_input_edges_for_group(group, None)
     assert cohort is not None
@@ -492,6 +493,7 @@ def test_explicit_measurement_rosters_survive_one_matched_source_anchor(
             original.pipeline_config,
             source_bindings_config=LazySourceBindingsConfig(
                 bindings=(_source("DNA", "1"), _source("Actin", "2")),
+                source_stack_components=(AllComponents.CHANNEL,),
                 match_plan=SourceBindingMatchPlan(method=SourceBindingMatchMethod.ORDER),
             ),
         ),
