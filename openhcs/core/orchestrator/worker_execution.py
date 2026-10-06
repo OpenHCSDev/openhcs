@@ -6,6 +6,7 @@ import concurrent.futures
 import contextlib
 import logging
 import multiprocessing
+import signal
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, replace
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Sequence
@@ -93,6 +94,13 @@ class WorkerExecutorResources(ABC):
 
     multiprocessing_context: Any
     use_multiprocessing: bool
+
+    @staticmethod
+    def initialize_process_signals() -> None:
+        """Give child termination its own process lifetime, not a parent's cleanup."""
+
+        signal.signal(signal.SIGTERM, signal.SIG_DFL)
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
 
     @property
     def executor(self) -> concurrent.futures.Executor | None:
@@ -446,6 +454,8 @@ def _configure_worker_process(
     import logging
     import os
 
+    WorkerExecutorResources.initialize_process_signals()
+
     worker_log_level_name = os.environ.get("OPENHCS_LOG_LEVEL", "INFO").upper()
     worker_log_levels = logging.getLevelNamesMapping()
     if worker_log_level_name not in worker_log_levels:
@@ -482,6 +492,7 @@ def _execute_fork_inherited_worker_lane_process(
 ) -> None:
     """Process entrypoint for fork-inherited worker lane execution."""
 
+    WorkerExecutorResources.initialize_process_signals()
     for connection in inherited_parent_connections:
         connection.close()
     profiling_policy = CProfileWorkerProfilingPolicy.from_environment()
