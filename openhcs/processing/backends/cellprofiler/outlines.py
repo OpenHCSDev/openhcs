@@ -45,6 +45,7 @@ from openhcs.core.pipeline.function_contracts import (
 from openhcs.core.public_api import public_names_from_objects
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
+    ObjectLabelStorageStrategy,
     object_label_dense_array,
 )
 from openhcs.core.runtime_image_values import (
@@ -1063,12 +1064,6 @@ def _draw_object_labels(
     import skimage.color
     import skimage.segmentation
 
-    label_plane = object_label_dense_array(labels, dtype=np.int32)
-    if label_plane.ndim != 2:
-        raise ValueError(
-            "OverlayOutlines requires runtime-projected 2-D object labels."
-        )
-    labels_2d = align_label_plane_to_shape(label_plane, output.shape[:2])
     outline_color: tuple[float, float, float] | float
     if display_mode is OutlineDisplayMode.COLOR:
         if output.ndim == 2:
@@ -1076,14 +1071,22 @@ def _draw_object_labels(
         outline_color = color
     else:
         outline_color = outline_intensity
-    boundaries = skimage.segmentation.find_boundaries(
-        labels_2d, mode=line_mode.skimage_mode
-    )
-    if not np.any(boundaries):
-        return output
-    return skimage.segmentation.mark_boundaries(
-        output, labels_2d, color=outline_color, mode=line_mode.skimage_mode
-    )
+    for label_plane in ObjectLabelStorageStrategy.for_value(labels).rendering_layers(
+        labels, source_spatial_shape_yx=labels.source_spatial_shape_yx,
+    ):
+        if label_plane.ndim != 2:
+            raise ValueError(
+                "OverlayOutlines requires runtime-projected 2-D object labels."
+            )
+        labels_2d = align_label_plane_to_shape(label_plane, output.shape[:2])
+        boundaries = skimage.segmentation.find_boundaries(
+            labels_2d, mode=line_mode.skimage_mode
+        )
+        if np.any(boundaries):
+            output = skimage.segmentation.mark_boundaries(
+                output, labels_2d, color=outline_color, mode=line_mode.skimage_mode
+            )
+    return output
 
 
 def _draw_outline_image(

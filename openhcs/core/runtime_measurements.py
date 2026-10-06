@@ -1216,13 +1216,14 @@ class MeasurementRowAxisField(str, Enum):
 
 @dataclass(frozen=True, slots=True)
 class RuntimeMeasurementRowIdentityContract:
-    """Declarative identity-field precedence for measurement table rows."""
+    """Declare input identity precedence and the projected object-ID field."""
 
     primary_image_fields: frozenset[str] = frozenset({"slice_index"})
     fallback_image_fields: frozenset[str] = frozenset({"image_number", "image_id"})
     object_identity_fields: tuple[str, ...] = (
         MeasurementRowAxisField.object_id_field_names()
     )
+    object_identity_output_field: str = MeasurementRowAxisField.OBJECT_LABEL.value
 
     def __post_init__(self) -> None:
         primary_image_fields = frozenset(
@@ -1253,6 +1254,10 @@ class RuntimeMeasurementRowIdentityContract:
                 "RuntimeMeasurementRowIdentityContract.object_identity_fields "
                 "cannot be empty."
             )
+        output_field = normalize_runtime_identifier(self.object_identity_output_field)
+        if not output_field:
+            raise ValueError("Object identity output field must be non-empty.")
+        object.__setattr__(self, "object_identity_output_field", output_field)
         object.__setattr__(self, "primary_image_fields", primary_image_fields)
         object.__setattr__(self, "fallback_image_fields", fallback_image_fields)
         object.__setattr__(self, "object_identity_fields", object_identity_fields)

@@ -854,3 +854,32 @@ def test_wide_measurement_projection_uses_row_owned_scope_for_artifact_table() -
             "Intensity_IntegratedIntensity_PH3": 9.0,
         },
     )
+
+
+@pytest.mark.parametrize("layout", ["identity", "wide", "long"])
+def test_measurement_row_contract_owns_output_identity_without_renumbering(layout):
+    from openhcs.interop.cellprofiler.measurement_dialect import CELLPROFILER_MEASUREMENT_DIALECT
+
+    columns = {"slice_index": (1, 1), "object_label": (2, 17)}
+    if layout == "wide":
+        columns["Area"] = (3.0, 4.0)
+    elif layout == "long":
+        columns.update(feature_name=("Area", "Area"), result_value=(3.0, 4.0))
+    rows = MeasurementSparseColumnarRows(
+        columns,
+        fields=tuple(FieldSpec(name, str if name == "feature_name" else float)
+                     for name in columns),
+    )
+    for contract, output_name in (
+        (DEFAULT_RUNTIME_MEASUREMENT_ROW_IDENTITY_CONTRACT, "object_label"),
+        (CELLPROFILER_MEASUREMENT_DIALECT.row_identity_contract, "object_number"),
+    ):
+        accumulator = WideMeasurementRowAccumulator(contract)
+        accumulator.add(
+            rows, lambda feature, qualifiers: feature,
+            default_subject="Objects", default_scope=MeasurementScope.OBJECT,
+        )
+        projected = accumulator.row_mappings_by_subject()["Objects"]
+        assert tuple(row[output_name] for row in projected) == (2, 17)
+        assert all(("object_label" if output_name == "object_number" else "object_number")
+                   not in row for row in projected)
