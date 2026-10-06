@@ -789,6 +789,31 @@ validation, compilation and execution workflow with the recorded installation.
 Do not execute the file as an alternative analysis route. The input manifest
 and interpretation limits are identified in the linked review.
 
+The following source files are also supplied byte-for-byte from the authors'
+selected frozen attempts. Their run identities and original hashes remain in
+the linked analysis records; no candidate was reselected using reference scores.
+
+| Analysis and run | Selected attempt | Frozen pipeline |
+|---|---|---|
+| Bright objects, fresh25 | REPAIR02 | [Source](task_only_analysis/pipelines/h001-fresh25.py) |
+| Volume localisation, fresh23 | REPAIR05 | [Source](task_only_analysis/pipelines/h002-fresh23.py) |
+| DNA/actin, fresh26 | REPAIR03 | [Source](task_only_analysis/pipelines/h003-fresh26.py) |
+| Retinal somata, fresh26 | repair03 | [Source](task_only_analysis/pipelines/retina-fresh26.py) |
+| Public neurites, fresh20 | repair03 | [Source](task_only_analysis/pipelines/h004-fresh20.py) |
+| Translocation, fresh23 | FULL_S08 | [Source](task_only_analysis/pipelines/bbbc013-fresh23.py) |
+
+The volume pipeline also requires the original [centre-detection custom function](task_only_analysis/pipelines/h002-fresh23/custom_function.py).
+The translocation pipeline requires its original [compartment measurements](task_only_analysis/pipelines/bbbc013-fresh23/bbbc013_compartment_qc_v4.py),
+[assay statistics](task_only_analysis/pipelines/bbbc013-fresh23/bbbc013_assay_statistics_v1.py)
+and [dose-response summary](task_only_analysis/pipelines/bbbc013-fresh23/bbbc013_dose_response_v2.py)
+functions. Register these sources through MCP under their recorded function
+names before validating the corresponding pipeline. Reproduction also requires
+the recorded inputs, metadata and software version. Preserve scientific
+settings while relocating destinations and use an isolated viewer endpoint.
+These are frozen analysis artifacts, not additions to the processing library.
+The retinal and volume sources in this table correspond to Data 8's named
+trials, not the different trials illustrated in main Figures 7 and 9.
+
 The personal mosaic and explicitly labelled development examples retain assisted
 provenance; they are not counted as fresh unguided trials. Recovery of principal
 neurite shafts is the relevant illustrated result, not exhaustive filopodial
