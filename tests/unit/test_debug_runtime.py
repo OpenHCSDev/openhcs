@@ -131,7 +131,6 @@ from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_o
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
 )
-from openhcs.core.source_load_plan import SourceLoadPlan
 from openhcs.core.steps.function_runtime import (
     PatternGroupData,
 )
@@ -317,7 +316,6 @@ class DebugRuntimeFixture:
             axis_id=DebugRuntimeFixture.AXIS_ID,
             input_memory_type=MEMORY_TYPE_NUMPY,
             source_binding_plan=CompiledSourceBindingPlan.empty(),
-            source_load_plan=SourceLoadPlan(),
             variable_components=(),
             execution_group_scope=ComponentGroupScope.ungrouped(),
             compiled_function_pattern=SimpleNamespace(is_grouped=False),

@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, TypeAlias
 
 if TYPE_CHECKING:
+    from openhcs.core.runtime_adapters import RuntimeAdapterRequest
     from openhcs.core.source_bindings import CompiledSourceBindingPlan
     from openhcs.core.aligned_image_payload import AlignedImageSliceContext
     from openhcs.core.compiled_step_plan import FrameworkDeviceAssignment
@@ -313,10 +314,20 @@ class InvocationArtifactInputEdgePlan:
         self,
         scope: "FunctionCoreExecutor",
         primary_source_payload: object,
+        *,
+        request: "RuntimeAdapterRequest | None" = None,
     ) -> object:
-        """Resolve source input through the existing exact-origin authority."""
+        """Admit pre-call input pixels through their exact compiled origin."""
+        request = (
+            scope.runtime_adapter_request(primary_source_payload)
+            if request is None else request
+        )
+        loaded_payload = scope.loaded_source_artifact_payload(request, self)
+        if loaded_payload is not None:
+            return loaded_payload
         return scope.declared_source_payload(
-            self.spec.ref(), primary_source_payload, loaded_artifact_payloads={}
+            self.spec.ref(), primary_source_payload, loaded_artifact_payloads={},
+            request=request,
         )
 
     def __post_init__(self) -> None:
@@ -353,6 +364,8 @@ class CompiledMetadataArtifactInputEdgePlan(InvocationArtifactInputEdgePlan):
         self,
         scope: "FunctionCoreExecutor",
         primary_source_payload: object,
+        *,
+        request: "RuntimeAdapterRequest | None" = None,
     ) -> object:
         return scope.invocation.artifact_parameter_value(self.spec)
 

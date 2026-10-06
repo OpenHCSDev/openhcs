@@ -2386,7 +2386,6 @@ def test_grouped_runtime_adapter_receives_component_selected_source_bindings() -
     from openhcs.core.runtime_adapters import (
         RuntimePlaneProjection,
     )
-    from openhcs.core.source_load_plan import SourceLoadPlan
     from openhcs.core.steps.function_runtime import (
         PatternGroupData,
         FunctionCoreExecutor,
@@ -2418,7 +2417,6 @@ def test_grouped_runtime_adapter_receives_component_selected_source_bindings() -
         source_binding_plan=source_binding_plan,
         compiled_function_pattern=compiled_pattern,
         variable_components=(VariableComponents.SITE,),
-        source_load_plan=SourceLoadPlan(),
     )
     scope = PatternGroupData(
         matching_files=["first.tif", "second.tif"],
@@ -2465,7 +2463,6 @@ def test_runtime_invocation_uses_only_active_source_bound_main_flow_edges(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from openhcs.core.artifacts import NoMainFlowOutput
-    from openhcs.core.source_load_plan import SourceLoadPlan
     from openhcs.core.steps import function_runtime
     from openhcs.core.steps.function_runtime import (
         PatternGroupData,
@@ -2543,7 +2540,6 @@ def test_runtime_invocation_uses_only_active_source_bound_main_flow_edges(
         source_binding_plan=source_binding_plan,
         input_memory_type="numpy",
         variable_components=(VariableComponents.SITE,),
-        source_load_plan=SourceLoadPlan(),
         compiled_function_pattern=compiled_pattern,
         artifact_inputs={},
         artifact_outputs=output_plans,
@@ -2691,7 +2687,6 @@ def test_runtime_chain_skips_adapter_invocation_without_component_outputs(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from openhcs.core.function_patterns import CompiledFunctionGroup
-    from openhcs.core.source_load_plan import SourceLoadPlan
     from openhcs.core.steps import function_runtime
     from openhcs.core.steps.function_runtime import (
         PatternGroupData,
@@ -2766,7 +2761,6 @@ def test_runtime_chain_skips_adapter_invocation_without_component_outputs(
         step_type="FunctionStep",
         execution_group_scope=ComponentGroupScope.dynamic(AllComponents.CHANNEL),
         source_binding_plan=CompiledSourceBindingPlan.empty(),
-        source_load_plan=SourceLoadPlan(),
         input_memory_type="numpy",
         variable_components=(VariableComponents.SITE,),
         artifact_inputs={},
