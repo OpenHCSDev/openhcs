@@ -38,6 +38,11 @@ file in the run freeze. The authorized publisher uses its reviewed revision::
 
   FLEET_PARENT_RELEASED=1 bash operations/project-program.sh publish FUNDING NEXT EXPECTED_SHA256
 
+During preparation the same projector copies each new author's declared brief
+from its input root into its workspace. A missing or unreadable input brief
+fails preparation through the copy operation; stderr is not brief content.
+Provision the actual input contract before preparing and freezing a new run.
+
 Publication and admission share program.lock at FUNDING. Publication exclusively
 commits membership and FULL retired output roots together using atomic rename;
 admission reads one shared-locked revision. Missing custody, stale revision,
@@ -85,6 +90,12 @@ Use the canonical AUTHOR-PACKET.rst for every new declaration. Start the ONE
 recorded interactive client with tools.exec_command tty=true::
 
   bash "$FLEET_OPERATIONS/recorded-mcp.sh" "$FLEET_ROOT" "$FLEET_SLOT" startup01
+
+The CLI's final answer is recorded as ``author-final-answer.rst`` under the
+existing ``FLEET_RECORD_RUNTIME`` observation directory. It never writes the
+author's scientific ``output/FINAL.rst`` report. Scientific reports and their
+frozen manifests remain author-owned; the controller answer has separate custody
+for both fresh launches and recovery observations.
 
 Known-closed controller recovery
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
