@@ -469,6 +469,213 @@ def _native_reference_inventory(paths: frozenset[Path]) -> tuple[dict[str, str],
     )
 
 
+def _native_shard_requests(
+    report: NativeBatchReport, job_count: int
+) -> tuple[NativeBatchRequest, ...]:
+    """Derive each exact partition from the original whole-batch request."""
+    report.require_complete(report.request.repetitions)
+    image_counts = {row.image_set_count for row in report.observations}
+    if len(image_counts) != 1:
+        raise RuntimeError("Native whole-batch image-set domain changed.")
+    (image_count,) = image_counts
+    if job_count < 2 or image_count < job_count or image_count % job_count:
+        raise RuntimeError("Native image sets do not partition across requested jobs.")
+    directories = report.request.assignment_output_subdirectories
+    if directories and len(directories) % job_count:
+        raise RuntimeError("Native assignments do not partition across requested jobs.")
+    if directories:
+        domains = tuple(
+            tuple(tuple(item) for item in row.assignment_image_set_counts)
+            for row in report.observations
+        )
+        if len(set(domains)) != 1 or len({count for _, count in domains[0]}) != 1:
+            raise RuntimeError(
+                "Native repeated assignments have unequal input domains."
+            )
+    shard_root = Path(report.request.output_root).parent / "native_shards"
+    partition = image_count // job_count
+    assignment_partition = len(directories) // job_count
+    return tuple(
+        replace(
+            report.request,
+            output_root=str(shard_root / str(index)),
+            expected_image_sets=partition,
+            first_image_set=1 if directories else index * partition + 1,
+            last_image_set=None if directories else (index + 1) * partition,
+            assignment_output_subdirectories=directories[
+                index * assignment_partition : (index + 1) * assignment_partition
+            ],
+            start_barrier_root=str(shard_root / "start_barrier"),
+            start_barrier_job_count=job_count,
+            start_barrier_job_index=index,
+            report_path=str(shard_root / f"{index}_report.json"),
+        )
+        for index in range(job_count)
+    )
+
+
+def _validate_native_shard_reports(
+    whole: NativeBatchReport,
+    reports: tuple[dict[str, object], ...],
+    job_count: int,
+) -> frozenset[Path]:
+    """Admit complete original reports and their exact partition/barrier custody."""
+    requests = _native_shard_requests(whole, job_count)
+    if len(reports) != job_count:
+        raise RuntimeError("Retained native shard reports are incomplete.")
+    files = set()
+    for request, payload in zip(requests, reports, strict=True):
+        report = NativeBatchReport.from_payload(payload)
+        report.require_complete(whole.request.repetitions)
+        report_path = Path(request.report_path)
+        request_path = report_path.with_name(
+            f"request_{request.start_barrier_job_index}.json"
+        )
+        if (
+            report.request != request
+            or NativeBatchRequest(**json.loads(request_path.read_text())) != request
+            or json.loads(report_path.read_text()) != payload
+        ):
+            raise RuntimeError(
+                "Native shard differs from its original partition/request/report."
+            )
+        whole.environment.require_equivalent(report.environment)
+        for whole_row, row in zip(whole.observations, report.observations, strict=True):
+            expected_domains = (
+                tuple(
+                    item
+                    for item in whole_row.assignment_image_set_counts
+                    if item[0] in request.assignment_output_subdirectories
+                )
+                if request.assignment_output_subdirectories
+                else (("", request.expected_image_sets),)
+            )
+            if row.image_set_count != request.expected_image_sets or tuple(
+                tuple(item) for item in row.assignment_image_set_counts
+            ) != tuple(tuple(item) for item in expected_domains):
+                raise RuntimeError(
+                    "Native shard assignment coverage differs from its partition."
+                )
+        files.update((request_path, report_path))
+    barrier_root = Path(requests[0].start_barrier_root)
+    expected_markers = frozenset(
+        barrier_root / f"repetition_{repetition}_job_{index}.ready"
+        for repetition in range(whole.request.repetitions)
+        for index in range(job_count)
+    )
+    if frozenset(barrier_root.iterdir()) != expected_markers or any(
+        not path.is_file() for path in expected_markers
+    ):
+        raise RuntimeError("Native shard barrier membership is incomplete or changed.")
+    return frozenset(files) | expected_markers
+
+
+def _concurrent_timing(
+    reports: tuple[dict[str, Any], ...], repetition: int
+) -> dict[str, float | int]:
+    """Derive simultaneous makespans from the original additive report clocks."""
+    observations = tuple(
+        next(row for row in report["observations"] if row["repetition"] == repetition)
+        for report in reports
+    )
+    invocations = tuple(
+        row["invocation_started_monotonic_seconds"] for row in observations
+    )
+    starts = tuple(row["pipeline_started_monotonic_seconds"] for row in observations)
+    completions = tuple(row["completed_monotonic_seconds"] for row in observations)
+    if any(
+        invocation > start or start > completed
+        for invocation, start, completed in zip(
+            invocations, starts, completions, strict=True
+        )
+    ):
+        raise RuntimeError("Native batch timing boundaries are out of order.")
+    if len(reports) > 1 and min(completions) <= max(starts):
+        raise RuntimeError("Native batch jobs did not overlap during analysis.")
+    return {
+        "repetition": repetition,
+        "invocation_start_skew_seconds": max(invocations) - min(invocations),
+        "invocation_overlap_seconds": min(completions) - max(invocations),
+        "invocation_through_completion_makespan_seconds": max(completions)
+        - min(invocations),
+        "pipeline_start_skew_seconds": max(starts) - min(starts),
+        "pipeline_overlap_seconds": min(completions) - max(starts),
+        "pipeline_execution_makespan_seconds": max(completions) - min(starts),
+    }
+
+
+def _native_shard_equivalence(
+    whole: NativeBatchReport,
+    reports: tuple[dict[str, object], ...],
+    *,
+    policy: RuntimeEquivalencePolicy,
+) -> list[dict[str, object]]:
+    """Recompare all original physical shard outputs to the whole native run."""
+    results = []
+    for repetition in range(-1, whole.request.repetitions):
+        native_root = Path(whole.observations[repetition + 1].output_root)
+        shard_roots = tuple(
+            Path(report["observations"][repetition + 1]["output_root"])
+            for report in reports
+        )
+        directories = whole.request.assignment_output_subdirectories
+        if not directories:
+            comparison = cellprofiler_native_shard_equivalence(
+                native_root, shard_roots, policy=policy
+            )
+        else:
+            comparisons = []
+            covered_files = set()
+            for directory in directories:
+                roots = tuple(
+                    root / directory
+                    for root in shard_roots
+                    if (root / directory).is_dir()
+                )
+                if len(roots) != 1:
+                    raise RuntimeError(
+                        "Native workers must own each repeated assignment exactly once."
+                    )
+                exports = RuntimeExportObservation.from_output_root(roots[0])
+                db, csv, images, _, _, _ = _saved_output_equivalence(
+                    native_root / directory, exports, policy=policy
+                )
+                comparisons.extend((db, csv, RuntimeEquivalenceReport(images)))
+                covered_files.update(exports.output_files)
+            actual_files = frozenset(
+                path
+                for root in shard_roots
+                for path in root.rglob("*")
+                if path.is_file()
+            )
+            if covered_files != actual_files:
+                raise RuntimeError(
+                    "Native assignment comparison leaves unowned output files."
+                )
+            comparison = RuntimeEquivalenceReport(
+                tuple(
+                    difference
+                    for report in comparisons
+                    for difference in report.differences
+                ),
+                frozenset(
+                    path
+                    for report in comparisons
+                    for path in report.compared_output_files
+                ),
+            )
+        result = {
+            **_concurrent_timing(reports, repetition),
+            "differences": tuple(str(value) for value in comparison.differences),
+        }
+        results.append(result)
+        if result["differences"]:
+            raise RuntimeError(
+                f"Native shard batch {repetition} differs from whole work: {result}"
+            )
+    return results
+
+
 def _reuse_native_report(
     reference_case: Path,
     *,
@@ -512,10 +719,6 @@ def _reuse_native_report(
     ):
         if origin[key] != json.loads(json.dumps(provenance[key])):
             raise RuntimeError(f"Retained native reference differs in {key}.")
-    if origin["native_job_count"] != 1:
-        raise RuntimeError(
-            "Retained native shards require barrier-specific qualification."
-        )
     # Exact prepared bytes reject unsupported path-dependent differences rather
     # than normalizing arbitrary CPPipe fields or accepting a changed input role.
     original_pipeline = Path(request.pipeline_path)
@@ -587,6 +790,51 @@ def _reuse_native_report(
     return report
 
 
+def _reuse_native_shard_reports(
+    reference_case: Path,
+    *,
+    native_report: Mapping[str, object],
+    provenance: dict[str, object],
+    policy: RuntimeEquivalencePolicy,
+) -> tuple[tuple[dict[str, object], ...], list[dict[str, object]]]:
+    """Qualify original parallel runs without invoking native analysis again."""
+    reports_path = reference_case / "native_shards" / "reports.json"
+    equivalence_path = reference_case / "native_shards" / "equivalence.json"
+    reports = tuple(json.loads(reports_path.read_text()))
+    whole = NativeBatchReport.from_payload(native_report)
+    files = _validate_native_shard_reports(
+        whole, reports, provenance["native_job_count"]
+    )
+    original_equivalence = json.loads(equivalence_path.read_text())
+    if tuple(row["repetition"] for row in original_equivalence) != tuple(
+        range(-1, whole.request.repetitions)
+    ):
+        raise RuntimeError(
+            "Original native shard equivalence is incomplete or reordered."
+        )
+    files |= frozenset((reports_path, equivalence_path)) | frozenset(
+        path
+        for report in reports
+        for observation in report["observations"]
+        for path in Path(observation["output_root"]).rglob("*")
+        if path.is_file()
+    )
+    candidate_path = reference_case / "candidate_report.json"
+    if candidate_path.is_file():
+        files |= frozenset((candidate_path,))
+    files |= frozenset(
+        Path(row["path"]) for row in provenance["native_reference_file_inventory"]
+    )
+    provenance["native_reference_file_inventory"] = _native_reference_inventory(files)
+    equivalence = _native_shard_equivalence(whole, reports, policy=policy)
+    if json.loads(json.dumps(equivalence)) != original_equivalence:
+        raise RuntimeError(
+            "Retained native shard science or simultaneous clocks changed."
+        )
+    _require_native_reference_unchanged(provenance)
+    return reports, equivalence
+
+
 def _require_native_reference_unchanged(provenance: Mapping[str, object]) -> None:
     """Retained inputs and outputs stay untouched throughout fresh scientific checks."""
     if "native_reference_file_inventory" not in provenance:
@@ -596,12 +844,26 @@ def _require_native_reference_unchanged(provenance: Mapping[str, object]) -> Non
     report = NativeBatchReport.from_payload(
         json.loads(Path(provenance["native_reference_report_path"]).read_text())
     )
+    reports = (report,)
+    if provenance["native_job_count"] > 1:
+        reports += tuple(
+            NativeBatchReport.from_payload(payload)
+            for payload in json.loads(
+                Path(provenance["native_reference_report_path"])
+                .with_name("native_shards")
+                .joinpath("reports.json")
+                .read_text()
+            )
+        )
     paths |= frozenset(
         path
-        for observation in report.observations
+        for retained in reports
+        for observation in retained.observations
         for path in Path(observation.output_root).rglob("*")
         if path.is_file()
     )
+    if len(reports) > 1:
+        paths |= frozenset(Path(reports[1].request.start_barrier_root).iterdir())
     if json.loads(json.dumps(_native_reference_inventory(paths))) != json.loads(
         json.dumps(before)
     ):
@@ -728,8 +990,6 @@ def main(argv: list[str] | None = None) -> int:
             "Native and OpenHCS worker counts must match in a concurrency pilot."
         )
     if args.native_reference_root is not None:
-        if args.native_jobs != 1:
-            raise ValueError("Retained native shard reuse is not supported.")
         if not args.native_reference_root.expanduser().is_dir():
             raise FileNotFoundError("Native reference cases root does not exist.")
     if args.repeat_assignments is not None and args.repeat_assignments < 1:
@@ -997,163 +1257,50 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
     shard_reports: tuple[dict[str, object], ...] = ()
     shard_equivalence: list[dict[str, object]] = []
     if args.native_jobs > 1:
-        partition_size = native_image_set_count // args.native_jobs
-        request_paths = []
-        for index in range(args.native_jobs):
-            shard_request = {
-                **native_payload,
-                "output_root": str(root / "native_shards" / str(index)),
-                "expected_image_sets": partition_size,
-                "first_image_set": (
-                    1
-                    if args.repeat_assignments is not None
-                    else index * partition_size + 1
-                ),
-                "last_image_set": (
-                    None
-                    if args.repeat_assignments is not None
-                    else (index + 1) * partition_size
-                ),
-                "assignment_output_subdirectories": (
-                    assignment_directories[
-                        index
-                        * (well_count // args.native_jobs) : (index + 1)
-                        * (well_count // args.native_jobs)
-                    ]
-                    if args.repeat_assignments is not None
-                    else ()
-                ),
-                "start_barrier_root": str(root / "native_shards" / "start_barrier"),
-                "start_barrier_job_count": args.native_jobs,
-                "start_barrier_job_index": index,
-            }
-            request_path = root / "native_shards" / f"request_{index}.json"
-            request_path.parent.mkdir(parents=True, exist_ok=True)
-            request_path.write_text(json.dumps(shard_request, indent=2))
-            request_paths.append(request_path)
-        with ThreadPoolExecutor(max_workers=args.native_jobs) as executor:
-            reports = tuple(
-                executor.map(
-                    lambda item: _invoke_native_worker(
-                        native_python=native_python,
-                        worker_script=native_worker,
-                        request_path=item[1],
-                        evidence_prefix=root / "native_shards" / str(item[0]),
-                        project_root=project_root,
-                        repetitions=args.repetitions,
-                        timeout_seconds=native_request.timeout_seconds,
-                    ),
-                    enumerate(request_paths),
-                )
+        whole = NativeBatchReport.from_payload(native_report)
+        if "native_reference_report_path" in provenance:
+            shard_reports, shard_equivalence = _reuse_native_shard_reports(
+                reference_case,
+                native_report=native_report,
+                provenance=provenance,
+                policy=policy,
             )
-        shard_reports = reports
+        else:
+            requests = _native_shard_requests(whole, args.native_jobs)
+            request_paths = []
+            for request in requests:
+                request_path = Path(request.report_path).with_name(
+                    f"request_{request.start_barrier_job_index}.json"
+                )
+                request_path.parent.mkdir(parents=True, exist_ok=True)
+                request_path.write_text(json.dumps(asdict(request), indent=2))
+                request_paths.append(request_path)
+            with ThreadPoolExecutor(max_workers=args.native_jobs) as executor:
+                shard_reports = tuple(
+                    executor.map(
+                        lambda item: _invoke_native_worker(
+                            native_python=native_python,
+                            worker_script=native_worker,
+                            request_path=item[1],
+                            evidence_prefix=root / "native_shards" / str(item[0]),
+                            project_root=project_root,
+                            repetitions=args.repetitions,
+                            timeout_seconds=native_request.timeout_seconds,
+                        ),
+                        enumerate(request_paths),
+                    )
+                )
+            _validate_native_shard_reports(whole, shard_reports, args.native_jobs)
+            shard_equivalence = _native_shard_equivalence(
+                whole, shard_reports, policy=policy
+            )
+        (root / "native_shards").mkdir(parents=True, exist_ok=True)
         (root / "native_shards" / "reports.json").write_text(
             json.dumps(shard_reports, indent=2)
         )
-        for repetition in range(-1, args.repetitions):
-            shard_roots = tuple(
-                root / "native_shards" / str(index) / str(repetition)
-                for index in range(args.native_jobs)
-            )
-            if args.repeat_assignments is None:
-                comparison = cellprofiler_native_shard_equivalence(
-                    root / "native" / str(repetition),
-                    shard_roots,
-                    policy=policy,
-                )
-            else:
-                reports = []
-                covered_files = set()
-                for directory in assignment_directories:
-                    assignment_roots = tuple(
-                        shard_root / directory
-                        for shard_root in shard_roots
-                        if (shard_root / directory).is_dir()
-                    )
-                    if len(assignment_roots) != 1:
-                        raise RuntimeError(
-                            "Native workers must own each repeated assignment exactly once."
-                        )
-                    assignment_exports = RuntimeExportObservation.from_output_root(
-                        assignment_roots[0]
-                    )
-                    db, csv, images, _, _, _ = _saved_output_equivalence(
-                        root / "native" / str(repetition) / directory,
-                        assignment_exports,
-                        policy=policy,
-                    )
-                    reports.extend((db, csv, RuntimeEquivalenceReport(images)))
-                    covered_files.update(assignment_exports.output_files)
-                actual_files = frozenset(
-                    path
-                    for shard_root in shard_roots
-                    for path in shard_root.rglob("*")
-                    if path.is_file()
-                )
-                if covered_files != actual_files:
-                    raise RuntimeError(
-                        "Native assignment comparison leaves unowned output files."
-                    )
-                comparison = RuntimeEquivalenceReport(
-                    tuple(
-                        difference
-                        for report in reports
-                        for difference in report.differences
-                    ),
-                    frozenset(
-                        path
-                        for report in reports
-                        for path in report.compared_output_files
-                    ),
-                )
-            observations_for_repetition = tuple(
-                report["observations"][repetition + 1] for report in shard_reports
-            )
-            invocations = tuple(
-                observation["invocation_started_monotonic_seconds"]
-                for observation in observations_for_repetition
-            )
-            starts = tuple(
-                observation["pipeline_started_monotonic_seconds"]
-                for observation in observations_for_repetition
-            )
-            completions = tuple(
-                observation["completed_monotonic_seconds"]
-                for observation in observations_for_repetition
-            )
-            if any(
-                invocation > pipeline_start or pipeline_start > completed
-                for invocation, pipeline_start, completed in zip(
-                    invocations, starts, completions, strict=True
-                )
-            ):
-                raise RuntimeError(
-                    "Native batch invocation, pipeline-start and completion "
-                    "timestamps are not ordered."
-                )
-            result = {
-                "repetition": repetition,
-                "invocation_start_skew_seconds": max(invocations) - min(invocations),
-                "invocation_overlap_seconds": min(completions) - max(invocations),
-                "invocation_through_completion_makespan_seconds": (
-                    max(completions) - min(invocations)
-                ),
-                "pipeline_start_skew_seconds": max(starts) - min(starts),
-                "pipeline_overlap_seconds": min(completions) - max(starts),
-                "pipeline_execution_makespan_seconds": (
-                    max(completions) - min(starts)
-                ),
-                "differences": tuple(str(value) for value in comparison.differences),
-            }
-            shard_equivalence.append(result)
-            (root / "native_shards" / "equivalence.json").write_text(
-                json.dumps(shard_equivalence, indent=2)
-            )
-            if result["pipeline_overlap_seconds"] <= 0 or result["differences"]:
-                raise RuntimeError(
-                    f"Native shard batch {repetition} did not prove concurrent, "
-                    f"equivalent work: {result}"
-                )
+        (root / "native_shards" / "equivalence.json").write_text(
+            json.dumps(shard_equivalence, indent=2)
+        )
         print(
             "Native sharded batches overlap and match whole-batch outputs.", flush=True
         )
