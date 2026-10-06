@@ -640,6 +640,39 @@ def h004_faint_path():
     sheet.save()
 
 
+def assay_review_sheets():
+    """Keep related native witnesses on one assay sheet, with original receipts."""
+    groups = (
+        ("h001_assay_review", "Bright-object separation", ("h001_scored_native",)),
+        ("h002_assay_review", "Volumetric localisation and body separation", ("h002_fresh22_split_repair", "h002_fresh10_native")),
+        ("retina_assay_review", "Retinal soma localisation", ("retina_fresh16_repair", "retinal_development_repair")),
+        ("h003_assay_review", "Paired nuclear and cell-body analysis", ("h003_fresh656_native", "h003_fresh19_matched")),
+        ("h004_assay_review", "Neurite main-shaft recovery", ("h004_main_shafts", "h004_junction_native")),
+    )
+    for stem, title, panels in groups:
+        sheet = FigureSheet(stem, title, 5.2 * len(panels))
+        height = 88 / len(panels)
+        for index, panel in enumerate(panels):
+            sheet.asset(OUTPUT / f"{panel}.png", (2, 5 + (len(panels) - index - 1) * height, 96, height - 2))
+        sheet.save()
+
+
+def h004_main_shafts():
+    """Show the retained initial shaft result, not a fine-branch sensitivity trial."""
+    sheet = FigureSheet("h004_main_shafts", "Main-shaft recovery", 4.2)
+    sources = OUTPUT / "h004_fresh20_sources"
+    index_path = sources / "QA-INDEX.json"
+    sheet.source(index_path)
+    captures = {item["capture_group"]: item for item in json.loads(index_path.read_text())}
+    for x, name, title in ((3, "first-bottom-raw", "A  Raw process channel"), (52, "first-bottom-result", "B  Main-shaft result")):
+        path = sources / f"{name}.png"
+        if digest(path) != captures[name]["sha256"]:
+            raise ValueError(f"Retained capture hash mismatch: {name}")
+        sheet.text(x, 87, title, size=13, weight="bold")
+        sheet.source_image(path, (x, 12, 45, 69), crop=(297, 28, 1250, 410))
+    sheet.save()
+
+
 def personal_stitched_development():
     """Retained development witnesses, not a fresh autonomous score."""
     sheet = FigureSheet("p001_stitched_dev13_native", "", 6.2)
