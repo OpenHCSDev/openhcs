@@ -99,7 +99,7 @@ historical rates; subscription allocation cannot be invented from tokens.
 No such billing owner receipt was supplied by the bound trial records.
 
 Selected examples and explicit repeats
--------------------------------------
+--------------------------------------
 
 These compact rows are available for parent manuscript integration.
 The initial endpoint's status is included so technical failures are not hidden.
@@ -181,7 +181,7 @@ remain ``not_recorded``. CLI and model release dates and immutable
 backend model revisions were not recorded and are not inferred.
 
 Original owners and readback
----------------------------
+----------------------------
 
 `Complete resource CSV <trial_resources.csv>`_ contains one scalar summary
 per original invocation or explicitly separate continuation. This file is a
