@@ -6,6 +6,8 @@ from typing import cast
 import numpy as np
 import pytest
 
+from openhcs.serialization.json import to_jsonable
+
 from openhcs.constants.constants import AllComponents
 from openhcs.core.artifacts import (
     ArtifactSpec,
@@ -1720,8 +1722,8 @@ def test_removed_source_binding_planes_become_nested_stack_contributors() -> Non
         len(plane.contributors)
         for plane in stacked.source_image_provenance_planes.planes
     ) == (3, 3, 3)
-    round_tripped_planes = SourceImageProvenancePlanes.from_records(
-        stacked.source_image_provenance_planes.records
+    round_tripped_planes = SourceImageProvenancePlanes.from_mapping(
+        to_jsonable(stacked.source_image_provenance_planes)
     )
     assert round_tripped_planes.identity == (
         stacked.source_image_provenance_planes.identity

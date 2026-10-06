@@ -551,7 +551,7 @@ def test_selected_file_stream_restores_persisted_crop_calibration_and_native_bat
     from openhcs.core.source_image_provenance import (
         SourceImageProvenance,
         SourceImageProvenanceContributor,
-        SourceImageProvenancePlaneRecord,
+        SourceImageIdentity,
         SourceImageProvenancePlanes,
     )
     from openhcs.core.source_projection import (
@@ -580,10 +580,8 @@ def test_selected_file_stream_restores_persisted_crop_calibration_and_native_bat
             for component, value in address.component_values().items()
         }
         contributors = tuple(
-            SourceImageProvenancePlaneRecord(
-                path=str(tmp_path / f"synthetic-site{site}-channel{channel}.tif"),
-                component_metadata={**component_metadata, "site": site},
-                identity_kind=SourceImageProvenanceContributor.identity_kind,
+            SourceImageProvenanceContributor(
+                SourceImageIdentity(str(tmp_path / f"synthetic-site{site}-channel{channel}.tif"), {**component_metadata, "site": site}),
                 source_image_name="neurite" if channel == 1 else "nucleus",
             )
             for site in range(1, 10)
@@ -594,9 +592,7 @@ def test_selected_file_stream_restores_persisted_crop_calibration_and_native_bat
             source_provenance=SourceImageProvenance(
                 source_component_metadata=component_metadata,
                 source_image_names=("neurite" if channel == 1 else "nucleus",),
-                source_image_provenance_planes=SourceImageProvenancePlanes.from_records(
-                    contributors
-                ),
+                source_image_provenance_planes=SourceImageProvenancePlanes(contributors),
             ),
         )
         path = tmp_path / f"stored-channel{channel}.tif"
