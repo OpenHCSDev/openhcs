@@ -426,6 +426,15 @@ assess centre placement, not physical distance or segmentation boundaries.
 Supplementary Data 8 preserves the distinct trials, local repairs and
 remaining whole-volume uncertainties.
 
+A further independent volume author reduced 31 first-attempt centres to 26
+after diagnosing duplicated markers on connected distance plateaus and
+associating nearby seeds within admitted components. Matched native XY, XZ
+and YZ review supported repaired ordinary-body placement while retaining a
+clear pair and a dim nucleus. A fragmented bright group and cropped objects
+remained uncertain. This is self-directed repair without reference feedback;
+the reduced count alone does not establish an exhaustive nucleus census
+(Supplementary Data 8).
+
 A fresh public neurite-field author identified bright junction pixels lost
 after ridge enhancement and restored them by combining enhanced support with
 a separately measured strong-raw threshold (Supplementary Figure 19).
@@ -434,6 +443,17 @@ the repair and none afterward; a sampled quiet tile remained empty.
 Faint branches still terminated prematurely, and shared-marker crossings did
 not establish per-neuron ownership. The trial separates a useful image-support
 repair from the unresolved requirements for complete outgrowth measurement.
+
+In another fresh paired-field trial, the first candidate partitioned visibly
+whole soma-like structures into 24 outputs. A measured nuclear-width revision
+retained eight nuclear-associated soma-like localizations. Subsequent changes
+to faint-process admission recovered five sampled distal witnesses without
+changing those body/nuclear labels; the sampled quiet region retained no
+candidate support. Final traces recovered more of a curved continuation, but
+weak gaps, short spurs and uncertain crossing ownership remained. Thus the
+final blind result supports soma localization and local process recovery, not
+validated complete arbors or per-neuron branching measurements
+(Supplementary Data 8).
 
 ### Recovery and self-diagnosis vary between images
 
