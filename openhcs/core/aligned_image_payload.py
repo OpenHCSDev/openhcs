@@ -1513,25 +1513,10 @@ class ProducedImageStack(ImagePayloadSliceStack):
     def normalize_intensity_payload(
         self, *, dtype: Any = None, channel_index: int = 0,
     ) -> Any:
-        if self._composed_payload is not None:
-            return self._metadata.normalize_intensity_payload(
-                self._composed_payload, dtype=dtype, channel_index=channel_index,
-            )
-        result = self._metadata.normalized_intensity_planes(
-            self.slices, dtype=dtype, channel_index=channel_index,
-        )
-        if result is None:
+        if self._metadata.normalization_dtype(self.dtype, dtype) is None:
             return self
-        metadata, normalized = result
-        slices = tuple(
-            image_payload_metadata(payload).payload_with(
-                image_payload_data(payload), image_payload_mask(original),
-            )
-            for payload, original in zip(normalized, self.slices, strict=True)
-        )
-        return type(self)(
-            slices, self.slice_contexts, memory_type=MEMORY_TYPE_NUMPY,
-            plane_axis=self.plane_axis, source_metadata=metadata,
+        return self._metadata.normalize_intensity_payload(
+            self.compose(), dtype=dtype, channel_index=channel_index,
         )
 
     def _shared_image_mask(

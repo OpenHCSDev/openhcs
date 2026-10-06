@@ -618,3 +618,64 @@ def test_same_scope_parameter_bound_input_does_not_select_lifecycle_output(
         [producer_path.name],
         SourceSchemaFilenameParser(),
     ) == [producer_path.name]
+
+
+def test_named_producer_members_keep_acquisition_filters_and_site_correlations():
+    from openhcs.constants import AllComponents
+    from openhcs.core.source_bindings import (
+        CompiledSourceBindingPlan, ComponentSelector, NamedSourceBinding,
+        SourceFilterClause, SourceFilterMatchType, SourceFilterSubject, SourceSelector,
+    )
+    from openhcs.core.source_matching import SourceImageSetIdentityPolicy
+    from openhcs.core.source_metadata import SourceFilterPathMetadata
+    from openhcs.core.steps.function_output_manifest import ProducedPathRecordIndex
+    from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+
+    parser = SourceSchemaFilenameParser()
+    plan = CompiledStepPlan(
+        step_index=2, step_type="FunctionStep", step_name="Align", axis_id="A01",
+        step_scope_id="align", pipeline_position=2, output_dir=Path("/memory"),
+    )
+    records = []
+    for site in (1, 2):
+        for channel, marker in ((1, "N_R"), (2, "N_G")):
+            components = dict(well="A01", site=site, channel=channel, z_index=1, timepoint=1)
+            acquisition_path = f"/acquisition/0_{site}_{marker}.png"
+            source_metadata = dict(components)
+            SourceFilterPathMetadata.from_paths(
+                (Path(acquisition_path).name, acquisition_path)
+            ).merge_into(source_metadata, path=acquisition_path)
+            identity = FunctionOutputIdentity(
+                components, ".tif", "test", filename_qualifier=f"Stain{channel}",
+            )
+            records.append(ProducedOutputSemantics.from_output(
+                plan, plan.output_dir / identity.filename(parser), identity,
+                output_context=AlignedImageSliceContext.main_flow(f"Stain{channel}", artifact_kind="image"),
+                image_metadata=ImagePayloadMetadata(
+                    source_path=acquisition_path, source_component_metadata=source_metadata,
+                ),
+            ).published())
+    bindings = CompiledSourceBindingPlan(bindings=(NamedSourceBinding(
+        alias="OrigStain1",
+        selector=SourceSelector(filters=(SourceFilterClause(
+            SourceFilterSubject.FILE, SourceFilterMatchType.CONTAINS, "N_R",
+        ),)),
+        component_identity=(ComponentSelector(AllComponents.CHANNEL, "1"),),
+    ),))
+    index = ProducedPathRecordIndex.from_records(tuple(records), parser)
+    anchors = index.matching_records("A01_s{iii}_w1_z001_t001.tif")
+    selected = index.source_binding_members(
+        tuple(record.output_path for record in anchors), source_bindings=bindings,
+        identity_policy=SourceImageSetIdentityPolicy(), parser=parser,
+    )
+    assert selected == (records[0], records[2])
+    assert tuple(record.component_values["site"] for record in selected) == (1, 2)
+    wrong_binding = replace(bindings, bindings=(replace(
+        bindings.bindings[0], selector=SourceSelector(filters=(SourceFilterClause(
+            SourceFilterSubject.FILE, SourceFilterMatchType.CONTAINS, "absent",
+        ),)),
+    ),))
+    assert index.source_binding_members(
+        tuple(record.output_path for record in anchors), source_bindings=wrong_binding,
+        identity_policy=SourceImageSetIdentityPolicy(), parser=parser,
+    ) == ()
