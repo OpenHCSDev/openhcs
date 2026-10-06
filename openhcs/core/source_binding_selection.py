@@ -1232,10 +1232,16 @@ class SourceBindingMatchedImageSet(SourceIdentityResolutionContext):
             selected = self._complete_alias_set(anchors, resolution_bindings)
             if selected is not None:
                 return selected
-            return SourceBindingCandidateMatcher.compatible_candidates(
-                anchors,
-                bindings=resolution_bindings,
-                source_context=self,
+            return tuple(
+                dict.fromkeys(
+                    candidate
+                    for binding in resolution_bindings
+                    for candidate in self._expand_single_alias(
+                        anchors,
+                        binding=binding,
+                        source_universe=source_universe,
+                    )
+                )
             )
 
         selected_anchor_candidates = self._complete_alias_set(
@@ -1903,7 +1909,7 @@ class StepInputSourceUniverseRequest(SourceUniverseRequest):
         cls, request: RuntimeAdapterRequest, binding: NamedSourceBinding,
     ) -> object:
         """Resolve primary planes from current pixels; companions from source."""
-        if binding.projection_role is SourceProjectionRole.SOURCE_ARTIFACT:
+        if not binding.requires_current_pixels:
             return SourceUniverseRequest.source_artifact_payload(request, binding)
         if request.source_payload is None:
             raise ValueError(f"STEP_INPUT binding {binding.alias!r} requires current pixels.")

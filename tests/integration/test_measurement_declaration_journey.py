@@ -143,6 +143,21 @@ def count_with_image_subject(image):
     )
 
 
+@numpy(contract=ProcessingContract.PURE_3D)
+def half_current_pixels(image):
+    """Transform main flow without declaring a separately named image artifact."""
+    return image / 2
+
+
+@pytest.fixture(scope="module")
+def registered_current_transform():
+    registered = register_custom_function(half_current_pixels)
+    try:
+        yield registered
+    finally:
+        CustomFunctionRuntimeRegistry.remove(half_current_pixels.__name__)
+
+
 @pytest.fixture
 def registered_count_callable(valid):
     function = count_with_image_subject if valid else count_without_subject
@@ -169,7 +184,7 @@ def _source(alias, channel):
                 SourceFilterClause(
                     subject=SourceFilterSubject.FILE,
                     match_type=SourceFilterMatchType.CONTAINS,
-                    value=alias,
+                    value=f"_w{channel}_",
                 ),
             ),
         ),
@@ -243,8 +258,8 @@ def _write_plate(path, *, same_source=False):
     dna = np.full((16, 16), 0.25 if same_source else 0.0, dtype=np.float32)
     dna[6:8, 6:8] = 1.0
     actin = np.ones_like(dna)
-    tifffile.imwrite(path / "A01_s001_DNA.tif", dna)
-    tifffile.imwrite(path / "A01_s001_Actin.tif", actin)
+    tifffile.imwrite(path / "A01_s001_w1_z001_t001.tif", dna)
+    tifffile.imwrite(path / "A01_s001_w2_z001_t001.tif", actin)
 
 
 def _compile(path, document, global_config):
@@ -274,6 +289,103 @@ def _execute(path, document, bundle):
             "axis_id": "",
         },
     )
+
+
+@pytest.mark.parametrize("image_names,current_scale", [
+    (("DNA",), 1), (("DNA", "Actin"), 1), (("Actin", "DNA"), 1),
+    (("DNAHalf",), 1), (("DNA", "DNAHalf"), 1), (("DNAHalf", "DNA"), 1),
+    (("DNA", "Actin"), 0.5),
+])
+def test_photometry_carrier_preserves_raw_aliases_and_produced_pixels(
+    tmp_path, image_names, current_scale, registered_current_transform,
+):
+    """A stored label cohort must not substitute label IDs for measured images."""
+    from openhcs.processing.backends.cellprofiler.intensity import rescale_intensity, RescaleMethod
+    dna = np.zeros((16, 16), dtype=np.float32)
+    dna[6:8, 6:8] = ((0.6, 0.7), (0.8, 0.9))
+    actin = (0.1 + np.arange(256).reshape(16, 16) * 0.001).astype(np.float32)
+    tifffile.imwrite(tmp_path / "A01_s001_w1_z001_t001.tif", dna)
+    tifffile.imwrite(tmp_path / "A01_s001_w2_z001_t001.tif", actin)
+    document = _document()
+    if "DNAHalf" in image_names:
+        document.pipeline_steps.insert(0, _step(rescale_intensity, "Produced half intensity", {
+            "select_the_input_image": "DNA", "name_the_output_image": "DNAHalf",
+            "rescale_method": RescaleMethod.DIVIDE_BY_VALUE, "divisor_value": 2.0,
+        }))
+    document.pipeline_steps[-1] = _step(measure_object_intensity, "Actual photometry", {
+        "select_images_to_measure": image_names, "select_object_sets_to_measure": ("Cells",),
+    })
+    if current_scale != 1:
+        document.pipeline_steps.insert(-1, _step(
+            registered_current_transform, "Transform current image carrier", {},
+        ))
+        measurement = document.pipeline_steps[-1]
+        measurement.processing_config = replace(
+            measurement.processing_config, input_source=InputSource.PREVIOUS_STEP,
+        )
+    document = PipelineDocumentAuthority.from_source(PipelineDocumentAuthority.render(document))
+    bundle = _compile(tmp_path, document, GlobalPipelineConfig(num_workers=1, use_threading=True))
+    context = bundle.runtime_contexts["A01"]
+    plan = context.step_plans[len(document.pipeline_steps)-1]
+    group = plan.compiled_function_pattern.default_group
+    selected = plan.stored_primary_input_edges_for_group(group, None)
+    if any(name in ("DNA", "Actin") for name in image_names):
+        assert selected is None  # Raw STEP_INPUT aliases need the current image carrier.
+    results = _execute(tmp_path, document, bundle)
+    assert results['A01'].is_success(), results['A01'].error_message
+    (labels,) = context.runtime_value_store.find(name="Cells", axis_id="A01")
+    foreground = object_label_dense_array(labels.data).squeeze() == 1
+    (invocation,) = group.invocations
+    (output,) = invocation.artifact_output_plans
+    (measurement,) = context.runtime_value_store.find(
+        name=output.name, artifact_type=MeasurementsArtifactType, axis_id="A01",
+    )
+    expected_images = {
+        "DNA": dna * current_scale, "Actin": actin * current_scale, "DNAHalf": dna / 2,
+    }
+    for image_name in image_names:
+        values = expected_images[image_name][foreground]
+        assert values.size and values.std() > 0
+        for feature, expected in (("MeanIntensity", values.mean()), ("MinIntensity", values.min()),
+                                  ("MaxIntensity", values.max()), ("StdIntensity", values.std())):
+            actual = measurement_values_for_feature(
+                (measurement.data,), f"Intensity_{feature}_{image_name}",
+                object_count=1, object_name="Cells", dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+            )
+            assert tuple(actual) == pytest.approx((expected,), abs=1e-7)
+
+
+def test_label_only_measurement_keeps_stored_cohort(tmp_path):
+    from openhcs.processing.backends.cellprofiler.shape import (
+        MeasureObjectSizeShapeModule, measure_object_size_shape,
+    )
+    _write_plate(tmp_path)
+    document = _document()
+    document.pipeline_steps[-1] = _step(measure_object_size_shape, "Label-only area", {
+        MeasureObjectSizeShapeModule.object_measurement_binding.require_parameter_name(): ("Cells",),
+        "calculate_advanced": False, "calculate_zernikes": False,
+    })
+    document = PipelineDocumentAuthority.from_source(PipelineDocumentAuthority.render(document))
+    bundle = _compile(tmp_path, document, GlobalPipelineConfig(num_workers=1, use_threading=True))
+    context = bundle.runtime_contexts["A01"]
+    plan = context.step_plans[len(document.pipeline_steps) - 1]
+    group = plan.compiled_function_pattern.default_group
+    cohort = plan.stored_primary_input_edges_for_group(group, None)
+    assert cohort is not None
+    assert tuple(edge.spec.name for edge in cohort) == ("Cells",)
+    results = _execute(tmp_path, document, bundle)
+    assert results["A01"].is_success(), results["A01"].error_message
+    (labels,) = context.runtime_value_store.find(name="Cells", axis_id="A01")
+    (invocation,) = group.invocations
+    (output,) = invocation.artifact_output_plans
+    (measurement,) = context.runtime_value_store.find(
+        name=output.name, artifact_type=MeasurementsArtifactType, axis_id="A01",
+    )
+    actual = measurement_values_for_feature(
+        (measurement.data,), "AreaShape_Area", object_count=1, object_name="Cells",
+        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+    )
+    assert tuple(actual) == (np.count_nonzero(object_label_dense_array(labels.data)),)
 
 
 @pytest.mark.parametrize("same_source", [True, False], ids=["single-source", "paired-channels"])
@@ -313,6 +425,11 @@ def test_exact_secondary_selector_survives_authoring_compile_and_execution(tmp_p
     assert edge.spec.name == "Cells"
     assert edge.spec.parameter_name == "labels"
     assert edge.storage_plan.source_step_id == 1
+    producer_output = next(
+        output for output in secondary_invocation.artifact_output_plans
+        if output.ref() == edge.spec.ref().for_plan_type(ArtifactOutputPlan)
+    )
+    assert edge.storage_plan.relations == producer_output.relations
     assert selector not in invocation.kwargs_dict
     assert "labels" not in invocation.kwargs_dict
 
@@ -356,7 +473,7 @@ def test_omitted_secondary_selector_still_fails_closed(tmp_path):
 
 
 @pytest.mark.parametrize("producer_group_by", [GroupBy.NONE, GroupBy.CHANNEL])
-def test_explicit_measurement_rosters_survive_one_matched_source_anchor(
+def test_explicit_measurement_rosters_preserve_compiled_source_groups(
     tmp_path, producer_group_by,
 ):
     from openhcs.core.steps.function_execution import FunctionStepExecutor
@@ -390,7 +507,10 @@ def test_explicit_measurement_rosters_survive_one_matched_source_anchor(
     context = bundle.runtime_contexts["A01"]
     executor = FunctionStepExecutor(context, 2)
     prepared = executor._prepare_groups(executor._detect_patterns())
-    assert prepared.total_count() == 1
+    expected_keys = (None,) if producer_group_by is GroupBy.NONE else ("1", "2")
+    assert context.step_plans[2].execution_group_scope.keys == expected_keys
+    assert tuple(prepared) == expected_keys
+    assert all(len(patterns) == 1 for patterns in prepared.values())
     invocation = next(executor.plan.compiled_function_pattern.iter_invocations())
     assert tuple(
         spec.name for spec in invocation.contract.artifact_inputs.of_artifact_type(ImageArtifactType)
@@ -398,9 +518,11 @@ def test_explicit_measurement_rosters_survive_one_matched_source_anchor(
     results = _execute(tmp_path, document, bundle)
     assert results["A01"].is_success(), results["A01"].error_message
     (output,) = invocation.artifact_output_plans
-    (measurement,) = context.runtime_value_store.find(
+    measurements = context.runtime_value_store.find(
         name=output.name, artifact_type=MeasurementsArtifactType, axis_id="A01",
     )
+    assert len(measurements) == len(expected_keys)
+    assert tuple(record.key.scope.value_text for record in measurements) == expected_keys
     for object_name in ("Nuclei", "Cells"):
         (labels,) = context.runtime_value_store.find(name=object_name, axis_id="A01")
         area = np.count_nonzero(object_label_dense_array(labels.data))
@@ -413,7 +535,7 @@ def test_explicit_measurement_rosters_survive_one_matched_source_anchor(
             }
             for feature, expected in expected_features.items():
                 values = measurement_values_for_feature(
-                    (measurement.data,),
+                    tuple(measurement.data for measurement in measurements),
                     f"Intensity_{feature}_{image_name}",
                     object_count=1,
                     object_name=object_name,

@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, TypeAlias
 
 if TYPE_CHECKING:
+    from openhcs.core.source_bindings import CompiledSourceBindingPlan
     from openhcs.core.aligned_image_payload import AlignedImageSliceContext
     from openhcs.core.compiled_step_plan import FrameworkDeviceAssignment
     from openhcs.core.pipeline.compilation_session import CompilationPathResolver
@@ -292,6 +293,15 @@ class InvocationArtifactInputEdgePlan:
     def uses_runtime_storage(self) -> bool:
         """Return whether an exact producer storage plan supplies this edge."""
         return self.storage_plan is not None
+
+    def requires_current_image_carrier(
+        self, source_bindings: CompiledSourceBindingPlan,
+    ) -> bool:
+        """Whether this unstored input consumes declared current source pixels."""
+        if self.uses_runtime_storage():
+            return False
+        binding = source_bindings.binding_for_artifact_ref(self.spec.ref())
+        return binding is not None and binding.requires_current_pixels
 
     def requires_callable_binding(self) -> bool:
         """Admit parameter-bearing sources and validate every stored argument."""
@@ -991,21 +1001,23 @@ class CompiledFunctionGroup:
         """Return the compiled runtime domain for this callable group."""
         return RuntimeInvocationDomain.from_invocations(self.invocations)
 
-    @property
-    def main_flow_input_refs(self) -> tuple[ArtifactSpecRef, ...] | None:
+    def main_flow_input_refs(
+        self, *, source_bindings: CompiledSourceBindingPlan,
+    ) -> tuple[ArtifactSpecRef, ...] | None:
         """Return exact main-flow refs, or None for an implicit image argument."""
 
         return self._main_flow_input_refs(
             tuple(
                 (invocation, invocation.artifact_input_edges)
                 for invocation in self.invocations
-            )
+            ), source_bindings=source_bindings,
         )
 
     def main_flow_input_refs_for_component(
         self,
         execution_scope: ComponentGroupScope,
         component_key: str | None,
+        *, source_bindings: CompiledSourceBindingPlan,
     ) -> tuple[ArtifactSpecRef, ...] | None:
         """Return main-flow refs active for one compiled component execution."""
 
@@ -1020,7 +1032,9 @@ class CompiledFunctionGroup:
             )
             is not None
         )
-        return self._main_flow_input_refs(invocations_and_edges)
+        return self._main_flow_input_refs(
+            invocations_and_edges, source_bindings=source_bindings,
+        )
 
     @staticmethod
     def _main_flow_input_refs(
@@ -1030,6 +1044,7 @@ class CompiledFunctionGroup:
                 Sequence[InvocationArtifactInputEdgePlan],
             ]
         ],
+        *, source_bindings: CompiledSourceBindingPlan,
     ) -> tuple[ArtifactSpecRef, ...] | None:
         """Return exact main-flow refs for the supplied active invocations."""
 
@@ -1039,6 +1054,7 @@ class CompiledFunctionGroup:
                 for _invocation, edges in invocations_and_edges
                 for edge in edges
                 if edge.main_flow_projection is not None
+                or edge.requires_current_image_carrier(source_bindings)
             )
         )
         if main_flow_refs:
@@ -1053,6 +1069,8 @@ class CompiledFunctionGroup:
         self,
         execution_scope: ComponentGroupScope,
         component_key: str | None,
+        *,
+        source_bindings: CompiledSourceBindingPlan,
     ) -> tuple[InvocationArtifactInputEdgePlan, ...] | None:
         """Select exact producer edges supplying an artifact-owned cohort.
 
@@ -1073,6 +1091,16 @@ class CompiledFunctionGroup:
             invocation.contract.accepts_implicit_main_flow_input
             and not invocation.adapter_manages_artifact_inputs
             for invocation, edges in active
+        ):
+            return None
+        # Stored objects can own cohort identity without carrying the current
+        # image consumed by an unstored primary source alias. Keep that input
+        # on the declared main-flow transport rather than projecting labels
+        # as image intensities. Produced image edges retain their own pixels.
+        if any(
+            edge.requires_current_image_carrier(source_bindings)
+            for _invocation, edges in active
+            for edge in edges
         ):
             return None
         primary_edges = tuple(
