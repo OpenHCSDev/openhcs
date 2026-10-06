@@ -120,3 +120,39 @@ def test_plain_two_dimensional_pixels_preserve_unscaled_gaussian():
     pixels = np.zeros((9, 11), dtype=np.float32)
     pixels[4, 5] = 1
     np.testing.assert_allclose(image_payload_data(_execute(pixels)), gaussian(pixels, sigma=1.5))
+
+
+@pytest.mark.parametrize("physical_volume", (False, True))
+def test_original_cohort_composition_keeps_every_source_plane(physical_volume):
+    planes = tuple(
+        ImagePayloadMetadata(
+            source_path=f"/synthetic/plane{index}.tif",
+            source_image_names=("Original",),
+            source_component_metadata={
+                "well": "A01", "site": 1 if physical_volume else index + 1,
+                "z_index": index if physical_volume else 0,
+            },
+            source_voxel_spacing=SourceVoxelSpacing(
+                values_zyx=(2, 0.5, 0.75) if physical_volume else (0.5, 0.75)
+            ),
+        ).payload_with(np.eye(9, 11, dtype=np.float32) * (index + 1), None)
+        for index in range(3)
+    )
+    metadata = ImagePayloadMetadata.compose(planes).replace_fields(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+    )
+    if physical_volume:
+        metadata = metadata.replace_fields(
+            source_spatial_domain=VolumeSourceSpatialDomain().admit_source_cohort(
+                metadata.source_spatial_domain, depth=len(planes),
+            )
+        )
+    pixels = np.stack([image_payload_data(plane) for plane in planes])
+    result = _execute(metadata.payload_with(pixels, None))
+    expected = (
+        gaussian(pixels, sigma=(0.75, 3, 2)) if physical_volume
+        else np.stack([gaussian(plane, sigma=(3, 2)) for plane in pixels])
+    )
+    np.testing.assert_allclose(image_payload_data(result), expected)
+    assert image_payload_metadata(result) == metadata
+    assert len(image_payload_metadata(result).source_provenance.planes) == 3
