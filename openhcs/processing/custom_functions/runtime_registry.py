@@ -224,6 +224,9 @@ class CustomFunctionRuntimeRegistry:
         factory: Callable[[], FunctionMetadata],
     ) -> FunctionMetadata:
         """Share one preparation outcome for one exact persisted source revision."""
+        from openhcs.processing.backends.lib_registry.registry_service import (
+            RegistryService,
+        )
 
         current_thread = threading.get_ident()
         with cls._lock:
@@ -235,6 +238,7 @@ class CustomFunctionRuntimeRegistry:
                     stale_key.function_name == source.function_name
                     and stale_key != source
                 ):
+                    RegistryService.release_prepared_catalog()
                     cls._preparation_outcomes.pop(stale_key, None)
                     cls._preparation_threads.pop(stale_key, None)
             outcome = cls._preparation_outcomes.get(source)
@@ -320,6 +324,9 @@ class CustomFunctionRuntimeRegistry:
     @classmethod
     def replace(cls, old_name: str, metadata: FunctionMetadata) -> None:
         """Atomically replace one runtime declaration, including a rename."""
+        from openhcs.processing.backends.lib_registry.registry_service import (
+            RegistryService,
+        )
 
         with cls._lock:
             metadata = cls._canonical_metadata_for_publication(metadata)
@@ -328,6 +335,7 @@ class CustomFunctionRuntimeRegistry:
                 new_name,
                 replacing_name=old_name,
             )
+            RegistryService.release_prepared_catalog()
             cls._declarations_by_name.pop(old_name, None)
             if old_name != new_name:
                 cls._remove_preparation_outcomes_locked(old_name)
@@ -396,9 +404,9 @@ class CustomFunctionRuntimeRegistry:
         """Remove one runtime projection and its public module export."""
 
         with cls._lock:
-            declaration = cls._declarations_by_name.pop(function_name, None)
             cls._remove_preparation_outcomes_locked(function_name)
             cls._remove_module_exports_locked((function_name,))
+            declaration = cls._declarations_by_name.pop(function_name, None)
             if (
                 declaration is not None
                 and declaration.lifetime is CustomFunctionLifetime.PERSISTED
@@ -411,11 +419,11 @@ class CustomFunctionRuntimeRegistry:
 
         with cls._lock:
             function_names = tuple(cls._declarations_by_name)
+            cls._remove_module_exports_locked(function_names)
             cls._declarations_by_name.clear()
             cls._preparation_outcomes.clear()
             cls._preparation_threads.clear()
             cls._source_revision = None
-            cls._remove_module_exports_locked(function_names)
 
     @classmethod
     def source_revision(cls) -> CustomFunctionSourceRevision | None:
@@ -467,6 +475,11 @@ class CustomFunctionRuntimeRegistry:
     @classmethod
     def _remove_preparation_outcomes_locked(cls, function_name: str) -> None:
         """Forget source outcomes when their persisted declaration is removed."""
+        from openhcs.processing.backends.lib_registry.registry_service import (
+            RegistryService,
+        )
+
+        RegistryService.release_prepared_catalog()
 
         for key in tuple(cls._preparation_outcomes):
             if key.function_name == function_name:
@@ -510,7 +523,11 @@ class CustomFunctionRuntimeRegistry:
     @classmethod
     def _remove_module_exports_locked(cls, function_names: tuple[str, ...]) -> None:
         import openhcs.processing.custom_functions as custom_functions
+        from openhcs.processing.backends.lib_registry.registry_service import (
+            RegistryService,
+        )
 
+        RegistryService.release_prepared_catalog()
         namespace = vars(custom_functions)
         for function_name in function_names:
             published = cls._published_exports.pop(function_name, None)

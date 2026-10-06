@@ -126,6 +126,13 @@ class FunctionCatalogPreparation:
             status_callback=status_callback,
             cancellation=cancellation,
         )
+        if cancellation.requested():
+            raise CancelledError
+        from openhcs.processing.backends.lib_registry.registry_service import (
+            RegistryService,
+        )
+
+        RegistryService.freeze_prepared_catalog_once()
 
     def cancel_and_join(self) -> None:
         """Cancel and join the exact preparation operation owned here."""
@@ -135,6 +142,11 @@ class FunctionCatalogPreparation:
             thread = self._thread
         if thread is not None and thread is not threading.current_thread():
             thread.join()
+        from openhcs.processing.backends.lib_registry.registry_service import (
+            RegistryService,
+        )
+
+        RegistryService.release_prepared_catalog()
 
     def wait_until_ready(
         self,
