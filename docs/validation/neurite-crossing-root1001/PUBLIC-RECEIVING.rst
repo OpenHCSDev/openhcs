@@ -4,7 +4,7 @@ Ordinary installed #1004 receiving
 Singer owns the affected acceptance; Planck owns the original whole-package
 builder, Dewey owns the recorded client/lane lifecycle handoff. No client is
 started by this packet. A released lane and matched whole installed client/native
-candidate containing production7a477a2c2 are required. Historical541 public88
+candidate containing the final reviewed PR1004 production are required. Historical541 public88
 identities are closed, not reusable runtime handles. No scientific input or
 frozen scientific bundle is modified, and no UNKNOWN request is replayed.
 
@@ -19,11 +19,13 @@ Reuse the existing accepted541 synthetic input/declaration recipe:
 * Only roots/route/incarnation are projected from the new lifecycle handoff.
   Original retained input and completed541 requests/results stay unchanged.
 
-The whole candidate first runs the25 current owner controls against asserted
+The whole candidate first runs the26 current owner controls against asserted
 installed OpenHCS origins. In particular the unrelated earlier owner's
 response cannot claim a resolved core, genuine input99 remains preserved,
 renumbering order is equivalent, unsupported/foreign-body routes are rejected,
-and per-owner projection on8MP/1000owners remains regional. Source-owned tests
+and per-owner projection on8MP/1000owners remains regional. Mixed same-owner
+branch arms remain eligible shared support without becoming crossover pairs.
+Source-owned tests
 are not copied to a new implementation or replaced by a count-only check.
 
 One new ordinary public execution must reach terminal success, persist pixel

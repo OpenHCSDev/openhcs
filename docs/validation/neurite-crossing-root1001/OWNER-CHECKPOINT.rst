@@ -169,3 +169,32 @@ three stored crossing sets remains. Skan Skeleton.path_coordinates source
 includes original endpoints (csr.py716..734); no new Skan conversion is added.
 Relevant dependency semantics were read, not a completed global R1 dynamic
 proof. All8 foreign gitlinks and historical/untracked evidence remain untouched.
+
+Complete mixed-junction family qualification
+-------------------------------------------
+
+The final source-member closure preserves every original arm in a resolved
+crossing, including three-arm same-owner branches sharing the physical core
+with another owner's crossover. _ResolvedCrossing.crossover_paths derives the
+pair-only publication view from those original owners. The external duplicate
+active-owner/count procedure and crossing_branch_owners roster are deleted.
+Shared support therefore admits a declared branch owner while the published
+crossover paths retain their original pair-only semantics. A new declaration
+with two owner1 arms/three owner2 branch arms exercises this behavior without
+consumer changes; foreign input99 is still rejected by both participants.
+
+controls19/fixed20 both reached known terminal124 before the original bootstrap
+printed the source owner or ran any assertion (58/51MiB peak, about1.2 CPU seconds
+over60s). Original empty stdout/stderr/resource logs are preserved. These are
+source-bootstrap deadline failures, not UNKNOWN scientific operations or
+mask failures. Fresh actual readback showed14.9GiB available, memory PSI0,
+nonzero I/O pressure. No cap increase, dependency install or native launch.
+
+combined21 uses the original source bootstrap once, then the affected pytest
+family and saved-stage probe in the same interpreter. It passed26 controls,
+69deselected, plus both saved04/05 witness/root/forest/input-hash assertions.
+Terminal0,15.56s/617016KiB maximum RSS. The saved05 branch remains owner4 at
+all five witnesses,04 remains6, and both have no failed owner4 root connection.
+This supersedes the earlier25-control checkpoint; it is not a further
+scientific attempt or a search for favorable assay settings. No current
+author receives the private diagnostic coordinates or ownership assignments.

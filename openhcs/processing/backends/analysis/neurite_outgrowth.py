@@ -1183,6 +1183,11 @@ class _ResolvedCrossing:
     def supports_owner(self, owner: int, path_owners: np.ndarray) -> bool:
         return any(int(path_owners[path]) == owner for path in self.arm_paths)
 
+    def crossover_paths(self, path_owners: np.ndarray) -> tuple[int, ...]:
+        owners = Counter(int(path_owners[path]) for path in self.arm_paths
+                         if path_owners[path] > 0)
+        return tuple(path for path in self.arm_paths if owners[int(path_owners[path])] == 2)
+
     def core_coordinates(self, path_coordinates: tuple[np.ndarray, ...]) -> np.ndarray:
         if not self.core_paths:
             return np.empty((0, 2), dtype=int)
@@ -1219,7 +1224,7 @@ class _TopologyResult:
     @property
     def crossing_paths(self) -> frozenset[int]:
         return frozenset(path for crossing in self.resolved_crossings
-                         for path in crossing.arm_paths)
+                         for path in crossing.crossover_paths(self.path_owners))
 
     @property
     def crossing_core_paths(self) -> frozenset[int]:
@@ -2460,7 +2465,6 @@ def _analyze_topology(
     # Two arms remain a crossover path; three or more arms are a branch for
     # that owner. This prevents an apparent crossing from silently severing a
     # soma-rooted neurite that the preceding ownership stage already proved.
-    crossing_branch_owners: dict[int, set[int]] = defaultdict(set)
     for node, (crossing_pairs, _) in crossing_clusters.items():
         endpoints_by_owner: dict[int, list[tuple[int, int]]] = defaultdict(list)
         for endpoint in (endpoint for pair in crossing_pairs for endpoint in pair):
@@ -2483,7 +2487,6 @@ def _analyze_topology(
                 path_endpoint_groups[path_index][endpoint_index] = merged_group
             if len(owner_paths) >= 3:
                 branch_nodes.add(node)
-                crossing_branch_owners[node].add(owner)
     roots_by_cell: dict[int, list[int]] = defaultdict(list)
     for path_index, labels in root_labels_by_path.items():
         owner = int(path_owners[path_index])
@@ -2512,26 +2515,11 @@ def _analyze_topology(
             if degree >= 3:
                 branch_nodes_by_cell[owner].append(node)
 
-    active_crossing_paths_by_node: dict[int, tuple[int, ...]] = {}
-    for node in crossing_nodes:
-        owner_counts = Counter(
-            int(path_owners[path_index])
-            for path_index in crossing_paths_by_node[node]
-            if path_owners[path_index] > 0
-        )
-        active_owners = {
-            owner
-            for owner, path_count in owner_counts.items()
-            if path_count == 2 and owner not in crossing_branch_owners[node]
-        }
-        active_crossing_paths_by_node[node] = tuple(
-            path_index
-            for path_index in crossing_paths_by_node[node]
-            if path_owners[path_index] in active_owners
-        )
-    used_crossings = {
-        node for node, paths in active_crossing_paths_by_node.items() if paths
-    }
+    resolved_crossings = tuple(
+        _ResolvedCrossing(node, crossing_paths_by_node[node],
+                          crossing_core_paths_by_node[node])
+        for node in sorted(crossing_nodes)
+    )
     return _TopologyResult(
         path_owners=path_owners,
         path_distances=path_distances,
@@ -2556,9 +2544,8 @@ def _analyze_topology(
             for owner, nodes in branch_nodes_by_cell.items()
         },
         resolved_crossings=tuple(
-            _ResolvedCrossing(node, active_crossing_paths_by_node[node],
-                              crossing_core_paths_by_node[node])
-            for node in sorted(used_crossings)
+            crossing for crossing in resolved_crossings
+            if crossing.crossover_paths(path_owners)
         ),
     )
 

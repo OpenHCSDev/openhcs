@@ -115,8 +115,9 @@ for attempt in ('attempt04', 'attempt05'):
     print(json.dumps({'attempt':attempt,'published_trace_pixels':int(np.count_nonzero(rendered)),
                       'witness_owners':neighborhoods,'graph_edges':len(graph.edges),
                       'coordinate_unit':graph.coordinate_spacing.unit.value}),flush=True)
-    # This diagnostic deliberately records unresolved support rather than
-    # turning another determining source observation into a claimed pass.
+    assert not failed_connections, f'{attempt}: owner4 still lacks continuous allowed support'
+    expected_owner = 6 if attempt == 'attempt04' else 4
+    assert all(expected_owner in labels for labels in neighborhoods), (attempt,neighborhoods)
 for path, digest in hashes.items():
     assert hashlib.sha256(Path(path).read_bytes()).hexdigest() == digest
 print('UNCHANGED_INPUT_HASHES',json.dumps(hashes,sort_keys=True),flush=True)

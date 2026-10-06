@@ -2420,6 +2420,22 @@ def test_signal_supported_repair_reserves_core_from_unrelated_earlier_owner():
     np.testing.assert_array_equal(reversed_repair, reverse(repaired))
 
 
+def test_crossing_resolution_keeps_branch_arms_in_shared_support_declaration():
+    topology = replace(
+        _empty_topology(), path_owners=np.array([1, 1, 2, 2, 2, 0]),
+        path_coordinates=tuple(np.array([[4, 5]]) for _ in range(6)),
+        resolved_crossings=(_ResolvedCrossing(0, (0, 1, 2, 3, 4), (5,)),),
+    )
+    assert topology.crossing_paths == frozenset({0, 1})
+    assert topology.resolved_crossings[0].supports_owner(2, topology.path_owners)
+    occupied = np.zeros((10, 10), dtype=np.int32)
+    occupied[4, 5] = 2
+    assert topology.crossing_support_mask(occupied, owner=1, origin=(0, 0))[4, 5]
+    assert topology.crossing_support_mask(occupied, owner=2, origin=(0, 0))[4, 5]
+    occupied[4, 5] = 99
+    assert not np.any(topology.crossing_support_mask(occupied, owner=2, origin=(0, 0)))
+
+
 def test_signal_supported_repair_bounds_compiled_search_to_owner_regions(monkeypatch):
     shape = (512, 512)
     labels = np.zeros(shape, dtype=np.int32)
