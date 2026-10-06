@@ -1,5 +1,5 @@
 {
-  "generator_sha256": "7b6c059573dcd34671e7265c62721bfb866465c2e83dad792e8dc339c97d3d95",
+  "generator_sha256": "725167a1661975dd5bda51486fc6fbe40d79c90669602f52b70c0df32ab26156",
   "source_sha256": {
     "paper/supplementary/task_only_analysis/h001-fresh586-postfreeze-evaluation.json": "b0f70a14a4fe97cd5b6c9da9fb6363006ae2471aab5c2bc507bf1bdb32fa8789",
     "paper/supplementary/task_only_analysis/bbbc039-fresh612-postfreeze-evaluation.json": "b491df2f50f0f9a3b1d1f72c940f1a0103c0c74764c4c80852f456da2d1702b2",
@@ -51,9 +51,9 @@
     }
   ],
   "output_sha256": {
-    "task_only_visual.png": "0eabe24abf44fdc5fb13d97ec3e876c99c7780109a8a10e01dba92d20f8cb77e",
-    "task_only_visual.pdf": "e207705c1cbd018cbf1d303451cb33e7dc79a03a5b49f00adcbf37b16f19941c",
-    "task_only_visual.svg": "c535cd8e5b242a541cd094481cdb92dc2c3cf62399aab0beeda8871441aa6ef5"
+    "task_only_visual.png": "bd9e5f8da237b77b4cce2906ca672a2cf0431ce5202619e368a7c7a150783fa7",
+    "task_only_visual.pdf": "d0b13e7089bbde248cbdd241235871a1a1e22737e7664ebda9916c70f7db7d46",
+    "task_only_visual.svg": "8961ed88e303d063344ec84762a10ad1f08406c9de24cbdd0ec5766de30c6e44"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

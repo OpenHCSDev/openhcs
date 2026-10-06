@@ -100,7 +100,10 @@ PAPER = PaperDefinition(
     declaration=Path(__file__).resolve(),
     documents=(
         DocumentDefinition(DocumentRole.MANUSCRIPT, (Path("manuscript.md"),)),
-        DocumentDefinition(DocumentRole.SUPPLEMENT, (Path("supplementary/README.md"),)),
+        DocumentDefinition(DocumentRole.SUPPLEMENT, (
+            Path("supplementary/README.md"),
+            Path("supplementary/task_only_analysis/trial_resource_tables.md"),
+        )),
     ),
     preparation=SlasRetainedFigures(),
 )

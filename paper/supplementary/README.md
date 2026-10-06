@@ -1,3 +1,11 @@
+---
+bibliography: ../openhcs_references.json
+csl: ../styles/elsevier-vancouver.csl
+reference-section-title: References
+link-citations: true
+link-bibliography: true
+---
+
 # OpenHCS supplementary material
 
 ## Supplementary Figure 1. Runtime composition
@@ -86,7 +94,19 @@ Supplementary Data 1.
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
-## Supplementary Figure 6. Held-out results from prospectively authored workflows
+## Supplementary Figure 6. Translocation measurements and prospective held-out assays
+
+### Full-plate translocation and compartment eligibility
+
+![Dose response and contributing-cell fractions in the final BBBC013 fresh23 analysis.](../figures/slas/translocation_fresh23.png){width=6in}
+
+Upper panels show the agent-selected well-level median eligible-cell log2
+nuclear/cytoplasmic GFP ratio. Lower panels show the fraction of detected nuclei
+with eligible compartments. Each dose has four wells; marks and whiskers show
+the mean and sample standard deviation between wells. All 96 wells include
+development wells. This final full-plate trial differs from the prospective
+held-out assay below. Main Figure 4 enlarges the same dose-response panels;
+no measurements or underlying pixels were changed.
 
 ### Nuclear detection improves while cytoplasmic boundaries remain uncertain
 
@@ -153,6 +173,14 @@ The scored autonomous result repairs an elongated-body split. Whole-image object
 ```
 
 ## Supplementary Figure 9. Volumetric localisation and body separation
+
+![Complete native localisation and post-freeze matching panel for the main Figure 4 volume trial.](../figures/slas/h002_measurement_first.png){width=6in}
+
+The H002 fresh15 trial matched 14 of 15 annotated centres within 10 voxels and
+all 15 within the primary 30-voxel distance, with mean matched error 4.80 voxels.
+Eleven predictions were unmatched to annotations of unestablished coverage.
+These are centre-localisation measurements, not validated nuclear boundaries.
+Main Figure 4 enlarges the native XY/XZ/YZ views from this same panel.
 
 ![Matched assay evidence.](../figures/slas/h002_assay_review.png){width=6in}
 

@@ -316,7 +316,7 @@ def task_only_story():
             axis.grid(axis="y", color="#d9e0e5", linewidth=.6)
             axis.set_axisbelow(True)
         sheet.text(50, 2,
-                   "Independent full-200 repeat: caption and Supplementary Figure 20",
+                   "Independent full-200 repeat: caption and Supplementary Figure 15",
                    size=12, ha="center", color=MUTED)
         sheet.save()
 
@@ -762,13 +762,15 @@ def submission_shared_workflow():
 
 def submission_quantitative_results():
     """Keep assay response and 3-D localisation in one quantitative result sheet."""
-    sheet = FigureSheet("submission_quantitative_results", "", 9.1)
+    sheet = FigureSheet("submission_quantitative_results", "", 8.3)
     sheet.source(OUTPUT / "translocation_fresh23_provenance.json")
     sheet.source(OUTPUT / "h002_measurement_first_provenance.json")
-    sheet.panel("I", "Translocation response and contributing cells", 3, 97)
-    sheet.source_image(OUTPUT / "translocation_fresh23.png", (3, 48, 94, 47))
-    sheet.panel("II", "Three-dimensional nuclear localisation", 3, 46)
-    sheet.source_image(OUTPUT / "h002_measurement_first.png", (3, 2, 94, 42))
+    sheet.panel("I", "Translocation response", 3, 97)
+    sheet.source_image(OUTPUT / "translocation_fresh23.png", (3, 56, 94, 37),
+                       crop=(50, 270, 2650, 1290))
+    sheet.panel("II", "Three-dimensional nuclear localisation", 3, 52)
+    sheet.source_image(OUTPUT / "h002_measurement_first.png", (3, 4, 94, 45),
+                       crop=(50, 110, 2660, 1300))
     sheet.save()
 
 
