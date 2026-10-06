@@ -1,6 +1,6 @@
 # #140: Execution failure visibility to ZMQ waiters
 
-**Status:** investigation plan, not an implementation or proof of a current defect. **Pinned heads:** OpenHCS `main` `0c7b898f852a8bedc0e1bc38b93f36088d301808`, ZMQRuntime gitlink `1d3b32f4fcead23d5d2079c975eb2ae7646a1478`; issue observation at OpenHCS `fc1f946329cc74ffcd1b6a73d39591c259dea030` (same ZMQRuntime gitlink). Source was read at the pinned dependency SHA via GitHub; the isolated worktree's submodule content was not used or modified.
+**Status:** historical investigation below; a concrete inherited-signal defect and candidate repair are recorded in the final section. **Historical pinned heads:** OpenHCS `main` `0c7b898f852a8bedc0e1bc38b93f36088d301808`, ZMQRuntime gitlink `1d3b32f4fcead23d5d2079c975eb2ae7646a1478`; issue observation at OpenHCS `fc1f946329cc74ffcd1b6a73d39591c259dea030` (same ZMQRuntime gitlink). Source was read at the pinned dependency SHA via GitHub; the isolated worktree's submodule content was not used or modified.
 
 ## Actual evidence and counterevidence
 
@@ -34,3 +34,20 @@ The original fork-failure boundary now has a real ordinary-ZMQ witness on clean 
 The first two private fixture attempts were rejected at compilation (a nonexistent catalog ID, then a missing memory declaration); neither reached fork execution. The accepted fixture uses the existing `ImportableFunctionReference` authority with its actual decorated callable metadata. Those preparation mistakes are not production failure evidence.
 
 **Current decision:** the original fork exception propagates correctly through the merged lifecycle owners, so no duplicate failure path is justified. Keep #140 open until the cancellation, transient status-error and process-loss controls are resolved; this evidence does not establish those separate behaviours. These diagnostics are not pipeline performance measurements.
+
+## Confirmed inherited-signal defect and candidate repair
+
+The follow-up controls preserve the original public waiter result before any independent status observation. Cancellation returns a matching CANCELLED record and terminal progress; the status failure is a separate endpoint loss, not a missing terminal waiter branch.
+
+The decisive `actual-cancel-ipc-witness-v4` packet records original server incarnation PID 947595, creation time 1791294744.97. Both genuine fork children, 948131 and 948133, inherit SIGTERM and SIGINT handler `zmqruntime.runner.serve_forever.<locals>._signal_handler`, whose closure captures `server`. Before public cancellation, IPC paths `openhcs-zmq-7777.sock` and `openhcs-zmq-8777.sock` exist with inodes 6056761 and 6056762. After the public response confirms two workers killed, both paths are absent while the same parent server remains alive. A fresh attach-only client cannot reach its endpoint. Installed ZMQRuntime's inherited handler calls `server.stop()`, which closes transport and removes those addresses; child termination therefore runs copied parent cleanup.
+
+Two remaining controls pass on unchanged `56c3da776` and installed ZMQRuntime 0.4.1:
+
+- `actual-server-loss-v1`: actual server SIGKILL after both fork workers enter. The original waiter returns CANCELLED without manufacturing a dead-server lifecycle record; its exact owned process-exit observation, original failed CSV and process cleanup are retained.
+- `actual-transient-status-healthy-v2`: one private injected status transport TimeoutError and one malformed missing-execution-ID reply, each following a retained actual server poll. The original waiter continues and agrees with terminal progress and fresh status on COMPLETE, with two successful wells. The earlier protocol-ERROR injection remains a negative control: that declared error is intentionally definitive under the existing waiter policy and is not a transient polling exception.
+
+The candidate repair belongs to existing `WorkerExecutorResources.initialize_process_signals`: initialize child SIGTERM and SIGINT to SIG_DFL at the existing fork entry and pooled-process initializer. Parent, inline and threaded execution do not call it. The fork path keeps its inherited catalog, kernels, logging, environment, progress and resource state; it does not run spawn preparation. There is no cancellation-specific branch, timeout change, ignored termination, second status authority or new wrapper family.
+
+The existing lane/resource control module passes 38 controls. Its new real fork/SIGTERM control checks child defaults and actual signal exit, leaves a parent cleanup sentinel untouched, and verifies the parent's handlers remain installed. Production cancellation with fresh attachment and a healthy subsequent job on the original server remains pending until normal native extension construction and runtime lease handoff. PR #160 remains draft; no performance improvement or complete cancellation acceptance is claimed.
+
+Local evidence root: `/home/ts/.local/state/openhcs-maintenance/20261006/issue140-fork-acceptance-preparation-v1`, including `independent-controls-and-cancellation-root-cause.json` and the original negative packets.
