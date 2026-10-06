@@ -57,9 +57,11 @@ alias/response and its units, including
 and within-body maxima versus a genuine pair to
 the proposed landscape. Keep method/parameter rationale in the trial, not a
 borrowed default justified only by raw diameter.
-When an image defect motivates analytical preprocessing, read
-[the preprocessing decision guide](references/image-preprocessing.md), also
-retrievable as `openhcs_image_preprocessing`, before changing the pipeline.
+Before segmentation or tracing parameter selection, read
+[analytical normalization](references/image-preprocessing.md#normalize-segmentation-inputs-before-tuning)
+in `openhcs_image_preprocessing`; normalized detection inputs are standard, not
+conditional on a visible image defect. The same guide owns additional
+nuisance-specific preprocessing and the separate fluorescence-measurement route.
 For extended-object point counts, false splits, merged neighbours, zero-growth cytoplasm
 or disconnected neurites, use [stage-specific segmentation diagnostics](references/segmentation-diagnostics.md)
 (`openhcs_segmentation_diagnostics`) to choose one discriminating trial rather

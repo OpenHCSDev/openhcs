@@ -163,6 +163,35 @@ class RuntimeArtifactQuery:
     target: RuntimeArtifactQueryTarget
 
     @classmethod
+    def records_for_input_edge(
+        cls,
+        edge: InvocationArtifactInputEdgePlan,
+        records: tuple["StoredRuntimeValue", ...],
+        *,
+        axis_id: str,
+        backend: str,
+    ) -> tuple["StoredRuntimeValue", ...]:
+        """Select observed records in the compiled producer-group order.
+
+        Unstored sources have no runtime records. Missing records remain empty;
+        the consuming invocation owns required-input admission across axes.
+        """
+        if edge.storage_plan is None:
+            return ()
+        queries = (
+            cls.from_input_plan(
+                edge.storage_plan,
+                axis_id=axis_id,
+                backend=backend,
+                group_key=group_key,
+            )
+            for group_key in edge.projection.producer_selection_scope.keys
+        )
+        return tuple(
+            record for query in queries for record in records if query.matches(record)
+        )
+
+    @classmethod
     def from_input_plan(
         cls,
         input_plan: ArtifactInputPlan,

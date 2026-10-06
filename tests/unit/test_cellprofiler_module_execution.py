@@ -678,7 +678,6 @@ def test_output_recording_preserves_complete_callable_return_abi() -> None:
 
     outputs = CellProfilerOutputRecorder.record_module_outputs(
         callable_contract=executor.callable_contract,
-        active_input_edges=(),
         adapter=_FakeCellProfilerRuntime({}),
         returned_values=MappingProxyType(
             {
@@ -7483,11 +7482,12 @@ def test_measure_object_size_shape_zernikes_use_declared_label_id_domain() -> No
     assert np.isfinite(rows[0]["Zernike_0_0"])
     assert np.isnan(rows[1]["Zernike_0_0"])
     assert np.isfinite(rows[2]["Zernike_0_0"])
-    np.testing.assert_array_equal([row["Area"] for row in rows], [9.0, np.nan, 16.0])
+    # Native Area/radius vectors use compact positions; Zernike/Feret retain label slots.
+    np.testing.assert_array_equal([row["Area"] for row in rows], [9.0, 16.0, np.nan])
     assert rows.object_row_identity is MeasurementObjectRowIdentity.LABEL_ID
     assert [row["slice_index"] for row in rows] == [0, 0, 0]
-    assert rows[1]["MaximumRadius"] == 0.0
-    assert rows[2]["MaximumRadius"] > 0.0
+    assert rows[1]["MaximumRadius"] > 0.0
+    assert rows[2]["MaximumRadius"] == 0.0
     assert rows[1]["MinFeretDiameter"] == 0.0
     assert rows[2]["MinFeretDiameter"] > 0.0
 
@@ -7513,7 +7513,7 @@ def test_measure_object_size_shape_backend_emits_concrete_cp_index_domain() -> N
     assert rows.object_row_identity is MeasurementObjectRowIdentity.LABEL_ID
     assert [row["slice_index"] for row in rows] == [0] * 5
     np.testing.assert_array_equal(
-        [row["Area"] for row in rows], [9.0, np.nan, 16.0, np.nan, np.nan]
+        [row["Area"] for row in rows], [9.0, 16.0, np.nan, np.nan, np.nan]
     )
 
 
@@ -8755,7 +8755,7 @@ def test_declared_output_source_uses_projected_object_input_value() -> None:
         artifact_input_edges=(_artifact_input_edge_for_test(object_spec),),
         artifact_output_bindings=((output_spec, output_plan),),
         variable_components=(VariableComponents.SITE,),
-        plane_projection=RuntimePlaneProjection.stack(plane_count=1),
+        plane_projection=RuntimePlaneProjection.selected(0, plane_count=1),
     )
     callable_contract = _compiled_callable_contract(
         MeasureObjectNeighborsModule.require_callable(),
@@ -16585,6 +16585,7 @@ def test_measurement_labels_do_not_project_runtime_slice_stack_for_aligned_measu
     )
     measurement_image = CellProfilerMeasurementImage(
         source_image_name="CropBlue__CropGreen",
+        execution_mode=ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK,
         source_aliases=("CropBlue", "CropGreen"),
         payload=AlignedImageStack(
             tuple(
