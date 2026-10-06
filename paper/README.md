@@ -207,3 +207,25 @@ delete historical reports. `review/latest` is a compatibility
 link to `current`, with its former manually copied pair preserved in a frozen
 directory. For a consistent multi-file read, resolve `current` once or use a
 snapshot. Native Windows publication is not implemented or claimed as tested.
+
+
+Single-core measured amortization uses the same qualified figure owner, separately
+from multiworker scaling. Supply the execution summaries for actual1/8/16
+assignments on one CPU/worker per engine, all from one qualified source head:
+
+```bash
+python paper/figures/build_slas_benchmark.py \
+  --summary-source "1 assignment / 1 worker=/qualified/one/execution_summary.csv" \
+  --summary-source "8 assignments / 1 worker=/qualified/eight/execution_summary.csv" \
+  --summary-source "16 assignments / 1 worker=/qualified/sixteen/execution_summary.csv" \
+  --scope amortization --cohort-manifest /qualified/selected-three-case-manifest.json \
+  --output-dir /qualified/figures/single-core-amortization
+```
+
+Counts and paired non-execution overhead come from the existing summary custody,
+not labels. Curves show measured seconds per assignment; lines do not project
+unmeasured counts. Compile-plus-run totals include OpenHCS per-job compilation;
+CellProfiler totals exclude one-time pipeline loading. Both exclude service/library
+readiness. Single-sample total targets native parity; the execution headline
+excludes compilation. Multiworker efficiency requires the same assignment count
+on one and several workers, rather than treating amortization as parallel speedup.

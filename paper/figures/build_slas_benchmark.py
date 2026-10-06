@@ -581,7 +581,7 @@ if __name__ == "__main__":
                         help="Reproduce the archived May 13 tables (default).")
     inputs.add_argument("--summary-source", action="append",
                         help="Measured MODE_LABEL=qualified_summary.csv; repeat for modes.")
-    parser.add_argument("--scope", choices=("execution", "total"),
+    parser.add_argument("--scope", choices=("execution", "total", "amortization"),
                         help="Required for measured summaries; archive has its retained clocks.")
     parser.add_argument("--cohort-manifest", type=Path,
                         help="Select unchanged cases declared by this manifest from each qualified measured source.")
