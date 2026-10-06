@@ -468,9 +468,9 @@ def test_factored_provenance_preserves_current_facts_and_independent_wire_occurr
 @pytest.mark.parametrize(
     "wire",
     (
-        {"identities": [], "planes": [{"identity": 0}]},
-        {"identities": [{}], "planes": [{"identity": True}]},
-        {"identities": [{}], "planes": [{"identity": -1}]},
+        {"identities": [], "planes": [{"identity": 0, "identity_kind": "runtime_plane"}]},
+        {"identities": [{}], "planes": [{"identity": True, "identity_kind": "runtime_plane"}]},
+        {"identities": [{}], "planes": [{"identity": -1, "identity_kind": "runtime_plane"}]},
         {"identities": [{}], "planes": [{"identity": 0, "identity_kind": "unknown"}]},
         {"identities": [{"extra": "unreferenced"}], "planes": []},
         {"identities": [{}], "planes": [{"identity": 0, "path": "extra.tif"}]},
