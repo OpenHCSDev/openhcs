@@ -6,21 +6,24 @@ state owner. References address exact UTF-8 bytes and an original result ordinal
 from __future__ import annotations
 
 import argparse
-from dataclasses import asdict, dataclass
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
 import hashlib
 import json
 from pathlib import Path
 import re
-from typing import Iterator
+from typing import ClassVar, Iterator, Sequence
 
+from metaclass_registry import AutoRegisterMeta
 from python_introspect import dataclass_from_mapping
 
 from openhcs.agent.capabilities import (
     GetViewerWindowStateCapability,
     ViewerSnapshotWindowCapability,
 )
-from openhcs.mcp.dev_client_core import McpDevToolResult
+from openhcs.mcp.dev_client_core import McpDevToolBatchResponse, McpDevToolResult
 from openhcs.agent.dto.viewer import ViewerWindowSnapshotResult
+from openhcs.serialization.json import to_jsonable
 
 
 @dataclass(frozen=True)
@@ -47,7 +50,7 @@ class RecordedMcpResponseReference:
         if self.result_index is None:
             raise ValueError('This reference selects an envelope, not a tool result')
         return dataclass_from_mapping(
-            McpDevToolResult, self.response(journal)['results'][self.result_index])
+            McpDevToolBatchResponse, self.response(journal)).results[self.result_index]
 
 
 @dataclass(frozen=True)
@@ -97,12 +100,17 @@ class RecordedMcpJournal:
             # Non-tool envelopes (including predispatch/transport errors and
             # catalog replies) stay resolvable too. Nothing is discarded from
             # the original journal, including non-JSON CLI/UNKNOWN diagnostics.
-            results = response.get('results', [])
-            if not results:
+            if 'results' not in response:
                 references.append(reference)
                 continue
-            for ordinal, raw_result in enumerate(results):
-                result = dataclass_from_mapping(McpDevToolResult, raw_result)
+            # for_rendering uses this same whole-envelope ingress codec, then
+            # projects selected DTOs. Indexing keeps original payloads instead
+            # of rendering every historical capability through today's schema.
+            batch = dataclass_from_mapping(McpDevToolBatchResponse, response)
+            if not batch.results:
+                references.append(reference)
+                continue
+            for ordinal, result in enumerate(batch.results):
                 selected = RecordedMcpResponseReference(
                     reference.byte_offset, reference.byte_length, reference.sha256, ordinal)
                 event = len(references)
@@ -157,17 +165,11 @@ class RecordedMcpEvidenceIndex:
     captures: tuple[RecordedMcpCaptureReference, ...]
 
     def to_dict(self) -> dict:
-        document = asdict(self)
-        document['journal']['path'] = str(self.journal.path)
-        return document
+        return to_jsonable(self)
 
     @classmethod
     def read(cls, path: Path) -> RecordedMcpEvidenceIndex:
-        document = json.loads(path.read_text())
-        journal = document['journal']
-        return cls(RecordedMcpJournal(Path(journal['path']), journal['prefix_bytes'], journal['sha256']),
-                   tuple(dataclass_from_mapping(RecordedMcpResponseReference, row) for row in document['events']),
-                   tuple(dataclass_from_mapping(RecordedMcpCaptureReference, row) for row in document['captures']))
+        return dataclass_from_mapping(cls, json.loads(path.read_text()))
 
     def capture_evidence(self, capture: RecordedMcpCaptureReference) -> Iterator[dict]:
         self.journal.verify()
@@ -183,35 +185,93 @@ class RecordedMcpEvidenceIndex:
             capture.verify_bitmap()
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    commands = parser.add_subparsers(dest='command', required=True)
-    index = commands.add_parser('index')
-    index.add_argument('--journal', type=Path, required=True)
-    index.add_argument('--output', type=Path, required=True)
-    verify = commands.add_parser('verify')
-    verify.add_argument('--index', type=Path, required=True)
-    resolve = commands.add_parser('resolve')
-    resolve.add_argument('--index', type=Path, required=True)
-    resolve.add_argument('--event', type=int, required=True)
-    args = parser.parse_args()
-    if args.command == 'index':
+class RecordedEvidenceCommand(ABC, metaclass=AutoRegisterMeta):
+    """Offline commands, declared and dispatched like BenchmarkCliCommand."""
+
+    __registry_key__ = 'command_name'
+    __skip_if_no_key__ = True
+    __registry__: ClassVar[dict[str, type[RecordedEvidenceCommand]]] = {}
+    command_name: ClassVar[str | None] = None
+    help_text: ClassVar[str]
+
+    @classmethod
+    def registered_commands(cls) -> tuple[RecordedEvidenceCommand, ...]:
+        return tuple(command_type() for command_type in cls.__registry__.values())
+
+    def configure(self, subparsers: argparse._SubParsersAction) -> argparse.ArgumentParser:
+        parser = subparsers.add_parser(self.command_name, help=self.help_text)
+        parser.set_defaults(cli_command=self)
+        self.configure_arguments(parser)
+        return parser
+
+    @abstractmethod
+    def configure_arguments(self, parser: argparse.ArgumentParser) -> None:
+        """Declare arguments owned by this operation."""
+
+    @abstractmethod
+    def run(self, args: argparse.Namespace) -> int:
+        """Perform this offline operation without a command-name switch."""
+
+
+class IndexRecordedEvidenceCommand(RecordedEvidenceCommand):
+    command_name = 'index'
+    help_text = 'Index original recorded response bytes without copying payloads.'
+
+    def configure_arguments(self, parser: argparse.ArgumentParser) -> None:
+        parser.add_argument('--journal', type=Path, required=True)
+        parser.add_argument('--output', type=Path, required=True)
+
+    def run(self, args: argparse.Namespace) -> int:
         evidence = RecordedMcpJournal.index(args.journal)
         evidence.verify()
         with args.output.open('x') as output:
-            json.dump(evidence.to_dict(), output, indent=2)
+            json.dump(to_jsonable(evidence), output, indent=2)
         print(json.dumps({'events': len(evidence.events), 'captures': len(evidence.captures),
                           'indexed_prefix_bytes': evidence.journal.prefix_bytes, 'output': str(args.output)}))
-    else:
+        return 0
+
+
+class IndexedRecordedEvidenceCommand(RecordedEvidenceCommand):
+    """Shared declared index input for operations consuming retained references."""
+
+    def configure_arguments(self, parser: argparse.ArgumentParser) -> None:
+        parser.add_argument('--index', type=Path, required=True)
+
+
+class VerifyRecordedEvidenceCommand(IndexedRecordedEvidenceCommand):
+    command_name = 'verify'
+    help_text = 'Verify the indexed prefix, original response bytes and capture hashes.'
+
+    def run(self, args: argparse.Namespace) -> int:
         evidence = RecordedMcpEvidenceIndex.read(args.index)
-        if args.command == 'verify':
-            evidence.verify()
-            print(json.dumps({'verified': True, 'events': len(evidence.events), 'captures': len(evidence.captures)}))
-        else:
-            evidence.journal.verify()
-            reference = evidence.events[args.event]
-            print(json.dumps(reference.response(evidence.journal)))
-    return 0
+        evidence.verify()
+        print(json.dumps({'verified': True, 'events': len(evidence.events), 'captures': len(evidence.captures)}))
+        return 0
+
+
+class ResolveRecordedEvidenceCommand(IndexedRecordedEvidenceCommand):
+    command_name = 'resolve'
+    help_text = 'Read an exact original response envelope by indexed event.'
+
+    def configure_arguments(self, parser: argparse.ArgumentParser) -> None:
+        super().configure_arguments(parser)
+        parser.add_argument('--event', type=int, required=True)
+
+    def run(self, args: argparse.Namespace) -> int:
+        evidence = RecordedMcpEvidenceIndex.read(args.index)
+        evidence.journal.verify()
+        reference = evidence.events[args.event]
+        print(json.dumps(reference.response(evidence.journal)))
+        return 0
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    commands = parser.add_subparsers(required=True)
+    for command in RecordedEvidenceCommand.registered_commands():
+        command.configure(commands)
+    args = parser.parse_args(argv)
+    return args.cli_command.run(args)
 
 
 if __name__ == '__main__':

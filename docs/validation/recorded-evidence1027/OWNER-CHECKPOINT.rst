@@ -63,3 +63,42 @@ this is structural evidence, not a substitute for retained-record acceptance.
 No native/client, scientific rerun, package build, cap, truncation or frozen rewrite.
 Small disposable indexes live only in the named recorded-evidence1027 scratch and
 are removed after qualification; acceptance prints counts, not repeated payloads.
+
+Parent architecture correction, qualified checkpoint
+---------------------------------------------------
+
+IMPL-1/MEMB-1: removed the manual command roster and args.command branches.
+RecordedEvidenceCommand follows the existing BenchmarkCliCommand declaration
+pattern with AutoRegisterMeta, declaration-derived registered_commands and
+parser.set_defaults(cli_command=self). Each operation owns its arguments and run;
+IndexedRecordedEvidenceCommand owns the common index argument. Adding an operation
+needs one declaration, not edits to a second parser or dispatch roster.
+
+BOUND-2/MEMB-5: removed the separate journal field mapping and asdict/Path patch.
+RecordedMcpEvidenceIndex.read decodes the whole index through dataclass_from_mapping;
+to_dict and the writer project the whole index through to_jsonable. The existing
+codec's declared Path handling owns conversion, and nested undeclared fields fail.
+
+Inspected McpDevToolBatchResponse.for_rendering (not from_response): its ingress is
+dataclass_from_mapping of the whole batch, followed by selected DTO projection.
+Indexing and result readback now use that whole-batch ingress directly, rather than
+manually consuming result dictionaries. Only snapshot resource extraction asks the
+existing result owner for its typed DTO; historical payloads are not all rendered
+through current schemas. Non-tool envelopes stay exact response references, including
+all28 originals in the real acceptance. Non-JSON/UNKNOWN bytes stay in the unchanged
+104451389-byte original prefix. No converter or alternate batch schema was added.
+
+After the coherent correction: index CLI45807 terminal0; retained verifier21684
+terminal0 with1479 exact results/241 exact captures, unchanged frozen indexes and
+the original matched triplet; verify CLI79261 terminal0; resolve CLI24237 terminal0
+and exact original response agreement (event337, no payload store written).
+Focused suite24735 terminal0: eight passed, including declaration-driven extension,
+whole-index Path roundtrip/undeclared-field rejection and non-tool resolution.
+Existing refactor-audit AST overlay91322 terminal0 over the MCP family: no new
+string-dispatch, literal-roster or hand-mapped record site in recorded_evidence.py.
+Other pre-existing family findings remain outside this correction.
+
+Review handoff scratch, owner Dewey:
+/home/ts/.cache/agent-scratch/recorded-evidence1027-review/index01.json (364018B).
+Retain this reference-only index until parent readback/review, then remove the named
+scratch. No payload copies, original journal edits or package installs are involved.
