@@ -1,3 +1,4 @@
+from openhcs.core.steps.abstract import StepExecutionObservation
 from openhcs.core.steps.function_runtime import (
     PatternGroupExecutionRequest,
     PatternGroupExecutionScope,
@@ -130,6 +131,7 @@ def _anchor_executor(
     executor = object.__new__(FunctionStepExecutor)
     executor.plan = plan
     executor.context = Mock(
+        completed_step_outputs=StepExecutionObservation.empty(),
         plate_path=Path("."),
         microscope_handler=SimpleNamespace(
             parser=parser,
@@ -4266,6 +4268,7 @@ def test_step_output_load_preserves_producer_stack_plane_provenance(
         ),
     )
     context = SimpleNamespace(
+        source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
         microscope_handler=SimpleNamespace(parser=SourceSchemaFilenameParser()),
         filemanager=MemoryFileManager(),
         runtime_image_stack_cache=RuntimeImageStackCache(),
@@ -5911,6 +5914,7 @@ def test_producer_loader_validates_ambiguity_before_cache(
             pytest.fail("Ambiguous producer admission must precede cached pixels")
 
     context = SimpleNamespace(
+        source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
         microscope_handler=SimpleNamespace(parser=SourceSchemaFilenameParser()),
         runtime_image_stack_cache=RejectImageCache(),
     )
