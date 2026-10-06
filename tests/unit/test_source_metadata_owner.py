@@ -25,7 +25,7 @@ from openhcs.core.source_image_provenance import (
     SourceImageProvenance,
     SourceImageProvenancePlanes,
     SourceImageProvenance,
-    SourceImageProvenancePlaneRecord,
+    RuntimeSourceImageProvenancePlane,
     SourcePlaneIndexedMetadata,
     source_component_metadata_consensus,
 )
@@ -505,7 +505,7 @@ def test_mapping_and_ordered_record_equality_namespaces_stay_separate():
             source_metadata=metadata
         ),
         lambda metadata: VirtualWorkspaceSourceProjection({}, {"plane.tif": metadata}),
-        lambda metadata: SourceImageProvenancePlaneRecord(component_metadata=metadata),
+        lambda metadata: RuntimeSourceImageProvenancePlane(SourceImageIdentity(component_metadata=metadata)),
         lambda metadata: SourcePlaneIndexedMetadata(metadata, 0, 1),
         lambda metadata: SourcePlaneProjection(
             address=OpenHCSPlaneAddress.from_values(

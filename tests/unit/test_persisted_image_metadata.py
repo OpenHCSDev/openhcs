@@ -25,7 +25,7 @@ from openhcs.core.source_image_provenance import (
     SourceImageIdentity,
     SourceImageProvenance,
     SourceImageProvenanceContributor,
-    SourceImageProvenancePlaneRecord,
+    RuntimeSourceImageProvenancePlane,
     SourceImageProvenancePlanes,
 )
 from openhcs.core.source_metadata import SourceVoxelSpacing
@@ -47,10 +47,8 @@ from openhcs.serialization.json import to_jsonable
 
 def metadata_fixture():
     contributors = tuple(
-        SourceImageProvenancePlaneRecord(
-            path=f"/source/site{site}.tif",
-            component_metadata={"site": site},
-            identity_kind=SourceImageProvenanceContributor.identity_kind,
+        SourceImageProvenanceContributor(
+            SourceImageIdentity(f"/source/site{site}.tif", {"site": site}),
             source_image_name="neurite",
         )
         for site in range(1, 10)
@@ -59,9 +57,7 @@ def metadata_fixture():
         source_provenance=SourceImageProvenance(
             source_path="/produced/mosaic.tif",
             source_component_metadata={"well": "A01", "site": 1, "channel": 1},
-            source_image_provenance_planes=SourceImageProvenancePlanes.from_records(
-                contributors
-            ),
+            source_image_provenance_planes=SourceImageProvenancePlanes(contributors),
             source_image_names=("neurite", "nucleus"),
         ),
         source_voxel_spacing=SourceVoxelSpacing((0.25, 0.5)),
@@ -124,15 +120,16 @@ def test_saved_format_metadata_is_native_and_does_not_reencode(
 def test_saved_two_channel_planes_keep_runtime_axis_not_contributor_axis(
     tmp_path, extension
 ):
-    contributor_records = metadata_fixture().source_image_provenance_planes.records
+    contributors = metadata_fixture().source_image_provenance_planes.planes
     metadata = metadata_fixture().replace_fields(
         plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
-        source_image_provenance_planes=SourceImageProvenancePlanes.from_records(
+        source_image_provenance_planes=SourceImageProvenancePlanes(
             tuple(
-                SourceImageProvenancePlaneRecord(
-                    path=f"/produced/channel{channel}.tif",
-                    component_metadata={"channel": channel},
-                    contributors=contributor_records,
+                RuntimeSourceImageProvenancePlane(
+                    SourceImageIdentity(
+                        f"/produced/channel{channel}.tif", {"channel": channel}
+                    ),
+                    contributors=contributors,
                 )
                 for channel in (1, 2)
             )
@@ -531,7 +528,7 @@ def test_native_header_reload_preserves_declared_crop_and_alias(tmp_path, origin
     assert current.source_image_names == ("neurite",)
     assert all(
         record.source_image_name == "neurite"
-        for record in current.source_image_provenance_planes.records
+        for record in current.source_image_provenance_planes.planes
     )
     assert len(current.source_provenance.represented_source_identities) == 9
 
