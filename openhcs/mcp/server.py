@@ -1698,7 +1698,7 @@ class McpDataclassRequestToolBindingABC(
         openhcs_tool,
     ) -> None:
         request_fields = dataclass_fields(request_type)
-        request_type_hints = get_type_hints(request_type)
+        request_type_hints = get_type_hints(request_type, include_extras=True)
         parameters: list[Parameter] = []
         for request_field in request_fields:
             if request_field.default_factory is not MISSING:

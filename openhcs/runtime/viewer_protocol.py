@@ -135,6 +135,7 @@ class ViewerControlField(str, Enum):
     RESOURCE = "resource"
     WIDTH = "width"
     HEIGHT = "height"
+    WINDOW_GEOMETRY = "window_geometry"
     LAYERS = "layers"
     LAYER_COUNT = "layer_count"
     ACTIVE_DIMENSION_LABEL_ROUTE = "active_dimension_label_route"
@@ -145,6 +146,29 @@ class ViewerControlField(str, Enum):
     COMPONENT_GROUP_COUNT = "component_group_count"
     COMPONENT_ITEM_COUNT = "component_item_count"
     PROCESS_LAUNCH = "process_launch"
+
+
+@dataclass(frozen=True, slots=True)
+class ViewerWindowGeometry:
+    """Qt logical-pixel extents of the window and its actual image canvas."""
+
+    window_size: tuple[int, int]
+    canvas_size: tuple[int, int]
+
+    def __post_init__(self) -> None:
+        for name, size in (
+            ("window_size", self.window_size),
+            ("canvas_size", self.canvas_size),
+        ):
+            if (
+                not isinstance(size, tuple)
+                or len(size) != 2
+                or any(
+                    isinstance(value, bool) or not isinstance(value, int) or value < 0
+                    for value in size
+                )
+            ):
+                raise ValueError(f"{name} must be a nonnegative (width, height) pair.")
 
 
 class OpenHCSViewerControlMessageType(str, Enum):

@@ -93,6 +93,7 @@ from openhcs.runtime.viewer_protocol import (
     ViewerPayloadField,
     ViewerPayloadSummaryField,
     ViewerRuntimeEndpoint,
+    ViewerWindowGeometry,
 )
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 
@@ -1342,6 +1343,9 @@ class ViewerWindowService:
             ),
             width=self._optional_typed(response, ViewerControlField.WIDTH, int),
             height=self._optional_typed(response, ViewerControlField.HEIGHT, int),
+            window_geometry=self._optional_typed(
+                response, ViewerControlField.WINDOW_GEOMETRY, ViewerWindowGeometry
+            ),
             response=response,
         )
 
@@ -2209,6 +2213,9 @@ class ViewerWindowService:
                 else ViewerNativeViewportPresentation.from_wire_mapping(
                     self._required_mapping(response, ViewerControlField.NATIVE_VIEWPORT)
                 )
+            ),
+            window_geometry=self._optional_typed(
+                response, ViewerControlField.WINDOW_GEOMETRY, ViewerWindowGeometry
             ),
             active_dimension_label_route=self._optional_typed(
                 response,

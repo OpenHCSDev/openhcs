@@ -511,6 +511,16 @@ class PlateFileStreamCommandOptions:
         add_request_field_option(
             parser,
             request_type,
+            "roi_parent_labels",
+            "--roi-parent-label",
+            type=int,
+            action="append",
+            default=None,
+            help="Stream complete contours for this parent ROI label; repeat as needed.",
+        )
+        add_request_field_option(
+            parser,
+            request_type,
             "viewer_config_key",
             "--viewer-config-key",
             help="Streaming config key such as napari_streaming_config.",
@@ -584,6 +594,7 @@ class StreamPlateFilesCommandSpec(SingleToolCommandSpec):
         request = PlateFileStreamRequest.from_fields(
             plate_path=args.plate_path,
             file_paths=list(args.file_paths),
+            roi_parent_labels=args.roi_parent_labels,
             microscope_type=args.microscope_type,
             pattern_format=args.pattern_format,
             kind=plate_file_stream_kind_argument(
@@ -943,6 +954,7 @@ class SelectedPlateStreamCommandSpec(SingleToolCommandSpec):
     ) -> dict[str, JsonValue]:
         request = SelectedPlateFileStreamRequest.from_fields(
             file_paths=list(args.file_paths),
+            roi_parent_labels=args.roi_parent_labels,
             microscope_type=args.microscope_type,
             pattern_format=args.pattern_format,
             kind=plate_file_stream_kind_argument(

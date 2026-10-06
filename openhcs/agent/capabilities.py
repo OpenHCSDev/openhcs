@@ -2592,6 +2592,9 @@ class InspectPipelineSourceArtifactPlanCapability(PipelineDraftCapability):
         f" Source workspace: {getdoc(SourceWorkspaceSummary)}"
     )
     service = "execution_session"
+    mutating = True
+    side_effects = ("may_write_plate_workspace_metadata",)
+    security_requirements = ("agent_path_policy",)
     exposition = PipelineDraftCapability.exposition.refine(
         workflow_stage=CapabilityWorkflowStage.VALIDATION,
     )
@@ -2847,12 +2850,21 @@ class ViewerSnapshotWindowCapability(ViewerWindowCliConnectionCapability):
     cli_command = "snapshot-viewer"
     kind = CapabilityKind.TOOL
     title = "Snapshot viewer window"
-    description = "Captures a running OpenHCS viewer window, such as Napari, through its ZMQ control socket."
+    description = (
+        "Captures a running OpenHCS viewer window through its ZMQ control socket. "
+        "A compatible viewer also reports live window and image-canvas "
+        "dimensions in Qt logical pixels; compare these across captures "
+        "because a user may resize the viewer."
+    )
     service = "viewer_window"
     mutating = True
     side_effects = ("writes_agent_output_file",)
     runtime_requirements = ("running_openhcs_viewer_server",)
-    data_exposure = ("viewer_screenshot", "local_output_path")
+    data_exposure = (
+        "viewer_screenshot",
+        "viewer_window_geometry",
+        "local_output_path",
+    )
     security_requirements = ("agent_path_policy",)
     input_contract = ViewerWindowSnapshotRequest
     output_contract = ViewerWindowSnapshotResult
@@ -2894,9 +2906,10 @@ class GetViewerWindowStateCapability(ViewerWindowCliConnectionCapability):
     kind = CapabilityKind.TOOL
     title = "Get viewer window state"
     description = (
-        "Returns bounded structured layer, component, axis, payload-summary, and "
-        "shape-bound state from a running OpenHCS viewer through its ZMQ "
-        "control socket."
+        "Returns bounded structured layer, component, axis, payload-summary, "
+        "shape-bound, camera, and (when supported) live window/canvas geometry "
+        "state from a running OpenHCS viewer. Query before visual comparisons to detect "
+        "human changes to the view."
     )
     service = "viewer_window"
     runtime_requirements = ("running_openhcs_viewer_server",)
@@ -2905,6 +2918,7 @@ class GetViewerWindowStateCapability(ViewerWindowCliConnectionCapability):
         "viewer_axis_state",
         "viewer_payload_summaries",
         "viewer_shape_bounds",
+        "viewer_window_geometry",
     )
     input_contract = ViewerWindowStateRequest
     output_contract = ViewerWindowStateResult

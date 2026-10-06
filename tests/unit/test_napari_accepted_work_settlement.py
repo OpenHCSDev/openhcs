@@ -188,6 +188,39 @@ def test_saved_roi_reopen_reports_pre_route_failure_and_recovers(
     assert len(receiver.viewer.layers) == 1
 
 
+def test_earlier_route_failure_remains_diagnostic_without_poisoning_new_batch(
+    receiver, qtbot
+):
+    receiver.layer_route_state.record_update_error(
+        "earlier-route", ValueError("invalid earlier plane")
+    )
+    response, progress = settle(receiver)
+    assert response["status"] == "error"
+    assert progress.phase is ViewerSettlePhase.FAILED
+
+    assert (
+        receiver.accept_stream_message(wire_batch(image_item())).to_wire_mapping()[
+            "status"
+        ]
+        == "success"
+    )
+    receiver.process_accepted_stream_messages()
+    settle(receiver)
+    qtbot.waitUntil(
+        lambda: settle(receiver)[1].phase is not ViewerSettlePhase.RUNNING,
+        timeout=5000,
+    )
+    response, progress = settle(receiver)
+    assert response["status"] == "success"
+    assert progress.phase is ViewerSettlePhase.COMPLETE
+    assert len(receiver.viewer.layers) == 1
+    assert (
+        receiver.layer_route_state.update_failure_message()
+        == "earlier-route: invalid earlier plane"
+    )
+    assert receiver.layer_route_state.settlement_failure_message() is None
+
+
 def test_previous_complete_cannot_settle_new_accepted_work(receiver):
     assert settle(receiver)[1].phase is ViewerSettlePhase.COMPLETE
     assert (

@@ -22,6 +22,7 @@ from benchmark.contracts.measured_run_receipt import (
     MEASURED_PIPELINE_RUN_RECEIPT_SCHEMA_VERSION,
     MeasuredEndpointProvenance,
     MeasuredPipelineRunReceipt,
+    require_positive_axis_count,
 )
 from benchmark.contracts.run_artifacts import (
     MeasuredPipelineRunArtifact,
@@ -255,8 +256,7 @@ def _require_measured_submission(
 ) -> None:
     """Fail before connecting when a measured request lacks its evidence target."""
 
-    if expected_axis_count is not None and expected_axis_count < 1:
-        raise ValueError("Expected axis count must be positive when declared.")
+    require_positive_axis_count(expected_axis_count, field_name="expected_axis_count")
     auxiliary_params = ZMQAuxiliaryExecutionParams.from_transport(
         submission.config_params
     )
@@ -377,8 +377,7 @@ def retain_measured_openhcs_completion(
 ) -> _ZMQOpenHCSExecution:
     """Validate and retain evidence after an ordinary execution completes."""
 
-    if expected_axis_count is not None and expected_axis_count < 1:
-        raise ValueError("Expected axis count must be positive when declared.")
+    require_positive_axis_count(expected_axis_count, field_name="expected_axis_count")
     auxiliary_params = ZMQAuxiliaryExecutionParams.from_transport(
         submission.config_params
     )

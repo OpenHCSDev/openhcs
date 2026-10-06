@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar
 
 from objectstate import spawn_thread_with_context
+from polystore.roi import ROIArchiveParentLabelSelection
 from polystore.streaming.identity import (
     FixedStreamProducerIdentityKind,
     StreamProducerIdentity,
@@ -27,7 +28,7 @@ from polystore.streaming.viewer_transport import (
     ViewerStreamSourceIdentity,
 )
 from zmqruntime.config import ZMQConfig
-from zmqruntime.viewer_protocol import ViewerWireMapping
+from zmqruntime.viewer_protocol import ViewerWireField, ViewerWireMapping
 
 from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
 from openhcs.core.runtime_image_values import (
@@ -53,6 +54,7 @@ from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 
 if TYPE_CHECKING:
     from polystore.filemanager import FileManager
+    from polystore.virtual_workspace import SourcePixelRef
 
     from openhcs.core.config import StreamingConfig
     from openhcs.microscopes.microscope_base import MicroscopeHandler
@@ -87,6 +89,7 @@ class ImageStreamingRequest(ViewerStreamingContext):
     filenames: tuple[str, ...]
     read_backend: str
     source_projection: VirtualWorkspaceSourceProjection | None = None
+    source_refs_by_path: Mapping[str, SourcePixelRef] = field(default_factory=dict)
     producer: ViewerStreamProducer | None = None
 
 
@@ -125,6 +128,7 @@ class RoiStreamingRequest(ViewerStreamingContext):
     """Request to stream ROI files to one viewer."""
 
     roi_filenames: tuple[str, ...]
+    parent_label_selection: ROIArchiveParentLabelSelection | None = None
     component_metadata_by_path: Mapping[str, ViewerWireMapping] = field(
         default_factory=dict
     )
@@ -338,16 +342,35 @@ class ViewerStreamingSource(ViewerStreamSourceIdentity):
         *,
         source_projection: VirtualWorkspaceSourceProjection,
         component_metadata: ViewerWireMapping,
+        source_ref_override: SourcePixelRef | None = None,
     ):
         lookup = VirtualWorkspacePathLookup.from_paths(
             filename, str(Path(self.plate_path) / filename)
         )
         source_ref = source_projection.source_ref_for(lookup)
+        if source_ref_override is not None:
+            if source_ref is not None and source_ref != source_ref_override:
+                raise ValueError(
+                    "Inventory image source conflicts with the plate source projection."
+                )
+            source_ref = source_ref_override
         backend = read_backend if source_ref is None else source_ref.backend
-        source_path = source_projection.resolved_source_path_for(
-            lookup, self.filemanager
-        )
-        image = self.filemanager.load(source_path, backend)
+        if source_ref is None:
+            source_address = lookup.full_virtual_path
+            image = self.filemanager.load(source_address, backend)
+        else:
+            if source_projection.workspace_root is None:
+                raise ValueError(
+                    "Viewer source resolution requires a workspace root."
+                )
+            source_address = source_ref.resolved_address(
+                self.filemanager.registry,
+                base_path=source_projection.workspace_root,
+            )
+            image = source_ref.load(
+                self.filemanager.registry,
+                base_path=source_projection.workspace_root,
+            )
         image = source_projection.project_unbound_payload(lookup, image)
         metadata = ImagePayloadSourceMetadataContext(
             source_identity=SourceImageIdentity(
@@ -356,7 +379,7 @@ class ViewerStreamingSource(ViewerStreamSourceIdentity):
             ),
             read_backend=backend,
             filemanager=self.filemanager,
-            source_address=source_path,
+            source_address=source_address,
         ).metadata(image)
         return metadata.payload_with(
             image_payload_data(image), image_payload_mask(image)
@@ -468,6 +491,46 @@ class ViewerStreamingSource(ViewerStreamSourceIdentity):
             else:
                 values.append(metadata_by_path[path])
         return StreamSourceComponentMetadataItems.from_values(values)
+
+    def image_item_fields(
+        self,
+        filename: str,
+        image,
+        source_projection: VirtualWorkspaceSourceProjection,
+        component_order: tuple[str, ...],
+    ):
+        """Project replayed image axes from the persisted source declaration."""
+
+        metadata = image_payload_metadata(image)
+        projection = source_projection.source_projection_for(
+            VirtualWorkspacePathLookup.from_paths(
+                filename, str(Path(self.plate_path) / filename)
+            )
+        )
+        singleton_components = (
+            ()
+            if projection is None or len(image_payload_data(image).shape) != 3
+            else projection.retained_singleton_plane_components(metadata)
+        )
+        fields = (
+            StreamImagePayloadMetadataProjector.item_fields_for_plane_components(
+                metadata, singleton_components
+            )
+            if singleton_components
+            else StreamImagePayloadMetadataProjector.item_fields(
+                metadata, component_order
+            )
+        )
+        if (
+            metadata.plane_axis is not None
+            and len(image_payload_data(image).shape) == 3
+            and ViewerWireField.PLANE_COMPONENT_VALUES.value not in fields
+        ):
+            raise ValueError(
+                "Replayed image has a retained plane axis without exact "
+                f"plane component values: {filename!r}."
+            )
+        return fields
 
     def roi_component_metadata_by_path(
         self,
@@ -648,6 +711,7 @@ class StreamingService:
                     request.read_backend,
                     source_projection=source_projection,
                     component_metadata=all_metadata_by_path[filename],
+                    source_ref_override=request.source_refs_by_path.get(filename),
                 )
                 if request.source_projection is not None:
                     self.source.require_projected_image_window(
@@ -661,15 +725,19 @@ class StreamingService:
             )
 
             component_order = message_authority.layout.component_order
-            for indices in StreamImagePayloadMetadataProjector.partition_indices(
-                (image_payload_metadata(image) for image in image_data_list),
-                component_order,
-            ):
-                metadata = image_payload_metadata(image_data_list[indices[0]])
-                item_fields = StreamImagePayloadMetadataProjector.item_fields(
-                    metadata,
+            item_fields_by_index = tuple(
+                self.source.image_item_fields(
+                    filename,
+                    image,
+                    source_projection,
                     component_order,
                 )
+                for filename, image in zip(file_paths, image_data_list, strict=True)
+            )
+            for indices in StreamImagePayloadMetadataProjector.partition_item_fields(
+                item_fields_by_index
+            ):
+                item_fields = item_fields_by_index[indices[0]]
                 partition_metadata_by_path = {
                     file_paths[index]: all_metadata_by_path[file_paths[index]]
                     for index in indices
@@ -767,7 +835,14 @@ class StreamingService:
 
         for i, filename in enumerate(request.roi_filenames, 1):
             file_path = Path(self.source.plate_path) / filename
-            rois = load_rois_from_zip(file_path)
+            rois = (
+                load_rois_from_zip(file_path)
+                if request.parent_label_selection is None
+                else load_rois_from_zip(
+                    file_path,
+                    selection=request.parent_label_selection,
+                )
+            )
             if not rois:
                 logger.warning(f"No ROIs found in {file_path.name}")
                 continue

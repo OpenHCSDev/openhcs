@@ -23,6 +23,7 @@ from openhcs.processing.backends.analysis.count_cells_simple import (
     ThresholdMethod,
     count_cells_simple,
     count_cells_simple_dual_channel,
+    inspect_metaxpress_round_object_component,
     inspect_metaxpress_round_objects,
     round_object_segmentation_stages,
     segment_metaxpress_round_objects,
@@ -684,6 +685,73 @@ def test_round_object_diagnostics_report_watershed_source_component_lineage():
     assert {row["source_component_label"] for row in rows} == {1}
     assert {row["source_component_output_count"] for row in rows} == {2}
     assert {row["split_from_source_component"] for row in rows} == {True}
+
+
+def test_round_object_component_trace_matches_production_split_and_contract():
+    image = np.zeros((2, 96, 96), dtype=np.float32)
+    for center in ((48, 43), (48, 53)):
+        rr, cc = disk(center, 6, shape=image.shape[1:])
+        image[1, rr, cc] = 1000.0
+        rr, cc = disk(center, 2, shape=image.shape[1:])
+        image[1, rr, cc] = 1800.0
+    original = image.copy()
+    settings = MetaXpressWavelengthSettings(
+        channel_index=1,
+        approx_min_width=5.0,
+        approx_max_width=30.0,
+        intensity_above_local_background=300.0,
+    )
+
+    returned = unwrap(inspect_metaxpress_round_object_component)(
+        image,
+        source_component_label=1,
+        settings=settings,
+        pixel_size=1.0,
+    )
+    matched = RuntimeReturnedOutputMatcher(
+        CallableContract.from_callable(inspect_metaxpress_round_object_component),
+        returned,
+    ).resolve()
+    raw, decisions, seeds, source, selected_seeds, split, response, surface = returned
+    assert len(matched) == 7
+    assert raw is image
+    np.testing.assert_array_equal(image, original)
+    assert not any(np.any(artifact[0]) for artifact in (source, selected_seeds, split))
+    assert response.source_indices == surface.source_indices == (1,)
+
+    stages = round_object_segmentation_stages(image[1], settings, 1.0)
+    np.testing.assert_array_equal(
+        source[1] > 0,
+        stages.source_components == 1,
+    )
+    np.testing.assert_array_equal(split[1], stages.prefilter_labels)
+    np.testing.assert_array_equal(response.data[0] > 0, source[1] > 0)
+    assert not np.any(selected_seeds[1] & (source[1] == 0))
+    assert not np.any((surface.data[0] != 0) & (source[1] == 0))
+
+    decision, = _rows(decisions)
+    assert decision["source_component_label"] == 1
+    assert decision["split_decision"] == "split_applied"
+    assert decision["selected_surface_kind"] == "intensity"
+    assert decision["selected_seed_count"] == 2
+    assert decision["output_count"] == 2
+    assert decision["area_pixels"] == np.count_nonzero(source[1])
+    assert decision["response_threshold"] == 300.0
+    selected_rows = [row for row in _rows(seeds) if row["selected"]]
+    assert len(selected_rows) == 2
+    assert {
+        (row["row_px"], row["column_px"]) for row in selected_rows
+    } == set(map(tuple, np.argwhere(selected_seeds[1] > 0)))
+
+
+def test_round_object_component_trace_rejects_absent_source_component():
+    image = np.zeros((1, 32, 32), dtype=np.float32)
+    with pytest.raises(ValueError, match="Source component 1 is absent"):
+        unwrap(inspect_metaxpress_round_object_component)(
+            image,
+            source_component_label=1,
+            pixel_size=1.0,
+        )
 
 
 def test_adjacent_satellite_filter_is_conjunctive_and_keeps_isolated_faint_objects():

@@ -24,6 +24,13 @@ _ARCHIVED_MEASURED_PIPELINE_RUN_RECEIPT_SCHEMA_VERSION = (
 _SHA256_HEX = re.compile(r"[0-9a-f]{64}\Z")
 
 
+def require_positive_axis_count(value: int | None, *, field_name: str) -> None:
+    """Validate one optional benchmark workload-coverage count."""
+
+    if value is not None and (type(value) is not int or value < 1):
+        raise ValueError(f"{field_name} must be a positive integer when declared.")
+
+
 @dataclass(frozen=True, slots=True)
 class MeasuredEndpointProvenance:
     """Endpoint identity observed by the ordinary client during one run."""
@@ -113,10 +120,12 @@ class MeasuredPipelineRunReceipt:
             raise ValueError("Completion time must be a positive epoch timestamp.")
         if self.compile_artifact_id == "":
             raise ValueError("Compile artifact id cannot be empty when declared.")
-        if self.expected_axis_count is not None and self.expected_axis_count < 1:
-            raise ValueError("Expected axis count must be positive when declared.")
-        if self.observed_axis_count is not None and self.observed_axis_count < 1:
-            raise ValueError("Observed axis count must be positive.")
+        require_positive_axis_count(
+            self.expected_axis_count, field_name="expected_axis_count"
+        )
+        require_positive_axis_count(
+            self.observed_axis_count, field_name="observed_axis_count"
+        )
         if (
             self.expected_axis_count is not None
             and self.observed_axis_count != self.expected_axis_count

@@ -1,0 +1,206 @@
+diff --git a/src/polystore/disk.py b/src/polystore/disk.py
+index e31daa2..6945206 100644
+--- a/src/polystore/disk.py
++++ b/src/polystore/disk.py
+@@ -22,6 +22,7 @@ from .config import TiffConfig
+ from .constants import Backend
+ from .exceptions import StorageResolutionError
+ from .formats import FileFormat
++from .roi import ROIArchiveParentLabelSelection
+ 
+ logger = logging.getLogger(__name__)
+ DISK_TEXT_ENCODING = "utf-8"
+@@ -333,11 +334,17 @@ class DiskStorageBackend(StorageBackend):
+         # data should be a list of ROI objects
+         self._save_rois(data, path, **kwargs)
+ 
+-    def _roi_zip_reader(self, path, **kwargs):
++    def _roi_zip_reader(
++        self,
++        path,
++        *,
++        selection: ROIArchiveParentLabelSelection | None = None,
++        **kwargs,
++    ):
+         """Read ROIs from .roi.zip archive."""
+         from .roi import load_rois_from_zip
+ 
+-        return load_rois_from_zip(path)
++        return load_rois_from_zip(path, selection=selection)
+ 
+     def _csv_reader(self, path):
+         import csv
+diff --git a/src/polystore/roi.py b/src/polystore/roi.py
+index a626856..c6be283 100644
+--- a/src/polystore/roi.py
++++ b/src/polystore/roi.py
+@@ -40,6 +40,25 @@ ROI_TUPLE_METADATA_KEYS = frozenset(
+ )
+ 
+ 
++@dataclass(frozen=True, slots=True)
++class ROIArchiveParentLabelSelection:
++    """Bound an ImageJ ROI archive read to complete parent-label projections."""
++
++    labels: tuple[int, ...]
++    max_members: int = 5000
++
++    def __post_init__(self) -> None:
++        if not self.labels:
++            raise ValueError("Select at least one parent ROI label.")
++        if any(type(label) is not int or label <= 0 for label in self.labels):
++            raise ValueError("Parent ROI labels must be positive integers.")
++        if len(set(self.labels)) != len(self.labels):
++            raise ValueError("Parent ROI labels must be unique.")
++        object.__setattr__(self, "labels", tuple(sorted(self.labels)))
++        if type(self.max_members) is not int or self.max_members <= 0:
++            raise ValueError("max_members must be a positive integer.")
++
++
+ @dataclass(frozen=True, slots=True)
+ class ROIArchivePath:
+     """Normalized filesystem path for an ImageJ ROI zip archive."""
+@@ -578,8 +597,12 @@ def load_rois_from_json(json_path: Path) -> List[ROI]:
+     return rois
+ 
+ 
+-def load_rois_from_zip(zip_path: Path) -> List[ROI]:
+-    """Load ROIs from .roi.zip archive (ImageJ standard format)."""
++def load_rois_from_zip(
++    zip_path: Path,
++    *,
++    selection: ROIArchiveParentLabelSelection | None = None,
++) -> List[ROI]:
++    """Load all ROIs, or complete selected parent labels, from an ImageJ ZIP."""
+     import zipfile
+ 
+     if not zip_path.exists():
+@@ -593,9 +616,38 @@ def load_rois_from_zip(zip_path: Path) -> List[ROI]:
+     rois = []
+     with zipfile.ZipFile(zip_path, "r") as zf:
+         metadata_by_filename = load_roi_zip_metadata(zf)
+-        for filename in zf.namelist():
+-            if not filename.endswith(".roi"):
+-                continue
++        if selection is not None and not metadata_by_filename:
++            raise ValueError(
++                f"ROI archive {zip_path} has no parent-label metadata sidecar."
++            )
++        roi_filenames = [name for name in zf.namelist() if name.endswith(".roi")]
++        if selection is not None:
++            selected_filenames = []
++            for filename in roi_filenames:
++                if filename not in metadata_by_filename:
++                    raise ValueError(
++                        f"ROI archive {zip_path} missing metadata sidecar entry for {filename!r}."
++                    )
++                metadata = metadata_by_filename[filename]
++                label = metadata.get("label")
++                if type(label) is not int or label <= 0:
++                    raise ValueError(
++                        f"ROI archive {zip_path} has invalid parent label for {filename!r}."
++                    )
++                if label in selection.labels:
++                    selected_filenames.append(filename)
++            if len(selected_filenames) > selection.max_members:
++                raise ValueError(
++                    "Selected parent ROIs exceed max_members; no partial "
++                    "parent-label projection was returned."
++                )
++            roi_filenames = selected_filenames
++        for filename in roi_filenames:
++            if filename not in metadata_by_filename:
++                raise ValueError(
++                    f"ROI archive {zip_path} missing metadata sidecar entry for {filename!r}."
++                )
++            metadata = metadata_by_filename[filename]
+             roi_bytes = zf.read(filename)
+             ij_roi = ImagejRoi.frombytes(roi_bytes)
+             coords = ij_roi.coordinates()
+@@ -606,15 +658,10 @@ def load_rois_from_zip(zip_path: Path) -> List[ROI]:
+                 shape = PolylineShape(coordinates=coords_yx)
+             else:
+                 shape = PolygonShape(coordinates=coords_yx)
+-            if filename not in metadata_by_filename:
+-                raise ValueError(
+-                    f"ROI archive {zip_path} missing metadata sidecar entry for {filename!r}."
+-                )
+-            metadata = dict(metadata_by_filename[filename])
+-            rois.append(ROI(shapes=[shape], metadata=metadata))
++            rois.append(ROI(shapes=[shape], metadata=dict(metadata)))
+ 
+     if not rois:
+-        raise ValueError(f"No valid ROIs found in {zip_path}")
++        raise ValueError(f"No valid ROIs found for the requested selection in {zip_path}")
+ 
+     logger.info(f"Loaded {len(rois)} ROIs from {zip_path}")
+     return rois
+diff --git a/tests/test_roi.py b/tests/test_roi.py
+index 897b7c9..2b9a108 100644
+--- a/tests/test_roi.py
++++ b/tests/test_roi.py
+@@ -4,6 +4,7 @@ import pytest
+ from polystore.disk import DiskStorageBackend
+ from polystore.roi import (
+     ROI,
++    ROIArchiveParentLabelSelection,
+     EllipseShape,
+     MaskShape,
+     PolygonShape,
+@@ -174,6 +175,56 @@ def test_roi_zip_roundtrip_preserves_source_canvas_shape_metadata(tmp_path):
+     assert loaded_rois[0].metadata["source_spatial_shape_yx"] == (100, 200)
+ 
+ 
++def test_roi_zip_parent_label_selection_retains_complete_parent_only(tmp_path):
++    pytest.importorskip("roifile")
++    path = tmp_path / "labels.roi.zip"
++    polygon = np.array([[10, 20], [10, 22], [12, 22], [12, 20]], dtype=float)
++    rois = [
++        ROI(
++            shapes=[PolygonShape(polygon), PolygonShape(polygon + 5)],
++            metadata={"label": 7, "source_spatial_shape_yx": (100, 200)},
++        ),
++        ROI(
++            shapes=[PolygonShape(polygon + 10)],
++            metadata={"label": 8, "source_spatial_shape_yx": (100, 200)},
++        ),
++    ]
++    DiskStorageBackend()._save_rois(rois, path)
++
++    assert len(load_rois_from_zip(path)) == 3
++    selected = load_rois_from_zip(
++        path,
++        selection=ROIArchiveParentLabelSelection((7,)),
++    )
++    assert len(selected) == 2
++    assert {roi.metadata["label"] for roi in selected} == {7}
++    backend_selected = DiskStorageBackend().load(
++        path,
++        selection=ROIArchiveParentLabelSelection((7,)),
++    )
++    assert len(backend_selected) == 2
++    assert {roi.metadata["label"] for roi in backend_selected} == {7}
++    with pytest.raises(ValueError, match="max_members"):
++        load_rois_from_zip(
++            path,
++            selection=ROIArchiveParentLabelSelection((7,), max_members=1),
++        )
++    with pytest.raises(ValueError, match="No valid ROIs"):
++        load_rois_from_zip(
++            path,
++            selection=ROIArchiveParentLabelSelection((9,)),
++        )
++
++
++def test_roi_archive_parent_label_selection_rejects_invalid_bounds():
++    with pytest.raises(ValueError, match="positive integers"):
++        ROIArchiveParentLabelSelection((True,))
++    with pytest.raises(ValueError, match="unique"):
++        ROIArchiveParentLabelSelection((7, 7))
++    with pytest.raises(ValueError, match="positive integer"):
++        ROIArchiveParentLabelSelection((7,), max_members=0)
++
++
+ def test_load_rois_from_json_decodes_shapes_through_nominal_registry(tmp_path):
+     roi_path = tmp_path / "rois.json"
+     roi_path.write_text(

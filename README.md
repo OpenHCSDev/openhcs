@@ -364,6 +364,9 @@ second pipeline runner or job-status system.
 pipeline through ordinary headless job control, then calls the same receipt
 finalizer as MCP. Use `--execution-plate PREPARED_PLATE` when the input workspace
 has been prepared separately; the evidence directory must be empty.
+When the workload has a known number of execution axes, pass
+`--expected-axis-count N` (or `expected_axis_count` to the expert finalizer):
+a mismatch prevents a success receipt.
 Use `--observation-scope outcomes` to retain per-axis success and provenance
 without transferring runtime arrays; this does not compare output values.
 After an ordinary headless job completes, the expert

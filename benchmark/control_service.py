@@ -97,6 +97,7 @@ class BenchmarkControlService:
             endpoint_provenance=measured_endpoint_provenance(completed.endpoint),
             phase_timing=phase_timing,
             compile_artifact_id=completed.submission.compile_artifact_id,
+            expected_axis_count=request.expected_axis_count,
         ).receipt
 
     def discover_cases(

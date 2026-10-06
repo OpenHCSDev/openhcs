@@ -94,15 +94,14 @@ class ImageQaPrecondition(Enum):
     """Evidence required before a reported miss can justify parameter tuning."""
 
     RAW_BIOLOGICAL_CONTRACT = (
-        "record stain targets; inspect every raw channel at identical native "
-        "coordinates under full, moderate, and dim windows, then the composite; freeze "
-        "a raw-only ledger of plausible objects, processes, ambiguities, and debris. "
-        "DAPI supports a nuclear anchor, broader colocalised process-channel signal a "
-        "soma, and thin continuous signal from that soma a neurite; brightness, labels, "
-        "or proximity alone prove none, and nucleus count is not cell count. Before "
-        "splitting a lobed nucleus, inspect a less-saturated window and require multiple "
-        "independently supported nuclear intensity centres; outline shape alone does not "
-        "prove multiple nuclei"
+        "inspect raw channels and composite at fixed native coordinates in full, "
+        "moderate, and dim windows; log objects, processes, ambiguity, and debris. "
+        "DAPI anchors nuclei; broad colocalised signal supports somata; connected thin "
+        "signal supports neurites; none alone proves a neuron. Compact nuclear-anchored "
+        "foci may be dying cells or debris: triage morphology and process continuity, "
+        "log uncertainty, keep reviewing clear misses; ask an expert only if a claim "
+        "depends on them. For lobed nuclei at low saturation, require multiple independently supported "
+        "nuclear intensity centres; outline shape alone does not prove multiple nuclei"
     )
     EARLIEST_FAILED_DEPENDENCY = (
         "review nuclear anchors, somata, candidates, rooted paths, and ownership in "

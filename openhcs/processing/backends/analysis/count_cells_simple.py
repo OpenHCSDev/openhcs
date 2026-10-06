@@ -10,17 +10,23 @@ watershed infrastructure while exposing controls appropriate to each workflow.
 from openhcs.core.memory import numpy
 from openhcs.core.artifacts import (
     ArtifactMeasurementSubjectRelation,
+    ArtifactSidecarRole,
     ArtifactSpec,
+    ArtifactViewerStreaming,
+    ImageArtifactType,
+    MainFlowPlaneProjectionOutputSpec,
     MeasurementsArtifactType,
     ObjectLabelsArtifactType,
     ObjectMeasurementSubjectRelation,
 )
+from openhcs.core.projected_image_output import SelectedPlaneImageOutput
 from openhcs.core.measurement_row_materialization import (
     DataclassMeasurementColumnarRows,
 )
 from openhcs.core.pipeline.function_contracts import artifact_inputs, artifact_outputs
 from openhcs.processing.materialization import (
     CsvOptions,
+    ImageFileOptions,
     MaterializationSpec,
     ROIOptions,
 )
@@ -566,6 +572,9 @@ class RoundObjectSegmentationStages:
     mean_response_by_label: np.ndarray
     width_keep_mask: np.ndarray
     adjacent_satellite_mask: np.ndarray
+    source_components: np.ndarray
+    local_background_response: np.ndarray
+    target_component_trace: Optional["WatershedComponentTrace"]
 
     @property
     def keep_mask(self) -> np.ndarray:
@@ -591,6 +600,8 @@ def round_object_segmentation_stages(
     slice_data: np.ndarray,
     settings: MetaXpressWavelengthSettings,
     pixel_size_um: float,
+    *,
+    trace_source_component_label: Optional[int] = None,
 ) -> RoundObjectSegmentationStages:
     """Run the shared detector once and retain its exact acceptance evidence."""
 
@@ -624,6 +635,7 @@ def round_object_segmentation_stages(
         watershed_marker_peak_prominence=(
             settings.intensity_above_local_background / 4.0
         ),
+        trace_source_component_label=trace_source_component_label,
     )
     labeled = component_stages.output_labels
 
@@ -654,6 +666,9 @@ def round_object_segmentation_stages(
         mean_response,
         width_keep_mask,
         adjacent_satellite_mask,
+        component_stages.source_labels,
+        intensity_above_background,
+        component_stages.target_component_trace,
     )
 
 
@@ -827,6 +842,281 @@ def inspect_metaxpress_round_objects(
         accepted,
         weak_core,
         adjacent_satellites,
+    )
+
+
+@dataclass(frozen=True)
+class RoundObjectComponentDecision:
+    """One threshold component's production split decision."""
+
+    source_component_label: int
+    area_pixels: int
+    min_row_px: int
+    max_row_exclusive_px: int
+    min_column_px: int
+    max_column_exclusive_px: int
+    response_threshold: float
+    split_size_pixels: int
+    minimum_fragment_area_pixels: int
+    shape_seed_count: int
+    intensity_seed_count: int
+    selected_seed_count: int
+    selected_surface_kind: str
+    split_decision: str
+    output_count: int
+
+
+@dataclass(frozen=True)
+class RoundObjectComponentSeed:
+    """A candidate seed in full-image pixel coordinates."""
+
+    source_component_label: int
+    seed_kind: str
+    row_px: int
+    column_px: int
+    selected: bool
+    surface_value: float
+
+
+ROUND_OBJECT_COMPONENT_SOURCE_OUTPUT = ArtifactSpec.output(
+    "round_object_component_source",
+    ObjectLabelsArtifactType,
+    materialization=MaterializationSpec(ROIOptions()),
+)
+ROUND_OBJECT_COMPONENT_DECISION_OUTPUT = ArtifactSpec.output(
+    "round_object_component_decision",
+    MeasurementsArtifactType,
+    materialization=MaterializationSpec(CsvOptions()),
+    relations=(
+        ObjectMeasurementSubjectRelation(
+            source=ROUND_OBJECT_COMPONENT_SOURCE_OUTPUT.ref(),
+            id_field="source_component_label",
+        ),
+    ),
+)
+ROUND_OBJECT_COMPONENT_SEED_ROWS_OUTPUT = ArtifactSpec.output(
+    "round_object_component_seed_rows",
+    MeasurementsArtifactType,
+    materialization=MaterializationSpec(CsvOptions()),
+    relations=(
+        ObjectMeasurementSubjectRelation(
+            source=ROUND_OBJECT_COMPONENT_SOURCE_OUTPUT.ref(),
+            id_field="source_component_label",
+        ),
+    ),
+)
+ROUND_OBJECT_COMPONENT_SELECTED_SEEDS_OUTPUT = ArtifactSpec.output(
+    "round_object_component_selected_seeds",
+    ObjectLabelsArtifactType,
+    materialization=MaterializationSpec(ROIOptions(min_area=1)),
+)
+ROUND_OBJECT_COMPONENT_SPLIT_OUTPUT = ArtifactSpec.output(
+    "round_object_component_split",
+    ObjectLabelsArtifactType,
+    materialization=MaterializationSpec(ROIOptions()),
+)
+ROUND_OBJECT_COMPONENT_RESPONSE_OUTPUT = MainFlowPlaneProjectionOutputSpec.output(
+    "round_object_component_response",
+    ImageArtifactType,
+    sidecar_role=ArtifactSidecarRole.QA_CHECKPOINT,
+    materialization=MaterializationSpec(
+        ImageFileOptions(filename_suffix="_round_object_component_response.checkpoint.tif")
+    ),
+    viewer_streaming=ArtifactViewerStreaming.ON_DEMAND,
+)
+ROUND_OBJECT_COMPONENT_SEED_SURFACE_OUTPUT = MainFlowPlaneProjectionOutputSpec.output(
+    "round_object_component_seed_surface",
+    ImageArtifactType,
+    sidecar_role=ArtifactSidecarRole.QA_CHECKPOINT,
+    materialization=MaterializationSpec(
+        ImageFileOptions(filename_suffix="_round_object_component_seed_surface.checkpoint.tif")
+    ),
+    viewer_streaming=ArtifactViewerStreaming.ON_DEMAND,
+)
+
+
+@numpy
+@artifact_inputs("pixel_size")
+@artifact_outputs(
+    ROUND_OBJECT_COMPONENT_DECISION_OUTPUT,
+    ROUND_OBJECT_COMPONENT_SEED_ROWS_OUTPUT,
+    ROUND_OBJECT_COMPONENT_SOURCE_OUTPUT,
+    ROUND_OBJECT_COMPONENT_SELECTED_SEEDS_OUTPUT,
+    ROUND_OBJECT_COMPONENT_SPLIT_OUTPUT,
+    ROUND_OBJECT_COMPONENT_RESPONSE_OUTPUT,
+    ROUND_OBJECT_COMPONENT_SEED_SURFACE_OUTPUT,
+)
+def inspect_metaxpress_round_object_component(
+    image: np.ndarray,
+    source_component_label: int,
+    settings: MetaXpressWavelengthSettings = MetaXpressWavelengthSettings(),
+    pixel_size: HiddenPixelSize = HiddenPixelSize(1.0),
+) -> tuple[
+    np.ndarray,
+    DataclassMeasurementColumnarRows,
+    DataclassMeasurementColumnarRows,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    SelectedPlaneImageOutput,
+    SelectedPlaneImageOutput,
+]:
+    """Trace one threshold-stage component through the unmodified detector.
+
+    The label is the source-component ID from ``round_object_widths``, not a
+    final accepted-object ID. Masks retain full input coordinates and are empty
+    on unselected channels. Response and selected seed-surface images are
+    display projections, zero outside the selected threshold component; use
+    ``round_object_component_source`` to distinguish that zero from real data.
+    The source, selected-seed, and split labels are exact detector pixels.
+    This function is diagnostic only and returns the main image unchanged.
+
+    Args:
+        image: Input ``CHANNEL,Y,X`` stack.
+        source_component_label: Positive threshold-component ID to inspect.
+        settings: The same settings used by the detector being diagnosed.
+        pixel_size: Source-calibrated micrometers per pixel, injected by OpenHCS.
+    """
+    settings.validate("settings")
+    if image.ndim != 3 or not 0 <= settings.channel_index < image.shape[0]:
+        raise ValueError("Expected CHANNEL,Y,X with the selected channel present")
+    if not isinstance(source_component_label, int) or source_component_label < 1:
+        raise ValueError("source_component_label must be a positive integer")
+    pixel_size_um = float(pixel_size)
+    if not np.isfinite(pixel_size_um) or pixel_size_um <= 0:
+        raise ValueError("Pixel size must be finite and positive")
+
+    stages = round_object_segmentation_stages(
+        image[settings.channel_index],
+        settings,
+        pixel_size_um,
+        trace_source_component_label=source_component_label,
+    )
+    component = stages.source_components == source_component_label
+    rows_px, columns_px = np.nonzero(component)
+    if rows_px.size == 0:
+        raise ValueError(
+            f"Source component {source_component_label} is absent for these settings"
+        )
+    min_row = int(rows_px.min())
+    max_row = int(rows_px.max()) + 1
+    min_column = int(columns_px.min())
+    max_column = int(columns_px.max()) + 1
+    min_width_px = settings.approx_min_width / pixel_size_um
+    split_size = max(1, int(np.ceil(2.0 * np.pi * (min_width_px / 2.0) ** 2)))
+    minimum_fragment_area = max(1, int(np.floor(split_size / 2.0)))
+    trace = stages.target_component_trace
+    if trace is None:
+        decision = "below_split_size"
+        surface_kind = "none"
+        shape_seeds = np.empty((0, 2), dtype=np.intp)
+        intensity_seeds = shape_seeds
+        selected_seeds = shape_seeds
+    else:
+        decision = trace.decision
+        surface_kind = trace.selected_surface_kind
+        shape_seeds = trace.shape_seeds
+        intensity_seeds = trace.intensity_seeds
+        selected_seeds = trace.selected_seeds
+
+    output_plane = np.where(component, stages.prefilter_labels, 0).astype(
+        np.int32, copy=False
+    )
+    output_ids = np.unique(output_plane[component])
+    decision_row = RoundObjectComponentDecision(
+        source_component_label=source_component_label,
+        area_pixels=int(rows_px.size),
+        min_row_px=min_row,
+        max_row_exclusive_px=max_row,
+        min_column_px=min_column,
+        max_column_exclusive_px=max_column,
+        response_threshold=float(settings.intensity_above_local_background),
+        split_size_pixels=split_size,
+        minimum_fragment_area_pixels=minimum_fragment_area,
+        shape_seed_count=len(shape_seeds),
+        intensity_seed_count=len(intensity_seeds),
+        selected_seed_count=len(selected_seeds),
+        selected_surface_kind=surface_kind,
+        split_decision=decision,
+        output_count=int(np.count_nonzero(output_ids)),
+    )
+    seed_rows: list[RoundObjectComponentSeed] = []
+    selected_seed_labels = np.zeros(image.shape, dtype=np.int32)
+    if trace is not None:
+        row_offset = int(trace.component_slice[0].start)
+        column_offset = int(trace.component_slice[1].start)
+        for seed_kind, coordinates, surface in (
+            ("shape", shape_seeds, trace.distance_surface),
+            (
+                "intensity",
+                intensity_seeds,
+                trace.intensity_surface,
+            ),
+        ):
+            if surface is None:
+                continue
+            for row, column in coordinates:
+                seed_rows.append(
+                    RoundObjectComponentSeed(
+                        source_component_label=source_component_label,
+                        seed_kind=seed_kind,
+                        row_px=row_offset + int(row),
+                        column_px=column_offset + int(column),
+                        selected=(
+                            (seed_kind == "shape" and surface_kind == "distance")
+                            or (
+                                seed_kind == "intensity"
+                                and surface_kind == "intensity"
+                            )
+                        ),
+                        surface_value=float(surface[row, column]),
+                    )
+                )
+        for seed_id, (row, column) in enumerate(selected_seeds, start=1):
+            selected_seed_labels[
+                settings.channel_index,
+                row_offset + int(row),
+                column_offset + int(column),
+            ] = seed_id
+
+    source_labels = np.zeros(image.shape, dtype=np.int32)
+    source_labels[settings.channel_index, component] = source_component_label
+    split_labels = np.zeros(image.shape, dtype=np.int32)
+    split_labels[settings.channel_index] = output_plane
+    response = np.zeros(image.shape, dtype=np.float32)
+    response[settings.channel_index, component] = stages.local_background_response[
+        component
+    ]
+    seed_surface = np.zeros(image.shape, dtype=np.float32)
+    if trace is not None:
+        surface = (
+            trace.intensity_surface
+            if surface_kind == "intensity"
+            else trace.distance_surface
+        )
+        local_component = component[trace.component_slice]
+        target_view = seed_surface[settings.channel_index][trace.component_slice]
+        target_view[local_component] = surface[local_component]
+
+    return (
+        image,
+        DataclassMeasurementColumnarRows(
+            (decision_row,), row_type=RoundObjectComponentDecision
+        ),
+        DataclassMeasurementColumnarRows(
+            tuple(seed_rows), row_type=RoundObjectComponentSeed
+        ),
+        source_labels,
+        selected_seed_labels,
+        split_labels,
+        SelectedPlaneImageOutput(
+            response[settings.channel_index : settings.channel_index + 1],
+            (settings.channel_index,),
+        ),
+        SelectedPlaneImageOutput(
+            seed_surface[settings.channel_index : settings.channel_index + 1],
+            (settings.channel_index,),
+        ),
     )
 
 
@@ -1164,12 +1454,29 @@ def _label_binary_components(
 
 
 @dataclass(frozen=True)
+class WatershedComponentTrace:
+    """Exact local decision surfaces for one production watershed component."""
+
+    source_component_label: int
+    component_slice: tuple[slice, slice]
+    distance_surface: np.ndarray
+    intensity_surface: Optional[np.ndarray]
+    shape_seeds: np.ndarray
+    intensity_seeds: np.ndarray
+    selected_seeds: np.ndarray
+    selected_surface_kind: str
+    candidate_splits: Optional[np.ndarray]
+    decision: str
+
+
+@dataclass(frozen=True)
 class BinaryComponentStages:
     """Connected-component identities before and after optional splitting."""
 
     source_labels: np.ndarray
     output_labels: np.ndarray
     source_component_by_output: np.ndarray
+    target_component_trace: Optional[WatershedComponentTrace] = None
 
 
 def _label_binary_component_stages(
@@ -1184,11 +1491,13 @@ def _label_binary_component_stages(
     watershed_marker_image: Optional[np.ndarray] = None,
     watershed_marker_smoothing_sigma: float = 0.0,
     watershed_marker_peak_prominence: float = 0.0,
+    trace_source_component_label: Optional[int] = None,
 ) -> BinaryComponentStages:
     """Retain source-component lineage across optional watershed splitting."""
 
     source_labels, num_objects = ndi.label(binary)
     output_labels = source_labels
+    component_traces: list[WatershedComponentTrace] = []
     if watershed_large_objects and num_objects > 0:
         output_labels = _watershed_large_objects(
             source_labels,
@@ -1200,6 +1509,8 @@ def _label_binary_component_stages(
             marker_image=watershed_marker_image,
             marker_smoothing_sigma=watershed_marker_smoothing_sigma,
             marker_peak_prominence=watershed_marker_peak_prominence,
+            trace_source_component_label=trace_source_component_label,
+            trace_sink=component_traces,
         )
     source_labels = source_labels.astype(np.int32, copy=False)
     output_labels = output_labels.astype(np.int32, copy=False)
@@ -1217,6 +1528,7 @@ def _label_binary_component_stages(
         source_labels,
         output_labels,
         source_component_by_output,
+        component_traces[0] if component_traces else None,
     )
 
 
@@ -1280,6 +1592,8 @@ def _watershed_large_objects(
     marker_image: Optional[np.ndarray] = None,
     marker_smoothing_sigma: float = 0.0,
     marker_peak_prominence: float = 0.0,
+    trace_source_component_label: Optional[int] = None,
+    trace_sink: Optional[list[WatershedComponentTrace]] = None,
 ) -> np.ndarray:
     """Split components above split_size and at or below watershed_max_size."""
     counts = np.bincount(labeled.ravel())
@@ -1364,17 +1678,38 @@ def _watershed_large_objects(
 
         use_intensity = marker_surface is not None
         seeds = intensity_seeds if use_intensity else shape_seeds
+        selected_surface_kind = "intensity" if use_intensity else "distance"
+        component_splits = None
         if len(seeds) <= 1:
-            continue
+            decision = "insufficient_seeds"
+        else:
+            markers = np.zeros_like(component, dtype=np.int32)
+            markers[seeds[:, 0], seeds[:, 1]] = np.arange(1, len(seeds) + 1)
+            split_surface = marker_surface if use_intensity else distance
+            component_splits = watershed(-split_surface, markers, mask=component)
+            decision = "split_applied"
+            if use_intensity:
+                fragment_areas = np.bincount(component_splits.ravel())[1:]
+                if np.any(fragment_areas < minimum_fragment_area):
+                    decision = "fragment_below_minimum"
 
-        markers = np.zeros_like(component, dtype=np.int32)
-        markers[seeds[:, 0], seeds[:, 1]] = np.arange(1, len(seeds) + 1)
-        split_surface = marker_surface if use_intensity else distance
-        component_splits = watershed(-split_surface, markers, mask=component)
-        if use_intensity:
-            fragment_areas = np.bincount(component_splits.ravel())[1:]
-            if np.any(fragment_areas < minimum_fragment_area):
-                continue
+        if trace_sink is not None and int(label_id) == trace_source_component_label:
+            trace_sink.append(
+                WatershedComponentTrace(
+                    source_component_label=int(label_id),
+                    component_slice=component_slice,
+                    distance_surface=distance,
+                    intensity_surface=marker_surface,
+                    shape_seeds=shape_seeds,
+                    intensity_seeds=intensity_seeds,
+                    selected_seeds=seeds,
+                    selected_surface_kind=selected_surface_kind,
+                    candidate_splits=component_splits,
+                    decision=decision,
+                )
+            )
+        if decision != "split_applied":
+            continue
 
         output_view = output[component_slice]
         output_view[component] = 0

@@ -57,6 +57,7 @@ from openhcs.agent.dto.execution import ExecutionJobRef, ExecutionJobStatus
 from openhcs.agent.path_policy import AgentPathPolicy
 from openhcs.agent.services.execution_session_service import CompletedPipelineExecution
 from openhcs.core.config import GlobalPipelineConfig, PipelineConfig
+from openhcs.core.orchestrator.execution_result import ExecutionResult
 from openhcs.core.pipeline_document import PipelineDocumentAuthority
 from openhcs.mcp import server
 from openhcs.mcp.context import OpenHCSAgentContext
@@ -64,8 +65,13 @@ from openhcs.runtime.environment_provenance import (
     InstalledDistributionVersion,
     RuntimeEnvironmentSnapshot,
 )
+from openhcs.runtime.zmq_application import OPENHCS_ENDPOINT_APPLICATION
 from openhcs.runtime.zmq_execution_client import OpenHCSExecutionSubmission
-from openhcs.runtime.zmq_execution_signature import ZMQAuxiliaryExecutionParams
+from openhcs.runtime.zmq_execution_observation import ZMQRuntimeExecutionOutcomeExport
+from openhcs.runtime.zmq_execution_signature import (
+    ZMQAuxiliaryExecutionParams,
+    ZMQRuntimeObservationExportScope,
+)
 
 
 def test_benchmark_command_catalog_is_derived_from_registered_commands() -> None:
@@ -112,6 +118,49 @@ def test_measured_cli_rejects_existing_evidence_before_execution(
     with pytest.raises(FileExistsError, match="must be empty"):
         args.cli_command.run(args)
     assert sentinel.read_text(encoding="utf-8") == "keep"
+
+
+@pytest.mark.parametrize("invalid_count", (0, -1, True, 1.5))
+def test_measured_finalization_requires_positive_integer_axis_count(
+    invalid_count: object,
+) -> None:
+    with pytest.raises(ValueError, match="positive integer"):
+        MeasuredPipelineRunFinalizationRequest(
+            job_id="job-1",
+            run_id="run-1",
+            pipeline_name="synthetic",
+            expected_axis_count=invalid_count,
+        )
+
+
+@pytest.mark.parametrize("invalid_count", (0, -1))
+def test_measured_cli_rejects_invalid_axis_count_before_creating_evidence(
+    invalid_count: int, tmp_path: Path
+) -> None:
+    output_dir = tmp_path / "evidence"
+    args = create_benchmark_argument_parser().parse_args(
+        (
+            "run-measured",
+            "--plate",
+            str(tmp_path / "not-yet-loaded"),
+            "--pipeline-source-file",
+            str(tmp_path / "not-yet-loaded.py"),
+            "--output-dir",
+            str(output_dir),
+            "--run-id",
+            "invalid-count",
+            "--expected-axis-count",
+            str(invalid_count),
+            "--wait-timeout-ms",
+            "1000",
+        )
+    )
+
+    with pytest.raises(
+        ValueError, match="expected_axis_count must be a positive integer"
+    ):
+        args.cli_command.run(args)
+    assert not output_dir.exists()
 
 
 @pytest.mark.parametrize("wait_outcome", ("interrupt", "timeout"))
@@ -585,6 +634,16 @@ def test_measured_receipt_round_trips_server_environment(tmp_path: Path) -> None
     assert MeasuredPipelineRunReceipt.read(path).server_environment == environment
 
 
+@pytest.mark.parametrize("field_name", ("expected_axis_count", "observed_axis_count"))
+def test_measured_receipt_rejects_boolean_axis_counts(
+    field_name: str, tmp_path: Path
+) -> None:
+    receipt = _measured_run_receipt(tmp_path / "measured")
+
+    with pytest.raises(ValueError, match=f"{field_name} must be a positive integer"):
+        replace(receipt, **{field_name: True})
+
+
 def test_measured_finalization_refuses_missing_server_timing_without_receipt(
     tmp_path: Path,
 ) -> None:
@@ -630,6 +689,156 @@ def test_measured_finalization_refuses_missing_server_timing_without_receipt(
         )
 
     assert not MeasuredPipelineRunArtifact.RECEIPT.path_in(tmp_path).exists()
+
+
+def test_measured_finalization_forwards_declared_axis_count_to_shared_finalizer(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    import benchmark.openhcs_measured_run as measured_run
+
+    observation_path = tmp_path / "observation.pkl"
+    observation_path.touch()
+    submission = OpenHCSExecutionSubmission(
+        plate_id=tmp_path,
+        pipeline_document=PipelineDocumentAuthority.from_values(
+            pipeline_config=PipelineConfig(), pipeline_steps=[]
+        ),
+        global_config=GlobalPipelineConfig(),
+    ).with_auxiliary_params(
+        ZMQAuxiliaryExecutionParams(runtime_observation_export_path=observation_path)
+    )
+    completed = CompletedPipelineExecution(
+        submission=submission,
+        record=ExecutionRecord(
+            execution_id="execution-1",
+            plate_id=str(tmp_path),
+            client_address=None,
+            status="complete",
+            start_time=10.0,
+            end_time=11.0,
+            results_summary={"well_count": 1},
+        ),
+        endpoint=object(),
+    )
+    captured: dict[str, object] = {}
+    receipt = object()
+
+    class CompletedJobService:
+        def require_completed_pipeline_execution(self, job_id: str):
+            assert job_id == "job-1"
+            return completed
+
+    monkeypatch.setattr(
+        measured_run, "measured_endpoint_provenance", lambda _: object()
+    )
+
+    def retain_completion(**kwargs):
+        captured.update(kwargs)
+        return SimpleNamespace(receipt=receipt)
+
+    monkeypatch.setattr(
+        measured_run, "retain_measured_openhcs_completion", retain_completion
+    )
+    service = BenchmarkControlService(
+        AgentPathPolicy.with_roots(
+            readable_roots=(tmp_path,), writable_roots=(tmp_path,)
+        ),
+        CompletedJobService(),
+    )
+
+    assert (
+        service.finalize_measured_run(
+            MeasuredPipelineRunFinalizationRequest(
+                job_id="job-1",
+                run_id="run-1",
+                pipeline_name="synthetic",
+                expected_axis_count=2,
+            )
+        )
+        is receipt
+    )
+    assert captured["expected_axis_count"] == 2
+    assert captured["submission"] is submission
+
+
+def test_measured_mcp_finalizer_rejects_axis_mismatch_before_receipt_then_succeeds(
+    tmp_path: Path,
+) -> None:
+    if importlib.util.find_spec("mcp") is None:
+        return
+
+    observation_path = tmp_path / "observation.pkl.gz"
+    ZMQRuntimeExecutionOutcomeExport.from_execution(
+        compiled_axis_ids=("A01",),
+        execution_results={"A01": ExecutionResult.success("A01")},
+        output_roots=(tmp_path / "output",),
+        execution_id="execution-1",
+    ).write(observation_path)
+    submission = OpenHCSExecutionSubmission(
+        plate_id=tmp_path,
+        pipeline_document=PipelineDocumentAuthority.from_values(
+            pipeline_config=PipelineConfig(), pipeline_steps=[]
+        ),
+        global_config=GlobalPipelineConfig(materialize_runtime_artifacts=False),
+    ).with_auxiliary_params(
+        ZMQAuxiliaryExecutionParams(
+            runtime_observation_export_path=observation_path,
+            runtime_observation_export_scope=ZMQRuntimeObservationExportScope.OUTCOMES,
+        )
+    )
+    completed = CompletedPipelineExecution(
+        submission=submission,
+        record=ExecutionRecord(
+            execution_id="execution-1",
+            plate_id=str(tmp_path),
+            client_address=None,
+            status="complete",
+            start_time=10.0,
+            end_time=11.0,
+            results_summary={"well_count": 1},
+        ),
+        endpoint=SimpleNamespace(
+            application=OPENHCS_ENDPOINT_APPLICATION,
+            process_identity=None,
+            log_file_path=None,
+            port=5555,
+        ),
+    )
+
+    class CompletedJobService:
+        def require_completed_pipeline_execution(self, job_id: str):
+            assert job_id == "job-1"
+            return completed
+
+    built = server.build_server(
+        OpenHCSAgentContext(
+            path_policy=AgentPathPolicy.with_roots(
+                readable_roots=(tmp_path,), writable_roots=(tmp_path,)
+            ),
+            execution_service=CompletedJobService(),
+        )
+    )
+    request = {
+        "job_id": "job-1",
+        "run_id": "one-axis",
+        "pipeline_name": "synthetic",
+        "expected_axis_count": 2,
+    }
+    mismatched = asyncio.run(
+        built.call_tool("openhcs_finalize_measured_pipeline_run", request)
+    )[1]
+    receipt_path = MeasuredPipelineRunArtifact.RECEIPT.path_in(tmp_path)
+    assert mismatched["ok"] is False
+    assert "Expected 2 execution axes" in mismatched["errors"][0]["message"]
+    assert not receipt_path.exists()
+
+    request["expected_axis_count"] = 1
+    finalized = asyncio.run(
+        built.call_tool("openhcs_finalize_measured_pipeline_run", request)
+    )[1]
+    assert finalized["expected_axis_count"] == 1
+    assert finalized["observed_axis_count"] == 1
+    assert MeasuredPipelineRunReceipt.read(receipt_path).execution_id == "execution-1"
 
 
 def test_empty_comparison_run_writes_completed_owned_receipt(tmp_path: Path) -> None:
@@ -1174,6 +1383,7 @@ def test_benchmark_capability_uses_generated_mcp_request_binding(
 def test_measured_inspection_and_report_are_expert_mcp_tools(tmp_path: Path) -> None:
     if importlib.util.find_spec("mcp") is None:
         return
+    from mcp.server.fastmcp.exceptions import ToolError
 
     output_dir = tmp_path / "measured"
     _measured_run_receipt(output_dir)
@@ -1194,9 +1404,24 @@ def test_measured_inspection_and_report_are_expert_mcp_tools(tmp_path: Path) -> 
         for tool in asyncio.run(built.list_tools())
         if tool.name == "openhcs_finalize_measured_pipeline_run"
     )
-    assert {"job_id", "run_id", "pipeline_name"} <= set(
+    assert {"job_id", "run_id", "pipeline_name", "expected_axis_count"} <= set(
         finalizer.inputSchema["properties"]
     )
+    assert {"type": "integer"} in finalizer.inputSchema["properties"][
+        "expected_axis_count"
+    ]["anyOf"]
+    with pytest.raises(ToolError, match="expected_axis_count"):
+        asyncio.run(
+            built.call_tool(
+                "openhcs_finalize_measured_pipeline_run",
+                {
+                    "job_id": "no-such-job",
+                    "run_id": "invalid-axis-count",
+                    "pipeline_name": "synthetic",
+                    "expected_axis_count": True,
+                },
+            )
+        )
 
     inspected = asyncio.run(
         built.call_tool(

@@ -1173,13 +1173,13 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
             if component in available
         )
 
-    def route_local_component_indices(
+    def shared_component_indices(
         self,
         projected_indices: Sequence[int],
         *,
         context: str,
     ) -> dict[str, int]:
-        """Derive every component index from one projected payload coordinate."""
+        """Derive shared-axis component indices from a projected coordinate."""
 
         projected = tuple(projected_indices)
         projected_axes = self.projection.projected_axis_components
@@ -1218,21 +1218,26 @@ class NapariAxisPresentation(ViewerComponentAxisSemantics):
                 f"available route-local component axes are {available_axes!r}."
             )
 
-        local_indices = self.route_local_component_indices(
+        shared_indices = self.shared_component_indices(
             projected_indices,
             context=context,
         )
         for axis_name, requested_index in requested_indices.items():
             if axis_name in self.projection.component_values:
-                extent = len(self.projection.component_values[axis_name])
+                shared_index = self.projection.shared_index_for_routed_index(
+                    axis_name,
+                    requested_index,
+                    context=context,
+                )
             else:
                 extent = len(self.projection.scalar_component_values[axis_name])
-            if requested_index >= extent:
-                raise ValueError(
-                    f"{context} index {requested_index} for axis {axis_name!r} is "
-                    f"outside the route-local extent {extent}."
-                )
-            if local_indices[axis_name] != requested_index:
+                if not 0 <= requested_index < extent:
+                    raise ValueError(
+                        f"{context} index {requested_index} for axis {axis_name!r} "
+                        f"is outside the route-local extent {extent}."
+                    )
+                shared_index = requested_index
+            if shared_indices[axis_name] != shared_index:
                 return False
         return True
 
@@ -1399,6 +1404,7 @@ class NapariLayerRouteStateStore:
     layer_update_errors: dict[str | None, str]
     active_dimension_label_route: str | None
     layer_settlement: NapariLayerSettlementState | None
+    _settlement_route_keys: set[str | None] = field(default_factory=set, repr=False)
     _settlement_lock: threading.RLock = field(
         default_factory=threading.RLock,
         repr=False,
@@ -1436,6 +1442,7 @@ class NapariLayerRouteStateStore:
         self.layer_pending_updates.pop(layer_key, None)
         with self._settlement_lock:
             self.layer_update_errors.pop(layer_key, None)
+            self._settlement_route_keys.discard(layer_key)
         if self.active_dimension_label_route == layer_key:
             self.active_dimension_label_route = None
 
@@ -1502,7 +1509,10 @@ class NapariLayerRouteStateStore:
                     raise RuntimeError(
                         "Cannot queue a Napari layer update while settlement is active."
                     )
+                self.layer_update_errors.pop(None, None)
+                self._settlement_route_keys.clear()
                 self.layer_settlement = None
+            self._settlement_route_keys.add(layer_key)
         self.layer_pending_updates[layer_key] = update
 
     def pop_pending_update(self, layer_key: str) -> NapariPendingLayerUpdate | None:
@@ -1548,8 +1558,9 @@ class NapariLayerRouteStateStore:
         """Begin a new stream cycle after any observed terminal settlement.
 
         Route failures remain attached to their route until a successful update
-        or clear-state. Failures without a route belong to the completed intake
-        cycle; retain them until that cycle has reached settlement.
+        or clear-state, but do not fail an unrelated later cycle. Failures
+        without a route belong to the completed intake cycle; retain them until
+        that cycle has reached settlement.
         """
 
         with self._settlement_lock:
@@ -1560,6 +1571,7 @@ class NapariLayerRouteStateStore:
                 raise RuntimeError("Cannot reset an active Napari layer settlement.")
             if self.layer_settlement is not None:
                 self.layer_update_errors.pop(None, None)
+                self._settlement_route_keys.clear()
             self.layer_settlement = None
 
     def record_update_error(self, layer_key: str | None, error: Exception) -> None:
@@ -1567,6 +1579,7 @@ class NapariLayerRouteStateStore:
 
         with self._settlement_lock:
             self.layer_update_errors[layer_key] = str(error)
+            self._settlement_route_keys.add(layer_key)
 
     def clear_update_error(self, layer_key: str) -> None:
         with self._settlement_lock:
@@ -1575,13 +1588,25 @@ class NapariLayerRouteStateStore:
     def clear_update_errors(self) -> None:
         with self._settlement_lock:
             self.layer_update_errors.clear()
+            self._settlement_route_keys.clear()
 
     def require_updates_succeeded(self) -> None:
-        failure_message = self.update_failure_message()
+        failure_message = self.settlement_failure_message()
         if failure_message is None:
             return
 
         raise RuntimeError(f"Napari layer updates failed: {failure_message}")
+
+    def settlement_failure_message(self) -> str | None:
+        """Report failures in this intake cycle without hiding older route errors."""
+
+        with self._settlement_lock:
+            failures = (
+                message if layer_key is None else f"{layer_key}: {message}"
+                for layer_key, message in self.layer_update_errors.items()
+                if layer_key in self._settlement_route_keys
+            )
+            return "; ".join(failures) or None
 
     def update_failure_message(self) -> str | None:
         """Return recorded display failures without inventing missing routes."""

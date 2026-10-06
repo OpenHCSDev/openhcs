@@ -143,6 +143,7 @@ def test_headless_observation_export_uses_ordinary_execution(tmp_path: Path) -> 
                 "job_id": status.job_id,
                 "run_id": "headless-ordinary",
                 "pipeline_name": "Blur",
+                "expected_axis_count": 1,
             },
         )
     )
@@ -152,6 +153,7 @@ def test_headless_observation_export_uses_ordinary_execution(tmp_path: Path) -> 
         MeasuredPipelineRunArtifact.RECEIPT.path_in(tmp_path)
     )
     assert receipt.execution_id == status.server_execution_id
+    assert receipt.expected_axis_count == receipt.observed_axis_count == 1
     assert receipt.plate_id == str(source_identity)
     assert receipt.execution_plate_id == str(plate)
     assert receipt.compile_artifact_id is None
@@ -501,6 +503,8 @@ def test_measured_cli_uses_ordinary_source_session_and_shared_finalizer(
             str(output_dir),
             "--run-id",
             "ordinary-cli",
+            "--expected-axis-count",
+            "1",
             "--observation-scope",
             "outcomes",
             "--port",
@@ -520,6 +524,7 @@ def test_measured_cli_uses_ordinary_source_session_and_shared_finalizer(
     assert receipt.plate_id == str(source_identity)
     assert receipt.execution_plate_id == str(plate)
     assert receipt.run_id == "ordinary-cli"
+    assert receipt.expected_axis_count == receipt.observed_axis_count == 1
     assert receipt.pipeline_name == "pipeline"
     assert receipt.observation_export_scope is ZMQRuntimeObservationExportScope.OUTCOMES
     assert receipt.phase_timings[0].phase is BenchmarkPhase.SERVER_PIPELINE_JOB

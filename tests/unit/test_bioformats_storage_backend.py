@@ -1,11 +1,14 @@
+import json
 from pathlib import Path
 
 import numpy as np
-
-from openhcs.constants.constants import Backend
-from openhcs.microscopes.bioformats import BioFormatsHandler
 from polystore.base import ImageSamplingRequest, ImageSamplingResult
 from polystore.bioformats_storage import BioFormatsPlaneRef, BioFormatsStorageBackend
+
+from openhcs.constants.constants import Backend
+from openhcs.core.runtime_image_values import image_payload_data
+from openhcs.core.viewer_streaming_service import ViewerStreamingSource
+from openhcs.microscopes.bioformats import BioFormatsHandler
 from tests.unit.bioformats_fixture import (
     bioformats_filemanager,
     write_bioformats_manifest_fixture,
@@ -33,6 +36,49 @@ def test_virtual_workspace_lists_and_loads_disk_fixture_refs(tmp_path: Path) -> 
     np.testing.assert_array_equal(sampled.data, stack[0, 0, 1, 1:3, 1:3])
     np.testing.assert_array_equal(sampled.statistics_data, stack[0, 0, 1])
     assert sampled.source_shape == stack[0, 0, 1].shape
+
+
+def test_viewer_streams_exact_bioformats_plane_address(
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
+    write_bioformats_manifest_fixture(tmp_path)
+    manifest_path = tmp_path / "bioformats_spw.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["images"][0]["source_path"] = "plate.fake"
+    manifest["images"][0]["reader"] = "bioformats"
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    (tmp_path / "plate.fake").write_bytes(b"")
+    observed: list[tuple[Path, int, int]] = []
+
+    def load_plane(*, source_path, series_index, plane_index):
+        observed.append((Path(source_path), series_index, plane_index))
+        return np.full((3, 4), plane_index + 11, dtype=np.uint16)
+
+    monkeypatch.setattr(
+        "polystore.bioformats_java.load_bioformats_plane", load_plane
+    )
+    filemanager = bioformats_filemanager()
+    handler = BioFormatsHandler(filemanager)
+    handler.initialize_workspace(tmp_path, filemanager)
+    source = ViewerStreamingSource(
+        plate_path=str(tmp_path),
+        filemanager=filemanager,
+        microscope_handler=handler,
+    )
+    projection = source.source_workspace_projection()
+    filename = "A01_s001_w2_z001_t001.tif"
+    components = source.image_component_metadata_by_path([filename], projection)
+
+    image = source.load_image(
+        filename,
+        Backend.VIRTUAL_WORKSPACE.value,
+        source_projection=projection,
+        component_metadata=components[filename],
+    )
+
+    np.testing.assert_array_equal(image_payload_data(image), np.full((3, 4), 12))
+    assert observed == [(tmp_path / "plate.fake", 0, 1)]
 
 
 def test_bioformats_plane_ref_has_canonical_address_round_trip(tmp_path: Path) -> None:

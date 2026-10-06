@@ -137,6 +137,7 @@ from openhcs.runtime.viewer_protocol import (
     ViewerBatchWireField,
     ViewerComponentValueOrdering,
     ViewerControlField,
+    ViewerWindowGeometry,
     ViewerControlMessageType,
     ViewerControlReplyHeader,
     ViewerControlReplyPayload,
@@ -2579,7 +2580,7 @@ class NapariSettleControlMessageAction(NapariControlMessageAction):
         progress: ViewerSettleProgress,
     ) -> dict[str, object]:
         failed = progress.phase is ViewerSettlePhase.FAILED
-        failure = server.layer_route_state.update_failure_message()
+        failure = server.layer_route_state.settlement_failure_message()
         return ViewerControlReplyPayload(
             ViewerControlReplyHeader(
                 (
@@ -3534,6 +3535,23 @@ def _install_result_selection_toolbar(
     return toolbar
 
 
+def _napari_window_geometry(
+    viewer: NapariViewerLayerCreator,
+) -> ViewerWindowGeometry | None:
+    """Read the live Qt canvas extent, which need not equal screenshot extent."""
+
+    window_owner = getattr(viewer, "window", None)
+    qt_viewer = getattr(window_owner, "qt_viewer", None)
+    if qt_viewer is None:
+        return None
+    window = qt_viewer.window()
+    canvas = qt_viewer.canvas.native
+    return ViewerWindowGeometry(
+        window_size=(int(window.width()), int(window.height())),
+        canvas_size=(int(canvas.width()), int(canvas.height())),
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class NapariViewerProjectionABC(ABC, Generic[NapariViewerProjectionRequestT]):
     """Shared projection of live Napari route and component stores."""
@@ -3561,6 +3579,9 @@ class NapariViewerProjectionABC(ABC, Generic[NapariViewerProjectionRequestT]):
             },
             ViewerControlField.LAYER_COUNT.value: len(layers),
             ViewerControlField.LAYERS.value: layers,
+            ViewerControlField.WINDOW_GEOMETRY.value: _napari_window_geometry(
+                self.viewer
+            ),
             ViewerControlField.NATIVE_VIEWPORT.value: (
                 viewport_control.snapshot().to_wire_mapping()
                 if viewport_control is not None
@@ -5011,11 +5032,27 @@ class NapariNavigationControlMessageAction(NapariMountedRouteControlMessageActio
             raise ValueError(
                 f"Viewer data_index {data_index} has no native layer geometry."
             ) from exc
-        return ViewerResultElementCoordinateAuthority.axis_indices(
+        native_indices = ViewerResultElementCoordinateAuthority.axis_indices(
             coordinates=cast(Sequence[object], coordinates),
             axis_labels=dimension_state.axis_labels,
             displayed_axis_count=int(server.viewer.dims.ndisplay),
         )
+        presentation = dimension_state.presentation
+        if presentation is None:
+            return native_indices
+        projection = presentation.projection
+        return {
+            axis_name: (
+                projection.routed_index_for_shared_index(
+                    axis_name,
+                    native_index,
+                    context="Viewer result element coordinate",
+                )
+                if axis_name in projection.routed_component_values
+                else native_index
+            )
+            for axis_name, native_index in native_indices.items()
+        }
 
     def axis_step(
         self,
@@ -5044,18 +5081,26 @@ class NapariNavigationControlMessageAction(NapariMountedRouteControlMessageActio
                     f"Axis {axis_name!r} is outside viewer current_step "
                     f"for route {request.route_key!r}."
                 )
-            self._validate_local_axis_index(
-                dimension_state,
-                local_shape,
-                axis_name,
-                axis_position,
-                local_axis_index,
-            )
             presentation = dimension_state.presentation
             if presentation is None:
                 raise ValueError(
                     f"Route {request.route_key!r} has no axis presentation "
                     "for semantic navigation."
+                )
+            projection = presentation.projection
+            if axis_name in projection.routed_component_values:
+                local_axis_index = projection.shared_index_for_routed_index(
+                    axis_name,
+                    local_axis_index,
+                    context="Napari navigation axis_indices",
+                )
+            else:
+                self._validate_local_axis_index(
+                    dimension_state,
+                    local_shape,
+                    axis_name,
+                    axis_position,
+                    local_axis_index,
                 )
             viewer_axis_origins = server.layer_route_state.axis_origins_for(axis_labels)
             current_step[axis_position] = presentation.viewer_step(
@@ -5252,6 +5297,9 @@ class NapariScreenshotControlMessageAction(NapariControlMessageAction):
             },
             ViewerControlField.WIDTH.value: snapshot.width,
             ViewerControlField.HEIGHT.value: snapshot.height,
+            ViewerControlField.WINDOW_GEOMETRY.value: _napari_window_geometry(
+                server.viewer
+            ),
             ViewerControlField.SNAPSHOT.value: snapshot.capture,
         }
 

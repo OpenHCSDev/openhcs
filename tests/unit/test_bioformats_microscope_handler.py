@@ -3,9 +3,9 @@ from dataclasses import replace
 from pathlib import Path
 
 import pytest
+from objectstate.lazy_factory import ensure_global_config_context
 from polystore.virtual_workspace import SourcePixelRef
 
-from objectstate.lazy_factory import ensure_global_config_context
 from openhcs.constants.constants import AllComponents, Backend
 from openhcs.core.config import GlobalPipelineConfig
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
@@ -50,6 +50,12 @@ def test_bioformats_handler_writes_normalized_workspace_metadata(
         "A01_s001_w2_z001_t001.tif",
     ]
     assert subdirectory["channels"] == {"1": "DAPI", "2": "GFP"}
+    assert subdirectory["pixel_size"] == 0.5
+    assert all(
+        source_metadata["OpenHCSSourceVoxelSpacingZYX"] == "0.5,0.5"
+        and source_metadata["OpenHCSSourceVoxelSpacingUnit"] == "micrometers"
+        for source_metadata in subdirectory["source_metadata"].values()
+    )
     assert handler.metadata_handler.parse_metadata(tmp_path) == {
         "channel": {"1": "DAPI", "2": "GFP"},
         "well": {"A01": "A01"},

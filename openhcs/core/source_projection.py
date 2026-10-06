@@ -653,6 +653,14 @@ class SourceProjection:
             return ()
         return self.address.component_values().declared_values()
 
+    def retained_singleton_plane_components(
+        self,
+        metadata: ImagePayloadMetadata,
+    ) -> tuple[AllComponents, ...]:
+        """Return a declared singleton pixel-plane axis, if this owner has one."""
+
+        return ()
+
     def serialized_address(self) -> dict[str, str] | None:
         """Project the optional scalar address to the metadata boundary."""
 
@@ -848,6 +856,59 @@ class SourceArtifactProjection(SourceProjection):
         if values or self.execution_scope is None:
             return values
         return self.execution_scope.source_component_values
+
+    def retained_singleton_plane_components(
+        self,
+        metadata: ImagePayloadMetadata,
+    ) -> tuple[AllComponents, ...]:
+        """Identify the one plane axis not fixed by this artifact's runtime scope."""
+
+        if (
+            metadata.plane_axis is None
+            or metadata.source_provenance.source_plane_count != 1
+        ):
+            return ()
+        if self.execution_scope is None:
+            return ()
+        plane_metadata = (
+            metadata.source_provenance.for_source_plane(0).source_component_metadata
+            or {}
+        )
+        scope_values = dict(self.execution_scope.source_component_values)
+        for component, fixed_value in scope_values.items():
+            plane_value = source_component_metadata_raw_value(plane_metadata, component)
+            if plane_value is not None and not source_metadata_values_equal(
+                plane_value, fixed_value
+            ):
+                raise ValueError(
+                    "Persisted image plane conflicts with its execution scope for "
+                    f"{component.value!r}."
+                )
+        candidates = tuple(
+            component
+            for component in AllComponents
+            if not component.is_multiprocessing_axis()
+            and component not in scope_values
+            and source_component_metadata_raw_value(plane_metadata, component)
+            is not None
+        )
+        if len(candidates) != 1:
+            raise ValueError(
+                "Persisted singleton image plane requires exactly one component "
+                "outside its execution scope; got "
+                f"{tuple(component.value for component in candidates)!r}."
+            )
+        component = candidates[0]
+        address_value = self.component_value(component)
+        plane_value = source_component_metadata_raw_value(plane_metadata, component)
+        if address_value is not None and not source_metadata_values_equal(
+            address_value, plane_value
+        ):
+            raise ValueError(
+                "Persisted image plane conflicts with its artifact address for "
+                f"{component.value!r}."
+            )
+        return candidates
 
     def serialized_execution_scope(self) -> Mapping[str, Any] | None:
         """Project the exact runtime scope for aggregate persisted artifacts."""

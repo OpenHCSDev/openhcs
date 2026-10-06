@@ -33,6 +33,12 @@ from openhcs.processing.custom_functions.runtime_registry import (
     CustomFunctionRuntimeRegistry,
     project_custom_function,
 )
+from openhcs.processing.custom_functions.source_namespace import (
+    CustomFunctionSource,
+    CustomFunctionSourceNamespace,
+    CustomFunctionSourceRevision,
+    CustomFunctionSourceSnapshot,
+)
 from openhcs.processing.custom_functions.validation import (
     ValidationError,
     validate_code,
@@ -65,35 +71,6 @@ class CustomFunctionInfo:
     doc: str
 
 
-@dataclass(frozen=True, slots=True)
-class CustomFunctionSource:
-    """Content identity of one persisted custom-function declaration."""
-
-    function_name: str
-    content_sha256: str
-
-
-@dataclass(frozen=True, slots=True)
-class CustomFunctionSourceRevision:
-    """Exact persisted source set owned by ``CustomFunctionManager``."""
-
-    sources: tuple[CustomFunctionSource, ...]
-
-    @property
-    def function_names(self) -> frozenset[str]:
-        """Return declaration names derived from the manager's file convention."""
-
-        return frozenset(source.function_name for source in self.sources)
-
-
-@dataclass(frozen=True, slots=True)
-class CustomFunctionSourceSnapshot:
-    """Exact source bytes decoded for preparation with their content proof."""
-
-    source: CustomFunctionSource
-    code: str
-
-
 class CustomFunctionManager:
     """
     Manager for custom function lifecycle operations.
@@ -104,6 +81,17 @@ class CustomFunctionManager:
     Attributes:
         storage_dir: Directory where custom functions are stored
     """
+
+    def require_source(self, expected: CustomFunctionSource) -> None:
+        """Reject a persisted declaration whose actual source bytes changed."""
+        current = self._snapshot_source(
+            self.storage_dir / f"{expected.function_name}.py"
+        )
+        if current is None or current.source != expected:
+            raise RuntimeError(
+                f"Custom function source {expected.function_name!r} changed; "
+                "recompile the pipeline."
+            )
 
     def __init__(self):
         """Initialize manager and create storage directory if needed."""
@@ -208,8 +196,7 @@ class CustomFunctionManager:
         prepared = {}
         for snapshot in snapshots:
             metadata = CustomFunctionRuntimeRegistry.prepare_source_once(
-                snapshot.source.function_name,
-                snapshot.source.content_sha256,
+                snapshot.source,
                 lambda snapshot=snapshot: self._prepare_source(snapshot.code),
             )
             if metadata.original_name != snapshot.source.function_name:
@@ -262,8 +249,7 @@ class CustomFunctionManager:
             return 0
 
         metadata = CustomFunctionRuntimeRegistry.prepare_source_once(
-            snapshot.source.function_name,
-            snapshot.source.content_sha256,
+            snapshot.source,
             lambda: self._prepare_source(snapshot.code),
         )
         if metadata.original_name != func_name:
@@ -408,7 +394,12 @@ class CustomFunctionManager:
         if old_snapshot is None:
             raise ValueError(f"Custom function '{old_name}' not found")
 
-        metadata = self._prepare_source(new_code)
+        if new_code == old_snapshot.code:
+            metadata = CustomFunctionRuntimeRegistry.prepare_source_once(
+                old_snapshot.source, lambda: self._prepare_source(new_code)
+            )
+        else:
+            metadata = self._prepare_source(new_code)
         new_name = metadata.original_name
         new_file_path = self.storage_dir / f"{new_name}.py"
         temp_path = self._write_temporary_source(new_code)
@@ -509,10 +500,15 @@ class CustomFunctionManager:
                 f"Function '{declaration.__name__}' validation failed:\n"
                 + "\n".join(function_validation.errors)
             )
+        source = CustomFunctionSource(
+            function_name=declaration.__name__,
+            content_sha256=hashlib.sha256(code.encode("utf-8")).hexdigest(),
+        )
+        CustomFunctionSourceNamespace(source, namespace).bind(declaration)
         try:
             return project_custom_function(
                 declaration,
-                declaration_revision=hashlib.sha256(code.encode("utf-8")).hexdigest(),
+                declaration_revision=source.content_sha256,
             )
         except ValueError as exc:
             raise ValidationError(

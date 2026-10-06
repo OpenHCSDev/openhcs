@@ -182,6 +182,11 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
         parser.add_argument("--run-id", required=True)
         parser.add_argument("--pipeline-name")
         parser.add_argument(
+            "--expected-axis-count",
+            type=int,
+            help="Require exactly this many compiled execution axes in the receipt.",
+        )
+        parser.add_argument(
             "--observation-scope",
             choices=tuple(scope.value for scope in ZMQRuntimeObservationExportScope),
             default=ZMQRuntimeObservationExportScope.VALUES.value,
@@ -209,6 +214,13 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
             raise ValueError("--wait-timeout-ms must be positive.")
         if args.submit_timeout_ms is not None and args.submit_timeout_ms <= 0:
             raise ValueError("--submit-timeout-ms must be positive.")
+        from benchmark.contracts.measured_run_receipt import (
+            require_positive_axis_count,
+        )
+
+        require_positive_axis_count(
+            args.expected_axis_count, field_name="expected_axis_count"
+        )
 
         from zmqruntime.messages import ExecutionStatus
 
@@ -309,6 +321,7 @@ class RunMeasuredPipelineCommand(BenchmarkCliCommand):
                 job_id=status.job_id,
                 run_id=args.run_id,
                 pipeline_name=args.pipeline_name or source_file.stem,
+                expected_axis_count=args.expected_axis_count,
             )
         )
         print(json.dumps(to_jsonable(receipt), indent=2, sort_keys=True))

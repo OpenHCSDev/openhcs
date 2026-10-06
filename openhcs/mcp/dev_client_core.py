@@ -914,6 +914,8 @@ def add_request_field_option(
 ) -> None:
     """Add a CLI option whose default/type comes from a request DTO field."""
     parameter = request_field_parameter(request_type, field_name)
+    if "dest" not in kwargs and flags and all(flag.startswith("-") for flag in flags):
+        kwargs["dest"] = field_name
     if "default" not in kwargs and parameter.default is not inspect.Parameter.empty:
         kwargs["default"] = parameter.default
     if "type" not in kwargs and "action" not in kwargs:

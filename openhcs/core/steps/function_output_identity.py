@@ -276,7 +276,9 @@ class FunctionOutputPathAuthority:
                     extension=extension,
                 )
             )
-            return cls._qualified_filename(filename, identity.filename_qualifier)
+            return cls._qualified_filename(
+                filename, identity.filename_qualifier, parser
+            )
         except MissingFilenameComponentError as exc:
             raise IncompleteFunctionOutputFilenameIdentityError(
                 exc.component_name,
@@ -308,12 +310,20 @@ class FunctionOutputPathAuthority:
         )
 
     @staticmethod
-    def _qualified_filename(filename: str, qualifier: str | None) -> str:
+    def _qualified_filename(
+        filename: str, qualifier: str | None, parser: FilenameParser
+    ) -> str:
         if qualifier is None:
             return filename
-        path = Path(filename)
-        suffixes = "".join(path.suffixes)
-        stem = path.name[: -len(suffixes)] if suffixes else path.name
+        parsed = parser.parse_filename(filename)
+        suffixes = (
+            parsed.extension
+            if parsed is not None
+            and parsed.extension
+            and filename.endswith(parsed.extension)
+            else "".join(Path(filename).suffixes)
+        )
+        stem = filename[: -len(suffixes)] if suffixes else filename
         return f"{stem}_{qualifier}{suffixes}"
 
     @staticmethod
@@ -356,9 +366,12 @@ class FunctionOutputExtensionAuthority:
         return cls.from_raw(metadata.get("extension"))
 
     @classmethod
-    def from_path(cls, path: str | None) -> str | None:
+    def from_path(cls, path: str | None, parser: FilenameParser) -> str | None:
         if path is None:
             return None
+        parsed = parser.parse_filename(_cached_path_name(path))
+        if parsed is not None:
+            return cls.from_raw(parsed.extension)
         return cls.from_raw("".join(Path(path).suffixes))
 
     @staticmethod
@@ -558,7 +571,9 @@ class FunctionOutputIdentityAuthority:
                 FunctionOutputExtensionAuthority.from_metadata(
                     metadata.source_component_metadata
                 ),
-                FunctionOutputExtensionAuthority.from_path(metadata.source_path),
+                FunctionOutputExtensionAuthority.from_path(
+                    metadata.source_path, parser
+                ),
             ),
             source="payload component metadata",
         )
@@ -615,7 +630,9 @@ class FunctionOutputIdentityAuthority:
                     FunctionOutputExtensionAuthority.from_metadata(
                         source_identity.component_metadata
                     ),
-                    FunctionOutputExtensionAuthority.from_path(source_identity.path),
+                    FunctionOutputExtensionAuthority.from_path(
+                        source_identity.path, parser
+                    ),
                 ),
                 source="single represented payload source metadata",
             )
@@ -676,7 +693,9 @@ class FunctionOutputIdentityAuthority:
                 FunctionOutputExtensionAuthority.from_metadata(
                     metadata.source_component_metadata
                 ),
-                FunctionOutputExtensionAuthority.from_path(metadata.source_path),
+                FunctionOutputExtensionAuthority.from_path(
+                    metadata.source_path, parser
+                ),
             ),
             source="payload component metadata",
         )
@@ -834,6 +853,7 @@ class FunctionOutputIdentityAuthority:
         extension = cls._source_stack_extension(
             plane_identities,
             identity_component_values,
+            parser=parser,
             fallback_identity_path=fallback_identity_path,
         )
         represented_source_identities = source_provenance.represented_source_identities
@@ -872,7 +892,9 @@ class FunctionOutputIdentityAuthority:
                 FunctionOutputExtensionAuthority.from_metadata(
                     source_identity.component_metadata
                 ),
-                FunctionOutputExtensionAuthority.from_path(source_identity.path),
+                FunctionOutputExtensionAuthority.from_path(
+                    source_identity.path, parser
+                ),
             ),
             source=f"represented source identity {identity_index} metadata",
         )
@@ -963,10 +985,11 @@ class FunctionOutputIdentityAuthority:
         plane_identities: tuple[FunctionOutputIdentity, ...],
         identity_component_values: frozenset[str],
         *,
+        parser: FilenameParser,
         fallback_identity_path: str | None,
     ) -> str | None:
         fallback_extension = FunctionOutputExtensionAuthority.from_path(
-            fallback_identity_path
+            fallback_identity_path, parser
         )
         if fallback_extension is not None:
             return fallback_extension

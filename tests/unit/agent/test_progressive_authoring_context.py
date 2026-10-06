@@ -278,6 +278,8 @@ def test_task_contexts_expose_only_the_next_relevant_boundary() -> None:
     assert f'kind="{ImageAnalysisWorkflowAuthoringContext.require_kind()}"' in pipeline
 
     assert "IMAGE-ANALYSIS WORKFLOW" in image_analysis
+    assert "Open and visually inspect the captured bitmap yourself" in image_analysis
+    assert "explicit accept/reject decision before widening" in image_analysis
     assert "routed source rank and channel-axis semantics" in image_analysis
     assert "registered typed transform before segmentation" in image_analysis
     assert "variable_components=[SITE]" in image_analysis
@@ -299,6 +301,8 @@ def test_task_contexts_expose_only_the_next_relevant_boundary() -> None:
         in image_analysis
     )
     assert "Compare channel histograms, clipped fractions" in image_analysis
+    assert "prefer a modestly elevated background over losing faint" in image_analysis
+    assert "Do not make a display-only enhancement into analytical preprocessing" in image_analysis
     assert "joins, quadrants, and complete fields" in image_analysis
     assert "per-region object or traced-signal density" in image_analysis
     assert "Display normalisation changes presentation only" in image_analysis

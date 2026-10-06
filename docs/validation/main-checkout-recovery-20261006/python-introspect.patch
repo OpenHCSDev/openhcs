@@ -1,0 +1,87 @@
+diff --git a/src/python_introspect/signature_analyzer.py b/src/python_introspect/signature_analyzer.py
+index 76f45b7..33800e7 100644
+--- a/src/python_introspect/signature_analyzer.py
++++ b/src/python_introspect/signature_analyzer.py
+@@ -434,12 +434,7 @@ class DocstringExtractor:
+         if not docstring:
+             return DocstringInfo(parameters={})
+ 
+-        # Try AST-based parsing first for better accuracy
+-        try:
+-            return DocstringExtractor._parse_docstring_ast(actual_target, docstring)
+-        except Exception:
+-            # Fall back to regex-based parsing
+-            return DocstringExtractor._parse_docstring(docstring)
++        return DocstringExtractor._parse_docstring(docstring)
+ 
+     @staticmethod
+     def _resolve_lazy_target(target: Union[Callable, type]) -> Union[Callable, type]:
+@@ -448,38 +443,6 @@ class DocstringExtractor:
+             return target
+         return _resolve_type(target)
+ 
+-    @staticmethod
+-    def _parse_docstring_ast(target: Union[Callable, type], docstring: str) -> DocstringInfo:
+-        """Parse docstring using AST for more accurate extraction.
+-
+-        This method uses AST to parse the source code and extract docstring
+-        information more accurately, especially for complex multiline descriptions.
+-        """
+-        try:
+-            # Get source code
+-            source = inspect.getsource(target)
+-            tree = ast.parse(source)
+-
+-            # Find the function/class node
+-            for node in ast.walk(tree):
+-                if isinstance(node, (ast.FunctionDef, ast.ClassDef)):
+-                    if ast.get_docstring(node) == docstring:
+-                        return DocstringExtractor._parse_ast_docstring(node, docstring)
+-
+-            # Fallback to regex parsing if AST parsing fails
+-            return DocstringExtractor._parse_docstring(docstring)
+-
+-        except Exception:
+-            # Fallback to regex parsing
+-            return DocstringExtractor._parse_docstring(docstring)
+-
+-    @staticmethod
+-    def _parse_ast_docstring(node: Union[ast.FunctionDef, ast.ClassDef], docstring: str) -> DocstringInfo:
+-        """Parse docstring from AST node with enhanced multiline support."""
+-        # For now, use the improved regex parser
+-        # This can be extended later with more sophisticated AST-based parsing
+-        return DocstringExtractor._parse_docstring(docstring)
+-
+     @staticmethod
+     def _parse_docstring(docstring: str) -> DocstringInfo:
+         """Parse a docstring into structured components with improved multiline support.
+diff --git a/tests/test_signature_analyzer.py b/tests/test_signature_analyzer.py
+index c4ce29d..90331b1 100644
+--- a/tests/test_signature_analyzer.py
++++ b/tests/test_signature_analyzer.py
+@@ -434,6 +434,25 @@ class TestSignatureAnalyzer:
+ class TestDocstringExtractor:
+     """Test DocstringExtractor functionality."""
+ 
++    def test_extract_does_not_require_source_code(self, monkeypatch):
++        """Docstring text owns extraction even when source is unavailable."""
++
++        def func(value: int):
++            """Summarize a value.
++
++            Args:
++                value: The number to summarize.
++            """
++
++        def unavailable_source(_target):
++            raise AssertionError("docstring extraction must not read source")
++
++        monkeypatch.setattr(inspect, "getsource", unavailable_source)
++        info = DocstringExtractor.extract(func)
++
++        assert info.summary == "Summarize a value."
++        assert info.parameters["value"] == "The number to summarize."
++
+     def test_extract_simple_docstring(self):
+         """Test extracting simple docstring."""
+         def func():

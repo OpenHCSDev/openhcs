@@ -48,6 +48,7 @@ from openhcs.agent.dto.viewer import (
     ViewerWindowRoiSummaryRequest,
     ViewerWindowSnapshotRequest,
     ViewerWindowStateRequest,
+    ViewerWindowStateResult,
     ViewerWindowValidationPolicy,
     ViewerWindowValidationRequest,
 )
@@ -124,6 +125,7 @@ from openhcs.runtime.viewer_protocol import (
     ViewerPayloadProjectionOptions,
     ViewerShapePayloadProjection,
     ViewerStateControlOptions,
+    ViewerWindowGeometry,
 )
 from openhcs.runtime.zmq_config import OPENHCS_ZMQ_CONFIG
 from openhcs.runtime.zmq_execution_client import (
@@ -790,6 +792,9 @@ class _FakeViewerWindowGateway(ViewerWindowGatewayABC):
             },
             "width": 640,
             "height": 480,
+            "window_geometry": ViewerWindowGeometry(
+                window_size=(640, 480), canvas_size=(512, 360)
+            ),
             "snapshot": request,
             "resource": {
                 "uri": "file:///tmp/napari.png",
@@ -810,6 +815,9 @@ class _FakeViewerWindowGateway(ViewerWindowGatewayABC):
                 "title": "OpenHCS Napari Viewer",
             },
             "layer_count": 1,
+            "window_geometry": ViewerWindowGeometry(
+                window_size=(640, 480), canvas_size=(512, 360)
+            ),
             "layers": (
                 {
                     "route_key": "IdentifyPrimaryObjects|image",
@@ -2023,6 +2031,9 @@ def test_viewer_window_service_snapshots_running_viewer():
     assert result.resource.mime_type == "image/png"
     assert result.width == 640
     assert result.height == 480
+    assert result.window_geometry == ViewerWindowGeometry(
+        window_size=(640, 480), canvas_size=(512, 360)
+    )
     assert result.capture_scope is WindowSnapshotCaptureScope.WINDOW
     assert gateway.requests[0].output_dir_path == "/tmp/openhcs-mcp-window-snapshots"
     assert gateway.requests[0].capture_scope is WindowSnapshotCaptureScope.WINDOW
@@ -2077,6 +2088,12 @@ def test_viewer_window_service_reads_running_viewer_state():
     assert result.viewer is not None
     assert result.viewer.viewer_type is ViewerType.NAPARI
     assert result.layer_count == 1
+    assert result.window_geometry == ViewerWindowGeometry(
+        window_size=(640, 480), canvas_size=(512, 360)
+    )
+    assert ViewerWindowStateResult.from_mapping(to_jsonable(result)).window_geometry == (
+        result.window_geometry
+    )
     assert result.component_group_count == 1
     assert result.component_item_count == 2
     assert result.active_dimension_label_route == "IdentifyPrimaryObjects|image"
@@ -3474,6 +3491,31 @@ def test_execution_session_service_warns_when_compile_inspection_initializes_wor
     assert inspection.warnings[0].code == "compile_inspection_initialized_workspace"
     assert str(tmp_path / "openhcs_metadata.json") in inspection.warnings[0].message
     assert "openhcs_inspect_plate_path" in inspection.warnings[0].hint
+
+
+def test_compile_inspection_requires_writable_plate_root(monkeypatch, tmp_path: Path):
+    gateway = _FakeCompileInspectionGateway()
+    execution_service = ExecutionSessionService(
+        path_policy=AgentPathPolicy.with_roots(
+            readable_roots=(tmp_path,),
+            writable_roots=(),
+        ),
+        pipeline_service=PipelineAuthoringService(_catalog(monkeypatch)),
+        config_service=ConfigService(),
+        client_factory=_FakeExecutionClientFactory(_FakeExecutionClient()),
+        compile_inspection_gateway=gateway,
+    )
+
+    with pytest.raises(AgentPathPolicyError, match="Writable path is outside"):
+        execution_service.inspect_pipeline_source_artifact_plan(
+            PipelineSourceSessionRequest(
+                identity=ZMQExecutionIdentity(plate_id=str(tmp_path)),
+                pipeline_source=_pipeline_document_source(),
+                global_config_id=None,
+                connection=ExecutionConnectionSpec(),
+            ),
+        )
+    assert gateway.requests == []
 
 
 def test_execution_session_service_projects_invalid_pipeline_document_errors(

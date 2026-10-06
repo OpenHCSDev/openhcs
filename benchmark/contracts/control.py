@@ -5,7 +5,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import ClassVar
 
-from benchmark.contracts.measured_run_receipt import MeasuredPipelineRunReceipt
+from pydantic import StrictInt
+
+from benchmark.contracts.measured_run_receipt import (
+    MeasuredPipelineRunReceipt,
+    require_positive_axis_count,
+)
 from benchmark.contracts.run_artifacts import (
     ComparisonRunArtifact,
     MeasuredPipelineRunArtifact,
@@ -126,6 +131,12 @@ class MeasuredPipelineRunFinalizationRequest:
     job_id: str
     run_id: str
     pipeline_name: str
+    expected_axis_count: StrictInt | None = None
+
+    def __post_init__(self) -> None:
+        require_positive_axis_count(
+            self.expected_axis_count, field_name="expected_axis_count"
+        )
 
 
 @dataclass(frozen=True, slots=True)

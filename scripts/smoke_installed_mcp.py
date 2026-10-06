@@ -344,6 +344,34 @@ async def _run_measured_execution_protocol_smoke(
     if status.get("status") != "complete" or not isinstance(status.get("job_id"), str):
         raise AssertionError(f"Installed MCP execution did not complete: {status}")
 
+    mismatched = _tool_payload(
+        await asyncio.wait_for(
+            session.call_tool(
+                "openhcs_finalize_measured_pipeline_run",
+                {
+                    "job_id": status["job_id"],
+                    "run_id": "installed-protocol-smoke",
+                    "pipeline_name": "Blur",
+                    "expected_axis_count": 2,
+                },
+            ),
+            timeout=90,
+        )
+    )
+    receipt_path = MeasuredPipelineRunArtifact.RECEIPT.path_in(evidence_dir)
+    if (
+        mismatched.get("ok") is not False
+        or not any(
+            "Expected 2 execution axes" in item.get("message", "")
+            for item in mismatched.get("errors", ())
+        )
+        or receipt_path.exists()
+    ):
+        raise AssertionError(
+            "Installed MCP wrote a success receipt for an axis-count mismatch: "
+            f"{mismatched}"
+        )
+
     finalized = _tool_payload(
         await asyncio.wait_for(
             session.call_tool(
@@ -352,6 +380,7 @@ async def _run_measured_execution_protocol_smoke(
                     "job_id": status["job_id"],
                     "run_id": "installed-protocol-smoke",
                     "pipeline_name": "Blur",
+                    "expected_axis_count": 1,
                 },
             ),
             timeout=90,
@@ -369,6 +398,11 @@ async def _run_measured_execution_protocol_smoke(
     if finalized.get("execution_id") != status.get("server_execution_id"):
         raise AssertionError(f"Installed MCP receipt changed job identity: {finalized}")
     if (
+        finalized.get("expected_axis_count") != 1
+        or finalized.get("observed_axis_count") != 1
+    ):
+        raise AssertionError(f"Installed MCP lost the declared axis count: {finalized}")
+    if (
         inspected.get("retained_evidence_valid") is not True
         or not inspected.get("source_evidence")
         or any(not item.get("valid") for item in inspected["source_evidence"])
@@ -378,7 +412,7 @@ async def _run_measured_execution_protocol_smoke(
         source_plate=plate,
         cli_execution_plate=cli_plate,
         source_file=source_file,
-        mcp_receipt_path=MeasuredPipelineRunArtifact.RECEIPT.path_in(evidence_dir),
+        mcp_receipt_path=receipt_path,
         mcp_execution_id=finalized["execution_id"],
     )
 
@@ -409,6 +443,8 @@ def _run_installed_measured_cli_smoke(
         "installed-cli-smoke",
         "--pipeline-name",
         "Blur",
+        "--expected-axis-count",
+        "1",
         "--observation-scope",
         "outcomes",
         "--port",
@@ -461,6 +497,11 @@ def _run_installed_measured_cli_smoke(
         or cli_receipt.observation_export_scope.value != "outcomes"
     ):
         raise AssertionError("Installed MCP and CLI ignored outcome-only export scope.")
+    if any(
+        (receipt.expected_axis_count, receipt.observed_axis_count) != (1, 1)
+        for receipt in (mcp_receipt, cli_receipt)
+    ):
+        raise AssertionError("Installed MCP and CLI lost declared axis coverage.")
     if mcp_receipt.server_environment is None or cli_receipt.server_environment is None:
         raise AssertionError("Installed measured receipt lacks server provenance.")
     if cli_receipt.server_environment != mcp_receipt.server_environment:
@@ -583,6 +624,26 @@ async def _run_benchmark_protocol_smoke(
                 raise AssertionError(
                     "Installed benchmark tools are not both declared and listed: "
                     f"expected={expected} listed={listed_names} declared={declared_names}"
+                )
+            invalid_count = await asyncio.wait_for(
+                session.call_tool(
+                    "openhcs_finalize_measured_pipeline_run",
+                    {
+                        "job_id": "no-such-job",
+                        "run_id": "invalid-axis-count",
+                        "pipeline_name": "Blur",
+                        "expected_axis_count": True,
+                    },
+                ),
+                timeout=60,
+            )
+            if not invalid_count.isError or not any(
+                "expected_axis_count" in getattr(item, "text", "")
+                and "valid integer" in getattr(item, "text", "")
+                for item in invalid_count.content
+            ):
+                raise AssertionError(
+                    "Installed MCP accepted a boolean expected_axis_count."
                 )
             benchmark_search = _tool_payload(
                 await asyncio.wait_for(

@@ -302,3 +302,175 @@ in `benchmark/progress.py` is diagnostic history, not the new status authority.
   the 30-workflow corpus or publish performance numbers in this infrastructure
   phase. A later matched experiment needs separately approved design and
   evidence review.
+
+### 26 September verification checkpoint
+
+The ordinary-pipeline benchmark wrapper landed in merged PR #128
+(`1700acb45f578273edfc8530162040f0dbb52cac`). Its exact-head CI completed
+successfully, including `wheel-integration-test`, whose installed-wheel smoke
+invokes `--exercise-measured-execution`. On the local checkout, the focused
+measured-run and benchmark-control unit tests passed 50/50, and the live ZMQ
+observation-export integration tests passed 9/9. The first local unit attempt
+used `/tmp` and failed with disk quota errors; the same tests passed with a
+small exact test directory under `/home`, which was then removed. These checks
+support infrastructure readiness for ordinary source-backed execution and
+measured evidence finalization. They do not validate a 30-workflow four-mode
+benchmark, a matched speedup, or the biological interpretation of any image
+analysis result.
+
+On the same local checkout after the 26 September analysis-side changes,
+the focused measured-run, benchmark-control, and well-throughput unit files
+passed 89/89 tests. Their 7 MiB temporary directory was removed after the
+run. This is a current source-level regression check; the merged PR's
+installed-wheel CI remains the separate installed-client evidence.
+
+The generic measured-run CLI and expert finalization request now accept an
+optional positive `expected_axis_count` and pass it to the existing shared
+receipt finalizer. This is a declared workload-coverage check, not a second
+execution status: an observed count mismatch prevents a success receipt.
+The unmodified compiler-owned axis membership check still rejects missing or
+unexpected axis identities even when callers omit the optional count. Focused
+benchmark-control and measured-run unit tests plus a live synthetic CLI test
+passed 55/55 on 26 September; the CLI test asserted a one-axis receipt carrying
+both expected and observed counts. The temporary test directory was removed.
+This new checkout state has not yet received installed-wheel CI verification.
+An additional focused service test passed and proves the expert finalizer
+forwards the declared count to the shared receipt writer. A fresh live MCP
+integration attempt did **not** reach finalization: its new execution server
+timed out while loading the cached function catalog (startup trace ended in
+`preparing_capabilities`, with no server-ready event). The fresh CLI integration
+above passed, but the MCP path's new count field is presently covered only by
+the service-level test, not a completed live MCP run on these bytes. The failed
+test's temporary directory was removed.
+The generated expert MCP input schema was also checked in-process on these
+bytes: it exposes `expected_axis_count` from the typed finalization request
+without a benchmark-only hand-written schema; that focused test passed. The
+fresh long-lived OpenHCS MCP process itself remains stale after analysis-side
+source edits and requires its client-owned reconnect before further live tool
+use. This does not invalidate the prior installed-wheel smoke on PR #128, but
+it does leave this new field's fresh-process live MCP path unverified.
+The positive-axis-count rule is now one function in the measured-receipt
+contract, used by the CLI preflight, typed MCP request, shared finalizer, and
+receipt validation. This also rejects booleans, rather than silently treating
+`True` as one axis. The two focused benchmark-control/measured-run unit files
+passed 57/57 on the current checkout; their 1.5 MiB `/tmp` test directory was
+removed. This is not a replacement for the still-missing fresh-process MCP
+end-to-end proof on the changed bytes.
+Two additional focused receipt-construction checks passed: the same shared
+rule rejects boolean expected and observed axis counts. The 40 KiB temporary
+test directory was removed. The previous 57/57 run predates these two tests;
+do not silently relabel it as a broader fresh-suite result.
+The kernel journal for that failed startup records global out-of-memory kills
+at 11:21:40 on 26 September, during the same capability-preparation window.
+The killed processes shown were Brave helpers, not the test's Python server,
+so this is evidence of host memory pressure rather than proof of the exact
+server failure mechanism. Do not interpret the connection failure as a
+benchmark-finalizer regression, or retry the heavy live test while RAM/swap
+remain saturated. Keep the fresh-process MCP gate open for a healthy host.
+
+### Current readiness boundary
+
+- **Ordinary execution ownership:** the active benchmark adapter and
+  throughput route call the shared measured-run wrapper, which delegates
+  compile/execute to `run_compiled_pipeline`; the CLI and MCP finalizer use
+  ordinary headless job control. A source scan found no active
+  `PipelineOrchestrator` call under `benchmark/`. The direct client in
+  `benchmark/results/matched_batch_pilot_20260915/pilot_driver.py` is a
+  retained historical pilot, not an active registered command.
+- **Evidence semantics:** value-scope exports validate compiled artifact
+  expectations; outcome-scope exports validate exact compiled-axis membership
+  and success but deliberately do not claim output-value equivalence. The
+  caller may additionally declare an expected axis count through the shared
+  contract. The expert MCP schema projects that field as an optional integer;
+  its focused schema test passed.
+- **Still open on these bytes:** a fresh-process live MCP finalization and
+  installed-wheel test of the new count field, then a healthy-host check of
+  the intended paper benchmark configuration. The prior green PR #128 wheel
+  CI proves the pre-count-gate infrastructure, not this changed checkout.
+  None of the tests so far proves a matched performance comparison or a
+  biological analysis result.
+
+The generated MCP integer schema alone was insufficient to prove strict input
+handling: FastMCP/Pydantic coerced JSON `true` to integer `1` and dispatched
+the finalizer to job lookup. The request now declares a strict integer, and
+the generic dataclass-tool binding preserves `Annotated` metadata from the
+typed request. A direct in-process MCP call with `expected_axis_count=true`
+now fails argument validation before finalizer dispatch. The focused MCP
+regression plus benchmark-control/self-description checks passed 57/57 on
+26 September. This is source-level evidence only; the long-lived MCP server
+reports stale source after the binding edit and requires a client-owned
+reconnect. A fresh-process live finalization and wheel test remain open.
+
+The installed-wheel smoke now declares one expected compiled axis through both
+its expert MCP finalizer call and its ordinary measured CLI invocation,
+asserts expected/observed counts in both receipts, and checks that a boolean
+MCP axis count is rejected before job lookup. It now also tries to finalize
+the same completed synthetic job with a deliberately wrong count of two,
+requires the structured mismatch error and absence of a receipt, then
+finalizes with the correct count of one. An in-process MCP service test proves
+that mismatch-then-success sequence on these source bytes. The smoke's four
+ownership unit tests passed. A local 0.8.6 wheel built from these checkout
+bytes; its packaged benchmark request, measured CLI, measured-run wrapper,
+and MCP server files
+matched the source byte-for-byte. An isolated `--target` install outside the
+checkout imported those wheel modules and its in-process MCP tool rejected
+`expected_axis_count=true` with a strict-integer `ToolError`. This is stronger
+than source-only testing, but it is not the fresh stdio execution smoke or
+CI's fully installed environment. Those remain open while host swap is full.
+The disposable local wheel was `openhcs-0.8.6-py3-none-any.whl` with SHA-256
+`10f141a8e99d5776e0534c4c7b6c7e93bcf41601a5f25a14bad70205f6946293`;
+the temporary install was removed after verification.
+The current benchmark-control, measured-run, throughput-scaling, and installed
+smoke ownership unit files passed together (103/103); their disposable
+temporary directory was removed. This still does not execute the changed
+installed smoke through a fresh stdio server.
+
+A read-only reinspection of the retained eight-well BBBC022 matched pilot
+(`benchmark/results/matched_bbbc022_20260923_rc5/`) found both the warm-up and
+timed measured receipts valid under the current receipt inspector, with no
+retained-evidence warnings. Each outcome-scope receipt declares and observes
+eight axes. The inspector verifies the receipt's source, observation, and job
+evidence, **not** the raw SQLite output values; those remain local to the
+original pilot and its report. The pilot's one timed repetition and unequal
+native/OpenHCS lifecycle boundaries do not establish a general speedup or
+throughput ranking. This retrospective check supports the wrapper's retained
+evidence path, not the changed installed MCP smoke or a new performance claim.
+The retained pilot report itself records eight declared/output files on each
+side and zero database/image differences in both repetitions, but a fresh
+read-only rerun of the strict SQLite/properties comparator did not complete
+within a 90-second bound on this swap-saturated host. Its timeout produced no
+comparison verdict; do not relabel the historical report as newly reverified
+value parity.
+The 32 retained SQLite/CPA output files (eight native and eight OpenHCS files
+in each of two repetitions) were independently hashed against that report's
+per-file SHA-256 inventory: every digest matched, with no missing or
+unexpected `.db`/`.properties` file. Thus the report still refers to these
+exact local output bytes, although its semantic comparison has not been
+re-executed on the current host.
+
+### 26 September current-byte verification continuation
+
+After the strict axis-count and analysis-side streaming changes, the focused
+benchmark-control, measured-run, well-throughput, installed-smoke ownership,
+plate-streaming, and viewer-streaming unit suite passed **144/144**. A small
+live synthetic ZMQ integration test passed **1/1**: ordinary source-backed
+submission exported its observation, and the in-process MCP finalizer retained
+a receipt with expected and observed axis counts of one. This does not assert
+biology or benchmark speedup.
+
+A fresh local `openhcs-0.8.6` wheel was built from these checkout bytes
+(SHA-256 `312adba0eed8959d742b45e4785ca631e7fede1126213f34fcf502e9090c03d4`),
+installed into an isolated target outside the source tree, and confirmed as
+the imported package. The opt-in installed-client smoke then completed with
+exit code zero through a **fresh stdio MCP process** and the installed CLI.
+It verified full-profile expert capability discovery, strict rejection of a
+boolean `expected_axis_count` before job lookup, rejection of a deliberate
+two-axis mismatch without a receipt, successful one-axis finalization and
+inspection, and distinct ordinary execution IDs for MCP and CLI runs
+(`f2917e7c-71db-4ab6-a2bf-0e7b642c8f5b` and
+`35a6fd43-d8f7-4413-8ec3-04b0d0007a16`). This closes the earlier
+fresh-process **local installed-client** gap for the changed field. It is not
+CI on an exact published head, a 30-workflow matched comparison, output-value
+parity, or a performance claim. Host swap remained full despite about 12 GiB
+available RAM; the successful smoke is direct evidence for this bounded path,
+not proof of memory safety under larger workloads.

@@ -6402,6 +6402,8 @@ def test_mcp_dev_client_stream_plate_files_command_projects_tool_arguments():
             "5555",
             "--viewer-transport-mode",
             "ipc",
+            "--roi-parent-label",
+            "97",
             "--fresh-viewer",
         )
     )
@@ -6414,6 +6416,7 @@ def test_mcp_dev_client_stream_plate_files_command_projects_tool_arguments():
             "images/A01_s001_w1_z001_t001.tif",
             "images_results/A01_w1_segmentation_masks_step0_rois.roi.zip",
         ],
+        "roi_parent_labels": [97],
         "microscope_type": "auto",
         "pattern_format": None,
         "kind": "all",
@@ -6435,6 +6438,7 @@ def test_mcp_dev_client_stream_plate_files_command_projects_tool_arguments():
 
     assert query_call.arguments["file_paths"] is None
     assert query_call.arguments["kind"] == "image"
+    assert query_call.arguments["roi_parent_labels"] is None
 
     alias_args = parser.parse_args(
         (
@@ -7161,6 +7165,8 @@ def test_mcp_dev_client_selected_plate_stream_command_projects_tool_arguments():
             "5555",
             "--viewer-transport-mode",
             "ipc",
+            "--roi-parent-label",
+            "98",
             "--fresh-viewer",
             "--timeout-ms",
             "1234",
@@ -7175,6 +7181,7 @@ def test_mcp_dev_client_selected_plate_stream_command_projects_tool_arguments():
             "images/A01_s001_w1_z001_t001.tif",
             "images_results/A01_w1_segmentation_masks_step0_rois.roi.zip",
         ],
+        "roi_parent_labels": [98],
         "microscope_type": "auto",
         "pattern_format": None,
         "kind": "all",
@@ -7196,6 +7203,7 @@ def test_mcp_dev_client_selected_plate_stream_command_projects_tool_arguments():
 
     assert query_call.arguments["file_paths"] is None
     assert query_call.arguments["kind"] == "image"
+    assert query_call.arguments["roi_parent_labels"] is None
 
 
 def test_mcp_dev_client_selected_plate_sample_command_renders_compact_summary():
@@ -12827,6 +12835,8 @@ def test_mcp_viewer_snapshot_binding_projects_request():
     if importlib.util.find_spec("mcp") is None:
         return
 
+    from openhcs.runtime.viewer_protocol import ViewerWindowGeometry
+
     class _ViewerWindowService:
         def __init__(self):
             self.snapshot_requests = []
@@ -12839,6 +12849,7 @@ def test_mcp_viewer_snapshot_binding_projects_request():
                 output_dir_path=request.output_dir_path,
                 capture_scope=request.capture_scope,
                 captured=True,
+                window_geometry=ViewerWindowGeometry((1200, 800), (900, 650)),
             )
 
     viewer_window_service = _ViewerWindowService()
@@ -12866,12 +12877,49 @@ def test_mcp_viewer_snapshot_binding_projects_request():
     assert payload["captured"] is True
     assert payload["output_dir_path"] == "/tmp/snapshots"
     assert payload["capture_scope"] == "window"
+    assert payload["window_geometry"] == {
+        "window_size": [1200, 800],
+        "canvas_size": [900, 650],
+    }
     assert viewer_window_service.snapshot_requests
     request = viewer_window_service.snapshot_requests[0]
     assert request.connection.port == 5555
     assert request.timeout_ms == 1000
     assert request.output_dir_path == "/tmp/snapshots"
     assert request.capture_scope is WindowSnapshotCaptureScope.WINDOW
+
+
+def test_mcp_viewer_state_exposes_live_canvas_geometry():
+    if importlib.util.find_spec("mcp") is None:
+        return
+
+    from openhcs.agent.dto.viewer import ViewerWindowStateResult
+    from openhcs.runtime.viewer_protocol import ViewerWindowGeometry
+
+    class _ViewerWindowService:
+        def window_state(self, request):
+            return ViewerWindowStateResult(
+                schema_version=SCHEMA_VERSION,
+                connection=request.connection,
+                observed=True,
+                window_geometry=ViewerWindowGeometry((1200, 800), (900, 650)),
+            )
+
+    built = server.build_server(
+        SimpleNamespace(viewer_window_service=_ViewerWindowService())
+    )
+
+    async def call_state_tool():
+        return await asyncio.wait_for(
+            built.call_tool("openhcs_get_viewer_window_state", {"port": 5555}),
+            timeout=2,
+        )
+
+    payload = json.loads(_direct_tool_text(asyncio.run(call_state_tool())))
+    assert payload["window_geometry"] == {
+        "window_size": [1200, 800],
+        "canvas_size": [900, 650],
+    }
 
 
 def test_mcp_viewer_close_binding_requires_confirmation_and_projects_result():

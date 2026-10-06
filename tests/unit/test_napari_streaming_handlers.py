@@ -1040,6 +1040,54 @@ def test_napari_intensity_window_matches_projected_and_scalar_axis_indices():
     }
 
 
+def test_napari_intensity_window_uses_sparse_route_local_channel_indices():
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+    route_key = "sparse-channel-route"
+    presentation = _axis_presentation(
+        layer_key=route_key,
+        projected_axis_components=("channel",),
+        component_values={"channel": [1, 2, 3]},
+    )
+    presentation = replace(
+        presentation,
+        projection=replace(
+            presentation.projection,
+            routed_component_values={"channel": [1, 3]},
+            routed_component_coordinates=((1,), (3,)),
+        ),
+    )
+    server, layer = _intensity_window_server(
+        route_key,
+        presentation,
+        (
+            _layer_item({"channel": 1}, data=np.array([[10.0, 20.0]])),
+            _layer_item({"channel": 3}, data=np.array([[30.0, 40.0]])),
+        ),
+    )
+
+    response = _apply_intensity_window(
+        napari_viewer_server,
+        server,
+        route_key,
+        {"channel": 1},
+    )
+
+    assert response["status"] == "success"
+    assert response["matched_payload_count"] == 1
+    assert response["matched_payload_identities"][0]["components"] == {"channel": 3}
+    assert response["resolved_limits"] == (30.0, 40.0)
+    assert layer.contrast_limits == (30.0, 40.0)
+
+    rejected = _apply_intensity_window(
+        napari_viewer_server,
+        server,
+        route_key,
+        {"channel": 2},
+    )
+    assert rejected["status"] == "error"
+    assert "outside the route-local extent 2" in rejected["message"]
+
+
 @pytest.mark.parametrize(
     ("axis_indices", "message_fragment"),
     (
@@ -2440,6 +2488,83 @@ def test_napari_navigation_control_selects_visible_layer_and_route_local_axes():
     assert response["current_step"] == (0, 1, 0, 0)
     assert response["layers"][0]["selected"] is True
     assert response["layers"][0]["visible"] is True
+
+
+def test_napari_navigation_skips_unrouted_values_in_shared_axis():
+    napari_viewer_server = pytest.importorskip("openhcs.runtime.napari_viewer_server")
+
+    viewer = _FakeViewer()
+    viewer.dims.current_step = (0, 0, 0)
+    viewer.dims.ndim = 3
+    layer = type(
+        "Layer",
+        (),
+        {
+            "name": "Sparse Z stack",
+            "data": np.zeros((4, 20, 20), dtype=np.uint8),
+            "scale": (1.0, 1.0, 1.0),
+            "translate": (0.0, 0.0, 0.0),
+            "visible": True,
+        },
+    )()
+    viewer.layers.append(layer)
+    presentation = _axis_presentation(
+        layer_key="sparse-z",
+        projected_axis_components=("z_index",),
+        component_values={"z_index": [1, 2, 3, 6]},
+    )
+    presentation = replace(
+        presentation,
+        projection=replace(
+            presentation.projection,
+            routed_component_values={"z_index": [1, 3, 6]},
+            routed_component_coordinates=((1,), (3,), (6,)),
+        ),
+    )
+    server = type("Server", (), {})()
+    server.viewer = viewer
+    server.napari_window_title = "OpenHCS Napari Viewer"
+    server.layer_route_state = NapariLayerRouteStateStore.empty()
+    server.layer_route_state.set_title("sparse-z", "Sparse Z stack")
+    server.layer_route_state.set_layer("sparse-z", layer)
+    server.layer_route_state.set_dimension_state(
+        "sparse-z",
+        NapariDimensionLayerState(
+            labels={"z_index": ["Z 1", "Z 2", "Z 3", "Z 6"]},
+            presentation=presentation,
+        ),
+    )
+    server.component_groups = NapariComponentGroupStore()
+    server.display_pipeline = napari_viewer_server.NapariLayerDisplayPipeline(server)
+    action = napari_viewer_server.NapariNavigationControlMessageAction()
+
+    for route_index, expected_viewer_index in ((1, 2), (2, 3)):
+        response = action.handle(
+            server,
+            {
+                "type": "navigate",
+                ViewerControlResponseField.PAYLOAD.value: ViewerNavigationControlOptions(
+                    route_key="sparse-z",
+                    axis_indices={"z_index": route_index},
+                ),
+            },
+        )
+        assert response["status"] == "success"
+        assert response["current_step"][0] == expected_viewer_index
+
+    rejected = action.handle(
+        server,
+        {
+            "type": "navigate",
+            ViewerControlResponseField.PAYLOAD.value: ViewerNavigationControlOptions(
+                route_key="sparse-z",
+                axis_indices={"z_index": 3},
+            ),
+        },
+    )
+    assert rejected["status"] == "error"
+    assert "route-local extent 3" in rejected["message"]
+    assert viewer.dims.current_step[0] == 3
 
 
 def test_napari_navigation_visibility_change_preserves_selected_label_route():
@@ -4743,6 +4868,55 @@ def test_napari_layer_route_state_store_keeps_layer_labels_and_timers_together()
     assert timer.stopped
     assert store.pop_pending_update("nuclei") is pending_update
     assert store.dimension_state_for("missing").labels == {}
+
+
+def test_napari_settlement_isolates_old_route_failure_from_new_cycle():
+    store = NapariLayerRouteStateStore.empty()
+    store.record_update_error("old-route", ValueError("old invalid plane"))
+    with pytest.raises(RuntimeError, match="old-route: old invalid plane"):
+        store.require_updates_succeeded()
+
+    store.begin_settlement()
+    store.reset_settlement()
+    fresh_update = NapariPendingLayerUpdate.from_semantics(
+        timer=_FakeTimer(),
+        data_type=StreamingDataType.IMAGE,
+        semantics=ViewerComponentAxisSemanticsAuthority.empty(),
+        display_config=NapariDisplayConfig(),
+    )
+    store.set_pending_update("fresh-route", fresh_update)
+    settlement = store.begin_settlement()
+    claimed = settlement.begin_next()
+    assert claimed == ("fresh-route", fresh_update)
+    settlement.begin_active_work_unit("fresh-route")
+    settlement.complete_active("fresh-route")
+
+    store.require_updates_succeeded()
+    assert store.update_failure_message() == "old-route: old invalid plane"
+    assert store.settlement_failure_message() is None
+
+    store.reset_settlement()
+    store.record_update_error("fresh-route", ValueError("new invalid plane"))
+    store.reset_settlement()  # another accepted batch in the same intake cycle
+    with pytest.raises(RuntimeError, match="fresh-route: new invalid plane"):
+        store.require_updates_succeeded()
+
+
+def test_napari_new_pending_route_starts_cycle_after_terminal_settlement():
+    store = NapariLayerRouteStateStore.empty()
+    store.record_update_error("old-route", ValueError("old failure"))
+    store.begin_settlement().fail()
+    fresh_update = NapariPendingLayerUpdate.from_semantics(
+        timer=_FakeTimer(),
+        data_type=StreamingDataType.IMAGE,
+        semantics=ViewerComponentAxisSemanticsAuthority.empty(),
+        display_config=NapariDisplayConfig(),
+    )
+
+    store.set_pending_update("fresh-route", fresh_update)
+
+    assert store.update_failure_message() == "old-route: old failure"
+    assert store.settlement_failure_message() is None
 
 
 def test_napari_settle_rejects_recorded_layer_update_failure():

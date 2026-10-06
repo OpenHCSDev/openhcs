@@ -155,6 +155,20 @@ class SelectedPlateFileFilterOptions(SelectedPlateTargetOptions):
     limit: int = 1
 
 
+@dataclass(frozen=True, kw_only=True)
+class ROIArchiveSelectionOptions:
+    """Shared parent-label selection for headless and UI-owned ROI streaming."""
+
+    roi_parent_labels: tuple[int, ...] = ()
+
+    def roi_selection_tool_arguments(self) -> dict[str, JsonValue]:
+        return {
+            "roi_parent_labels": (
+                list(self.roi_parent_labels) if self.roi_parent_labels else None
+            )
+        }
+
+
 @dataclass(frozen=True, slots=True)
 class PlateInspectionBounds:
     """Payload bounds for potentially large plate folder inspections."""
@@ -375,7 +389,7 @@ class PlateFileQueryRequest:
 
 
 @dataclass(frozen=True, slots=True)
-class PlateFileStreamRequest:
+class PlateFileStreamRequest(ROIArchiveSelectionOptions):
     """Stream image or ROI files exposed by a local plate inventory to a viewer."""
 
     plate_path: str
@@ -398,6 +412,7 @@ class PlateFileStreamRequest:
         *,
         plate_path: str,
         file_paths: list[str] | None = None,
+        roi_parent_labels: list[int] | None = None,
         microscope_type: str = PlateInspectionDefaults.MICROSCOPE_AUTO,
         pattern_format: str | None = None,
         kind: PlateFileKindSelection = PlateFileKind.IMAGE,
@@ -415,6 +430,7 @@ class PlateFileStreamRequest:
         return cls(
             plate_path=plate_path,
             file_paths=tuple(file_paths or ()),
+            roi_parent_labels=tuple(roi_parent_labels or ()),
             microscope_type=microscope_type,
             pattern_format=pattern_format,
             kind=PlateFileInventoryQuery.kind_from_value(kind),
@@ -436,6 +452,7 @@ class PlateFileStreamRequest:
         return {
             "plate_path": self.plate_path,
             "file_paths": list(self.file_paths) if self.file_paths else None,
+            **self.roi_selection_tool_arguments(),
             "microscope_type": self.microscope_type,
             "pattern_format": self.pattern_format,
             "kind": PlateFileInventoryQuery.kind_value(self.kind),
@@ -682,7 +699,10 @@ class SelectedPlateImageSampleRequest(SelectedPlateTargetOptions):
 
 
 @dataclass(frozen=True, slots=True)
-class SelectedPlateFileStreamRequest(SelectedPlateFileFilterOptions):
+class SelectedPlateFileStreamRequest(
+    SelectedPlateFileFilterOptions,
+    ROIArchiveSelectionOptions,
+):
     """Stream files from the plate currently selected in the UI."""
 
     file_paths: tuple[str, ...] = ()
@@ -695,6 +715,7 @@ class SelectedPlateFileStreamRequest(SelectedPlateFileFilterOptions):
         cls,
         *,
         file_paths: list[str] | None = None,
+        roi_parent_labels: list[int] | None = None,
         microscope_type: str = PlateInspectionDefaults.MICROSCOPE_AUTO,
         pattern_format: str | None = None,
         kind: PlateFileKindSelection = PlateFileKind.IMAGE,
@@ -711,6 +732,7 @@ class SelectedPlateFileStreamRequest(SelectedPlateFileFilterOptions):
     ) -> "SelectedPlateFileStreamRequest":
         return cls(
             file_paths=tuple(file_paths or ()),
+            roi_parent_labels=tuple(roi_parent_labels or ()),
             microscope_type=microscope_type,
             pattern_format=pattern_format,
             kind=PlateFileInventoryQuery.kind_from_value(kind),
@@ -731,6 +753,7 @@ class SelectedPlateFileStreamRequest(SelectedPlateFileFilterOptions):
     def as_tool_arguments(self) -> dict[str, JsonValue]:
         return {
             "file_paths": list(self.file_paths) if self.file_paths else None,
+            **self.roi_selection_tool_arguments(),
             "microscope_type": self.microscope_type,
             "pattern_format": self.pattern_format,
             "kind": PlateFileInventoryQuery.kind_value(self.kind),
@@ -754,6 +777,7 @@ class SelectedPlateFileStreamRequest(SelectedPlateFileFilterOptions):
             plate_path=plate_path,
             context_plate_path=context_plate_path,
             file_paths=self.file_paths,
+            roi_parent_labels=self.roi_parent_labels,
             microscope_type=microscope_type,
             pattern_format=self.pattern_format,
             kind=self.kind,

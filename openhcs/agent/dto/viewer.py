@@ -48,6 +48,7 @@ from openhcs.runtime.viewer_controls import (
     ViewerShapePayloadProjection,
     ViewerStateControlOptions,
 )
+from openhcs.runtime.viewer_protocol import ViewerWindowGeometry
 from openhcs.serialization.json import to_jsonable
 
 VIEWER_WINDOW_CONTROL_TIMEOUT_MS_DEFAULT = 5000
@@ -904,6 +905,7 @@ class ViewerWindowSnapshotResult(
     viewer: ViewerWindowDescriptor | None = None
     width: int | None = None
     height: int | None = None
+    window_geometry: ViewerWindowGeometry | None = None
     response: JsonObject = field(default_factory=dict)
 
 
@@ -926,6 +928,7 @@ class ViewerWindowStateResult(
     component_group_count: int = 0
     component_item_count: int = 0
     native_viewport: ViewerNativeViewportPresentation | None = None
+    window_geometry: ViewerWindowGeometry | None = None
     response: JsonObject = field(default_factory=dict)
 
     @classmethod

@@ -51,17 +51,17 @@ from openhcs.core.runtime_object_label_domains import (
     ObjectLabelDomainScope,
 )
 from openhcs.core.runtime_object_labels import (
+    ObjectLabelPayload,
     ObjectLabelRepresentation,
     ObjectLabelSet,
-    ObjectLabelPayload,
     ObjectLabelVariantData,
 )
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisValueProjection,
 )
-from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
 from openhcs.core.runtime_slice_projection import RuntimeProjectionPlaneMetadata
+from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
 from openhcs.core.runtime_tabular_values import FieldSpec
 from openhcs.core.source_image_provenance import (
     SourceImageIdentity,
@@ -74,6 +74,9 @@ from openhcs.core.source_metadata import (
 )
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
+from openhcs.processing.backends.analysis.consolidate_analysis_results import (
+    analysis_file_path_is_included,
+)
 from openhcs.processing.materialization import (
     CsvOptions,
     ImageFileOptions,
@@ -85,14 +88,11 @@ from openhcs.processing.materialization import (
     csv_only,
     json_materializer,
     json_only,
-    materialize,
     materialization_outputs,
+    materialize,
     tabular_field_names_from_materialization,
     text_only,
     tiff_stack,
-)
-from openhcs.processing.backends.analysis.consolidate_analysis_results import (
-    analysis_file_path_is_included,
 )
 from openhcs.processing.materialization.core import (
     MaterializationInputItem,
@@ -1322,6 +1322,10 @@ def test_roi_materialization_extracts_each_plane_from_object_label_stack() -> No
         "/tmp/A01_Nuclei_step3_segmentation_summary.txt",
         "memory",
     )
+    assert (
+        "Segmentation ROI objects before archive encoding: 2 "
+        "(not a cell count or polygon count)"
+    ) in summary
     assert "Spatial dimensions: 2D" in summary
     assert "Projected source planes: 2" in summary
     assert "Z-planes" not in summary

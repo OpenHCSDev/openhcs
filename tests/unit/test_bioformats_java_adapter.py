@@ -5,8 +5,15 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 import tifffile
+from polystore.base import ImageSamplingRequest
+from polystore.bioformats_java import (
+    BioFormatsJavaContext,
+    BioFormatsOpenedReader,
+    sample_bioformats_plane,
+)
 
 from openhcs.constants.constants import AllComponents, Backend
+from openhcs.core.source_metadata import SourceVoxelSpacing
 from openhcs.microscopes.bioformats_adapter import (
     BioFormatsContainerOpenError,
     BioFormatsDatasetAmbiguityError,
@@ -14,9 +21,6 @@ from openhcs.microscopes.bioformats_adapter import (
     BioFormatsPackedRgbSeriesExclusion,
     SourcePlaneStoreAdapter,
 )
-from polystore.bioformats_java import BioFormatsOpenedReader, BioFormatsJavaContext
-from polystore.bioformats_java import sample_bioformats_plane
-from polystore.base import ImageSamplingRequest
 
 
 class JavaValue:
@@ -28,11 +32,15 @@ class JavaValue:
 
 
 class PhysicalSize:
-    def __init__(self, value):
+    def __init__(self, value, unit="µm"):
         self._value = value
+        self._unit = unit
 
     def value(self):
         return self._value
+
+    def unit(self):
+        return SimpleNamespace(getSymbol=lambda: self._unit)
 
 
 @dataclass
@@ -106,6 +114,9 @@ class FakeBioFormatsMetadata:
         return self.channel_names[channel]
 
     def getPixelsPhysicalSizeX(self, image):
+        return None if self.pixel_size is None else PhysicalSize(self.pixel_size)
+
+    def getPixelsPhysicalSizeY(self, image):
         return None if self.pixel_size is None else PhysicalSize(self.pixel_size)
 
 
@@ -501,6 +512,9 @@ def test_java_adapter_retains_typed_packed_rgb_ancillary_exclusion(
         def getPixelsPhysicalSizeX(self, image):
             return PhysicalSize(0.65) if image == 0 else None
 
+        def getPixelsPhysicalSizeY(self, image):
+            return PhysicalSize(0.65) if image == 0 else None
+
     class _ScalarAndRgbReader(FakeBioFormatsReader):
         def getSeriesCount(self):
             return 2
@@ -532,6 +546,11 @@ def test_java_adapter_retains_typed_packed_rgb_ancillary_exclusion(
 
     assert dataset.pixel_size == 0.65
     assert len(dataset.candidates) == 2
+    assert all(
+        SourceVoxelSpacing.from_source_metadata(candidate.metadata).values_zyx
+        == (0.65, 0.65)
+        for candidate in dataset.candidates
+    )
     assert {candidate.store_identity.image_id for candidate in dataset.candidates} == {
         "Image:scalar"
     }
@@ -677,6 +696,11 @@ def test_java_adapter_projects_one_czi_ome_spw_metadata(
 
     assert dataset.identity.value == "Plate:0"
     assert dataset.pixel_size == 0.65
+    assert all(
+        SourceVoxelSpacing.from_source_metadata(candidate.metadata).values_zyx
+        == (0.65, 0.65)
+        for candidate in dataset.candidates
+    )
     assert [
         candidate.declared_address.value_for(AllComponents.CHANNEL)
         for candidate in dataset.candidates
@@ -719,6 +743,10 @@ def test_java_adapter_normalizes_uncalibrated_pixels_to_unit_spacing(
     dataset = SourcePlaneStoreAdapter.discover_dataset(tmp_path)
 
     assert dataset.pixel_size == 1.0
+    assert all(
+        not SourceVoxelSpacing.from_source_metadata(candidate.metadata).has_values
+        for candidate in dataset.candidates
+    )
 
 
 def test_java_adapter_aggregates_independent_czi_containers_with_one_plate_id(

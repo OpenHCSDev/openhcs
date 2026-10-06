@@ -3030,7 +3030,8 @@ def _write_roi_zip(
             )
 
     summary = (
-        f"Segmentation ROIs: {total_roi_count} cells\n"
+        f"Segmentation ROI objects before archive encoding: {total_roi_count} "
+        "(not a cell count or polygon count)\n"
         "Spatial dimensions: 2D\n"
         f"Projected source planes: {len(materialization_input.items)}\n"
     )

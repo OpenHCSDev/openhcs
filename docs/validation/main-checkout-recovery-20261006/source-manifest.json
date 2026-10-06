@@ -1,0 +1,680 @@
+{
+  "source_checkout": "/home/ts/code/projects/openhcs",
+  "base": "2bc579ca9e5d3d70a130bec96ee6f001f3dd5c74",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 24851,
+      "sha256": "3552466a497d562f7ff0f674a558ee65017800cc847c9bc4bf1cd7b7b9c64971"
+    },
+    {
+      "path": "benchmark/cellprofiler_benchmark_cli.py",
+      "bytes": 38563,
+      "sha256": "d96bc1d4c2f7d10ab6bb56432fa863f07afc851ba32c0a51ad3f7cc8fb0f73cd"
+    },
+    {
+      "path": "benchmark/contracts/control.py",
+      "bytes": 5049,
+      "sha256": "e0b2f7ca268368ecc5d38d6661bfe12bfa5a29dc5e24337cf10382ef37a24795"
+    },
+    {
+      "path": "benchmark/contracts/measured_run_receipt.py",
+      "bytes": 6786,
+      "sha256": "09f0c01e703ffecd274b76a4e6faf0bfaeafac0a6221f8973a1801649ec081d3"
+    },
+    {
+      "path": "benchmark/control_service.py",
+      "bytes": 5484,
+      "sha256": "048e461f8900710c29d791e77fae6202915c9eec1f71540aed0521077ff79ab3"
+    },
+    {
+      "path": "benchmark/haase_blind_task_presets_20260927.md",
+      "bytes": 10718,
+      "sha256": "59bf0f21dfc583176344e6af633e23cd526de5463fe78e1bc29d18a95534f1da"
+    },
+    {
+      "path": "benchmark/openhcs_measured_run.py",
+      "bytes": 19277,
+      "sha256": "86d0d9a522063d54980b4277087bb12ae1e76ab0f03e4fb6b2ec09da2f8405da"
+    },
+    {
+      "path": "benchmark/prepare_haase_cells3d_ome.py",
+      "bytes": 1545,
+      "sha256": "20931c68a389c319e7cd2c543e2b871023165a05220d3065df9ce41f5546fee3"
+    },
+    {
+      "path": "benchmark/prepare_liz_retina_blind.py",
+      "bytes": 6202,
+      "sha256": "ddea87b37b52b277c59a3fe78a77762504d98c4c9dc353f9b239231350640d21"
+    },
+    {
+      "path": "benchmark/score_instance_labels.py",
+      "bytes": 4062,
+      "sha256": "19576ade67dd1a00775bd780cbcdee9d4c9d7a136c25e54bf1bdc282c764f97d"
+    },
+    {
+      "path": "benchmark/score_point_centres.py",
+      "bytes": 3965,
+      "sha256": "a80eecefc791dd755444892cde5816df8c6a6bad15b9dd350fadfd23d6156af8"
+    },
+    {
+      "path": "docs/plans/benchmark_pipeline_wrapper_20260922.md",
+      "bytes": 32735,
+      "sha256": "5b376a34c35b5b0c1838ac24635f0c06693b537a4bfcb81b80c954c515b76f42"
+    },
+    {
+      "path": "openhcs/agent/capabilities.py",
+      "bytes": 153425,
+      "sha256": "35e4d715f9cee21cff54cd101039d2948c71fe0315b731758d9cf32e351936f7"
+    },
+    {
+      "path": "openhcs/agent/dto/plate.py",
+      "bytes": 45401,
+      "sha256": "9d8591f66d377daa4909fcb0c1dbde42dd02c3f7a279126f059f3091229de22d"
+    },
+    {
+      "path": "openhcs/agent/dto/viewer.py",
+      "bytes": 47203,
+      "sha256": "d57a1ca059ff0dbf070601bbce58c92ead4a7ba59b57d6e61072eabbd97e5854"
+    },
+    {
+      "path": "openhcs/agent/image_analysis_qa.py",
+      "bytes": 24548,
+      "sha256": "ed55eaeb3926dba8693ed572fa2b2fde55199b8479a181afc1d57c727a4d4986"
+    },
+    {
+      "path": "openhcs/agent/services/execution_session_service.py",
+      "bytes": 59211,
+      "sha256": "edaf82c358c8d18b0e005917bf277dc481a3aeb56709e969658eafaf0fa7aa55"
+    },
+    {
+      "path": "openhcs/agent/services/llm_context_service.py",
+      "bytes": 68900,
+      "sha256": "778fd32acd4fd5d3de420a7cceacfa6219b3ed825366e0eb99b3f674edf3fafa"
+    },
+    {
+      "path": "openhcs/agent/services/plate_streaming_service.py",
+      "bytes": 24215,
+      "sha256": "ba00c331fe049a4a551b8e3abb54ce94237c070e83eeb76559331468ceb1f2bd"
+    },
+    {
+      "path": "openhcs/agent/services/viewer_window_service.py",
+      "bytes": 106252,
+      "sha256": "0243e3ad430d824992fed18de1b291b7d8a011ffb5236b414bd95b0ffebf8cca"
+    },
+    {
+      "path": "openhcs/core/function_contract_metadata.py",
+      "bytes": 2234,
+      "sha256": "87c1371f4d4df2b1b0a1e3bc950947e16ea12917e7700e63bac39b875e072882"
+    },
+    {
+      "path": "openhcs/core/function_reference.py",
+      "bytes": 14913,
+      "sha256": "5d791b11744cbde31a7874b053b09e8f1f862b8266093778b405aa613c889abb"
+    },
+    {
+      "path": "openhcs/core/source_projection.py",
+      "bytes": 51593,
+      "sha256": "c8052fa7f64e60c7306482da5e808a3cb8116dc291460375c7a15d7e8702a69d"
+    },
+    {
+      "path": "openhcs/core/steps/function_output_identity.py",
+      "bytes": 41292,
+      "sha256": "9eb60be3d7c0024608b94a62b9e752ad320c03fcd4430f42ee3e3fb043b1a5ce"
+    },
+    {
+      "path": "openhcs/core/steps/stream_component_semantics.py",
+      "bytes": 29968,
+      "sha256": "7674de2dc3db046b6b7d161f257d2719a30909838cb2363acec4f681870a3196"
+    },
+    {
+      "path": "openhcs/core/viewer_streaming_service.py",
+      "bytes": 34866,
+      "sha256": "042a6daa80a93b0b907440a8520222129aef6e931f0b679467cdc1baf38ea2d3"
+    },
+    {
+      "path": "openhcs/mcp/dev_client_commands/plate.py",
+      "bytes": 33995,
+      "sha256": "42b576f59f04fce3246a24f6c996dd8da68aea6553010730eaf6beb1978f961b"
+    },
+    {
+      "path": "openhcs/mcp/dev_client_core.py",
+      "bytes": 81755,
+      "sha256": "4dd55b227c6cfec1b1484b7cc136e1b1ffc414c2e7c7276f1e5f41a31e6e0162"
+    },
+    {
+      "path": "openhcs/mcp/server.py",
+      "bytes": 92308,
+      "sha256": "bbaa9b56fb5ff0c4d713ae75cf75dc561b04d4ba277a16db3e2acdc33063e5fd"
+    },
+    {
+      "path": "openhcs/microscopes/bioformats_adapter.py",
+      "bytes": 61615,
+      "sha256": "1c8f92a6d835c1aefa4a14dee3fd2b6d70dbbd560c698f1df3ec1bf9e3ba381b"
+    },
+    {
+      "path": "openhcs/processing/backends/analysis/count_cells_simple.py",
+      "bytes": 62368,
+      "sha256": "1f062b985689d792b2a916d7e523232024c74de95e586e7ff146fb294d4e1e5c"
+    },
+    {
+      "path": "openhcs/processing/backends/lib_registry/registry_service.py",
+      "bytes": 17525,
+      "sha256": "7515b76d936e4239f08b2e564d0682d72c18ecda8d096a6d9b3c837ec5309b18"
+    },
+    {
+      "path": "openhcs/processing/custom_functions/manager.py",
+      "bytes": 23683,
+      "sha256": "818cbd94890d3e767093e55a06e5c2905637cb18c79ab6037166dda2b435c636"
+    },
+    {
+      "path": "openhcs/processing/custom_functions/runtime_registry.py",
+      "bytes": 19642,
+      "sha256": "eb746cceee3c5c3568bbad026aa8e9d2fed9d8b739bf58166d576b71797f7290"
+    },
+    {
+      "path": "openhcs/processing/custom_functions/source_namespace.py",
+      "bytes": 5812,
+      "sha256": "c921b5dfb8fe1a59eb4dea180d45be64e962d5b49f58f97236e053da93d63e40"
+    },
+    {
+      "path": "openhcs/processing/materialization/core.py",
+      "bytes": 139299,
+      "sha256": "6f737e3632cd832f1b757c703d7e84b976595c59fba19d6e7ba545aa490b55c4"
+    },
+    {
+      "path": "openhcs/runtime/napari_streaming_handlers.py",
+      "bytes": 72870,
+      "sha256": "fa80c1bf0f1cead67402634b44c31b35215c9f5f365d370f78d1d4a761f9b74c"
+    },
+    {
+      "path": "openhcs/runtime/napari_viewer_server.py",
+      "bytes": 229458,
+      "sha256": "5bc7b390c612090a885d84dad7d629a2b0d65635fb8886577a5fe6fae210e1c2"
+    },
+    {
+      "path": "openhcs/runtime/viewer_component_system.py",
+      "bytes": 59905,
+      "sha256": "b20a94327e6796f01cd785cb5caf5324e6892d9c7b4d8a05325755f0cb2b1b59"
+    },
+    {
+      "path": "openhcs/runtime/viewer_controls.py",
+      "bytes": 23532,
+      "sha256": "5d66623d623a6a69f9b3c0c79b488662a68e104a8911a5685432d9312449262d"
+    },
+    {
+      "path": "openhcs/runtime/viewer_protocol.py",
+      "bytes": 62257,
+      "sha256": "0f4f5e8b2cb9f02c874b49bcd0639095325e2d9a731bd9a1cf2bcfbb5666c2c9"
+    },
+    {
+      "path": "packaging/codex/openhcs/skills/use-openhcs/SKILL.md",
+      "bytes": 11408,
+      "sha256": "912f7d96c5b4d16d530ab0c69c0674e94f71ab878785d81e7b30e3a5204bc388"
+    },
+    {
+      "path": "packaging/codex/openhcs/skills/use-openhcs/references/image-preprocessing.md",
+      "bytes": 3406,
+      "sha256": "95d4feea2959b5ceb6b936f1e805556c510d47e959bd5599fa72231a4c1e0986"
+    },
+    {
+      "path": "paper/plans/liz_retina_multimodel_validation_20260925.md",
+      "bytes": 73084,
+      "sha256": "ec3f68590dcfb0ce0e5880c1915331c36be24bdde0ce27e5655c2a92a369cfbd"
+    },
+    {
+      "path": "scripts/smoke_installed_mcp.py",
+      "bytes": 33180,
+      "sha256": "caf98b5eacca8f2c97483a220973974cc844baebb3a50b788b5524130e161bbc"
+    },
+    {
+      "path": "tests/integration/test_agent_observation_export_zmq.py",
+      "bytes": 21885,
+      "sha256": "f5b82ea3f7b08cd9206b97c0c71f9d9df73f2121d9411426868362bcf369223e"
+    },
+    {
+      "path": "tests/unit/agent/test_agent_services.py",
+      "bytes": 163517,
+      "sha256": "de0230716176c880f155bfd14ad088b4b34c353bc9278e666e05da15c727c14b"
+    },
+    {
+      "path": "tests/unit/agent/test_compile_inspection_latency.py",
+      "bytes": 3160,
+      "sha256": "37120e19e32f1ef089d17656a5fadf6779adbf8be8b17269f2ecef7bdcd9616e"
+    },
+    {
+      "path": "tests/unit/agent/test_mcp_server.py",
+      "bytes": 582090,
+      "sha256": "5e262033ff9525c392a35efcf56f4968a27a2f2224fbd35370f39026af2bb503"
+    },
+    {
+      "path": "tests/unit/agent/test_plate_streaming_service.py",
+      "bytes": 27710,
+      "sha256": "7271cba3c5eb575a8bdff02c3fc8f2b39fb9fc3688e1672800691814d2a882a6"
+    },
+    {
+      "path": "tests/unit/agent/test_progressive_authoring_context.py",
+      "bytes": 24417,
+      "sha256": "9d6637bd486d954525f65585c198a26ab972e1b740d3e07cd5bff39d394b169f"
+    },
+    {
+      "path": "tests/unit/test_benchmark_control.py",
+      "bytes": 55652,
+      "sha256": "74b1ea2e4533139b5259cedf0a87aecc2b0c0582b83acdb2b6a36280fa0d5223"
+    },
+    {
+      "path": "tests/unit/test_bioformats_java_adapter.py",
+      "bytes": 28983,
+      "sha256": "af9aef936b07e660e80cf31f74354079375965c18bab41e9b747faa3d70346ef"
+    },
+    {
+      "path": "tests/unit/test_bioformats_microscope_handler.py",
+      "bytes": 13177,
+      "sha256": "4cbb14f1bf73f21aced88b1841c00e1650ac003bc5be3bc2dd0740302e2f7e33"
+    },
+    {
+      "path": "tests/unit/test_bioformats_storage_backend.py",
+      "bytes": 5886,
+      "sha256": "85892816f66ded56b77e29353e1822a308891ae8e96f9cfbcdd4552a8d80859c"
+    },
+    {
+      "path": "tests/unit/test_count_cells_simple.py",
+      "bytes": 27952,
+      "sha256": "977eee2fbfccffcf5c1bbef5e845b5af6233910f7c89bb373d9e94495a21e69f"
+    },
+    {
+      "path": "tests/unit/test_function_runtime_source_projection.py",
+      "bytes": 180102,
+      "sha256": "95f24311cb6ef832f3fd06ac9d7b3bd9c86a49a891fefda787aaacf8091f4096"
+    },
+    {
+      "path": "tests/unit/test_materialization_core.py",
+      "bytes": 74800,
+      "sha256": "07f7447f3a7b3a6849b2a56de6cfb32c41371f883aa823eb2100516936efc8af"
+    },
+    {
+      "path": "tests/unit/test_napari_accepted_work_settlement.py",
+      "bytes": 10589,
+      "sha256": "40e4d32ce4f269f6f2d90eba4533e808f3af55a0416f502acead8b440c8218eb"
+    },
+    {
+      "path": "tests/unit/test_napari_streaming_handlers.py",
+      "bytes": 216283,
+      "sha256": "5af4079d22b442fffff92908c6028e1bfe224e17bdfcf43b42024b361f268123"
+    },
+    {
+      "path": "tests/unit/test_score_instance_labels.py",
+      "bytes": 1146,
+      "sha256": "14fb6fa623a3529d70d1e0bfb0e3df9600d0d08ff8af8c73d5fc5c7feecf93a3"
+    },
+    {
+      "path": "tests/unit/test_score_point_centres.py",
+      "bytes": 1250,
+      "sha256": "6640a37ee8d3303c69e7796f4e78d132a7a9c6c737133c1f47661455ccad50ba"
+    },
+    {
+      "path": "tests/unit/test_streaming_service.py",
+      "bytes": 44655,
+      "sha256": "3c47f3913a2045fd142fb68ab3e8a2310fb755ae6f5b02d02c11bf9984f83a98"
+    },
+    {
+      "path": "tests/unit/test_viewer_result_element_selection.py",
+      "bytes": 22370,
+      "sha256": "c02cd5b546d824aa06aa34ac8df834a8b68dc7f102bdb4ca6f77afb20159153c"
+    },
+    {
+      "path": "tests/unit/test_viewer_window_geometry.py",
+      "bytes": 1468,
+      "sha256": "c2784d38925a216a03bf936211f581321a9427b914c195fb58ee5fb6f2198704"
+    },
+    {
+      "path": "uv.lock",
+      "bytes": 1192183,
+      "sha256": "b8bb0bff44cd169c73e25cf60d81d3510ab6800ce023e11754ed68e78ae86d6f"
+    },
+    {
+      "path": "website/assets/gallery/current-neurite-result.webp",
+      "bytes": 61142,
+      "sha256": "e55ea2fda442740f58e93f4773419c53026faa4b3336d0148039ea996f65f551"
+    },
+    {
+      "path": "website/assets/gallery/release-media-record.json",
+      "bytes": 43281,
+      "sha256": "fffe771e55e88377e8c46a40ff81dbd3222d9cbb152842f5edce49d89ac23fa9"
+    },
+    {
+      "path": "website/assets/gallery/source-capture-evidence.json",
+      "bytes": 7700,
+      "sha256": "ae0d19fca99f3bb5e98eb299b044075b812cf414b4917216fa8233fa721e9c64"
+    },
+    {
+      "path": "website/assets/gallery/stitched-neurite-overview.webp",
+      "bytes": 99640,
+      "sha256": "537df1dbc4e2ccc3ae6b96245daf79a504dee29e8b8b498a7a2f12c2dd43bd0b"
+    }
+  ],
+  "excluded": [
+    "For Tristan.zip",
+    "Unconfirmed 302961.crdownload",
+    "benchmark/results/matched_batch_pilot_20260915/candidate_warmup/A01_s001_w1_z001_t001_Overlay.tiff",
+    "benchmark/results/matched_batch_pilot_20260915/candidate_warmup/A12_s001_w1_z001_t001_Overlay.tiff",
+    "benchmark/results/matched_batch_pilot_20260915/candidate_warmup/B01_s001_w1_z001_t001_Overlay.tiff",
+    "benchmark/results/matched_batch_pilot_20260915/candidate_warmup/B12_s001_w1_z001_t001_Overlay.tiff",
+    "benchmark/results/matched_batch_pilot_20260915/candidate_warmup/C01_s001_w1_z001_t001_Overlay.tiff",
+    "benchmark/results/matched_batch_pilot_20260915/candidate_warmup/C12_s001_w1_z001_t001_Overlay.tiff",
+    "benchmark/results/matched_batch_pilot_20260915/candidate_warmup/D01_s001_w1_z001_t001_Overlay.tiff",
+    "benchmark/results/matched_batch_pilot_20260915/candidate_warmup/D12_s001_w1_z001_t001_Overlay.tiff",
+    "benchmark/results/matched_batch_pilot_20260915/candidate_warmup/DefaultDB.db",
+    "benchmark/results/matched_batch_pilot_20260915/candidate_warmup/DefaultDB.properties",
+    "benchmark/results/matched_batch_pilot_20260915/events_-1.json.gz",
+    "benchmark/results/matched_batch_pilot_20260915/native_warmup/BBBC013_A01_s1_w1_Overlay.tiff",
+    "benchmark/results/matched_batch_pilot_20260915/native_warmup/BBBC013_A12_s1_w1_Overlay.tiff",
+    "benchmark/results/matched_batch_pilot_20260915/native_warmup/BBBC013_B01_s1_w1_Overlay.tiff",
+    "benchmark/results/matched_batch_pilot_20260915/native_warmup/BBBC013_B12_s1_w1_Overlay.tiff",
+    "benchmark/results/matched_batch_pilot_20260915/native_warmup/BBBC013_C01_s1_w1_Overlay.tiff",
+    "benchmark/results/matched_batch_pilot_20260915/native_warmup/BBBC013_C12_s1_w1_Overlay.tiff",
+    "benchmark/results/matched_batch_pilot_20260915/native_warmup/BBBC013_D01_s1_w1_Overlay.tiff",
+    "benchmark/results/matched_batch_pilot_20260915/native_warmup/BBBC013_D12_s1_w1_Overlay.tiff",
+    "benchmark/results/matched_batch_pilot_20260915/native_warmup/DefaultDB.db",
+    "benchmark/results/matched_batch_pilot_20260915/native_warmup/DefaultDB.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/candidate/-1/source_workspace_matched_pilot/results/BBBC022.db",
+    "benchmark/results/matched_bbbc022_20260923_rc2/candidate/-1/source_workspace_matched_pilot/results/BBBC022_Cells.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/candidate/-1/source_workspace_matched_pilot/results/BBBC022_Cytoplasm.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/candidate/-1/source_workspace_matched_pilot/results/BBBC022_Mitochondria.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/candidate/-1/source_workspace_matched_pilot/results/BBBC022_MitochondriaChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/candidate/-1/source_workspace_matched_pilot/results/BBBC022_Nuclei.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/candidate/-1/source_workspace_matched_pilot/results/BBBC022_Nucleoli.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/candidate/-1/source_workspace_matched_pilot/results/BBBC022_NucleoliChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/candidate_evidence/-1/observation.pkl",
+    "benchmark/results/matched_bbbc022_20260923_rc2/candidate_evidence/-1/submitted_global_config.py",
+    "benchmark/results/matched_bbbc022_20260923_rc2/candidate_evidence/-1/submitted_pipeline.py",
+    "benchmark/results/matched_bbbc022_20260923_rc2/candidate_evidence/-1/well_throughput_progress_events.csv",
+    "benchmark/results/matched_bbbc022_20260923_rc2/candidate_evidence/-1/well_throughput_step_timings.csv",
+    "benchmark/results/matched_bbbc022_20260923_rc2/candidate_evidence/-1/well_throughput_worker_lanes.csv",
+    "benchmark/results/matched_bbbc022_20260923_rc2/imported_pipeline.py",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native/-1/BBBC022.db",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native/-1/BBBC022_Cells.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native/-1/BBBC022_Cytoplasm.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native/-1/BBBC022_Mitochondria.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native/-1/BBBC022_MitochondriaChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native/-1/BBBC022_Nuclei.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native/-1/BBBC022_Nucleoli.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native/-1/BBBC022_NucleoliChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native/0/BBBC022.db",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native/0/BBBC022_Cells.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native/0/BBBC022_Cytoplasm.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native/0/BBBC022_Mitochondria.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native/0/BBBC022_MitochondriaChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native/0/BBBC022_Nuclei.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native/0/BBBC022_Nucleoli.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native/0/BBBC022_NucleoliChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_preparation/native_cellprofiler_headless/BBBC022_Analysis_Final.cppipe",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_preparation/native_cellprofiler_selected_source_workspace/openhcs_metadata.json.lock",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_shards/0/-1/BBBC022.db",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_shards/0/-1/BBBC022_Cells.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_shards/0/-1/BBBC022_Cytoplasm.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_shards/0/-1/BBBC022_Mitochondria.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_shards/0/-1/BBBC022_MitochondriaChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_shards/0/-1/BBBC022_Nuclei.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_shards/0/-1/BBBC022_Nucleoli.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_shards/0/-1/BBBC022_NucleoliChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_shards/0/0/BBBC022.db",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_shards/0/0/BBBC022_Cells.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_shards/0/0/BBBC022_Cytoplasm.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_shards/0/0/BBBC022_Mitochondria.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_shards/0/0/BBBC022_MitochondriaChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_shards/0/0/BBBC022_Nuclei.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_shards/0/0/BBBC022_Nucleoli.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_shards/0/0/BBBC022_NucleoliChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_shards/1/-1/BBBC022.db",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_shards/1/-1/BBBC022_Cells.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_shards/1/-1/BBBC022_Cytoplasm.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_shards/1/-1/BBBC022_Mitochondria.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_shards/1/-1/BBBC022_MitochondriaChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_shards/1/-1/BBBC022_Nuclei.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_shards/1/-1/BBBC022_Nucleoli.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_shards/1/-1/BBBC022_NucleoliChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_shards/1/0/BBBC022.db",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_shards/1/0/BBBC022_Cells.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_shards/1/0/BBBC022_Cytoplasm.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_shards/1/0/BBBC022_Mitochondria.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_shards/1/0/BBBC022_MitochondriaChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_shards/1/0/BBBC022_Nuclei.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_shards/1/0/BBBC022_Nucleoli.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/native_shards/1/0/BBBC022_NucleoliChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc2/source_workspace/openhcs_metadata.json.lock",
+    "benchmark/results/matched_bbbc022_20260923_rc3/candidate/-1/source_workspace_matched_pilot/results/BBBC022.db",
+    "benchmark/results/matched_bbbc022_20260923_rc3/candidate/-1/source_workspace_matched_pilot/results/BBBC022_Cells.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/candidate/-1/source_workspace_matched_pilot/results/BBBC022_Cytoplasm.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/candidate/-1/source_workspace_matched_pilot/results/BBBC022_Mitochondria.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/candidate/-1/source_workspace_matched_pilot/results/BBBC022_MitochondriaChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/candidate/-1/source_workspace_matched_pilot/results/BBBC022_Nuclei.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/candidate/-1/source_workspace_matched_pilot/results/BBBC022_Nucleoli.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/candidate/-1/source_workspace_matched_pilot/results/BBBC022_NucleoliChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/candidate/0/source_workspace_matched_pilot/results/BBBC022.db",
+    "benchmark/results/matched_bbbc022_20260923_rc3/candidate/0/source_workspace_matched_pilot/results/BBBC022_Cells.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/candidate/0/source_workspace_matched_pilot/results/BBBC022_Cytoplasm.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/candidate/0/source_workspace_matched_pilot/results/BBBC022_Mitochondria.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/candidate/0/source_workspace_matched_pilot/results/BBBC022_MitochondriaChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/candidate/0/source_workspace_matched_pilot/results/BBBC022_Nuclei.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/candidate/0/source_workspace_matched_pilot/results/BBBC022_Nucleoli.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/candidate/0/source_workspace_matched_pilot/results/BBBC022_NucleoliChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/candidate_evidence/-1/observation.pkl",
+    "benchmark/results/matched_bbbc022_20260923_rc3/candidate_evidence/-1/submitted_global_config.py",
+    "benchmark/results/matched_bbbc022_20260923_rc3/candidate_evidence/-1/submitted_pipeline.py",
+    "benchmark/results/matched_bbbc022_20260923_rc3/candidate_evidence/-1/well_throughput_progress_events.csv",
+    "benchmark/results/matched_bbbc022_20260923_rc3/candidate_evidence/-1/well_throughput_step_timings.csv",
+    "benchmark/results/matched_bbbc022_20260923_rc3/candidate_evidence/-1/well_throughput_worker_lanes.csv",
+    "benchmark/results/matched_bbbc022_20260923_rc3/candidate_evidence/0/observation.pkl",
+    "benchmark/results/matched_bbbc022_20260923_rc3/candidate_evidence/0/submitted_global_config.py",
+    "benchmark/results/matched_bbbc022_20260923_rc3/candidate_evidence/0/submitted_pipeline.py",
+    "benchmark/results/matched_bbbc022_20260923_rc3/candidate_evidence/0/well_throughput_progress_events.csv",
+    "benchmark/results/matched_bbbc022_20260923_rc3/candidate_evidence/0/well_throughput_step_timings.csv",
+    "benchmark/results/matched_bbbc022_20260923_rc3/candidate_evidence/0/well_throughput_worker_lanes.csv",
+    "benchmark/results/matched_bbbc022_20260923_rc3/imported_pipeline.py",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native/-1/BBBC022.db",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native/-1/BBBC022_Cells.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native/-1/BBBC022_Cytoplasm.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native/-1/BBBC022_Mitochondria.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native/-1/BBBC022_MitochondriaChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native/-1/BBBC022_Nuclei.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native/-1/BBBC022_Nucleoli.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native/-1/BBBC022_NucleoliChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native/0/BBBC022.db",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native/0/BBBC022_Cells.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native/0/BBBC022_Cytoplasm.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native/0/BBBC022_Mitochondria.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native/0/BBBC022_MitochondriaChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native/0/BBBC022_Nuclei.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native/0/BBBC022_Nucleoli.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native/0/BBBC022_NucleoliChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_preparation/native_cellprofiler_headless/BBBC022_Analysis_Final.cppipe",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_preparation/native_cellprofiler_selected_source_workspace/openhcs_metadata.json.lock",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_shards/0/-1/BBBC022.db",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_shards/0/-1/BBBC022_Cells.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_shards/0/-1/BBBC022_Cytoplasm.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_shards/0/-1/BBBC022_Mitochondria.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_shards/0/-1/BBBC022_MitochondriaChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_shards/0/-1/BBBC022_Nuclei.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_shards/0/-1/BBBC022_Nucleoli.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_shards/0/-1/BBBC022_NucleoliChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_shards/0/0/BBBC022.db",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_shards/0/0/BBBC022_Cells.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_shards/0/0/BBBC022_Cytoplasm.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_shards/0/0/BBBC022_Mitochondria.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_shards/0/0/BBBC022_MitochondriaChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_shards/0/0/BBBC022_Nuclei.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_shards/0/0/BBBC022_Nucleoli.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_shards/0/0/BBBC022_NucleoliChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_shards/1/-1/BBBC022.db",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_shards/1/-1/BBBC022_Cells.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_shards/1/-1/BBBC022_Cytoplasm.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_shards/1/-1/BBBC022_Mitochondria.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_shards/1/-1/BBBC022_MitochondriaChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_shards/1/-1/BBBC022_Nuclei.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_shards/1/-1/BBBC022_Nucleoli.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_shards/1/-1/BBBC022_NucleoliChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_shards/1/0/BBBC022.db",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_shards/1/0/BBBC022_Cells.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_shards/1/0/BBBC022_Cytoplasm.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_shards/1/0/BBBC022_Mitochondria.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_shards/1/0/BBBC022_MitochondriaChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_shards/1/0/BBBC022_Nuclei.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_shards/1/0/BBBC022_Nucleoli.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/native_shards/1/0/BBBC022_NucleoliChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc3/source_workspace/openhcs_metadata.json.lock",
+    "benchmark/results/matched_bbbc022_20260923_rc4/imported_pipeline.py",
+    "benchmark/results/matched_bbbc022_20260923_rc4/native/-1/BBBC022.db",
+    "benchmark/results/matched_bbbc022_20260923_rc4/native_preparation/native_cellprofiler_headless/BBBC022_Analysis_Final.cppipe",
+    "benchmark/results/matched_bbbc022_20260923_rc4/native_preparation/native_cellprofiler_selected_source_workspace/openhcs_metadata.json.lock",
+    "benchmark/results/matched_bbbc022_20260923_rc4/source_workspace/openhcs_metadata.json.lock",
+    "benchmark/results/matched_bbbc022_20260923_rc5/candidate/-1/source_workspace_matched_pilot/results/BBBC022.db",
+    "benchmark/results/matched_bbbc022_20260923_rc5/candidate/-1/source_workspace_matched_pilot/results/BBBC022_Cells.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/candidate/-1/source_workspace_matched_pilot/results/BBBC022_Cytoplasm.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/candidate/-1/source_workspace_matched_pilot/results/BBBC022_Mitochondria.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/candidate/-1/source_workspace_matched_pilot/results/BBBC022_MitochondriaChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/candidate/-1/source_workspace_matched_pilot/results/BBBC022_Nuclei.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/candidate/-1/source_workspace_matched_pilot/results/BBBC022_Nucleoli.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/candidate/-1/source_workspace_matched_pilot/results/BBBC022_NucleoliChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/candidate/0/source_workspace_matched_pilot/results/BBBC022.db",
+    "benchmark/results/matched_bbbc022_20260923_rc5/candidate/0/source_workspace_matched_pilot/results/BBBC022_Cells.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/candidate/0/source_workspace_matched_pilot/results/BBBC022_Cytoplasm.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/candidate/0/source_workspace_matched_pilot/results/BBBC022_Mitochondria.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/candidate/0/source_workspace_matched_pilot/results/BBBC022_MitochondriaChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/candidate/0/source_workspace_matched_pilot/results/BBBC022_Nuclei.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/candidate/0/source_workspace_matched_pilot/results/BBBC022_Nucleoli.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/candidate/0/source_workspace_matched_pilot/results/BBBC022_NucleoliChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/candidate_evidence/-1/submitted_global_config.py",
+    "benchmark/results/matched_bbbc022_20260923_rc5/candidate_evidence/-1/submitted_pipeline.py",
+    "benchmark/results/matched_bbbc022_20260923_rc5/candidate_evidence/0/submitted_global_config.py",
+    "benchmark/results/matched_bbbc022_20260923_rc5/candidate_evidence/0/submitted_pipeline.py",
+    "benchmark/results/matched_bbbc022_20260923_rc5/imported_pipeline.py",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native/-1/BBBC022.db",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native/-1/BBBC022_Cells.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native/-1/BBBC022_Cytoplasm.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native/-1/BBBC022_Mitochondria.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native/-1/BBBC022_MitochondriaChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native/-1/BBBC022_Nuclei.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native/-1/BBBC022_Nucleoli.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native/-1/BBBC022_NucleoliChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native/0/BBBC022.db",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native/0/BBBC022_Cells.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native/0/BBBC022_Cytoplasm.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native/0/BBBC022_Mitochondria.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native/0/BBBC022_MitochondriaChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native/0/BBBC022_Nuclei.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native/0/BBBC022_Nucleoli.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native/0/BBBC022_NucleoliChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_preparation/native_cellprofiler_selected_source_workspace/openhcs_metadata.json.lock",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/0/-1/BBBC022.db",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/0/-1/BBBC022_Cells.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/0/-1/BBBC022_Cytoplasm.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/0/-1/BBBC022_Mitochondria.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/0/-1/BBBC022_MitochondriaChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/0/-1/BBBC022_Nuclei.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/0/-1/BBBC022_Nucleoli.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/0/-1/BBBC022_NucleoliChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/0/0/BBBC022.db",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/0/0/BBBC022_Cells.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/0/0/BBBC022_Cytoplasm.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/0/0/BBBC022_Mitochondria.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/0/0/BBBC022_MitochondriaChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/0/0/BBBC022_Nuclei.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/0/0/BBBC022_Nucleoli.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/0/0/BBBC022_NucleoliChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/1/-1/BBBC022.db",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/1/-1/BBBC022_Cells.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/1/-1/BBBC022_Cytoplasm.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/1/-1/BBBC022_Mitochondria.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/1/-1/BBBC022_MitochondriaChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/1/-1/BBBC022_Nuclei.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/1/-1/BBBC022_Nucleoli.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/1/-1/BBBC022_NucleoliChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/1/0/BBBC022.db",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/1/0/BBBC022_Cells.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/1/0/BBBC022_Cytoplasm.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/1/0/BBBC022_Mitochondria.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/1/0/BBBC022_MitochondriaChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/1/0/BBBC022_Nuclei.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/1/0/BBBC022_Nucleoli.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/1/0/BBBC022_NucleoliChildObjects.properties",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/start_barrier/repetition_0_job_0.ready",
+    "benchmark/results/matched_bbbc022_20260923_rc5/native_shards/start_barrier/repetition_0_job_1.ready",
+    "benchmark/results/matched_bbbc022_20260923_rc5/source_workspace/openhcs_metadata.json.lock",
+    "benchmark/results/matched_bbbc022_probe_20260923/imported_pipeline.py",
+    "benchmark/results/matched_bbbc022_probe_20260923/native/-1/BBBC022.db",
+    "benchmark/results/matched_bbbc022_probe_20260923/native/-1/BBBC022_Cells.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native/-1/BBBC022_Cytoplasm.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native/-1/BBBC022_Mitochondria.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native/-1/BBBC022_MitochondriaChildObjects.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native/-1/BBBC022_Nuclei.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native/-1/BBBC022_Nucleoli.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native/-1/BBBC022_NucleoliChildObjects.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native/0/BBBC022.db",
+    "benchmark/results/matched_bbbc022_probe_20260923/native/0/BBBC022_Cells.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native/0/BBBC022_Cytoplasm.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native/0/BBBC022_Mitochondria.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native/0/BBBC022_MitochondriaChildObjects.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native/0/BBBC022_Nuclei.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native/0/BBBC022_Nucleoli.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native/0/BBBC022_NucleoliChildObjects.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_preparation/native_cellprofiler_headless/BBBC022_Analysis_Final.cppipe",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_preparation/native_cellprofiler_selected_source_workspace/openhcs_metadata.json.lock",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_shards/0/-1/BBBC022.db",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_shards/0/-1/BBBC022_Cells.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_shards/0/-1/BBBC022_Cytoplasm.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_shards/0/-1/BBBC022_Mitochondria.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_shards/0/-1/BBBC022_MitochondriaChildObjects.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_shards/0/-1/BBBC022_Nuclei.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_shards/0/-1/BBBC022_Nucleoli.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_shards/0/-1/BBBC022_NucleoliChildObjects.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_shards/0/0/BBBC022.db",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_shards/0/0/BBBC022_Cells.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_shards/0/0/BBBC022_Cytoplasm.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_shards/0/0/BBBC022_Mitochondria.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_shards/0/0/BBBC022_MitochondriaChildObjects.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_shards/0/0/BBBC022_Nuclei.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_shards/0/0/BBBC022_Nucleoli.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_shards/0/0/BBBC022_NucleoliChildObjects.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_shards/1/-1/BBBC022.db",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_shards/1/-1/BBBC022_Cells.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_shards/1/-1/BBBC022_Cytoplasm.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_shards/1/-1/BBBC022_Mitochondria.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_shards/1/-1/BBBC022_MitochondriaChildObjects.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_shards/1/-1/BBBC022_Nuclei.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_shards/1/-1/BBBC022_Nucleoli.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_shards/1/-1/BBBC022_NucleoliChildObjects.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_shards/1/0/BBBC022.db",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_shards/1/0/BBBC022_Cells.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_shards/1/0/BBBC022_Cytoplasm.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_shards/1/0/BBBC022_Mitochondria.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_shards/1/0/BBBC022_MitochondriaChildObjects.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_shards/1/0/BBBC022_Nuclei.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_shards/1/0/BBBC022_Nucleoli.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/native_shards/1/0/BBBC022_NucleoliChildObjects.properties",
+    "benchmark/results/matched_bbbc022_probe_20260923/source_workspace/openhcs_metadata.json.lock"
+  ],
+  "purpose": "Exact historical source preservation, NOT an implementation ready for main",
+  "submodules": [
+    {
+      "name": "PolyStore",
+      "head": "0efe67fdd14985bf90cee6e0f0c4735d41d265d1",
+      "patch_sha256": "604f7b032c2d5cabf202c33858033dfbc818c47bd69662f64328a6441802e9c9",
+      "untracked": []
+    },
+    {
+      "name": "python-introspect",
+      "head": "5bb79d5edb7250083a09ab77b2d9177e3ba202ab",
+      "patch_sha256": "a608e9303ddf4f70a0455de823488b3b6c45aeae71f2127c848ccd55dc0fb30a",
+      "untracked": []
+    },
+    {
+      "name": "ObjectState",
+      "head": "b0004daf3223326ac78689ba7b2e68abc18ae298",
+      "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "untracked": [
+        "uv.lock"
+      ]
+    }
+  ]
+}

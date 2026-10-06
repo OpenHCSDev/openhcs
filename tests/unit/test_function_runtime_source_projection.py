@@ -103,6 +103,7 @@ from openhcs.core.steps.function_output_manifest import (
     StepOutputManifestStore,
 )
 from openhcs.formats.pattern.pattern_discovery import PatternDiscoveryEngine
+from openhcs.microscopes.bioformats import BioFormatsFilenameParser
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 
 
@@ -4701,6 +4702,51 @@ def test_function_output_path_uses_payload_identity_over_input_carrier(
     )
 
     assert output_path.name == "A14_s002_w3_z001_t001.tif"
+
+
+@pytest.mark.parametrize(
+    ("qualifier", "expected_name"),
+    [
+        (None, "image.tif_s001_w1_z001_t001.tif"),
+        (
+            "ConvertObjectsToImage_4_image_1",
+            "image.tif_s001_w1_z001_t001_ConvertObjectsToImage_4_image_1.tif",
+        ),
+    ],
+)
+def test_function_output_path_preserves_virtual_plane_extension(
+    tmp_path: Path,
+    qualifier: str | None,
+    expected_name: str,
+) -> None:
+    parser = BioFormatsFilenameParser()
+    source_name = "image.tif_s001_w1_z001_t001.tif"
+    payload = ImagePayloadMetadata(
+        source_path=f"/source/{source_name}",
+        source_component_metadata={
+            "well": "image.tif",
+            "site": "1",
+            "channel": "1",
+            "z_index": "1",
+            "timepoint": "1",
+        },
+    ).payload_with(np.zeros((4, 5), dtype=np.float32), None)
+
+    request = FunctionOutputPathRequest(
+        parser=parser,
+        output_dir=tmp_path,
+        output_payload=payload,
+        input_path=source_name,
+    )
+    identity = FunctionOutputIdentityAuthority.identity(request)
+    if qualifier is not None:
+        identity = identity.with_filename_qualifier(qualifier)
+    output_path = FunctionOutputPathAuthority.output_path_for_identity(
+        request, identity
+    )
+
+    assert output_path.name == expected_name
+    assert parser.parse_filename(output_path.name) is not None
 
 
 def test_function_output_path_uses_payload_identity_without_input_path(

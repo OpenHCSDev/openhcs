@@ -492,6 +492,7 @@ def test_napari_navigation_moves_to_selected_roi_component_slice(qtbot) -> None:
         {
             ViewerControlResponseField.PAYLOAD.value: ViewerNavigationControlOptions.from_overrides(
                 route_key="result-rois",
+                axis_indices={"z": 1},
                 visible=True,
                 selected=True,
                 data_index=1,
@@ -508,7 +509,7 @@ def test_napari_navigation_moves_to_selected_roi_component_slice(qtbot) -> None:
         {
             ViewerControlResponseField.PAYLOAD.value: ViewerNavigationControlOptions.from_overrides(
                 route_key="result-rois",
-                axis_indices={"z": 1},
+                axis_indices={"z": 0},
                 visible=True,
                 selected=True,
                 data_index=1,

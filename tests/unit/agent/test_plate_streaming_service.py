@@ -1,10 +1,13 @@
 from pathlib import Path
 
+import pytest
+from polystore.virtual_workspace import SourcePixelRef
 from zmqruntime.config import TransportMode
 
 from openhcs.agent.dto.execution import ExecutionConnectionSpec
 from openhcs.agent.dto.plate import (
     PlateFileStreamRequest,
+    SelectedPlateFileStreamRequest,
 )
 from openhcs.agent.services.plate_inspection_service import PlateInspectionContext
 from openhcs.agent.services.plate_streaming_service import PlateStreamingService
@@ -12,6 +15,7 @@ from openhcs.constants.constants import FileFormat
 from openhcs.core.plate_image_inventory import (
     PlateFileInventory,
     PlateFileKind,
+    PlateFileRecord,
     PlateImageRecord,
     PlateResultFileRecord,
 )
@@ -98,6 +102,24 @@ def plate_streaming_service(
             launch_context or graphical_launch_context()
         ),
     )
+
+
+def test_roi_parent_selection_is_shared_by_headless_and_ui_stream_requests():
+    headless = PlateFileStreamRequest.from_fields(
+        plate_path="/plate",
+        roi_parent_labels=[7],
+    )
+    selected = SelectedPlateFileStreamRequest.from_fields(
+        roi_parent_labels=[7],
+    )
+
+    assert headless.as_tool_arguments()["roi_parent_labels"] == [7]
+    assert selected.as_tool_arguments()["roi_parent_labels"] == [7]
+    assert selected.to_plate_file_stream_request(
+        plate_path="/plate",
+        context_plate_path=None,
+        microscope_type="auto",
+    ).roi_parent_labels == (7,)
 
 
 def test_agent_context_injects_its_shared_ui_bridge_service():
@@ -311,6 +333,56 @@ def test_plate_streaming_service_streams_virtual_image_path(monkeypatch):
     assert result.resolved_records[0].virtual_path == "A01_s001_w1_z001_t001.tif"
 
 
+def test_plate_streaming_service_forwards_inventory_owned_czi_planes(monkeypatch):
+    refs = (
+        SourcePixelRef(backend="bioformats", backend_address="czi-plane-1"),
+        SourcePixelRef(backend="bioformats", backend_address="czi-plane-2"),
+    )
+    paths = (
+        "R0096.czi_s001_w1_z001_t001.tif",
+        "R0096.czi_s001_w2_z001_t001.tif",
+    )
+    inventory = PlateFileInventory(
+        plate_path=Path("/plate"),
+        image_records=tuple(
+            PlateImageRecord(
+                virtual_path=path,
+                full_virtual_path=f"/plate/{path}",
+                backend="bioformats",
+                source_path="/plate/R0096.czi",
+                metadata={"well": "R0096.czi", "channel": index},
+                source_ref=ref,
+            )
+            for index, (path, ref) in enumerate(zip(paths, refs), start=1)
+        ),
+        result_records=(),
+    )
+    captured = {}
+    monkeypatch.setattr(
+        "openhcs.agent.services.plate_streaming_service."
+        "StreamingViewerLifecycle.get_or_create_visualizer",
+        lambda **_kwargs: FakeViewer(),
+    )
+
+    def fake_stream_images(self, request):
+        del self
+        captured.update(request.source_refs_by_path)
+
+    monkeypatch.setattr(
+        "openhcs.agent.services.plate_streaming_service."
+        "StreamingService.stream_images",
+        fake_stream_images,
+    )
+
+    result = plate_streaming_service(FakeInspectionService(inventory)).stream_files(
+        PlateFileStreamRequest(plate_path="/plate", file_paths=paths)
+    )
+
+    assert result.errors == ()
+    assert result.streamed_image_paths == paths
+    assert captured == dict(zip(paths, refs))
+
+
 def test_plate_streaming_service_rejects_non_roi_result_files(monkeypatch):
     inventory = PlateFileInventory(
         plate_path=Path("/plate"),
@@ -344,7 +416,10 @@ def test_plate_streaming_service_rejects_non_roi_result_files(monkeypatch):
     assert result.streamed_roi_paths == ()
 
 
-def test_plate_streaming_service_streams_roi_result_full_path_and_metadata(monkeypatch):
+@pytest.mark.parametrize("roi_parent_labels", [(), (7,)])
+def test_plate_streaming_service_streams_roi_result_full_path_and_metadata(
+    monkeypatch, roi_parent_labels
+):
     captured = {}
     roi_full_path = "/plate_openhcs/images_results/A01_w1_rois.roi.zip"
     inventory = PlateFileInventory(
@@ -375,6 +450,12 @@ def test_plate_streaming_service_streams_roi_result_full_path_and_metadata(monke
         del self
         captured["roi_filenames"] = request.roi_filenames
         captured["component_metadata_by_path"] = request.component_metadata_by_path
+        captured["roi_parent_labels"] = (
+            None
+            if request.parent_label_selection is None
+            else request.parent_label_selection.labels
+        )
+        captured["projection_key"] = request.producer.identities[0].projection_key
         request.status_callback("streamed rois")
 
     monkeypatch.setattr(
@@ -387,6 +468,7 @@ def test_plate_streaming_service_streams_roi_result_full_path_and_metadata(monke
         PlateFileStreamRequest(
             plate_path="/plate",
             file_paths=("images_results/A01_w1_rois.roi.zip",),
+            roi_parent_labels=roi_parent_labels,
             kind=PlateFileKind.RESULT,
         )
     )
@@ -394,9 +476,12 @@ def test_plate_streaming_service_streams_roi_result_full_path_and_metadata(monke
     assert result.errors == ()
     assert result.streamed_image_paths == ()
     assert result.streamed_roi_paths == (roi_full_path,)
-    assert captured == {
-        "roi_filenames": (roi_full_path,),
-        "component_metadata_by_path": {
+    assert captured["roi_filenames"] == (roi_full_path,)
+    assert captured["roi_parent_labels"] == (roi_parent_labels or None)
+    assert captured["projection_key"].endswith(
+        "_parent_labels_7" if roi_parent_labels else "A01_w1_rois.roi.zip"
+    )
+    assert captured["component_metadata_by_path"] == {
             roi_full_path: {
                 "well": "A01",
                 "site": 1,
@@ -404,7 +489,6 @@ def test_plate_streaming_service_streams_roi_result_full_path_and_metadata(monke
                 "z_index": 1,
                 "timepoint": 1,
             }
-        },
     }
     assert result.status_messages == ("streamed rois",)
 
@@ -622,3 +706,104 @@ def test_plate_streaming_service_uses_context_plate_for_output_roi_stream(monkey
         "component_metadata_by_path": {},
     }
     assert result.status_messages == ("streamed output rois",)
+
+
+def test_roi_streaming_uses_unique_source_components_when_result_has_none():
+    source = PlateImageRecord(
+        virtual_path="images/R0001.tif",
+        full_virtual_path="/plate/images/R0001.tif",
+        backend="disk",
+        source_path="/plate/images/R0001.tif",
+        metadata={
+            "well": "R0001",
+            "site": 1,
+            "channel": 1,
+            "z_index": 1,
+            "timepoint": 1,
+        },
+    )
+    result = PlateFileRecord.from_result(
+        PlateResultFileRecord(
+            relative_path="results/R0001_site-1_channel-1_segmentation_masks_step0_rois.roi.zip",
+            full_path="/plate/results/R0001_site-1_channel-1_segmentation_masks_step0_rois.roi.zip",
+            file_format=FileFormat.ROI,
+            metadata={"filename": "result.roi.zip", "size": "1 MB"},
+        )
+    )
+
+    _images, roi_paths, metadata, _skipped = PlateStreamingService._streamable_paths(
+        (result,), image_records=(source,)
+    )
+
+    assert roi_paths == (result.full_path,)
+    assert metadata[result.full_path] == {
+        "well": "R0001",
+        "site": 1,
+        "channel": 1,
+        "z_index": 1,
+        "timepoint": 1,
+    }
+
+
+def test_roi_streaming_ignores_derived_label_image_when_finding_source():
+    source = PlateImageRecord(
+        virtual_path="images/R0001.tif",
+        full_virtual_path="/plate/images/R0001.tif",
+        backend="disk",
+        source_path="/plate/images/R0001.tif",
+        metadata={"well": "R0001", "site": 1, "channel": 2},
+    )
+    labels = PlateImageRecord(
+        virtual_path="results/R0001.labels.tif",
+        full_virtual_path="/plate/results/R0001.labels.tif",
+        backend="disk",
+        source_path="/plate/results/R0001.labels.tif",
+        metadata={
+            "well": "R0001",
+            "site": 1,
+            "channel": 2,
+            "source_artifact_type": "object_labels",
+        },
+    )
+    result = PlateFileRecord.from_result(
+        PlateResultFileRecord(
+            relative_path="results/R0001_rois.roi.zip",
+            full_path="/plate/results/R0001_rois.roi.zip",
+            file_format=FileFormat.ROI,
+            metadata={"filename": "R0001_rois.roi.zip"},
+        )
+    )
+
+    _images, roi_paths, metadata, _skipped = PlateStreamingService._streamable_paths(
+        (result,), image_records=(source, labels)
+    )
+
+    assert roi_paths == (result.full_path,)
+    assert metadata[result.full_path] == {
+        "well": "R0001",
+        "site": 1,
+        "channel": 2,
+    }
+
+
+def test_roi_streaming_rejects_conflict_with_unique_source_components():
+    source = PlateImageRecord(
+        virtual_path="images/R0001.tif",
+        full_virtual_path="/plate/images/R0001.tif",
+        backend="disk",
+        source_path="/plate/images/R0001.tif",
+        metadata={"well": "R0001", "channel": 1},
+    )
+    result = PlateFileRecord.from_result(
+        PlateResultFileRecord(
+            relative_path="results/R0001_w2_rois.roi.zip",
+            full_path="/plate/results/R0001_w2_rois.roi.zip",
+            file_format=FileFormat.ROI,
+            metadata={"well": "R0001", "channel": 2},
+        )
+    )
+
+    with pytest.raises(ValueError, match="conflicts with its sole source image"):
+        PlateStreamingService._streamable_paths(
+            (result,), image_records=(source,)
+        )

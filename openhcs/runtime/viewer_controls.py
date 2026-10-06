@@ -61,7 +61,7 @@ class ViewerResultElementCoordinateAuthority:
         axis_labels: Sequence[str],
         displayed_axis_count: int,
     ) -> dict[str, int]:
-        """Return exact route-local indices for every non-displayed axis."""
+        """Return native layer indices for every non-displayed axis."""
 
         if isinstance(displayed_axis_count, bool) or not isinstance(
             displayed_axis_count,
@@ -178,7 +178,11 @@ class ViewerResultElementCoordinateAuthority:
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ViewerPayloadControlOptions:
-    """Caller-declared payload selection and inspection controls."""
+    """Caller-declared payload selection and inspection controls.
+
+    Semantic axis-index mappings use each route's routed component values,
+    not positions in the shared viewer axis.
+    """
 
     route_key: str | None = None
     axis_indices: ViewerPayloadAxisIndices | None = None
@@ -407,9 +411,10 @@ class ViewerStateControlOptions:
 class ViewerIntensityWindowControlOptions:
     """Route-global image contrast derived from caller-declared percentiles.
 
-    Semantic ``axis_indices`` select every real payload record matching those
-    coordinates. An empty mapping deliberately selects every real payload
-    coordinate on the route; display-array padding is outside this contract.
+    Semantic ``axis_indices`` use route-local component positions and select
+    every real payload record matching those coordinates. An empty mapping
+    deliberately selects every real payload coordinate on the route;
+    display-array padding is outside this contract.
     """
 
     route_key: str
@@ -464,7 +469,10 @@ class ViewerIntensityWindowControlOptions:
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ViewerNavigationControlOptions:
-    """Formal viewer navigation controls shared by agent and viewer runtimes."""
+    """Formal viewer navigation controls shared by agent and viewer runtimes.
+
+    Semantic axis-index mappings use route-local component positions.
+    """
 
     DATA_INDEX_SEMANTICS: ClassVar[str] = (
         "Selecting a native feature row by data_index requires the target layer "

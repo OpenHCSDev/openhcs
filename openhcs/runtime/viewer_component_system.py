@@ -1165,6 +1165,45 @@ class ViewerLayerAxisProjection:
             for component in self.projected_axis_components
         )
 
+    def shared_index_for_routed_index(
+        self,
+        component: str,
+        routed_index: int,
+        *,
+        context: str,
+    ) -> int:
+        """Map a route-local component index into the shared viewer axis."""
+        routed_values = self.routed_component_values[component]
+        if not 0 <= routed_index < len(routed_values):
+            raise ValueError(
+                f"{context} index {routed_index} for axis {component!r} is "
+                f"outside the route-local extent {len(routed_values)}."
+            )
+        return self.component_values[component].index(routed_values[routed_index])
+
+    def routed_index_for_shared_index(
+        self,
+        component: str,
+        shared_index: int,
+        *,
+        context: str,
+    ) -> int:
+        """Map a native element's shared-axis index into this route."""
+        shared_values = self.component_values[component]
+        if not 0 <= shared_index < len(shared_values):
+            raise ValueError(
+                f"{context} index {shared_index} for axis {component!r} is "
+                f"outside the shared extent {len(shared_values)}."
+            )
+        value = shared_values[shared_index]
+        try:
+            return self.routed_component_values[component].index(value)
+        except ValueError as exc:
+            raise ValueError(
+                f"{context} value {value!r} for axis {component!r} is not "
+                "routed by this layer."
+            ) from exc
+
     def coordinate_index(
         self,
         components: Mapping[str, ComponentValue],

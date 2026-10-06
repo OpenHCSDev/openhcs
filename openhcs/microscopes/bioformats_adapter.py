@@ -5,7 +5,7 @@ from __future__ import annotations
 import filecmp
 import json
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from itertools import product
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Mapping
@@ -30,7 +30,7 @@ from openhcs.core.source_matching import (
     merge_source_metadata,
     with_source_component_metadata,
 )
-from openhcs.core.source_metadata import SourceMetadataMapping
+from openhcs.core.source_metadata import SourceMetadataMapping, SourceVoxelSpacing
 from openhcs.core.source_projection import (
     OpenHCSPlaneAddress,
     SourceCandidate,
@@ -181,6 +181,7 @@ class BioFormatsImage:
     channel_names: tuple[str | None, ...]
     pixel_size: float
     reader: str = "bioformats"
+    source_voxel_spacing: SourceVoxelSpacing = field(default_factory=SourceVoxelSpacing)
 
     def __post_init__(self) -> None:
         if not self.image_id:
@@ -427,6 +428,7 @@ class BioFormatsStoreMetadata:
                 "ome_image_id": image.image_id,
                 "ome_sample_id": sample_id,
             }
+            image.source_voxel_spacing.merge_into(metadata, path=backend_source)
             if self.plates:
                 metadata["ome_plate_id"] = self.plates[0].plate_id
             for component, value in address.component_values().items():
@@ -973,6 +975,16 @@ def _images_from_java(
         size_c = _axis_size(metadata.getPixelsSizeC(image_index), reader.getSizeC())
         size_z = _axis_size(metadata.getPixelsSizeZ(image_index), reader.getSizeZ())
         size_t = _axis_size(metadata.getPixelsSizeT(image_index), reader.getSizeT())
+        physical_x = metadata.getPixelsPhysicalSizeX(image_index)
+        physical_y = metadata.getPixelsPhysicalSizeY(image_index)
+        spacing = SourceVoxelSpacing()
+        if physical_x is not None and physical_y is not None:
+            spacing = SourceVoxelSpacing(
+                (
+                    _micrometer_size(physical_y, "Y"),
+                    _micrometer_size(physical_x, "X"),
+                )
+            )
         images.append(
             BioFormatsImage(
                 image_id=image_id,
@@ -997,9 +1009,8 @@ def _images_from_java(
                     java_str(metadata.getChannelName(image_index, channel_index))
                     for channel_index in range(size_c)
                 ),
-                pixel_size=_normalized_pixel_size(
-                    metadata.getPixelsPhysicalSizeX(image_index)
-                ),
+                pixel_size=_normalized_pixel_size(physical_x),
+                source_voxel_spacing=spacing,
             )
         )
     return tuple(images), tuple(excluded_series)
@@ -1190,6 +1201,9 @@ def _image_from_mapping(
             None if value is None else str(value) for value in payload["channel_names"]
         ),
         pixel_size=float(payload["pixel_size"]),
+        source_voxel_spacing=SourceVoxelSpacing(
+            (float(payload["pixel_size"]), float(payload["pixel_size"]))
+        ),
         pixels=BioFormatsPixels(
             size_c=int(pixels["size_c"]),
             size_z=int(pixels["size_z"]),
@@ -1598,6 +1612,24 @@ def _normalized_pixel_size(value: Any) -> float:
             "OME Pixels.PhysicalSizeX must be positive when declared."
         )
     return converted
+
+
+def _micrometer_size(value: Any, axis: str) -> float:
+    """Read an OME physical axis only when its declared unit is micrometers."""
+
+    unit = value.unit()
+    symbol = str(unit.getSymbol())
+    if symbol not in {"µm", "μm", "um"}:
+        raise BioFormatsAdapterUnavailableError(
+            f"OME Pixels.PhysicalSize{axis} uses unsupported unit {symbol!r}; "
+            "physical source spacing requires micrometers."
+        )
+    size = java_float(value)
+    if size is None or size <= 0:
+        raise BioFormatsAdapterUnavailableError(
+            f"OME Pixels.PhysicalSize{axis} must be positive when declared."
+        )
+    return size
 
 
 def _required_str(value: Any, field_name: str) -> str:

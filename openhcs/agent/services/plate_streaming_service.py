@@ -6,6 +6,7 @@ import json
 from dataclasses import replace
 from pathlib import Path
 
+from polystore.roi import ROIArchiveParentLabelSelection
 from polystore.streaming.identity import (
     FixedStreamProducerIdentityKind,
     StreamProducerIdentity,
@@ -40,6 +41,7 @@ from openhcs.core.config import StreamingConfig
 from openhcs.core.plate_image_inventory import (
     PlateFileInventoryQuery,
     PlateFileRecord,
+    PlateImageRecord,
 )
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
@@ -134,6 +136,11 @@ class PlateStreamingService:
         config = None
         connection = request.connection
         try:
+            roi_selection = (
+                ROIArchiveParentLabelSelection(request.roi_parent_labels)
+                if request.roi_parent_labels
+                else None
+            )
             stream_context = replace(context, plate_path=inventory_plate_path)
             config = self._streaming_config(request)
             connection = replace(
@@ -155,7 +162,14 @@ class PlateStreamingService:
                 roi_paths,
                 roi_component_metadata_by_path,
                 skipped_records,
-            ) = self._streamable_paths(resolved_records)
+            ) = self._streamable_paths(
+                resolved_records,
+                image_records=inventory.image_records,
+            )
+            if roi_selection is not None and not roi_paths:
+                raise ValueError(
+                    "roi_parent_labels requires at least one selected ROI archive."
+                )
             all_warnings = inventory_warnings
             if skipped_records:
                 all_warnings = (
@@ -228,11 +242,17 @@ class PlateStreamingService:
                         filenames=image_paths,
                         read_backend=read_backend,
                         source_projection=source_projection,
+                        source_refs_by_path={
+                            record.streamable_image_path: record.source_ref
+                            for record in resolved_records
+                            if record.streamable_image_path is not None
+                            and record.source_ref is not None
+                        },
                         producer=producer,
                     )
                 )
             if roi_paths:
-                roi_producer = ViewerStreamProducer.from_identities(
+                roi_identities = tuple(
                     StreamProducerIdentity.fixed_output(
                         FixedStreamProducerIdentityKind.MANUAL,
                         record.key,
@@ -240,6 +260,15 @@ class PlateStreamingService:
                     for record in resolved_records
                     if record.streamable_roi_path is not None
                 )
+                if roi_selection is not None:
+                    suffix = "_parent_labels_" + "_".join(
+                        str(label) for label in roi_selection.labels
+                    )
+                    roi_identities = tuple(
+                        replace(identity, projection_key=identity.projection_key + suffix)
+                        for identity in roi_identities
+                    )
+                roi_producer = ViewerStreamProducer.from_identities(roi_identities)
                 streaming_service.stream_rois(
                     RoiStreamingRequest(
                         viewer=viewer,
@@ -247,6 +276,7 @@ class PlateStreamingService:
                         status_callback=status_messages.append,
                         error_callback=status_messages.append,
                         roi_filenames=roi_paths,
+                        parent_label_selection=roi_selection,
                         component_metadata_by_path=roi_component_metadata_by_path,
                         producer=roi_producer,
                     )
@@ -483,6 +513,8 @@ class PlateStreamingService:
     def _streamable_paths(
         cls,
         records: tuple[PlateFileRecord, ...],
+        *,
+        image_records: tuple[PlateImageRecord, ...] = (),
     ) -> tuple[
         tuple[str, ...],
         tuple[str, ...],
@@ -493,6 +525,23 @@ class PlateStreamingService:
         roi_paths: list[str] = []
         roi_component_metadata_by_path: dict[str, JsonObject] = {}
         skipped_records: list[PlateFileRecord] = []
+        # Derived image artifacts (for example, CellProfiler object-label
+        # TIFFs) can be inventoried alongside the materialized source plane.
+        # They must not make an otherwise unique source ambiguous for an ROI.
+        source_images = tuple(
+            image
+            for image in image_records
+            if "source_artifact_type" not in image.metadata
+        )
+        unique_source_components = (
+            {
+                component.value: source_images[0].metadata[component.value]
+                for component in AllComponents
+                if component.value in source_images[0].metadata
+            }
+            if len(source_images) == 1
+            else {}
+        )
         for record in records:
             if not cls._is_streamable_record(record):
                 skipped_records.append(record)
@@ -503,8 +552,29 @@ class PlateStreamingService:
                 image_paths.append(image_path)
             elif roi_path is not None:
                 roi_paths.append(roi_path)
-                if record.metadata:
-                    roi_component_metadata_by_path[roi_path] = dict(record.metadata)
+                result_components = {
+                    component.value: record.metadata[component.value]
+                    for component in AllComponents
+                    if component.value in record.metadata
+                }
+                conflicting = {
+                    name
+                    for name, value in result_components.items()
+                    if name in unique_source_components
+                    and str(unique_source_components[name]) != str(value)
+                }
+                if conflicting:
+                    raise ValueError(
+                        "ROI result component metadata conflicts with its sole "
+                        f"source image for {sorted(conflicting)!r}."
+                    )
+                if unique_source_components:
+                    result_components = {
+                        **unique_source_components,
+                        **result_components,
+                    }
+                if result_components:
+                    roi_component_metadata_by_path[roi_path] = result_components
         return (
             tuple(image_paths),
             tuple(roi_paths),

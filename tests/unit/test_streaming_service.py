@@ -7,6 +7,7 @@ from types import SimpleNamespace
 
 import numpy as np
 import pytest
+from polystore.roi import ROIArchiveParentLabelSelection
 from polystore.streaming.identity import (
     FixedStreamProducerIdentityKind,
     StreamProducerIdentity,
@@ -17,7 +18,7 @@ from polystore.zmq_config import POLYSTORE_ZMQ_CONFIG
 from zmqruntime.viewer_protocol import ViewerBatchWireField, ViewerWireField
 
 from openhcs.constants.constants import AllComponents
-from openhcs.core.artifacts import ObjectLabelsArtifactType
+from openhcs.core.artifacts import ImageArtifactType, ObjectLabelsArtifactType
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.components.parser_metaprogramming import FilenameParseResult
 from openhcs.core.config import (
@@ -31,10 +32,11 @@ from openhcs.core.config import (
     get_all_streaming_ports,
 )
 from openhcs.core.runtime_image_values import ImagePayloadMetadata
+from openhcs.core.runtime_image_values import image_payload_data
 from openhcs.core.runtime_plane_projection import RuntimePlaneAxis
 from openhcs.core.source_image_provenance import SourceImageProvenancePlanes
 from openhcs.core.source_metadata import SourceVoxelSpacing
-from openhcs.core.source_projection import SourceArtifactProjection
+from openhcs.core.source_projection import OpenHCSPlaneAddress, SourceArtifactProjection
 from openhcs.core.source_spatial_domain import SourceSpatialDomain
 from openhcs.core.source_workspace_projection import VirtualWorkspaceSourceProjection
 from openhcs.core.streaming_config_declarations import ViewerType
@@ -45,6 +47,7 @@ from openhcs.core.viewer_streaming_service import (
     RoiStreamingRequest,
     StreamingService,
     StreamingViewerLifecycle,
+    ViewerStreamingSource,
 )
 from openhcs.runtime.fiji_stream_visualizer import FijiStreamVisualizer
 from openhcs.runtime.napari_stream_visualizer import NapariStreamVisualizer
@@ -117,6 +120,71 @@ class FakeMetadataHandler:
     def get_pixel_size(self, plate_path) -> float:
         del plate_path
         return 1.3556
+
+
+def test_viewer_source_loads_inventory_plane_ref_not_virtual_tiff(monkeypatch):
+    loaded = []
+    image = np.full((4, 5), 7, dtype=np.uint8)
+    ref = SourcePixelRef(backend="bioformats", backend_address="czi-plane-2")
+
+    def load_ref(self, registry, *, base_path):
+        loaded.append((self, registry, base_path))
+        return image
+
+    monkeypatch.setattr(SourcePixelRef, "load", load_ref)
+    monkeypatch.setattr(
+        SourcePixelRef,
+        "resolved_address",
+        lambda self, registry, *, base_path: self.backend_address,
+    )
+    monkeypatch.setattr(
+        "openhcs.core.viewer_streaming_service."
+        "ImagePayloadSourceMetadataContext.metadata",
+        lambda self, image: ImagePayloadMetadata.for_array(image),
+    )
+    filemanager = FakeFileManager()
+    filemanager.registry = object()
+    source = ViewerStreamingSource(
+        filemanager=filemanager,
+        microscope_handler=SimpleNamespace(),
+        plate_path=Path("/plate"),
+    )
+
+    payload = source.load_image(
+        "R0096.czi_s001_w2_z001_t001.tif",
+        "bioformats",
+        source_projection=VirtualWorkspaceSourceProjection.empty(Path("/plate")),
+        component_metadata={"channel": 2, "well": "R0096.czi"},
+        source_ref_override=ref,
+    )
+
+    assert loaded == [(ref, filemanager.registry, "/plate")]
+    np.testing.assert_array_equal(image_payload_data(payload), image)
+
+
+def test_viewer_source_rejects_inventory_projection_source_conflict():
+    path = "R0096.czi_s001_w2_z001_t001.tif"
+    projected = SourcePixelRef(backend="bioformats", backend_address="czi-plane-1")
+    inventory = SourcePixelRef(backend="bioformats", backend_address="czi-plane-2")
+    projection = VirtualWorkspaceSourceProjection(
+        source_refs_by_virtual_path=MappingProxyType({path: projected}),
+        source_metadata_by_path=MappingProxyType({}),
+        workspace_root="/plate",
+    )
+    source = ViewerStreamingSource(
+        filemanager=FakeFileManager(),
+        microscope_handler=SimpleNamespace(),
+        plate_path=Path("/plate"),
+    )
+
+    with pytest.raises(ValueError, match="conflicts with the plate source projection"):
+        source.load_image(
+            path,
+            "bioformats",
+            source_projection=projection,
+            component_metadata={"channel": 2},
+            source_ref_override=inventory,
+        )
 
 
 def filename_parse_result(*, channel: int = 1) -> FilenameParseResult:
@@ -533,7 +601,7 @@ def test_stream_images_projects_declared_channel_singleton_with_retained_plane_a
 
 
 def test_stream_images_routes_aggregate_channel_through_payload_plane_axis(
-    tmp_path: Path,
+    tmp_path: Path, monkeypatch,
 ) -> None:
     path = tmp_path / "aggregate.labels.tif"
     expected = np.arange(2 * 8 * 9, dtype=np.int32).reshape(2, 8, 9)
@@ -597,6 +665,19 @@ def test_stream_images_routes_aggregate_channel_through_payload_plane_axis(
         source_projections_by_virtual_path=MappingProxyType({path.name: projection}),
     )
     filemanager = AggregateFileManager()
+    filemanager.registry = object()
+    monkeypatch.setattr(
+        SourcePixelRef,
+        "resolved_address",
+        lambda self, registry, *, base_path: self.backend_address,
+    )
+    monkeypatch.setattr(
+        SourcePixelRef,
+        "load",
+        lambda self, registry, *, base_path: filemanager.load(
+            self.backend_address, self.backend
+        ),
+    )
     service = StreamingService(
         filemanager=filemanager,
         microscope_handler=SimpleNamespace(
@@ -635,6 +716,129 @@ def test_stream_images_routes_aggregate_channel_through_payload_plane_axis(
     assert stream_request.message_extra[
         ViewerBatchWireField.COMPONENT_VALUE_DOMAIN.value
     ]["channel"] == [1, 2]
+
+
+def test_stream_images_replays_persisted_singleton_checkpoint_plane(
+    tmp_path: Path, monkeypatch
+) -> None:
+    path = tmp_path / "A49_s001_w3_z001_t001_response.checkpoint.tif"
+    components = {
+        "well": "A49",
+        "site": "1",
+        "channel": "3",
+        "z_index": "1",
+        "timepoint": "1",
+    }
+    scope = RuntimeExecutionAxisScope.from_raw(
+        "A49",
+        component=None,
+        value=None,
+        fixed_component_values=(
+            ("site", "1"),
+            ("z_index", "1"),
+            ("timepoint", "1"),
+        ),
+    )
+    metadata = ImagePayloadMetadata(
+        source_spatial_domain=SourceSpatialDomain((0, 0), (8, 9)),
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=("/source/channel-3.tif",),
+            component_metadata=(components,),
+        ),
+        source_dtype="float32",
+        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+    )
+    projection = SourceArtifactProjection(
+        address=OpenHCSPlaneAddress.from_complete_source_metadata(components),
+        ref=SourcePixelRef(backend="disk", backend_address=str(path)),
+        source_alias="response",
+        artifact_kind=ImageArtifactType,
+        source_metadata=MappingProxyType(components),
+        image_metadata=metadata,
+        execution_scope=scope,
+    )
+    workspace_projection = VirtualWorkspaceSourceProjection(
+        source_refs_by_virtual_path=MappingProxyType({path.name: projection.ref}),
+        source_metadata_by_path=MappingProxyType({path.name: components}),
+        workspace_root=str(tmp_path),
+        source_projections_by_virtual_path=MappingProxyType({path.name: projection}),
+    )
+
+    class CheckpointFileManager(FakeFileManager):
+        registry = object()
+
+        def load(self, path: str, read_backend: str) -> np.ndarray:
+            assert path == str(
+                tmp_path / "A49_s001_w3_z001_t001_response.checkpoint.tif"
+            )
+            assert read_backend == "disk"
+            return np.zeros((1, 8, 9), dtype=np.float32)
+
+    filemanager = CheckpointFileManager()
+    monkeypatch.setattr(
+        SourcePixelRef,
+        "resolved_address",
+        lambda self, registry, *, base_path: self.backend_address,
+    )
+    monkeypatch.setattr(
+        SourcePixelRef,
+        "load",
+        lambda self, registry, *, base_path: filemanager.load(
+            self.backend_address, self.backend
+        ),
+    )
+    service = StreamingService(
+        filemanager=filemanager,
+        microscope_handler=SimpleNamespace(
+            parser=SimpleNamespace(parse_filename=lambda _filename: None),
+            metadata_handler=FakeMetadataHandler(),
+        ),
+        plate_path=tmp_path,
+    )
+
+    service.stream_images(
+        ImageStreamingRequest(
+            viewer=FakeViewer(),
+            config=NapariStreamingConfig(enabled=True),
+            status_callback=lambda _status: None,
+            error_callback=lambda error: (_ for _ in ()).throw(AssertionError(error)),
+            filenames=(path.name,),
+            read_backend="disk",
+            source_projection=workspace_projection,
+        )
+    )
+
+    assert len(filemanager.saved_batches) == 1
+    stream_request = filemanager.saved_batches[0][3][
+        ViewerStreamKwarg.STREAM_REQUEST.value
+    ]
+    assert stream_request.source.item_fields["plane_component_values"] == {
+        "channel": ["3"]
+    }
+
+
+def test_persisted_singleton_checkpoint_rejects_ambiguous_axis() -> None:
+    components = {"well": "A49", "site": "1", "channel": "3", "z_index": "1"}
+    metadata = ImagePayloadMetadata(
+        source_image_provenance_planes=SourceImageProvenancePlanes.from_components(
+            paths=("/source/channel-3.tif",),
+            component_metadata=(components,),
+        ),
+        plane_axis=RuntimePlaneAxis.SOURCE_BINDING,
+    )
+    projection = SourceArtifactProjection(
+        address=None,
+        ref=SourcePixelRef(backend="disk", backend_address="/checkpoint.tif"),
+        source_alias="response",
+        artifact_kind=ImageArtifactType,
+        image_metadata=metadata,
+        execution_scope=RuntimeExecutionAxisScope.from_raw(
+            "A49", component=None, value=None, fixed_component_values=()
+        ),
+    )
+
+    with pytest.raises(ValueError, match="exactly one component"):
+        projection.retained_singleton_plane_components(metadata)
 
 
 def test_stream_images_does_not_report_success_when_viewer_settlement_fails() -> None:
@@ -784,6 +988,45 @@ def test_stream_rois_uses_explicit_component_metadata(monkeypatch) -> None:
         stream_request.source.item_fields[ViewerWireField.IMAGE_METADATA.value]
     )
     assert image_metadata.source_voxel_spacing == SourceVoxelSpacing((1.3556, 1.3556))
+
+
+def test_stream_rois_passes_parent_label_selection_to_archive_reader(monkeypatch) -> None:
+    selection = ROIArchiveParentLabelSelection((7,))
+    received = []
+
+    def load_selected(_path, *, selection):
+        received.append(selection)
+        return [object()]
+
+    monkeypatch.setattr("polystore.roi.load_rois_from_zip", load_selected)
+    roi_path = "/output/results/A01_bodies.roi.zip"
+    service = StreamingService(
+        filemanager=FakeFileManager(),
+        microscope_handler=SimpleNamespace(metadata_handler=FakeMetadataHandler()),
+        plate_path=Path("/plate"),
+    )
+
+    service.stream_rois(
+        RoiStreamingRequest(
+            viewer=FakeViewer(),
+            config=FijiStreamingConfig(enabled=True),
+            status_callback=lambda _status: None,
+            error_callback=lambda error: (_ for _ in ()).throw(AssertionError(error)),
+            roi_filenames=(roi_path,),
+            parent_label_selection=selection,
+            component_metadata_by_path={
+                roi_path: {
+                    "well": "A01",
+                    "site": 1,
+                    "channel": 2,
+                    "z_index": 1,
+                    "timepoint": 1,
+                }
+            },
+        )
+    )
+
+    assert received == [selection]
 
 
 def test_stream_rois_preserves_per_artifact_producer_identities(monkeypatch) -> None:
