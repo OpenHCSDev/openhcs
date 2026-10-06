@@ -673,13 +673,18 @@ class PipelineOrchestrator:
 
         return context
 
-    def source_workspace_projection(self):
+    def source_workspace_projection(
+        self, *, resolved_config: GlobalPipelineConfig | None = None
+    ):
         """Return the canonical resolved source state for the initialized plate.
 
         The projection carries every named alias, sample/well, site, channel, Z,
         timepoint, and backend-owned pixel reference used by compilation, runtime,
         and UI inspection. Consumers must query this view rather than constructing
         a second metadata model.
+
+        Compilation supplies its already-resolved configuration; live inspection
+        resolves the current saved configuration at this query boundary.
         """
         if not self.is_initialized():
             raise RuntimeError(
@@ -699,7 +704,10 @@ class PipelineOrchestrator:
             metadata_handler=self.microscope_handler.metadata_handler,
             filemanager=self.filemanager,
             source_bindings=source_bindings_defaults_to_base(
-                self.get_effective_config().source_bindings_config
+                (
+                    self.get_effective_config()
+                    if resolved_config is None else resolved_config
+                ).source_bindings_config
             ),
         ).projection_if_available()
         if projection is not None:
@@ -801,6 +809,8 @@ class PipelineOrchestrator:
         self,
         component: Union["AllComponents", "VariableComponents"],
         component_filter: Optional[List[Union[str, int]]] = None,
+        *,
+        resolved_config: GlobalPipelineConfig | None = None,
     ) -> List[str]:
         """
         Generic method to get component keys using VariableComponents directly.
@@ -814,6 +824,8 @@ class PipelineOrchestrator:
             component: AllComponents or VariableComponents enum specifying which component to extract
                       (also accepts GroupBy enum which will be converted to AllComponents)
             component_filter: Optional list of component values to filter by
+            resolved_config: Existing compilation configuration. Omit for live
+                inspection of the current saved declaration.
 
         Returns:
             List of component values as strings, sorted
@@ -833,8 +845,11 @@ class PipelineOrchestrator:
         # Convert to AllComponents for cache lookup (includes multiprocessing axis)
         component = convert_enum_by_value(component, AllComponents) or component
 
+        effective_config = (
+            self.get_effective_config() if resolved_config is None else resolved_config
+        )
         source_bindings = source_bindings_defaults_to_base(
-            self.get_effective_config().source_bindings_config
+            effective_config.source_bindings_config
         )
         # Use component directly - let natural errors occur for wrong types
         component_name = component.value
@@ -842,7 +857,11 @@ class PipelineOrchestrator:
         # Try metadata cache first (preferred source)
         cached_metadata = self._metadata_cache_service.get_cached_metadata(component)
         if source_bindings.source_filter_declarations:
-            all_components = list(self.source_workspace_projection().component_values(component))
+            all_components = list(
+                self.source_workspace_projection(
+                    resolved_config=effective_config
+                ).component_values(component)
+            )
         elif cached_metadata:
             all_components = list(cached_metadata.keys())
             logger.debug(

@@ -43,7 +43,7 @@ def _resolved_checkpoint(
     orchestrator = SimpleNamespace(
         plate_path=plate_path,
         pipeline_config=pipeline_config,
-        get_component_keys=lambda _component: ["A01", "B02"],
+        get_component_keys=lambda _component, *, resolved_config: ["A01", "B02"],
         create_context=lambda axis_id, *, resolved_config: SimpleNamespace(
             axis_id=axis_id,
             step_axis_filters={},

@@ -260,7 +260,7 @@ def _artifact_planner_stub() -> PathPlanner:
         ),
     )
     planner.orchestrator = SimpleNamespace(
-        get_component_keys=lambda _component: (),
+        get_component_keys=lambda _component, *, resolved_config: (),
     )
     planner.plans = {
         2: CompiledStepPlan(
@@ -3757,7 +3757,7 @@ def test_execution_groups_resolve_non_grouped_variable_component_conflicts():
 def test_non_dict_group_by_declares_dynamic_scope_without_plate_key_lookup():
     planner = _artifact_planner_stub()
     planner.orchestrator = SimpleNamespace(
-        get_component_keys=lambda group_by: pytest.fail(
+        get_component_keys=lambda group_by, *, resolved_config: pytest.fail(
             "non-dict group_by must not request plate component keys"
         )
     )
