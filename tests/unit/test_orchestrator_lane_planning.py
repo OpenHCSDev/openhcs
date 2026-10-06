@@ -1,4 +1,6 @@
 from contextlib import nullcontext
+import multiprocessing
+import signal
 from types import SimpleNamespace
 
 import pytest
@@ -579,11 +581,68 @@ def test_worker_process_initializer_does_not_prepare_global_function_registry(
         lambda: initialized.append(True),
     )
 
-    worker_execution_module._configure_worker_process(
-        None,
-    )
+    parent_handlers = {
+        sig: signal.getsignal(sig) for sig in (signal.SIGTERM, signal.SIGINT)
+    }
+    try:
+        worker_execution_module._configure_worker_process(None)
+    finally:
+        for sig, handler in parent_handlers.items():
+            signal.signal(sig, handler)
 
     assert initialized == []
+
+
+def test_fork_child_termination_cannot_run_inherited_parent_cleanup(
+    monkeypatch, tmp_path
+) -> None:
+    cleanup = tmp_path / "parent-endpoint-cleanup"
+
+    def parent_cleanup(_sig, _frame):
+        cleanup.write_text("parent cleanup invoked")
+
+    parent_handlers = {
+        sig: signal.getsignal(sig) for sig in (signal.SIGTERM, signal.SIGINT)
+    }
+    fork = multiprocessing.get_context("fork")
+    reader, writer = fork.Pipe(duplex=False)
+
+    def held_lane(_keys, _context, _mode):
+        writer.send(tuple(signal.getsignal(sig) for sig in parent_handlers))
+        signal.pause()
+
+    monkeypatch.setattr(
+        worker_execution_module, "_execute_fork_inherited_worker_lane_static", held_lane
+    )
+    lane = WorkerLaneExecutionContext(
+        execution_id="signal-ownership", plate_id=str(tmp_path),
+        debug_execution_policy=NoOpDebugExecutionPolicy(), worker_slot="worker_0",
+        worker_assignments={"worker_0": ["A01"]},
+    )
+    process = fork.Process(
+        target=worker_execution_module._execute_fork_inherited_worker_lane_process,
+        args=(writer, [], lane, RuntimeObservationMode.OMIT),
+    )
+    try:
+        for sig in parent_handlers:
+            signal.signal(sig, parent_cleanup)
+        process.start()
+        writer.close()
+        assert reader.poll(5), "Actual fork entry did not reach its worker lane"
+        assert reader.recv() == (signal.SIG_DFL, signal.SIG_DFL)
+        process.terminate()
+        process.join(timeout=5)
+        assert process.exitcode == -signal.SIGTERM
+        assert not cleanup.exists()
+        assert all(signal.getsignal(sig) is parent_cleanup for sig in parent_handlers)
+    finally:
+        if process.is_alive():
+            process.kill()
+            process.join(timeout=5)
+        reader.close()
+        writer.close()
+        for sig, handler in parent_handlers.items():
+            signal.signal(sig, handler)
 
 
 def test_pooled_worker_lane_runner_submits_and_collects_lane_results(monkeypatch):
