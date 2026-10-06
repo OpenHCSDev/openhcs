@@ -239,13 +239,15 @@ which inherits the same field/gate. That native run used its inherited default;
 lower-value behavior is the focused-controls claim, not an invented new native
 experiment. This is control exposure, not biological tuning or vendor parity.
 
-Issue907 remains a current source defect: MetadataHandlerInterface.source_voxel_spacing
-constructs physical-default SourceVoxelSpacing from get_pixel_size, and
-ViewerStreamingSource.calibrated_metadata consumes it when saved spacing is
-absent. The independent Gaussian980 axis fix does not change these owners.
-Successful pixel graph analysis/reopen does not establish acquisition calibration.
-Singer retains the existing source-spacing repair boundary; no competing viewer
-implementation was started.
+Issue907's source repair is merged on main in ed1bbed73. SourceVoxelSpacing now
+owns shared declared-frame projection; OpenHCS/BioFormats metadata handlers
+consume their actual typed source spacing and no longer promote numeric defaults
+to physical calibration. The legacy numeric-to-physical fallback is deleted.
+Unknown, relative and conflicting frames remain distinct from a physical scalar;
+explicit physical/anisotropic coordinates are preserved. Singer's27 affected
+checks passed, including the actual calibrated_metadata/native-coordinate
+projection. Saved-reopen installed/public acceptance remains outstanding; no
+detector rerun, package activation or biological acceptance is claimed.
 
 Issues131 and580 retain specific causal-memory and upstream triangulation/
 orthogonal acceptance gaps. Related merges alone do not close those gaps.
@@ -287,6 +289,22 @@ current declarations rather than asking anyone to redo removed-object repair.
 
 Current runtime and reporting residuals
 --------------------------------------
+
+Issue226 CLOSED after actual installed primitive acceptance. With PYTHONPATH
+unset and module origin asserted in the existing0.8.7 site-packages, the original
+explicit Centrosome three-pixel reproducer returned exact labels1/1/2 and
+-1/-1/-2 for signed markers; process96164 exited0. The existing six provider/
+public-primary and eight independent reference controls remain the broader
+source evidence. No install, download, native server or scientific replay was
+performed. Preliminary attempts stopped before computation: source cwd shadowed
+the requested target, then the retired target had no package files. Neither
+was counted as acceptance. This closes registered-provider/kernel availability,
+not whole-pipeline/native-viewer or biological parity.
+
+Issue132's selected-source and fragmented-ROI fidelity changes are retained on
+current main. Its remaining scope is phase-level real-container and dense ROI
+profiling, not missing filtering or a claim that archive fragments are cells.
+Historical runtime numbers have not been presented as measurements of main.
 
 Issue432 CLOSED after following its remaining native blocker through448:
 PR437's singleton composition declaration is retained, the original installed
