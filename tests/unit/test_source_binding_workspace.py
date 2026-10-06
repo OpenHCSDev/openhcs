@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from types import MappingProxyType
 
 import numpy as np
 import pytest
@@ -48,6 +49,7 @@ from openhcs.microscopes.openhcs import (
     get_metadata_path,
 )
 from openhcs.core.source_workspace_projection import (
+    VirtualWorkspaceSourceProjection,
     VirtualWorkspaceSourceProjectionCache,
     VirtualWorkspaceSourceProjectionAuthority,
     VirtualWorkspacePathLookup,
@@ -56,6 +58,20 @@ from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.microscopes.source_bindings_handler import SourceBindingsHandler
 from polystore.base import ensure_storage_registry, storage_registry
 from polystore.filemanager import FileManager
+from polystore.virtual_workspace import SourcePixelRef
+
+
+def test_transient_axis_views_observe_each_new_projection_without_reusing_released_ids():
+    cache = VirtualWorkspaceSourceProjectionCache()
+    refs = MappingProxyType({"A01.tif": SourcePixelRef("disk", "source.tif")})
+    for generation in range(20):
+        metadata = MappingProxyType({"A01.tif": MappingProxyType({
+            "well": "A01", "generation": str(generation),
+        })})
+        projection = VirtualWorkspaceSourceProjection(refs, metadata, "/plate")
+        filtered = cache.filtered_by_axis(projection, axis_id="A01")
+        assert filtered.source_metadata_by_path["A01.tif"]["generation"] == str(generation)
+        del projection
 
 
 def _write_tiff_stack(path: Path, values: tuple[int, ...]) -> None:
@@ -73,7 +89,7 @@ def _filemanager() -> FileManager:
 
 @pytest.mark.parametrize("selection,expected_sites", ((None, tuple(range(1, 10))), (7, (7,)), (3, (3,))))
 def test_prepared_workspace_admits_declared_source_universe_without_rewriting_provenance(
-    tmp_path, selection, expected_sites,
+    tmp_path, monkeypatch, selection, expected_sites,
 ):
     source = tmp_path / "source"
     source.mkdir()
@@ -126,10 +142,18 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
     context = ProcessingContext(filemanager=filemanager, axis_id="A01")
     context.plate_path = workspace
     context.microscope_handler = handler
+    from openhcs.core import source_workspace_projection
+    monkeypatch.setattr(source_workspace_projection, "DEFAULT_SOURCE_PROJECTION_CACHE", cache)
     runtime_projection = VirtualWorkspaceSourceProjectionAuthority.from_context(
         context,
     ).projection_or_empty()
     assert runtime_projection.pipeline_start_files() == selected.pipeline_start_files()
+    assert not hasattr(context, "runtime_source_workspace_projection_cache")
+    other = ProcessingContext(filemanager=filemanager, axis_id="A01")
+    other.plate_path = workspace
+    other.microscope_handler = handler
+    assert context.runtime_source_workspace_projection_authority.cache is other.runtime_source_workspace_projection_authority.cache is cache
+    assert other.runtime_source_workspace_projection_authority.projection_or_empty().pipeline_start_files() == selected.pipeline_start_files()
     from openhcs.core.config import PipelineConfig, LazySourceBindingsConfig
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
     orchestrator = PipelineOrchestrator(

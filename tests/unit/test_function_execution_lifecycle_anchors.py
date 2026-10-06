@@ -40,12 +40,12 @@ def _anchor_executor(
         plate_path=Path("."),
         microscope_handler=SimpleNamespace(
             parser=parser,
+            source_admission_config=lambda: None,
             metadata_handler=SimpleNamespace(
                 source_workspace_metadata_document=lambda _path: None
             ),
         ),
         filemanager=SimpleNamespace(exists=lambda *_args: False),
-        runtime_source_workspace_projection_cache=source_workspace_projection_cache,
         runtime_source_binding_context_cache=RuntimeSourceBindingContextCache(),
     )
     executor.context.runtime_source_workspace_projection_authority = (

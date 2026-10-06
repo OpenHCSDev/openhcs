@@ -894,13 +894,12 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
         return request.runtime_universe_state().require_load_universe().files
 
     def _source_binding_candidate_context(self) -> SourcePatternResolutionContext:
-        projection = self.source_workspace_projection_authority().projection_or_empty()
+        projection = self.source_workspace_projection_authority().projection_or_empty(
+            axis_id=self.execution_plan.axis_id,
+        )
         return self.context.runtime_source_binding_context_cache.source_pattern_context(
             parser=self.context.microscope_handler.parser,
-            projection=self.context.runtime_source_workspace_projection_cache.filtered_by_axis(
-                projection,
-                axis_id=self.execution_plan.axis_id,
-            ),
+            projection=projection,
             metadata_rules=self.source_binding_plan.metadata_rules,
         )
 

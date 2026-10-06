@@ -57,7 +57,6 @@ from openhcs.core.source_projection import SourceProjection
 from openhcs.core.source_workspace_projection import (
     VirtualWorkspacePathLookup,
     VirtualWorkspaceSourceProjection,
-    VirtualWorkspaceSourceProjectionAuthority,
 )
 from openhcs.core.aligned_image_payload import stack_image_payloads
 from openhcs.core.runtime_image_values import (
@@ -1674,20 +1673,14 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
                 f"Source-bound artifact {ref!r} requires main-flow source provenance."
             )
 
-        cache = request.context.runtime_source_workspace_projection_cache
-        projection = VirtualWorkspaceSourceProjectionAuthority.from_context(
-            request.context,
-            cache=cache,
-        ).projection_if_available()
+        projection = request.context.runtime_source_workspace_projection_authority.projection_if_available(
+            axis_id=request.axis_scope.axis_id,
+        )
         if projection is None:
             raise ValueError(
                 f"Source-bound artifact {ref!r} requires a virtual-workspace "
                 "source projection."
             )
-        projection = cache.filtered_by_axis(
-            projection,
-            axis_id=request.axis_scope.axis_id,
-        )
         source_context = (
             request.context.runtime_source_binding_context_cache.source_pattern_context(
                 parser=request.context.microscope_handler.parser,

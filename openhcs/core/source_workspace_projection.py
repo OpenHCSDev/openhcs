@@ -695,19 +695,22 @@ def source_schema_filename_metadata(path: str) -> SourceMetadataMapping | None:
 
 
 @dataclass(frozen=True, slots=True)
-class VirtualWorkspaceSourceProjectionAxisCacheKey:
-    """Cache key for an axis-filtered projection view."""
-
-    projection_identity: int
-    axis_id: str | None
-
-
-@dataclass(frozen=True, slots=True)
 class VirtualWorkspaceSourceProjectionCacheEntry:
     """One projection bound to the exact metadata document that produced it."""
 
     metadata: OpenHCSMetadataPayload
     projection: VirtualWorkspaceSourceProjection
+    axis_filtered_projections: dict[str, VirtualWorkspaceSourceProjection] = field(
+        default_factory=dict, compare=False, repr=False,
+    )
+
+    def filtered_by_axis(self, *, axis_id: str) -> VirtualWorkspaceSourceProjection:
+        """Derive each axis view from this retained document exactly once."""
+        filtered = self.axis_filtered_projections.get(axis_id)
+        if filtered is None:
+            filtered = self.projection.filtered_by_axis(axis_id=axis_id)
+            self.axis_filtered_projections[axis_id] = filtered
+        return filtered
 
 
 @dataclass(slots=True)
@@ -718,11 +721,6 @@ class VirtualWorkspaceSourceProjectionCache:
         str,
         VirtualWorkspaceSourceProjectionCacheEntry,
     ] = field(default_factory=dict)
-    axis_filtered_projections: dict[
-        VirtualWorkspaceSourceProjectionAxisCacheKey,
-        VirtualWorkspaceSourceProjection,
-    ] = field(default_factory=dict)
-
     def projection_for(
         self,
         plate_path: Path,
@@ -735,7 +733,6 @@ class VirtualWorkspaceSourceProjectionCache:
                 plate_path,
                 metadata,
             )
-            self.axis_filtered_projections.clear()
             self.projections_by_plate_path[plate_key] = (
                 VirtualWorkspaceSourceProjectionCacheEntry(metadata, projection)
             )
@@ -748,18 +745,18 @@ class VirtualWorkspaceSourceProjectionCache:
         *,
         axis_id: str | None,
     ) -> VirtualWorkspaceSourceProjection:
-        """Return an axis-filtered projection owned by this cache."""
+        """Reuse axis views only while their admitted document owns the input.
+
+        Runtime overlays and caller-created projections have no retained cache
+        authority. Derive them directly instead of retaining old output epochs
+        or identifying a released projection by its recyclable object ID.
+        """
         if axis_id is None:
             return projection
-        cache_key = VirtualWorkspaceSourceProjectionAxisCacheKey(
-            projection_identity=id(projection),
-            axis_id=axis_id,
-        )
-        filtered = self.axis_filtered_projections.get(cache_key)
-        if filtered is None:
-            filtered = projection.filtered_by_axis(axis_id=axis_id)
-            self.axis_filtered_projections[cache_key] = filtered
-        return filtered
+        cached = self.projections_by_plate_path.get(projection.workspace_root)
+        if cached is None or cached.projection is not projection:
+            return projection.filtered_by_axis(axis_id=axis_id)
+        return cached.filtered_by_axis(axis_id=axis_id)
 
 
 # One process-level default: the projection authority owns its cache, so
@@ -857,7 +854,20 @@ class VirtualWorkspaceSourceProjectionAuthority:
             documents.append(metadata)
         return tuple(documents)
 
-    def projection_if_available(self) -> VirtualWorkspaceSourceProjection | None:
+    def _projection_for_axis(
+        self,
+        projection: VirtualWorkspaceSourceProjection,
+        *,
+        axis_id: str | None,
+    ) -> VirtualWorkspaceSourceProjection:
+        """Derive an explicitly requested axis from this source owner."""
+        if self.cache is None:
+            return projection.filtered_by_axis(axis_id=axis_id)
+        return self.cache.filtered_by_axis(projection, axis_id=axis_id)
+
+    def projection_if_available(
+        self, *, axis_id: str | None = None,
+    ) -> VirtualWorkspaceSourceProjection | None:
         for metadata in self.metadata_documents():
             if not OpenHCSMetadataSubdirectories(metadata).has_workspace_mapping():
                 continue
@@ -874,11 +884,13 @@ class VirtualWorkspaceSourceProjectionAuthority:
                 projection = SourceBindingWorkspaceProjector(
                     self.source_bindings
                 ).admit_prepared_projection(projection)
-            return projection
+            return self._projection_for_axis(projection, axis_id=axis_id)
         return None
 
-    def projection_or_empty(self) -> VirtualWorkspaceSourceProjection:
-        projection = self.projection_if_available()
+    def projection_or_empty(
+        self, *, axis_id: str | None = None,
+    ) -> VirtualWorkspaceSourceProjection:
+        projection = self.projection_if_available(axis_id=axis_id)
         if projection is not None:
             return projection
         return VirtualWorkspaceSourceProjection.empty(self.plate_path)
@@ -897,7 +909,9 @@ class RuntimeVirtualWorkspaceSourceProjectionAuthority(
             RuntimeVirtualWorkspaceSourceProjectionAuthority, self
         ).is_bound_to_context(context)
 
-    def projection_if_available(self) -> VirtualWorkspaceSourceProjection | None:
+    def projection_if_available(
+        self, *, axis_id: str | None = None,
+    ) -> VirtualWorkspaceSourceProjection | None:
         projection = super(
             RuntimeVirtualWorkspaceSourceProjectionAuthority, self
         ).projection_if_available()
@@ -911,7 +925,10 @@ class RuntimeVirtualWorkspaceSourceProjectionAuthority(
             and not entries.is_empty
         )
         if not produced_entries:
-            return projection
+            return (
+                None if projection is None
+                else self._projection_for_axis(projection, axis_id=axis_id)
+            )
         builder = VirtualWorkspaceSourceProjectionBuilder(self.plate_path)
         if projection is not None:
             builder.ingest_workspace_mapping(
@@ -933,7 +950,7 @@ class RuntimeVirtualWorkspaceSourceProjectionAuthority(
                 VirtualWorkspaceMapping.from_subdirectory(fields)
             )
             builder.ingest_admitted_subdirectory(fields, entries)
-        return builder.projection()
+        return self._projection_for_axis(builder.projection(), axis_id=axis_id)
 
 
 @dataclass(slots=True)

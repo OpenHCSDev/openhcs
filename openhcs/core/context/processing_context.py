@@ -36,7 +36,6 @@ from openhcs.core.runtime_stack_cache import RuntimeImageStackCache
 from openhcs.core.runtime_source_binding_cache import RuntimeSourceBindingContextCache
 from openhcs.core.source_workspace_projection import (
     VirtualWorkspaceSourceProjectionAuthority,
-    VirtualWorkspaceSourceProjectionCache,
 )
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.core.streaming_config_declarations import ViewerType
@@ -136,9 +135,6 @@ class ProcessingContext:
         from openhcs.core.steps.abstract import StepExecutionObservation
 
         self.completed_step_outputs = StepExecutionObservation.empty()
-        self.runtime_source_workspace_projection_cache = (
-            VirtualWorkspaceSourceProjectionCache()
-        )
         self._runtime_source_workspace_projection_authority: (
             VirtualWorkspaceSourceProjectionAuthority | None
         ) = None
@@ -185,7 +181,6 @@ class ProcessingContext:
         if authority is None or not authority.is_bound_to_context(self):
             authority = VirtualWorkspaceSourceProjectionAuthority.from_context(
                 self,
-                cache=self.runtime_source_workspace_projection_cache,
             )
             self._runtime_source_workspace_projection_authority = authority
         return authority
