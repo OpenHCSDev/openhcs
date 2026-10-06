@@ -514,6 +514,28 @@ compartment loss. The reported responses therefore describe the contributing
 cohorts, not unbiased whole-population translocation; Supplementary Data 8
 retains each pipeline, coverage denominator and failed predecessor.
 
+Table 2 summarizes the different endpoints supported by these task-only
+trials. The measures are not interchangeable: object matching, directed
+boundary agreement, centre localisation and assay-response separation answer
+different questions.
+
+| Input and task | Evaluation evidence | Supported result and limit |
+|---|---|---|
+| H001 bright objects | Pinned notebook labels; 64 objects | First/final object F1 0.929/0.944 in the Figure 5 trial; computational, not manual biological truth |
+| BBBC039 nuclei | Independent instance annotations; 200 fields | Three authors' final pooled F1 0.898–0.906; includes development fields, not first-200 or unseen accuracy |
+| BBBC007 DNA/actin | Manual-outline union; 16 fields | Directed boundary fraction 0.743 within two pixels; not boundary recall or exhaustive instance accuracy |
+| H002 3-D centres | 15 manual centres; Figure 9 trial | 15/15 matched within 20 voxels, mean error 4.80 voxels; annotations not established as exhaustive |
+| R0010 retinal somata | Distributed matched raw/result review | Autonomous repair retained neighbours and reduced nuisance masks; manual-reference accuracy unmeasured |
+| H004 public neurites | Matched raw paths and nuisance controls | Local junction and faint-path recovery; complete extent and per-neuron ownership unresolved |
+| BBBC013 translocation | Well-level control and dose summaries; 96 wells | Assay responses recovered in contributing cohorts; compartment coverage varied and whole-cell accuracy unmeasured |
+
+Table 2. Evidence and claim boundaries across task-only analysis tasks.
+Rows summarize the reported trials, not a newly pooled benchmark or a ranking
+of assays. Reference comparisons followed pipeline freezing and were not
+returned to authors. Visual-review rows do not supply a numerical accuracy
+estimate. First/final comparisons and independent repeats remain distinct;
+Supplementary Data 8 retains their exact inputs, predictions and evaluations.
+
 Together, the task-only trials demonstrate useful initial choices, local
 recovery and self-diagnosis without reference-score feedback. Their quantitative
 comparisons and matched views distinguish detection, object separation,
