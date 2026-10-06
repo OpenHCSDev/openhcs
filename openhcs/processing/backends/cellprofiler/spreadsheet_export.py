@@ -6,11 +6,13 @@ import re
 import statistics
 from collections import OrderedDict
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import Enum
 from numbers import Real
 from pathlib import Path, PurePosixPath
 from typing import cast, TYPE_CHECKING, ClassVar, TypeVar
+
+import numpy as np
 
 from openhcs.core._tabular_native import render_csv as _render_native_csv
 from openhcs.core.artifacts import (
@@ -29,6 +31,8 @@ from openhcs.core.equivalence import (
 )
 from openhcs.core.measurement_row_materialization import (
     MeasurementSparseColumnarRows,
+    MEASUREMENT_SPARSE_CELL,
+    is_structural_missing_measurement_cell,
     MeasurementRowsAxisProjection,
     WideMeasurementRowAccumulator,
 )
@@ -37,6 +41,7 @@ from openhcs.core.pipeline.function_contracts import (
     runtime_bound_parameters,
 )
 from openhcs.core.runtime_tabular_values import (
+    ColumnarRows,
     FieldSpec,
 )
 from openhcs.core.runtime_measurements import (
@@ -219,61 +224,105 @@ class SpreadsheetFileSelection:
 
     def combined_rows(
         self,
-        selected_tables: tuple[tuple[str, tuple[Mapping[str, object], ...]], ...],
-    ) -> tuple[Mapping[str, object], ...]:
+        selected_tables: tuple[tuple[str, ColumnarRows], ...],
+    ) -> ColumnarRows:
         if len(selected_tables) == 1:
             return selected_tables[0][1]
         image_field = CellProfilerSpreadsheetRowField.IMAGE_NUMBER.value
-        grouped: list[tuple[str, OrderedDict[object, list[Mapping[str, object]]]]] = []
-        image_order: list[object] = []
+        grouped: list[tuple[str, ColumnarRows, OrderedDict[object, list[int]]]] = []
+        image_counts: OrderedDict[object, int] = OrderedDict()
         for subject, rows in selected_tables:
-            rows_by_image: OrderedDict[object, list[Mapping[str, object]]] = (
-                OrderedDict()
+            rows_by_image: OrderedDict[object, list[int]] = OrderedDict()
+            if image_field not in rows.columns and len(rows):
+                raise ValueError(
+                    "Combined spreadsheet subjects require a producer-declared "
+                    f"{image_field!r} on every {subject!r} row."
+                )
+            image_numbers = (
+                rows.column_values(image_field) if image_field in rows.columns else ()
             )
-            for row in rows:
-                if image_field not in row:
+            for index, image_number in enumerate(image_numbers):
+                if is_structural_missing_measurement_cell(image_number):
                     raise ValueError(
                         "Combined spreadsheet subjects require a producer-declared "
                         f"{image_field!r} on every {subject!r} row."
                     )
-                image_number = row[image_field]
-                rows_by_image.setdefault(image_number, []).append(row)
-                if image_number not in image_order:
-                    image_order.append(image_number)
-            grouped.append((subject, rows_by_image))
+                indexes = rows_by_image.setdefault(image_number, [])
+                indexes.append(index)
+                image_counts[image_number] = max(
+                    image_counts.get(image_number, 0), len(indexes)
+                )
+            grouped.append((subject, rows, rows_by_image))
 
-        combined: list[Mapping[str, object]] = []
-        for image_number in image_order:
-            row_count = max(
-                (
-                    len(rows_by_image.get(image_number, ()))
-                    for _, rows_by_image in grouped
-                ),
-                default=0,
+        offsets: dict[object, int] = {}
+        image_values: list[object] = []
+        for image_number, count in image_counts.items():
+            offsets[image_number] = len(image_values)
+            image_values.extend([image_number] * count)
+        columns: dict[str, np.ndarray] = {}
+        if image_values:
+            columns[image_field] = ColumnarRows.column_array(image_values)
+        for subject, rows, rows_by_image in grouped:
+            source_indexes = np.asarray(
+                [index for indexes in rows_by_image.values() for index in indexes],
+                dtype=np.intp,
             )
-            for row_index in range(row_count):
-                row: dict[str, object] = {image_field: image_number}
-                for subject, rows_by_image in grouped:
-                    subject_rows = rows_by_image.get(image_number, ())
-                    if row_index >= len(subject_rows):
-                        continue
-                    for field_name, value in subject_rows[row_index].items():
-                        if field_name == image_field:
-                            continue
-                        row[f"{subject}_{field_name}"] = value
-                combined.append(row)
-        return tuple(combined)
+            target_indexes = np.asarray(
+                [
+                    offsets[image_number] + ordinal
+                    for image_number, indexes in rows_by_image.items()
+                    for ordinal in range(len(indexes))
+                ],
+                dtype=np.intp,
+            )
+            for field_name in rows.columns:
+                if field_name == image_field:
+                    continue
+                values = ColumnarRows.column_array(rows.column_values(field_name))[
+                    source_indexes
+                ]
+                present = np.fromiter(
+                    (not is_structural_missing_measurement_cell(value) for value in values),
+                    dtype=bool,
+                    count=len(values),
+                )
+                if not np.any(present):
+                    continue
+                name = f"{subject}_{field_name}"
+                if name not in columns:
+                    columns[name] = np.empty(len(image_values), dtype=object)
+                    columns[name].fill(MEASUREMENT_SPARSE_CELL)
+                columns[name][target_indexes[present]] = values[present]
+        # Native headers follow the first row where a field is present, then
+        # the declared subject/field order within that row.
+        names = tuple(
+            sorted(
+                columns,
+                key=lambda name: next(
+                    index
+                    for index, value in enumerate(columns[name])
+                    if not is_structural_missing_measurement_cell(value)
+                ),
+            )
+        )
+        return MeasurementSparseColumnarRows(
+            {name: columns[name] for name in names},
+            fields=tuple(FieldSpec(name, required=False) for name in names),
+        )
 
     def render_csv(
         self,
-        rows: tuple[Mapping[str, object], ...],
+        rows: ColumnarRows,
         *,
         active_subjects: tuple[str, ...],
         delimiter: SpreadsheetDelimiter,
         nan_representation: SpreadsheetNanRepresentation,
     ) -> str:
         """Render native single or contextual headers from the selected subjects."""
-        columns = tuple(dict.fromkeys(field_name for row in rows for field_name in row))
+        row_mappings = tuple(rows.iter_row_mappings())
+        columns = tuple(
+            dict.fromkeys(field_name for row in row_mappings for field_name in row)
+        )
         header_rows = (columns,)
         if len(active_subjects) > 1:
             bindings = []
@@ -294,7 +343,7 @@ class SpreadsheetFileSelection:
                 bindings.append((subject, name[len(subject) + 1 :]))
             header_rows = tuple(zip(*bindings))
         return _render_native_csv(
-            rows,
+            row_mappings,
             columns,
             delimiter.value,
             Real,
@@ -391,7 +440,9 @@ def render_spreadsheet_bundle(
     relationship_rows = _relationship_rows(artifact_batch, image_numbers)
     if relationship_rows:
         tables["Object relationships"] = relationship_rows
-    source_image_rows = tables.get("Image", ())
+    source_image_rows = tables.get(
+        "Image", MeasurementSparseColumnarRows({}, fields=())
+    )
 
     tables = _selected_table_columns(
         tables,
@@ -461,7 +512,7 @@ def _measurement_tables(
     add_image_metadata: bool,
     add_image_file_names: bool,
 ) -> tuple[
-    OrderedDict[str, tuple[Mapping[str, object], ...]],
+    OrderedDict[str, ColumnarRows],
     tuple[str, ...],
 ]:
     accumulator = WideMeasurementRowAccumulator(
@@ -595,7 +646,7 @@ def _measurement_tables(
     return (
         OrderedDict(
             (subject, _cellprofiler_rows(rows))
-            for subject, rows in accumulator.row_mappings_by_subject().items()
+            for subject, rows in accumulator.columnar_rows_by_subject().items()
         ),
         accumulator.object_subjects(),
     )
@@ -682,7 +733,7 @@ def _source_metadata_measurement_rows(
 def _relationship_rows(
     artifact_batch: RuntimeArtifactBatch,
     image_numbers: CellProfilerImageSetNumbering,
-) -> tuple[Mapping[str, object], ...]:
+) -> ColumnarRows:
     rows: list[Mapping[str, object]] = []
     for record in _records_in_contract_order(
         artifact_batch,
@@ -696,45 +747,57 @@ def _relationship_rows(
             owner=relationship.name,
         )
         rows.extend(
-            _cellprofiler_rows(
-                MeasurementRowsAxisProjection.from_rows(
-                    relationship.row_mappings()
-                ).remap_runtime_slice_indices(image_numbers_by_slice)
-            )
+            MeasurementRowsAxisProjection.from_rows(
+                relationship.row_mappings()
+            ).remap_runtime_slice_indices(image_numbers_by_slice)
         )
-    return tuple(rows)
+    names = tuple(dict.fromkeys(name for row in rows for name in row))
+    # Relationship rows are separate edges, not sparse fragments to coalesce.
+    return _cellprofiler_rows(
+        MeasurementSparseColumnarRows(
+            {
+                name: tuple(row.get(name, MEASUREMENT_SPARSE_CELL) for row in rows)
+                for name in names
+            },
+            fields=tuple(FieldSpec(name, required=False) for name in names),
+        )
+    )
 
 
-def _cellprofiler_rows(
-    rows: Sequence[Mapping[str, object]],
-) -> tuple[Mapping[str, object], ...]:
-    """Expose canonical image-number coordinates in CellProfiler rows."""
-
+def _cellprofiler_rows(rows: ColumnarRows) -> ColumnarRows:
+    """Project declared image coordinates once while retaining sparse columns."""
     slice_field = MeasurementRowAxisField.SLICE_INDEX.value
-    image_number_field = CellProfilerSpreadsheetRowField.IMAGE_NUMBER.value
-    projected_rows: list[Mapping[str, object]] = []
-    for row in rows:
-        if slice_field not in row:
-            projected_rows.append(row)
+    image_field = CellProfilerSpreadsheetRowField.IMAGE_NUMBER.value
+    if slice_field not in rows.columns:
+        return rows
+    source_values = rows.column_values(slice_field)
+    values = np.empty(len(source_values), dtype=object)
+    for index, value in enumerate(source_values):
+        if is_structural_missing_measurement_cell(value):
+            values[index] = value
             continue
-        slice_index = measurement_axis_integer_value(
-            row[slice_field],
-            MeasurementRowAxisField.SLICE_INDEX,
+        number = measurement_axis_integer_value(
+            value, MeasurementRowAxisField.SLICE_INDEX
         )
-        if slice_index is None:
+        if number is None:
             raise ValueError(
                 "CellProfiler spreadsheet export requires an integer "
-                f"{slice_field!r}, got {row[slice_field]!r}."
+                f"{slice_field!r}, got {value!r}."
             )
-        projected_rows.append(
-            {
-                (image_number_field if field_name == slice_field else field_name): (
-                    slice_index if field_name == slice_field else value
-                )
-                for field_name, value in row.items()
-            }
-        )
-    return tuple(projected_rows)
+        values[index] = number
+    return MeasurementSparseColumnarRows(
+        {
+            image_field if name == slice_field else name: (
+                values if name == slice_field else rows.column_values(name)
+            )
+            for name in rows.columns
+        },
+        fields=tuple(
+            replace(field, name=image_field) if field.name == slice_field else field
+            for field in rows.fields
+        ),
+        object_row_identity=rows.object_row_identity,
+    )
 
 
 def _records_in_contract_order(
@@ -765,155 +828,218 @@ def _measurement_subject_name(table: MeasurementTable) -> str:
 
 
 def _selected_table_columns(
-    tables: OrderedDict[str, tuple[Mapping[str, object], ...]],
+    tables: OrderedDict[str, ColumnarRows],
     *,
     selected_columns: tuple[SpreadsheetColumnSelection, ...],
     enabled: bool,
-) -> OrderedDict[str, tuple[Mapping[str, object], ...]]:
+) -> OrderedDict[str, ColumnarRows]:
     if not enabled:
         return tables
     axis_fields = (
         *MeasurementRowAxisField.field_names(),
         CellProfilerSpreadsheetRowField.IMAGE_NUMBER.value,
     )
-    return OrderedDict(
-        (
-            subject,
-            (
-                rows
-                if subject == "Object relationships"
-                else tuple(
-                    {
-                        field_name: value
-                        for field_name, value in row.items()
-                        if field_name in axis_fields
-                        or any(
-                            selection.matches(subject, field_name)
-                            for selection in selected_columns
-                        )
-                    }
-                    for row in rows
-                )
-            ),
+    selected = OrderedDict()
+    for subject, rows in tables.items():
+        fields = tuple(
+            field
+            for field in rows.fields
+            if subject == "Object relationships"
+            or field.name in axis_fields
+            or any(
+                selection.matches(subject, field.name) for selection in selected_columns
+            )
         )
-        for subject, rows in tables.items()
-    )
+        selected[subject] = MeasurementSparseColumnarRows(
+            {field.name: rows.column_values(field.name) for field in fields},
+            fields=fields,
+            object_row_identity=rows.object_row_identity,
+        )
+    return selected
 
 
 def _with_requested_aggregates(
-    tables: OrderedDict[str, tuple[Mapping[str, object], ...]],
+    tables: OrderedDict[str, ColumnarRows],
     *,
     object_subjects: tuple[str, ...],
     mean: bool,
     median: bool,
     standard_deviation: bool,
-) -> OrderedDict[str, tuple[Mapping[str, object], ...]]:
+) -> OrderedDict[str, ColumnarRows]:
     if not (mean or median or standard_deviation):
         return tables
     image_field = CellProfilerSpreadsheetRowField.IMAGE_NUMBER.value
-    image_rows = [dict(row) for row in tables.get("Image", ())]
-    image_rows_by_number = {
-        row[image_field]: row for row in image_rows if image_field in row
+    image = tables.get("Image")
+    image_numbers = (
+        ()
+        if image is None or image_field not in image.columns
+        else image.column_values(image_field)
+    )
+    image_indexes = {
+        value: index
+        for index, value in enumerate(image_numbers)
+        if not is_structural_missing_measurement_cell(value)
     }
+    columns = (
+        {}
+        if image is None
+        else {
+            name: ColumnarRows.column_array(image.column_values(name)).astype(
+                object, copy=True
+            )
+            for name in image.columns
+        }
+    )
+    fields = [] if image is None else list(image.fields)
     for subject in object_subjects:
-        rows = tables.get(subject, ())
-        rows_by_image: OrderedDict[object, list[Mapping[str, object]]] = OrderedDict()
-        for row in rows:
-            if image_field not in row:
+        rows = tables.get(subject)
+        if rows is None:
+            continue
+        if image_field not in rows.columns:
+            raise ValueError(
+                f"Object measurement aggregation requires image_number in every {subject!r} row."
+            )
+        groups: OrderedDict[object, list[int]] = OrderedDict()
+        for index, number in enumerate(rows.column_values(image_field)):
+            if is_structural_missing_measurement_cell(number):
                 raise ValueError(
-                    "Object measurement aggregation requires image_number in every "
-                    f"{subject!r} row."
+                    f"Object measurement aggregation requires image_number in every {subject!r} row."
                 )
-            rows_by_image.setdefault(row[image_field], []).append(row)
-        for image_number, subject_rows in rows_by_image.items():
-            image_row = image_rows_by_number.get(image_number)
-            if image_row is None:
+            groups.setdefault(number, []).append(index)
+        for number, indexes in groups.items():
+            image_index = image_indexes.get(number)
+            if image_index is None:
                 raise ValueError(
                     "Object measurement aggregation requires a producer-declared "
-                    f"Image measurement row for {image_field}={image_number!r}."
+                    f"Image measurement row for {image_field}={number!r}."
                 )
-            for feature in _numeric_features(subject_rows):
-                values = tuple(
-                    float(row[feature]) for row in subject_rows if feature in row
-                )
-                if mean:
-                    image_row[f"Mean_{subject}_{feature}"] = statistics.fmean(values)
-                if median:
-                    image_row[f"Median_{subject}_{feature}"] = statistics.median(values)
-                if standard_deviation:
-                    image_row[f"StDev_{subject}_{feature}"] = statistics.pstdev(values)
+            for feature, values in _numeric_features(
+                rows, np.asarray(indexes, dtype=np.intp)
+            ):
+                for prefix, enabled, calculate in (
+                    ("Mean", mean, statistics.fmean),
+                    ("Median", median, statistics.median),
+                    ("StDev", standard_deviation, statistics.pstdev),
+                ):
+                    if not enabled:
+                        continue
+                    name = f"{prefix}_{subject}_{feature}"
+                    if name not in columns:
+                        columns[name] = np.full(
+                            len(image_numbers),
+                            MEASUREMENT_SPARSE_CELL,
+                            dtype=object,
+                        )
+                        fields.append(FieldSpec(name, required=False))
+                    # Retain the existing statistics owner and float-cell semantics.
+                    columns[name][image_index] = calculate(
+                        float(value) for value in values
+                    )
     updated = OrderedDict(tables)
-    updated["Image"] = tuple(image_rows)
+    updated["Image"] = MeasurementSparseColumnarRows(columns, fields=tuple(fields))
     return updated
 
 
-def _numeric_features(rows: Sequence[Mapping[str, object]]) -> tuple[str, ...]:
+def _numeric_features(
+    rows: ColumnarRows,
+    indexes: np.ndarray,
+) -> tuple[tuple[str, np.ndarray], ...]:
+    """Derive numerical columns in first-present-cell order for one image."""
     axis_fields = frozenset(
         (
             *MeasurementRowAxisField.field_names(),
             CellProfilerSpreadsheetRowField.IMAGE_NUMBER.value,
         )
     )
-    candidates = tuple(
-        dict.fromkeys(
-            field_name
-            for row in rows
-            for field_name, value in row.items()
-            if field_name not in axis_fields
-            and isinstance(value, Real)
-            and not isinstance(value, bool)
-        )
-    )
-    return tuple(
-        field_name
-        for field_name in candidates
-        if all(
-            field_name not in row
-            or (
-                isinstance(row[field_name], Real)
-                and not isinstance(row[field_name], bool)
+    features = []
+    for position, name in enumerate(rows.columns):
+        if name in axis_fields:
+            continue
+        values = ColumnarRows.column_array(rows.column_values(name))[indexes]
+        if values.dtype.hasobject:
+            present = np.fromiter(
+                (not is_structural_missing_measurement_cell(value) for value in values),
+                dtype=bool,
+                count=len(values),
             )
-            for row in rows
+            locations = np.flatnonzero(present)
+            if not len(locations):
+                continue
+            first = int(locations[0])
+            values = values[present]
+            if not all(
+                isinstance(value, Real) and not isinstance(value, bool)
+                for value in values
+            ):
+                continue
+        else:
+            if not len(values) or values.dtype.kind not in "iuf":
+                continue
+            first = 0
+        features.append((first, position, name, values))
+    return tuple(
+        (name, values)
+        for _first, _position, name, values in sorted(
+            features, key=lambda value: value[:2]
         )
     )
 
 
 def _with_image_columns_on_objects(
-    tables: OrderedDict[str, tuple[Mapping[str, object], ...]],
+    tables: OrderedDict[str, ColumnarRows],
     *,
     object_subjects: tuple[str, ...],
-    image_rows: tuple[Mapping[str, object], ...],
+    image_rows: ColumnarRows,
     add_metadata: bool,
     add_file_names: bool,
-) -> OrderedDict[str, tuple[Mapping[str, object], ...]]:
+) -> OrderedDict[str, ColumnarRows]:
     if not (add_metadata or add_file_names):
         return tables
+    # Image metadata is small; retain its existing naming policy, without rebuilding
+    # complete object row dictionaries just to project the selected columns.
     image_field = CellProfilerSpreadsheetRowField.IMAGE_NUMBER.value
-    image_rows_by_number = {
-        row[image_field]: row for row in image_rows if image_field in row
+    image_columns_by_number = {
+        row[image_field]: _image_columns_for_objects(
+            row,
+            add_metadata=add_metadata,
+            add_file_names=add_file_names,
+        )
+        for row in image_rows.iter_row_mappings()
+        if image_field in row
     }
     updated = OrderedDict(tables)
     for subject in object_subjects:
-        updated[subject] = tuple(
-            _row_with_image_columns(
-                row,
-                image_rows_by_number.get(row[image_field], {}),
-                add_metadata=add_metadata,
-                add_file_names=add_file_names,
-            )
-            for row in tables.get(subject, ())
+        rows = tables.get(subject)
+        if rows is None:
+            continue
+        columns = {
+            name: ColumnarRows.column_array(rows.column_values(name)).copy()
+            for name in rows.columns
+        }
+        fields = list(rows.fields)
+        for index, number in enumerate(rows.column_values(image_field)):
+            additions = image_columns_by_number.get(number, {})
+            for name, value in additions.items():
+                if name not in columns:
+                    columns[name] = np.full(
+                        rows.row_count(), MEASUREMENT_SPARSE_CELL, dtype=object
+                    )
+                    fields.append(FieldSpec(name, required=False))
+                if is_structural_missing_measurement_cell(columns[name][index]):
+                    columns[name][index] = value
+        updated[subject] = MeasurementSparseColumnarRows(
+            columns, fields=tuple(fields), object_row_identity=rows.object_row_identity
         )
     return updated
 
 
-def _row_with_image_columns(
-    row: Mapping[str, object],
+def _image_columns_for_objects(
     image_row: Mapping[str, object],
     *,
     add_metadata: bool,
     add_file_names: bool,
 ) -> Mapping[str, object]:
-    result = dict(row)
+    result = {}
     for field_name, value in image_row.items():
         normalized = normalize_runtime_identifier(field_name)
         selected = (
@@ -947,7 +1073,7 @@ def _row_with_image_columns(
 
 
 def _automatic_file_selections(
-    tables: Mapping[str, tuple[Mapping[str, object], ...]],
+    tables: Mapping[str, ColumnarRows],
     delimiter: SpreadsheetDelimiter,
 ) -> tuple[SpreadsheetFileSelection, ...]:
     return tuple(
@@ -972,21 +1098,22 @@ def _bundle_path_template(
 
 def _rows_by_resolved_path(
     path_template: str,
-    rows: tuple[Mapping[str, object], ...],
+    rows: ColumnarRows,
     *,
-    image_rows: tuple[Mapping[str, object], ...],
-) -> tuple[tuple[str, tuple[Mapping[str, object], ...]], ...]:
+    image_rows: ColumnarRows,
+) -> tuple[tuple[str, ColumnarRows], ...]:
     tokens = tuple(
         match.group("name") for match in _METADATA_TEMPLATE.finditer(path_template)
     )
     if not tokens:
         return ((path_template, rows),)
     image_field = CellProfilerSpreadsheetRowField.IMAGE_NUMBER.value
+    image_row_mappings = tuple(image_rows.iter_row_mappings())
     image_rows_by_number = {
-        row[image_field]: row for row in image_rows if image_field in row
+        row[image_field]: row for row in image_row_mappings if image_field in row
     }
-    grouped: OrderedDict[str, list[Mapping[str, object]]] = OrderedDict()
-    for row in rows:
+    grouped: OrderedDict[str, list[int]] = OrderedDict()
+    for index, row in enumerate(rows.iter_row_mappings()):
         metadata_row = dict(image_rows_by_number.get(row.get(image_field), {}))
         metadata_row.update(row)
         replacements = {}
@@ -996,7 +1123,7 @@ def _rows_by_resolved_path(
                 plate_values = tuple(
                     dict.fromkeys(
                         candidate
-                        for image_row in image_rows
+                        for image_row in image_row_mappings
                         for candidate in (_optional_metadata_value(image_row, token),)
                         if candidate is not None
                     )
@@ -1010,8 +1137,23 @@ def _rows_by_resolved_path(
                 value = plate_values[0]
             replacements[token] = value
         relative_path = path_template.format_map(replacements)
-        grouped.setdefault(relative_path, []).append(row)
-    return tuple((path, tuple(path_rows)) for path, path_rows in grouped.items())
+        grouped.setdefault(relative_path, []).append(index)
+    return tuple(
+        (
+            path,
+            MeasurementSparseColumnarRows(
+                {
+                    name: ColumnarRows.column_array(rows.column_values(name))[
+                        np.asarray(indexes, dtype=np.intp)
+                    ]
+                    for name in rows.columns
+                },
+                fields=rows.fields,
+                object_row_identity=rows.object_row_identity,
+            ),
+        )
+        for path, indexes in grouped.items()
+    )
 
 
 def _optional_metadata_value(

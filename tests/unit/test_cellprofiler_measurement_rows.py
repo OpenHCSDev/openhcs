@@ -799,13 +799,14 @@ def test_object_scoped_long_form_projection_rejects_conflicting_values() -> None
         DEFAULT_RUNTIME_MEASUREMENT_ROW_IDENTITY_CONTRACT
     )
 
+    accumulator.add(
+        rows,
+        lambda feature, _qualifiers: feature,
+        default_subject="Cells",
+        default_scope=MeasurementScope.OBJECT,
+    )
     with pytest.raises(ValueError, match="Conflicting sparse measurement values"):
-        accumulator.add(
-            rows,
-            lambda feature, _qualifiers: feature,
-            default_subject="Cells",
-            default_scope=MeasurementScope.OBJECT,
-        )
+        accumulator.columnar_rows_by_subject()
 
 
 def test_wide_measurement_projection_uses_row_owned_scope_for_artifact_table() -> None:
