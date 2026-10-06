@@ -53,7 +53,7 @@ HEAD rather than being updated over colliding untracked source.
 
 The observed processes whose cwd was this checkout run agent_comms.worker in
 a separate Toad environment, not an OpenHCS runtime. No process was stopped.
-All312 original parent untracked files remain. The dependency leftovers were
+All312 original parent untracked files were initially retained. The dependency leftovers were
 subsequently stashed independently: PolyStore a2284ef8d9a08487219a9ea4b08f5af7e3c35b7a
 and python-introspect adcbec4729250a4739be743f81c4054c83a3b3df. Each complete
 stash patch was compared with the published patch hash and matched exactly.
@@ -62,6 +62,16 @@ untracked paths, as439eba29305141b5a58bf6e2b29333b29fb03e1a; its untracked-paren
 blob matches the archived file hash exactly. All three original dependency
 HEADs remain unchanged. Main and its dependencies now have no tracked dirty
 entries. Source classification and remaining issue disposition continue.
+
+After source-family classification, the13 historical untracked source/document/
+lock files were checked again against the published manifest: all13 hashes
+matched. Only those exact paths were stashed with include-untracked in
+d4faf47ed31d8ce36721a28efe5492153202f0c7. Its third-parent tree contains exactly
+those13 files and compares byte-identically with the recovery branch. The
+remaining299 untracked paths compare exactly with the manifest's excluded
+data/download/result inventory. No dataset/output was included in the stash,
+and the historical HEAD remains2bc579ca9e. Both tracked and untracked historical
+source are now stashed, independently recoverable from published Git custody.
 
 The observed live MCP interpreters use this checkout's venv, but that venv's
 OpenHCS editable finder and PolyStore path refer to separate /wt source trees,
@@ -174,7 +184,8 @@ were transplanted into current APIs or discarded to claim parity.
 The excluded untracked inventory contains exactly two acquisition/download
 files and297 benchmark/results paths. None is another excluded source tree.
 The13 selected untracked source/document/lock files are included in the
-published70-file custody inventory. Untracked results and both original
+published70-file custody inventory and are now stashed as described above.
+Untracked results and both original
 downloads remain untouched. Derived lockfiles are historical installation
 metadata, not a request to downgrade the current dependency graph.
 
@@ -289,6 +300,33 @@ current declarations rather than asking anyone to redo removed-object repair.
 
 Current runtime and reporting residuals
 --------------------------------------
+
+Issues302 and417 CLOSED against their original acceptance, not extra later
+activation notes. For302, the final factored source had two real MCP/native
+compile/execute/reset/inventory/reopen journeys with matched raw/result/combined
+captures and physical transforms; current mounted-route reset retains this
+behavior. This is actual source-qualified application evidence, not repair of
+the separate old H002 source-skew installation. For417, the original generic/
+selection ownership correction and31 checks include the actual named/ordinary
+checkpoint writer/reopen flow. Neither closure claims all viewer states,
+installed native acceptance or biological accuracy.
+
+Issue1077 was already automatically closed by merged1078. Its original stale
+supplementary benchmark consumers were corrected by the other-machine owner;
+no competing benchmark patch or duplicate closure was created.
+
+Issue516 remains a real importer batch-context defect. Public kwarg projection
+uses the pre-batch context, but subsequent verification advances context after
+the first filter. That can erase Objects selection and recreate competing
+RetainedEnabled lineage. Hypatia owns the existing lowerer/projection repair;
+the original explicit object relation and complete five-module CPPipe remain
+the acceptance target. The strict combiner is not the defect.
+
+Issue529's source relation is repaired by84ba215d6: the object-domain policy
+projects invocation payload AND plane projection from the labels binding.
+Its original installed SOURCE_BINDING singleton/two-source publication/following
+consumer acceptance remains unverified. No output guard weakening or competing
+axis fix is assigned.
 
 Issue226 CLOSED after actual installed primitive acceptance. With PYTHONPATH
 unset and module origin asserted in the existing0.8.7 site-packages, the original
