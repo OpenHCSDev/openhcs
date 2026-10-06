@@ -41,7 +41,7 @@ production source [pending]{.benchmark-claim key=source_revision},
 publication status [pending]{.benchmark-claim key=status}.
 ```
 
-`case_count` is also derived from the matched execution/total cohort. The two
+`case_count` is also derived from the matched execution/total cohort.
 Final Figure 2 is one composite (A declared-output parity, B execution CDF,
 C total CDF), using the existing measured renderer/CDF painter:
 
