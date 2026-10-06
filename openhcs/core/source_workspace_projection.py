@@ -23,6 +23,7 @@ from openhcs.core.source_bindings import (
     SOURCE_BINDING_ALIAS_METADATA_FIELD,
     NamedSourceBinding,
     SourceBindingsConfig,
+    SourceFilterClause,
     SourceProjectionRole,
 )
 from openhcs.core.source_metadata import (
@@ -703,6 +704,40 @@ class VirtualWorkspaceSourceProjectionCacheEntry:
     axis_filtered_projections: dict[str, VirtualWorkspaceSourceProjection] = field(
         default_factory=dict, compare=False, repr=False,
     )
+    source_admitted_entries: dict[
+        tuple[SourceFilterClause, ...], VirtualWorkspaceSourceProjectionCacheEntry,
+    ] = field(default_factory=dict, compare=False, repr=False)
+
+    def admitted_for(
+        self, source_bindings: SourceBindingsConfig | None,
+    ) -> VirtualWorkspaceSourceProjectionCacheEntry:
+        """Bind prepared-source admission to its document and declarations."""
+        if source_bindings is None or not source_bindings.source_filter_declarations:
+            return self
+        declarations = source_bindings.source_filter_declarations
+        admitted = self.source_admitted_entries.get(declarations)
+        if admitted is None:
+            from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
+
+            admitted = VirtualWorkspaceSourceProjectionCacheEntry(
+                self.metadata,
+                SourceBindingWorkspaceProjector(source_bindings).admit_prepared_projection(
+                    self.projection
+                ),
+            )
+            self.source_admitted_entries[declarations] = admitted
+        return admitted
+
+    def entry_for_projection(
+        self, projection: VirtualWorkspaceSourceProjection,
+    ) -> VirtualWorkspaceSourceProjectionCacheEntry | None:
+        """Recognize only projections retained by this admitted document."""
+        if self.projection is projection:
+            return self
+        return next((
+            entry for entry in self.source_admitted_entries.values()
+            if entry.projection is projection
+        ), None)
 
     def partition_by_axes(
         self, axis_ids: Sequence[str],
@@ -735,6 +770,8 @@ class VirtualWorkspaceSourceProjectionCache:
         self,
         plate_path: Path,
         metadata: OpenHCSMetadataPayload,
+        *,
+        source_bindings: SourceBindingsConfig | None = None,
     ) -> VirtualWorkspaceSourceProjection:
         plate_key = str(plate_path)
         cached = self.projections_by_plate_path.get(plate_key)
@@ -743,11 +780,9 @@ class VirtualWorkspaceSourceProjectionCache:
                 plate_path,
                 metadata,
             )
-            self.projections_by_plate_path[plate_key] = (
-                VirtualWorkspaceSourceProjectionCacheEntry(metadata, projection)
-            )
-            return projection
-        return cached.projection
+            cached = VirtualWorkspaceSourceProjectionCacheEntry(metadata, projection)
+            self.projections_by_plate_path[plate_key] = cached
+        return cached.admitted_for(source_bindings).projection
 
     def filtered_by_axis(
         self,
@@ -772,8 +807,12 @@ class VirtualWorkspaceSourceProjectionCache:
         axis_ids: Sequence[str],
     ) -> Mapping[str, VirtualWorkspaceSourceProjection]:
         """Share admitted axis views between compilation and runtime queries."""
-        cached = self.projections_by_plate_path.get(projection.workspace_root)
-        if cached is None or cached.projection is not projection:
+        document_entry = self.projections_by_plate_path.get(projection.workspace_root)
+        cached = (
+            None if document_entry is None
+            else document_entry.entry_for_projection(projection)
+        )
+        if cached is None:
             return projection.partition_by_axes(axis_ids)
         return cached.partition_by_axes(axis_ids)
 
@@ -840,6 +879,7 @@ class VirtualWorkspaceSourceProjectionAuthority:
             self.plate_path == Path(context.plate_path)
             and self.metadata_handler is context.microscope_handler.metadata_handler
             and self.filemanager is context.filemanager
+            and self.source_bindings == context.microscope_handler.source_admission_config()
         )
 
     def metadata_handlers(self) -> tuple["MetadataHandler", ...]:
@@ -895,14 +935,16 @@ class VirtualWorkspaceSourceProjectionAuthority:
                     self.plate_path,
                     metadata,
                 )
-            else:
-                projection = self.cache.projection_for(self.plate_path, metadata)
-            if self.source_bindings is not None:
-                from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
+                if self.source_bindings is not None:
+                    from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
 
-                projection = SourceBindingWorkspaceProjector(
-                    self.source_bindings
-                ).admit_prepared_projection(projection)
+                    projection = SourceBindingWorkspaceProjector(
+                        self.source_bindings
+                    ).admit_prepared_projection(projection)
+            else:
+                projection = self.cache.projection_for(
+                    self.plate_path, metadata, source_bindings=self.source_bindings,
+                )
             return self._projection_for_axis(projection, axis_id=axis_id)
         return None
 

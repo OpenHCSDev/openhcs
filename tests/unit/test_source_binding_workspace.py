@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path
 from types import MappingProxyType
 
@@ -125,6 +126,12 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
         plate_path=workspace, metadata_handler=handler.metadata_handler,
         filemanager=filemanager, cache=cache,
     ).projection_or_empty()
+    admissions = []
+    original_admit = SourceBindingWorkspaceProjector.admit_prepared_projection
+    def observe_admission(projector, projection):
+        admissions.append(projection)
+        return original_admit(projector, projection)
+    monkeypatch.setattr(SourceBindingWorkspaceProjector, "admit_prepared_projection", observe_admission)
     selected = VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(
         plate_path=workspace, metadata_handler=handler.metadata_handler,
         filemanager=filemanager, cache=cache, source_bindings=config,
@@ -153,14 +160,37 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
     other.plate_path = workspace
     other.microscope_handler = handler
     assert context.runtime_source_workspace_projection_authority.cache is other.runtime_source_workspace_projection_authority.cache is cache
-    assert other.runtime_source_workspace_projection_authority.projection_or_empty().pipeline_start_files() == selected.pipeline_start_files()
-    if selection is None:
-        compiled_views = cache.partition_by_axes(full, axis_ids=("A01",))
-        assert context.runtime_source_workspace_projection_authority.projection_or_empty(axis_id="A01") is compiled_views["A01"]
-        handler.metadata_handler.invalidate_metadata_cache()
-        replacement = context.runtime_source_workspace_projection_authority.projection_or_empty(axis_id="A01")
-        assert replacement is not compiled_views["A01"]
-        assert replacement.source_metadata_by_path == compiled_views["A01"].source_metadata_by_path
+    assert other.runtime_source_workspace_projection_authority.projection_or_empty() is selected
+    equivalent = VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(
+        plate_path=workspace, metadata_handler=handler.metadata_handler,
+        filemanager=filemanager, cache=cache, source_bindings=replace(config),
+    ).projection_or_empty()
+    assert equivalent is selected
+    compiled_views = cache.partition_by_axes(selected, axis_ids=("A01",))
+    assert context.runtime_source_workspace_projection_authority.projection_or_empty(axis_id="A01") is compiled_views["A01"]
+    assert len(admissions) == (0 if selection is None else 1)
+    prior_authority = context.runtime_source_workspace_projection_authority
+    handler._source_bindings_config = replace(config, source_filters=(
+        SourceFilterClause(subject=SourceFilterSubject.FILE,
+                          match_type=SourceFilterMatchType.CONTAINS, value="_s008_"),
+    ))
+    changed = context.runtime_source_workspace_projection_authority
+    assert changed is not prior_authority
+    assert changed.projection_or_empty().component_values(AllComponents.SITE) == ("8",)
+    handler._source_bindings_config = replace(config, source_filters=())
+    assert context.runtime_source_workspace_projection_authority.projection_or_empty() is full
+    handler._source_bindings_config = replace(config, source_filters=(
+        SourceFilterClause(subject=SourceFilterSubject.FILE,
+                          match_type=SourceFilterMatchType.CONTAINS, value="_s099_"),
+    ))
+    with pytest.raises(ValueError, match="matched no prepared workspace sources"):
+        context.runtime_source_workspace_projection_authority.projection_or_empty()
+    handler._source_bindings_config = config
+    assert context.runtime_source_workspace_projection_authority.projection_or_empty() is selected
+    handler.metadata_handler.invalidate_metadata_cache()
+    replacement = context.runtime_source_workspace_projection_authority.projection_or_empty(axis_id="A01")
+    assert replacement is not compiled_views["A01"]
+    assert replacement.source_metadata_by_path == compiled_views["A01"].source_metadata_by_path
     from openhcs.core.config import PipelineConfig, LazySourceBindingsConfig
     from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
     orchestrator = PipelineOrchestrator(
