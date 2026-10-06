@@ -54,6 +54,12 @@ from openhcs.core.runtime_identifier import (
     normalize_runtime_identifier,
 )
 from openhcs.core.runtime_stores import RuntimeArtifactBatch, StoredRuntimeValue
+from openhcs.core.runtime_batch_contracts import (
+    RuntimeArtifactPartitionBatchRequest,
+    RuntimeBatchExecutionDomain,
+    runtime_batch_executor,
+    runtime_callable_defaults,
+)
 from openhcs.core.runtime_measurements import (
     MeasurementTable,
 )
@@ -97,7 +103,7 @@ from openhcs.processing.materialization import (
     WriteMode,
 )
 
-from openhcs.processing.materialization.core import ColumnarCsvOutput
+from openhcs.processing.materialization.core import ColumnarCsvOutput, RenderedColumnarCsvOutput
 
 if TYPE_CHECKING:
     from openhcs.core.function_patterns import FunctionInvocationKey
@@ -467,6 +473,8 @@ def prepare_spreadsheet_bundle(
     add_filename_prefix: bool = True,
     filename_prefix: str = "MyExpt_",
     context: ProcessingContext | None = None,
+    image_numbers: CellProfilerImageSetNumbering | None = None,
+    experiment_tables: tuple[MeasurementTable, ...] | None = None,
 ) -> dict[str, ColumnarCsvOutput]:
     """Prepare exactly the measurement records selected by ``artifact_batch``."""
 
@@ -492,14 +500,16 @@ def prepare_spreadsheet_bundle(
     ):
         raise TypeError("file_selections must contain SpreadsheetFileSelection values.")
 
-    image_numbers = CellProfilerImageSetNumbering(
-        artifact_batch.source_image_set_identity_policy
-    )
+    if image_numbers is None:
+        image_numbers = CellProfilerImageSetNumbering(
+            artifact_batch.source_image_set_identity_policy
+        )
     tables, object_subjects = _measurement_tables(
         artifact_batch,
         image_numbers,
         add_image_metadata=add_image_metadata,
         add_image_file_names=add_image_file_names,
+        experiment_tables=experiment_tables,
     )
     relationship_rows = _relationship_rows(artifact_batch, image_numbers)
     if relationship_rows:
@@ -579,12 +589,34 @@ def render_spreadsheet_bundle(
     }
 
 
+def _record_measurement_tables(artifact_batch: RuntimeArtifactBatch):
+    """Yield exact declared record/table order, shared by numbering and export."""
+    for spec in artifact_batch.input_specs:
+        if not issubclass(spec.artifact_type, MeasurementBearingArtifactType):
+            continue
+        record_tables = tuple(
+            (record, table)
+            for axis_records in artifact_batch.records(spec.ref()).values()
+            for record in axis_records
+            for table in spec.artifact_type.measurement_tables(
+                record, CELLPROFILER_MEASUREMENT_DIALECT
+            )
+        )
+        MeasurementTable.shared_row_axis_domain(
+            spec.name,
+            tuple(table for _record, table in record_tables),
+            MeasurementRowAxisField.SLICE_INDEX,
+        )
+        yield spec, record_tables
+
+
 def _measurement_tables(
     artifact_batch: RuntimeArtifactBatch,
     image_numbers: CellProfilerImageSetNumbering,
     *,
     add_image_metadata: bool,
     add_image_file_names: bool,
+    experiment_tables: tuple[MeasurementTable, ...] | None = None,
 ) -> tuple[
     OrderedDict[str, ColumnarRows],
     tuple[str, ...],
@@ -597,26 +629,9 @@ def _measurement_tables(
         list[tuple[Mapping[str, object], Mapping[str, object]]],
     ] = OrderedDict()
     all_tables: list[MeasurementTable] = []
-    for spec in artifact_batch.input_specs:
-        if not issubclass(spec.artifact_type, MeasurementBearingArtifactType):
-            continue
-        records_by_axis = artifact_batch.records(spec.ref())
-        records = tuple(
-            record
-            for axis_records in records_by_axis.values()
-            for record in axis_records
-        )
-        record_tables = tuple(
-            (record, table)
-            for record in records
-            for table in spec.artifact_type.measurement_tables(
-                record, CELLPROFILER_MEASUREMENT_DIALECT
-            )
-        )
-        tables = tuple(table for _record, table in record_tables)
-        all_tables.extend(tables)
+    for _spec, record_tables in _record_measurement_tables(artifact_batch):
+        all_tables.extend(table for _record, table in record_tables)
         slice_axis = MeasurementRowAxisField.SLICE_INDEX
-        MeasurementTable.shared_row_axis_domain(spec.name, tables, slice_axis)
         for record, table in record_tables:
             image_numbers_by_slice = image_numbers.for_source_slices(
                 scope=record.key.scope,
@@ -669,7 +684,9 @@ def _measurement_tables(
                         default_subject="Image",
                         default_scope=MeasurementScope.IMAGE,
                     )
-    for table in CellProfilerModule.derive_experiment_measurement_tables(all_tables):
+    if experiment_tables is None:
+        experiment_tables = CellProfilerModule.derive_experiment_measurement_tables(all_tables)
+    for table in experiment_tables:
         accumulator.add_declared_rows(
             table.rows,
             CELLPROFILER_MEASUREMENT_DIALECT,
@@ -1250,6 +1267,128 @@ def _coerce_enum(enum_type: type[_EnumT], value: object) -> _EnumT:
         return value
     return enum_type(value)
 
+
+@dataclass(frozen=True, slots=True)
+class SpreadsheetPartitionInvocation:
+    """One existing worker invocation with globally admitted image numbering."""
+
+    artifact_batch: RuntimeArtifactBatch
+    kwargs: dict[str, object]
+    image_numbers: CellProfilerImageSetNumbering
+
+
+def _prepare_spreadsheet_partition(
+    request: SpreadsheetPartitionInvocation,
+) -> dict[str, RenderedColumnarCsvOutput]:
+    return {
+        path: output.realized_for_composition()
+        for path, output in prepare_spreadsheet_bundle(
+            request.artifact_batch,
+            image_numbers=request.image_numbers,
+            experiment_tables=(),
+            **request.kwargs,
+        ).items()
+    }
+
+
+def _partitioned_spreadsheet_export(
+    request: RuntimeArtifactPartitionBatchRequest,
+) -> dict[str, ColumnarCsvOutput | RenderedColumnarCsvOutput]:
+    """Use existing lanes only where exact source domains separate the export."""
+    batch = request.artifact_batch
+    kwargs = {**runtime_callable_defaults(request.func), **request.kwargs}
+    kwargs.pop(ProcessingContext.require_parameter_name(), None)
+    path_templates = (
+        str(kwargs["output_directory"]),
+        str(kwargs["filename_prefix"]) if kwargs["add_filename_prefix"] else "",
+        *(selection.file_name for selection in kwargs["file_selections"]),
+    )
+    uses_metadata_path = any(_METADATA_TEMPLATE.search(value) for value in path_templates)
+    if len(batch.records_by_axis) < 2:
+        return prepare_spreadsheet_bundle(
+            batch, context=request.runtime_context, **kwargs
+        )
+    image_numbers = CellProfilerImageSetNumbering(batch.source_image_set_identity_policy)
+    all_tables = []
+    numbers_by_axis: OrderedDict[str, list[int]] = OrderedDict()
+    schemas_by_spec = {}
+    declarations_by_axis = {}
+    homogeneous = True
+    for spec, record_tables in _record_measurement_tables(batch):
+        for record, table in record_tables:
+            all_tables.append(table)
+            numbers = image_numbers.for_source_slices(
+                scope=record.key.scope,
+                provenance=table.source_provenance,
+                slice_indices=image_numbers.source_slices_for_measurement_table(table),
+                owner=table.name,
+            )
+            axis_numbers = numbers_by_axis.setdefault(record.key.scope.axis_id, [])
+            axis_numbers.extend(number for number in numbers.values() if number not in axis_numbers)
+            schema = table.rows.fields
+            declaration = (spec.ref(), table.name)
+            declarations_by_axis.setdefault(record.key.scope.axis_id, []).append(declaration)
+            previous = schemas_by_spec.setdefault(declaration, schema)
+            homogeneous = homogeneous and previous == schema
+    declaration_sets = tuple(tuple(values) for values in declarations_by_axis.values())
+    homogeneous = homogeneous and all(
+        declarations == declaration_sets[0] for declarations in declaration_sets
+    )
+    experiment_tables = CellProfilerModule.derive_experiment_measurement_tables(all_tables)
+    relationship_rows = _relationship_rows(batch, image_numbers)
+    # Existing source-numbering traversal can interleave axes. Byte bodies may
+    # be concatenated only when axis partitions preserve that admitted order.
+    flattened_numbers = tuple(number for values in numbers_by_axis.values() for number in values)
+    ordered_domains = flattened_numbers == tuple(range(1, len(flattened_numbers) + 1))
+    if (
+        len(numbers_by_axis) < 2
+        or experiment_tables
+        or relationship_rows
+        or not homogeneous
+        or not ordered_domains
+        or uses_metadata_path
+    ):
+        return prepare_spreadsheet_bundle(
+            batch,
+            image_numbers=image_numbers,
+            experiment_tables=experiment_tables,
+            context=request.runtime_context,
+            **kwargs,
+        )
+    invocations = tuple(
+        SpreadsheetPartitionInvocation(
+            RuntimeArtifactBatch(
+                batch.input_specs,
+                {axis_id: batch.records_by_axis[axis_id]},
+                batch.source_image_set_identity_policy,
+                batch.source_binding_plan,
+            ),
+            kwargs,
+            image_numbers,
+        )
+        for axis_id in numbers_by_axis
+    )
+    parts = request.map_partition_invocations(_prepare_spreadsheet_partition, invocations)
+    by_path: OrderedDict[str, list[RenderedColumnarCsvOutput]] = OrderedDict()
+    for part in parts:
+        for path, output in part.items():
+            by_path.setdefault(path, []).append(output)
+    bundle = {
+        path: RenderedColumnarCsvOutput.compose(
+            outputs,
+            partition_fields=(CellProfilerSpreadsheetRowField.IMAGE_NUMBER.value,),
+        )
+        for path, outputs in by_path.items()
+    }
+    if request.runtime_context is not None:
+        image_numbers.observe_export_paths(request.runtime_context, tuple(bundle))
+    return bundle
+
+
+@runtime_batch_executor(
+    RuntimeBatchExecutionDomain.ARTIFACT_PARTITIONS,
+    _partitioned_spreadsheet_export,
+)
 
 @execution_scope(FunctionStepExecutionScope.PLATE)
 @runtime_bound_parameters(RuntimeArtifactBatch)
