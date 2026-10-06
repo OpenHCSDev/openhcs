@@ -1,0 +1,7 @@
+label,speedup_threshold,percent_at_or_above,count_at_or_above,sample_count
+OH (16 assignments/1 worker),1.0,100.0,1,1
+OH (16 assignments/1 worker),2.0,100.0,1,1
+OH (16 assignments/1 worker),4.604235470729667,100.0,1,1
+OH (16 assignments/4 workers),1.0,100.0,1,1
+OH (16 assignments/4 workers),2.0,100.0,1,1
+OH (16 assignments/4 workers),12.69670617883523,100.0,1,1

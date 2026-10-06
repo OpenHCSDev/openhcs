@@ -1,0 +1,4 @@
+pipeline_name,method,assay_category,module_category,accuracy_fraction,raw_seconds,speedup,peak_memory_mb
+cp_tutorial_3d_monolayer,CP (one process),Uncategorized assay,Mixed modules,1.0,245.80418001906946,1.0,
+cp_tutorial_3d_monolayer,OH (16 assignments/1 worker),Uncategorized assay,Mixed modules,1.0,53.3865354154259,4.604235470729667,
+cp_tutorial_3d_monolayer,OH (16 assignments/4 workers),Uncategorized assay,Mixed modules,1.0,19.359680893365294,12.69670617883523,
