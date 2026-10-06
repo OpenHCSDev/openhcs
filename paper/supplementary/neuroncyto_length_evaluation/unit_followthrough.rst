@@ -22,9 +22,8 @@ Primary material inspected
   its extracted closing text identifies VERSION 1.0, 2015. Its export section
   (printed page 38) describes a CellImageName.txt output; pages 39--40 describe
   the Result Inspector and dendrite measurements. It does not declare an
-  export length unit in the extracted text. Embedded screenshot labels were
-  not independently resolved by this text extraction and are not asserted
-  to lack units.
+  export length unit in the extracted text. The initially unresolved embedded
+  screenshots were subsequently inspected visually, as recorded below.
 * Original Supplement 8 DOCX was requested through the publisher and PMC/
   Europe PMC direct file routes. Publisher and Europe PMC file routes returned
   HTTP 403; PMC returned a browser-challenge HTML response (HTTP 203), not a
@@ -60,3 +59,42 @@ candidate or chosen by closeness to the reference. No sorted or ordinal
 per-cell matching is permitted by the retained evidence. The search stops
 here; no installer, full supplementary movie archive or microscopy dataset
 was acquired.
+
+Visual closure of guide screenshots, 6 October 2026
+--------------------------------------------------
+
+The original official guide PDF was obtained (3537667 bytes, SHA-256
+``ee7e7f71f8cc1842c6756f504558a343bb620201b86072c2a04b11fd303e3d09``).
+PDF metadata identifies Version 1.0, 2015, 44 pages. Only PDF pages 39--41
+(printed pages 38--40) were rendered to PNG at a 2200-pixel maximum dimension
+and personally opened. No scientific images or measurements were processed.
+
+* Printed page 38: the example text export shows ``Cell length:22``,
+  ``Cell Area:216``, ``Absolute Length of Dendrite:88`` and
+  ``Relative Length of Dendrite: 4.00``; another absolute/relative pair is
+  41 and 1.86. There is no explicit pixel, micrometer or calibration label
+  in this visible export excerpt.
+* Printed page 39: the Result Inspector tables label ``Cell length``,
+  ``Cell Area``, ``Abs. Length``, ``Rel. Length``, ``Level`` and
+  ``Complexity``. The selected dendrite shows absolute lengths 118 and 32
+  with relative lengths 4.3704 and 1.1852. The image axes show numeric
+  positions, but no length-unit or calibration label is visible.
+* Printed page 40: zoomed and selected-dendrite views repeat those headers
+  and values. They add no explicit unit or calibration declaration.
+
+The relative values are consistent with division by the displayed cell
+length; that relationship is not evidence that either absolute value is
+expressed in pixels. The screenshots depict the guide's ``test_seg_W2``
+example, not an identified Supplement 8 image-1 manual export. Even an
+established guide default would not prove the supplement's actual calibration.
+Thus this visual check does not change the unscored determination above.
+
+Render SHA-256 identifiers, in printed-page order 38, 39, 40:
+
+* ``3c265a0af95ff42b09b12716df3b5fb6481d4c0573eee55fa9188647f18de05a``.
+* ``d9970e27c181d61ce0041ba58639b208145f90c1399b4d8b2c1a4881a5abb225``.
+* ``5ce4c6ea74e322199f22fa723e2ea62a43bdd38a2d14bb81a0bc9276795a4e9e``.
+
+The owned temporary PDF and three renders (4531003 file bytes total) were
+removed after inspection. Their source URL and hashes remain recorded here;
+no original reference, prediction or parent paper asset was deleted.
