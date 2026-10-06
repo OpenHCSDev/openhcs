@@ -34,6 +34,7 @@ from openhcs.core.runtime_stores import (
 from openhcs.core.component_group_scope import ComponentGroupScope
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
 from openhcs.core.component_set import ComponentSet
+from openhcs.core.equivalence import RuntimeMeasurementDialect
 from openhcs.core.callable_contract import CallableContract
 from openhcs.core.runtime_equivalence import (
     RuntimeMeasurementObservationAxis,
@@ -583,6 +584,111 @@ def test_runtime_artifact_query_from_dynamic_input_plan_matches_discovered_group
                 backend="memory",
             ),
         )
+    )
+
+
+@pytest.mark.parametrize("dynamic", (False, True))
+def test_observed_input_selection_preserves_groups_axis_backend_and_locations(
+    dynamic: bool,
+) -> None:
+    storage_plan = ArtifactInputPlan(
+        name="RGB",
+        path="/memory/RGB.pkl",
+        artifact_type=ImageArtifactType,
+        group_keys=(None,) if dynamic else ("1", "2", "3"),
+        group_component=AllComponents.SITE,
+        paths_by_group=(
+            {None: "/memory/RGB.pkl"}
+            if dynamic
+            else {key: f"/memory/RGB_s{key}.pkl" for key in ("1", "2", "3")}
+        ),
+    )
+    selection = (
+        ComponentGroupScope.dynamic(AllComponents.SITE)
+        if dynamic
+        else ComponentGroupScope.from_raw(("2", "1"), component=AllComponents.SITE)
+    )
+    edge = _runtime_input_edge(
+        storage_plan,
+        invocation_scope=ComponentGroupScope.ungrouped(),
+        producer_selection_scope=selection,
+        component_scopes=(selection,),
+        consumer_variable_components=(AllComponents.SITE,),
+    )
+    records = tuple(
+        StoredRuntimeValue(
+            key=ArtifactKey(
+                name="RGB",
+                artifact_type=ImageArtifactType,
+                scope=RuntimeExecutionAxisScope.from_raw(
+                    "A01",
+                    component=AllComponents.SITE,
+                    value=key,
+                ),
+            ),
+            data=np.full((2, 2, 3), int(key), dtype=np.float32),
+            location=RuntimeArtifactLocation(
+                storage_plan.path_for_runtime_query(key),
+                "memory",
+            ),
+        )
+        for key in ("1", "2", "3")
+    )
+    first = records[0]
+    unrelated = (
+        replace(first, location=RuntimeArtifactLocation(first.location.path, "disk")),
+        replace(first, location=RuntimeArtifactLocation("/memory/wrong.pkl", "memory")),
+        replace(
+            first,
+            key=replace(
+                first.key,
+                scope=RuntimeExecutionAxisScope.from_raw(
+                    "B01",
+                    component=AllComponents.SITE,
+                    value="1",
+                ),
+            ),
+        ),
+        replace(first, key=replace(first.key, name="Other")),
+    )
+    selected = RuntimeArtifactQuery.records_for_input_edge(
+        edge,
+        (*records, *unrelated),
+        axis_id="A01",
+        backend="memory",
+    )
+    expected = records if dynamic else (records[1], records[0])
+    assert tuple(id(record) for record in selected) == tuple(
+        id(record) for record in expected
+    )
+
+
+def test_unstored_source_input_does_not_select_same_named_runtime_record() -> None:
+    spec = ArtifactSpec.input("raw", ImageArtifactType, required=False)
+    key = FunctionInvocationKey("source_test", DEFAULT_GROUP_KEY, 0)
+    edge = InvocationArtifactInputEdgePlan(
+        key=InvocationArtifactInputProjectionKey(key, 0),
+        spec=spec,
+        storage_plan=None,
+        projection=None,
+    )
+    record = StoredRuntimeValue(
+        key=ArtifactKey(
+            name="raw",
+            artifact_type=ImageArtifactType,
+            scope=RuntimeExecutionAxisScope.from_raw("A01", component=None, value=None),
+        ),
+        data=np.ones((2, 2)),
+        location=RuntimeArtifactLocation("/memory/raw", "memory"),
+    )
+    assert (
+        RuntimeArtifactQuery.records_for_input_edge(
+            edge,
+            (record,),
+            axis_id="A01",
+            backend="memory",
+        )
+        == ()
     )
 
 
@@ -2274,7 +2380,7 @@ def test_runtime_measurement_observation_axis_accepts_table_record_once():
              )
     axis = RuntimeMeasurementObservationAxis("A01")
 
-    axis.accept_measurement_table(record)
+    axis.accept_measurement_table(record, RuntimeMeasurementDialect())
 
     assert len(axis.measurement_tables) == 1
     scoped_table = axis.measurement_tables[0]

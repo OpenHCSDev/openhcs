@@ -44,6 +44,7 @@ from openhcs.core.orchestrator.compiled_plate_execution import (
     execute_plate_scoped_steps,
     validate_plate_scoped_contexts,
 )
+from openhcs.core.orchestrator.execution_result import RuntimeObservationMode
 from openhcs.core.progress import (
     ProgressEvent,
     ProgressExecutionContext,
@@ -225,6 +226,8 @@ def test_plate_scope_drives_no_main_flow_paths() -> None:
     }
     output_dir = Path("/data/plate_processed/images")
     planner.paths = SimpleNamespace(build_output_path=lambda: output_dir)
+    planner.artifact_context = ArtifactDeclarationStepContext.empty()
+    planner.declared = {}
     planner.steps = PathPlannerStepAssemblyStage(planner)
     snapshot = FunctionStep(func=lambda image: image, name="export")
 
@@ -607,6 +610,159 @@ def test_plate_artifact_batch_keeps_optional_source_declaration_without_record()
     assert batch.records(source_spec.ref())["A01"] == ()
 
 
+@pytest.mark.parametrize("stored_image", (False, True))
+def test_plate_retention_uses_exact_edges_instead_of_requested_types(
+    stored_image: bool,
+) -> None:
+    source_spec = ArtifactSpec.input("raw", ImageArtifactType, required=False)
+    measurement_spec = ArtifactSpec.input("Measurements", MeasurementsArtifactType)
+    output_spec = ArtifactSpec.output("Export", SpecialArtifactType)
+
+    @execution_scope(FunctionStepExecutionScope.PLATE)
+    @runtime_bound_parameters(RuntimeArtifactBatch)
+    @artifact_inputs(source_spec, measurement_spec)
+    @artifact_outputs(output_spec)
+    def export(*, artifact_batch: RuntimeArtifactBatch):
+        return artifact_batch
+
+    inputs = (
+        ArtifactInputPlan(
+            name="Measurements",
+            path="/memory/measurements",
+            artifact_type=MeasurementsArtifactType,
+        ),
+    )
+    if stored_image:
+        inputs += (
+            ArtifactInputPlan(
+                name="raw",
+                path="/memory/raw",
+                artifact_type=ImageArtifactType,
+            ),
+        )
+    plan = _plate_step_plan(
+        axis_id="A01",
+        step_index=1,
+        func=export,
+        artifact_inputs=inputs,
+        artifact_output=ArtifactOutputPlan(
+            name="Export",
+            path="/memory/export",
+            artifact_type=SpecialArtifactType,
+        ),
+        metadata_writer=True,
+    )
+    context = _plate_context("A01", (plan,))
+    for name in ("RGB", "raw"):
+        image = RuntimeValue.normalize(
+            ArtifactOutputPlan(
+                name=name,
+                path=f"/memory/{name}",
+                artifact_type=ImageArtifactType,
+            ),
+            np.ones((2, 2, 3)),
+            axis_id="A01",
+        )
+        context.runtime_value_store.replace(
+            image,
+            path=f"/memory/{name}",
+            backend=Backend.MEMORY.value,
+        )
+    _record_measurements(context, name="Other", path="/memory/other", count=1)
+    _record_measurements(
+        context,
+        name="Measurements",
+        path="/memory/measurements",
+        count=2,
+    )
+    _record_measurements(
+        context,
+        name="Measurements",
+        path="/memory/measurements",
+        count=3,
+    )
+    observations = context.runtime_value_store.observed_values
+    retained = RuntimeObservationMode.MERGE_PLATE_INPUTS.retain_records(
+        observations,
+        context,
+    )
+    assert [record.key.name for record in retained] == (
+        (["raw"] if stored_image else []) + ["Measurements", "Measurements"]
+    )
+    assert (
+        RuntimeObservationMode.MERGE_INTO_PARENT.retain_records(
+            observations,
+            context,
+        )
+        is observations
+    )
+    assert RuntimeObservationMode.OMIT.retain_records(observations, context) == ()
+
+    full_store = type(context.runtime_value_store)()
+    full_store.merge_observed_values(observations)
+    retained_store = type(context.runtime_value_store)()
+    retained_store.merge_observed_values(retained)
+    batches = tuple(
+        _plate_artifact_batch(
+            compiled_contexts={"A01": context},
+            step_index=1,
+            invocation_position=0,
+            contract=CallableContract.from_callable(export),
+            records_by_axis={"A01": store.values()},
+            source_binding_plan=plan.source_binding_plan,
+            source_image_set_identity_policy=SourceImageSetIdentityPolicy(frozenset()),
+        )
+        for store in (full_store, retained_store)
+    )
+    assert batches[0].records_by_axis == batches[1].records_by_axis
+    assert (
+        batches[1].records(measurement_spec.ref())["A01"][0].data.rows[0]["count"] == 3
+    )
+
+
+def test_plate_retention_defers_required_missing_admission_to_parent() -> None:
+    measurement_spec = ArtifactSpec.input("Missing", MeasurementsArtifactType)
+    output_spec = ArtifactSpec.output("Export", SpecialArtifactType)
+
+    @execution_scope(FunctionStepExecutionScope.PLATE)
+    @runtime_bound_parameters(RuntimeArtifactBatch)
+    @artifact_inputs(measurement_spec)
+    @artifact_outputs(output_spec)
+    def export(*, artifact_batch: RuntimeArtifactBatch):
+        return artifact_batch
+
+    plan = _plate_step_plan(
+        axis_id="A01",
+        step_index=1,
+        func=export,
+        artifact_inputs=(
+            ArtifactInputPlan(
+                name="Missing",
+                path="/memory/missing",
+                artifact_type=MeasurementsArtifactType,
+            ),
+        ),
+        artifact_output=ArtifactOutputPlan(
+            name="Export",
+            path="/memory/export",
+            artifact_type=SpecialArtifactType,
+        ),
+        metadata_writer=True,
+    )
+    context = _plate_context("A01", (plan,))
+    assert RuntimeObservationMode.MERGE_PLATE_INPUTS.retain_records((), context) == ()
+    with pytest.raises(ValueError, match="missing required input"):
+        _plate_artifact_batch(
+            compiled_contexts={"A01": context},
+            step_index=1,
+            invocation_position=0,
+            contract=CallableContract.from_callable(export),
+            records_by_axis={"A01": ()},
+            source_binding_plan=plan.source_binding_plan,
+            source_image_set_identity_policy=SourceImageSetIdentityPolicy(frozenset()),
+        )
+
+
 def test_plate_scope_runs_once_from_exact_contract_selected_records() -> None:
     measurement_spec = ArtifactSpec.input(
         "Measurements",
@@ -786,7 +942,7 @@ def test_plate_scope_observation_excludes_preexisting_runtime_history(tmp_path) 
     assert {record.key.name for record in observation.contexts[0].records} == {
         output_spec.name
     }
-    analysis_inputs = observation.contexts[0].analysis_inputs
+    analysis_inputs = observation.contexts[0].outputs.analysis_inputs
     assert analysis_inputs is not None
     assert analysis_inputs.destination.backend == Backend.MEMORY.value
     (table,) = tuple(
@@ -795,7 +951,7 @@ def test_plate_scope_observation_excludes_preexisting_runtime_history(tmp_path) 
     )
     assert table.csv_content == "ImageNumber,Count\r\n1,7\r\n"
     assert table.well_id == "A01"
-    assert observation.contexts[0].runtime_export_paths == (table.path,)
+    assert observation.contexts[0].outputs.runtime_export_paths == (table.path,)
     events = [ProgressEvent.from_dict(event) for event in progress_queue.events]
     assert events[-1].phase is ProgressPhase.STEP_COMPLETED
 
