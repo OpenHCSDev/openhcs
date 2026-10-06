@@ -1929,7 +1929,10 @@ class CellProfilerAnalystProjectionBuilder:
                 )
             )
             if isinstance(object_table.rows, ColumnarRows):
-                physical_columns = object_table.rows.columns
+                physical_columns = {
+                    name: object_table.rows.column_values(name)
+                    for name in object_table.rows.columns
+                }
                 image_ids = tuple(
                     int(value) for value in physical_columns[image_id_field.name]
                 )
@@ -2021,11 +2024,14 @@ class CellProfilerAnalystProjectionBuilder:
                     "double",
                 }
             )
-        source = (
-            rows.columns.get(field_spec.name, ())
-            if isinstance(rows, ColumnarRows)
-            else (row[field_spec.name] for row in rows if field_spec.name in row)
-        )
+        if isinstance(rows, ColumnarRows):
+            source = (
+                rows.column_values(field_spec.name)
+                if field_spec.name in rows.columns
+                else ()
+            )
+        else:
+            source = (row[field_spec.name] for row in rows if field_spec.name in row)
         values = tuple(
             value
             for value in source
@@ -2089,7 +2095,7 @@ class CellProfilerAnalystProjectionBuilder:
             row_projection.image_id_field(),
             row_projection.object_id_field(subject),
         )
-        columns = dict(rows.columns)
+        columns = {name: rows.column_values(name) for name in rows.columns}
         for field_spec in identities:
             if field_spec.name not in columns:
                 raise ValueError(
@@ -2812,14 +2818,16 @@ class CPASQLiteRenderer:
             )
             if isinstance(object_table.rows, ColumnarRows):
                 columns = {
-                    name: values
-                    for name, values in object_table.rows.columns.items()
+                    name: object_table.rows.column_values(name)
+                    for name in object_table.rows.columns
                     if name in nullable_names
                 }
-                columns[image_id.name] = object_table.rows.columns[source_image_id.name]
-                columns[object_id.name] = object_table.rows.columns[
+                columns[image_id.name] = object_table.rows.column_values(
+                    source_image_id.name
+                )
+                columns[object_id.name] = object_table.rows.column_values(
                     source_object_id.name
-                ]
+                )
                 batch_fields = (image_id, object_id, *nullable_columns)
                 batch_fields = FieldSpec.merge_exact(
                     (batch_fields,), context="CPA combined fields"
@@ -2926,11 +2934,12 @@ class CPASQLiteRenderer:
         if isinstance(table.rows, ColumnarRows):
             values_by_column = []
             for field_spec in columns:
-                values = table.rows.columns.get(field_spec.name)
-                if values is None:
+                if field_spec.name not in table.rows.columns:
                     values_by_column.append([None] * table.rows.row_count())
                     continue
-                array = ColumnarRows.column_array(values)
+                array = ColumnarRows.column_array(
+                    table.rows.column_values(field_spec.name)
+                )
                 if array.dtype.kind in "biufUS":
                     native_values = (
                         array.astype(float, copy=False).tolist()
@@ -3196,11 +3205,12 @@ class CPASQLiteRenderer:
         rows: Sequence[Mapping[str, Any]],
         field_name: str,
     ) -> str:
-        source = (
-            rows.columns.get(field_name, ())
-            if isinstance(rows, ColumnarRows)
-            else (row[field_name] for row in rows if field_name in row)
-        )
+        if isinstance(rows, ColumnarRows):
+            source = (
+                rows.column_values(field_name) if field_name in rows.columns else ()
+            )
+        else:
+            source = (row[field_name] for row in rows if field_name in row)
         values = tuple(
             cls._sqlite_value(value)
             for value in source
