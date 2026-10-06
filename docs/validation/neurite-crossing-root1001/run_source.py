@@ -19,6 +19,9 @@ sys.path.insert(0, str(target))
 from openhcs.processing.backends.analysis import neurite_outgrowth
 assert Path(neurite_outgrowth.__file__).resolve() == root / 'openhcs/processing/backends/analysis/neurite_outgrowth.py'
 print('owner:', neurite_outgrowth.__file__, flush=True)
+if len(sys.argv) > 2:
+    runpy.run_path(sys.argv[2], run_name='__main__')
+    raise SystemExit(0)
 import pytest
 raise SystemExit(pytest.main([
     '--noconftest', '-o', 'addopts=', '-p', 'no:cacheprovider',

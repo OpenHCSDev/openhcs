@@ -89,3 +89,55 @@ root connection. The test now follows the profile's explicit body exclusion
 and asserts every outside-body trace owner and both rooted subjects instead.
 No original crossing/distance assertions were removed or weakened. controls06
 will exercise the coherent regional/foreign-owner correction; not yet claimed.
+
+Final source qualification and remaining installed boundary
+----------------------------------------------------------
+
+The first shared-core correction was insufficient for the retained05 case.
+controls06 returned20PASS/4FAIL because the added foreign fixture placed all
+foreign core pixels inside its own soma, then asserted they remained neurite
+trace. The fixture now includes an external soma and real foreign trace;
+controls07 passed24 controls. fixed08 nevertheless failed the retained distal
+branch assertion. These original negatives remain in the evidence archive.
+
+root-gap10/chain11 establish that the owner4 path chain reaches its own soma
+(root134 intersects body4). No geometric root rejection or owner6 restoration
+is justified. core12 records the determining remaining transition: the middle
+resolved core pixel(248,384) has input raster0, response78, but repair for
+owner2 changes it to2 before owner4 is processed. Owner4 correctly refuses
+that occupied pixel, splitting its allowed support into two components.
+Thus the regression is repair-stage acquisition of another logical owner's
+reserved core, not demonstrated smoothing/preprocessing erasure.
+
+The original topology now owns both the regional physical core view and the
+owner-qualified support view. Unrelated repair may not acquire a resolved core
+through secondary response alone. Input foreign identities are qualified
+against the immutable input raster; original local core values are restored
+after temporary shared support. Existing original trace/body support is not
+globally prohibited. The complete private repair/final-topology family consumes
+an explicit _TopologyResult, with _empty_topology for no crossing evidence;
+the optional None authority and its consumer absence checks are deleted.
+Coordinate clipping is shared on _ResolvedCrossing, not copied by consumers.
+
+fixed13 returns no failed connection for04/05. All five retained distal
+witness neighborhoods are6 in04 and4 in05, not a restored previous assignment.
+The resulting graphs pass require_directed_forest (95/216edges). All eight
+original admission/body/response/secondary file hashes remain unchanged.
+This reconstructs the affected original stages, not a pipeline/detector replay
+or biological ownership/accuracy proof. fixed13 terminal0,20-second scale,
+491MiB approximate peak; exact resource values are in its original stderr.
+
+controls14:25PASS/69deselected, terminal0,13.25s/617404KiB maximum RSS.
+Original resolved multi-owner crossings, reversed owner order, unrelated
+earlier repair ownership, preserved foreign99 input/core/trace, below-threshold
+core rejection, soma-rooted-only adoption, and8MP/1000-owner regional projection
+are exercised. Both inherited physical/pixel profiles retain one shared recipe.
+The original full-detector timeout and assertion failures remain; this is not
+a full-suite claim. No native/client/viewer/provider operation was launched.
+
+Installed acceptance is the remaining readiness boundary. Dewey was given the
+determining source result and owns coordination of one ordinary whole-package
+engineering lane. The original registered pixel route/CSV/GraphROI receiving
+recipe will be reused, together with these affected installed owner controls;
+no frozen scientific input, endpoint or installed prefix is changed. PR1004
+stays draft until that ordinary installed/native path is qualified.

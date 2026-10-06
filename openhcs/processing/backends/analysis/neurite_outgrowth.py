@@ -1188,6 +1188,14 @@ class _ResolvedCrossing:
             return np.empty((0, 2), dtype=int)
         return np.concatenate([path_coordinates[path] for path in self.core_paths])
 
+    def regional_core_coordinates(
+        self, path_coordinates: tuple[np.ndarray, ...], shape: tuple[int, int],
+        origin: tuple[int, int],
+    ) -> np.ndarray:
+        coordinates = self.core_coordinates(path_coordinates) - origin
+        inside = np.all((coordinates >= 0) & (coordinates < shape), axis=1)
+        return coordinates[inside]
+
 
 @dataclass(frozen=True)
 class _TopologyResult:
@@ -1225,24 +1233,33 @@ class _TopologyResult:
         return np.concatenate(coordinates) if coordinates else np.empty((0, 2), dtype=int)
 
     def crossing_core_mask(
-        self, shape: tuple[int, int], *, owner: int | None = None,
+        self, shape: tuple[int, int], *,
         origin: tuple[int, int] = (0, 0),
-        occupied_owners: np.ndarray | None = None,
     ) -> np.ndarray:
-        """Project declared shared support, never infer it from raster neighbors."""
+        """Project the physical cores reserved by resolved logical crossings."""
         mask = np.zeros(shape, dtype=bool)
         for crossing in self.resolved_crossings:
-            if owner is not None and not crossing.supports_owner(owner, self.path_owners):
+            coordinates = crossing.regional_core_coordinates(
+                self.path_coordinates, shape, origin,
+            )
+            mask[tuple(coordinates.T)] = True
+        return mask
+
+    def crossing_support_mask(
+        self, occupied_owners: np.ndarray, *, owner: int,
+        origin: tuple[int, int],
+    ) -> np.ndarray:
+        """Project one logical owner's core without overwriting foreign input."""
+        mask = np.zeros(occupied_owners.shape, dtype=bool)
+        for crossing in self.resolved_crossings:
+            if not crossing.supports_owner(owner, self.path_owners):
                 continue
-            coordinates = crossing.core_coordinates(self.path_coordinates) - origin
-            inside = np.all((coordinates >= 0) & (coordinates < shape), axis=1)
-            coordinates = coordinates[inside]
-            if occupied_owners is not None:
-                # Another declared crossing arm may share this core. An
-                # unrelated raster owner is not permission to overwrite it.
-                current = occupied_owners[tuple(coordinates.T)]
-                arm_owners = self.path_owners[list(crossing.arm_paths)]
-                coordinates = coordinates[(current == 0) | np.isin(current, arm_owners)]
+            coordinates = crossing.regional_core_coordinates(
+                self.path_coordinates, occupied_owners.shape, origin,
+            )
+            current = occupied_owners[tuple(coordinates.T)]
+            arm_owners = self.path_owners[list(crossing.arm_paths)]
+            coordinates = coordinates[(current == 0) | np.isin(current, arm_owners)]
             mask[tuple(coordinates.T)] = True
         return mask
 
@@ -2018,7 +2035,7 @@ def _repair_signal_supported_skeleton(
     cell_body_labels: np.ndarray,
     *,
     minimum_response: float,
-    crossing_topology: _TopologyResult | None = None,
+    crossing_topology: _TopologyResult,
 ) -> np.ndarray:
     """Connect owned fragments only through continuous same-owner image evidence.
 
@@ -2049,11 +2066,7 @@ def _repair_signal_supported_skeleton(
     owners = sorted(int(region.label) for region in regionprops(repaired))
     for owner in owners:
         bounds = owner_bounds[owner]
-        core_coordinates = (
-            np.empty((0, 2), dtype=int)
-            if crossing_topology is None
-            else crossing_topology.crossing_core_coordinates(owner=owner)
-        )
+        core_coordinates = crossing_topology.crossing_core_coordinates(owner=owner)
         if len(core_coordinates):
             low = core_coordinates.min(axis=0)
             high = core_coordinates.max(axis=0) + 1
@@ -2074,14 +2087,12 @@ def _repair_signal_supported_skeleton(
         local_bodies = bodies[owner_slice]
         body_mask = local_bodies == owner
         original_owner = (local_repaired == owner) & ~body_mask
-        local_shared_core = (
-            np.zeros(local_repaired.shape, dtype=bool)
-            if crossing_topology is None
-            else crossing_topology.crossing_core_mask(
-                local_repaired.shape, owner=owner,
-                origin=(owner_slice[0].start, owner_slice[1].start),
-                occupied_owners=local_repaired,
-            )
+        origin = (owner_slice[0].start, owner_slice[1].start)
+        local_core = crossing_topology.crossing_core_mask(
+            local_repaired.shape, origin=origin,
+        )
+        local_shared_core = crossing_topology.crossing_support_mask(
+            labels[owner_slice], owner=owner, origin=origin,
         )
         original_core_values = local_repaired[local_shared_core].copy()
         shared_signal_support = (
@@ -2113,7 +2124,9 @@ def _repair_signal_supported_skeleton(
         signal_support = (local_response >= minimum_response) & (local_regions == owner)
         allowed = (
             signal_support | original_owner | body_mask | shared_signal_support
-        ) & ~occupied_by_other_owner
+        ) & ~occupied_by_other_owner & (
+            ~local_core | shared_signal_support | original_owner | body_mask
+        )
 
         while True:
             components, _ = ndi.label(
@@ -2556,7 +2569,7 @@ def _analyze_owned_topology(
     coordinate_scale: float,
     outgrowth_width_px: float,
     *,
-    crossing_topology: _TopologyResult | None = None,
+    crossing_topology: _TopologyResult,
 ) -> _TopologyResult:
     """Analyze each nominal owner without erasing ownership at shared borders.
 
@@ -2611,12 +2624,10 @@ def _analyze_owned_topology(
             ),
         )
         local_owner_mask = owned[owner_slice] == owner
-        if crossing_topology is not None:
-            local_owner_mask |= crossing_topology.crossing_core_mask(
-                local_owner_mask.shape, owner=owner,
-                origin=(owner_slice[0].start, owner_slice[1].start),
-                occupied_owners=owned[owner_slice],
-            )
+        local_owner_mask |= crossing_topology.crossing_support_mask(
+            owned[owner_slice], owner=owner,
+            origin=(owner_slice[0].start, owner_slice[1].start),
+        )
         local_owned = np.where(local_owner_mask, owner, 0).astype(
             np.int32,
             copy=False,
