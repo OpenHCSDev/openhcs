@@ -1369,6 +1369,14 @@ binds the frozen source and independently checked 283 scientific files, 112
 control files, three completed MCP journals and two retained journal prefixes.
 No reference answers were opened for this review.
 
+A subsequent fresh public-neurite repeat retained useful eight-soma coverage
+and partial process geometry after autonomous false-split and admission repairs.
+The [qualified geometry review](task_only_analysis/h004-fresh25-qualified-geometry.rst)
+distinguishes its selected 4,432-pixel checkpoint from the rejected last attempt:
+the latter increases total length while losing a raw-supported branch downstream
+of unchanged feature responses and preserved admission. Whole arbors and overlap
+ownership remain unresolved; the larger total is not an accuracy gain.
+
 A separate fresh public-field author recovered a missed faint process after
 measuring the actual enhanced response and sampled background controls. Eight
 nuclear objects and bounded perinuclear regions remained useful; a raw-pixel
