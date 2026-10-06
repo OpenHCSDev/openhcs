@@ -38,8 +38,20 @@ No shared production file has been edited in this checkpoint.
 NRA/refactor-audit and the catalog README were reread. Relevant ownership leads
 are BOUND-2 (bypassing the existing admission owner), IMPL-12 (avoid a copied
 filter procedure), and AGENT-2 (migrate the retained route, not only fresh input).
-Complete relevant production/dependency AST closure and semantic read precede
-the correction; no global dynamic proof is claimed by these source observations.
+The existing refactor-audit Repository/Package loader parsed all702 production
+modules at2945688c4 with zero parse omissions. An AST declaration/name/attribute
+query enumerated the projector/filter/factory/projection family across handler,
+orchestrator, compilation session/compiler, runtime context/function runtime,
+execution-session/inspection services, inventory, viewer source and CP export.
+The query also identified unrelated measurement_feature_queries.source_candidates
+names; these are not workspace admission consumers. Relevant dependency/MRO
+semantic closure remains pending, not silently omitted or claimed as global proof.
+
+The factory passes source_bindings_config to MicroscopeHandler.create, whose
+base implementation discards it; the prepared handler inherits that method.
+VirtualWorkspaceSourceProjectionAuthority.from_context and from_plate_metadata
+also receive no source declarations. This confirms the bypass family rather
+than a failure of SourceBindingsConfig.source_path_filters_match itself.
 
 Acceptance and remaining work
 -----------------------------
