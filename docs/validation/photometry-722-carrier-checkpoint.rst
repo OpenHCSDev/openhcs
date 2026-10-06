@@ -305,3 +305,63 @@ One ordinary offline installed95-attempt01 candidate uses the unchanged original
 receiving22 archive materializer/builder/verifier and five dependency wheels.
 Its pin is74dd08ca8; this receipt-only successor does not change production.
 No native or public compile/execute success is claimed before that acceptance.
+
+Installed public95 acceptance: complete and closed
+------------------------------------------------
+
+The later ordinary installed95-attempt01 wheel at production74dd08ca8 is
+qualified: 920 wheel RECORD entries,817 tracked source files,792 Python files
+and all13 canonical managed skill files. Wheel SHA256:
+dd60b648939f9aa9b5c7f91bc96b23fd804fbb6460d70f9893c73ddce15880d7.
+This supersedes the historical pending statements above, not their original
+failed control dispositions. The receipt-only0a62dcc33 successor has identical
+production and test bytes to the installed pin.
+
+Published FUND slot ADMIN929_NATIVE95 was consumed once through the original
+recorded-mcp.sh owner. Original unified exec session36249, scope
+engineering929-native95-20261006-admin929_native95-mcp.scope, invocation
+5449f6375dc445e78a047947e46375e0 and startup epoch1791254266 are retained.
+MCP2827590 used this installed target; exact native2829481/create1791254304.54
+served TCP6014/ACK7014. No viewer, new environment or scientific client existed.
+Public native catalogue readiness and one distinct custom half-current image
+registration succeeded before the cases.
+
+Eight distinct public execute-source requests created ordinary orchestrator
+sessions, compiled and executed their complete PipelineDocuments. Jobs1..8
+all returned complete with no execution error. The saved Cells CSVs reconcile
+61 actual feature values against the original two synthetic float32 image
+arrays on each actual saved Cells label support: mean/min/max/std/integrated
+intensity for single raw, both two-image orders, produced half image, both
+mixed raw/produced orders, transformed CURRENT previous-step carrier and
+label-only area. Every case has one original objectID1,24 support pixels and
+identical saved cell geometry. No source-label-scaling or raw reload substitutes
+for transformed current/produced pixels. This is synthetic workflow acceptance,
+not scientific accuracy or whole-backend correctness.
+
+Absolute original acceptance root:
+/home/ts/wt/openhcs-issue-batch-20260929/engineering-photometry-722-20261005/public95-native-attempt01
+CSV-ACCEPTANCE01.json contains all eight session/job/execution identities,
+actual expected/observed values and source/CSV/label SHA256 values.
+verify-public-csv01.py is its read-only reproducer, terminal exit0.
+TERMINAL-CUSTODY01.json contains the full typed closure and original journal
+seal; seal-terminal01.py is terminal exit0. Original source revisions and
+admitted source/array provenance are retained in prepared-case03 packets.
+Actual payloads remain under:
+/run/media/ts/hdd/openhcs-engineering/engineering929-native95-20261006
+
+The exact typed close acknowledged endpoint termination and process_exited=true.
+Native2829481 and MCP2827590 are absent,6014/7014 have no listeners, original
+scope is inactive/dead. Original client36249 is terminal exit2: its persistent
+shell aggregates retained pre-dispatch help/argument/path refusals. It is not a
+shutdown failure or a failed execution. Original readonly-plate refusal, initial
+IPC path refusal, invalid observation argument and catalogue request before
+listening remain in the sealed journal; no UNKNOWN registration/job was replayed.
+Four current scientific run owners and their frozen installed packages are unchanged.
+
+Normal integration follows actual main5f3ec2722. Its newer source-binding loader
+factoring (#952) is retained: source_artifact_payload delegates to the original
+projection.load_binding_payloads, while this PR's current-pixel carrier and
+matched-alias expansion hunks remain unchanged. New exporter-table namespace
+ordering (#950) and paper checkpoints are retained without reverting their
+owners. The public installed proof applies to74dd08ca8; integration is a source
+review, not a claim that the unrelated newer main changes were re-executed here.
