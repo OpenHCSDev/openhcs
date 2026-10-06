@@ -59,5 +59,11 @@ Freeze: control/final05_freeze.json and control/terminal_disposition.json.
 Field jobs: control/final05_sessions.json.
 Native PNGs: qa/FINAL05_A02_s001_context_*,
 qa/FINAL05_A04_s002_context_* and qa/FINAL05_A04_s011_context_*.
-The author remains live while preparing its final report; exact runtime closure
-and complete outer-journal seals are not claimed by this checkpoint.
+The author's FINAL_REPORT.md and final control inventory are now retained.
+Independent verification checked all1878 control/report files with zero hash
+mismatches, and matched the three complete closed MCP journal hashes in
+control/final_custody.json. The exact owned viewer and native process are absent,
+and all four receiving listeners are closed. The recorded CLI exited2, retaining
+known earlier command failures; all sixteen selected scientific executions
+completed. No replay or clean-zero-exit claim is made. Complete outer author
+journals remain the harness's responsibility after the author process ends.
