@@ -330,10 +330,10 @@ def _saved_output_equivalence(
     RuntimeEquivalenceReport,
     tuple[RuntimeEquivalenceDifference, ...],
     RuntimeExportObservation,
-    RuntimeOutputSnapshot,
-    RuntimeOutputSnapshot,
+    int,
+    int,
 ]:
-    """Consume complete saved schemas, values, correlations and file inventories."""
+    """Compare full saved outputs; retain reports and counts, not decoded pixels."""
     database_report = cellprofiler_database_export_equivalence(
         native_root,
         candidate_exports,
@@ -382,8 +382,8 @@ def _saved_output_equivalence(
         csv_report,
         image_differences,
         native_exports,
-        native_snapshot,
-        candidate_snapshot,
+        len(native_snapshot.images),
+        len(candidate_snapshot.images),
     )
 
 
@@ -1495,12 +1495,8 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
         image_differences = tuple(
             difference for comparison in comparisons for difference in comparison[2]
         )
-        native_images = tuple(
-            image for comparison in comparisons for image in comparison[4].images
-        )
-        candidate_images = tuple(
-            image for comparison in comparisons for image in comparison[5].images
-        )
+        native_image_count = sum(comparison[4] for comparison in comparisons)
+        candidate_image_count = sum(comparison[5] for comparison in comparisons)
         native_exports = RuntimeExportObservation.from_output_roots((native_root,))
         phase_seconds = PhaseTimingRecord.seconds_by_phase(
             completed.receipt.phase_timings
@@ -1527,8 +1523,8 @@ def _run_case(args: argparse.Namespace, client: ZMQExecutionClient) -> int:
             "first_axis_through_server_completion_seconds": (
                 record.end_time - first_axis_started_at
             ),
-            "native_image_count": len(native_images),
-            "candidate_image_count": len(candidate_images),
+            "native_image_count": native_image_count,
+            "candidate_image_count": candidate_image_count,
             "native_physical_image_count": len(native_exports.image_outputs),
             "candidate_physical_image_count": len(candidate_exports.image_outputs),
             "native_output_file_count": len(native_output_files),
