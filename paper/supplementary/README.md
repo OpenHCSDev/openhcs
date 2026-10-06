@@ -795,6 +795,13 @@ construction is described by [Ong et al. (2016)](https://doi.org/10.1002/cyto.a.
 
 ## Software snapshots and evidence
 
+A further task-only BBBC007 author completed sixteen paired fields after
+self-directed repair, retaining 1,428 nuclear and seeded-cell IDs. Direct saved
+mask checks reconcile every reported area and same-ID nuclear containment.
+The [final-candidate record](task_only_analysis/bbbc007-fresh26-final-candidate.rst)
+separates this exploratory result from held-out accuracy and exact cell-boundary
+claims; a plausible residual merge and crowded-boundary uncertainty remain.
+
 A subsequent independent paired DNA/actin author recovered three crowded
 nuclear omissions and excluded two cell candidates with no growth beyond their
 nuclear seeds. Its final 56 nuclei and 54 retained cell regions have reconciled
