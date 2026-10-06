@@ -835,6 +835,7 @@ def generate_measured_batch_figures(
             filename_prefix=f"measured_{scope}_speedup",
             title=f"Measured batch {scope} speedup distribution",
             xlabel=f"{scope.title()} speedup versus native CellProfiler (x)",
+            target_line=1.0 if scope == "total" else SPEEDUP_TARGET,
             output_formats=output_formats,
         ),
     )
@@ -1573,6 +1574,7 @@ class SpeedupDistributionReport:
     title: str
     xlabel: str
     output_formats: tuple[str, ...] = DEFAULT_FORMATS
+    target_line: float = SPEEDUP_TARGET
 
     def outputs(self) -> tuple[Path, ...]:
         """Write all speedup distribution report artifacts."""
@@ -1672,6 +1674,9 @@ class SpeedupDistributionReport:
                 layout="constrained",
             )
             for index, item in enumerate(self.series):
+                summary = SpeedupSummaryStatistics.from_series(item)
+                if summary is None:
+                    continue
                 thresholds = self.thresholds(item.values)
                 y_values = tuple(
                     100.0
@@ -1685,18 +1690,21 @@ class SpeedupDistributionReport:
                     where="post",
                     linewidth=2.0,
                     color=FIGURE_STYLE.color_for_method(index + 1),
-                    label=item.label,
+                    label=(
+                        f"{item.label}\n"
+                        f"min {summary.minimum:.2f}x; median {summary.median:.2f}x"
+                    ),
                 )
             axis.axvline(
-                SPEEDUP_TARGET,
+                self.target_line,
                 color=FIGURE_STYLE.target_color,
                 linewidth=1.15,
                 linestyle="--",
                 alpha=0.86,
             )
             axis.annotate(
-                f"{SPEEDUP_TARGET:g}x target",
-                xy=(SPEEDUP_TARGET, 99.0),
+                "Native parity (1x)" if self.target_line == 1.0 else f"{self.target_line:g}x target",
+                xy=(self.target_line, 99.0),
                 xycoords=("data", "data"),
                 xytext=(3, -2),
                 textcoords="offset points",
@@ -1706,12 +1714,14 @@ class SpeedupDistributionReport:
                 color=FIGURE_STYLE.target_color,
             )
             if log_x:
-                axis.set_xscale("log")
+                axis.set_xscale("log", base=2)
+                axis.xaxis.set_major_locator(LogLocator(base=2, numticks=12))
+                axis.xaxis.set_minor_locator(NullLocator())
                 axis.xaxis.set_major_formatter(FuncFormatter(_plain_log_tick_label))
                 axis.xaxis.set_minor_formatter(NullFormatter())
             axis.set_ylim(0.0, 102.0)
             axis.set_xlabel(self.xlabel)
-            axis.set_ylabel("Datasets at or above threshold (%)")
+            axis.set_ylabel("Pipelines at or above threshold (%)")
             axis.set_title(
                 f"{self.title} (log scale)" if log_x else self.title,
                 loc="left",
@@ -1777,6 +1787,7 @@ def generate_speedup_distribution_artifacts(
     title: str,
     xlabel: str,
     output_formats: Sequence[str] = DEFAULT_FORMATS,
+    target_line: float = SPEEDUP_TARGET,
 ) -> tuple[Path, ...]:
     """Generate speedup summary tables and cumulative distribution figures."""
     clean_series = tuple(
@@ -1798,6 +1809,7 @@ def generate_speedup_distribution_artifacts(
         title=title,
         xlabel=xlabel,
         output_formats=tuple(output_formats),
+        target_line=target_line,
     ).outputs()
 
 
