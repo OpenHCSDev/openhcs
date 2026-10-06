@@ -54,12 +54,34 @@ Review and retained originals
 
 The author records distributed candidate6 review and four post-freeze reserve
 triplets at E02/G08 for nuclear and cell results. The coordinator personally
-opened G08 raw and combined cell views: reporter signal is nuclear-dominant,
-and many cell estimates have little visible extranuclear extent. This supports
-retaining the population-selection limitation, not accepting every body mask.
-The coordinator has not yet independently reviewed every reserve screenshot,
-sealed all payloads or verified terminal native/viewer closure. Those are not
-claimed by this result receipt.
+opened all twelve reserve captures and checked their recorded byte lengths
+and SHA256 values. E02 shows substantial propagated cytoplasmic extent around
+many nuclei, while G08 is nuclear-dominant and many cell estimates remain
+close to their nuclear seeds. Nuclear masks cover many visible bodies in both
+fields; these whole-field views do not resolve every dim object or crowded
+boundary. This supports the conditional measurement workflow and its
+population-selection limitation, not acceptance of every mask or exhaustive
+segmentation accuracy.
+
+Terminal custody and retained-file verification
+------------------------------------------------
+
+The final author report records exact-incarnation viewer and native exit.
+The coordinator independently checked that the known viewer, native runtime,
+recorded client, MCP server and recording-wrapper PIDs were absent. The
+recorded client ended with exit code2: its aggregate command status retains
+earlier usage errors. That nonzero status and UNKNOWN receipts remain separate
+from the successful final science job and table audit; no uncertain operation
+was replayed.
+
+Independent read-only verification matched all6298 entries and3597626654 bytes
+in canonical-payload-manifest.json, SHA256
+9ababf29e1719430085d7242deb017db9534a0b04de4b786c5e14ab3b9980c33.
+The complete stopped MCP input, output and timing journals also matched
+journal-integrity.json. The author-event and timing journals matched their
+recorded exact byte prefixes only; final full-journal sealing belongs to the
+harness after its outer writer exits. These custody checks establish retained
+file integrity and owned runtime closure, not biological accuracy.
 
 Original control root:
 /home/ts/wt/openhcs-issue-batch-20260929/next-bbbc013-fresh20-88-after-retina19-20261005/BBBC013_FRESH20_88/author-workspace/output.
