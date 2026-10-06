@@ -43,6 +43,13 @@ Determining dispositions
   Refresh this result against the current head before cleanup.
 * CustomFunctionSourceNamespace and source-lifetime validation are integrated;
   later canonical changes mean whole-file equality is not the correct test.
+* Both execution-session edits are integrated: InProcessCompileInspectionGateway
+  compiles the declared pipeline without its former explicit full-catalog
+  initialization, and artifact-plan inspection admits plate/managed metadata
+  writes before source evaluation and initialization. Later main reports actual
+  initialization/compilation stages through EndpointStartupStatus. The old
+  latency test refers to the previous gateway API and remains archival, not an
+  instruction to move compilation work owned by the other machine.
 * Old ViewerWindowGeometry is superseded by ViewerNativeWindowGeometry and
   ViewerNativeDimensions.canvas_size. Do not restore the old declaration.
 * BioFormats physical spacing is superseded by the canonical Java decoder,
@@ -69,6 +76,12 @@ Determining dispositions
 * The old ROI summary correction is superseded by 6dce327e6: current materializer
   reports parent labels, not cells. Archive member count and biological count
   remain distinct. No wording transplant is needed.
+* PlateStreamingService's historical source-reference override is superseded
+  by _inventory_source_projection, which carries record source references,
+  metadata and projection entries through the existing workspace projection
+  owner. Current code still uses this on ordinary inventory streaming. The
+  associated ROI parent-label selective-read extension remains separately
+  unpublished; do not mistake it for the already delivered physical-channel fix.
 * Round-object component inspection is unpublished. Its production split-stage
   diagnostic needs current-owner adaptation, not wholesale old-file copying.
 * Strict workload-count finalization is a historical unpublished benchmark/MCP
@@ -152,6 +165,29 @@ fractional-Points journey exercised XY/XZ/YZ with source transforms intact.
 The actual native stack was Napari0.6.1. Unsupported planar Shapes cross-sections,
 simultaneous linked canvases and separate late-WM/triangulation failures are not
 claimed fixed. The closure comments retain these precise limits.
+
+Issue620 CLOSED: current FunctionOutputIdentity.component_metadata preserves
+acquisition facts separately from filename storage extension (87e190f6a).
+The original registered public CPPipe completed with automatic AND named image
+publication enabled, four unique images, 720 exact public element comparisons,
+unchanged calibration and acquisition hashes. Full original failed/accepted
+evidence is automatic-image-publication-620-20261004.rst. The strict persisted
+metadata comparison remains intact.
+
+Issue421 CLOSED: current McpDevStdioSession.request uses SDK ProgressNotification
+and renews its existing inactivity deadline only for its matching request token;
+resident sockets inherit it. Actual generated stdio/socket journeys exercised
+2.4-second cold work with a 1.6-second idle allowance, original errors and warm
+reuse. Later affine qualification covers successive resident connections.
+Evidence: mcp-progress-ack-20261002.rst and mcp-affine-inspection-436-20261002/
+receipt.rst. No arbitrary third-party timeout-policy claim is made.
+
+Issue502 remains OPEN with corrected scope: PR503's exact removed-object return
+and installed/public default/removed-enabled acceptance are delivered. The
+remaining additional-object cardinality case is not covered by its topology
+tests: current ABI validation excludes the callable's variadic annotation and
+requires an exact return-slot count. The issue comment points to these actual
+current declarations rather than asking anyone to redo removed-object repair.
 
 Next delivery
 -------------
