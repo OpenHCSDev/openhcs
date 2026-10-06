@@ -2,27 +2,28 @@
   "source_sha256": {
     "benchmark/results/matched_final_20261006/data/singlewell/total_summary.csv": "1f0dcd2773a34c60b199e00a659bc9904f4d4dc5b55303f15065b117479a0304",
     "benchmark/results/matched_final_20261006/data/singlewell/summary_custody.json": "43d7ddacbd37a2e0d31b4eb0bedda3401ca3fc780616d128e96ce22e60da06c7",
-    "benchmark/reports/cppipe_figures.py": "87ceb84ff6d8c4ab6aa8bd0a07ffb8411e730cc7b7c699e76a383be7d1581e76"
+    "paper/figures/slas/benchmark-publication/benchmark_claims.json": "bc0a756abdfe29ef1ddfbd4c09991fdbed1f9c4e760da62bdb7e7173309ebec1",
+    "benchmark/reports/cppipe_figures.py": "64005f2734937b58fa9ad0f8615e74d14d225e66d3064dac55cba1aaaa89f343"
   },
-  "generator_sha256": "75259b57e2929990e24de603f1c150a5c5a9b5c8f4ca20587420542e50bf4910",
+  "generator_sha256": "a8afc37c09bf2ab678d595b9e4dc6db68d2b0361a6d6471518d95735ca67d348",
   "output_sha256": {
-    "measured_total_metrics_long.csv": "d34cfdc05cfe122a6bc79f07cad3ed9d798956f44dc36ed8e88e87424b6b5285",
-    "measured_total_caption.md": "32ac0ddf7bbaba65fbe8f704541150f37fddc4bfa5d5d4390835a77773687879",
-    "measured_total_seconds.png": "58b9dc42806a75e573055179bb73f7aee2cb919a4f6c4a2dc3f529a46a934f38",
-    "measured_total_seconds.svg": "fd3a4cba861c9e3e670ff6766bb58b8087a2e9f11fd63f65347aafe9613d6489",
-    "measured_total_seconds_log.png": "ffa0bc3fc6300178f228c34adb07ba7ddb4e75c08da05e2fe3b23d3f4a97433e",
-    "measured_total_seconds_log.svg": "481ed2ead0162d4d0504c62e0d5dc8e3553283e3901e25fea6a221f427ffcbd9",
-    "measured_total_speedup.png": "48260bbe735c5d866876a90b7f9bd13bcac6a2c2467d8db2106c16fb66705554",
-    "measured_total_speedup.svg": "0f3f2c59ff59772bae65d5bb84220c4843746996eeeaad043bd0f90b5381f5ef",
-    "measured_total_speedup_log.png": "b126c6ba4de15a33bdb593aa70b0608829c665ed1fa697a80637377004ebc57a",
-    "measured_total_speedup_log.svg": "df287d2194b12a06541a5e3b5a9a7910d56916ec2e63f078298a7c6a844ea1dc",
-    "measured_total_speedup_summary_statistics.csv": "acc98f4592effc27da593ff1517dd1833f30be4f951c00ee27a13db1556ef01f",
-    "measured_total_speedup_summary_statistics.md": "91bd31a813753d14ef500ebac77a7510b79e486ef5154aff895b229f48c9dfcc",
-    "measured_total_speedup_cumulative_distribution.csv": "d10df418ac0335c5f3c83a91843bfd4505727940299567e649262ac74b8e5ca2",
-    "measured_total_speedup_cumulative_distribution.png": "55d466d57e3f555180ac6ebd5b665365ddcbbd2f87b6be22cab7717233ab1a4e",
-    "measured_total_speedup_cumulative_distribution.svg": "87b5940891d20be74881580bd669174d4dfe6f1b05f9082a68f0261f5cd046d1",
-    "measured_total_speedup_cumulative_distribution_log.png": "2d590afb3134939a6f80fad4c66c65ceb0afaf08c3bb3bff0f0ed7715e4ad139",
-    "measured_total_speedup_cumulative_distribution_log.svg": "eb99d929d6da0a4891711d2e3172ea849acd3d024324469d43ae13decbf95816"
+    "measured_total_metrics_long.csv": "343d44d7ab9e3533f9ac5ba44a7948ef001c0e9b82b968332060f7a9118691c2",
+    "measured_total_caption.md": "f326279c59a3748c77af65bad77abb37f3dd1b2f80c26353c63da5ba76d7263c",
+    "measured_total_seconds.png": "1645b0a8e276bc02b779fb51d61b574ca5523fc878bd5d42116a2f931b5ba105",
+    "measured_total_seconds.svg": "f8bda9f34a7a2b4cafaa88b9b44fdd88231ee8dad4bea717a1b5c825b903f007",
+    "measured_total_seconds_log.png": "897ddf0e953602b54bb98ecb8e7ffb6dadce0114431bce8828e0f6900fc7b0d9",
+    "measured_total_seconds_log.svg": "9b195f5b2fea4ee1a891b853f7681fc68837b857dbac627442397be5ca90d09f",
+    "measured_total_speedup.png": "984e83916d68ddbbed54166fffd2bd58c05e9bd0cc372661220336c97fc7dc80",
+    "measured_total_speedup.svg": "76fa510e58e2ca41b75b2648355fbbe33388a4d458672f4c7f99fd9748091154",
+    "measured_total_speedup_log.png": "dd5e712886b1aebd31ecf2d102d6035a3c77df979bed547421c461558dfa5585",
+    "measured_total_speedup_log.svg": "30fc66a41976ff18f92e484db7340b4920aa18bd0f6eb3f5bb90d7d5f946978b",
+    "measured_total_speedup_summary_statistics.csv": "cf1a6c4e146e79ce2b483ffe1d5d0b03e6ccb3c22bdd6d009207eb12e9976b40",
+    "measured_total_speedup_summary_statistics.md": "f6c3ea884b9e7a4d88aa53ef38980574f7b92da6d45896bb3b3bcb1ec7c06d25",
+    "measured_total_speedup_cumulative_distribution.csv": "fd9d97592ddebfaf446539e34a0c79ef390ba918dde0113b3813bfede2ee4612",
+    "measured_total_speedup_cumulative_distribution.png": "49bfbd44ef6ac463442b9889e5961d821e4589e31f1c56878708f547ae085781",
+    "measured_total_speedup_cumulative_distribution.svg": "35f2f66e128c7d544456924cfa565f9051260722fde76253fe5142141c722e66",
+    "measured_total_speedup_cumulative_distribution_log.png": "6f2d178a8b65016de021da9814703fc09eb2d800e3659054067fd9e5e564fa11",
+    "measured_total_speedup_cumulative_distribution_log.svg": "4915b08c4251d9fba30541492bd1f5fbd115c187818596a941d53a076fb3d909"
   },
   "benchmark_mode": "measured",
   "scope": "total",
@@ -32358,14 +32359,5 @@
     }
   ],
   "selected_pipeline_names": null,
-  "interpretation": "Qualified matched measurements rendered by the existing measured benchmark owner. Original clock boundaries, repetitions and source custody remain in matched_report_provenance. Each mode owns its actual native baseline; no projected throughput or RAM is supplied.",
-  "source_path_origins": {
-    "benchmark/results/matched_final_20261006/data/singlewell/total_summary.csv": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/singlewell/total_summary.csv",
-    "benchmark/results/matched_final_20261006/data/singlewell/summary_custody.json": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/singlewell/summary_custody.json"
-  },
-  "provenance_normalization": {
-    "original_receipt_sha256": "c9d17950353a1169f6d2f4bbd5f8cafc614ec826dc4e6b0f6a6a6e7675330886",
-    "writer_sha256": "a8afc37c09bf2ab678d595b9e4dc6db68d2b0361a6d6471518d95735ca67d348",
-    "scope": "Path-only correction to byte-identical retained inputs; original generator/output hashes preserved; no rerender or benchmark execution."
-  }
+  "interpretation": "Qualified matched measurements rendered by the existing measured benchmark owner. Original clock boundaries, repetitions and source custody remain in matched_report_provenance. Each mode owns its actual native baseline; no projected throughput or RAM is supplied."
 }

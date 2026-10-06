@@ -73,9 +73,17 @@ class SlasRetainedFigures(Preparation):
                     source.validate(observations)
         ordinary_figures = tuple(figure for figure in figures if figure != include)
         if ordinary_figures:
-            coverage = ReceiptCoverage.discover(
-                root / "figures/slas", ordinary_figures, root.parent, observations
+            # Receipts reside with their outputs, including measured bundles.
+            # Directory membership is derived from the actual document figures.
+            receipts = tuple(
+                receipt
+                for directory in sorted({figure.parent for figure in ordinary_figures})
+                for receipt in ReceiptCoverage.discover(
+                    directory, tuple(figure for figure in ordinary_figures if figure.parent == directory),
+                    root.parent, observations,
+                ).receipts
             )
+            coverage = ReceiptCoverage(receipts, ordinary_figures)
             checks = (*coverage.validate(observations), *checks)
         return checks
 

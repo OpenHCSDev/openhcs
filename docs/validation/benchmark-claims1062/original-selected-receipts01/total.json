@@ -1,7 +1,7 @@
 {
   "source_sha256": {
-    "benchmark/results/matched_final_20261006/data/singlewell/total_summary.csv": "1f0dcd2773a34c60b199e00a659bc9904f4d4dc5b55303f15065b117479a0304",
-    "benchmark/results/matched_final_20261006/data/singlewell/summary_custody.json": "43d7ddacbd37a2e0d31b4eb0bedda3401ca3fc780616d128e96ce22e60da06c7",
+    "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/singlewell/total_summary.csv": "1f0dcd2773a34c60b199e00a659bc9904f4d4dc5b55303f15065b117479a0304",
+    "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/singlewell/summary_custody.json": "43d7ddacbd37a2e0d31b4eb0bedda3401ca3fc780616d128e96ce22e60da06c7",
     "benchmark/reports/cppipe_figures.py": "87ceb84ff6d8c4ab6aa8bd0a07ffb8411e730cc7b7c699e76a383be7d1581e76"
   },
   "generator_sha256": "75259b57e2929990e24de603f1c150a5c5a9b5c8f4ca20587420542e50bf4910",
@@ -32358,14 +32358,5 @@
     }
   ],
   "selected_pipeline_names": null,
-  "interpretation": "Qualified matched measurements rendered by the existing measured benchmark owner. Original clock boundaries, repetitions and source custody remain in matched_report_provenance. Each mode owns its actual native baseline; no projected throughput or RAM is supplied.",
-  "source_path_origins": {
-    "benchmark/results/matched_final_20261006/data/singlewell/total_summary.csv": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/singlewell/total_summary.csv",
-    "benchmark/results/matched_final_20261006/data/singlewell/summary_custody.json": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/singlewell/summary_custody.json"
-  },
-  "provenance_normalization": {
-    "original_receipt_sha256": "c9d17950353a1169f6d2f4bbd5f8cafc614ec826dc4e6b0f6a6a6e7675330886",
-    "writer_sha256": "a8afc37c09bf2ab678d595b9e4dc6db68d2b0361a6d6471518d95735ca67d348",
-    "scope": "Path-only correction to byte-identical retained inputs; original generator/output hashes preserved; no rerender or benchmark execution."
-  }
+  "interpretation": "Qualified matched measurements rendered by the existing measured benchmark owner. Original clock boundaries, repetitions and source custody remain in matched_report_provenance. Each mode owns its actual native baseline; no projected throughput or RAM is supplied."
 }

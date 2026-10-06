@@ -1,13 +1,13 @@
 {
   "source_sha256": {
-    "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/singlewell/execution_summary.csv": "4509058f31061aa651baf7e80fdc78ae17841f87a6717522838b3e5bcdfeed13",
-    "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/9assignments-1worker/execution_summary.csv": "59c5ca71c148ec3cb1c908e8cb73ae55683fba05bb95427854b8fc4f132dd653",
-    "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/16assignments-1worker/execution_summary.csv": "3d118157f8529b2864af46bfd312e909c19760f92feac7579cc04436a9f2a511",
-    "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/singlewell/summary_custody.json": "43d7ddacbd37a2e0d31b4eb0bedda3401ca3fc780616d128e96ce22e60da06c7",
-    "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/9assignments-1worker/summary_custody.json": "8dee34e964504a71cdafc1bf9d104549fcca8d1c185d3f33beb88854430a04b3",
-    "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/16assignments-1worker/summary_custody.json": "1114e4c0e7fc32831873818ad8401a5f68520d770efe6ff7ef288356646de368",
-    "/home/ts/.local/state/openhcs-maintenance/20261006/final-measured-publication-v15/selected-three-case-manifest.json": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
-    "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/official30-prioritized-manifest.json": "1d1b016aea7ff2ac0bc2441fff1140bb492bbf3b86048f8565694ccd45e4dff1",
+    "benchmark/results/matched_final_20261006/data/singlewell/execution_summary.csv": "4509058f31061aa651baf7e80fdc78ae17841f87a6717522838b3e5bcdfeed13",
+    "benchmark/results/matched_final_20261006/data/9assignments-1worker/execution_summary.csv": "59c5ca71c148ec3cb1c908e8cb73ae55683fba05bb95427854b8fc4f132dd653",
+    "benchmark/results/matched_final_20261006/data/16assignments-1worker/execution_summary.csv": "3d118157f8529b2864af46bfd312e909c19760f92feac7579cc04436a9f2a511",
+    "benchmark/results/matched_final_20261006/data/singlewell/summary_custody.json": "43d7ddacbd37a2e0d31b4eb0bedda3401ca3fc780616d128e96ce22e60da06c7",
+    "benchmark/results/matched_final_20261006/data/9assignments-1worker/summary_custody.json": "8dee34e964504a71cdafc1bf9d104549fcca8d1c185d3f33beb88854430a04b3",
+    "benchmark/results/matched_final_20261006/data/16assignments-1worker/summary_custody.json": "1114e4c0e7fc32831873818ad8401a5f68520d770efe6ff7ef288356646de368",
+    "benchmark/results/matched_final_20261006/protocol/9assignments-1worker/selected-three-case-manifest.json": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
+    "benchmark/results/matched_final_20261006/protocol/singlewell/official30-prioritized-manifest.json": "1d1b016aea7ff2ac0bc2441fff1140bb492bbf3b86048f8565694ccd45e4dff1",
     "benchmark/reports/cppipe_figures.py": "87ceb84ff6d8c4ab6aa8bd0a07ffb8411e730cc7b7c699e76a383be7d1581e76"
   },
   "generator_sha256": "75259b57e2929990e24de603f1c150a5c5a9b5c8f4ca20587420542e50bf4910",
@@ -38961,5 +38961,20 @@
     "ExampleIlluminationCorrection_Example3",
     "cp_tutorial_3d_monolayer"
   ],
-  "interpretation": "Qualified matched measurements rendered by the existing measured benchmark owner. Original clock boundaries, repetitions and source custody remain in matched_report_provenance. Each mode owns its actual native baseline; no projected throughput or RAM is supplied."
+  "interpretation": "Qualified matched measurements rendered by the existing measured benchmark owner. Original clock boundaries, repetitions and source custody remain in matched_report_provenance. Each mode owns its actual native baseline; no projected throughput or RAM is supplied.",
+  "source_path_origins": {
+    "benchmark/results/matched_final_20261006/data/singlewell/execution_summary.csv": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/singlewell/execution_summary.csv",
+    "benchmark/results/matched_final_20261006/data/9assignments-1worker/execution_summary.csv": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/9assignments-1worker/execution_summary.csv",
+    "benchmark/results/matched_final_20261006/data/16assignments-1worker/execution_summary.csv": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/16assignments-1worker/execution_summary.csv",
+    "benchmark/results/matched_final_20261006/data/singlewell/summary_custody.json": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/singlewell/summary_custody.json",
+    "benchmark/results/matched_final_20261006/data/9assignments-1worker/summary_custody.json": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/9assignments-1worker/summary_custody.json",
+    "benchmark/results/matched_final_20261006/data/16assignments-1worker/summary_custody.json": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-measured-publication-v1/data/16assignments-1worker/summary_custody.json",
+    "benchmark/results/matched_final_20261006/protocol/9assignments-1worker/selected-three-case-manifest.json": "/home/ts/.local/state/openhcs-maintenance/20261006/final-measured-publication-v15/selected-three-case-manifest.json",
+    "benchmark/results/matched_final_20261006/protocol/singlewell/official30-prioritized-manifest.json": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/official30-prioritized-manifest.json"
+  },
+  "provenance_normalization": {
+    "original_receipt_sha256": "6da0e286ea672eb4819354fd80a8e15df38273da4bfe49fb87d68cf97b8d4a4a",
+    "writer_sha256": "a8afc37c09bf2ab678d595b9e4dc6db68d2b0361a6d6471518d95735ca67d348",
+    "scope": "Path-only correction to byte-identical retained inputs; original generator/output hashes preserved; no rerender or benchmark execution."
+  }
 }

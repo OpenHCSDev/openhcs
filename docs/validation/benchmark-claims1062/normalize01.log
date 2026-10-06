@@ -1,0 +1,7 @@
+execution PASS 2 relocated source references; 19 unchanged outputs
+matched-nine-execution PASS 5 relocated source references; 19 unchanged outputs
+matched-nine-total PASS 5 relocated source references; 17 unchanged outputs
+matched-sixteen-execution PASS 5 relocated source references; 19 unchanged outputs
+matched-sixteen-total PASS 5 relocated source references; 17 unchanged outputs
+single-core-amortization PASS 8 relocated source references; 3 unchanged outputs
+total PASS 2 relocated source references; 17 unchanged outputs
