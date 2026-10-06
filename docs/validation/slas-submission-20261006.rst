@@ -135,3 +135,27 @@ attempt passed an external input path to the repository-relative receipt
 format; it was corrected at the producer, using the already retained input
 declaration, without weakening the shared receipt codec. Its diagnostic log
 is preserved on the HDD; failed derived document outputs can be regenerated.
+
+Current author-review package after cost and figure revisions
+-----------------------------------------------------------
+
+The existing paired snapshot command froze run-20261006T190756-a6045698
+as 20261006T191050-slas-current-author-review-cee87966. The reading package
+now includes the token/rate-scenario table, readable orthogonal outlines and
+the corrected eligibility labels. Its source checkpoint is 37a03f4ac.
+
+HDD package: /run/media/ts/hdd/openhcs-slas-author-review-20261006/current-reading-copy-and-final-record.tgz
+SHA256: b71f884567536dd8cfc2c2e00f29b26a06e384e426b839de93d5732fa88deb7c.
+Source companion: /run/media/ts/hdd/openhcs-slas-author-review-20261006/current-figure-and-evaluation-sources.tgz
+SHA256: 601a2953e5bd369f551aeba9a232fdde42bf3eb291c8442753560cbfb97022d4.
+
+The full reading archive passed tar --compare against staged originals. All
+290 regular files in the source companion matched committed Git bytes.
+The selected benchmark record is derived from the frozen reading copy's claim
+include. This remains local author review, not a Zenodo deposit or a claim of
+complete historical input availability.
+
+Both uncompressed review snapshots were separately compared with their archived
+members before removal, reclaiming approximately 125 MiB from home. Their
+immutable compressed copies remain on the HDD and can restore the original
+member paths; the current PDFs and preceding paired rollback remain available.
