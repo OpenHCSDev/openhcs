@@ -1,0 +1,12 @@
+{
+  "direct_url": {
+    "url": "https://github.com/OpenHCSDev/ZMQRuntime.git",
+    "vcs_info": {
+      "commit_id": "ddb228bbf509ba9e5b8ff3b139d41565c9d293de",
+      "requested_revision": "ddb228bbf509ba9e5b8ff3b139d41565c9d293de",
+      "vcs": "git"
+    }
+  },
+  "startup_sha256": "5d7169974e24f075b79d4775ce9be264d0380e309cdc3d43e584a6e8e3d4515d",
+  "all_dependency_versions_unchanged": true
+}

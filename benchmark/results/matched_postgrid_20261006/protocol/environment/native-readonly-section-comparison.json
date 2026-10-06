@@ -1,0 +1,142 @@
+{
+  "openhcs/core/_tabular_native.abi3.so": {
+    "before": {
+      ".text": {
+        "sha256": "0c097cb41f4378c5a889a76aafb43ab8a9f5e553c4bfceff2e36386415898db4",
+        "bytes": 9921
+      },
+      ".rodata": {
+        "sha256": "8d0927b7863e6b3a3b144b173e8c6b2c75d78e238dc19914f152c63443b50bb2",
+        "bytes": 760
+      },
+      ".data": {
+        "sha256": "917d98c98f3d0122205a9626070db58cd94dfef95f2eef3d410dc40d1ce78915",
+        "bytes": 312
+      }
+    },
+    "after": {
+      ".text": {
+        "sha256": "0c097cb41f4378c5a889a76aafb43ab8a9f5e553c4bfceff2e36386415898db4",
+        "bytes": 9921
+      },
+      ".rodata": {
+        "sha256": "8d0927b7863e6b3a3b144b173e8c6b2c75d78e238dc19914f152c63443b50bb2",
+        "bytes": 760
+      },
+      ".data": {
+        "sha256": "917d98c98f3d0122205a9626070db58cd94dfef95f2eef3d410dc40d1ce78915",
+        "bytes": 312
+      }
+    },
+    "equal_sections": {
+      ".text": true,
+      ".rodata": true,
+      ".data": true
+    }
+  },
+  "openhcs/processing/backends/cellprofiler/_font_raster_native.abi3.so": {
+    "before": {
+      ".text": {
+        "sha256": "eadb62118ae454a0dc4907990709aa31177f87de537ce0f408d1c341db356c73",
+        "bytes": 567258
+      },
+      ".rodata": {
+        "sha256": "a1472fd8ead3ca3e372e08a60f46d2fea9d6284de1f15b12183ba71220361c8a",
+        "bytes": 87124
+      },
+      ".data": {
+        "sha256": "4a1ad7ebe91c8d861ef500655b065ad31583840ae0721f98d5b9fed33cbb4fb1",
+        "bytes": 240
+      }
+    },
+    "after": {
+      ".text": {
+        "sha256": "eadb62118ae454a0dc4907990709aa31177f87de537ce0f408d1c341db356c73",
+        "bytes": 567258
+      },
+      ".rodata": {
+        "sha256": "a1472fd8ead3ca3e372e08a60f46d2fea9d6284de1f15b12183ba71220361c8a",
+        "bytes": 87124
+      },
+      ".data": {
+        "sha256": "4a1ad7ebe91c8d861ef500655b065ad31583840ae0721f98d5b9fed33cbb4fb1",
+        "bytes": 240
+      }
+    },
+    "equal_sections": {
+      ".text": true,
+      ".rodata": true,
+      ".data": true
+    }
+  },
+  "openhcs/processing/backends/cellprofiler/_median_native.abi3.so": {
+    "before": {
+      ".text": {
+        "sha256": "a5a9f2c2e75020feaed722306cb94fd9b4caf0750ec3a6e937c74b7316efffa9",
+        "bytes": 67329
+      },
+      ".rodata": {
+        "sha256": "97828092c5a5ffe345285d9515f6ef342f78dc4a5540517d6768ad8ff08eb3ea",
+        "bytes": 1220
+      },
+      ".data": {
+        "sha256": "28eb02112e6c37eff7fc4ca67926dd22f3d9106611995bef20a91797926fa1f9",
+        "bytes": 264
+      }
+    },
+    "after": {
+      ".text": {
+        "sha256": "a5a9f2c2e75020feaed722306cb94fd9b4caf0750ec3a6e937c74b7316efffa9",
+        "bytes": 67329
+      },
+      ".rodata": {
+        "sha256": "97828092c5a5ffe345285d9515f6ef342f78dc4a5540517d6768ad8ff08eb3ea",
+        "bytes": 1220
+      },
+      ".data": {
+        "sha256": "28eb02112e6c37eff7fc4ca67926dd22f3d9106611995bef20a91797926fa1f9",
+        "bytes": 264
+      }
+    },
+    "equal_sections": {
+      ".text": true,
+      ".rodata": true,
+      ".data": true
+    }
+  },
+  "openhcs/processing/backends/cellprofiler/_granularity_native.abi3.so": {
+    "before": {
+      ".text": {
+        "sha256": "03f6dbbee52f5b03d4fc1670b8f65716492d142ddcedc22595d371dac0da882b",
+        "bytes": 25777
+      },
+      ".rodata": {
+        "sha256": "74feec8eaa430885ec9ea09897c7cea862a65df623396207efccd3ca2338e42c",
+        "bytes": 912
+      },
+      ".data": {
+        "sha256": "66cbd030a354063268f2d466f7816ed4095fb3b1df155106dad7a15005484deb",
+        "bytes": 264
+      }
+    },
+    "after": {
+      ".text": {
+        "sha256": "03f6dbbee52f5b03d4fc1670b8f65716492d142ddcedc22595d371dac0da882b",
+        "bytes": 25777
+      },
+      ".rodata": {
+        "sha256": "74feec8eaa430885ec9ea09897c7cea862a65df623396207efccd3ca2338e42c",
+        "bytes": 912
+      },
+      ".data": {
+        "sha256": "66cbd030a354063268f2d466f7816ed4095fb3b1df155106dad7a15005484deb",
+        "bytes": 264
+      }
+    },
+    "equal_sections": {
+      ".text": true,
+      ".rodata": true,
+      ".data": true
+    }
+  }
+}

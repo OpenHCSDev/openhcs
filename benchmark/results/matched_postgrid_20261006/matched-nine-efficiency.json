@@ -1,0 +1,76 @@
+{
+  "source_head": "eb773573cced496fe5ee7bfeef7b961674958c1d",
+  "assignment_count": 9,
+  "workers": 3,
+  "cases": [
+    {
+      "case": "ExampleVitra",
+      "execution": {
+        "oh_serial": 8.959977388381958,
+        "oh_parallel": 3.9549524784088135,
+        "native_serial": 24.13621953316033,
+        "native_parallel": 9.742641963995993,
+        "oh_efficiency": 0.7551694099399819,
+        "native_efficiency": 0.8257931001452484,
+        "efficiency_ratio": 0.9144777424359146,
+        "native_parallel_speedup": 2.4634030414230734
+      },
+      "total": {
+        "oh_serial": 9.406813020352274,
+        "oh_parallel": 4.4158834046684206,
+        "native_serial": 24.136970807798207,
+        "native_parallel": 9.743396325036883,
+        "oh_efficiency": 0.710074078677553,
+        "native_efficiency": 0.8257548669408435,
+        "efficiency_ratio": 0.8599090445668813,
+        "native_parallel_speedup": 2.206443293936674
+      }
+    },
+    {
+      "case": "ExampleIlluminationCorrection_Example3",
+      "execution": {
+        "oh_serial": 1.5687224864959717,
+        "oh_parallel": 0.7231040000915527,
+        "native_serial": 3.63112607691437,
+        "native_parallel": 2.2305072909221053,
+        "oh_efficiency": 0.7231428610994428,
+        "native_efficiency": 0.5426457756482294,
+        "efficiency_ratio": 1.3326241418457496,
+        "native_parallel_speedup": 3.084628615855671
+      },
+      "total": {
+        "oh_serial": 1.9642462832853198,
+        "oh_parallel": 1.1020759269595146,
+        "native_serial": 3.6318474048748612,
+        "native_parallel": 2.231199855916202,
+        "oh_efficiency": 0.5941049478337432,
+        "native_efficiency": 0.5425851020987253,
+        "efficiency_ratio": 1.0949525623459593,
+        "native_parallel_speedup": 2.0245427754436074
+      }
+    },
+    {
+      "case": "cp_tutorial_3d_monolayer",
+      "execution": {
+        "oh_serial": 27.118808269500732,
+        "oh_parallel": 12.142255544662476,
+        "native_serial": 127.80388973513618,
+        "native_parallel": 45.97763208905235,
+        "oh_efficiency": 0.7444747578611041,
+        "native_efficiency": 0.9265656938544785,
+        "efficiency_ratio": 0.8034775761706836,
+        "native_parallel_speedup": 3.7865808308789313
+      },
+      "total": {
+        "oh_serial": 28.797242304775864,
+        "oh_parallel": 13.62584541644901,
+        "native_serial": 127.80510546499863,
+        "native_parallel": 45.97839789232239,
+        "oh_efficiency": 0.7044759774443565,
+        "native_efficiency": 0.9265590750124847,
+        "efficiency_ratio": 0.7603141520521659,
+        "native_parallel_speedup": 3.374351938325797
+      }
+    }
+  ]
+}

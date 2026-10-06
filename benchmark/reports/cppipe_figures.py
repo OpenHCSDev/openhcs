@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import math
 import re
@@ -145,6 +146,15 @@ class MeasuredBatchSummarySource(SummarySource):
         if custody["status"] != "PASS":
             raise ValueError("Measured publication requires qualified matched custody")
         return custody
+
+    def retained_manifest_path(self) -> Path:
+        """Bind the archived declaration to the converter's original digest."""
+        declaration = self.qualified_custody()["manifest"]
+        original = Path(declaration["path"])
+        retained = self.path.parents[2] / "protocol" / self.path.parent.name / original.name
+        if hashlib.sha256(retained.read_bytes()).hexdigest() != declaration["sha256"]:
+            raise ValueError(f"Archived qualified manifest has changed: {retained}")
+        return retained
 
     def publication_values(
         self, total: MeasuredBatchSummarySource, *, record_name: str, frozen: bool,

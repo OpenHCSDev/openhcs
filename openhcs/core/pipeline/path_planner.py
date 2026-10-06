@@ -2205,6 +2205,7 @@ class PathPlannerStepAssemblyStage:
         step_plan.main_input_dependency = main_input_dependency
         step_plan.artifact_inputs = artifact_maps.inputs
         step_plan.artifact_outputs = artifact_maps.outputs
+        step_plan.future_artifact_inputs = self.planner.future_artifact_inputs[step_index]
         step_plan.execution_group_scope = artifact_maps.group_scope
         step_plan.compiled_function_pattern = compiled_function_pattern
         step_plan.source_binding_plan = artifact_maps.source_binding_plan

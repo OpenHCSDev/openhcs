@@ -1,0 +1,25 @@
+{
+  "pipeline_path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_preparation/native_cellprofiler_headless/3d_monolayer_final.cppipe",
+  "input_dir": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/3d_monolayer/images",
+  "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native",
+  "expected_image_sets": null,
+  "repetitions": 3,
+  "file_list_path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_preparation/native_cellprofiler_file_list.txt",
+  "first_image_set": 1,
+  "last_image_set": null,
+  "report_path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_report.json",
+  "start_barrier_root": null,
+  "start_barrier_job_count": 1,
+  "start_barrier_job_index": 0,
+  "assignment_output_subdirectories": [
+    "W001",
+    "W002",
+    "W003",
+    "W004",
+    "W005",
+    "W006",
+    "W007",
+    "W008",
+    "W009"
+  ]
+}

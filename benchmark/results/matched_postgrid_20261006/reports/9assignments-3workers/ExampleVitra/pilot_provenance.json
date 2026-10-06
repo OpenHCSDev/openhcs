@@ -1,0 +1,1623 @@
+{
+  "case": "ExampleVitra",
+  "wells": [
+    "W001",
+    "W002",
+    "W003",
+    "W004",
+    "W005",
+    "W006",
+    "W007",
+    "W008",
+    "W009"
+  ],
+  "selected_source_wells": [
+    "A01"
+  ],
+  "assignment_scope": "independent repeated source assignments",
+  "manifest_sha256": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
+  "cppipe_sha256": "3d1335d9aa58a4cefb13fe41214d60a0f3491ab5fa6fe520fbd038ce50565b36",
+  "driver_sha256": "128f5d81011fb5e7207c51c6a32072e10aa62f029e5545cb5ebaf245b3c3041b",
+  "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
+  "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
+  "source_commit": "eb773573cced496fe5ee7bfeef7b961674958c1d",
+  "source_dirty": false,
+  "native_job_count": 3,
+  "candidate_worker_count": 3,
+  "candidate_worker_start_method": "fork",
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0"
+  },
+  "native_input_inventory": [
+    {
+      "path": "Channel 1-01-A-01-00.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleVitraImages/images/Channel 1-01-A-01-00.tif",
+      "size_bytes": 1426912,
+      "sha256": "0e8a20a42e86c5160188f2c1f897a370dde1b3280f67b1078552b027dac95a0e"
+    },
+    {
+      "path": "Channel 2-01-A-01-00.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleVitraImages/images/Channel 2-01-A-01-00.tif",
+      "size_bytes": 1426120,
+      "sha256": "b402b814586eeb5fa0f7bd211153652fba495b23f052dd87fea497a26ce6f617"
+    },
+    {
+      "path": "VitraChannel1ILLUM.npy",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleVitraImages/images/VitraChannel1ILLUM.npy",
+      "size_bytes": 5570640,
+      "sha256": "101cc785bc0d7bf66f7abfe96f155a154c23f271755f4d3a5c2a92457dc96227"
+    },
+    {
+      "path": "VitraChannel2ILLUM.npy",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleVitraImages/images/VitraChannel2ILLUM.npy",
+      "size_bytes": 5570640,
+      "sha256": "8df277e136903f2456b1f02c402f6a661342fd0831353aae523c5e2618445b7e"
+    }
+  ],
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_report.json",
+  "native_reference_report_sha256": "a4a935cfc47a19e2f52e64127bc50e7014841fb811d717085c671499cd8a7018",
+  "native_reference_source_commit": "56c3da776ccc12688b4566f7b0c0ef728e6bc7c6",
+  "native_reference_file_inventory": [
+    {
+      "path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleVitraImages/ExampleVitra.cppipe",
+      "sha256": "3d1335d9aa58a4cefb13fe41214d60a0f3491ab5fa6fe520fbd038ce50565b36"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/candidate_report.json",
+      "sha256": "4ec31cf4444097a7dadeed2137b57162601c66229c251a0b571f7a3ea1456234"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_report.json",
+      "sha256": "a4a935cfc47a19e2f52e64127bc50e7014841fb811d717085c671499cd8a7018"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_request.json",
+      "sha256": "c261633595629b51f7a7f7c2fb9389c7c539a0e7ff5607d95ed1108c86052000"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/equivalence.json",
+      "sha256": "073dd919001ad5c66a1109e813c89ff6e8aca0a7dfc973c1f8be963d192d1c59"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/reports.json",
+      "sha256": "06fd127c661b8df9e409872c91acaca5a7214523be4b410c59e8a5c6ce646481"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/pilot_provenance.json",
+      "sha256": "959117037dde8b695d0642420969d79e3877a24d21b7c29973641f7b183e29ec"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W001/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W001/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W001/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W001/Image.csv",
+      "sha256": "f7f0b2282d051d7d07db6219849d3c82de4020eef86b9df3effc79c0b540e959"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W001/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W002/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W002/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W002/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W002/Image.csv",
+      "sha256": "5eb467e49fae2bbe4de7d462999af99b2bf526d02fbf0312ff9ac255a0a8cff1"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W002/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W003/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W003/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W003/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W003/Image.csv",
+      "sha256": "697a320682f236d1550d5ac0193fe1bd30092cf14c4c67b34b119d5a83fa4379"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W003/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W004/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W004/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W004/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W004/Image.csv",
+      "sha256": "0e61aed126d513b1eab2839f7f77d82dd2a744adefe9ca2124917830f01ffdd3"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W004/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W005/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W005/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W005/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W005/Image.csv",
+      "sha256": "bb1eeec0a33bf35c6e342d7d59720c19dac0539c3f1715d9ee14d998b7937052"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W005/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W006/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W006/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W006/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W006/Image.csv",
+      "sha256": "b9f62536f811c44d56276f682f34b733e5ceba573c87d34922927373528c35b6"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W006/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W007/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W007/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W007/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W007/Image.csv",
+      "sha256": "aba0470eda0e8b894710080cf2e5c4ecde4f385b072cde0273ce7520ef82bea6"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W007/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W008/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W008/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W008/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W008/Image.csv",
+      "sha256": "1a98645b533cfc099a8513563b06016f99ef8f3a4dd563c1751ab7b0a3c7e881"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W008/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W009/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W009/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W009/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W009/Image.csv",
+      "sha256": "b06806fd85e4e230b0df30dc60c6d16131f5adedc02318d78de045c5c0e7d5c8"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1/W009/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W001/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W001/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W001/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W001/Image.csv",
+      "sha256": "c6cec40821070c4e23ed989d26656231da72e85f788f076eaab09e1adf8ff5d4"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W001/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W002/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W002/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W002/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W002/Image.csv",
+      "sha256": "cab08ea64cae2cffd135bf72f2eca51a97fd1d3648d4424d7ec98e1ddd2887f5"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W002/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W003/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W003/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W003/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W003/Image.csv",
+      "sha256": "e9795bfd302c8708d46a366a1b49aa747bd5f4ac0559e72f54653606bc0da507"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W003/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W004/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W004/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W004/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W004/Image.csv",
+      "sha256": "78804f05bfd66495b171509530550d4bc65e4c8d426a11c2633bc23f7a4abfb8"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W004/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W005/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W005/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W005/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W005/Image.csv",
+      "sha256": "c8a7820c1632aaff35d5c7a6afc836746ff0fba26a746b3a4fa356864dcdda00"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W005/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W006/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W006/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W006/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W006/Image.csv",
+      "sha256": "a17e871d55b5c57216a44c1f876d501b20684c40772ded07de923b88488d33e6"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W006/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W007/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W007/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W007/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W007/Image.csv",
+      "sha256": "65a41100b7919dc54042ddfb18662824d5c6101777947d2615f7d526150265aa"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W007/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W008/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W008/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W008/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W008/Image.csv",
+      "sha256": "e75f9bdd70090d59d83bab02652c4febf14495b37e001a9af4dac41c99ba2552"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W008/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W009/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W009/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W009/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W009/Image.csv",
+      "sha256": "a24642f5f1213196add82a7597637e0cd50c96e5bf955af595b615afb5a2655a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0/W009/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W001/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W001/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W001/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W001/Image.csv",
+      "sha256": "485637984ee7a5201c9e66fefe1f2578091b10f760e661de185ad3c07d0b17cd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W001/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W002/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W002/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W002/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W002/Image.csv",
+      "sha256": "18b07b0a233881d9fc897aee8b0e6d12d4e8baac8250f1748b944ea5bf550114"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W002/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W003/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W003/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W003/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W003/Image.csv",
+      "sha256": "14a8533dda55fa86be8575752faca48af47959ed258287cfc66fe6b629cdec52"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W003/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W004/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W004/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W004/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W004/Image.csv",
+      "sha256": "2d20fd6a438e12e701a5f009cd490a0af5cfe05fca5aa0c387f52c31413b43f5"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W004/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W005/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W005/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W005/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W005/Image.csv",
+      "sha256": "6f2dc267458aaf0ec17b6c82753d8fa9fb4369a039819f02c186924299d13622"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W005/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W006/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W006/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W006/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W006/Image.csv",
+      "sha256": "c019f915fadc3d554ed73d405fd35c3a6a925f517875084a66ec527caa316808"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W006/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W007/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W007/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W007/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W007/Image.csv",
+      "sha256": "5ae6e8749a7632b0d492561a3470ff013f97973407cf543c473e887f606a1706"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W007/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W008/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W008/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W008/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W008/Image.csv",
+      "sha256": "b90e4b875da1c27baa048cedba3d5e47ca7a03174c0ed78252a0cc3d01450402"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W008/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W009/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W009/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W009/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W009/Image.csv",
+      "sha256": "91d2ab348113fa5be3d4b500aae25f097863115eae6c3ed5df4197aa37cf3213"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1/W009/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W001/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W001/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W001/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W001/Image.csv",
+      "sha256": "147403d2660152b320beffde0c3dbc8804fc88b0582062dddba6ca72b6a0d621"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W001/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W002/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W002/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W002/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W002/Image.csv",
+      "sha256": "8dcba3761aeb7c9a49451fd2172acdafe0d5445adb0acfe8aaf37867030c352e"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W002/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W003/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W003/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W003/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W003/Image.csv",
+      "sha256": "5da2db8cc760a6284f3fdaf039d3a3a564c397d907b44ad79eb0da9e2d3ddbe4"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W003/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W004/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W004/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W004/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W004/Image.csv",
+      "sha256": "21e078b0e1616ac59c51270177a0169ee8a97b283dafa8e0c96097e61fc9bb1a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W004/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W005/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W005/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W005/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W005/Image.csv",
+      "sha256": "4fc28b7e4bdd337cea86d31ae1bad957b3d6adbee7c1e7ca63354cee8b6690e2"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W005/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W006/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W006/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W006/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W006/Image.csv",
+      "sha256": "1bfaaee03f82e4ff22bb44d40e1818912817d3a8b149db3d6a452614e4d8ef11"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W006/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W007/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W007/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W007/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W007/Image.csv",
+      "sha256": "700d15eed4b7a22f14aadf8a1d42a00ed2374f1c37e077b092c2b069d52c8ed6"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W007/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W008/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W008/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W008/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W008/Image.csv",
+      "sha256": "a0e8391de96b9ca6f9755ad293ef59a8c943d4a5a75da51e25fae35bfd3080d4"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W008/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W009/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W009/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W009/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W009/Image.csv",
+      "sha256": "e0422b83bc0c7a22b36e99243c6c546f9db2fe3d8326b27188c0dd6590dd9beb"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2/W009/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/-1/W001/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/-1/W001/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/-1/W001/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/-1/W001/Image.csv",
+      "sha256": "fdfd2b242b2502a35371022203cf34a33e1abf379cd738f597cbbbd2f685bdcb"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/-1/W001/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/-1/W002/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/-1/W002/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/-1/W002/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/-1/W002/Image.csv",
+      "sha256": "a0b3fd94c4d7feda984bda07f78e85fb282b550b6aac374ae24c6365ee561564"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/-1/W002/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/-1/W003/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/-1/W003/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/-1/W003/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/-1/W003/Image.csv",
+      "sha256": "77a80bb47c1a48ea799e2a950e390dbce49df645d0b56b2c23fbb672a98cc4d8"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/-1/W003/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/0/W001/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/0/W001/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/0/W001/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/0/W001/Image.csv",
+      "sha256": "2074e4c7519972415eb288f06bd731fabc843cd903b1a96206a6ad633f1dcee6"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/0/W001/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/0/W002/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/0/W002/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/0/W002/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/0/W002/Image.csv",
+      "sha256": "d6e9fc8a7a4b820372a01c63bd37ff4a64a7dd4b66655a086ea632108acc8522"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/0/W002/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/0/W003/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/0/W003/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/0/W003/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/0/W003/Image.csv",
+      "sha256": "22e4d733ac0a5872f19a990fa69b15265a10f0d795fcf4984fa21d9d42f570bd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/0/W003/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/1/W001/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/1/W001/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/1/W001/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/1/W001/Image.csv",
+      "sha256": "5ce50d5b712c212a543da6d4e16e158cfd2b45c6e2d7188d78a9b97464980397"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/1/W001/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/1/W002/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/1/W002/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/1/W002/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/1/W002/Image.csv",
+      "sha256": "127bfc893a5868b854859d3940d1e2d3a8bc75a52d99c56fccee45dde93d2b45"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/1/W002/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/1/W003/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/1/W003/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/1/W003/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/1/W003/Image.csv",
+      "sha256": "2bdf71478f944dcd641d77f429dd1174423eb56d6ed3527edf463d5df5cfc1e7"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/1/W003/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/2/W001/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/2/W001/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/2/W001/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/2/W001/Image.csv",
+      "sha256": "da02b4dbaa704ec137439c54843aeae978fe48b054c89af62a933b0969dbaa34"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/2/W001/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/2/W002/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/2/W002/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/2/W002/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/2/W002/Image.csv",
+      "sha256": "0e7b78e244e41d58ded25d20ebaf609024422cf821303f6c57704b58011c672d"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/2/W002/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/2/W003/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/2/W003/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/2/W003/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/2/W003/Image.csv",
+      "sha256": "2048b6fae235fb803d95157c42a4e0d46822e9056993e7bcfd9ea119a7efdf3d"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0/2/W003/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0_report.json",
+      "sha256": "66b4e0f0e3f0910762bc3c3496df1e07941394f7e705924b41fa3dae9f3954ad"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/-1/W004/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/-1/W004/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/-1/W004/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/-1/W004/Image.csv",
+      "sha256": "d423f5b8d4fa8abc389fcd0c552462e4a545c19287a695d0f1f8cce1344eeab7"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/-1/W004/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/-1/W005/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/-1/W005/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/-1/W005/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/-1/W005/Image.csv",
+      "sha256": "680ab99010b1fd72ec8d7fbcb3b364e11d3fc157f3d77b936be830456ec0dc60"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/-1/W005/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/-1/W006/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/-1/W006/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/-1/W006/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/-1/W006/Image.csv",
+      "sha256": "fcc495d4210233b88f4fe36c0204806f3955260b948553834585f37424f52d64"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/-1/W006/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/0/W004/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/0/W004/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/0/W004/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/0/W004/Image.csv",
+      "sha256": "a358c4c12f5f3e6a7d19cf5d8eea1ea7a17c380cf36afef8ef5e02d8b015ea7d"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/0/W004/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/0/W005/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/0/W005/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/0/W005/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/0/W005/Image.csv",
+      "sha256": "b986f9291dbf89fd4ff5562381ef31b16a2c43c72120a5e14584533ca73754f0"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/0/W005/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/0/W006/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/0/W006/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/0/W006/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/0/W006/Image.csv",
+      "sha256": "a9c1b38c44f778f5f7497423fb9732436e60201f13a5225a671952930d82eda5"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/0/W006/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/1/W004/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/1/W004/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/1/W004/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/1/W004/Image.csv",
+      "sha256": "3194dddeef96645e7508856e95538c0f0ec4218782a484b40eafc260694f9351"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/1/W004/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/1/W005/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/1/W005/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/1/W005/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/1/W005/Image.csv",
+      "sha256": "06f45e796bebc3958407ba196f4eaaa65242d9a94ca96b588126ca3a862ef8c5"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/1/W005/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/1/W006/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/1/W006/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/1/W006/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/1/W006/Image.csv",
+      "sha256": "8ea071bd0392ef0ab82e153a4906c800737b5137eaf660bd41005c3965a04e43"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/1/W006/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/2/W004/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/2/W004/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/2/W004/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/2/W004/Image.csv",
+      "sha256": "1c0bd02858d822c40c9e7c4427dea1f9209f8635e53f40037b4613b1084efd0a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/2/W004/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/2/W005/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/2/W005/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/2/W005/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/2/W005/Image.csv",
+      "sha256": "47070887d6a96ca37e947af559e3aef6b818aa11b3cdc96c66773b20792b774c"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/2/W005/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/2/W006/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/2/W006/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/2/W006/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/2/W006/Image.csv",
+      "sha256": "45e97ea6d01cda24913790403a171f3f6e98b335f9b2d70d1d97db19e2d452a8"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1/2/W006/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1_report.json",
+      "sha256": "3e4aad5bd8dd6054ba110eba7297e5314fd10b8867d853c2ef738262382ba59b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/-1/W007/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/-1/W007/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/-1/W007/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/-1/W007/Image.csv",
+      "sha256": "b218336d781e1e291e7a783806ee49c9dc5643d2d9d7fbac90dcde9c55e68d23"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/-1/W007/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/-1/W008/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/-1/W008/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/-1/W008/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/-1/W008/Image.csv",
+      "sha256": "3a4677c555b4b88e7011d920c176e0f5c4b581bdb46cf32ea725ed82ff327c6b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/-1/W008/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/-1/W009/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/-1/W009/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/-1/W009/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/-1/W009/Image.csv",
+      "sha256": "8d8d3d9dadc2a8dc47b1ca365f4a04fb5efc8b6dbf8915758d070048c5da5835"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/-1/W009/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/0/W007/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/0/W007/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/0/W007/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/0/W007/Image.csv",
+      "sha256": "b1ea0cfae25d82159c57b207f3f78e2a4177f464087e1a08f45d2c534bbfe1be"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/0/W007/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/0/W008/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/0/W008/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/0/W008/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/0/W008/Image.csv",
+      "sha256": "5a297c8e4a5449e59bc76b89a68f933fb60ca818c772004345e9c34939e6f25b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/0/W008/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/0/W009/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/0/W009/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/0/W009/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/0/W009/Image.csv",
+      "sha256": "1d0445040ca6fdce835e59209ab74af2ae489eb20b1bcba2d95ddf95c35aca7b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/0/W009/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/1/W007/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/1/W007/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/1/W007/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/1/W007/Image.csv",
+      "sha256": "8749e839fea572fa90cc85622dda9e0cac1544f94338dc7d62d90e359b06ca52"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/1/W007/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/1/W008/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/1/W008/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/1/W008/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/1/W008/Image.csv",
+      "sha256": "d3d7425aec380f3941ce7f1170174333586529f5cb412c2005714807fa42b442"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/1/W008/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/1/W009/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/1/W009/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/1/W009/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/1/W009/Image.csv",
+      "sha256": "33918314bc1ff2d07a0849e71da99f3d99d2759abebc83a934ff5c281a7420b7"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/1/W009/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/2/W007/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/2/W007/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/2/W007/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/2/W007/Image.csv",
+      "sha256": "824e90557a2ec6598b9c19611a4bc85a14db6eb13fe53d5151a5fda8ca0634f5"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/2/W007/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/2/W008/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/2/W008/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/2/W008/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/2/W008/Image.csv",
+      "sha256": "337895149c35dc00b58304e2eddd1fadbbb8ab52dd524d4598c9ec1bbd239b22"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/2/W008/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/2/W009/Cells.csv",
+      "sha256": "2ac1308e6bd6c3299ce34217916f3eb1846e1992215bc658658e947ab19d46fc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/2/W009/Channel 1-01-A-01-00_Outlined.tiff",
+      "sha256": "4c9caab6edec2642f60376a9b5257ab60d08adac602952b1528b868d0e6ae711"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/2/W009/Cytoplasm.csv",
+      "sha256": "7c8c1139cea980114efe72dac52cfb2364a4dcc26904c3ef4c68e3297731e5df"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/2/W009/Image.csv",
+      "sha256": "c59052fc4dfb412f97110cc86711c43318969fd008c85e05c796c136c5b5ed96"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2/2/W009/Nuclei.csv",
+      "sha256": "2201239ff8cf2042dc36ed4812b61a00cdee8311bcbed804b2cd0537ce82666b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2_report.json",
+      "sha256": "138675c67b5d9d6e444d8770cbb4ed08b20dd37abd2cb129a785b29155026ce0"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/request_0.json",
+      "sha256": "1183bf0ee015c1961d90c89e8cb99b684a320fd804ba3ff87e0f0f8569be0ada"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/request_1.json",
+      "sha256": "1db5bd6b04cf045e8115861125a4799f9666d7db4f9faf971da0370b1fa65475"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/request_2.json",
+      "sha256": "51c843d64a0785716cd5c2181c01cd33086d710fd9ab750aa316839fe987fb9b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_0_job_0.ready",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_0_job_1.ready",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_0_job_2.ready",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_1_job_0.ready",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_1_job_1.ready",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_1_job_2.ready",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_2_job_0.ready",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_2_job_1.ready",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_2_job_2.ready",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "native_image_set_count": 9,
+  "native_input_inventory_after": [
+    {
+      "path": "Channel 1-01-A-01-00.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleVitraImages/images/Channel 1-01-A-01-00.tif",
+      "size_bytes": 1426912,
+      "sha256": "0e8a20a42e86c5160188f2c1f897a370dde1b3280f67b1078552b027dac95a0e"
+    },
+    {
+      "path": "Channel 2-01-A-01-00.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleVitraImages/images/Channel 2-01-A-01-00.tif",
+      "size_bytes": 1426120,
+      "sha256": "b402b814586eeb5fa0f7bd211153652fba495b23f052dd87fea497a26ce6f617"
+    },
+    {
+      "path": "VitraChannel1ILLUM.npy",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleVitraImages/images/VitraChannel1ILLUM.npy",
+      "size_bytes": 5570640,
+      "sha256": "101cc785bc0d7bf66f7abfe96f155a154c23f271755f4d3a5c2a92457dc96227"
+    },
+    {
+      "path": "VitraChannel2ILLUM.npy",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleVitraImages/images/VitraChannel2ILLUM.npy",
+      "size_bytes": 5570640,
+      "sha256": "8df277e136903f2456b1f02c402f6a661342fd0831353aae523c5e2618445b7e"
+    }
+  ]
+}
