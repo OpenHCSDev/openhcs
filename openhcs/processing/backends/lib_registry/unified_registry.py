@@ -1141,9 +1141,10 @@ class Pure2DProcessingContract(ProcessingContractDeclaration):
     def main_flow_call_argument(
         self, callable_contract: "CallableContract", source_payload: Any,
     ) -> Any:
-        """Keep the declared plane domain until the PURE_2D slicer consumes it."""
-        del callable_contract
-        return source_payload
+        """Retain plane context only for the declared contract execution wrapper."""
+        if callable_contract.raw_processing_function is not None:
+            return source_payload
+        return super().main_flow_call_argument(callable_contract, source_payload)
 
     def execute(self, registry, func, image, *args, **kwargs):
         return registry.execute_pure_2d(func, image, *args, **kwargs)
