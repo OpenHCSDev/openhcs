@@ -148,7 +148,13 @@ class GenericValidator(Generic[T]):
             return ValidationResult(is_valid=False, error_message=str(e))
 
     def validate_dict_pattern_keys(
-        self, func_pattern: Dict[str, Any], group_by: T, step_name: str, orchestrator
+        self,
+        func_pattern: Dict[str, Any],
+        group_by: T,
+        step_name: str,
+        orchestrator,
+        *,
+        resolved_config=None,
     ) -> ValidationResult:
         """
         Validate that dict function pattern keys match available component keys.
@@ -161,6 +167,7 @@ class GenericValidator(Generic[T]):
             group_by: GroupBy component specifying component type
             step_name: Name of the step containing the function
             orchestrator: Orchestrator for component key access
+            resolved_config: Held compilation configuration, or live saved configuration.
 
         Returns:
             ValidationResult indicating success or failure
@@ -169,7 +176,9 @@ class GenericValidator(Generic[T]):
 
         try:
             # Use enum objects directly - orchestrator now accepts VariableComponents
-            available_keys = orchestrator.get_component_keys(group_by)
+            available_keys = orchestrator.get_component_keys(
+                group_by, resolved_config=resolved_config
+            )
             available_keys_set = set(str(key) for key in available_keys)
 
             # Check each dict key against available keys

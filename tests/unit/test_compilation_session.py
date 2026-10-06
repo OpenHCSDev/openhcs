@@ -15,6 +15,7 @@ from openhcs.core.callable_contract import CallableContract
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.config import (
     GlobalPipelineConfig,
+    MaterializationBackend,
     LazyNapariStreamingConfig,
     LazyProcessingConfig,
     LazySourceBindingsConfig,
@@ -61,6 +62,74 @@ from openhcs.processing.backends.analysis.neurite_outgrowth import (
 
 def _identity(image):
     return image
+
+
+@pytest.mark.parametrize("channel, missing", [("2", False), ("9", True)])
+def test_shared_declaration_checks_full_plate_group_domain_with_held_config(
+    channel, missing
+):
+    step = FunctionStep(func={channel: _identity}, name="Grouped")
+    step.processing_config = ProcessingConfig(
+        variable_components=[VariableComponents.SITE], group_by=GroupBy.CHANNEL
+    )
+    pipeline = ResolvedPipelineDefinition(
+        (step,), {0: "plate::functionstep_0"}, {0: {}}
+    )
+    held_config = GlobalPipelineConfig()
+    requests = []
+
+    def full_plate_keys(component, *, resolved_config):
+        requests.append((component, resolved_config))
+        return ("1", "2")
+
+    orchestrator = SimpleNamespace(get_component_keys=full_plate_keys)
+    if missing:
+        with pytest.raises(
+            ValueError,
+            match="FunctionStep 'Grouped' \\(index: 0\\).*keys \\['9'\\] not found",
+        ):
+            pipeline.validate_source_group_domains(orchestrator, held_config)
+    else:
+        pipeline.validate_source_group_domains(orchestrator, held_config)
+    assert requests == [(GroupBy.CHANNEL, held_config)]
+
+
+@pytest.mark.parametrize(
+    "backend", [MaterializationBackend.DISK, MaterializationBackend.ZARR]
+)
+def test_zarr_store_planning_queries_whole_plate_only_for_zarr(backend):
+    config = GlobalPipelineConfig()
+    config = replace(
+        config,
+        vfs_config=replace(config.vfs_config, materialization_backend=backend),
+    )
+    plans = [SimpleNamespace(zarr_config={"old": True}) for _ in range(2)]
+    requests = []
+
+    def full_plate_keys(component, *, resolved_config):
+        requests.append((component, resolved_config))
+        return ("A01", "A02")
+
+    session = SimpleNamespace(
+        step_count=2,
+        global_config=config,
+        plan=plans.__getitem__,
+        axis_id="A01",
+        orchestrator=SimpleNamespace(get_component_keys=full_plate_keys),
+        pipeline=SimpleNamespace(
+            steps=(SimpleNamespace(name="first"), SimpleNamespace(name="last"))
+        ),
+    )
+    PipelineCompiler.declare_zarr_stores(session)
+    assert plans[0].zarr_config is None
+    if backend is MaterializationBackend.ZARR:
+        assert plans[1].zarr_config == {
+            "all_wells": ("A01", "A02"), "needs_initialization": True
+        }
+        assert len(requests) == 1 and requests[0][1] is config
+    else:
+        assert plans[1].zarr_config is None
+        assert requests == []
 
 
 @pytest.mark.parametrize("pipeline_workers, expected_workers", [(None, 2), (3, 3)])
