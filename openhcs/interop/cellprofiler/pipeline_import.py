@@ -969,8 +969,8 @@ def _lower_module_batch(
     )
     public_pattern: FunctionPatternSyntax | None = None
     lowered_units = units
-    target_contracts_by_default_position: list[CallableContract] = []
-    target_contracts_by_group_key: dict[str, list[CallableContract]] = {}
+    target_units_by_default_position: list[_ParsedTargetUnit] = []
+    target_units_by_group_key: dict[str, list[_ParsedTargetUnit]] = {}
     if target_contract is not None and (
         not source_group_keys
         or has_unscoped_single_invocation
@@ -1040,7 +1040,7 @@ def _lower_module_batch(
                 leaf, projected_units = projected
                 default_chain.append(leaf)
                 analyzed_units.extend(projected_units)
-                target_contracts_by_default_position.append(unit.contract)
+                target_units_by_default_position.append(unit)
             public_pattern = (
                 default_chain[0] if len(default_chain) == 1 else default_chain
             )
@@ -1060,8 +1060,8 @@ def _lower_module_batch(
                     if group_key in grouped_items and not preserves_input_main_flow:
                         return None
                     grouped_items.setdefault(group_key, []).append(leaf)
-                    target_contracts_by_group_key.setdefault(group_key, []).append(
-                        unit.contract
+                    target_units_by_group_key.setdefault(group_key, []).append(
+                        unit
                     )
             public_pattern = {
                 group_key: items[0] if len(items) == 1 else items
@@ -1075,22 +1075,22 @@ def _lower_module_batch(
         InvocationContractPlan,
     ] = {}
 
-    def target_contract_for_invocation(
+    def target_units_for_invocation(
         invocation_key: FunctionInvocationKey,
-    ) -> CallableContract | None:
+    ) -> tuple[_ParsedTargetUnit, ...]:
         if invocation_key.group_key == DEFAULT_GROUP_KEY:
-            if target_contracts_by_default_position:
-                if invocation_key.position >= len(target_contracts_by_default_position):
-                    return None
-                return target_contracts_by_default_position[invocation_key.position]
-            return target_contract
-        grouped_contracts = target_contracts_by_group_key.get(
+            if target_units_by_default_position:
+                if invocation_key.position >= len(target_units_by_default_position):
+                    return ()
+                return (target_units_by_default_position[invocation_key.position],)
+            return units if target_contract is not None else ()
+        grouped_units = target_units_by_group_key.get(
             invocation_key.group_key,
             (),
         )
-        if invocation_key.position >= len(grouped_contracts):
-            return None
-        return grouped_contracts[invocation_key.position]
+        if invocation_key.position >= len(grouped_units):
+            return ()
+        return (grouped_units[invocation_key.position],)
 
     public_next_module_num = first_module_num
     group_contexts: list[ArtifactDeclarationStepContext] = []
@@ -1098,6 +1098,28 @@ def _lower_module_batch(
     for group in normalized_public_pattern.groups:
         group_context = reconstruction_context
         for invocation in group.items:
+            invocation_target_units = target_units_for_invocation(invocation.key)
+            if not invocation_target_units:
+                return None
+            invocation_target_contract = (
+                invocation_target_units[0].contract
+                if len(invocation_target_units) == 1 else target_contract
+            )
+            # Projection may omit a selector only in its original context.
+            # Reuse the binding-owned occurrence relation after earlier calls
+            # advance that context; retry smaller batches if selection changes.
+            if len(units) > 1:
+                projection = _public_kwargs_for_target(
+                    module_type,
+                    invocation_target_units,
+                    candidate_group_keys=(
+                        () if invocation.key.group_key == DEFAULT_GROUP_KEY
+                        else (invocation.key.group_key,)
+                    ),
+                    step_context=group_context,
+                )
+                if projection is None or projection.kwargs != invocation.kwargs_dict:
+                    return None
             invocation_blocks, consumed_names = (
                 module_type.module_blocks_for_invocation(
                     invocation=invocation,
@@ -1119,9 +1141,6 @@ def _lower_module_batch(
                     step_context=group_context,
                 )
             )
-            invocation_target_contract = target_contract_for_invocation(invocation.key)
-            if invocation_target_contract is None:
-                return None
             public_contract_plans[(step_index, invocation.key)] = (
                 InvocationContractPlan(
                     contract=invocation_target_contract,
