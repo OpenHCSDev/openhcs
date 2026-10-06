@@ -117,6 +117,14 @@ Separate trials evaluated whether a fresh gpt-6.1-sol agent could choose and rev
 
 We compared first completed scientific settings with the final settings on exactly the same inputs. Technical corrections needed to submit or execute a pipeline remain part of the record; the first completed prediction is not necessarily the first tool call. H001 used a single notebook-derived bright-object image and its predeclared computational label reference. BBBC039 used independent nuclear annotations, with a paired first/final comparison on three fields and a separate final evaluation across all 200 fields. Some of those fields were inspected during development, so the 200-field result measures reference agreement rather than unseen generalization. Existing instance scorers used one-to-one matching at intersection over union at least 0.5.
 
+For BBBC039, we also scored the frozen final predictions on fields whose images
+were not opened by the analysis agents. Original image-delivery records excluded
+25 fields opened by at least one of the three agents, leaving a common 175-field
+comparison. This retrospective subset is distinct from the prospectively
+withheld images above. Supplementary Data 8 records the exclusions, frozen
+predictions and each trial's wall time, model and software versions. Billing
+amounts were not recorded.
+
 ### Performance measurements and reproducibility
 
 The matched single-sample evaluation used CPU execution with one worker and one numerical thread on one physical core. OpenHCS revision [pending]{.benchmark-claim key=source_revision} ran with Python 3.12; native CellProfiler 4.2.8.1 ran with Python 3.9 in its separate environment. Each workflow used one selected source well or sample, which can contain multiple image sets, with unchanged processing settings and the declared comparison outputs. A warmup preceded three measured repetitions. Complete retained native observations were reused only after the workload, inputs, outputs, software environment and hardware checks passed; OpenHCS observations were acquired on the same clean source revision across all 30 workflows.
@@ -182,7 +190,9 @@ For bright-object segmentation, the H001 author matched 59 of 64
 notebook-reference objects while reducing excess predictions from four to two,
 raising object F1 from 0.929 to 0.944 (Figure 3). The reference is computational,
 not a manual cell census. Independent BBBC039 authors achieved final pooled
-object F1 of 0.898–0.906 over the same 200 annotated fields. The lower-scoring
+object F1 of 0.898–0.906 over the same 200 annotated fields. On the common
+175 fields opened by none of the three agents, final F1 was 0.906–0.910.
+The lower-scoring
 fields show that useful overall agreement does not imply uniform accuracy.
 
 In three dimensions, a measurement-first author recovered all 15 annotated
@@ -250,7 +260,7 @@ being treated as additional experiments.
 | Input and task | Evaluation evidence | Supported result and limit |
 |---|---|---|
 | H001 bright objects | Pinned notebook labels; 64 objects | First/final object F1 0.929/0.944 in the Figure 3 trial; computational, not manual biological truth |
-| BBBC039 nuclei | Independent instance annotations; 200 fields | Three authors' final pooled F1 0.898–0.906; includes development fields, not first-200 or unseen accuracy |
+| BBBC039 nuclei | Independent instance annotations; 200 fields and common 175 image-uninspected fields | Three agents' final pooled F1 0.898–0.906 on all fields and 0.906–0.910 on the retrospective uninspected subset |
 | BBBC007 DNA/actin | Manual-outline union; 16 fields per author | Two final authors' directed boundary fractions 0.740–0.743 within two pixels; not boundary recall or exhaustive instance accuracy |
 | H002 3-D centres | 15 manual centres; Figure 4 trial | 15/15 matched within the primary 30-voxel distance, mean error 4.80 voxels; annotations not established as exhaustive |
 | R0010 retinal somata | Distributed matched raw/result review | Autonomous repair retained neighbours and reduced nuisance masks; manual-reference accuracy unmeasured |

@@ -713,7 +713,7 @@ relative to `website/assets/agent/`; original absolute runtime paths describe
 the recorded machine and are not portable download locations.
 
 The record separately identifies post-run software corrections and a later
-viewer replay. Figure 5 uses the original input pixels and uncut recording, with
+viewer replay. The original demonstration retains its input pixels and uncut recording, with
 checksums in [its provenance record](../figures/slas/figure3_provenance.json).
 The run evaluates workflow completion and inspection; it contains no manually
 annotated segmentation-accuracy score.
@@ -916,6 +916,12 @@ receive an accuracy percentage.
 - [Independent field-by-field laboratory neurite analysis](../../figure-collection-20261004/P001-FRESH13-NINE-FIELD-REVIEW.rst), with frozen pipeline and output identities, sampled raw/path review and remaining limitations.
 - [Public translocation assay](task_only_analysis/bbbc013-fresh23-qualified-completion.rst).
 - [Public neurite analysis](task_only_analysis/h004-fresh20-qualified-completion.rst).
+- [BBBC039 frozen predictions on image-uninspected fields](task_only_analysis/bbbc039-uninspected-fields.rst),
+  with the [field-level scores and exposure flags](task_only_analysis/bbbc039-uninspected-fields.csv)
+  and [source and image-opening evidence](task_only_analysis/bbbc039-uninspected-fields.json).
+- [BBBC013 endpoint selection and development-well inclusion](task_only_analysis/bbbc013-fresh23-endpoint-provenance.rst).
+- [Trial wall times, usage and dated model/software identities](task_only_analysis/trial_resources.rst),
+  with the [complete resource catalogue](task_only_analysis/trial_resources.csv).
 
 The [frozen nine-field pipeline source](task_only_analysis/pipelines/p001-fresh13.py)
 is supplied unchanged, with SHA256
