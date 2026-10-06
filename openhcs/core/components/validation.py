@@ -71,9 +71,11 @@ class GenericValidator(Generic[T]):
             config: ComponentConfiguration for validation rules
         """
         self.config = config
-        logger.debug(
-            f"GenericValidator initialized for components: {[c.value for c in config.all_components]}"
-        )
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                "GenericValidator initialized for components: %s",
+                [c.value for c in config.all_components],
+            )
 
     def validate_step(
         self,

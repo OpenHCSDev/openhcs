@@ -1439,6 +1439,9 @@ def test_object_output_lineage_uses_unique_object_input_among_other_artifacts() 
         main_flow_artifacts=ArtifactSpecCollection(()),
     )
 
+    assert tuple(spec.ref() for spec in contract.invocation_domain_inputs) == (
+        guides.ref(),
+    )
     (output,) = contract.artifact_outputs.of_artifact_type(ObjectLabelsArtifactType)
     assert output.relations == (SourceStackLineageSourceRelation(source=guides.ref()),)
     (measurements,) = contract.artifact_outputs.of_artifact_type(
@@ -1674,6 +1677,9 @@ def test_unguided_grid_output_uses_current_main_flow_image_lineage() -> None:
     assert tuple(spec.ref() for spec in contract.artifact_inputs) == (
         current_image.ref(),
         grid.ref().for_plan_type(ArtifactInputPlan),
+    )
+    assert tuple(spec.ref() for spec in contract.invocation_domain_inputs) == (
+        current_image.ref(),
     )
     (output,) = contract.artifact_outputs.of_artifact_type(ObjectLabelsArtifactType)
     assert output.relations == (

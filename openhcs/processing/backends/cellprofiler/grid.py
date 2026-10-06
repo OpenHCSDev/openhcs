@@ -643,6 +643,26 @@ class IdentifyObjectsInGridModule(
     )
 
     @classmethod
+    def invocation_domain_inputs(
+        cls,
+        contract: "CallableContract",
+        declared_inputs: tuple[ArtifactSpec, ...],
+    ) -> tuple[ArtifactSpec, ...]:
+        """Guided shapes execute in their declared guiding-object domain."""
+
+        guiding_inputs = ArtifactSpecCollection(declared_inputs).of_artifact_type(
+            ObjectLabelsArtifactType
+        )
+        if guiding_inputs:
+            if len(guiding_inputs) != 1:
+                raise ValueError(
+                    "IdentifyObjectsInGrid requires exactly one guiding-object "
+                    f"domain, got {tuple(spec.ref() for spec in guiding_inputs)!r}."
+                )
+            return guiding_inputs
+        return super().invocation_domain_inputs(contract, declared_inputs)
+
+    @classmethod
     def active_artifact_bindings(
         cls,
         module: "ModuleBlock | None" = None,

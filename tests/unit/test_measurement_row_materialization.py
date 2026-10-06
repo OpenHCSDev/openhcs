@@ -538,3 +538,48 @@ def test_bounded_preview_is_live_but_explicit_column_admission_keeps_snapshot() 
         {"object_label": 1, "area": 7.0},
         {"object_label": 2, "area": 9.0},
     )
+
+
+def test_columnar_join_preserves_atomic_array_ragged_and_null_cells() -> None:
+    rows = MeasurementProjectedColumnarRows(
+        {
+            "object_label": (4, 9),
+            "array": (np.array([1, 2]), np.array([3, 4])),
+            "ragged": ([1], [2, 3]),
+            "nullable": (None, float("nan")),
+        },
+        fields=(
+            FieldSpec("object_label", int),
+            FieldSpec("array", np.ndarray),
+            FieldSpec("ragged", list),
+            FieldSpec("nullable", float),
+        ),
+    )
+    joined = MeasurementSparseColumnarRows.from_columnar_batches((rows, rows))
+    assert joined.row_count() == 2
+    assert joined.column_values("array").shape == (2,)
+    np.testing.assert_array_equal(joined.column_values("array")[0], [1, 2])
+    assert joined.column_values("ragged").tolist() == [[1], [2, 3]]
+    assert joined.column_values("nullable")[0] is None
+    assert np.isnan(joined.column_values("nullable")[1])
+
+
+def test_columnar_join_custom_equality_receives_atomic_cells_and_rejects_nan() -> None:
+    rows = MeasurementProjectedColumnarRows(
+        {"object_label": (4,), "value": (float("nan"),)},
+        fields=(FieldSpec("object_label", int), FieldSpec("value", float)),
+    )
+
+    def strict(left: object, right: object) -> bool:
+        assert not isinstance(left, np.ndarray)
+        assert not isinstance(right, np.ndarray)
+        return bool(left == right)
+
+    unique = MeasurementSparseColumnarRows.from_columnar_batches(
+        (rows,), values_equal=strict
+    )
+    assert np.isnan(unique.columns["value"][0])
+    with pytest.raises(ValueError, match="Conflicting sparse measurement values"):
+        MeasurementSparseColumnarRows.from_columnar_batches(
+            (rows, rows), values_equal=strict
+        )

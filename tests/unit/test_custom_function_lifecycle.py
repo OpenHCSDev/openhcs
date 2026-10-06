@@ -1019,3 +1019,42 @@ def nested_helper_transport_probe(image):
     CustomFunctionRuntimeRegistry.clear()
     with pytest.raises((RuntimeError, pickle.PicklingError)):
         pickle.dumps(helper)
+
+
+@pytest.mark.parametrize("operation", ["replace", "remove", "reconcile", "clear", "stale_preparation"])
+def test_source_retirement_thaws_before_dropping_captured_owners(
+    isolated_custom_runtime, monkeypatch, operation,
+):
+    from openhcs.processing.custom_functions.source_namespace import CustomFunctionSource
+
+    manager = CustomFunctionManager()
+    name = "startup_gc_retirement_probe"
+    manager.register_from_code(_source(name))
+    previous = CustomFunctionRuntimeRegistry.metadata_by_name()[name]
+    calls = []
+    monkeypatch.setattr(RegistryService, "_startup_heap_frozen", True)
+
+    def unfreeze():
+        # All five actual retirement boundaries still own the original export.
+        assert vars(custom_functions)[name] is previous.func
+        calls.append("thaw")
+
+    monkeypatch.setattr("openhcs.processing.backends.lib_registry.registry_service.gc.unfreeze", unfreeze)
+    if operation == "replace":
+        manager.update_custom_function(name, _source(name, "image + 1"))
+    elif operation == "remove":
+        CustomFunctionRuntimeRegistry.remove(name)
+    elif operation == "reconcile":
+        (isolated_custom_runtime / f"{name}.py").unlink()
+        manager.load_all_custom_functions()
+    elif operation == "clear":
+        CustomFunctionRuntimeRegistry.clear()
+    else:
+        old = CustomFunctionSource(name, "old-preparation")
+        current = CustomFunctionSource(name, "new-preparation")
+        outcome = concurrent.futures.Future()
+        outcome.set_result(previous)
+        CustomFunctionRuntimeRegistry._preparation_outcomes[old] = outcome
+        CustomFunctionRuntimeRegistry.prepare_source_once(current, lambda: previous)
+    assert calls == ["thaw"]
+    assert not RegistryService._startup_heap_frozen
