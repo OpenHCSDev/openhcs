@@ -1336,6 +1336,14 @@ neuron-specific endpoints. The
 preserves all four candidates, local acceptance scope and independently verified
 181 payload files, 61 indexed screenshots and six post-exit journal seals.
 
+A later independent full-plate translocation author retained all 19,732 nuclear
+rows, with 8,655 contributing ratios and 9,661 rows lacking supported cytoplasm.
+The [qualified completion record](task_only_analysis/bbbc013-fresh20-qualified-completion.rst)
+reports independent all-well/object-table checks and conditional assay statistics,
+including the weaker LY294002 control separation. It distinguishes complete
+measurement coverage from GFP-dependent population selection and does not claim
+exhaustive biological segmentation or fully sealed runtime closure.
+
 A retained personal-neurite development continuation also analysed a reused
 nine-field mosaic with pooled channel fits. A fixed-DN clipping repair corrected
 unexpected rescaling, but dense nuclear misses and soma underfill prevented

@@ -515,6 +515,18 @@ and seed-sized cytoplasmic regions. This same-author development recovered
 useful assay responses on selected masks, while incomplete compartments and
 GFP-dependent selection limited population inference (Supplementary Data 8).
 
+Another independent author completed all 96 wells after repairing object
+separation and preserving missing compartments as undefined measurements.
+It retained 19,732 detected nuclear rows, of which 8,655 (43.9%) qualified for
+the nuclear-to-cytoplasmic ratio; 9,661 lacked supported cytoplasm. Independent
+reading of all object tables reproduced each well's contributing-row mean.
+Conditional Z-prime/V-factor values were 0.885/0.626 for Wortmannin and
+0.262/0.497 for LY294002. Matched reserve review showed nuclear-dominant GFP
+with limited extranuclear support. This complete measurement workflow therefore
+retains useful cohort-specific responses alongside substantial selection loss,
+rather than establishing unbiased whole-population translocation
+(Supplementary Data 8).
+
 Together, the task-only trials demonstrate useful initial choices, local
 recovery and self-diagnosis without reference-score feedback. Their quantitative
 comparisons and matched views distinguish detection, object separation,
