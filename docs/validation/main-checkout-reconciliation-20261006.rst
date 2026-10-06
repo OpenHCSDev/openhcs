@@ -3,8 +3,9 @@ Dirty main checkout reconciliation
 
 Integration owner: this coordinator. Viewer audit: Singer. Benchmark and
 scientific-source audit: Hypatia. Source preservation and tracked/dependency
-checkout cleanup are complete; selective integration and issue acceptance
-remain in progress. Original untracked inputs/results are preserved in place.
+checkout cleanup, selective integration and the current issue audit are complete.
+Remaining issue acceptance is explicitly separated below from delivered source.
+Original untracked inputs/results are preserved in place.
 
 The live checkout at /home/ts/code/projects/openhcs remains based on
 2bc579ca9e5d3d70a130bec96ee6f001f3dd5c74 (24 September). Direct tool-call history
@@ -470,8 +471,8 @@ The current declarations and original control confirm that distinction; the
 issue remains open for the existing nominal strategy repair, not a per-function
 workaround. Neither new issue is an unpreserved historical checkout edit.
 
-Next delivery
--------------
+Outcome and remaining work
+--------------------------
 
 Useful unpublished families remain independently published in the recovery
 branch; no demonstrated current defect warrants a wholesale transplant. The
