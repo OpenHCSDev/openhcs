@@ -540,26 +540,38 @@ class ShapeObjectFeatureValueTable(ObjectFeatureValueTable):
             return ObjectFeatureArrayDomain.MEASURED_OBJECT_ID
         return ObjectFeatureArrayDomain.ROW_ORDINAL
 
-    def feature_missing_value(
-        self, feature_name: str, *, object_id: int,
-    ) -> ObjectFeatureMissingValue:
+    def feature_missing_values_for_objects(
+        self, feature_name: str, object_ids: tuple[int, ...],
+    ) -> Mapping[int, ObjectFeatureMissingValue]:
         """Native radius/Feret vectors contain zeros within their material extent."""
-        material_slot = (
-            object_id - 1
-            if self.feature_array_domain(feature_name)
-            is ObjectFeatureArrayDomain.MEASURED_OBJECT_ID
-            else self.object_domain.index(object_id)
+        array_domain = self.feature_array_domain(feature_name)
+        zero_filled = any(
+            feature.value == feature_name
+            and ZeroFilledShapeFeature.matches_feature(feature)
+            for feature in MeasureObjectSizeShapeModule.MeasurementFeature
         )
-        if (
-            material_slot < max(self.measured_object_ids, default=0)
-            and any(
-                feature.value == feature_name
-                and ZeroFilledShapeFeature.matches_feature(feature)
-                for feature in MeasureObjectSizeShapeModule.MeasurementFeature
+        missing_values = super().feature_missing_values_for_objects(
+            feature_name, object_ids
+        )
+        if not zero_filled:
+            return missing_values
+        material_extent = max(self.measured_object_ids, default=0)
+        material_slots = (
+            {object_id: object_id - 1 for object_id in object_ids}
+            if array_domain is ObjectFeatureArrayDomain.MEASURED_OBJECT_ID
+            else {
+                object_id: position
+                for position, object_id in enumerate(self.object_domain)
+            }
+        )
+        return {
+            object_id: (
+                ObjectFeatureMissingValue.ZERO
+                if material_slots[object_id] < material_extent
+                else missing_value
             )
-        ):
-            return ObjectFeatureMissingValue.ZERO
-        return super().feature_missing_value(feature_name, object_id=object_id)
+            for object_id, missing_value in missing_values.items()
+        }
 
 
 class ShapeObjectMeasurementRows(ObjectMeasurementColumnarRows):
