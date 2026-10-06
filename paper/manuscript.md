@@ -578,6 +578,18 @@ an unsupported lateral branch, so the author rejected that trial. This provides
 a reproducible stitched development result, with incomplete fine-path coverage
 and uncertain ownership at crowded crossings (Supplementary Data 8).
 
+A retained-context comparison then fitted one analytical percentile mapping
+across all nine process-channel fields, rather than fitting each field separately.
+With local-difference thresholds converted to the new units, reported field
+lengths changed by -0.29% to +3.55%. Matched predecessor/result views retained
+the same supported principal processes and incomplete faint tips; a measured
+crossing's candidate admission was unchanged. Independent recalculation of
+every current per-cell length reproduced all nine field summaries. This
+assisted comparison demonstrates a reproducible shared input transform and
+locally stable geometry, not improved complete-arbor accuracy. Nuclear inputs
+remained untransformed, and overlapping fields were not summed as independent
+replicates or unique-well counts (Supplementary Data 8).
+
 A fresh, treatment-aware translocation author completed all 96 BBBC013 wells
 using scientific settings chosen from six development wells and frozen before
 the remaining 90 were opened. Its measured first candidate retained ordinary
