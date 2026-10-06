@@ -1,0 +1,34 @@
+{
+  "scope": "Qualifiedall30originalpipelines1assignment1worker warm+3 allSCIempty",
+  "source_commit": "e905e77057e588f48df141634b4eb5b4a765095a",
+  "execution": {
+    "case_count": 30,
+    "minimum_speedup": 2.9546889385659756,
+    "median_speedup": 4.40149057145956,
+    "weakest_case": "ExampleIlluminationCorrection_Example3",
+    "weakest_native_seconds": 0.5975759867578745,
+    "weakest_openhcs_seconds": 0.20224666595458984,
+    "below_parity_count": 0,
+    "below2x_count": 0
+  },
+  "total": {
+    "case_count": 30,
+    "minimum_speedup": 1.3272699436465936,
+    "median_speedup": 3.37044984835353,
+    "weakest_case": "ExampleIlluminationCorrection_Example3",
+    "weakest_native_seconds": 0.5983075951226056,
+    "weakest_openhcs_seconds": 0.45078064035624266,
+    "below_parity_count": 0,
+    "below2x_count": 2
+  },
+  "historical56_checkpoint": {
+    "source_commit": "56c3da776ccc12688b4566f7b0c0ef728e6bc7c6",
+    "execution_minimum": 2.8641569026002096,
+    "execution_median": 4.36006805929033,
+    "total_minimum": 1.399486471104155,
+    "total_median": 3.3009166356979356,
+    "scope": "Previousqualifiedfull30v16checkpoint; historicalcomparison only, not currentmatchedscalingdenominator",
+    "execution_input": "/home/ts/.local/state/openhcs-maintenance/20261006/final-measured-publication-v16/data/singlewell/execution_summary.csv",
+    "total_input": "/home/ts/.local/state/openhcs-maintenance/20261006/final-measured-publication-v16/data/singlewell/total_summary.csv"
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "startup_seconds": 0.7984837316907942,
+  "environment": {
+    "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+    "python_version": "3.9.25",
+    "cellprofiler_version": "4.2.8.1",
+    "cellprofiler_core_version": "4.2.8.1",
+    "numpy_version": "1.24.4",
+    "scipy_version": "1.9.0",
+    "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWormsBrightField/native_tmp",
+    "temporary_device": 66306,
+    "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+    "host_node": "ts-gaming",
+    "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+    "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+    "cpu_affinity": [
+      5
+    ]
+  },
+  "request": {
+    "pipeline_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWormsBrightField/native_preparation/native_cellprofiler_headless/ExampleUntangleWormsBrightField.cppipe",
+    "input_dir": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleUntangleWormsBrightField/images",
+    "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWormsBrightField/native",
+    "expected_image_sets": null,
+    "repetitions": 3,
+    "file_list_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWormsBrightField/native_preparation/native_cellprofiler_file_list.txt",
+    "first_image_set": 1,
+    "last_image_set": null,
+    "report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWormsBrightField/native_report.json",
+    "start_barrier_root": null,
+    "start_barrier_job_count": 1,
+    "start_barrier_job_index": 0,
+    "assignment_output_subdirectories": []
+  },
+  "observations": [
+    {
+      "repetition": -1,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWormsBrightField/native/-1",
+      "image_set_count": 2,
+      "invocation_seconds": 6.59376684576273,
+      "pre_pipeline_seconds": 0.0016438737511634827,
+      "pipeline_execution_seconds": 6.592122972011566,
+      "invocation_started_monotonic_seconds": 4042057.077575833,
+      "pipeline_started_monotonic_seconds": 4042057.079219707,
+      "completed_monotonic_seconds": 4042063.671342679,
+      "assignment_image_set_counts": [
+        [
+          "",
+          2
+        ]
+      ]
+    },
+    {
+      "repetition": 0,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWormsBrightField/native/0",
+      "image_set_count": 2,
+      "invocation_seconds": 5.782462208997458,
+      "pre_pipeline_seconds": 0.0007554423063993454,
+      "pipeline_execution_seconds": 5.781706766691059,
+      "invocation_started_monotonic_seconds": 4042063.671357176,
+      "pipeline_started_monotonic_seconds": 4042063.672112618,
+      "completed_monotonic_seconds": 4042069.453819385,
+      "assignment_image_set_counts": [
+        [
+          "",
+          2
+        ]
+      ]
+    },
+    {
+      "repetition": 1,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWormsBrightField/native/1",
+      "image_set_count": 2,
+      "invocation_seconds": 6.099909635260701,
+      "pre_pipeline_seconds": 0.0008124103769659996,
+      "pipeline_execution_seconds": 6.099097224883735,
+      "invocation_started_monotonic_seconds": 4042069.45383304,
+      "pipeline_started_monotonic_seconds": 4042069.45464545,
+      "completed_monotonic_seconds": 4042075.553742675,
+      "assignment_image_set_counts": [
+        [
+          "",
+          2
+        ]
+      ]
+    },
+    {
+      "repetition": 2,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v9/cases/ExampleUntangleWormsBrightField/native/2",
+      "image_set_count": 2,
+      "invocation_seconds": 5.803519443143159,
+      "pre_pipeline_seconds": 0.0010441252961754799,
+      "pipeline_execution_seconds": 5.802475317846984,
+      "invocation_started_monotonic_seconds": 4042075.553759527,
+      "pipeline_started_monotonic_seconds": 4042075.554803652,
+      "completed_monotonic_seconds": 4042081.35727897,
+      "assignment_image_set_counts": [
+        [
+          "",
+          2
+        ]
+      ]
+    }
+  ]
+}

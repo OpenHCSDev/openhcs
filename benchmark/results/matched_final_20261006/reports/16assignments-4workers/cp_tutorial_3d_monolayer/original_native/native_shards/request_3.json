@@ -1,0 +1,20 @@
+{
+  "pipeline_path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_preparation/native_cellprofiler_headless/3d_monolayer_final.cppipe",
+  "input_dir": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/3d_monolayer/images",
+  "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/3",
+  "expected_image_sets": 4,
+  "repetitions": 3,
+  "file_list_path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_preparation/native_cellprofiler_file_list.txt",
+  "first_image_set": 1,
+  "last_image_set": null,
+  "report_path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/3_report.json",
+  "start_barrier_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/start_barrier",
+  "start_barrier_job_count": 4,
+  "start_barrier_job_index": 3,
+  "assignment_output_subdirectories": [
+    "W013",
+    "W014",
+    "W015",
+    "W016"
+  ]
+}

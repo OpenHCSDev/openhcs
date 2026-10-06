@@ -1,0 +1,99 @@
+{
+  "scope": "Actual9assignments 1versus3workers, fixed priorfrontier+3D cohort, warm+3allSCIzero, not full30/multicorefinal",
+  "source_commit": "e905e77057e588f48df141634b4eb5b4a765095a",
+  "cases": [
+    {
+      "case": "ExampleVitra",
+      "execution": {
+        "openhcs_serial_seconds": 8.994373083114624,
+        "openhcs_three_worker_seconds": 3.819622755050659,
+        "native_serial_seconds": 24.13621953316033,
+        "native_three_worker_seconds": 9.742641963995993,
+        "openhcs_efficiency": 0.7849268247954094,
+        "openhcs_loss_vs_ideal": 0.21507317520459057,
+        "native_efficiency": 0.8257931001452484,
+        "native_loss_vs_ideal": 0.17420689985475157,
+        "openhcs_efficiency_divided_by_native_efficiency": 0.9505126945930512,
+        "additional_loss_relative_native_efficiency": 0.04948730540694879,
+        "parallel_speedup_vs_native": 2.5506817266478397,
+        "serial_speedup_vs_native": 2.6834799168462222
+      },
+      "total": {
+        "openhcs_serial_seconds": 9.452576354611665,
+        "openhcs_three_worker_seconds": 4.260757280513644,
+        "native_serial_seconds": 24.136970807798207,
+        "native_three_worker_seconds": 9.743396325036883,
+        "openhcs_efficiency": 0.7395067537127371,
+        "openhcs_loss_vs_ideal": 0.2604932462872629,
+        "native_efficiency": 0.8257548669408435,
+        "native_loss_vs_ideal": 0.17424513305915645,
+        "openhcs_efficiency_divided_by_native_efficiency": 0.8955524009835655,
+        "additional_loss_relative_native_efficiency": 0.10444759901643452,
+        "parallel_speedup_vs_native": 2.2867757263709456,
+        "serial_speedup_vs_native": 2.5534806493282023
+      }
+    },
+    {
+      "case": "ExampleIlluminationCorrection_Example3",
+      "execution": {
+        "openhcs_serial_seconds": 1.5613515377044678,
+        "openhcs_three_worker_seconds": 0.714968204498291,
+        "native_serial_seconds": 3.63112607691437,
+        "native_three_worker_seconds": 2.2305072909221053,
+        "openhcs_efficiency": 0.7279351855001266,
+        "openhcs_loss_vs_ideal": 0.2720648144998734,
+        "native_efficiency": 0.5426457756482294,
+        "native_loss_vs_ideal": 0.45735422435177064,
+        "openhcs_efficiency_divided_by_native_efficiency": 1.3414555464484281,
+        "additional_loss_relative_native_efficiency": -0.3414555464484281,
+        "parallel_speedup_vs_native": 3.1197293486460724,
+        "serial_speedup_vs_native": 2.325630064228155
+      },
+      "total": {
+        "openhcs_serial_seconds": 1.9460866805166006,
+        "openhcs_three_worker_seconds": 1.0941514042206109,
+        "native_serial_seconds": 3.6318474048748612,
+        "native_three_worker_seconds": 2.231199855916202,
+        "openhcs_efficiency": 0.5928754993777857,
+        "openhcs_loss_vs_ideal": 0.4071245006222143,
+        "native_efficiency": 0.5425851020987253,
+        "native_loss_vs_ideal": 0.45741489790127465,
+        "openhcs_efficiency_divided_by_native_efficiency": 1.0926866533646733,
+        "additional_loss_relative_native_efficiency": -0.0926866533646733,
+        "parallel_speedup_vs_native": 2.039205769246841,
+        "serial_speedup_vs_native": 1.866231058069194
+      }
+    },
+    {
+      "case": "cp_tutorial_3d_monolayer",
+      "execution": {
+        "openhcs_serial_seconds": 27.00552725791931,
+        "openhcs_three_worker_seconds": 11.518024682998657,
+        "native_serial_seconds": 127.80388973513618,
+        "native_three_worker_seconds": 45.97763208905235,
+        "openhcs_efficiency": 0.7815439423908974,
+        "openhcs_loss_vs_ideal": 0.21845605760910258,
+        "native_efficiency": 0.9265656938544785,
+        "native_loss_vs_ideal": 0.07343430614552149,
+        "openhcs_efficiency_divided_by_native_efficiency": 0.8434846525988934,
+        "additional_loss_relative_native_efficiency": 0.15651534740110662,
+        "parallel_speedup_vs_native": 3.991798364255833,
+        "serial_speedup_vs_native": 4.732508590353776
+      },
+      "total": {
+        "openhcs_serial_seconds": 28.428460652939975,
+        "openhcs_three_worker_seconds": 12.987121930811554,
+        "native_serial_seconds": 127.80510546499863,
+        "native_three_worker_seconds": 45.97839789232239,
+        "openhcs_efficiency": 0.729657702565963,
+        "openhcs_loss_vs_ideal": 0.27034229743403704,
+        "native_efficiency": 0.9265590750124847,
+        "native_loss_vs_ideal": 0.07344092498751531,
+        "openhcs_efficiency_divided_by_native_efficiency": 0.7874918310590518,
+        "additional_loss_relative_native_efficiency": 0.21250816894094815,
+        "parallel_speedup_vs_native": 3.540306939233398,
+        "serial_speedup_vs_native": 4.495674494136968
+      }
+    }
+  ]
+}
