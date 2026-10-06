@@ -1,7 +1,7 @@
 Photometry image carrier and invocation domain
 ==============================================
 
-Owner: Planck. Issue722. Production checkpoint df283098a is published;
+Owner: Planck. Issue722. Production checkpoint 210f9c99c is published;
 source qualification is in progress and installed acceptance is not yet claimed.
 Base: ca29edea4. No current open PR claims this image-carrier seam; PR926
 owns sparse-label profile geometry, PR910 owns viewer settlement custody.
@@ -190,3 +190,35 @@ R0010_FRESH22_96 author observed raw label-scaling/zero variance and independent
 continued using its saved raw image. Root:
 /home/ts/wt/openhcs-issue-batch-20260929/next-retina-fresh22-96-after-retina20-20261006/R0010_FRESH22_96/author-workspace/output
 No contact, source change, scientific replay or receiving22 hotpatch occurred.
+
+Source-set qualification05
+-------------------------
+
+Original controls05 is terminal exit 1 at 210f9c99c: 97 passed, three failed.
+Both raw-image orders and both mixed raw/produced-image orders now pass;
+single raw photometry, label-only stored cohort and related source-flow controls
+also pass. The remaining failures are deliberately retained: transformed current
+STEP_INPUT still lacks Actin planes; produced-only DNAHalf rejects the Actin
+object cohort's fixed-channel scope; grouped producer rosters retain two anchors
+instead of the required single matched anchor. No assertion or identity guard
+has been weakened and no full-family or installed acceptance is claimed.
+
+The current-input failure reaches the STEP_OUTPUT loading branch, which returns
+before declared alias expansion; any correction must expand the existing
+predecessor's transformed files, not reload original source pixels. The produced
+scope failure reaches RuntimeArtifactInput._source_context_identity_policy and
+the artifact-owned cohort's execution scope; the complete declared source-context
+relation must be resolved rather than bypassing its identity check.
+
+Existing Package AST receipt AST-SOURCESET05.json includes the matched image-set
+owner and its single-alias resolver: 1409 modules,1542 selected sites,zero parse
+omissions. Dynamic resolution remains a semantic read, not an AST behavior proof.
+Original controls05.log/time retain 3:47.08 elapsed,1469948 KiB peak RSS,zero swaps.
+All source-control processes are terminal; no #929 native client has launched.
+
+Dewey's exact closed95 inspection custody is published in PR929 comments
+6006832227/6006839059 and OWNER-INSPECTION01-TERMINAL.rst under
+engineering-p001-input-contract-20261006/public95-receiving22. The existing lane
+is available for a qualified candidate through his ordinary successor declaration;
+this PR must first finish its own remaining source family, then supply the exact
+installed target and fixture. There is no scientific, CI or parent-approval hold.
