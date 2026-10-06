@@ -1,0 +1,123 @@
+{
+  "case": "ExampleColocalization",
+  "wells": [
+    "A01"
+  ],
+  "selected_source_wells": [
+    "A01"
+  ],
+  "assignment_scope": "genuine source wells",
+  "manifest_sha256": "1d1b016aea7ff2ac0bc2441fff1140bb492bbf3b86048f8565694ccd45e4dff1",
+  "cppipe_sha256": "640e5c936dddb1a4f030c78db6b8ff038ff41ff322804439dc0cda914f2a688c",
+  "driver_sha256": "8b987409c66e29fdc1dc18e61bd31a07c631750cc9bb9224a6bfff37a8c9a3a9",
+  "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
+  "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
+  "source_commit": "5ad1e69565493220572de0a9c1af29f558b5f920",
+  "source_dirty": false,
+  "native_job_count": 1,
+  "candidate_worker_count": 1,
+  "candidate_worker_start_method": "fork",
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0"
+  },
+  "native_input_inventory": [
+    {
+      "path": "0_1_N_G.png",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleColocalization/images/0_1_N_G.png",
+      "size_bytes": 1165089,
+      "sha256": "db19c1b2fb22b62bd7d0d2737cdcf3a94126c8ad2a7f3cf0ffb6311c49a2ffbc"
+    },
+    {
+      "path": "0_1_N_R.png",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleColocalization/images/0_1_N_R.png",
+      "size_bytes": 757033,
+      "sha256": "5f9ead36f4c06a1e0928112c46df0197a914c3c01ebefcdee01624919a7e3b9c"
+    },
+    {
+      "path": "0_2_N_G.png",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleColocalization/images/0_2_N_G.png",
+      "size_bytes": 1194872,
+      "sha256": "9ebf121a2ed219735a66f99ab251922b291752b54c4c959895dfb395005a8716"
+    },
+    {
+      "path": "0_2_N_R.png",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleColocalization/images/0_2_N_R.png",
+      "size_bytes": 754954,
+      "sha256": "c0a8f47e8e204b53a92ef80e2b51b64305ecd51d0fa0b4158d18d2e4082cc056"
+    }
+  ],
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/retained-native-references/ExampleColocalization/native_report.json",
+  "native_reference_report_sha256": "443d19a2819f667cc8e8d27a6f153170a9e320ef8cf85628f34b4f2610a4459d",
+  "native_reference_source_commit": "ee0b125de9d5df66d85b038b74d9ce2d7acc1b3b",
+  "native_reference_file_inventory": [
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/retained-native-references/ExampleColocalization/native_report.json",
+      "sha256": "443d19a2819f667cc8e8d27a6f153170a9e320ef8cf85628f34b4f2610a4459d"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/retained-native-references/ExampleColocalization/native_request.json",
+      "sha256": "54794fd03ebee6626df31ebbff598d2e25017e4065b099c2613fea390da9a5e7"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/retained-native-references/ExampleColocalization/pilot_provenance.json",
+      "sha256": "89a01e0a3ec3146cd48ba2e4960e5a54c0a5126ec7e320d8c56967b84f9a7049"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleColocalization/native/-1/Image.csv",
+      "sha256": "c2867574287dedf4cae07eed1630fbc1c022c49a56a4525382a1cf038de04062"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleColocalization/native/0/Image.csv",
+      "sha256": "96739fabf093beafe56c34f29ee7f11908e5bb341a8574dae70bf348f79ce683"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleColocalization/native/1/Image.csv",
+      "sha256": "87dd0304a8ee6efd7eea791fd84cb4c7c48094494ad0be2825277d16445f5bf1"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleColocalization/native/2/Image.csv",
+      "sha256": "d736942c365732a55b556a1f62c13e9a65f5fcf1130e044147dea9f9ce5e95e1"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleColocalization/native_preparation/native_cellprofiler_file_list.txt",
+      "sha256": "22db458de69d10ac4b82c148fd44b96ea72ece88e05e378fe588f0178f708196"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleColocalization/native_preparation/native_cellprofiler_headless/ExampleColocalization.cppipe",
+      "sha256": "839bb2b5efb5b5035c69231ab49be696772017eb2f629a6545d0c7eb9fd38b28"
+    }
+  ],
+  "native_image_set_count": 2,
+  "native_input_inventory_after": [
+    {
+      "path": "0_1_N_G.png",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleColocalization/images/0_1_N_G.png",
+      "size_bytes": 1165089,
+      "sha256": "db19c1b2fb22b62bd7d0d2737cdcf3a94126c8ad2a7f3cf0ffb6311c49a2ffbc"
+    },
+    {
+      "path": "0_1_N_R.png",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleColocalization/images/0_1_N_R.png",
+      "size_bytes": 757033,
+      "sha256": "5f9ead36f4c06a1e0928112c46df0197a914c3c01ebefcdee01624919a7e3b9c"
+    },
+    {
+      "path": "0_2_N_G.png",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleColocalization/images/0_2_N_G.png",
+      "size_bytes": 1194872,
+      "sha256": "9ebf121a2ed219735a66f99ab251922b291752b54c4c959895dfb395005a8716"
+    },
+    {
+      "path": "0_2_N_R.png",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleColocalization/images/0_2_N_R.png",
+      "size_bytes": 754954,
+      "sha256": "c0a8f47e8e204b53a92ef80e2b51b64305ecd51d0fa0b4158d18d2e4082cc056"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "pipeline_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_pixel_based_classification/native_preparation/native_cellprofiler_headless/pixel_based_classification_cho.cppipe",
+  "input_dir": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/PixelBasedClassification/images",
+  "file_list_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_pixel_based_classification/native_preparation/native_cellprofiler_file_list.txt",
+  "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_pixel_based_classification/native",
+  "expected_image_sets": null,
+  "repetitions": 3,
+  "assignment_output_subdirectories": [],
+  "report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_pixel_based_classification/native_report.json"
+}

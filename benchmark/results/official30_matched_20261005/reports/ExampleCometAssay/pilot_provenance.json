@@ -1,0 +1,195 @@
+{
+  "case": "ExampleCometAssay",
+  "wells": [
+    "A01"
+  ],
+  "selected_source_wells": [
+    "A01"
+  ],
+  "assignment_scope": "genuine source wells",
+  "manifest_sha256": "1d1b016aea7ff2ac0bc2441fff1140bb492bbf3b86048f8565694ccd45e4dff1",
+  "cppipe_sha256": "2b32717ac09a722c0b3efd95ad1a023f32b7ac0afce7d951ff513fdac120a8be",
+  "driver_sha256": "8b987409c66e29fdc1dc18e61bd31a07c631750cc9bb9224a6bfff37a8c9a3a9",
+  "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
+  "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
+  "source_commit": "5ad1e69565493220572de0a9c1af29f558b5f920",
+  "source_dirty": false,
+  "native_job_count": 1,
+  "candidate_worker_count": 1,
+  "candidate_worker_start_method": "fork",
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0"
+  },
+  "native_input_inventory": [
+    {
+      "path": "CometTails.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleCometAssay/images/CometTails.tif",
+      "size_bytes": 1445878,
+      "sha256": "8b880cab97cfe207f4e046224288b8fa73438aa36612c12ad0dcac94ceb20fc2"
+    },
+    {
+      "path": "NoTails.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleCometAssay/images/NoTails.tif",
+      "size_bytes": 1445878,
+      "sha256": "1d46e6d0b28b98d13df9b4ac9884c33a841173b6aa5376e98606dcd5f0a95f93"
+    }
+  ],
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/retained-native-references/ExampleCometAssay/native_report.json",
+  "native_reference_report_sha256": "6b37902c62233dc0d6a4c095bc78a2793e44b74ab037d3028a829bdd9ee0c8da",
+  "native_reference_source_commit": "ee0b125de9d5df66d85b038b74d9ce2d7acc1b3b",
+  "native_reference_file_inventory": [
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/retained-native-references/ExampleCometAssay/native_report.json",
+      "sha256": "6b37902c62233dc0d6a4c095bc78a2793e44b74ab037d3028a829bdd9ee0c8da"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/retained-native-references/ExampleCometAssay/native_request.json",
+      "sha256": "54133189bf75a2194417d0fb1f7ab99f8ee42710c2a1dec8ff98fbaec1edee6a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/retained-native-references/ExampleCometAssay/pilot_provenance.json",
+      "sha256": "c8af95bc502cdb37a591223644cc3c190cb4f825dc54338e2ebb0aa39c8cc0f9"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleCometAssay/native/-1/Comet.csv",
+      "sha256": "bf3d9b0365d9157e60dfed4c1473b021f69810f4c7592d9dfe7a8b2bd00add6b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleCometAssay/native/-1/CometHead.csv",
+      "sha256": "a3505fe5b510a9ad92eb5c58e9ea8a71b17c2f122f272c8649167afcd47ea9a5"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleCometAssay/native/-1/CometTail.csv",
+      "sha256": "fa3e46fbd2d4272932e236e30a331420443a92368bda32ed00682af6d86cac2c"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleCometAssay/native/-1/CometTails_CometHeadOutline.png",
+      "sha256": "6c37dc5412968ba29393ab57de0f390a933c0e7cb9df9ec930338de2b34c3684"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleCometAssay/native/-1/Experiment.csv",
+      "sha256": "a6d74aec89bc2c2d3dc7b0e0f89f203f8e78b7eeb9645c530a5bd5a45651abd1"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleCometAssay/native/-1/Image.csv",
+      "sha256": "31c6099a6b8dabf0af8afa3c0145866050458c58ad98e0fa3ceeb77146da8067"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleCometAssay/native/-1/NoTails_CometHeadOutline.png",
+      "sha256": "c5bd0b0a6bddd22be27240f9d85a6243cc28dc204a7a900d3d698bc89219f03d"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleCometAssay/native/0/Comet.csv",
+      "sha256": "bf3d9b0365d9157e60dfed4c1473b021f69810f4c7592d9dfe7a8b2bd00add6b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleCometAssay/native/0/CometHead.csv",
+      "sha256": "a3505fe5b510a9ad92eb5c58e9ea8a71b17c2f122f272c8649167afcd47ea9a5"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleCometAssay/native/0/CometTail.csv",
+      "sha256": "fa3e46fbd2d4272932e236e30a331420443a92368bda32ed00682af6d86cac2c"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleCometAssay/native/0/CometTails_CometHeadOutline.png",
+      "sha256": "6c37dc5412968ba29393ab57de0f390a933c0e7cb9df9ec930338de2b34c3684"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleCometAssay/native/0/Experiment.csv",
+      "sha256": "1ba723d9132a4ca943e1a459947cb7ef4558f244e4a0223d420f8eb7f727c4b2"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleCometAssay/native/0/Image.csv",
+      "sha256": "278fa9e4855da7976d852ba0d051eb160b0277f1ff0f2266c204785e611432ee"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleCometAssay/native/0/NoTails_CometHeadOutline.png",
+      "sha256": "c5bd0b0a6bddd22be27240f9d85a6243cc28dc204a7a900d3d698bc89219f03d"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleCometAssay/native/1/Comet.csv",
+      "sha256": "bf3d9b0365d9157e60dfed4c1473b021f69810f4c7592d9dfe7a8b2bd00add6b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleCometAssay/native/1/CometHead.csv",
+      "sha256": "a3505fe5b510a9ad92eb5c58e9ea8a71b17c2f122f272c8649167afcd47ea9a5"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleCometAssay/native/1/CometTail.csv",
+      "sha256": "fa3e46fbd2d4272932e236e30a331420443a92368bda32ed00682af6d86cac2c"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleCometAssay/native/1/CometTails_CometHeadOutline.png",
+      "sha256": "6c37dc5412968ba29393ab57de0f390a933c0e7cb9df9ec930338de2b34c3684"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleCometAssay/native/1/Experiment.csv",
+      "sha256": "e566df1b4706252be7347102f0460075d2d71e1b43418240c859ad2adc32e613"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleCometAssay/native/1/Image.csv",
+      "sha256": "bafee9522ba2ae499e28e9942320721ccca936268a48c7098e229dfcc3ff36f9"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleCometAssay/native/1/NoTails_CometHeadOutline.png",
+      "sha256": "c5bd0b0a6bddd22be27240f9d85a6243cc28dc204a7a900d3d698bc89219f03d"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleCometAssay/native/2/Comet.csv",
+      "sha256": "bf3d9b0365d9157e60dfed4c1473b021f69810f4c7592d9dfe7a8b2bd00add6b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleCometAssay/native/2/CometHead.csv",
+      "sha256": "a3505fe5b510a9ad92eb5c58e9ea8a71b17c2f122f272c8649167afcd47ea9a5"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleCometAssay/native/2/CometTail.csv",
+      "sha256": "fa3e46fbd2d4272932e236e30a331420443a92368bda32ed00682af6d86cac2c"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleCometAssay/native/2/CometTails_CometHeadOutline.png",
+      "sha256": "6c37dc5412968ba29393ab57de0f390a933c0e7cb9df9ec930338de2b34c3684"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleCometAssay/native/2/Experiment.csv",
+      "sha256": "922b93e9d94d9c329c2dbe729e0c8a9de81eb38fad6bca76b15d90bcdd377790"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleCometAssay/native/2/Image.csv",
+      "sha256": "4c754ffed92c894d0c7b4fafc2eed6c1be3c235cf588bb06ef520ea0bb1f9dfc"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleCometAssay/native/2/NoTails_CometHeadOutline.png",
+      "sha256": "c5bd0b0a6bddd22be27240f9d85a6243cc28dc204a7a900d3d698bc89219f03d"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleCometAssay/native_preparation/native_cellprofiler_file_list.txt",
+      "sha256": "5af4f1dfa994676acef7c7375e7e4db4608cc7ba0cb33434d6a5cd966100a47f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v4/cases/ExampleCometAssay/native_preparation/native_cellprofiler_headless/ExampleCometAssay.cppipe",
+      "sha256": "daec62eb90d9457a240bd28dcb3a1002b480db366a5d6aa849a8813f1073f8b6"
+    }
+  ],
+  "native_image_set_count": 2,
+  "native_input_inventory_after": [
+    {
+      "path": "CometTails.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleCometAssay/images/CometTails.tif",
+      "size_bytes": 1445878,
+      "sha256": "8b880cab97cfe207f4e046224288b8fa73438aa36612c12ad0dcac94ceb20fc2"
+    },
+    {
+      "path": "NoTails.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleCometAssay/images/NoTails.tif",
+      "size_bytes": 1445878,
+      "sha256": "1d46e6d0b28b98d13df9b4ac9884c33a841173b6aa5376e98606dcd5f0a95f93"
+    }
+  ]
+}

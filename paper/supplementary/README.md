@@ -569,12 +569,15 @@ translocation overlay compared alongside its SQLite values.
 
 The [observations](../../benchmark/results/official30_unified_value_comparison_20260916/observations.csv),
 [phase timings](../../benchmark/results/official30_unified_value_comparison_20260916/phase_timing.csv),
-[summary](../../benchmark/results/official30_unified_value_comparison_20260916/summary.csv)
-and [run environment](../../benchmark/results/official30_unified_value_comparison_20260916/run_environment.json)
-retain the result and exact candidate source identities. The candidate used
-OpenHCS 0.8.5 current source on Python 3.12.3, NumPy 2.1.3 and SciPy 1.18.1.
-The selected native references used CellProfiler 4.2.8.1 on Python 3.9.25,
-NumPy 1.24.4 and SciPy 1.9.0.
+and [summary](../../benchmark/results/official30_unified_value_comparison_20260916/summary.csv)
+retain the comparison results. The original observations identify the candidate
+as OpenHCS 0.8.5 and retain endpoint, executable and submitted-pipeline provenance.
+The full run-environment and suite-metadata records were not retained in this
+archive; its exact candidate source commit and Python, NumPy and SciPy versions
+cannot be established from those observations. The selected native references'
+original dependency environments are likewise not established by this bundle.
+Environment identities from later matched runs do not supply this missing
+historical provenance.
 
 ### Five-workflow image and object-label exports
 
@@ -691,12 +694,12 @@ timing. The summary's `n=1` counts comparison observations, not necessarily fres
 timed executions. This policy could account for a timeout-valued row, but the
 retained summary alone does not establish which path produced it.
 
-The [timing source audit](../review/slas-panel-20260910/TIMING_BOUNDARY_AUDIT.md)
-identifies the exact code locations and reproduction commands. The committed
-source establishes these timer definitions; the original run environment and
-per-run phase traces still need recovery to establish the executed snapshot.
-A new matched comparison would time the same work on both systems, separately
-for cold-start and repeated prepared execution, with repeated observations.
+The committed source establishes these timer definitions. The separate timing
+source audit document is not retained in this archive; the original run
+environment and per-run phase traces still need recovery to establish the
+executed snapshot. The subsequent matched comparison in Figure 4 uses separately
+declared execution and total intervals with three measured observations per
+engine; it does not reconstruct the missing historical timing provenance.
 
 ## Supplementary Data 2. Archived CellProfiler coverage
 
@@ -803,8 +806,7 @@ catalog-refresh and selector-lifetime fixes recorded there. It demonstrates
 registration and editor integration; the example function was not run on the
 analysis dataset.
 
-The [visual storyboard](../review/FIGURE_STORYBOARD.md) identifies the purpose
-and source of each main figure. The
+The separate visual storyboard is not retained in this archive. The
 [gallery capture record](../../website/assets/gallery/release-media-record.json)
 owns the source identities, published hashes and demonstration descriptions for
 the retained Fiji/napari panels. Figure 2 instead uses fresh matching captures
