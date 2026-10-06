@@ -1344,6 +1344,14 @@ including the weaker LY294002 control separation. It distinguishes complete
 measurement coverage from GFP-dependent population selection and does not claim
 exhaustive biological segmentation or fully sealed runtime closure.
 
+An independent volume repeat repaired internal-peak duplicates before freezing
+26 candidate centres. The existing post-freeze matcher recovered all 15 manual
+centres within 20 and 30 voxels, with mean error 4.82 voxels, and 14 within
+10 voxels. Eleven predictions remain unmatched to a reference of unestablished
+completeness. The [repeat completion and comparison](task_only_analysis/h002-fresh22-postfreeze-localisation.rst)
+records all distance thresholds, source identities and technical delivery
+failures without interpreting unmatched predictions as false biological cells.
+
 A fresh retinal author replaced grain-scale foreground admission with
 body-scale contrast after rejecting nuisance flooding and dim-body losses.
 The final 141-instance candidate preserves a clear neighbouring pair, while
