@@ -3329,7 +3329,7 @@ def test_pipeline_start_main_flow_survives_prior_producer_image_input(
     assert mask_edge.storage_plan is not None
     assert (mask_edge.main_flow_projection is not None) is False
     assert invocation.contract.accepts_implicit_main_flow_input is True
-    assert compiled_pattern.default_group.main_flow_input_refs is None
+    assert compiled_pattern.default_group.main_flow_input_refs(source_bindings=CompiledSourceBindingPlan.empty()) is None
     assert tuple(
         binding.alias
         for binding in scope.main_flow_source_binding_plan.binding_declarations

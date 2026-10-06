@@ -12,6 +12,7 @@ from openhcs.core.artifacts import (
     ArtifactSpec,
     ImageArtifactType,
     InputGroupLineageSourceRelation,
+    SourceStackLineageSourceRelation,
     ObjectLabelsArtifactType,
     MeasurementsArtifactType,
 )
@@ -39,6 +40,7 @@ from openhcs.core.callable_contract import CallableContract
 from openhcs.core.runtime_equivalence import (
     RuntimeMeasurementObservationAxis,
 )
+from openhcs.core.equivalence.policy import RuntimeMeasurementDialect
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     image_payload_data,
@@ -2080,6 +2082,50 @@ def test_context_relation_to_another_source_does_not_borrow_visible_plane_member
 
     with pytest.raises(RuntimeError, match="Missing RuntimeValueStore record"):
         unrelated_input.records(store)
+
+
+def test_stored_producer_context_retains_its_declared_source_membership():
+    store, record, runtime_input = _paired_channel_label_input()
+    (binding,) = runtime_input.source_binding_plan.binding_declarations
+    edge = runtime_input.edge_plan
+    runtime_input = replace(
+        runtime_input,
+        edge_plan=replace(
+            edge,
+            spec=replace(edge.spec, relations=()),
+            storage_plan=replace(
+                edge.storage_plan,
+                relations=(SourceStackLineageSourceRelation(binding.input_spec().ref()),),
+            ),
+        ),
+    )
+
+    assert runtime_input.records(store) == (record,)
+    assert runtime_input.edge_plan.storage_plan.runtime_query_snapshot().relations == (
+        runtime_input.edge_plan.storage_plan.relations
+    )
+
+
+def test_explicit_consumer_context_does_not_borrow_stored_producer_membership():
+    store, _record, runtime_input = _paired_channel_label_input()
+    (binding,) = runtime_input.source_binding_plan.binding_declarations
+    edge = runtime_input.edge_plan
+    runtime_input = replace(
+        runtime_input,
+        edge_plan=replace(
+            edge,
+            spec=replace(edge.spec, relations=(InputGroupLineageSourceRelation(
+                ArtifactSpec.input("UnrelatedImage", ImageArtifactType).ref(),
+            ),)),
+            storage_plan=replace(
+                edge.storage_plan,
+                relations=(SourceStackLineageSourceRelation(binding.input_spec().ref()),),
+            ),
+        ),
+    )
+
+    with pytest.raises(RuntimeError, match="Missing RuntimeValueStore record"):
+        runtime_input.records(store)
 
 
 def test_paired_channel_projection_rejects_a_different_producer_site_plane():

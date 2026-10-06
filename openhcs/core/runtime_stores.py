@@ -748,9 +748,12 @@ class RuntimeArtifactInput:
         ).matches()
 
     def _source_context_identity_policy(self) -> SourceImageSetIdentityPolicy:
-        """Derive plane membership only from this edge's context declarations."""
+        """Use declared consumer context, otherwise the stored producer's context."""
 
         context_sources = self.edge_plan.spec.source_context_sources()
+        if not context_sources and self.edge_plan.storage_plan is not None:
+            producer_source = self.edge_plan.storage_plan.source_context_source()
+            context_sources = () if producer_source is None else (producer_source,)
         if not context_sources:
             return SourceImageSetIdentityPolicy()
         return SourceImageSetIdentityPolicy.from_source_bindings(

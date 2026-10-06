@@ -32,6 +32,12 @@ from openhcs.core.steps.function_output_identity import (
 from openhcs.microscopes.microscope_interfaces import FilenameParser
 from openhcs.core.compiled_step_plan import CompiledStepPlan
 from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+from openhcs.core.source_bindings import CompiledSourceBindingPlan
+from openhcs.core.source_binding_selection import (
+    SourceBindingMatchedImageSet,
+    SourcePatternResolutionContext,
+)
+from openhcs.core.source_matching import SourceImageSetIdentityPolicy
 from openhcs.constants import AllComponents
 
 
@@ -685,6 +691,38 @@ class ProducedPathRecordIndex:
         paths: Sequence[str],
     ) -> tuple[ProducedOutputSemantics, ...]:
         return tuple(self.record_for_path(path) for path in paths)
+
+    def source_binding_members(
+        self,
+        paths: Sequence[str],
+        *,
+        source_bindings: CompiledSourceBindingPlan,
+        identity_policy: SourceImageSetIdentityPolicy,
+        parser: FilenameParser,
+    ) -> tuple[ProducedOutputSemantics, ...]:
+        """Expand aliases only within this exact predecessor's current outputs."""
+        anchors = tuple(record.output_path for record in self.records_for_paths(paths))
+        bindings = source_bindings.primary_plane_bindings
+        if not bindings:
+            return self.records_for_paths(anchors)
+        source_context = SourcePatternResolutionContext.from_sources(
+            parser=parser,
+            source_paths_by_virtual_path={},
+            source_metadata_by_path={
+                record.output_path: record.component_values for record in self.records
+            },
+            metadata_rules=source_bindings.metadata_rules,
+        )
+        members = SourceBindingMatchedImageSet.from_plan(
+            bindings=bindings,
+            match_plan=source_bindings.match_plan,
+            source_context=source_context,
+            identity_policy=identity_policy,
+        ).expand(
+            anchors,
+            source_universe=tuple(record.output_path for record in self.records),
+        )
+        return self.records_for_paths(members)
 
     def validate_input_records(
         self,
