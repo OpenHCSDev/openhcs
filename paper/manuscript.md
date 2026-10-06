@@ -524,6 +524,15 @@ instance boundaries. The author detected these conflicts and rejected a complete
 cell census. Independent matched-view review confirmed the pair-joining regression;
 manual-reference accuracy remains unmeasured (Supplementary Data 8).
 
+A subsequent fresh retinal author recovered useful bright-soma localisation
+across the noisy field, retaining 136 candidate regions after repairing rim
+fragmentation and size-based omissions. Matched raw/result review showed a
+coherent central body and separated bright neighbours. Weak rims and several
+lobed profiles remained ambiguous. This supports useful cell localisation and
+approximate mask geometry, without treating every uncertain boundary as a
+failure or the candidate count as a manual-reference accuracy estimate
+(Supplementary Data 8).
+
 Public neurite-field authors recovered clear process segments while weak
 paths and ambiguous crossings remained difficult. One corrected false nuclear
 splits and traced a segment to the boundary but admitted nearby fragments.
@@ -599,6 +608,15 @@ assisted comparison demonstrates a reproducible shared input transform and
 locally stable geometry, not improved complete-arbor accuracy. Nuclear inputs
 remained untransformed, and overlapping fields were not summed as independent
 replicates or unique-well counts (Supplementary Data 8).
+
+A later assisted phase completed all nine fields and analysed the retained
+2,868-by-2,868-pixel mosaic using one percentile-derived mapping per physical
+channel, fitted across the field stack. The mosaic retained 1,740 candidate
+body identities, with distributed raw-supported geometry. Independent
+recalculation reproduced its exported length and graph summaries, but did not
+validate complete arbors or crossing ownership. The existing assembly was
+reused rather than discovered anew; this is completed mosaic analysis, not a
+fresh autonomous stitching demonstration (Supplementary Data 8).
 
 A fresh, treatment-aware translocation author completed all 96 BBBC013 wells
 using scientific settings chosen from six development wells and frozen before
