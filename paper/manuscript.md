@@ -309,7 +309,7 @@ The appropriate endpoint also depends on the experiment. Principal neurite shaft
 
 Repeated trials with additional models, assays and expert-reviewed images will be needed to estimate how often an agent produces an acceptable analysis on a new experiment. The present trials do not isolate the effect of the packaged guidance or establish uniform performance across images. Further comparisons can extend CellProfiler import testing to additional settings and assess throughput with matched outputs. Channel selection, processing parameters and intermediate results remain available for review when a pipeline is transferred to new samples.
 
-OpenHCS provides an analysis component for AI-guided laboratories in which established workflows, custom functions and intermediate results remain accessible through the same editable pipeline. Scientists can delegate pipeline construction and execution, then inspect the results in familiar viewers and revise the analysis through graphical controls or Python.
+Scientists can therefore delegate pipeline construction and execution while retaining the ability to inspect results in familiar viewers and revise the analysis through graphical controls or Python.
 
 ## Supplementary Data
 
