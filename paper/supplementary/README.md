@@ -1302,6 +1302,15 @@ steps. Fragmented weak paths and ambiguous crossings still prevented complete
 outgrowth measurement. Supplementary Data 8 retains this distinct trial and its
 independently checked files, rather than replacing the earlier neurite repeat.
 
+A later fresh paired-field author retained eight soma-like detections while
+recovering a measured faint path through self-directed candidate-gate repairs.
+Major-trunk geometry remained useful, but algorithm branch counts rose from
+12 to 234 as uncertain short twigs accumulated. Those totals are not accepted
+neuron-specific endpoints. The
+[qualified completion record](task_only_analysis/h004-fresh20-qualified-completion.rst)
+preserves all four candidates, local acceptance scope and independently verified
+181 payload files, 61 indexed screenshots and six post-exit journal seals.
+
 A retained personal-neurite development continuation also analysed a reused
 nine-field mosaic with pooled channel fits. A fixed-DN clipping repair corrected
 unexpected rescaling, but dense nuclear misses and soma underfill prevented
