@@ -339,6 +339,15 @@ and lobed or crowded objects retained uncertain extent and identity. This result
 adds evidence of self-directed repair; the detector total is not a manual cell
 count (Supplementary Data 8).
 
+A further fresh author traced nuisance flooding to grain-scale foreground
+admission and replaced it with body-scale background subtraction. The final
+141-instance candidate retained the clear neighbouring pair, but weak southwest
+bodies still received incomplete masks. The author also detected invalid
+label-derived fluorescence measurements and corrected their source binding
+without changing the segmentation. This trial demonstrates self-directed
+preprocessing and measurement repair, not a validated retinal cell census
+(Supplementary Data 8).
+
 Whole-volume analysis also separated useful localisation from instance
 identity. One fresh nucleus-centre trial matched all 15 manual reference
 centres within 30 voxels, with ten unmatched predictions; at ten voxels it
