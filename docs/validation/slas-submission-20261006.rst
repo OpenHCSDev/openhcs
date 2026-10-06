@@ -94,3 +94,22 @@ The companion adds reproduction sources absent from a reading-copy snapshot;
 it does not contain environments, model journals or private raw acquisitions.
 It is not a claim of complete historical input availability or a substitute
 for third-party dataset licences. No upload was performed.
+
+Resumed resource reporting
+-------------------------
+
+The author subsequently accepted recorded tokens or reverse-engineered rate
+estimates for resource reporting, with further runs optional. Missing actual
+billing is therefore not a reason to withhold the manuscript's resource table.
+The original 71-row CSV remains byte-identical. Its selected 13 token rows were
+checked against exact counters; 12 independent-row API and Standard-credit
+scenarios were recomputed with Decimal arithmetic. The retained-context assisted
+row is not priced as incremental phase usage. Official exact-model rates were
+opened on 6 October; their source and exclusions are in trial_resources.rst.
+No charge, purchased-credit deduction or included-quota consumption is inferred.
+
+Accepted paired build: run-20261006T185409-0cae253f. PDF/DOCX checks pass,
+status is current, and the main manuscript contains 6,720 extracted words.
+The resource table on supplementary pages 54--55 was visually checked; headers
+repeat on the continuation page and values remain readable. This update is
+published on main as 4c6a3f422. Declarations and Zenodo remain explicitly deferred.
