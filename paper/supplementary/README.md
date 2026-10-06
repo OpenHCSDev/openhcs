@@ -488,6 +488,30 @@ records the original capture hashes and editorial crop.
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
+## Supplementary Figure 25. Autonomous repair of an internal body split
+
+![Unchanged raw image, first labels, repaired labels and repaired combined view.](../figures/slas/h002_fresh22_split_repair.png){width=5.3in}
+
+\(A) Raw image. (B) First categorical instance labels divide the continuous
+elongated body into two visible partitions. (C) Component-local seed suppression
+retains one partition in that body, while the round neighbouring body remains
+separate. (D) Repaired labels over raw. The four panels come from the same XY
+viewport at zero-based Z index 36 in the frozen independent H002 fresh22 trial.
+First and repaired raw screenshots are byte-identical. The visible colour map
+is categorical; colours are not stable object identities across candidates.
+Panels use identical editorial crops, with no pixel retouching. The repaired
+candidate's label volume is byte-identical to its final technical delivery
+retry. This is a local partition witness, not complete volume segmentation.
+Post-freeze comparison recovered all 15 manual centres within 20 voxels,
+while 11 predictions were unmatched to annotations of unestablished coverage.
+The [completion record](task_only_analysis/h002-fresh22-postfreeze-localisation.rst)
+retains that comparison and the original technical failures; the figure
+provenance records source hashes and crops.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
 ## Supplementary Table 1. Reusable libraries and their roles
 
 | Library | Role in OpenHCS |
@@ -1345,6 +1369,23 @@ reports independent all-well/object-table checks and conditional assay statistic
 including the weaker LY294002 control separation. It distinguishes complete
 measurement coverage from GFP-dependent population selection and does not claim
 exhaustive biological segmentation or fully sealed runtime closure.
+
+An independent volume repeat repaired internal-peak duplicates before freezing
+26 candidate centres. The existing post-freeze matcher recovered all 15 manual
+centres within 20 and 30 voxels, with mean error 4.82 voxels, and 14 within
+10 voxels. Eleven predictions remain unmatched to a reference of unestablished
+completeness. The [repeat completion and comparison](task_only_analysis/h002-fresh22-postfreeze-localisation.rst)
+records all distance thresholds, source identities and technical delivery
+failures without interpreting unmatched predictions as false biological cells.
+
+A fresh retinal author replaced grain-scale foreground admission with
+body-scale contrast after rejecting nuisance flooding and dim-body losses.
+The final 141-instance candidate preserves a clear neighbouring pair, while
+weak bodies still have incomplete support. A separately corrected raw-fluorescence
+binding leaves the label array unchanged. The
+[qualified completion record](task_only_analysis/retinal-fresh22-qualified-completion.rst)
+retains all four attempts, the independently checked 903-file freeze and the
+distinction between useful localisation and unmeasured manual-reference accuracy.
 
 A retained personal-neurite development continuation also analysed a reused
 nine-field mosaic with pooled channel fits. A fixed-DN clipping repair corrected
