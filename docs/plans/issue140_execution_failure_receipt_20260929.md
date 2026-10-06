@@ -21,3 +21,16 @@ For one accepted execution ID, is the server record terminal, and can the client
 4. Reinspect PR #157's head for collisions. A full context NRA scan with `scan_status`, class-first syntax rows and raw record evidence is required before *prescribing a structural refactor*; no such scan was completed for this plan. A focused root `openhcs/runtime` census/overlay at this head has 18,078 code lines and heuristic findings, none of which proves this failure path.
 
 **Decision point:** if the injected failure already terminates correctly at the pinned head, document closure evidence instead of adding a redundant fix. If not, name the exact owner and open a separate implementation PR. This draft plan does not close #140.
+
+## Actual fork acceptance on 2026-10-06
+
+The original fork-failure boundary now has a real ordinary-ZMQ witness on clean OpenHCS `56c3da776ccc12688b4566f7b0c0ef728e6bc7c6` with installed ZMQRuntime 0.4.1. A private importable, memory-declared pass-through callable ran in two genuine fork children and armed an exception after their ordinary `_release_runtime_resources` cleanup. No server status, waiter outcome, or benchmark row was manufactured.
+
+- Failure packet: `20261006/issue140-fork-acceptance-preparation-v1/actual-failure-v3`. Compile ID `101ff205-1167-4ba8-8d80-045bbb53d157`; execution ID `3ebcaee5-b209-4c7d-b636-d887febedad3`. Server PID 835048; fork children 835540 and 835542. The original waiter, queried lifecycle, and terminal progress snapshot agree on that execution's FAILED status. The original well-throughput CSV contains the actionable outer-cleanup traceback; all owned process incarnations were gone after disconnect. The external 240-second diagnostic deadline was not reached.
+- Healthy control: `actual-healthy-v1` passed with the same public route, two fork children, finite ten-second work, COMPLETE status, and two successful wells.
+- Cancellation control: `actual-cancel-v1` obtained the real public response `Cancelled - killed 2 workers`, but the diagnostic then failed with `Server was not writable for status request within 5000ms`; it retained only the compilation observation. No cancellation acceptance is claimed. All owned processes exited. The next investigation must separate the actual waiter outcome from the additional observation/status probe.
+- Process-loss control has not run. Transient status-error acceptance also remains unproved.
+
+The first two private fixture attempts were rejected at compilation (a nonexistent catalog ID, then a missing memory declaration); neither reached fork execution. The accepted fixture uses the existing `ImportableFunctionReference` authority with its actual decorated callable metadata. Those preparation mistakes are not production failure evidence.
+
+**Current decision:** the original fork exception propagates correctly through the merged lifecycle owners, so no duplicate failure path is justified. Keep #140 open until the cancellation, transient status-error and process-loss controls are resolved; this evidence does not establish those separate behaviours. These diagnostics are not pipeline performance measurements.
