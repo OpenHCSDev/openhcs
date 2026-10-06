@@ -86,7 +86,9 @@ Determining dispositions
 * Exact reverse-patch checks at main79c09a62c proved all local changes in seven
   files already integrated: function_contract_metadata, function_reference,
   lib_registry/registry_service and four website gallery assets/records.
-  Refresh this result against the current head before cleanup.
+  Exact original bytes were subsequently verified in the published recovery
+  checkpoint and both source stashes before cleanup; later owner changes are
+  classified below rather than overwritten with whole historical files.
 * CustomFunctionSourceNamespace and source-lifetime validation are integrated;
   later canonical changes mean whole-file equality is not the correct test.
 * Both execution-session edits are integrated: InProcessCompileInspectionGateway
@@ -237,10 +239,8 @@ Merged OpenHCS PR664 retains independent receiving of the unchanged recipe:
 The historical failed bundle carried1.1.9. The closure comment identifies this
 cause/fix and does not claim every recipe or biological endpoint is validated.
 
-Issue226 is NOT closed merely because PR227 merged: its explicit comment and
-receipt retain fresh installed callable/compile/execute acceptance. Current
-source registration and primitive parity are established; locate later evidence
-or exercise that small actual path before closure.
+Issue226 was not closed merely because PR227 merged. Its actual installed
+primitive verification and precise closure scope are recorded below.
 
 Issue424 CLOSED: PR425's declared lower soma gate is retained by both consumers;
 13 original controls cover lower-value admission, independent negatives,
@@ -257,12 +257,22 @@ to physical calibration. The legacy numeric-to-physical fallback is deleted.
 Unknown, relative and conflicting frames remain distinct from a physical scalar;
 explicit physical/anisotropic coordinates are preserved. Singer's27 affected
 checks passed, including the actual calibrated_metadata/native-coordinate
-projection. Saved-reopen installed/public acceptance remains outstanding; no
-detector rerun, package activation or biological acceptance is claimed.
+projection. Issue907 is now CLOSED after reviewing Singer's real installed
+saved-reopen acceptance. All22 public replies succeeded; all16384 raw pixels,
+three saved ROI paths and69 coordinates matched; unknown spacing remained
+absent with native XY scale1, while the explicitly calibrated image and ROI
+retained scale0.5 micrometers. Original fixture hashes remained unchanged and
+both viewers closed successfully. The published497204-byte evidence archive
+has SHA256 feb44b99f7dcfff53b62ca5e57f14507a9f6ff974343d20d339dc6ae7aa61917.
+See acquisition-spacing-907/LIVE-ACCEPTANCE01.rst at2c53f50c7. The coordinator
+also inspected the actual combined captures. This qualifies the isolated
+installed candidate, not replacement of the unrelated default installation,
+a detector rerun or biological accuracy.
 
 Issues131 and580 retain specific causal-memory and upstream triangulation/
 orthogonal acceptance gaps. Related merges alone do not close those gaps.
-The rest of the open-issue census is still under commit-level audit.
+The full current open-issue census has been audited against its original
+acceptance and determining main history; the remaining scope is recorded below.
 
 Issues445 and152 CLOSED after reading current main6c388681f and subsequent owner
 history, not just original PR associations. Physical acquisition inventory and
@@ -315,12 +325,25 @@ Issue1077 was already automatically closed by merged1078. Its original stale
 supplementary benchmark consumers were corrected by the other-machine owner;
 no competing benchmark patch or duplicate closure was created.
 
-Issue516 remains a real importer batch-context defect. Public kwarg projection
-uses the pre-batch context, but subsequent verification advances context after
-the first filter. That can erase Objects selection and recreate competing
-RetainedEnabled lineage. Hypatia owns the existing lowerer/projection repair;
-the original explicit object relation and complete five-module CPPipe remain
-the acceptance target. The strict combiner is not the defect.
+Issue516's importer batch-context defect is repaired in4fbe696b5. Previously
+public kwarg projection used the pre-batch context, but subsequent verification
+advanced context after the first filter, erasing Objects selection and creating
+competing RetainedEnabled lineage. The lowerer now retains original parsed
+units and reuses the existing binding-owned occurrence equivalence in advancing
+context; unsafe composition takes the existing smaller-batch fallback. Strict
+contract equality and genuine sequential RetainedDefault selection remain intact.
+The coordinator reviewed the source and original command results: five focused
+checks pass, including safe batching and both filter input variants. The real
+InProcessCompileInspectionGateway compiled the unchanged original five-module
+CPPipe for A01; both filters' actual compiled runtime edges bind Objects to
+object_labels with storage plans, and retain their separate retained/removed
+output plans. Native leaf checks retain labels2/7, areas6/20 and exact directed
+relationships. This used existing installed dependencies/native binaries with
+the changed Python source, not a new environment or installed MCP source.
+Complete-pipeline execution through the installed public entrypoint remains
+unverified, so516 stays open with that precise acceptance scope. The original
+test/compiler handles exited0; the first compiler readback's incorrect
+iter_items call was preserved, not described as an execution failure or success.
 
 Issue529's source relation is repaired by84ba215d6: the object-domain policy
 projects invocation payload AND plane projection from the labels binding.
@@ -383,13 +406,65 @@ These concrete remaining readers keep407 open, not an assumption that completed
 native geometry or segmentation is broken. Both issue comments now identify
 the current owners and remaining consumers explicitly.
 
+Issue280 CLOSED: the original obsolete viewer process is absent, its historical
+unpublished class is preserved, and later installed454/748 acceptance exercises
+the canonical typed camera/canvas state. Current failure observations explicitly
+retain observed=false rather than representing a failure as a biological zero.
+This closes the historical incident, not general version-skew compatibility or
+recovery of disposed unsaved history.
+
+Issue308's original reset/prune repair is delivered:31 real Qt/native controls
+and the original public MCP journey retain exact raw/processed routes, samples,
+transforms, captures and process closure. Its remaining source defect is ordinary
+shared-axis expansion, currently rejected when rematerialize defaults false.
+The same existing display/domain owner already rematerializes clear/prune;
+future repair belongs there, without weakening invalid-domain or cancellation
+checks or publishing pending data early. The title now names that residual.
+
+Issue521 does not establish a current resolver defect. The original default02
+pipeline inherited its handler, requested a nonexistent leading Z axis for a
+scalar12x15 TIFF and reused a prepared Labels-only workspace without Objects.
+Later03 retained the authored axis error;04 instead used a dual-role carrier.
+The exact binding/realized-source scope owner remains intact. Correctly
+configured artifact-only public plan/execute acceptance is still missing; its
+title now asks for that verification rather than asserting a reproduced bug.
+
+Issue204 retains installed UI code-document verification only. Exact selectors,
+catalog exposure, roundtrip, headless declarations and actual same/paired-channel
+execution are delivered. Headless PipelineDocument evidence is not a UI claim.
+Issue376 retains the original pixel-classification/ExampleHuman knowledge
+section verification, not the already repaired selected discovery or the later
+installed translocation path. Issue379 retains exact installed cold/stale
+canonical-expression lookup verification; the later stable-import pipeline does
+not exercise that original expression. Their current titles distinguish those
+remaining acceptance cases from missing source implementation.
+
+Issue580 retains the separate Shapes triangulation and blank orthogonal-frame
+acceptance gaps. The old0.6.1 empty-selection gold highlight mechanism is already
+removed by the declared supported Napari0.7.1 dependency; it does not justify an
+OpenHCS renderer copy or a claim that all orthogonal navigation remains broken.
+Issue131 retains causal attribution of the original large long-lived MCP
+process. The independently repaired failed-preparation retention has actual
+installed acceptance, but neither that repair nor old host swap totals prove
+the original process's cause or a universal no-leak claim.
+
+The original checkout was rechecked after custody completion: all70 published
+source hashes match, both57/13-file source stash payloads match the recovery
+branch, exactly the299 excluded data/result paths remain, and all three original
+dependency HEADs remain unchanged with clean worktrees. No new source inventory,
+data rewrite, environment, worktree or contributor PR was created for this audit.
+
 Next delivery
 -------------
 
-Adapt useful unpublished families through existing owners in released /wt
-checkouts, preserving this recovery branch independently. Tests and affected
-real application checks follow coherent implementation. No new environment,
-arbitrary memory cap, broad code transplant or routine contributor PR is needed.
+Useful unpublished families remain independently published in the recovery
+branch; no demonstrated current defect warrants a wholesale transplant. The
+verified selective source deliveries are the exact scientific preparation/
+scoring scripts, acquisition spacing repair and importer batch-context repair.
+The latter retains its installed public execution acceptance on516. Remaining
+open issues above are scoped failures or missing original acceptance, not a
+reason to redo integrated historical fixes. No new environment, arbitrary
+memory cap, broad code transplant or routine contributor PR was needed.
 Stashing historical source was a custody operation, not the implementation
 or scientific-provenance deliverable. That custody is complete. Keep the
 original data/history separate; do not pull current main over colliding
