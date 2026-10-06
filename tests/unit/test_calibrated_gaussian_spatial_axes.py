@@ -116,6 +116,44 @@ def test_invalid_channel_and_spatial_rank_still_reject():
         _execute(_source(np.zeros((9, 11)), domain=VolumeSourceSpatialDomain(source_depth=3)))
 
 
+@pytest.mark.parametrize(
+    "shape,channel_axis,non_channel_axes,yx",
+    (
+        ((7,), None, (0,), None),
+        ((7, 9), 0, (1,), None),
+        ((7, 9), None, (0, 1), (0, 1)),
+        ((2, 7, 9, 3), -1, (0, 1, 2), (1, 2)),
+    ),
+)
+def test_optional_yx_and_strict_intrinsic_share_non_channel_projection(
+    shape, channel_axis, non_channel_axes, yx,
+):
+    metadata = ImagePayloadMetadata(source_channel_axis=channel_axis)
+    pixels = np.zeros(shape)
+    assert metadata.non_channel_axes(pixels) == non_channel_axes
+    assert metadata.spatial_axes_yx(pixels) == yx
+    if yx is None:
+        with pytest.raises(ValueError, match="spatial rank"):
+            metadata.spatial_axes(pixels)
+    else:
+        assert metadata.spatial_axes(pixels) == yx
+
+
+def test_yx_does_not_inherit_strict_volume_rank_requirement():
+    metadata = ImagePayloadMetadata(source_spatial_domain=VolumeSourceSpatialDomain())
+    pixels = np.zeros((7, 9))
+    assert metadata.spatial_axes_yx(pixels) == (0, 1)
+    with pytest.raises(ValueError, match="spatial rank"):
+        metadata.spatial_axes(pixels)
+
+
+@pytest.mark.parametrize("projection", ("spatial_axes_yx", "spatial_axes"))
+def test_both_spatial_projections_preserve_invalid_channel_rejection(projection):
+    metadata = ImagePayloadMetadata(source_channel_axis=4)
+    with pytest.raises(ValueError, match="channel axis"):
+        getattr(metadata, projection)(np.zeros((7, 9)))
+
+
 def test_plain_two_dimensional_pixels_preserve_unscaled_gaussian():
     pixels = np.zeros((9, 11), dtype=np.float32)
     pixels[4, 5] = 1
