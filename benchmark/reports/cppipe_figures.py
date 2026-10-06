@@ -671,6 +671,7 @@ def generate_measured_batch_figures(
     output_dir: Path,
     output_formats: Sequence[str] = DEFAULT_FORMATS,
     include_average: bool = True,
+    selected_pipeline_names: Sequence[str] | None = None,
 ) -> tuple[Path, ...]:
     """Render already-qualified measured summaries without projecting native time.
 
@@ -690,9 +691,20 @@ def generate_measured_batch_figures(
     if len(set(methods)) != len(methods):
         raise ValueError("Measured mode method labels must be distinct.")
     tables = tuple(_load_summary_table(source) for source in summary_sources)
-    pipeline_names = _pipeline_order(tables)
-    if any(set(table) != set(pipeline_names) for table in tables):
-        raise ValueError("Measured modes must contain the same pipeline cohort.")
+    if selected_pipeline_names is None:
+        pipeline_names = _pipeline_order(tables)
+        if any(set(table) != set(pipeline_names) for table in tables):
+            raise ValueError("Measured modes must contain the same pipeline cohort.")
+    else:
+        pipeline_names = tuple(selected_pipeline_names)
+        if not pipeline_names or len(set(pipeline_names)) != len(pipeline_names):
+            raise ValueError("The selected measured cohort must be nonempty and unique.")
+        for source, table in zip(summary_sources, tables, strict=True):
+            missing = set(pipeline_names) - set(table)
+            if missing:
+                raise ValueError(
+                    f"Measured source {source.path} lacks selected cases: {sorted(missing)!r}"
+                )
     rows = tuple(
         _benchmark_metric_rows(
             tables,

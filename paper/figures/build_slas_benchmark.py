@@ -65,6 +65,7 @@ def write_provenance(
 
 def build_measured(
     summary_sources: tuple[str, ...], scope: str, output_dir: Path,
+    cohort_manifest: Path | None = None,
 ) -> None:
     """Present qualified matched summaries through the measured figure owner."""
     from benchmark.reports.cppipe_figures import (
@@ -83,16 +84,46 @@ def build_measured(
         raise ValueError("Measured manuscript inputs require qualified matched reports")
     if len({record["source_head"] for record in custody}) != 1:
         raise ValueError("Measured manuscript modes must share one source revision")
+    selected_pipeline_names = None
+    manifest_paths = ()
+    if cohort_manifest is not None:
+        from benchmark.cellprofiler_comparison import load_comparison_cases
+
+        selected_cases = load_comparison_cases(cohort_manifest, materialize_roots=False)
+        selected_pipeline_names = tuple(case.name for case in selected_cases)
+        if (
+            not selected_pipeline_names
+            or len(set(selected_pipeline_names)) != len(selected_pipeline_names)
+        ):
+            raise ValueError("The measured cohort manifest must declare unique, nonempty cases")
+        manifest_paths = tuple(dict.fromkeys(
+            (cohort_manifest, *(Path(record["manifest"]["path"]) for record in custody))
+        ))
+        for record in custody:
+            manifest = Path(record["manifest"]["path"])
+            if sha256(manifest) != record["manifest"]["sha256"]:
+                raise ValueError(f"Qualified case manifest has changed: {manifest}")
+            qualified_cases = load_comparison_cases(manifest, materialize_roots=False)
+            declared = {case.name: case for case in qualified_cases}
+            if len(declared) != len(qualified_cases):
+                raise ValueError(f"Qualified case manifest repeats a case: {manifest}")
+            for case in selected_cases:
+                if declared.get(case.name) != case:
+                    raise ValueError(
+                        f"Selected case {case.name!r} differs from qualified declaration: {manifest}"
+                    )
     outputs = generate_measured_batch_figures(
         tuple(MeasuredBatchSummarySource(source.label, source.path) for source in sources),
         scope=scope,
         output_dir=output_dir,
+        selected_pipeline_names=selected_pipeline_names,
     )
     write_provenance(
         output_dir,
         (
             *tuple(source.path for source in sources),
             *custody_paths,
+            *manifest_paths,
             Path(cppipe_figures.__file__).resolve(),
         ),
         outputs,
@@ -100,6 +131,7 @@ def build_measured(
             "benchmark_mode": "measured",
             "scope": scope,
             "matched_report_provenance": custody,
+            "selected_pipeline_names": selected_pipeline_names,
             "interpretation": (
                 "Qualified matched measurements rendered by the existing measured "
                 "benchmark owner. Original clock boundaries, repetitions and source "
@@ -551,6 +583,8 @@ if __name__ == "__main__":
                         help="Measured MODE_LABEL=qualified_summary.csv; repeat for modes.")
     parser.add_argument("--scope", choices=("execution", "total"),
                         help="Required for measured summaries; archive has its retained clocks.")
+    parser.add_argument("--cohort-manifest", type=Path,
+                        help="Select unchanged cases declared by this manifest from each qualified measured source.")
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
     arguments = parser.parse_args()
     if arguments.summary_source:
@@ -558,8 +592,13 @@ if __name__ == "__main__":
             parser.error("--summary-source requires --scope")
         if arguments.output_dir.resolve() == DEFAULT_OUTPUT.resolve():
             parser.error("Measured figures require an explicit distinct --output-dir")
-        build_measured(tuple(arguments.summary_source), arguments.scope, arguments.output_dir)
+        build_measured(
+            tuple(arguments.summary_source), arguments.scope, arguments.output_dir,
+            cohort_manifest=arguments.cohort_manifest,
+        )
     else:
         if arguments.scope is not None:
             parser.error("--scope requires --summary-source")
+        if arguments.cohort_manifest is not None:
+            parser.error("--cohort-manifest requires --summary-source")
         build(arguments.data_dir, arguments.output_dir)
