@@ -776,6 +776,7 @@ receive an accuracy percentage.
 - [Paired-channel analysis](task_only_analysis/h003-fresh26-qualified-completion.rst).
 - [Retinal soma localisation](task_only_analysis/retinal-fresh26-qualified-completion.rst).
 - [Personal nine-field mosaic](task_only_analysis/p001-allchannel25-qualified-completion.rst).
+- [Independent field-by-field laboratory neurite analysis](../../figure-collection-20261004/P001-FRESH13-NINE-FIELD-REVIEW.rst), with frozen pipeline and output identities, sampled raw/path review and remaining limitations.
 - [Public translocation assay](task_only_analysis/bbbc013-fresh23-qualified-completion.rst).
 - [Public neurite analysis](task_only_analysis/h004-fresh20-qualified-completion.rst).
 
