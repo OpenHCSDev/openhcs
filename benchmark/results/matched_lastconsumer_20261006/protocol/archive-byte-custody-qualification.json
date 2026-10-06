@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "checks": [
+    {
+      "mode": "16assignments-1worker",
+      "verified_byte_originals": 14
+    },
+    {
+      "mode": "16assignments-4workers",
+      "verified_byte_originals": 36
+    }
+  ]
+}

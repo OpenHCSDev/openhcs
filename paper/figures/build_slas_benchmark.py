@@ -68,23 +68,32 @@ def build_measured(
     summary_sources: tuple[str, ...], scope: str, output_dir: Path,
     cohort_manifest: Path | None = None,
     claim_metadata: Path | None = None,
+    native_baseline: Path | None = None,
 ) -> None:
     """Present qualified matched summaries through the measured figure owner."""
+    from benchmark.reports import cppipe_figures
     from benchmark.reports.cppipe_figures import (
         MeasuredBatchSummarySource,
+        SerialCellProfilerBatchSummarySource,
         generate_measured_batch_figures,
         parse_summary_source,
     )
-    from benchmark.reports import cppipe_figures
 
     sources = tuple(parse_summary_source(value) for value in summary_sources)
     sources = tuple(MeasuredBatchSummarySource(source.label, source.path) for source in sources)
-    custody_paths = tuple(dict.fromkeys(source.custody_path for source in sources))
-    custody = tuple(source.qualified_custody() for source in sources)
+    baseline = None
+    if native_baseline is not None:
+        if scope == "amortization":
+            raise ValueError("Amortization already owns its actual single-process baseline")
+        baseline = MeasuredBatchSummarySource("one process", native_baseline)
+        sources = tuple(SerialCellProfilerBatchSummarySource(source.label, source.path, baseline) for source in sources)
+    admitted_sources = (*sources, *((baseline,) if baseline is not None else ()))
+    custody_paths = tuple(dict.fromkeys(source.custody_path for source in admitted_sources))
+    custody = tuple(source.qualified_custody() for source in admitted_sources)
     if len({record["source_head"] for record in custody}) != 1:
         raise ValueError("Measured manuscript modes must share one source revision")
     selected_pipeline_names = None
-    manifest_paths = ()
+    manifest_paths = tuple(dict.fromkeys(source.retained_manifest_path() for source in admitted_sources))
     if cohort_manifest is not None:
         from benchmark.cellprofiler_comparison import load_comparison_cases
 
@@ -96,7 +105,7 @@ def build_measured(
         ):
             raise ValueError("The measured cohort manifest must declare unique, nonempty cases")
         qualified_manifests = tuple(source.retained_manifest_path() for source in sources)
-        manifest_paths = tuple(dict.fromkeys((cohort_manifest, *qualified_manifests)))
+        manifest_paths = tuple(dict.fromkeys((cohort_manifest, *manifest_paths, *qualified_manifests)))
         for manifest in qualified_manifests:
             qualified_cases = load_comparison_cases(manifest, materialize_roots=False)
             declared = {case.name: case for case in qualified_cases}
@@ -125,7 +134,7 @@ def build_measured(
     write_provenance(
         output_dir,
         (
-            *tuple(source.path for source in sources),
+            *tuple(source.path for source in admitted_sources),
             *custody_paths,
             *manifest_paths,
             *((claim_metadata,) if claim_metadata is not None else ()),
@@ -141,7 +150,7 @@ def build_measured(
                 "Qualified matched measurements rendered by the existing measured "
                 "benchmark owner. Original clock boundaries, repetitions and source "
                 "custody remain in matched_report_provenance. Each mode owns its "
-                "actual native baseline; no projected throughput or RAM is supplied."
+                "declared measured native baseline; no projected throughput or RAM is supplied."
             ),
         },
     )
@@ -623,6 +632,8 @@ if __name__ == "__main__":
                         help="Saved record root: derive Figure 2 and the single manuscript claim include.")
     parser.add_argument("--frozen", action="store_true",
                         help="Use only after the benchmark owner explicitly freezes this final publication record.")
+    parser.add_argument("--native-baseline", type=Path,
+                        help="Qualified one-process CP summary for the same assignments; primary comparison for built-in OpenHCS workers.")
     parser.add_argument("--scope", choices=("execution", "total", "amortization"),
                         help="Required for measured summaries; archive has its retained clocks.")
     parser.add_argument("--cohort-manifest", type=Path,
@@ -630,7 +641,7 @@ if __name__ == "__main__":
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
     arguments = parser.parse_args()
     if arguments.publication_record:
-        if arguments.scope is not None or arguments.cohort_manifest is not None:
+        if arguments.scope is not None or arguments.cohort_manifest is not None or arguments.native_baseline is not None:
             parser.error("--publication-record owns both scopes and their complete saved cohort")
         if arguments.output_dir.resolve() == DEFAULT_OUTPUT.resolve():
             parser.error("--publication-record requires an explicit distinct --output-dir")
@@ -644,9 +655,11 @@ if __name__ == "__main__":
             parser.error("Measured figures require an explicit distinct --output-dir")
         build_measured(
             tuple(arguments.summary_source), arguments.scope, arguments.output_dir,
-            cohort_manifest=arguments.cohort_manifest,
+            cohort_manifest=arguments.cohort_manifest, native_baseline=arguments.native_baseline,
         )
     else:
+        if arguments.native_baseline is not None:
+            parser.error("--native-baseline requires --summary-source")
         if arguments.frozen:
             parser.error("--frozen requires --publication-record")
         if arguments.scope is not None:
