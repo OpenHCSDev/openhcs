@@ -4937,10 +4937,10 @@ def test_object_row_binding_projects_the_current_runtime_plane() -> None:
     (
         pytest.param(
             RuntimePlaneProjection.stack(1),
-            (2, 2),
-            None,
-            False,
-            id="implicit-singleton-selection",
+            (1, 2, 2),
+            RuntimePlaneAxis.RUNTIME_SLICE,
+            True,
+            id="preserved-singleton-domain",
         ),
         pytest.param(
             RuntimePlaneProjection.selected(0, 1),
@@ -4997,6 +4997,18 @@ def test_object_row_binding_honors_authoritative_singleton_runtime_projection(
         object_label_dense_array(bound_labels),
         label_array if preserved else label_array[0],
     )
+    if preserved:
+        image = bound_labels.measurement_reference_image()
+        projection = bound_labels.declared_plane_projection()
+        assert projection is not None and projection.plane_index is None
+        measurement_values = RuntimeSliceAlignedValues((np.asarray([0.25]),))
+        projected = RuntimeSliceProjection.kwargs_for_slice(
+            {"object_labels": (bound_labels,), "measurement_values": measurement_values},
+            projection.selected_plane(0),
+        )
+        assert object_label_dense_array(projected["object_labels"][0]).shape == (2, 2)
+        np.testing.assert_array_equal(projected["measurement_values"], (0.25,))
+        assert image_payload_data(image).shape == (1, 2, 2)
 
 
 def test_object_row_binding_preserves_nominal_parameter_abi_without_domain() -> None:

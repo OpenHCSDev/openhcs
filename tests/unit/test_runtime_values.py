@@ -1175,17 +1175,17 @@ def test_shape_object_feature_table_uses_registered_nominal_contract() -> None:
 
     rows = table.rows()
     assert rows[0]["object_label"] == 1
-    assert np.isnan(rows[0][MeasureObjectSizeShapeModule.MeasurementFeature.AREA.value])
+    assert rows[0][MeasureObjectSizeShapeModule.MeasurementFeature.AREA.value] == 10.0
     assert (
         rows[0][MeasureObjectSizeShapeModule.MeasurementFeature.MAXIMUM_RADIUS.value]
-        == 0.0
+        == 2.0
     )
     assert MeasureObjectSizeShapeModule.MeasurementFeature.CENTER_Z.value not in rows[0]
     assert rows[1]["object_label"] == 2
-    assert rows[1][MeasureObjectSizeShapeModule.MeasurementFeature.AREA.value] == 10.0
+    assert np.isnan(rows[1][MeasureObjectSizeShapeModule.MeasurementFeature.AREA.value])
     assert (
         rows[1][MeasureObjectSizeShapeModule.MeasurementFeature.MAXIMUM_RADIUS.value]
-        == 2.0
+        == 0.0
     )
 
 

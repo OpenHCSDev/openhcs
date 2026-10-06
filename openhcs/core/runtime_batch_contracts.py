@@ -8,7 +8,7 @@ from dataclasses import dataclass, replace
 from enum import Enum
 import inspect
 from types import MappingProxyType
-from typing import ClassVar, Generic, TypeVar
+from typing import TYPE_CHECKING, ClassVar, Generic, TypeVar
 
 from metaclass_registry import AutoRegisterMeta
 
@@ -25,6 +25,10 @@ from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxisValueProjection,
 )
 from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
+
+if TYPE_CHECKING:
+    from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+
 
 F = TypeVar("F", bound=Callable)
 RuntimeSliceDataT = TypeVar("RuntimeSliceDataT")
@@ -95,16 +99,22 @@ class RuntimeBatchInvocationRequest(RuntimeImageExecutionContext):
             ),
         )
 
-    def batch_executor_request(self) -> "RuntimeBatchInvocationRequest | None":
+    def batch_executor_request(
+        self, *, processing_contract: "ProcessingContract",
+    ) -> "RuntimeBatchInvocationRequest | None":
         """Return a request projected into the batch executor's image domain.
 
         A batch executor may inspect image pixels before it delegates the actual
-        call.  It must therefore see the same image domain as the callable.  A
+        call.  It must therefore see the same image domain as the callable.
+        Preserved NATURAL axes requiring 2D execution remain with the ordinary
+        slicer under the processing declaration.  A
         singleton aligned runtime-slice axis can be consumed exactly; a larger
         aligned axis requires per-slice execution and is left to the ordinary
         contract executor by returning ``None``.
         """
 
+        if not processing_contract.declaration.supports_measurement_image_batch(self):
+            return None
         if (
             self.execution_mode
             is not ImagePayloadExecutionMode.ALIGNED_MULTI_IMAGE_STACK
