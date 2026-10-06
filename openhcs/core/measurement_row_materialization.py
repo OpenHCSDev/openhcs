@@ -21,10 +21,6 @@ from typing import Any, ClassVar, TYPE_CHECKING, TypeAlias, cast
 from metaclass_registry import AutoRegisterMeta
 from openhcs.constants.constants import AllComponents
 from openhcs.core.alias_property import AliasProperty
-from openhcs.core._tabular_native import (
-    assign_cell as _assign_native_cell,
-    assign_columns as _assign_native_columns,
-)
 import numpy as np
 
 from openhcs.core.registry_strategies import NominalTypeStrategyFamilyMixin
@@ -601,20 +597,30 @@ class MeasurementSparseColumnarRows(ColumnarRows):
         )
         names = tuple(field.name for field in fields)
         identities = (
-            tuple(field.value for field in MeasurementRowAxisField if field.value in names)
+            tuple(
+                field.value for field in MeasurementRowAxisField if field.value in names
+            )
             if identity_fields is None
             else tuple(identity_fields)
         )
         undeclared = tuple(name for name in identities if name not in names)
         if undeclared:
-            raise ValueError(f"Columnar join identities are undeclared: {undeclared!r}.")
-        equal = _measurement_sparse_cell_values_equal if values_equal is None else values_equal
+            raise ValueError(
+                f"Columnar join identities are undeclared: {undeclared!r}."
+            )
+        equal = (
+            _measurement_sparse_cell_values_equal
+            if values_equal is None
+            else values_equal
+        )
         row_domain: dict[tuple[tuple[str, object], ...], int] = {}
         segments: list[tuple[np.ndarray, Mapping[str, Sequence[object]]]] = []
         passthrough = 0
         for batch in batches:
             for count, columns in batch.columnar_row_batches():
-                identity_columns = tuple((name, columns[name]) for name in identities if name in columns)
+                identity_columns = tuple(
+                    (name, columns[name]) for name in identities if name in columns
+                )
                 destinations = np.empty(count, dtype=np.intp)
                 for index in range(count):
                     identity = tuple(
@@ -625,40 +631,65 @@ class MeasurementSparseColumnarRows(ColumnarRows):
                     if not identity:
                         identity = (("__row_index__", passthrough),)
                         passthrough += 1
-                    destinations[index] = row_domain.setdefault(identity, len(row_domain))
+                    destinations[index] = row_domain.setdefault(
+                        identity, len(row_domain)
+                    )
                 segments.append((destinations, columns))
-        columns = {name: np.full(len(row_domain), missing_cell, dtype=object) for name in names}
+        columns = {
+            name: np.full(len(row_domain), missing_cell, dtype=object) for name in names
+        }
         for destinations, source_columns in segments:
             for name, values in source_columns.items():
-                values = np.asarray(values)
+                values = ColumnarRows.column_array(values)
                 present = (
                     np.ones(len(values), dtype=bool)
-                    if not values.dtype.hasobject and missing_cell is MEASUREMENT_SPARSE_CELL
+                    if not values.dtype.hasobject
+                    and missing_cell is MEASUREMENT_SPARSE_CELL
                     else np.fromiter(
-                        (value is not missing_cell and not is_structural_missing_measurement_cell(value) for value in values),
+                        (
+                            value is not missing_cell
+                            and not is_structural_missing_measurement_cell(value)
+                            for value in values
+                        ),
                         dtype=bool,
                         count=len(values),
                     )
                 )
                 indexes = destinations[present]
                 admitted = values[present]
-                unique, first, inverse = np.unique(indexes, return_index=True, return_inverse=True)
+                unique, first, inverse = np.unique(
+                    indexes, return_index=True, return_inverse=True
+                )
                 selected = admitted[first]
-                if not equal(admitted, selected[inverse]):
-                    for value, previous in zip(admitted, selected[inverse], strict=True):
+                if values_equal is not None or not equal(admitted, selected[inverse]):
+                    for value, previous in zip(
+                        admitted, selected[inverse], strict=True
+                    ):
                         if not equal(previous, value):
-                            raise ValueError(f"Conflicting sparse measurement values for field {name!r}: {previous!r} vs {value!r}.")
+                            raise ValueError(
+                                f"Conflicting sparse measurement values for field {name!r}: {previous!r} vs {value!r}."
+                            )
                 target = columns[name]
                 previous = target[unique]
                 overlap = np.fromiter(
-                    (not is_structural_missing_measurement_cell(value) and value is not missing_cell for value in previous),
+                    (
+                        not is_structural_missing_measurement_cell(value)
+                        and value is not missing_cell
+                        for value in previous
+                    ),
                     dtype=bool,
                     count=len(previous),
                 )
-                if not equal(previous[overlap], selected[overlap]):
-                    for left, right in zip(previous[overlap], selected[overlap], strict=True):
+                if values_equal is not None or not equal(
+                    previous[overlap], selected[overlap]
+                ):
+                    for left, right in zip(
+                        previous[overlap], selected[overlap], strict=True
+                    ):
                         if not equal(left, right):
-                            raise ValueError(f"Conflicting sparse measurement values for field {name!r}: {left!r} vs {right!r}.")
+                            raise ValueError(
+                                f"Conflicting sparse measurement values for field {name!r}: {left!r} vs {right!r}."
+                            )
                 target[unique] = selected
         return cls(
             MappingProxyType(columns),
@@ -810,22 +841,10 @@ class WideMeasurementRowAccumulator:
     """Consolidate measurement columns directly into final subject-owned rows."""
 
     row_identity_contract: RuntimeMeasurementRowIdentityContract
-    _rows: dict[str, dict[tuple[object, ...], dict[str, object]]] = field(
-        default_factory=dict,
-        init=False,
-        repr=False,
-    )
-    _order: dict[str, list[tuple[object, ...]]] = field(
-        default_factory=dict,
-        init=False,
-        repr=False,
+    _rows_by_subject: dict[str, ColumnarRows] = field(
+        default_factory=dict, init=False, repr=False
     )
     _object_subjects: list[str] = field(default_factory=list, init=False, repr=False)
-    _passthrough_index: int = field(default=0, init=False, repr=False)
-    _absent_identity: object = field(default_factory=object, init=False, repr=False)
-    _passthrough_identity: object = field(
-        default_factory=object, init=False, repr=False
-    )
 
     def __post_init__(self) -> None:
         if not isinstance(
@@ -982,390 +1001,223 @@ class WideMeasurementRowAccumulator:
         qualifier_field_names: Iterable[str],
         missing_cell: object,
     ) -> None:
-        feature_fields = MeasurementRowAxisField.feature_name_field_names_ordered()
-        value_fields = MeasurementRowValueField.field_names_ordered()
-        qualifier_fields = tuple(
-            field_name
-            for field_name in dict.fromkeys(qualifier_field_names)
-            if field_name in columns
+        if not row_count:
+            return
+        image_fields = self.row_identity_contract.selected_image_identity_fields(
+            frozenset(normalize_runtime_identifier(name) for name in columns)
         )
-        object_id_fields = tuple(
+        identity_columns = tuple(
+            (name, values)
+            for name, values in columns.items()
+            if normalize_runtime_identifier(name) in image_fields
+        )
+        object_fields = tuple(
             dict.fromkeys(
                 (
-                    *((object_id_field,) if object_id_field is not None else ()),
+                    *((object_id_field,) if object_id_field else ()),
                     *MeasurementRowAxisField.object_id_field_names(),
                 )
             )
         )
-        identity_field_names = (
-            self.row_identity_contract.selected_image_identity_fields(
-                frozenset(
-                    normalize_runtime_identifier(field_name) for field_name in columns
-                )
-            )
+        object_columns = tuple(
+            columns[name] for name in object_fields if name in columns
         )
-        identity_columns = tuple(
-            (field_name, values)
-            for field_name, values in columns.items()
-            if normalize_runtime_identifier(field_name) in identity_field_names
+        qualifiers = tuple(
+            (name, columns[name])
+            for name in dict.fromkeys(qualifier_field_names)
+            if name in columns
         )
-
-        source_values = columns.get(MeasurementRowAxisField.SOURCE_IMAGE_NAME.value)
-        object_name_values = columns.get(MeasurementRowAxisField.OBJECT_NAME.value)
-        object_id_columns = tuple(
-            columns[field_name]
-            for field_name in object_id_fields
-            if field_name in columns
+        object_names = columns.get(MeasurementRowAxisField.OBJECT_NAME.value)
+        source_names = columns.get(MeasurementRowAxisField.SOURCE_IMAGE_NAME.value)
+        feature_fields = tuple(
+            columns[name]
+            for name in MeasurementRowAxisField.feature_name_field_names_ordered()
+            if name in columns
         )
-        feature_field_columns = tuple(
-            columns[field_name]
-            for field_name in feature_fields
-            if field_name in columns
+        value_fields = tuple(
+            columns[name]
+            for name in MeasurementRowValueField.field_names_ordered()
+            if name in columns
         )
-        value_field_columns = tuple(
-            columns[field_name] for field_name in value_fields if field_name in columns
-        )
-        qualifier_columns = tuple(
-            (field_name, columns[field_name]) for field_name in qualifier_fields
-        )
-
-        if feature_field_columns:
-            if not value_field_columns:
-                raise ValueError("Long-form measurement columns have no value column.")
-            feature_values = feature_field_columns[0]
-            measurement_values = value_field_columns[0]
-            if (
-                object_name_values is None
-                and default_scope is MeasurementScope.OBJECT
-                and len(identity_columns) == 1
-                and len(object_id_columns) == 1
-                and not feature_columns
-            ):
-                self._add_object_scoped_long_form(
-                    row_count=row_count,
-                    subject=default_subject,
-                    identity_column=identity_columns[0],
-                    object_id_values=object_id_columns[0],
-                    feature_values=feature_values,
-                    measurement_values=measurement_values,
-                    qualifier_columns=qualifier_columns,
-                    project_feature_name=project_feature_name,
-                    missing_cell=missing_cell,
-                )
-                return
-            subject_cache: dict[object, str] = {}
-            source_cache: dict[object, str | None] = {}
-            projected_feature_cache: dict[
-                tuple[str, tuple[tuple[str, object], ...]],
-                str,
-            ] = {}
-            for row_index in range(row_count):
-                row_subject = default_subject
-                row_owned = False
-                if object_name_values is not None:
-                    object_name = object_name_values[row_index]
-                    if not is_structural_missing_measurement_cell(object_name):
-                        if object_name in subject_cache:
-                            row_subject = subject_cache[object_name]
-                        elif object_name is not None:
-                            normalized_object_name = str(object_name).strip()
-                            if normalized_object_name:
-                                row_subject = normalized_object_name
-                                subject_cache[object_name] = row_subject
-                        row_owned = row_subject != default_subject
-                identity_values = tuple(
-                    values[row_index] for _field_name, values in identity_columns
-                )
-                object_label = None
-                for values in object_id_columns:
-                    object_label = measurement_object_label_value(values[row_index])
-                    if object_label is not None:
-                        break
-                identity = (
-                    *identity_values,
-                    object_label if object_label is not None else self._absent_identity,
-                )
-                if all(value is self._absent_identity for value in identity):
-                    identity = (self._passthrough_identity, self._passthrough_index)
-                    self._passthrough_index += 1
-                subject_rows = self._rows.setdefault(row_subject, {})
-                target = subject_rows.get(identity)
-                if target is None:
-                    target = {
-                        field_name: value
-                        for (field_name, _values), value in zip(
-                            identity_columns,
-                            identity_values,
-                            strict=True,
-                        )
-                    }
-                    if object_label is not None:
-                        target[
-                            self.row_identity_contract.object_identity_output_field
-                        ] = object_label
-                    subject_rows[identity] = target
-                    self._order.setdefault(row_subject, []).append(identity)
-
-                row_source_name = source_image_name
-                if source_values is not None:
-                    source_value = source_values[row_index]
-                    if source_value in source_cache:
-                        row_source_name = source_cache[source_value]
-                    elif not is_structural_missing_measurement_cell(source_value):
-                        if source_value is not None:
-                            normalized_source = str(source_value).strip()
-                            if normalized_source:
-                                row_source_name = normalized_source
-                        source_cache[source_value] = row_source_name
-                qualifier_values = (
-                    tuple(
-                        (field_name, value)
-                        for field_name, values in qualifier_columns
-                        for value in (values[row_index],)
-                        if not is_structural_missing_measurement_cell(value)
-                    )
-                    if qualifier_columns
-                    else ()
-                )
-                row_scope = MeasurementRowOwnership(
-                    object_name=row_subject if row_owned else None,
-                    source_image_name=row_source_name,
-                ).scope(default_scope)
-                if (
-                    row_scope is MeasurementScope.OBJECT
-                    and row_subject not in self._object_subjects
+        if feature_fields and not value_fields:
+            raise ValueError("Long-form measurement columns have no value column.")
+        cohorts: dict[tuple[str, tuple[tuple[str, object], ...]], list[int]] = {}
+        labels = np.full(row_count, missing_cell, dtype=object)
+        for index in range(row_count):
+            subject = default_subject
+            owned = False
+            if object_names is not None:
+                name = object_names[index]
+                if name is not None and not is_structural_missing_measurement_cell(
+                    name
                 ):
-                    self._object_subjects.append(row_subject)
-                feature_value = feature_values[row_index]
-                if is_structural_missing_measurement_cell(feature_value):
-                    for field_name, values in feature_columns:
-                        value = values[row_index]
-                        if is_structural_missing_measurement_cell(value):
-                            continue
-                        self._assign(
-                            target,
-                            identity,
-                            project_feature_name(
-                                field_name,
-                                qualifier_values,
-                            ),
-                            value,
-                            missing_cell,
-                        )
-                    continue
-                feature_name = (
-                    feature_value
-                    if isinstance(feature_value, str)
-                    else str(feature_value)
-                )
-                if not feature_name:
-                    raise ValueError(
-                        "Long-form measurement row has an empty feature name."
-                    )
-                projection_key = (
-                    feature_name,
-                    qualifier_values,
-                )
-                projected_feature = projected_feature_cache.get(projection_key)
-                if projected_feature is None:
-                    projected_feature = project_feature_name(*projection_key)
-                    projected_feature_cache[projection_key] = projected_feature
-                for field_name, values in feature_columns:
-                    value = values[row_index]
-                    if not is_structural_missing_measurement_cell(value):
-                        self._assign(target, identity, field_name, value, missing_cell)
-                measurement_value = measurement_values[row_index]
-                if is_structural_missing_measurement_cell(measurement_value):
-                    raise ValueError(
-                        f"Long-form measurement feature {feature_name!r} has no value."
-                    )
-                self._assign(
-                    target,
-                    identity,
-                    projected_feature,
-                    measurement_value,
-                    missing_cell,
-                )
-            return
-
-        for row_index in range(row_count):
-            row_subject = default_subject
-            row_owned = False
-            if object_name_values is not None:
-                object_name = object_name_values[row_index]
-                if (
-                    not is_structural_missing_measurement_cell(object_name)
-                    and object_name is not None
-                ):
-                    normalized_object_name = str(object_name).strip()
-                    if normalized_object_name:
-                        row_subject = normalized_object_name
-                        row_owned = True
-            identity_values = tuple(
-                (
-                    self._absent_identity
-                    if is_structural_missing_measurement_cell(values[row_index])
-                    else values[row_index]
-                )
-                for _field_name, values in identity_columns
-            )
-            object_label = None
-            for values in object_id_columns:
-                value = values[row_index]
-                if is_structural_missing_measurement_cell(value):
-                    continue
-                object_label = measurement_object_label_value(value)
-                if object_label is not None:
+                    normalized = str(name).strip()
+                    if normalized:
+                        subject = normalized
+                        owned = True
+            for values in object_columns:
+                label = measurement_object_label_value(values[index])
+                if label is not None:
+                    labels[index] = label
                     break
-            identity = (
-                *identity_values,
-                object_label if object_label is not None else self._absent_identity,
-            )
-            if all(value is self._absent_identity for value in identity):
-                identity = (self._passthrough_identity, self._passthrough_index)
-                self._passthrough_index += 1
-            subject_rows = self._rows.setdefault(row_subject, {})
-            target = subject_rows.get(identity)
-            if target is None:
-                target = {
-                    field_name: value
-                    for (field_name, _values), value in zip(
-                        identity_columns,
-                        identity_values,
-                        strict=True,
-                    )
-                    if value is not self._absent_identity
-                }
-                if object_label is not None:
-                    target[
-                        self.row_identity_contract.object_identity_output_field
-                    ] = object_label
-                subject_rows[identity] = target
-                self._order.setdefault(row_subject, []).append(identity)
-
-            row_source_name = source_image_name
-            if source_values is not None:
-                source_value = source_values[row_index]
-                if (
-                    not is_structural_missing_measurement_cell(source_value)
-                    and source_value is not None
+            source = source_image_name
+            if source_names is not None:
+                name = source_names[index]
+                if name is not None and not is_structural_missing_measurement_cell(
+                    name
                 ):
-                    normalized_source = str(source_value).strip()
-                    if normalized_source:
-                        row_source_name = normalized_source
-            qualifier_values = (
-                tuple(
-                    (field_name, value)
-                    for field_name, values in qualifier_columns
-                    for value in (values[row_index],)
-                    if not is_structural_missing_measurement_cell(value)
-                )
-                if qualifier_columns
-                else ()
-            )
-            row_scope = MeasurementRowOwnership(
-                object_name=row_subject if row_owned else None,
-                source_image_name=row_source_name,
+                    source = str(name).strip() or source
+            scope = MeasurementRowOwnership(
+                object_name=subject if owned else None, source_image_name=source
             ).scope(default_scope)
             if (
-                row_scope is MeasurementScope.OBJECT
-                and row_subject not in self._object_subjects
+                scope is MeasurementScope.OBJECT
+                and subject not in self._object_subjects
             ):
-                self._object_subjects.append(row_subject)
-            _assign_native_columns(
-                target,
-                identity,
-                feature_columns,
-                row_index,
-                project_feature_name,
-                qualifier_values,
-                MeasurementSparseCell,
-                missing_cell,
-                _measurement_sparse_cell_values_equal,
+                self._object_subjects.append(subject)
+            qualification = tuple(
+                (name, values[index])
+                for name, values in qualifiers
+                if not is_structural_missing_measurement_cell(values[index])
             )
-
-    def _add_object_scoped_long_form(
-        self,
-        *,
-        row_count: int,
-        subject: str,
-        identity_column: tuple[str, Sequence[object]],
-        object_id_values: Sequence[object],
-        feature_values: Sequence[object],
-        measurement_values: Sequence[object],
-        qualifier_columns: tuple[tuple[str, Sequence[object]], ...],
-        project_feature_name: MeasurementFeatureNameProjection,
-        missing_cell: object,
-    ) -> None:
-        """Fold object-owned long rows without repeating fixed ownership work."""
-        subject_rows = self._rows.setdefault(subject, {})
-        subject_order = self._order.setdefault(subject, [])
-        if subject not in self._object_subjects:
-            self._object_subjects.append(subject)
-        identity_field, image_values = identity_column
-        absent_identity = self._absent_identity
-        projection_cache: dict[tuple[str, tuple[tuple[str, object], ...]], str] = {}
-        for row_index in range(row_count):
-            image_value = image_values[row_index]
-            object_label = measurement_object_label_value(object_id_values[row_index])
-            identity = (
-                image_value,
-                object_label if object_label is not None else absent_identity,
-            )
-            if image_value is absent_identity and object_label is None:
-                identity = (self._passthrough_identity, self._passthrough_index)
-                self._passthrough_index += 1
-            target = subject_rows.get(identity)
-            if target is None:
-                target = {identity_field: image_value}
-                if object_label is not None:
-                    target[
-                        self.row_identity_contract.object_identity_output_field
-                    ] = object_label
-                subject_rows[identity] = target
-                subject_order.append(identity)
-            feature_value = feature_values[row_index]
-            if is_structural_missing_measurement_cell(feature_value):
-                continue
-            feature_name = (
-                feature_value if isinstance(feature_value, str) else str(feature_value)
-            )
-            if not feature_name:
-                raise ValueError("Long-form measurement row has an empty feature name.")
-            qualifier_values = tuple(
-                (field_name, value)
-                for field_name, values in qualifier_columns
-                for value in (values[row_index],)
-                if not is_structural_missing_measurement_cell(value)
-            )
-            projection_key = (feature_name, qualifier_values)
-            projected_feature = projection_cache.get(projection_key)
-            if projected_feature is None:
-                projected_feature = project_feature_name(*projection_key)
-                projection_cache[projection_key] = projected_feature
-            measurement_value = measurement_values[row_index]
-            if is_structural_missing_measurement_cell(measurement_value):
-                raise ValueError(
-                    f"Long-form measurement feature {feature_name!r} has no value."
+            cohorts.setdefault((subject, qualification), []).append(index)
+        for (subject, qualification), selected in cohorts.items():
+            indexes = np.asarray(selected, dtype=np.intp)
+            output = {
+                name: ColumnarRows.column_array(values)[indexes]
+                for name, values in identity_columns
+            }
+            if object_columns:
+                output[self.row_identity_contract.object_identity_output_field] = (
+                    labels[indexes]
                 )
-            self._assign(
-                target,
-                identity,
-                projected_feature,
-                measurement_value,
-                missing_cell,
+            identity_names = tuple(output)
+            first_present: dict[str, tuple[int, int]] = {}
+
+            def admit(
+                name: str, values: Sequence[object], mask: np.ndarray | None = None
+            ) -> None:
+                projected = project_feature_name(name, qualification)
+                incoming = ColumnarRows.column_array(values)[indexes]
+                if mask is not None:
+                    incoming = incoming.astype(object, copy=True)
+                    incoming[~mask[indexes]] = missing_cell
+                first = next(
+                    (
+                        position
+                        for position, value in enumerate(incoming)
+                        if not is_structural_missing_measurement_cell(value)
+                    ),
+                    None,
+                )
+                if first is not None:
+                    first_present.setdefault(projected, (first, len(first_present)))
+                if projected in output:
+                    previous = output[projected]
+                    for position, value in enumerate(incoming):
+                        if is_structural_missing_measurement_cell(value):
+                            continue
+                        if not is_structural_missing_measurement_cell(
+                            previous[position]
+                        ) and not _measurement_sparse_cell_values_equal(
+                            previous[position], value
+                        ):
+                            raise ValueError(
+                                f"Conflicting measurement values for field {projected!r}."
+                            )
+                        previous[position] = value
+                else:
+                    output[projected] = incoming
+
+            for name, values in feature_columns:
+                admit(name, values)
+            if feature_fields:
+                names = feature_fields[0]
+                values = value_fields[0]
+                feature_names = tuple(
+                    dict.fromkeys(
+                        str(names[index])
+                        for index in selected
+                        if not is_structural_missing_measurement_cell(names[index])
+                    )
+                )
+                for name in feature_names:
+                    if not name:
+                        raise ValueError(
+                            "Long-form measurement row has an empty feature name."
+                        )
+                    mask = np.fromiter(
+                        (
+                            not is_structural_missing_measurement_cell(value)
+                            and str(value) == name
+                            for value in names
+                        ),
+                        dtype=bool,
+                        count=row_count,
+                    )
+                    for index in indexes[mask[indexes]]:
+                        if is_structural_missing_measurement_cell(values[index]):
+                            raise ValueError(
+                                f"Long-form measurement feature {name!r} has no value."
+                            )
+                    admit(name, values, mask)
+            output = {
+                name: output[name]
+                for name in (
+                    *identity_names,
+                    *sorted(
+                        (name for name in output if name not in identity_names),
+                        key=lambda name: first_present.get(
+                            name, (len(indexes), len(first_present))
+                        ),
+                    ),
+                )
+            }
+            batch = MeasurementSparseColumnarRows(
+                MappingProxyType(output),
+                fields=tuple(FieldSpec(name, required=False) for name in output),
+                missing_cell=missing_cell,
+            )
+            previous = self._rows_by_subject.get(subject)
+            batches = (batch,) if previous is None else (previous, batch)
+            names = frozenset(name for value in batches for name in value.columns)
+            image_names = self.row_identity_contract.selected_image_identity_fields(
+                frozenset(normalize_runtime_identifier(name) for name in names)
+            )
+            identities = tuple(
+                name
+                for value in batches
+                for name in value.columns
+                if normalize_runtime_identifier(name) in image_names
+            )
+            identities = tuple(
+                dict.fromkeys(
+                    (
+                        *identities,
+                        *(
+                            (self.row_identity_contract.object_identity_output_field,)
+                            if self.row_identity_contract.object_identity_output_field
+                            in names
+                            else ()
+                        ),
+                    )
+                )
+            )
+            self._rows_by_subject[subject] = (
+                MeasurementSparseColumnarRows.from_columnar_batches(
+                    batches, identity_fields=identities
+                )
             )
 
-    def row_mappings_by_subject(
-        self,
-    ) -> dict[str, tuple[Mapping[str, object], ...]]:
-        """Return final rows in first-seen subject and identity order."""
+    def columnar_rows_by_subject(self) -> dict[str, ColumnarRows]:
+        """Derive final correlated columns in first-seen subject/identity order."""
+        return dict(self._rows_by_subject)
+
+    def row_mappings_by_subject(self) -> dict[str, tuple[Mapping[str, object], ...]]:
+        """Materialize mappings only for consumers requesting the row boundary."""
         return {
-            subject: tuple(
-                MappingProxyType(self._rows[subject][identity])
-                for identity in identities
-            )
-            for subject, identities in self._order.items()
+            subject: tuple(rows.iter_row_mappings())
+            for subject, rows in self.columnar_rows_by_subject().items()
         }
 
     def object_subjects(self) -> tuple[str, ...]:
@@ -1389,23 +1241,6 @@ class WideMeasurementRowAccumulator:
         raise TypeError(
             "Measurement row mappings require an explicit schema-bearing "
             "ColumnarRows carrier."
-        )
-
-    @staticmethod
-    def _assign(
-        target: MutableMapping[str, object],
-        identity: tuple[object, ...],
-        field_name: str,
-        value: object,
-        missing_cell: object,
-    ) -> None:
-        _assign_native_cell(
-            target,
-            identity,
-            field_name,
-            value,
-            missing_cell,
-            _measurement_sparse_cell_values_equal,
         )
 
 
