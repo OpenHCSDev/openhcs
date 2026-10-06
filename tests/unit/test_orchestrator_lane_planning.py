@@ -76,6 +76,104 @@ PROGRESS_CONTEXT = ProgressExecutionContext(
 )
 
 
+def _partition_process_identity(value):
+    import os
+
+    if value < 0:
+        raise ValueError("partition failed")
+    return value, os.getpid()
+
+
+def test_fork_resources_reuse_lane_processes_for_ordered_plate_partitions(monkeypatch):
+    import multiprocessing
+
+    monkeypatch.setattr(
+        worker_execution_module,
+        "_execute_fork_inherited_worker_lane_static",
+        lambda keys, context, mode: {
+            axis: ExecutionResult.success(axis) for axis, _ in keys
+        },
+    )
+    ForkInheritedWorkerExecutionState.install(SimpleNamespace(runtime_contexts={}))
+    resources = ForkInheritedWorkerExecutorResources(
+        multiprocessing_context=multiprocessing.get_context("fork"),
+        use_multiprocessing=True,
+    )
+    plan = WorkerLaneExecutionPlan(
+        execution_id="exec", plate_id="plate",
+        debug_execution_policy=NoOpDebugExecutionPolicy(),
+        assignments=WorkerAssignmentPlan(
+            worker_assignments={"worker_0": ["A01"], "worker_1": ["A02"]},
+            lane_axis_contexts={"worker_0": [("A01", [])], "worker_1": [("A02", [])]},
+        ),
+        runtime_observation_mode=RuntimeObservationMode.OMIT,
+    )
+    processes = []
+    try:
+        with resources.execution_context():
+            assert set(resources.run_worker_lanes(
+                pipeline_definition=[], worker_lane_execution_plan=plan, parent_contexts={},
+            )) == {"A01", "A02"}
+            processes = [process for _, process, _ in resources._runner._processes]
+            assert all(process.is_alive() for process in processes)
+            for requests in [(5, 2, 7, 1, 8, 4), (3, 9)]:
+                results = resources.map_partition_invocations(
+                    _partition_process_identity, requests
+                )
+                assert tuple(value for value, _ in results) == requests
+                assert {pid for _, pid in results} == {p.pid for p in processes}
+    finally:
+        ForkInheritedWorkerExecutionState.clear()
+    assert all(not process.is_alive() and process.exitcode == 0 for process in processes)
+    resources.shutdown_executor()
+
+
+@pytest.mark.parametrize("failure", ["partition", "cancel"])
+def test_fork_resources_join_all_lanes_after_plate_failure(monkeypatch, failure):
+    import multiprocessing
+
+    monkeypatch.setattr(
+        worker_execution_module,
+        "_execute_fork_inherited_worker_lane_static",
+        lambda keys, context, mode: {
+            axis: ExecutionResult.success(axis) for axis, _ in keys
+        },
+    )
+    ForkInheritedWorkerExecutionState.install(SimpleNamespace(runtime_contexts={}))
+    resources = ForkInheritedWorkerExecutorResources(
+        multiprocessing_context=multiprocessing.get_context("fork"),
+        use_multiprocessing=True,
+    )
+    plan = WorkerLaneExecutionPlan(
+        execution_id="exec", plate_id="plate",
+        debug_execution_policy=NoOpDebugExecutionPolicy(),
+        assignments=WorkerAssignmentPlan(
+            worker_assignments={"worker_0": ["A01"], "worker_1": ["A02"]},
+            lane_axis_contexts={"worker_0": [("A01", [])], "worker_1": [("A02", [])]},
+        ),
+        runtime_observation_mode=RuntimeObservationMode.OMIT,
+    )
+    processes = []
+    try:
+        with pytest.raises(
+            RuntimeError if failure == "partition" else ExecutionCancelledError,
+            match="partition failed" if failure == "partition" else "cancelled",
+        ):
+            with resources.execution_context():
+                resources.run_worker_lanes(
+                    pipeline_definition=[], worker_lane_execution_plan=plan,
+                    parent_contexts={},
+                )
+                processes = [p for _, p, _ in resources._runner._processes]
+                if failure == "cancel":
+                    raise ExecutionCancelledError("cancelled")
+                resources.map_partition_invocations(_partition_process_identity, (-1, 2))
+    finally:
+        ForkInheritedWorkerExecutionState.clear()
+    assert len(processes) == 2
+    assert all(not process.is_alive() and process.exitcode == 0 for process in processes)
+
+
 def _compiled_context(axis_id: str) -> ProcessingContext:
     return ProcessingContext(axis_id=axis_id)
 
@@ -621,7 +719,7 @@ def test_fork_child_termination_cannot_run_inherited_parent_cleanup(
     )
     process = fork.Process(
         target=worker_execution_module._execute_fork_inherited_worker_lane_process,
-        args=(writer, [], lane, RuntimeObservationMode.OMIT),
+        args=(writer, [], lane, RuntimeObservationMode.OMIT, (reader,)),
     )
     try:
         for sig in parent_handlers:

@@ -293,6 +293,15 @@ class Output:
     variable_components: tuple[AllComponents, ...] = ()
     image_numbers_by_axis: Mapping[str, tuple[int, ...]] | None = None
 
+    def same_materialization_owner(self, other: Output) -> bool:
+        """Compare current destination/source declarations, independent of content."""
+        return (
+            self.path == other.path
+            and self.metadata == other.metadata
+            and self.variable_components == other.variable_components
+            and self.image_numbers_by_axis == other.image_numbers_by_axis
+        )
+
     @classmethod
     def from_metadata(
         cls,
@@ -306,6 +315,10 @@ class Output:
             content=content,
             metadata=metadata,
         )
+
+    def rendered(self) -> Output:
+        """Return this output's concrete file representation."""
+        return self
 
     @property
     def source_identity(self) -> SourceImageIdentity | None:
@@ -490,6 +503,196 @@ class Utf8TextOutput(Output):
 
     def require_text_content(self) -> str:
         return self.content.decode("utf-8")
+
+@dataclass(frozen=True)
+class ColumnarCsvOutput(Output):
+    """CSV whose correlated row domain survives until file materialization.
+
+    Headers and encoding policy are declared by the producer. Composition is
+    permitted for compatible declared fields and disjoint partition domains.
+    The existing field owner admits column unions; differing rendered headers
+    require whole-domain formatting. Opaque text outputs are not composable.
+    """
+
+    content: ColumnarRows
+    options: CsvOptions = field(default_factory=CsvOptions)
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.content, ColumnarRows):
+            raise TypeError("Columnar CSV content must be ColumnarRows.")
+        if not isinstance(self.options, CsvOptions):
+            raise TypeError("Columnar CSV output requires CSV writer options.")
+
+    def rendered(self) -> Utf8TextOutput:
+        return Utf8TextOutput(
+            path=self.path,
+            content=self.options.render(self.content).encode("utf-8"),
+            metadata=self.metadata,
+            variable_components=self.variable_components,
+            image_numbers_by_axis=self.image_numbers_by_axis,
+        )
+
+    def realized_for_composition(self) -> RenderedColumnarCsvOutput:
+        """Transfer a rendering-time scalar-row snapshot into its realized view.
+
+        Original producer arrays may subsequently be reused or released. The
+        realized view retains its own correlated columns, not a live mutable
+        source alias or a second independently maintained schema.
+        """
+        from numbers import Real
+        from openhcs.core.measurement_row_materialization import (
+            MeasurementProjectedColumnarRows,
+            is_structural_missing_measurement_cell,
+        )
+
+        columns = {}
+        for name in self.content.columns:
+            values = ColumnarRows.column_array(self.content.column_values(name))
+            if values.dtype.hasobject and any(
+                not (
+                    value is None
+                    or isinstance(value, (Real, str, bytes, bool, np.bool_))
+                    or is_structural_missing_measurement_cell(value)
+                )
+                for value in values
+            ):
+                raise TypeError(
+                    "CSV partition realization requires immutable scalar cells; "
+                    f"column {name!r} contains opaque mutable values."
+                )
+            snapshot = np.array(values, copy=True)
+            snapshot.flags.writeable = False
+            columns[name] = snapshot
+        source = replace(
+            self,
+            content=MeasurementProjectedColumnarRows(
+                MappingProxyType(columns),
+                fields=self.content.fields,
+                declared_object_measurement_domain_covered=(
+                    self.content.covers_declared_object_measurement_domain
+                ),
+                object_row_identity=self.content.object_row_identity,
+            ),
+        )
+        header, text = source.options.render_parts(source.content)
+        return RenderedColumnarCsvOutput(
+            path=self.path,
+            content=text.encode("utf-8"),
+            metadata=self.metadata,
+            variable_components=self.variable_components,
+            image_numbers_by_axis=self.image_numbers_by_axis,
+            source=source,
+            header_content=header.encode("utf-8"),
+        )
+
+    @classmethod
+    def compose(
+        cls,
+        outputs: Sequence[ColumnarCsvOutput],
+        *,
+        partition_fields: tuple[str, ...],
+    ) -> ColumnarCsvOutput:
+        """Compose ordered independent partitions before any output is written.
+
+        The caller derives partition fields/order from its admitted source-domain
+        authority. This method does not infer independence from filenames, row
+        count, subject names or an opaque byte stream.
+        """
+        from openhcs.core.measurement_row_materialization import (
+            ConcatenatedColumnarRows,
+            is_structural_missing_measurement_cell,
+        )
+
+        values = tuple(outputs)
+        if not values or not partition_fields:
+            raise ValueError("CSV composition requires outputs and partition fields.")
+        first = values[0]
+        if not isinstance(first, cls):
+            raise TypeError("Only columnar CSV outputs can be composed.")
+        domains: set[tuple[object, ...]] = set()
+        for output in values:
+            if not isinstance(output, cls):
+                raise TypeError("Only columnar CSV outputs can be composed.")
+            if (
+                not output.same_materialization_owner(first)
+                or output.options != first.options
+            ):
+                raise ValueError("CSV partitions declare incompatible paths/schema/policy.")
+            if output.image_numbers_by_axis is not None:
+                raise ValueError("CSV source numbering must be composed by its existing owner.")
+            if any(name not in output.content.columns for name in partition_fields):
+                raise ValueError("CSV partitions lack their declared source identity fields.")
+            columns = tuple(output.content.column_values(name) for name in partition_fields)
+            current: set[tuple[object, ...]] = set()
+            for identity in zip(*columns, strict=True):
+                if any(is_structural_missing_measurement_cell(value) for value in identity):
+                    raise ValueError("CSV partitions contain unscoped/global rows.")
+                current.add(identity)
+            if domains.intersection(current):
+                raise ValueError("CSV partitions overlap their declared source domain.")
+            domains.update(current)
+        return replace(
+            first,
+            content=ConcatenatedColumnarRows(tuple(output.content for output in values)),
+        )
+
+@dataclass(frozen=True, kw_only=True)
+class RenderedColumnarCsvOutput(Utf8TextOutput):
+    """Realized CSV bytes retaining their rendering-time columnar authority."""
+
+    source: ColumnarCsvOutput
+    header_content: bytes
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.source, ColumnarCsvOutput):
+            raise TypeError("Realized CSV must retain its columnar source owner.")
+        if not self.content.startswith(self.header_content):
+            raise ValueError("Realized CSV does not contain its rendered header.")
+
+    @classmethod
+    def compose(
+        cls,
+        outputs: Sequence[RenderedColumnarCsvOutput],
+        *,
+        partition_fields: tuple[str, ...],
+    ) -> RenderedColumnarCsvOutput:
+        """Compose validated realized bodies without rendering rows again."""
+        values = tuple(outputs)
+        if not values or any(not isinstance(output, cls) for output in values):
+            raise TypeError("CSV byte composition requires realized columnar outputs.")
+        first = values[0]
+        if any(not output.same_materialization_owner(first) for output in values):
+            raise ValueError("Realized CSV partitions declare incompatible output ownership.")
+        if any(output.image_numbers_by_axis is not None for output in values):
+            raise ValueError("CSV source numbering must be composed by its existing owner.")
+        source = ColumnarCsvOutput.compose(
+            tuple(output.source for output in values),
+            partition_fields=partition_fields,
+        )
+        if any(
+            output.header_content != first.header_content
+            or output.source.content.fields != first.source.content.fields
+            for output in values
+        ):
+            # Header presence can depend on actual scalar values. The original
+            # row/format owner resolves that global law, without replaying the
+            # exporter or concatenating incompatible byte representations.
+            header, text = source.options.render_parts(source.content)
+            return replace(
+                first,
+                source=source,
+                header_content=header.encode("utf-8"),
+                content=text.encode("utf-8"),
+            )
+        return replace(
+            first,
+            source=source,
+            content=first.header_content + b"".join(
+                output.content[len(output.header_content):] for output in values
+            ),
+        )
+
+
 
 
 class SourceSegmentAuthority:
@@ -2802,7 +3005,13 @@ def _file_bundle_outputs(
             if step_outputs is not None
             else None
         )
-        if isinstance(content, str):
+        if isinstance(content, Output):
+            output = replace(
+                content,
+                path=output_path,
+                image_numbers_by_axis=image_numbers,
+            ).rendered()
+        elif isinstance(content, str):
             output = Utf8TextOutput.from_text(
                 path=output_path,
                 content=content,
@@ -2815,7 +3024,7 @@ def _file_bundle_outputs(
                 image_numbers_by_axis=image_numbers,
             )
         else:
-            raise TypeError("File bundle values must be str or bytes.")
+            raise TypeError("File bundle values must be text, bytes or typed outputs.")
         outputs.append(output)
     return outputs
 

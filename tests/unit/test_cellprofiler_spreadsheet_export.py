@@ -89,6 +89,7 @@ from openhcs.processing.backends.cellprofiler.spreadsheet_export import (
     SpreadsheetFileSelection,
     SpreadsheetNanRepresentation,
     export_to_spreadsheet,
+    render_spreadsheet_bundle,
 )
 from openhcs.processing.backends.cellprofiler.intensity import (
     MeasureObjectIntensityModule,
@@ -357,7 +358,7 @@ def test_export_to_spreadsheet_renders_only_declared_batch_records() -> None:
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
     )
 
-    bundle = export_to_spreadsheet(
+    bundle = render_spreadsheet_bundle(
         select_measurements=True,
         selected_columns=(
             SpreadsheetColumnSelection("Image", "Count"),
@@ -433,7 +434,7 @@ def test_spreadsheet_projects_source_identity_without_upstream_image_features(
         rows=({**({} if axisless else {'slice_index': 0}), 'object_number': 7, 'Area': 12.0},),
         source_image_provenance_planes=provenance,
     )
-    bundle = export_to_spreadsheet(
+    bundle = render_spreadsheet_bundle(
         artifact_batch=RuntimeArtifactBatch(
             input_specs=(ArtifactSpec.input('cells', MeasurementsArtifactType),),
             records_by_axis={'A01': (cells,)},
@@ -484,7 +485,7 @@ def test_spreadsheet_preserves_independent_contributor_filenames(names: tuple[st
         rows=({'slice_index': 0, 'object_number': 1, 'Area': 12.0},),
         source_image_provenance_planes=provenance,
     )
-    bundle = export_to_spreadsheet(
+    bundle = render_spreadsheet_bundle(
         artifact_batch=RuntimeArtifactBatch(
             input_specs=(ArtifactSpec.input('cells', MeasurementsArtifactType),),
             records_by_axis={'A01': (record,)},
@@ -514,7 +515,7 @@ def test_requested_source_columns_preserve_original_extraction_path_template() -
         subject=MeasurementSubject(MeasurementScope.OBJECT, 'Cells', 'object_number'),
         rows=({'slice_index': 0, 'object_number': 1, 'Area': 12.0},),
     )
-    bundle = export_to_spreadsheet(
+    bundle = render_spreadsheet_bundle(
         artifact_batch=RuntimeArtifactBatch(
             input_specs=tuple(ArtifactSpec.input(record.key.name, MeasurementsArtifactType) for record in (image, cells)),
             records_by_axis={'A01': (image, cells)},
@@ -542,7 +543,7 @@ def test_spreadsheet_rejects_existing_filename_conflicting_with_provenance() -> 
         )),
     )
     with pytest.raises(ValueError, match='Conflicting sparse measurement values'):
-        export_to_spreadsheet(
+        render_spreadsheet_bundle(
             artifact_batch=RuntimeArtifactBatch(
                 input_specs=(ArtifactSpec.input('image', MeasurementsArtifactType),),
                 records_by_axis={'A01': (record,)},
@@ -576,6 +577,8 @@ def test_export_to_spreadsheet_bundle_uses_generic_file_materialization() -> Non
             artifact_batch=batch,
             context=context,
         )
+        from openhcs.processing.materialization.core import ColumnarCsvOutput
+        assert all(isinstance(output, ColumnarCsvOutput) for output in bundle.values())
         outputs = materialization_outputs(
             MaterializationSpec(FileBundleOptions()),
             data=bundle,
@@ -658,7 +661,7 @@ def test_columnar_aggregates_preserve_missing_cells_and_exclude_non_numeric_valu
         records_by_axis={"A01": (image, objects)},
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
     )
-    bundle = export_to_spreadsheet(
+    bundle = render_spreadsheet_bundle(
         artifact_batch=batch,
         calculate_aggregate_means=True,
         export_all_measurement_types=False,
@@ -705,7 +708,7 @@ def test_export_to_spreadsheet_rejects_append_order_slice_synthesis() -> None:
     )
 
     with pytest.raises(ValueError, match="Conflicting sparse measurement values"):
-        export_to_spreadsheet(
+        render_spreadsheet_bundle(
             add_filename_prefix=False,
             artifact_batch=batch,
         )
@@ -740,7 +743,7 @@ def test_export_to_spreadsheet_projects_site_group_scope_without_relabeling_stac
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
     )
 
-    bundle = export_to_spreadsheet(
+    bundle = render_spreadsheet_bundle(
         add_filename_prefix=False,
         artifact_batch=batch,
     )
@@ -793,7 +796,7 @@ def test_export_to_spreadsheet_uses_declared_image_set_identity_across_channels(
         ),
     )
 
-    bundle = export_to_spreadsheet(
+    bundle = render_spreadsheet_bundle(
         calculate_aggregate_means=True,
         add_filename_prefix=False,
         artifact_batch=batch,
@@ -893,7 +896,7 @@ def test_export_to_spreadsheet_pairs_fully_addressed_field_measurements() -> Non
         source_image_set_identity_policy=policy,
     )
 
-    bundle = export_to_spreadsheet(add_filename_prefix=False, artifact_batch=batch)
+    bundle = render_spreadsheet_bundle(add_filename_prefix=False, artifact_batch=batch)
 
     cells = tuple(csv.DictReader(io.StringIO(bundle["Cells.csv"])))
     assert cells == tuple(
@@ -951,7 +954,7 @@ def test_export_to_spreadsheet_nulls_metadata_that_differs_between_image_planes(
         ),
     )
 
-    bundle = export_to_spreadsheet(
+    bundle = render_spreadsheet_bundle(
         add_filename_prefix=False,
         artifact_batch=batch,
     )
@@ -999,7 +1002,7 @@ def test_export_to_spreadsheet_copies_native_metadata_and_qualified_file_names()
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
     )
 
-    bundle = export_to_spreadsheet(
+    bundle = render_spreadsheet_bundle(
         artifact_batch=batch,
         add_image_metadata=True,
         add_image_file_names=True,
@@ -1040,7 +1043,7 @@ def test_combined_spreadsheet_retains_native_subject_headers_and_sparse_rows(
         records_by_axis={"A01": records},
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
     )
-    bundle = export_to_spreadsheet(
+    bundle = render_spreadsheet_bundle(
         artifact_batch=batch,
         export_all_measurement_types=False,
         file_selections=(
@@ -1135,7 +1138,7 @@ def test_export_to_spreadsheet_merges_object_features_across_runtime_groups() ->
         ),
     )
 
-    bundle = export_to_spreadsheet(
+    bundle = render_spreadsheet_bundle(
         add_filename_prefix=False,
         artifact_batch=batch,
     )
@@ -1186,7 +1189,7 @@ def test_export_to_spreadsheet_aggregates_mixed_producer_declared_rows() -> None
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
     )
 
-    bundle = export_to_spreadsheet(
+    bundle = render_spreadsheet_bundle(
         calculate_aggregate_means=True,
         add_filename_prefix=False,
         artifact_batch=batch,
@@ -1228,7 +1231,7 @@ def test_export_to_spreadsheet_resolves_slice_indices_per_producer_table() -> No
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
     )
 
-    bundle = export_to_spreadsheet(
+    bundle = render_spreadsheet_bundle(
         add_filename_prefix=False,
         artifact_batch=batch,
     )
@@ -1259,7 +1262,7 @@ def test_export_to_spreadsheet_anchors_axisless_artifact_summary_to_stack() -> N
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
     )
 
-    bundle = export_to_spreadsheet(
+    bundle = render_spreadsheet_bundle(
         add_filename_prefix=False,
         artifact_batch=batch,
     )
@@ -1294,7 +1297,7 @@ def test_export_to_spreadsheet_rejects_axisless_artifact_without_source_identity
         ValueError,
         match="requires .*producer-declared source identity",
     ):
-        export_to_spreadsheet(
+        render_spreadsheet_bundle(
             add_filename_prefix=False,
             artifact_batch=batch,
         )
@@ -1324,7 +1327,7 @@ def test_export_to_spreadsheet_rejects_axisless_image_rows_across_image_sets() -
         ValueError,
         match="cannot bind axisless rows.*image numbers \\(1, 2\\)",
     ):
-        export_to_spreadsheet(
+        render_spreadsheet_bundle(
             add_filename_prefix=False,
             artifact_batch=batch,
         )
@@ -1361,7 +1364,7 @@ def test_export_to_spreadsheet_binds_payload_rows_to_exact_source_image_set() ->
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
     )
 
-    bundle = export_to_spreadsheet(
+    bundle = render_spreadsheet_bundle(
         add_filename_prefix=False,
         artifact_batch=batch,
     )
@@ -1400,7 +1403,7 @@ def test_export_to_spreadsheet_aggregate_requires_declared_image_row() -> None:
         ValueError,
         match="producer-declared Image measurement row for image_number=1",
     ):
-        export_to_spreadsheet(
+        render_spreadsheet_bundle(
             calculate_aggregate_means=True,
             add_filename_prefix=False,
             artifact_batch=batch,
@@ -1433,7 +1436,7 @@ def test_export_to_spreadsheet_preserves_source_qualified_wide_features() -> Non
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
     )
 
-    bundle = export_to_spreadsheet(
+    bundle = render_spreadsheet_bundle(
         add_filename_prefix=False,
         artifact_batch=batch,
     )
@@ -1495,7 +1498,7 @@ def test_export_to_spreadsheet_keeps_crop_outputs_distinct_at_same_slice_index()
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
     )
 
-    bundle = export_to_spreadsheet(
+    bundle = render_spreadsheet_bundle(
         add_filename_prefix=False,
         artifact_batch=batch,
     )
@@ -1546,7 +1549,7 @@ def test_export_to_spreadsheet_preserves_declared_intensity_feature() -> None:
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
     )
 
-    bundle = export_to_spreadsheet(
+    bundle = render_spreadsheet_bundle(
         add_filename_prefix=False,
         artifact_batch=batch,
     )
@@ -1601,7 +1604,7 @@ def test_export_to_spreadsheet_leaves_track_objects_features_unsuffixed() -> Non
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
     )
 
-    bundle = export_to_spreadsheet(
+    bundle = render_spreadsheet_bundle(
         add_filename_prefix=False,
         artifact_batch=batch,
     )
@@ -1647,7 +1650,7 @@ def test_export_to_spreadsheet_leaves_worm_descriptor_fields_unsuffixed() -> Non
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
     )
 
-    bundle = export_to_spreadsheet(
+    bundle = render_spreadsheet_bundle(
         add_filename_prefix=False,
         artifact_batch=batch,
     )
@@ -1696,7 +1699,7 @@ def test_export_to_spreadsheet_folds_descriptor_axes_before_coalescing() -> None
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
     )
 
-    bundle = export_to_spreadsheet(
+    bundle = render_spreadsheet_bundle(
         add_filename_prefix=False,
         artifact_batch=batch,
     )
@@ -1738,7 +1741,7 @@ def test_export_to_spreadsheet_folds_neighbor_scale_once() -> None:
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
     )
 
-    bundle = export_to_spreadsheet(
+    bundle = render_spreadsheet_bundle(
         calculate_aggregate_means=True,
         add_filename_prefix=False,
         artifact_batch=batch,
@@ -1792,7 +1795,7 @@ def test_export_to_spreadsheet_routes_row_owned_objects_and_normalizes_ids() -> 
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
     )
 
-    bundle = export_to_spreadsheet(
+    bundle = render_spreadsheet_bundle(
         add_filename_prefix=False,
         artifact_batch=batch,
     )
@@ -1999,7 +2002,7 @@ def test_spatial_grid_geometry_is_exported_for_exact_source_cycles(
         records_by_axis={"A01": (record,)},
         source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
     )
-    bundle = export_to_spreadsheet(
+    bundle = render_spreadsheet_bundle(
         delimiter=SpreadsheetDelimiter.COMMA,
         add_filename_prefix=False,
         artifact_batch=batch,

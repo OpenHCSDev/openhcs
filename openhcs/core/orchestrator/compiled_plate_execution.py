@@ -52,6 +52,7 @@ from openhcs.core.orchestrator.execution_result import (
 )
 from openhcs.core.orchestrator.worker_execution import (
     WorkerExecutorFactory,
+    WorkerExecutorResources,
 )
 from openhcs.core.orchestrator.worker_lanes import (
     WorkerAssignmentPlan,
@@ -68,6 +69,10 @@ from openhcs.core.progress import (
     ProgressStatus,
     create_event,
     set_progress_queue,
+)
+from openhcs.core.runtime_batch_contracts import (
+    RuntimeArtifactPartitionBatchRequest,
+    RuntimeBatchExecutionDomain,
 )
 from openhcs.core.runtime_artifact_values import RuntimeValue
 from openhcs.core.runtime_stores import (
@@ -271,24 +276,31 @@ def execute_compiled_plate_request(
                     if any(result.is_cancelled() for result in execution_results.values()):
                         raise ExecutionCancelledError("Execution cancelled during worker execution")
                     cancellation.raise_if_requested("after worker execution")
+                    if execution_results.is_success():
+                        plate_runtime_observation = execute_plate_scoped_steps(
+                            validated.compiled_contexts,
+                            progress_queue=validated.progress_queue,
+                            progress_context=validated,
+                            executor_resources=(
+                                executor_resources
+                                if validated.actual_max_workers > 1 else None
+                            ),
+                        )
                     executor_resources.shutdown_executor()
             except BrokenProcessPool as exc:
                 logger.warning(
                     "ORCHESTRATOR: Executor context exit failed due to broken process "
                     f"pool (workers were killed externally): {exc}"
                 )
-                if not execution_results:
+                if not execution_results or execution_results.is_success():
+                    # A failed plate partition/finalizer after successful axes
+                    # must not become a successful pipeline without its output.
                     raise
             finally:
                 executor_resources.clear_execution_bundle()
                 executor_resources.release_parent_runtime_resources(execution_bundle)
 
             if execution_results.is_success():
-                plate_runtime_observation = execute_plate_scoped_steps(
-                    validated.compiled_contexts,
-                    progress_queue=validated.progress_queue,
-                    progress_context=validated,
-                )
                 consolidate_analysis_outputs(
                     validated.compiled_contexts,
                     execution_results,
@@ -477,6 +489,7 @@ def execute_plate_scoped_steps(
     progress_queue: ProgressQueue,
     progress_context: ProgressExecutionContext,
     heartbeat_interval_seconds: float = PLATE_STEP_PROGRESS_HEARTBEAT_SECONDS,
+    executor_resources: WorkerExecutorResources | None = None,
 ) -> RuntimeExecutionObservation:
     """Invoke plate-scoped FunctionSteps once from merged runtime records."""
 
@@ -543,10 +556,26 @@ def execute_plate_scoped_steps(
                         "runtime-owned kwargs "
                         f"{tuple(sorted(conflicting_parameters))!r}."
                     )
-                result = owner_invocation.contract.resolve_runtime_callable()(
-                    **kwargs,
-                    **runtime_kwargs,
+                runtime_callable = contract.resolve_runtime_callable()
+                partition_executor = contract.runtime_batch_executor(
+                    RuntimeBatchExecutionDomain.ARTIFACT_PARTITIONS
                 )
+                if partition_executor is not None and executor_resources is not None:
+                    result = partition_executor(
+                        RuntimeArtifactPartitionBatchRequest.from_contract(
+                            contract,
+                            artifact_batch=batch,
+                            kwargs=kwargs,
+                            runtime_context=(
+                                owner_context if context_parameter is not None else None
+                            ),
+                            map_partition_invocations=(
+                                executor_resources.map_partition_invocations
+                            ),
+                        )
+                    )
+                else:
+                    result = runtime_callable(**kwargs, **runtime_kwargs)
                 owner_axis_id = owner_context.require_axis_id()
                 runtime_value = RuntimeValue.normalize(
                     resolved_output_plan,

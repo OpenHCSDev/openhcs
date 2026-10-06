@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Hashable, Mapping
+from collections.abc import Callable, Hashable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from enum import Enum
 import inspect
@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, ClassVar, Generic, TypeVar
 
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.core.callable_contract import CallableMetadata, KeywordRuntimeParameter
+from openhcs.core.callable_contract import CallableContract, CallableMetadata, KeywordRuntimeParameter
 from openhcs.core.function_reference import FunctionReference
 from openhcs.core.aligned_image_payload import (
     AlignedImageStack,
@@ -28,6 +28,8 @@ from openhcs.core.runtime_slice_projection import RuntimeSliceProjection
 
 if TYPE_CHECKING:
     from openhcs.processing.backends.lib_registry.unified_registry import ProcessingContract
+    from openhcs.core.runtime_stores import RuntimeArtifactBatch
+    from openhcs.core.context.processing_context import ProcessingContext
 
 
 F = TypeVar("F", bound=Callable)
@@ -167,6 +169,64 @@ class RuntimeBatchExecutionDomain(str, Enum):
 
     PURE_2D_SLICES = "pure_2d_slices"
     MEASUREMENT_IMAGES = "measurement_images"
+    ARTIFACT_PARTITIONS = "artifact_partitions"
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeArtifactPartitionBatchRequest:
+    """Parent-admitted artifact batch mapped through existing worker resources.
+
+    The declared executor owns partition eligibility and global reductions.
+    ProcessingContext stays in the parent and is never part of worker requests.
+    """
+
+    func: Callable[..., object]
+    artifact_batch: RuntimeArtifactBatch
+    kwargs: Mapping[str, object]
+    runtime_context: ProcessingContext | None
+    map_partition_invocations: Callable[
+        [Callable[[object], object], Sequence[object]], tuple[object, ...]
+    ]
+
+    @classmethod
+    def from_contract(
+        cls,
+        contract: CallableContract,
+        *,
+        artifact_batch: RuntimeArtifactBatch,
+        kwargs: Mapping[str, object],
+        runtime_context: ProcessingContext | None,
+        map_partition_invocations: Callable[
+            [Callable[[object], object], Sequence[object]], tuple[object, ...]
+        ],
+    ) -> RuntimeArtifactPartitionBatchRequest:
+        """Bind the raw plate ABI through the existing wrapper-control owner.
+
+        Plate wrappers project Enableable controls before invoking their raw
+        processing function. Partition executors enter that same raw boundary;
+        compiler admission continues to own whether the invocation is enabled.
+        """
+        from python_introspect import Enableable
+        from openhcs.processing.backends.lib_registry.unified_registry import (
+            RuntimeInvocationKwargPolicy,
+            RuntimeInvocationKwargPolicyStrategy,
+        )
+
+        raw_callable = contract.resolve_raw_runtime_callable()
+        kwargs = RuntimeInvocationKwargPolicyStrategy.for_policy(
+            RuntimeInvocationKwargPolicy.SIGNATURE_FILTERED
+        ).accepted_kwargs(
+            raw_callable,
+            Enableable.without_parameter(kwargs),
+            signature=contract.raw_runtime_signature,
+        )
+        return cls(
+            func=raw_callable,
+            artifact_batch=artifact_batch,
+            kwargs=kwargs,
+            runtime_context=runtime_context,
+            map_partition_invocations=map_partition_invocations,
+        )
 
 
 class RuntimeBatchCallableMetadataField(str, Enum):

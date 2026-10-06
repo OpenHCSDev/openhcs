@@ -12,6 +12,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
+from openhcs.core.runtime_tabular_values import ColumnarRows
 from openhcs.core.runtime_measurements import RuntimeMeasurementFeature
 from openhcs.processing.materialization.path_scopes import (
     MaterializationRelativePathScope,
@@ -80,6 +81,22 @@ class CsvOptions(FileOutputOptions, SourceOptions, TabularExtractionOptions):
     """CSV writer options."""
 
     filename_suffix: str = "_details.csv"
+
+    def header_rows(self, rows: ColumnarRows) -> tuple[tuple[str, ...], ...]:
+        """Declare the CSV schema used for correlated partition composition."""
+        return (tuple(field.name for field in rows.fields),)
+
+    def render_parts(self, rows: ColumnarRows) -> tuple[str, str]:
+        """Derive header and complete CSV through this writer's format owner."""
+        from openhcs.processing.materialization.core import _render_csv_rows
+
+        return _render_csv_rows((), self.header_rows(rows)[0]), self.render(rows)
+
+    def render(self, data: Any) -> str:
+        """Render through the existing CSV format owner."""
+        from openhcs.processing.materialization.core import _render_csv
+
+        return _render_csv(data, self)
 
 
 @dataclass(frozen=True)
@@ -185,7 +202,7 @@ class ImageFileOptions(FileOutputOptions, SourceOptions):
 
 @dataclass(frozen=True)
 class FileBundleOptions(FileOutputOptions):
-    """A validated mapping of relative output paths to file bytes or text."""
+    """A validated mapping of relative output paths to bytes, text or typed outputs."""
 
     filename_identity: MaterializedFilenameIdentity = (
         MaterializedFilenameIdentity.ARTIFACT_NAME

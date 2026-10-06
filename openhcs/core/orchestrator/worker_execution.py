@@ -8,8 +8,8 @@ import logging
 import multiprocessing
 import signal
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, replace
-from typing import Any, Dict, Iterable, List, Mapping
+from dataclasses import dataclass, field, replace
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Sequence
 
 from openhcs.core.compiled_execution import (
     CompiledExecutionBundle,
@@ -155,6 +155,12 @@ class WorkerExecutorResources(ABC):
     def shutdown_executor(self) -> None:
         """Shutdown owned executor resources."""
 
+    def map_partition_invocations(
+        self, func: Callable[[object], object], requests: Sequence[object]
+    ) -> tuple[object, ...]:
+        """Prepare plate partitions using this execution's existing resources."""
+        return tuple(func(request) for request in requests)
+
     def release_parent_runtime_resources(
         self,
         execution_bundle: CompiledExecutionBundle,
@@ -198,6 +204,36 @@ class InlineWorkerExecutorResources(WorkerExecutorResources):
 class ForkInheritedWorkerExecutorResources(WorkerExecutorResources):
     """Fork-inherited runtime context execution resources."""
 
+    _runner: ForkInheritedWorkerLaneRunner = field(init=False, repr=False, compare=False)
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self, "_runner", ForkInheritedWorkerLaneRunner(self.multiprocessing_context)
+        )
+
+    @contextlib.contextmanager
+    def execution_context(self):
+        try:
+            yield
+        except BaseException:
+            try:
+                self.shutdown_executor()
+            except Exception:
+                logger.exception(
+                    "Fork worker shutdown failed while handling execution failure"
+                )
+            raise
+        else:
+            self.shutdown_executor()
+
+    def shutdown_executor(self) -> None:
+        self._runner.shutdown()
+
+    def map_partition_invocations(
+        self, func: Callable[[object], object], requests: Sequence[object]
+    ) -> tuple[object, ...]:
+        return self._runner.map_partition_invocations(func, requests)
+
     @property
     def uses_fork_inherited_contexts(self) -> bool:
         return True
@@ -223,9 +259,7 @@ class ForkInheritedWorkerExecutorResources(WorkerExecutorResources):
         worker_lane_execution_plan: WorkerLaneExecutionPlan,
         parent_contexts: Mapping[str, ProcessingContext],
     ) -> Dict[str, ExecutionResult]:
-        return ForkInheritedWorkerLaneRunner(self.multiprocessing_context).run(
-            worker_lane_execution_plan
-        )
+        return self._runner.run(worker_lane_execution_plan)
 
 
 @dataclass(frozen=True, slots=True)
@@ -245,6 +279,11 @@ class PooledWorkerExecutorResources(WorkerExecutorResources):
 
     def execution_context(self):
         return self._executor
+
+    def map_partition_invocations(
+        self, func: Callable[[object], object], requests: Sequence[object]
+    ) -> tuple[object, ...]:
+        return tuple(self._executor.map(func, requests))
 
     def contexts_snapshot(
         self,
@@ -449,10 +488,13 @@ def _execute_fork_inherited_worker_lane_process(
     lane_axis_context_keys: List[tuple[str, List[str]]],
     lane_context: WorkerLaneExecutionContext,
     runtime_observation_mode: RuntimeObservationMode,
+    inherited_parent_connections: tuple[Any, ...],
 ) -> None:
     """Process entrypoint for fork-inherited worker lane execution."""
 
     WorkerExecutorResources.initialize_process_signals()
+    for connection in inherited_parent_connections:
+        connection.close()
     profiling_policy = CProfileWorkerProfilingPolicy.from_environment()
     try:
         with profiling_policy.profile(
@@ -471,6 +513,22 @@ def _execute_fork_inherited_worker_lane_process(
                     ),
                 )
             )
+        while True:
+            invocation = result_connection.recv()
+            if invocation is None:
+                break
+            func, indexed_requests = invocation
+            try:
+                result_connection.send(
+                    (
+                        "result",
+                        tuple((index, func(request)) for index, request in indexed_requests),
+                    )
+                )
+            except Exception as exc:
+                import traceback
+
+                result_connection.send(("error", exc, traceback.format_exc()))
     except BaseException as exc:
         import traceback
 
@@ -484,6 +542,7 @@ class ForkInheritedWorkerLaneRunner:
 
     def __init__(self, multiprocessing_context: Any) -> None:
         self._multiprocessing_context = multiprocessing_context
+        self._processes: list[tuple[str, Any, Any]] = []
 
     def run(
         self,
@@ -498,14 +557,12 @@ class ForkInheritedWorkerLaneRunner:
                 execution_plan,
             )
 
-        processes: list[tuple[str, List[str], Any, Any]] = []
         execution_results: Dict[str, ExecutionResult] = {}
 
         for worker_slot, lane_contexts in active_lanes:
-            owned_wells = list(execution_plan.assignments.owned_wells(worker_slot))
             worker_lane_context = execution_plan.lane_context(worker_slot)
             result_reader, result_writer = self._multiprocessing_context.Pipe(
-                duplex=False
+                duplex=True
             )
             process = self._multiprocessing_context.Process(
                 target=_execute_fork_inherited_worker_lane_process,
@@ -514,49 +571,25 @@ class ForkInheritedWorkerLaneRunner:
                     lane_contexts,
                     worker_lane_context,
                     execution_plan.runtime_observation_mode,
+                    (
+                        result_reader,
+                        *(connection for _, _, connection in self._processes),
+                    ),
                 ),
             )
-            process.start()
+            try:
+                process.start()
+            except BaseException:
+                result_reader.close()
+                result_writer.close()
+                raise
             result_writer.close()
-            processes.append((worker_slot, owned_wells, process, result_reader))
+            self._processes.append((worker_slot, process, result_reader))
 
         lane_errors: list[Exception] = []
-        for worker_slot, owned_wells, process, result_reader in processes:
+        for worker_slot, process, result_reader in self._processes:
             try:
-                try:
-                    message_kind, payload, *rest = result_reader.recv()
-                except EOFError as exc:
-                    process.join()
-                    raise RuntimeError(
-                        f"Fork worker lane {worker_slot} exited without returning "
-                        f"a result; exitcode={process.exitcode}."
-                    ) from exc
-                finally:
-                    result_reader.close()
-
-                process.join()
-                if process.exitcode != 0:
-                    raise RuntimeError(
-                        f"Fork worker lane {worker_slot} exited with "
-                        f"exitcode={process.exitcode}."
-                    )
-                if message_kind == "error":
-                    if not rest:
-                        raise RuntimeError(
-                            f"Fork worker lane {worker_slot} returned an error without traceback."
-                        )
-                    traceback_text = rest[0]
-                    raise RuntimeError(
-                        f"Fork worker lane {worker_slot} generated an exception: "
-                        f"{payload}\n{traceback_text}"
-                    )
-                if message_kind != "result":
-                    raise RuntimeError(
-                        f"Fork worker lane {worker_slot} returned unknown message "
-                        f"{message_kind!r}."
-                    )
-
-                lane_results = payload
+                lane_results = self._receive_result(worker_slot, process, result_reader)
                 execution_results.update(lane_results)
                 for result in lane_results.values():
                     result.runtime_observation.merge_into(
@@ -568,6 +601,86 @@ class ForkInheritedWorkerLaneRunner:
             raise lane_errors[0]
 
         return execution_results
+
+    @staticmethod
+    def _receive_result(worker_slot: str, process: Any, connection: Any) -> Any:
+        try:
+            message_kind, payload, *rest = connection.recv()
+        except EOFError as exc:
+            process.join()
+            raise RuntimeError(
+                f"Fork worker lane {worker_slot} exited without returning "
+                f"a result; exitcode={process.exitcode}."
+            ) from exc
+        if message_kind == "error":
+            if not rest:
+                raise RuntimeError(
+                    f"Fork worker lane {worker_slot} returned an error without traceback."
+                )
+            raise RuntimeError(
+                f"Fork worker lane {worker_slot} generated an exception: "
+                f"{payload}\n{rest[0]}"
+            )
+        if message_kind != "result":
+            raise RuntimeError(
+                f"Fork worker lane {worker_slot} returned unknown message {message_kind!r}."
+            )
+        return payload
+
+    def map_partition_invocations(
+        self, func: Callable[[object], object], requests: Sequence[object]
+    ) -> tuple[object, ...]:
+        if not self._processes or len(requests) <= 1:
+            return tuple(func(request) for request in requests)
+        active_processes = self._processes[:len(requests)]
+        indexed_requests = tuple(enumerate(requests))
+        errors: list[Exception] = []
+        submitted: list[tuple[str, Any, Any]] = []
+        for offset, (worker_slot, process, connection) in enumerate(active_processes):
+            try:
+                connection.send((func, indexed_requests[offset::len(active_processes)]))
+                submitted.append((worker_slot, process, connection))
+            except Exception as exc:
+                errors.append(exc)
+        results: dict[int, object] = {}
+        for worker_slot, process, connection in submitted:
+            try:
+                results.update(self._receive_result(worker_slot, process, connection))
+            except Exception as exc:
+                errors.append(exc)
+        if errors:
+            raise errors[0]
+        return tuple(results[index] for index in range(len(requests)))
+
+    def shutdown(self) -> None:
+        """Close every owned channel and join every lane, including failed lanes."""
+        processes, self._processes = self._processes, []
+        errors: list[Exception] = []
+        for _worker_slot, process, connection in processes:
+            try:
+                if process.is_alive():
+                    connection.send(None)
+            except (BrokenPipeError, EOFError, OSError):
+                # The failed lane has already closed its channel.
+                pass
+            except Exception as exc:
+                errors.append(exc)
+            finally:
+                try:
+                    connection.close()
+                except Exception as exc:
+                    errors.append(exc)
+        for worker_slot, process, _connection in processes:
+            try:
+                process.join()
+                if process.exitcode != 0:
+                    raise RuntimeError(
+                        f"Fork worker lane {worker_slot} exited with exitcode={process.exitcode}."
+                    )
+            except Exception as exc:
+                errors.append(exc)
+        if errors:
+            raise errors[0]
 
     def run_inline_single_lane(
         self,

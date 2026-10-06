@@ -824,6 +824,18 @@ class RuntimeArtifactBatch(RuntimeParameterDeclarationABC):
             MappingProxyType(records_by_axis),
         )
 
+    def __reduce__(self):
+        """Transport the admitted batch through ordinary worker pipes."""
+        return (
+            type(self),
+            (
+                self.input_specs,
+                dict(self.records_by_axis),
+                self.source_image_set_identity_policy,
+                self.source_binding_plan,
+            ),
+        )
+
     @classmethod
     def require_parameter_name(cls) -> str:
         """Return the runtime-owned callable parameter name."""
