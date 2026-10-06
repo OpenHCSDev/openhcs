@@ -1372,6 +1372,23 @@ neuron-specific endpoints. The
 preserves all four candidates, local acceptance scope and independently verified
 181 payload files, 61 indexed screenshots and six post-exit journal seals.
 
+An independent repeat retained eight body/nuclear regions after rejecting a
+smoothing revision that lost distributed positives. It recovered a measured
+faint-path witness at the ridge-admission stage, while other gaps and spurs
+remained and algorithm branch counts rose from 15 to 247. The
+[repeat completion record](task_only_analysis/h004-fresh22-qualified-completion.rst)
+preserves these separate findings, independently checked label areas, 1,040
+science/evidence hashes and 22 terminal hashes. Stable soma support is not
+promoted to complete neuron-specific outgrowth.
+
+The [personal-neurite field and assembly checkpoint](task_only_analysis/p001-input-repaired22-qualified-completion.rst)
+records completed processing of nine overlapping paired fields and two raw
+2868-square acquisition-coordinate mosaics after an operational input repair.
+All 513 payload hashes were independently checked. A failed viewer-control
+route prevented result and seam review; this is an operationally blocked
+checkpoint, neither a biological failure nor an autonomous scientific pass.
+The frozen outputs remain available for separately recorded development.
+
 A later independent full-plate translocation author retained all 19,732 nuclear
 rows, with 8,655 contributing ratios and 9,661 rows lacking supported cytoplasm.
 The [qualified completion record](task_only_analysis/bbbc013-fresh20-qualified-completion.rst)
