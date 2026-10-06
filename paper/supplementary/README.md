@@ -1440,6 +1440,14 @@ found essentially unchanged nuclear object F1 and modestly better actin-region
 F1, with worse directed nuclear contact-boundary agreement. No reference
 feedback reached the authors; runtime retirement is a separate handoff.
 
+The [subsequent fresh paired-channel repeat](task_only_analysis/h003-fresh25-postfreeze-comparison.rst)
+retains a rejected final 51-instance candidate. Its self-directed marker repairs
+reduced nuclear reference F1 from 0.745 to 0.735 and cell-region F1 from 0.679
+to 0.629. All 493 frozen artifact hashes and the final journals were independently
+checked before reference scoring. These results retain the failed repair and
+supported ordinary-object coverage rather than selecting a different candidate
+after seeing the reference.
+
 A fresh retinal author replaced grain-scale foreground admission with
 body-scale contrast after rejecting nuisance flooding and dim-body losses.
 The final 141-instance candidate preserves a clear neighbouring pair, while
