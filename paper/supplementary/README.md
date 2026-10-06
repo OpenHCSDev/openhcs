@@ -1423,6 +1423,14 @@ binding leaves the label array unchanged. The
 retains all four attempts, the independently checked 903-file freeze and the
 distinction between useful localisation and unmeasured manual-reference accuracy.
 
+Another fresh retinal repeat corrected fragmented foreground while preserving
+a genuine pair, retaining 110 algorithm-defined regions, including nine
+border-censored objects. Its separate source-binding correction left labels
+unchanged. The [qualified repeat record](task_only_analysis/retinal-fresh23-qualified-completion.rst)
+reports independent saved-array/CSV reconciliation, all 313 declared file hashes
+and exact runtime disposition. Weak-object sensitivity and boundary accuracy
+remain unmeasured; this is useful detection coverage, not an exact cell census.
+
 A retained personal-neurite development continuation also analysed a reused
 nine-field mosaic with pooled channel fits. A fixed-DN clipping repair corrected
 unexpected rescaling, but dense nuclear misses and soma underfill prevented
