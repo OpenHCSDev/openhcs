@@ -22,7 +22,7 @@ Efficiency is `T(N,1)/(p*T(N,p))`, using identical assignment counts and source.
 | ExampleIlluminationCorrection_Example3 | 1.561352 | 0.714968 | 72.79% | 54.26% | -34.15% | 3.120× / 2.039× |
 | cp_tutorial_3d_monolayer | 27.005527 | 11.518025 | 78.15% | 92.66% | 15.65% | 3.992× / 3.540× |
 
-[Exact execution and total values](matched-nine-efficiency.json) retain all denominators and both loss definitions. The 15% ideal-scaling target is not achieved across this cohort; measured losses remain explicit.
+[Exact execution and total values](matched-nine-efficiency.json) retain all denominators and both loss definitions. Measured losses versus ideal exceed 15% across this cohort; native-relative losses are reported separately.
 
 ### 16 assignments: one versus 4 workers
 
@@ -32,7 +32,7 @@ Efficiency is `T(N,1)/(p*T(N,p))`, using identical assignment counts and source.
 | ExampleIlluminationCorrection_Example3 | 2.786461 | 1.150517 | 60.55% | 64.46% | 6.07% | 2.154× / 1.466× |
 | cp_tutorial_3d_monolayer | 49.028282 | 17.614147 | 69.59% | 84.20% | 17.35% | 4.144× / 3.669× |
 
-[Exact execution and total values](matched-sixteen-efficiency.json) retain all denominators and both loss definitions. The 15% ideal-scaling target is not achieved across this cohort; measured losses remain explicit.
+[Exact execution and total values](matched-sixteen-efficiency.json) retain all denominators and both loss definitions. Measured losses versus ideal exceed 15% across this cohort; native-relative losses are reported separately.
 
 ## Single-core amortization
 
@@ -40,7 +40,7 @@ Qualified 1/1, 9/1 and 16/1 points show execution and total time per assignment.
 
 ## Clocks, science and immutable evidence
 
-OpenHCS execution covers complete `SERVER_PIPELINE_JOB`, including plate exports and finalization. Total sums the disjoint compile and execute client submit/wait phases. Native execution covers continuous pipeline execution through post-run, including preparation and modules; native total includes measured invocation and CPPipe loading. One-time server/catalog/kernel readiness, JVM startup and subsequent scientific comparisons are excluded. Memory was not measured.
+OpenHCS execution covers complete `SERVER_PIPELINE_JOB`, including plate exports and finalization. Total sums the disjoint compile and execute client submit/wait phases. Native execution covers continuous pipeline execution through post-run, including preparation and modules; native total covers the prepared invocation. One-time CPPipe loading, server/catalog/kernel readiness, JVM startup and subsequent scientific comparisons are excluded. Memory was not measured.
 
 The existing converter admitted source/input/environment custody, complete typed native observations, original shard requests/barriers and physical clocks, actual worker overlap, complete inventories and strict database/CSV/image comparisons. [Lightweight reports and phase receipts](reports) and [original commands, terminals, manifests and converter](protocol) are byte-identical copies. External native inputs retain original locations in their content and are archived under each case's `original_native/` directory; no timing or path was rewritten. Scientific images, measurement CSVs and databases remain at captured original locations and are not duplicated here. Progress CSVs are timing evidence.
 
