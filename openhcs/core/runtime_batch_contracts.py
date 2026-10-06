@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, ClassVar, Generic, TypeVar
 
 from metaclass_registry import AutoRegisterMeta
 
-from openhcs.core.callable_contract import CallableMetadata, KeywordRuntimeParameter
+from openhcs.core.callable_contract import CallableContract, CallableMetadata, KeywordRuntimeParameter
 from openhcs.core.function_reference import FunctionReference
 from openhcs.core.aligned_image_payload import (
     AlignedImageStack,
@@ -187,6 +187,46 @@ class RuntimeArtifactPartitionBatchRequest:
     map_partition_invocations: Callable[
         [Callable[[object], object], Sequence[object]], tuple[object, ...]
     ]
+
+    @classmethod
+    def from_contract(
+        cls,
+        contract: CallableContract,
+        *,
+        artifact_batch: RuntimeArtifactBatch,
+        kwargs: Mapping[str, object],
+        runtime_context: ProcessingContext | None,
+        map_partition_invocations: Callable[
+            [Callable[[object], object], Sequence[object]], tuple[object, ...]
+        ],
+    ) -> RuntimeArtifactPartitionBatchRequest:
+        """Bind the raw plate ABI through the existing wrapper-control owner.
+
+        Plate wrappers project Enableable controls before invoking their raw
+        processing function. Partition executors enter that same raw boundary;
+        compiler admission continues to own whether the invocation is enabled.
+        """
+        from python_introspect import Enableable
+        from openhcs.processing.backends.lib_registry.unified_registry import (
+            RuntimeInvocationKwargPolicy,
+            RuntimeInvocationKwargPolicyStrategy,
+        )
+
+        raw_callable = contract.resolve_raw_runtime_callable()
+        kwargs = RuntimeInvocationKwargPolicyStrategy.for_policy(
+            RuntimeInvocationKwargPolicy.SIGNATURE_FILTERED
+        ).accepted_kwargs(
+            raw_callable,
+            Enableable.without_parameter(kwargs),
+            signature=contract.raw_runtime_signature,
+        )
+        return cls(
+            func=raw_callable,
+            artifact_batch=artifact_batch,
+            kwargs=kwargs,
+            runtime_context=runtime_context,
+            map_partition_invocations=map_partition_invocations,
+        )
 
 
 class RuntimeBatchCallableMetadataField(str, Enum):

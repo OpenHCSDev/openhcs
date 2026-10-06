@@ -562,8 +562,8 @@ def execute_plate_scoped_steps(
                 )
                 if partition_executor is not None and executor_resources is not None:
                     result = partition_executor(
-                        RuntimeArtifactPartitionBatchRequest(
-                            func=runtime_callable,
+                        RuntimeArtifactPartitionBatchRequest.from_contract(
+                            contract,
                             artifact_batch=batch,
                             kwargs=kwargs,
                             runtime_context=(
