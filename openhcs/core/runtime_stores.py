@@ -719,13 +719,15 @@ class RuntimeArtifactInput:
         ).matches()
 
     def _source_context_identity_policy(self) -> SourceImageSetIdentityPolicy:
-        """Derive plane membership only from this edge's context declarations."""
+        """Derive image-set membership from the compiled invocation's sources.
 
-        context_sources = self.edge_plan.spec.source_context_sources()
-        if not context_sources:
-            return SourceImageSetIdentityPolicy()
+        An edge's context relation can name a produced image rather than a raw
+        alias. Filtering raw bindings by that produced name discards the source
+        lineage already resolved by the compiler and mistakes a plane coordinate
+        for the whole image-set identity.
+        """
         return SourceImageSetIdentityPolicy.from_source_bindings(
-            self.source_binding_plan.for_artifact_refs(context_sources)
+            self.source_binding_plan
         )
 
 

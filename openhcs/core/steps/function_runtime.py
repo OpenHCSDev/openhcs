@@ -259,10 +259,17 @@ class PatternGroupExecutionScope:
     @property
     def main_flow_source_binding_plan(self) -> CompiledSourceBindingPlan:
         """Return bindings that anchor and load this group's main-flow stack."""
-
-        return self.unscoped_main_flow_source_binding_plan.for_execution_axis_scope(
-            self.axis_scope
+        declared_plan = self.execution_plan.source_binding_plan
+        selected = declared_plan.for_main_flow_scope(
+            component=self.execution_plan.execution_group_scope.component,
+            group_key=self.component_key,
+            main_flow_refs=self.compiled_group.main_flow_input_refs_for_component(
+                self.execution_plan.execution_group_scope,
+                self.component_key,
+                source_bindings=declared_plan,
+            ),
         )
+        return declared_plan.for_artifact_refs(()) if selected is None else selected
 
     def active_main_flow_source_binding_plan(
         self,
@@ -306,13 +313,13 @@ class PatternGroupExecutionScope:
 
         declared_plan = self.execution_plan.source_binding_plan
         source_refs = self.invocation_source_artifact_refs
-        return (
-            declared_plan.for_artifact_refs(source_refs)
-            if source_refs
-            or self.compiled_group.runtime_domain
-            is RuntimeInvocationDomain.ARTIFACT_MANAGED
-            else self.main_flow_source_binding_plan
-        )
+        if source_refs:
+            return declared_plan.for_artifact_refs(source_refs)
+        if self.compiled_group.runtime_domain is RuntimeInvocationDomain.ARTIFACT_MANAGED:
+            # The compiler has already traced stored artifact lineage to its
+            # source bindings. A produced name is not itself a raw alias.
+            return declared_plan
+        return self.main_flow_source_binding_plan
 
     @property
     def axis_component(self) -> str | None:
@@ -640,6 +647,16 @@ class PatternGroupExecutionRequest(PatternGroupExecutionScope):
             if matching_files and not selected_paths:
                 raise NoStepOutputManifestMatch
             matching_files = selected_paths
+
+        if producer_index is not None:
+            producer_records = producer_index.source_binding_members(
+                matching_files,
+                source_bindings=self.main_flow_source_binding_plan,
+                identity_policy=context.source_image_set_identity_policy,
+                parser=context.microscope_handler.parser,
+            )
+            matching_files = [record.output_path for record in producer_records]
+            producer_matching_files = tuple(matching_files)
 
         if not matching_files:
             raise ValueError(

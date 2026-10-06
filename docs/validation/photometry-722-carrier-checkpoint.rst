@@ -222,3 +222,32 @@ engineering-p001-input-contract-20261006/public95-receiving22. The existing lane
 is available for a qualified candidate through his ordinary successor declaration;
 this PR must first finish its own remaining source family, then supply the exact
 installed target and fixture. There is no scientific, CI or parent-approval hold.
+
+Coherent successor to qualification05
+-------------------------------------
+
+ProducedPathRecordIndex now expands required aliases through the same existing
+SourceBindingMatchedImageSet resolver, limited to its exact predecessor records.
+PatternGroupExecutionRequest loads those current transformed outputs and their
+original correlated metadata together; no original-pixel reload is introduced.
+
+RuntimeArtifactInput derives image-set membership from the compiled source
+binding context rather than filtering raw aliases by a produced image name.
+Artifact-managed requests retain the compiler-resolved producer source lineage
+when their direct input names are not raw aliases. Empty binding declarations
+still leave every component in image-set identity; exact producer addresses,
+projection selection, well/site/time constraints and absence guards remain.
+
+CompiledSourceBindingPlan.for_main_flow_scope owns the distinction between
+explicit consumed image refs and implicit component dispatch. Both source
+anchoring and stack loading consume it; their duplicate projection is removed.
+Explicit DNA/Actin image inputs remain available to an object-group invocation
+on either channel, while implicit image arguments retain component dispatch.
+
+The grouped-roster fixture previously assumed one ungrouped table even when
+its upstream object producers declared CHANNEL groups. PathPlannerArtifactStage
+and ArtifactOutputPlan preserve those inherited output scopes. The fixture now
+asserts exact groups 1/2 versus None, one anchor per group, exact table cardinality
+and scope, and all unchanged intensity features for both named object sets/images.
+It does not merge or drop legitimate producer groups to satisfy the old assertion.
+This successor awaits its batched behavioral qualification and installed case.

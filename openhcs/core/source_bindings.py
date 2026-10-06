@@ -2406,7 +2406,12 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
         group_key: str | None,
         main_flow_refs: tuple[ArtifactSpecRef, ...] | None,
     ) -> "CompiledSourceBindingPlan | None":
-        """Project exact source declarations for one main-flow execution scope."""
+        """Project the image argument separately from invocation dispatch.
+
+        Explicit input refs declare every image consumed by the invocation.
+        A grouped object cohort does not reduce that image roster to the cohort's
+        channel. Implicit image arguments still follow component dispatch.
+        """
 
         component_plan = (
             self
@@ -2420,8 +2425,7 @@ class CompiledSourceBindingPlan(SourceBindingDeclarationsMixin, _SourceBindingPl
         declared_main_flow_plan = self.for_artifact_refs(main_flow_refs)
         if not declared_main_flow_plan.binding_declarations:
             return None
-        compatible_plan = component_plan.for_artifact_refs(main_flow_refs)
-        return compatible_plan if compatible_plan.binding_declarations else None
+        return declared_main_flow_plan
 
     def __reduce__(
         self,

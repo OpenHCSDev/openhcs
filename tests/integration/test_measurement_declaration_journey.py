@@ -468,7 +468,7 @@ def test_omitted_secondary_selector_still_fails_closed(tmp_path):
 
 
 @pytest.mark.parametrize("producer_group_by", [GroupBy.NONE, GroupBy.CHANNEL])
-def test_explicit_measurement_rosters_survive_one_matched_source_anchor(
+def test_explicit_measurement_rosters_preserve_compiled_source_groups(
     tmp_path, producer_group_by,
 ):
     from openhcs.core.steps.function_execution import FunctionStepExecutor
@@ -502,7 +502,10 @@ def test_explicit_measurement_rosters_survive_one_matched_source_anchor(
     context = bundle.runtime_contexts["A01"]
     executor = FunctionStepExecutor(context, 2)
     prepared = executor._prepare_groups(executor._detect_patterns())
-    assert sum(len(patterns) for patterns in prepared.values()) == 1
+    expected_keys = (None,) if producer_group_by is GroupBy.NONE else ("1", "2")
+    assert context.step_plans[2].execution_group_scope.keys == expected_keys
+    assert tuple(prepared) == expected_keys
+    assert all(len(patterns) == 1 for patterns in prepared.values())
     invocation = next(executor.plan.compiled_function_pattern.iter_invocations())
     assert tuple(
         spec.name for spec in invocation.contract.artifact_inputs.of_artifact_type(ImageArtifactType)
@@ -510,9 +513,11 @@ def test_explicit_measurement_rosters_survive_one_matched_source_anchor(
     results = _execute(tmp_path, document, bundle)
     assert results["A01"].is_success(), results["A01"].error_message
     (output,) = invocation.artifact_output_plans
-    (measurement,) = context.runtime_value_store.find(
+    measurements = context.runtime_value_store.find(
         name=output.name, artifact_type=MeasurementsArtifactType, axis_id="A01",
     )
+    assert len(measurements) == len(expected_keys)
+    assert tuple(record.key.scope.value_text for record in measurements) == expected_keys
     for object_name in ("Nuclei", "Cells"):
         (labels,) = context.runtime_value_store.find(name=object_name, axis_id="A01")
         area = np.count_nonzero(object_label_dense_array(labels.data))
@@ -525,7 +530,7 @@ def test_explicit_measurement_rosters_survive_one_matched_source_anchor(
             }
             for feature, expected in expected_features.items():
                 values = measurement_values_for_feature(
-                    (measurement.data,),
+                    tuple(measurement.data for measurement in measurements),
                     f"Intensity_{feature}_{image_name}",
                     object_count=1,
                     object_name=object_name,
