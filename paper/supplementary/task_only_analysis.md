@@ -368,7 +368,7 @@ no new scientific execution, reference scoring or image transformation was
 used to prepare this account. The earlier Figure 9 presentation used the
 corrected whole-field and southwest raw/combined captures, not the earlier
 misnamed overview captures. Those predecessor captures remain retained;
-The current main retinal figure uses the later fresh26 trial, not this predecessor.
+the current main figure shows the separate 102-instance repeat described below.
 Its [native source proof](task_only_analysis/retinal-fresh-native-source-proof.json)
 retains original PNG hashes, camera coordinates and exact geometric crops.
 Whole-field crops are [566,41,415,415] and southwest crops [413,28,837,442]
@@ -840,8 +840,8 @@ exits and are not certified by this prefix check. The
 identifies the preserved report, manifest, pipeline and inspected captures.
 No analysis, private scoring or source-image transformation was rerun for this
 account. The separate 109-instance predecessor retains its original captures
-and source proof. Main Figure 7 uses the later fresh26 trial, not this
-118-instance repeat or the intervening 102-instance repeat.
+and source proof. Main Figure 7 shows the later 102-instance repeat, not this
+118-instance repeat.
 
 ## BBBC039 fresh08: batch coverage completed in a separate continuation
 
@@ -900,9 +900,8 @@ and visual acceptance. No manual retinal count or mask score was obtained.
 The [independent final review](../../figure-collection-20261004/R0010-C10-INDEPENDENT-LOCAL-REPAIR-REVIEW.rst)
 and [intermediate tradeoff](../../figure-collection-20261004/R0010-C08-REGIONAL-TRADEOFF-REVIEW.rst)
 retain original capture identities, table checks and lifecycle qualifications.
-The retained panel from this trial shows the final candidate's whole field,
-northwest pair and southeast continuous envelope; it is not the current main
-Figure 7. Its [native source proof](task_only_analysis/retinal-fresh09-native-source-proof.json)
+Main Figure 7 shows this final candidate's whole field, northwest pair
+and southeast continuous envelope. Its [native source proof](task_only_analysis/retinal-fresh09-native-source-proof.json)
 binds six unchanged original PNGs, the frozen pipeline, native camera settings
 and exact geometric crops. Raw views use window 0–63 and gamma 1. The outline
 background uses the pipeline's source-intensity stretch followed by the manual
