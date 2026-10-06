@@ -1,0 +1,16 @@
+{
+  "author_run": "H002_FRESH22_89",
+  "original_index": "/home/ts/wt/openhcs-issue-batch-20260929/next-h002-fresh22-89-after918-20261006/H002_FRESH22_89/author-workspace/output/evidence/qa-capture-custody.json",
+  "source_root": "/run/media/ts/hdd/openhcs-science/next-h002-fresh22-89-after918-20261006/H002_FRESH22_89/qa",
+  "displayed_axes": ["y", "x"],
+  "native_point": [0, 0, 36, 0, 0, 157.5, 39.5],
+  "canvas_size": [953, 448],
+  "raw_comparison": "First and repaired raw PNGs are byte-identical, not independently stretched.",
+  "interpretation": "Local continuous-body split repair; categorical colours differ between candidates and are not stable object identities.",
+  "captures": {
+    "raw": {"path": "a01-label-xy-z36-left/raw/20261006T010252437790Z_napari_6023_OpenHCS_Napari_Visualization.png", "sha256": "d4a5e1aeb3ad88bf4426f8028ecf0aecd74d6796b2e92e6fb5257deff1da52f5"},
+    "first-labels": {"path": "a01-label-xy-z36-left/points/20261006T010300720622Z_napari_6023_OpenHCS_Napari_Visualization.png", "sha256": "1137aa91bd978124271de44e7f4fcf40e1868a0c5170a75f9239ce39f968e6cf"},
+    "final-labels": {"path": "a02-label-xy-z36-left/points/20261006T011232724226Z_napari_6023_OpenHCS_Napari_Visualization.png", "sha256": "a184fa75bf18c6d215539ac5fbad6ba05b68fc6f778a6a912b3de371061592e7"},
+    "final-combined": {"path": "a02-label-xy-z36-left/combined/20261006T011236055305Z_napari_6023_OpenHCS_Napari_Visualization.png", "sha256": "62e3132a9c086a7a5e3f0fa4b9b639836510f80755e499ff2111a7e7c9401e87"}
+  }
+}

@@ -17,7 +17,7 @@ The run used the committed native-reference tree and the five declaration-derive
 terminal export pipelines under
 `benchmark/reference_exports/official30_value_completion_20260914`. Candidate
 runtime outputs were discarded after comparison. The retained files here are
-the comparison observations, phase timings, summary, suite metadata and a fresh
+the comparison observations, phase timings, summary and a fresh
 inventory of the reference profiles.
 
 ## Files
@@ -26,15 +26,17 @@ inventory of the reference profiles.
   and provenance.
 - `summary.csv`: one summarized row per workflow.
 - `phase_timing.csv`: benchmark phase timings.
-- `suite_metadata.json`: harness configuration and runtime metadata.
 - `reference_inventory.csv`: selected reference artifacts and enabled value
   comparison routes for all 30 workflows.
-- `run_environment.json`: exact candidate source and dependency identity plus
-  the invocation used for this proof.
+
+The original `suite_metadata.json` and `run_environment.json` are not present in
+the retained archive or its available Git history. The observations identify
+OpenHCS 0.8.5 and retain executable, endpoint and submitted-pipeline provenance,
+but do not establish the exact candidate source commit or dependency versions.
+Later runs' environments are not substituted for those missing original records.
 
 ## Claim boundary
 
 This run establishes selected reference-value agreement for the settings and
 artifacts represented by the 30 retained workflows. It is not a segmentation
 accuracy study or a matched CellProfiler/OpenHCS throughput comparison.
-

@@ -1,0 +1,119 @@
+{
+  "case": "ExampleIlluminationCorrection_Example2",
+  "wells": [
+    "A01"
+  ],
+  "selected_source_wells": [
+    "A01"
+  ],
+  "assignment_scope": "genuine source wells",
+  "manifest_sha256": "1d1b016aea7ff2ac0bc2441fff1140bb492bbf3b86048f8565694ccd45e4dff1",
+  "cppipe_sha256": "fa2966b0cd36932e1fa5a853e3a5f4d272173f20c97b81636cdfeb31d79419a2",
+  "driver_sha256": "8b987409c66e29fdc1dc18e61bd31a07c631750cc9bb9224a6bfff37a8c9a3a9",
+  "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
+  "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
+  "source_commit": "5ad1e69565493220572de0a9c1af29f558b5f920",
+  "source_dirty": false,
+  "native_job_count": 1,
+  "candidate_worker_count": 1,
+  "candidate_worker_start_method": "fork",
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0"
+  },
+  "native_input_inventory": [
+    {
+      "path": "--W00001--P00001--Z00000--T00000--cherry.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/--W00001--P00001--Z00000--T00000--cherry.tif",
+      "size_bytes": 1660533,
+      "sha256": "f073bc8f8102f05e6443226fcb986e7d30b3f9f0d7cd77d25c7c9f82ee11b782"
+    }
+  ],
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/retained-native-references/ExampleIlluminationCorrection_Example2/native_report.json",
+  "native_reference_report_sha256": "aa4894da242b00d5506cbe504fc19ede0bb2b850464b1bfd730fba90eca43aab",
+  "native_reference_source_commit": "6fb8212c26dee2349425f4593e8c115d38a5c755",
+  "native_reference_file_inventory": [
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/retained-native-references/ExampleIlluminationCorrection_Example2/native_report.json",
+      "sha256": "aa4894da242b00d5506cbe504fc19ede0bb2b850464b1bfd730fba90eca43aab"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/retained-native-references/ExampleIlluminationCorrection_Example2/native_request.json",
+      "sha256": "c3346aba2a1410ed5105c466309afb3a9b6414feb44e1014a22b810874f8683f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/retained-native-references/ExampleIlluminationCorrection_Example2/pilot_provenance.json",
+      "sha256": "bac9e65fecf11b1189b6291b7d05a70853f6f0ff34d179982961e3f55407cd74"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example2/native/-1/reference_labels__LargeBlockCorrectedNuclei.tiff",
+      "sha256": "f1bbed3348ce75d8d4158cad37c08ae4ab30d9e0a5dfbb9e259b906311811e45"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example2/native/-1/reference_labels__SmallBlockCorrectedNuclei.tiff",
+      "sha256": "d31aa4bc3e9782e646820b5f3bef6f91f4fbf78bf8ee46b5260cde78e558f700"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example2/native/-1/reference_labels__UncorrectedNuclei.tiff",
+      "sha256": "2f54cba8f1482ab54e8a21f71fb2a912ea8a260f8dae2bb5bccfb94994da5a84"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example2/native/0/reference_labels__LargeBlockCorrectedNuclei.tiff",
+      "sha256": "f1bbed3348ce75d8d4158cad37c08ae4ab30d9e0a5dfbb9e259b906311811e45"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example2/native/0/reference_labels__SmallBlockCorrectedNuclei.tiff",
+      "sha256": "d31aa4bc3e9782e646820b5f3bef6f91f4fbf78bf8ee46b5260cde78e558f700"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example2/native/0/reference_labels__UncorrectedNuclei.tiff",
+      "sha256": "2f54cba8f1482ab54e8a21f71fb2a912ea8a260f8dae2bb5bccfb94994da5a84"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example2/native/1/reference_labels__LargeBlockCorrectedNuclei.tiff",
+      "sha256": "f1bbed3348ce75d8d4158cad37c08ae4ab30d9e0a5dfbb9e259b906311811e45"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example2/native/1/reference_labels__SmallBlockCorrectedNuclei.tiff",
+      "sha256": "d31aa4bc3e9782e646820b5f3bef6f91f4fbf78bf8ee46b5260cde78e558f700"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example2/native/1/reference_labels__UncorrectedNuclei.tiff",
+      "sha256": "2f54cba8f1482ab54e8a21f71fb2a912ea8a260f8dae2bb5bccfb94994da5a84"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example2/native/2/reference_labels__LargeBlockCorrectedNuclei.tiff",
+      "sha256": "f1bbed3348ce75d8d4158cad37c08ae4ab30d9e0a5dfbb9e259b906311811e45"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example2/native/2/reference_labels__SmallBlockCorrectedNuclei.tiff",
+      "sha256": "d31aa4bc3e9782e646820b5f3bef6f91f4fbf78bf8ee46b5260cde78e558f700"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example2/native/2/reference_labels__UncorrectedNuclei.tiff",
+      "sha256": "2f54cba8f1482ab54e8a21f71fb2a912ea8a260f8dae2bb5bccfb94994da5a84"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example2/native_preparation/native_cellprofiler_file_list.txt",
+      "sha256": "6cdd305e931eab9d08f3020e7417c974c58a57b13128e515a7ee03096bb835aa"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example2/native_preparation/native_cellprofiler_headless/ExampleIlluminationCorrection_Example2.cppipe",
+      "sha256": "e0bc950272c5ab0135fbca7982e8c825efbe56ab659e376402a5e4cf4d986224"
+    }
+  ],
+  "native_image_set_count": 1,
+  "native_input_inventory_after": [
+    {
+      "path": "--W00001--P00001--Z00000--T00000--cherry.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/--W00001--P00001--Z00000--T00000--cherry.tif",
+      "size_bytes": 1660533,
+      "sha256": "f073bc8f8102f05e6443226fcb986e7d30b3f9f0d7cd77d25c7c9f82ee11b782"
+    }
+  ]
+}

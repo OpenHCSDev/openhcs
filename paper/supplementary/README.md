@@ -488,6 +488,30 @@ records the original capture hashes and editorial crop.
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
+## Supplementary Figure 25. Autonomous repair of an internal body split
+
+![Unchanged raw image, first labels, repaired labels and repaired combined view.](../figures/slas/h002_fresh22_split_repair.png){width=5.3in}
+
+\(A) Raw image. (B) First categorical instance labels divide the continuous
+elongated body into two visible partitions. (C) Component-local seed suppression
+retains one partition in that body, while the round neighbouring body remains
+separate. (D) Repaired labels over raw. The four panels come from the same XY
+viewport at zero-based Z index 36 in the frozen independent H002 fresh22 trial.
+First and repaired raw screenshots are byte-identical. The visible colour map
+is categorical; colours are not stable object identities across candidates.
+Panels use identical editorial crops, with no pixel retouching. The repaired
+candidate's label volume is byte-identical to its final technical delivery
+retry. This is a local partition witness, not complete volume segmentation.
+Post-freeze comparison recovered all 15 manual centres within 20 voxels,
+while 11 predictions were unmatched to annotations of unestablished coverage.
+The [completion record](task_only_analysis/h002-fresh22-postfreeze-localisation.rst)
+retains that comparison and the original technical failures; the figure
+provenance records source hashes and crops.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
 ## Supplementary Table 1. Reusable libraries and their roles
 
 | Library | Role in OpenHCS |
@@ -569,12 +593,15 @@ translocation overlay compared alongside its SQLite values.
 
 The [observations](../../benchmark/results/official30_unified_value_comparison_20260916/observations.csv),
 [phase timings](../../benchmark/results/official30_unified_value_comparison_20260916/phase_timing.csv),
-[summary](../../benchmark/results/official30_unified_value_comparison_20260916/summary.csv)
-and [run environment](../../benchmark/results/official30_unified_value_comparison_20260916/run_environment.json)
-retain the result and exact candidate source identities. The candidate used
-OpenHCS 0.8.5 current source on Python 3.12.3, NumPy 2.1.3 and SciPy 1.18.1.
-The selected native references used CellProfiler 4.2.8.1 on Python 3.9.25,
-NumPy 1.24.4 and SciPy 1.9.0.
+and [summary](../../benchmark/results/official30_unified_value_comparison_20260916/summary.csv)
+retain the comparison results. The original observations identify the candidate
+as OpenHCS 0.8.5 and retain endpoint, executable and submitted-pipeline provenance.
+The full run-environment and suite-metadata records were not retained in this
+archive; its exact candidate source commit and Python, NumPy and SciPy versions
+cannot be established from those observations. The selected native references'
+original dependency environments are likewise not established by this bundle.
+Environment identities from later matched runs do not supply this missing
+historical provenance.
 
 ### Five-workflow image and object-label exports
 
@@ -691,12 +718,12 @@ timing. The summary's `n=1` counts comparison observations, not necessarily fres
 timed executions. This policy could account for a timeout-valued row, but the
 retained summary alone does not establish which path produced it.
 
-The [timing source audit](../review/slas-panel-20260910/TIMING_BOUNDARY_AUDIT.md)
-identifies the exact code locations and reproduction commands. The committed
-source establishes these timer definitions; the original run environment and
-per-run phase traces still need recovery to establish the executed snapshot.
-A new matched comparison would time the same work on both systems, separately
-for cold-start and repeated prepared execution, with repeated observations.
+The committed source establishes these timer definitions. The separate timing
+source audit document is not retained in this archive; the original run
+environment and per-run phase traces still need recovery to establish the
+executed snapshot. The subsequent matched comparison in Figure 4 uses separately
+declared execution and total intervals with three measured observations per
+engine; it does not reconstruct the missing historical timing provenance.
 
 ## Supplementary Data 2. Archived CellProfiler coverage
 
@@ -803,8 +830,7 @@ catalog-refresh and selector-lifetime fixes recorded there. It demonstrates
 registration and editor integration; the example function was not run on the
 analysis dataset.
 
-The [visual storyboard](../review/FIGURE_STORYBOARD.md) identifies the purpose
-and source of each main figure. The
+The separate visual storyboard is not retained in this archive. The
 [gallery capture record](../../website/assets/gallery/release-media-record.json)
 owns the source identities, published hashes and demonstration descriptions for
 the retained Fiji/napari panels. Figure 2 instead uses fresh matching captures
@@ -1041,6 +1067,16 @@ preserves both scores and their distinct frozen predictions. The
 retains the stale capture-state extraction qualification, original viewport
 acknowledgements and checked artifact hashes. This computational comparison
 does not establish manual biological accuracy or an isolated skill effect.
+
+A further fresh H001 author retained its first method after rejecting an
+intensity-marker alternative. First and final matched 58 of 64 reference
+partitions (object F1 0.906; foreground IoU 0.980), whereas the rejected
+alternative matched the same 58 with fewer excess partitions (F1 0.928).
+This difference between visual selection and computational-reference ranking
+is retained in the [post-freeze comparison](task_only_analysis/h001-fresh22-postfreeze-comparison.rst),
+along with all candidate scores, source hashes, independently reconciled
+areas and terminal evidence. The repeat is not an accuracy gain over the
+earlier best result.
 
 A separate public translocation trial, `BBBC013_REPEAT94`, compiled the full
 plate but was terminated at its configured 4.5 GiB scope limit. Complete masks
