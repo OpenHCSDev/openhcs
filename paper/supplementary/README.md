@@ -1559,6 +1559,14 @@ assembly from autonomous stitching discovery.
 
 ## Software snapshots and evidence
 
+A subsequent independent paired DNA/actin author recovered three crowded
+nuclear omissions and excluded two cell candidates with no growth beyond their
+nuclear seeds. Its final 56 nuclei and 54 retained cell regions have reconciled
+labels, areas and parent relationships. The
+[qualified completed repair](task_only_analysis/h003-fresh26-qualified-completion.rst)
+records independent matched-view review and full own-nucleus containment,
+without treating uncertain cell boundaries as a failure of useful localisation.
+
 | Evidence | Software identity | What the record establishes |
 |------------------------------|------------------------------|----------------------------------------|
 | May CellProfiler benchmark | Co-committed source `f58bca4e9`; executed environment still to be recovered | Retained comparison and timing summaries, worker and memory observations |

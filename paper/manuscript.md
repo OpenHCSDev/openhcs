@@ -509,6 +509,13 @@ only their nuclear seeds; the author identified both rather than presenting
 them as complete cells. This is useful autonomous nuclear segmentation and
 provisional body geometry, without a manual-reference accuracy estimate.
 
+A subsequent fresh paired-field author recovered three crowded nuclear misses
+and excluded two seed-only cell candidates without supported actin growth.
+Its final result retained 56 nuclei and 54 cell regions. Independent review
+confirmed useful distributed geometry and complete own-nucleus containment
+across all retained cells; faint splitting and diffuse cell boundaries remained
+uncertain (Supplementary Data 8).
+
 A separate retinal author smoothed fragmented body outlines while preserving
 an inspected bright neighbouring pair (Supplementary Figure 22). The matched
 raw captures were byte-identical before and after repair, separating the
