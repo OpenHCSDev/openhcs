@@ -19,15 +19,16 @@ Hoechst association is not sufficient to identify every RBPMS-positive body.
 The final complete PipelineDocument SHA256 is
 ``0d0ea95b2cab5df73d2af186a05252b45cb931a5e5c3b82e2c7661948edd5c89``.
 A registered plane-local custom callable computes the nonnegative difference
-between Gaussian6 and Gaussian60 of raw/255. Disk closing radius16 precedes
-manual threshold0.015, diameter admission50--200, SHAPE markers/watershed and
-marker suppression80. The output supports attempted mask geometry, not raw
+between Gaussian filters with sigma 6 and 60 pixels applied to raw/255. Disk
+closing radius 16 precedes manual threshold 0.015, diameter admission 50--200,
+SHAPE markers/watershed and marker suppression 80. The output supports
+attempted mask geometry, not raw
 fluorescence quantification. The custom callable retained named diagnostic
 outputs and ordinary registry/runtime ownership; it did not parse files or
 control a viewer.
 
-FIRST produced100 regions without closing. Closing10 produced102; closing16
-with suppression60 produced112; suppression80 produced106. These are candidate
+FIRST produced 100 regions without closing. Closing 10 produced 102; closing 16
+with suppression 60 produced 112; suppression 80 produced 106. These are candidate
 counts, not four independent biological replicates. The author measured regional
 processed response before proposing FIRST, but those small controls did not
 establish field-wide specificity. Before the last repair, measured fragment
@@ -37,11 +38,11 @@ established by those chords.
 Independent visual review
 -------------------------
 
-The parent personally opened12 original native PNGs: repair02 NE raw/result/
+The parent personally opened 12 original native PNGs: repair02 NE raw/result/
 combined and repair03 NE, NW and SE raw/result/combined. Corresponding capture
 custody reports render_complete, exact visible route sets and fixed camera
-centres. Native (y,x) centres are NE(600,2100), NW(600,700), SE(1900,1900),
-zoom7. RBPMS uses0--63, gamma1. The NE raw image is byte-identical between
+centres. Native (y,x) centres are NE (600,2100), NW (600,700), SE (1900,1900),
+zoom 7. RBPMS uses 0--63, gamma 1. The NE raw image is byte-identical between
 repair02 and repair03. Each triplet retains one raw route, the intended result
 route or both; earlier results are not treated as current overlays.
 
@@ -56,7 +57,9 @@ the review does not independently decide every lobe's cell identity.
 
 Thus useful localisation is retained while complete instance separation and
 dim-body extent remain inadequate. No fraction of all true cells detected,
-manual-count agreement or boundary accuracy is inferred from these12 views.
+manual-count agreement or boundary accuracy is inferred from these 12 views.
+These selected views directly establish the pair-joining regression, not every
+earlier benefit of gap filling reported by the author.
 The parent did not independently inspect every author capture or repeat the
 author's whole-field and all-channel review. Some stored full-state snapshots
 precede later presentation controls; immediate isolation, viewport and window
@@ -65,15 +68,16 @@ receipts establish the particular comparison, not every full-state field.
 Artifact reconciliation and custody
 -----------------------------------
 
-The parent independently reopened the final2586-by-2586 int32 label TIFF and
-the per-object CSV:106 nonzero IDs and106 rows. The label artifact SHA256 is
+The parent independently reopened the final 2586-by-2586 int32 label TIFF and
+the per-object CSV: 106 nonzero IDs and 106 unique rows with identical ID sets.
+Every exported area equals its saved label pixel count. The label artifact SHA256 is
 ``5ea9d332e0e2a05d5275a8cb02a08b5e35219fd4d426d9f8caf095c37ffade1f``.
-Ten labels touch the source edge:1,2,3,4,5,8,79,87,98,106. The remaining96
-are nonborder candidates, not validated cells. The viewer's108 ROI contour
-features are distinct from106 parent identities and cannot be counted as cells.
+Ten labels touch the source edge: 1, 2, 3, 4, 5, 8, 79, 87, 98, 106. The remaining 96
+are nonborder candidates, not validated cells. The viewer's 108 ROI contour
+features are distinct from 106 parent identities and cannot be counted as cells.
 
-All1096 declared scientific payload hashes were independently checked,
-covering1,666,299,948 manifest bytes. Of400 control entries,397 matched complete
+All 1096 declared scientific payload hashes were independently checked,
+covering 1,666,299,948 manifest bytes. Of 400 control entries, 397 matched complete
 files; three continuing journals matched their exact recorded byte prefixes.
 These are manifest scopes, not exclusive disk usage. Prefix matches do not
 establish that the later complete journal is identical to its frozen prefix;
@@ -81,7 +85,7 @@ the harness owns separate postwriter seals. Original manifests and reports
 were not rewritten by this review.
 
 The author retained typed shutdown receipts for the exact native and viewer
-incarnations. The client exit code2 is preserved separately from successful
+incarnations. The client exit code 2 is preserved separately from successful
 owned-runtime closure and biological rejection. No unknown operation was
 replayed. This checkpoint is an autonomous attempted repair with explicit
 failure recognition, not proof of fresh-author improvement from later skill

@@ -521,7 +521,7 @@ uniform gain: gap filling recovered some soma support, but stronger marker
 suppression joined a neighbouring pair. Its final 106-region candidate retained
 plausible bright-body localisation alongside incomplete dim rims and uncertain
 instance boundaries. The author detected these conflicts and rejected a complete
-cell census. Independent matched-view review confirmed the local trade-off;
+cell census. Independent matched-view review confirmed the pair-joining regression;
 manual-reference accuracy remains unmeasured (Supplementary Data 8).
 
 Public neurite-field authors recovered clear process segments while weak
