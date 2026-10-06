@@ -1,0 +1,14 @@
+{
+  "generator_sha256": "2e7d4ec1c9a3cf47e8f30788262b520bdf3d4fef0cc49c4bb2bbe4e4019e62ef",
+  "source_sha256": {
+    "paper/figures/slas/h004_main_shafts.png": "ff2451cec52fa68080e893e149921ca2668450b58a4ffafaa5c844551bb3caa8",
+    "paper/figures/slas/h004_junction_native.png": "587e55c5df3f579ae084452cba02cbde434becc2b2fc9626de0462316f344b42"
+  },
+  "ui_crops": [],
+  "output_sha256": {
+    "h004_assay_review.png": "217022656131bf88a4867c589ec90a5e771c3e6b166c58c94d691d710bef09c3",
+    "h004_assay_review.pdf": "a6db3d22dd0eb6a11b7e711659bbd0fc2020756e9f63eb8344a8c286417ccd86",
+    "h004_assay_review.svg": "a648eb02128db3cbef14be04499ab33c835aa31a4849ad3284cf68690b8cb4d0"
+  },
+  "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
+}
