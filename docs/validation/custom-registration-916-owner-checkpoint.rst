@@ -58,14 +58,59 @@ Original evidence root:
 /home/ts/wt/openhcs-issue-batch-20260929/engineering-registration-916-20261005
 (controls01.log/.time, AST-BEFORE.json, AST-AFTER.json, source-check01).
 
-Remaining installed acceptance
-------------------------------
+Installed public acceptance and closure
+---------------------------------------
 
-Use one newly recorded synthetic registration through ordinary installed MCP
-and an explicitly owned native endpoint: native declaration error must retain
-its original cause and native observation handle; a separate valid synthetic
-callable must register exactly once, discover, compile and execute with original
-raw values and an admitted persisted source. Exact typed closure follows.
-Dewey owns released endpoint custody. This is not permission to adopt the
-original P001 native/client or to replay original00326; receiving19/20 and
-current science remain unchanged. Issue916 remains open pending that path.
+Ordinary receiving21 pins eaf161df38147f5834f41e10cf1be8a81235fc80,
+wheel SHA256 88f1aeaea5baeb4225a0deab9d6b067350aec47482aedf868fa371547590e32f.
+Whole wheel RECORD/source and 13 managed skill files qualified; fresh MCP
+health and context retrieval passed. No shared environment was altered.
+
+Original persistent client02 handle66578 selected freshly owned native2281416,
+creation1791245041.4, TCP6022 on released display89; MCP2281333 was distinct.
+No viewer or science session was adopted. One deliberately undecorated source
+returned the native ValidationError (zero decorated functions) and the correct
+native observation handle, rather than masking it with MCP/native mismatch.
+Read-only observation returned not_observed; that alone is not proof of no
+mutation. The separate valid registration_probe916 source was submitted once,
+registered once and persisted byte-identically (SHA256
+fc86957e0d4e6972a9f501b68543b4454f81da3742a51a703bf340d9d7e1ecce).
+Public discovery described its declared PURE_3D contract and image output.
+
+Original pipeline01 incorrectly selected ImageXpress for loose synthetic TIFFs
+without mandatory HTD metadata. Its compile refusal remains preserved. Distinct
+pipeline02 uses the existing SOURCE_BINDINGS handler, LazySourceBindingsConfig,
+filename metadata extraction and a named Fixture binding. Public artifact-plan
+compiled all four source planes Z0..3. One execute-source request created
+session-1/job-1, execution ede25c2f-9062-444a-9d8e-ea2c4e231838, and completed
+with errors empty. Saved four uint16 5x7 planes exactly equal z*100+y*7+x:
+140 original pixels preserved; original input hashes are unchanged.
+
+Exact typed close acknowledged endpoint termination and process_exited=true
+for native2281416/1791245041.4. Native and MCP PIDs were independently absent;
+6022/7022 had no listeners. Original client66578 terminal1 is the aggregate
+disposition of retained tool errors, not a failed typed close. The recorder
+ended normally with COMMAND_EXIT_CODE=1. First client97487 terminal2 retains
+predispatch syntax errors and a lock-file path admission refusal; it never
+returned a native handle. Client02 admits only the exact owned transport lock
+paths through the existing launch owner. Nothing uncertain was resubmitted.
+
+Other retained negatives: incorrect observation driver argument, catalog ping
+refusal while registration refreshed the catalog, and pipeline01 metadata
+refusal. Explicit same-owner catalog preparation later returned READY; no
+registration was repeated. These are not fabricated all-tools-pass receipts.
+
+Evidence root:
+/home/ts/wt/openhcs-issue-batch-20260929/engineering-registration-916-20261005/public-case01
+contains both original journals, both pipeline revisions, PUBLIC-REPLIES02.json,
+PIXEL-VERIFICATION02.json, original sources, persisted source and TIFF outputs.
+Final journal SHA256s: stdin99e46a51f9a496332781b44a73568c8742ff2e8ce891e083429ba0eb1b4b37d1,
+stdout3e2212cd13274c75cd4555425ad9c4adb1ea55ee5f961cfcf8bfa207bed6305a,
+timingb467465b2b4e7b0b0ab87dfab85bb8c74a2281fc64f66240badcad38f19b6f47.
+
+Normal final main integration used 354be9f9f; determining changes do not touch
+the registration DTO or endpoint projection owner. Installed acceptance
+qualifies the unchanged registration owner hunk, not those later unrelated
+measurement changes. Issue916's caller-side error projection is repaired;
+the original00326 native cause remains unknown and was never replayed.
+Receiving19/20 and live scientific authors remain unchanged. Lane89 is released.
