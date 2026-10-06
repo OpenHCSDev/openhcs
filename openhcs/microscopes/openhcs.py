@@ -315,15 +315,23 @@ class OpenHCSMetadataHandler(MetadataHandler, OpenHCSMetadataBase):
         return list(self.get_grid_dimensions(plate_path))
 
     def get_pixel_size(self, plate_path: Union[str, Path]) -> float:
-        """Resolve physical calibration before the legacy numeric metadata view."""
+        """Require declared physical calibration, never the numeric metadata view."""
+        return SourceVoxelSpacing.require_physical_pixel_size(
+            self._source_voxel_spacings(plate_path)
+        )
+
+    def source_voxel_spacing(self, plate_path: Union[str, Path]) -> SourceVoxelSpacing:
+        """Preserve the stored source frame, including unknown/relative units."""
+        return SourceVoxelSpacing.common(self._source_voxel_spacings(plate_path))
+
+    def _source_voxel_spacings(
+        self, plate_path: Union[str, Path]
+    ) -> tuple[SourceVoxelSpacing, ...]:
+        """Decode source declarations once for scalar and coordinate projections."""
         metadata = self._load_metadata(plate_path)
-        spacings = tuple(
+        return tuple(
             SourceVoxelSpacing.from_source_metadata(source)
             for source in metadata.get(FIELDS.SOURCE_METADATA, {}).values()
-        )
-        return SourceVoxelSpacing.resolve_physical_pixel_size(
-            spacings,
-            legacy_metadata_pixel_size=self.get_metadata_pixel_size(plate_path),
         )
 
     def get_metadata_pixel_size(self, plate_path: Union[str, Path]) -> float:

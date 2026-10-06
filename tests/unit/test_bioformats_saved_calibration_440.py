@@ -13,6 +13,7 @@ from polystore.roi import load_rois_from_zip
 from openhcs.constants.constants import Backend
 from openhcs.core.roi_source_metadata import ROIArchiveSourceMetadata
 from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
+from openhcs.core.runtime_image_values import ImagePayloadMetadata
 from openhcs.core.runtime_object_labels import (
     ObjectLabelPayload,
     ObjectLabelVariantData,
@@ -24,7 +25,10 @@ from openhcs.core.source_bindings import (
     SourceSelector,
 )
 from openhcs.core.source_image_provenance import SourceImageIdentity
-from openhcs.core.source_metadata import SourceVoxelSpacing
+from openhcs.core.source_metadata import SourceVoxelSpacing, SourceVoxelSpacingUnit
+from openhcs.core.viewer_streaming_service import ViewerStreamingSource
+from openhcs.microscopes.bioformats import BioFormatsMetadataHandler
+from types import SimpleNamespace
 from openhcs.microscopes.bioformats import BioFormatsHandler
 from openhcs.microscopes.bioformats_adapter import BioFormatsAdapterUnavailableError
 from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
@@ -164,6 +168,52 @@ def test_absent_ome_calibration_does_not_invent_micrometers(tmp_path, monkeypatc
         == "pixel"
         for metadata in persisted["source_metadata"].values()
     )
+    metadata_handler = OpenHCSMetadataHandler(FileManager({Backend.DISK.value: DiskStorageBackend()}))
+    assert metadata_handler.get_metadata_pixel_size(tmp_path) == 1.0
+    assert metadata_handler.source_voxel_spacing(tmp_path) == SourceVoxelSpacing()
+    with pytest.raises(ValueError, match="micrometer calibration"):
+        metadata_handler.get_pixel_size(tmp_path)
+    source = ViewerStreamingSource(
+        filemanager=metadata_handler.filemanager,
+        microscope_handler=SimpleNamespace(metadata_handler=metadata_handler),
+        plate_path=tmp_path,
+    )
+    reopened = source.calibrated_metadata(ImagePayloadMetadata())
+    assert reopened.source_voxel_spacing == SourceVoxelSpacing()
+    assert reopened.source_voxel_spacing.layer_coordinate_kwargs(("y", "x")) == {
+        "scale": (1.0, 1.0), "units": ("pixel", "pixel"),
+    }
+
+
+@pytest.mark.parametrize("spacings,expected", (
+    ((SourceVoxelSpacing(),), SourceVoxelSpacing()),
+    ((SourceVoxelSpacing((0.65, 0.65)),), SourceVoxelSpacing((0.65, 0.65))),
+    ((SourceVoxelSpacing((2.0, 0.65, 0.65)),), SourceVoxelSpacing((2.0, 0.65, 0.65))),
+    ((SourceVoxelSpacing((1.0, 2.0), unit=SourceVoxelSpacingUnit.RELATIVE),),
+     SourceVoxelSpacing((1.0, 2.0), unit=SourceVoxelSpacingUnit.RELATIVE)),
+    ((SourceVoxelSpacing(), SourceVoxelSpacing((0.65, 0.65))), SourceVoxelSpacing()),
+    ((SourceVoxelSpacing((0.65, 0.65)), SourceVoxelSpacing((0.5, 0.5))), SourceVoxelSpacing()),
+))
+def test_store_spacing_preserves_declared_units_not_numeric_defaults(monkeypatch, spacings, expected):
+    handler = BioFormatsMetadataHandler()
+    dataset = SimpleNamespace(
+        pixel_size=1.0,
+        candidates=tuple(SimpleNamespace(metadata={}) for _ in spacings),
+    )
+    candidates = []
+    for spacing in spacings:
+        metadata = {}
+        spacing.merge_into(metadata, path="original")
+        candidates.append(SimpleNamespace(metadata=metadata))
+    dataset.candidates = tuple(candidates)
+    monkeypatch.setattr(handler, "source_dataset", lambda _: dataset)
+    assert handler.source_voxel_spacing(Path("original")) == expected
+    assert handler.get_metadata_pixel_size(Path("original")) == 1.0
+    if SourceVoxelSpacing.common_physical_pixel_size(spacings) is None:
+        with pytest.raises(ValueError, match="micrometer calibration"):
+            handler.get_pixel_size(Path("original"))
+    else:
+        assert handler.get_pixel_size(Path("original")) == 0.65
 
 
 def test_anisotropic_coordinates_are_preserved_without_a_false_scalar(
