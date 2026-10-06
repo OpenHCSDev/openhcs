@@ -1474,6 +1474,14 @@ reports independent saved-array/CSV reconciliation, all 313 declared file hashes
 and exact runtime disposition. Weak-object sensitivity and boundary accuracy
 remain unmeasured; this is useful detection coverage, not an exact cell census.
 
+A subsequent independent retinal repeat retained 106 candidate parent labels
+and matching measurement rows. Gap filling improved some body support, but
+stronger marker suppression merged a neighbouring pair; incomplete dim rims
+remained. The [qualified final review](task_only_analysis/retinal-fresh25-qualified-review.rst)
+records useful bright-body localisation separately from the rejected complete
+instance inventory, with independent matched-view checks and frozen-artifact
+scope. This repeat is not a manual-reference accuracy estimate.
+
 A retained personal-neurite development continuation also analysed a reused
 nine-field mosaic with pooled channel fits. A fixed-DN clipping repair corrected
 unexpected rescaling, but dense nuclear misses and soma underfill prevented
