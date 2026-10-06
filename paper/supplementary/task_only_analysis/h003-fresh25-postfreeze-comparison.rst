@@ -34,6 +34,49 @@ pair, alongside an ambiguous clipped border pair. This six-capture check is
 not a complete biological review or independent confirmation of every author
 capture. All other candidate files and captures remain in the original freeze.
 
+Cause traced through frozen stages
+---------------------------------
+
+An independent postfreeze stage comparison found identical threshold support
+and initial component arrays in FIRST and all three repairs: 19,206 foreground
+pixels and 46 connected components. REPAIR1 also retained FIRST's marker and
+label arrays exactly. Thus the regression does not originate in a changed
+threshold, source channel, background correction or display window.
+
+The scientific changes were from SHAPE markers with suppression 8 to INTENSITY
+markers with smoothing 2 and suppression 12, while retaining SHAPE watershed.
+FIRST and FINAL both emitted 58 markers, but accepted 55 and 51 objects
+respectively. Marker cardinality alone concealed changed marker positions and
+unequal watershed basins. In the central pair's initial component 27, FIRST
+gave basins of 691 and 420 pixels. FINAL still had two markers, but its basins
+were 1,105 and six pixels. The six-pixel basin failed the minimum diameter 8
+area gate (50.27 pixels); subsequent hole filling incorporated five of those
+pixels into the surviving label. The final pair therefore remained merged
+despite retaining two markers.
+
+In initial component 28, FIRST retained four basins of 313, 314, 291 and 894
+pixels. FINAL's relocated intensity markers instead produced a 1,439-pixel
+basin spanning parts of three FIRST labels, plus small partitions. The large
+basin exceeded the unchanged maximum diameter 40 area gate (1,256.64 pixels)
+and was discarded. Its overlap with FIRST labels 39, 40 and 42 was 310, 235
+and 894 pixels. FINAL loses 1,444 accepted foreground pixels relative to FIRST
+and adds none. The cell propagation method and parameters are unchanged, so
+the altered nuclear seeds propagate into different cell partitions; this is
+not evidence of an independently changed actin threshold.
+
+The saved stages identify a marker/partition interaction followed by size
+rejection, not simply too few seeds or absent raw foreground. No new
+counterfactual watershed execution has established which replacement division
+method would fix it, and these observations do not prove an infrastructure
+defect. The existing skill already distinguishes marker extraction from the
+division landscape and warns that maximum-size rejection can hide a merged
+basin. The author inspected marker responses and retuned suppression but did
+not test a different division landscape in this run. This is an evidenced
+application gap; the independent regression audit evaluates whether a more
+explicit marker-to-unfiltered-basin diagnostic would improve general guidance.
+No dataset-specific coordinates, counts or scoring answers are transferred
+into the skill or supplied to a live blind author.
+
 Scoring contract
 ----------------
 
