@@ -1,5 +1,5 @@
 {
-  "generator_sha256": "25804c8892b2459f72fd35e3493e0b7eedbdc52cc511703ed5381700e0f5d574",
+  "generator_sha256": "9a9274505beb342c83b7520e31904e2606d7dab1cf3751a03e50214cd6c687f5",
   "source_sha256": {
     "paper/figures/slas/h002_firstmethod_sources/source-receipt.json": "de1cb0cba6e9343ffbed17baeb4c712b70c29235b027a98d2f1cce8d4d134e2d",
     "paper/supplementary/task_only_analysis/h002-fresh15-postfreeze-evaluation.json": "ca34ddcfaea7dcdc16c4813f8665e3295bab08c3167571fdff4cc6d06984027d",
@@ -51,8 +51,8 @@
   ],
   "output_sha256": {
     "h002_measurement_first.png": "41a4496d661a1246e2f99b1207a427263ef061957f685ebc5c896e06c1c5368f",
-    "h002_measurement_first.pdf": "13e6a092d9380b750882a60c62bb47f60ae9ab96e5bf18d837a2734e9f2fc9ec",
-    "h002_measurement_first.svg": "12bddf96688e4835c329dfff44a6f3cddce9da7fe6248f4ad7060a28e2c777e0"
+    "h002_measurement_first.pdf": "ad1efc8cd72e00e2c31ead6fd4ab4c5070c1acd95a0cec2c02941db47e921988",
+    "h002_measurement_first.svg": "bcc7c47740b83c3e1e9740ec3fddcf8bed827b4a7306cdacbef3a0f9560df3cd"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }

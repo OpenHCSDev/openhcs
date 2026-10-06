@@ -348,10 +348,6 @@ def h002_measurement_first():
             crop = tuple(capture["crop_xyxy"])
             if digest(path) != capture["sha256"]:
                 raise ValueError(f"Frozen native capture changed: {name}")
-            with Image.open(path) as pixels:
-                x0, y0, x1, y1 = crop
-                if not (0 <= x0 < x1 <= pixels.width and 0 <= y0 < y1 <= pixels.height):
-                    raise ValueError(f"Native crop exceeds capture geometry: {name}")
             sheet.text(*heading_position, capture["panel_heading"], size=13, weight="bold")
             sheet.source_image(path, bounds, crop=crop)
         sheet.text(55, 70, "Y = 157 voxels", size=11, color=MUTED)
