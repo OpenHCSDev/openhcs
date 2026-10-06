@@ -1,0 +1,32 @@
+{
+  "status": "PREPARED_FINAL_COHORT_NOT_LAUNCHED",
+  "argv": [
+    "taskset",
+    "-c",
+    "5",
+    "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "-B",
+    "-c",
+    "import runpy,sys;from dataclasses import replace;from benchmark.runtime_env import configure_headless_cpu_benchmark_runtime;configure_headless_cpu_benchmark_runtime('WARNING');import openhcs.runtime.zmq_config as c;c.OPENHCS_ZMQ_CONFIG=replace(c.OPENHCS_ZMQ_CONFIG,client_connect_timeout_seconds=180.0);sys.argv=['benchmark.matched_cellprofiler_batch',*sys.argv[1:]];runpy.run_module('benchmark.matched_cellprofiler_batch',run_name='__main__')",
+    "--manifest",
+    "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/official30-prioritized-manifest.json",
+    "--all-cases",
+    "--well-count",
+    "1",
+    "--openhcs-workers",
+    "1",
+    "--native-jobs",
+    "1",
+    "--repetitions",
+    "3",
+    "--native-python",
+    "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+    "--output-dir",
+    "/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v16/cases",
+    "--native-reference-root",
+    "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases"
+  ],
+  "protocol": "All30 original prioritized authored manifest cases, unchanged1well1worker onCPU5, warmup plus3 ordinary measured repetitions. Actualmain56c includes columnar plate-wide spreadsheet owner1040, compiler snapshot1029 and qualified source/geometry repairs. Strict original genuine nativev11 reference reuse; complete OH server execution and compile+execute disjoint client total. Server/catalog/kernel/import/JVM/readiness/SCI excluded; no projected native timing. Derive final figures only after all30 science/custody and clean-source completion.",
+  "source_freeze_head": "56c3da776ccc12688b4566f7b0c0ef728e6bc7c6",
+  "native_reference_scope": "All30 genuine completed native observations v11/cases, original strict workload/source/environment/input/output guards; no projected native timing."
+}

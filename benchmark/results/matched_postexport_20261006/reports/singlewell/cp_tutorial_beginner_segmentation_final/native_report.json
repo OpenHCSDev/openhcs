@@ -1,0 +1,105 @@
+{
+  "startup_seconds": 0.831810305826366,
+  "environment": {
+    "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+    "python_version": "3.9.25",
+    "cellprofiler_version": "4.2.8.1",
+    "cellprofiler_core_version": "4.2.8.1",
+    "numpy_version": "1.24.4",
+    "scipy_version": "1.9.0",
+    "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_beginner_segmentation_final/native_tmp",
+    "temporary_device": 66306,
+    "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+    "host_node": "ts-gaming",
+    "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+    "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+    "cpu_affinity": [
+      5
+    ]
+  },
+  "request": {
+    "pipeline_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_beginner_segmentation_final/native_preparation/native_cellprofiler_headless/segmentation_final.cppipe",
+    "input_dir": "/home/ts/.cache/openhcs/benchmark_datasets/CellProfiler_tutorials/data/BeginnerSegmentation/images_Illum-corrected",
+    "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_beginner_segmentation_final/native",
+    "expected_image_sets": null,
+    "repetitions": 3,
+    "file_list_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_beginner_segmentation_final/native_preparation/native_cellprofiler_file_list.txt",
+    "first_image_set": 1,
+    "last_image_set": null,
+    "report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_beginner_segmentation_final/native_report.json",
+    "start_barrier_root": null,
+    "start_barrier_job_count": 1,
+    "start_barrier_job_index": 0,
+    "assignment_output_subdirectories": []
+  },
+  "observations": [
+    {
+      "repetition": -1,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_beginner_segmentation_final/native/-1",
+      "image_set_count": 2,
+      "invocation_seconds": 16.251553243026137,
+      "pre_pipeline_seconds": 0.0015491270460188389,
+      "pipeline_execution_seconds": 16.25000411598012,
+      "invocation_started_monotonic_seconds": 4043300.466464086,
+      "pipeline_started_monotonic_seconds": 4043300.468013213,
+      "completed_monotonic_seconds": 4043316.718017329,
+      "assignment_image_set_counts": [
+        [
+          "",
+          2
+        ]
+      ]
+    },
+    {
+      "repetition": 0,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_beginner_segmentation_final/native/0",
+      "image_set_count": 2,
+      "invocation_seconds": 15.263865604996681,
+      "pre_pipeline_seconds": 0.000887060072273016,
+      "pipeline_execution_seconds": 15.262978544924408,
+      "invocation_started_monotonic_seconds": 4043316.718031476,
+      "pipeline_started_monotonic_seconds": 4043316.718918536,
+      "completed_monotonic_seconds": 4043331.981897081,
+      "assignment_image_set_counts": [
+        [
+          "",
+          2
+        ]
+      ]
+    },
+    {
+      "repetition": 1,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_beginner_segmentation_final/native/1",
+      "image_set_count": 2,
+      "invocation_seconds": 15.290614362806082,
+      "pre_pipeline_seconds": 0.0011836388148367405,
+      "pipeline_execution_seconds": 15.289430723991245,
+      "invocation_started_monotonic_seconds": 4043331.98191792,
+      "pipeline_started_monotonic_seconds": 4043331.983101559,
+      "completed_monotonic_seconds": 4043347.272532283,
+      "assignment_image_set_counts": [
+        [
+          "",
+          2
+        ]
+      ]
+    },
+    {
+      "repetition": 2,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/cp_tutorial_beginner_segmentation_final/native/2",
+      "image_set_count": 2,
+      "invocation_seconds": 14.739612061996013,
+      "pre_pipeline_seconds": 0.001058313064277172,
+      "pipeline_execution_seconds": 14.738553748931736,
+      "invocation_started_monotonic_seconds": 4043347.272547712,
+      "pipeline_started_monotonic_seconds": 4043347.273606025,
+      "completed_monotonic_seconds": 4043362.012159774,
+      "assignment_image_set_counts": [
+        [
+          "",
+          2
+        ]
+      ]
+    }
+  ]
+}

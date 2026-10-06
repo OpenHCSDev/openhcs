@@ -1,0 +1,646 @@
+[
+  {
+    "startup_seconds": 0.8061930881813169,
+    "environment": {
+      "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+      "python_version": "3.9.25",
+      "cellprofiler_version": "4.2.8.1",
+      "cellprofiler_core_version": "4.2.8.1",
+      "numpy_version": "1.24.4",
+      "scipy_version": "1.9.0",
+      "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/0_tmp",
+      "temporary_device": 66306,
+      "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+      "host_node": "ts-gaming",
+      "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+      "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+      "cpu_affinity": [
+        1,
+        2,
+        4,
+        5
+      ]
+    },
+    "request": {
+      "pipeline_path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_preparation/native_cellprofiler_headless/ExampleIlluminationCorrection_Example3.cppipe",
+      "input_dir": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images",
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/0",
+      "expected_image_sets": 4,
+      "repetitions": 3,
+      "file_list_path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_preparation/native_cellprofiler_file_list.txt",
+      "first_image_set": 1,
+      "last_image_set": null,
+      "report_path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/0_report.json",
+      "start_barrier_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier",
+      "start_barrier_job_count": 4,
+      "start_barrier_job_index": 0,
+      "assignment_output_subdirectories": [
+        "W001",
+        "W002",
+        "W003",
+        "W004"
+      ]
+    },
+    "observations": [
+      {
+        "repetition": -1,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/0/-1",
+        "image_set_count": 4,
+        "invocation_seconds": 3.893658078275621,
+        "pre_pipeline_seconds": 0.0016323551535606384,
+        "pipeline_execution_seconds": 3.8920257231220603,
+        "invocation_started_monotonic_seconds": 4081736.932070485,
+        "pipeline_started_monotonic_seconds": 4081736.93370284,
+        "completed_monotonic_seconds": 4081740.825728563,
+        "assignment_image_set_counts": [
+          [
+            "W001",
+            1
+          ],
+          [
+            "W002",
+            1
+          ],
+          [
+            "W003",
+            1
+          ],
+          [
+            "W004",
+            1
+          ]
+        ]
+      },
+      {
+        "repetition": 0,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/0/0",
+        "image_set_count": 4,
+        "invocation_seconds": 2.6245491979643703,
+        "pre_pipeline_seconds": 0.0009597679600119591,
+        "pipeline_execution_seconds": 2.6235894300043583,
+        "invocation_started_monotonic_seconds": 4081741.212738935,
+        "pipeline_started_monotonic_seconds": 4081741.213698703,
+        "completed_monotonic_seconds": 4081743.837288133,
+        "assignment_image_set_counts": [
+          [
+            "W001",
+            1
+          ],
+          [
+            "W002",
+            1
+          ],
+          [
+            "W003",
+            1
+          ],
+          [
+            "W004",
+            1
+          ]
+        ]
+      },
+      {
+        "repetition": 1,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/0/1",
+        "image_set_count": 4,
+        "invocation_seconds": 2.466643919236958,
+        "pre_pipeline_seconds": 0.0009958059526979923,
+        "pipeline_execution_seconds": 2.46564811328426,
+        "invocation_started_monotonic_seconds": 4081743.881069299,
+        "pipeline_started_monotonic_seconds": 4081743.882065105,
+        "completed_monotonic_seconds": 4081746.347713218,
+        "assignment_image_set_counts": [
+          [
+            "W001",
+            1
+          ],
+          [
+            "W002",
+            1
+          ],
+          [
+            "W003",
+            1
+          ],
+          [
+            "W004",
+            1
+          ]
+        ]
+      },
+      {
+        "repetition": 2,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/0/2",
+        "image_set_count": 4,
+        "invocation_seconds": 2.2933634417131543,
+        "pre_pipeline_seconds": 0.0007003899663686752,
+        "pipeline_execution_seconds": 2.2926630517467856,
+        "invocation_started_monotonic_seconds": 4081746.347845096,
+        "pipeline_started_monotonic_seconds": 4081746.348545486,
+        "completed_monotonic_seconds": 4081748.641208538,
+        "assignment_image_set_counts": [
+          [
+            "W001",
+            1
+          ],
+          [
+            "W002",
+            1
+          ],
+          [
+            "W003",
+            1
+          ],
+          [
+            "W004",
+            1
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "startup_seconds": 0.7858710610307753,
+    "environment": {
+      "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+      "python_version": "3.9.25",
+      "cellprofiler_version": "4.2.8.1",
+      "cellprofiler_core_version": "4.2.8.1",
+      "numpy_version": "1.24.4",
+      "scipy_version": "1.9.0",
+      "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/1_tmp",
+      "temporary_device": 66306,
+      "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+      "host_node": "ts-gaming",
+      "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+      "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+      "cpu_affinity": [
+        1,
+        2,
+        4,
+        5
+      ]
+    },
+    "request": {
+      "pipeline_path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_preparation/native_cellprofiler_headless/ExampleIlluminationCorrection_Example3.cppipe",
+      "input_dir": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images",
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/1",
+      "expected_image_sets": 4,
+      "repetitions": 3,
+      "file_list_path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_preparation/native_cellprofiler_file_list.txt",
+      "first_image_set": 1,
+      "last_image_set": null,
+      "report_path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/1_report.json",
+      "start_barrier_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier",
+      "start_barrier_job_count": 4,
+      "start_barrier_job_index": 1,
+      "assignment_output_subdirectories": [
+        "W005",
+        "W006",
+        "W007",
+        "W008"
+      ]
+    },
+    "observations": [
+      {
+        "repetition": -1,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/1/-1",
+        "image_set_count": 4,
+        "invocation_seconds": 3.8303594109602273,
+        "pre_pipeline_seconds": 0.001632185187190771,
+        "pipeline_execution_seconds": 3.8287272257730365,
+        "invocation_started_monotonic_seconds": 4081736.896192539,
+        "pipeline_started_monotonic_seconds": 4081736.897824724,
+        "completed_monotonic_seconds": 4081740.72655195,
+        "assignment_image_set_counts": [
+          [
+            "W005",
+            1
+          ],
+          [
+            "W006",
+            1
+          ],
+          [
+            "W007",
+            1
+          ],
+          [
+            "W008",
+            1
+          ]
+        ]
+      },
+      {
+        "repetition": 0,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/1/0",
+        "image_set_count": 4,
+        "invocation_seconds": 2.5805652011185884,
+        "pre_pipeline_seconds": 0.0008709109388291836,
+        "pipeline_execution_seconds": 2.5796942901797593,
+        "invocation_started_monotonic_seconds": 4081741.215741211,
+        "pipeline_started_monotonic_seconds": 4081741.216612122,
+        "completed_monotonic_seconds": 4081743.796306412,
+        "assignment_image_set_counts": [
+          [
+            "W005",
+            1
+          ],
+          [
+            "W006",
+            1
+          ],
+          [
+            "W007",
+            1
+          ],
+          [
+            "W008",
+            1
+          ]
+        ]
+      },
+      {
+        "repetition": 1,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/1/1",
+        "image_set_count": 4,
+        "invocation_seconds": 2.161106093786657,
+        "pre_pipeline_seconds": 0.0010047927498817444,
+        "pipeline_execution_seconds": 2.160101301036775,
+        "invocation_started_monotonic_seconds": 4081743.877420254,
+        "pipeline_started_monotonic_seconds": 4081743.878425047,
+        "completed_monotonic_seconds": 4081746.038526348,
+        "assignment_image_set_counts": [
+          [
+            "W005",
+            1
+          ],
+          [
+            "W006",
+            1
+          ],
+          [
+            "W007",
+            1
+          ],
+          [
+            "W008",
+            1
+          ]
+        ]
+      },
+      {
+        "repetition": 2,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/1/2",
+        "image_set_count": 4,
+        "invocation_seconds": 2.2924283500760794,
+        "pre_pipeline_seconds": 0.00115117896348238,
+        "pipeline_execution_seconds": 2.291277171112597,
+        "invocation_started_monotonic_seconds": 4081746.351937005,
+        "pipeline_started_monotonic_seconds": 4081746.353088184,
+        "completed_monotonic_seconds": 4081748.644365355,
+        "assignment_image_set_counts": [
+          [
+            "W005",
+            1
+          ],
+          [
+            "W006",
+            1
+          ],
+          [
+            "W007",
+            1
+          ],
+          [
+            "W008",
+            1
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "startup_seconds": 0.9676179890520871,
+    "environment": {
+      "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+      "python_version": "3.9.25",
+      "cellprofiler_version": "4.2.8.1",
+      "cellprofiler_core_version": "4.2.8.1",
+      "numpy_version": "1.24.4",
+      "scipy_version": "1.9.0",
+      "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/2_tmp",
+      "temporary_device": 66306,
+      "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+      "host_node": "ts-gaming",
+      "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+      "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+      "cpu_affinity": [
+        1,
+        2,
+        4,
+        5
+      ]
+    },
+    "request": {
+      "pipeline_path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_preparation/native_cellprofiler_headless/ExampleIlluminationCorrection_Example3.cppipe",
+      "input_dir": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images",
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/2",
+      "expected_image_sets": 4,
+      "repetitions": 3,
+      "file_list_path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_preparation/native_cellprofiler_file_list.txt",
+      "first_image_set": 1,
+      "last_image_set": null,
+      "report_path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/2_report.json",
+      "start_barrier_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier",
+      "start_barrier_job_count": 4,
+      "start_barrier_job_index": 2,
+      "assignment_output_subdirectories": [
+        "W009",
+        "W010",
+        "W011",
+        "W012"
+      ]
+    },
+    "observations": [
+      {
+        "repetition": -1,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/2/-1",
+        "image_set_count": 4,
+        "invocation_seconds": 3.612367495894432,
+        "pre_pipeline_seconds": 0.002956980839371681,
+        "pipeline_execution_seconds": 3.6094105150550604,
+        "invocation_started_monotonic_seconds": 4081737.599417812,
+        "pipeline_started_monotonic_seconds": 4081737.602374793,
+        "completed_monotonic_seconds": 4081741.211785308,
+        "assignment_image_set_counts": [
+          [
+            "W009",
+            1
+          ],
+          [
+            "W010",
+            1
+          ],
+          [
+            "W011",
+            1
+          ],
+          [
+            "W012",
+            1
+          ]
+        ]
+      },
+      {
+        "repetition": 0,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/2/0",
+        "image_set_count": 4,
+        "invocation_seconds": 2.596961402334273,
+        "pre_pipeline_seconds": 0.0007044272497296333,
+        "pipeline_execution_seconds": 2.5962569750845432,
+        "invocation_started_monotonic_seconds": 4081741.211907739,
+        "pipeline_started_monotonic_seconds": 4081741.212612166,
+        "completed_monotonic_seconds": 4081743.808869141,
+        "assignment_image_set_counts": [
+          [
+            "W009",
+            1
+          ],
+          [
+            "W010",
+            1
+          ],
+          [
+            "W011",
+            1
+          ],
+          [
+            "W012",
+            1
+          ]
+        ]
+      },
+      {
+        "repetition": 1,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/2/1",
+        "image_set_count": 4,
+        "invocation_seconds": 2.4734744178131223,
+        "pre_pipeline_seconds": 0.0009357328526675701,
+        "pipeline_execution_seconds": 2.4725386849604547,
+        "invocation_started_monotonic_seconds": 4081743.870417721,
+        "pipeline_started_monotonic_seconds": 4081743.871353454,
+        "completed_monotonic_seconds": 4081746.343892139,
+        "assignment_image_set_counts": [
+          [
+            "W009",
+            1
+          ],
+          [
+            "W010",
+            1
+          ],
+          [
+            "W011",
+            1
+          ],
+          [
+            "W012",
+            1
+          ]
+        ]
+      },
+      {
+        "repetition": 2,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/2/2",
+        "image_set_count": 4,
+        "invocation_seconds": 2.358329551294446,
+        "pre_pipeline_seconds": 0.0009839539416134357,
+        "pipeline_execution_seconds": 2.3573455973528326,
+        "invocation_started_monotonic_seconds": 4081746.356843549,
+        "pipeline_started_monotonic_seconds": 4081746.357827503,
+        "completed_monotonic_seconds": 4081748.7151731,
+        "assignment_image_set_counts": [
+          [
+            "W009",
+            1
+          ],
+          [
+            "W010",
+            1
+          ],
+          [
+            "W011",
+            1
+          ],
+          [
+            "W012",
+            1
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "startup_seconds": 0.900294910185039,
+    "environment": {
+      "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+      "python_version": "3.9.25",
+      "cellprofiler_version": "4.2.8.1",
+      "cellprofiler_core_version": "4.2.8.1",
+      "numpy_version": "1.24.4",
+      "scipy_version": "1.9.0",
+      "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/3_tmp",
+      "temporary_device": 66306,
+      "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+      "host_node": "ts-gaming",
+      "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+      "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+      "cpu_affinity": [
+        1,
+        2,
+        4,
+        5
+      ]
+    },
+    "request": {
+      "pipeline_path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_preparation/native_cellprofiler_headless/ExampleIlluminationCorrection_Example3.cppipe",
+      "input_dir": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images",
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/3",
+      "expected_image_sets": 4,
+      "repetitions": 3,
+      "file_list_path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_preparation/native_cellprofiler_file_list.txt",
+      "first_image_set": 1,
+      "last_image_set": null,
+      "report_path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/3_report.json",
+      "start_barrier_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier",
+      "start_barrier_job_count": 4,
+      "start_barrier_job_index": 3,
+      "assignment_output_subdirectories": [
+        "W013",
+        "W014",
+        "W015",
+        "W016"
+      ]
+    },
+    "observations": [
+      {
+        "repetition": -1,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/3/-1",
+        "image_set_count": 4,
+        "invocation_seconds": 3.8397184130735695,
+        "pre_pipeline_seconds": 0.0016482449136674404,
+        "pipeline_execution_seconds": 3.838070168159902,
+        "invocation_started_monotonic_seconds": 4081737.011927038,
+        "pipeline_started_monotonic_seconds": 4081737.013575283,
+        "completed_monotonic_seconds": 4081740.851645451,
+        "assignment_image_set_counts": [
+          [
+            "W013",
+            1
+          ],
+          [
+            "W014",
+            1
+          ],
+          [
+            "W015",
+            1
+          ],
+          [
+            "W016",
+            1
+          ]
+        ]
+      },
+      {
+        "repetition": 0,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/3/0",
+        "image_set_count": 4,
+        "invocation_seconds": 2.6532128620892763,
+        "pre_pipeline_seconds": 0.0010225758887827396,
+        "pipeline_execution_seconds": 2.6521902862004936,
+        "invocation_started_monotonic_seconds": 4081741.215608241,
+        "pipeline_started_monotonic_seconds": 4081741.216630817,
+        "completed_monotonic_seconds": 4081743.868821103,
+        "assignment_image_set_counts": [
+          [
+            "W013",
+            1
+          ],
+          [
+            "W014",
+            1
+          ],
+          [
+            "W015",
+            1
+          ],
+          [
+            "W016",
+            1
+          ]
+        ]
+      },
+      {
+        "repetition": 1,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/3/1",
+        "image_set_count": 4,
+        "invocation_seconds": 2.125164419412613,
+        "pre_pipeline_seconds": 0.000689289066940546,
+        "pipeline_execution_seconds": 2.1244751303456724,
+        "invocation_started_monotonic_seconds": 4081743.868932212,
+        "pipeline_started_monotonic_seconds": 4081743.869621501,
+        "completed_monotonic_seconds": 4081745.994096631,
+        "assignment_image_set_counts": [
+          [
+            "W013",
+            1
+          ],
+          [
+            "W014",
+            1
+          ],
+          [
+            "W015",
+            1
+          ],
+          [
+            "W016",
+            1
+          ]
+        ]
+      },
+      {
+        "repetition": 2,
+        "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/16assignments-4workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/3/2",
+        "image_set_count": 4,
+        "invocation_seconds": 2.2802168927155435,
+        "pre_pipeline_seconds": 0.0009604296647012234,
+        "pipeline_execution_seconds": 2.2792564630508423,
+        "invocation_started_monotonic_seconds": 4081746.348933867,
+        "pipeline_started_monotonic_seconds": 4081746.349894297,
+        "completed_monotonic_seconds": 4081748.62915076,
+        "assignment_image_set_counts": [
+          [
+            "W013",
+            1
+          ],
+          [
+            "W014",
+            1
+          ],
+          [
+            "W015",
+            1
+          ],
+          [
+            "W016",
+            1
+          ]
+        ]
+      }
+    ]
+  }
+]
