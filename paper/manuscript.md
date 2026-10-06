@@ -256,6 +256,16 @@ therefore did not rank these candidates identically. The repeat retains useful
 bright-body coverage but lower instance agreement than the earlier best run;
 it is not evidence of an accuracy gain (Supplementary Data 8).
 
+A subsequent fresh author traced a missing bright focus to size rejection:
+foreground and a marker were present, but the object failed the minimum-area
+gate. Lowering only that gate recovered two reference objects, increasing
+matches from 60 to 62 of 64 and object F1 from 0.923 to 0.939. Foreground IoU
+rose from 0.983 to 0.985. This independently selected final result approaches
+the earlier best agreement while retaining ambiguous lobed bodies and faint
+foci; it does not establish exhaustive biological detection. Reference scoring
+followed author completion and was not supplied during repair (Supplementary
+Data 8).
+
 The BBBC039 author improved object F1 from 0.908 to 0.934 on its original three fields, reducing missed reference nuclei from 39 to 25 while retaining 14 excess predictions (Figure 5C). Its final pipeline then covered all 200 fields: 20,521 of 23,615 reference nuclei matched, with precision 0.947, recall 0.869 and pooled object F1 0.906. Field F1 reached at least 0.90 in 135 fields; ten fields remained below 0.80 (Figure 5D). This distribution retains difficult fields and three annotation-empty fields rather than selecting only favorable examples. No first-attempt score across 200 fields is inferred from the three initial outputs.
 
 Native H001 views show the elongated-body false-split repair in the same scored
