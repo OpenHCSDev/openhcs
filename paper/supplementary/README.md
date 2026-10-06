@@ -1,5 +1,66 @@
 # OpenHCS supplementary material
 
+## Additional matched inspection views
+
+### An agent separates crowded nuclei but misses a faint pair
+
+![Matched first/final nuclear overlays and a final-only faint-pair failure control.](../figures/slas/h003_native_repair.png){width=6in}
+
+\(A) Matched raw DNA images and initial/final overlays show separation of a joined nuclear pair while a compact neighbour remains separate. Diffuse signal remains in the lower region. (B) Final raw, segmentation-only and combined views reveal a faint pair that remains merged. The autonomous author revised its pipeline without reference feedback. These examples demonstrate a useful correction and a remaining failure, not exhaustive detection accuracy or validation of actin-defined cell boundaries. Contrast windows differ between regions to reveal their local signal; colours do not identify objects across attempts. Capture and display settings are retained in Supplementary Data 8. Source: BBBC007v1 A02, Sabatini laboratory, Whitehead Institute; CC0.
+
+### Autonomous retinal repair preserves a neighbouring pair
+
+![Matched whole-field and regional retinal raw images and final outlines.](../figures/slas/retinal_fresh_native.png){width=5.3in}
+
+\(A) Whole-field detections against heterogeneous retinal background. (B) Northwest neighbours remain separate. (C) A southeast partition is repaired. Using only the task, MCP and packaged skill, the author recognised a pair-merging regression and retained both corrections in its final 102-instance segmentation. Diffuse regions remain uncertain (Supplementary Figure 10), and accuracy against a manual reference is unmeasured. Raw and outlined views use different intensity stretches, so brightness differs at matched positions. Supplementary Data 8 retains the original captures and display settings. Source: user-provided R0010 RBPMS-labelled retina; physical calibration is unverified.
+
+### Nuclear detection improves while cytoplasmic boundaries remain uncertain
+
+![Same-author BBBC013 development views of a dim-nucleus repair, a crowded after-only control and uncertain GFP compartments.](../figures/slas/bbbc013_development_repair.png){width=6in}
+
+\(A) Matched H12 views before and after a foreground-admission adjustment show
+recovery of a dim broad profile and retained separation of nearby regions. The
+minimum-size rule was unchanged; retained intermediate measurements support
+threshold-shrunken support as the earlier loss mechanism. (B) An after-only
+bright crowded A01 control shows separate supported regions at the reviewed
+position, with touching or lobed identities still uncertain. (C) Corrected D06
+GFP views show unresolved propagated-compartment extent and ownership. Numeric
+raw windows are 0–60, 0–123 and 0–111 in A, B and C, respectively; gamma is 1.
+Colours are not cross-candidate identities. Physical calibration is unverified.
+These same-author development witnesses support a local nuclear repair, not
+exhaustive accuracy, validated translocation measurements, complete plate
+execution or fresh autonomous success. The full-plate continuation remained
+interrupted. The [source proof](task_only_analysis/bbbc013-development-source-proof.json)
+and [render receipt](task_only_analysis/bbbc013-development-render-receipt.json)
+retain the original capture, source, presentation and unchanged embed identities.
+Source: Ilya Ravkin, [Broad Bioimage Benchmark Collection BBBC013v1](https://bbbc.broadinstitute.org/BBBC013),
+[CC BY 3.0](https://creativecommons.org/licenses/by/3.0/). Adaptations comprise
+OpenHCS-derived overlays, native display windows and screenshot cropping/scaling.
+
+
+## Historical performance protocols
+
+### Matched scaling and archived comparisons
+
+Actual single-core measurements at 1, 9 and 16 repeated source assignments separate execution from compilation and client coordination (Supplementary Figure 16). Balanced comparisons at nine assignments on one/three workers and sixteen assignments on one/four workers retain measured native parallel clocks and matched outputs (Supplementary Figure 17). Four-worker OpenHCS execution efficiencies ranged from 58.7% to 69.6% of ideal scaling, compared with 64.5% to 84.2% for native CellProfiler. OpenHCS retained 82.6% to 93.9% of native execution scaling efficiency, with execution speedups of 2.13- to 4.14-fold in these matched four-worker workloads. These measurements distinguish loss against ideal scaling from additional loss relative to native CellProfiler and do not establish near-linear scaling.
+
+The earlier analysis-focused throughput and memory measurements remain archived in Supplementary Data 3 and Supplementary Figure 7. Their configured worker and output policies differ from this output-complete matched evaluation, so their rates and memory values are not combined with the fresh timing distributions.
+
+### Archived protocols
+
+Archived May development runs measured throughput and peak memory by assigning the same source images to multiple well identifiers, creating repeated analysis work. Queue depth specifies how many assignments were supplied per configured worker. Each condition has one recorded run per workflow. The retained rows report completed assignments but do not preserve worker-process traces or per-run output inventories.
+
+Throughput varied the configured worker maximum over two, three and four,
+with four assignments per worker. The memory sweep fixed four workers and
+varied assignments per worker over one, two, three, four, six and eight.
+
+Throughput uses execution time after initialization and compilation. The recorded configuration disables default saving of named results and return of detailed worker records, and requests removal of unused steps whose outputs are not saved. Supplementary Data 3 identifies these settings, the individual runs and the limits of their historical output-policy provenance. These rows characterize that archived analysis-focused workload, not the current output-complete CellProfiler translation. Measurements cover CPU execution on local or explicitly mounted image sources; GPU and cloud or network-storage performance were not measured.
+
+The archived single-sample benchmark specifies one thread/core, CPU-only execution and no batching, with one retained comparison observation per workflow. The harness committed with the tables times the native CellProfiler command from subprocess launch through completion, including its startup. It times OpenHCS execution after initialization and compilation. Total-phase values also include different work, including benchmark validation and comparison on the OpenHCS path. Supplementary Figure 5 and Supplementary Data 1 report these observations with their timer definitions; they do not establish a like-for-like speed comparison. The wound-healing native duration equals the 900-s timeout ceiling without an explicit completion flag and is excluded from timing statistics.
+
+The supplementary package separates the release CI comparison records from the earlier performance measurements. Its software-snapshot table identifies the revision and evidence for each evaluation. Figure scripts regenerate panels from saved CSVs and record source and output checksums. Supplementary Data 6 links automated tests of workflow editing and pre-execution validation to their source and CI jobs.
+
+
 ## Supplementary Figure 1. Runtime composition
 
 ![Array axes, function patterns, named results and scheduling.](../figures/slas/runtime_composition.png){width=4.9in}
@@ -282,6 +343,21 @@ inventories and provenance accompany the [matched checkpoint](../../benchmark/re
 ```
 
 ## Supplementary Data 1. CellProfiler workflow comparison
+
+### Import, export and comparison methods
+
+Imported `ExportToDatabase` modules run once per plate after image-group processing. They collect the selected images, objects, measurements, relationships, thumbnails and grouping information into CellProfiler Analyst tables [@Jones2008]. The export produces a self-contained SQLite database and matching `.properties` files. Non-SQLite databases, custom filter rows, `.workspace` generation and some historical aggregation settings remain unsupported; unsupported requests fail or are identified in the compatibility documentation.
+
+Automated testing for the OpenHCS 0.8.5 release checked execution of all 30 imported workflows and compared selected outputs for the 25 with retained CellProfiler-produced reference values. The continuous-integration (CI) job built installable packages from the release source and its dependencies on Linux with Python 3.12. It acquired the workflows and image sets at the revisions specified in the benchmark manifest, then compiled and executed each imported workflow through the execution server. Every OpenHCS analysis ran afresh. The historical release test required 30 successful execution records and no differences in its selected comparisons. Supplementary Data 1 preserves the per-workflow observations, run metadata and tested revision.
+
+The historical release comparison selects exported values from CSV tables and CellProfiler Analyst SQLite tables and `.properties` files. Its image comparison selects files, including NumPy arrays, from native reference-output directories that contain images and no CSV files. This includes the NPY-only illumination workflow and the completed translocation tutorial's overlay alongside its SQLite measurements. Images accompanying CSV measurements in 14 historical profiles remain outside that release comparison. Absolute and relative tolerances are `1e-6` for numeric values and image pixels, with no pixels allowed outside tolerance; identifiers and categorical values are compared exactly after documented CellProfiler-compatible normalizations.
+
+The subsequent matched performance evaluation retained the complete 30-workflow manifest and compared the declared table, database and image outputs in a warmup and three measured repetitions per engine. All 120 OpenHCS observations completed without declared-output differences against complete native CellProfiler runs. These current-source observations, their output inventories and their timing boundaries are separate from the historical release comparison and are retained in the [matched benchmark record](../../benchmark/results/matched_final_20261006/README.md).
+
+For the five workflows without file exports, terminal image or object-label exports were appended while preserving the original processing modules and settings. Native CellProfiler generated eight additional reference artifacts. A subsequent unified run compiled and executed all 30 workflows afresh and compared each candidate with its selected native reference values. Object labels were compared exactly after singleton-axis normalization; numerical images used the stated float tolerances. The unified run used OpenHCS 0.8.5 current source on Python 3.12.3 with NumPy 2.1.3 and SciPy 1.18.1. Native references used CellProfiler 4.2.8.1 on Python 3.9.25 with NumPy 1.24.4 and SciPy 1.9.0. Supplementary Data 1 links the export definitions, reference inventory, per-workflow comparisons and exact source identities separately from the historical release CI records.
+
+The corpus contains 22 workflows and associated image sets from the official CellProfiler 3 examples repository, seven workflows and image sets from the official CellProfiler tutorials repository, and one workflow from the supplement to the CellProfiler 4 performance study [@CellProfilerExamples; @CellProfilerTutorials; @Stirling2021]. The CellProfiler project and the cited dataset contributors retain authorship and provenance for these materials. The retained manifest maps workflow names to pipeline and image locations; Supplementary Data 1-3 provide the corresponding comparison, coverage and throughput tables.
+
 
 This supplement indexes source tables and evaluation records. Figure scripts
 derive panels and plotted-row exports from the linked files; paths are relative
