@@ -46,14 +46,19 @@ def gaussian_filter(image: RuntimeArrayData, sigma: float = 1.0) -> np.ndarray:
     """
     Apply CellProfiler-compatible Gaussian smoothing to an image.
 
-    CellProfiler divides the user sigma by image voxel spacing before invoking
-    the library filter, so volumetric source metadata must stay on the payload."""
+    CellProfiler divides the user sigma by physical voxel spacing before
+    invoking the library filter. Assembled source cohorts and channels are
+    independent images, not additional physical dimensions.
+    """
     from skimage.filters import gaussian as skimage_gaussian
 
     pixel_data = np.asarray(image_payload_data(image))
-    spacing = image_payload_metadata(image).source_voxel_spacing.spacing_for_ndim(
-        pixel_data.ndim
+    metadata = image_payload_metadata(image)
+    spatial_axes = metadata.spatial_axes(pixel_data)
+    spacing = metadata.source_voxel_spacing.spacing_for_ndim(len(spatial_axes))
+    effective_sigma = np.zeros(pixel_data.ndim, dtype=np.float64)
+    effective_sigma[list(spatial_axes)] = np.divide(
+        float(sigma), np.asarray(spacing, dtype=np.float64)
     )
-    effective_sigma = np.divide(float(sigma), np.asarray(spacing, dtype=np.float64))
     filtered = skimage_gaussian(pixel_data, sigma=effective_sigma)
     return with_image_payload_data(image, filtered)
