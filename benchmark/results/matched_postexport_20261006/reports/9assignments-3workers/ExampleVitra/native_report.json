@@ -1,0 +1,245 @@
+{
+  "startup_seconds": 0.7281603165902197,
+  "environment": {
+    "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+    "python_version": "3.9.25",
+    "cellprofiler_version": "4.2.8.1",
+    "cellprofiler_core_version": "4.2.8.1",
+    "numpy_version": "1.24.4",
+    "scipy_version": "1.9.0",
+    "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_tmp",
+    "temporary_device": 66306,
+    "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+    "host_node": "ts-gaming",
+    "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+    "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+    "cpu_affinity": [
+      1,
+      4,
+      5
+    ]
+  },
+  "request": {
+    "pipeline_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleVitraImages/ExampleVitra.cppipe",
+    "input_dir": "/tmp/openhcsnativecellprofiler/hhcfpklghddnndnj/input",
+    "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native",
+    "expected_image_sets": null,
+    "repetitions": 3,
+    "file_list_path": null,
+    "first_image_set": 1,
+    "last_image_set": null,
+    "report_path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_report.json",
+    "start_barrier_root": null,
+    "start_barrier_job_count": 1,
+    "start_barrier_job_index": 0,
+    "assignment_output_subdirectories": [
+      "W001",
+      "W002",
+      "W003",
+      "W004",
+      "W005",
+      "W006",
+      "W007",
+      "W008",
+      "W009"
+    ]
+  },
+  "observations": [
+    {
+      "repetition": -1,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/-1",
+      "image_set_count": 9,
+      "invocation_seconds": 21.758366950321943,
+      "pre_pipeline_seconds": 0.0018193162977695465,
+      "pipeline_execution_seconds": 21.756547634024173,
+      "invocation_started_monotonic_seconds": 4074449.681042716,
+      "pipeline_started_monotonic_seconds": 4074449.682862032,
+      "completed_monotonic_seconds": 4074471.439409666,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          1
+        ],
+        [
+          "W002",
+          1
+        ],
+        [
+          "W003",
+          1
+        ],
+        [
+          "W004",
+          1
+        ],
+        [
+          "W005",
+          1
+        ],
+        [
+          "W006",
+          1
+        ],
+        [
+          "W007",
+          1
+        ],
+        [
+          "W008",
+          1
+        ],
+        [
+          "W009",
+          1
+        ]
+      ]
+    },
+    {
+      "repetition": 0,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/0",
+      "image_set_count": 9,
+      "invocation_seconds": 22.432899392209947,
+      "pre_pipeline_seconds": 0.0007926528342068195,
+      "pipeline_execution_seconds": 22.43210673937574,
+      "invocation_started_monotonic_seconds": 4074471.439421258,
+      "pipeline_started_monotonic_seconds": 4074471.440213911,
+      "completed_monotonic_seconds": 4074493.87232065,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          1
+        ],
+        [
+          "W002",
+          1
+        ],
+        [
+          "W003",
+          1
+        ],
+        [
+          "W004",
+          1
+        ],
+        [
+          "W005",
+          1
+        ],
+        [
+          "W006",
+          1
+        ],
+        [
+          "W007",
+          1
+        ],
+        [
+          "W008",
+          1
+        ],
+        [
+          "W009",
+          1
+        ]
+      ]
+    },
+    {
+      "repetition": 1,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/1",
+      "image_set_count": 9,
+      "invocation_seconds": 23.1364091867581,
+      "pre_pipeline_seconds": 0.0007599308155477047,
+      "pipeline_execution_seconds": 23.135649255942553,
+      "invocation_started_monotonic_seconds": 4074493.872332142,
+      "pipeline_started_monotonic_seconds": 4074493.873092073,
+      "completed_monotonic_seconds": 4074517.008741329,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          1
+        ],
+        [
+          "W002",
+          1
+        ],
+        [
+          "W003",
+          1
+        ],
+        [
+          "W004",
+          1
+        ],
+        [
+          "W005",
+          1
+        ],
+        [
+          "W006",
+          1
+        ],
+        [
+          "W007",
+          1
+        ],
+        [
+          "W008",
+          1
+        ],
+        [
+          "W009",
+          1
+        ]
+      ]
+    },
+    {
+      "repetition": 2,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native/2",
+      "image_set_count": 9,
+      "invocation_seconds": 23.08075312897563,
+      "pre_pipeline_seconds": 0.0007482189685106277,
+      "pipeline_execution_seconds": 23.08000491000712,
+      "invocation_started_monotonic_seconds": 4074517.00875215,
+      "pipeline_started_monotonic_seconds": 4074517.009500369,
+      "completed_monotonic_seconds": 4074540.089505279,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          1
+        ],
+        [
+          "W002",
+          1
+        ],
+        [
+          "W003",
+          1
+        ],
+        [
+          "W004",
+          1
+        ],
+        [
+          "W005",
+          1
+        ],
+        [
+          "W006",
+          1
+        ],
+        [
+          "W007",
+          1
+        ],
+        [
+          "W008",
+          1
+        ],
+        [
+          "W009",
+          1
+        ]
+      ]
+    }
+  ]
+}
