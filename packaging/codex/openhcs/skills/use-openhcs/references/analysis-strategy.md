@@ -152,6 +152,15 @@ units, misaligned geometry or catastrophic failures still reject the affected
 claim. Do not invent a universal error tolerance or relax the task's declared
 criteria to fit a result.
 
+For neurite outgrowth, distinguish principal-shaft recovery from exhaustive
+fine-protrusion tracing. When the requested endpoint concerns soma-connected
+main shafts, assess their distributed raw support, continuity and false bridges;
+unrequested filopodial completeness is not an acceptance gate. Lowering a
+threshold to add uncertain twigs or increase graph length/branch counts is not
+necessarily an improvement. Retain the author's best-supported candidate with
+its inclusion rules and known misses. If the task requires fine-branch counts
+or complete arbor length, those finer structures still need their own evidence.
+
 Useful algorithm-defined assay or morphology estimates can include counts and
 per-object summaries with stated inclusion rules, observed errors and uncertainty.
 They are not biological ground truth. Do not require proof of every body's cell
