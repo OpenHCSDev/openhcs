@@ -226,14 +226,16 @@ def _require_compared_output_inventory(
     from openhcs.core.equivalence.relationships import (
         ExportedRelationshipMeasurementSemantics,
     )
-    from openhcs.core.runtime_equivalence import RuntimeMeasurementSnapshot
-
-    measurements = tuple(
-        RuntimeMeasurementSnapshot.from_output_snapshot(snapshot)
-        for snapshot in (reference_snapshot, candidate_snapshot)
-    )
+    # The inventory's default dialect is deliberately separate from the CSV
+    # comparison policy. Retain its edge admission without rebuilding scalar
+    # measurement counters already consumed by the value comparison.
     correlations = tuple(
-        measurement.required_relationship_correlations() for measurement in measurements
+        ExportedRelationshipMeasurementSemantics.correlated_object_relationships(
+            *ExportedRelationshipMeasurementSemantics.validated_output_tables(
+                snapshot.tables, RuntimeEquivalencePolicy()
+            )
+        )
+        for snapshot in (reference_snapshot, candidate_snapshot)
     )
     if correlations[0] != correlations[1]:
         raise RuntimeError("Matched saved output relationship correlations differ.")
