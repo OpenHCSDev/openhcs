@@ -1688,17 +1688,30 @@ class ObjectFeatureValueTable:
 
     def rows(self) -> list[dict[str, float | int]]:
         """Return wide rows ordered by the declared object domain."""
-        feature_items = tuple(
-            (
-                (
-                    feature_name,
-                    np.asarray(values),
-                    self.python_feature_values(values),
-                    self.feature_value_indexes(feature_name, np.asarray(values)),
+        feature_items = []
+        for feature_name, values in self.feature_values.items():
+            array = np.asarray(values)
+            python_values = self.python_feature_values(values)
+            value_indexes = self.feature_value_indexes(feature_name, array)
+            missing_object_ids = (
+                tuple(
+                    object_id
+                    for object_id in self.object_domain
+                    if object_id not in value_indexes
                 )
-                for feature_name, values in self.feature_values.items()
+                if array.ndim != 0
+                else ()
             )
-        )
+            missing_values = (
+                self.feature_missing_values_for_objects(
+                    feature_name, missing_object_ids
+                )
+                if missing_object_ids
+                else {}
+            )
+            feature_items.append(
+                (feature_name, array, python_values, value_indexes, missing_values)
+            )
         rows: list[dict[str, float | int]] = []
         for object_id in self.object_domain:
             row: dict[str, float | int] = {
@@ -1710,13 +1723,14 @@ class ObjectFeatureValueTable:
                 values,
                 python_values,
                 value_indexes,
+                missing_values,
             ) in feature_items:
                 if values.ndim == 0:
                     row[feature_name] = python_values
                     continue
                 value_index = value_indexes.get(object_id)
                 row[feature_name] = (
-                    self.feature_missing_value(feature_name, object_id=object_id).scalar
+                    missing_values[object_id].scalar
                     if value_index is None else python_values[value_index]
                 )
             self.complete_row(row)
@@ -1793,14 +1807,14 @@ class ObjectFeatureValueTable:
         """Add table-specific axis/value fields after feature projection."""
         del row
 
-    def feature_missing_value(
-        self, feature_name: str, *, object_id: int,
-    ) -> ObjectFeatureMissingValue:
-        """Return the declared missing-value policy for one feature/object row."""
-        del object_id
-        return self.feature_missing_values.get(
+    def feature_missing_values_for_objects(
+        self, feature_name: str, object_ids: tuple[int, ...],
+    ) -> Mapping[int, ObjectFeatureMissingValue]:
+        """Project one column's missing-value policy onto its absent objects."""
+        missing_value = self.feature_missing_values.get(
             feature_name, ObjectFeatureMissingValue.NAN
         )
+        return dict.fromkeys(object_ids, missing_value)
 
 
 @dataclass(frozen=True, slots=True)
