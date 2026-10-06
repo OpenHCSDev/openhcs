@@ -139,17 +139,6 @@ Scientists can inspect streamed images and objects in Fiji or napari (Supplement
 
 
 
-### An agent constructs a neurite-outgrowth analysis
-
-From a detailed prompt identifying the two NeuronCyto II channels and requested outputs, the agent built and inspected a neurite-outgrowth analysis without further human input.
-
-The agent inspected the images and constructed a two-step pipeline: normalization followed by neurite morphology and topology analysis (Figure 5). It corrected invalid pipeline settings before execution and completed authoring, corrections, execution and output checks in 609 s; pipeline execution took 16.5 s. Outputs included neuron and nuclear labels, neurite paths and per-neuron measurements. The pipeline remained editable in Python and the graphical interface. The complete tool history, including rejected requests and authoring errors, is provided in Supplementary Data 4.
-
-The final napari view displayed enhanced neuronal signal, neuron labels and neurite paths, with a table linking paths to measurements. All nine expected outputs were present. The analysis reported nine neurons, ten nuclei and 25 graph paths. Subsequent visual review identified a crossing classified as a branch and a soma divided between two neuron labels; its nuclear signal was also divided into three objects. The published manual-tracing table lists eight neurons for image 1 [@NeuronCytoII]. The discrepancy illustrates why complete outputs must still be checked against the biological structures in the image.
-
-A separate current-source replay used nuclear-supported soma detection and soma-rooted path assignment. It produced eight cell bodies, eight nuclei, 18 processes, two branch events and 24 graph paths. Per-cell measurements agree with graph distance features, totaling 2556.137 pixels under unit spacing. Supplementary Data 4 retains the original run, intervening correction and current replay separately. Document validation caught invalid authoring attempts before execution; image review identified errors in the biological result.
-
-
 
 ### Prospective held-out assay analyses
 
@@ -302,11 +291,12 @@ within-run repair does not guarantee a better result from the next fresh author.
 
 
 
-### Figure 5. Neurite morphology and topology from an agent-authored workflow
+### Figure 5. Autonomous neurite analysis on public and laboratory images
 
-![Original inputs, current native viewer inspection and retained neurite measurements.](figures/slas/figure3_agent_workflow.png){width=6in}
+![Public neurite sensitivity and matched final laboratory-field raw, body/path and combined views.](figures/slas/submission_neurite_results.png){width=6in}
 
-(A, B) Original 800 x 800-pixel NeuronCyto II field-1 inputs [@NeuronCytoII], displayed linearly over their unsigned 8-bit range. The boxes name the two saved pipeline functions. (C) The native napari canvas shows neuronal signal, unified labels and graph paths from the current-source replay; application controls are cropped away without changing image or overlay pixels. Selecting neuron 8 links its three paths. (D) Retained nucleus, soma and assigned-neuron labels for the lower field cell, shown in magenta, cyan and yellow, respectively. Label identities are matched by pixel overlap. (E) Crossing paths remain assigned to separate neurons. (F, G) Per-neuron and summary measurements derived from the retained tables. Lengths are pixels because the public input has no recorded physical calibration. This replay is distinct from the original unattended run retained in Supplementary Data 4; it is not another fresh autonomous evaluation.
+(I, A–C) Matched NeuronCyto II process-channel view and the H004 author's first and final results [@NeuronCytoII]. Lowering the admission threshold retained principal shafts but added uncertain short twigs; colours represent assigned identities, not independently established ownership at crossings. The first result is a predecessor, not a substituted final endpoint. (II, D–F) Byte-identical native captures from the final P001 autonomous analysis show raw FITC, body/path output and their combination at matched site-1 coordinates. The run completed all nine fields without stitching or overlap deduplication. These views illustrate recovery and remaining ambiguity, not a manual-reference accuracy score. Supplementary Data 8 retains the distinct frozen pipelines and wider review; the assisted mosaic is confined to Supplementary Figure 12.
+
 
 ## Discussion
 

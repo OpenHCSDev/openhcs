@@ -708,6 +708,36 @@ def personal_stitched_development():
     sheet.save()
 
 
+def submission_neurite_results():
+    """Distinguish frozen public-trial sensitivity from personal-field recovery."""
+    sheet = FigureSheet("submission_neurite_results", "", 7.3)
+    public = OUTPUT / "h004_fresh20_sources"
+    personal = OUTPUT / "p001_fresh13_sources"
+    sheet.source(public / "QA-INDEX.json")
+    sheet.source(personal / "source-record.rst")
+    sheet.source(ROOT / "paper/supplementary/task_only_analysis/h004-fresh20-qualified-completion.rst")
+    sheet.source(ROOT / "figure-collection-20261004/P001-FRESH13-NINE-FIELD-REVIEW.rst")
+    sheet.panel("I", "Public neurites: raw signal and self-directed sensitivity changes", 3, 97)
+    for x, name, title in (
+        (3, "first-bottom-raw", "A  Raw process channel"),
+        (35, "first-bottom-result", "B  First shaft result"),
+        (67, "repair03-bottom-result", "C  Final result"),
+    ):
+        sheet.text(x, 91, title, size=10.5, weight="bold")
+        sheet.source_image(public / f"{name}.png", (x, 62, 30, 26), crop=(297, 28, 1250, 410))
+    sheet.text(3, 59, "Lowering the admission threshold retains trunks but adds uncertain short twigs.", size=10, color=MUTED)
+    sheet.panel("II", "Laboratory neurites: final autonomous field-by-field analysis", 3, 52)
+    for x, name, title in (
+        (3, "raw", "D  Raw FITC"),
+        (35, "result", "E  Body and path result"),
+        (67, "combined", "F  Combined"),
+    ):
+        sheet.text(x, 46, title, size=10.5, weight="bold")
+        sheet.source_image(personal / f"site1-{name}.png", (x, 8, 30, 35), crop=(550, 28, 997, 437))
+    sheet.text(3, 5, "Matched site-1 crops; nine fields completed without stitching or overlap deduplication.", size=10, color=MUTED)
+    sheet.save()
+
+
 def submission_shared_workflow():
     """Combine the workflow diagram with its retained native editing evidence."""
     sheet = FigureSheet("submission_shared_workflow", "", 9.1)

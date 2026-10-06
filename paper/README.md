@@ -53,7 +53,7 @@ environment, without rerunning scientific analyses:
 
 ```sh
 PYTHONPATH=paper/figures python -c \
-  'from build_slas_visual_story import submission_shared_workflow, submission_quantitative_results; submission_shared_workflow(); submission_quantitative_results()'
+  'from build_slas_visual_story import submission_shared_workflow, submission_quantitative_results, submission_neurite_results; submission_shared_workflow(); submission_quantitative_results(); submission_neurite_results()'
 ```
 
 The existing `FigureSheet` owns retained-image placement, crops and output
