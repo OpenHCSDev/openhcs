@@ -218,6 +218,8 @@ In the 6 October 2026 matched single-sample checkpoint, all 30 workflows passed 
 
 All 30 single-sample compile-plus-run totals were faster than native CellProfiler, with a minimum speedup of 1.40-fold and a median of 3.30-fold (Figure 4B). Three workflows fell below twofold total speedup: illumination correction Example 3, CombineObjects and PercentPositive. The total comparison includes OpenHCS compilation and client coordination, so it differs from the execution comparison. Per-workflow runtime and speedup panels, exact durations and the clock definitions accompany the matched record; no unmeasured memory result or projected native throughput is included in these fresh panels.
 
+Actual single-core measurements at 1, 9 and 16 repeated source assignments separate execution from compilation and client coordination (Supplementary Figure 16). Balanced comparisons at nine assignments on one/three workers and sixteen assignments on one/four workers retain measured native parallel clocks and matched outputs (Supplementary Figure 17). The selected workflows show substantial parallel scaling losses: four-worker OpenHCS execution efficiencies ranged from 55.3% to 69.4%. These results qualify the single-sample speedup headline and do not establish near-linear scaling.
+
 The earlier analysis-focused throughput and memory measurements remain archived in Supplementary Data 3 and Supplementary Figure 7. Their configured worker and output policies differ from this output-complete matched evaluation, so their rates and memory values are not combined with the fresh timing distributions.
 
 ### Figure 4. Matched single-sample speedup over native CellProfiler

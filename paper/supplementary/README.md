@@ -210,6 +210,49 @@ field scores, reference hashes and original lifecycle records are retained in
 the [repeat evaluation](../../figure-collection-20261004/bbbc039-fresh10coverage-postfreeze-evaluation.json)
 and Supplementary Data 8.
 
+
+## Supplementary Figure 16. Matched single-core amortization
+
+![Execution, total and nonexecution time per assignment at actual single-core workload sizes.](../figures/slas/matched_postexport_20261006/single-core-amortization/measured_single_core_amortization.png){width=6in}
+
+The three selected workflows retain the prior single-sample execution frontier
+(Vitra), total-time frontier (illumination correction Example 3) and representative
+3D monolayer workflow. Each engine used one worker and one numerical thread.
+Points are actual medians over three measured repetitions after warmup at 1, 9
+and 16 repeated assignments of one biological source sample. Connecting lines
+join observations; they do not predict other assignment counts. Nonexecution
+is the difference between the declared total and execution clocks. OpenHCS total
+includes compilation and client coordination; native total excludes one-time
+pipeline loading and JVM initialization. Endpoint, library and kernel readiness
+and post-run scientific comparison are outside both clocks. All observations
+passed the declared-output comparisons on source revision `56c3da776`.
+
+## Supplementary Figure 17. Matched workload comparisons across worker counts
+
+![Nine assignments: execution on one and three workers.](../figures/slas/matched_postexport_20261006/matched-nine-execution/measured_execution_seconds.png){width=6in}
+
+![Nine assignments: total on one and three workers.](../figures/slas/matched_postexport_20261006/matched-nine-total/measured_total_seconds.png){width=6in}
+
+![Sixteen assignments: execution on one and four workers.](../figures/slas/matched_postexport_20261006/matched-sixteen-execution/measured_execution_seconds.png){width=6in}
+
+![Sixteen assignments: total on one and four workers.](../figures/slas/matched_postexport_20261006/matched-sixteen-total/measured_total_seconds.png){width=6in}
+
+The same three-workflow cohort and source revision as Supplementary Figure 16
+are used. Each condition completed warmup and three measured repetitions with
+no declared-output differences. Native parallel durations are actual simultaneous
+shard makespans, validated against a complete serial batch; they are not estimated
+from separate runs. OpenHCS execution includes the complete server job and plate
+exports. The Average category is an arithmetic summary of workflow bars.
+
+For the same assignment count, execution efficiency is the one-worker median
+divided by the worker count times the parallel median. OpenHCS efficiencies for
+Vitra, illumination and 3D were 64.3%, 59.5% and 71.1% at three workers, and 55.3%,
+62.4% and 69.4% at four workers. These observations do not establish near-linear
+scaling. The four-worker execution speedups over native CellProfiler were 1.93-,
+2.22- and 4.14-fold, respectively, so the single-sample minimum speedup does not
+apply to every parallel condition. Exact timings, native baselines, inventories
+and provenance accompany the [matched checkpoint](../../benchmark/results/matched_postexport_20261006/README.md).
+
 ```{=openxml}
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
