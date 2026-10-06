@@ -1,0 +1,135 @@
+{
+  "case": "ExampleNeighbors",
+  "wells": [
+    "A01"
+  ],
+  "selected_source_wells": [
+    "A01"
+  ],
+  "assignment_scope": "genuine source wells",
+  "manifest_sha256": "1d1b016aea7ff2ac0bc2441fff1140bb492bbf3b86048f8565694ccd45e4dff1",
+  "cppipe_sha256": "ee0ebab39ff3e621dd66bbac2ff59e8f7d6506010b21897f19a9f151256f8c66",
+  "driver_sha256": "128f5d81011fb5e7207c51c6a32072e10aa62f029e5545cb5ebaf245b3c3041b",
+  "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
+  "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
+  "source_commit": "eb773573cced496fe5ee7bfeef7b961674958c1d",
+  "source_dirty": false,
+  "native_job_count": 1,
+  "candidate_worker_count": 1,
+  "candidate_worker_start_method": "fork",
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0"
+  },
+  "native_input_inventory": [
+    {
+      "path": "Clones1.JPG",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleNeighbors/images/Clones1.JPG",
+      "size_bytes": 78831,
+      "sha256": "1a2754f0771c82b733fbb4a46334e42210e2655d954a6be98c4e4de89d094c25"
+    }
+  ],
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/singlewell/capture/cases/ExampleNeighbors/native_report.json",
+  "native_reference_report_sha256": "3237687afaa0becd381c3654bbb00295c0aea9bea754af9ed214d96c67daa6a0",
+  "native_reference_source_commit": "58febb609b02cede0ad2f827bfc53ca2cc5ab067",
+  "native_reference_file_inventory": [
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/-1/Cells.csv",
+      "sha256": "3ac4cbfaaf7d4cdbe4ea9f0624707ca1776b2b0a65b8c3dfd30cfb3e3a1c908f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/-1/Clones1_ColorNeighbors.png",
+      "sha256": "9c930b44559a4c8b343652b52c42602348b8c9b48d0608f715fce3285198d18b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/-1/Clones1_InvertedRed.png",
+      "sha256": "81efde4802d5cfa71292ffdf78567535b8761ed9dffd10d849b95c9cb2b37b72"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/-1/Image.csv",
+      "sha256": "cfc13a7fef343adbb559642b610b4e48901e758278b1f4bba171fb3efe40c4a0"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/0/Cells.csv",
+      "sha256": "3ac4cbfaaf7d4cdbe4ea9f0624707ca1776b2b0a65b8c3dfd30cfb3e3a1c908f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/0/Clones1_ColorNeighbors.png",
+      "sha256": "9c930b44559a4c8b343652b52c42602348b8c9b48d0608f715fce3285198d18b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/0/Clones1_InvertedRed.png",
+      "sha256": "81efde4802d5cfa71292ffdf78567535b8761ed9dffd10d849b95c9cb2b37b72"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/0/Image.csv",
+      "sha256": "831fa9362296bb8911a864a2ddf7ce11a5657c253742bb0a02b7615d857c4b2a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/1/Cells.csv",
+      "sha256": "3ac4cbfaaf7d4cdbe4ea9f0624707ca1776b2b0a65b8c3dfd30cfb3e3a1c908f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/1/Clones1_ColorNeighbors.png",
+      "sha256": "9c930b44559a4c8b343652b52c42602348b8c9b48d0608f715fce3285198d18b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/1/Clones1_InvertedRed.png",
+      "sha256": "81efde4802d5cfa71292ffdf78567535b8761ed9dffd10d849b95c9cb2b37b72"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/1/Image.csv",
+      "sha256": "ea4812c67cde85d19c3b79b0f9a129ed66fdcb6dfae7312da12011d84762db73"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/2/Cells.csv",
+      "sha256": "3ac4cbfaaf7d4cdbe4ea9f0624707ca1776b2b0a65b8c3dfd30cfb3e3a1c908f"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/2/Clones1_ColorNeighbors.png",
+      "sha256": "9c930b44559a4c8b343652b52c42602348b8c9b48d0608f715fce3285198d18b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/2/Clones1_InvertedRed.png",
+      "sha256": "81efde4802d5cfa71292ffdf78567535b8761ed9dffd10d849b95c9cb2b37b72"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native/2/Image.csv",
+      "sha256": "53fbe82a48da060d618c7d6de88f12183593685a40bb9d4c4f8b9b9e2881b528"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native_preparation/native_cellprofiler_file_list.txt",
+      "sha256": "2a80e5949bc283999e14c575276ffe817b03dab061abf3cf99be28fe5953a7b6"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v7/cases/ExampleNeighbors/native_preparation/native_cellprofiler_headless/ExampleNeighbors.cppipe",
+      "sha256": "53bd447b6bb96fb63588590838e0b74d9b3514615773b88c0e00437d15f82c64"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/singlewell/capture/cases/ExampleNeighbors/native_report.json",
+      "sha256": "3237687afaa0becd381c3654bbb00295c0aea9bea754af9ed214d96c67daa6a0"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/singlewell/capture/cases/ExampleNeighbors/native_request.json",
+      "sha256": "ea9b97769a5d8e7a7703d833943f0ec19477f0a6d49bb3cd175656575bcfb5bd"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postpartition-qualification-preparation-v1/singlewell/capture/cases/ExampleNeighbors/pilot_provenance.json",
+      "sha256": "8f34d0fc24f1fbf30b0105c8435355a1c1733572316ac65793fe8ebba73bcb30"
+    }
+  ],
+  "native_image_set_count": 1,
+  "native_input_inventory_after": [
+    {
+      "path": "Clones1.JPG",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleNeighbors/images/Clones1.JPG",
+      "size_bytes": 78831,
+      "sha256": "1a2754f0771c82b733fbb4a46334e42210e2655d954a6be98c4e4de89d094c25"
+    }
+  ]
+}

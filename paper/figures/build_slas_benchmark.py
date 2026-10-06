@@ -95,13 +95,9 @@ def build_measured(
             or len(set(selected_pipeline_names)) != len(selected_pipeline_names)
         ):
             raise ValueError("The measured cohort manifest must declare unique, nonempty cases")
-        manifest_paths = tuple(dict.fromkeys(
-            (cohort_manifest, *(Path(record["manifest"]["path"]) for record in custody))
-        ))
-        for record in custody:
-            manifest = Path(record["manifest"]["path"])
-            if sha256(manifest) != record["manifest"]["sha256"]:
-                raise ValueError(f"Qualified case manifest has changed: {manifest}")
+        qualified_manifests = tuple(source.retained_manifest_path() for source in sources)
+        manifest_paths = tuple(dict.fromkeys((cohort_manifest, *qualified_manifests)))
+        for manifest in qualified_manifests:
             qualified_cases = load_comparison_cases(manifest, materialize_roots=False)
             declared = {case.name: case for case in qualified_cases}
             if len(declared) != len(qualified_cases):

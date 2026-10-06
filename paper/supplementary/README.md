@@ -307,52 +307,62 @@ and Supplementary Data 8.
 
 ## Supplementary Figure 16. Matched single-core amortization
 
-![Execution, total and nonexecution time per assignment at actual single-core workload sizes.](../figures/slas/matched_final_20261006/single-core-amortization/measured_single_core_amortization.png){width=6in}
+![Execution, total and nonexecution time per assignment at actual single-core workload sizes.](../figures/slas/matched_postgrid_20261006/single-core-amortization/measured_single_core_amortization.png){width=6in}
 
 The three selected workflows retain the prior single-sample execution frontier
 (Vitra), total-time frontier (illumination correction Example 3) and representative
-3D monolayer workflow. Each engine used one worker and one numerical thread.
-Points are actual medians over three measured repetitions after warmup at 1, 9
-and 16 repeated assignments of one biological source sample. Connecting lines
-join observations; they do not predict other assignment counts. Nonexecution
-is the difference between the declared total and execution clocks. OpenHCS total
-includes compilation and client coordination; native total excludes one-time
-pipeline loading and JVM initialization. Endpoint, library and kernel readiness
-and post-run scientific comparison are outside both clocks. All observations
-passed the declared-output comparisons on source revision `e905e7705`.
+3D monolayer workflow. They were not reselected from the final single-sample
+rankings. Each engine used one worker and one numerical thread. Points are actual
+medians over three measured repetitions after warmup at 1, 9 and 16 repeated
+assignments of one biological source sample. Connecting lines join observations;
+they do not predict other assignment counts. OpenHCS nonexecution overhead is the
+median paired difference between total and full server execution per assignment,
+including compilation and client coordination; it is not a decomposition of
+kernel and plumbing work. Native total excludes one-time pipeline loading and
+JVM initialization. Endpoint, library and kernel readiness and post-run scientific
+comparison are outside both clocks. All observations passed declared-output
+comparisons on production revision `eb773573c` in one refreshed environment.
 
 ## Supplementary Figure 17. Matched workload comparisons across worker counts
 
-![Nine assignments: execution on one and three workers.](../figures/slas/matched_final_20261006/matched-nine-execution/measured_execution_seconds.png){width=6in}
+![Nine assignments: execution on one and three workers.](../figures/slas/matched_postgrid_20261006/matched-nine-execution/measured_execution_seconds.png){width=6in}
 
-![Nine assignments: total on one and three workers.](../figures/slas/matched_final_20261006/matched-nine-total/measured_total_seconds.png){width=6in}
+![Nine assignments: total on one and three workers.](../figures/slas/matched_postgrid_20261006/matched-nine-total/measured_total_seconds.png){width=6in}
 
-![Sixteen assignments: execution on one and four workers.](../figures/slas/matched_final_20261006/matched-sixteen-execution/measured_execution_seconds.png){width=6in}
+![Sixteen assignments: execution on one and four workers.](../figures/slas/matched_postgrid_20261006/matched-sixteen-execution/measured_execution_seconds.png){width=6in}
 
-![Sixteen assignments: total on one and four workers.](../figures/slas/matched_final_20261006/matched-sixteen-total/measured_total_seconds.png){width=6in}
+![Sixteen assignments: total on one and four workers.](../figures/slas/matched_postgrid_20261006/matched-sixteen-total/measured_total_seconds.png){width=6in}
 
-The same three-workflow cohort and source revision as Supplementary Figure 16
-are used. Each condition completed warmup and three measured repetitions with
-no declared-output differences. Native parallel durations are actual simultaneous
-shard makespans, validated against a complete serial batch; they are not estimated
-from separate runs. OpenHCS execution includes the complete server job and plate
-exports. The Average category is an arithmetic summary of workflow bars.
+The same three-workflow cohort, source revision and environment as Supplementary
+Figure 16 are used. Each condition completed warmup and three measured repetitions
+with no declared-output differences. Native parallel durations are actual
+simultaneous shard makespans validated against a complete serial batch; they are
+not estimated from independent durations. OpenHCS execution includes the complete
+server job and plate exports. The Average category is an arithmetic summary of
+workflow bars, not a pooled runtime.
 
 For the same assignment count, execution efficiency is the one-worker median
-divided by the product of worker count and parallel median. OpenHCS efficiencies
-for Vitra, illumination and 3D were 78.5%, 72.8% and 78.2% at three workers, and
-58.7%, 60.5% and 69.6% at four workers. Native efficiencies were 82.6%, 54.3% and
-92.7% at three workers, and 67.4%, 64.5% and 84.2% at four workers.
+divided by worker count times the parallel median. OpenHCS efficiencies for Vitra,
+illumination and 3D were 75.5%, 72.3% and 74.4% at three workers, and 71.8%, 69.1%
+and 74.1% at four workers. Native efficiencies were 82.6%, 54.3% and 92.7% at three
+workers, and 67.4%, 64.5% and 84.2% at four workers. These efficiencies measure
+loss against ideal scaling and are distinct from speedup over native. The
+[retained passive-counter comparison](../../benchmark/results/matched_postgrid_20261006/diagnostics/3d-same-step-scaling-counter-comparison.json)
+shows additional 3D work inside the critical worker lane, increased system time,
+process swap and major faults during parallel execution, supporting a working-set
+and reclaim contribution. It does not identify the allocation owner or prove a
+guaranteed fix. Process memory ranges are not summed as unique physical bytes;
+these diagnostics are separate from the benchmark clock and science qualification.
 
-Dividing OpenHCS efficiency by native efficiency separates additional scaling
-loss from loss against ideal scaling. At three workers, the additional execution
-loss was 4.9% for Vitra and 15.7% for 3D; illumination scaled better than native.
-At four workers, the additional losses were 12.9%, 6.1% and 17.4%, respectively.
-These observations do not establish near-linear scaling. The four-worker execution
-speedups over native CellProfiler were 2.13-, 2.15- and 4.14-fold, respectively;
-total speedups were 1.96-, 1.47- and 3.67-fold. The single-sample minimum speedup
-does not apply to every parallel condition. Exact timings, native baselines,
-inventories and provenance accompany the [matched checkpoint](../../benchmark/results/matched_final_20261006/README.md).
+Dividing OpenHCS efficiency by native efficiency measures additional scaling loss
+on this hardware. At three workers, the additional execution loss was 8.6% for
+Vitra and 19.7% for 3D; illumination scaled better than native. At four workers,
+Vitra and illumination scaled better than native, while 3D had 12.0% additional
+loss. Ideal linear scaling is not established. Four-worker execution speedups
+over native CellProfiler were 2.56-, 2.43- and 4.28-fold; total speedups were 2.32-,
+1.53- and 3.77-fold, respectively. The single-sample minimum speedup does not apply
+to every parallel condition. Exact execution and total denominators, native
+baselines, inventories and provenance accompany the [current matched record](../../benchmark/results/matched_postgrid_20261006/README.md); the [earlier checkpoint](../../benchmark/results/matched_final_20261006/README.md) remains separate.
 
 ```{=openxml}
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
@@ -385,7 +395,7 @@ Automated testing for the OpenHCS 0.8.5 release checked execution of all 30 impo
 
 The historical release comparison selects exported values from CSV tables and CellProfiler Analyst SQLite tables and `.properties` files. Its image comparison selects files, including NumPy arrays, from native reference-output directories that contain images and no CSV files. This includes the NPY-only illumination workflow and the completed translocation tutorial's overlay alongside its SQLite measurements. Images accompanying CSV measurements in 14 historical profiles remain outside that release comparison. Absolute and relative tolerances are `1e-6` for numeric values and image pixels, with no pixels allowed outside tolerance; identifiers and categorical values are compared exactly after documented CellProfiler-compatible normalizations.
 
-The subsequent matched performance evaluation retained the complete 30-workflow manifest and compared the declared table, database and image outputs in a warmup and three measured repetitions per engine. All 120 OpenHCS observations completed without declared-output differences against complete native CellProfiler runs. These current-source observations, their output inventories and their timing boundaries are separate from the historical release comparison and are retained in the [matched benchmark record](../../benchmark/results/matched_final_20261006/README.md).
+The subsequent matched performance evaluation retained the complete 30-workflow manifest and compared the declared table, database and image outputs in a warmup and three measured repetitions per engine. All 120 OpenHCS observations completed without declared-output differences against complete native CellProfiler runs. These current-source observations, their output inventories and their timing boundaries are separate from the historical release comparison and are retained in the [matched benchmark record](../../benchmark/results/matched_postgrid_20261006/README.md).
 
 For the five workflows without file exports, terminal image or object-label exports were appended while preserving the original processing modules and settings. Native CellProfiler generated eight additional reference artifacts. A subsequent unified run compiled and executed all 30 workflows afresh and compared each candidate with its selected native reference values. Object labels were compared exactly after singleton-axis normalization; numerical images used the stated float tolerances. The unified run used OpenHCS 0.8.5 current source on Python 3.12.3 with NumPy 2.1.3 and SciPy 1.18.1. Native references used CellProfiler 4.2.8.1 on Python 3.9.25 with NumPy 1.24.4 and SciPy 1.9.0. Supplementary Data 1 links the export definitions, reference inventory, per-workflow comparisons and exact source identities separately from the historical release CI records.
 
@@ -605,7 +615,7 @@ current-version compatibility matrix.
 
 #### Matched scaling and archived comparisons
 
-Actual single-core measurements at 1, 9 and 16 repeated source assignments separate execution from compilation and client coordination (Supplementary Figure 16). Balanced comparisons at nine assignments on one/three workers and sixteen assignments on one/four workers retain measured native parallel clocks and matched outputs (Supplementary Figure 17). Four-worker OpenHCS execution efficiencies ranged from 58.7% to 69.6% of ideal scaling, compared with 64.5% to 84.2% for native CellProfiler. OpenHCS retained 82.6% to 93.9% of native execution scaling efficiency, with execution speedups of 2.13- to 4.14-fold in these matched four-worker workloads. These measurements distinguish loss against ideal scaling from additional loss relative to native CellProfiler and do not establish near-linear scaling.
+Actual single-core measurements at 1, 9 and 16 repeated source assignments separate execution from compilation and client coordination (Supplementary Figure 16). Balanced comparisons at nine assignments on one/three workers and sixteen assignments on one/four workers retain measured native parallel clocks and matched outputs (Supplementary Figure 17). Four-worker OpenHCS execution efficiencies ranged from 69.1% to 74.1% of ideal scaling, compared with 64.5% to 84.2% for native CellProfiler. OpenHCS retained 88.0% to 107.3% of native execution scaling efficiency, with execution speedups of 2.43- to 4.28-fold in these matched four-worker workloads. These measurements distinguish loss against ideal scaling from additional loss relative to native CellProfiler and do not establish near-linear scaling.
 
 The earlier analysis-focused throughput and memory measurements remain archived in Supplementary Data 3 and Supplementary Figure 7. Their configured worker and output policies differ from this output-complete matched evaluation, so their rates and memory values are not combined with the fresh timing distributions.
 

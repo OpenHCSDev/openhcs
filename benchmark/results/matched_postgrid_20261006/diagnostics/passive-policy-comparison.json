@@ -1,0 +1,2034 @@
+{
+  "scope": "Two fresh candidate-only endpoints, original Track warmup+3 per policy, no profiler and no native process. Process CPU counters include other server threads; sample brackets, not exclusive step attribution. CPU quantization uncertainty approximately two ticks. Memory sampled at most1Hz. Global vmstat is corroboration only.",
+  "source_head": "eb773573cced496fe5ee7bfeef7b961674958c1d",
+  "arms": [
+    {
+      "advice": 1,
+      "dependency_seal_sha256": "7e73cafd566b11c251283b68a34a09174e162e59f5c902b91828fd2026f814f2",
+      "repetitions": [
+        {
+          "repetition": -1,
+          "execution_id": "ceeadfbc-4831-4a43-9bcf-1262e1f47a54",
+          "server_job_seconds": 2.2662436962127686,
+          "compile_seconds": 0.21012139320373535,
+          "total_seconds": 2.5672208326868713,
+          "axis": {
+            "wall_seconds": 2.170330286026001,
+            "inside_samples": 21,
+            "coverage": "complete",
+            "inner": {
+              "user_seconds": 1.76,
+              "system_seconds": 0.2,
+              "minor_faults": 82027,
+              "major_faults": 0,
+              "sample_start": 1791316540.940609,
+              "sample_end": 1791316542.9482536
+            },
+            "outer": {
+              "user_seconds": 1.93,
+              "system_seconds": 0.23,
+              "minor_faults": 95056,
+              "major_faults": 0,
+              "sample_start": 1791316540.8402517,
+              "sample_end": 1791316543.0485644
+            },
+            "memory_status_samples": [
+              {
+                "timestamp": 1791316541.4426377,
+                "VmSize": "1827216 kB",
+                "VmHWM": "905300 kB",
+                "VmRSS": "905300 kB",
+                "RssAnon": "662556 kB",
+                "RssFile": "242732 kB",
+                "Threads": "6"
+              },
+              {
+                "timestamp": 1791316542.4464984,
+                "VmSize": "2003144 kB",
+                "VmHWM": "1110452 kB",
+                "VmRSS": "1110452 kB",
+                "RssAnon": "866976 kB",
+                "RssFile": "243464 kB",
+                "Threads": "6"
+              }
+            ]
+          },
+          "steps": [
+            {
+              "step": "ColorToGray",
+              "wall_seconds": 0.10235142707824707,
+              "inside_samples": 1,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.14,
+                "system_seconds": 0.05,
+                "minor_faults": 22818,
+                "major_faults": 0,
+                "sample_start": 1791316540.8402517,
+                "sample_end": 1791316541.041004
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "IdentifyPrimaryObjects",
+              "wall_seconds": 0.5092599391937256,
+              "inside_samples": 5,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.37,
+                "system_seconds": 0.03,
+                "minor_faults": 19941,
+                "major_faults": 0,
+                "sample_start": 1791316541.041004,
+                "sample_end": 1791316541.4426377
+              },
+              "outer": {
+                "user_seconds": 0.53,
+                "system_seconds": 0.06,
+                "minor_faults": 31251,
+                "major_faults": 0,
+                "sample_start": 1791316540.940609,
+                "sample_end": 1791316541.5429926
+              },
+              "memory_status_samples": [
+                {
+                  "timestamp": 1791316541.4426377,
+                  "VmSize": "1827216 kB",
+                  "VmHWM": "905300 kB",
+                  "VmRSS": "905300 kB",
+                  "RssAnon": "662556 kB",
+                  "RssFile": "242732 kB",
+                  "Threads": "6"
+                }
+              ]
+            },
+            {
+              "step": "MeasureObjectSizeShape",
+              "wall_seconds": 0.14574146270751953,
+              "inside_samples": 1,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.19,
+                "system_seconds": 0.01,
+                "minor_faults": 1724,
+                "major_faults": 0,
+                "sample_start": 1791316541.4426377,
+                "sample_end": 1791316541.643372
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "MeasureObjectIntensity",
+              "wall_seconds": 0.05524563789367676,
+              "inside_samples": 1,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.19,
+                "system_seconds": 0.0,
+                "minor_faults": 1057,
+                "major_faults": 0,
+                "sample_start": 1791316541.5429926,
+                "sample_end": 1791316541.7437336
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "TrackObjects",
+              "wall_seconds": 0.5740585327148438,
+              "inside_samples": 6,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.43,
+                "system_seconds": 0.06,
+                "minor_faults": 26180,
+                "major_faults": 0,
+                "sample_start": 1791316541.7437336,
+                "sample_end": 1791316542.2456968
+              },
+              "outer": {
+                "user_seconds": 0.62,
+                "system_seconds": 0.07,
+                "minor_faults": 27900,
+                "major_faults": 0,
+                "sample_start": 1791316541.643372,
+                "sample_end": 1791316542.3460567
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "OverlayOutlines",
+              "wall_seconds": 0.13902759552001953,
+              "inside_samples": 1,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.18,
+                "system_seconds": 0.02,
+                "minor_faults": 5617,
+                "major_faults": 0,
+                "sample_start": 1791316542.2456968,
+                "sample_end": 1791316542.4464984
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "Tile",
+              "wall_seconds": 0.16138887405395508,
+              "inside_samples": 2,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.05,
+                "system_seconds": 0.05,
+                "minor_faults": 17081,
+                "major_faults": 0,
+                "sample_start": 1791316542.4464984,
+                "sample_end": 1791316542.546898
+              },
+              "outer": {
+                "user_seconds": 0.22,
+                "system_seconds": 0.06,
+                "minor_faults": 22557,
+                "major_faults": 0,
+                "sample_start": 1791316542.3460567,
+                "sample_end": 1791316542.6472366
+              },
+              "memory_status_samples": [
+                {
+                  "timestamp": 1791316542.4464984,
+                  "VmSize": "2003144 kB",
+                  "VmHWM": "1110452 kB",
+                  "VmRSS": "1110452 kB",
+                  "RssAnon": "866976 kB",
+                  "RssFile": "243464 kB",
+                  "Threads": "6"
+                }
+              ]
+            },
+            {
+              "step": "SaveImages",
+              "wall_seconds": 0.4775087833404541,
+              "inside_samples": 4,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.29,
+                "system_seconds": 0.01,
+                "minor_faults": 9,
+                "major_faults": 0,
+                "sample_start": 1791316542.6472366,
+                "sample_end": 1791316542.9482536
+              },
+              "outer": {
+                "user_seconds": 0.48,
+                "system_seconds": 0.01,
+                "minor_faults": 948,
+                "major_faults": 0,
+                "sample_start": 1791316542.546898,
+                "sample_end": 1791316543.0485644
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "ExportToSpreadsheet",
+              "wall_seconds": 0.040007591247558594,
+              "inside_samples": 1,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.15,
+                "system_seconds": 0.01,
+                "minor_faults": 243,
+                "major_faults": 0,
+                "sample_start": 1791316542.9482536,
+                "sample_end": 1791316543.1489682
+              },
+              "memory_status_samples": []
+            }
+          ],
+          "scientific_differences": 0
+        },
+        {
+          "repetition": 0,
+          "execution_id": "b4ea6ed5-aa60-43a6-8ee9-4f41f36c8a10",
+          "server_job_seconds": 2.121903419494629,
+          "compile_seconds": 0.1612999439239502,
+          "total_seconds": 2.3660909133031964,
+          "axis": {
+            "wall_seconds": 2.0272581577301025,
+            "inside_samples": 20,
+            "coverage": "complete",
+            "inner": {
+              "user_seconds": 1.77,
+              "system_seconds": 0.11,
+              "minor_faults": 23392,
+              "major_faults": 0,
+              "sample_start": 1791316544.755023,
+              "sample_end": 1791316546.6629252
+            },
+            "outer": {
+              "user_seconds": 1.93,
+              "system_seconds": 0.11,
+              "minor_faults": 23570,
+              "major_faults": 0,
+              "sample_start": 1791316544.654626,
+              "sample_end": 1791316546.7632785
+            },
+            "memory_status_samples": [
+              {
+                "timestamp": 1791316545.4582198,
+                "VmSize": "1980844 kB",
+                "VmHWM": "1346272 kB",
+                "VmRSS": "1007356 kB",
+                "RssAnon": "762812 kB",
+                "RssFile": "244532 kB",
+                "Threads": "6"
+              },
+              {
+                "timestamp": 1791316546.4622488,
+                "VmSize": "2300844 kB",
+                "VmHWM": "1382208 kB",
+                "VmRSS": "1336952 kB",
+                "RssAnon": "1092408 kB",
+                "RssFile": "244532 kB",
+                "Threads": "6"
+              }
+            ]
+          },
+          "steps": [
+            {
+              "step": "ColorToGray",
+              "wall_seconds": 0.06962132453918457,
+              "inside_samples": 1,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.17,
+                "system_seconds": 0.0,
+                "minor_faults": 179,
+                "major_faults": 0,
+                "sample_start": 1791316544.654626,
+                "sample_end": 1791316544.8555107
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "IdentifyPrimaryObjects",
+              "wall_seconds": 0.4596681594848633,
+              "inside_samples": 5,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.39,
+                "system_seconds": 0.0,
+                "minor_faults": 129,
+                "major_faults": 0,
+                "sample_start": 1791316544.8555107,
+                "sample_end": 1791316545.2574286
+              },
+              "outer": {
+                "user_seconds": 0.59,
+                "system_seconds": 0.01,
+                "minor_faults": 4450,
+                "major_faults": 0,
+                "sample_start": 1791316544.755023,
+                "sample_end": 1791316545.3578465
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "MeasureObjectSizeShape",
+              "wall_seconds": 0.14919233322143555,
+              "inside_samples": 1,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.19,
+                "system_seconds": 0.01,
+                "minor_faults": 5095,
+                "major_faults": 0,
+                "sample_start": 1791316545.2574286,
+                "sample_end": 1791316545.4582198
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "MeasureObjectIntensity",
+              "wall_seconds": 0.05533576011657715,
+              "inside_samples": 1,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.19,
+                "system_seconds": 0.0,
+                "minor_faults": 884,
+                "major_faults": 0,
+                "sample_start": 1791316545.3578465,
+                "sample_end": 1791316545.558576
+              },
+              "memory_status_samples": [
+                {
+                  "timestamp": 1791316545.4582198,
+                  "VmSize": "1980844 kB",
+                  "VmHWM": "1346272 kB",
+                  "VmRSS": "1007356 kB",
+                  "RssAnon": "762812 kB",
+                  "RssFile": "244532 kB",
+                  "Threads": "6"
+                }
+              ]
+            },
+            {
+              "step": "TrackObjects",
+              "wall_seconds": 0.5196552276611328,
+              "inside_samples": 5,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.37,
+                "system_seconds": 0.03,
+                "minor_faults": 593,
+                "major_faults": 0,
+                "sample_start": 1791316545.558576,
+                "sample_end": 1791316545.9600286
+              },
+              "outer": {
+                "user_seconds": 0.56,
+                "system_seconds": 0.03,
+                "minor_faults": 834,
+                "major_faults": 0,
+                "sample_start": 1791316545.4582198,
+                "sample_end": 1791316546.0603848
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "OverlayOutlines",
+              "wall_seconds": 0.13952302932739258,
+              "inside_samples": 1,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.18,
+                "system_seconds": 0.01,
+                "minor_faults": 477,
+                "major_faults": 0,
+                "sample_start": 1791316545.9600286,
+                "sample_end": 1791316546.1611145
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "Tile",
+              "wall_seconds": 0.16260623931884766,
+              "inside_samples": 2,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.06,
+                "system_seconds": 0.04,
+                "minor_faults": 16637,
+                "major_faults": 0,
+                "sample_start": 1791316546.1611145,
+                "sample_end": 1791316546.2615016
+              },
+              "outer": {
+                "user_seconds": 0.24,
+                "system_seconds": 0.06,
+                "minor_faults": 17331,
+                "major_faults": 0,
+                "sample_start": 1791316546.0603848,
+                "sample_end": 1791316546.3618474
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "SaveImages",
+              "wall_seconds": 0.46776294708251953,
+              "inside_samples": 4,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.29,
+                "system_seconds": 0.01,
+                "minor_faults": 0,
+                "major_faults": 0,
+                "sample_start": 1791316546.3618474,
+                "sample_end": 1791316546.6629252
+              },
+              "outer": {
+                "user_seconds": 0.47,
+                "system_seconds": 0.02,
+                "minor_faults": 353,
+                "major_faults": 0,
+                "sample_start": 1791316546.2615016,
+                "sample_end": 1791316546.7632785
+              },
+              "memory_status_samples": [
+                {
+                  "timestamp": 1791316546.4622488,
+                  "VmSize": "2300844 kB",
+                  "VmHWM": "1382208 kB",
+                  "VmRSS": "1336952 kB",
+                  "RssAnon": "1092408 kB",
+                  "RssFile": "244532 kB",
+                  "Threads": "6"
+                }
+              ]
+            },
+            {
+              "step": "ExportToSpreadsheet",
+              "wall_seconds": 0.039202213287353516,
+              "inside_samples": 1,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.15,
+                "system_seconds": 0.0,
+                "minor_faults": 6,
+                "major_faults": 0,
+                "sample_start": 1791316546.6629252,
+                "sample_end": 1791316546.863613
+              },
+              "memory_status_samples": []
+            }
+          ],
+          "scientific_differences": 0
+        },
+        {
+          "repetition": 1,
+          "execution_id": "a3c72050-cc09-4adc-9945-0cfdfe95b151",
+          "server_job_seconds": 2.115302324295044,
+          "compile_seconds": 0.1683809757232666,
+          "total_seconds": 2.3645830638706684,
+          "axis": {
+            "wall_seconds": 2.021477222442627,
+            "inside_samples": 21,
+            "coverage": "complete",
+            "inner": {
+              "user_seconds": 1.86,
+              "system_seconds": 0.11,
+              "minor_faults": 24673,
+              "major_faults": 0,
+              "sample_start": 1791316547.867233,
+              "sample_end": 1791316549.8748636
+            },
+            "outer": {
+              "user_seconds": 1.99,
+              "system_seconds": 0.12,
+              "minor_faults": 24866,
+              "major_faults": 0,
+              "sample_start": 1791316547.76689,
+              "sample_end": 1791316549.975185
+            },
+            "memory_status_samples": [
+              {
+                "timestamp": 1791316548.4695783,
+                "VmSize": "1984940 kB",
+                "VmHWM": "1382208 kB",
+                "VmRSS": "998012 kB",
+                "RssAnon": "753468 kB",
+                "RssFile": "244532 kB",
+                "Threads": "6"
+              },
+              {
+                "timestamp": 1791316549.4735653,
+                "VmSize": "2303916 kB",
+                "VmHWM": "1392224 kB",
+                "VmRSS": "1343196 kB",
+                "RssAnon": "1098652 kB",
+                "RssFile": "244532 kB",
+                "Threads": "6"
+              }
+            ]
+          },
+          "steps": [
+            {
+              "step": "ColorToGray",
+              "wall_seconds": 0.07300472259521484,
+              "inside_samples": 1,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.17,
+                "system_seconds": 0.0,
+                "minor_faults": 308,
+                "major_faults": 0,
+                "sample_start": 1791316547.76689,
+                "sample_end": 1791316547.9675717
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "IdentifyPrimaryObjects",
+              "wall_seconds": 0.4730074405670166,
+              "inside_samples": 5,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.39,
+                "system_seconds": 0.01,
+                "minor_faults": 46,
+                "major_faults": 0,
+                "sample_start": 1791316547.9675717,
+                "sample_end": 1791316548.369164
+              },
+              "outer": {
+                "user_seconds": 0.58,
+                "system_seconds": 0.01,
+                "minor_faults": 4930,
+                "major_faults": 0,
+                "sample_start": 1791316547.867233,
+                "sample_end": 1791316548.4695783
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "MeasureObjectSizeShape",
+              "wall_seconds": 0.14887666702270508,
+              "inside_samples": 1,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.18,
+                "system_seconds": 0.01,
+                "minor_faults": 6562,
+                "major_faults": 0,
+                "sample_start": 1791316548.369164,
+                "sample_end": 1791316548.5700152
+              },
+              "memory_status_samples": [
+                {
+                  "timestamp": 1791316548.4695783,
+                  "VmSize": "1984940 kB",
+                  "VmHWM": "1382208 kB",
+                  "VmRSS": "998012 kB",
+                  "RssAnon": "753468 kB",
+                  "RssFile": "244532 kB",
+                  "Threads": "6"
+                }
+              ]
+            },
+            {
+              "step": "MeasureObjectIntensity",
+              "wall_seconds": 0.05671358108520508,
+              "inside_samples": 1,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.19,
+                "system_seconds": 0.01,
+                "minor_faults": 1845,
+                "major_faults": 0,
+                "sample_start": 1791316548.4695783,
+                "sample_end": 1791316548.6703784
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "TrackObjects",
+              "wall_seconds": 0.5178840160369873,
+              "inside_samples": 5,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.36,
+                "system_seconds": 0.03,
+                "minor_faults": 617,
+                "major_faults": 0,
+                "sample_start": 1791316548.6703784,
+                "sample_end": 1791316549.0719492
+              },
+              "outer": {
+                "user_seconds": 0.56,
+                "system_seconds": 0.03,
+                "minor_faults": 801,
+                "major_faults": 0,
+                "sample_start": 1791316548.5700152,
+                "sample_end": 1791316549.1724005
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "OverlayOutlines",
+              "wall_seconds": 0.13496971130371094,
+              "inside_samples": 1,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.19,
+                "system_seconds": 0.01,
+                "minor_faults": 373,
+                "major_faults": 0,
+                "sample_start": 1791316549.0719492,
+                "sample_end": 1791316549.2727594
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "Tile",
+              "wall_seconds": 0.1562495231628418,
+              "inside_samples": 2,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.07,
+                "system_seconds": 0.03,
+                "minor_faults": 15892,
+                "major_faults": 0,
+                "sample_start": 1791316549.2727594,
+                "sample_end": 1791316549.373135
+              },
+              "outer": {
+                "user_seconds": 0.24,
+                "system_seconds": 0.06,
+                "minor_faults": 17144,
+                "major_faults": 0,
+                "sample_start": 1791316549.1724005,
+                "sample_end": 1791316549.4735653
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "SaveImages",
+              "wall_seconds": 0.4565153121948242,
+              "inside_samples": 4,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.29,
+                "system_seconds": 0.0,
+                "minor_faults": 0,
+                "major_faults": 0,
+                "sample_start": 1791316549.4735653,
+                "sample_end": 1791316549.7745185
+              },
+              "outer": {
+                "user_seconds": 0.47,
+                "system_seconds": 0.02,
+                "minor_faults": 1016,
+                "major_faults": 0,
+                "sample_start": 1791316549.373135,
+                "sample_end": 1791316549.8748636
+              },
+              "memory_status_samples": [
+                {
+                  "timestamp": 1791316549.4735653,
+                  "VmSize": "2303916 kB",
+                  "VmHWM": "1392224 kB",
+                  "VmRSS": "1343196 kB",
+                  "RssAnon": "1098652 kB",
+                  "RssFile": "244532 kB",
+                  "Threads": "6"
+                }
+              ]
+            },
+            {
+              "step": "ExportToSpreadsheet",
+              "wall_seconds": 0.037285566329956055,
+              "inside_samples": 0,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.06,
+                "system_seconds": 0.01,
+                "minor_faults": 4,
+                "major_faults": 0,
+                "sample_start": 1791316549.8748636,
+                "sample_end": 1791316549.975185
+              },
+              "memory_status_samples": []
+            }
+          ],
+          "scientific_differences": 0
+        },
+        {
+          "repetition": 2,
+          "execution_id": "04aa0169-e643-4178-97b3-01ffd119839d",
+          "server_job_seconds": 2.0978965759277344,
+          "compile_seconds": 0.15920472145080566,
+          "total_seconds": 2.3244391726329923,
+          "axis": {
+            "wall_seconds": 2.0086941719055176,
+            "inside_samples": 20,
+            "coverage": "complete",
+            "inner": {
+              "user_seconds": 1.77,
+              "system_seconds": 0.1,
+              "minor_faults": 24482,
+              "major_faults": 0,
+              "sample_start": 1791316550.8785675,
+              "sample_end": 1791316552.7858407
+            },
+            "outer": {
+              "user_seconds": 1.93,
+              "system_seconds": 0.12,
+              "minor_faults": 24670,
+              "major_faults": 0,
+              "sample_start": 1791316550.7781081,
+              "sample_end": 1791316552.8861806
+            },
+            "memory_status_samples": [
+              {
+                "timestamp": 1791316551.4810548,
+                "VmSize": "1989036 kB",
+                "VmHWM": "1392224 kB",
+                "VmRSS": "1014944 kB",
+                "RssAnon": "770400 kB",
+                "RssFile": "244532 kB",
+                "Threads": "6"
+              },
+              {
+                "timestamp": 1791316552.484831,
+                "VmSize": "2321008 kB",
+                "VmHWM": "1395236 kB",
+                "VmRSS": "1361308 kB",
+                "RssAnon": "1116764 kB",
+                "RssFile": "244532 kB",
+                "Threads": "6"
+              }
+            ]
+          },
+          "steps": [
+            {
+              "step": "ColorToGray",
+              "wall_seconds": 0.07045698165893555,
+              "inside_samples": 1,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.16,
+                "system_seconds": 0.02,
+                "minor_faults": 4606,
+                "major_faults": 0,
+                "sample_start": 1791316550.7781081,
+                "sample_end": 1791316550.978936
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "IdentifyPrimaryObjects",
+              "wall_seconds": 0.46746110916137695,
+              "inside_samples": 4,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.29,
+                "system_seconds": 0.0,
+                "minor_faults": 1,
+                "major_faults": 0,
+                "sample_start": 1791316550.978936,
+                "sample_end": 1791316551.2801483
+              },
+              "outer": {
+                "user_seconds": 0.48,
+                "system_seconds": 0.01,
+                "minor_faults": 4730,
+                "major_faults": 0,
+                "sample_start": 1791316550.8785675,
+                "sample_end": 1791316551.3806362
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "MeasureObjectSizeShape",
+              "wall_seconds": 0.14536666870117188,
+              "inside_samples": 2,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.09,
+                "system_seconds": 0.01,
+                "minor_faults": 525,
+                "major_faults": 0,
+                "sample_start": 1791316551.3806362,
+                "sample_end": 1791316551.4810548
+              },
+              "outer": {
+                "user_seconds": 0.28,
+                "system_seconds": 0.01,
+                "minor_faults": 1392,
+                "major_faults": 0,
+                "sample_start": 1791316551.2801483,
+                "sample_end": 1791316551.5814538
+              },
+              "memory_status_samples": [
+                {
+                  "timestamp": 1791316551.4810548,
+                  "VmSize": "1989036 kB",
+                  "VmHWM": "1392224 kB",
+                  "VmRSS": "1014944 kB",
+                  "RssAnon": "770400 kB",
+                  "RssFile": "244532 kB",
+                  "Threads": "6"
+                }
+              ]
+            },
+            {
+              "step": "MeasureObjectIntensity",
+              "wall_seconds": 0.05489611625671387,
+              "inside_samples": 0,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.09,
+                "system_seconds": 0.0,
+                "minor_faults": 560,
+                "major_faults": 0,
+                "sample_start": 1791316551.4810548,
+                "sample_end": 1791316551.5814538
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "TrackObjects",
+              "wall_seconds": 0.5209963321685791,
+              "inside_samples": 6,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.47,
+                "system_seconds": 0.03,
+                "minor_faults": 2441,
+                "major_faults": 0,
+                "sample_start": 1791316551.5814538,
+                "sample_end": 1791316552.0832655
+              },
+              "outer": {
+                "user_seconds": 0.66,
+                "system_seconds": 0.03,
+                "minor_faults": 3521,
+                "major_faults": 0,
+                "sample_start": 1791316551.4810548,
+                "sample_end": 1791316552.1837049
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "OverlayOutlines",
+              "wall_seconds": 0.13677024841308594,
+              "inside_samples": 1,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.19,
+                "system_seconds": 0.01,
+                "minor_faults": 1302,
+                "major_faults": 0,
+                "sample_start": 1791316552.0832655,
+                "sample_end": 1791316552.2840774
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "Tile",
+              "wall_seconds": 0.15504884719848633,
+              "inside_samples": 2,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.05,
+                "system_seconds": 0.04,
+                "minor_faults": 14483,
+                "major_faults": 0,
+                "sample_start": 1791316552.2840774,
+                "sample_end": 1791316552.3844337
+              },
+              "outer": {
+                "user_seconds": 0.24,
+                "system_seconds": 0.05,
+                "minor_faults": 15706,
+                "major_faults": 0,
+                "sample_start": 1791316552.1837049,
+                "sample_end": 1791316552.484831
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "SaveImages",
+              "wall_seconds": 0.4539790153503418,
+              "inside_samples": 4,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.3,
+                "system_seconds": 0.0,
+                "minor_faults": 0,
+                "major_faults": 0,
+                "sample_start": 1791316552.484831,
+                "sample_end": 1791316552.7858407
+              },
+              "outer": {
+                "user_seconds": 0.49,
+                "system_seconds": 0.01,
+                "minor_faults": 445,
+                "major_faults": 0,
+                "sample_start": 1791316552.3844337,
+                "sample_end": 1791316552.8861806
+              },
+              "memory_status_samples": [
+                {
+                  "timestamp": 1791316552.484831,
+                  "VmSize": "2321008 kB",
+                  "VmHWM": "1395236 kB",
+                  "VmRSS": "1361308 kB",
+                  "RssAnon": "1116764 kB",
+                  "RssFile": "244532 kB",
+                  "Threads": "6"
+                }
+              ]
+            },
+            {
+              "step": "ExportToSpreadsheet",
+              "wall_seconds": 0.03803849220275879,
+              "inside_samples": 0,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.09,
+                "system_seconds": 0.01,
+                "minor_faults": 4,
+                "major_faults": 0,
+                "sample_start": 1791316552.7858407,
+                "sample_end": 1791316552.8861806
+              },
+              "memory_status_samples": []
+            }
+          ],
+          "scientific_differences": 0
+        }
+      ],
+      "median_server_seconds": 2.115302324295044,
+      "median_total_seconds": 2.3645830638706684,
+      "global_vmstat_delta": {
+        "thp_migration_success": 0,
+        "thp_migration_fail": 0,
+        "thp_migration_split": 0,
+        "compact_migrate_scanned": 2526923,
+        "compact_free_scanned": 685054,
+        "compact_isolated": 833102,
+        "compact_stall": 0,
+        "compact_fail": 0,
+        "compact_success": 0,
+        "compact_daemon_wake": 0,
+        "compact_daemon_migrate_scanned": 2526923,
+        "compact_daemon_free_scanned": 685054,
+        "thp_fault_alloc": 1220,
+        "thp_fault_fallback": 0,
+        "thp_fault_fallback_charge": 0,
+        "thp_collapse_alloc": 0,
+        "thp_collapse_alloc_failed": 0,
+        "thp_file_alloc": 0,
+        "thp_file_fallback": 0,
+        "thp_file_fallback_charge": 0,
+        "thp_file_mapped": 0,
+        "thp_split_page": 0,
+        "thp_split_page_failed": 0,
+        "thp_deferred_split_page": 19,
+        "thp_underused_split_page": 0,
+        "thp_split_pmd": 24,
+        "thp_scan_exceed_none_pte": 0,
+        "thp_scan_exceed_swap_pte": 0,
+        "thp_scan_exceed_share_pte": 0,
+        "thp_split_pud": 0,
+        "thp_zero_page_alloc": 0,
+        "thp_zero_page_alloc_failed": 0,
+        "thp_swpout": 0,
+        "thp_swpout_fallback": 0
+      },
+      "all_science_and_custody_pass": true
+    },
+    {
+      "advice": 0,
+      "dependency_seal_sha256": "7e73cafd566b11c251283b68a34a09174e162e59f5c902b91828fd2026f814f2",
+      "repetitions": [
+        {
+          "repetition": -1,
+          "execution_id": "53177919-c102-4eef-bb94-0242394e4313",
+          "server_job_seconds": 2.250854969024658,
+          "compile_seconds": 0.2044522762298584,
+          "total_seconds": 2.5380105832591653,
+          "axis": {
+            "wall_seconds": 2.155060291290283,
+            "inside_samples": 21,
+            "coverage": "complete",
+            "inner": {
+              "user_seconds": 1.78,
+              "system_seconds": 0.19,
+              "minor_faults": 85535,
+              "major_faults": 0,
+              "sample_start": 1791316593.7271113,
+              "sample_end": 1791316595.7350807
+            },
+            "outer": {
+              "user_seconds": 1.94,
+              "system_seconds": 0.21,
+              "minor_faults": 93508,
+              "major_faults": 0,
+              "sample_start": 1791316593.626717,
+              "sample_end": 1791316595.8354352
+            },
+            "memory_status_samples": [
+              {
+                "timestamp": 1791316594.5305634,
+                "VmSize": "1815404 kB",
+                "VmHWM": "967372 kB",
+                "VmRSS": "956024 kB",
+                "RssAnon": "688992 kB",
+                "RssFile": "267020 kB",
+                "Threads": "6"
+              },
+              {
+                "timestamp": 1791316595.5343997,
+                "VmSize": "2212092 kB",
+                "VmHWM": "1370504 kB",
+                "VmRSS": "1348380 kB",
+                "RssAnon": "1079740 kB",
+                "RssFile": "268628 kB",
+                "Threads": "6"
+              }
+            ]
+          },
+          "steps": [
+            {
+              "step": "ColorToGray",
+              "wall_seconds": 0.09452700614929199,
+              "inside_samples": 1,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.13,
+                "system_seconds": 0.05,
+                "minor_faults": 21762,
+                "major_faults": 0,
+                "sample_start": 1791316593.626717,
+                "sample_end": 1791316593.8274841
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "IdentifyPrimaryObjects",
+              "wall_seconds": 0.5114829540252686,
+              "inside_samples": 5,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.37,
+                "system_seconds": 0.03,
+                "minor_faults": 19579,
+                "major_faults": 0,
+                "sample_start": 1791316593.8274841,
+                "sample_end": 1791316594.229048
+              },
+              "outer": {
+                "user_seconds": 0.53,
+                "system_seconds": 0.06,
+                "minor_faults": 35772,
+                "major_faults": 0,
+                "sample_start": 1791316593.7271113,
+                "sample_end": 1791316594.329392
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "MeasureObjectSizeShape",
+              "wall_seconds": 0.146895170211792,
+              "inside_samples": 1,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.19,
+                "system_seconds": 0.0,
+                "minor_faults": 2362,
+                "major_faults": 0,
+                "sample_start": 1791316594.229048,
+                "sample_end": 1791316594.430071
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "MeasureObjectIntensity",
+              "wall_seconds": 0.056542158126831055,
+              "inside_samples": 1,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.19,
+                "system_seconds": 0.01,
+                "minor_faults": 793,
+                "major_faults": 0,
+                "sample_start": 1791316594.329392,
+                "sample_end": 1791316594.5305634
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "TrackObjects",
+              "wall_seconds": 0.5730617046356201,
+              "inside_samples": 6,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.44,
+                "system_seconds": 0.05,
+                "minor_faults": 25854,
+                "major_faults": 0,
+                "sample_start": 1791316594.5305634,
+                "sample_end": 1791316595.0322378
+              },
+              "outer": {
+                "user_seconds": 0.63,
+                "system_seconds": 0.06,
+                "minor_faults": 27642,
+                "major_faults": 0,
+                "sample_start": 1791316594.430071,
+                "sample_end": 1791316595.1326425
+              },
+              "memory_status_samples": [
+                {
+                  "timestamp": 1791316594.5305634,
+                  "VmSize": "1815404 kB",
+                  "VmHWM": "967372 kB",
+                  "VmRSS": "956024 kB",
+                  "RssAnon": "688992 kB",
+                  "RssFile": "267020 kB",
+                  "Threads": "6"
+                }
+              ]
+            },
+            {
+              "step": "OverlayOutlines",
+              "wall_seconds": 0.1392991542816162,
+              "inside_samples": 1,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.19,
+                "system_seconds": 0.01,
+                "minor_faults": 4663,
+                "major_faults": 0,
+                "sample_start": 1791316595.0322378,
+                "sample_end": 1791316595.2331176
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "Tile",
+              "wall_seconds": 0.15868425369262695,
+              "inside_samples": 2,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.05,
+                "system_seconds": 0.04,
+                "minor_faults": 17562,
+                "major_faults": 0,
+                "sample_start": 1791316595.2331176,
+                "sample_end": 1791316595.3335903
+              },
+              "outer": {
+                "user_seconds": 0.23,
+                "system_seconds": 0.06,
+                "minor_faults": 21978,
+                "major_faults": 0,
+                "sample_start": 1791316595.1326425,
+                "sample_end": 1791316595.4339314
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "SaveImages",
+              "wall_seconds": 0.46993494033813477,
+              "inside_samples": 4,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.29,
+                "system_seconds": 0.01,
+                "minor_faults": 84,
+                "major_faults": 0,
+                "sample_start": 1791316595.4339314,
+                "sample_end": 1791316595.7350807
+              },
+              "outer": {
+                "user_seconds": 0.48,
+                "system_seconds": 0.02,
+                "minor_faults": 992,
+                "major_faults": 0,
+                "sample_start": 1791316595.3335903,
+                "sample_end": 1791316595.8354352
+              },
+              "memory_status_samples": [
+                {
+                  "timestamp": 1791316595.5343997,
+                  "VmSize": "2212092 kB",
+                  "VmHWM": "1370504 kB",
+                  "VmRSS": "1348380 kB",
+                  "RssAnon": "1079740 kB",
+                  "RssFile": "268628 kB",
+                  "Threads": "6"
+                }
+              ]
+            },
+            {
+              "step": "ExportToSpreadsheet",
+              "wall_seconds": 0.04048013687133789,
+              "inside_samples": 1,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.15,
+                "system_seconds": 0.01,
+                "minor_faults": 240,
+                "major_faults": 0,
+                "sample_start": 1791316595.7350807,
+                "sample_end": 1791316595.935787
+              },
+              "memory_status_samples": []
+            }
+          ],
+          "scientific_differences": 0
+        },
+        {
+          "repetition": 0,
+          "execution_id": "4a7c451d-1b84-45af-899d-93f1425cd88d",
+          "server_job_seconds": 2.080681800842285,
+          "compile_seconds": 0.16181278228759766,
+          "total_seconds": 2.3256498593837023,
+          "axis": {
+            "wall_seconds": 1.9891810417175293,
+            "inside_samples": 20,
+            "coverage": "complete",
+            "inner": {
+              "user_seconds": 1.79,
+              "system_seconds": 0.08,
+              "minor_faults": 17771,
+              "major_faults": 0,
+              "sample_start": 1791316597.5417671,
+              "sample_end": 1791316599.4491854
+            },
+            "outer": {
+              "user_seconds": 1.95,
+              "system_seconds": 0.09,
+              "minor_faults": 17955,
+              "major_faults": 0,
+              "sample_start": 1791316597.4412842,
+              "sample_end": 1791316599.5497122
+            },
+            "memory_status_samples": [
+              {
+                "timestamp": 1791316597.5417671,
+                "VmSize": "1979748 kB",
+                "VmHWM": "1370504 kB",
+                "VmRSS": "981960 kB",
+                "RssAnon": "713196 kB",
+                "RssFile": "268752 kB",
+                "Threads": "6"
+              },
+              {
+                "timestamp": 1791316598.5457232,
+                "VmSize": "1981796 kB",
+                "VmHWM": "1370504 kB",
+                "VmRSS": "1032948 kB",
+                "RssAnon": "764184 kB",
+                "RssFile": "268752 kB",
+                "Threads": "6"
+              }
+            ]
+          },
+          "steps": [
+            {
+              "step": "ColorToGray",
+              "wall_seconds": 0.07009673118591309,
+              "inside_samples": 1,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.16,
+                "system_seconds": 0.01,
+                "minor_faults": 183,
+                "major_faults": 0,
+                "sample_start": 1791316597.4412842,
+                "sample_end": 1791316597.642134
+              },
+              "memory_status_samples": [
+                {
+                  "timestamp": 1791316597.5417671,
+                  "VmSize": "1979748 kB",
+                  "VmHWM": "1370504 kB",
+                  "VmRSS": "981960 kB",
+                  "RssAnon": "713196 kB",
+                  "RssFile": "268752 kB",
+                  "Threads": "6"
+                }
+              ]
+            },
+            {
+              "step": "IdentifyPrimaryObjects",
+              "wall_seconds": 0.4593219757080078,
+              "inside_samples": 5,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.4,
+                "system_seconds": 0.0,
+                "minor_faults": 113,
+                "major_faults": 0,
+                "sample_start": 1791316597.642134,
+                "sample_end": 1791316598.0436797
+              },
+              "outer": {
+                "user_seconds": 0.58,
+                "system_seconds": 0.0,
+                "minor_faults": 580,
+                "major_faults": 0,
+                "sample_start": 1791316597.5417671,
+                "sample_end": 1791316598.1440384
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "MeasureObjectSizeShape",
+              "wall_seconds": 0.14386796951293945,
+              "inside_samples": 1,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.19,
+                "system_seconds": 0.0,
+                "minor_faults": 504,
+                "major_faults": 0,
+                "sample_start": 1791316598.0436797,
+                "sample_end": 1791316598.2444181
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "MeasureObjectIntensity",
+              "wall_seconds": 0.05467939376831055,
+              "inside_samples": 1,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.19,
+                "system_seconds": 0.01,
+                "minor_faults": 159,
+                "major_faults": 0,
+                "sample_start": 1791316598.1440384,
+                "sample_end": 1791316598.3448005
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "TrackObjects",
+              "wall_seconds": 0.5187580585479736,
+              "inside_samples": 5,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.37,
+                "system_seconds": 0.02,
+                "minor_faults": 611,
+                "major_faults": 0,
+                "sample_start": 1791316598.3448005,
+                "sample_end": 1791316598.7464318
+              },
+              "outer": {
+                "user_seconds": 0.56,
+                "system_seconds": 0.03,
+                "minor_faults": 845,
+                "major_faults": 0,
+                "sample_start": 1791316598.2444181,
+                "sample_end": 1791316598.846786
+              },
+              "memory_status_samples": [
+                {
+                  "timestamp": 1791316598.5457232,
+                  "VmSize": "1981796 kB",
+                  "VmHWM": "1370504 kB",
+                  "VmRSS": "1032948 kB",
+                  "RssAnon": "764184 kB",
+                  "RssFile": "268752 kB",
+                  "Threads": "6"
+                }
+              ]
+            },
+            {
+              "step": "OverlayOutlines",
+              "wall_seconds": 0.1322040557861328,
+              "inside_samples": 1,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.19,
+                "system_seconds": 0.01,
+                "minor_faults": 469,
+                "major_faults": 0,
+                "sample_start": 1791316598.7464318,
+                "sample_end": 1791316598.9471495
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "Tile",
+              "wall_seconds": 0.15543651580810547,
+              "inside_samples": 2,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.07,
+                "system_seconds": 0.03,
+                "minor_faults": 15945,
+                "major_faults": 0,
+                "sample_start": 1791316598.9471495,
+                "sample_end": 1791316599.0476758
+              },
+              "outer": {
+                "user_seconds": 0.25,
+                "system_seconds": 0.04,
+                "minor_faults": 16307,
+                "major_faults": 0,
+                "sample_start": 1791316598.846786,
+                "sample_end": 1791316599.1479874
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "SaveImages",
+              "wall_seconds": 0.45218849182128906,
+              "inside_samples": 4,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.3,
+                "system_seconds": 0.01,
+                "minor_faults": 0,
+                "major_faults": 0,
+                "sample_start": 1791316599.1479874,
+                "sample_end": 1791316599.4491854
+              },
+              "outer": {
+                "user_seconds": 0.48,
+                "system_seconds": 0.01,
+                "minor_faults": 10,
+                "major_faults": 0,
+                "sample_start": 1791316599.0476758,
+                "sample_end": 1791316599.5497122
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "ExportToSpreadsheet",
+              "wall_seconds": 0.03804349899291992,
+              "inside_samples": 1,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.12,
+                "system_seconds": 0.0,
+                "minor_faults": 5,
+                "major_faults": 0,
+                "sample_start": 1791316599.4491854,
+                "sample_end": 1791316599.6501117
+              },
+              "memory_status_samples": [
+                {
+                  "timestamp": 1791316599.5497122,
+                  "VmSize": "1982836 kB",
+                  "VmHWM": "1406264 kB",
+                  "VmRSS": "985592 kB",
+                  "RssAnon": "716828 kB",
+                  "RssFile": "268752 kB",
+                  "Threads": "7"
+                }
+              ]
+            }
+          ],
+          "scientific_differences": 0
+        },
+        {
+          "repetition": 1,
+          "execution_id": "e839238c-b86f-4de6-8728-2e3ca92d3327",
+          "server_job_seconds": 2.0817956924438477,
+          "compile_seconds": 0.1607818603515625,
+          "total_seconds": 2.319590021856129,
+          "axis": {
+            "wall_seconds": 1.9898874759674072,
+            "inside_samples": 19,
+            "coverage": "complete",
+            "inner": {
+              "user_seconds": 1.68,
+              "system_seconds": 0.09,
+              "minor_faults": 19637,
+              "major_faults": 0,
+              "sample_start": 1791316600.6541445,
+              "sample_end": 1791316602.4610283
+            },
+            "outer": {
+              "user_seconds": 1.85,
+              "system_seconds": 0.11,
+              "minor_faults": 19871,
+              "major_faults": 0,
+              "sample_start": 1791316600.5537775,
+              "sample_end": 1791316602.5615165
+            },
+            "memory_status_samples": [
+              {
+                "timestamp": 1791316601.5576293,
+                "VmSize": "1984868 kB",
+                "VmHWM": "1406264 kB",
+                "VmRSS": "1046576 kB",
+                "RssAnon": "777812 kB",
+                "RssFile": "268752 kB",
+                "Threads": "6"
+              }
+            ]
+          },
+          "steps": [
+            {
+              "step": "ColorToGray",
+              "wall_seconds": 0.06958818435668945,
+              "inside_samples": 0,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.08,
+                "system_seconds": 0.01,
+                "minor_faults": 231,
+                "major_faults": 0,
+                "sample_start": 1791316600.5537775,
+                "sample_end": 1791316600.6541445
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "IdentifyPrimaryObjects",
+              "wall_seconds": 0.4621875286102295,
+              "inside_samples": 5,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.4,
+                "system_seconds": 0.0,
+                "minor_faults": 25,
+                "major_faults": 0,
+                "sample_start": 1791316600.6541445,
+                "sample_end": 1791316601.0556805
+              },
+              "outer": {
+                "user_seconds": 0.57,
+                "system_seconds": 0.01,
+                "minor_faults": 788,
+                "major_faults": 0,
+                "sample_start": 1791316600.5537775,
+                "sample_end": 1791316601.15603
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "MeasureObjectSizeShape",
+              "wall_seconds": 0.14654040336608887,
+              "inside_samples": 1,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.19,
+                "system_seconds": 0.0,
+                "minor_faults": 939,
+                "major_faults": 0,
+                "sample_start": 1791316601.0556805,
+                "sample_end": 1791316601.2564237
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "MeasureObjectIntensity",
+              "wall_seconds": 0.0557100772857666,
+              "inside_samples": 1,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.19,
+                "system_seconds": 0.0,
+                "minor_faults": 459,
+                "major_faults": 0,
+                "sample_start": 1791316601.15603,
+                "sample_end": 1791316601.3567858
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "TrackObjects",
+              "wall_seconds": 0.5143105983734131,
+              "inside_samples": 5,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.37,
+                "system_seconds": 0.03,
+                "minor_faults": 590,
+                "major_faults": 0,
+                "sample_start": 1791316601.3567858,
+                "sample_end": 1791316601.7583697
+              },
+              "outer": {
+                "user_seconds": 0.56,
+                "system_seconds": 0.03,
+                "minor_faults": 788,
+                "major_faults": 0,
+                "sample_start": 1791316601.2564237,
+                "sample_end": 1791316601.8587234
+              },
+              "memory_status_samples": [
+                {
+                  "timestamp": 1791316601.5576293,
+                  "VmSize": "1984868 kB",
+                  "VmHWM": "1406264 kB",
+                  "VmRSS": "1046576 kB",
+                  "RssAnon": "777812 kB",
+                  "RssFile": "268752 kB",
+                  "Threads": "6"
+                }
+              ]
+            },
+            {
+              "step": "OverlayOutlines",
+              "wall_seconds": 0.13279962539672852,
+              "inside_samples": 1,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.19,
+                "system_seconds": 0.01,
+                "minor_faults": 380,
+                "major_faults": 0,
+                "sample_start": 1791316601.7583697,
+                "sample_end": 1791316601.9590964
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "Tile",
+              "wall_seconds": 0.15608620643615723,
+              "inside_samples": 2,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.06,
+                "system_seconds": 0.04,
+                "minor_faults": 16945,
+                "major_faults": 0,
+                "sample_start": 1791316601.9590964,
+                "sample_end": 1791316602.0595884
+              },
+              "outer": {
+                "user_seconds": 0.24,
+                "system_seconds": 0.06,
+                "minor_faults": 17885,
+                "major_faults": 0,
+                "sample_start": 1791316601.8587234,
+                "sample_end": 1791316602.1599567
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "SaveImages",
+              "wall_seconds": 0.4499669075012207,
+              "inside_samples": 4,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.29,
+                "system_seconds": 0.0,
+                "minor_faults": 0,
+                "major_faults": 0,
+                "sample_start": 1791316602.1599567,
+                "sample_end": 1791316602.4610283
+              },
+              "outer": {
+                "user_seconds": 0.47,
+                "system_seconds": 0.02,
+                "minor_faults": 709,
+                "major_faults": 0,
+                "sample_start": 1791316602.0595884,
+                "sample_end": 1791316602.5615165
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "ExportToSpreadsheet",
+              "wall_seconds": 0.03813886642456055,
+              "inside_samples": 1,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.14,
+                "system_seconds": 0.01,
+                "minor_faults": 7,
+                "major_faults": 0,
+                "sample_start": 1791316602.4610283,
+                "sample_end": 1791316602.6618752
+              },
+              "memory_status_samples": [
+                {
+                  "timestamp": 1791316602.5615165,
+                  "VmSize": "1985908 kB",
+                  "VmHWM": "1421004 kB",
+                  "VmRSS": "988592 kB",
+                  "RssAnon": "719828 kB",
+                  "RssFile": "268752 kB",
+                  "Threads": "7"
+                }
+              ]
+            }
+          ],
+          "scientific_differences": 0
+        },
+        {
+          "repetition": 2,
+          "execution_id": "6ced2a71-70ed-41f3-9d3c-76e45090f0f0",
+          "server_job_seconds": 2.1113479137420654,
+          "compile_seconds": 0.15967774391174316,
+          "total_seconds": 2.356520783621818,
+          "axis": {
+            "wall_seconds": 2.020988941192627,
+            "inside_samples": 20,
+            "coverage": "complete",
+            "inner": {
+              "user_seconds": 1.75,
+              "system_seconds": 0.12,
+              "minor_faults": 27532,
+              "major_faults": 0,
+              "sample_start": 1791316603.5652034,
+              "sample_end": 1791316605.473078
+            },
+            "outer": {
+              "user_seconds": 1.91,
+              "system_seconds": 0.14,
+              "minor_faults": 27690,
+              "major_faults": 0,
+              "sample_start": 1791316603.4647188,
+              "sample_end": 1791316605.573571
+            },
+            "memory_status_samples": [
+              {
+                "timestamp": 1791316603.5652034,
+                "VmSize": "1986916 kB",
+                "VmHWM": "1421004 kB",
+                "VmRSS": "989460 kB",
+                "RssAnon": "720696 kB",
+                "RssFile": "268752 kB",
+                "Threads": "6"
+              },
+              {
+                "timestamp": 1791316604.5695047,
+                "VmSize": "1988964 kB",
+                "VmHWM": "1421004 kB",
+                "VmRSS": "1054224 kB",
+                "RssAnon": "785460 kB",
+                "RssFile": "268752 kB",
+                "Threads": "6"
+              }
+            ]
+          },
+          "steps": [
+            {
+              "step": "ColorToGray",
+              "wall_seconds": 0.06952476501464844,
+              "inside_samples": 1,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.17,
+                "system_seconds": 0.01,
+                "minor_faults": 718,
+                "major_faults": 0,
+                "sample_start": 1791316603.4647188,
+                "sample_end": 1791316603.6655743
+              },
+              "memory_status_samples": [
+                {
+                  "timestamp": 1791316603.5652034,
+                  "VmSize": "1986916 kB",
+                  "VmHWM": "1421004 kB",
+                  "VmRSS": "989460 kB",
+                  "RssAnon": "720696 kB",
+                  "RssFile": "268752 kB",
+                  "Threads": "6"
+                }
+              ]
+            },
+            {
+              "step": "IdentifyPrimaryObjects",
+              "wall_seconds": 0.4627561569213867,
+              "inside_samples": 4,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.29,
+                "system_seconds": 0.0,
+                "minor_faults": 0,
+                "major_faults": 0,
+                "sample_start": 1791316603.6655743,
+                "sample_end": 1791316603.966723
+              },
+              "outer": {
+                "user_seconds": 0.49,
+                "system_seconds": 0.0,
+                "minor_faults": 659,
+                "major_faults": 0,
+                "sample_start": 1791316603.5652034,
+                "sample_end": 1791316604.0671825
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "MeasureObjectSizeShape",
+              "wall_seconds": 0.14741015434265137,
+              "inside_samples": 2,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.1,
+                "system_seconds": 0.0,
+                "minor_faults": 15,
+                "major_faults": 0,
+                "sample_start": 1791316604.0671825,
+                "sample_end": 1791316604.167609
+              },
+              "outer": {
+                "user_seconds": 0.29,
+                "system_seconds": 0.01,
+                "minor_faults": 403,
+                "major_faults": 0,
+                "sample_start": 1791316603.966723,
+                "sample_end": 1791316604.2680652
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "MeasureObjectIntensity",
+              "wall_seconds": 0.05633258819580078,
+              "inside_samples": 0,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.09,
+                "system_seconds": 0.01,
+                "minor_faults": 291,
+                "major_faults": 0,
+                "sample_start": 1791316604.167609,
+                "sample_end": 1791316604.2680652
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "TrackObjects",
+              "wall_seconds": 0.5363941192626953,
+              "inside_samples": 6,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.45,
+                "system_seconds": 0.04,
+                "minor_faults": 5349,
+                "major_faults": 0,
+                "sample_start": 1791316604.2680652,
+                "sample_end": 1791316604.7702484
+              },
+              "outer": {
+                "user_seconds": 0.64,
+                "system_seconds": 0.05,
+                "minor_faults": 6026,
+                "major_faults": 0,
+                "sample_start": 1791316604.167609,
+                "sample_end": 1791316604.8706021
+              },
+              "memory_status_samples": [
+                {
+                  "timestamp": 1791316604.5695047,
+                  "VmSize": "1988964 kB",
+                  "VmHWM": "1421004 kB",
+                  "VmRSS": "1054224 kB",
+                  "RssAnon": "785460 kB",
+                  "RssFile": "268752 kB",
+                  "Threads": "6"
+                }
+              ]
+            },
+            {
+              "step": "OverlayOutlines",
+              "wall_seconds": 0.13694310188293457,
+              "inside_samples": 1,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.18,
+                "system_seconds": 0.01,
+                "minor_faults": 2823,
+                "major_faults": 0,
+                "sample_start": 1791316604.7702484,
+                "sample_end": 1791316604.9711626
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "Tile",
+              "wall_seconds": 0.15585947036743164,
+              "inside_samples": 2,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.06,
+                "system_seconds": 0.04,
+                "minor_faults": 17880,
+                "major_faults": 0,
+                "sample_start": 1791316604.9711626,
+                "sample_end": 1791316605.0716596
+              },
+              "outer": {
+                "user_seconds": 0.23,
+                "system_seconds": 0.07,
+                "minor_faults": 20832,
+                "major_faults": 0,
+                "sample_start": 1791316604.8706021,
+                "sample_end": 1791316605.1719959
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "SaveImages",
+              "wall_seconds": 0.45310449600219727,
+              "inside_samples": 4,
+              "coverage": "complete",
+              "inner": {
+                "user_seconds": 0.29,
+                "system_seconds": 0.0,
+                "minor_faults": 0,
+                "major_faults": 0,
+                "sample_start": 1791316605.1719959,
+                "sample_end": 1791316605.473078
+              },
+              "outer": {
+                "user_seconds": 0.47,
+                "system_seconds": 0.03,
+                "minor_faults": 517,
+                "major_faults": 0,
+                "sample_start": 1791316605.0716596,
+                "sample_end": 1791316605.573571
+              },
+              "memory_status_samples": []
+            },
+            {
+              "step": "ExportToSpreadsheet",
+              "wall_seconds": 0.03792595863342285,
+              "inside_samples": 1,
+              "coverage": "complete",
+              "outer": {
+                "user_seconds": 0.13,
+                "system_seconds": 0.01,
+                "minor_faults": 8,
+                "major_faults": 0,
+                "sample_start": 1791316605.473078,
+                "sample_end": 1791316605.6739264
+              },
+              "memory_status_samples": [
+                {
+                  "timestamp": 1791316605.573571,
+                  "VmSize": "1990004 kB",
+                  "VmHWM": "1437664 kB",
+                  "VmRSS": "1055424 kB",
+                  "RssAnon": "786660 kB",
+                  "RssFile": "268752 kB",
+                  "Threads": "7"
+                }
+              ]
+            }
+          ],
+          "scientific_differences": 0
+        }
+      ],
+      "median_server_seconds": 2.0817956924438477,
+      "median_total_seconds": 2.3256498593837023,
+      "global_vmstat_delta": {
+        "thp_migration_success": 0,
+        "thp_migration_fail": 0,
+        "thp_migration_split": 0,
+        "compact_migrate_scanned": 1030347,
+        "compact_free_scanned": 270404,
+        "compact_isolated": 23629,
+        "compact_stall": 0,
+        "compact_fail": 0,
+        "compact_success": 0,
+        "compact_daemon_wake": 0,
+        "compact_daemon_migrate_scanned": 1030347,
+        "compact_daemon_free_scanned": 270404,
+        "thp_fault_alloc": 1336,
+        "thp_fault_fallback": 0,
+        "thp_fault_fallback_charge": 0,
+        "thp_collapse_alloc": 0,
+        "thp_collapse_alloc_failed": 0,
+        "thp_file_alloc": 0,
+        "thp_file_fallback": 0,
+        "thp_file_fallback_charge": 0,
+        "thp_file_mapped": 0,
+        "thp_split_page": 0,
+        "thp_split_page_failed": 0,
+        "thp_deferred_split_page": 1,
+        "thp_underused_split_page": 0,
+        "thp_split_pmd": 2,
+        "thp_scan_exceed_none_pte": 0,
+        "thp_scan_exceed_swap_pte": 0,
+        "thp_scan_exceed_share_pte": 0,
+        "thp_split_pud": 0,
+        "thp_zero_page_alloc": 0,
+        "thp_zero_page_alloc_failed": 0,
+        "thp_swpout": 0,
+        "thp_swpout_fallback": 0
+      },
+      "all_science_and_custody_pass": true
+    }
+  ],
+  "median_server_delta_advice0_minus1": -0.03350663185119629,
+  "limitations": [
+    "Sequential arms can differ in host and allocation history; not an interleaved ABBA causal proof.",
+    "Fresh standalone fast advice1 nonrecurrence makes this comparison inconclusive for history-dependent spikes.",
+    "NUMPY_MADVISE_HUGEPAGE=0 disables NumPy advice, not global THP enabled=always.",
+    "No3D bandwidth or multiworker scaling inference follows from Track alone."
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "openhcs/core/_tabular_native.abi3.so": {
+    "sha256": "5fe275a436726553d0f05b068fb682592b55be5b2baded4db68427b1e47a0b3e",
+    "size": 211528
+  },
+  "openhcs/processing/backends/cellprofiler/_font_raster_native.abi3.so": {
+    "sha256": "7aad0b4896417813ea51f80e9a4db4a17e5c7e27a6f95b8ea478def9cd08049c",
+    "size": 3692512
+  },
+  "openhcs/processing/backends/cellprofiler/_median_native.abi3.so": {
+    "sha256": "16176a7e0f728cb59aef931579b892991232b8f10357b0954410ecac87ebd205",
+    "size": 662768
+  },
+  "openhcs/processing/backends/cellprofiler/_granularity_native.abi3.so": {
+    "sha256": "225582abe43e5409af6844b18da777c43ec3130458461fc62831ff5f16cd79a9",
+    "size": 166480
+  }
+}
