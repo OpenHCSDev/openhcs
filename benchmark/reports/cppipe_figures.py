@@ -140,7 +140,7 @@ class MeasuredBatchSummarySource(SummarySource):
         if len(counts) != 1:
             raise ValueError("Measured mode must have one declared CP process count")
         count = counts.pop()
-        return f"CP ({self.label})" if count == 1 else f"CP ({count} independent processes; calibration)"
+        return f"CP ({self.label})" if count == 1 else f"CP ({self.label}; {count} independent processes; calibration)"
 
     @property
     def candidate_method(self) -> str:
