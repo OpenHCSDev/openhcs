@@ -181,10 +181,21 @@ receipt retain fresh installed callable/compile/execute acceptance. Current
 source registration and primitive parity are established; locate later evidence
 or exercise that small actual path before closure.
 
-Issue424 is implemented by PR425 and controls cover both consumers, generated
-MCP schema and PipelineDocument roundtrip. Its qualification explicitly leaves
-fresh installed catalog/native acceptance distinct. It is not an unpublished
-checkout change. Determine that remaining path before recording full closure.
+Issue424 CLOSED: PR425's declared lower soma gate is retained by both consumers;
+13 original controls cover lower-value admission, independent negatives,
+generated MCP settings, describe_function and document roundtrip. The later541
+installed/public pixel neurite workflow compiled and executed PixelCellBodySettings,
+which inherits the same field/gate. That native run used its inherited default;
+lower-value behavior is the focused-controls claim, not an invented new native
+experiment. This is control exposure, not biological tuning or vendor parity.
+
+Issue907 remains a current source defect: MetadataHandlerInterface.source_voxel_spacing
+constructs physical-default SourceVoxelSpacing from get_pixel_size, and
+ViewerStreamingSource.calibrated_metadata consumes it when saved spacing is
+absent. The independent Gaussian980 axis fix does not change these owners.
+Successful pixel graph analysis/reopen does not establish acquisition calibration.
+Singer retains the existing source-spacing repair boundary; no competing viewer
+implementation was started.
 
 Issues131 and580 retain specific causal-memory and upstream triangulation/
 orthogonal acceptance gaps. Related merges alone do not close those gaps.
