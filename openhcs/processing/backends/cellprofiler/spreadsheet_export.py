@@ -224,23 +224,10 @@ class SpreadsheetFileSelection:
 
     def combined_rows(
         self,
-        selected_tables: tuple[
-            tuple[str, ColumnarRows | tuple[Mapping[str, object], ...]], ...
-        ],
-    ) -> ColumnarRows | tuple[Mapping[str, object], ...]:
+        selected_tables: tuple[tuple[str, ColumnarRows], ...],
+    ) -> ColumnarRows:
         if len(selected_tables) == 1:
             return selected_tables[0][1]
-        selected_tables = tuple(
-            (
-                subject,
-                (
-                    tuple(rows.iter_row_mappings())
-                    if isinstance(rows, ColumnarRows)
-                    else rows
-                ),
-            )
-            for subject, rows in selected_tables
-        )
         image_field = CellProfilerSpreadsheetRowField.IMAGE_NUMBER.value
         grouped: list[tuple[str, OrderedDict[object, list[Mapping[str, object]]]]] = []
         image_order: list[object] = []
@@ -248,7 +235,7 @@ class SpreadsheetFileSelection:
             rows_by_image: OrderedDict[object, list[Mapping[str, object]]] = (
                 OrderedDict()
             )
-            for row in rows:
+            for row in rows.iter_row_mappings():
                 if image_field not in row:
                     raise ValueError(
                         "Combined spreadsheet subjects require a producer-declared "
@@ -280,20 +267,28 @@ class SpreadsheetFileSelection:
                             continue
                         row[f"{subject}_{field_name}"] = value
                 combined.append(row)
-        return tuple(combined)
+        names = tuple(dict.fromkeys(name for row in combined for name in row))
+        return MeasurementSparseColumnarRows(
+            {
+                name: tuple(row.get(name, MEASUREMENT_SPARSE_CELL) for row in combined)
+                for name in names
+            },
+            fields=tuple(FieldSpec(name, required=False) for name in names),
+        )
 
     def render_csv(
         self,
-        rows: ColumnarRows | tuple[Mapping[str, object], ...],
+        rows: ColumnarRows,
         *,
         active_subjects: tuple[str, ...],
         delimiter: SpreadsheetDelimiter,
         nan_representation: SpreadsheetNanRepresentation,
     ) -> str:
         """Render native single or contextual headers from the selected subjects."""
-        if isinstance(rows, ColumnarRows):
-            rows = tuple(rows.iter_row_mappings())
-        columns = tuple(dict.fromkeys(field_name for row in rows for field_name in row))
+        row_mappings = tuple(rows.iter_row_mappings())
+        columns = tuple(
+            dict.fromkeys(field_name for row in row_mappings for field_name in row)
+        )
         header_rows = (columns,)
         if len(active_subjects) > 1:
             bindings = []
@@ -314,7 +309,7 @@ class SpreadsheetFileSelection:
                 bindings.append((subject, name[len(subject) + 1 :]))
             header_rows = tuple(zip(*bindings))
         return _render_native_csv(
-            rows,
+            row_mappings,
             columns,
             delimiter.value,
             Real,
@@ -411,7 +406,9 @@ def render_spreadsheet_bundle(
     relationship_rows = _relationship_rows(artifact_batch, image_numbers)
     if relationship_rows:
         tables["Object relationships"] = relationship_rows
-    source_image_rows = tables.get("Image", ())
+    source_image_rows = tables.get(
+        "Image", MeasurementSparseColumnarRows({}, fields=())
+    )
 
     tables = _selected_table_columns(
         tables,
@@ -669,11 +666,8 @@ def _source_metadata_measurement_rows(
             acquisition.update(
                 dialect.source_metadata_values(
                     None,
-                    (
-                        Path(provenance.source_path)
-                        if provenance.source_path is not None
-                        else None
-                    ),
+                    Path(provenance.source_path)
+                    if provenance.source_path is not None else None,
                 )
             )
         file_values: dict[str, str] = {}
@@ -697,12 +691,7 @@ def _source_metadata_measurement_rows(
             )
         if metadata or acquisition or file_values:
             rows.append(
-                (
-                    image_numbers_by_slice[slice_index],
-                    metadata,
-                    acquisition,
-                    file_values,
-                )
+                (image_numbers_by_slice[slice_index], metadata, acquisition, file_values)
             )
     return tuple(rows)
 
@@ -747,9 +736,11 @@ def _cellprofiler_rows(rows: ColumnarRows) -> ColumnarRows:
     image_field = CellProfilerSpreadsheetRowField.IMAGE_NUMBER.value
     if slice_field not in rows.columns:
         return rows
-    values = ColumnarRows.column_array(rows.column_values(slice_field)).copy()
-    for index, value in enumerate(values):
+    source_values = rows.column_values(slice_field)
+    values = np.empty(len(source_values), dtype=object)
+    for index, value in enumerate(source_values):
         if is_structural_missing_measurement_cell(value):
+            values[index] = value
             continue
         number = measurement_axis_integer_value(
             value, MeasurementRowAxisField.SLICE_INDEX
@@ -964,7 +955,7 @@ def _with_image_columns_on_objects(
     tables: OrderedDict[str, ColumnarRows],
     *,
     object_subjects: tuple[str, ...],
-    image_rows: ColumnarRows | Sequence[Mapping[str, object]],
+    image_rows: ColumnarRows,
     add_metadata: bool,
     add_file_names: bool,
 ) -> OrderedDict[str, ColumnarRows]:
@@ -979,11 +970,7 @@ def _with_image_columns_on_objects(
             add_metadata=add_metadata,
             add_file_names=add_file_names,
         )
-        for row in (
-            image_rows.iter_row_mappings()
-            if isinstance(image_rows, ColumnarRows)
-            else image_rows
-        )
+        for row in image_rows.iter_row_mappings()
         if image_field in row
     }
     updated = OrderedDict(tables)
@@ -1077,25 +1064,22 @@ def _bundle_path_template(
 
 def _rows_by_resolved_path(
     path_template: str,
-    rows: ColumnarRows | tuple[Mapping[str, object], ...],
+    rows: ColumnarRows,
     *,
-    image_rows: ColumnarRows | tuple[Mapping[str, object], ...],
-) -> tuple[tuple[str, ColumnarRows | tuple[Mapping[str, object], ...]], ...]:
+    image_rows: ColumnarRows,
+) -> tuple[tuple[str, ColumnarRows], ...]:
     tokens = tuple(
         match.group("name") for match in _METADATA_TEMPLATE.finditer(path_template)
     )
     if not tokens:
         return ((path_template, rows),)
-    if isinstance(rows, ColumnarRows):
-        rows = tuple(rows.iter_row_mappings())
-    if isinstance(image_rows, ColumnarRows):
-        image_rows = tuple(image_rows.iter_row_mappings())
     image_field = CellProfilerSpreadsheetRowField.IMAGE_NUMBER.value
+    image_row_mappings = tuple(image_rows.iter_row_mappings())
     image_rows_by_number = {
-        row[image_field]: row for row in image_rows if image_field in row
+        row[image_field]: row for row in image_row_mappings if image_field in row
     }
-    grouped: OrderedDict[str, list[Mapping[str, object]]] = OrderedDict()
-    for row in rows:
+    grouped: OrderedDict[str, list[int]] = OrderedDict()
+    for index, row in enumerate(rows.iter_row_mappings()):
         metadata_row = dict(image_rows_by_number.get(row.get(image_field), {}))
         metadata_row.update(row)
         replacements = {}
@@ -1105,7 +1089,7 @@ def _rows_by_resolved_path(
                 plate_values = tuple(
                     dict.fromkeys(
                         candidate
-                        for image_row in image_rows
+                        for image_row in image_row_mappings
                         for candidate in (_optional_metadata_value(image_row, token),)
                         if candidate is not None
                     )
@@ -1119,8 +1103,23 @@ def _rows_by_resolved_path(
                 value = plate_values[0]
             replacements[token] = value
         relative_path = path_template.format_map(replacements)
-        grouped.setdefault(relative_path, []).append(row)
-    return tuple((path, tuple(path_rows)) for path, path_rows in grouped.items())
+        grouped.setdefault(relative_path, []).append(index)
+    return tuple(
+        (
+            path,
+            MeasurementSparseColumnarRows(
+                {
+                    name: ColumnarRows.column_array(rows.column_values(name))[
+                        np.asarray(indexes, dtype=np.intp)
+                    ]
+                    for name in rows.columns
+                },
+                fields=rows.fields,
+                object_row_identity=rows.object_row_identity,
+            ),
+        )
+        for path, indexes in grouped.items()
+    )
 
 
 def _optional_metadata_value(
