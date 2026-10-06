@@ -285,7 +285,7 @@ def test_runtime_execution_observation_merges_into_parent_contexts():
         path="/memory/measurements.pkl",
         backend="memory",
     )
-    parent_context = SimpleNamespace(runtime_value_store=RuntimeValueStore())
+    parent_context = ProcessingContext(axis_id="A01")
 
     RuntimeExecutionObservation(
         contexts=(

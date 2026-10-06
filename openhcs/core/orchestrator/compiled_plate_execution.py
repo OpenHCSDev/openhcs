@@ -210,6 +210,8 @@ def execute_compiled_plate_request(
         raise
 
     set_progress_queue(validated.progress_queue)
+    for context in validated.compiled_contexts.values():
+        context.reset_completed_step_outputs()
     try:
         orchestrator._state = OrchestratorState.EXECUTING
         logger.info(
@@ -229,53 +231,63 @@ def execute_compiled_plate_request(
         execution_bundle = request.execution_bundle
         worker_assignments = request.worker_assignments_for()
 
-        executor_resources.install_execution_bundle(execution_bundle)
-        orchestrator._executor = executor_resources.executor
         execution_results: Dict[str, ExecutionResult] = {}
-        try:
-            with executor_resources.execution_context():
-                worker_assignment_plan = executor_resources.plan_worker_lanes(
-                    actual_max_workers=validated.actual_max_workers,
-                    execution_bundle=execution_bundle,
-                    worker_assignments=worker_assignments,
-                )
-                worker_lane_execution_plan = validated.worker_lane_execution_plan(
-                    request=request,
-                    worker_assignment_plan=worker_assignment_plan,
-                )
-                execution_results = executor_resources.run_worker_lanes(
-                    pipeline_definition=validated.pipeline_definition,
-                    worker_lane_execution_plan=worker_lane_execution_plan,
-                    parent_contexts=validated.compiled_contexts,
-                )
-                cancellation.raise_if_requested("after worker execution")
-                executor_resources.shutdown_executor()
-        except BrokenProcessPool as exc:
-            logger.warning(
-                "ORCHESTRATOR: Executor context exit failed due to broken process "
-                f"pool (workers were killed externally): {exc}"
-            )
-            if not execution_results:
-                raise
-        finally:
-            executor_resources.clear_execution_bundle()
-            executor_resources.release_parent_runtime_resources(execution_bundle)
-
         plate_runtime_observation = RuntimeExecutionObservation()
-        if all(result.is_success() for result in execution_results.values()):
-            plate_runtime_observation = execute_plate_scoped_steps(
-                validated.compiled_contexts,
-                progress_queue=validated.progress_queue,
-                progress_context=validated,
-            )
-            consolidate_analysis_outputs(
-                validated.compiled_contexts,
-                execution_results,
-                plate_runtime_observation=plate_runtime_observation,
-            )
+        try:
+            executor_resources.install_execution_bundle(execution_bundle)
+            orchestrator._executor = executor_resources.executor
+            try:
+                with executor_resources.execution_context():
+                    worker_assignment_plan = executor_resources.plan_worker_lanes(
+                        actual_max_workers=validated.actual_max_workers,
+                        execution_bundle=execution_bundle,
+                        worker_assignments=worker_assignments,
+                    )
+                    worker_lane_execution_plan = validated.worker_lane_execution_plan(
+                        request=request,
+                        worker_assignment_plan=worker_assignment_plan,
+                    )
+                    execution_results = executor_resources.run_worker_lanes(
+                        pipeline_definition=validated.pipeline_definition,
+                        worker_lane_execution_plan=worker_lane_execution_plan,
+                        parent_contexts=validated.compiled_contexts,
+                    )
+                    if any(result.is_cancelled() for result in execution_results.values()):
+                        raise ExecutionCancelledError("Execution cancelled during worker execution")
+                    cancellation.raise_if_requested("after worker execution")
+                    executor_resources.shutdown_executor()
+            except BrokenProcessPool as exc:
+                logger.warning(
+                    "ORCHESTRATOR: Executor context exit failed due to broken process "
+                    f"pool (workers were killed externally): {exc}"
+                )
+                if not execution_results:
+                    raise
+            finally:
+                executor_resources.clear_execution_bundle()
+                executor_resources.release_parent_runtime_resources(execution_bundle)
+
+            if all(result.is_success() for result in execution_results.values()):
+                plate_runtime_observation = execute_plate_scoped_steps(
+                    validated.compiled_contexts,
+                    progress_queue=validated.progress_queue,
+                    progress_context=validated,
+                )
+                consolidate_analysis_outputs(
+                    validated.compiled_contexts,
+                    execution_results,
+                    plate_runtime_observation=plate_runtime_observation,
+                )
+        finally:
             OpenHCSMetadataTarget.finalize_completed_plate(
                 validated.compiled_contexts,
+                runtime_observations=(
+                    RuntimeExecutionObservation.from_completed_outputs(
+                        validated.compiled_contexts
+                    ),
+                ),
             )
+        if all(result.is_success() for result in execution_results.values()):
             viewer_states_by_port = settle_viewer_state(
                 visualizers,
                 progress_queue=validated.progress_queue,
@@ -545,7 +557,7 @@ def execute_plate_scoped_steps(
                 owner_context,
                 owner_plan.require_function_execution_ready(),
             )
-            OpenHCSMetadataTarget.write_for_step(
+            projection_entries = OpenHCSMetadataTarget.observe_for_step(
                 owner_context,
                 owner_plan.require_function_execution_ready(),
                 artifact_materializations=materializations,
@@ -555,12 +567,18 @@ def execute_plate_scoped_steps(
                 for key, context in compiled_contexts.items()
                 if context is owner_context
             )
-            observations_by_context[owner_context_key].append(
+            observation = StepExecutionObservation.combine((
                 StepExecutionObservation.combine(
                     item.observation(owner_plan, owner_context)
                     for item in materializations
-                )
-            )
+                ),
+                StepExecutionObservation(
+                    materialized_locations_by_address=MappingProxyType({}),
+                    source_projection_entries_by_target=projection_entries,
+                ),
+            ))
+            owner_context.record_completed_step_outputs(observation)
+            observations_by_context[owner_context_key].append(observation)
         _emit_execution_progress(
             progress_queue=progress_queue,
             progress_context=progress_context,

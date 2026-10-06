@@ -87,12 +87,28 @@ class RuntimeExecutionObservation:
 
     contexts: tuple[RuntimeContextObservation, ...] = field(default_factory=tuple)
 
+    @classmethod
+    def from_completed_outputs(
+        cls, contexts: Mapping[str, ProcessingContext]
+    ) -> "RuntimeExecutionObservation":
+        """Project saved facts independently of retained runtime pixel records."""
+        return cls(contexts=tuple(
+            RuntimeContextObservation(
+                context_key=context_key,
+                records=(),
+                outputs=context.completed_step_outputs,
+            )
+            for context_key, context in contexts.items()
+            if not context.completed_step_outputs.is_empty
+        ))
+
     def merge_into(self, execution_contexts: Mapping[str, ProcessingContext]) -> None:
         """Merge returned runtime records into parent-owned compiled contexts."""
         for context_observation in self.contexts:
             context = execution_contexts[context_observation.context_key]
             store = context.runtime_value_store
             store.merge_observed_values(context_observation.records)
+            context.record_completed_step_outputs(context_observation.outputs)
 
 
 class RuntimeObservationMode(Enum):
@@ -202,6 +218,9 @@ class ExecutionResult:
         """Check if execution failed."""
         return self.status == ExecutionStatus.ERROR
 
+    def is_cancelled(self) -> bool:
+        return self.status == ExecutionStatus.CANCELLED
+
     @classmethod
     def success(
         cls,
@@ -221,6 +240,7 @@ class ExecutionResult:
         axis_id: str,
         failed_combination: Optional[str] = None,
         error_message: Optional[str] = None,
+        runtime_observation: RuntimeExecutionObservation | None = None,
     ) -> "ExecutionResult":
         """Create an error execution result."""
         return cls(
@@ -228,4 +248,27 @@ class ExecutionResult:
             axis_id=axis_id,
             failed_combination=failed_combination,
             error_message=error_message,
+            runtime_observation=(
+                RuntimeExecutionObservation()
+                if runtime_observation is None else runtime_observation
+            ),
+        )
+
+    @classmethod
+    def cancelled(
+        cls,
+        axis_id: str,
+        *,
+        error_message: str,
+        runtime_observation: RuntimeExecutionObservation | None = None,
+    ) -> "ExecutionResult":
+        """Return completed outputs from a cooperative cancellation boundary."""
+        return cls(
+            status=ExecutionStatus.CANCELLED,
+            axis_id=axis_id,
+            error_message=error_message,
+            runtime_observation=(
+                RuntimeExecutionObservation()
+                if runtime_observation is None else runtime_observation
+            ),
         )

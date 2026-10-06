@@ -133,6 +133,9 @@ class ProcessingContext:
         self.runtime_pattern_discovery_cache = RuntimePatternDiscoveryCache()
         self.runtime_source_binding_context_cache = RuntimeSourceBindingContextCache()
         self._runtime_step_values: dict[type[object], object] | None = None
+        from openhcs.core.steps.abstract import StepExecutionObservation
+
+        self.completed_step_outputs = StepExecutionObservation.empty()
         self.runtime_source_workspace_projection_cache = (
             VirtualWorkspaceSourceProjectionCache()
         )
@@ -194,6 +197,25 @@ class ProcessingContext:
         """Bind worker-owned execution identity after compilation freeze."""
 
         self.execution_runtime = runtime
+        self.reset_completed_step_outputs()
+
+    def reset_completed_step_outputs(self) -> None:
+        """Start an execution's saved-output facts without retaining old payloads."""
+        from openhcs.core.steps.abstract import StepExecutionObservation
+
+        self.completed_step_outputs = StepExecutionObservation.empty()
+
+    def record_completed_step_outputs(
+        self, observation: "StepExecutionObservation"
+    ) -> None:
+        """Own completed persisted facts across step cleanup and worker transfer."""
+        from openhcs.core.steps.abstract import StepExecutionObservation
+
+        if observation is self.completed_step_outputs:
+            return
+        self.completed_step_outputs = StepExecutionObservation.combine(
+            (self.completed_step_outputs, observation)
+        )
 
     def release_execution_image_cache(self) -> None:
         """Release image reuse storage without discarding runtime observations."""

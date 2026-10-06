@@ -39,6 +39,10 @@ from openhcs.core.runtime_stores import (
 
 # ProcessingContext is used in type hints
 if TYPE_CHECKING:
+    from openhcs.core.steps.function_outputs import OpenHCSMetadataTarget
+    from openhcs.core.virtual_workspace_metadata import (
+        VirtualWorkspaceSourceProjectionEntries,
+    )
     from openhcs.core.context.processing_context import ProcessingContext
     from openhcs.core.orchestrator.analysis_consolidation import (
         RuntimeAnalysisConsolidationInputs,
@@ -59,6 +63,46 @@ class StepExecutionObservation:
     image_numbers_by_export_path: Mapping[Path, Mapping[str, tuple[int, ...]]] = field(
         default_factory=dict
     )
+
+    source_projection_entries_by_target: Mapping[
+        "OpenHCSMetadataTarget", "VirtualWorkspaceSourceProjectionEntries"
+    ] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        projections = dict(self.source_projection_entries_by_target)
+        if projections:
+            from openhcs.core.steps.function_outputs import OpenHCSMetadataTarget
+            from openhcs.core.virtual_workspace_metadata import (
+                VirtualWorkspaceSourceProjectionEntries,
+            )
+
+            for target, entries in projections.items():
+                if not isinstance(target, OpenHCSMetadataTarget):
+                    raise TypeError(
+                        "Persisted source projection observations require declared metadata targets."
+                    )
+                if target.artifact_materializations:
+                    raise ValueError(
+                        "Persisted source projection observations cannot retain image materializations."
+                    )
+                if not isinstance(entries, VirtualWorkspaceSourceProjectionEntries):
+                    raise TypeError(
+                        "Persisted source projection observations require typed projection entries."
+                    )
+        object.__setattr__(
+            self, "source_projection_entries_by_target", MappingProxyType(projections)
+        )
+
+    @property
+    def is_empty(self) -> bool:
+        """Whether this completed output carrier has no facts to transport."""
+        return not (
+            self.materialized_locations_by_address
+            or self.runtime_export_paths
+            or self.analysis_inputs is not None
+            or self.image_numbers_by_export_path
+            or self.source_projection_entries_by_target
+        )
 
     @classmethod
     def empty(cls) -> "StepExecutionObservation":
@@ -84,6 +128,7 @@ class StepExecutionObservation:
         paths = []
         analysis_inputs = []
         image_numbers = {}
+        source_projections = {}
         for observation in observations:
             for (
                 address,
@@ -100,11 +145,26 @@ class StepExecutionObservation:
                         f"Export {path} has conflicting execution image-number owners."
                     )
                 image_numbers[path] = numbers
+            for (
+                target,
+                entries,
+            ) in observation.source_projection_entries_by_target.items():
+                source_projections.setdefault(target, []).append(entries)
+        from openhcs.core.virtual_workspace_metadata import (
+            VirtualWorkspaceSourceProjectionEntries,
+        )
+
         return cls(
             MappingProxyType(locations),
             tuple(dict.fromkeys(paths)),
             RuntimeAnalysisConsolidationInputs.combine(analysis_inputs),
             MappingProxyType(image_numbers),
+            MappingProxyType(
+                {
+                    target: VirtualWorkspaceSourceProjectionEntries.combine(entries)
+                    for target, entries in source_projections.items()
+                }
+            ),
         )
 
 

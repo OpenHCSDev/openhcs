@@ -23,6 +23,7 @@ from openhcs.core.config import (
 )
 from openhcs.core.memory import numpy as numpy_decorator
 from openhcs.core.orchestrator.orchestrator import PipelineOrchestrator
+from openhcs.core.orchestrator.execution_result import RuntimeContextObservation, RuntimeExecutionObservation
 from openhcs.core.pipeline.function_contracts import (
     artifact_outputs, required_variable_components,
 )
@@ -93,9 +94,13 @@ def test_named_and_ordinary_checkpoint_inventory_owns_every_address(tmp_path, ma
         step_materialization_config=LazyStepMaterializationConfig(enabled=True),
     )
     bundle = orchestrator.compile_pipelines([step])
-    for context in bundle.runtime_contexts.values():
-        step.process(context, 0)
-    OpenHCSMetadataTarget.finalize_completed_plate(bundle.runtime_contexts)
+    observations = RuntimeExecutionObservation(contexts=tuple(
+        RuntimeContextObservation(context_key=key, records=(), outputs=step.process(context, 0))
+        for key, context in bundle.runtime_contexts.items()
+    ))
+    OpenHCSMetadataTarget.finalize_completed_plate(
+        bundle.runtime_contexts, runtime_observations=(observations,)
+    )
     root = tmp_path / "source_out"
     metadata = json.loads((root / "openhcs_metadata.json").read_text())
     reopened = VirtualWorkspaceSourceProjection.from_openhcs_metadata(root, metadata)
