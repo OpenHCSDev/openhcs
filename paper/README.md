@@ -111,8 +111,8 @@ reading copies without rerunning scientific analyses. Automatic
 `--refresh-figures` deliberately fails: no safe historical-input/live-UI refresh
 is declared. Figure generation remains a separate explicit workflow.
 
-The overview and benchmark figures can be regenerated independently from their
-declared source assets and CSV tables:
+The overview and archived May benchmark figures can be regenerated independently
+from their declared source assets and CSV tables:
 
 ```sh
 PYTHONPATH=paper/figures python -c \
@@ -122,10 +122,40 @@ python paper/figures/build_slas_benchmark.py \
   --output-dir paper/figures/slas
 ```
 
-The benchmark builder emits the main distribution figure, the supplementary
-workflow heatmap, their plotted-row CSVs and a checksum receipt. Point
-`--data-dir` at a new measurement bundle containing the four named source CSVs
-to update the paper numbers without changing plotting code.
+The archived benchmark mode reproduces the May distribution figure, supplementary
+workflow heatmap and plotted-row CSVs. It retains the original one-observation
+tables, historical timing scopes and unresolved wound-healing exclusion.
+
+For fresh measurements, first qualify the complete matched reports and convert
+them to execution or total summaries with their original `summary_custody.json`.
+Then use the same paper builder's explicit measured input mode:
+
+```sh
+PYTHONPATH=. python paper/figures/build_slas_benchmark.py \
+  --summary-source '1 well / 1 worker=QUALIFIED/execution_summary.csv' \
+  --scope execution --output-dir paper/figures/slas/measured/execution
+PYTHONPATH=. python paper/figures/build_slas_benchmark.py \
+  --summary-source '8 assignments / 2 workers=QUALIFIED/8a2w/total_summary.csv' \
+  --summary-source '16 assignments / 4 workers=QUALIFIED/16a4w/total_summary.csv' \
+  --scope total --output-dir paper/figures/slas/measured/scaling-total
+```
+
+This delegates to the existing measured benchmark figure owner, preserving each
+mode's actual native baseline, per-pipeline ratios of engine medians, original
+clock boundaries and repetition counts. Supplied modes must cover the same
+pipeline cohort and source revision. Repeated assignments are independent copies
+of one selected source sample, not additional acquired biological wells. No
+projected native throughput or unmeasured RAM panel is generated. The execution
+scope also renders the accepted scientific-comparison fraction. See
+[the measured report contract](../benchmark/reports/README.md) for timing scopes
+and output panels.
+
+Both input modes emit the existing `figure2_provenance.json` checksum contract.
+Measured outputs retain the exact summary and custody inputs plus the delegated
+plotting implementation's digest. Use a distinct measured output directory so
+archived figure assets and their provenance remain identified as historical.
+The plotting entry consumes qualification established by the matched-report
+producer; it does not independently rerun or qualify the scientific comparison.
 
 Each local document figure must have exactly one receipt output declaration;
 missing, empty, malformed or ambiguous coverage fails closed. All outputs owned
