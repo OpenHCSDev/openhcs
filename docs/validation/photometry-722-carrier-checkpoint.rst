@@ -275,7 +275,33 @@ image rosters do not perform an unused dispatch projection. The observation fixt
 passes the original RuntimeMeasurementDialect required by the current API.
 New controls cover producer-relation snapshot retention and explicit consumer
 context precedence; the integration fixture compares original producer relations
-with their consumed storage projection. Qualification07 and installed95 are pending.
+with their consumed storage projection. Qualification07 is complete below;
+installed95 is pending.
 
 AST-LINEAGE-BEFORE07.json: 1409 modules,2455 selected sites,zero parse omissions.
 Source syntax evidence does not prove dynamic runtime dispatch or live readiness.
+
+Qualification07: accepted source-family checkpoint
+-------------------------------------------------
+
+Original controls07 session58369 is terminal exit0 at production74dd08ca8:
+184 passed, zero failures. All seven raw/produced/current-transform photometry
+cases, both producer-group roster cases, label-only cohort, original missing and
+unrelated context guards, new producer-context/explicit-consumer precedence,
+other coordinate/address/ambiguity negatives and main-flow consumer controls pass.
+The earlier97/3 and177/5 outcomes remain unchanged historical evidence.
+
+Elapsed3:47.41, peak1458288 KiB, zero swaps. Exact original log/time and driver:
+/home/ts/wt/openhcs-issue-batch-20260929/engineering-photometry-722-20261005/controls07.log
+/home/ts/wt/openhcs-issue-batch-20260929/engineering-photometry-722-20261005/controls07.time
+/home/ts/wt/openhcs-issue-batch-20260929/engineering-photometry-722-20261005/controls07.py
+AST-LINEAGE-AFTER07.json:1409 modules,2459 selected sites,zero parse omissions.
+The sole plan-context query moved to ArtifactPlan; both PathPlanner input
+projections retain original producer relations; RuntimeArtifactInput consumes
+those relations only when explicit consumer context is absent. Dynamic dispatch
+was read semantically; this is focused family qualification, not universal proof.
+
+One ordinary offline installed95-attempt01 candidate uses the unchanged original
+receiving22 archive materializer/builder/verifier and five dependency wheels.
+Its pin is74dd08ca8; this receipt-only successor does not change production.
+No native or public compile/execute success is claimed before that acceptance.
