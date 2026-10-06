@@ -135,8 +135,10 @@ PYTHONPATH=. python paper/figures/build_slas_benchmark.py \
   --summary-source '1 well / 1 worker=QUALIFIED/execution_summary.csv' \
   --scope execution --output-dir paper/figures/slas/measured/execution
 PYTHONPATH=. python paper/figures/build_slas_benchmark.py \
+  --summary-source '1 well / 1 worker=QUALIFIED/total_summary.csv' \
   --summary-source '8 assignments / 2 workers=QUALIFIED/8a2w/total_summary.csv' \
   --summary-source '16 assignments / 4 workers=QUALIFIED/16a4w/total_summary.csv' \
+  --cohort-manifest SELECTED_THREE_CASE_MANIFEST.json \
   --scope total --output-dir paper/figures/slas/measured/scaling-total
 ```
 
@@ -149,6 +151,13 @@ projected native throughput or unmeasured RAM panel is generated. The execution
 scope also renders the accepted scientific-comparison fraction. See
 [the measured report contract](../benchmark/reports/README.md) for timing scopes
 and output panels.
+
+An explicit `--cohort-manifest` selects its ordered cases from every supplied
+mode without editing the qualified summaries. Each selected case must match the
+original qualified manifest through the existing benchmark case owner, including
+resolved inputs, pipeline parameters and well selection. Every mode must contain
+every selected case. The figure provenance retains the selection manifest and
+original manifest digests; the default still requires identical complete cohorts.
 
 Both input modes emit the existing `figure2_provenance.json` checksum contract.
 Measured outputs retain the exact summary and custody inputs plus the delegated
