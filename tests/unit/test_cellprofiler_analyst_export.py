@@ -1954,3 +1954,89 @@ def test_database_projection_includes_derived_grid_measurements() -> None:
         "Image_DefinedGrid_Grid_YLocationOfLowestYSpot": 57,
         "Image_DefinedGrid_Grid_YSpacing": 103.25,
     }
+
+
+def test_repeated_source_contributors_share_physical_projection(tmp_path, monkeypatch):
+    from collections import defaultdict
+    import openhcs.interop.cellprofiler.analyst_export as export
+    from openhcs.core.component_group_scope import RuntimeExecutionAxisScope
+    from openhcs.core.source_image_provenance import SourceImageProvenance
+
+    source = tmp_path / "DNA.tif"
+    import tifffile
+    tifffile.imwrite(
+        source, np.arange(192, dtype=np.uint16).reshape(3, 8, 8),
+        photometric="minisblack", metadata={"axes": "ZYX"},
+    )
+    provenance = SourceImageProvenance(
+        source_path=str(source), source_component_metadata={"well": "A01", "site": "1"},
+        source_image_names=("DNA",),
+    )
+    owner = CPATableRowProjection(
+        CellProfilerDatabaseColumnDialect(),
+        CellProfilerImageSetNumbering(SourceImageSetIdentityPolicy()),
+    )
+    rows, metadata = {}, defaultdict(list)
+    manufacture = export._source_image_projection_values
+    calls = []
+    def counted(*args, **kwargs):
+        calls.append(args[0])
+        return manufacture(*args, **kwargs)
+    monkeypatch.setattr(export, "_source_image_projection_values", counted)
+    for _ in range(3):
+        owner.collect_image_provenance(
+            provenance, scope=RuntimeExecutionAxisScope(AXIS_ID), source_image_name="DNA",
+            image_rows_by_number=rows, source_metadata_by_image_number=metadata,
+        )
+    assert calls == [source]
+    assert len(metadata[1]) == 3  # Every contributor's correlation evidence survives.
+    conflicting = provenance.with_source_path(str(tmp_path / "other.tif"))
+    with pytest.raises(ValueError, match="conflicting values"):
+        owner.collect_image_provenance(
+            conflicting, scope=RuntimeExecutionAxisScope(AXIS_ID), source_image_name="DNA",
+            image_rows_by_number=rows, source_metadata_by_image_number=metadata,
+        )
+
+    with pytest.raises(ValueError, match="conflicting values"):
+        owner.collect_image_provenance(
+            provenance, scope=RuntimeExecutionAxisScope(AXIS_ID), source_image_name="DNA",
+            image_rows_by_number=rows, source_metadata_by_image_number=metadata,
+            source_axis_indices=(1,),
+        )
+    assert calls == [source]  # Explicit frame admission still rejects contradiction.
+
+
+def test_produced_thumbnail_uses_named_pixels_not_measurement_source(tmp_path, monkeypatch):
+    import openhcs.interop.cellprofiler.analyst_export as export
+    source = tmp_path / "DNA.tif"
+    Image.fromarray(np.arange(64, dtype=np.uint8).reshape(8, 8)).save(source)
+    store = RuntimeValueStore()
+    dna = _record_image(store, name="DNA", source_path=str(source), metadata={"well": "A01", "site": "1"})
+    planes = SourceImageProvenancePlanes.from_components(
+        paths=(str(source),), component_metadata=({"well": "A01", "site": "1"},),
+    )
+    measurements = tuple(_record_measurements(
+        store, table=MeasurementTable(
+            name=f"Measurements{index}", source_image_names=("DNA",),
+            subject=MeasurementSubject(MeasurementScope.IMAGE, "Image"),
+            rows=MeasurementSparseColumnarRows.from_rows(
+                ({RUNTIME_IMAGE_FIELD: 0, f"Value{index}": float(index)},),
+                fields=(FieldSpec(RUNTIME_IMAGE_FIELD, int), FieldSpec(f"Value{index}", float)),
+            ),
+        ), source_image_provenance_planes=planes,
+    ) for index in range(3))
+    batch = RuntimeArtifactBatch(
+        input_specs=(dna, *measurements), records_by_axis={AXIS_ID: store.values()},
+        source_image_set_identity_policy=SourceImageSetIdentityPolicy(),
+    )
+    settings = replace(_settings(), write_image_thumbnails=True, thumbnail_image_names=("DNA",), auto_scale_thumbnail_intensities=False)
+    encode = export._thumbnail_png_base64
+    pixels = []
+    def counted(image, **kwargs):
+        pixels.append(np.asarray(image).copy())
+        return encode(image, **kwargs)
+    monkeypatch.setattr(export, "_thumbnail_png_base64", counted)
+    projection = _projection_builder().build(batch, settings, (CPAImageChannelSpec(alias="DNA", image_name="DNA", channel_color="none"),))
+    assert len(pixels) == 1
+    assert np.array_equal(pixels[0], np.zeros((8, 8), dtype=np.uint8))
+    assert _external_rows(projection.image_table)[0]["Image_Thumbnail_DNA"] == encode(pixels[0], auto_scale=False)

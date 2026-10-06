@@ -30,6 +30,7 @@ from PIL import Image
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactSpec,
+    ArtifactSpecCollection,
     ImageArtifactType,
     MeasurementBearingArtifactType,
     RelationshipsArtifactType,
@@ -948,8 +949,6 @@ class CPATableRowProjection:
             int,
             list[Mapping[str, SourceMetadataScalar]],
         ],
-        thumbnail_field: FieldSpec | None = None,
-        auto_scale_thumbnail_intensities: bool = True,
         source_axis_indices: tuple[int, ...] = (),
     ) -> None:
         """Fold typed source provenance directly into projected image rows."""
@@ -958,37 +957,6 @@ class CPATableRowProjection:
         plane_indices = range(plane_count) if plane_count > 0 else range(1)
         for plane_index in plane_indices:
             plane_provenance = provenance.for_source_plane(plane_index)
-            values: dict[str, Any] = {}
-            source_path = self._resolved_source_path(plane_provenance.source_path)
-            if source_path is not None:
-                values.update(
-                    self.dialect.source_image_file_values(source_path, source_image_name)
-                )
-                if source_path.is_file():
-                    values.update(
-                        _source_image_projection_values(
-                            source_path,
-                            source_image_name,
-                            self.dialect,
-                            source_axis_indices=source_axis_indices,
-                        )
-                    )
-                    if thumbnail_field is not None:
-                        pixels = ImageFileFormat.require_path(source_path).read(
-                            source_path
-                        )
-                        values[thumbnail_field.name] = _thumbnail_png_base64(
-                            pixels,
-                            auto_scale=auto_scale_thumbnail_intensities,
-                        )
-            component_metadata = plane_provenance.source_component_metadata
-            metadata_items = {
-                field_name: value
-                for field_name, value in self.dialect.source_metadata_defaults().items()
-            }
-            metadata_items.update(
-                self.dialect.source_metadata_values(component_metadata, source_path)
-            )
             image_number = self.image_set_numbering.for_source_slice(
                 scope=scope,
                 provenance=provenance,
@@ -999,6 +967,56 @@ class CPATableRowProjection:
             target = image_rows_by_number.setdefault(
                 image_number,
                 {image_id.name: image_number},
+            )
+            values: dict[str, Any] = {}
+            source_path = self._resolved_source_path(plane_provenance.source_path)
+            if source_path is not None:
+                values.update(
+                    self.dialect.source_image_file_values(source_path, source_image_name)
+                )
+                # Every contributor must agree on the physical source. The held
+                # image row already owns the derived file fields for that source.
+                _merge_projected_row_values(
+                    target, values, owner=f"CPA image {image_number}",
+                )
+                if source_path.is_file():
+                    values[self.dialect.source_image_feature_field(
+                        source_image_name,
+                        CellProfilerSourceImageProjectionField.URL.field_spec,
+                    ).name] = source_path.resolve().as_uri()
+                    source_fields = tuple(
+                        self.dialect.source_image_feature_field(
+                            source_image_name, field.field_spec,
+                        ).name
+                        for field in CellProfilerSourceImageProjectionField
+                    )
+                    if not all(field in target for field in source_fields):
+                        values.update(
+                            _source_image_projection_values(
+                                source_path,
+                                source_image_name,
+                                self.dialect,
+                                source_axis_indices=source_axis_indices,
+                            )
+                        )
+                    else:
+                        frame = (
+                            ImageFileFormat.require_path(source_path)
+                            .require_source_metadata(source_path)
+                            .frame_for_source_indices(source_axis_indices)
+                            if source_axis_indices else 0
+                        )
+                        values[self.dialect.source_image_feature_field(
+                            source_image_name,
+                            CellProfilerSourceImageProjectionField.FRAME.field_spec,
+                        ).name] = frame
+            component_metadata = plane_provenance.source_component_metadata
+            metadata_items = {
+                field_name: value
+                for field_name, value in self.dialect.source_metadata_defaults().items()
+            }
+            metadata_items.update(
+                self.dialect.source_metadata_values(component_metadata, source_path)
             )
             _merge_projected_row_values(
                 target,
@@ -1038,6 +1056,7 @@ class CPATableRowProjection:
         source_binding_plan: CompiledSourceBindingPlan,
         image_channels: Sequence[CPAImageChannelSpec],
         axis_id: str,
+        settings: CellProfilerDatabaseExportSettings,
         image_rows_by_number: dict[int, dict[str, Any]],
         source_metadata_by_image_number: dict[
             int, list[Mapping[str, SourceMetadataScalar]]
@@ -1045,8 +1064,6 @@ class CPATableRowProjection:
     ) -> None:
         """Project declared source occurrences for image sets actually exported."""
 
-        if self.context is None:
-            return
         channel_aliases = frozenset(channel.alias for channel in image_channels)
         source_bindings = tuple(
             binding
@@ -1056,11 +1073,23 @@ class CPATableRowProjection:
         )
         if not source_bindings:
             return
+        if self.context is None:
+            if settings.write_image_thumbnails and any(
+                binding.alias in settings.thumbnail_image_names
+                for binding in source_bindings
+            ):
+                raise ValueError("CPA source-bound thumbnails require a runtime context.")
+            return
         workspace = VirtualWorkspaceSourceProjectionAuthority.from_context(
             self.context,
             cache=self.context.runtime_source_workspace_projection_cache,
         ).projection_if_available()
         if workspace is None:
+            if settings.write_image_thumbnails and any(
+                binding.alias in settings.thumbnail_image_names
+                for binding in source_bindings
+            ):
+                raise ValueError("CPA source-bound thumbnails require a source workspace.")
             return
         scope = RuntimeExecutionAxisScope(axis_id)
         for binding in source_bindings:
@@ -1100,6 +1129,62 @@ class CPATableRowProjection:
                     source_metadata_by_image_number=source_metadata_by_image_number,
                     source_axis_indices=projection.ref.source_axis_indices,
                 )
+
+                if (
+                    settings.write_image_thumbnails
+                    and binding.alias in settings.thumbnail_image_names
+                ):
+                    (payload,) = workspace.load_binding_payloads(
+                        (path,), binding=binding, filemanager=self.context.filemanager,
+                    )
+                    self.collect_image_thumbnail(
+                        payload, scope=scope, image_name=binding.alias,
+                        settings=settings, image_rows_by_number=image_rows_by_number,
+                    )
+
+    def collect_image_thumbnail(
+        self,
+        payload: Any,
+        *,
+        scope: RuntimeExecutionAxisScope,
+        image_name: str,
+        settings: CellProfilerDatabaseExportSettings,
+        image_rows_by_number: dict[int, dict[str, Any]],
+    ) -> None:
+        """Render the selected named pixels into their exact source image rows."""
+        provenance = image_payload_metadata(payload).source_provenance
+        image_numbers = self.image_numbers_for_provenance(
+            provenance, scope=scope, owner=image_name,
+        )
+        pixels = np.asarray(image_payload_data(payload))
+        planes = self._thumbnail_planes(pixels, len(image_numbers))
+        thumbnail_field = self.dialect.thumbnail_field(image_name)
+        image_id_field = self.image_id_field()
+        for image_number, plane in zip(image_numbers, planes, strict=True):
+            target = image_rows_by_number.setdefault(
+                image_number, {image_id_field.name: image_number},
+            )
+            _merge_projected_row_values(
+                target,
+                {thumbnail_field.name: _thumbnail_png_base64(
+                    plane, auto_scale=settings.auto_scale_thumbnail_intensities,
+                )},
+                owner=f"CPA image {image_number}",
+            )
+
+    @staticmethod
+    def _thumbnail_planes(
+        pixels: np.ndarray,
+        plane_count: int,
+    ) -> tuple[np.ndarray, ...]:
+        if plane_count <= 1:
+            return (pixels,)
+        if pixels.ndim < 3 or pixels.shape[0] != plane_count:
+            raise ValueError(
+                "CPA thumbnail image stack does not match its source-plane count: "
+                f"shape={pixels.shape!r}, planes={plane_count}."
+            )
+        return tuple(pixels[index] for index in range(plane_count))
 
     def image_numbers_for_provenance(
         self,
@@ -1305,7 +1390,6 @@ class CellProfilerAnalystProjectionBuilder:
             self._collect_measurement_provenance(
                 tables=measurement_tables[axis_id],
                 image_channels=image_channels,
-                settings=settings,
                 row_projection=row_projection,
                 image_rows_by_number=image_rows_by_number,
                 source_metadata_by_image_number=source_metadata_by_image_number,
@@ -1320,11 +1404,13 @@ class CellProfilerAnalystProjectionBuilder:
                 source_binding_plan=self.source_binding_plan,
                 image_channels=image_channels,
                 axis_id=axis_id,
+                settings=settings,
                 image_rows_by_number=image_rows_by_number,
                 source_metadata_by_image_number=source_metadata_by_image_number,
             )
             if settings.write_image_thumbnails:
                 self._collect_image_thumbnails(
+                    artifact_batch=artifact_batch,
                     records=image_records[axis_id],
                     settings=settings,
                     row_projection=row_projection,
@@ -1628,7 +1714,6 @@ class CellProfilerAnalystProjectionBuilder:
         *,
         tables: Sequence[RuntimeScopedMeasurementTable],
         image_channels: Sequence[CPAImageChannelSpec],
-        settings: CellProfilerDatabaseExportSettings,
         row_projection: CPATableRowProjection,
         image_rows_by_number: dict[int, dict[str, Any]],
         source_metadata_by_image_number: dict[
@@ -1644,21 +1729,12 @@ class CellProfilerAnalystProjectionBuilder:
                 if source_image_name not in channel_aliases:
                     continue
                 selected_provenance = provenance.for_source_image(source_image_name)
-                thumbnail_field = (
-                    row_projection.dialect.thumbnail_field(source_image_name)
-                    if source_image_name in settings.thumbnail_image_names
-                    else None
-                )
                 row_projection.collect_image_provenance(
                     selected_provenance,
                     scope=scoped_table.execution_scope,
                     source_image_name=source_image_name,
                     image_rows_by_number=image_rows_by_number,
                     source_metadata_by_image_number=source_metadata_by_image_number,
-                    thumbnail_field=thumbnail_field,
-                    auto_scale_thumbnail_intensities=(
-                        settings.auto_scale_thumbnail_intensities
-                    ),
                 )
 
     @staticmethod
@@ -1679,63 +1755,26 @@ class CellProfilerAnalystProjectionBuilder:
             row[group_fields[1].name] = image_count
             row[group_fields[2].name] = 1
 
-    @classmethod
     def _collect_image_thumbnails(
-        cls,
+        self,
         *,
+        artifact_batch: RuntimeArtifactBatch,
         records: Sequence[StoredRuntimeValue],
         settings: CellProfilerDatabaseExportSettings,
         row_projection: CPATableRowProjection,
         image_rows_by_number: dict[int, dict[str, Any]],
     ) -> None:
-        image_id_field = row_projection.image_id_field()
+        inputs = ArtifactSpecCollection(artifact_batch.input_specs)
         for image_name in settings.thumbnail_image_names:
+            spec = inputs.require_by_name_and_artifact_type(image_name, ImageArtifactType)
+            if self.source_binding_plan.declares_artifact_ref(spec.ref()):
+                continue  # The declared source-occurrence owner projects these pixels.
             for record in records:
-                if record.key.name != image_name:
-                    continue
-                payload = record.data
-                provenance = image_payload_metadata(payload).source_provenance
-                image_numbers = row_projection.image_numbers_for_provenance(
-                    provenance,
-                    scope=record.key.scope,
-                    owner=image_name,
-                )
-                pixels = np.asarray(image_payload_data(payload))
-                plane_pixels = cls._thumbnail_planes(pixels, len(image_numbers))
-                thumbnail_field = row_projection.dialect.thumbnail_field(image_name)
-                for image_number, plane in zip(
-                    image_numbers,
-                    plane_pixels,
-                    strict=True,
-                ):
-                    target = image_rows_by_number.setdefault(
-                        image_number,
-                        {image_id_field.name: image_number},
+                if record.key.name == image_name:
+                    row_projection.collect_image_thumbnail(
+                        record.data, scope=record.key.scope, image_name=image_name,
+                        settings=settings, image_rows_by_number=image_rows_by_number,
                     )
-                    _merge_projected_row_values(
-                        target,
-                        {
-                            thumbnail_field.name: _thumbnail_png_base64(
-                                plane,
-                                auto_scale=settings.auto_scale_thumbnail_intensities,
-                            )
-                        },
-                        owner=f"CPA image {image_number}",
-                    )
-
-    @staticmethod
-    def _thumbnail_planes(
-        pixels: np.ndarray,
-        plane_count: int,
-    ) -> tuple[np.ndarray, ...]:
-        if plane_count <= 1:
-            return (pixels,)
-        if pixels.ndim < 3 or pixels.shape[0] != plane_count:
-            raise ValueError(
-                "CPA thumbnail image stack does not match its source-plane count: "
-                f"shape={pixels.shape!r}, planes={plane_count}."
-            )
-        return tuple(pixels[index] for index in range(plane_count))
 
     @classmethod
     def _collect_image_aggregates(

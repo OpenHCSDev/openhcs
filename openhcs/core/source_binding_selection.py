@@ -1719,39 +1719,9 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
                 f"Source-bound artifact {ref!r} resolved no workspace members."
             )
 
-        payloads = request.context.filemanager.load_batch(
-            list(members),
-            Backend.VIRTUAL_WORKSPACE.value,
+        projected_payloads = projection.load_binding_payloads(
+            members, binding=binding, filemanager=request.context.filemanager,
         )
-        if len(payloads) != len(members):
-            raise ValueError(
-                f"Source-bound artifact {ref!r} loaded {len(payloads)} payloads "
-                f"for {len(members)} workspace members."
-            )
-        projected_payloads = []
-        for member, payload in zip(members, payloads, strict=True):
-            lookup = VirtualWorkspacePathLookup.from_paths(member, member)
-            source_projection = projection.require_source_projection_for(lookup)
-            if not source_projection.matches_binding(binding):
-                raise ValueError(
-                    f"Workspace projection for {member!r} does not match compiled "
-                    f"source artifact {ref!r}."
-                )
-            projected = projection.project_payload(lookup, payload)
-            projected_payloads.append(
-                binding.apply_loaded_payload(
-                    projected,
-                    ImagePayloadSourceMetadataContext(
-                        SourceImageIdentity(
-                            projection.logical_path_for(lookup),
-                            projection.source_metadata_for(lookup),
-                        ),
-                        source_projection.ref.backend,
-                        request.context.filemanager,
-                        source_projection.ref.backend_address,
-                    ),
-                )
-            )
         payload = (
             projected_payloads[0]
             if len(projected_payloads) == 1

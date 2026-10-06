@@ -413,6 +413,45 @@ class VirtualWorkspaceSourceProjection:
                 occurrences.append((path, projection))
         return tuple(occurrences)
 
+    def load_binding_payloads(
+        self,
+        paths: Sequence[str],
+        *,
+        binding: NamedSourceBinding,
+        filemanager: FileManagerLike,
+    ) -> tuple[RuntimeArrayData, ...]:
+        """Load exact selected occurrences with their declared pixel semantics."""
+        from openhcs.core.runtime_image_loading import ImagePayloadSourceMetadataContext
+        from openhcs.core.source_image_provenance import SourceImageIdentity
+
+        payloads = filemanager.load_batch(list(paths), Backend.VIRTUAL_WORKSPACE.value)
+        if len(payloads) != len(paths):
+            raise ValueError(
+                f"Source-bound artifact {binding.input_spec().ref()!r} loaded "
+                f"{len(payloads)} payloads for {len(paths)} workspace members."
+            )
+        projected_payloads = []
+        for path, payload in zip(paths, payloads, strict=True):
+            lookup = VirtualWorkspacePathLookup.from_paths(path, path)
+            projection = self.require_source_projection_for(lookup)
+            if not projection.matches_binding(binding):
+                raise ValueError(
+                    f"Workspace projection for {path!r} does not match compiled "
+                    f"source artifact {binding.input_spec().ref()!r}."
+                )
+            projected_payloads.append(binding.apply_loaded_payload(
+                self.project_payload(lookup, payload),
+                ImagePayloadSourceMetadataContext(
+                    SourceImageIdentity(
+                        self.logical_path_for(lookup), self.source_metadata_for(lookup),
+                    ),
+                    projection.ref.backend,
+                    filemanager,
+                    projection.ref.backend_address,
+                ),
+            ))
+        return tuple(projected_payloads)
+
     def validate_runtime_metadata_projection(
         self,
         *,
