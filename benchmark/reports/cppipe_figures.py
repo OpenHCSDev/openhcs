@@ -888,7 +888,7 @@ def _generate_measured_amortization_figures(
             axis.set_ylabel(metric.ylabel)
             axis.set_xticks(counts)
             axis.set_ylim(bottom=0)
-            axis.legend()
+        FIGURE_STYLE.decorate_legend(axes[0, -1])
         fig.tight_layout()
         for extension in output_formats:
             path = output_dir / f"{metric.filename_stem}.{extension}"
