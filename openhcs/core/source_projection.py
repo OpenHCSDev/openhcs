@@ -9,7 +9,7 @@ from dataclasses import dataclass, field, fields, replace
 from pathlib import Path, PurePosixPath
 from types import MappingProxyType
 from functools import lru_cache
-from typing import Any, ClassVar, Mapping, cast, get_type_hints
+from typing import Any, ClassVar, Mapping, cast, get_args, get_type_hints
 from urllib.parse import quote
 
 from polystore.virtual_workspace import SourcePixelRef
@@ -704,6 +704,17 @@ class SourceProjection:
     def extend_serialized_payload(self, payload: dict[str, Any]) -> None:
         """Add projection-specific fields to the nominal wire payload."""
 
+    def persisted_image_metadata(self) -> ImagePayloadMetadata | None:
+        """Restore pixel metadata when a consumer needs physical image semantics.
+
+        Publication uses the same coordinates while retaining opaque serialized
+        provenance. Durable image readers still admit the complete payload.
+        """
+        return (
+            ImagePayloadMetadata.from_mapping(self.image_metadata)
+            if isinstance(self.image_metadata, Mapping) else self.image_metadata
+        )
+
     def matches_binding(self, binding: NamedSourceBinding) -> bool:
         """Return whether this projection represents one exact source binding."""
 
@@ -720,7 +731,7 @@ class SourceProjection:
 
 
 def declared_optional_payload_field(cls, payload_type: type) -> str:
-    """Derive the one declared field carrying ``payload_type | None``.
+    """Derive the one optional declared field carrying ``payload_type``.
 
     Class-level derivation: the wire field is owned by the projection's
     dataclass declaration, so it is computed once per (class, payload type)
@@ -731,7 +742,8 @@ def declared_optional_payload_field(cls, payload_type: type) -> str:
     matches = tuple(
         declared.name
         for declared in fields(cls)
-        if annotations[declared.name] == payload_type | None
+        if payload_type in get_args(annotations[declared.name])
+        and type(None) in get_args(annotations[declared.name])
     )
     if len(matches) != 1:
         raise ValueError(
@@ -762,7 +774,7 @@ class SourcePlaneProjection(SourceProjection):
     component_labels: Mapping[str, str | None] = field(
         default_factory=lambda: MappingProxyType({})
     )
-    image_metadata: ImagePayloadMetadata | None = None
+    image_metadata: ImagePayloadMetadata | Mapping[str, object] | None = None
 
     def __post_init__(self) -> None:
         _normalize_projection(self)
@@ -776,9 +788,6 @@ class SourcePlaneProjection(SourceProjection):
     def extend_serialized_payload(self, payload: dict[str, Any]) -> None:
         if self.image_metadata is not None:
             payload[self.image_metadata_wire_field()] = to_jsonable(self.image_metadata)
-
-    def persisted_image_metadata(self) -> ImagePayloadMetadata | None:
-        return self.image_metadata
 
     @property
     def payload_composition_alias(self) -> str | None:
@@ -805,7 +814,7 @@ class SourceArtifactProjection(SourceProjection):
     component_labels: Mapping[str, str | None] = field(
         default_factory=lambda: MappingProxyType({})
     )
-    image_metadata: ImagePayloadMetadata | None = None
+    image_metadata: ImagePayloadMetadata | Mapping[str, object] | None = None
     execution_scope: RuntimeExecutionAxisScope | None = None
 
     def artifact_result_directory(
@@ -938,12 +947,6 @@ class SourceArtifactProjection(SourceProjection):
             payload[SourcePlaneProjection.image_metadata_wire_field()] = to_jsonable(
                 self.image_metadata
             )
-
-    def persisted_image_metadata(self) -> ImagePayloadMetadata | None:
-        """Return pixel metadata when this artifact is independently loadable."""
-
-        return self.image_metadata
-
 
 @dataclass(frozen=True, slots=True)
 class SourceProjectionSet:

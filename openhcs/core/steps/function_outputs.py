@@ -82,6 +82,7 @@ from openhcs.core.steps.stream_component_semantics import (
 from openhcs.core.virtual_workspace_metadata import (
     METADATA_CONFIG,
     AtomicMetadataWriter,
+    OpenHCSMetadataSubdirectories,
     VirtualWorkspaceSourceProjectionEntries,
 )
 from openhcs.microscopes.microscope_interfaces import FilenameParser
@@ -701,7 +702,11 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
         return (self,)
 
     def reconciliation_targets(
-        self, context: ProcessingContext
+        self,
+        context: ProcessingContext,
+        *,
+        document: OpenHCSMetadataSubdirectories | None = None,
+        admitted_entries: Mapping[str, VirtualWorkspaceSourceProjectionEntries] | None = None,
     ) -> tuple[OpenHCSMetadataTarget, ...]:
         """Resolve destinations after runtime values have been released."""
         return (self,)
@@ -749,7 +754,10 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
         context: ProcessingContext,
         *,
         produced_plan: CompiledStepPlan | None = None,
-    ) -> None:
+        metadata_writer: AtomicMetadataWriter | None = None,
+        metadata_document: dict[str, Any] | None = None,
+        admitted_entries: VirtualWorkspaceSourceProjectionEntries | None = None,
+    ) -> VirtualWorkspaceSourceProjectionEntries:
         """Project the target's current storage state into plate metadata."""
 
         if context.filemanager is None:
@@ -770,7 +778,7 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
                 str(self.output_dir), self.backend
             )
         )
-        AtomicMetadataWriter().publish_source_projection_metadata(
+        return (metadata_writer or AtomicMetadataWriter()).publish_source_projection_metadata(
             METADATA_CONFIG.metadata_path(self.plate_root),
             self.sub_dir,
             projection_entries,
@@ -786,6 +794,8 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
                 if self.results_dir is not None
                 else None
             ),
+            metadata_document=metadata_document,
+            admitted_entries=admitted_entries,
         )
 
     def produced_projection_entries(
@@ -1051,10 +1061,15 @@ class OpenHCSMetadataTarget(ABC, metaclass=AutoRegisterMeta):
                 for target in cls.for_plan(plan):
                     target_contexts.setdefault(target, context)
 
+        targets_by_document: dict[
+            Path, dict[OpenHCSMetadataTarget, ProcessingContext]
+        ] = {}
         for owner, context in target_contexts.items():
-            for target in owner.reconciliation_targets(context):
-                if target.contains_outputs(context):
-                    target.write(context)
+            targets_by_document.setdefault(
+                METADATA_CONFIG.metadata_path(owner.plate_root), {}
+            )[owner] = context
+        for metadata_path, targets in targets_by_document.items():
+            AtomicMetadataWriter().reconcile_completed_plate(metadata_path, targets)
 
 
 class ProducedImageMetadataCapability:
@@ -1157,14 +1172,24 @@ class RuntimeArtifactMetadataTarget(OpenHCSMetadataTarget):
         )
 
     def reconciliation_targets(
-        self, context: ProcessingContext
+        self,
+        context: ProcessingContext,
+        *,
+        document: OpenHCSMetadataSubdirectories | None = None,
+        admitted_entries: Mapping[str, VirtualWorkspaceSourceProjectionEntries] | None = None,
     ) -> tuple[RuntimeArtifactMetadataTarget, ...]:
         """Use durable typed projections, without reloading cleaned artifact values."""
         from openhcs.microscopes.openhcs import OpenHCSMetadataHandler
 
-        directories = OpenHCSMetadataHandler(
-            context.filemanager
-        ).reconciliation_directories(self.plate_root, self.backend)
+        if (document is None) != (admitted_entries is None):
+            raise ValueError("Reconciliation requires one document and its admitted entries.")
+        handler = OpenHCSMetadataHandler(context.filemanager)
+        directories = (
+            handler.reconciliation_directories(self.plate_root, self.backend)
+            if document is None else handler.reconciliation_directories_from_document(
+                self.plate_root, self.backend, document, admitted_entries
+            )
+        )
         return tuple(
             self.for_directory(directory)
             for directory in dict.fromkeys(

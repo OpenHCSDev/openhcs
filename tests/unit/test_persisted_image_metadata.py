@@ -333,9 +333,9 @@ def test_typed_projection_update_admits_only_retained_wire_records(
     decode = VirtualWorkspaceSourceProjectionEntries._projection_record
     encode = SourceProjectionMetadataSerializer._source_projection_payload
 
-    def record(cls, wire):
+    def record(cls, wire, **kwargs):
         admitted_paths.append(wire["virtual_path"])
-        return decode(wire)
+        return decode(wire, **kwargs)
 
     def payload(cls, projection, virtual_path):
         serialized_paths.append(virtual_path)
