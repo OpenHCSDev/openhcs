@@ -292,7 +292,9 @@ class PathPlannerExecutionGroups:
         if source_component is None:
             return PathPlannerGroupScope.ungrouped()
         source_keys = tuple(
-            self.planner.orchestrator.get_component_keys(source_component)
+            self.planner.orchestrator.get_component_keys(
+                source_component, resolved_config=self.planner.session.global_config
+            )
         )
         return (
             PathPlannerGroupScope.from_raw(source_keys, component=source_component)
@@ -504,7 +506,12 @@ class PathPlannerExecutionGroups:
         if group_by_component is None:
             return PathPlannerGroupScope.ungrouped()
         source_keys = (
-            tuple(self.planner.orchestrator.get_component_keys(group_by_component))
+            tuple(
+                self.planner.orchestrator.get_component_keys(
+                    group_by_component,
+                    resolved_config=self.planner.session.global_config,
+                )
+            )
             if step.processing_config.input_source is InputSource.PIPELINE_START
             else ()
         )
