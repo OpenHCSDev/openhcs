@@ -218,6 +218,15 @@ corrected or repaired continuations are not. If assistance is supplied, retain
 the original unassisted outcome and its evaluation denominator, then label the
 continuation separately. Do not change a declared evaluation budget mid-run.
 
+Assess autonomous quality on the author's final frozen choice after its own
+inspection and repairs, including its decision to retain an earlier candidate
+when a revision regresses. A poor first candidate does not fail the whole run
+if the author independently reaches a useful result within the declared scope.
+Report the first completed prediction separately as an initial-selection and
+repair-effort diagnostic, not as the autonomous success criterion. Preserve
+first, rejected and final artifacts; do not substitute the evaluator's
+highest-scoring attempt for the author's final choice or feed scores back to it.
+
 Transfer only general, tested operational or reasoning improvements into the
 skill/MCP harness through [analysis learning](analysis-learning.md). Do not copy
 dataset-specific thresholds, object identities, expected masks, scoring answers

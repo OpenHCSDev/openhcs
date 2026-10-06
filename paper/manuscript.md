@@ -122,6 +122,13 @@ The corpus contains 22 workflows and associated image sets from the official Cel
 
 ### Task-only authoring and independent repair
 
+The primary outcome is the author's final frozen result after its own inspection
+and repairs. Self-directed iteration remains autonomous when the author receives
+no external scientific corrections or reference feedback. First-attempt results
+describe initial method selection and the extent of repair, not the criterion
+for autonomous success. Continuations receiving external scientific corrections
+provide assisted-development evidence and are reported separately.
+
 Separate trials evaluated whether a fresh gpt-6.1-sol agent could choose and revise an analysis using the task brief, packaged OpenHCS skill and MCP. The skill describes function discovery, image measurements, preprocessing and visual review; it does not supply the evaluated images' reference labels or accepted settings. Authors inspected their own inputs and intermediate results, retaining pipeline attempts, tool calls and matched image-only, result-only and combined views. The coordinator evaluated frozen predictions after authoring ended, without returning reference scores to the authors. These trials are distinct from the earlier three-assay held-out evaluation (Supplementary Data 8).
 
 We compared first completed scientific settings with the final settings on exactly the same inputs. Technical corrections needed to submit or execute a pipeline remain part of the record; the first completed prediction is not necessarily the first tool call. H001 used a single notebook-derived bright-object image and its predeclared computational label reference. BBBC039 used independent nuclear annotations, with a paired first/final comparison on three fields and a separate final evaluation across all 200 fields. Some of those fields were inspected during development, so the 200-field result measures reference agreement rather than unseen generalization. Existing instance scorers used one-to-one matching at intersection over union at least 0.5.
