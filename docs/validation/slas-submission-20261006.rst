@@ -80,3 +80,17 @@ length definitions, and actual trial billing amounts absent from retained
 records. The BBBC039 retrospective subset excludes images viewed by any of
 the three analysis agents; it does not prove that no human author ever viewed
 those fields. These gaps are not solved by another segmentation run.
+
+The separate 1.5 MiB reproduction-source companion is:
+
+  /run/media/ts/hdd/openhcs-slas-author-review-20261006/figure-and-evaluation-sources.tgz
+
+SHA256: 0d43f95b9f0eafbd27dd64b40e693f529960ca1465faef9b7e3341c91c9279b3.
+Git archive selected committed figure-generation Python, figure provenance
+JSON, benchmark Python including evaluation code, build/quality requirements,
+project metadata and the project licence from ad18f39cf. Each of its 287 regular
+files was independently compared with git show at that commit; all bytes match.
+The companion adds reproduction sources absent from a reading-copy snapshot;
+it does not contain environments, model journals or private raw acquisitions.
+It is not a claim of complete historical input availability or a substitute
+for third-party dataset licences. No upload was performed.
