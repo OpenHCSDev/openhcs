@@ -1731,10 +1731,40 @@ class SourceUniverseRequest(metaclass=AutoRegisterMeta):
                 ),
             )
         )
+        return cls.admit_source_artifact_cohort(
+            payload,
+            source_binding_plan=request.source_binding_plan,
+            member_count=len(members),
+        )
+
+    @staticmethod
+    def admit_source_artifact_cohort(
+        payload: RuntimeArrayData,
+        *,
+        source_binding_plan: CompiledSourceBindingPlan,
+        member_count: int,
+    ) -> RuntimeArrayData:
+        """Admit original source pixels with their declared cohort domain.
+
+        A scalar source member still owns a singleton runtime axis. An already
+        assembled runtime cohort retains its held pixels, while an explicitly
+        whole-image source retains its intrinsic spatial dimensions.
+        """
         metadata = image_payload_metadata(payload)
-        domain = request.source_binding_plan.source_spatial_domain.admit_source_cohort(
-            metadata.source_spatial_domain,
-            depth=len(members),
+        if not metadata.persists_whole_image() and metadata.plane_axis is None:
+            if member_count != 1:
+                raise ValueError(
+                    "A scalar source payload must declare exactly one cohort member."
+                )
+            payload = stack_image_payloads(
+                (payload,),
+                metadata_mode=ImagePayloadMetadataCompositionMode.for_plane_axis(
+                    RuntimePlaneAxis.RUNTIME_SLICE
+                ),
+            )
+            metadata = image_payload_metadata(payload)
+        domain = source_binding_plan.source_spatial_domain.admit_source_cohort(
+            metadata.source_spatial_domain, depth=member_count,
         )
         return metadata.replace_fields(source_spatial_domain=domain).attach_to(payload)
 

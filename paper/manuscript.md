@@ -300,7 +300,7 @@ being treated as additional experiments.
 |---|---|---|
 | H001 bright objects | Pinned notebook labels; 64 objects | First/final object F1 0.929/0.944 in the Figure 5 trial; computational, not manual biological truth |
 | BBBC039 nuclei | Independent instance annotations; 200 fields | Three authors' final pooled F1 0.898–0.906; includes development fields, not first-200 or unseen accuracy |
-| BBBC007 DNA/actin | Manual-outline union; 16 fields | Directed boundary fraction 0.743 within two pixels; not boundary recall or exhaustive instance accuracy |
+| BBBC007 DNA/actin | Manual-outline union; 16 fields per author | Two final authors' directed boundary fractions 0.740–0.743 within two pixels; not boundary recall or exhaustive instance accuracy |
 | H002 3-D centres | 15 manual centres; Figure 9 trial | 15/15 matched within 20 voxels, mean error 4.80 voxels; annotations not established as exhaustive |
 | R0010 retinal somata | Distributed matched raw/result review | Autonomous repair retained neighbours and reduced nuisance masks; manual-reference accuracy unmeasured |
 | H004 public neurites | Matched raw shafts and nuisance controls | Principal-shaft and junction recovery; fine protrusions and per-neuron crossing ownership unresolved |
@@ -361,14 +361,17 @@ Supplementary Data 8.
 
 ### Figure 9. Measurement-first autonomous localisation in three dimensions
 
-![Original native XY, XZ and YZ views and independent annotated-centre matching.](figures/slas/h002_measurement_first.png){width=6in}
+![Same-run saved nuclear ROI extents in XY, original XZ/YZ centre views and independent annotated-centre matching.](figures/slas/h002_measurement_first.png){width=6in}
 
-\(A–C) Retained native image/Points views from one fresh task-only author.
-XY uses Z index 34, XZ uses Y index 157 and YZ uses X index 80; all are voxel
-indices. Green points are the original fractional predicted centres, not added
-annotations. Out-of-plane Points are hidden, so a body without a visible point
-in one slice is not necessarily missed. Crops are scaled without image or point
-retouching. \(D) Independent postfreeze one-to-one matching recovered 14 of
+\(A) Saved same-run nuclear ROI extents over raw signal, reopened through MCP
+for native presentation at Z index 34; categorical fills and edges show nuclear
+support, not validated cellular boundaries. (B,C) Original retained native
+image/Points views at Y index 157 (XZ) and X index 80 (YZ). All indices are
+voxel indices. Green points in B,C are the original fractional predicted
+centres, not added annotations. Out-of-plane Points are hidden, so a body
+without a visible point in one slice is not necessarily missed. Crops are
+scaled without image or point retouching. \(D) Independent postfreeze
+one-to-one matching recovered 14 of
 15 manual centres within 10 voxels and all 15 within the predeclared 30-voxel
 primary distance. Mean matched error at the primary distance was 4.80 voxels;
 11 of 26 predictions were unmatched to annotations whose coverage was not
