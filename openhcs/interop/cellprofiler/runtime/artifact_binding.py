@@ -411,9 +411,7 @@ class RuntimeInputBindingRequest:
             payload.source_aliases,
         )
         if plane_index is None:
-            if plane_count != 1:
-                return payload
-            plane_index = 0
+            return payload
         projection = RuntimePlaneAxisValueProjection.from_selected_plane(
             axis=payload.plane_axis,
             source_aliases=payload.source_aliases,
