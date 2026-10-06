@@ -59,8 +59,9 @@ not the original scientist or receiving25. No merge readiness is claimed yet.
 Qualified source checkpoint
 ---------------------------
 
-Production bytes are unchanged since c0d67deff; the final fixture head is
-775163f06. Original source checks used the paired Python3.12 interpreter and
+At the initial qualified checkpoint, production bytes were unchanged since
+c0d67deff and its final fixture head was 775163f06. Original source checks used
+the paired Python3.12 interpreter and
 the five receiving25 qualified dependencies, without modifying their prefix.
 The isolated Git source archive has no foreign external checkouts. Its original
 unchanged _tabular_native.abi3.so was reused from receiving25; both copies have
@@ -85,7 +86,7 @@ assertion used a nonexistent .planes property. It was corrected to the original
 SourceImageProvenance.source_plane_count, with no production change or weakened
 assertion. None was a scientist execution or an UNKNOWN replay.
 
-Production byte pins:
+Initial qualified production byte pins (superseded below for metadata only):
 
 * runtime_image_values.py:
   118750a9171d45114a9be18c5bb0bd8df29eee3718a04c5a085a7217f7778c33
@@ -106,3 +107,35 @@ registered Gaussian compile/execute COMPLETE, exact persisted pixels against
 independent-site and anisotropic-volume expectations, and unchanged source
 provenance/calibration. No viewer or biological rerun is necessary. Receiving25
 and all blind-author packages remain immutable.
+
+Parent IMPL-12 cleanup before candidate build
+-------------------------------------------
+
+Source head 5991cabc9 deletes the duplicated pixel-rank/channel-normalization/
+axis enumeration from spatial_axes and spatial_axes_yx. The existing metadata
+owner now provides non_channel_axes once. Optional Y/X projection still returns
+None for fewer than two non-channel axes, including a channel-bearing rank2
+payload with only one non-channel axis. Strict intrinsic projection still
+rejects insufficient declared Y/X or Z/Y/X dimensions. A volume declaration
+does not make optional Y/X placement reject a rank2 image. Both paths continue
+to reject an invalid declared channel index through the original normalizer.
+
+Relevant post-edit AST closure parsed seven metadata/placement/consumer modules
+with zero omissions. Existing Y/X callers in aligned payloads, streaming-axis
+binding, viewer sampling and viewer source-domain materialization retain the
+optional contract and their own established None handling. Gaussian alone
+consumes the strict intrinsic projection; its implementation is unchanged.
+This is a focused owner-family audit, not a global R1 or native runtime proof.
+
+Original controls06 session89764 is terminal0: all59 Gaussian, optional/strict
+projection, prepared geometry and saved-label domain controls passed in3.56s.
+Full process elapsed8.75s, peak426164KiB, zero swaps. Original log/time remain at
+/home/ts/wt/openhcs-issue-batch-20260929/engineering-gaussian980/controls06.log
+and controls06.time. No whole-candidate build was started before this cleanup.
+
+Current metadata SHA256:
+33810f045251604c1404fe91f98da7048ae9b9481a77a41fe61fd04e73dff1bb.
+Gaussian SHA256 remains
+df06de7964caf889ff6f5539da93ff7656864b9ebaeceba4654250e9d6301b35.
+Installed registered MCP pixels/provenance acceptance remains required and
+unclaimed. No current scientist, target or shared dependency was changed.
