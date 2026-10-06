@@ -141,6 +141,12 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
     assert set(orchestrator.get_component_keys(AllComponents.SITE)) == set(map(str, expected_sites))
     assert orchestrator.get_component_keys(AllComponents.SITE, [str(expected_sites[0])]) == [str(expected_sites[0])]
     assert orchestrator.get_component_keys(AllComponents.SITE, ["99"]) == []
+    from tests.unit.test_completed_output_publication_lifecycle import _facts
+    context.record_completed_step_outputs(_facts(workspace))
+    with_output = VirtualWorkspaceSourceProjectionAuthority.from_context(context).projection_or_empty()
+    assert set(with_output.pipeline_start_files()) == {
+        *selected.pipeline_start_files(), str(workspace / "images/saved.tif"),
+    }
     assert materialization.metadata_path.read_bytes() == original_bytes
     with pytest.raises(ValueError, match="matched no prepared workspace sources"):
         VirtualWorkspaceSourceProjectionAuthority.from_plate_metadata(

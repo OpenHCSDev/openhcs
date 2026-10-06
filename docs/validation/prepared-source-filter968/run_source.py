@@ -29,5 +29,5 @@ raise SystemExit(pytest.main([
     '--noconftest', '-o', 'addopts=', '-p', 'no:cacheprovider',
     '--basetemp=' + str(Path(sys.argv[1]).resolve() / 'pytest'),
     'tests/unit/test_source_binding_workspace.py',
-    '-k', 'prepared_workspace_admits',
+    'tests/unit/test_completed_output_publication_lifecycle.py',
 ]))
