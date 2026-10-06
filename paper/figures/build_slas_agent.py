@@ -22,6 +22,7 @@ SOURCE_MANIFEST = OUTPUT / "figure3_current_replay_sources.json"
 NEURITE_PIPELINE_SUFFIX = "/neurite/plate"
 # Native screenshot coordinates: x0, y0, x1, y1 of the napari canvas.
 DETAIL_CANVAS_XYXY = (580, 40, 1753, 720)
+OVERVIEW_CANVAS_XYXY = (454, 42, 1752, 720)
 SOMA_ASSIGNMENT_PADDING = 72
 
 
@@ -108,9 +109,9 @@ def read_measurements(
     return cells, summary
 
 
-def detail_canvas(path: Path) -> np.ndarray:
+def detail_canvas(path: Path, *, bounds=DETAIL_CANVAS_XYXY) -> np.ndarray:
     pixels = plt.imread(path)
-    left, top, right, bottom = DETAIL_CANVAS_XYXY
+    left, top, right, bottom = bounds
     if pixels.shape[1] < right or pixels.shape[0] < bottom:
         raise ValueError(f"Native detail capture geometry changed: {path}")
     return pixels[top:bottom, left:right]
@@ -239,7 +240,7 @@ def build() -> None:
         sources["cell_measurements"],
         sources["summary_measurements"],
     )
-    overview = plt.imread(sources["viewer_overview"])
+    overview = detail_canvas(sources["viewer_overview"], bounds=OVERVIEW_CANVAS_XYXY)
     crossing_detail = detail_canvas(sources["crossing_detail"])
     nuclei_labels = nonempty_label_plane(sources["nuclei_labels"])
     cell_body_labels = nonempty_label_plane(sources["cell_body_labels"])
@@ -285,7 +286,7 @@ def build() -> None:
 
     overview_axis = figure.add_subplot(grid[2:4, :4])
     overview_axis.imshow(overview, interpolation="nearest")
-    overview_axis.set_title("C  Current-source napari review", fontsize=12)
+    overview_axis.set_title("C  Assigned neurons and traced processes", fontsize=12)
     overview_axis.set_axis_off()
 
     for position, title, pixels in (
@@ -354,7 +355,9 @@ def build() -> None:
         "replay_execution_id": manifest["replay_execution_id"],
         "image_display": "Original uint8 TIFF pixels displayed linearly at 0..255",
         "viewer_display": (
-            "Panel C and the crossing detail are native Qt captures; the crossing "
+            "Panel C is an unchanged native canvas crop using "
+            f"xyxy={OVERVIEW_CANVAS_XYXY}; application controls are omitted. "
+            "The crossing detail is a native Qt capture; the crossing "
             f"detail is an unchanged canvas crop using xyxy={DETAIL_CANVAS_XYXY}. "
             "Panel D is a deterministic overlay of retained input pixels and labels."
         ),

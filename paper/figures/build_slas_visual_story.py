@@ -442,7 +442,9 @@ def translocation_repeat():
         raise ValueError("Expected the frozen fresh13 translocation author")
     tables = source["tables"]
     with plt.rc_context({"font.size": 12, "axes.titlesize": 13,
-                         "axes.spines.top": False, "axes.spines.right": False}):
+                         "axes.spines.top": False, "axes.spines.right": False,
+                         "axes.linewidth": 1.5, "xtick.major.width": 1.5,
+                         "ytick.major.width": 1.5}):
         sheet = FigureSheet("translocation_fresh13", "", 6.3)
         sheet.source(source_path)
         sheet.source(ROOT / "figure-collection-20261004/BBBC013-FRESH13-DEVELOPMENT-VISUAL-REVIEW.rst")
@@ -465,7 +467,8 @@ def translocation_repeat():
             dose_axis.errorbar(
                 positions, [float(row["mean_well_ratio"]) for row in rows],
                 yerr=[float(row["replicate_sd"]) for row in rows],
-                fmt="o-", color=color, capsize=3, linewidth=1.3, markersize=4,
+                fmt="o-", color=color, capsize=4, linewidth=2.2, markersize=6,
+                elinewidth=2.0, capthick=2.0, markeredgewidth=1.2,
             )
             dose_axis.set(
                 title=f"{'AB'[index]}  {block}", ylim=(0, 9),
@@ -482,7 +485,9 @@ def translocation_repeat():
                 (0, 1), (float(statistics["negative_mean"]), float(statistics["positive_mean"])),
                 yerr=(float(statistics["negative_replicate_sd"]),
                       float(statistics["positive_replicate_sd"])),
-                color=(MUTED, color), width=.5, capsize=3,
+                color=(MUTED, color), width=.5, capsize=4,
+                edgecolor=INK, linewidth=1.5,
+                error_kw={"elinewidth": 2.0, "capthick": 2.0},
             )
             control_axis.set(
                 title=f"{'CD'[index]}  Controls: Z′ = {float(statistics['z_prime']):.3f}",
