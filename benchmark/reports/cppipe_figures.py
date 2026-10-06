@@ -393,6 +393,10 @@ class BenchmarkFigureStyle:
     def save(self, fig, output_path: Path) -> None:
         fig.savefig(output_path, dpi=FIGURE_DPI, bbox_inches="tight")
 
+    def decorate_legend(self, axis) -> None:
+        """Keep grouped method identities outside the measured bar domain."""
+        axis.legend(frameon=False, loc="upper left", bbox_to_anchor=(1.02, 1.0))
+
 
 @dataclass(frozen=True)
 class LinearAxisBreakPolicy:
@@ -1183,11 +1187,7 @@ def _plot_grouped_metric(
                 axis.yaxis.set_major_formatter(FuncFormatter(_plain_log_tick_label))
                 axis.yaxis.set_minor_formatter(NullFormatter())
 
-        panel_axes[0].legend(
-            frameon=False,
-            ncol=min(len(request.methods), 5),
-            loc="upper left",
-        )
+        FIGURE_STYLE.decorate_legend(panel_axes[0])
         outputs: list[Path] = []
         filename_stem = f"{metric.filename_stem}_log" if log_y else metric.filename_stem
         for output_format in request.output_formats:
@@ -1285,11 +1285,7 @@ def _plot_grouped_metric_broken(
                 fontsize=PIPELINE_LABEL_FONT_SIZE,
             )
 
-        all_axes[0].legend(
-            frameon=False,
-            ncol=min(len(request.methods), 5),
-            loc="upper left",
-        )
+        FIGURE_STYLE.decorate_legend(all_axes[0])
         outputs: list[Path] = []
         for output_format in request.output_formats:
             output_path = request.output_dir / f"{metric.filename_stem}.{output_format}"
@@ -1379,11 +1375,7 @@ def _plot_accuracy_zoom(
             context_axis.margins(x=0.01)
             LINEAR_AXIS_BREAK_POLICY.mark(zoom_axis, context_axis)
 
-        all_axes[0].legend(
-            frameon=False,
-            ncol=min(len(request.methods), 5),
-            loc="upper left",
-        )
+        FIGURE_STYLE.decorate_legend(all_axes[0])
         outputs: list[Path] = []
         for output_format in request.output_formats:
             output_path = request.output_dir / f"cppipe_accuracy_zoom.{output_format}"
