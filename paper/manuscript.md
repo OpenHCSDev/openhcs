@@ -20,7 +20,7 @@ link-bibliography: true
 
 ## Abstract
 
-Closed-loop microscopy laboratories need image analysis that an agent can perform and a scientist can audit. We developed OpenHCS, an open-source platform in which scientists and agents edit the same pipeline through graphical controls, Python or the Model Context Protocol (MCP). Established CellProfiler workflows and custom Python functions can be combined, with images, segmentation masks and measurements available for inspection in napari and Fiji. All 30 imported CellProfiler workflows passed selected reference-output comparisons, including five supplemented with image or object-label exports. We evaluated autonomy with blind task-only trials: agents constructed and repaired analyses using MCP and packaged guidance, with pipelines frozen before reference comparison and no reference-score feedback. Independent nuclear analyses reached pooled object F1 of 0.898–0.906 across 200 annotated fields, including development fields. A completed 96-well translocation analysis yielded control Z-prime values of 0.849 and 0.726 for two drugs among cells with measurable compartments. Image review showed recovery of retinal cell bodies and principal neurite shafts, with uncertain cell boundaries and unresolved assignment at neurite crossings. Matched single-thread measurements across all 30 workflows showed a minimum execution speedup of 2.86-fold over native CellProfiler and a median of 4.36-fold, with no declared-output differences. OpenHCS allows scientists to delegate analysis construction and execution while retaining access to the processing choices and biological results.
+Closed-loop microscopy laboratories need image analysis that an agent can perform and a scientist can audit. We developed OpenHCS, an open-source platform in which scientists and agents edit the same pipeline through graphical controls, Python or the Model Context Protocol (MCP). Established CellProfiler workflows and custom Python functions can be combined, with images, segmentation masks and measurements available for inspection in napari and Fiji. All 30 imported CellProfiler workflows passed selected reference-output comparisons, including five supplemented with image or object-label exports. We evaluated autonomy with blind task-only trials: agents constructed and repaired analyses using MCP and packaged guidance, with pipelines frozen before reference comparison and no reference-score feedback. Independent nuclear analyses reached pooled object F1 of 0.898–0.906 across 200 annotated fields, including development fields. A completed 96-well translocation analysis yielded control Z-prime values of 0.849 and 0.726 for two drugs among cells with measurable compartments. Image review showed recovery of retinal cell bodies and principal neurite shafts, with uncertain cell boundaries and unresolved assignment at neurite crossings. Matched single-thread measurements across [pending]{.benchmark-claim key=case_count} workflows showed a minimum execution speedup of [pending]{.benchmark-claim key=execution_min}-fold over native CellProfiler and a median of [pending]{.benchmark-claim key=execution_median}-fold, with no declared-output differences. OpenHCS allows scientists to delegate analysis construction and execution while retaining access to the processing choices and biological results.
 
 ## Introduction
 
@@ -38,15 +38,13 @@ MCMICRO combines interchangeable processing modules for multiplexed tissue imagi
 
 CellProfiler import provides a direct test of workflow preservation: comparing translated `.cppipe` workflows against native CellProfiler tests whether they retain the selected measurements and images.
 
-We evaluated OpenHCS using established CellProfiler workflows and agent-authored analyses of nuclei, cell bodies, neurites and protein translocation. Comparisons with native CellProfiler tested whether imported workflows preserved their selected outputs. Autonomous trials tested whether agents could construct an analysis, inspect its results and correct segmentation errors without access to reference scores. We assessed the final analyses using annotated images, well-level assay responses and matched image review (Figures 5–9). Separate experiments compared execution and total analysis time across all 30 imported workflows (Figure 4).
+We evaluated OpenHCS using established CellProfiler workflows and agent-authored analyses of nuclei, cell bodies, neurites and protein translocation. Comparisons with native CellProfiler tested whether imported workflows preserved their selected outputs. Autonomous trials tested whether agents could construct an analysis, inspect its results and correct segmentation errors without access to reference scores. We assessed frozen analyses using annotations, well-level assay responses and matched image review. Separate experiments compared execution and total time across the 30 imported workflows.
 
-### Figure 1. Scientists and agents operate a shared microscopy workflow
+### Figure 1. A shared, editable analysis connects agents, scientists and execution
 
-![Shared workflow, source connections and execution.](figures/slas/shared_workflow.png){width=6in}
+![Shared workflow and retained native editing evidence.](figures/slas/submission_shared_workflow.png){width=6in}
 
-\(A) Desktop, Python and MCP operations act on a shared pipeline; CellProfiler import supplies an editable analysis in that model. The illustrated desktop process hosts the editors and MCP bridge. The processing sequence is illustrative, with functions chosen for each assay. (B) Image-source bindings and established or custom functions connect to the same definition. OMERO is experimental. (C) A separate ZeroMQ execution server prepares the function catalog, compiles workflows and schedules prepared tasks on worker processes. Blue arrows distinguish requests and progress from green result streaming to separate napari or Fiji viewers. Workers also retain configured images, ROIs and measurements for review and subsequent edits. Worker/viewer counts are configurable, and CPU/GPU support depends on the selected functions; performance measurements are presented separately in Figure 4.
-
-## Materials and Methods
+(I) Forms, Python and MCP act on one workflow; CellProfiler imports and custom functions enter the same definition. The execution server prepares the catalog, compiles pipelines and coordinates workers, with results streamed to separate viewers. CPU/GPU support depends on the selected functions; OMERO support is experimental. (II) Native workflow editor. (III) The real ZeroMQ server browser, captured in OpenHCS 0.8.7. (IV, V) Native controls and Python show matching normalization settings after MCP edits in an OpenHCS 0.8.5 session. The complete editing record and capture provenance are retained in the supplementary package.
 
 ### Workflow definition and image sources
 
@@ -121,7 +119,7 @@ We compared first completed scientific settings with the final settings on exact
 
 ### Performance measurements and reproducibility
 
-The matched single-sample evaluation used CPU execution with one worker and one numerical thread on one physical core. OpenHCS revision `5ad1e69565493220572de0a9c1af29f558b5f920` ran with Python 3.12; native CellProfiler 4.2.8.1 ran with Python 3.9 in its separate environment. Each workflow used one selected source well or sample, which can contain multiple image sets, with unchanged processing settings and the declared comparison outputs. A warmup preceded three measured repetitions. Complete retained native observations were reused only after the workload, inputs, outputs, software environment and hardware checks passed; OpenHCS observations were acquired on the same clean source revision across all 30 workflows.
+The matched single-sample evaluation used CPU execution with one worker and one numerical thread on one physical core. OpenHCS revision [pending]{.benchmark-claim key=source_revision} ran with Python 3.12; native CellProfiler 4.2.8.1 ran with Python 3.9 in its separate environment. Each workflow used one selected source well or sample, which can contain multiple image sets, with unchanged processing settings and the declared comparison outputs. A warmup preceded three measured repetitions. Complete retained native observations were reused only after the workload, inputs, outputs, software environment and hardware checks passed; OpenHCS observations were acquired on the same clean source revision across all 30 workflows.
 
 Execution timing covers the native pipeline call, including preparation of the run and groups, module processing and post-run work; OpenHCS timing covers the complete server execution job, including ordinary output publication and plate exports. Process, JVM and execution-server startup, function-library readiness, warmup and scientific comparison are excluded. The separate total metric compares the prepared native invocation with the sum of disjoint OpenHCS client compilation and execution submission/wait phases. Nested server and worker durations are not added again. Each workflow's speedup is the ratio of the two engines' independently calculated median durations; the reported cohort median is the median of those 30 ratios. Original reports, summaries, source checksums and figure provenance are retained with the matched benchmark record.
 
@@ -133,33 +131,25 @@ Historical performance protocols and their different timing and output policies 
 
 The desktop interface, generated Python and MCP operations read and modify the same workflow definition (Figure 1). A pipeline created by an agent can be opened in the editor, revised by a scientist and run again. Source mappings connect folders, Bio-Formats containers and managed images to named inputs. Intermediate images and measurements retain their source coordinates and producing step, allowing a displayed result to be traced back to its processing choices.
 
-A recorded authoring check demonstrates this connection directly (Figure 2). An MCP request applied edited Python to the normalization step, changing its high percentile from 99.8 to 99.6; the control then showed 99.6. A subsequent MCP field-edit request restored 99.8, and regenerated Python contained that value. The full application view, parameter controls and function-code window were captured in the same session, using the source commit released as OpenHCS 0.8.5. Forms show the values that will be used, including shared defaults; clearing a step's override restores its shared setting.
+A recorded authoring check demonstrates this connection directly (Figure 1). An MCP request applied edited Python to the normalization step, changing its high percentile from 99.8 to 99.6; the control then showed 99.6. A subsequent MCP field-edit request restored 99.8, and regenerated Python contained that value. The full application view, parameter controls and function-code window were captured in the same session, using the source commit released as OpenHCS 0.8.5. Forms show the values that will be used, including shared defaults; clearing a step's override restores its shared setting.
 
-The UI submits work to a separate execution server using ZeroMQ messaging. The server prepares the function catalog, compiles the workflow and coordinates workers. Workers execute the prepared steps and stream selected results to separate napari or Fiji processes, while progress returns through the server to the UI (Figure 1C).
+The UI submits work to a separate execution server using ZeroMQ messaging. The server prepares the function catalog, compiles the workflow and coordinates workers. Workers execute the prepared steps and stream selected results to separate napari or Fiji processes, while progress returns through the server to the UI (Figure 1I).
 
 Scientists can inspect streamed images and objects in Fiji or napari (Supplementary Figure 14). napari also exposes layer and ROI information to agents; selected objects remain linked to their measurements (Supplementary Figure 3).
 
-### Figure 2. Forms, Python and MCP edit the same analysis
 
-![Main workflow, ZeroMQ server browser, parameter controls and matching Python code.](figures/slas/editable_analyses.png){width=6in}
-
-\(A) NeuronCyto II workflow and enlarged pipeline steps. (B) The ZeroMQ server browser lists the execution server and UI bridge, with status and management controls. This panel was captured separately in OpenHCS 0.8.7. (C, D) Matching controls and Python show the high percentile restored to 99.8 and parameters in signature order after MCP edits. Panels A, C and D come from the same OpenHCS 0.8.5 editing session; Figure 3 shows the subsequent replay and measurements.
 
 ### An agent constructs a neurite-outgrowth analysis
 
 From a detailed prompt identifying the two NeuronCyto II channels and requested outputs, the agent built and inspected a neurite-outgrowth analysis without further human input.
 
-The agent inspected the images and constructed a two-step pipeline: normalization followed by neurite morphology and topology analysis (Figure 3). It corrected invalid pipeline settings before execution and completed authoring, corrections, execution and output checks in 609 s; pipeline execution took 16.5 s. Outputs included neuron and nuclear labels, neurite paths and per-neuron measurements. The pipeline remained editable in Python and the graphical interface. The complete tool history, including rejected requests and authoring errors, is provided in Supplementary Data 4.
+The agent inspected the images and constructed a two-step pipeline: normalization followed by neurite morphology and topology analysis (Figure 5). It corrected invalid pipeline settings before execution and completed authoring, corrections, execution and output checks in 609 s; pipeline execution took 16.5 s. Outputs included neuron and nuclear labels, neurite paths and per-neuron measurements. The pipeline remained editable in Python and the graphical interface. The complete tool history, including rejected requests and authoring errors, is provided in Supplementary Data 4.
 
 The final napari view displayed enhanced neuronal signal, neuron labels and neurite paths, with a table linking paths to measurements. All nine expected outputs were present. The analysis reported nine neurons, ten nuclei and 25 graph paths. Subsequent visual review identified a crossing classified as a branch and a soma divided between two neuron labels; its nuclear signal was also divided into three objects. The published manual-tracing table lists eight neurons for image 1 [@NeuronCytoII]. The discrepancy illustrates why complete outputs must still be checked against the biological structures in the image.
 
 A separate current-source replay used nuclear-supported soma detection and soma-rooted path assignment. It produced eight cell bodies, eight nuclei, 18 processes, two branch events and 24 graph paths. Per-cell measurements agree with graph distance features, totaling 2556.137 pixels under unit spacing. Supplementary Data 4 retains the original run, intervening correction and current replay separately. Document validation caught invalid authoring attempts before execution; image review identified errors in the biological result.
 
-### Figure 3. Neurite morphology and topology from an agent-authored workflow
 
-![Original inputs, current native viewer inspection and retained neurite measurements.](figures/slas/figure3_agent_workflow.png){width=6in}
-
-(A, B) Original 800 x 800-pixel NeuronCyto II field-1 inputs [@NeuronCytoII], displayed linearly over their unsigned 8-bit range. The boxes name the two saved pipeline functions. (C) The native napari canvas shows neuronal signal, unified labels and graph paths from the current-source replay; application controls are cropped away without changing image or overlay pixels. Selecting neuron 8 links its three paths. (D) Retained nucleus, soma and assigned-neuron labels for the lower field cell, shown in magenta, cyan and yellow, respectively. Label identities are matched by pixel overlap. (E) Crossing paths remain assigned to separate neurons. (F, G) Per-neuron and summary measurements derived from the retained tables. Lengths are pixels because the public input has no recorded physical calibration. This replay is distinct from the original unattended run retained in Supplementary Data 4; it is not another fresh autonomous evaluation.
 
 ### Prospective held-out assay analyses
 
@@ -179,19 +169,19 @@ The advanced segmentation and 3D monolayer imports retain their named structures
 
 ### Matched execution and total time across 30 workflows
 
-In the 6 October 2026 matched single-sample evaluation on source revision `e905e7705`, all 30 workflows passed their declared-output comparisons in the warmup and all three measured repetitions. The minimum execution speedup over native CellProfiler was 2.95-fold, and the median across workflows was 4.40-fold (Figure 4A). The weakest execution result was illumination correction Example 3: native pipeline time was 0.598 s and OpenHCS server execution time was 0.202 s, each the median of three measured repetitions. The 3D monolayer workflow measured 14.529 s versus 2.735 s, a 5.31-fold execution speedup.
+The matched single-sample evaluation used [pending]{.benchmark-claim key=case_count} workflows from record [pending]{.benchmark-claim key=record_name}, production revision [pending]{.benchmark-claim key=source_revision}. Its publication status is [pending]{.benchmark-claim key=status}. Declared-output comparisons passed in the warmup and three measured repetitions. The minimum execution speedup over native CellProfiler was [pending]{.benchmark-claim key=execution_min}-fold and the median was [pending]{.benchmark-claim key=execution_median}-fold (Figure 2A).
 
-All 30 single-sample compile-plus-run totals were faster than native CellProfiler, with a minimum speedup of 1.33-fold and a median of 3.37-fold (Figure 4B). Two workflows fell below twofold total speedup: illumination correction Example 3 and CombineObjects. The total comparison includes OpenHCS compilation and client coordination, so it differs from the execution comparison. Per-workflow runtime and speedup panels, exact durations and the clock definitions accompany the matched record; no unmeasured memory result or projected native throughput is included in these fresh panels.
+Compile-plus-run total speedup had a minimum of [pending]{.benchmark-claim key=total_min}-fold and a median of [pending]{.benchmark-claim key=total_median}-fold (Figure 2B). This comparison includes OpenHCS compilation and client coordination, separately from execution. Exact per-workflow times and the clock definitions accompany the same record.
 
 Measured multi-worker efficiencies and single-core amortization are reported separately in Supplementary Figures 16–17.
 
-### Figure 4. Matched single-sample speedup over native CellProfiler
+### Figure 2. Matched single-sample speedup over native CellProfiler
 
-![Execution speedup distribution.](figures/slas/matched_final_20261006/execution/measured_execution_speedup_cumulative_distribution_log.png){width=5.5in}
+![Execution speedup distribution.](figures/slas/benchmark-publication/execution/measured_execution_speedup_cumulative_distribution_log.png){width=5.5in}
 
-![Total speedup distribution.](figures/slas/matched_final_20261006/total/measured_total_speedup_cumulative_distribution_log.png){width=5.5in}
+![Total speedup distribution.](figures/slas/benchmark-publication/total/measured_total_speedup_cumulative_distribution_log.png){width=5.5in}
 
-\(A) Execution and (B) total speedup for all 30 workflows, with one selected source sample and one worker using one numerical thread. Curves show the fraction of workflows at or above each speedup threshold on a logarithmic horizontal axis; the dashed lines mark twofold execution speedup and native parity for total runtime. Each workflow contributes one ratio of independent engine medians from three measured repetitions after warmup. Native execution includes run/group preparation, modules and post-run work; OpenHCS execution includes the completed server job and ordinary exports. Total compares the prepared native invocation with disjoint OpenHCS compilation and execution client phases; native one-time pipeline loading and JVM startup are excluded. Startup, library readiness and scientific comparisons are outside these clocks. All declared-output comparisons passed. This dated checkpoint used unchanged production source `e905e77057e588f48df141634b4eb5b4a765095a`; genuine native observations were reused only after workload, input, environment, CPU/storage and complete-observation qualification. Exact values, per-workflow panels and source/output checksums are retained in the matched benchmark record.
+\(A) Execution and (B) total speedup for [pending]{.benchmark-claim key=case_count} workflows on one selected source sample, one worker and one numerical thread. Curves show the fraction at or above each threshold on a logarithmic axis; dashed lines denote twofold execution speedup and total-time parity. Ratios use independent engine medians from three repetitions after warmup. Execution minima/medians are [pending]{.benchmark-claim key=execution_min}/[pending]{.benchmark-claim key=execution_median]-fold; total minima/medians are [pending]{.benchmark-claim key=total_min}/[pending]{.benchmark-claim key=total_median]-fold. Record [pending]{.benchmark-claim key=record_name}, revision [pending]{.benchmark-claim key=source_revision}, status [pending]{.benchmark-claim key=status}, supplies both panels and all manuscript claims. Timing definitions and provenance are retained with that record.
 
 ### Autonomous analysis across distinct biological tasks
 
@@ -203,13 +193,13 @@ these endpoints should not be combined into a single accuracy percentage.
 
 For bright-object segmentation, the H001 author matched 59 of 64
 notebook-reference objects while reducing excess predictions from four to two,
-raising object F1 from 0.929 to 0.944 (Figure 5). The reference is computational,
+raising object F1 from 0.929 to 0.944 (Figure 3). The reference is computational,
 not a manual cell census. Independent BBBC039 authors achieved final pooled
 object F1 of 0.898–0.906 over the same 200 annotated fields. The lower-scoring
 fields show that useful overall agreement does not imply uniform accuracy.
 
 In three dimensions, a measurement-first author recovered all 15 annotated
-centres within 20 voxels, with mean matched error of 4.80 voxels (Figure 9).
+centres within 20 voxels, with mean matched error of 4.80 voxels (Figure 4).
 Eleven further predictions were unmatched to annotations of unestablished
 coverage. Native orthogonal views reveal supported body locations and remaining
 lobed-body ambiguity; a separate author repaired an internal partition without
@@ -259,7 +249,7 @@ The public BBBC013 translocation analysis completed all 96 wells. It retained
 14,631 of 17,320 detected nuclei with eligible cytoplasmic compartments (84.5%).
 The endpoint is each well's median eligible-cell log2 nuclear-to-cytoplasmic
 GFP ratio. Four wells contribute to each treatment group. Control Z-prime was
-0.849 for the LY294002 block and 0.726 for the Wortmannin block (Figure 8).
+0.849 for the LY294002 block and 0.726 for the Wortmannin block (Figure 4).
 Eligibility varies with treatment, so the response describes contributing cells,
 not an unbiased estimate for every detected cell. Supplementary matched views show complementary
 compartment-level inspection from assisted development. Frozen records and
@@ -268,10 +258,10 @@ being treated as additional experiments.
 
 | Input and task | Evaluation evidence | Supported result and limit |
 |---|---|---|
-| H001 bright objects | Pinned notebook labels; 64 objects | First/final object F1 0.929/0.944 in the Figure 5 trial; computational, not manual biological truth |
+| H001 bright objects | Pinned notebook labels; 64 objects | First/final object F1 0.929/0.944 in the Figure 3 trial; computational, not manual biological truth |
 | BBBC039 nuclei | Independent instance annotations; 200 fields | Three authors' final pooled F1 0.898–0.906; includes development fields, not first-200 or unseen accuracy |
 | BBBC007 DNA/actin | Manual-outline union; 16 fields per author | Two final authors' directed boundary fractions 0.740–0.743 within two pixels; not boundary recall or exhaustive instance accuracy |
-| H002 3-D centres | 15 manual centres; Figure 9 trial | 15/15 matched within 20 voxels, mean error 4.80 voxels; annotations not established as exhaustive |
+| H002 3-D centres | 15 manual centres; Figure 4 trial | 15/15 matched within 20 voxels, mean error 4.80 voxels; annotations not established as exhaustive |
 | R0010 retinal somata | Distributed matched raw/result review | Autonomous repair retained neighbours and reduced nuisance masks; manual-reference accuracy unmeasured |
 | H004 public neurites | Matched raw shafts and nuisance controls | Principal-shaft and junction recovery; fine protrusions and per-neuron crossing ownership unresolved |
 | Laboratory neurites, nine fields | Matched raw/path review in three sampled fields | Autonomous completion and recovery of thin paths after self-directed repair; overlapping fields not stitched or deduplicated, per-neuron ownership unresolved |
@@ -286,7 +276,7 @@ Supplementary Data 8 retains their exact inputs, predictions and evaluations.
 
 Table 2 summarizes each task's endpoint and scope; Supplementary Data 8 retains frozen attempts and independent evaluations.
 
-### Figure 5. Autonomous image review improves nuclear segmentation
+### Figure 3. Autonomous image review improves nuclear segmentation
 
 ![Native autonomous repair, paired scores and complete coverage.](figures/slas/task_only_visual.png){width=6in}
 
@@ -299,56 +289,24 @@ within-run repair does not guarantee a better result from the next fresh author.
 
 
 
-### Figure 8. Autonomous recovery of the translocation response
+### Figure 4. Autonomous analysis recovers an assay response and three-dimensional nuclear positions
 
-![Dose response and contributing-cell coverage.](figures/slas/translocation_fresh23.png){width=6in}
+![Translocation response, contributing-cell coverage and nuclear localisation.](figures/slas/submission_quantitative_results.png){width=6in}
 
-Upper panels show the mean and sample standard deviation of four well-level
-median eligible-cell log2 nuclear-to-cytoplasmic GFP ratios per dose. Dots are
-individual wells, not cells. Lower panels show the corresponding fraction of
-detected nuclei contributing an eligible compartment. Drug concentration units
-differ. Equally spaced dose positions and connecting lines are descriptive,
-not a fitted potency model. The autonomous author selected its final pipeline
-without segmentation ground truth. Treatment-dependent eligibility limits
-population interpretation; the preserved source tables are linked in
-Supplementary Data 8.
-
-### Figure 9. Autonomous localisation of nuclei in three dimensions
-
-![Same-run saved nuclear ROI extents in XY, original XZ/YZ centre views and independent annotated-centre matching.](figures/slas/h002_measurement_first.png){width=6in}
-
-\(A) Predicted nuclear regions over raw signal in the XY plane at Z index 34.
-(B,C) Predicted centres in XZ and YZ views at Y index 157 and X index 80,
-respectively. Indices and distances are in voxels. Green points are the author's
-predictions; out-of-plane points are hidden, so a nucleus without a visible
-point in one slice is not necessarily missed. \(D) Independent evaluation after
-the pipeline was frozen matched 14 of 15 manual centres within 10 voxels and
-all 15 within the predeclared 30-voxel primary distance. Mean matched error
-was 4.80 voxels. Eleven of 26 predictions were unmatched, but the annotations
-were not established as exhaustive. These results support nuclear localisation,
-not validated cell boundaries or a complete biological census; a lobed
-chromatin complex remains unresolved. Physical calibration is unverified.
-Source: Allen Institute for Cell Science cells3d, through the Haase
-notebook-derived task. Supplementary Data 8 retains captures and evaluation details.
+(I) BBBC013 dose-response panels show mean and sample standard deviation across four well-level median eligible-cell log2 nuclear-to-cytoplasmic GFP ratios per dose; dots represent wells. Lower panels report the fraction of detected nuclei contributing eligible compartments. Concentration units differ between drugs; connecting lines do not represent fitted potency. All 96 wells include the development wells. (II) Native XY nuclear extents and XZ/YZ centre views, with independent matching to 15 manually annotated centres after freezing. Fourteen centres matched within 10 voxels and all 15 within the predeclared 30-voxel distance; mean error was 4.80 voxels. Eleven predictions remained unmatched to annotations of unestablished coverage. This supports localisation, not validated cell boundaries. Physical calibration is unverified. Supplementary Data 8 identifies the distinct trials, captures and score receipts.
 
 
 
-### Figure 11. Neurite analysis across an overlapping nine-field mosaic
 
-![Matched seam and field-core raw, body/path result and combined views.](figures/slas/p001_stitched_dev13_native.png){width=6in}
 
-(A–C) Sampled overlap region; (D–F) lower-right field core in an acquisition-placed
-nine-field mosaic. Each triplet uses the same native crop, with raw FITC,
-body envelopes plus process paths, and their combination. The analysis fits
-one pooled percentile pair per complete nine-field channel stack before
-assembly, rather than fitting fields separately. Supported long paths remain
-visible; faint segments and crowded ownership remain incomplete. The displayed
-mosaic is an assisted retained-context example, not a fresh unguided trial.
-Original captures, the precise selected pipeline and the development history
-remain in the [source record](../figure-collection-20261004/P001-STITCHED-DEV13-INDEPENDENT-REVIEW.rst).
-The completed all-channel continuation is recorded separately in Supplementary
-Data 8; its aggregate measurements are not assigned to these earlier panels.
 
+
+
+### Figure 5. Neurite morphology and topology from an agent-authored workflow
+
+![Original inputs, current native viewer inspection and retained neurite measurements.](figures/slas/figure3_agent_workflow.png){width=6in}
+
+(A, B) Original 800 x 800-pixel NeuronCyto II field-1 inputs [@NeuronCytoII], displayed linearly over their unsigned 8-bit range. The boxes name the two saved pipeline functions. (C) The native napari canvas shows neuronal signal, unified labels and graph paths from the current-source replay; application controls are cropped away without changing image or overlay pixels. Selecting neuron 8 links its three paths. (D) Retained nucleus, soma and assigned-neuron labels for the lower field cell, shown in magenta, cyan and yellow, respectively. Label identities are matched by pixel overlap. (E) Crossing paths remain assigned to separate neurons. (F, G) Per-neuron and summary measurements derived from the retained tables. Lengths are pixels because the public input has no recorded physical calibration. This replay is distinct from the original unattended run retained in Supplementary Data 4; it is not another fresh autonomous evaluation.
 
 ## Discussion
 

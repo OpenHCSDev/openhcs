@@ -708,6 +708,40 @@ def personal_stitched_development():
     sheet.save()
 
 
+def submission_shared_workflow():
+    """Combine the workflow diagram with its retained native editing evidence."""
+    sheet = FigureSheet("submission_shared_workflow", "", 9.1)
+    sheet.source(OUTPUT / "shared_workflow_provenance.json")
+    sheet.source(OUTPUT / "authoring_verified_roundtrip_provenance.json")
+    sheet.panel("I", "Shared analysis and execution", 3, 97)
+    sheet.source_image(OUTPUT / "shared_workflow.png", (3, 45, 94, 50))
+    sheet.panel("II", "Editable workflow", 3, 42)
+    sheet.native_image("authoring_main_verified_capture", (3, 6, 33, 34))
+    sheet.panel("III", "Execution server", 39, 42)
+    sheet.native_image("authoring_server_browser_verified_capture", (39, 30, 58, 10))
+    sheet.panel("IV", "Controls", 39, 27)
+    sheet.panel("V", "Matching Python", 68, 27)
+    sheet.native_image(
+        "authoring_function_verified_capture", (39, 5, 25, 20), crop=(25, 153, 193, 290)
+    )
+    sheet.native_image(
+        "authoring_code_verified_capture", (68, 5, 29, 20), crop=(74, 96, 292, 222)
+    )
+    sheet.save()
+
+
+def submission_quantitative_results():
+    """Keep assay response and 3-D localisation in one quantitative result sheet."""
+    sheet = FigureSheet("submission_quantitative_results", "", 9.1)
+    sheet.source(OUTPUT / "translocation_fresh23_provenance.json")
+    sheet.source(OUTPUT / "h002_measurement_first_provenance.json")
+    sheet.panel("I", "Translocation response and contributing cells", 3, 97)
+    sheet.source_image(OUTPUT / "translocation_fresh23.png", (3, 48, 94, 47))
+    sheet.panel("II", "Three-dimensional nuclear localisation", 3, 46)
+    sheet.source_image(OUTPUT / "h002_measurement_first.png", (3, 2, 94, 42))
+    sheet.save()
+
+
 def architecture():
     sheet = FigureSheet(
         "shared_workflow", "OpenHCS: one editable workflow from images to results", 8.1

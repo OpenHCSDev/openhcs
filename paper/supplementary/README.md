@@ -12,8 +12,25 @@ The BBBC013 run produced matched nuclear and cytoplasmic measurements for 14,262
 
 ### Assisted laboratory neurite mosaic
 
+### Neurite analysis across an overlapping nine-field mosaic
+
+![Matched seam and field-core raw, body/path result and combined views.](../figures/slas/p001_stitched_dev13_native.png){width=6in}
+
+(A–C) Sampled overlap region; (D–F) lower-right field core in an acquisition-placed
+nine-field mosaic. Each triplet uses the same native crop, with raw FITC,
+body envelopes plus process paths, and their combination. The analysis fits
+one pooled percentile pair per complete nine-field channel stack before
+assembly, rather than fitting fields separately. Supported long paths remain
+visible; faint segments and crowded ownership remain incomplete. The displayed
+mosaic is an assisted retained-context example, not a fresh unguided trial.
+Original captures, the precise selected pipeline and the development history
+remain in the [source record](../../figure-collection-20261004/P001-STITCHED-DEV13-INDEPENDENT-REVIEW.rst).
+The completed all-channel continuation is recorded separately in Supplementary
+Data 8; its aggregate measurements are not assigned to these earlier panels.
+
+
 An assisted analysis of the same dataset assembled the nine overlapping fields
-into a mosaic (Figure 11). A shared percentile fit across the complete stack preserves a
+into a mosaic (Figure 5). A shared percentile fit across the complete stack preserves a
 common channel scale before mosaic analysis. The completed retained-context
 workflow produced 1,740 soma candidates and 123,054 micrometres of computed total
 outgrowth at the declared spacing. These are algorithmic outputs, not a unique
@@ -263,7 +280,7 @@ Upper: matched process-channel raw image and the initial autonomous shaft-focuse
 
 ![Recorded image and ROI inspection in two viewers.](../figures/slas/inspectable_results.png){width=5.5in}
 
-\(A) Fiji displays a single NeuronCyto II field 1 nuclear plane with nine corresponding native ROI Manager entries. (B) A separate three-plane napari demonstration shows segmented objects, a selected ROI-list entry and the displayed channel/Z coordinates. Its accompanying recording shows selection navigating between planes. These are retained viewer demonstrations, separate from the unattended analysis in Figure 3; their segmentation outputs are not compared with each other. Details enlarge the ROI entries and a nuclear outline in A, and the selected object, highlighted list entry and coordinates in B. The full captures and checksum records are retained in the gallery archive.
+\(A) Fiji displays a single NeuronCyto II field 1 nuclear plane with nine corresponding native ROI Manager entries. (B) A separate three-plane napari demonstration shows segmented objects, a selected ROI-list entry and the displayed channel/Z coordinates. Its accompanying recording shows selection navigating between planes. These are retained viewer demonstrations, separate from the unattended analysis in Figure 5; their segmentation outputs are not compared with each other. Details enlarge the ROI entries and a nuclear outline in A, and the selected object, highlighted list entry and coordinates in B. The full captures and checksum records are retained in the gallery archive.
 
 ```{=openxml}
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
@@ -568,7 +585,7 @@ retained summary alone does not establish which path produced it.
 The committed source establishes these timer definitions. The separate timing
 source audit document is not retained in this archive; the original run
 environment and per-run phase traces still need recovery to establish the
-executed snapshot. The subsequent matched comparison in Figure 4 uses separately
+executed snapshot. The subsequent matched comparison in Figure 2 uses separately
 declared execution and total intervals with three measured observations per
 engine; it does not reconstruct the missing historical timing provenance.
 
@@ -668,7 +685,7 @@ output hashes: [runtime composition](../figures/slas/runtime_composition_provena
 [custom-function integration](../figures/slas/custom_function_extension_provenance.json).
 Their generators are retained in `paper/figures/` alongside editable SVG and PDF
 versions. The output figure also records the saved image, ROI and CSV identities.
-Its corrected demonstration is distinct from the original recording in Figure 3.
+Its corrected demonstration is distinct from the original recording in Figure 5.
 
 The [custom-function capture record](../figures/slas/custom_extension_evidence.json)
 retains registration and selection receipts, source identities and full native
@@ -680,7 +697,7 @@ analysis dataset.
 The separate visual storyboard is not retained in this archive. The
 [gallery capture record](../../website/assets/gallery/release-media-record.json)
 owns the source identities, published hashes and demonstration descriptions for
-the retained Fiji/napari panels. Figure 2 panels A, C and D use matching captures
+the retained Fiji/napari panels. Figure 1 panels A, C and D use matching captures
 from one OpenHCS 0.8.5 editing session. Its
 [native interaction record](../figures/slas/authoring_verified_roundtrip_provenance.json)
 contains the code/field round trip, widget observations and screenshot receipts.
@@ -711,7 +728,7 @@ relative to `website/assets/agent/`; original absolute runtime paths describe
 the recorded machine and are not portable download locations.
 
 The record separately identifies post-run software corrections and a later
-viewer replay. Figure 3 uses the original input pixels and uncut recording, with
+viewer replay. Figure 5 uses the original input pixels and uncut recording, with
 checksums in [its provenance record](../figures/slas/figure3_provenance.json).
 The run evaluates workflow completion and inspection; it contains no manually
 annotated segmentation-accuracy score.
@@ -997,9 +1014,9 @@ without treating uncertain cell boundaries as a failure of useful localisation.
 | Unified Official30 comparison | OpenHCS 0.8.5 current source based on `b2f3cf83b`; Python 3.12.3, NumPy 2.1.3, SciPy 1.18.1 | 30 fresh candidate executions; 30 equivalent selected-value comparisons; seven workflows with image comparison; zero differences |
 | Five-workflow export extension | OpenHCS source `7ca8ecb8e`; Python 3.12.3, NumPy 2.1.3, SciPy 1.18.0 | Five fresh candidate executions; eight passing image or object-label comparisons; native and candidate environments retained |
 | Workflow regression tests | `7a7d21fee`; named test files unchanged from 0.8.5 | Successful unit-test job; representative authoring and validation cases |
-| Original unattended neurite run; Figure 3 | OpenHCS 0.7.13, `f1c1d9b670`; Codex 0.146.0, gpt-5.6-sol | Recorded construction, execution, saved outputs and viewer checks |
+| Original unattended neurite run; Figure 5 | OpenHCS 0.7.13, `f1c1d9b670`; Codex 0.146.0, gpt-5.6-sol | Recorded construction, execution, saved outputs and viewer checks |
 | Later corrected neurite demonstration; Supplementary Figure 3 | OpenHCS 0.7.14; correction `0eb5f77c02` | Separately recorded corrected outputs and object-to-measurement links |
-| Parameter/code round trip; Figure 2 | OpenHCS 0.8.5 release commit `e867013a8` | Same-session code/field edits and matching native controls |
+| Parameter/code round trip; Figure 1 | OpenHCS 0.8.5 release commit `e867013a8` | Same-session code/field edits and matching native controls |
 | Comet Assay translation; Supplementary Figure 13 | Mapping retained from the 0.8.5 figure; regenerated with source hashes in the translation receipt | Unchanged module-to-step mapping, function parameters and generated-code round trip |
 | Custom-function registration; Supplementary Figure 4 | 0.8.5 development checkout with root patch `89ef46cb05` and generic patch `c5aeee2413` | Registration, selection, controls and MCP descriptions |
 | Prospective agent-authored assays; Supplementary Figure 6 | OpenHCS 0.8.5 current-source trials on 15-16 September 2026; frozen source and score receipts retained | Three single-attempt pipelines frozen before held-out scoring; BBBC039/007 annotations and BBBC013 treatment response |
