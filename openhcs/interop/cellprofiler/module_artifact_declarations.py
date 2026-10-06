@@ -499,6 +499,19 @@ class PriorMeasurementArtifactInputModule(CellProfilerModule):
     """Parent for modules that consume feature-addressed prior measurements."""
 
     @classmethod
+    def primary_image_inputs(
+        cls,
+        contract: CallableContract,
+        declared_inputs: tuple[ArtifactSpec, ...],
+    ) -> tuple[ArtifactSpec, ...]:
+        """Feature lineage supplies pixels only through declared image bindings."""
+        if not cls.declared_artifact_bindings(
+            plan_type=ArtifactInputPlan, artifact_type=ImageArtifactType,
+        ):
+            return ()
+        return super().primary_image_inputs(contract, declared_inputs)
+
+    @classmethod
     @lru_cache(maxsize=None)
     def measurement_feature_setting_bindings(
         cls,

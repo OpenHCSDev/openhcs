@@ -295,10 +295,17 @@ class InvocationArtifactInputEdgePlan:
         return self.storage_plan is not None
 
     def requires_current_image_carrier(
-        self, source_bindings: CompiledSourceBindingPlan,
+        self,
+        source_bindings: CompiledSourceBindingPlan,
+        contract: CallableContract,
     ) -> bool:
-        """Whether this unstored input consumes declared current source pixels."""
+        """Whether this occurrence consumes declared current source pixels."""
         if self.uses_runtime_storage():
+            return False
+        adapter = contract.runtime_adapter
+        if adapter is not None and not adapter.consumes_image_input(
+            contract, self.spec
+        ):
             return False
         binding = source_bindings.binding_for_artifact_ref(self.spec.ref())
         return binding is not None and binding.requires_current_pixels
@@ -1051,10 +1058,10 @@ class CompiledFunctionGroup:
         main_flow_refs = tuple(
             dict.fromkeys(
                 edge.spec.ref()
-                for _invocation, edges in invocations_and_edges
+                for invocation, edges in invocations_and_edges
                 for edge in edges
                 if edge.main_flow_projection is not None
-                or edge.requires_current_image_carrier(source_bindings)
+                or edge.requires_current_image_carrier(source_bindings, invocation.contract)
             )
         )
         if main_flow_refs:
@@ -1098,8 +1105,8 @@ class CompiledFunctionGroup:
         # on the declared main-flow transport rather than projecting labels
         # as image intensities. Produced image edges retain their own pixels.
         if any(
-            edge.requires_current_image_carrier(source_bindings)
-            for _invocation, edges in active
+            edge.requires_current_image_carrier(source_bindings, invocation.contract)
+            for invocation, edges in active
             for edge in edges
         ):
             return None

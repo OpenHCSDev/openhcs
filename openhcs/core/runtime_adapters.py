@@ -20,6 +20,7 @@ from openhcs.core.aligned_image_payload import (
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
+    ArtifactSpec,
     ArtifactSpecCollection,
     ArtifactSpecRef,
 )
@@ -266,6 +267,16 @@ class RuntimeAdapterSpec:
         if contract.accepts_implicit_main_flow_input:
             return ArtifactSpecCollection(())
         return contract.group_scope_inputs
+
+    def consumes_image_input(
+        self,
+        contract: "CallableContract",
+        spec: ArtifactSpec,
+    ) -> bool:
+        """Distinguish image arguments from artifact-context dependencies."""
+        return (
+            spec.binds_callable_parameter() or contract.accepts_implicit_main_flow_input
+        )
 
     def __post_init__(self) -> None:
         if not self.parameter_name:
