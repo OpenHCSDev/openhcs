@@ -167,9 +167,9 @@ The UI submits work to a separate execution server using ZeroMQ messaging. The s
 
 ### Figure 2. Forms, Python and MCP edit the same analysis
 
-![Matching main window, recorded MCP edits, parameter controls and Python code.](figures/slas/editable_analyses.png){width=6in}
+![Main workflow, ZeroMQ server browser, parameter controls and matching Python code.](figures/slas/editable_analyses.png){width=6in}
 
-\(A) Full NeuronCyto II main window, with enlarged step and connection details. (B) MCP applies edited Python to the step and checks the updated control, then edits the field and checks regenerated Python. (C, D) Same-session crops show matching controls and code, with high percentile restored to 99.8 and parameters in signature order. Captures use OpenHCS 0.8.5; Figure 3 shows the current replay and retained measurements.
+\(A) NeuronCyto II workflow and enlarged pipeline steps. (B) The ZeroMQ server browser lists the execution server and UI bridge, with status and management controls. This panel was captured separately in OpenHCS 0.8.7. (C, D) Matching controls and Python show the high percentile restored to 99.8 and parameters in signature order after MCP edits. Panels A, C and D come from the same OpenHCS 0.8.5 editing session; Figure 3 shows the subsequent replay and measurements.
 
 ### An agent constructs a neurite-outgrowth analysis
 
@@ -280,8 +280,20 @@ that endpoint. Crossings remain a limitation for assigning length to individual
 neurons. The representative shaft result is not presented as a manual-trace
 accuracy measurement.
 
-The laboratory neurite example extends the workflow to nine overlapping fields
-(Figure 11). A shared percentile fit across the complete stack preserves a
+A separate autonomous author analysed all nine fields of the laboratory neurite
+dataset using only its task brief, MCP and packaged guidance. During image
+review, it detected that its initial settings excluded thin processes and
+adjusted neurite admission while retaining the same cell-body labels in the
+reviewed field. The final analysis recovered many raw-visible paths in sampled
+sparse and dense regions, although some fine branches and cell assignments at
+crossings remained uncertain. Fields were analysed separately; overlapping
+positions were not deduplicated, so their counts do not represent unique
+neurons. The frozen pipeline, outputs and independent image review are linked
+in Supplementary Data 8. This trial used development images rather than an
+unseen test set.
+
+An assisted analysis of the same dataset assembled the nine overlapping fields
+into a mosaic (Figure 11). A shared percentile fit across the complete stack preserves a
 common channel scale before mosaic analysis. The completed retained-context
 workflow produced 1,740 soma candidates and 123,054 micrometres of computed total
 outgrowth at the declared spacing. These are algorithmic outputs, not a unique
@@ -307,6 +319,7 @@ being treated as additional experiments.
 | H002 3-D centres | 15 manual centres; Figure 9 trial | 15/15 matched within 20 voxels, mean error 4.80 voxels; annotations not established as exhaustive |
 | R0010 retinal somata | Distributed matched raw/result review | Autonomous repair retained neighbours and reduced nuisance masks; manual-reference accuracy unmeasured |
 | H004 public neurites | Matched raw shafts and nuisance controls | Principal-shaft and junction recovery; fine protrusions and per-neuron crossing ownership unresolved |
+| Laboratory neurites, nine fields | Matched raw/path review in three sampled fields | Autonomous completion and recovery of thin paths after self-directed repair; overlapping fields not stitched or deduplicated, per-neuron ownership unresolved |
 | BBBC013 translocation | Well-level control and dose summaries; 96 wells | Assay responses recovered in contributing cohorts; compartment coverage varied and whole-cell accuracy unmeasured |
 
 Table 2. Results and evaluation methods for autonomous image analysis.

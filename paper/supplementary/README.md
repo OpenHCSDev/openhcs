@@ -555,11 +555,15 @@ analysis dataset.
 The separate visual storyboard is not retained in this archive. The
 [gallery capture record](../../website/assets/gallery/release-media-record.json)
 owns the source identities, published hashes and demonstration descriptions for
-the retained Fiji/napari panels. Figure 2 instead uses fresh matching captures
-from one development-checkout session. Its
+the retained Fiji/napari panels. Figure 2 panels A, C and D use matching captures
+from one OpenHCS 0.8.5 editing session. Its
 [native interaction record](../figures/slas/authoring_verified_roundtrip_provenance.json)
 contains the code/field round trip, widget observations and screenshot receipts.
-Both sets of captures are distinct from the original unattended agent run.
+Panel B is a separate OpenHCS 0.8.7 native capture of the ZeroMQ server browser
+on an isolated display; its [original MCP receipt](../figures/slas/authoring_server_browser_verified_capture_provenance.json)
+records the unmodified widget image and checksum. The browser lists observed
+endpoints; the status ticks alone do not establish client/server version compatibility.
+These captures are distinct from the original unattended agent run.
 
 `paper/figures/build_slas_visual_story.py` checks the published media hashes and
 records any UI-detail crop rectangles before assembling Figures 1, 2 and 6.
@@ -772,6 +776,7 @@ receive an accuracy percentage.
 - [Paired-channel analysis](task_only_analysis/h003-fresh26-qualified-completion.rst).
 - [Retinal soma localisation](task_only_analysis/retinal-fresh26-qualified-completion.rst).
 - [Personal nine-field mosaic](task_only_analysis/p001-allchannel25-qualified-completion.rst).
+- [Independent field-by-field laboratory neurite analysis](../../figure-collection-20261004/P001-FRESH13-NINE-FIELD-REVIEW.rst), with frozen pipeline and output identities, sampled raw/path review and remaining limitations.
 - [Public translocation assay](task_only_analysis/bbbc013-fresh23-qualified-completion.rst).
 - [Public neurite analysis](task_only_analysis/h004-fresh20-qualified-completion.rst).
 

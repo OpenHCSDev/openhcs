@@ -42,6 +42,12 @@ class ValidationError(Exception):
             parts.append(f"Code: {self.code_snippet}")
         return " | ".join(parts)
 
+    def __copy__(self) -> "ValidationError":
+        """Copy declared values without reformatting an already formatted arg."""
+        error = type(self)(self.message, self.line_number, self.code_snippet)
+        error.__dict__.update(self.__dict__)
+        return error
+
 
 @dataclass(frozen=True)
 class ValidationResult:
