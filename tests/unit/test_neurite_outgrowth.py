@@ -1008,6 +1008,41 @@ def test_short_two_junction_crossing_resolves_opposite_rooted_traces(pixel_size_
         for path_index in topology.crossing_paths
     )
 
+    # A resolved logical crossing must survive the same repair stage used by
+    # the public profile. Secondary regions deliberately supply no alternate
+    # connection; only the original declared core may join these rooted arms.
+    owned = _render_owned_skeleton(skeleton.shape, topology)
+    response = np.where(skeleton, 150.0, 0.0)
+    repaired = _repair_signal_supported_skeleton(
+        owned, response, np.zeros_like(cell_bodies), cell_bodies,
+        minimum_response=100.0, crossing_topology=topology,
+    )
+    core = topology.crossing_core_mask(skeleton.shape)
+    assert not np.any(repaired[core])  # Temporary support is not a pixel owner.
+    for path_index in topology.crossing_paths:
+        coordinates = topology.path_coordinates[path_index]
+        outside = ~core[tuple(coordinates.T)] & (cell_bodies[tuple(coordinates.T)] == 0)
+        assert np.all(repaired[tuple(coordinates[outside].T)] == topology.path_owners[path_index])
+    final = _analyze_owned_topology(
+        repaired, cell_bodies, pixel_size_um, 8.0, crossing_topology=topology,
+    )
+    final_terminals = {
+        tuple(coordinate): int(final.path_owners[path_index])
+        for path_index, coordinates in enumerate(final.path_coordinates)
+        for coordinate in (coordinates[0], coordinates[-1])
+        if tuple(coordinate) in terminals
+    }
+    assert final_terminals == terminal_owners
+
+    unsupported_response = response.copy()
+    unsupported_response[core] = 0
+    unsupported = _repair_signal_supported_skeleton(
+        owned, unsupported_response, np.zeros_like(cell_bodies), cell_bodies,
+        minimum_response=100.0, crossing_topology=topology,
+    )
+    # Merely declaring a crossing does not license a below-threshold bridge.
+    assert np.count_nonzero(unsupported) < np.count_nonzero(repaired)
+
     morphology = _build_neurite_morphology_graph(
         topology,
         cell_bodies,
@@ -1220,9 +1255,7 @@ def test_neurite_morphology_breaks_cycle_without_dropping_path_geometry():
         transitions={0: (1, 2), 1: (0, 2), 2: (0, 1)},
         root_paths_by_cell={1: (0, 2)},
         branch_nodes_by_cell={},
-        crossing_nodes=frozenset(),
-        crossing_paths=frozenset(),
-        crossing_core_paths=frozenset(),
+        resolved_crossings=(),
     )
     cell_bodies = np.zeros((32, 32), dtype=np.int32)
     cell_bodies[6:11, 6:11] = 1
@@ -1277,9 +1310,7 @@ def test_neurite_morphology_does_not_fabricate_links_between_components():
         transitions={0: (), 1: ()},
         root_paths_by_cell={1: (0, 1)},
         branch_nodes_by_cell={},
-        crossing_nodes=frozenset(),
-        crossing_paths=frozenset(),
-        crossing_core_paths=frozenset(),
+        resolved_crossings=(),
     )
     cell_bodies = np.zeros((32, 32), dtype=np.int32)
     cell_bodies[10:17, 9:14] = 1
@@ -2414,9 +2445,7 @@ def test_morphology_retains_topology_owners_when_shared_endpoints_collide():
         transitions={0: (1,), 1: (0,)},
         root_paths_by_cell={1: (0,), 2: (1,)},
         branch_nodes_by_cell={},
-        crossing_nodes=frozenset(),
-        crossing_paths=frozenset(),
-        crossing_core_paths=frozenset(),
+        resolved_crossings=(),
     )
     bodies = np.zeros((8, 8), dtype=np.int32)
     bodies[1, 2] = 1

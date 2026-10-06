@@ -402,10 +402,7 @@ class CellProfilerNeuriteEngineProfile:
             outgrowth_skeleton.shape,
             topology,
         )
-        crossing_core_mask = _render_crossing_core_mask(
-            outgrowth_skeleton.shape,
-            topology,
-        )
+        crossing_core_mask = topology.crossing_core_mask(outgrowth_skeleton.shape)
         resolved_crossovers = _count_multi_owner_crossings(
             crossing_core_mask,
             crossing_support,
@@ -421,6 +418,7 @@ class CellProfilerNeuriteEngineProfile:
             secondary_owner_regions,
             cell_body_labels,
             minimum_response=outgrowth.intensity_above_local_background,
+            crossing_topology=topology,
         )
         owner_skeleton = np.where(
             crossing_support > 0,
@@ -437,7 +435,7 @@ class CellProfilerNeuriteEngineProfile:
             cell_body_labels,
             coordinate_scale,
             outgrowth_width_px,
-            shared_crossing_mask=crossing_core_mask,
+            crossing_topology=topology,
         )
         neurite_skeleton = _render_owned_skeleton(
             pre_topology_owner_skeleton.shape,
@@ -1175,6 +1173,18 @@ NeuriteOutgrowthRuntimeTuple = Tuple[(
 
 
 @dataclass(frozen=True)
+class _ResolvedCrossing:
+    """The original logical arms sharing one physical junction core."""
+
+    node: int
+    arm_paths: tuple[int, ...]
+    core_paths: tuple[int, ...]
+
+    def supports_owner(self, owner: int, path_owners: np.ndarray) -> bool:
+        return any(int(path_owners[path]) == owner for path in self.arm_paths)
+
+
+@dataclass(frozen=True)
 class _TopologyResult:
     path_owners: np.ndarray
     path_distances: np.ndarray
@@ -1187,9 +1197,33 @@ class _TopologyResult:
     transitions: Mapping[int, tuple[int, ...]]
     root_paths_by_cell: Mapping[int, tuple[int, ...]]
     branch_nodes_by_cell: Mapping[int, tuple[int, ...]]
-    crossing_nodes: frozenset[int]
-    crossing_paths: frozenset[int]
-    crossing_core_paths: frozenset[int]
+    resolved_crossings: tuple[_ResolvedCrossing, ...]
+
+    @property
+    def crossing_nodes(self) -> frozenset[int]:
+        return frozenset(crossing.node for crossing in self.resolved_crossings)
+
+    @property
+    def crossing_paths(self) -> frozenset[int]:
+        return frozenset(path for crossing in self.resolved_crossings
+                         for path in crossing.arm_paths)
+
+    @property
+    def crossing_core_paths(self) -> frozenset[int]:
+        return frozenset(path for crossing in self.resolved_crossings
+                         for path in crossing.core_paths)
+
+    def crossing_core_mask(
+        self, shape: tuple[int, int], *, owner: int | None = None,
+    ) -> np.ndarray:
+        """Project declared shared support, never infer it from raster neighbors."""
+        mask = np.zeros(shape, dtype=bool)
+        for crossing in self.resolved_crossings:
+            if owner is not None and not crossing.supports_owner(owner, self.path_owners):
+                continue
+            for path in crossing.core_paths:
+                mask[tuple(self.path_coordinates[path].T)] = True
+        return mask
 
 
 def _raw_processing_leaf(func):
@@ -1963,6 +1997,7 @@ def _repair_signal_supported_skeleton(
     cell_body_labels: np.ndarray,
     *,
     minimum_response: float,
+    crossing_topology: _TopologyResult | None = None,
 ) -> np.ndarray:
     """Connect owned fragments only through continuous same-owner image evidence.
 
@@ -1993,6 +2028,16 @@ def _repair_signal_supported_skeleton(
     owners = sorted(int(region.label) for region in regionprops(repaired))
     for owner in owners:
         bounds = owner_bounds[owner]
+        shared_core = (
+            np.zeros(repaired.shape, dtype=bool)
+            if crossing_topology is None
+            else crossing_topology.crossing_core_mask(repaired.shape, owner=owner)
+        )
+        core_coordinates = np.argwhere(shared_core)
+        if len(core_coordinates):
+            low = core_coordinates.min(axis=0)
+            high = core_coordinates.max(axis=0) + 1
+            bounds.append((int(low[0]), int(low[1]), int(high[0]), int(high[1])))
         owner_slice = (
             slice(
                 min(bound[0] for bound in bounds),
@@ -2009,6 +2054,11 @@ def _repair_signal_supported_skeleton(
         local_bodies = bodies[owner_slice]
         body_mask = local_bodies == owner
         original_owner = (local_repaired == owner) & ~body_mask
+        local_shared_core = shared_core[owner_slice]
+        shared_signal_support = (
+            local_shared_core & (local_response >= minimum_response)
+            & ((local_bodies == 0) | body_mask)
+        )
         local_repaired[(local_repaired == owner) & body_mask] = 0
         if not np.any(original_owner):
             repaired[owner_slice] = local_repaired
@@ -2026,10 +2076,14 @@ def _repair_signal_supported_skeleton(
             ]
         )
         local_repaired[soma_coordinate] = owner
+        # The topology has already paired this owner's logical arms. Use their
+        # signal-qualified shared core temporarily, without giving the pixel a
+        # permanent exclusive neuron identity or crossing foreign bodies.
+        local_repaired[shared_signal_support] = owner
         occupied_by_other_owner = (local_repaired > 0) & (local_repaired != owner)
         signal_support = (local_response >= minimum_response) & (local_regions == owner)
         allowed = (
-            signal_support | original_owner | body_mask
+            signal_support | original_owner | body_mask | shared_signal_support
         ) & ~occupied_by_other_owner
 
         while True:
@@ -2060,6 +2114,7 @@ def _repair_signal_supported_skeleton(
         )
         root_component = int(components[soma_coordinate])
         local_repaired[(local_repaired == owner) & (components != root_component)] = 0
+        local_repaired[local_shared_core & (local_repaired == owner)] = 0
         repaired[owner_slice] = local_repaired
     return repaired
 
@@ -2458,16 +2513,10 @@ def _analyze_topology(
             )
             for owner, nodes in branch_nodes_by_cell.items()
         },
-        crossing_nodes=frozenset(used_crossings),
-        crossing_paths=frozenset(
-            path_index
-            for node in used_crossings
-            for path_index in active_crossing_paths_by_node[node]
-        ),
-        crossing_core_paths=frozenset(
-            path_index
-            for node in used_crossings
-            for path_index in crossing_core_paths_by_node[node]
+        resolved_crossings=tuple(
+            _ResolvedCrossing(node, active_crossing_paths_by_node[node],
+                              crossing_core_paths_by_node[node])
+            for node in sorted(used_crossings)
         ),
     )
 
@@ -2478,7 +2527,7 @@ def _analyze_owned_topology(
     coordinate_scale: float,
     outgrowth_width_px: float,
     *,
-    shared_crossing_mask: np.ndarray | None = None,
+    crossing_topology: _TopologyResult | None = None,
 ) -> _TopologyResult:
     """Analyze each nominal owner without erasing ownership at shared borders.
 
@@ -2493,39 +2542,12 @@ def _analyze_owned_topology(
     bodies = np.asarray(cell_body_labels, dtype=np.int32)
     if owned.shape != bodies.shape:
         raise ValueError("owner_skeleton and cell_body_labels must have the same shape")
-    crossing_mask = (
-        np.zeros(owned.shape, dtype=bool)
-        if shared_crossing_mask is None
-        else np.asarray(shared_crossing_mask, dtype=bool)
-    )
-    if crossing_mask.shape != owned.shape:
-        raise ValueError(
-            "shared_crossing_mask and owner_skeleton must have the same shape"
-        )
     if not np.any(owned > 0):
         return _empty_topology()
 
     body_regions = {int(region.label): region for region in regionprops(bodies)}
     owned_regions = {int(region.label): region for region in regionprops(owned)}
     margin = max(1, int(np.ceil(outgrowth_width_px)) + 2)
-    connectivity = np.ones((3, 3), dtype=bool)
-    crossing_components, crossing_component_count = ndi.label(
-        crossing_mask,
-        structure=connectivity,
-    )
-    shared_crossings_by_owner: dict[int, set[int]] = defaultdict(set)
-    for component in range(1, crossing_component_count + 1):
-        component_mask = crossing_components == component
-        adjacent = (
-            ndi.binary_dilation(
-                component_mask,
-                structure=connectivity,
-            )
-            & ~component_mask
-        )
-        for owner in np.unique(owned[adjacent]):
-            if owner > 0:
-                shared_crossings_by_owner[int(owner)].add(component)
 
     path_owners: list[np.ndarray] = []
     path_distances: list[np.ndarray] = []
@@ -2538,9 +2560,7 @@ def _analyze_owned_topology(
     transitions: dict[int, tuple[int, ...]] = {}
     root_paths_by_cell: dict[int, tuple[int, ...]] = {}
     branch_nodes_by_cell: dict[int, tuple[int, ...]] = {}
-    crossing_nodes: set[int] = set()
-    crossing_paths: set[int] = set()
-    crossing_core_paths: set[int] = set()
+    resolved_crossings: list[_ResolvedCrossing] = []
     path_offset = 0
     endpoint_group_offset = 0
     node_offset = 0
@@ -2562,12 +2582,10 @@ def _analyze_owned_topology(
             ),
         )
         local_owner_mask = owned[owner_slice] == owner
-        owner_crossings = shared_crossings_by_owner.get(owner, set())
-        if owner_crossings:
-            local_owner_mask |= np.isin(
-                crossing_components[owner_slice],
-                tuple(sorted(owner_crossings)),
-            )
+        if crossing_topology is not None:
+            local_owner_mask |= crossing_topology.crossing_core_mask(
+                owned.shape, owner=owner,
+            )[owner_slice]
         local_owned = np.where(local_owner_mask, owner, 0).astype(
             np.int32,
             copy=False,
@@ -2633,12 +2651,11 @@ def _analyze_owned_topology(
                 for cell, nodes in local.branch_nodes_by_cell.items()
             }
         )
-        crossing_nodes.update(node + node_offset for node in local.crossing_nodes)
-        crossing_paths.update(
-            path_index + path_offset for path_index in local.crossing_paths
-        )
-        crossing_core_paths.update(
-            path_index + path_offset for path_index in local.crossing_core_paths
+        resolved_crossings.extend(
+            _ResolvedCrossing(crossing.node + node_offset,
+                              tuple(path + path_offset for path in crossing.arm_paths),
+                              tuple(path + path_offset for path in crossing.core_paths))
+            for crossing in local.resolved_crossings
         )
 
         path_offset += local_path_count
@@ -2661,9 +2678,7 @@ def _analyze_owned_topology(
         transitions=transitions,
         root_paths_by_cell=root_paths_by_cell,
         branch_nodes_by_cell=branch_nodes_by_cell,
-        crossing_nodes=frozenset(crossing_nodes),
-        crossing_paths=frozenset(crossing_paths),
-        crossing_core_paths=frozenset(crossing_core_paths),
+        resolved_crossings=tuple(resolved_crossings),
     )
 
 
@@ -2712,9 +2727,7 @@ def _empty_topology() -> _TopologyResult:
         transitions={},
         root_paths_by_cell={},
         branch_nodes_by_cell={},
-        crossing_nodes=frozenset(),
-        crossing_paths=frozenset(),
-        crossing_core_paths=frozenset(),
+        resolved_crossings=(),
     )
 
 
@@ -3284,19 +3297,6 @@ def _render_crossing_support(
         coordinates = topology.path_coordinates[path_index]
         support[tuple(coordinates.T)] = nearest_owner[tuple(coordinates.T)]
     return support
-
-
-def _render_crossing_core_mask(
-    shape: tuple[int, int],
-    topology: _TopologyResult,
-) -> np.ndarray:
-    """Render physical pixels shared by the resolved logical crossing paths."""
-
-    crossing_core = np.zeros(shape, dtype=bool)
-    for path_index in topology.crossing_core_paths:
-        coordinates = topology.path_coordinates[path_index]
-        crossing_core[tuple(coordinates.T)] = True
-    return crossing_core
 
 
 def _count_multi_owner_crossings(

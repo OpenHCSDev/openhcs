@@ -46,3 +46,20 @@ Acceptance includes original curved-support/foreign-owner negatives, resolved
 single/multi-owner crossing with attached distal paths, no synthetic owner
 restoration, saved same-input branch reconstruction, and ordinary registered
 installed MCP/native raw/result/combined QA. Existing frozen04/05 stay immutable.
+
+Implementation checkpoint
+-------------------------
+
+_ResolvedCrossing stores the original node/core-path/arm-path relationship once.
+_TopologyResult derives crossing node/path/core views and per-owner temporary
+core masks from that declaration and its original path_owners. Both profiles
+retain their shared inherited analyze implementation. No extra inheritance or
+catalog is added. Signal repair uses only response-qualified declared shared
+core support, does not traverse foreign bodies, and removes temporary exclusive
+core identities before returning. Final owned topology consumes the same
+association instead of inferring membership from raster adjacency. The old
+three independent result sets, connected-component adjacency membership loop
+and forwarding core renderer are deleted. Empty/combined topology and all
+explicit test constructors migrate together. Scientific detection/admission,
+root-distance rule and output artifact ABI are unchanged; geometry after
+repair is intentionally corrected, not claimed invariant.
