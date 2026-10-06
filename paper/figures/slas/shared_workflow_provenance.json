@@ -1,11 +1,11 @@
 {
-  "generator_sha256": "bd8fed03ccec5156525bead7f6f94b355fded82c9a7b6ea9d610a03463ca02d9",
+  "generator_sha256": "2a4c520aff09e67ecd3c37e7ffd6237e0da94e2cfd16d0fdb342ab8d728ef996",
   "source_sha256": {
     "docs/source/architecture/quick_start.rst": "e0f403e65287bdd6b65bdafdcaee5fc54556205411a5cb988bcb95e2a67f7339",
     "openhcs/core/pipeline_document.py": "0849800b3e6474b8176fe35bc4aaebc63cfa85bd77251000c50da5f4c928b1b2",
-    "openhcs/core/compiled_step_plan.py": "cc4a6782f46ddc610ee440e572dd8b51c49d41fd4743ef5a8eb3e8a1f8c857e4",
+    "openhcs/core/compiled_step_plan.py": "8bf2b30a367511c03915614d60bd6d3efacd036ce6b21cccc7240713d78779dc",
     "openhcs/core/runtime_stores.py": "70bb51b0b02d92eaff6e7a5177cbc84b298e5d1c2b2697534be324288117eefe",
-    "openhcs/core/source_bindings.py": "d92fa4548e2c2369650d4325b76be34bc1053c7a22f3c396e196859df0ffe203",
+    "openhcs/core/source_bindings.py": "fce49a28b8a41a7af1f6d33e326d77ab618eab2168ab33e6088db34bd5c72f9c",
     "openhcs/agent/capabilities.py": "6928c4d2af41555a27dbbfe6ed2cc868d635fca6c2251a80ec2832336a9cab88",
     "website/assets/logos/README.md": "244baac8bc62478d51d3f50a750559edc1205763bcdb4c6fbab87e698a93e43b",
     "website/assets/logos/python.svg": "adca85e1d0bd6d796abea422d983fd131a432fe78efeac58af18461eb1548780",
@@ -21,9 +21,9 @@
   },
   "ui_crops": [],
   "output_sha256": {
-    "shared_workflow.png": "2c8d779aad9d0be4fa5d125f8f0e87be63a128455995c8bcfc34378a1ae6e404",
-    "shared_workflow.pdf": "f39fed521d6ebe5dd737733cd8cde7f0283ac1ac7493079152451be3f47e9d84",
-    "shared_workflow.svg": "212b7d7d30a3ad4b584dc5faaa3d5d6fbfdfc3945bfa9aa24b6103a283144413"
+    "shared_workflow.png": "b9f2212837a1683187cb967b556874d7f2cc9743492edca490eaef3f8d65b443",
+    "shared_workflow.pdf": "9852bb7c0cdc6937454289313b021769c5206a6b6077cf3f0763534b44b4870a",
+    "shared_workflow.svg": "502e8f7a4a3b6c06756469b73554174f8b7ccb4253da1163f5c1d013fc009ffa"
   },
   "interpretation": "Original explanatory layout; retained captures are not new scientific evaluations"
 }
