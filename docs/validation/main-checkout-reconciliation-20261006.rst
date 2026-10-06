@@ -11,7 +11,8 @@ from this conversation establishes edits there on 26--28 September. This is
 historical work, not evidence that the latest manuscript changes bypassed /wt.
 Its 57 historical tracked regular-file edits are now stashed after verifying
 their preservation, as described below. Its original baseline has not advanced;
-submodule edits and untracked inputs/results remain in place.
+dependency edits are independently stashed, and untracked inputs/results remain
+in place.
 
 Lossless source checkpoint
 --------------------------
@@ -51,11 +52,22 @@ HEAD rather than being updated over colliding untracked source.
 
 The observed processes whose cwd was this checkout run agent_comms.worker in
 a separate Toad environment, not an OpenHCS runtime. No process was stopped.
-All312 original untracked files remain. The PolyStore and python-introspect
-patch hashes still exactly match their archived patches; they were not stashed
-or changed. ObjectState's untracked lockfile also remains. Source classification
-and remaining issue disposition continue independently of this completed
-tracked-source custody operation.
+All312 original parent untracked files remain. The dependency leftovers were
+subsequently stashed independently: PolyStore a2284ef8d9a08487219a9ea4b08f5af7e3c35b7a
+and python-introspect adcbec4729250a4739be743f81c4054c83a3b3df. Each complete
+stash patch was compared with the published patch hash and matched exactly.
+ObjectState's sole untracked uv.lock was stashed explicitly, without other
+untracked paths, as439eba29305141b5a58bf6e2b29333b29fb03e1a; its untracked-parent
+blob matches the archived file hash exactly. All three original dependency
+HEADs remain unchanged. Main and its dependencies now have no tracked dirty
+entries. Source classification and remaining issue disposition continue.
+
+The observed live MCP interpreters use this checkout's venv, but that venv's
+OpenHCS editable finder and PolyStore path refer to separate /wt source trees,
+not these original dependency checkouts. No interpreter, installed package,
+live endpoint or backing /wt source was changed. A referenced old OpenHCS
+editable path is absent on disk; no missing-path runtime was restarted or
+uncertain operation replayed as part of cleanup.
 
 Determining dispositions
 -------------------------
