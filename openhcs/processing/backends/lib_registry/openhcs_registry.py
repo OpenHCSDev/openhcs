@@ -438,7 +438,12 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
         return modules
 
     def get_modules_to_scan(self) -> List[Tuple[str, Any]]:
-        """Get modules to scan for OpenHCS functions."""
+        """Import every admitted native declaration before catalog publication.
+
+        Memory-type eligibility owns exclusions. An eligible OpenHCS module
+        that cannot import is a broken installation, not an optional function
+        inventory; its failure must prevent apparent catalog readiness.
+        """
         self._ensure_module_inventory()
         assert self.MODULES_TO_SCAN is not None
         modules = []
@@ -453,11 +458,8 @@ class OpenHCSRegistry(CustomFunctionCanonicalLookup, LibraryRegistryBase):
                     module_name,
                 )
                 continue
-            try:
-                module = import_module_preserving_root_logging(module_name)
-                modules.append((module_name, module))
-            except Exception as e:
-                logger.warning(f"Could not import OpenHCS module {module_name}: {e}")
+            module = import_module_preserving_root_logging(module_name)
+            modules.append((module_name, module))
         return modules
 
     # ===== ESSENTIAL ABC METHODS =====

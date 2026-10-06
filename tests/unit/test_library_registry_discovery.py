@@ -18,6 +18,38 @@ import numpy as np
 import pytest
 
 
+@pytest.mark.parametrize("memory_type, admitted", [("numpy", True), ("cupy", False)])
+def test_native_catalog_import_failures_follow_declared_memory_admission(
+    tmp_path, monkeypatch, memory_type, admitted
+) -> None:
+    from openhcs.processing.backends.lib_registry.openhcs_registry import (
+        OpenHCSRegistry,
+    )
+
+    package_name = f"native_catalog_probe_{memory_type}"
+    package = tmp_path / package_name
+    package.mkdir()
+    (package / "__init__.py").write_text("")
+    (package / "processing.py").write_text(
+        f"from openhcs.core.memory.decorators import {memory_type}\n"
+        "import absent_required_native_catalog_extension\n"
+        f"@{memory_type}\n"
+        "def process(image):\n    return image\n"
+    )
+    monkeypatch.syspath_prepend(str(tmp_path))
+    monkeypatch.setenv("OPENHCS_CPU_ONLY", "1")
+    registry = OpenHCSRegistry()
+    registry.MODULES_TO_SCAN = [f"{package_name}.processing"]
+
+    if admitted:
+        with pytest.raises(
+            ModuleNotFoundError, match="absent_required_native_catalog_extension"
+        ):
+            registry.get_modules_to_scan()
+    else:
+        assert registry.get_modules_to_scan() == []
+
+
 def test_concurrent_catalog_requests_share_one_metadata_load(monkeypatch) -> None:
     from openhcs.processing.backends.lib_registry.registry_service import (
         RegistryService,
