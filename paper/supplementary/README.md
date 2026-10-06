@@ -1369,6 +1369,14 @@ binds the frozen source and independently checked 283 scientific files, 112
 control files, three completed MCP journals and two retained journal prefixes.
 No reference answers were opened for this review.
 
+A subsequent fresh public-neurite repeat retained useful eight-soma coverage
+and partial process geometry after autonomous false-split and admission repairs.
+The [qualified geometry review](task_only_analysis/h004-fresh25-qualified-geometry.rst)
+distinguishes its selected 4,432-pixel checkpoint from the rejected last attempt:
+the latter increases total length while losing a raw-supported branch downstream
+of unchanged feature responses and preserved admission. Whole arbors and overlap
+ownership remain unresolved; the larger total is not an accuracy gain.
+
 A separate fresh public-field author recovered a missed faint process after
 measuring the actual enhanced response and sampled background controls. Eight
 nuclear objects and bounded perinuclear regions remained useful; a raw-pixel
@@ -1481,6 +1489,13 @@ remained. The [qualified final review](task_only_analysis/retinal-fresh25-qualif
 records useful bright-body localisation separately from the rejected complete
 instance inventory, with independent matched-view checks and frozen-artifact
 scope. This repeat is not a manual-reference accuracy estimate.
+
+A fresh H001 repeat retained 62 bright-object instances after autonomous
+partition repair, with unchanged foreground compared with its 66-object FIRST.
+The [independent qualified review](task_only_analysis/h001-fresh25-qualified-review.rst)
+records useful compact-body coverage, unresolved lobed-object splits/merges and
+small-focus misses, native label/area reconciliation and the checked freeze.
+It does not infer cell identity or reference accuracy from algorithm counts.
 
 A retained personal-neurite development continuation also analysed a reused
 nine-field mosaic with pooled channel fits. A fixed-DN clipping repair corrected
