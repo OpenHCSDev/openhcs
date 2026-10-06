@@ -895,10 +895,12 @@ def _generate_measured_amortization_figures(
         "Actual measured assignment counts only; connecting lines are visual guides, "
         "not projections. One CPU/worker per engine, three measured repetitions after warmup. "
         "Execution and total curves use per-engine medians divided by the declared assignment count. "
-        "OH non-execution is the median paired (total minus execution) divided by that count. "
+        "OH non-execution is the median paired (total minus server execution) divided by that count: "
+        "compilation plus client submission/polling overhead. It does not separate pixel processing "
+        "from generic plumbing inside the server execution interval. "
         "Repeated assignments reuse one biological source sample. OH total includes compilation "
         "and full execution; CP total includes invocation preparation and execution, excluding "
-        "one-time pipeline loading. Server/library readiness is excluded for both. "
+        "one-time pipeline loading and JVM startup. Server/library readiness is excluded for both. "
         "Single-sample compile-plus-run performance relative to native remains visible; "
         "the execution headline excludes compilation. No unmeasured modes or RAM are shown.\n",
         encoding="utf-8",

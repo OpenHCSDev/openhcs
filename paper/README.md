@@ -223,9 +223,11 @@ python paper/figures/build_slas_benchmark.py \
 ```
 
 Counts and paired non-execution overhead come from the existing summary custody,
-not labels. Curves show measured seconds per assignment; lines do not project
+not labels. Non-execution is the median paired total minus server execution,
+covering compilation and client overhead. It is not a kernel/runtime breakdown.
+Curves show measured seconds per assignment; lines do not project
 unmeasured counts. Compile-plus-run totals include OpenHCS per-job compilation;
-CellProfiler totals exclude one-time pipeline loading. Both exclude service/library
+CellProfiler totals exclude one-time pipeline loading and JVM startup. Both exclude service/library
 readiness. Single-sample total targets native parity; the execution headline
 excludes compilation. Multiworker efficiency requires the same assignment count
 on one and several workers, rather than treating amortization as parallel speedup.
