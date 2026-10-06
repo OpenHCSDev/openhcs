@@ -340,6 +340,17 @@ correspondence. Open or frame-connected reference interiors are excluded,
 and tiny closed annotation regions remain included; these single-field scores
 do not establish an exhaustive biological census (Supplementary Data 8).
 
+In another fresh repeat, the author distinguished marker extraction from
+division after its first method missed three joined nuclei. Intensity markers
+alone still merged the group and a genuine pair; changing the dividing landscape
+recovered the three cores and separated the pair while retaining textured-single
+controls. The final 55-instance result included two seed-only actin regions and
+an ambiguous adjacent-nucleus group. The author retained these uncertainties
+after matched review at nine positions in both channels. Independent checks
+confirmed label-to-table agreement and unchanged exports after a technical
+integrity audit; they do not establish exact biological counts (Supplementary
+Data 8).
+
 Retinal authors used measured background and weak-body support to select
 smoothing, background subtraction and foreground admission. In the independent
 trial shown in Figure 7, an intermediate repair

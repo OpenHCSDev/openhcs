@@ -1405,6 +1405,15 @@ completeness. The [repeat completion and comparison](task_only_analysis/h002-fre
 records all distance thresholds, source identities and technical delivery
 failures without interpreting unmatched predictions as false biological cells.
 
+A fresh paired-channel author recovered three missed nuclear cores and a
+genuine pair by distinguishing intensity marker extraction from the dividing
+landscape, while retaining textured-single controls. The final 55-instance
+candidate retains seed-only actin regions and ambiguous nuclear identity.
+The [qualified scientific completion record](task_only_analysis/h003-fresh23-development-checkpoint.rst)
+reports the author's 108 matched final captures, independent frozen-file checks
+and byte-identical label/table exports after a technical integrity audit.
+Reference accuracy remains unmeasured; runtime retirement is a separate handoff.
+
 A fresh retinal author replaced grain-scale foreground admission with
 body-scale contrast after rejecting nuisance flooding and dim-body losses.
 The final 141-instance candidate preserves a clear neighbouring pair, while
