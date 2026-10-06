@@ -313,9 +313,10 @@ def test_measurement_only_step_does_not_reconcile_pending_image_producer(
         ref=SourcePixelRef(Backend.DISK.value, virtual_path),
         source_alias="declared_image", artifact_kind=ImageArtifactType,
     )
-    AtomicMetadataWriter().merge_source_projection_metadata(
+    from openhcs.core.source_projection import SourceProjectionMetadataSerializer
+    AtomicMetadataWriter().replace_subdirectory_metadata(
         metadata_path, destination,
-        VirtualWorkspaceSourceProjectionEntries.from_projection_paths(((projection, virtual_path),)),
+        SourceProjectionMetadataSerializer.projection_fields(((projection, virtual_path),)),
     )
     publication_context.step_plans = {0: plan}
     OpenHCSMetadataTarget.finalize_completed_plate({"A01": publication_context})

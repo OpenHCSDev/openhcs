@@ -3,6 +3,8 @@
 import json
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import fields
+from pathlib import Path
+from openhcs.core.steps.function_outputs import RuntimeArtifactMetadataTarget
 
 import numpy as np
 import pytest
@@ -158,6 +160,17 @@ def test_saved_two_channel_planes_keep_runtime_axis_not_contributor_axis(
     )
 
 
+def receive_projection_entries(writer, metadata_path, subdirectory, entries):
+    target = RuntimeArtifactMetadataTarget(
+        output_dir=Path(metadata_path).parent / subdirectory,
+        plate_root=str(Path(metadata_path).parent), sub_dir=subdirectory,
+        backend="disk", results_dir=None, create_openhcs_metadata=False,
+    )
+    writer.reconcile_completed_plate(
+        metadata_path, {}, produced_entries_by_target={target: entries}
+    )
+
+
 def test_atomic_perwell_projection_merge_preserves_all_records(tmp_path):
     path = tmp_path / "openhcs_metadata.json"
     writer = AtomicMetadataWriter()
@@ -170,7 +183,7 @@ def test_atomic_perwell_projection_merge_preserves_all_records(tmp_path):
             SourcePixelRef("disk", virtual_path),
             image_metadata=metadata_fixture(),
         )
-        writer.merge_source_projection_metadata(
+        receive_projection_entries(writer,
             path,
             ".",
             VirtualWorkspaceSourceProjectionEntries.from_projection_paths(
@@ -216,7 +229,7 @@ def publish_projection_inventory(writer, path, projection_metadata, saved_paths)
 
 
 @pytest.mark.parametrize(
-    "merge_method", ("merge_subdirectory_metadata", "merge_source_projection_metadata")
+    "merge_method", ("merge_subdirectory_metadata", "reconcile_completed_plate")
 )
 def test_atomic_projection_merge_refreshes_geometry_from_current_document(
     tmp_path, merge_method
@@ -234,7 +247,7 @@ def test_atomic_projection_merge_refreshes_geometry_from_current_document(
         writer.merge_subdirectory_metadata(path, {"images": second_fields})
         expected_pixel_size = 2.0
     else:
-        writer.merge_source_projection_metadata(
+        receive_projection_entries(writer,
             path, "images",
             VirtualWorkspaceSourceProjectionEntries.from_projection_paths(
                 ((second, "images/second.tif"),)
@@ -257,7 +270,7 @@ def test_final_publication_prunes_geometry_and_preserves_other_directories(tmp_p
         (deleted, "images/deleted.tif"),
         (elsewhere, "other/retained.tif"),
     )
-    writer.merge_source_projection_metadata(
+    receive_projection_entries(writer,
         path, "images",
         VirtualWorkspaceSourceProjectionEntries.from_projection_paths(projection_paths)
     )
@@ -360,7 +373,7 @@ def test_typed_projection_update_admits_only_retained_wire_records(
             writer, path, updates, ("images/retained.tif", "images/replaced.tif")
         )
     else:
-        writer.merge_source_projection_metadata(path, "images", updates)
+        receive_projection_entries(writer, path, "images", updates)
     assert admitted_paths == ["images/retained.tif"]
     assert serialized_paths == ["images/replaced.tif"]
     subdir = json.loads(path.read_text())[FIELDS.SUBDIRECTORIES]["images"]
@@ -388,7 +401,7 @@ def test_invalid_unreplaced_projection_aborts_typed_transaction(tmp_path, publis
         if publish:
             publish_projection_inventory(writer, path, updates, ("images/new.tif",))
         else:
-            writer.merge_source_projection_metadata(path, "images", updates)
+            receive_projection_entries(writer, path, "images", updates)
     assert path.read_bytes() == before
 
 
@@ -418,7 +431,7 @@ def test_typed_transaction_retains_wire_fields_and_derives_workspace_views(
             writer, path, updates, ("images/original.tif", "images/new.tif")
         )
     else:
-        writer.merge_source_projection_metadata(path, "images", updates)
+        receive_projection_entries(writer, path, "images", updates)
     subdir = json.loads(path.read_text())[FIELDS.SUBDIRECTORIES]["images"]
     assert subdir[FIELDS.SOURCE_PROJECTION][0]["external_annotation"] == {"version": 7}
     if publish:
