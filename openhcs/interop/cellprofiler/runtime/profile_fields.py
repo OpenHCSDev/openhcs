@@ -9,6 +9,7 @@ from openhcs.core.image_shapes import ArrayShape
 from openhcs.core.artifacts import ArtifactSpec
 from openhcs.core.runtime_object_labels import (
     ObjectLabelValue,
+    ObjectLabelStorageStrategy,
 )
 from openhcs.core.runtime_array_values import RuntimeArrayPayload
 from openhcs.core.runtime_image_values import (
@@ -78,11 +79,18 @@ def cellprofiler_profile_payload_fields(
     """Return cheap payload shape/size fields for CellProfiler runtime profiling."""
     if isinstance(value, RuntimeArrayPayload):
         # Structured array owners declare geometry without materializing pixels.
-        shape = tuple(value.shape)
+        shape = (
+            ObjectLabelStorageStrategy.for_value(value).label_shape(value)
+            if isinstance(value, ObjectLabelValue)
+            else tuple(value.shape)
+        )
         return {
             f"{prefix}_type": type(value).__name__,
             f"{prefix}_shape": shape,
-            f"{prefix}_nbytes": int(np.prod(shape)) * np.dtype(value.dtype).itemsize,
+            f"{prefix}_nbytes": (
+                None if shape is None
+                else int(np.prod(shape)) * np.dtype(value.dtype).itemsize
+            ),
         }
     data = image_payload_data(value)
     data_array = data if isinstance(data, np.ndarray) else None
@@ -102,7 +110,7 @@ def object_label_artifact_profile_fields(
         source_component_metadata = dict(value.source_component_metadata)
     domain = value.domain
     return {
-        "label_shape": tuple(value.shape),
+        "label_shape": ObjectLabelStorageStrategy.for_value(value).label_shape(value),
         "declared_object_count": domain.declared_object_count,
         "declared_object_ids": len(domain.declared_object_ids),
         "declared_object_id_domains": len(domain.declared_object_id_domains),

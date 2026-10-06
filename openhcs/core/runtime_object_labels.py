@@ -117,8 +117,8 @@ class ObjectLabelVariantData:
     small_removed_labels: ObjectLabelData | None = None
 
     @property
-    def shape(self) -> tuple[int, ...]:
-        return self.labels.shape
+    def shape(self) -> tuple[int, ...] | None:
+        return ObjectLabelStorageStrategy.for_value(self.labels).label_shape(self.labels)
 
     @property
     def dtype(self) -> Any:
@@ -1896,8 +1896,7 @@ class ObjectLabelValueStorageStrategy(ObjectLabelStorageStrategy):
         )
 
     def label_shape(self, labels: object) -> tuple[int, ...] | None:
-        label_data = self.label_data(labels)
-        return ObjectLabelStorageStrategy.for_value(label_data).label_shape(label_data)
+        return cast(ObjectLabelValue, labels).variant_data.shape
 
 
 def object_label_dense_array(
