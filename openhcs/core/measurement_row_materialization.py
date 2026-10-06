@@ -1110,8 +1110,9 @@ class WideMeasurementRowAccumulator:
                     ),
                     None,
                 )
-                if first is not None:
-                    first_present.setdefault(projected, (first, len(first_present)))
+                if first is None:
+                    return
+                first_present.setdefault(projected, (first, len(first_present)))
                 if projected in output:
                     previous = output[projected]
                     for position, value in enumerate(incoming):
