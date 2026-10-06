@@ -134,28 +134,6 @@ class AtomicMetadataWriter:
             {METADATA_CONFIG.SUBDIRECTORIES_KEY: {}},
         )
 
-    def merge_source_projection_metadata(
-        self,
-        metadata_path: str | Path,
-        subdirectory_name: str,
-        projection_entries: VirtualWorkspaceSourceProjectionEntries,
-    ) -> None:
-        """Merge exact produced paths under one lock, preserving other wells."""
-
-        def update(data):
-            data = self._ensure_subdirectories_structure(data)
-            subdirectory = data[METADATA_CONFIG.SUBDIRECTORIES_KEY].setdefault(
-                subdirectory_name, {}
-            )
-            entries = projection_entries.merge_into_subdirectory(subdirectory)
-            self._update_projection_geometry(
-                subdirectory,
-                entries.entries.values(),
-            )
-            return data
-
-        self._execute_update(metadata_path, update)
-
     def publish_source_projection_metadata(
         self,
         metadata_path: str | Path,
