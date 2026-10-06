@@ -1,8 +1,8 @@
 Photometry image carrier and invocation domain
 ==============================================
 
-Owner: Planck. Issue722. This checkpoint records the source investigation;
-production correction and installed acceptance are not yet claimed.
+Owner: Planck. Issue722. Production checkpoint df283098a is published;
+source qualification is in progress and installed acceptance is not yet claimed.
 Base: ca29edea4. No current open PR claims this image-carrier seam; PR926
 owns sparse-label profile geometry, PR910 owns viewer settlement custody.
 Foreign gitlinks and untracked bootstrap history are preserved.
@@ -75,3 +75,38 @@ native incarnation. Source, installed and live strengths remain separate.
 
 Dewey owns independent receiving22/future science. This PR does not borrow
 its builder or hold science launch. No current scientific package is edited.
+
+Production and retained qualification
+-------------------------------------
+
+NamedSourceBinding.requires_current_pixels derives STEP_INPUT / PRIMARY_PLANE
+from the existing declaration. CompiledFunctionGroup consumes that fact before
+choosing a stored cohort as image carrier. CompiledStepPlan passes its existing
+source-binding plan; the artifact request and checkpoint consumers derive their
+transport from this same decision. StepInputSourceUniverseRequest uses the same
+binding property instead of independently deciding its projection role.
+Stored produced images keep their storage edge and transformed pixels.
+
+The existing refactor-audit Package parser covered 1409 OpenHCS/test modules:
+1393 selected sites before, 1396 after, zero parse omissions. These are source
+declaration/call/write findings, not global semantic or behavioral proof. The
+only production reads of requires_current_pixels are the compiled carrier
+decision and StepInputSourceUniverseRequest; its declaration owns origin/role.
+The related origin registry still selects SourceUniverseRequest.for_binding;
+the image-input admission owner retains its single-authority check.
+
+Original controls01 ended with 140 passed and 9 failed, exit 1. Seven failures
+reached the existing fixture's DNA file selector against canonical virtual
+workspace paths before photometry; two used obsolete prepared.total_count()
+although FunctionStepExecutor now returns its grouped-pattern mapping.
+No failed receipt is relabelled PASS. The fixture revision uses canonical
+channel-bearing file names and their exact _wN_ selector through the ordinary
+workspace projection, and counts the existing grouped mapping. Pixel,
+measurement, object-identity and absence assertions remain enforced.
+
+The revised batch additionally covers mixed raw/produced image orders, a
+transformed current STEP_INPUT carrier without a produced image artifact,
+and a label-only stored cohort. Installed/public MCP acceptance remains pending.
+Original receipts are retained under:
+/home/ts/wt/openhcs-issue-batch-20260929/engineering-photometry-722-20261005/
+controls01.log, controls01.time, AST-BEFORE.json and AST-AFTER.json.

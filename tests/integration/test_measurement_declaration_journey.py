@@ -143,6 +143,21 @@ def count_with_image_subject(image):
     )
 
 
+@numpy(contract=ProcessingContract.PURE_3D)
+def half_current_pixels(image):
+    """Transform main flow without declaring a separately named image artifact."""
+    return image / 2
+
+
+@pytest.fixture
+def registered_current_transform():
+    registered = register_custom_function(half_current_pixels)
+    try:
+        yield registered
+    finally:
+        CustomFunctionRuntimeRegistry.remove(half_current_pixels.__name__)
+
+
 @pytest.fixture
 def registered_count_callable(valid):
     function = count_with_image_subject if valid else count_without_subject
@@ -169,7 +184,7 @@ def _source(alias, channel):
                 SourceFilterClause(
                     subject=SourceFilterSubject.FILE,
                     match_type=SourceFilterMatchType.CONTAINS,
-                    value=alias,
+                    value=f"_w{channel}_",
                 ),
             ),
         ),
@@ -243,8 +258,8 @@ def _write_plate(path, *, same_source=False):
     dna = np.full((16, 16), 0.25 if same_source else 0.0, dtype=np.float32)
     dna[6:8, 6:8] = 1.0
     actin = np.ones_like(dna)
-    tifffile.imwrite(path / "A01_s001_DNA.tif", dna)
-    tifffile.imwrite(path / "A01_s001_Actin.tif", actin)
+    tifffile.imwrite(path / "A01_s001_w1_z001_t001.tif", dna)
+    tifffile.imwrite(path / "A01_s001_w2_z001_t001.tif", actin)
 
 
 def _compile(path, document, global_config):
@@ -276,19 +291,23 @@ def _execute(path, document, bundle):
     )
 
 
-@pytest.mark.parametrize("image_names", [
-    ("DNA",), ("DNA", "Actin"), ("Actin", "DNA"), ("DNAHalf",),
+@pytest.mark.parametrize("image_names,current_scale", [
+    (("DNA",), 1), (("DNA", "Actin"), 1), (("Actin", "DNA"), 1),
+    (("DNAHalf",), 1), (("DNA", "DNAHalf"), 1), (("DNAHalf", "DNA"), 1),
+    (("DNA", "Actin"), 0.5),
 ])
-def test_photometry_carrier_preserves_raw_aliases_and_produced_pixels(tmp_path, image_names):
+def test_photometry_carrier_preserves_raw_aliases_and_produced_pixels(
+    tmp_path, image_names, current_scale, registered_current_transform,
+):
     """A stored label cohort must not substitute label IDs for measured images."""
     from openhcs.processing.backends.cellprofiler.intensity import rescale_intensity, RescaleMethod
     dna = np.zeros((16, 16), dtype=np.float32)
     dna[6:8, 6:8] = ((0.6, 0.7), (0.8, 0.9))
     actin = (0.1 + np.arange(256).reshape(16, 16) * 0.001).astype(np.float32)
-    tifffile.imwrite(tmp_path / "A01_s001_DNA.tif", dna)
-    tifffile.imwrite(tmp_path / "A01_s001_Actin.tif", actin)
+    tifffile.imwrite(tmp_path / "A01_s001_w1_z001_t001.tif", dna)
+    tifffile.imwrite(tmp_path / "A01_s001_w2_z001_t001.tif", actin)
     document = _document()
-    if image_names == ("DNAHalf",):
+    if "DNAHalf" in image_names:
         document.pipeline_steps.insert(0, _step(rescale_intensity, "Produced half intensity", {
             "select_the_input_image": "DNA", "name_the_output_image": "DNAHalf",
             "rescale_method": RescaleMethod.DIVIDE_BY_VALUE, "divisor_value": 2.0,
@@ -296,13 +315,21 @@ def test_photometry_carrier_preserves_raw_aliases_and_produced_pixels(tmp_path, 
     document.pipeline_steps[-1] = _step(measure_object_intensity, "Actual photometry", {
         "select_images_to_measure": image_names, "select_object_sets_to_measure": ("Cells",),
     })
+    if current_scale != 1:
+        document.pipeline_steps.insert(-1, _step(
+            registered_current_transform, "Transform current image carrier", {},
+        ))
+        measurement = document.pipeline_steps[-1]
+        measurement.processing_config = replace(
+            measurement.processing_config, input_source=InputSource.PREVIOUS_STEP,
+        )
     document = PipelineDocumentAuthority.from_source(PipelineDocumentAuthority.render(document))
     bundle = _compile(tmp_path, document, GlobalPipelineConfig(num_workers=1, use_threading=True))
     context = bundle.runtime_contexts["A01"]
     plan = context.step_plans[len(document.pipeline_steps)-1]
     group = plan.compiled_function_pattern.default_group
     selected = plan.stored_primary_input_edges_for_group(group, None)
-    if image_names != ("DNAHalf",):
+    if any(name in ("DNA", "Actin") for name in image_names):
         assert selected is None  # Raw STEP_INPUT aliases need the current image carrier.
     results = _execute(tmp_path, document, bundle)
     assert results['A01'].is_success(), results['A01'].error_message
@@ -313,7 +340,9 @@ def test_photometry_carrier_preserves_raw_aliases_and_produced_pixels(tmp_path, 
     (measurement,) = context.runtime_value_store.find(
         name=output.name, artifact_type=MeasurementsArtifactType, axis_id="A01",
     )
-    expected_images = {"DNA": dna, "Actin": actin, "DNAHalf": dna / 2}
+    expected_images = {
+        "DNA": dna * current_scale, "Actin": actin * current_scale, "DNAHalf": dna / 2,
+    }
     for image_name in image_names:
         values = expected_images[image_name][foreground]
         assert values.size and values.std() > 0
@@ -324,6 +353,39 @@ def test_photometry_carrier_preserves_raw_aliases_and_produced_pixels(tmp_path, 
                 object_count=1, object_name="Cells", dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
             )
             assert tuple(actual) == pytest.approx((expected,), abs=1e-7)
+
+
+def test_label_only_measurement_keeps_stored_cohort(tmp_path):
+    from openhcs.processing.backends.cellprofiler.shape import (
+        MeasureObjectSizeShapeModule, measure_object_size_shape,
+    )
+    _write_plate(tmp_path)
+    document = _document()
+    document.pipeline_steps[-1] = _step(measure_object_size_shape, "Label-only area", {
+        MeasureObjectSizeShapeModule.object_measurement_binding.require_parameter_name(): ("Cells",),
+        "calculate_advanced": False, "calculate_zernikes": False,
+    })
+    document = PipelineDocumentAuthority.from_source(PipelineDocumentAuthority.render(document))
+    bundle = _compile(tmp_path, document, GlobalPipelineConfig(num_workers=1, use_threading=True))
+    context = bundle.runtime_contexts["A01"]
+    plan = context.step_plans[-1]
+    group = plan.compiled_function_pattern.default_group
+    cohort = plan.stored_primary_input_edges_for_group(group, None)
+    assert cohort is not None
+    assert tuple(edge.spec.name for edge in cohort) == ("Cells",)
+    results = _execute(tmp_path, document, bundle)
+    assert results["A01"].is_success(), results["A01"].error_message
+    (labels,) = context.runtime_value_store.find(name="Cells", axis_id="A01")
+    (invocation,) = group.invocations
+    (output,) = invocation.artifact_output_plans
+    (measurement,) = context.runtime_value_store.find(
+        name=output.name, artifact_type=MeasurementsArtifactType, axis_id="A01",
+    )
+    actual = measurement_values_for_feature(
+        (measurement.data,), "AreaShape_Area", object_count=1, object_name="Cells",
+        dialect=CELLPROFILER_MEASUREMENT_LOOKUP_DIALECT,
+    )
+    assert tuple(actual) == (np.count_nonzero(object_label_dense_array(labels.data)),)
 
 
 @pytest.mark.parametrize("same_source", [True, False], ids=["single-source", "paired-channels"])
@@ -440,7 +502,7 @@ def test_explicit_measurement_rosters_survive_one_matched_source_anchor(
     context = bundle.runtime_contexts["A01"]
     executor = FunctionStepExecutor(context, 2)
     prepared = executor._prepare_groups(executor._detect_patterns())
-    assert prepared.total_count() == 1
+    assert sum(len(patterns) for patterns in prepared.values()) == 1
     invocation = next(executor.plan.compiled_function_pattern.iter_invocations())
     assert tuple(
         spec.name for spec in invocation.contract.artifact_inputs.of_artifact_type(ImageArtifactType)
