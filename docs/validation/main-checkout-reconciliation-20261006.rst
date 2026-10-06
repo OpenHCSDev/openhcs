@@ -9,7 +9,9 @@ The live checkout at /home/ts/code/projects/openhcs remains based on
 2bc579ca9e5d3d70a130bec96ee6f001f3dd5c74 (24 September). Direct tool-call history
 from this conversation establishes edits there on 26--28 September. This is
 historical work, not evidence that the latest manuscript changes bypassed /wt.
-Its files and index have not been reset, cleaned, restored or stashed.
+Its 57 historical tracked regular-file edits are now stashed after verifying
+their preservation, as described below. Its original baseline has not advanced;
+submodule edits and untracked inputs/results remain in place.
 
 Lossless source checkpoint
 --------------------------
@@ -33,6 +35,27 @@ Dataset ZIP, partial browser download and historical benchmark/results files
 were excluded and remain at their original paths. The parent commit retains
 unchanged tracked source. No dataset, scientific output, history or UNKNOWN
 input was removed. Frozen scorers are recoverable as exact Git blobs.
+
+Tracked-source cleanup
+-----------------------
+
+All 70 captured source files still matched their recorded hashes immediately
+before cleanup. The original index was empty. The 57 dirty tracked regular
+files alone were stashed, excluding external repositories and every untracked
+path. Stash commit3979d3ad96c8620f369d2b67c6175e12e69a832f is named
+"Historical Sept26-28 source; published recovery-main-checkout-source-20261006".
+Comparing its 57 files with the published recovery tree returned no differences.
+The recovery branch is the durable publication; the stash is additional local
+recovery, not the only copy. The checkout remains on its original September24
+HEAD rather than being updated over colliding untracked source.
+
+The observed processes whose cwd was this checkout run agent_comms.worker in
+a separate Toad environment, not an OpenHCS runtime. No process was stopped.
+All312 original untracked files remain. The PolyStore and python-introspect
+patch hashes still exactly match their archived patches; they were not stashed
+or changed. ObjectState's untracked lockfile also remains. Source classification
+and remaining issue disposition continue independently of this completed
+tracked-source custody operation.
 
 Determining dispositions
 -------------------------
