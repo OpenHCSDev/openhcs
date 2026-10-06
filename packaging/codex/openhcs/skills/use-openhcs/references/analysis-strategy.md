@@ -153,7 +153,13 @@ claim. Do not invent a universal error tolerance or relax the task's declared
 criteria to fit a result.
 
 For neurite outgrowth, distinguish principal-shaft recovery from exhaustive
-fine-protrusion tracing. When the requested endpoint concerns soma-connected
+fine-protrusion tracing before choosing detection settings. State the intended
+structures in the task brief and candidate rationale. For a shaft-focused assay,
+an appropriate brief is: "Segment the soma-connected thick neurite shafts,
+including dim stretches of those shafts; fine filopodia are outside the target."
+Thickness and brightness are different: a faint shaft can still belong to the
+target. Do not silently expand that endpoint during repair. When the requested
+endpoint concerns soma-connected
 main shafts, assess their distributed raw support, continuity and false bridges;
 unrequested filopodial completeness is not an acceptance gate. Lowering a
 threshold to add uncertain twigs or increase graph length/branch counts is not

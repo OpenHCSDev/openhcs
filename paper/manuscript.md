@@ -229,7 +229,11 @@ For public neurite images, autonomous analysis recovered principal shafts and
 raw-supported junctions (Supplementary Figure 12). Main-shaft coverage is the
 relevant illustrative endpoint: exhaustive filopodial tracing is not required.
 Additional threshold lowering can add uncertain short twigs without improving
-that endpoint. Crossings remain a limitation for assigning length to individual
+that endpoint. The last repair expanded tracing beyond the intended thick-shaft
+target; Figure 5 therefore illustrates the retained initial shaft candidate,
+not a successful final repaired result. The shaft-specific target was clarified
+after the run and is not credited to its original brief. Crossings remain a
+limitation for assigning length to individual
 neurons. The representative shaft result is not presented as a manual-trace
 accuracy measurement. Its inputs matched the published NeuronCyto II image-1
 field, but the manual-reference tables did not specify length units and the
@@ -268,7 +272,7 @@ being treated as additional experiments.
 | BBBC007 DNA/actin | Manual-outline union; 16 fields per author | Two final authors' directed boundary fractions 0.740–0.743 within two pixels; not boundary recall or exhaustive instance accuracy |
 | H002 3-D centres | 15 manual centres; Figure 4 trial | 15/15 matched within the primary 30-voxel distance, mean error 4.80 voxels; annotations not established as exhaustive |
 | R0010 retinal somata | Distributed matched raw/result review | Autonomous repair retained neighbours and reduced nuisance masks; manual-reference accuracy unmeasured |
-| H004 public neurites | Matched raw shafts and nuisance controls | Principal-shaft and junction recovery; fine protrusions and per-neuron crossing ownership unresolved |
+| H004 public neurites | Matched raw shafts and nuisance controls | Retained initial principal-shaft recovery; final repair exceeded the shaft target, and per-neuron crossing ownership remains unresolved |
 | Laboratory neurites, nine fields | Matched raw/path review in three sampled fields | Autonomous completion and recovery of thin paths after self-directed repair; overlapping fields not stitched or deduplicated, per-neuron ownership unresolved |
 | BBBC013 translocation | Well-level control and dose summaries; 96 wells | Assay responses recovered in contributing cohorts; compartment coverage varied and whole-cell accuracy unmeasured |
 
@@ -309,9 +313,9 @@ within-run repair does not guarantee a better result from the next fresh author.
 
 ### Figure 5. Autonomous neurite analysis on public and laboratory images
 
-![Public neurite sensitivity and matched final laboratory-field raw, body/path and combined views.](figures/slas/submission_neurite_results.png){width=6in}
+![Public neurite shaft recovery and matched final laboratory-field raw, body/path and combined views.](figures/slas/submission_neurite_results.png){width=6in}
 
-(I, A–C) Matched NeuronCyto II process-channel view and the H004 author's first and final results [@NeuronCytoII]. Lowering the admission threshold retained principal shafts but added uncertain short twigs; colours represent assigned identities, not independently established ownership at crossings. The first result is a predecessor, not a substituted final endpoint. (II, D–F) Byte-identical native captures from the final P001 autonomous analysis show raw FITC, body/path output and their combination at matched site-1 coordinates. The run completed all nine fields without stitching or overlap deduplication. These views illustrate recovery and remaining ambiguity, not a manual-reference accuracy score. Supplementary Data 8 retains the distinct frozen pipelines and wider review; the assisted mosaic is confined to Supplementary Figure 12.
+(I, A–B) Matched NeuronCyto II process-channel view and the H004 author's retained initial shaft result [@NeuronCytoII]. The intended structures are thick neurite shafts, including their dim stretches, rather than fine filopodia. The later repair overextended tracing and is not shown as a successful final result. Colours represent assigned identities, not independently established ownership at crossings. (II, C–E) Byte-identical native captures from the final P001 autonomous analysis show raw FITC, body/path output and their combination at matched site-1 coordinates. The run completed all nine fields without stitching or overlap deduplication. These views illustrate recovery and remaining ambiguity, not a manual-reference accuracy score. Supplementary Data 8 retains the distinct frozen pipelines and wider review; the assisted mosaic is confined to Supplementary Figure 12.
 
 
 ## Discussion

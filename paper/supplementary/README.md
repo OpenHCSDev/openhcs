@@ -1033,7 +1033,11 @@ in unspecified units. These values are descriptive, not an accuracy ratio:
 the length definitions and units have not been aligned, and the retained
 reference has no spatial traces or cell correspondences. The
 [aggregate table](neuroncyto_length_evaluation/aggregate_lengths.csv) keeps the
-first prediction separate from the final candidate illustrated beside it.
+first prediction separate from the overextended final attempted repair. Main
+Figure 5 illustrates the initial shaft candidate, not that repair. The intended
+thick-shaft endpoint was clarified after the run; the original brief and all
+predictions remain unchanged. This clarification is not evidence that the
+original author received that more specific target.
 The [primary-source follow-through](neuroncyto_length_evaluation/unit_followthrough.rst)
 records the article and user-guide checks and the remaining unit requirement.
 

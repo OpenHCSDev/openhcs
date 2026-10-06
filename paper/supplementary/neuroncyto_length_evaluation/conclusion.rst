@@ -26,6 +26,13 @@ endpoint requested for this comparison. The descriptive aggregates in
 ``aggregate_lengths.csv`` must not be subtracted or ratioed as an accuracy
 metric without compatible units and endpoint definitions.
 
+The target was clarified after the run as thick soma-connected neurite shafts,
+including their faint stretches, not exhaustive filopodial tracing. The final
+chronological repair expanded beyond that target and is not an accepted final
+shaft result. Main Figure 5 now shows only the retained initial candidate and
+labels it accordingly. This editorial selection does not retroactively change
+the original brief, its frozen outputs or its autonomous outcome.
+
 Input identity
 --------------
 

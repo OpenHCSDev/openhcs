@@ -159,3 +159,26 @@ Both uncompressed review snapshots were separately compared with their archived
 members before removal, reclaiming approximately 125 MiB from home. Their
 immutable compressed copies remain on the HDD and can restore the original
 member paths; the current PDFs and preceding paired rollback remain available.
+
+Thick-shaft endpoint correction
+------------------------------
+
+Tristan clarified that public neurite analysis targets thick soma-connected
+shafts, including dim stretches, not exhaustive fine filopodia. The original
+H004 fresh20 SCIENCE-BRIEF requested soma/process outputs and review of faint
+paths but did not state that exclusion. Frozen briefs and predictions remain
+unchanged; no post-run clarification is credited to the original author.
+
+Main Figure 5 now uses matched raw and FIRST shaft-result captures, labelled
+initial, rather than presenting repair03 as a successful final shaft result.
+Results, Table 2 and supplementary qualifications distinguish chronological
+completion from endpoint suitability. The existing canonical analysis-strategy
+reference carries explicit future shaft-task wording; the knowledge manifest
+already derives that document from the packaged reference. No second skill or
+new knowledge owner was added. Skill validation and figure bitmap review passed.
+
+The first paired rebuild correctly refused publication because the Table 2
+edit occurred during rendering. Its failed candidate did not replace current.
+The subsequent build uses settled source inputs. Earlier local reading archives
+remain immutable snapshots predating this endpoint correction; no Zenodo upload
+was requested or performed.

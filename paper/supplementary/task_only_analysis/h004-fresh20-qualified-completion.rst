@@ -41,6 +41,20 @@ The graph diagnostics also retain representation differences: 118 dropped
 trace pixels and 6479 published versus 6473 final-owned trace pixels. Counts
 from different representations must not be silently equated.
 
+Endpoint clarification, 6 October 2026
+-------------------------------------
+
+The requested biological target is the thick soma-connected neurite shafts,
+including dim stretches of those shafts, not exhaustive branching filopodia.
+The last attempted repair expanded beyond that target. It remains the final
+chronological attempt, not an accepted final shaft analysis. Main Figure 5
+illustrates the retained FIRST shaft candidate and labels it as initial;
+neither its selection nor this post-run clarification is credited as a
+prospectively specified autonomous success. Original briefs, pipelines,
+measurements and freezes are unchanged. Future shaft-task briefs should state
+the target explicitly before authorship, following the canonical autonomous
+analysis strategy in the packaged skill.
+
 Freeze, review and reproduction
 ------------------------------
 
