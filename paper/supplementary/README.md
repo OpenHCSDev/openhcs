@@ -780,6 +780,15 @@ receive an accuracy percentage.
 - [Public translocation assay](task_only_analysis/bbbc013-fresh23-qualified-completion.rst).
 - [Public neurite analysis](task_only_analysis/h004-fresh20-qualified-completion.rst).
 
+The [frozen nine-field pipeline source](task_only_analysis/pipelines/p001-fresh13.py)
+is supplied unchanged, with SHA256
+`8b9a70c205103ec9d1600b0592cfb9481bf989e449f049aee176803069f34203`.
+It retains the recorded output root and viewer endpoint; for reproduction,
+relocate only input/output destinations and use the source-document MCP
+validation, compilation and execution workflow with the recorded installation.
+Do not execute the file as an alternative analysis route. The input manifest
+and interpretation limits are identified in the linked review.
+
 The personal mosaic and explicitly labelled development examples retain assisted
 provenance; they are not counted as fresh unguided trials. Recovery of principal
 neurite shafts is the relevant illustrated result, not exhaustive filopodial
