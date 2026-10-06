@@ -10,6 +10,7 @@ from openhcs.core.aligned_image_payload import (
     AlignedImageStackKwargResolver,
     AlignedImageSliceContext,
     ImageOutputBundle,
+    ProducedImageStack,
 )
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
@@ -228,6 +229,16 @@ def test_image_aligned_operation_does_not_remove_runtime_plane_axis():
     ordinary = RuntimeSliceProjection.value_for_slice(value, resolver.projection_axis)
     np.testing.assert_array_equal(image_payload_data(ordinary), image_payload_data(value)[1])
     assert image_payload_data(ordinary).shape == (3, 4)
+
+
+@pytest.mark.parametrize("axis", (RuntimePlaneAxis.RUNTIME_SLICE, RuntimePlaneAxis.SOURCE_BINDING))
+def test_produced_literal_stack_uses_image_aligned_operation_without_selecting_a_plane(axis):
+    value = ProducedImageStack(
+        tuple(np.full((3, 4), index, dtype=np.float32) for index in (1, 2, 3)),
+        memory_type="numpy", plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+    )
+    assert _resolver(axis=axis).resolve(value) is value
+    assert value._composed_payload is None
 
 
 @pytest.mark.parametrize("inner_count", (1, 2, 3))
