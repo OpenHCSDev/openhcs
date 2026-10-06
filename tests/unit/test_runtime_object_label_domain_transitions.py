@@ -164,3 +164,37 @@ def test_sparse_label_slice_projection_preserves_overlap_and_axis_domain(
         labels.with_variants(
             ObjectLabelVariantData(SparseIJVLabelRows.from_slices((*planes, first))),
         )
+
+
+@pytest.mark.parametrize("second_start,expected_layers", [(3, 2), (5, 1)])
+def test_sparse_rendering_layers_preserve_whole_objects(second_start, expected_layers):
+    from openhcs.core.runtime_object_labels import (
+        ObjectLabelRepresentation, ObjectLabelStorageStrategy,
+    )
+    from openhcs.core.runtime_sparse_labels import SparseIJVLabelRows
+    from openhcs.core.source_spatial_domain import SourceSpatialDomain
+
+    rows = SparseIJVLabelRows(np.asarray(
+        [(y, x, label) for label, start in ((1, 1), (2_000_000_000, second_start))
+         for y in range(start, start + 4) for x in range(start, start + 4)],
+        dtype=np.int32,
+    ))
+    value = ObjectLabelSet(
+        name="Objects", variant_data=ObjectLabelVariantData(rows),
+        representation=ObjectLabelRepresentation.SPARSE_IJV,
+        source_spatial_domain=SourceSpatialDomain(source_shape_yx=(10, 10)),
+    )
+    layers = ObjectLabelStorageStrategy.for_value(value).rendering_layers(
+        value, source_spatial_shape_yx=None,
+    )
+    assert len(layers) == expected_layers
+    for label in (1, 2_000_000_000):
+        occurrences = [np.argwhere(layer == label) for layer in layers]
+        assert sum(bool(len(points)) for points in occurrences) == 1
+        points = next(points for points in occurrences if len(points))
+        np.testing.assert_array_equal(points, rows.as_array()[rows.as_array()[:, 2] == label, :2])
+    dense = np.asarray([[0, 1], [2, 0]], dtype=np.int32)
+    dense_layers = ObjectLabelStorageStrategy.for_value(dense).rendering_layers(
+        dense, source_spatial_shape_yx=None,
+    )
+    assert len(dense_layers) == 1 and dense_layers[0] is dense
