@@ -1,0 +1,3524 @@
+{
+  "status": "PASS",
+  "source_head": "eb773573cced496fe5ee7bfeef7b961674958c1d",
+  "suite_terminal": {
+    "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/terminal.json",
+    "sha256": "a6a439f5e2f974358a1a018c6ee2988e176ce09db6206123b436529a0018ec99"
+  },
+  "manifest": {
+    "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-measured-publication-v15/selected-three-case-manifest.json",
+    "sha256": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2"
+  },
+  "converter_sha256": "d9967c60b429a127390226c2c61b2a0e8c6ca7d845e83b7ae8b977aabdecaf2d",
+  "execution_clock": "CP actual concurrent pipeline-start through post-run makespan / OH full SERVER_PIPELINE_JOB including plate exports",
+  "total_clock": "CP actual concurrent invocation-through-completion makespan / OH sum of disjoint compile+execute SUBMIT+WAIT phases, excluding startup and SCI",
+  "speedup_definition": "Ratio of per-engine medians; warmup repetition -1 excluded",
+  "memory": "Not measured in matched reports; left absent",
+  "cases": [
+    {
+      "case": "ExampleVitra",
+      "source_commit": "eb773573cced496fe5ee7bfeef7b961674958c1d",
+      "rows": [
+        {
+          "repetition": 0,
+          "native_execution_seconds": 10.314509059302509,
+          "native_total_seconds": 10.315214568283409,
+          "openhcs_execution_seconds": 3.9549524784088135,
+          "openhcs_total_seconds": 4.4158834046684206,
+          "openhcs_compile_seconds": 0.3650074005126953,
+          "openhcs_axis_only_seconds": 3.19407320022583,
+          "openhcs_first_axis_to_completion_seconds": 3.9156031608581543
+        },
+        {
+          "repetition": 1,
+          "native_execution_seconds": 9.742641963995993,
+          "native_total_seconds": 9.743396325036883,
+          "openhcs_execution_seconds": 3.9959800243377686,
+          "openhcs_total_seconds": 4.443573763594031,
+          "openhcs_compile_seconds": 0.3637559413909912,
+          "openhcs_axis_only_seconds": 3.245483160018921,
+          "openhcs_first_axis_to_completion_seconds": 3.9524879455566406
+        },
+        {
+          "repetition": 2,
+          "native_execution_seconds": 9.349630871322006,
+          "native_total_seconds": 9.35037102503702,
+          "openhcs_execution_seconds": 3.888793468475342,
+          "openhcs_total_seconds": 4.349911374039948,
+          "openhcs_compile_seconds": 0.3695652484893799,
+          "openhcs_axis_only_seconds": 3.1210789680480957,
+          "openhcs_first_axis_to_completion_seconds": 3.8473031520843506
+        }
+      ],
+      "receipts": [
+        {
+          "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/ExampleVitra/candidate_evidence/0/measured_pipeline_receipt.json",
+          "sha256": "3ef958d4152833b3d480d93ff4b6d33407b26afd456d4b53c45410630db44fd2",
+          "execution_id": "c4457105-8564-4c56-a529-865a5804ed54"
+        },
+        {
+          "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/ExampleVitra/candidate_evidence/1/measured_pipeline_receipt.json",
+          "sha256": "63ca369ccdce75b5c4bd55e8c8e28503709696e1512f8688fe3583c1a6bab9f3",
+          "execution_id": "33952fa8-3225-437e-b5f2-0e45160a0c33"
+        },
+        {
+          "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/ExampleVitra/candidate_evidence/2/measured_pipeline_receipt.json",
+          "sha256": "275f2746aa369906240ea82e12c532bec16c7dc167423b4e6e7c767714a6c278",
+          "execution_id": "ba42ddaa-a5ce-49c5-bd53-1609135b5027"
+        }
+      ],
+      "raw_inputs": {
+        "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/ExampleVitra/pilot_provenance.json": "5c8741d3bd71eac8473ef0a6733b4c59517e60db7aad9ca2aa4147583e10447a",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/ExampleVitra/native_report.json": "a4a935cfc47a19e2f52e64127bc50e7014841fb811d717085c671499cd8a7018",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/ExampleVitra/candidate_report.json": "f37063f551ce3014a333143b3e8c5998625bdb67a7075184cfeb8433c34d3084",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/ExampleVitra/native_request.json": "c261633595629b51f7a7f7c2fb9389c7c539a0e7ff5607d95ed1108c86052000",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/ExampleVitra/native_shards/reports.json": "06fd127c661b8df9e409872c91acaca5a7214523be4b410c59e8a5c6ce646481",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/ExampleVitra/native_shards/equivalence.json": "073dd919001ad5c66a1109e813c89ff6e8aca0a7dfc973c1f8be963d192d1c59",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0_report.json": "66b4e0f0e3f0910762bc3c3496df1e07941394f7e705924b41fa3dae9f3954ad",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1_report.json": "3e4aad5bd8dd6054ba110eba7297e5314fd10b8867d853c2ef738262382ba59b",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2_report.json": "138675c67b5d9d6e444d8770cbb4ed08b20dd37abd2cb129a785b29155026ce0",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/request_0.json": "1183bf0ee015c1961d90c89e8cb99b684a320fd804ba3ff87e0f0f8569be0ada",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/request_1.json": "1db5bd6b04cf045e8115861125a4799f9666d7db4f9faf971da0370b1fa65475",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/request_2.json": "51c843d64a0785716cd5c2181c01cd33086d710fd9ab750aa316839fe987fb9b",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_0_job_0.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_0_job_1.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_0_job_2.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_1_job_0.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_1_job_1.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_1_job_2.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_2_job_0.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_2_job_1.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/start_barrier/repetition_2_job_2.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/ExampleVitra/candidate_evidence/-1/well_throughput_progress_events.csv": "378f07639114bca216d21610acc6df3eeaa59e941a016c5865539ba6ce6c468a",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/ExampleVitra/candidate_evidence/0/well_throughput_progress_events.csv": "f52e827c64ac7d70979beb31c74f3984ea9af097a68c78d06061baef99c956c3",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/ExampleVitra/candidate_evidence/1/well_throughput_progress_events.csv": "1594220ede4e72c9167282f5cce9db80f2fde217814b3f2c64af460097a84718",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/ExampleVitra/candidate_evidence/2/well_throughput_progress_events.csv": "06388c4365433df3a0833eee90624c943c5c273e209d0a19239c373def456ac0"
+      },
+      "server_environment": {
+        "installed_distributions": [
+          {
+            "name": "abi3audit",
+            "version": "0.0.26"
+          },
+          {
+            "name": "abi3info",
+            "version": "2026.9.25"
+          },
+          {
+            "name": "aiobotocore",
+            "version": "3.9.1"
+          },
+          {
+            "name": "aiohappyeyeballs",
+            "version": "2.7.1"
+          },
+          {
+            "name": "aiohttp",
+            "version": "3.14.3"
+          },
+          {
+            "name": "aioitertools",
+            "version": "0.13.0"
+          },
+          {
+            "name": "aiosignal",
+            "version": "1.4.0"
+          },
+          {
+            "name": "annotated-doc",
+            "version": "0.0.5"
+          },
+          {
+            "name": "annotated-types",
+            "version": "0.8.0"
+          },
+          {
+            "name": "anyio",
+            "version": "4.15.1"
+          },
+          {
+            "name": "app-model",
+            "version": "0.5.1"
+          },
+          {
+            "name": "array-api-compat",
+            "version": "1.15.0"
+          },
+          {
+            "name": "arraybridge",
+            "version": "0.3.6"
+          },
+          {
+            "name": "ast_serialize",
+            "version": "0.11.2"
+          },
+          {
+            "name": "asttokens",
+            "version": "3.0.2"
+          },
+          {
+            "name": "attrs",
+            "version": "26.1.0"
+          },
+          {
+            "name": "autopep8",
+            "version": "2.3.2"
+          },
+          {
+            "name": "black",
+            "version": "26.5.1"
+          },
+          {
+            "name": "botocore",
+            "version": "1.43.75"
+          },
+          {
+            "name": "build",
+            "version": "1.6.1"
+          },
+          {
+            "name": "cachey",
+            "version": "0.2.1"
+          },
+          {
+            "name": "cattrs",
+            "version": "26.2.1"
+          },
+          {
+            "name": "centrosome",
+            "version": "1.3.4"
+          },
+          {
+            "name": "certifi",
+            "version": "2026.7.22"
+          },
+          {
+            "name": "cffi",
+            "version": "2.1.1"
+          },
+          {
+            "name": "charset-normalizer",
+            "version": "3.5.1"
+          },
+          {
+            "name": "cjdk",
+            "version": "0.5.0"
+          },
+          {
+            "name": "click",
+            "version": "8.5.0"
+          },
+          {
+            "name": "cloudpickle",
+            "version": "3.1.2"
+          },
+          {
+            "name": "colorama",
+            "version": "0.4.6"
+          },
+          {
+            "name": "comm",
+            "version": "0.2.3"
+          },
+          {
+            "name": "contourpy",
+            "version": "1.4.0"
+          },
+          {
+            "name": "coverage",
+            "version": "7.16.2"
+          },
+          {
+            "name": "cryptography",
+            "version": "50.0.1"
+          },
+          {
+            "name": "cycler",
+            "version": "0.12.1"
+          },
+          {
+            "name": "dask",
+            "version": "2026.8.0"
+          },
+          {
+            "name": "debugpy",
+            "version": "1.8.22"
+          },
+          {
+            "name": "defusedxml",
+            "version": "0.7.1"
+          },
+          {
+            "name": "Deprecated",
+            "version": "3.0.0"
+          },
+          {
+            "name": "deprecation",
+            "version": "2.1.0"
+          },
+          {
+            "name": "dill",
+            "version": "0.4.1"
+          },
+          {
+            "name": "distinctipy",
+            "version": "1.3.4"
+          },
+          {
+            "name": "docstring_parser",
+            "version": "0.18.0"
+          },
+          {
+            "name": "docutils",
+            "version": "0.23"
+          },
+          {
+            "name": "donfig",
+            "version": "0.8.1.post1"
+          },
+          {
+            "name": "et_xmlfile",
+            "version": "2.0.0"
+          },
+          {
+            "name": "execnet",
+            "version": "2.1.2"
+          },
+          {
+            "name": "executing",
+            "version": "2.2.1"
+          },
+          {
+            "name": "flexcache",
+            "version": "0.3"
+          },
+          {
+            "name": "flexparser",
+            "version": "0.4"
+          },
+          {
+            "name": "fonttools",
+            "version": "4.66.1"
+          },
+          {
+            "name": "freetype-py",
+            "version": "2.5.1"
+          },
+          {
+            "name": "frozenlist",
+            "version": "1.8.0"
+          },
+          {
+            "name": "fsspec",
+            "version": "2026.9.0"
+          },
+          {
+            "name": "genbadge",
+            "version": "1.1.3"
+          },
+          {
+            "name": "google-crc32c",
+            "version": "1.9.0"
+          },
+          {
+            "name": "GPUtil",
+            "version": "1.4.0"
+          },
+          {
+            "name": "h11",
+            "version": "0.16.0"
+          },
+          {
+            "name": "HeapDict",
+            "version": "1.0.1"
+          },
+          {
+            "name": "hsluv",
+            "version": "5.0.4"
+          },
+          {
+            "name": "httpcore",
+            "version": "1.0.9"
+          },
+          {
+            "name": "httpx",
+            "version": "0.28.1"
+          },
+          {
+            "name": "httpx-sse",
+            "version": "0.4.3"
+          },
+          {
+            "name": "idna",
+            "version": "3.20"
+          },
+          {
+            "name": "imagecodecs",
+            "version": "2026.8.16"
+          },
+          {
+            "name": "ImageIO",
+            "version": "2.38.0"
+          },
+          {
+            "name": "imglyb",
+            "version": "2.1.0"
+          },
+          {
+            "name": "in-n-out",
+            "version": "0.2.1"
+          },
+          {
+            "name": "iniconfig",
+            "version": "2.3.0"
+          },
+          {
+            "name": "ipycanvas",
+            "version": "0.14.3"
+          },
+          {
+            "name": "ipyevents",
+            "version": "2.0.4"
+          },
+          {
+            "name": "ipykernel",
+            "version": "6.31.0"
+          },
+          {
+            "name": "ipympl",
+            "version": "0.10.0"
+          },
+          {
+            "name": "ipython",
+            "version": "9.17.1"
+          },
+          {
+            "name": "ipython_pygments_lexers",
+            "version": "1.1.1"
+          },
+          {
+            "name": "ipywidgets",
+            "version": "8.1.9"
+          },
+          {
+            "name": "jax",
+            "version": "0.9.2"
+          },
+          {
+            "name": "jaxlib",
+            "version": "0.9.2"
+          },
+          {
+            "name": "jedi",
+            "version": "0.20.0"
+          },
+          {
+            "name": "jgo",
+            "version": "3.1.0"
+          },
+          {
+            "name": "jmespath",
+            "version": "1.1.0"
+          },
+          {
+            "name": "joblib",
+            "version": "1.6.0"
+          },
+          {
+            "name": "jpype1",
+            "version": "1.7.1"
+          },
+          {
+            "name": "jsonschema",
+            "version": "4.26.0"
+          },
+          {
+            "name": "jsonschema-specifications",
+            "version": "2025.9.1"
+          },
+          {
+            "name": "jupyter_client",
+            "version": "8.10.0"
+          },
+          {
+            "name": "jupyter_core",
+            "version": "5.9.1"
+          },
+          {
+            "name": "jupyterlab_widgets",
+            "version": "3.0.17"
+          },
+          {
+            "name": "kaitaistruct",
+            "version": "0.11"
+          },
+          {
+            "name": "kiwisolver",
+            "version": "1.5.1"
+          },
+          {
+            "name": "labeling",
+            "version": "0.1.15"
+          },
+          {
+            "name": "lazy-loader",
+            "version": "0.6"
+          },
+          {
+            "name": "librt",
+            "version": "0.16.0"
+          },
+          {
+            "name": "llvmlite",
+            "version": "0.49.0"
+          },
+          {
+            "name": "locket",
+            "version": "1.0.0"
+          },
+          {
+            "name": "lxml",
+            "version": "6.1.3"
+          },
+          {
+            "name": "magicgui",
+            "version": "0.10.2"
+          },
+          {
+            "name": "mahotas",
+            "version": "1.4.19"
+          },
+          {
+            "name": "markdown-it-py",
+            "version": "4.2.0"
+          },
+          {
+            "name": "matplotlib",
+            "version": "3.11.2"
+          },
+          {
+            "name": "matplotlib-inline",
+            "version": "0.2.2"
+          },
+          {
+            "name": "mcp",
+            "version": "1.30.0"
+          },
+          {
+            "name": "mdurl",
+            "version": "0.1.2"
+          },
+          {
+            "name": "metaclass-registry",
+            "version": "0.2.2"
+          },
+          {
+            "name": "ml_dtypes",
+            "version": "0.6.0"
+          },
+          {
+            "name": "msgspec",
+            "version": "0.22.0"
+          },
+          {
+            "name": "Multi-Template-Matching",
+            "version": "2.0.1"
+          },
+          {
+            "name": "multidict",
+            "version": "6.9.1"
+          },
+          {
+            "name": "mypy",
+            "version": "2.3.1"
+          },
+          {
+            "name": "mypy_extensions",
+            "version": "1.1.0"
+          },
+          {
+            "name": "napari",
+            "version": "0.9.2"
+          },
+          {
+            "name": "napari-console",
+            "version": "0.1.4"
+          },
+          {
+            "name": "napari-crop",
+            "version": "0.1.12"
+          },
+          {
+            "name": "napari-plugin-engine",
+            "version": "0.2.1"
+          },
+          {
+            "name": "napari-resources",
+            "version": "1.0.1"
+          },
+          {
+            "name": "napari-svg",
+            "version": "0.2.1"
+          },
+          {
+            "name": "napari-tools-menu",
+            "version": "0.1.20"
+          },
+          {
+            "name": "napari-workflows",
+            "version": "0.2.11"
+          },
+          {
+            "name": "narwhals",
+            "version": "2.26.0"
+          },
+          {
+            "name": "nest-asyncio",
+            "version": "1.6.0"
+          },
+          {
+            "name": "networkx",
+            "version": "3.7"
+          },
+          {
+            "name": "npe2",
+            "version": "0.9.0"
+          },
+          {
+            "name": "numba",
+            "version": "0.67.0"
+          },
+          {
+            "name": "numcodecs",
+            "version": "0.17.0"
+          },
+          {
+            "name": "numpy",
+            "version": "2.5.3"
+          },
+          {
+            "name": "objectstate",
+            "version": "1.3.1"
+          },
+          {
+            "name": "ome-zarr",
+            "version": "0.19.2"
+          },
+          {
+            "name": "ome-zarr-models",
+            "version": "1.8.1"
+          },
+          {
+            "name": "opencv-python-headless",
+            "version": "5.0.0.93"
+          },
+          {
+            "name": "openhcs",
+            "version": "0.8.7"
+          },
+          {
+            "name": "openhcs-basicpy",
+            "version": "1.3.1"
+          },
+          {
+            "name": "openpyxl",
+            "version": "3.1.5"
+          },
+          {
+            "name": "opt_einsum",
+            "version": "3.4.0"
+          },
+          {
+            "name": "packaging",
+            "version": "26.3"
+          },
+          {
+            "name": "pandas",
+            "version": "3.0.6"
+          },
+          {
+            "name": "parso",
+            "version": "0.8.7"
+          },
+          {
+            "name": "partd",
+            "version": "1.4.2"
+          },
+          {
+            "name": "pathspec",
+            "version": "1.1.1"
+          },
+          {
+            "name": "pefile",
+            "version": "2024.8.26"
+          },
+          {
+            "name": "pexpect",
+            "version": "4.9.0"
+          },
+          {
+            "name": "pillow",
+            "version": "11.3.0"
+          },
+          {
+            "name": "Pint",
+            "version": "0.26.1"
+          },
+          {
+            "name": "pip",
+            "version": "26.2.1"
+          },
+          {
+            "name": "platformdirs",
+            "version": "4.12.2"
+          },
+          {
+            "name": "pluggy",
+            "version": "1.6.0"
+          },
+          {
+            "name": "polystore",
+            "version": "0.3.3"
+          },
+          {
+            "name": "pooch",
+            "version": "1.9.0"
+          },
+          {
+            "name": "portalocker",
+            "version": "4.4.0"
+          },
+          {
+            "name": "progressbar2",
+            "version": "4.6.0"
+          },
+          {
+            "name": "prompt_toolkit",
+            "version": "3.0.53"
+          },
+          {
+            "name": "propcache",
+            "version": "0.5.4"
+          },
+          {
+            "name": "psutil",
+            "version": "7.2.2"
+          },
+          {
+            "name": "psygnal",
+            "version": "0.16.1"
+          },
+          {
+            "name": "ptyprocess",
+            "version": "0.7.0"
+          },
+          {
+            "name": "pure_eval",
+            "version": "0.2.4"
+          },
+          {
+            "name": "pycodestyle",
+            "version": "2.15.0"
+          },
+          {
+            "name": "pycodify",
+            "version": "0.1.3"
+          },
+          {
+            "name": "pyconify",
+            "version": "0.2.1"
+          },
+          {
+            "name": "pycparser",
+            "version": "3.0"
+          },
+          {
+            "name": "pydantic",
+            "version": "2.12.5"
+          },
+          {
+            "name": "pydantic-extra-types",
+            "version": "2.11.1"
+          },
+          {
+            "name": "pydantic-settings",
+            "version": "2.15.0"
+          },
+          {
+            "name": "pydantic-zarr",
+            "version": "0.10.0"
+          },
+          {
+            "name": "pydantic_core",
+            "version": "2.41.5"
+          },
+          {
+            "name": "pyelftools",
+            "version": "0.33"
+          },
+          {
+            "name": "Pygments",
+            "version": "2.21.0"
+          },
+          {
+            "name": "pyimagej",
+            "version": "1.7.0"
+          },
+          {
+            "name": "PyJWT",
+            "version": "2.15.1"
+          },
+          {
+            "name": "PyOpenGL",
+            "version": "3.1.10"
+          },
+          {
+            "name": "pyparsing",
+            "version": "3.3.3"
+          },
+          {
+            "name": "pyproject_hooks",
+            "version": "1.3.3"
+          },
+          {
+            "name": "pyqt-reactive",
+            "version": "0.3.27"
+          },
+          {
+            "name": "PyQt6",
+            "version": "6.11.0"
+          },
+          {
+            "name": "PyQt6-QScintilla",
+            "version": "2.14.1"
+          },
+          {
+            "name": "PyQt6-Qt6",
+            "version": "6.11.2"
+          },
+          {
+            "name": "PyQt6_sip",
+            "version": "13.12.0"
+          },
+          {
+            "name": "pyqtgraph",
+            "version": "0.14.0"
+          },
+          {
+            "name": "pytest",
+            "version": "9.1.1"
+          },
+          {
+            "name": "pytest-asyncio",
+            "version": "1.4.0"
+          },
+          {
+            "name": "pytest-cov",
+            "version": "7.1.0"
+          },
+          {
+            "name": "pytest-qt",
+            "version": "4.5.0"
+          },
+          {
+            "name": "pytest-xdist",
+            "version": "3.8.0"
+          },
+          {
+            "name": "python-dateutil",
+            "version": "2.9.0.post0"
+          },
+          {
+            "name": "python-dotenv",
+            "version": "1.2.3"
+          },
+          {
+            "name": "python-introspect",
+            "version": "0.2.1"
+          },
+          {
+            "name": "python-multipart",
+            "version": "0.0.32"
+          },
+          {
+            "name": "python-utils",
+            "version": "4.0.1"
+          },
+          {
+            "name": "pytokens",
+            "version": "0.4.1"
+          },
+          {
+            "name": "PyWavelets",
+            "version": "1.10.0"
+          },
+          {
+            "name": "PyYAML",
+            "version": "6.0.3"
+          },
+          {
+            "name": "pyzmq",
+            "version": "27.2.0"
+          },
+          {
+            "name": "qtconsole",
+            "version": "5.7.2"
+          },
+          {
+            "name": "QtPy",
+            "version": "2.4.3"
+          },
+          {
+            "name": "rangehttpserver",
+            "version": "1.4.0"
+          },
+          {
+            "name": "referencing",
+            "version": "0.37.0"
+          },
+          {
+            "name": "requests",
+            "version": "2.34.2"
+          },
+          {
+            "name": "requests-cache",
+            "version": "1.1.1"
+          },
+          {
+            "name": "rich",
+            "version": "15.0.0"
+          },
+          {
+            "name": "roifile",
+            "version": "2026.9.22"
+          },
+          {
+            "name": "rpds-py",
+            "version": "2026.6.3"
+          },
+          {
+            "name": "ruff",
+            "version": "0.16.9"
+          },
+          {
+            "name": "s3fs",
+            "version": "2026.9.0"
+          },
+          {
+            "name": "scikit-image",
+            "version": "0.26.0"
+          },
+          {
+            "name": "scikit-learn",
+            "version": "1.9.1"
+          },
+          {
+            "name": "scipy",
+            "version": "1.18.1"
+          },
+          {
+            "name": "scyjava",
+            "version": "1.12.5"
+          },
+          {
+            "name": "semver",
+            "version": "3.1.0"
+          },
+          {
+            "name": "setuptools",
+            "version": "84.0.0"
+          },
+          {
+            "name": "shellingham",
+            "version": "1.5.4"
+          },
+          {
+            "name": "six",
+            "version": "1.17.0"
+          },
+          {
+            "name": "skan",
+            "version": "0.13.1"
+          },
+          {
+            "name": "sse-starlette",
+            "version": "3.5.0"
+          },
+          {
+            "name": "stack-data",
+            "version": "0.6.3"
+          },
+          {
+            "name": "stackview",
+            "version": "0.19.1"
+          },
+          {
+            "name": "starlette",
+            "version": "1.7.0"
+          },
+          {
+            "name": "superqt",
+            "version": "0.8.2"
+          },
+          {
+            "name": "threadpoolctl",
+            "version": "3.7.0"
+          },
+          {
+            "name": "tifffile",
+            "version": "2026.9.20"
+          },
+          {
+            "name": "tomli_w",
+            "version": "1.2.0"
+          },
+          {
+            "name": "tomlkit",
+            "version": "0.15.1"
+          },
+          {
+            "name": "toolz",
+            "version": "1.1.0"
+          },
+          {
+            "name": "tornado",
+            "version": "6.5.10"
+          },
+          {
+            "name": "tqdm",
+            "version": "4.70.1"
+          },
+          {
+            "name": "traitlets",
+            "version": "5.16.1"
+          },
+          {
+            "name": "transformnd",
+            "version": "0.7.2"
+          },
+          {
+            "name": "typer",
+            "version": "0.27.2"
+          },
+          {
+            "name": "typing-inspection",
+            "version": "0.4.4"
+          },
+          {
+            "name": "typing_extensions",
+            "version": "4.16.0"
+          },
+          {
+            "name": "url-normalize",
+            "version": "3.0.1"
+          },
+          {
+            "name": "urllib3",
+            "version": "2.8.0"
+          },
+          {
+            "name": "uvicorn",
+            "version": "0.54.0"
+          },
+          {
+            "name": "vispy",
+            "version": "0.17.0"
+          },
+          {
+            "name": "watchdog",
+            "version": "6.0.0"
+          },
+          {
+            "name": "wcag-contrast-ratio",
+            "version": "0.9"
+          },
+          {
+            "name": "wcwidth",
+            "version": "0.9.1"
+          },
+          {
+            "name": "widgetsnbextension",
+            "version": "4.0.16"
+          },
+          {
+            "name": "wordcloud",
+            "version": "1.9.6"
+          },
+          {
+            "name": "wrapt",
+            "version": "2.5.0"
+          },
+          {
+            "name": "xarray",
+            "version": "2026.7.0"
+          },
+          {
+            "name": "xlsxwriter",
+            "version": "3.2.9"
+          },
+          {
+            "name": "yarl",
+            "version": "1.25.1"
+          },
+          {
+            "name": "zarr",
+            "version": "3.4.0"
+          },
+          {
+            "name": "zmqruntime",
+            "version": "0.4.1"
+          }
+        ],
+        "machine": "x86_64",
+        "python_executable": "/home/ts/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/bin/python3.12",
+        "python_implementation": "CPython",
+        "python_version": "3.12.14",
+        "sys_platform": "linux"
+      },
+      "native_environment": {
+        "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+        "python_version": "3.9.25",
+        "cellprofiler_version": "4.2.8.1",
+        "cellprofiler_core_version": "4.2.8.1",
+        "numpy_version": "1.24.4",
+        "scipy_version": "1.9.0",
+        "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_tmp",
+        "temporary_device": 66306,
+        "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+        "host_node": "ts-gaming",
+        "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+        "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+        "cpu_affinity": [
+          1,
+          4,
+          5
+        ]
+      },
+      "thread_environment": {
+        "OMP_NUM_THREADS": "1",
+        "OPENBLAS_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1",
+        "NUMEXPR_NUM_THREADS": "1",
+        "VECLIB_MAXIMUM_THREADS": "1",
+        "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+        "PYTHONHASHSEED": "0"
+      },
+      "mode": {
+        "wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009"
+        ],
+        "selected_source_wells": [
+          "A01"
+        ],
+        "assignment_scope": "independent repeated source assignments",
+        "native_job_count": 3,
+        "candidate_worker_count": 3,
+        "candidate_worker_start_method": "fork"
+      },
+      "native_shard_environments": [
+        {
+          "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+          "python_version": "3.9.25",
+          "cellprofiler_version": "4.2.8.1",
+          "cellprofiler_core_version": "4.2.8.1",
+          "numpy_version": "1.24.4",
+          "scipy_version": "1.9.0",
+          "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0_tmp",
+          "temporary_device": 66306,
+          "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+          "host_node": "ts-gaming",
+          "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+          "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+          "cpu_affinity": [
+            1,
+            4,
+            5
+          ]
+        },
+        {
+          "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+          "python_version": "3.9.25",
+          "cellprofiler_version": "4.2.8.1",
+          "cellprofiler_core_version": "4.2.8.1",
+          "numpy_version": "1.24.4",
+          "scipy_version": "1.9.0",
+          "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/1_tmp",
+          "temporary_device": 66306,
+          "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+          "host_node": "ts-gaming",
+          "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+          "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+          "cpu_affinity": [
+            1,
+            4,
+            5
+          ]
+        },
+        {
+          "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+          "python_version": "3.9.25",
+          "cellprofiler_version": "4.2.8.1",
+          "cellprofiler_core_version": "4.2.8.1",
+          "numpy_version": "1.24.4",
+          "scipy_version": "1.9.0",
+          "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/2_tmp",
+          "temporary_device": 66306,
+          "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+          "host_node": "ts-gaming",
+          "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+          "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+          "cpu_affinity": [
+            1,
+            4,
+            5
+          ]
+        }
+      ]
+    },
+    {
+      "case": "ExampleIlluminationCorrection_Example3",
+      "source_commit": "eb773573cced496fe5ee7bfeef7b961674958c1d",
+      "rows": [
+        {
+          "repetition": 0,
+          "native_execution_seconds": 2.371115478221327,
+          "native_total_seconds": 2.371839521918446,
+          "openhcs_execution_seconds": 0.7231040000915527,
+          "openhcs_total_seconds": 1.1020759269595146,
+          "openhcs_compile_seconds": 0.29953622817993164,
+          "openhcs_axis_only_seconds": 0.6456851959228516,
+          "openhcs_first_axis_to_completion_seconds": 0.6883952617645264
+        },
+        {
+          "repetition": 1,
+          "native_execution_seconds": 2.2305072909221053,
+          "native_total_seconds": 2.231199855916202,
+          "openhcs_execution_seconds": 0.7398197650909424,
+          "openhcs_total_seconds": 1.122681980021298,
+          "openhcs_compile_seconds": 0.29949259757995605,
+          "openhcs_axis_only_seconds": 0.6586167812347412,
+          "openhcs_first_axis_to_completion_seconds": 0.7046754360198975
+        },
+        {
+          "repetition": 2,
+          "native_execution_seconds": 2.051751964725554,
+          "native_total_seconds": 2.052436053752899,
+          "openhcs_execution_seconds": 0.7145431041717529,
+          "openhcs_total_seconds": 1.096594413742423,
+          "openhcs_compile_seconds": 0.30597949028015137,
+          "openhcs_axis_only_seconds": 0.6437721252441406,
+          "openhcs_first_axis_to_completion_seconds": 0.6800994873046875
+        }
+      ],
+      "receipts": [
+        {
+          "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/0/measured_pipeline_receipt.json",
+          "sha256": "7684869d5afba3e3e733e9b564b1ed0fadf719b43932c05e502b6655d6a8beb0",
+          "execution_id": "f987fc85-24ed-414e-8b67-9bcd3686506f"
+        },
+        {
+          "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/1/measured_pipeline_receipt.json",
+          "sha256": "2fd9f783b3228ccfb61164270b584c5f3aff1a0e4be0a018a52a22dd22e0f3d8",
+          "execution_id": "d8ff6ab9-684e-411f-98be-6cb3b894e08b"
+        },
+        {
+          "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/2/measured_pipeline_receipt.json",
+          "sha256": "c16277f9f365866a7ebb944f940e9c57d1b849d3957eccb2836e61fbd940e55f",
+          "execution_id": "9a491fc9-e412-41dc-b7f0-2f56dd30e708"
+        }
+      ],
+      "raw_inputs": {
+        "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/pilot_provenance.json": "e890694d7ac52bc1387f869105fe77fd37ad58ffb6b89a785ab04a427aee5d4c",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_report.json": "e7a8ae30512c84bb0b1ecd58617a7e4bd10a66214cd82672d9e6e3db8182f784",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/candidate_report.json": "b619110b5f04b9b34339ee6a8955e21448c05e87dfced19a0a07c7d8b6282b18",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_request.json": "109f2e7618e9415780aedf816eefea9ea4aba73752795cdc9601f0ba0b175952",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/reports.json": "2ab8727e7aec99fa328cae91e60ea6956fe5798dc043895bf4930bd70b68201b",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/equivalence.json": "de5eeadefeec2a97d30e80dd8b624538ad09f8a6c4c117c1fa6c46d3d171974f",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/0_report.json": "1bcb3d74e92365e95234cf7bfc06519b4979a8242913e3befd98176b76769cef",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/1_report.json": "2e8de0bfeb5d508b8d4c5ce754f186fd7765085417ee4f754bb3f2dbccf5dd77",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/2_report.json": "864f4e8e3c15c73f38afd1e71df1b811aa5789b2eebe693603cc49336f7870f8",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/request_0.json": "3afa0697a79204932b7d83d51adc8a2ad52b5e96a375cf13e783ceb289e8bc86",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/request_1.json": "6879d1b6f80097542c9ac9bb2bd269790473b0550ccee3e2b22f94e6f4d8f583",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/request_2.json": "93a06b799a197842285f0b318f46eaf19312b6388755de073897aeb67d05e080",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier/repetition_0_job_0.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier/repetition_0_job_1.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier/repetition_0_job_2.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier/repetition_1_job_0.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier/repetition_1_job_1.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier/repetition_1_job_2.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier/repetition_2_job_0.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier/repetition_2_job_1.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier/repetition_2_job_2.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/-1/well_throughput_progress_events.csv": "87c877afdeaeebc3a40ed3913e862415f8ccb0f9ead3949d06eb3cc8665b2bec",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/0/well_throughput_progress_events.csv": "2d8071c1defd5b477894c8154f395eeb5b4d10247b5718e770893fa6bb7ef005",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/1/well_throughput_progress_events.csv": "025e94223833990ab1c4813d8d5f5e40d0347e034037887cbff9694d270c912b",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/candidate_evidence/2/well_throughput_progress_events.csv": "b90c46e75e1d3a9c17b7b0c518bd5b2b9258d2d59613d310135d64a16d02855a"
+      },
+      "server_environment": {
+        "installed_distributions": [
+          {
+            "name": "abi3audit",
+            "version": "0.0.26"
+          },
+          {
+            "name": "abi3info",
+            "version": "2026.9.25"
+          },
+          {
+            "name": "aiobotocore",
+            "version": "3.9.1"
+          },
+          {
+            "name": "aiohappyeyeballs",
+            "version": "2.7.1"
+          },
+          {
+            "name": "aiohttp",
+            "version": "3.14.3"
+          },
+          {
+            "name": "aioitertools",
+            "version": "0.13.0"
+          },
+          {
+            "name": "aiosignal",
+            "version": "1.4.0"
+          },
+          {
+            "name": "annotated-doc",
+            "version": "0.0.5"
+          },
+          {
+            "name": "annotated-types",
+            "version": "0.8.0"
+          },
+          {
+            "name": "anyio",
+            "version": "4.15.1"
+          },
+          {
+            "name": "app-model",
+            "version": "0.5.1"
+          },
+          {
+            "name": "array-api-compat",
+            "version": "1.15.0"
+          },
+          {
+            "name": "arraybridge",
+            "version": "0.3.6"
+          },
+          {
+            "name": "ast_serialize",
+            "version": "0.11.2"
+          },
+          {
+            "name": "asttokens",
+            "version": "3.0.2"
+          },
+          {
+            "name": "attrs",
+            "version": "26.1.0"
+          },
+          {
+            "name": "autopep8",
+            "version": "2.3.2"
+          },
+          {
+            "name": "black",
+            "version": "26.5.1"
+          },
+          {
+            "name": "botocore",
+            "version": "1.43.75"
+          },
+          {
+            "name": "build",
+            "version": "1.6.1"
+          },
+          {
+            "name": "cachey",
+            "version": "0.2.1"
+          },
+          {
+            "name": "cattrs",
+            "version": "26.2.1"
+          },
+          {
+            "name": "centrosome",
+            "version": "1.3.4"
+          },
+          {
+            "name": "certifi",
+            "version": "2026.7.22"
+          },
+          {
+            "name": "cffi",
+            "version": "2.1.1"
+          },
+          {
+            "name": "charset-normalizer",
+            "version": "3.5.1"
+          },
+          {
+            "name": "cjdk",
+            "version": "0.5.0"
+          },
+          {
+            "name": "click",
+            "version": "8.5.0"
+          },
+          {
+            "name": "cloudpickle",
+            "version": "3.1.2"
+          },
+          {
+            "name": "colorama",
+            "version": "0.4.6"
+          },
+          {
+            "name": "comm",
+            "version": "0.2.3"
+          },
+          {
+            "name": "contourpy",
+            "version": "1.4.0"
+          },
+          {
+            "name": "coverage",
+            "version": "7.16.2"
+          },
+          {
+            "name": "cryptography",
+            "version": "50.0.1"
+          },
+          {
+            "name": "cycler",
+            "version": "0.12.1"
+          },
+          {
+            "name": "dask",
+            "version": "2026.8.0"
+          },
+          {
+            "name": "debugpy",
+            "version": "1.8.22"
+          },
+          {
+            "name": "defusedxml",
+            "version": "0.7.1"
+          },
+          {
+            "name": "Deprecated",
+            "version": "3.0.0"
+          },
+          {
+            "name": "deprecation",
+            "version": "2.1.0"
+          },
+          {
+            "name": "dill",
+            "version": "0.4.1"
+          },
+          {
+            "name": "distinctipy",
+            "version": "1.3.4"
+          },
+          {
+            "name": "docstring_parser",
+            "version": "0.18.0"
+          },
+          {
+            "name": "docutils",
+            "version": "0.23"
+          },
+          {
+            "name": "donfig",
+            "version": "0.8.1.post1"
+          },
+          {
+            "name": "et_xmlfile",
+            "version": "2.0.0"
+          },
+          {
+            "name": "execnet",
+            "version": "2.1.2"
+          },
+          {
+            "name": "executing",
+            "version": "2.2.1"
+          },
+          {
+            "name": "flexcache",
+            "version": "0.3"
+          },
+          {
+            "name": "flexparser",
+            "version": "0.4"
+          },
+          {
+            "name": "fonttools",
+            "version": "4.66.1"
+          },
+          {
+            "name": "freetype-py",
+            "version": "2.5.1"
+          },
+          {
+            "name": "frozenlist",
+            "version": "1.8.0"
+          },
+          {
+            "name": "fsspec",
+            "version": "2026.9.0"
+          },
+          {
+            "name": "genbadge",
+            "version": "1.1.3"
+          },
+          {
+            "name": "google-crc32c",
+            "version": "1.9.0"
+          },
+          {
+            "name": "GPUtil",
+            "version": "1.4.0"
+          },
+          {
+            "name": "h11",
+            "version": "0.16.0"
+          },
+          {
+            "name": "HeapDict",
+            "version": "1.0.1"
+          },
+          {
+            "name": "hsluv",
+            "version": "5.0.4"
+          },
+          {
+            "name": "httpcore",
+            "version": "1.0.9"
+          },
+          {
+            "name": "httpx",
+            "version": "0.28.1"
+          },
+          {
+            "name": "httpx-sse",
+            "version": "0.4.3"
+          },
+          {
+            "name": "idna",
+            "version": "3.20"
+          },
+          {
+            "name": "imagecodecs",
+            "version": "2026.8.16"
+          },
+          {
+            "name": "ImageIO",
+            "version": "2.38.0"
+          },
+          {
+            "name": "imglyb",
+            "version": "2.1.0"
+          },
+          {
+            "name": "in-n-out",
+            "version": "0.2.1"
+          },
+          {
+            "name": "iniconfig",
+            "version": "2.3.0"
+          },
+          {
+            "name": "ipycanvas",
+            "version": "0.14.3"
+          },
+          {
+            "name": "ipyevents",
+            "version": "2.0.4"
+          },
+          {
+            "name": "ipykernel",
+            "version": "6.31.0"
+          },
+          {
+            "name": "ipympl",
+            "version": "0.10.0"
+          },
+          {
+            "name": "ipython",
+            "version": "9.17.1"
+          },
+          {
+            "name": "ipython_pygments_lexers",
+            "version": "1.1.1"
+          },
+          {
+            "name": "ipywidgets",
+            "version": "8.1.9"
+          },
+          {
+            "name": "jax",
+            "version": "0.9.2"
+          },
+          {
+            "name": "jaxlib",
+            "version": "0.9.2"
+          },
+          {
+            "name": "jedi",
+            "version": "0.20.0"
+          },
+          {
+            "name": "jgo",
+            "version": "3.1.0"
+          },
+          {
+            "name": "jmespath",
+            "version": "1.1.0"
+          },
+          {
+            "name": "joblib",
+            "version": "1.6.0"
+          },
+          {
+            "name": "jpype1",
+            "version": "1.7.1"
+          },
+          {
+            "name": "jsonschema",
+            "version": "4.26.0"
+          },
+          {
+            "name": "jsonschema-specifications",
+            "version": "2025.9.1"
+          },
+          {
+            "name": "jupyter_client",
+            "version": "8.10.0"
+          },
+          {
+            "name": "jupyter_core",
+            "version": "5.9.1"
+          },
+          {
+            "name": "jupyterlab_widgets",
+            "version": "3.0.17"
+          },
+          {
+            "name": "kaitaistruct",
+            "version": "0.11"
+          },
+          {
+            "name": "kiwisolver",
+            "version": "1.5.1"
+          },
+          {
+            "name": "labeling",
+            "version": "0.1.15"
+          },
+          {
+            "name": "lazy-loader",
+            "version": "0.6"
+          },
+          {
+            "name": "librt",
+            "version": "0.16.0"
+          },
+          {
+            "name": "llvmlite",
+            "version": "0.49.0"
+          },
+          {
+            "name": "locket",
+            "version": "1.0.0"
+          },
+          {
+            "name": "lxml",
+            "version": "6.1.3"
+          },
+          {
+            "name": "magicgui",
+            "version": "0.10.2"
+          },
+          {
+            "name": "mahotas",
+            "version": "1.4.19"
+          },
+          {
+            "name": "markdown-it-py",
+            "version": "4.2.0"
+          },
+          {
+            "name": "matplotlib",
+            "version": "3.11.2"
+          },
+          {
+            "name": "matplotlib-inline",
+            "version": "0.2.2"
+          },
+          {
+            "name": "mcp",
+            "version": "1.30.0"
+          },
+          {
+            "name": "mdurl",
+            "version": "0.1.2"
+          },
+          {
+            "name": "metaclass-registry",
+            "version": "0.2.2"
+          },
+          {
+            "name": "ml_dtypes",
+            "version": "0.6.0"
+          },
+          {
+            "name": "msgspec",
+            "version": "0.22.0"
+          },
+          {
+            "name": "Multi-Template-Matching",
+            "version": "2.0.1"
+          },
+          {
+            "name": "multidict",
+            "version": "6.9.1"
+          },
+          {
+            "name": "mypy",
+            "version": "2.3.1"
+          },
+          {
+            "name": "mypy_extensions",
+            "version": "1.1.0"
+          },
+          {
+            "name": "napari",
+            "version": "0.9.2"
+          },
+          {
+            "name": "napari-console",
+            "version": "0.1.4"
+          },
+          {
+            "name": "napari-crop",
+            "version": "0.1.12"
+          },
+          {
+            "name": "napari-plugin-engine",
+            "version": "0.2.1"
+          },
+          {
+            "name": "napari-resources",
+            "version": "1.0.1"
+          },
+          {
+            "name": "napari-svg",
+            "version": "0.2.1"
+          },
+          {
+            "name": "napari-tools-menu",
+            "version": "0.1.20"
+          },
+          {
+            "name": "napari-workflows",
+            "version": "0.2.11"
+          },
+          {
+            "name": "narwhals",
+            "version": "2.26.0"
+          },
+          {
+            "name": "nest-asyncio",
+            "version": "1.6.0"
+          },
+          {
+            "name": "networkx",
+            "version": "3.7"
+          },
+          {
+            "name": "npe2",
+            "version": "0.9.0"
+          },
+          {
+            "name": "numba",
+            "version": "0.67.0"
+          },
+          {
+            "name": "numcodecs",
+            "version": "0.17.0"
+          },
+          {
+            "name": "numpy",
+            "version": "2.5.3"
+          },
+          {
+            "name": "objectstate",
+            "version": "1.3.1"
+          },
+          {
+            "name": "ome-zarr",
+            "version": "0.19.2"
+          },
+          {
+            "name": "ome-zarr-models",
+            "version": "1.8.1"
+          },
+          {
+            "name": "opencv-python-headless",
+            "version": "5.0.0.93"
+          },
+          {
+            "name": "openhcs",
+            "version": "0.8.7"
+          },
+          {
+            "name": "openhcs-basicpy",
+            "version": "1.3.1"
+          },
+          {
+            "name": "openpyxl",
+            "version": "3.1.5"
+          },
+          {
+            "name": "opt_einsum",
+            "version": "3.4.0"
+          },
+          {
+            "name": "packaging",
+            "version": "26.3"
+          },
+          {
+            "name": "pandas",
+            "version": "3.0.6"
+          },
+          {
+            "name": "parso",
+            "version": "0.8.7"
+          },
+          {
+            "name": "partd",
+            "version": "1.4.2"
+          },
+          {
+            "name": "pathspec",
+            "version": "1.1.1"
+          },
+          {
+            "name": "pefile",
+            "version": "2024.8.26"
+          },
+          {
+            "name": "pexpect",
+            "version": "4.9.0"
+          },
+          {
+            "name": "pillow",
+            "version": "11.3.0"
+          },
+          {
+            "name": "Pint",
+            "version": "0.26.1"
+          },
+          {
+            "name": "pip",
+            "version": "26.2.1"
+          },
+          {
+            "name": "platformdirs",
+            "version": "4.12.2"
+          },
+          {
+            "name": "pluggy",
+            "version": "1.6.0"
+          },
+          {
+            "name": "polystore",
+            "version": "0.3.3"
+          },
+          {
+            "name": "pooch",
+            "version": "1.9.0"
+          },
+          {
+            "name": "portalocker",
+            "version": "4.4.0"
+          },
+          {
+            "name": "progressbar2",
+            "version": "4.6.0"
+          },
+          {
+            "name": "prompt_toolkit",
+            "version": "3.0.53"
+          },
+          {
+            "name": "propcache",
+            "version": "0.5.4"
+          },
+          {
+            "name": "psutil",
+            "version": "7.2.2"
+          },
+          {
+            "name": "psygnal",
+            "version": "0.16.1"
+          },
+          {
+            "name": "ptyprocess",
+            "version": "0.7.0"
+          },
+          {
+            "name": "pure_eval",
+            "version": "0.2.4"
+          },
+          {
+            "name": "pycodestyle",
+            "version": "2.15.0"
+          },
+          {
+            "name": "pycodify",
+            "version": "0.1.3"
+          },
+          {
+            "name": "pyconify",
+            "version": "0.2.1"
+          },
+          {
+            "name": "pycparser",
+            "version": "3.0"
+          },
+          {
+            "name": "pydantic",
+            "version": "2.12.5"
+          },
+          {
+            "name": "pydantic-extra-types",
+            "version": "2.11.1"
+          },
+          {
+            "name": "pydantic-settings",
+            "version": "2.15.0"
+          },
+          {
+            "name": "pydantic-zarr",
+            "version": "0.10.0"
+          },
+          {
+            "name": "pydantic_core",
+            "version": "2.41.5"
+          },
+          {
+            "name": "pyelftools",
+            "version": "0.33"
+          },
+          {
+            "name": "Pygments",
+            "version": "2.21.0"
+          },
+          {
+            "name": "pyimagej",
+            "version": "1.7.0"
+          },
+          {
+            "name": "PyJWT",
+            "version": "2.15.1"
+          },
+          {
+            "name": "PyOpenGL",
+            "version": "3.1.10"
+          },
+          {
+            "name": "pyparsing",
+            "version": "3.3.3"
+          },
+          {
+            "name": "pyproject_hooks",
+            "version": "1.3.3"
+          },
+          {
+            "name": "pyqt-reactive",
+            "version": "0.3.27"
+          },
+          {
+            "name": "PyQt6",
+            "version": "6.11.0"
+          },
+          {
+            "name": "PyQt6-QScintilla",
+            "version": "2.14.1"
+          },
+          {
+            "name": "PyQt6-Qt6",
+            "version": "6.11.2"
+          },
+          {
+            "name": "PyQt6_sip",
+            "version": "13.12.0"
+          },
+          {
+            "name": "pyqtgraph",
+            "version": "0.14.0"
+          },
+          {
+            "name": "pytest",
+            "version": "9.1.1"
+          },
+          {
+            "name": "pytest-asyncio",
+            "version": "1.4.0"
+          },
+          {
+            "name": "pytest-cov",
+            "version": "7.1.0"
+          },
+          {
+            "name": "pytest-qt",
+            "version": "4.5.0"
+          },
+          {
+            "name": "pytest-xdist",
+            "version": "3.8.0"
+          },
+          {
+            "name": "python-dateutil",
+            "version": "2.9.0.post0"
+          },
+          {
+            "name": "python-dotenv",
+            "version": "1.2.3"
+          },
+          {
+            "name": "python-introspect",
+            "version": "0.2.1"
+          },
+          {
+            "name": "python-multipart",
+            "version": "0.0.32"
+          },
+          {
+            "name": "python-utils",
+            "version": "4.0.1"
+          },
+          {
+            "name": "pytokens",
+            "version": "0.4.1"
+          },
+          {
+            "name": "PyWavelets",
+            "version": "1.10.0"
+          },
+          {
+            "name": "PyYAML",
+            "version": "6.0.3"
+          },
+          {
+            "name": "pyzmq",
+            "version": "27.2.0"
+          },
+          {
+            "name": "qtconsole",
+            "version": "5.7.2"
+          },
+          {
+            "name": "QtPy",
+            "version": "2.4.3"
+          },
+          {
+            "name": "rangehttpserver",
+            "version": "1.4.0"
+          },
+          {
+            "name": "referencing",
+            "version": "0.37.0"
+          },
+          {
+            "name": "requests",
+            "version": "2.34.2"
+          },
+          {
+            "name": "requests-cache",
+            "version": "1.1.1"
+          },
+          {
+            "name": "rich",
+            "version": "15.0.0"
+          },
+          {
+            "name": "roifile",
+            "version": "2026.9.22"
+          },
+          {
+            "name": "rpds-py",
+            "version": "2026.6.3"
+          },
+          {
+            "name": "ruff",
+            "version": "0.16.9"
+          },
+          {
+            "name": "s3fs",
+            "version": "2026.9.0"
+          },
+          {
+            "name": "scikit-image",
+            "version": "0.26.0"
+          },
+          {
+            "name": "scikit-learn",
+            "version": "1.9.1"
+          },
+          {
+            "name": "scipy",
+            "version": "1.18.1"
+          },
+          {
+            "name": "scyjava",
+            "version": "1.12.5"
+          },
+          {
+            "name": "semver",
+            "version": "3.1.0"
+          },
+          {
+            "name": "setuptools",
+            "version": "84.0.0"
+          },
+          {
+            "name": "shellingham",
+            "version": "1.5.4"
+          },
+          {
+            "name": "six",
+            "version": "1.17.0"
+          },
+          {
+            "name": "skan",
+            "version": "0.13.1"
+          },
+          {
+            "name": "sse-starlette",
+            "version": "3.5.0"
+          },
+          {
+            "name": "stack-data",
+            "version": "0.6.3"
+          },
+          {
+            "name": "stackview",
+            "version": "0.19.1"
+          },
+          {
+            "name": "starlette",
+            "version": "1.7.0"
+          },
+          {
+            "name": "superqt",
+            "version": "0.8.2"
+          },
+          {
+            "name": "threadpoolctl",
+            "version": "3.7.0"
+          },
+          {
+            "name": "tifffile",
+            "version": "2026.9.20"
+          },
+          {
+            "name": "tomli_w",
+            "version": "1.2.0"
+          },
+          {
+            "name": "tomlkit",
+            "version": "0.15.1"
+          },
+          {
+            "name": "toolz",
+            "version": "1.1.0"
+          },
+          {
+            "name": "tornado",
+            "version": "6.5.10"
+          },
+          {
+            "name": "tqdm",
+            "version": "4.70.1"
+          },
+          {
+            "name": "traitlets",
+            "version": "5.16.1"
+          },
+          {
+            "name": "transformnd",
+            "version": "0.7.2"
+          },
+          {
+            "name": "typer",
+            "version": "0.27.2"
+          },
+          {
+            "name": "typing-inspection",
+            "version": "0.4.4"
+          },
+          {
+            "name": "typing_extensions",
+            "version": "4.16.0"
+          },
+          {
+            "name": "url-normalize",
+            "version": "3.0.1"
+          },
+          {
+            "name": "urllib3",
+            "version": "2.8.0"
+          },
+          {
+            "name": "uvicorn",
+            "version": "0.54.0"
+          },
+          {
+            "name": "vispy",
+            "version": "0.17.0"
+          },
+          {
+            "name": "watchdog",
+            "version": "6.0.0"
+          },
+          {
+            "name": "wcag-contrast-ratio",
+            "version": "0.9"
+          },
+          {
+            "name": "wcwidth",
+            "version": "0.9.1"
+          },
+          {
+            "name": "widgetsnbextension",
+            "version": "4.0.16"
+          },
+          {
+            "name": "wordcloud",
+            "version": "1.9.6"
+          },
+          {
+            "name": "wrapt",
+            "version": "2.5.0"
+          },
+          {
+            "name": "xarray",
+            "version": "2026.7.0"
+          },
+          {
+            "name": "xlsxwriter",
+            "version": "3.2.9"
+          },
+          {
+            "name": "yarl",
+            "version": "1.25.1"
+          },
+          {
+            "name": "zarr",
+            "version": "3.4.0"
+          },
+          {
+            "name": "zmqruntime",
+            "version": "0.4.1"
+          }
+        ],
+        "machine": "x86_64",
+        "python_executable": "/home/ts/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/bin/python3.12",
+        "python_implementation": "CPython",
+        "python_version": "3.12.14",
+        "sys_platform": "linux"
+      },
+      "native_environment": {
+        "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+        "python_version": "3.9.25",
+        "cellprofiler_version": "4.2.8.1",
+        "cellprofiler_core_version": "4.2.8.1",
+        "numpy_version": "1.24.4",
+        "scipy_version": "1.9.0",
+        "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_tmp",
+        "temporary_device": 66306,
+        "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+        "host_node": "ts-gaming",
+        "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+        "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+        "cpu_affinity": [
+          1,
+          4,
+          5
+        ]
+      },
+      "thread_environment": {
+        "OMP_NUM_THREADS": "1",
+        "OPENBLAS_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1",
+        "NUMEXPR_NUM_THREADS": "1",
+        "VECLIB_MAXIMUM_THREADS": "1",
+        "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+        "PYTHONHASHSEED": "0"
+      },
+      "mode": {
+        "wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009"
+        ],
+        "selected_source_wells": [
+          "A01"
+        ],
+        "assignment_scope": "independent repeated source assignments",
+        "native_job_count": 3,
+        "candidate_worker_count": 3,
+        "candidate_worker_start_method": "fork"
+      },
+      "native_shard_environments": [
+        {
+          "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+          "python_version": "3.9.25",
+          "cellprofiler_version": "4.2.8.1",
+          "cellprofiler_core_version": "4.2.8.1",
+          "numpy_version": "1.24.4",
+          "scipy_version": "1.9.0",
+          "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/0_tmp",
+          "temporary_device": 66306,
+          "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+          "host_node": "ts-gaming",
+          "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+          "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+          "cpu_affinity": [
+            1,
+            4,
+            5
+          ]
+        },
+        {
+          "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+          "python_version": "3.9.25",
+          "cellprofiler_version": "4.2.8.1",
+          "cellprofiler_core_version": "4.2.8.1",
+          "numpy_version": "1.24.4",
+          "scipy_version": "1.9.0",
+          "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/1_tmp",
+          "temporary_device": 66306,
+          "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+          "host_node": "ts-gaming",
+          "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+          "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+          "cpu_affinity": [
+            1,
+            4,
+            5
+          ]
+        },
+        {
+          "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+          "python_version": "3.9.25",
+          "cellprofiler_version": "4.2.8.1",
+          "cellprofiler_core_version": "4.2.8.1",
+          "numpy_version": "1.24.4",
+          "scipy_version": "1.9.0",
+          "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/2_tmp",
+          "temporary_device": 66306,
+          "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+          "host_node": "ts-gaming",
+          "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+          "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+          "cpu_affinity": [
+            1,
+            4,
+            5
+          ]
+        }
+      ]
+    },
+    {
+      "case": "cp_tutorial_3d_monolayer",
+      "source_commit": "eb773573cced496fe5ee7bfeef7b961674958c1d",
+      "rows": [
+        {
+          "repetition": 0,
+          "native_execution_seconds": 45.97763208905235,
+          "native_total_seconds": 45.97839789232239,
+          "openhcs_execution_seconds": 11.420237302780151,
+          "openhcs_total_seconds": 12.91492210002616,
+          "openhcs_compile_seconds": 1.335585117340088,
+          "openhcs_axis_only_seconds": 10.645095825195312,
+          "openhcs_first_axis_to_completion_seconds": 11.36342978477478
+        },
+        {
+          "repetition": 1,
+          "native_execution_seconds": 45.03852380486205,
+          "native_total_seconds": 45.03928797412664,
+          "openhcs_execution_seconds": 12.142255544662476,
+          "openhcs_total_seconds": 13.62584541644901,
+          "openhcs_compile_seconds": 1.339019775390625,
+          "openhcs_axis_only_seconds": 11.42562484741211,
+          "openhcs_first_axis_to_completion_seconds": 12.09024453163147
+        },
+        {
+          "repetition": 2,
+          "native_execution_seconds": 49.13787537813187,
+          "native_total_seconds": 49.138633565977216,
+          "openhcs_execution_seconds": 12.172105073928833,
+          "openhcs_total_seconds": 13.65851897187531,
+          "openhcs_compile_seconds": 1.3308563232421875,
+          "openhcs_axis_only_seconds": 11.44437050819397,
+          "openhcs_first_axis_to_completion_seconds": 12.115228414535522
+        }
+      ],
+      "receipts": [
+        {
+          "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/0/measured_pipeline_receipt.json",
+          "sha256": "dcc86e38da1c7511122f8c4b625fde40665b74834c5ce91a95a85006e54a232b",
+          "execution_id": "938e1960-e52b-42ea-a6b0-ec35ec143100"
+        },
+        {
+          "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/1/measured_pipeline_receipt.json",
+          "sha256": "4290f34b72957793bf726b63ca4e23f88215080eb7213660e990e518a08f20b3",
+          "execution_id": "6883cb90-37fb-4143-97df-b4b35a346a6b"
+        },
+        {
+          "path": "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/2/measured_pipeline_receipt.json",
+          "sha256": "2b6d5ea65a6dc413a516aa96aad022ee1742aba5c6e662fbedc20f3e92a28286",
+          "execution_id": "476c8200-54c8-463b-94c6-114e293f1ff7"
+        }
+      ],
+      "raw_inputs": {
+        "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/pilot_provenance.json": "4aff92fd2ffeebed53f7233f5a2022a4bf70fbeb02c75ccea7a2610f4b32146b",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_report.json": "c59831f79775394aa15262ba214ce8a2b30b867f2df42a760a5d99a5c2b794a5",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/candidate_report.json": "6cf482305bc9d05055d99b905d0e2febcf437770b665c1681310817ca2124436",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_request.json": "e180bed7d72a50b34d1a6d3a491e00c6fa41108f4c630f0f6f9654c3511fe5a1",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/reports.json": "821c6e799ee8067a6b46ea60bb87f754f3a46fdd1b086fba6861c9f24e3b6d8d",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/equivalence.json": "92273a2b321a2ceefdb66a05bb139bec4a1a038e19bd2979cc01676fe0accb58",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/0_report.json": "babc866bb9f826274a6b2a7b8ee99b69e52d7165d2ef1447509e68f1124e2136",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/1_report.json": "78e94c8ccda0616c666cea6a5e8d31f01f61813ce9f29509580ac8ece96f0488",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/2_report.json": "0322533359fc76777b952b8e6629475968161fbae600d7935373d49c4616f2e8",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/request_0.json": "a54a736f6295853416e8419ab7dcd22ca10010da154d6df5fb44b7d0107364f8",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/request_1.json": "0cc90924b89401454e87ed3b50d0e22a10379e52393e3badb8ac897775e57d64",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/request_2.json": "20ff5757384b6f17591bbd5f1d260981dc5a975807fa20b05a8ded700480aead",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/start_barrier/repetition_0_job_0.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/start_barrier/repetition_0_job_1.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/start_barrier/repetition_0_job_2.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/start_barrier/repetition_1_job_0.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/start_barrier/repetition_1_job_1.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/start_barrier/repetition_1_job_2.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/start_barrier/repetition_2_job_0.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/start_barrier/repetition_2_job_1.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/start_barrier/repetition_2_job_2.ready": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/-1/well_throughput_progress_events.csv": "6b6e46c198749cad8255350e7d9ee07fe895d7bb76a28f6c13fed4871a32fcdc",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/0/well_throughput_progress_events.csv": "36c0e4c0aaf9e27bdf81a02a871efbddfe96a2776ae9d0a096b1b4f0cffe107e",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/1/well_throughput_progress_events.csv": "fc652277c86f8c4d371293cc922694344e299c183368031747f3604e0bccb87f",
+        "/home/ts/.local/state/openhcs-maintenance/20261006/final-postgrid-qualification-preparation-v2/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/candidate_evidence/2/well_throughput_progress_events.csv": "487d6c6370ddf0f4eed0de87d4f1aa08c08f96dca47b7cbfc5ead62167fe5a47"
+      },
+      "server_environment": {
+        "installed_distributions": [
+          {
+            "name": "abi3audit",
+            "version": "0.0.26"
+          },
+          {
+            "name": "abi3info",
+            "version": "2026.9.25"
+          },
+          {
+            "name": "aiobotocore",
+            "version": "3.9.1"
+          },
+          {
+            "name": "aiohappyeyeballs",
+            "version": "2.7.1"
+          },
+          {
+            "name": "aiohttp",
+            "version": "3.14.3"
+          },
+          {
+            "name": "aioitertools",
+            "version": "0.13.0"
+          },
+          {
+            "name": "aiosignal",
+            "version": "1.4.0"
+          },
+          {
+            "name": "annotated-doc",
+            "version": "0.0.5"
+          },
+          {
+            "name": "annotated-types",
+            "version": "0.8.0"
+          },
+          {
+            "name": "anyio",
+            "version": "4.15.1"
+          },
+          {
+            "name": "app-model",
+            "version": "0.5.1"
+          },
+          {
+            "name": "array-api-compat",
+            "version": "1.15.0"
+          },
+          {
+            "name": "arraybridge",
+            "version": "0.3.6"
+          },
+          {
+            "name": "ast_serialize",
+            "version": "0.11.2"
+          },
+          {
+            "name": "asttokens",
+            "version": "3.0.2"
+          },
+          {
+            "name": "attrs",
+            "version": "26.1.0"
+          },
+          {
+            "name": "autopep8",
+            "version": "2.3.2"
+          },
+          {
+            "name": "black",
+            "version": "26.5.1"
+          },
+          {
+            "name": "botocore",
+            "version": "1.43.75"
+          },
+          {
+            "name": "build",
+            "version": "1.6.1"
+          },
+          {
+            "name": "cachey",
+            "version": "0.2.1"
+          },
+          {
+            "name": "cattrs",
+            "version": "26.2.1"
+          },
+          {
+            "name": "centrosome",
+            "version": "1.3.4"
+          },
+          {
+            "name": "certifi",
+            "version": "2026.7.22"
+          },
+          {
+            "name": "cffi",
+            "version": "2.1.1"
+          },
+          {
+            "name": "charset-normalizer",
+            "version": "3.5.1"
+          },
+          {
+            "name": "cjdk",
+            "version": "0.5.0"
+          },
+          {
+            "name": "click",
+            "version": "8.5.0"
+          },
+          {
+            "name": "cloudpickle",
+            "version": "3.1.2"
+          },
+          {
+            "name": "colorama",
+            "version": "0.4.6"
+          },
+          {
+            "name": "comm",
+            "version": "0.2.3"
+          },
+          {
+            "name": "contourpy",
+            "version": "1.4.0"
+          },
+          {
+            "name": "coverage",
+            "version": "7.16.2"
+          },
+          {
+            "name": "cryptography",
+            "version": "50.0.1"
+          },
+          {
+            "name": "cycler",
+            "version": "0.12.1"
+          },
+          {
+            "name": "dask",
+            "version": "2026.8.0"
+          },
+          {
+            "name": "debugpy",
+            "version": "1.8.22"
+          },
+          {
+            "name": "defusedxml",
+            "version": "0.7.1"
+          },
+          {
+            "name": "Deprecated",
+            "version": "3.0.0"
+          },
+          {
+            "name": "deprecation",
+            "version": "2.1.0"
+          },
+          {
+            "name": "dill",
+            "version": "0.4.1"
+          },
+          {
+            "name": "distinctipy",
+            "version": "1.3.4"
+          },
+          {
+            "name": "docstring_parser",
+            "version": "0.18.0"
+          },
+          {
+            "name": "docutils",
+            "version": "0.23"
+          },
+          {
+            "name": "donfig",
+            "version": "0.8.1.post1"
+          },
+          {
+            "name": "et_xmlfile",
+            "version": "2.0.0"
+          },
+          {
+            "name": "execnet",
+            "version": "2.1.2"
+          },
+          {
+            "name": "executing",
+            "version": "2.2.1"
+          },
+          {
+            "name": "flexcache",
+            "version": "0.3"
+          },
+          {
+            "name": "flexparser",
+            "version": "0.4"
+          },
+          {
+            "name": "fonttools",
+            "version": "4.66.1"
+          },
+          {
+            "name": "freetype-py",
+            "version": "2.5.1"
+          },
+          {
+            "name": "frozenlist",
+            "version": "1.8.0"
+          },
+          {
+            "name": "fsspec",
+            "version": "2026.9.0"
+          },
+          {
+            "name": "genbadge",
+            "version": "1.1.3"
+          },
+          {
+            "name": "google-crc32c",
+            "version": "1.9.0"
+          },
+          {
+            "name": "GPUtil",
+            "version": "1.4.0"
+          },
+          {
+            "name": "h11",
+            "version": "0.16.0"
+          },
+          {
+            "name": "HeapDict",
+            "version": "1.0.1"
+          },
+          {
+            "name": "hsluv",
+            "version": "5.0.4"
+          },
+          {
+            "name": "httpcore",
+            "version": "1.0.9"
+          },
+          {
+            "name": "httpx",
+            "version": "0.28.1"
+          },
+          {
+            "name": "httpx-sse",
+            "version": "0.4.3"
+          },
+          {
+            "name": "idna",
+            "version": "3.20"
+          },
+          {
+            "name": "imagecodecs",
+            "version": "2026.8.16"
+          },
+          {
+            "name": "ImageIO",
+            "version": "2.38.0"
+          },
+          {
+            "name": "imglyb",
+            "version": "2.1.0"
+          },
+          {
+            "name": "in-n-out",
+            "version": "0.2.1"
+          },
+          {
+            "name": "iniconfig",
+            "version": "2.3.0"
+          },
+          {
+            "name": "ipycanvas",
+            "version": "0.14.3"
+          },
+          {
+            "name": "ipyevents",
+            "version": "2.0.4"
+          },
+          {
+            "name": "ipykernel",
+            "version": "6.31.0"
+          },
+          {
+            "name": "ipympl",
+            "version": "0.10.0"
+          },
+          {
+            "name": "ipython",
+            "version": "9.17.1"
+          },
+          {
+            "name": "ipython_pygments_lexers",
+            "version": "1.1.1"
+          },
+          {
+            "name": "ipywidgets",
+            "version": "8.1.9"
+          },
+          {
+            "name": "jax",
+            "version": "0.9.2"
+          },
+          {
+            "name": "jaxlib",
+            "version": "0.9.2"
+          },
+          {
+            "name": "jedi",
+            "version": "0.20.0"
+          },
+          {
+            "name": "jgo",
+            "version": "3.1.0"
+          },
+          {
+            "name": "jmespath",
+            "version": "1.1.0"
+          },
+          {
+            "name": "joblib",
+            "version": "1.6.0"
+          },
+          {
+            "name": "jpype1",
+            "version": "1.7.1"
+          },
+          {
+            "name": "jsonschema",
+            "version": "4.26.0"
+          },
+          {
+            "name": "jsonschema-specifications",
+            "version": "2025.9.1"
+          },
+          {
+            "name": "jupyter_client",
+            "version": "8.10.0"
+          },
+          {
+            "name": "jupyter_core",
+            "version": "5.9.1"
+          },
+          {
+            "name": "jupyterlab_widgets",
+            "version": "3.0.17"
+          },
+          {
+            "name": "kaitaistruct",
+            "version": "0.11"
+          },
+          {
+            "name": "kiwisolver",
+            "version": "1.5.1"
+          },
+          {
+            "name": "labeling",
+            "version": "0.1.15"
+          },
+          {
+            "name": "lazy-loader",
+            "version": "0.6"
+          },
+          {
+            "name": "librt",
+            "version": "0.16.0"
+          },
+          {
+            "name": "llvmlite",
+            "version": "0.49.0"
+          },
+          {
+            "name": "locket",
+            "version": "1.0.0"
+          },
+          {
+            "name": "lxml",
+            "version": "6.1.3"
+          },
+          {
+            "name": "magicgui",
+            "version": "0.10.2"
+          },
+          {
+            "name": "mahotas",
+            "version": "1.4.19"
+          },
+          {
+            "name": "markdown-it-py",
+            "version": "4.2.0"
+          },
+          {
+            "name": "matplotlib",
+            "version": "3.11.2"
+          },
+          {
+            "name": "matplotlib-inline",
+            "version": "0.2.2"
+          },
+          {
+            "name": "mcp",
+            "version": "1.30.0"
+          },
+          {
+            "name": "mdurl",
+            "version": "0.1.2"
+          },
+          {
+            "name": "metaclass-registry",
+            "version": "0.2.2"
+          },
+          {
+            "name": "ml_dtypes",
+            "version": "0.6.0"
+          },
+          {
+            "name": "msgspec",
+            "version": "0.22.0"
+          },
+          {
+            "name": "Multi-Template-Matching",
+            "version": "2.0.1"
+          },
+          {
+            "name": "multidict",
+            "version": "6.9.1"
+          },
+          {
+            "name": "mypy",
+            "version": "2.3.1"
+          },
+          {
+            "name": "mypy_extensions",
+            "version": "1.1.0"
+          },
+          {
+            "name": "napari",
+            "version": "0.9.2"
+          },
+          {
+            "name": "napari-console",
+            "version": "0.1.4"
+          },
+          {
+            "name": "napari-crop",
+            "version": "0.1.12"
+          },
+          {
+            "name": "napari-plugin-engine",
+            "version": "0.2.1"
+          },
+          {
+            "name": "napari-resources",
+            "version": "1.0.1"
+          },
+          {
+            "name": "napari-svg",
+            "version": "0.2.1"
+          },
+          {
+            "name": "napari-tools-menu",
+            "version": "0.1.20"
+          },
+          {
+            "name": "napari-workflows",
+            "version": "0.2.11"
+          },
+          {
+            "name": "narwhals",
+            "version": "2.26.0"
+          },
+          {
+            "name": "nest-asyncio",
+            "version": "1.6.0"
+          },
+          {
+            "name": "networkx",
+            "version": "3.7"
+          },
+          {
+            "name": "npe2",
+            "version": "0.9.0"
+          },
+          {
+            "name": "numba",
+            "version": "0.67.0"
+          },
+          {
+            "name": "numcodecs",
+            "version": "0.17.0"
+          },
+          {
+            "name": "numpy",
+            "version": "2.5.3"
+          },
+          {
+            "name": "objectstate",
+            "version": "1.3.1"
+          },
+          {
+            "name": "ome-zarr",
+            "version": "0.19.2"
+          },
+          {
+            "name": "ome-zarr-models",
+            "version": "1.8.1"
+          },
+          {
+            "name": "opencv-python-headless",
+            "version": "5.0.0.93"
+          },
+          {
+            "name": "openhcs",
+            "version": "0.8.7"
+          },
+          {
+            "name": "openhcs-basicpy",
+            "version": "1.3.1"
+          },
+          {
+            "name": "openpyxl",
+            "version": "3.1.5"
+          },
+          {
+            "name": "opt_einsum",
+            "version": "3.4.0"
+          },
+          {
+            "name": "packaging",
+            "version": "26.3"
+          },
+          {
+            "name": "pandas",
+            "version": "3.0.6"
+          },
+          {
+            "name": "parso",
+            "version": "0.8.7"
+          },
+          {
+            "name": "partd",
+            "version": "1.4.2"
+          },
+          {
+            "name": "pathspec",
+            "version": "1.1.1"
+          },
+          {
+            "name": "pefile",
+            "version": "2024.8.26"
+          },
+          {
+            "name": "pexpect",
+            "version": "4.9.0"
+          },
+          {
+            "name": "pillow",
+            "version": "11.3.0"
+          },
+          {
+            "name": "Pint",
+            "version": "0.26.1"
+          },
+          {
+            "name": "pip",
+            "version": "26.2.1"
+          },
+          {
+            "name": "platformdirs",
+            "version": "4.12.2"
+          },
+          {
+            "name": "pluggy",
+            "version": "1.6.0"
+          },
+          {
+            "name": "polystore",
+            "version": "0.3.3"
+          },
+          {
+            "name": "pooch",
+            "version": "1.9.0"
+          },
+          {
+            "name": "portalocker",
+            "version": "4.4.0"
+          },
+          {
+            "name": "progressbar2",
+            "version": "4.6.0"
+          },
+          {
+            "name": "prompt_toolkit",
+            "version": "3.0.53"
+          },
+          {
+            "name": "propcache",
+            "version": "0.5.4"
+          },
+          {
+            "name": "psutil",
+            "version": "7.2.2"
+          },
+          {
+            "name": "psygnal",
+            "version": "0.16.1"
+          },
+          {
+            "name": "ptyprocess",
+            "version": "0.7.0"
+          },
+          {
+            "name": "pure_eval",
+            "version": "0.2.4"
+          },
+          {
+            "name": "pycodestyle",
+            "version": "2.15.0"
+          },
+          {
+            "name": "pycodify",
+            "version": "0.1.3"
+          },
+          {
+            "name": "pyconify",
+            "version": "0.2.1"
+          },
+          {
+            "name": "pycparser",
+            "version": "3.0"
+          },
+          {
+            "name": "pydantic",
+            "version": "2.12.5"
+          },
+          {
+            "name": "pydantic-extra-types",
+            "version": "2.11.1"
+          },
+          {
+            "name": "pydantic-settings",
+            "version": "2.15.0"
+          },
+          {
+            "name": "pydantic-zarr",
+            "version": "0.10.0"
+          },
+          {
+            "name": "pydantic_core",
+            "version": "2.41.5"
+          },
+          {
+            "name": "pyelftools",
+            "version": "0.33"
+          },
+          {
+            "name": "Pygments",
+            "version": "2.21.0"
+          },
+          {
+            "name": "pyimagej",
+            "version": "1.7.0"
+          },
+          {
+            "name": "PyJWT",
+            "version": "2.15.1"
+          },
+          {
+            "name": "PyOpenGL",
+            "version": "3.1.10"
+          },
+          {
+            "name": "pyparsing",
+            "version": "3.3.3"
+          },
+          {
+            "name": "pyproject_hooks",
+            "version": "1.3.3"
+          },
+          {
+            "name": "pyqt-reactive",
+            "version": "0.3.27"
+          },
+          {
+            "name": "PyQt6",
+            "version": "6.11.0"
+          },
+          {
+            "name": "PyQt6-QScintilla",
+            "version": "2.14.1"
+          },
+          {
+            "name": "PyQt6-Qt6",
+            "version": "6.11.2"
+          },
+          {
+            "name": "PyQt6_sip",
+            "version": "13.12.0"
+          },
+          {
+            "name": "pyqtgraph",
+            "version": "0.14.0"
+          },
+          {
+            "name": "pytest",
+            "version": "9.1.1"
+          },
+          {
+            "name": "pytest-asyncio",
+            "version": "1.4.0"
+          },
+          {
+            "name": "pytest-cov",
+            "version": "7.1.0"
+          },
+          {
+            "name": "pytest-qt",
+            "version": "4.5.0"
+          },
+          {
+            "name": "pytest-xdist",
+            "version": "3.8.0"
+          },
+          {
+            "name": "python-dateutil",
+            "version": "2.9.0.post0"
+          },
+          {
+            "name": "python-dotenv",
+            "version": "1.2.3"
+          },
+          {
+            "name": "python-introspect",
+            "version": "0.2.1"
+          },
+          {
+            "name": "python-multipart",
+            "version": "0.0.32"
+          },
+          {
+            "name": "python-utils",
+            "version": "4.0.1"
+          },
+          {
+            "name": "pytokens",
+            "version": "0.4.1"
+          },
+          {
+            "name": "PyWavelets",
+            "version": "1.10.0"
+          },
+          {
+            "name": "PyYAML",
+            "version": "6.0.3"
+          },
+          {
+            "name": "pyzmq",
+            "version": "27.2.0"
+          },
+          {
+            "name": "qtconsole",
+            "version": "5.7.2"
+          },
+          {
+            "name": "QtPy",
+            "version": "2.4.3"
+          },
+          {
+            "name": "rangehttpserver",
+            "version": "1.4.0"
+          },
+          {
+            "name": "referencing",
+            "version": "0.37.0"
+          },
+          {
+            "name": "requests",
+            "version": "2.34.2"
+          },
+          {
+            "name": "requests-cache",
+            "version": "1.1.1"
+          },
+          {
+            "name": "rich",
+            "version": "15.0.0"
+          },
+          {
+            "name": "roifile",
+            "version": "2026.9.22"
+          },
+          {
+            "name": "rpds-py",
+            "version": "2026.6.3"
+          },
+          {
+            "name": "ruff",
+            "version": "0.16.9"
+          },
+          {
+            "name": "s3fs",
+            "version": "2026.9.0"
+          },
+          {
+            "name": "scikit-image",
+            "version": "0.26.0"
+          },
+          {
+            "name": "scikit-learn",
+            "version": "1.9.1"
+          },
+          {
+            "name": "scipy",
+            "version": "1.18.1"
+          },
+          {
+            "name": "scyjava",
+            "version": "1.12.5"
+          },
+          {
+            "name": "semver",
+            "version": "3.1.0"
+          },
+          {
+            "name": "setuptools",
+            "version": "84.0.0"
+          },
+          {
+            "name": "shellingham",
+            "version": "1.5.4"
+          },
+          {
+            "name": "six",
+            "version": "1.17.0"
+          },
+          {
+            "name": "skan",
+            "version": "0.13.1"
+          },
+          {
+            "name": "sse-starlette",
+            "version": "3.5.0"
+          },
+          {
+            "name": "stack-data",
+            "version": "0.6.3"
+          },
+          {
+            "name": "stackview",
+            "version": "0.19.1"
+          },
+          {
+            "name": "starlette",
+            "version": "1.7.0"
+          },
+          {
+            "name": "superqt",
+            "version": "0.8.2"
+          },
+          {
+            "name": "threadpoolctl",
+            "version": "3.7.0"
+          },
+          {
+            "name": "tifffile",
+            "version": "2026.9.20"
+          },
+          {
+            "name": "tomli_w",
+            "version": "1.2.0"
+          },
+          {
+            "name": "tomlkit",
+            "version": "0.15.1"
+          },
+          {
+            "name": "toolz",
+            "version": "1.1.0"
+          },
+          {
+            "name": "tornado",
+            "version": "6.5.10"
+          },
+          {
+            "name": "tqdm",
+            "version": "4.70.1"
+          },
+          {
+            "name": "traitlets",
+            "version": "5.16.1"
+          },
+          {
+            "name": "transformnd",
+            "version": "0.7.2"
+          },
+          {
+            "name": "typer",
+            "version": "0.27.2"
+          },
+          {
+            "name": "typing-inspection",
+            "version": "0.4.4"
+          },
+          {
+            "name": "typing_extensions",
+            "version": "4.16.0"
+          },
+          {
+            "name": "url-normalize",
+            "version": "3.0.1"
+          },
+          {
+            "name": "urllib3",
+            "version": "2.8.0"
+          },
+          {
+            "name": "uvicorn",
+            "version": "0.54.0"
+          },
+          {
+            "name": "vispy",
+            "version": "0.17.0"
+          },
+          {
+            "name": "watchdog",
+            "version": "6.0.0"
+          },
+          {
+            "name": "wcag-contrast-ratio",
+            "version": "0.9"
+          },
+          {
+            "name": "wcwidth",
+            "version": "0.9.1"
+          },
+          {
+            "name": "widgetsnbextension",
+            "version": "4.0.16"
+          },
+          {
+            "name": "wordcloud",
+            "version": "1.9.6"
+          },
+          {
+            "name": "wrapt",
+            "version": "2.5.0"
+          },
+          {
+            "name": "xarray",
+            "version": "2026.7.0"
+          },
+          {
+            "name": "xlsxwriter",
+            "version": "3.2.9"
+          },
+          {
+            "name": "yarl",
+            "version": "1.25.1"
+          },
+          {
+            "name": "zarr",
+            "version": "3.4.0"
+          },
+          {
+            "name": "zmqruntime",
+            "version": "0.4.1"
+          }
+        ],
+        "machine": "x86_64",
+        "python_executable": "/home/ts/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/bin/python3.12",
+        "python_implementation": "CPython",
+        "python_version": "3.12.14",
+        "sys_platform": "linux"
+      },
+      "native_environment": {
+        "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+        "python_version": "3.9.25",
+        "cellprofiler_version": "4.2.8.1",
+        "cellprofiler_core_version": "4.2.8.1",
+        "numpy_version": "1.24.4",
+        "scipy_version": "1.9.0",
+        "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_tmp",
+        "temporary_device": 66306,
+        "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+        "host_node": "ts-gaming",
+        "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+        "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+        "cpu_affinity": [
+          1,
+          4,
+          5
+        ]
+      },
+      "thread_environment": {
+        "OMP_NUM_THREADS": "1",
+        "OPENBLAS_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1",
+        "NUMEXPR_NUM_THREADS": "1",
+        "VECLIB_MAXIMUM_THREADS": "1",
+        "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+        "PYTHONHASHSEED": "0"
+      },
+      "mode": {
+        "wells": [
+          "W001",
+          "W002",
+          "W003",
+          "W004",
+          "W005",
+          "W006",
+          "W007",
+          "W008",
+          "W009"
+        ],
+        "selected_source_wells": [
+          "A01"
+        ],
+        "assignment_scope": "independent repeated source assignments",
+        "native_job_count": 3,
+        "candidate_worker_count": 3,
+        "candidate_worker_start_method": "fork"
+      },
+      "native_shard_environments": [
+        {
+          "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+          "python_version": "3.9.25",
+          "cellprofiler_version": "4.2.8.1",
+          "cellprofiler_core_version": "4.2.8.1",
+          "numpy_version": "1.24.4",
+          "scipy_version": "1.9.0",
+          "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/0_tmp",
+          "temporary_device": 66306,
+          "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+          "host_node": "ts-gaming",
+          "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+          "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+          "cpu_affinity": [
+            1,
+            4,
+            5
+          ]
+        },
+        {
+          "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+          "python_version": "3.9.25",
+          "cellprofiler_version": "4.2.8.1",
+          "cellprofiler_core_version": "4.2.8.1",
+          "numpy_version": "1.24.4",
+          "scipy_version": "1.9.0",
+          "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/1_tmp",
+          "temporary_device": 66306,
+          "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+          "host_node": "ts-gaming",
+          "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+          "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+          "cpu_affinity": [
+            1,
+            4,
+            5
+          ]
+        },
+        {
+          "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+          "python_version": "3.9.25",
+          "cellprofiler_version": "4.2.8.1",
+          "cellprofiler_core_version": "4.2.8.1",
+          "numpy_version": "1.24.4",
+          "scipy_version": "1.9.0",
+          "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/native_shards/2_tmp",
+          "temporary_device": 66306,
+          "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+          "host_node": "ts-gaming",
+          "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+          "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+          "cpu_affinity": [
+            1,
+            4,
+            5
+          ]
+        }
+      ]
+    }
+  ],
+  "assignment_scope": "Independent repeated source assignments, not additional genuine wells"
+}

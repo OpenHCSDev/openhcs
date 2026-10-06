@@ -1,0 +1,42 @@
+[
+  {
+    "repetition": -1,
+    "invocation_start_skew_seconds": 0.004335595760494471,
+    "invocation_overlap_seconds": 10.71692112321034,
+    "invocation_through_completion_makespan_seconds": 11.132769541814923,
+    "pipeline_start_skew_seconds": 0.003990445751696825,
+    "pipeline_overlap_seconds": 10.71534276008606,
+    "pipeline_execution_makespan_seconds": 11.130846028681844,
+    "differences": []
+  },
+  {
+    "repetition": 0,
+    "invocation_start_skew_seconds": 0.004271965939551592,
+    "invocation_overlap_seconds": 10.29474090738222,
+    "invocation_through_completion_makespan_seconds": 10.315214568283409,
+    "pipeline_start_skew_seconds": 0.004674805328249931,
+    "pipeline_overlap_seconds": 10.293632559012622,
+    "pipeline_execution_makespan_seconds": 10.314509059302509,
+    "differences": []
+  },
+  {
+    "repetition": 1,
+    "invocation_start_skew_seconds": 0.0040204827673733234,
+    "invocation_overlap_seconds": 9.459584233351052,
+    "invocation_through_completion_makespan_seconds": 9.743396325036883,
+    "pipeline_start_skew_seconds": 0.006182604935020208,
+    "pipeline_overlap_seconds": 9.456667750142515,
+    "pipeline_execution_makespan_seconds": 9.742641963995993,
+    "differences": []
+  },
+  {
+    "repetition": 2,
+    "invocation_start_skew_seconds": 0.006077356170862913,
+    "invocation_overlap_seconds": 9.181128912605345,
+    "invocation_through_completion_makespan_seconds": 9.35037102503702,
+    "pipeline_start_skew_seconds": 0.006340913008898497,
+    "pipeline_overlap_seconds": 9.180125202052295,
+    "pipeline_execution_makespan_seconds": 9.349630871322006,
+    "differences": []
+  }
+]

@@ -1,0 +1,2185 @@
+{
+  "scope": "Same-source eb773 actual3D16/1 versus16/4; passive process counters; no kernel/callable profiler",
+  "representations": "kB status ranges as read; CPUseconds inner/outer samplebounds; no endpointreaped-child plus workerCPU doublecount",
+  "repetitions": [
+    {
+      "repetition": 0,
+      "serial_server": 50.97561025619507,
+      "parallel_server": 17.510270833969116,
+      "critical_lane": {
+        "pid": 2728820,
+        "axes": [
+          "W002",
+          "W006",
+          "W010",
+          "W014"
+        ],
+        "started_at": 1791316258.3376331,
+        "completed_at": 1791316274.5825422,
+        "lane_wall": 16.244909048080444,
+        "parallel_step_sum": 16.214750051498413,
+        "serial_same_axis_step_sum": 12.548499822616577,
+        "step_inflation": 3.666250228881836,
+        "outside_steps_wall": 0.03015899658203125,
+        "serial_same_axis_wall": 12.5838041305542,
+        "lane_vs_serial_wall_excess": 3.661104917526245,
+        "worker_job_cpu_lower": {
+          "pid": 2728820,
+          "wall": 17.510270833969116,
+          "coverage": "partial",
+          "sample_coverage": [
+            1791316258.423492,
+            1791316275.1532826
+          ],
+          "inner_samples": 168,
+          "user_range": [
+            13.02,
+            null
+          ],
+          "system_range": [
+            2.79,
+            null
+          ],
+          "reaped_child_user_range": [
+            0.0,
+            null
+          ],
+          "reaped_child_system_range": [
+            0.0,
+            null
+          ],
+          "minor_range": [
+            346690,
+            null
+          ],
+          "major_range": [
+            2,
+            null
+          ]
+        },
+        "status_kB": {
+          "VmRSS": [
+            793792,
+            1239876
+          ],
+          "VmSwap": [
+            0,
+            394644
+          ],
+          "RssAnon": [
+            777764,
+            1221932
+          ],
+          "VmData": [
+            1031344,
+            1408800
+          ]
+        },
+        "lane_cpu_counters": {
+          "pid": 2728820,
+          "wall": 16.244909048080444,
+          "coverage": "partial",
+          "sample_coverage": [
+            1791316258.423492,
+            1791316275.1532826
+          ],
+          "inner_samples": 162,
+          "user_range": [
+            12.87,
+            null
+          ],
+          "system_range": [
+            2.7800000000000002,
+            null
+          ],
+          "reaped_child_user_range": [
+            0.0,
+            null
+          ],
+          "reaped_child_system_range": [
+            0.0,
+            null
+          ],
+          "minor_range": [
+            345232,
+            null
+          ],
+          "major_range": [
+            2,
+            null
+          ]
+        }
+      },
+      "all_lanes": [
+        {
+          "pid": 2728818,
+          "axes": [
+            "W001",
+            "W005",
+            "W009",
+            "W013"
+          ],
+          "started_at": 1791316258.3211305,
+          "completed_at": 1791316274.5225642,
+          "lane_wall": 16.201433658599854,
+          "parallel_step_sum": 16.170452117919922,
+          "serial_same_axis_step_sum": 12.358627080917358,
+          "step_inflation": 3.8118250370025635,
+          "outside_steps_wall": 0.03098154067993164,
+          "serial_same_axis_wall": 12.395947694778442,
+          "lane_vs_serial_wall_excess": 3.805485963821411,
+          "worker_job_cpu_lower": {
+            "pid": 2728818,
+            "wall": 17.510270833969116,
+            "coverage": "partial",
+            "sample_coverage": [
+              1791316258.3233595,
+              1791316275.1532826
+            ],
+            "inner_samples": 169,
+            "user_range": [
+              13.17,
+              null
+            ],
+            "system_range": [
+              2.74,
+              null
+            ],
+            "reaped_child_user_range": [
+              0.0,
+              null
+            ],
+            "reaped_child_system_range": [
+              0.0,
+              null
+            ],
+            "minor_range": [
+              369794,
+              null
+            ],
+            "major_range": [
+              176,
+              null
+            ]
+          },
+          "status_kB": {
+            "VmRSS": [
+              794772,
+              1239788
+            ],
+            "VmSwap": [
+              0,
+              394624
+            ],
+            "RssAnon": [
+              778756,
+              1221896
+            ],
+            "VmData": [
+              1031344,
+              1419596
+            ]
+          }
+        },
+        {
+          "pid": 2728820,
+          "axes": [
+            "W002",
+            "W006",
+            "W010",
+            "W014"
+          ],
+          "started_at": 1791316258.3376331,
+          "completed_at": 1791316274.5825422,
+          "lane_wall": 16.244909048080444,
+          "parallel_step_sum": 16.214750051498413,
+          "serial_same_axis_step_sum": 12.548499822616577,
+          "step_inflation": 3.666250228881836,
+          "outside_steps_wall": 0.03015899658203125,
+          "serial_same_axis_wall": 12.5838041305542,
+          "lane_vs_serial_wall_excess": 3.661104917526245,
+          "worker_job_cpu_lower": {
+            "pid": 2728820,
+            "wall": 17.510270833969116,
+            "coverage": "partial",
+            "sample_coverage": [
+              1791316258.423492,
+              1791316275.1532826
+            ],
+            "inner_samples": 168,
+            "user_range": [
+              13.02,
+              null
+            ],
+            "system_range": [
+              2.79,
+              null
+            ],
+            "reaped_child_user_range": [
+              0.0,
+              null
+            ],
+            "reaped_child_system_range": [
+              0.0,
+              null
+            ],
+            "minor_range": [
+              346690,
+              null
+            ],
+            "major_range": [
+              2,
+              null
+            ]
+          },
+          "status_kB": {
+            "VmRSS": [
+              793792,
+              1239876
+            ],
+            "VmSwap": [
+              0,
+              394644
+            ],
+            "RssAnon": [
+              777764,
+              1221932
+            ],
+            "VmData": [
+              1031344,
+              1408800
+            ]
+          }
+        },
+        {
+          "pid": 2728822,
+          "axes": [
+            "W003",
+            "W007",
+            "W011",
+            "W015"
+          ],
+          "started_at": 1791316258.3576198,
+          "completed_at": 1791316274.0572765,
+          "lane_wall": 15.69965672492981,
+          "parallel_step_sum": 15.657808065414429,
+          "serial_same_axis_step_sum": 12.470818281173706,
+          "step_inflation": 3.1869897842407227,
+          "outside_steps_wall": 0.04184865951538086,
+          "serial_same_axis_wall": 12.506036520004272,
+          "lane_vs_serial_wall_excess": 3.193620204925537,
+          "worker_job_cpu_lower": {
+            "pid": 2728822,
+            "wall": 17.510270833969116,
+            "coverage": "partial",
+            "sample_coverage": [
+              1791316258.423492,
+              1791316275.1532826
+            ],
+            "inner_samples": 168,
+            "user_range": [
+              12.9,
+              null
+            ],
+            "system_range": [
+              2.43,
+              null
+            ],
+            "reaped_child_user_range": [
+              0.0,
+              null
+            ],
+            "reaped_child_system_range": [
+              0.0,
+              null
+            ],
+            "minor_range": [
+              333924,
+              null
+            ],
+            "major_range": [
+              10,
+              null
+            ]
+          },
+          "status_kB": {
+            "VmRSS": [
+              825592,
+              1239912
+            ],
+            "VmSwap": [
+              0,
+              363296
+            ],
+            "RssAnon": [
+              809516,
+              1221932
+            ],
+            "VmData": [
+              1031344,
+              1406748
+            ]
+          }
+        },
+        {
+          "pid": 2728824,
+          "axes": [
+            "W004",
+            "W008",
+            "W012",
+            "W016"
+          ],
+          "started_at": 1791316258.390132,
+          "completed_at": 1791316274.346518,
+          "lane_wall": 15.956386089324951,
+          "parallel_step_sum": 15.913105964660645,
+          "serial_same_axis_step_sum": 12.470566511154175,
+          "step_inflation": 3.4425394535064697,
+          "outside_steps_wall": 0.04328012466430664,
+          "serial_same_axis_wall": 12.498719930648804,
+          "lane_vs_serial_wall_excess": 3.4576661586761475,
+          "worker_job_cpu_lower": {
+            "pid": 2728824,
+            "wall": 17.510270833969116,
+            "coverage": "partial",
+            "sample_coverage": [
+              1791316258.423492,
+              1791316275.1532826
+            ],
+            "inner_samples": 168,
+            "user_range": [
+              13.06,
+              null
+            ],
+            "system_range": [
+              2.5500000000000003,
+              null
+            ],
+            "reaped_child_user_range": [
+              0.0,
+              null
+            ],
+            "reaped_child_system_range": [
+              0.0,
+              null
+            ],
+            "minor_range": [
+              316766,
+              null
+            ],
+            "major_range": [
+              5,
+              null
+            ]
+          },
+          "status_kB": {
+            "VmRSS": [
+              805028,
+              1239852
+            ],
+            "VmSwap": [
+              0,
+              394672
+            ],
+            "RssAnon": [
+              788952,
+              1221900
+            ],
+            "VmData": [
+              1031344,
+              1440388
+            ]
+          }
+        }
+      ],
+      "largest_critical_lane_step_inflations": [
+        {
+          "step": "MeasureObjectIntensity",
+          "serial_same_assignments": 2.121323823928833,
+          "parallel_same_assignments": 2.9451746940612793,
+          "inflation": 0.8238508701324463,
+          "authored_generated_step_index": 21
+        },
+        {
+          "step": "Threshold",
+          "serial_same_assignments": 0.788149356842041,
+          "parallel_same_assignments": 1.5403501987457275,
+          "inflation": 0.7522008419036865,
+          "authored_generated_step_index": 17
+        },
+        {
+          "step": "Watershed",
+          "serial_same_assignments": 0.45257067680358887,
+          "parallel_same_assignments": 1.127812147140503,
+          "inflation": 0.6752414703369141,
+          "authored_generated_step_index": 20
+        },
+        {
+          "step": "MeasureObjectSizeShape",
+          "serial_same_assignments": 0.788780927658081,
+          "parallel_same_assignments": 1.0033791065216064,
+          "inflation": 0.2145981788635254,
+          "authored_generated_step_index": 22
+        },
+        {
+          "step": "Threshold",
+          "serial_same_assignments": 0.7751455307006836,
+          "parallel_same_assignments": 0.985771894454956,
+          "inflation": 0.21062636375427246,
+          "authored_generated_step_index": 10
+        },
+        {
+          "step": "RescaleIntensity",
+          "serial_same_assignments": 1.518897294998169,
+          "parallel_same_assignments": 1.718398094177246,
+          "inflation": 0.19950079917907715,
+          "authored_generated_step_index": 0
+        },
+        {
+          "step": "ImageMath",
+          "serial_same_assignments": 1.183485507965088,
+          "parallel_same_assignments": 1.3534491062164307,
+          "inflation": 0.16996359825134277,
+          "authored_generated_step_index": 13
+        },
+        {
+          "step": "ResizeObjects",
+          "serial_same_assignments": 0.09959220886230469,
+          "parallel_same_assignments": 0.199662446975708,
+          "inflation": 0.10007023811340332,
+          "authored_generated_step_index": 8
+        },
+        {
+          "step": "ErodeImage",
+          "serial_same_assignments": 0.13198542594909668,
+          "parallel_same_assignments": 0.1818239688873291,
+          "inflation": 0.04983854293823242,
+          "authored_generated_step_index": 19
+        },
+        {
+          "step": "Watershed",
+          "serial_same_assignments": 0.367600679397583,
+          "parallel_same_assignments": 0.4120802879333496,
+          "inflation": 0.0444796085357666,
+          "authored_generated_step_index": 5
+        },
+        {
+          "step": "RescaleIntensity",
+          "serial_same_assignments": 0.4192006587982178,
+          "parallel_same_assignments": 0.4619436264038086,
+          "inflation": 0.04274296760559082,
+          "authored_generated_step_index": 24
+        },
+        {
+          "step": "Closing",
+          "serial_same_assignments": 0.3153700828552246,
+          "parallel_same_assignments": 0.35477614402770996,
+          "inflation": 0.03940606117248535,
+          "authored_generated_step_index": 15
+        },
+        {
+          "step": "MaskImage",
+          "serial_same_assignments": 0.1872713565826416,
+          "parallel_same_assignments": 0.22572588920593262,
+          "inflation": 0.038454532623291016,
+          "authored_generated_step_index": 18
+        },
+        {
+          "step": "ImageMath",
+          "serial_same_assignments": 0.13074111938476562,
+          "parallel_same_assignments": 0.16388392448425293,
+          "inflation": 0.033142805099487305,
+          "authored_generated_step_index": 11
+        },
+        {
+          "step": "SaveImages",
+          "serial_same_assignments": 0.22812294960021973,
+          "parallel_same_assignments": 0.2605438232421875,
+          "inflation": 0.03242087364196777,
+          "authored_generated_step_index": 29
+        },
+        {
+          "step": "ResizeObjects",
+          "serial_same_assignments": 0.11350154876708984,
+          "parallel_same_assignments": 0.14533114433288574,
+          "inflation": 0.0318295955657959,
+          "authored_generated_step_index": 6
+        },
+        {
+          "step": "SaveImages",
+          "serial_same_assignments": 0.2279067039489746,
+          "parallel_same_assignments": 0.2553870677947998,
+          "inflation": 0.027480363845825195,
+          "authored_generated_step_index": 27
+        },
+        {
+          "step": "Threshold",
+          "serial_same_assignments": 0.15085768699645996,
+          "parallel_same_assignments": 0.17566490173339844,
+          "inflation": 0.024807214736938477,
+          "authored_generated_step_index": 3
+        },
+        {
+          "step": "Resize",
+          "serial_same_assignments": 0.24605035781860352,
+          "parallel_same_assignments": 0.27080798149108887,
+          "inflation": 0.02475762367248535,
+          "authored_generated_step_index": 14
+        },
+        {
+          "step": "ConvertObjectsToImage",
+          "serial_same_assignments": 0.09055376052856445,
+          "parallel_same_assignments": 0.11259698867797852,
+          "inflation": 0.022043228149414062,
+          "authored_generated_step_index": 9
+        },
+        {
+          "step": "ConvertObjectsToImage",
+          "serial_same_assignments": 0.1459043025970459,
+          "parallel_same_assignments": 0.16549038887023926,
+          "inflation": 0.01958608627319336,
+          "authored_generated_step_index": 28
+        },
+        {
+          "step": "RemoveHoles",
+          "serial_same_assignments": 0.06784486770629883,
+          "parallel_same_assignments": 0.0862421989440918,
+          "inflation": 0.01839733123779297,
+          "authored_generated_step_index": 4
+        },
+        {
+          "step": "Resize",
+          "serial_same_assignments": 0.1948997974395752,
+          "parallel_same_assignments": 0.21232819557189941,
+          "inflation": 0.01742839813232422,
+          "authored_generated_step_index": 16
+        },
+        {
+          "step": "Resize",
+          "serial_same_assignments": 0.22414040565490723,
+          "parallel_same_assignments": 0.23842883110046387,
+          "inflation": 0.01428842544555664,
+          "authored_generated_step_index": 1
+        },
+        {
+          "step": "OverlayObjects",
+          "serial_same_assignments": 0.1374821662902832,
+          "parallel_same_assignments": 0.15016579627990723,
+          "inflation": 0.012683629989624023,
+          "authored_generated_step_index": 25
+        },
+        {
+          "step": "MedianFilter",
+          "serial_same_assignments": 0.6651415824890137,
+          "parallel_same_assignments": 0.6777420043945312,
+          "inflation": 0.012600421905517578,
+          "authored_generated_step_index": 2
+        },
+        {
+          "step": "ErodeObjects",
+          "serial_same_assignments": 0.23184800148010254,
+          "parallel_same_assignments": 0.2439899444580078,
+          "inflation": 0.012141942977905273,
+          "authored_generated_step_index": 7
+        },
+        {
+          "step": "OverlayObjects",
+          "serial_same_assignments": 0.1497032642364502,
+          "parallel_same_assignments": 0.1608290672302246,
+          "inflation": 0.011125802993774414,
+          "authored_generated_step_index": 23
+        },
+        {
+          "step": "ConvertObjectsToImage",
+          "serial_same_assignments": 0.14183449745178223,
+          "parallel_same_assignments": 0.14639616012573242,
+          "inflation": 0.004561662673950195,
+          "authored_generated_step_index": 26
+        },
+        {
+          "step": "RemoveHoles",
+          "serial_same_assignments": 0.2525932788848877,
+          "parallel_same_assignments": 0.23857402801513672,
+          "inflation": -0.014019250869750977,
+          "authored_generated_step_index": 12
+        }
+      ],
+      "parallel_parent_cpu": {
+        "pid": 2664659,
+        "wall": 17.510270833969116,
+        "coverage": "complete",
+        "sample_coverage": [
+          1791315562.1957836,
+          1791316419.8758707
+        ],
+        "inner_samples": 175,
+        "user_range": [
+          1.5100000000000016,
+          1.5999999999999979
+        ],
+        "system_range": [
+          0.1599999999999997,
+          0.17999999999999972
+        ],
+        "reaped_child_user_range": [
+          52.30000000000001,
+          52.30000000000001
+        ],
+        "reaped_child_system_range": [
+          10.79,
+          10.79
+        ],
+        "minor_range": [
+          24948,
+          25988
+        ],
+        "major_range": [
+          76,
+          81
+        ],
+        "outer_padding_seconds": 0.12068724632263184,
+        "rss_mib_range": [
+          380.80078125,
+          971.6328125
+        ]
+      },
+      "serial_endpoint_cpu": {
+        "pid": 2592914,
+        "wall": 50.97561025619507,
+        "coverage": "complete",
+        "sample_coverage": [
+          1791314809.7735424,
+          1791315509.9139469
+        ],
+        "inner_samples": 509,
+        "user_range": [
+          46.91999999999999,
+          47.06
+        ],
+        "system_range": [
+          2.87,
+          2.87
+        ],
+        "reaped_child_user_range": [
+          0.0,
+          0.0
+        ],
+        "reaped_child_system_range": [
+          0.0,
+          0.0
+        ],
+        "minor_range": [
+          661807,
+          661810
+        ],
+        "major_range": [
+          0,
+          0
+        ],
+        "outer_padding_seconds": 0.09400057792663574,
+        "rss_mib_range": [
+          1281.421875,
+          1534.1171875
+        ]
+      },
+      "serial_status_kB": {
+        "VmRSS": [
+          1312132,
+          1530420
+        ],
+        "VmSwap": [
+          0,
+          0
+        ],
+        "RssAnon": [
+          1104980,
+          1323288
+        ],
+        "VmData": [
+          1289308,
+          1507716
+        ]
+      },
+      "parallel_parent_status_kB": {
+        "VmRSS": [
+          390352,
+          995268
+        ],
+        "VmSwap": [
+          0,
+          416080
+        ],
+        "RssAnon": [
+          372916,
+          789024
+        ],
+        "VmData": [
+          973936,
+          974028
+        ]
+      }
+    },
+    {
+      "repetition": 1,
+      "serial_server": 50.52460265159607,
+      "parallel_server": 17.043155908584595,
+      "critical_lane": {
+        "pid": 2733676,
+        "axes": [
+          "W002",
+          "W006",
+          "W010",
+          "W014"
+        ],
+        "started_at": 1791316313.1437066,
+        "completed_at": 1791316328.9307072,
+        "lane_wall": 15.78700065612793,
+        "parallel_step_sum": 15.753710985183716,
+        "serial_same_axis_step_sum": 12.336442470550537,
+        "step_inflation": 3.4172685146331787,
+        "outside_steps_wall": 0.03328967094421387,
+        "serial_same_axis_wall": 12.362635374069214,
+        "lane_vs_serial_wall_excess": 3.424365282058716,
+        "worker_job_cpu_lower": {
+          "pid": 2733676,
+          "wall": 17.043155908584595,
+          "coverage": "partial",
+          "sample_coverage": [
+            1791316313.2093484,
+            1791316329.539449
+          ],
+          "inner_samples": 164,
+          "user_range": [
+            12.879999999999999,
+            null
+          ],
+          "system_range": [
+            2.6,
+            null
+          ],
+          "reaped_child_user_range": [
+            0.0,
+            null
+          ],
+          "reaped_child_system_range": [
+            0.0,
+            null
+          ],
+          "minor_range": [
+            373376,
+            null
+          ],
+          "major_range": [
+            553,
+            null
+          ]
+        },
+        "status_kB": {
+          "VmRSS": [
+            386412,
+            840156
+          ],
+          "VmSwap": [
+            398108,
+            487756
+          ],
+          "RssAnon": [
+            379028,
+            824264
+          ],
+          "VmData": [
+            977116,
+            1409912
+          ]
+        },
+        "lane_cpu_counters": {
+          "pid": 2733676,
+          "wall": 15.78700065612793,
+          "coverage": "partial",
+          "sample_coverage": [
+            1791316313.2093484,
+            1791316329.539449
+          ],
+          "inner_samples": 157,
+          "user_range": [
+            12.67,
+            null
+          ],
+          "system_range": [
+            2.58,
+            null
+          ],
+          "reaped_child_user_range": [
+            0.0,
+            null
+          ],
+          "reaped_child_system_range": [
+            0.0,
+            null
+          ],
+          "minor_range": [
+            371916,
+            null
+          ],
+          "major_range": [
+            499,
+            null
+          ]
+        }
+      },
+      "all_lanes": [
+        {
+          "pid": 2733674,
+          "axes": [
+            "W001",
+            "W005",
+            "W009",
+            "W013"
+          ],
+          "started_at": 1791316313.1297407,
+          "completed_at": 1791316328.9057617,
+          "lane_wall": 15.776021003723145,
+          "parallel_step_sum": 15.736219882965088,
+          "serial_same_axis_step_sum": 12.568936824798584,
+          "step_inflation": 3.167283058166504,
+          "outside_steps_wall": 0.03980112075805664,
+          "serial_same_axis_wall": 12.59630560874939,
+          "lane_vs_serial_wall_excess": 3.179715394973755,
+          "worker_job_cpu_lower": {
+            "pid": 2733674,
+            "wall": 17.043155908584595,
+            "coverage": "partial",
+            "sample_coverage": [
+              1791316313.2093484,
+              1791316329.539449
+            ],
+            "inner_samples": 164,
+            "user_range": [
+              12.83,
+              null
+            ],
+            "system_range": [
+              2.5,
+              null
+            ],
+            "reaped_child_user_range": [
+              0.0,
+              null
+            ],
+            "reaped_child_system_range": [
+              0.0,
+              null
+            ],
+            "minor_range": [
+              379627,
+              null
+            ],
+            "major_range": [
+              3379,
+              null
+            ]
+          },
+          "status_kB": {
+            "VmRSS": [
+              386408,
+              840152
+            ],
+            "VmSwap": [
+              398108,
+              487752
+            ],
+            "RssAnon": [
+              379024,
+              824232
+            ],
+            "VmData": [
+              977116,
+              1409848
+            ]
+          }
+        },
+        {
+          "pid": 2733676,
+          "axes": [
+            "W002",
+            "W006",
+            "W010",
+            "W014"
+          ],
+          "started_at": 1791316313.1437066,
+          "completed_at": 1791316328.9307072,
+          "lane_wall": 15.78700065612793,
+          "parallel_step_sum": 15.753710985183716,
+          "serial_same_axis_step_sum": 12.336442470550537,
+          "step_inflation": 3.4172685146331787,
+          "outside_steps_wall": 0.03328967094421387,
+          "serial_same_axis_wall": 12.362635374069214,
+          "lane_vs_serial_wall_excess": 3.424365282058716,
+          "worker_job_cpu_lower": {
+            "pid": 2733676,
+            "wall": 17.043155908584595,
+            "coverage": "partial",
+            "sample_coverage": [
+              1791316313.2093484,
+              1791316329.539449
+            ],
+            "inner_samples": 164,
+            "user_range": [
+              12.879999999999999,
+              null
+            ],
+            "system_range": [
+              2.6,
+              null
+            ],
+            "reaped_child_user_range": [
+              0.0,
+              null
+            ],
+            "reaped_child_system_range": [
+              0.0,
+              null
+            ],
+            "minor_range": [
+              373376,
+              null
+            ],
+            "major_range": [
+              553,
+              null
+            ]
+          },
+          "status_kB": {
+            "VmRSS": [
+              386412,
+              840156
+            ],
+            "VmSwap": [
+              398108,
+              487756
+            ],
+            "RssAnon": [
+              379028,
+              824264
+            ],
+            "VmData": [
+              977116,
+              1409912
+            ]
+          }
+        },
+        {
+          "pid": 2733678,
+          "axes": [
+            "W003",
+            "W007",
+            "W011",
+            "W015"
+          ],
+          "started_at": 1791316313.166118,
+          "completed_at": 1791316328.918186,
+          "lane_wall": 15.752068042755127,
+          "parallel_step_sum": 15.715342998504639,
+          "serial_same_axis_step_sum": 12.238998174667358,
+          "step_inflation": 3.4763448238372803,
+          "outside_steps_wall": 0.03672504425048828,
+          "serial_same_axis_wall": 12.26975703239441,
+          "lane_vs_serial_wall_excess": 3.4823110103607178,
+          "worker_job_cpu_lower": {
+            "pid": 2733678,
+            "wall": 17.043155908584595,
+            "coverage": "partial",
+            "sample_coverage": [
+              1791316313.2093484,
+              1791316329.539449
+            ],
+            "inner_samples": 164,
+            "user_range": [
+              12.83,
+              null
+            ],
+            "system_range": [
+              2.64,
+              null
+            ],
+            "reaped_child_user_range": [
+              0.0,
+              null
+            ],
+            "reaped_child_system_range": [
+              0.0,
+              null
+            ],
+            "minor_range": [
+              375892,
+              null
+            ],
+            "major_range": [
+              70,
+              null
+            ]
+          },
+          "status_kB": {
+            "VmRSS": [
+              386380,
+              839716
+            ],
+            "VmSwap": [
+              398164,
+              487852
+            ],
+            "RssAnon": [
+              378996,
+              823780
+            ],
+            "VmData": [
+              977116,
+              1409856
+            ]
+          }
+        },
+        {
+          "pid": 2733722,
+          "axes": [
+            "W004",
+            "W008",
+            "W012",
+            "W016"
+          ],
+          "started_at": 1791316313.1870615,
+          "completed_at": 1791316328.7503219,
+          "lane_wall": 15.563260316848755,
+          "parallel_step_sum": 15.525146484375,
+          "serial_same_axis_step_sum": 12.281636953353882,
+          "step_inflation": 3.243509531021118,
+          "outside_steps_wall": 0.03811383247375488,
+          "serial_same_axis_wall": 12.309054374694824,
+          "lane_vs_serial_wall_excess": 3.2542059421539307,
+          "worker_job_cpu_lower": {
+            "pid": 2733722,
+            "wall": 17.043155908584595,
+            "coverage": "partial",
+            "sample_coverage": [
+              1791316313.2093484,
+              1791316329.539449
+            ],
+            "inner_samples": 164,
+            "user_range": [
+              12.82,
+              null
+            ],
+            "system_range": [
+              2.4000000000000004,
+              null
+            ],
+            "reaped_child_user_range": [
+              0.0,
+              null
+            ],
+            "reaped_child_system_range": [
+              0.0,
+              null
+            ],
+            "minor_range": [
+              372373,
+              null
+            ],
+            "major_range": [
+              89,
+              null
+            ]
+          },
+          "status_kB": {
+            "VmRSS": [
+              386388,
+              840188
+            ],
+            "VmSwap": [
+              398152,
+              487972
+            ],
+            "RssAnon": [
+              379004,
+              824224
+            ],
+            "VmData": [
+              977116,
+              1420804
+            ]
+          }
+        }
+      ],
+      "largest_critical_lane_step_inflations": [
+        {
+          "step": "Threshold",
+          "serial_same_assignments": 0.6631975173950195,
+          "parallel_same_assignments": 1.413323163986206,
+          "inflation": 0.7501256465911865,
+          "authored_generated_step_index": 17
+        },
+        {
+          "step": "MeasureObjectIntensity",
+          "serial_same_assignments": 2.1307172775268555,
+          "parallel_same_assignments": 2.8145945072174072,
+          "inflation": 0.6838772296905518,
+          "authored_generated_step_index": 21
+        },
+        {
+          "step": "Watershed",
+          "serial_same_assignments": 0.36112427711486816,
+          "parallel_same_assignments": 1.0224463939666748,
+          "inflation": 0.6613221168518066,
+          "authored_generated_step_index": 20
+        },
+        {
+          "step": "Threshold",
+          "serial_same_assignments": 0.7801663875579834,
+          "parallel_same_assignments": 1.0397133827209473,
+          "inflation": 0.25954699516296387,
+          "authored_generated_step_index": 10
+        },
+        {
+          "step": "ImageMath",
+          "serial_same_assignments": 1.1748828887939453,
+          "parallel_same_assignments": 1.3335442543029785,
+          "inflation": 0.1586613655090332,
+          "authored_generated_step_index": 13
+        },
+        {
+          "step": "RescaleIntensity",
+          "serial_same_assignments": 1.5104827880859375,
+          "parallel_same_assignments": 1.6672906875610352,
+          "inflation": 0.15680789947509766,
+          "authored_generated_step_index": 0
+        },
+        {
+          "step": "ResizeObjects",
+          "serial_same_assignments": 0.10044264793395996,
+          "parallel_same_assignments": 0.21568989753723145,
+          "inflation": 0.11524724960327148,
+          "authored_generated_step_index": 8
+        },
+        {
+          "step": "RemoveHoles",
+          "serial_same_assignments": 0.19379925727844238,
+          "parallel_same_assignments": 0.293168306350708,
+          "inflation": 0.09936904907226562,
+          "authored_generated_step_index": 12
+        },
+        {
+          "step": "ResizeObjects",
+          "serial_same_assignments": 0.1109321117401123,
+          "parallel_same_assignments": 0.18547916412353516,
+          "inflation": 0.07454705238342285,
+          "authored_generated_step_index": 6
+        },
+        {
+          "step": "Closing",
+          "serial_same_assignments": 0.31550002098083496,
+          "parallel_same_assignments": 0.3793184757232666,
+          "inflation": 0.06381845474243164,
+          "authored_generated_step_index": 15
+        },
+        {
+          "step": "ErodeObjects",
+          "serial_same_assignments": 0.23321294784545898,
+          "parallel_same_assignments": 0.2938649654388428,
+          "inflation": 0.06065201759338379,
+          "authored_generated_step_index": 7
+        },
+        {
+          "step": "RescaleIntensity",
+          "serial_same_assignments": 0.43152856826782227,
+          "parallel_same_assignments": 0.48894524574279785,
+          "inflation": 0.057416677474975586,
+          "authored_generated_step_index": 24
+        },
+        {
+          "step": "ConvertObjectsToImage",
+          "serial_same_assignments": 0.09260225296020508,
+          "parallel_same_assignments": 0.1354048252105713,
+          "inflation": 0.04280257225036621,
+          "authored_generated_step_index": 9
+        },
+        {
+          "step": "Watershed",
+          "serial_same_assignments": 0.36921095848083496,
+          "parallel_same_assignments": 0.40580248832702637,
+          "inflation": 0.036591529846191406,
+          "authored_generated_step_index": 5
+        },
+        {
+          "step": "Resize",
+          "serial_same_assignments": 0.22783231735229492,
+          "parallel_same_assignments": 0.2577192783355713,
+          "inflation": 0.029886960983276367,
+          "authored_generated_step_index": 1
+        },
+        {
+          "step": "Threshold",
+          "serial_same_assignments": 0.15208745002746582,
+          "parallel_same_assignments": 0.18190312385559082,
+          "inflation": 0.029815673828125,
+          "authored_generated_step_index": 3
+        },
+        {
+          "step": "ImageMath",
+          "serial_same_assignments": 0.12994670867919922,
+          "parallel_same_assignments": 0.15879154205322266,
+          "inflation": 0.028844833374023438,
+          "authored_generated_step_index": 11
+        },
+        {
+          "step": "Resize",
+          "serial_same_assignments": 0.24081802368164062,
+          "parallel_same_assignments": 0.2669041156768799,
+          "inflation": 0.026086091995239258,
+          "authored_generated_step_index": 14
+        },
+        {
+          "step": "MaskImage",
+          "serial_same_assignments": 0.1894683837890625,
+          "parallel_same_assignments": 0.2144920825958252,
+          "inflation": 0.025023698806762695,
+          "authored_generated_step_index": 18
+        },
+        {
+          "step": "Resize",
+          "serial_same_assignments": 0.19757890701293945,
+          "parallel_same_assignments": 0.21816515922546387,
+          "inflation": 0.020586252212524414,
+          "authored_generated_step_index": 16
+        },
+        {
+          "step": "ConvertObjectsToImage",
+          "serial_same_assignments": 0.14383220672607422,
+          "parallel_same_assignments": 0.16385889053344727,
+          "inflation": 0.020026683807373047,
+          "authored_generated_step_index": 26
+        },
+        {
+          "step": "SaveImages",
+          "serial_same_assignments": 0.2284555435180664,
+          "parallel_same_assignments": 0.23949241638183594,
+          "inflation": 0.011036872863769531,
+          "authored_generated_step_index": 27
+        },
+        {
+          "step": "SaveImages",
+          "serial_same_assignments": 0.23439431190490723,
+          "parallel_same_assignments": 0.24086475372314453,
+          "inflation": 0.006470441818237305,
+          "authored_generated_step_index": 29
+        },
+        {
+          "step": "MeasureObjectSizeShape",
+          "serial_same_assignments": 0.801262378692627,
+          "parallel_same_assignments": 0.8076491355895996,
+          "inflation": 0.006386756896972656,
+          "authored_generated_step_index": 22
+        },
+        {
+          "step": "RemoveHoles",
+          "serial_same_assignments": 0.06871628761291504,
+          "parallel_same_assignments": 0.07360315322875977,
+          "inflation": 0.0048868656158447266,
+          "authored_generated_step_index": 4
+        },
+        {
+          "step": "MedianFilter",
+          "serial_same_assignments": 0.6649584770202637,
+          "parallel_same_assignments": 0.6697523593902588,
+          "inflation": 0.004793882369995117,
+          "authored_generated_step_index": 2
+        },
+        {
+          "step": "ErodeImage",
+          "serial_same_assignments": 0.13445353507995605,
+          "parallel_same_assignments": 0.13808536529541016,
+          "inflation": 0.0036318302154541016,
+          "authored_generated_step_index": 19
+        },
+        {
+          "step": "ConvertObjectsToImage",
+          "serial_same_assignments": 0.14718937873840332,
+          "parallel_same_assignments": 0.14330649375915527,
+          "inflation": -0.003882884979248047,
+          "authored_generated_step_index": 28
+        },
+        {
+          "step": "OverlayObjects",
+          "serial_same_assignments": 0.15819573402404785,
+          "parallel_same_assignments": 0.150007963180542,
+          "inflation": -0.00818777084350586,
+          "authored_generated_step_index": 23
+        },
+        {
+          "step": "OverlayObjects",
+          "serial_same_assignments": 0.14945292472839355,
+          "parallel_same_assignments": 0.14052939414978027,
+          "inflation": -0.008923530578613281,
+          "authored_generated_step_index": 25
+        }
+      ],
+      "parallel_parent_cpu": {
+        "pid": 2664659,
+        "wall": 17.043155908584595,
+        "coverage": "complete",
+        "sample_coverage": [
+          1791315562.1957836,
+          1791316419.8758707
+        ],
+        "inner_samples": 170,
+        "user_range": [
+          1.4400000000000013,
+          1.5799999999999983
+        ],
+        "system_range": [
+          0.20999999999999996,
+          0.20999999999999996
+        ],
+        "reaped_child_user_range": [
+          51.53,
+          51.53
+        ],
+        "reaped_child_system_range": [
+          10.43,
+          10.43
+        ],
+        "minor_range": [
+          24390,
+          26078
+        ],
+        "major_range": [
+          1547,
+          1601
+        ],
+        "outer_padding_seconds": 0.08796286582946777,
+        "rss_mib_range": [
+          248.09375,
+          385.8515625
+        ]
+      },
+      "serial_endpoint_cpu": {
+        "pid": 2592914,
+        "wall": 50.52460265159607,
+        "coverage": "complete",
+        "sample_coverage": [
+          1791314809.7735424,
+          1791315509.9139469
+        ],
+        "inner_samples": 504,
+        "user_range": [
+          47.389999999999986,
+          47.56
+        ],
+        "system_range": [
+          1.92,
+          1.9300000000000015
+        ],
+        "reaped_child_user_range": [
+          0.0,
+          0.0
+        ],
+        "reaped_child_system_range": [
+          0.0,
+          0.0
+        ],
+        "minor_range": [
+          471118,
+          471411
+        ],
+        "major_range": [
+          0,
+          0
+        ],
+        "outer_padding_seconds": 0.04559445381164551,
+        "rss_mib_range": [
+          1293.21875,
+          1551.2890625
+        ]
+      },
+      "serial_status_kB": {
+        "VmRSS": [
+          1324104,
+          1583268
+        ],
+        "VmSwap": [
+          0,
+          0
+        ],
+        "RssAnon": [
+          1117040,
+          1376208
+        ],
+        "VmData": [
+          1300688,
+          1565068
+        ]
+      },
+      "parallel_parent_status_kB": {
+        "VmRSS": [
+          266912,
+          394936
+        ],
+        "VmSwap": [
+          415380,
+          531876
+        ],
+        "RssAnon": [
+          258808,
+          377500
+        ],
+        "VmData": [
+          977100,
+          977100
+        ]
+      }
+    },
+    {
+      "repetition": 2,
+      "serial_server": 50.32781505584717,
+      "parallel_server": 17.02194309234619,
+      "critical_lane": {
+        "pid": 2738518,
+        "axes": [
+          "W002",
+          "W006",
+          "W010",
+          "W014"
+        ],
+        "started_at": 1791316367.2395191,
+        "completed_at": 1791316382.895204,
+        "lane_wall": 15.65568494796753,
+        "parallel_step_sum": 15.630436897277832,
+        "serial_same_axis_step_sum": 12.241068363189697,
+        "step_inflation": 3.3893685340881348,
+        "outside_steps_wall": 0.025248050689697266,
+        "serial_same_axis_wall": 12.269887208938599,
+        "lane_vs_serial_wall_excess": 3.3857977390289307,
+        "worker_job_cpu_lower": {
+          "pid": 2738518,
+          "wall": 17.02194309234619,
+          "coverage": "partial",
+          "sample_coverage": [
+            1791316367.2947443,
+            1791316383.6247122
+          ],
+          "inner_samples": 164,
+          "user_range": [
+            13.180000000000001,
+            null
+          ],
+          "system_range": [
+            2.16,
+            null
+          ],
+          "reaped_child_user_range": [
+            0.0,
+            null
+          ],
+          "reaped_child_system_range": [
+            0.0,
+            null
+          ],
+          "minor_range": [
+            345789,
+            null
+          ],
+          "major_range": [
+            781,
+            null
+          ]
+        },
+        "status_kB": {
+          "VmRSS": [
+            266012,
+            736180
+          ],
+          "VmSwap": [
+            498940,
+            533252
+          ],
+          "RssAnon": [
+            259848,
+            725088
+          ],
+          "VmData": [
+            980188,
+            1412944
+          ]
+        },
+        "lane_cpu_counters": {
+          "pid": 2738518,
+          "wall": 15.65568494796753,
+          "coverage": "partial",
+          "sample_coverage": [
+            1791316367.2947443,
+            1791316383.6247122
+          ],
+          "inner_samples": 156,
+          "user_range": [
+            12.850000000000001,
+            null
+          ],
+          "system_range": [
+            2.1500000000000004,
+            null
+          ],
+          "reaped_child_user_range": [
+            0.0,
+            null
+          ],
+          "reaped_child_system_range": [
+            0.0,
+            null
+          ],
+          "minor_range": [
+            344521,
+            null
+          ],
+          "major_range": [
+            780,
+            null
+          ]
+        }
+      },
+      "all_lanes": [
+        {
+          "pid": 2738516,
+          "axes": [
+            "W001",
+            "W005",
+            "W009",
+            "W013"
+          ],
+          "started_at": 1791316367.2247944,
+          "completed_at": 1791316382.8456552,
+          "lane_wall": 15.620860815048218,
+          "parallel_step_sum": 15.593133449554443,
+          "serial_same_axis_step_sum": 12.44366717338562,
+          "step_inflation": 3.1494662761688232,
+          "outside_steps_wall": 0.027727365493774414,
+          "serial_same_axis_wall": 12.471978664398193,
+          "lane_vs_serial_wall_excess": 3.1488821506500244,
+          "worker_job_cpu_lower": {
+            "pid": 2738516,
+            "wall": 17.02194309234619,
+            "coverage": "partial",
+            "sample_coverage": [
+              1791316367.2947443,
+              1791316383.6247122
+            ],
+            "inner_samples": 164,
+            "user_range": [
+              13.12,
+              null
+            ],
+            "system_range": [
+              2.28,
+              null
+            ],
+            "reaped_child_user_range": [
+              0.0,
+              null
+            ],
+            "reaped_child_system_range": [
+              0.0,
+              null
+            ],
+            "minor_range": [
+              346570,
+              null
+            ],
+            "major_range": [
+              2309,
+              null
+            ]
+          },
+          "status_kB": {
+            "VmRSS": [
+              265948,
+              736104
+            ],
+            "VmSwap": [
+              498956,
+              533276
+            ],
+            "RssAnon": [
+              259824,
+              725080
+            ],
+            "VmData": [
+              980188,
+              1412944
+            ]
+          }
+        },
+        {
+          "pid": 2738518,
+          "axes": [
+            "W002",
+            "W006",
+            "W010",
+            "W014"
+          ],
+          "started_at": 1791316367.2395191,
+          "completed_at": 1791316382.895204,
+          "lane_wall": 15.65568494796753,
+          "parallel_step_sum": 15.630436897277832,
+          "serial_same_axis_step_sum": 12.241068363189697,
+          "step_inflation": 3.3893685340881348,
+          "outside_steps_wall": 0.025248050689697266,
+          "serial_same_axis_wall": 12.269887208938599,
+          "lane_vs_serial_wall_excess": 3.3857977390289307,
+          "worker_job_cpu_lower": {
+            "pid": 2738518,
+            "wall": 17.02194309234619,
+            "coverage": "partial",
+            "sample_coverage": [
+              1791316367.2947443,
+              1791316383.6247122
+            ],
+            "inner_samples": 164,
+            "user_range": [
+              13.180000000000001,
+              null
+            ],
+            "system_range": [
+              2.16,
+              null
+            ],
+            "reaped_child_user_range": [
+              0.0,
+              null
+            ],
+            "reaped_child_system_range": [
+              0.0,
+              null
+            ],
+            "minor_range": [
+              345789,
+              null
+            ],
+            "major_range": [
+              781,
+              null
+            ]
+          },
+          "status_kB": {
+            "VmRSS": [
+              266012,
+              736180
+            ],
+            "VmSwap": [
+              498940,
+              533252
+            ],
+            "RssAnon": [
+              259848,
+              725088
+            ],
+            "VmData": [
+              980188,
+              1412944
+            ]
+          }
+        },
+        {
+          "pid": 2738520,
+          "axes": [
+            "W003",
+            "W007",
+            "W011",
+            "W015"
+          ],
+          "started_at": 1791316367.2635152,
+          "completed_at": 1791316382.6115367,
+          "lane_wall": 15.348021507263184,
+          "parallel_step_sum": 15.318849802017212,
+          "serial_same_axis_step_sum": 12.226558208465576,
+          "step_inflation": 3.0922915935516357,
+          "outside_steps_wall": 0.02917170524597168,
+          "serial_same_axis_wall": 12.25441288948059,
+          "lane_vs_serial_wall_excess": 3.0936086177825928,
+          "worker_job_cpu_lower": {
+            "pid": 2738520,
+            "wall": 17.02194309234619,
+            "coverage": "partial",
+            "sample_coverage": [
+              1791316367.2947443,
+              1791316383.6247122
+            ],
+            "inner_samples": 164,
+            "user_range": [
+              13.15,
+              null
+            ],
+            "system_range": [
+              2.1500000000000004,
+              null
+            ],
+            "reaped_child_user_range": [
+              0.0,
+              null
+            ],
+            "reaped_child_system_range": [
+              0.0,
+              null
+            ],
+            "minor_range": [
+              371675,
+              null
+            ],
+            "major_range": [
+              516,
+              null
+            ]
+          },
+          "status_kB": {
+            "VmRSS": [
+              265992,
+              736172
+            ],
+            "VmSwap": [
+              498952,
+              533272
+            ],
+            "RssAnon": [
+              259828,
+              725076
+            ],
+            "VmData": [
+              980188,
+              1421048
+            ]
+          }
+        },
+        {
+          "pid": 2738522,
+          "axes": [
+            "W004",
+            "W008",
+            "W012",
+            "W016"
+          ],
+          "started_at": 1791316367.2860742,
+          "completed_at": 1791316382.7410922,
+          "lane_wall": 15.455018043518066,
+          "parallel_step_sum": 15.431468725204468,
+          "serial_same_axis_step_sum": 12.314904689788818,
+          "step_inflation": 3.1165640354156494,
+          "outside_steps_wall": 0.023549318313598633,
+          "serial_same_axis_wall": 12.343032598495483,
+          "lane_vs_serial_wall_excess": 3.111985445022583,
+          "worker_job_cpu_lower": {
+            "pid": 2738522,
+            "wall": 17.02194309234619,
+            "coverage": "partial",
+            "sample_coverage": [
+              1791316367.2947443,
+              1791316383.6247122
+            ],
+            "inner_samples": 164,
+            "user_range": [
+              13.07,
+              null
+            ],
+            "system_range": [
+              2.19,
+              null
+            ],
+            "reaped_child_user_range": [
+              0.0,
+              null
+            ],
+            "reaped_child_system_range": [
+              0.0,
+              null
+            ],
+            "minor_range": [
+              353307,
+              null
+            ],
+            "major_range": [
+              409,
+              null
+            ]
+          },
+          "status_kB": {
+            "VmRSS": [
+              265988,
+              736216
+            ],
+            "VmSwap": [
+              498968,
+              533280
+            ],
+            "RssAnon": [
+              259824,
+              725104
+            ],
+            "VmData": [
+              980188,
+              1412976
+            ]
+          }
+        }
+      ],
+      "largest_critical_lane_step_inflations": [
+        {
+          "step": "MeasureObjectIntensity",
+          "serial_same_assignments": 2.1282784938812256,
+          "parallel_same_assignments": 3.024719476699829,
+          "inflation": 0.8964409828186035,
+          "authored_generated_step_index": 21
+        },
+        {
+          "step": "Threshold",
+          "serial_same_assignments": 0.6533021926879883,
+          "parallel_same_assignments": 1.1577370166778564,
+          "inflation": 0.5044348239898682,
+          "authored_generated_step_index": 17
+        },
+        {
+          "step": "Watershed",
+          "serial_same_assignments": 0.3602423667907715,
+          "parallel_same_assignments": 0.8567864894866943,
+          "inflation": 0.49654412269592285,
+          "authored_generated_step_index": 20
+        },
+        {
+          "step": "Threshold",
+          "serial_same_assignments": 0.7767810821533203,
+          "parallel_same_assignments": 1.0016720294952393,
+          "inflation": 0.22489094734191895,
+          "authored_generated_step_index": 10
+        },
+        {
+          "step": "ImageMath",
+          "serial_same_assignments": 1.1793324947357178,
+          "parallel_same_assignments": 1.3539197444915771,
+          "inflation": 0.17458724975585938,
+          "authored_generated_step_index": 13
+        },
+        {
+          "step": "Resize",
+          "serial_same_assignments": 0.24199748039245605,
+          "parallel_same_assignments": 0.39075255393981934,
+          "inflation": 0.14875507354736328,
+          "authored_generated_step_index": 14
+        },
+        {
+          "step": "ResizeObjects",
+          "serial_same_assignments": 0.10057926177978516,
+          "parallel_same_assignments": 0.2416069507598877,
+          "inflation": 0.14102768898010254,
+          "authored_generated_step_index": 8
+        },
+        {
+          "step": "MaskImage",
+          "serial_same_assignments": 0.18822288513183594,
+          "parallel_same_assignments": 0.30941295623779297,
+          "inflation": 0.12119007110595703,
+          "authored_generated_step_index": 18
+        },
+        {
+          "step": "RemoveHoles",
+          "serial_same_assignments": 0.1912553310394287,
+          "parallel_same_assignments": 0.2774364948272705,
+          "inflation": 0.0861811637878418,
+          "authored_generated_step_index": 12
+        },
+        {
+          "step": "Watershed",
+          "serial_same_assignments": 0.3672659397125244,
+          "parallel_same_assignments": 0.45308828353881836,
+          "inflation": 0.08582234382629395,
+          "authored_generated_step_index": 5
+        },
+        {
+          "step": "Closing",
+          "serial_same_assignments": 0.3129143714904785,
+          "parallel_same_assignments": 0.388364315032959,
+          "inflation": 0.07544994354248047,
+          "authored_generated_step_index": 15
+        },
+        {
+          "step": "ResizeObjects",
+          "serial_same_assignments": 0.11384344100952148,
+          "parallel_same_assignments": 0.18340182304382324,
+          "inflation": 0.06955838203430176,
+          "authored_generated_step_index": 6
+        },
+        {
+          "step": "ConvertObjectsToImage",
+          "serial_same_assignments": 0.14270973205566406,
+          "parallel_same_assignments": 0.20856857299804688,
+          "inflation": 0.06585884094238281,
+          "authored_generated_step_index": 28
+        },
+        {
+          "step": "RescaleIntensity",
+          "serial_same_assignments": 0.4226531982421875,
+          "parallel_same_assignments": 0.469088077545166,
+          "inflation": 0.046434879302978516,
+          "authored_generated_step_index": 24
+        },
+        {
+          "step": "ImageMath",
+          "serial_same_assignments": 0.1329054832458496,
+          "parallel_same_assignments": 0.17656445503234863,
+          "inflation": 0.04365897178649902,
+          "authored_generated_step_index": 11
+        },
+        {
+          "step": "Threshold",
+          "serial_same_assignments": 0.14967131614685059,
+          "parallel_same_assignments": 0.19287991523742676,
+          "inflation": 0.04320859909057617,
+          "authored_generated_step_index": 3
+        },
+        {
+          "step": "Resize",
+          "serial_same_assignments": 0.2244884967803955,
+          "parallel_same_assignments": 0.26633524894714355,
+          "inflation": 0.04184675216674805,
+          "authored_generated_step_index": 1
+        },
+        {
+          "step": "ErodeObjects",
+          "serial_same_assignments": 0.23450756072998047,
+          "parallel_same_assignments": 0.26371169090270996,
+          "inflation": 0.029204130172729492,
+          "authored_generated_step_index": 7
+        },
+        {
+          "step": "MedianFilter",
+          "serial_same_assignments": 0.6626300811767578,
+          "parallel_same_assignments": 0.6916797161102295,
+          "inflation": 0.02904963493347168,
+          "authored_generated_step_index": 2
+        },
+        {
+          "step": "ConvertObjectsToImage",
+          "serial_same_assignments": 0.14168977737426758,
+          "parallel_same_assignments": 0.16294050216674805,
+          "inflation": 0.02125072479248047,
+          "authored_generated_step_index": 26
+        },
+        {
+          "step": "SaveImages",
+          "serial_same_assignments": 0.22720694541931152,
+          "parallel_same_assignments": 0.2439115047454834,
+          "inflation": 0.016704559326171875,
+          "authored_generated_step_index": 27
+        },
+        {
+          "step": "SaveImages",
+          "serial_same_assignments": 0.2263929843902588,
+          "parallel_same_assignments": 0.24298572540283203,
+          "inflation": 0.016592741012573242,
+          "authored_generated_step_index": 29
+        },
+        {
+          "step": "RemoveHoles",
+          "serial_same_assignments": 0.06859469413757324,
+          "parallel_same_assignments": 0.08488273620605469,
+          "inflation": 0.016288042068481445,
+          "authored_generated_step_index": 4
+        },
+        {
+          "step": "Resize",
+          "serial_same_assignments": 0.19765305519104004,
+          "parallel_same_assignments": 0.21192359924316406,
+          "inflation": 0.014270544052124023,
+          "authored_generated_step_index": 16
+        },
+        {
+          "step": "ConvertObjectsToImage",
+          "serial_same_assignments": 0.08716511726379395,
+          "parallel_same_assignments": 0.0999305248260498,
+          "inflation": 0.01276540756225586,
+          "authored_generated_step_index": 9
+        },
+        {
+          "step": "ErodeImage",
+          "serial_same_assignments": 0.13178348541259766,
+          "parallel_same_assignments": 0.14022350311279297,
+          "inflation": 0.008440017700195312,
+          "authored_generated_step_index": 19
+        },
+        {
+          "step": "MeasureObjectSizeShape",
+          "serial_same_assignments": 0.7913153171539307,
+          "parallel_same_assignments": 0.7996833324432373,
+          "inflation": 0.00836801528930664,
+          "authored_generated_step_index": 22
+        },
+        {
+          "step": "OverlayObjects",
+          "serial_same_assignments": 0.14470267295837402,
+          "parallel_same_assignments": 0.14001154899597168,
+          "inflation": -0.004691123962402344,
+          "authored_generated_step_index": 23
+        },
+        {
+          "step": "OverlayObjects",
+          "serial_same_assignments": 0.13193082809448242,
+          "parallel_same_assignments": 0.12195229530334473,
+          "inflation": -0.009978532791137695,
+          "authored_generated_step_index": 25
+        },
+        {
+          "step": "RescaleIntensity",
+          "serial_same_assignments": 1.5090522766113281,
+          "parallel_same_assignments": 1.4742658138275146,
+          "inflation": -0.03478646278381348,
+          "authored_generated_step_index": 0
+        }
+      ],
+      "parallel_parent_cpu": {
+        "pid": 2664659,
+        "wall": 17.02194309234619,
+        "coverage": "complete",
+        "sample_coverage": [
+          1791315562.1957836,
+          1791316419.8758707
+        ],
+        "inner_samples": 170,
+        "user_range": [
+          1.5000000000000036,
+          1.6499999999999986
+        ],
+        "system_range": [
+          0.18000000000000016,
+          0.18000000000000016
+        ],
+        "reaped_child_user_range": [
+          52.629999999999995,
+          52.629999999999995
+        ],
+        "reaped_child_system_range": [
+          9.04,
+          9.04
+        ],
+        "minor_range": [
+          25191,
+          26271
+        ],
+        "major_range": [
+          946,
+          963
+        ],
+        "outer_padding_seconds": 0.10906982421875,
+        "rss_mib_range": [
+          229.01953125,
+          262.39453125
+        ]
+      },
+      "serial_endpoint_cpu": {
+        "pid": 2592914,
+        "wall": 50.32781505584717,
+        "coverage": "complete",
+        "sample_coverage": [
+          1791314809.7735424,
+          1791315509.9139469
+        ],
+        "inner_samples": 502,
+        "user_range": [
+          47.09,
+          47.22999999999999
+        ],
+        "system_range": [
+          2.0199999999999996,
+          2.0299999999999994
+        ],
+        "reaped_child_user_range": [
+          0.0,
+          0.0
+        ],
+        "reaped_child_system_range": [
+          0.0,
+          0.0
+        ],
+        "minor_range": [
+          495553,
+          495816
+        ],
+        "major_range": [
+          0,
+          0
+        ],
+        "outer_padding_seconds": 0.050719499588012695,
+        "rss_mib_range": [
+          1301.2421875,
+          1559.30859375
+        ]
+      },
+      "serial_status_kB": {
+        "VmRSS": [
+          1332292,
+          1550476
+        ],
+        "VmSwap": [
+          0,
+          0
+        ],
+        "RssAnon": [
+          1125256,
+          1343440
+        ],
+        "VmData": [
+          1308880,
+          1527176
+        ]
+      },
+      "parallel_parent_status_kB": {
+        "VmRSS": [
+          233988,
+          268980
+        ],
+        "VmSwap": [
+          534524,
+          568888
+        ],
+        "RssAnon": [
+          224316,
+          258576
+        ],
+        "VmData": [
+          980172,
+          980276
+        ]
+      }
+    }
+  ],
+  "source_head": "eb773573cced496fe5ee7bfeef7b961674958c1d",
+  "first_observer_gap": "16/1 started before observer; all3D warm+3 fullycovered.16/4 observer started before firstjob; worker birth/end remainpartial due100ms sampling.",
+  "swap_onset": {
+    "rep0_last_zero_epoch": 1791316268.240804,
+    "rep0_first_nonzero_epoch": 1791316269.2424276,
+    "parent_first_kB": 137432,
+    "active_assignments": [
+      "W009",
+      "W010",
+      "W011",
+      "W012"
+    ],
+    "active_step_bracket": [
+      17,
+      20,
+      21
+    ],
+    "prior_warmup_and_guard_parent_swap_kB": 0,
+    "status_uncertainty_seconds": 1.0016236
+  },
+  "interpretation": {
+    "whole_job_cpu": "Parallel completeworker totals via endpointreaped-child counters. NeveraddsameworkerCPUagain. Workerchildlifetimecountersincludebootstrap/transport/cleanup, notonlyaxissteps. Reaping observed afterlastaxis+.67/.71/.83s before jobcompletion.",
+    "memory_evidence": "SerialVmSwap0/majorfaults0; parallelVmSwap0.4\u20130.55GiB perprocess plusworker/parentmajorfaults. Do notsumprocessRSS orswap asuniquephysicalpages.",
+    "dominant_critical_path": "Index21Intensity/index17Threshold/index20Watershed; approximately2.0\u20132.25s of3.4\u20133.7s critical-lane inflation. Outside-step gap25\u201333ms.",
+    "system_ceiling": "Parallelworker+parentSYS minusserialSYS approximately7.2\u20138.7 aggregateCPU seconds /4 ~1.8\u20132.2 criticalseconds; not an exclusive/guaranteed attainable saving.",
+    "unidentified": "Exactkernelpagehandling/copy/COW paths; rawcallable vs adapter allocation; uniquephysicalworking-set; unsampleddriver/nativeSCI snapshot memory; current retainedartifactbyte/lifetime census.",
+    "next_owner_question": "Existing exactplateinputretention and input-buffer/scratch lifetimes as fourworkers accumulate fourassignments. No proved safe metadata-only/pixel-retention change or pricedproductionpatch yet."
+  }
+}

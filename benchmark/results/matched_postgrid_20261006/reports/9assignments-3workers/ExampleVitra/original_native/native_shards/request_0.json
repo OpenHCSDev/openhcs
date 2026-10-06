@@ -1,0 +1,19 @@
+{
+  "pipeline_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleVitraImages/ExampleVitra.cppipe",
+  "input_dir": "/tmp/openhcsnativecellprofiler/hhcfpklghddnndnj/input",
+  "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0",
+  "expected_image_sets": 3,
+  "repetitions": 3,
+  "file_list_path": null,
+  "first_image_set": 1,
+  "last_image_set": null,
+  "report_path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/0_report.json",
+  "start_barrier_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-3workers/capture/cases/ExampleVitra/native_shards/start_barrier",
+  "start_barrier_job_count": 3,
+  "start_barrier_job_index": 0,
+  "assignment_output_subdirectories": [
+    "W001",
+    "W002",
+    "W003"
+  ]
+}
