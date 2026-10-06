@@ -1525,7 +1525,7 @@ def test_source_reinitialization_refreshes_calibration_and_registered_projection
     )
     current.initialize_workspace(tmp_path, filemanager)
     assert current.metadata_handler.get_pixel_size(tmp_path) == 1.3556
-    assert filemanager.registry[Backend.VIRTUAL_WORKSPACE.value] is not original_backend
+    assert filemanager.registry[Backend.VIRTUAL_WORKSPACE.value] is original_backend
     assert (
         np.asarray(
             filemanager.load(virtual_name, Backend.VIRTUAL_WORKSPACE.value)
