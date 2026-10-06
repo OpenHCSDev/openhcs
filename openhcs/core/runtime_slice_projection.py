@@ -16,6 +16,7 @@ from metaclass_registry import AutoRegisterMeta
 
 from openhcs.constants.constants import VariableComponents
 from openhcs.core.aligned_image_payload import (
+    AlignedImageStack,
     ImagePayloadSliceStack,
     AlignedImageStackKwargResolver,
     ImageOutputBundle,
@@ -578,13 +579,25 @@ class ImagePayloadSliceStackRuntimeSliceProjectionStrategy(RuntimeSliceProjectio
 
     value_type = ImagePayloadSliceStack
 
+    @classmethod
+    def aligned_kwarg_member(cls) -> type | tuple[type, ...] | None:
+        """Outer argument selection belongs to aligned bundles, not literal images."""
+        return (
+            AlignedImageStack
+            if cls.value_type is ImagePayloadSliceStackRuntimeSliceProjectionStrategy.value_type
+            else cls.value_type
+        )
+
     def resolve_aligned_kwarg(
         self,
         value: Any,
         resolver: AlignedImageStackKwargResolver,
     ) -> Any:
         return resolver.resolve(
-            self.value_for_slice(value, resolver.projection_axis)
+            value.aligned_slice(
+                resolver.projection_axis.require_plane_index(),
+                resolver.projection_axis.axis_size,
+            )
         )
 
     def full_stack_value(self, value: RuntimeProjectionData) -> RuntimeProjectionData:

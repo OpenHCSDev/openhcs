@@ -215,6 +215,145 @@ SaveImages:[module_num:3|enabled:True]
     assert "select_the_image_to_save" not in save_invocation.kwargs_dict
 
 
+@pytest.mark.parametrize("second_input", ["Objects", "RetainedDefault"])
+def test_adjacent_filters_preserve_original_named_object_lineage(
+    second_input: str,
+    tmp_path: Path,
+) -> None:
+    from openhcs.core.artifacts import SourceStackLineageSourceRelation
+    from openhcs.core.pipeline.compilation_session import ResolvedPipelineDefinition
+    from openhcs.core.pipeline_document import PipelineDocumentAuthority
+    from openhcs.core.runtime_relationships import ObjectRelationshipDeclaration
+
+    cppipe_path = Path("pipelines/repeated-filters.cppipe")
+    filemanager = _MemoryFileManager(
+        {cppipe_path: f"""CellProfiler Pipeline: https://cellprofiler.org
+NamesAndTypes:[module_num:1|enabled:True]
+    Assignments count:1
+    Select the image type:Grayscale image
+    Name to assign these images:Labels
+    Select the rule criteria:and (file does contain "Labels")
+ConvertImageToObjects:[module_num:2|enabled:True]
+    Select the input image:Labels
+    Name the output objects:Objects
+    Convert to boolean image:No
+    Preserve original labels:Yes
+    Background label:0
+    Connectivity:1
+MeasureObjectSizeShape:[module_num:3|enabled:True]
+    Select object sets to measure:Objects
+    Calculate the Zernike features?:No
+    Calculate the advanced features?:No
+FilterObjects:[module_num:4|enabled:True]
+    Select the object to filter:Objects
+    Name the output objects:RetainedDefault
+    Filter using classifier rules or measurements?:Border
+    Select the filtering method:Limits
+    Additional object count:0
+FilterObjects:[module_num:5|enabled:True]
+    Select the object to filter:{second_input}
+    Name the output objects:RetainedEnabled
+    Filter using classifier rules or measurements?:Border
+    Select the filtering method:Limits
+    Additional object count:0
+    Keep removed objects as a separate set?:Yes
+    Name the objects removed by the filter:RemovedEnabled
+"""}
+    )
+    steps, config = import_cellprofiler_pipeline(
+        cppipe_path, filemanager=filemanager, backend=Backend.MEMORY,
+    )
+    physical_cppipe = tmp_path / "repeated-filters.cppipe"
+    physical_cppipe.write_text(filemanager.files[cppipe_path], encoding="utf-8")
+    reconstructed = PipelineDocumentAuthority.from_source(
+        "from pathlib import Path\n"
+        "from openhcs.interop.cellprofiler.pipeline_import import "
+        "import_cellprofiler_pipeline\n"
+        f"pipeline_steps, pipeline_config = import_cellprofiler_pipeline("
+        f"Path({str(physical_cppipe)!r}))\n"
+    )
+    pipeline = ResolvedPipelineDefinition(
+        steps=reconstructed.pipeline_steps,
+        step_scope_ids={index: f"pipeline::step_{index}" for index in range(len(steps))},
+        step_provenance={index: {} for index in range(len(steps))},
+    )
+    contracts = tuple(
+        item.contract
+        for step, graph in zip(pipeline.steps, pipeline.artifact_graphs, strict=True)
+        if step.name == "FilterObjects"
+        for item in graph.pattern.iter_items()
+    )
+    assert len(contracts) == 2
+    expected_sources = ("Objects", second_input)
+    expected_outputs = (("RetainedDefault",), ("RetainedEnabled", "RemovedEnabled"))
+    for contract, source, output_names in zip(
+        contracts, expected_sources, expected_outputs, strict=True,
+    ):
+        assert tuple(
+            spec.name for spec in contract.artifact_inputs.of_artifact_type(
+                ObjectLabelsArtifactType,
+            )
+        ) == (source,)
+        outputs = contract.artifact_outputs.of_artifact_type(ObjectLabelsArtifactType)
+        assert tuple(spec.name for spec in outputs) == output_names
+        for output in outputs:
+            (lineage,) = tuple(
+                relation for relation in output.relations
+                if isinstance(relation, SourceStackLineageSourceRelation)
+            )
+            assert lineage.source.name == source
+        assert {
+            (relation.source.name, relation.target.name)
+            for _spec, relation in contract.artifact_outputs.relation_refs(
+                ObjectRelationshipDeclaration,
+            )
+        } == {(source, name) for name in output_names}
+
+    # Exercise the unchanged native leaves as well as their admitted graph.
+    import inspect
+    import numpy as np
+    from openhcs.core.runtime_object_labels import object_label_dense_array
+    from openhcs.processing.backends.cellprofiler.object_images import convert_image_to_objects
+    from openhcs.processing.backends.cellprofiler.object_filtering import FilterMode, filter_objects
+    from openhcs.processing.backends.cellprofiler.shape import measure_object_size_shape
+
+    image = np.zeros((12, 15), dtype=np.uint16)
+    image[0:2, 2:5] = 2
+    image[6:10, 8:13] = 7
+    _image, _stats, objects = inspect.unwrap(convert_image_to_objects)(
+        image, preserve_label=True,
+    )
+    _image, features = inspect.unwrap(measure_object_size_shape)(
+        image, objects, calculate_advanced=False, calculate_zernikes=False,
+    )
+    assert dict(zip(
+        features.columns["object_label"], features.columns["Area"], strict=True,
+    )) == {2: 6.0, 7: 20.0}
+    _image, _stats, retained, relationship = inspect.unwrap(filter_objects)(
+        image, mode=FilterMode.BORDER, object_labels=(objects,),
+    )
+    assert relationship.source_ids == (7,)
+    assert relationship.target_ids == (1,)
+    selected = objects if second_input == "Objects" else retained
+    _image, _stats, enabled, removed, kept_relation, removed_relation = (
+        inspect.unwrap(filter_objects)(
+            image, mode=FilterMode.BORDER, object_labels=(selected,), emit_removed_objects=True,
+        )
+    )
+    expected_kept = np.zeros_like(image)
+    expected_kept[6:10, 8:13] = 1
+    np.testing.assert_array_equal(object_label_dense_array(retained), expected_kept)
+    np.testing.assert_array_equal(object_label_dense_array(enabled), expected_kept)
+    expected_removed = np.zeros_like(image)
+    if second_input == "Objects":
+        expected_removed[0:2, 2:5] = 1
+    np.testing.assert_array_equal(object_label_dense_array(removed), expected_removed)
+    assert kept_relation.source_ids == ((7,) if second_input == "Objects" else (1,))
+    assert kept_relation.target_ids == (1,)
+    assert removed_relation.source_ids == ((2,) if second_input == "Objects" else ())
+    assert removed_relation.target_ids == ((1,) if second_input == "Objects" else ())
+
+
 def test_direct_import_rejects_interactive_manual_identification() -> None:
     cppipe_path = Path("pipelines/interactive.cppipe")
     filemanager = _MemoryFileManager(
