@@ -42,7 +42,6 @@ from openhcs.core.source_matching import (
 )
 from openhcs.core.source_metadata import (
     ORIGINAL_SOURCE_METADATA_FIELD,
-    SOURCE_FILTER_PATHS_METADATA_FIELD,
     OriginalSourceMetadata,
     SourceFilterPathMetadata,
     SourceMetadataMapping,
@@ -648,17 +647,9 @@ class SourceBindingWorkspaceProjector:
             metadata = projection.source_metadata_for(
                 VirtualWorkspacePathLookup.from_paths(path, path)
             )
-            declared_paths = (
-                None if metadata is None
-                else metadata.get(SOURCE_FILTER_PATHS_METADATA_FIELD)
-            )
             filter_paths = (
-                (ref.backend_address, path)
-                if declared_paths is None
-                else SourceFilterPathMetadata.from_reserved_value(
-                    declared_paths, path=path
-                ).paths
-            )
+                () if metadata is None else SourceMetadataFields.source_filter_paths(metadata)
+            ) or (ref.backend_address, path)
             if self.source_bindings.source_path_filters_match(filter_paths):
                 selected_paths.add(path)
                 selected_metadata_paths.update((path, ref.backend_address))

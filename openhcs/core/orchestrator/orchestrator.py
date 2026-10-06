@@ -836,17 +836,14 @@ class PipelineOrchestrator:
         source_bindings = source_bindings_defaults_to_base(
             self.get_effective_config().source_bindings_config
         )
-        if source_bindings.source_filter_declarations:
-            available = self.source_workspace_projection().component_values(component)
-            requested = None if not component_filter else set(map(str, component_filter))
-            return [value for value in available if requested is None or value in requested]
-
         # Use component directly - let natural errors occur for wrong types
         component_name = component.value
 
         # Try metadata cache first (preferred source)
         cached_metadata = self._metadata_cache_service.get_cached_metadata(component)
-        if cached_metadata:
+        if source_bindings.source_filter_declarations:
+            all_components = list(self.source_workspace_projection().component_values(component))
+        elif cached_metadata:
             all_components = list(cached_metadata.keys())
             logger.debug(
                 f"Using metadata cache for {component_name}: {len(all_components)} components"
