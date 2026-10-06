@@ -1,0 +1,105 @@
+{
+  "startup_seconds": 0.7973914109170437,
+  "environment": {
+    "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+    "python_version": "3.9.25",
+    "cellprofiler_version": "4.2.8.1",
+    "cellprofiler_core_version": "4.2.8.1",
+    "numpy_version": "1.24.4",
+    "scipy_version": "1.9.0",
+    "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example3/native_tmp",
+    "temporary_device": 66306,
+    "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+    "host_node": "ts-gaming",
+    "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+    "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+    "cpu_affinity": [
+      5
+    ]
+  },
+  "request": {
+    "pipeline_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example3/native_preparation/native_cellprofiler_headless/ExampleIlluminationCorrection_Example3.cppipe",
+    "input_dir": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images",
+    "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example3/native",
+    "expected_image_sets": null,
+    "repetitions": 3,
+    "file_list_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example3/native_preparation/native_cellprofiler_file_list.txt",
+    "first_image_set": 1,
+    "last_image_set": null,
+    "report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example3/native_report.json",
+    "start_barrier_root": null,
+    "start_barrier_job_count": 1,
+    "start_barrier_job_index": 0,
+    "assignment_output_subdirectories": []
+  },
+  "observations": [
+    {
+      "repetition": -1,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example3/native/-1",
+      "image_set_count": 1,
+      "invocation_seconds": 1.1165074668824673,
+      "pre_pipeline_seconds": 0.0015552989207208157,
+      "pipeline_execution_seconds": 1.1149521679617465,
+      "invocation_started_monotonic_seconds": 4031899.384603655,
+      "pipeline_started_monotonic_seconds": 4031899.386158954,
+      "completed_monotonic_seconds": 4031900.501111122,
+      "assignment_image_set_counts": [
+        [
+          "",
+          1
+        ]
+      ]
+    },
+    {
+      "repetition": 0,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example3/native/0",
+      "image_set_count": 1,
+      "invocation_seconds": 0.5364706548862159,
+      "pre_pipeline_seconds": 0.0007135639898478985,
+      "pipeline_execution_seconds": 0.535757090896368,
+      "invocation_started_monotonic_seconds": 4031900.501123275,
+      "pipeline_started_monotonic_seconds": 4031900.501836839,
+      "completed_monotonic_seconds": 4031901.03759393,
+      "assignment_image_set_counts": [
+        [
+          "",
+          1
+        ]
+      ]
+    },
+    {
+      "repetition": 1,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example3/native/1",
+      "image_set_count": 1,
+      "invocation_seconds": 0.6318686967715621,
+      "pre_pipeline_seconds": 0.0007548811845481396,
+      "pipeline_execution_seconds": 0.631113815587014,
+      "invocation_started_monotonic_seconds": 4031901.037603348,
+      "pipeline_started_monotonic_seconds": 4031901.038358229,
+      "completed_monotonic_seconds": 4031901.669472045,
+      "assignment_image_set_counts": [
+        [
+          "",
+          1
+        ]
+      ]
+    },
+    {
+      "repetition": 2,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleIlluminationCorrection_Example3/native/2",
+      "image_set_count": 1,
+      "invocation_seconds": 0.5983075951226056,
+      "pre_pipeline_seconds": 0.0007316083647310734,
+      "pipeline_execution_seconds": 0.5975759867578745,
+      "invocation_started_monotonic_seconds": 4031901.669482235,
+      "pipeline_started_monotonic_seconds": 4031901.670213843,
+      "completed_monotonic_seconds": 4031902.26778983,
+      "assignment_image_set_counts": [
+        [
+          "",
+          1
+        ]
+      ]
+    }
+  ]
+}

@@ -799,7 +799,7 @@ class PlotMeasuredBenchmarkCommand(BenchmarkCliCommand):
             required=True,
             help="MODE_LABEL=qualified_summary.csv; repeat for measured well/worker modes.",
         )
-        parser.add_argument("--scope", choices=("execution", "total"), required=True)
+        parser.add_argument("--scope", choices=("execution", "total", "amortization"), required=True)
         parser.add_argument("--output-dir", type=Path, required=True)
         return parser
 

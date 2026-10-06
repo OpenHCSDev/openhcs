@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import json
 import math
 import re
 import statistics
@@ -133,6 +134,44 @@ class MeasuredBatchSummarySource(SummarySource):
     @property
     def candidate_method(self) -> str:
         return f"OH ({self.label})"
+
+    def amortization_points(self, pipeline_name: str) -> tuple[int, dict[str, float]]:
+        """Derive single-core per-assignment clocks from qualified paired observations."""
+        custody = json.loads((self.path.parent / "summary_custody.json").read_text())
+        if custody["status"] != "PASS":
+            raise ValueError("Amortization requires qualified matched custody")
+        cases = tuple(case for case in custody["cases"] if case["case"] == pipeline_name)
+        if len(cases) != 1:
+            raise ValueError(f"Custody must own exactly one case {pipeline_name!r}")
+        case = cases[0]
+        mode = case["mode"]
+        count = len(mode["wells"])
+        if count < 1 or len(set(mode["wells"])) != count:
+            raise ValueError("Amortization assignment identities must be nonempty and unique")
+        if mode["candidate_worker_count"] != 1 or mode["native_job_count"] != 1:
+            raise ValueError("Amortization is a single-worker/single-native-job comparison")
+        if case["source_commit"] != custody["source_head"]:
+            raise ValueError("Amortization case source differs from qualified custody")
+        if len(case["native_environment"]["cpu_affinity"]) != 1:
+            raise ValueError("Single-core amortization requires one actual native CPU")
+        observations = case["rows"]
+        if tuple(row["repetition"] for row in observations) != (0, 1, 2):
+            raise ValueError("Amortization requires three measured paired repetitions")
+        values = {
+            "OH execution": statistics.median(row["openhcs_execution_seconds"] for row in observations),
+            "OH total": statistics.median(row["openhcs_total_seconds"] for row in observations),
+            "OH non-execution": statistics.median(
+                row["openhcs_total_seconds"] - row["openhcs_execution_seconds"]
+                for row in observations
+            ),
+            "CP total": statistics.median(row["native_total_seconds"] for row in observations),
+        }
+        if any(not math.isfinite(value) or value < 0 for value in values.values()):
+            raise ValueError("Amortization clocks must be finite and nonnegative")
+        row = _load_summary_table(self)[pipeline_name]
+        if not math.isclose(float(row[OPENHCS_SECONDS_FIELD]), values["OH execution"], abs_tol=1e-9):
+            raise ValueError("Amortization source must be the custody-owned execution summary")
+        return count, {key: value / count for key, value in values.items()}
 
 
 @dataclass(frozen=True)
@@ -679,7 +718,7 @@ def generate_measured_batch_figures(
     conversion belong to the matched-report producer; plotting never invents
     timings, extends measured well counts, or substitutes absent RAM data.
     """
-    if scope not in ("execution", "total"):
+    if scope not in ("execution", "total", "amortization"):
         raise ValueError(f"Unknown measured timing scope: {scope!r}")
     if not summary_sources:
         raise ValueError("At least one measured summary source is required.")
@@ -705,6 +744,11 @@ def generate_measured_batch_figures(
                 raise ValueError(
                     f"Measured source {source.path} lacks selected cases: {sorted(missing)!r}"
                 )
+    if scope == "amortization":
+        return _generate_measured_amortization_figures(
+            summary_sources, pipeline_names=pipeline_names,
+            output_dir=output_dir, output_formats=output_formats,
+        )
     rows = tuple(
         _benchmark_metric_rows(
             tables,
@@ -728,7 +772,7 @@ def generate_measured_batch_figures(
             f"Measured batch {scope} speedup versus CellProfiler",
             "Speedup (x)",
             baseline_line=1.0,
-            target_line=SPEEDUP_TARGET,
+            target_line=SPEEDUP_TARGET if scope == "execution" else None,
             minimum_ylim=0.0,
             log_variant=True,
         ),
@@ -791,9 +835,78 @@ def generate_measured_batch_figures(
             filename_prefix=f"measured_{scope}_speedup",
             title=f"Measured batch {scope} speedup distribution",
             xlabel=f"{scope.title()} speedup versus native CellProfiler (x)",
+            target_line=1.0 if scope == "total" else SPEEDUP_TARGET,
             output_formats=output_formats,
         ),
     )
+
+
+def _generate_measured_amortization_figures(
+    sources: Sequence[MeasuredBatchSummarySource], *, pipeline_names: Sequence[str],
+    output_dir: Path, output_formats: Sequence[str],
+) -> tuple[Path, ...]:
+    """Present actual single-core batch sizes using the existing manuscript style."""
+    heads = {
+        json.loads((source.path.parent / "summary_custody.json").read_text())["source_head"]
+        for source in sources
+    }
+    if len(heads) != 1:
+        raise ValueError("Amortization modes must share one qualified source revision")
+    points = {
+        name: sorted((source.amortization_points(name) for source in sources), key=lambda point: point[0])
+        for name in pipeline_names
+    }
+    for name, series in points.items():
+        counts = tuple(count for count, _ in series)
+        if len(counts) < 2 or counts[0] != 1 or len(set(counts)) != len(counts):
+            raise ValueError(f"Amortization needs measured1 and distinct larger counts: {name}")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    outputs = []
+    metric = FigureMetricSpec(
+        RAW_SECONDS_FIELD, "measured_single_core_amortization",
+        "Single-core measured amortization", "Seconds per assignment", minimum_ylim=0.0,
+    )
+    with FIGURE_STYLE.context():
+        fig, axes = plt.subplots(1, len(pipeline_names), squeeze=False,
+                                 figsize=(5 * len(pipeline_names), SINGLE_PANEL_HEIGHT_INCHES))
+        for index, name in enumerate(pipeline_names):
+            axis = axes[0, index]
+            series = points[name]
+            counts = tuple(count for count, _ in series)
+            for method_index, method in enumerate(series[0][1]):
+                axis.plot(counts, [values[method] for _, values in series],
+                          marker="o", label=method,
+                          linestyle=":" if method == "CP total" else "-",
+                          color=FIGURE_STYLE.color_for_method(method_index))
+            FIGURE_STYLE.decorate_axis(axis, metric=metric, panel_index=index)
+            axis.set_title(PIPELINE_LABEL_LAYOUT.split_label(name), loc="left", pad=10)
+            axis.set_xlabel("Measured repeated assignments (one worker)")
+            axis.set_ylabel(metric.ylabel)
+            axis.set_xticks(counts)
+            axis.set_ylim(bottom=0)
+            axis.legend()
+        fig.tight_layout()
+        for extension in output_formats:
+            path = output_dir / f"{metric.filename_stem}.{extension}"
+            FIGURE_STYLE.save(fig, path)
+            outputs.append(path)
+        plt.close(fig)
+    caption = output_dir / "measured_single_core_amortization_caption.md"
+    caption.write_text(
+        "Actual measured assignment counts only; connecting lines are visual guides, "
+        "not projections. One CPU/worker per engine, three measured repetitions after warmup. "
+        "Execution and total curves use per-engine medians divided by the declared assignment count. "
+        "OH non-execution is the median paired (total minus server execution) divided by that count: "
+        "compilation plus client submission/polling overhead. It does not separate pixel processing "
+        "from generic plumbing inside the server execution interval. "
+        "Repeated assignments reuse one biological source sample. OH total includes compilation "
+        "and full execution; CP total includes invocation preparation and execution, excluding "
+        "one-time pipeline loading and JVM startup. Server/library readiness is excluded for both. "
+        "Single-sample compile-plus-run performance relative to native remains visible; "
+        "the execution headline excludes compilation. No unmeasured modes or RAM are shown.\n",
+        encoding="utf-8",
+    )
+    return (*outputs, caption)
 
 
 def _load_summary_table(source: SummarySource) -> SummaryTable:
@@ -1461,6 +1574,7 @@ class SpeedupDistributionReport:
     title: str
     xlabel: str
     output_formats: tuple[str, ...] = DEFAULT_FORMATS
+    target_line: float = SPEEDUP_TARGET
 
     def outputs(self) -> tuple[Path, ...]:
         """Write all speedup distribution report artifacts."""
@@ -1560,6 +1674,9 @@ class SpeedupDistributionReport:
                 layout="constrained",
             )
             for index, item in enumerate(self.series):
+                summary = SpeedupSummaryStatistics.from_series(item)
+                if summary is None:
+                    continue
                 thresholds = self.thresholds(item.values)
                 y_values = tuple(
                     100.0
@@ -1573,18 +1690,21 @@ class SpeedupDistributionReport:
                     where="post",
                     linewidth=2.0,
                     color=FIGURE_STYLE.color_for_method(index + 1),
-                    label=item.label,
+                    label=(
+                        f"{item.label}\n"
+                        f"min {summary.minimum:.2f}x; median {summary.median:.2f}x"
+                    ),
                 )
             axis.axvline(
-                SPEEDUP_TARGET,
+                self.target_line,
                 color=FIGURE_STYLE.target_color,
                 linewidth=1.15,
                 linestyle="--",
                 alpha=0.86,
             )
             axis.annotate(
-                f"{SPEEDUP_TARGET:g}x target",
-                xy=(SPEEDUP_TARGET, 99.0),
+                "Native parity (1x)" if self.target_line == 1.0 else f"{self.target_line:g}x target",
+                xy=(self.target_line, 99.0),
                 xycoords=("data", "data"),
                 xytext=(3, -2),
                 textcoords="offset points",
@@ -1594,12 +1714,14 @@ class SpeedupDistributionReport:
                 color=FIGURE_STYLE.target_color,
             )
             if log_x:
-                axis.set_xscale("log")
+                axis.set_xscale("log", base=2)
+                axis.xaxis.set_major_locator(LogLocator(base=2, numticks=12))
+                axis.xaxis.set_minor_locator(NullLocator())
                 axis.xaxis.set_major_formatter(FuncFormatter(_plain_log_tick_label))
                 axis.xaxis.set_minor_formatter(NullFormatter())
             axis.set_ylim(0.0, 102.0)
             axis.set_xlabel(self.xlabel)
-            axis.set_ylabel("Datasets at or above threshold (%)")
+            axis.set_ylabel("Pipelines at or above threshold (%)")
             axis.set_title(
                 f"{self.title} (log scale)" if log_x else self.title,
                 loc="left",
@@ -1665,6 +1787,7 @@ def generate_speedup_distribution_artifacts(
     title: str,
     xlabel: str,
     output_formats: Sequence[str] = DEFAULT_FORMATS,
+    target_line: float = SPEEDUP_TARGET,
 ) -> tuple[Path, ...]:
     """Generate speedup summary tables and cumulative distribution figures."""
     clean_series = tuple(
@@ -1686,6 +1809,7 @@ def generate_speedup_distribution_artifacts(
         title=title,
         xlabel=xlabel,
         output_formats=tuple(output_formats),
+        target_line=target_line,
     ).outputs()
 
 

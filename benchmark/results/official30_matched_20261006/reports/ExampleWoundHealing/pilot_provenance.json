@@ -1,0 +1,99 @@
+{
+  "case": "ExampleWoundHealing",
+  "wells": [
+    "A01"
+  ],
+  "selected_source_wells": [
+    "A01"
+  ],
+  "assignment_scope": "genuine source wells",
+  "manifest_sha256": "1d1b016aea7ff2ac0bc2441fff1140bb492bbf3b86048f8565694ccd45e4dff1",
+  "cppipe_sha256": "61da2bdd29daec73813645fef978fe237ecd92229433106d80e9bb0c65a3c8e6",
+  "driver_sha256": "8b987409c66e29fdc1dc18e61bd31a07c631750cc9bb9224a6bfff37a8c9a3a9",
+  "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
+  "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
+  "source_commit": "d8678dbd443d78e0c4e5d90f4c2e867af61af80b",
+  "source_dirty": false,
+  "native_job_count": 1,
+  "candidate_worker_count": 1,
+  "candidate_worker_start_method": "fork",
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0"
+  },
+  "native_input_inventory": [
+    {
+      "path": "DMSO_B5_t0.JPG",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleWoundHealing/images/DMSO_B5_t0.JPG",
+      "size_bytes": 575687,
+      "sha256": "1d91c175dd7aa433e63d218b9d352e6065c5c5c888631366f6d0716fa384f642"
+    },
+    {
+      "path": "DMSO_B5_t24.JPG",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleWoundHealing/images/DMSO_B5_t24.JPG",
+      "size_bytes": 588592,
+      "sha256": "fc83c19de66538f1619728cd52930b867fb87bbcfa39d85ab9838eae7e097198"
+    }
+  ],
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleWoundHealing/native_report.json",
+  "native_reference_report_sha256": "069037a3e6c0fb0b7ca5db495b43e5671ba5867fb75a90eb7ed4609805f84eed",
+  "native_reference_source_commit": "6fb8212c26dee2349425f4593e8c115d38a5c755",
+  "native_reference_file_inventory": [
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleWoundHealing/native_report.json",
+      "sha256": "069037a3e6c0fb0b7ca5db495b43e5671ba5867fb75a90eb7ed4609805f84eed"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleWoundHealing/native_request.json",
+      "sha256": "8865f5b58cead0eb2c09e10c6236ac579355f4580349e55aa38fb218030d1799"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleWoundHealing/pilot_provenance.json",
+      "sha256": "c4f022a0d28670c1b71bced948633edb4b36b4ed8a43b6c55f7259621c36150e"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleWoundHealing/native/-1/Image.csv",
+      "sha256": "c3008e29640bc8957662a495c6e6172bcab91b31e6987b1f5bb873f5d696c792"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleWoundHealing/native/0/Image.csv",
+      "sha256": "d2966c97c0148c48d7b2214caebdd13c32998833ec6eb5fa54fa615c94840ed3"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleWoundHealing/native/1/Image.csv",
+      "sha256": "812e77d958b1a2f6e4c5a79ba058923cf436ba869adc28b20133360e10938f8c"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleWoundHealing/native/2/Image.csv",
+      "sha256": "b15b7bc4b50e2f07a1f2c980ee06778008344ac415e223c36e66d74db2a15d22"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleWoundHealing/native_preparation/native_cellprofiler_file_list.txt",
+      "sha256": "f00beb9e827b95803f59725b3dd7b98817fdb815bd4c0361300daeb8b5e3f2ab"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v6/cases/ExampleWoundHealing/native_preparation/native_cellprofiler_headless/ExampleWoundHealing.cppipe",
+      "sha256": "492f8be03ef821ebf56ac43023a956f368fd89f03abfdf9e5ed5cefe3ac790fb"
+    }
+  ],
+  "native_image_set_count": 2,
+  "native_input_inventory_after": [
+    {
+      "path": "DMSO_B5_t0.JPG",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleWoundHealing/images/DMSO_B5_t0.JPG",
+      "size_bytes": 575687,
+      "sha256": "1d91c175dd7aa433e63d218b9d352e6065c5c5c888631366f6d0716fa384f642"
+    },
+    {
+      "path": "DMSO_B5_t24.JPG",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleWoundHealing/images/DMSO_B5_t24.JPG",
+      "size_bytes": 588592,
+      "sha256": "fc83c19de66538f1619728cd52930b867fb87bbcfa39d85ab9838eae7e097198"
+    }
+  ]
+}
