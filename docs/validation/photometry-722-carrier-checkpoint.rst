@@ -164,3 +164,29 @@ at 35f08b267. Neither it nor controls02 is claimed as full acceptance.
 Normal main integration at 70605278a includes accepted PR926 and current paper
 commits; those are not attributed to this photometry repair. The new source
 checkpoint still requires its batch and installed MCP checks before merge.
+
+Controls04 and next source-set boundary
+-------------------------------------
+
+Controls04 at 7b80e6729 ended exit 1: 94 passed, six failed. Label-only stored
+cohort, single raw alias, mixed raw/produced orders and the migrated source-flow
+controls passed. Remaining failures are missing current Actin planes, a named
+produced-image/channel scope mismatch, and the two-source anchor count.
+The transformed-current case remains among the missing-plane failures.
+This is not full family or installed acceptance.
+
+Source readback identifies another owning decision: when an anchor contains
+only one alias and matching is ORDER or unspecified, SourceBindingMatchedImageSet
+returned only compatible anchors without expanding other required aliases.
+Its existing single-alias resolver already supplies identity-checked members
+from the declared source universe. The multi-alias expansion now consumes that
+same resolver for each declared alias. Image-set identity constraints remain in
+the existing policy/compatibility owner; no new store or weakened provenance
+guard is added. This source follow-through is awaiting its batched verification.
+The distinct produced-image scope failure is retained, not hidden by a raw reload.
+
+Additional immutable witness reported by the parent: receiving22's independent
+R0010_FRESH22_96 author observed raw label-scaling/zero variance and independently
+continued using its saved raw image. Root:
+/home/ts/wt/openhcs-issue-batch-20260929/next-retina-fresh22-96-after-retina20-20261006/R0010_FRESH22_96/author-workspace/output
+No contact, source change, scientific replay or receiving22 hotpatch occurred.

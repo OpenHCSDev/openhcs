@@ -1232,10 +1232,16 @@ class SourceBindingMatchedImageSet(SourceIdentityResolutionContext):
             selected = self._complete_alias_set(anchors, resolution_bindings)
             if selected is not None:
                 return selected
-            return SourceBindingCandidateMatcher.compatible_candidates(
-                anchors,
-                bindings=resolution_bindings,
-                source_context=self,
+            return tuple(
+                dict.fromkeys(
+                    candidate
+                    for binding in resolution_bindings
+                    for candidate in self._expand_single_alias(
+                        anchors,
+                        binding=binding,
+                        source_universe=source_universe,
+                    )
+                )
             )
 
         selected_anchor_candidates = self._complete_alias_set(
