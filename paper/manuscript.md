@@ -480,6 +480,13 @@ measured local omission, but the sensitivity of the graph outputs prevents
 interpreting them as validated neuron-specific outgrowth or branch counts
 (Supplementary Figure 24; Supplementary Data 8).
 
+An independent repeat also retained eight soma-associated regions after
+repairing nuclear texture splits. Widening ridge admission recovered a measured
+faint-process witness, but reported branch counts rose from 15 to 247 while
+other gaps and near-track spurs remained. Thus the repeated result supports
+soma localisation and useful principal-process geometry, not stable fine-branch
+quantification (Supplementary Data 8).
+
 A separate retained-context personal-neurite continuation
 processed a nine-field mosaic with shared channel fits and paths across sampled
 joins, but incomplete nuclear and soma detection limited its morphology
