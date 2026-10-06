@@ -158,19 +158,17 @@ The advanced segmentation and 3D monolayer imports retain their named structures
 
 ### Matched execution and total time across 30 workflows
 
-The matched single-sample evaluation used [pending]{.benchmark-claim key=case_count} workflows from record [pending]{.benchmark-claim key=record_name}, production revision [pending]{.benchmark-claim key=source_revision}. Its publication status is [pending]{.benchmark-claim key=status}. Declared-output comparisons passed in the warmup and three measured repetitions. The minimum execution speedup over native CellProfiler was [pending]{.benchmark-claim key=execution_min}-fold and the median was [pending]{.benchmark-claim key=execution_median}-fold (Figure 2A).
+The matched single-sample evaluation used [pending]{.benchmark-claim key=case_count} workflows from record [pending]{.benchmark-claim key=record_name}, production revision [pending]{.benchmark-claim key=source_revision}. Its publication status is [pending]{.benchmark-claim key=status}. Declared-output comparisons passed in the warmup and three measured repetitions (Figure 2A). The minimum execution speedup over native CellProfiler was [pending]{.benchmark-claim key=execution_min}-fold and the median was [pending]{.benchmark-claim key=execution_median}-fold (Figure 2B).
 
-Compile-plus-run total speedup had a minimum of [pending]{.benchmark-claim key=total_min}-fold and a median of [pending]{.benchmark-claim key=total_median}-fold (Figure 2B). This comparison includes OpenHCS compilation and client coordination, separately from execution. Exact per-workflow times and the clock definitions accompany the same record.
+Compile-plus-run total speedup had a minimum of [pending]{.benchmark-claim key=total_min}-fold and a median of [pending]{.benchmark-claim key=total_median}-fold (Figure 2C). This comparison includes OpenHCS compilation and client coordination, separately from execution. Exact per-workflow times and the clock definitions accompany the same record.
 
 Measured multi-worker efficiencies and single-core amortization are reported separately in Supplementary Figures 16–17.
 
 ### Figure 2. Matched single-sample speedup over native CellProfiler
 
-![Execution speedup distribution.](figures/slas/benchmark-publication/execution/measured_execution_speedup_cumulative_distribution_log.png){width=5.5in}
+![Declared-output parity and matched execution and total speedup distributions.](figures/slas/benchmark-publication/measured_benchmark_publication.png){width=6in}
 
-![Total speedup distribution.](figures/slas/benchmark-publication/total/measured_total_speedup_cumulative_distribution_log.png){width=5.5in}
-
-\(A) Execution and (B) total speedup for [pending]{.benchmark-claim key=case_count} workflows on one selected source sample, one worker and one numerical thread. Curves show the fraction at or above each threshold on a logarithmic axis; dashed lines denote twofold execution speedup and total-time parity. Ratios use independent engine medians from three repetitions after warmup. Execution minima/medians are [pending]{.benchmark-claim key=execution_min}/[pending]{.benchmark-claim key=execution_median]-fold; total minima/medians are [pending]{.benchmark-claim key=total_min}/[pending]{.benchmark-claim key=total_median]-fold. Record [pending]{.benchmark-claim key=record_name}, revision [pending]{.benchmark-claim key=source_revision}, status [pending]{.benchmark-claim key=status}, supplies both panels and all manuscript claims. Timing definitions and provenance are retained with that record.
+\(A) Declared-output comparisons passed for [pending]{.benchmark-claim key=case_count} workflows; this is workflow parity, not biological segmentation accuracy. (B) Execution and (C) total speedup use one selected source sample, one worker and one numerical thread. Curves show the fraction at or above each threshold on a logarithmic axis; dashed lines denote twofold execution speedup and total-time parity. Ratios use independent engine medians from three repetitions after warmup. Execution minima/medians are [pending]{.benchmark-claim key=execution_min}/[pending]{.benchmark-claim key=execution_median]-fold; total minima/medians are [pending]{.benchmark-claim key=total_min}/[pending]{.benchmark-claim key=total_median]-fold. Record [pending]{.benchmark-claim key=record_name}, revision [pending]{.benchmark-claim key=source_revision}, status [pending]{.benchmark-claim key=status}, supplies all panels and manuscript claims. Timing definitions and provenance are retained with that record.
 
 ### Autonomous analysis across distinct biological tasks
 
@@ -188,7 +186,8 @@ object F1 of 0.898–0.906 over the same 200 annotated fields. The lower-scoring
 fields show that useful overall agreement does not imply uniform accuracy.
 
 In three dimensions, a measurement-first author recovered all 15 annotated
-centres within 20 voxels, with mean matched error of 4.80 voxels (Figure 4).
+centres within the predeclared 30-voxel matching distance, with mean matched
+error of 4.80 voxels (Figure 4). All 15 also matched within 20 voxels.
 Eleven further predictions were unmatched to annotations of unestablished
 coverage. Native orthogonal views reveal supported body locations and remaining
 lobed-body ambiguity; a separate author repaired an internal partition without
@@ -250,7 +249,7 @@ being treated as additional experiments.
 | H001 bright objects | Pinned notebook labels; 64 objects | First/final object F1 0.929/0.944 in the Figure 3 trial; computational, not manual biological truth |
 | BBBC039 nuclei | Independent instance annotations; 200 fields | Three authors' final pooled F1 0.898–0.906; includes development fields, not first-200 or unseen accuracy |
 | BBBC007 DNA/actin | Manual-outline union; 16 fields per author | Two final authors' directed boundary fractions 0.740–0.743 within two pixels; not boundary recall or exhaustive instance accuracy |
-| H002 3-D centres | 15 manual centres; Figure 4 trial | 15/15 matched within 20 voxels, mean error 4.80 voxels; annotations not established as exhaustive |
+| H002 3-D centres | 15 manual centres; Figure 4 trial | 15/15 matched within the primary 30-voxel distance, mean error 4.80 voxels; annotations not established as exhaustive |
 | R0010 retinal somata | Distributed matched raw/result review | Autonomous repair retained neighbours and reduced nuisance masks; manual-reference accuracy unmeasured |
 | H004 public neurites | Matched raw shafts and nuisance controls | Principal-shaft and junction recovery; fine protrusions and per-neuron crossing ownership unresolved |
 | Laboratory neurites, nine fields | Matched raw/path review in three sampled fields | Autonomous completion and recovery of thin paths after self-directed repair; overlapping fields not stitched or deduplicated, per-neuron ownership unresolved |
