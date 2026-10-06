@@ -2,8 +2,9 @@ Dirty main checkout reconciliation
 ==================================
 
 Integration owner: this coordinator. Viewer audit: Singer. Benchmark and
-scientific-source audit: Hypatia. Source preservation is complete; selective
-integration, issue acceptance and checkout cleanup remain in progress.
+scientific-source audit: Hypatia. Source preservation and tracked/dependency
+checkout cleanup are complete; selective integration and issue acceptance
+remain in progress. Original untracked inputs/results are preserved in place.
 
 The live checkout at /home/ts/code/projects/openhcs remains based on
 2bc579ca9e5d3d70a130bec96ee6f001f3dd5c74 (24 September). Direct tool-call history
@@ -125,11 +126,15 @@ Determining dispositions
   machine. Compare its current workflow and subsequent main history before
   proposing any change; competing implementation has been stopped. The exact
   old patch remains independently recoverable from the recovery branch.
-* score_instance_labels.py and score_point_centres.py plus their tests are
-  unpublished sources required by published H001/H002 evidence. Existing
-  instance matching does not establish equivalent diagnostic contracts.
-* Haase/Liz preparation scripts and preset notes are unpublished acquisition
-  provenance, not fixes for runtime preparation cost or viewer QA issues.
+* score_instance_labels.py and score_point_centres.py plus their tests were
+  unpublished sources required by published H001/H002 evidence. Their exact
+  original bytes are now delivered on main in8522309d1, together with the
+  Haase/Liz preparation scripts; all six match the archival blobs. The11
+  original scorer controls passed. This preserves the original scientific
+  methods, not a universal matching-optimality or biological-accuracy claim.
+* Haase preset notes and the Liz prospective study plan remain historical
+  acquisition/study provenance in the recovery branch, not fixes for runtime
+  preparation cost, viewer QA or a statement of current manuscript completion.
 
 Dependency source dispositions
 ------------------------------
@@ -235,6 +240,30 @@ tests: current ABI validation excludes the callable's variadic annotation and
 requires an exact return-slot count. The issue comment points to these actual
 current declarations rather than asking anyone to redo removed-object repair.
 
+Current runtime and reporting residuals
+--------------------------------------
+
+At main888756bbd, issue385 is a real OpenHCS consumer gap. Reading the EXACT
+main-pinned ZMQRuntime29e2a869f confirms VisualizerProcessManager already retains
+EndpointProcess and delegates its exact-child stop. The borrowed submodule
+checkout is a different revision and was not used as current-source evidence.
+OpenHCS launch_detached_viewer still returns a raw Popen, and
+terminate_owned_viewer_process clears self.process in finally. After failed
+acquisition/cleanup, StreamingViewerLifecycle constructs a launch failure from
+the request/log, without the original child identity or stop disposition.
+PlateStreamingService publishes the log path only. The dependency owner exists;
+its launch/failure consumer migration remains. Historical missing evidence is
+not recoverable from a later successful viewer, and no operation was replayed.
+
+Issue407 is narrower than its original whole-family receiving note. PR413 and
+later672e7c4c7/6b76266c4/7ee00fda5 delivered original typed summaries, sample/ROI
+records, receipt admission and their presentation consumers. Current
+ViewerNavigationRenderer and ViewerSnapshotRenderer still use raw maps;
+RuntimeServerRenderer still reconstructs runtime counts from raw responses.
+These concrete remaining readers keep407 open, not an assumption that completed
+native geometry or segmentation is broken. Both issue comments now identify
+the current owners and remaining consumers explicitly.
+
 Next delivery
 -------------
 
@@ -242,6 +271,7 @@ Adapt useful unpublished families through existing owners in released /wt
 checkouts, preserving this recovery branch independently. Tests and affected
 real application checks follow coherent implementation. No new environment,
 arbitrary memory cap, broad code transplant or routine contributor PR is needed.
-Stashing historical source is a final custody operation, not the implementation
-or scientific-provenance deliverable. Keep data/history separate and preserve
-dependency edits independently before changing the live checkout.
+Stashing historical source was a custody operation, not the implementation
+or scientific-provenance deliverable. That custody is complete. Keep the
+original data/history separate; do not pull current main over colliding
+untracked source or replace another worker's installed backing paths.
