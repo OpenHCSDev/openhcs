@@ -300,7 +300,7 @@ being treated as additional experiments.
 |---|---|---|
 | H001 bright objects | Pinned notebook labels; 64 objects | First/final object F1 0.929/0.944 in the Figure 5 trial; computational, not manual biological truth |
 | BBBC039 nuclei | Independent instance annotations; 200 fields | Three authors' final pooled F1 0.898–0.906; includes development fields, not first-200 or unseen accuracy |
-| BBBC007 DNA/actin | Manual-outline union; 16 fields | Directed boundary fraction 0.743 within two pixels; not boundary recall or exhaustive instance accuracy |
+| BBBC007 DNA/actin | Manual-outline union; 16 fields per author | Two final authors' directed boundary fractions 0.740–0.743 within two pixels; not boundary recall or exhaustive instance accuracy |
 | H002 3-D centres | 15 manual centres; Figure 9 trial | 15/15 matched within 20 voxels, mean error 4.80 voxels; annotations not established as exhaustive |
 | R0010 retinal somata | Distributed matched raw/result review | Autonomous repair retained neighbours and reduced nuisance masks; manual-reference accuracy unmeasured |
 | H004 public neurites | Matched raw shafts and nuisance controls | Principal-shaft and junction recovery; fine protrusions and per-neuron crossing ownership unresolved |
