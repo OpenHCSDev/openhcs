@@ -621,24 +621,57 @@ class MeasurementSparseColumnarRows(ColumnarRows):
                 identity_columns = tuple(
                     (name, columns[name]) for name in identities if name in columns
                 )
-                destinations = np.empty(count, dtype=np.intp)
-                for index in range(count):
-                    identity = tuple(
-                        (name, values[index])
+                first_segment = segments[0] if segments else None
+                aligned = (
+                    first_segment is not None
+                    and len(first_segment[0]) == count
+                    and all(
+                        name in first_segment[1]
+                        and np.array_equal(values, first_segment[1][name])
                         for name, values in identity_columns
-                        if not is_structural_missing_measurement_cell(values[index])
                     )
-                    if not identity:
-                        identity = (("__row_index__", passthrough),)
-                        passthrough += 1
-                    destinations[index] = row_domain.setdefault(
-                        identity, len(row_domain)
+                    and tuple(name for name in identities if name in first_segment[1])
+                    == tuple(name for name, _values in identity_columns)
+                    and bool(identity_columns)
+                    and (
+                        any(
+                            isinstance(values, np.ndarray)
+                            and not values.dtype.hasobject
+                            for _name, values in identity_columns
+                        )
+                        or all(
+                            any(
+                                not is_structural_missing_measurement_cell(
+                                    values[index]
+                                )
+                                for _name, values in identity_columns
+                            )
+                            for index in range(count)
+                        )
                     )
+                )
+                if aligned:
+                    destinations = first_segment[0]
+                else:
+                    destinations = np.empty(count, dtype=np.intp)
+                    for index in range(count):
+                        identity = tuple(
+                            (name, values[index])
+                            for name, values in identity_columns
+                            if not is_structural_missing_measurement_cell(values[index])
+                        )
+                        if not identity:
+                            identity = (("__row_index__", passthrough),)
+                            passthrough += 1
+                        destinations[index] = row_domain.setdefault(
+                            identity, len(row_domain)
+                        )
                 segments.append((destinations, columns))
-        columns = {
-            name: np.full(len(row_domain), missing_cell, dtype=object) for name in names
-        }
+        columns: dict[str, np.ndarray] = {}
         for destinations, source_columns in segments:
+            complete_projection = np.unique(
+                destinations, return_index=True, return_inverse=True
+            )
             for name, values in source_columns.items():
                 values = ColumnarRows.column_array(values)
                 present = (
@@ -657,28 +690,44 @@ class MeasurementSparseColumnarRows(ColumnarRows):
                 )
                 indexes = destinations[present]
                 admitted = values[present]
-                unique, first, inverse = np.unique(
-                    indexes, return_index=True, return_inverse=True
+                unique, first, inverse = (
+                    complete_projection
+                    if bool(np.all(present))
+                    else np.unique(indexes, return_index=True, return_inverse=True)
                 )
                 selected = admitted[first]
+                repeated = np.arange(len(admitted)) != first[inverse]
                 if values_equal is not None or not equal(admitted, selected[inverse]):
                     for value, previous in zip(
-                        admitted, selected[inverse], strict=True
+                        admitted[repeated], selected[inverse][repeated], strict=True
                     ):
                         if not equal(previous, value):
                             raise ValueError(
                                 f"Conflicting sparse measurement values for field {name!r}: {previous!r} vs {value!r}."
                             )
-                target = columns[name]
+                target = columns.get(name)
+                if target is None:
+                    if len(unique) == len(row_domain):
+                        columns[name] = selected.copy()
+                    else:
+                        target = np.full(len(row_domain), missing_cell, dtype=object)
+                        target[unique] = selected
+                        columns[name] = target
+                    continue
                 previous = target[unique]
-                overlap = np.fromiter(
-                    (
-                        not is_structural_missing_measurement_cell(value)
-                        and value is not missing_cell
-                        for value in previous
-                    ),
-                    dtype=bool,
-                    count=len(previous),
+                overlap = (
+                    np.ones(len(previous), dtype=bool)
+                    if not target.dtype.hasobject
+                    and missing_cell is MEASUREMENT_SPARSE_CELL
+                    else np.fromiter(
+                        (
+                            not is_structural_missing_measurement_cell(value)
+                            and value is not missing_cell
+                            for value in previous
+                        ),
+                        dtype=bool,
+                        count=len(previous),
+                    )
                 )
                 if values_equal is not None or not equal(
                     previous[overlap], selected[overlap]
@@ -690,7 +739,16 @@ class MeasurementSparseColumnarRows(ColumnarRows):
                             raise ValueError(
                                 f"Conflicting sparse measurement values for field {name!r}: {left!r} vs {right!r}."
                             )
+                if target.dtype != selected.dtype:
+                    target = target.astype(object)
+                    columns[name] = target
                 target[unique] = selected
+        columns = {
+            name: columns.get(
+                name, np.full(len(row_domain), missing_cell, dtype=object)
+            )
+            for name in names
+        }
         return cls(
             MappingProxyType(columns),
             fields=fields,
@@ -1041,6 +1099,22 @@ class WideMeasurementRowAccumulator:
         )
         if feature_fields and not value_fields:
             raise ValueError("Long-form measurement columns have no value column.")
+        normalized_features = (
+            np.fromiter(
+                (
+                    (
+                        MEASUREMENT_SPARSE_CELL
+                        if is_structural_missing_measurement_cell(value)
+                        else str(value)
+                    )
+                    for value in feature_fields[0]
+                ),
+                dtype=object,
+                count=row_count,
+            )
+            if feature_fields
+            else None
+        )
         cohorts: dict[tuple[str, tuple[tuple[str, object], ...]], list[int]] = {}
         labels = np.full(row_count, missing_cell, dtype=object)
         for index in range(row_count):
@@ -1133,13 +1207,13 @@ class WideMeasurementRowAccumulator:
             for name, values in feature_columns:
                 admit(name, values)
             if feature_fields:
-                names = feature_fields[0]
+                names = normalized_features
                 values = value_fields[0]
                 feature_names = tuple(
                     dict.fromkeys(
-                        str(names[index])
-                        for index in selected
-                        if not is_structural_missing_measurement_cell(names[index])
+                        value
+                        for value in names[indexes]
+                        if not is_structural_missing_measurement_cell(value)
                     )
                 )
                 for name in feature_names:
@@ -1147,15 +1221,7 @@ class WideMeasurementRowAccumulator:
                         raise ValueError(
                             "Long-form measurement row has an empty feature name."
                         )
-                    mask = np.fromiter(
-                        (
-                            not is_structural_missing_measurement_cell(value)
-                            and str(value) == name
-                            for value in names
-                        ),
-                        dtype=bool,
-                        count=row_count,
-                    )
+                    mask = names == name
                     for index in indexes[mask[indexes]]:
                         if is_structural_missing_measurement_cell(values[index]):
                             raise ValueError(
@@ -1509,6 +1575,8 @@ class ColumnarMeasurementRowsAxisProjection(MeasurementRowsAxisProjection):
         values = self.columns.get(axis.value)
         if values is None:
             return self.has_rows
+        if isinstance(values, np.ndarray) and values.dtype.kind in "biu":
+            return False
         return any(
             measurement_axis_integer_value(value, axis) is None for value in values
         )
@@ -1553,33 +1621,56 @@ class ColumnarMeasurementRowsAxisProjection(MeasurementRowsAxisProjection):
             if axisless_value is None:
                 return self.rows
             return self.project_runtime_slice_index(axisless_value)
-        projected_values = []
-        for value in self.columns[slice_index_field]:
-            if is_structural_missing_measurement_cell(value):
-                projected_values.append(
-                    value if axisless_value is None else int(axisless_value)
+        source_values = self.columns[slice_index_field]
+        if isinstance(source_values, np.ndarray) and source_values.dtype.kind in "biu":
+            domain, inverse = np.unique(source_values, return_inverse=True)
+            remapped = []
+            for value in domain:
+                slice_index = int(value)
+                if slice_index not in values:
+                    raise ValueError(
+                        "Measurement row runtime-slice remapping has no value for "
+                        f"slice_index={slice_index!r}."
+                    )
+                remapped.append(int(values[slice_index]))
+            integer_bounds = np.iinfo(np.int64)
+            dtype = (
+                np.int64
+                if all(
+                    integer_bounds.min <= value <= integer_bounds.max
+                    for value in remapped
                 )
-                continue
-            slice_index = measurement_axis_integer_value(
-                value,
-                MeasurementRowAxisField.SLICE_INDEX,
+                else object
             )
-            if slice_index is None:
-                if axisless_value is None:
-                    projected_values.append(value)
+            projected_values = np.asarray(remapped, dtype=dtype)[inverse]
+        else:
+            projected_values = []
+            for value in self.columns[slice_index_field]:
+                if is_structural_missing_measurement_cell(value):
+                    projected_values.append(
+                        value if axisless_value is None else int(axisless_value)
+                    )
                     continue
-                projected_values.append(int(axisless_value))
-                continue
-            if slice_index not in values:
-                raise ValueError(
-                    "Measurement row runtime-slice remapping has no value for "
-                    f"slice_index={slice_index!r}."
+                slice_index = measurement_axis_integer_value(
+                    value,
+                    MeasurementRowAxisField.SLICE_INDEX,
                 )
-            projected_values.append(int(values[slice_index]))
+                if slice_index is None:
+                    if axisless_value is None:
+                        projected_values.append(value)
+                        continue
+                    projected_values.append(int(axisless_value))
+                    continue
+                if slice_index not in values:
+                    raise ValueError(
+                        "Measurement row runtime-slice remapping has no value for "
+                        f"slice_index={slice_index!r}."
+                    )
+                projected_values.append(int(values[slice_index]))
         return MeasurementProjectedColumnarRows(
             ColumnarRowColumnOverlay(
                 self.columns,
-                MappingProxyType({slice_index_field: tuple(projected_values)}),
+                MappingProxyType({slice_index_field: projected_values}),
             ),
             fields=projected_columnar_fields(
                 self.rows,

@@ -575,6 +575,10 @@ def test_columnar_join_custom_equality_receives_atomic_cells_and_rejects_nan() -
         assert not isinstance(right, np.ndarray)
         return bool(left == right)
 
+    unique = MeasurementSparseColumnarRows.from_columnar_batches(
+        (rows,), values_equal=strict
+    )
+    assert np.isnan(unique.columns["value"][0])
     with pytest.raises(ValueError, match="Conflicting sparse measurement values"):
         MeasurementSparseColumnarRows.from_columnar_batches(
             (rows, rows), values_equal=strict
