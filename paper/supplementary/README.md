@@ -488,6 +488,30 @@ records the original capture hashes and editorial crop.
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
+## Supplementary Figure 25. Autonomous repair of an internal body split
+
+![Unchanged raw image, first labels, repaired labels and repaired combined view.](../figures/slas/h002_fresh22_split_repair.png){width=5.3in}
+
+\(A) Raw image. (B) First categorical instance labels divide the continuous
+elongated body into two visible partitions. (C) Component-local seed suppression
+retains one partition in that body, while the round neighbouring body remains
+separate. (D) Repaired labels over raw. The four panels come from the same XY
+viewport at zero-based Z index 36 in the frozen independent H002 fresh22 trial.
+First and repaired raw screenshots are byte-identical. The visible colour map
+is categorical; colours are not stable object identities across candidates.
+Panels use identical editorial crops, with no pixel retouching. The repaired
+candidate's label volume is byte-identical to its final technical delivery
+retry. This is a local partition witness, not complete volume segmentation.
+Post-freeze comparison recovered all 15 manual centres within 20 voxels,
+while 11 predictions were unmatched to annotations of unestablished coverage.
+The [completion record](task_only_analysis/h002-fresh22-postfreeze-localisation.rst)
+retains that comparison and the original technical failures; the figure
+provenance records source hashes and crops.
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+
 ## Supplementary Table 1. Reusable libraries and their roles
 
 | Library | Role in OpenHCS |
