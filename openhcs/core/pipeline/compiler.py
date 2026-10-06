@@ -503,33 +503,26 @@ class PipelineCompiler:
             session: Axis-scoped compiler session.
         """
 
-        context = session.context
-        orchestrator = session.orchestrator
-        all_wells = orchestrator.get_component_keys(
-            get_multiprocessing_axis(), resolved_config=session.global_config
+        for step_index in range(session.step_count):
+            session.plan(step_index).zarr_config = None
+        if (
+            not session.step_count
+            or session.global_config.vfs_config.materialization_backend
+            != MaterializationBackend.ZARR
+        ):
+            return
+        last_step_index = session.step_count - 1
+        session.plan(last_step_index).zarr_config = {
+            "all_wells": session.orchestrator.get_component_keys(
+                get_multiprocessing_axis(), resolved_config=session.global_config
+            ),
+            "needs_initialization": True,
+        }
+        logger.debug(
+            "Step %r will use zarr backend for axis %s",
+            session.pipeline.steps[last_step_index].name,
+            session.axis_id,
         )
-
-        # Access config from merged config (pipeline + global) for proper inheritance
-        vfs_config = session.global_config.vfs_config
-
-        for step_index, step in enumerate(session.pipeline.steps):
-            step_plan = session.plan(step_index)
-
-            will_use_zarr = (
-                vfs_config.materialization_backend == MaterializationBackend.ZARR
-                and step_index == len(session.pipeline.steps) - 1
-            )
-
-            if will_use_zarr:
-                step_plan.zarr_config = {
-                    "all_wells": all_wells,
-                    "needs_initialization": True,
-                }
-                logger.debug(
-                    f"Step '{step.name}' will use zarr backend for axis {context.axis_id}"
-                )
-            else:
-                step_plan.zarr_config = None
 
     @staticmethod
     def plan_materialization_flags(
@@ -754,7 +747,6 @@ class PipelineCompiler:
         FuncStepContractValidator.validate_pipeline(
             steps=session.pipeline.steps,
             pipeline_context=context,  # Pass context so validator can access step plans for memory type overrides
-            orchestrator=session.orchestrator,  # Pass orchestrator for dict pattern key validation
         )
 
         for step_index, step in enumerate(session.pipeline.steps):
@@ -1675,6 +1667,9 @@ class PipelineCompiler:
                 ),
                 enable_visualizer_override=enable_visualizer_override,
                 is_zmq_execution=is_zmq_execution,
+            )
+            pipeline_inputs.validate_source_group_domains(
+                orchestrator, effective_config
             )
             compiled_contexts = PipelineCompiler._compile_axis_values(
                 axis_request,

@@ -318,6 +318,44 @@ class ResolvedPipelineDefinition(InvocationContractProvider):
         self._admit_artifact_graphs()
         return self
 
+    def validate_source_group_domains(
+        self,
+        orchestrator: PipelineOrchestrator,
+        global_config: GlobalPipelineConfig,
+    ) -> None:
+        """Validate declaration-owned group keys once against the whole plate."""
+        from openhcs.constants.constants import GroupBy, get_openhcs_config
+        from openhcs.core.callable_contract import FunctionStepExecutionScope
+        from openhcs.core.components.validation import GenericValidator
+
+        validator = GenericValidator(get_openhcs_config())
+        for index, (graph, context) in enumerate(
+            zip(self.artifact_graphs, self.artifact_contexts)
+        ):
+            pattern = graph.pattern
+            if (
+                pattern is None
+                or not pattern.is_grouped
+                or context.group_by is GroupBy.NONE
+            ):
+                continue
+            if FunctionStepExecutionScope.require_uniform(
+                item.contract for item in pattern.iter_items()
+            ) is FunctionStepExecutionScope.PLATE:
+                continue
+            result = validator.validate_dict_pattern_keys(
+                pattern,
+                context.group_by,
+                context.step_name,
+                orchestrator,
+                resolved_config=global_config,
+            )
+            if not result.is_valid:
+                raise ValueError(
+                    f"FunctionStep {context.step_name!r} (index: {index}) failed "
+                    f"compile-time contract validation: {result.error_message}"
+                )
+
     def __call__(
         self,
         invocation: NormalizedFunctionItem,

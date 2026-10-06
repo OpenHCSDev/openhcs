@@ -590,7 +590,6 @@ class FuncStepContractValidator:
     def validate_pipeline(
         steps: List[Any],
         pipeline_context: ProcessingContext | None = None,
-        orchestrator=None,
     ) -> None:
         """
         Validate memory type contracts and function patterns for all FunctionStep instances in a pipeline.
@@ -603,7 +602,6 @@ class FuncStepContractValidator:
         Args:
             steps: The steps in the pipeline
             pipeline_context: Optional context object with planner execution flags
-            orchestrator: Optional orchestrator for dict pattern key validation
 
         Raises:
             ValueError: If any FunctionStep violates memory type contracts or dict pattern validation
@@ -664,7 +662,6 @@ class FuncStepContractValidator:
                         )
                     FuncStepContractValidator.validate_compiled_step_plan(
                         step_plan,
-                        orchestrator,
                     )
                     input_type, output_type = (
                         FuncStepContractValidator.validate_compiled_function_pattern(
@@ -681,7 +678,7 @@ class FuncStepContractValidator:
                 step_plan.output_memory_type = output_type
 
     @staticmethod
-    def validate_compiled_step_plan(step_plan, orchestrator=None) -> None:
+    def validate_compiled_step_plan(step_plan) -> None:
         """Validate FunctionStep structure from the compiled plan SSOT."""
         func_pattern = step_plan.func
         step_name = step_plan.step_name
@@ -754,20 +751,6 @@ class FuncStepContractValidator:
             contracts,
             step_name,
         )
-
-        if (
-            orchestrator is not None
-            and compiled_pattern.is_grouped
-            and group_by not in (None, GroupBy.NONE)
-        ):
-            dict_validation_result = validator.validate_dict_pattern_keys(
-                func_pattern,
-                group_by,
-                step_name,
-                orchestrator,
-            )
-            if not dict_validation_result.is_valid:
-                raise ValueError(dict_validation_result.error_message)
 
     @staticmethod
     def validate_artifact_input_scope_availability(step_plan) -> None:
