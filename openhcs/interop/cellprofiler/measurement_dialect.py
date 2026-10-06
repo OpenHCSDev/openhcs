@@ -168,6 +168,7 @@ CELLPROFILER_MEASUREMENT_DIALECT = RuntimeMeasurementDialect(
         CellProfilerModule.measurement_feature_marker_types_for_key
     ),
     row_identity_contract=RuntimeMeasurementRowIdentityContract(
+        object_identity_output_field=MeasurementRowAxisField.OBJECT_NUMBER.value,
         object_identity_fields=(
             "_".join(CELLPROFILER_OBJECT_NUMBER_FEATURE_PARTS),
             *MeasurementRowAxisField.object_id_field_names(),

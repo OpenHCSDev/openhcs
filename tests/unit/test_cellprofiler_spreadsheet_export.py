@@ -402,8 +402,8 @@ def test_export_to_spreadsheet_renders_only_declared_batch_records() -> None:
         },
     )
     assert cell_rows == (
-        {"image_number": "1", "object_label": "1", "Area": "2.0"},
-        {"image_number": "1", "object_label": "2", "Area": "4.0"},
+        {"image_number": "1", "object_number": "1", "Area": "2.0"},
+        {"image_number": "1", "object_number": "2", "Area": "4.0"},
     )
     assert relationship_rows[0]["relationship_type"] == "related"
     assert relationship_rows[0]["source_role"] == "parent"
@@ -455,7 +455,7 @@ def test_spreadsheet_projects_source_identity_without_upstream_image_features(
     if add_files:
         assert image['FileName_Body'] == 'body.tif'
         assert image['PathName_Body'] == '/acquisition'
-    assert cell['object_label'] == '7'
+    assert cell['object_number'] == '7'
     assert cell['Area'] == '12.0'
     assert ('Metadata_site' in cell) is add_metadata
     assert ('Image_FileName_Body' in cell) is add_files
@@ -726,7 +726,7 @@ def test_export_to_spreadsheet_uses_declared_image_set_identity_across_channels(
         },
     )
     assert tuple(csv.DictReader(io.StringIO(bundle["Cells.csv"]))) == (
-        {"image_number": "1", "object_label": "1", "Area": "4.0"},
+        {"image_number": "1", "object_number": "1", "Area": "4.0"},
     )
 
 
@@ -818,7 +818,7 @@ def test_export_to_spreadsheet_pairs_fully_addressed_field_measurements() -> Non
     assert cells == tuple(
         {
             "image_number": image_number,
-            "object_label": object_number,
+            "object_number": object_number,
             "Parent_Nuclei": "1",
             "Location_Center_X": "1.5",
             "AreaShape_Area": "4.0",
@@ -970,7 +970,7 @@ def test_combined_spreadsheet_retains_native_subject_headers_and_sparse_rows(
     lines = tuple(tuple(row) for row in csv.reader(io.StringIO(bundle["Combined.csv"])))
     assert lines == (
         ("Image", "Cells", "Cells", "Cells_inner", "Cells_inner"),
-        ("image_number", "object_label", "Area", "object_label", "Area"),
+        ("image_number", "object_number", "Area", "object_number", "Area"),
         ("1", "1", "2.0", "1", "3.0"),
         ("1", "2", "4.0", "", ""),
     )
@@ -1062,7 +1062,7 @@ def test_export_to_spreadsheet_merges_object_features_across_runtime_groups() ->
     assert tuple(csv.DictReader(io.StringIO(bundle["Cells.csv"]))) == (
         {
             "image_number": "1",
-            "object_label": "1",
+            "object_number": "1",
             "Area": "4.0",
             "Perimeter": "6.0",
         },
@@ -1288,7 +1288,7 @@ def test_export_to_spreadsheet_binds_payload_rows_to_exact_source_image_set() ->
     assert tuple(csv.DictReader(io.StringIO(bundle["Cells.csv"]))) == (
         {
             "image_number": "1",
-            "object_label": "1",
+            "object_number": "1",
             "Area": "4.0",
             "Children_Nuclei_Count": "1",
         },
@@ -1361,7 +1361,7 @@ def test_export_to_spreadsheet_preserves_source_qualified_wide_features() -> Non
     assert rows == (
         {
             "image_number": "1",
-            "object_label": "1",
+            "object_number": "1",
             **{
                 f"Granularity_1_{source_image_name}": str(value)
                 for source_image_name, value in source_values
@@ -1474,7 +1474,7 @@ def test_export_to_spreadsheet_preserves_declared_intensity_feature() -> None:
     assert rows == (
         {
             "image_number": "1",
-            "object_label": "1",
+            "object_number": "1",
             feature_name: "12.5",
         },
     )
@@ -1528,7 +1528,7 @@ def test_export_to_spreadsheet_leaves_track_objects_features_unsuffixed() -> Non
     assert tuple(csv.DictReader(io.StringIO(bundle["Cells.csv"]))) == (
         {
             "image_number": "1",
-            "object_label": "1",
+            "object_number": "1",
             object_feature: "4.25",
         },
     )
@@ -1574,7 +1574,7 @@ def test_export_to_spreadsheet_leaves_worm_descriptor_fields_unsuffixed() -> Non
     assert tuple(csv.DictReader(io.StringIO(bundle["Worms.csv"]))) == (
         {
             "image_number": "1",
-            "object_label": "1",
+            "object_number": "1",
             descriptor_field: "17.5",
         },
     )
@@ -1666,7 +1666,7 @@ def test_export_to_spreadsheet_folds_neighbor_scale_once() -> None:
     assert tuple(csv.DictReader(io.StringIO(bundle["Cells.csv"]))) == (
         {
             "image_number": "1",
-            "object_label": "1",
+            "object_number": "1",
             "Neighbors_NumberOfNeighbors_expanded": "2",
         },
     )
@@ -1720,7 +1720,7 @@ def test_export_to_spreadsheet_routes_row_owned_objects_and_normalizes_ids() -> 
     assert rows == (
         {
             "image_number": "1",
-            "object_label": "1",
+            "object_number": "1",
             "Area": "2.0",
             "Perimeter": "3.0",
         },

@@ -1037,9 +1037,9 @@ class WideMeasurementRowAccumulator:
                         )
                     }
                     if object_label is not None:
-                        target[MeasurementRowAxisField.OBJECT_LABEL.value] = (
-                            object_label
-                        )
+                        target[
+                            self.row_identity_contract.object_identity_output_field
+                        ] = object_label
                     subject_rows[identity] = target
                     self._order.setdefault(row_subject, []).append(identity)
 
@@ -1174,7 +1174,9 @@ class WideMeasurementRowAccumulator:
                     if value is not self._absent_identity
                 }
                 if object_label is not None:
-                    target[MeasurementRowAxisField.OBJECT_LABEL.value] = object_label
+                    target[
+                        self.row_identity_contract.object_identity_output_field
+                    ] = object_label
                 subject_rows[identity] = target
                 self._order.setdefault(row_subject, []).append(identity)
 
@@ -1254,7 +1256,9 @@ class WideMeasurementRowAccumulator:
             if target is None:
                 target = {identity_field: image_value}
                 if object_label is not None:
-                    target[MeasurementRowAxisField.OBJECT_LABEL.value] = object_label
+                    target[
+                        self.row_identity_contract.object_identity_output_field
+                    ] = object_label
                 subject_rows[identity] = target
                 subject_order.append(identity)
             feature_value = feature_values[row_index]
