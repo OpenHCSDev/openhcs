@@ -1,0 +1,37 @@
+# OpenHCS configuration
+
+from openhcs.core.config import (
+    AnalysisConsolidationConfig,
+    GlobalPipelineConfig,
+    MultiprocessingStartMethod,
+    PathPlanningConfig,
+    WellFilterConfig,
+)
+from pathlib import Path
+
+config = GlobalPipelineConfig(
+    materialize_runtime_artifacts=False,
+    num_workers=3,
+    multiprocessing_start_method=MultiprocessingStartMethod.FORK,
+    well_filter_config=WellFilterConfig(
+        well_filter=[
+            'W001',
+            'W002',
+            'W003',
+            'W004',
+            'W005',
+            'W006',
+            'W007',
+            'W008',
+            'W009'
+        ]
+    ),
+    analysis_consolidation_config=AnalysisConsolidationConfig(
+        enabled=False
+    ),
+    path_planning_config=PathPlanningConfig(
+        well_filter=0,
+        output_dir_suffix='_matched_pilot',
+        global_output_folder=Path('/home/ts/.local/state/openhcs-maintenance/20261006/runtime-artifact-last-consumer-resumed-singlewell-v1/9assignments-3workers/capture/cases/cp_tutorial_3d_monolayer/candidate/1')
+    )
+)

@@ -1,0 +1,13 @@
+pipeline_name,method,assay_category,module_category,accuracy_fraction,raw_seconds,speedup,peak_memory_mb
+ExampleVitra,CP (one process),Cell morphology,Segmentation + shape measurement,1.0,24.13621953316033,1.0,
+ExampleVitra,OH (9 assignments/1 worker),Cell morphology,Segmentation + shape measurement,1.0,8.89089298248291,2.7147126369324424,
+ExampleVitra,OH (9 assignments/3 workers),Cell morphology,Segmentation + shape measurement,1.0,3.8463802337646484,6.275047724425565,
+ExampleIlluminationCorrection_Example3,CP (one process),Illumination correction,Image correction,1.0,3.63112607691437,1.0,
+ExampleIlluminationCorrection_Example3,OH (9 assignments/1 worker),Illumination correction,Image correction,1.0,1.6085402965545654,2.2574044832399345,
+ExampleIlluminationCorrection_Example3,OH (9 assignments/3 workers),Illumination correction,Image correction,1.0,0.681612491607666,5.327258701421268,
+cp_tutorial_3d_monolayer,CP (one process),Uncategorized assay,Mixed modules,1.0,127.80388973513618,1.0,
+cp_tutorial_3d_monolayer,OH (9 assignments/1 worker),Uncategorized assay,Mixed modules,1.0,26.967435598373413,4.739193286247985,
+cp_tutorial_3d_monolayer,OH (9 assignments/3 workers),Uncategorized assay,Mixed modules,1.0,11.160437107086182,11.451512920940049,
+Average,CP (one process),Aggregate,Aggregate,1.0,51.85707844840363,1.0,
+Average,OH (9 assignments/1 worker),Aggregate,Aggregate,1.0,12.488956292470297,3.237103468806787,
+Average,OH (9 assignments/3 workers),Aggregate,Aggregate,1.0,5.229476610819499,7.68460644892896,
