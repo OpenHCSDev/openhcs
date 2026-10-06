@@ -55,6 +55,7 @@ from openhcs.core.source_workspace_projection import (
     VirtualWorkspaceSourceProjectionAuthority,
     VirtualWorkspacePathLookup,
 )
+from openhcs.core.virtual_workspace_metadata import VirtualWorkspaceMapping
 from openhcs.microscopes.source_schema import SourceSchemaFilenameParser
 from openhcs.microscopes.source_bindings_handler import SourceBindingsHandler
 from polystore.base import ensure_storage_registry, storage_registry
@@ -73,6 +74,25 @@ def test_transient_axis_views_observe_each_new_projection_without_reusing_releas
         filtered = cache.filtered_by_axis(projection, axis_id="A01")
         assert filtered.source_metadata_by_path["A01.tif"]["generation"] == str(generation)
         del projection
+
+
+def test_source_projection_document_replacement_preserves_absence_and_schema_rejection(tmp_path):
+    cache = VirtualWorkspaceSourceProjectionCache()
+    native_document = {FIELDS.SUBDIRECTORIES: {
+        "images": {FIELDS.IMAGE_FILES: ["native.tif"]},
+    }}
+    empty_workspace = {FIELDS.SUBDIRECTORIES: {
+        "images": {FIELDS.WORKSPACE_MAPPING: {}},
+    }}
+    for document in (native_document, empty_workspace):
+        assert cache.projection_for(tmp_path, document) is None
+        assert cache.projection_for(tmp_path, document) is None
+    malformed_document = {FIELDS.SUBDIRECTORIES: {
+        "images": {FIELDS.WORKSPACE_MAPPING: []},
+    }}
+    with pytest.raises(RuntimeError, match="workspace_mapping must be a mapping"):
+        cache.projection_for(tmp_path, malformed_document)
+    assert cache.projection_for(tmp_path, native_document) is None
 
 
 def _write_tiff_stack(path: Path, values: tuple[int, ...]) -> None:
@@ -169,6 +189,12 @@ def test_prepared_workspace_admits_declared_source_universe_without_rewriting_pr
     compiled_views = cache.partition_by_axes(selected, axis_ids=("A01",))
     assert context.runtime_source_workspace_projection_authority.projection_or_empty(axis_id="A01") is compiled_views["A01"]
     assert len(admissions) == (0 if selection is None else 1)
+    with monkeypatch.context() as admitted_query:
+        def reject_redecode(_cls, _subdirectory):
+            raise AssertionError("An admitted document must not decode its whole workspace again.")
+        admitted_query.setattr(VirtualWorkspaceMapping, "from_subdirectory", classmethod(reject_redecode))
+        assert context.runtime_source_workspace_projection_authority.projection_or_empty() is selected
+        assert context.runtime_source_workspace_projection_authority.projection_or_empty(axis_id="A01") is compiled_views["A01"]
     prior_authority = context.runtime_source_workspace_projection_authority
     handler._source_bindings_config = replace(config, source_filters=(
         SourceFilterClause(subject=SourceFilterSubject.FILE,

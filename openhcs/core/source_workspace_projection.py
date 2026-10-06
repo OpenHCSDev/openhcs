@@ -700,7 +700,7 @@ class VirtualWorkspaceSourceProjectionCacheEntry:
     """One projection bound to the exact metadata document that produced it."""
 
     metadata: OpenHCSMetadataPayload
-    projection: VirtualWorkspaceSourceProjection
+    projection: VirtualWorkspaceSourceProjection | None
     axis_filtered_projections: dict[str, VirtualWorkspaceSourceProjection] = field(
         default_factory=dict, compare=False, repr=False,
     )
@@ -712,9 +712,11 @@ class VirtualWorkspaceSourceProjectionCacheEntry:
         self, source_bindings: SourceBindingsConfig | None,
     ) -> VirtualWorkspaceSourceProjectionCacheEntry:
         """Bind prepared-source admission to its document and declarations."""
-        if source_bindings is None or not source_bindings.source_filter_declarations:
+        if self.projection is None or source_bindings is None:
             return self
         declarations = source_bindings.source_filter_declarations
+        if not declarations:
+            return self
         admitted = self.source_admitted_entries.get(declarations)
         if admitted is None:
             from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
@@ -743,6 +745,8 @@ class VirtualWorkspaceSourceProjectionCacheEntry:
         self, axis_ids: Sequence[str],
     ) -> Mapping[str, VirtualWorkspaceSourceProjection]:
         """Derive missing axis views together from this retained document."""
+        if self.projection is None:
+            raise ValueError("Axis views require an admitted source workspace projection.")
         selected = tuple(dict.fromkeys(axis_ids))
         missing = tuple(
             axis_id for axis_id in selected
@@ -772,11 +776,11 @@ class VirtualWorkspaceSourceProjectionCache:
         metadata: OpenHCSMetadataPayload,
         *,
         source_bindings: SourceBindingsConfig | None = None,
-    ) -> VirtualWorkspaceSourceProjection:
+    ) -> VirtualWorkspaceSourceProjection | None:
         plate_key = str(plate_path)
         cached = self.projections_by_plate_path.get(plate_key)
         if cached is None or cached.metadata is not metadata:
-            projection = VirtualWorkspaceSourceProjection.from_openhcs_metadata(
+            projection = VirtualWorkspaceSourceProjection.from_openhcs_metadata_if_available(
                 plate_path,
                 metadata,
             )
@@ -875,12 +879,13 @@ class VirtualWorkspaceSourceProjectionAuthority:
 
     def is_bound_to_context(self, context: "ProcessingContext") -> bool:
         """Compare actual owners, never identities of already-released objects."""
-        return (
+        if not (
             self.plate_path == Path(context.plate_path)
             and self.metadata_handler is context.microscope_handler.metadata_handler
             and self.filemanager is context.filemanager
-            and self.source_bindings == context.microscope_handler.source_admission_config()
-        )
+        ):
+            return False
+        return self.source_bindings == context.microscope_handler.source_admission_config()
 
     def metadata_handlers(self) -> tuple["MetadataHandler", ...]:
         """Observe workspace eligibility live while retaining admitted providers."""
@@ -928,14 +933,12 @@ class VirtualWorkspaceSourceProjectionAuthority:
         self, *, axis_id: str | None = None,
     ) -> VirtualWorkspaceSourceProjection | None:
         for metadata in self.metadata_documents():
-            if not OpenHCSMetadataSubdirectories(metadata).has_workspace_mapping():
-                continue
             if self.cache is None:
-                projection = VirtualWorkspaceSourceProjection.from_openhcs_metadata(
+                projection = VirtualWorkspaceSourceProjection.from_openhcs_metadata_if_available(
                     self.plate_path,
                     metadata,
                 )
-                if self.source_bindings is not None:
+                if projection is not None and self.source_bindings is not None:
                     from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
 
                     projection = SourceBindingWorkspaceProjector(
@@ -945,6 +948,8 @@ class VirtualWorkspaceSourceProjectionAuthority:
                 projection = self.cache.projection_for(
                     self.plate_path, metadata, source_bindings=self.source_bindings,
                 )
+            if projection is None:
+                continue
             return self._projection_for_axis(projection, axis_id=axis_id)
         return None
 
