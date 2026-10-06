@@ -43,7 +43,18 @@
       "panel_heading": "A  XY: saved nuclear ROIs + raw"
     }
   },
-  "presentation_note": "XY: same-run nuclear ROI extents, not validated cell borders.\nXZ/YZ: original centres; out-of-plane points are hidden.",
+  "orthogonal_presentation": {
+    "planes": {
+      "xz": {"fixed_axis": 1, "index": 157, "panel_heading": "B  XZ: saved outlines + centres"},
+      "yz": {"fixed_axis": 2, "index": 80, "panel_heading": "C  YZ: saved outlines + centres"}
+    },
+    "raw_contrast_limits": [2513.0, 31882.274999999863],
+    "centre_plane_tolerance_voxels": 0.5,
+    "outline_color": "#ffe36b",
+    "centre_color": "#ff65da",
+    "interpretation": "Post-freeze display of unchanged raw voxels, saved label intersections and in-plane fractional centres; no segmentation or scoring."
+  },
+  "presentation_note": "XY: native saved nuclear ROIs, not validated cell borders.\nXZ/YZ: post-freeze saved-mask outlines and in-plane centres.",
   "presentation_phase": "same_run_xy_roi_readability_checkpoint",
   "native_presentation_review": {
     "slot": "HYPATIA_H002_FRESH15_FIGURE9_95",

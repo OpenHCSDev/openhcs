@@ -16,6 +16,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.patches import Circle, FancyArrowPatch, FancyBboxPatch, Rectangle
 from PIL import Image
 
@@ -323,6 +324,7 @@ def task_only_story():
 
 def h002_measurement_first():
     """Retained native views and postfreeze centre agreement, without scoring."""
+    import tifffile
     source_root = OUTPUT / "h002_firstmethod_sources"
     source_path = source_root / "source-receipt.json"
     evaluation_path = ROOT / "paper/supplementary/task_only_analysis/h002-fresh15-postfreeze-evaluation.json"
@@ -330,6 +332,24 @@ def h002_measurement_first():
     evaluation = json.loads(evaluation_path.read_text())
     if sources["author_run"] != evaluation["author_run"]:
         raise ValueError("Native captures and evaluation name different authors")
+    volumes = {}
+    for role in ("raw", "labels", "measurements"):
+        record = sources["frozen_scientific_inputs"][role]
+        path = Path(record["path"])
+        if digest(path) != record["sha256"]:
+            raise ValueError(f"Frozen scientific input changed: {role}")
+        if role == "measurements":
+            with path.open(newline="") as stream:
+                centres = np.array([
+                    [float(row[f"center_{axis}"]) for axis in "zyx"]
+                    for row in csv.DictReader(stream)
+                ])
+        else:
+            volumes[role] = tifffile.imread(path)
+    expected_shape = tuple(sources["scientific_scope"]["source_shape"])
+    if any(volume.shape != expected_shape for volume in volumes.values()):
+        raise ValueError("Frozen raw and label volumes do not share the declared ZYX shape")
+    presentation = sources["orthogonal_presentation"]
     with plt.rc_context({"font.size": 13, "axes.spines.top": False,
                          "axes.spines.right": False}):
         sheet = FigureSheet("h002_measurement_first", "", 7.3)
@@ -343,13 +363,34 @@ def h002_measurement_first():
             ("xz", (55, 73, 42, 18), (55, 93)),
             ("yz", (55, 45, 42, 18), (55, 65)),
         ):
-            capture = sources["captures"][name]
-            path = source_root / capture["asset"]
-            crop = tuple(capture["crop_xyxy"])
-            if digest(path) != capture["sha256"]:
-                raise ValueError(f"Frozen native capture changed: {name}")
-            sheet.text(*heading_position, capture["panel_heading"], size=13, weight="bold")
-            sheet.source_image(path, bounds, crop=crop)
+            if name == "xy":
+                capture = sources["captures"][name]
+                path = source_root / capture["asset"]
+                if digest(path) != capture["sha256"]:
+                    raise ValueError(f"Frozen native capture changed: {name}")
+                sheet.text(*heading_position, capture["panel_heading"], size=13, weight="bold")
+                sheet.source_image(path, bounds, crop=tuple(capture["crop_xyxy"]))
+                continue
+            plane = presentation["planes"][name]
+            fixed_axis, index = plane["fixed_axis"], plane["index"]
+            raw = np.take(volumes["raw"], index, axis=fixed_axis)
+            labels = np.take(volumes["labels"], index, axis=fixed_axis)
+            sheet.text(*heading_position, plane["panel_heading"], size=13, weight="bold")
+            axis = sheet.figure.add_axes(tuple(value / 100 for value in bounds))
+            low, high = presentation["raw_contrast_limits"]
+            axis.imshow(raw, cmap="gray", vmin=low, vmax=high, interpolation="nearest")
+            for identity in np.unique(labels):
+                if identity:
+                    axis.contour(labels == identity, levels=[0.5],
+                                 colors=[presentation["outline_color"]], linewidths=0.9)
+            in_plane = centres[np.abs(centres[:, fixed_axis] - index) <=
+                               presentation["centre_plane_tolerance_voxels"]]
+            projected = np.delete(in_plane, fixed_axis, axis=1)
+            axis.scatter(projected[:, 1], projected[:, 0], s=65, marker="+",
+                         color=presentation["centre_color"], linewidths=1.8)
+            axis.set_xlim(-0.5, raw.shape[1] - 0.5)
+            axis.set_ylim(raw.shape[0] - 0.5, -0.5)
+            axis.set_axis_off()
         sheet.text(55, 70, "Y = 157 voxels", size=11, color=MUTED)
         sheet.text(55, 42, "X = 80 voxels", size=11, color=MUTED)
         sheet.text(3, 36, sources["presentation_note"],

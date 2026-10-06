@@ -174,13 +174,19 @@ The scored autonomous result repairs an elongated-body split. Whole-image object
 
 ## Supplementary Figure 9. Volumetric localisation and body separation
 
-![Complete native localisation and post-freeze matching panel for the main Figure 4 volume trial.](../figures/slas/h002_measurement_first.png){width=6in}
+![Native XY localisation, post-freeze orthogonal outlines and matching panel for the main Figure 4 volume trial.](../figures/slas/h002_measurement_first.png){width=6in}
 
 The H002 fresh15 trial matched 14 of 15 annotated centres within 10 voxels and
 all 15 within the primary 30-voxel distance, with mean matched error 4.80 voxels.
 Eleven predictions were unmatched to annotations of unestablished coverage.
 These are centre-localisation measurements, not validated nuclear boundaries.
-Main Figure 4 enlarges the native XY/XZ/YZ views from this same panel.
+Main Figure 4 enlarges these same planes. XY uses the original native ROI
+capture; XZ/YZ are post-freeze renderings of the unchanged raw volume and
+saved label intersections, with yellow outlines and enlarged magenta centres.
+Only centres within half a voxel of the displayed plane are drawn. Raw
+contrast limits are shared across the two orthogonal planes. No detector or
+reference score was rerun; the outlines expose the existing masks rather
+than establishing their biological accuracy.
 
 ![Matched assay evidence.](../figures/slas/h002_assay_review.png){width=6in}
 

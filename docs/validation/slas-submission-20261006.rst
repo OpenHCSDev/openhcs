@@ -113,3 +113,25 @@ status is current, and the main manuscript contains 6,720 extracted words.
 The resource table on supplementary pages 54--55 was visually checked; headers
 repeat on the continuation page and values remain readable. This update is
 published on main as 4c6a3f422. Declarations and Zenodo remain explicitly deferred.
+
+Readable volume outlines
+-----------------------
+
+Main Figure 4 and Supplementary Figure 9 now replace the tiny orthogonal
+green markers with post-freeze raw-volume displays, yellow saved-mask
+intersections and enlarged magenta centres. The original XY native capture
+is unchanged. Planes remain Y=157 and X=80; only centres within half a voxel
+are shown. The declared 26 centres and all original scientific-input paths,
+hashes and scope are unchanged. Raw, label and centre-CSV hashes were checked
+before rendering; no detector, measurement or reference scorer was rerun.
+Captions distinguish native captures from post-freeze displays. Presentation
+settings belong to the existing source receipt, and the existing FigureSheet
+still owns placement and output provenance.
+
+Accepted paired build: run-20261006T190410-b487cf8b. PDF/DOCX checks pass,
+status is current, and the manuscript contains 6,741 extracted words.
+Main page 20 was visually checked at printed-page scale. An earlier rendering
+attempt passed an external input path to the repository-relative receipt
+format; it was corrected at the producer, using the already retained input
+declaration, without weakening the shared receipt codec. Its diagnostic log
+is preserved on the HDD; failed derived document outputs can be regenerated.
