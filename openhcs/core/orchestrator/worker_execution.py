@@ -15,6 +15,8 @@ from openhcs.core.compiled_execution import (
     CompiledExecutionBundle,
     CompiledRuntimeEnvironmentPlan,
 )
+from openhcs.core.artifacts import ArtifactInputPlan
+from openhcs.core.debug import NoOpDebugExecutionPolicy
 from openhcs.core.compiled_step_plan import (
     CompiledStepPlan,
     FrameworkDeviceAssignment,
@@ -938,6 +940,7 @@ def _execute_axis_with_sequential_combinations(
                 lane_context,
                 context_key=context_key,
                 cancellation=cancellation,
+                runtime_observation_mode=runtime_observation_mode,
             )
             observed_records = runtime_store.observed_values_after(
                 execution_observation_cursor
@@ -1072,6 +1075,7 @@ def _execute_single_axis_static(
     *,
     context_key: str,
     cancellation: ExecutionCancellationSignal | None = None,
+    runtime_observation_mode: RuntimeObservationMode = RuntimeObservationMode.MERGE_INTO_PARENT,
 ) -> ExecutionResult:
     """Execute one frozen axis context against the compiled pipeline."""
 
@@ -1091,6 +1095,23 @@ def _execute_single_axis_static(
     frozen_context.bind_execution_runtime(lane_context)
     lane_context.install_debug_sink(frozen_context)
     runtime_value_store = frozen_context.runtime_value_store
+    # Full-value observations, debug replay and viewer histories own their
+    # original retention contract. Ordinary execution can retire dead inputs
+    # only after the step's output/progress consumers have completed.
+    release_consumed = (
+        runtime_observation_mode is not RuntimeObservationMode.MERGE_INTO_PARENT
+        and isinstance(lane_context.debug_execution_policy, NoOpDebugExecutionPolicy)
+        and not any(
+            plan.visualize or plan.streaming_configs
+            for plan in frozen_context.step_plans.values()
+        )
+    )
+    checkpoint_refs = frozenset(
+        output.ref().for_plan_type(ArtifactInputPlan)
+        for plan in frozen_context.step_plans.values()
+        if plan.requires_main_flow_checkpoint(frozen_context.step_plans)
+        for output in plan.artifact_outputs.values()
+    ) if release_consumed else frozenset()
 
     try:
         for step_index, step in enumerate(pipeline_definition):
@@ -1186,6 +1207,15 @@ def _execute_single_axis_static(
                 step_name=step_name,
             ):
                 break
+            del observed_records
+            if release_consumed and step_plan.future_artifact_inputs is not None:
+                runtime_value_store.release_unconsumed(
+                    step_plan.future_artifact_inputs | checkpoint_refs,
+                    runtime_observation_mode.retain_records(
+                        runtime_value_store.observed_values, frozen_context,
+                    ),
+                    filemanager=frozen_context.filemanager,
+                )
 
     except ExecutionCancelledError as exc:
         return ExecutionResult.cancelled(

@@ -12,7 +12,7 @@ from typing import Any, TypeVar, cast
 
 from python_introspect import RuntimeParameterDeclarationABC
 
-from openhcs.constants.constants import AllComponents
+from openhcs.constants.constants import AllComponents, Backend
 from openhcs.core.artifacts import (
     ArtifactInputPlan,
     ArtifactOutputPlan,
@@ -991,7 +991,7 @@ class RuntimeValueStore:
             tuple[ArtifactKey, RuntimeArtifactLocation],
             StoredRuntimeValue,
         ] = OrderedDict()
-        self._observation_records: list[StoredRuntimeValue] = []
+        self._observation_records: list[StoredRuntimeValue | None] = []
         self._current_location_by_key: dict[ArtifactKey, RuntimeArtifactLocation] = {}
         self._revision = 0
         self._query_caches: dict[
@@ -1228,8 +1228,8 @@ class RuntimeValueStore:
 
     @property
     def observed_values(self) -> tuple[StoredRuntimeValue, ...]:
-        """Return every runtime artifact write in insertion order."""
-        return tuple(self._observation_records)
+        """Return retained runtime artifact writes in their original order."""
+        return tuple(record for record in self._observation_records if record is not None)
 
     def observation_cursor(self) -> RuntimeStoreObservationCursor:
         """Return a cursor for future observation-delta queries."""
@@ -1242,14 +1242,66 @@ class RuntimeValueStore:
         self,
         cursor: RuntimeStoreObservationCursor,
     ) -> tuple[StoredRuntimeValue, ...]:
-        """Return runtime artifact writes recorded after ``cursor``."""
+        """Return retained writes after ``cursor``, skipping retired slots."""
         if cursor.index > len(self._observation_records):
             raise ValueError(
                 "RuntimeStoreObservationCursor.index is beyond the current "
                 f"observation stream length: {cursor.index} > "
                 f"{len(self._observation_records)}."
             )
-        return tuple(self._observation_records[cursor.index :])
+        return tuple(
+            record for record in self._observation_records[cursor.index :]
+            if record is not None
+        )
+
+    def release_unconsumed(
+        self,
+        retained_refs: frozenset[ArtifactSpecRef],
+        retained_records: tuple[StoredRuntimeValue, ...],
+        *,
+        filemanager: Any,
+    ) -> None:
+        """Retire dead payloads jointly, preserving observation cursor positions.
+
+        Typed future declarations conservatively retain every producer version
+        and group of a needed artifact. Parent-selected exact addresses retain
+        their observation history. Empty stream slots mark retired writes, not
+        fabricated runtime values.
+        """
+        retained_addresses = {(record.key, record.location) for record in retained_records}
+
+        def retained(record: StoredRuntimeValue) -> bool:
+            return (
+                ArtifactSpecRef(ArtifactInputPlan, record.key.artifact_type, record.key.name)
+                in retained_refs
+                or (record.key, record.location) in retained_addresses
+            )
+
+        retired = tuple(
+            record for record in self.observed_values if not retained(record)
+        )
+        if not retired:
+            return
+        live_locations = {
+            record.location for record in self._records_by_location.values()
+            if retained(record)
+        }
+        for location in dict.fromkeys(record.location for record in retired):
+            if location not in live_locations and location.backend == Backend.MEMORY.value:
+                if filemanager.exists(location.path, location.backend):
+                    filemanager.delete(location.path, location.backend)
+        for address, record in tuple(self._records_by_location.items()):
+            if not retained(record):
+                del self._records_by_location[address]
+        for index, record in enumerate(self._observation_records):
+            if record is not None and not retained(record):
+                self._observation_records[index] = None
+        self._current_location_by_key = {
+            key: location
+            for key, location in self._current_location_by_key.items()
+            if (key, location) in self._records_by_location
+        }
+        self._mark_mutated()
 
     def clear(self) -> None:
         """Release every runtime artifact record owned by this execution context."""
@@ -1263,7 +1315,7 @@ class RuntimeValueStore:
         records: tuple[StoredRuntimeValue, ...],
     ) -> None:
         """Merge observed records produced across an execution boundary."""
-        if records and tuple(self._observation_records) == records:
+        if records and self.observed_values == records:
             return
         for record in records:
             key = (record.key, record.location)
