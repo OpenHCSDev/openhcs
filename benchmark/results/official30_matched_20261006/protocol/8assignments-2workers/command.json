@@ -1,0 +1,32 @@
+{
+  "status": "PREPARED_FINAL_COHORT_NOT_LAUNCHED",
+  "argv": [
+    "taskset",
+    "-c",
+    "4,5",
+    "/home/ts/code/projects/openhcs/.venv/bin/python",
+    "-B",
+    "-c",
+    "import runpy,sys;from dataclasses import replace;from benchmark.runtime_env import configure_headless_cpu_benchmark_runtime;configure_headless_cpu_benchmark_runtime('WARNING');import openhcs.runtime.zmq_config as c;c.OPENHCS_ZMQ_CONFIG=replace(c.OPENHCS_ZMQ_CONFIG,client_connect_timeout_seconds=180.0);sys.argv=['benchmark.matched_cellprofiler_batch',*sys.argv[1:]];runpy.run_module('benchmark.matched_cellprofiler_batch',run_name='__main__')",
+    "--manifest",
+    "/home/ts/.local/state/openhcs-maintenance/20261006/final-measured-publication-v15/selected-three-case-manifest.json",
+    "--all-cases",
+    "--well-count",
+    "1",
+    "--repeat-assignments",
+    "8",
+    "--openhcs-workers",
+    "2",
+    "--native-jobs",
+    "2",
+    "--repetitions",
+    "3",
+    "--native-python",
+    "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+    "--output-dir",
+    "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/8assignments-2workers/capture/cases"
+  ],
+  "protocol": "One genuine selected source well repeated as independent matched assignments; one warmup plus three actual measured repetitions per engine. Actual serial native SCI baseline and barrier-synchronized parallel native shards; same native/OH worker count; ordinary OUTCOMES candidate capture. Native pipeline/invocation simultaneous-clock makespans; OpenHCS full server job and disjoint client compile+execute totals; server startup and SCI excluded.",
+  "source_freeze_head": "d8678dbd443d78e0c4e5d90f4c2e867af61af80b",
+  "cohort_scope": "Exact original declarations selected by qualified full30 weakest execution, weakest total, and fixed3D; repeated source assignments, not independent biological samples."
+}

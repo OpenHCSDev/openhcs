@@ -1,0 +1,199 @@
+{
+  "case": "ExampleYeastPatches",
+  "wells": [
+    "A01"
+  ],
+  "selected_source_wells": [
+    "A01"
+  ],
+  "assignment_scope": "genuine source wells",
+  "manifest_sha256": "1d1b016aea7ff2ac0bc2441fff1140bb492bbf3b86048f8565694ccd45e4dff1",
+  "cppipe_sha256": "b1961a8dd8a9debbf4a0a50ff110f238b51bce60cd3bf930b7de02d0713fc7b4",
+  "driver_sha256": "d4c82795712e99c0e9c012e554d9e9c913bca4f1a6231a9cfaecd62dd6a021bf",
+  "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
+  "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
+  "source_commit": "56c3da776ccc12688b4566f7b0c0ef728e6bc7c6",
+  "source_dirty": false,
+  "native_job_count": 1,
+  "candidate_worker_count": 1,
+  "candidate_worker_start_method": "fork",
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0"
+  },
+  "native_input_inventory": [
+    {
+      "path": "1832-48hours-gal-1.JPG",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleYeastPatches/images/1832-48hours-gal-1.JPG",
+      "size_bytes": 466029,
+      "sha256": "bc042a64441edc53250ce18f5b37dc04a6453d5737061ba89180784f032702d0"
+    }
+  ],
+  "native_reference_report_path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleYeastPatches/native_report.json",
+  "native_reference_report_sha256": "6a377c61d924990124d3f6a7db9760e470cfd078b8a88b74359278e29f48f859",
+  "native_reference_source_commit": "5ad1e69565493220572de0a9c1af29f558b5f920",
+  "native_reference_file_inventory": [
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native/-1/1832-48hours-gal-1_ForcedOutline.png",
+      "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native/-1/1832-48hours-gal-1_NaturalOutline.png",
+      "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native/-1/Experiment.csv",
+      "sha256": "55db8d571d2da67c3f7e9c0da0fa554f70dae3228644127d4c6f1c10eb27910c"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native/-1/FilterObjects.csv",
+      "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native/-1/ForcedSpots.csv",
+      "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native/-1/Image.csv",
+      "sha256": "7ce0e34b80c92497fb260763cf72d51e1875cf061350f908fcf8f8cb5974cf4c"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native/-1/NaturalSpots.csv",
+      "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native/-1/Prespots.csv",
+      "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native/0/1832-48hours-gal-1_ForcedOutline.png",
+      "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native/0/1832-48hours-gal-1_NaturalOutline.png",
+      "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native/0/Experiment.csv",
+      "sha256": "1df459d86f622844e6f718010e2d0d79b4cb66dbeb54d45ce8cd18e3b95f7a07"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native/0/FilterObjects.csv",
+      "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native/0/ForcedSpots.csv",
+      "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native/0/Image.csv",
+      "sha256": "0fb947a97a6019f5d91930e1bca7456880e609a85330453eb7f3e2274d09da32"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native/0/NaturalSpots.csv",
+      "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native/0/Prespots.csv",
+      "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native/1/1832-48hours-gal-1_ForcedOutline.png",
+      "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native/1/1832-48hours-gal-1_NaturalOutline.png",
+      "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native/1/Experiment.csv",
+      "sha256": "39cc067648951f63dd59134bc29b276538f8b34b58b1b0c120ecbc4c18658f6a"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native/1/FilterObjects.csv",
+      "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native/1/ForcedSpots.csv",
+      "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native/1/Image.csv",
+      "sha256": "d9a895bcec60ede34f49dad2945a9aea9206a44ed3593853d9112c37c31aee2b"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native/1/NaturalSpots.csv",
+      "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native/1/Prespots.csv",
+      "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native/2/1832-48hours-gal-1_ForcedOutline.png",
+      "sha256": "c03031031d98b5e391c77bc8345f07148543d25b60843ad3ce1206bba1e9f8fe"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native/2/1832-48hours-gal-1_NaturalOutline.png",
+      "sha256": "d581dc4d03a11a5535ee237459c14603e80ebbbdf22a82abdb6e469769445954"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native/2/Experiment.csv",
+      "sha256": "a76065a3a4fc74f8225e7fd9fef4cb3fb0620dd9092bb279c0da770d9da5c1f7"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native/2/FilterObjects.csv",
+      "sha256": "c096a4758c1816a807f15e5a97e1437953445f5f0637887200f95f6c5d73d09c"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native/2/ForcedSpots.csv",
+      "sha256": "ae682b931aac32f5ea6c899953ccd72c4ee826e711153dad97b053a4d0ec3b65"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native/2/Image.csv",
+      "sha256": "ed6d06a9dcc1e994bdb679ef358c1c0fcd7e568f226968f57fd7e823a9aec075"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native/2/NaturalSpots.csv",
+      "sha256": "87da0ddc6b311e95e9ab11d162d62e85fec437a33eb07a6f01fd2f7cfc2b47d1"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native/2/Prespots.csv",
+      "sha256": "d3500afcfb50d95a18eb391371e79897456bbf39489657f2ffa1551ecc7d6c3d"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native_preparation/native_cellprofiler_file_list.txt",
+      "sha256": "b08566b61f65bfb22c329500259b205fc82e58249f94b27262aca9f079208882"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v10/cases/ExampleYeastPatches/native_preparation/native_cellprofiler_headless/ExampleYeastPatches.cppipe",
+      "sha256": "0a44f253afd1ab73ec99c77f3b91cdb09bf5d41b1fe22465ee4b1e46ce720066"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleYeastPatches/native_report.json",
+      "sha256": "6a377c61d924990124d3f6a7db9760e470cfd078b8a88b74359278e29f48f859"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleYeastPatches/native_request.json",
+      "sha256": "5ba64088543b39236c35a597df17c0dc60c0ec7122780dee9c10a946b01738ab"
+    },
+    {
+      "path": "/home/ts/.local/state/openhcs-maintenance/20261005/final-official30-singlewell-matched-v11/cases/ExampleYeastPatches/pilot_provenance.json",
+      "sha256": "8383059df914db4d12ddc01c9d7dd5905905126be53a753713d9f4144fbe60e9"
+    }
+  ],
+  "native_image_set_count": 1,
+  "native_input_inventory_after": [
+    {
+      "path": "1832-48hours-gal-1.JPG",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleYeastPatches/images/1832-48hours-gal-1.JPG",
+      "size_bytes": 466029,
+      "sha256": "bc042a64441edc53250ce18f5b37dc04a6453d5737061ba89180784f032702d0"
+    }
+  ]
+}

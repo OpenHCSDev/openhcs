@@ -1,0 +1,54 @@
+{
+  "case": "ExampleIlluminationCorrection_Example3",
+  "wells": [
+    "W001",
+    "W002",
+    "W003",
+    "W004",
+    "W005",
+    "W006",
+    "W007",
+    "W008",
+    "W009"
+  ],
+  "selected_source_wells": [
+    "A01"
+  ],
+  "assignment_scope": "independent repeated source assignments",
+  "manifest_sha256": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
+  "cppipe_sha256": "f7ec9eb561730cc567986e6a50504a69f23a3ca78a1a033faba0b2fea52759fb",
+  "driver_sha256": "d4c82795712e99c0e9c012e554d9e9c913bca4f1a6231a9cfaecd62dd6a021bf",
+  "native_worker_sha256": "c3d61231abd4431a59dfba3ed409c6bc9da7f30172b6948665f91655189fef30",
+  "native_contract_sha256": "ec5eb262cff9e032f29b27c3f479ea5df5921daf3d2c51a3fb364b2872637487",
+  "source_commit": "56c3da776ccc12688b4566f7b0c0ef728e6bc7c6",
+  "source_dirty": false,
+  "native_job_count": 3,
+  "candidate_worker_count": 3,
+  "candidate_worker_start_method": "fork",
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "NPY_DISABLE_CPU_FEATURES": "AVX512_SKX,X86_V4",
+    "PYTHONHASHSEED": "0"
+  },
+  "native_input_inventory": [
+    {
+      "path": "ADSAStaphInfection2_A01_w2247376DD-6ADD-442D-AE47-F54A05F3EA94.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/ADSAStaphInfection2_A01_w2247376DD-6ADD-442D-AE47-F54A05F3EA94.tif",
+      "size_bytes": 451368,
+      "sha256": "5a57b7557bb0da5e241b48851b82d936c7ec36ede7aaca5e77b28ac4bfebf502"
+    }
+  ],
+  "native_image_set_count": 9,
+  "native_input_inventory_after": [
+    {
+      "path": "ADSAStaphInfection2_A01_w2247376DD-6ADD-442D-AE47-F54A05F3EA94.tif",
+      "source_path": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images/ADSAStaphInfection2_A01_w2247376DD-6ADD-442D-AE47-F54A05F3EA94.tif",
+      "size_bytes": 451368,
+      "sha256": "5a57b7557bb0da5e241b48851b82d936c7ec36ede7aaca5e77b28ac4bfebf502"
+    }
+  ]
+}

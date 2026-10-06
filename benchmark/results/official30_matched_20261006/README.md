@@ -37,3 +37,43 @@ Re-render without changing the data authority:
 PYTHONPATH=. python paper/figures/build_slas_benchmark.py --summary-source '1 well / 1 worker=benchmark/results/official30_matched_20261006/data/singlewell/execution_summary.csv' --scope execution --output-dir paper/figures/slas/official30_matched_20261006/execution
 PYTHONPATH=. python paper/figures/build_slas_benchmark.py --summary-source '1 well / 1 worker=benchmark/results/official30_matched_20261006/data/singlewell/total_summary.csv' --scope total --output-dir paper/figures/slas/official30_matched_20261006/total
 ```
+
+## Actual single-core amortization: 1 and 8 assignments
+
+The same dated production source completed all three declared frontier workflows with eight repeated source assignments, one worker and CPU5, using fresh genuine serial CellProfiler observations. Warmup and three measured repetitions passed all five scientific comparison inventories, and the full-suite terminal returned0 on unchanged clean `d8678dbd443d78e0c4e5d90f4c2e867af61af80b`. Repeated assignments reuse one biological source sample; they are not eight independent biological wells.
+
+- [Declared three-workflow cohort](protocol/selected-three-case-manifest.json)
+- [Actual8/1 execution summary](data/8assignments-1worker/execution_summary.csv)
+- [Actual8/1 total summary](data/8assignments-1worker/total_summary.csv)
+- [Original8/1 conversion custody](data/8assignments-1worker/summary_custody.json)
+- [Measured1+8 single-core figure](../../../paper/figures/slas/official30_matched_20261006/single-core-amortization/measured_single_core_amortization.png)
+
+| Workflow | OH total/assignment,1→8 | OH execution/assignment,1→8 | OH nonexecution/assignment,1→8 |
+|---|---:|---:|---:|
+| Vitra |1.3398→1.3134s|1.0722→1.2598s|0.2627→0.0538s|
+| Illumination Example3 |0.4352→0.2323s|0.1997→0.1797s|0.2362→0.0501s|
+|3D monolayer |3.3858→3.3031s|2.7360→3.0293s|0.6495→0.2453s|
+
+Execution and total use per-engine medians divided by the exact declared assignment count. Nonexecution uses the median paired total-minus-server-execution difference divided by that count; it covers compilation and client submission/polling, not a physical breakdown of pixel processing and runtime plumbing. These three medians do not have to sum exactly. Vitra and3D execution per assignment increase despite nonexecution amortization; the figure preserves that outcome. Lines connect actual measured points as visual guides, not projections.16-assignment and matched-count multicore comparisons remain pending and are not represented.
+
+`reports/8assignments-1worker/` and `protocol/8assignments-1worker/` preserve exact lightweight original reports, four phase receipts per workflow, command and terminal. Large images, databases and measurement CSVs remain in the original packet under `/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/8assignments-1worker/capture`. All archived copies were byte-verified. The single-well summaries above remain unchanged.
+
+## Actual matched eight-assignment parallel comparison
+
+Both actual8/1 and8/2 captures completed all three workflows, warmup plus three measured repetitions, with all five scientific inventories empty on unchanged clean `d8678dbd443d78e0c4e5d90f4c2e867af61af80b`. The parallel mode used two actual fork workers on CPU4/5; serial used CPU5. Each engine processed exactly eight repeated source assignments. Native8/2 clocks are genuine simultaneous shard makespans, not the maximum of independently timed jobs. Original shard reports, requests, equivalence and barrier-clock ownership remain archived without rewriting.
+
+| Workflow | OH execution8/1 | OH execution8/2 | Matched-count speedup | Two-worker efficiency |
+|---|---:|---:|---:|---:|
+|ExampleVitra|10.078320s|6.927434s|1.4548×|72.742%|
+|ExampleIlluminationCorrection_Example3|1.437690s|0.829096s|1.7340×|86.702%|
+|cp_tutorial_3d_monolayer|24.234790s|13.858792s|1.7487×|87.435%|
+
+Efficiency is `median execution8/1 / (2 × median execution8/2)`, comparing the same declared assignment count and source checkpoint. Vitra loses approximately27.3% of ideal efficiency and remains outside the accepted approximately15% loss. Illumination and3D lose approximately13.3% and12.6%. These results do not establish three-core efficiency or a guaranteed monotonic improvement. Current export optimizations and future modes have not been substituted into this dated comparison.
+
+- [Actual8/2 execution summary](data/8assignments-2workers/execution_summary.csv)
+- [Actual8/2 total summary](data/8assignments-2workers/total_summary.csv)
+- [Original8/2 conversion custody](data/8assignments-2workers/summary_custody.json)
+- [Matched execution comparison](../../../paper/figures/slas/official30_matched_20261006/matched-eight-execution/measured_execution_seconds.png)
+- [Matched total comparison](../../../paper/figures/slas/official30_matched_20261006/matched-eight-total/measured_total_seconds.png)
+
+Figure mode labels `8/1` and `8/2` mean eight repeated assignments with one or two workers. Assignment and worker counts are owned by custody, not inferred from labels. The retained comparison includes each engine's measured mode-specific baseline. The arithmetic Average row is the existing presentation summary, not another measured workflow or a substitute for case-wise efficiency. No independent biological-sample count or unmeasured memory metric is claimed.

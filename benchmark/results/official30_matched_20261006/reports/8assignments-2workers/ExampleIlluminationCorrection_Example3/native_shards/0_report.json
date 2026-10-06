@@ -1,0 +1,159 @@
+{
+  "startup_seconds": 0.8433889509178698,
+  "environment": {
+    "python_executable": "/home/ts/code/projects/openhcs/.venv-cellprofiler39/bin/python",
+    "python_version": "3.9.25",
+    "cellprofiler_version": "4.2.8.1",
+    "cellprofiler_core_version": "4.2.8.1",
+    "numpy_version": "1.24.4",
+    "scipy_version": "1.9.0",
+    "temporary_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/8assignments-2workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/0_tmp",
+    "temporary_device": 66306,
+    "host_machine_id": "b6ee2ce43d414c008929b08e9eb8eee4",
+    "host_node": "ts-gaming",
+    "host_platform": "Linux-7.0.9-arch1-1-x86_64-with-glibc2.43",
+    "cpu_info_sha256": "79a0254f2678c7a7dda03db9c4fec0809d3fbb157b1d868a1a534968aa093554",
+    "cpu_affinity": [
+      4,
+      5
+    ]
+  },
+  "request": {
+    "pipeline_path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/8assignments-2workers/capture/cases/ExampleIlluminationCorrection_Example3/native_preparation/native_cellprofiler_headless/ExampleIlluminationCorrection_Example3.cppipe",
+    "input_dir": "/home/ts/.cache/openhcs/cellprofiler_examples/ExampleIlluminationCorrection/images",
+    "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/8assignments-2workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/0",
+    "expected_image_sets": 4,
+    "repetitions": 3,
+    "file_list_path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/8assignments-2workers/capture/cases/ExampleIlluminationCorrection_Example3/native_preparation/native_cellprofiler_file_list.txt",
+    "first_image_set": 1,
+    "last_image_set": null,
+    "report_path": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/8assignments-2workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/0_report.json",
+    "start_barrier_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/8assignments-2workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/start_barrier",
+    "start_barrier_job_count": 2,
+    "start_barrier_job_index": 0,
+    "assignment_output_subdirectories": [
+      "W001",
+      "W002",
+      "W003",
+      "W004"
+    ]
+  },
+  "observations": [
+    {
+      "repetition": -1,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/8assignments-2workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/0/-1",
+      "image_set_count": 4,
+      "invocation_seconds": 3.322366983164102,
+      "pre_pipeline_seconds": 0.0034059733152389526,
+      "pipeline_execution_seconds": 3.318961009848863,
+      "invocation_started_monotonic_seconds": 4070070.149461236,
+      "pipeline_started_monotonic_seconds": 4070070.152867209,
+      "completed_monotonic_seconds": 4070073.471828219,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          1
+        ],
+        [
+          "W002",
+          1
+        ],
+        [
+          "W003",
+          1
+        ],
+        [
+          "W004",
+          1
+        ]
+      ]
+    },
+    {
+      "repetition": 0,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/8assignments-2workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/0/0",
+      "image_set_count": 4,
+      "invocation_seconds": 2.0419169822707772,
+      "pre_pipeline_seconds": 0.0006888573989272118,
+      "pipeline_execution_seconds": 2.04122812487185,
+      "invocation_started_monotonic_seconds": 4070073.471939529,
+      "pipeline_started_monotonic_seconds": 4070073.472628386,
+      "completed_monotonic_seconds": 4070075.513856511,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          1
+        ],
+        [
+          "W002",
+          1
+        ],
+        [
+          "W003",
+          1
+        ],
+        [
+          "W004",
+          1
+        ]
+      ]
+    },
+    {
+      "repetition": 1,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/8assignments-2workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/0/1",
+      "image_set_count": 4,
+      "invocation_seconds": 2.014181906823069,
+      "pre_pipeline_seconds": 0.0009339191019535065,
+      "pipeline_execution_seconds": 2.0132479877211154,
+      "invocation_started_monotonic_seconds": 4070075.58515685,
+      "pipeline_started_monotonic_seconds": 4070075.586090769,
+      "completed_monotonic_seconds": 4070077.599338757,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          1
+        ],
+        [
+          "W002",
+          1
+        ],
+        [
+          "W003",
+          1
+        ],
+        [
+          "W004",
+          1
+        ]
+      ]
+    },
+    {
+      "repetition": 2,
+      "output_root": "/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/8assignments-2workers/capture/cases/ExampleIlluminationCorrection_Example3/native_shards/0/2",
+      "image_set_count": 4,
+      "invocation_seconds": 1.8023537518456578,
+      "pre_pipeline_seconds": 0.0007051178254187107,
+      "pipeline_execution_seconds": 1.8016486340202391,
+      "invocation_started_monotonic_seconds": 4070077.599444787,
+      "pipeline_started_monotonic_seconds": 4070077.600149905,
+      "completed_monotonic_seconds": 4070079.401798539,
+      "assignment_image_set_counts": [
+        [
+          "W001",
+          1
+        ],
+        [
+          "W002",
+          1
+        ],
+        [
+          "W003",
+          1
+        ],
+        [
+          "W004",
+          1
+        ]
+      ]
+    }
+  ]
+}
