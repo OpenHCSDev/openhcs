@@ -307,6 +307,10 @@ class Output:
             metadata=metadata,
         )
 
+    def rendered(self) -> Output:
+        """Return this output's concrete file representation."""
+        return self
+
     @property
     def source_identity(self) -> SourceImageIdentity | None:
         if self.metadata is None:
@@ -490,6 +494,91 @@ class Utf8TextOutput(Output):
 
     def require_text_content(self) -> str:
         return self.content.decode("utf-8")
+
+@dataclass(frozen=True)
+class ColumnarCsvOutput(Output):
+    """CSV whose correlated row domain survives until file materialization.
+
+    Headers and encoding policy are declared by the producer. Composition is
+    permitted only for equal schemas and disjoint declared partition domains;
+    opaque text outputs have no corresponding composition law.
+    """
+
+    content: ColumnarRows
+    options: CsvOptions = field(default_factory=CsvOptions)
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.content, ColumnarRows):
+            raise TypeError("Columnar CSV content must be ColumnarRows.")
+        if not isinstance(self.options, CsvOptions):
+            raise TypeError("Columnar CSV output requires CSV writer options.")
+
+    def rendered(self) -> Utf8TextOutput:
+        return Utf8TextOutput(
+            path=self.path,
+            content=self.options.render(self.content).encode("utf-8"),
+            metadata=self.metadata,
+            variable_components=self.variable_components,
+            image_numbers_by_axis=self.image_numbers_by_axis,
+        )
+
+    @classmethod
+    def compose(
+        cls,
+        outputs: Sequence[ColumnarCsvOutput],
+        *,
+        partition_fields: tuple[str, ...],
+    ) -> ColumnarCsvOutput:
+        """Compose ordered independent partitions before any output is written.
+
+        The caller derives partition fields/order from its admitted source-domain
+        authority. This method does not infer independence from filenames, row
+        count, subject names or an opaque byte stream.
+        """
+        from openhcs.core.measurement_row_materialization import (
+            ConcatenatedColumnarRows,
+            is_structural_missing_measurement_cell,
+        )
+
+        values = tuple(outputs)
+        if not values or not partition_fields:
+            raise ValueError("CSV composition requires outputs and partition fields.")
+        first = values[0]
+        if not isinstance(first, cls):
+            raise TypeError("Only columnar CSV outputs can be composed.")
+        canonical_headers = first.options.header_rows(first.content)
+        canonical_fields = first.content.fields
+        domains: set[tuple[object, ...]] = set()
+        for output in values:
+            if not isinstance(output, cls):
+                raise TypeError("Only columnar CSV outputs can be composed.")
+            if (
+                output.path != first.path
+                or output.options != first.options
+                or (output is not first and output.options.header_rows(output.content) != canonical_headers)
+                or output.content.fields != canonical_fields
+                or output.metadata != first.metadata
+                or output.variable_components != first.variable_components
+            ):
+                raise ValueError("CSV partitions declare incompatible paths/schema/policy.")
+            if output.image_numbers_by_axis is not None:
+                raise ValueError("CSV source numbering must be composed by its existing owner.")
+            if any(name not in output.content.columns for name in partition_fields):
+                raise ValueError("CSV partitions lack their declared source identity fields.")
+            columns = tuple(output.content.column_values(name) for name in partition_fields)
+            current: set[tuple[object, ...]] = set()
+            for identity in zip(*columns, strict=True):
+                if any(is_structural_missing_measurement_cell(value) for value in identity):
+                    raise ValueError("CSV partitions contain unscoped/global rows.")
+                current.add(identity)
+            if domains.intersection(current):
+                raise ValueError("CSV partitions overlap their declared source domain.")
+            domains.update(current)
+        return replace(
+            first,
+            content=ConcatenatedColumnarRows(tuple(output.content for output in values)),
+        )
+
 
 
 class SourceSegmentAuthority:
@@ -2802,7 +2891,13 @@ def _file_bundle_outputs(
             if step_outputs is not None
             else None
         )
-        if isinstance(content, str):
+        if isinstance(content, Output):
+            output = replace(
+                content,
+                path=output_path,
+                image_numbers_by_axis=image_numbers,
+            ).rendered()
+        elif isinstance(content, str):
             output = Utf8TextOutput.from_text(
                 path=output_path,
                 content=content,
@@ -2815,7 +2910,7 @@ def _file_bundle_outputs(
                 image_numbers_by_axis=image_numbers,
             )
         else:
-            raise TypeError("File bundle values must be str or bytes.")
+            raise TypeError("File bundle values must be text, bytes or typed outputs.")
         outputs.append(output)
     return outputs
 

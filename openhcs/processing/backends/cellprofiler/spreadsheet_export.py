@@ -91,10 +91,13 @@ from openhcs.interop.cellprofiler.settings_binder import (
     parse_cellprofiler_bool,
 )
 from openhcs.processing.materialization import (
+    CsvOptions,
     FileBundleOptions,
     MaterializationSpec,
     WriteMode,
 )
+
+from openhcs.processing.materialization.core import ColumnarCsvOutput
 
 if TYPE_CHECKING:
     from openhcs.core.function_patterns import FunctionInvocationKey
@@ -310,16 +313,19 @@ class SpreadsheetFileSelection:
             fields=tuple(FieldSpec(name, required=False) for name in names),
         )
 
-    def render_csv(
-        self,
-        rows: ColumnarRows,
-        *,
+    def header_rows(
+        self, rows: ColumnarRows, *, active_subjects: tuple[str, ...],
+    ) -> tuple[tuple[str, ...], ...]:
+        """Derive native headers in their existing first-present field order."""
+        return self.csv_schema(
+            tuple(rows.iter_row_mappings()), active_subjects=active_subjects,
+        )[1]
+
+    def csv_schema(
+        self, row_mappings: Sequence[Mapping[str, object]], *,
         active_subjects: tuple[str, ...],
-        delimiter: SpreadsheetDelimiter,
-        nan_representation: SpreadsheetNanRepresentation,
-    ) -> str:
-        """Render native single or contextual headers from the selected subjects."""
-        row_mappings = tuple(rows.iter_row_mappings())
+    ) -> tuple[tuple[str, ...], tuple[tuple[str, ...], ...]]:
+        """Own both physical column order and contextual header projection."""
         columns = tuple(
             dict.fromkeys(field_name for row in row_mappings for field_name in row)
         )
@@ -342,13 +348,64 @@ class SpreadsheetFileSelection:
                     )
                 bindings.append((subject, name[len(subject) + 1 :]))
             header_rows = tuple(zip(*bindings))
+        return columns, header_rows
+
+    def prepare_csv(
+        self,
+        rows: ColumnarRows,
+        *,
+        active_subjects: tuple[str, ...],
+        delimiter: SpreadsheetDelimiter,
+        nan_representation: SpreadsheetNanRepresentation,
+    ) -> ColumnarCsvOutput:
+        """Retain correlated rows and declared formatting until materialization."""
+        return ColumnarCsvOutput(
+            path=self.file_name,
+            content=rows,
+            options=CellProfilerSpreadsheetCsvOptions(
+                selection=self,
+                active_subjects=active_subjects,
+                delimiter=delimiter,
+                nan_representation=nan_representation,
+            ),
+        )
+
+    def render_csv(
+        self,
+        rows: ColumnarRows,
+        *,
+        active_subjects: tuple[str, ...],
+        delimiter: SpreadsheetDelimiter,
+        nan_representation: SpreadsheetNanRepresentation,
+    ) -> str:
+        """Realized view of this selection's canonical typed CSV output."""
+        output = self.prepare_csv(
+            rows, active_subjects=active_subjects, delimiter=delimiter,
+            nan_representation=nan_representation,
+        )
+        return output.options.render(output.content)
+
+
+@dataclass(frozen=True, kw_only=True)
+class CellProfilerSpreadsheetCsvOptions(CsvOptions):
+    """CellProfiler CSV dialect and header semantics on the writer-option family."""
+
+    selection: SpreadsheetFileSelection
+    active_subjects: tuple[str, ...]
+    delimiter: SpreadsheetDelimiter
+    nan_representation: SpreadsheetNanRepresentation
+
+    def header_rows(self, rows: ColumnarRows) -> tuple[tuple[str, ...], ...]:
+        return self.selection.header_rows(rows, active_subjects=self.active_subjects)
+
+    def render(self, data: ColumnarRows) -> str:
+        row_mappings = tuple(data.iter_row_mappings())
+        columns, headers = self.selection.csv_schema(
+            row_mappings, active_subjects=self.active_subjects,
+        )
         return _render_native_csv(
-            row_mappings,
-            columns,
-            delimiter.value,
-            Real,
-            nan_representation is SpreadsheetNanRepresentation.NULL,
-            header_rows,
+            row_mappings, columns, self.delimiter.value, Real,
+            self.nan_representation is SpreadsheetNanRepresentation.NULL, headers,
         )
 
 
@@ -383,7 +440,7 @@ def cellprofiler_output_directory(value: str) -> str:
     return normalized.strip("/")
 
 
-def render_spreadsheet_bundle(
+def prepare_spreadsheet_bundle(
     artifact_batch: RuntimeArtifactBatch,
     *,
     delimiter: SpreadsheetDelimiter = SpreadsheetDelimiter.COMMA,
@@ -403,8 +460,8 @@ def render_spreadsheet_bundle(
     add_filename_prefix: bool = True,
     filename_prefix: str = "MyExpt_",
     context: ProcessingContext | None = None,
-) -> dict[str, str | bytes]:
-    """Render exactly the measurement records selected by ``artifact_batch``."""
+) -> dict[str, ColumnarCsvOutput]:
+    """Prepare exactly the measurement records selected by ``artifact_batch``."""
 
     if not isinstance(artifact_batch, RuntimeArtifactBatch):
         raise TypeError("artifact_batch must be RuntimeArtifactBatch.")
@@ -470,7 +527,7 @@ def render_spreadsheet_bundle(
         else file_selections
     )
     prefix = filename_prefix if add_filename_prefix else ""
-    bundle: dict[str, str | bytes] = {}
+    bundle: dict[str, ColumnarCsvOutput] = {}
     for selection in selections:
         selected_tables = tuple(
             (subject, tables[subject])
@@ -494,7 +551,7 @@ def render_spreadsheet_bundle(
                 raise ValueError(
                     f"Spreadsheet export produced duplicate path {relative_path!r}."
                 )
-            bundle[relative_path] = selection.render_csv(
+            bundle[relative_path] = selection.prepare_csv(
                 selected_rows,
                 active_subjects=tuple(subject for subject, _ in selected_tables),
                 delimiter=delimiter,
@@ -503,6 +560,16 @@ def render_spreadsheet_bundle(
     if context is not None:
         image_numbers.observe_export_paths(context, tuple(bundle))
     return bundle
+
+
+def render_spreadsheet_bundle(
+    artifact_batch: RuntimeArtifactBatch, **kwargs: object,
+) -> dict[str, str | bytes]:
+    """Realized view of the canonical schema-bearing spreadsheet bundle."""
+    return {
+        path: output.options.render(output.content)
+        for path, output in prepare_spreadsheet_bundle(artifact_batch, **kwargs).items()
+    }
 
 
 def _measurement_tables(
@@ -1199,7 +1266,7 @@ def export_to_spreadsheet(
     filename_prefix: str = "MyExpt_",
     artifact_batch: RuntimeArtifactBatch,
     context: ProcessingContext | None = None,
-) -> dict[str, str | bytes]:
+) -> dict[str, ColumnarCsvOutput]:
     """Render one plate's exact contract-selected spreadsheet file bundle.
 
     Args:
@@ -1214,7 +1281,7 @@ def export_to_spreadsheet(
             when automatic export of all measurement types is disabled.
     """
 
-    return render_spreadsheet_bundle(
+    return prepare_spreadsheet_bundle(
         artifact_batch,
         context=context,
         delimiter=delimiter,
