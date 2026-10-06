@@ -788,6 +788,7 @@ class ZMQExecutionServer(FunctionCatalogExecutionServer):
             compilation=compilation,
             execution_results=execution_results,
         )
+        execution_results.require_success()
         return execution_results
 
     def _export_runtime_observation(
