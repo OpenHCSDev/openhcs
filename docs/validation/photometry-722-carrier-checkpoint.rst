@@ -95,6 +95,29 @@ decision and StepInputSourceUniverseRequest; its declaration owns origin/role.
 The related origin registry still selects SourceUniverseRequest.for_binding;
 the image-input admission owner retains its single-authority check.
 
+Origin/projection consumer closure (production reads, not behavioral claims):
+
+* source_bindings.py owns primary-plane membership, pipeline-start resolution,
+  matched source-set need, current-selector/component-stack need, and compiled
+  universe derivation. Those queries answer distinct declaration questions;
+  they do not infer which pixels a stored object carrier contains.
+* source_binding_workspace.py indexes and constructs declared projection roles;
+  source_projection.py matches a projection's alias/kind/role to its binding;
+  source_workspace_projection.py selects exact role/axis occurrences.
+* source_binding_selection.py uses roles to form the source universe and uses
+  the declared origin registry to select its resolver. Its current-primary
+  pixel decision now consumes requires_current_pixels.
+* function_runtime.py filters the main stack to declared primary-plane bindings;
+  function_patterns.py alone chooses stored versus main-flow transport, with
+  CompiledStepPlan supplying its frozen source-binding plan. Checkpoint and
+  artifact-request consumers use that same transport decision.
+* source_bindings_view.py and source_bindings_editor.py project declaration
+  origin/role into presentation; they neither resolve pixels nor choose carriers.
+
+The source parser finds nominal call sites, not every possible dynamic runtime
+target. Registry dispatch and artifact-type conversion were read semantically;
+the scan does not certify all possible third-party adapters or a full NRA R1.
+
 Original controls01 ended with 140 passed and 9 failed, exit 1. Seven failures
 reached the existing fixture's DNA file selector against canonical virtual
 workspace paths before photometry; two used obsolete prepared.total_count()
