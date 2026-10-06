@@ -102,9 +102,7 @@ BBBC013 supplied four development and 92 held-out wells from a two-drug FKHR-GFP
 
 CellProfiler `.cppipe` files are parsed into modules and settings. Setup modules define image sources; registered processing and export modules become editable OpenHCS steps. Each module declaration specifies the images, objects, measurements and relationships its function needs, together with whether it runs per image group or across the plate. The same function is exposed in the GUI, Python and MCP.
 
-The imported ExampleCometAssay illustrates this mapping. Its 16 modules become image-source configuration and 12 processing steps containing 16 function calls. One step measures the size and shape of three named object sets: Comet, CometHead and CometTail. Another defines CometTail by masking the comet with the inverted head mask. These names connect each measurement to the object set it describes.
-
-Two additional workflows illustrate larger imports: the advanced segmentation tutorial and the 3D monolayer tutorial [@CellProfilerTutorials]. Enabled modules were parsed from the benchmark pipeline files, translated using the importer, and counted alongside their generated function steps and individual calls. The imported Python documents were reloaded to check preservation of function identities and parameters. Supplementary Data 5 provides the complete step sequences and source records; output comparisons are reported separately below.
+Named images and objects connect imported measurements to their inputs, as illustrated by the Comet Assay (Supplementary Figure 13). For the advanced segmentation and 3D monolayer tutorials, reloading generated Python checked preservation of function identities and parameters [@CellProfilerTutorials]. Supplementary Data 5 provides their step sequences and source records.
 
 Comparisons use absolute and relative tolerances of `1e-6` for numerical values and image pixels, with no out-of-tolerance pixels; identifiers and categorical values are compared exactly after documented CellProfiler-compatible normalizations. Object-label images are compared exactly after singleton-axis normalization. For five workflows lacking exports, terminal image or object-label exports supplied reference artifacts without changing their processing settings. Supplementary Data 1 records export definitions, output inventories, software versions and historical release-CI results; Supplementary Data 2 documents the imported corpus and setting coverage.
 
@@ -163,13 +161,9 @@ A separate current-source replay used nuclear-supported soma detection and soma-
 
 (A, B) Original 800 x 800-pixel NeuronCyto II field-1 inputs [@NeuronCytoII], displayed linearly over their unsigned 8-bit range. The boxes name the two saved pipeline functions. (C) The native napari canvas shows neuronal signal, unified labels and graph paths from the current-source replay; application controls are cropped away without changing image or overlay pixels. Selecting neuron 8 links its three paths. (D) Retained nucleus, soma and assigned-neuron labels for the lower field cell, shown in magenta, cyan and yellow, respectively. Label identities are matched by pixel overlap. (E) Crossing paths remain assigned to separate neurons. (F, G) Per-neuron and summary measurements derived from the retained tables. Lengths are pixels because the public input has no recorded physical calibration. This replay is distinct from the original unattended run retained in Supplementary Data 4; it is not another fresh autonomous evaluation.
 
-### Agent-authored analyses recover nuclei and treatment responses in held-out samples
+### Prospective held-out assay analyses
 
-The three prospectively authored workflows were applied without scientific parameter changes after their held-out partitions were disclosed (Supplementary Figure 6 and Supplementary Data 7). On the 50 BBBC039 fields, 4,733 of 5,720 reference nuclei matched at intersection over union at least 0.5. Pooled precision was 0.680, recall was 0.827 and object F1 was 0.746; mean field foreground Dice was 0.935. The workflow predicted 6,964 nuclei, 1,244 more than the reference, and the overlap diagnostic identified more split reference instances than merged predictions. The first blind pipeline therefore recovered nuclear foreground well while over-segmenting instances.
-
-On the 12 BBBC007 fields, 29,450 of 43,875 relevant predicted adjacent-cell boundary pixels were within two pixels of a manual outline, a pooled fraction of 0.671. The workflow predicted 1,274 nuclei and 1,273 cells; every predicted nucleus overlapped a cell and one cell shared two nuclei. The manual outlines enclosed 1,082 closed nuclear interiors, while 12 open or frame-connected regions were excluded. Because the boundary score is directed from predictions to the outline union, it can reward an incomplete segmentation and does not establish object correspondence.
-
-The BBBC013 run produced matched nuclear and cytoplasmic measurements for 14,262 cells across all 92 held-out wells. Wortmannin controls separated with Z-prime 0.751 and mean nuclear-to-cytoplasmic GFP ratios of 7.235 and 0.915 for positive and negative controls. LY294002 controls gave Z-prime 0.554 and means of 7.219 and 1.127. Both held-out dose series showed the expected increase in nuclear translocation. This result evaluates recovery of the assay response; BBBC013 does not supply manual masks with which to score segmentation.
+The earlier prospective trials recovered nuclear foreground and translocation responses but over-segmented nuclear instances and left uncertain actin-defined boundaries. On held-out fields, BBBC039 pooled object F1 was 0.746 and foreground Dice was 0.935; BBBC007's directed boundary fraction was 0.671. Across 92 BBBC013 held-out wells, control Z-prime was 0.751 for Wortmannin and 0.554 for LY294002. These single-attempt trials are distinct from the later self-repair evaluations below. Supplementary Figure 6 and Supplementary Data 7 provide counts, scoring definitions and treatment summaries.
 
 ### Imported CellProfiler workflows match the compared reference outputs
 
@@ -259,13 +253,7 @@ neurons. The frozen pipeline, outputs and independent image review are linked
 in Supplementary Data 8. This trial used development images rather than an
 unseen test set.
 
-An assisted analysis of the same dataset assembled the nine overlapping fields
-into a mosaic (Figure 11). A shared percentile fit across the complete stack preserves a
-common channel scale before mosaic analysis. The completed retained-context
-workflow produced 1,740 soma candidates and 123,054 micrometres of computed total
-outgrowth at the declared spacing. These are algorithmic outputs, not a unique
-biological cell census or calibrated ground-truth length. The workflow is
-assisted development, distinct from the fresh unguided trials.
+Supplementary Data 8 separately reports an assisted stitched-mosaic analysis of the laboratory dataset.
 
 The public BBBC013 translocation analysis completed all 96 wells. It retained
 14,631 of 17,320 detected nuclei with eligible cytoplasmic compartments (84.5%).
@@ -296,14 +284,7 @@ returned to authors. Visual-review rows do not supply a numerical accuracy
 estimate. First/final comparisons and independent repeats remain distinct;
 Supplementary Data 8 retains their exact inputs, predictions and evaluations.
 
-Together, the task-only trials demonstrate useful initial choices, local
-recovery and self-diagnosis without reference-score feedback. Their quantitative
-comparisons and matched views distinguish detection, object separation,
-boundary extent and execution coverage. Repair of one region alone does not
-establish quality throughout an image or performance on a new dataset.
-Supplementary Data 8 retains the individual attempts, pipeline freezes and
-reference definitions. Supplementary Figures 8–12 group matched evidence by assay. Assisted examples
-are identified separately from fresh autonomous results.
+Table 2 summarizes each task's endpoint and scope; Supplementary Data 8 retains frozen attempts and independent evaluations.
 
 ### Figure 5. Autonomous image review improves nuclear segmentation
 
