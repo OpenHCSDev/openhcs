@@ -20,7 +20,7 @@ link-bibliography: true
 
 ## Abstract
 
-Scientists need to inspect and revise image analyses built by AI agents. OpenHCS is an open-source platform in which scientists and agents edit the same microscopy pipeline through graphical controls, Python or the Model Context Protocol (MCP), which lets an AI client request analysis operations. Each registered processing function supplies the parameter names, types and defaults used to generate its controls and describe it to agents. The selected functions and settings remain editable as Python. Before execution, OpenHCS connects the selected images and intermediate results to each step and checks their compatibility. Established CellProfiler pipelines and custom Python functions use this model, with images, regions of interest and measurements available for inspection in napari and Fiji. All 30 imported CellProfiler workflows passed selected reference-output comparisons, including five supplemented with exports of computed images or object labels. Task-only agents used MCP and packaged guidance to construct, inspect and revise analyses without reference-score feedback, then froze their final pipelines before reference comparison. Independent final nuclear analyses reached pooled object F1 0.898–0.906 across 200 annotated fields, including development fields. A completed 96-well translocation analysis yielded control Z-prime values of 0.849 and 0.726 for two drugs among cells with eligible compartments. Matched image review distinguished useful localisation and principal-neurite recovery from unresolved boundaries and crossing ownership. Matched single-thread measurements across all 30 workflows showed a minimum execution speedup of 2.77-fold over native CellProfiler, with a median of 4.21-fold and no declared-output differences. OpenHCS connects established analysis methods to agent-guided laboratory workflows while keeping processing choices and results available for scientific review.
+Microscopy analysis requires selecting processing methods, inspecting segmentation and adapting the pipeline to the experiment. AI agents can perform these operations, but scientists need to examine and revise the resulting analysis. We developed OpenHCS, an open-source platform in which scientists and agents edit the same pipeline through graphical controls, Python or the Model Context Protocol (MCP). Established CellProfiler workflows and custom Python functions can be combined, with images, segmentation masks and measurements available for inspection in napari and Fiji. All 30 imported CellProfiler workflows passed selected reference-output comparisons, including five supplemented with image or object-label exports. Autonomous agents constructed and revised analyses using MCP and packaged guidance without reference-score feedback; final pipelines were frozen before reference comparison. Independent nuclear analyses reached pooled object F1 of 0.898–0.906 across 200 annotated fields, including development fields. A completed 96-well translocation analysis yielded control Z-prime values of 0.849 and 0.726 for two drugs among cells with measurable compartments. Image review showed recovery of retinal cell bodies and principal neurite shafts, with uncertain cell boundaries and unresolved assignment at neurite crossings. Matched single-thread measurements across all 30 workflows showed a minimum execution speedup of 2.77-fold over native CellProfiler and a median of 4.21-fold, with no declared-output differences. OpenHCS allows scientists to delegate analysis construction and execution while retaining access to the processing choices and biological results.
 
 ## Introduction
 
@@ -167,17 +167,17 @@ The UI submits work to a separate execution server using ZeroMQ messaging. The s
 
 ### Figure 2. Forms, Python and MCP edit the same analysis
 
-![Matching main window, recorded MCP edits, parameter controls and Python code.](figures/slas/editable_analyses.png){width=6in}
+![Main workflow, ZeroMQ server browser, parameter controls and matching Python code.](figures/slas/editable_analyses.png){width=6in}
 
-\(A) Full NeuronCyto II main window, with enlarged step and connection details. (B) MCP applies edited Python to the step and checks the updated control, then edits the field and checks regenerated Python. (C, D) Same-session crops show matching controls and code, with high percentile restored to 99.8 and parameters in signature order. Captures use OpenHCS 0.8.5; Figure 3 shows the current replay and retained measurements.
+\(A) NeuronCyto II workflow and enlarged pipeline steps. (B) The ZeroMQ server browser lists the execution server and UI bridge, with status and management controls. This panel was captured separately in OpenHCS 0.8.7. (C, D) Matching controls and Python show the high percentile restored to 99.8 and parameters in signature order after MCP edits. Panels A, C and D come from the same OpenHCS 0.8.5 editing session; Figure 3 shows the subsequent replay and measurements.
 
 ### An agent constructs a neurite-outgrowth analysis
 
 From a detailed prompt identifying the two NeuronCyto II channels and requested outputs, the agent built and inspected a neurite-outgrowth analysis without further human input.
 
-The agent inspected the images' organization and constructed a two-step pipeline: normalization followed by a registered neurite morphology and topology function (Figure 3). Of 140 attempted MCP calls, one was rejected for an invalid operation name; 30 others returned an error from the requested operation. Seventeen of those 30 errors came from code-document validation, which rejected invalid preset imports, document structure or configuration values before analysis execution. These counts include repeated authoring attempts. The agent revised the document until validation succeeded, then compiled and ran it in the desktop session. The remaining errors concerned request formats, discovery, file queries and UI operations (Supplementary Data 4). The saved record reports 609 s from start to completion, including authoring, corrections, execution and agent output checks; pipeline execution took 16.5 s. Outputs included neuron and nuclear labels, per-neuron measurements, neurite paths, ROI files and an SWC morphology file. The pipeline remained editable in Python and the graphical interface.
+The agent inspected the images and constructed a two-step pipeline: normalization followed by neurite morphology and topology analysis (Figure 3). It corrected invalid pipeline settings before execution and completed authoring, corrections, execution and output checks in 609 s; pipeline execution took 16.5 s. Outputs included neuron and nuclear labels, neurite paths and per-neuron measurements. The pipeline remained editable in Python and the graphical interface. The complete tool history, including rejected requests and authoring errors, is provided in Supplementary Data 4.
 
-The final napari view displayed enhanced neuronal signal, unified neuron labels and neurite paths, with a feature table linking paths to measurements. Structured viewer checks found all nine expected outputs present with no missing or duplicate coordinates. The original analysis reported nine neurons, ten nuclei and 25 graph paths. Subsequent visual review identified a crossover classified as branching and a soma split between two neuron labels. The retained outlines also divide the nuclear signal at that soma into three objects. The published manual-tracing table lists eight neurons for image 1, providing an independent reference for investigating the count discrepancy [@NeuronCytoII].
+The final napari view displayed enhanced neuronal signal, neuron labels and neurite paths, with a table linking paths to measurements. All nine expected outputs were present. The analysis reported nine neurons, ten nuclei and 25 graph paths. Subsequent visual review identified a crossing classified as a branch and a soma divided between two neuron labels; its nuclear signal was also divided into three objects. The published manual-tracing table lists eight neurons for image 1 [@NeuronCytoII]. The discrepancy illustrates why complete outputs must still be checked against the biological structures in the image.
 
 A separate current-source replay used nuclear-supported soma detection and soma-rooted path assignment. It produced eight cell bodies, eight nuclei, 18 processes, two branch events and 24 graph paths. Per-cell measurements agree with graph distance features, totaling 2556.137 pixels under unit spacing. Supplementary Data 4 retains the original run, intervening correction and current replay separately. Document validation caught invalid authoring attempts before execution; image review identified errors in the biological result.
 
@@ -280,8 +280,20 @@ that endpoint. Crossings remain a limitation for assigning length to individual
 neurons. The representative shaft result is not presented as a manual-trace
 accuracy measurement.
 
-The laboratory neurite example extends the workflow to nine overlapping fields
-(Figure 11). A shared percentile fit across the complete stack preserves a
+A separate autonomous author analysed all nine fields of the laboratory neurite
+dataset using only its task brief, MCP and packaged guidance. During image
+review, it detected that its initial settings excluded thin processes and
+adjusted neurite admission while retaining the same cell-body labels in the
+reviewed field. The final analysis recovered many raw-visible paths in sampled
+sparse and dense regions, although some fine branches and cell assignments at
+crossings remained uncertain. Fields were analysed separately; overlapping
+positions were not deduplicated, so their counts do not represent unique
+neurons. The frozen pipeline, outputs and independent image review are linked
+in Supplementary Data 8. This trial used development images rather than an
+unseen test set.
+
+An assisted analysis of the same dataset assembled the nine overlapping fields
+into a mosaic (Figure 11). A shared percentile fit across the complete stack preserves a
 common channel scale before mosaic analysis. The completed retained-context
 workflow produced 1,740 soma candidates and 123,054 micrometres of computed total
 outgrowth at the declared spacing. These are algorithmic outputs, not a unique
@@ -307,6 +319,7 @@ being treated as additional experiments.
 | H002 3-D centres | 15 manual centres; Figure 9 trial | 15/15 matched within 20 voxels, mean error 4.80 voxels; annotations not established as exhaustive |
 | R0010 retinal somata | Distributed matched raw/result review | Autonomous repair retained neighbours and reduced nuisance masks; manual-reference accuracy unmeasured |
 | H004 public neurites | Matched raw shafts and nuisance controls | Principal-shaft and junction recovery; fine protrusions and per-neuron crossing ownership unresolved |
+| Laboratory neurites, nine fields | Matched raw/path review in three sampled fields | Autonomous completion and recovery of thin paths after self-directed repair; overlapping fields not stitched or deduplicated, per-neuron ownership unresolved |
 | BBBC013 translocation | Well-level control and dose summaries; 96 wells | Assay responses recovered in contributing cohorts; compartment coverage varied and whole-cell accuracy unmeasured |
 
 Table 2. Results and evaluation methods for autonomous image analysis.
