@@ -574,15 +574,6 @@ joins, but incomplete nuclear and soma detection limited its morphology
 measurements. That assisted continuation is distinct from fresh autonomous
 authoring.
 
-A later assisted phase completed all nine fields and analysed the retained
-2,868-by-2,868-pixel mosaic using one percentile-derived mapping per physical
-channel, fitted across the field stack. The mosaic retained 1,740 candidate
-body identities, with distributed raw-supported geometry. Independent
-recalculation reproduced its exported length and graph summaries, but did not
-validate complete arbors or crossing ownership. The existing assembly was
-reused rather than discovered anew; this is completed mosaic analysis, not a
-fresh autonomous stitching demonstration (Supplementary Data 8).
-
 A later retained-context continuation completed fieldwise processing of all
 nine personal-neurite fields. Matched review at three sites showed supported
 bodies and process segments alongside faint gaps and incomplete body association
@@ -617,6 +608,15 @@ assisted comparison demonstrates a reproducible shared input transform and
 locally stable geometry, not improved complete-arbor accuracy. Nuclear inputs
 remained untransformed, and overlapping fields were not summed as independent
 replicates or unique-well counts (Supplementary Data 8).
+
+A later assisted phase completed all nine fields and analysed the retained
+2,868-by-2,868-pixel mosaic using one percentile-derived mapping per physical
+channel, fitted across the field stack. The mosaic retained 1,740 candidate
+body identities, with distributed raw-supported geometry. Independent
+recalculation reproduced its exported length and graph summaries, but did not
+validate complete arbors or crossing ownership. The existing assembly was
+reused rather than discovered anew; this is completed mosaic analysis, not a
+fresh autonomous stitching demonstration (Supplementary Data 8).
 
 A fresh, treatment-aware translocation author completed all 96 BBBC013 wells
 using scientific settings chosen from six development wells and frozen before
