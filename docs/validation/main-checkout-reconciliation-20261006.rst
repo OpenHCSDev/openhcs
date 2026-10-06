@@ -60,16 +60,30 @@ Determining dispositions
   the reported behavior before adapting old code.
 * Round-object component inspection is unpublished. Its production split-stage
   diagnostic needs current-owner adaptation, not wholesale old-file copying.
-* Strict workload-count finalization is an unpublished coherent benchmark/MCP
-  contract family. Current measured-run checks do not replace the missing
-  finalization-request input or strict boolean rejection. Extend the existing
-  request, CLI, control service, shared finalizer and original MCP annotation
-  binding; do not introduce a second execution or validation authority.
+* Strict workload-count finalization is a historical unpublished benchmark/MCP
+  patch, not evidence of a present benchmark defect. The current benchmark
+  implementation and final records belong to the agent on Tristan's other
+  machine. Compare its current workflow and subsequent main history before
+  proposing any change; competing implementation has been stopped. The exact
+  old patch remains independently recoverable from the recovery branch.
 * score_instance_labels.py and score_point_centres.py plus their tests are
   unpublished sources required by published H001/H002 evidence. Existing
   instance matching does not establish equivalent diagnostic contracts.
 * Haase/Liz preparation scripts and preset notes are unpublished acquisition
   provenance, not fixes for runtime preparation cost or viewer QA issues.
+
+Recovered scientific tools
+--------------------------
+
+The two frozen scorers, their original tests, and the Haase/Liz preparation
+scripts are restored unchanged from the recovery commit. These retain the
+implementation behind existing scientific records, not a new benchmark
+execution path or a recommendation to restart completed studies. The scoring
+tests pass (11 cases) using existing NumPy/SciPy/tifffile dependencies and the
+actual restored modules. No images were extracted or scientific scores rerun.
+This establishes recovery and the original covered scorer behavior; it does
+not establish algorithmic optimality for every possible matching problem,
+validate arbitrary existing extraction files, or certify biological accuracy.
 
 Issue closure decisions
 -----------------------
