@@ -1,0 +1,6 @@
+case_name,worker_count,well_count,worker_slot,axis_id,step_name,started_at,completed_at,step_seconds
+ExampleWoundHealing,1,1,worker_0,A01,ColorToGray,1791320652.1818492,1791320652.5168486,0.33499932289123535
+ExampleWoundHealing,1,1,worker_0,A01,Smooth,1791320652.5169597,1791320652.8475323,0.33057260513305664
+ExampleWoundHealing,1,1,worker_0,A01,IdentifyPrimaryObjects,1791320652.8476844,1791320653.173361,0.32567667961120605
+ExampleWoundHealing,1,1,worker_0,A01,MeasureImageAreaOccupied,1791320653.1736991,1791320653.2300391,0.05633997917175293
+ExampleWoundHealing,1,1,,,ExportToSpreadsheet,1791320653.2417212,1791320653.246412,0.004690885543823242

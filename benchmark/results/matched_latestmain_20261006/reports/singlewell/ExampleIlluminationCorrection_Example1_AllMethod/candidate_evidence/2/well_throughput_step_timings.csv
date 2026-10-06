@@ -1,0 +1,6 @@
+case_name,worker_count,well_count,worker_slot,axis_id,step_name,started_at,completed_at,step_seconds
+ExampleIlluminationCorrection_Example1_AllMethod,1,1,worker_0,A01,CorrectIlluminationCalculate,1791320782.102047,1791320782.8007119,0.6986649036407471
+ExampleIlluminationCorrection_Example1_AllMethod,1,1,worker_0,A01,CorrectIlluminationApply,1791320782.8007479,1791320783.0924134,0.29166555404663086
+ExampleIlluminationCorrection_Example1_AllMethod,1,1,worker_0,A01,CorrectIlluminationCalculate,1791320783.0925834,1791320783.9388595,0.846276044845581
+ExampleIlluminationCorrection_Example1_AllMethod,1,1,worker_0,A01,CorrectIlluminationApply,1791320783.938896,1791320784.286324,0.3474280834197998
+ExampleIlluminationCorrection_Example1_AllMethod,1,1,worker_0,A01,SaveImages,1791320784.2863655,1791320784.3205748,0.034209251403808594

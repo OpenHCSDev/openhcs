@@ -1,10 +1,10 @@
 {
-  "record_name": "matched_postgrid_20261006",
-  "source_revision": "eb773573cced496fe5ee7bfeef7b961674958c1d",
+  "record_name": "matched_latestmain_20261006",
+  "source_revision": "bb3180e04372a1ba33a269fe37b6512c1dc18da7",
   "status": "frozen",
   "case_count": "30",
-  "execution_min": "2.785",
-  "execution_median": "4.264",
-  "total_min": "1.348",
-  "total_median": "3.338"
+  "execution_min": "2.934",
+  "execution_median": "4.293",
+  "total_min": "1.365",
+  "total_median": "2.994"
 }

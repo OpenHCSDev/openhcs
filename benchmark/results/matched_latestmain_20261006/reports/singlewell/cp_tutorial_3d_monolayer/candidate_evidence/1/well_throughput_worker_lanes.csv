@@ -1,0 +1,2 @@
+case_name,worker_count,well_count,worker_slot,axis_count,started_at,completed_at,lane_seconds
+cp_tutorial_3d_monolayer,1,1,worker_0,1,1791320375.0303483,1791320377.8453689,2.8150205612182617
