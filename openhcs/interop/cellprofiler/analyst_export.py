@@ -21,6 +21,7 @@ from io import BytesIO
 from itertools import chain
 from numbers import Integral, Real
 from pathlib import Path
+from types import MappingProxyType
 import sqlite3
 from typing import cast, Any, ClassVar, Literal
 
@@ -40,11 +41,15 @@ from openhcs.core.context.processing_context import ProcessingContext
 from openhcs.core.image_file_serialization import ImageFileFormat
 from openhcs.core.measurement_row_materialization import (
     WideMeasurementRowAccumulator,
+    MEASUREMENT_SPARSE_CELL,
+    MeasurementSparseColumnarRows,
+    is_structural_missing_measurement_cell,
 )
 from openhcs.core.equivalence import measurement_qualifier_field_names
 from openhcs.core.equivalence.relationships import RuntimeScopedMeasurementTable
 from openhcs.core.runtime_tabular_values import (
     FieldSpec,
+    ColumnarRows,
 )
 from openhcs.core.runtime_measurements import (
     MeasurementRowAxisField,
@@ -648,34 +653,35 @@ class CPATableRowProjection:
         table: MeasurementTable,
         *,
         scope: RuntimeExecutionAxisScope | None,
-    ) -> Iterator[
-        tuple[MeasurementSubject, tuple[Mapping[str, Any], ...], tuple[FieldSpec, ...]]
-    ]:
+    ) -> Iterator[tuple[MeasurementSubject, ColumnarRows, tuple[FieldSpec, ...]]]:
         """Admit correlated rows and field declarations in one table epoch."""
         admitted_fields: dict[tuple[MeasurementSubject, str], FieldSpec | None] = {}
         subject_rows = self._measurement_subject_rows(table, scope=scope)
-        first_subject_rows = next(subject_rows, (table.subject, ()))
+        first_subject_rows = next(subject_rows, None)
+        if first_subject_rows is None:
+            first_subject_rows = (
+                table.subject,
+                MeasurementSparseColumnarRows(MappingProxyType({}), fields=()),
+            )
         owner = table.measurement_feature_owner
         project_database_field = (
             owner.database_measurement_field_projection()
             if owner is not None and issubclass(owner, CellProfilerModule)
             else None
         )
-        rows_by_subject: dict[
-            MeasurementSubject, tuple[Mapping[str, Any], ...]
-        ] = {}
         for subject, source_rows in chain((first_subject_rows,), subject_rows):
-            rows_by_subject[subject] = tuple(
-                self._project_runtime_row(
-                    table, row, subject=subject,
-                    field_projection_cache=admitted_fields,
-                    project_database_field=project_database_field,
-                )
-                for row in source_rows
+            rows = self._project_runtime_rows(
+                table,
+                source_rows,
+                subject=subject,
+                field_projection_cache=admitted_fields,
+                project_database_field=project_database_field,
             )
-        for subject, rows in rows_by_subject.items():
             yield subject, rows, self._measurement_columns(
-                table, rows, subject=subject, field_projection_cache=admitted_fields,
+                table,
+                rows,
+                subject=subject,
+                field_projection_cache=admitted_fields,
                 project_database_field=project_database_field,
             )
 
@@ -684,7 +690,7 @@ class CPATableRowProjection:
         table: MeasurementTable,
         *,
         scope: RuntimeExecutionAxisScope | None,
-    ) -> Iterator[tuple[MeasurementSubject, Sequence[Mapping[str, Any]]]]:
+    ) -> Iterator[tuple[MeasurementSubject, ColumnarRows]]:
         projected_rows = table.rows
         if table.subject.scope is not MeasurementScope.EXPERIMENT:
             if scope is None:
@@ -720,7 +726,10 @@ class CPATableRowProjection:
         )
         object_subjects = accumulator.object_subjects()
         object_subject_set = frozenset(object_subjects)
-        for subject_name, subject_rows in accumulator.row_mappings_by_subject().items():
+        for (
+            subject_name,
+            subject_rows,
+        ) in accumulator.columnar_rows_by_subject().items():
             subject = (
                 MeasurementSubject(MeasurementScope.OBJECT, subject_name)
                 if subject_name in object_subject_set
@@ -731,7 +740,7 @@ class CPATableRowProjection:
     def _measurement_columns(
         self,
         table: MeasurementTable,
-        rows: Sequence[Mapping[str, Any]],
+        rows: ColumnarRows,
         *,
         subject: MeasurementSubject,
         field_projection_cache: dict[tuple[MeasurementSubject, str], FieldSpec | None],
@@ -789,9 +798,7 @@ class CPATableRowProjection:
                 field_name,
                 FieldSpec(field_name, dynamic_dtype, required=False),
             )
-            for field_name in dict.fromkeys(
-                field_name for row in rows for field_name in row
-            )
+            for field_name in rows.columns
         )
         return FieldSpec.merge_exact(
             (
@@ -813,7 +820,9 @@ class CPATableRowProjection:
         key = (subject, field_name)
         if key not in field_projection_cache:
             field_projection_cache[key] = self._project_measurement_field(
-                table, field_name, subject=subject,
+                table,
+                field_name,
+                subject=subject,
                 project_database_field=project_database_field,
             )
         return field_projection_cache[key]
@@ -872,36 +881,61 @@ class CPATableRowProjection:
             projected_field,
         )
 
-    def _project_runtime_row(
+    def _project_runtime_rows(
         self,
         table: MeasurementTable,
-        row: Mapping[str, Any],
+        rows: ColumnarRows,
         *,
         subject: MeasurementSubject,
         field_projection_cache: dict[tuple[MeasurementSubject, str], FieldSpec | None],
         project_database_field: Callable[[FieldSpec], FieldSpec] | None,
-    ) -> Mapping[str, Any]:
-        projected_row: dict[str, Any] = {}
-        for field_name, value in row.items():
-            key = (subject, field_name)
-            field_spec = (
-                field_projection_cache[key]
-                if key in field_projection_cache
-                else self._admitted_measurement_field(
-                    table, field_name, subject=subject,
-                    field_projection_cache=field_projection_cache,
-                    project_database_field=project_database_field,
-                )
+    ) -> ColumnarRows:
+        columns: dict[str, Sequence[object]] = {}
+        fields: list[FieldSpec] = []
+        for name in rows.columns:
+            field = self._admitted_measurement_field(
+                table,
+                name,
+                subject=subject,
+                field_projection_cache=field_projection_cache,
+                project_database_field=project_database_field,
             )
-            if field_spec is None:
+            if field is None:
                 continue
-            if field_spec.name in projected_row:
-                raise ValueError(
-                    f"CPA row projection for table '{table.name}' would overwrite "
-                    f"field {field_spec.name!r}."
+            values = rows.column_values(name)
+            if field.name in columns:
+                previous = ColumnarRows.column_array(columns[field.name])
+                incoming = ColumnarRows.column_array(values)
+                previous_present = np.fromiter(
+                    (
+                        not is_structural_missing_measurement_cell(value)
+                        for value in previous
+                    ),
+                    dtype=bool,
+                    count=len(previous),
                 )
-            projected_row[field_spec.name] = value
-        return projected_row
+                incoming_present = np.fromiter(
+                    (
+                        not is_structural_missing_measurement_cell(value)
+                        for value in incoming
+                    ),
+                    dtype=bool,
+                    count=len(incoming),
+                )
+                if np.any(previous_present & incoming_present):
+                    raise ValueError(
+                        f"CPA row projection for table '{table.name}' would overwrite field {field.name!r}."
+                    )
+                merged = previous.astype(object, copy=True)
+                merged[incoming_present] = incoming[incoming_present]
+                columns[field.name] = merged
+            else:
+                columns[field.name] = values
+            fields.append(field)
+        declared = FieldSpec.merge_exact(
+            (tuple(fields),), context=f"CPA table {table.name!r} projected fields"
+        )
+        return MeasurementSparseColumnarRows(MappingProxyType(columns), fields=declared)
 
     def image_id_field(self) -> FieldSpec:
         return self.dialect.image_id_field()
@@ -972,21 +1006,28 @@ class CPATableRowProjection:
             source_path = self._resolved_source_path(plane_provenance.source_path)
             if source_path is not None:
                 values.update(
-                    self.dialect.source_image_file_values(source_path, source_image_name)
+                    self.dialect.source_image_file_values(
+                        source_path, source_image_name
+                    )
                 )
                 # Every contributor must agree on the physical source. The held
                 # image row already owns the derived file fields for that source.
                 _merge_projected_row_values(
-                    target, values, owner=f"CPA image {image_number}",
+                    target,
+                    values,
+                    owner=f"CPA image {image_number}",
                 )
                 if source_path.is_file():
-                    values[self.dialect.source_image_feature_field(
-                        source_image_name,
-                        CellProfilerSourceImageProjectionField.URL.field_spec,
-                    ).name] = source_path.resolve().as_uri()
+                    values[
+                        self.dialect.source_image_feature_field(
+                            source_image_name,
+                            CellProfilerSourceImageProjectionField.URL.field_spec,
+                        ).name
+                    ] = source_path.resolve().as_uri()
                     source_fields = tuple(
                         self.dialect.source_image_feature_field(
-                            source_image_name, field.field_spec,
+                            source_image_name,
+                            field.field_spec,
                         ).name
                         for field in CellProfilerSourceImageProjectionField
                     )
@@ -1004,12 +1045,15 @@ class CPATableRowProjection:
                             ImageFileFormat.require_path(source_path)
                             .require_source_metadata(source_path)
                             .frame_for_source_indices(source_axis_indices)
-                            if source_axis_indices else 0
+                            if source_axis_indices
+                            else 0
                         )
-                        values[self.dialect.source_image_feature_field(
-                            source_image_name,
-                            CellProfilerSourceImageProjectionField.FRAME.field_spec,
-                        ).name] = frame
+                        values[
+                            self.dialect.source_image_feature_field(
+                                source_image_name,
+                                CellProfilerSourceImageProjectionField.FRAME.field_spec,
+                            ).name
+                        ] = frame
             component_metadata = plane_provenance.source_component_metadata
             metadata_items = {
                 field_name: value
@@ -1066,13 +1110,19 @@ class CPATableRowProjection:
         """Project declared source occurrences for image sets actually exported."""
 
         channel_aliases = frozenset(channel.alias for channel in image_channels)
-        selected_images = ArtifactSpecCollection(tuple(
-            image_inputs.require_by_name_and_artifact_type(name, ImageArtifactType)
-            for name in chain(
-                (channel.alias for channel in image_channels),
-                settings.thumbnail_image_names if settings.write_image_thumbnails else (),
+        selected_images = ArtifactSpecCollection(
+            tuple(
+                image_inputs.require_by_name_and_artifact_type(name, ImageArtifactType)
+                for name in chain(
+                    (channel.alias for channel in image_channels),
+                    (
+                        settings.thumbnail_image_names
+                        if settings.write_image_thumbnails
+                        else ()
+                    ),
+                )
             )
-        ))
+        )
         source_bindings = source_binding_plan.bindings_for_artifact_refs(
             selected_images.ref_set(),
         )
@@ -1083,7 +1133,9 @@ class CPATableRowProjection:
                 binding.alias in settings.thumbnail_image_names
                 for binding in source_bindings
             ):
-                raise ValueError("CPA source-bound thumbnails require a runtime context.")
+                raise ValueError(
+                    "CPA source-bound thumbnails require a runtime context."
+                )
             return
         workspace = VirtualWorkspaceSourceProjectionAuthority.from_context(
             self.context,
@@ -1094,7 +1146,9 @@ class CPATableRowProjection:
                 binding.alias in settings.thumbnail_image_names
                 for binding in source_bindings
             ):
-                raise ValueError("CPA source-bound thumbnails require a source workspace.")
+                raise ValueError(
+                    "CPA source-bound thumbnails require a source workspace."
+                )
             return
         scope = RuntimeExecutionAxisScope(axis_id)
         for binding in source_bindings:
@@ -1141,11 +1195,16 @@ class CPATableRowProjection:
                     and binding.alias in settings.thumbnail_image_names
                 ):
                     (payload,) = workspace.load_binding_payloads(
-                        (path,), binding=binding, filemanager=self.context.filemanager,
+                        (path,),
+                        binding=binding,
+                        filemanager=self.context.filemanager,
                     )
                     self.collect_image_thumbnail(
-                        payload, scope=scope, image_name=binding.alias,
-                        settings=settings, image_rows_by_number=image_rows_by_number,
+                        payload,
+                        scope=scope,
+                        image_name=binding.alias,
+                        settings=settings,
+                        image_rows_by_number=image_rows_by_number,
                     )
 
     def collect_image_thumbnail(
@@ -1160,7 +1219,9 @@ class CPATableRowProjection:
         """Render the selected named pixels into their exact source image rows."""
         provenance = image_payload_metadata(payload).source_provenance
         image_numbers = self.image_numbers_for_provenance(
-            provenance, scope=scope, owner=image_name,
+            provenance,
+            scope=scope,
+            owner=image_name,
         )
         pixels = np.asarray(image_payload_data(payload))
         planes = self._thumbnail_planes(pixels, len(image_numbers))
@@ -1168,13 +1229,17 @@ class CPATableRowProjection:
         image_id_field = self.image_id_field()
         for image_number, plane in zip(image_numbers, planes, strict=True):
             target = image_rows_by_number.setdefault(
-                image_number, {image_id_field.name: image_number},
+                image_number,
+                {image_id_field.name: image_number},
             )
             _merge_projected_row_values(
                 target,
-                {thumbnail_field.name: _thumbnail_png_base64(
-                    plane, auto_scale=settings.auto_scale_thumbnail_intensities,
-                )},
+                {
+                    thumbnail_field.name: _thumbnail_png_base64(
+                        plane,
+                        auto_scale=settings.auto_scale_thumbnail_intensities,
+                    )
+                },
                 owner=f"CPA image {image_number}",
             )
 
@@ -1295,10 +1360,14 @@ class CellProfilerAnalystProjectionBuilder:
                 "CellProfilerDatabaseExportSettings."
             )
         self._validate_image_channels(artifact_batch, image_channels)
-        image_inputs = ArtifactSpecCollection(artifact_batch.specs_of_type(ImageArtifactType))
+        image_inputs = ArtifactSpecCollection(
+            artifact_batch.specs_of_type(ImageArtifactType)
+        )
         if settings.write_image_thumbnails:
             for image_name in settings.thumbnail_image_names:
-                image_inputs.require_by_name_and_artifact_type(image_name, ImageArtifactType)
+                image_inputs.require_by_name_and_artifact_type(
+                    image_name, ImageArtifactType
+                )
 
         dialect = self._dialect(settings)
         row_projection = CPATableRowProjection(
@@ -1349,7 +1418,7 @@ class CellProfilerAnalystProjectionBuilder:
         )
         object_rows_by_subject: dict[
             MeasurementSubject,
-            dict[tuple[int, int], dict[str, Any]],
+            list[ColumnarRows],
         ] = {}
         object_columns_by_subject: dict[
             MeasurementSubject,
@@ -1478,7 +1547,25 @@ class CellProfilerAnalystProjectionBuilder:
             object_table_values.append(
                 CellProfilerProjectedTable(
                     table_name=dialect.object_table_name(object_name),
-                    rows=tuple(rows.values()),
+                    rows=MeasurementSparseColumnarRows.from_columnar_batches(
+                        rows
+                        or (
+                            MeasurementSparseColumnarRows(
+                                MappingProxyType(
+                                    {
+                                        field.name: ()
+                                        for field in object_columns_by_subject[subject]
+                                    }
+                                ),
+                                fields=object_columns_by_subject[subject],
+                            ),
+                        ),
+                        identity_fields=(
+                            row_projection.image_id_field().name,
+                            row_projection.object_id_field(subject).name,
+                        ),
+                        values_equal=lambda left, right: bool(left == right),
+                    ),
                     columns=object_columns_by_subject.get(subject, ()),
                     subject=subject,
                 )
@@ -1540,7 +1627,7 @@ class CellProfilerAnalystProjectionBuilder:
         image_rows_by_number: dict[int, dict[str, Any]],
         object_rows_by_subject: dict[
             MeasurementSubject,
-            dict[tuple[int, int], dict[str, Any]],
+            list[ColumnarRows],
         ],
         image_columns: tuple[FieldSpec, ...],
         experiment_rows: list[Mapping[str, Any]],
@@ -1577,7 +1664,7 @@ class CellProfilerAnalystProjectionBuilder:
         experiment_columns: tuple[FieldSpec, ...],
         object_rows_by_subject: dict[
             MeasurementSubject,
-            dict[tuple[int, int], dict[str, Any]],
+            list[ColumnarRows],
         ],
         object_columns_by_subject: dict[
             MeasurementSubject,
@@ -1591,7 +1678,8 @@ class CellProfilerAnalystProjectionBuilder:
         }:
             return image_columns, experiment_columns
         for subject, rows, columns in row_projection.measurement_projections(
-            table, scope=scope,
+            table,
+            scope=scope,
         ):
             if subject.scope is MeasurementScope.IMAGE:
                 image_table_name = row_projection.dialect.image_table_name()
@@ -1623,7 +1711,7 @@ class CellProfilerAnalystProjectionBuilder:
             object_name = subject.object_name
             if object_name is None:
                 raise ValueError("CPA object table requires an object subject.")
-            object_rows = object_rows_by_subject.setdefault(subject, {})
+            object_rows = object_rows_by_subject.setdefault(subject, [])
             object_table_name = row_projection.dialect.object_table_name(object_name)
             object_columns_by_subject[subject] = FieldSpec.merge_exact(
                 (object_columns_by_subject.get(subject, ()), columns),
@@ -1776,14 +1864,19 @@ class CellProfilerAnalystProjectionBuilder:
         image_rows_by_number: dict[int, dict[str, Any]],
     ) -> None:
         for image_name in settings.thumbnail_image_names:
-            spec = image_inputs.require_by_name_and_artifact_type(image_name, ImageArtifactType)
+            spec = image_inputs.require_by_name_and_artifact_type(
+                image_name, ImageArtifactType
+            )
             if self.source_binding_plan.declares_artifact_ref(spec.ref()):
                 continue  # The declared source-occurrence owner projects these pixels.
             for record in records:
                 if record.key.name == image_name:
                     row_projection.collect_image_thumbnail(
-                        record.data, scope=record.key.scope, image_name=image_name,
-                        settings=settings, image_rows_by_number=image_rows_by_number,
+                        record.data,
+                        scope=record.key.scope,
+                        image_name=image_name,
+                        settings=settings,
+                        image_rows_by_number=image_rows_by_number,
                     )
 
     @classmethod
@@ -1835,12 +1928,38 @@ class CellProfilerAnalystProjectionBuilder:
                     object_table.rows,
                 )
             )
-            rows_by_image: dict[
-                int,
-                list[Mapping[str, Any]],
-            ] = defaultdict(list)
-            for row in object_table.rows:
-                rows_by_image[int(row[image_id_field.name])].append(row)
+            if isinstance(object_table.rows, ColumnarRows):
+                physical_columns = {
+                    name: object_table.rows.column_values(name)
+                    for name in object_table.rows.columns
+                }
+                image_ids = tuple(
+                    int(value) for value in physical_columns[image_id_field.name]
+                )
+                indexes_by_image: dict[int, list[int]] = defaultdict(list)
+                for index, image_number in enumerate(image_ids):
+                    indexes_by_image[image_number].append(index)
+                feature_values = {
+                    field.name: ColumnarRows.column_array(
+                        physical_columns.get(
+                            field.name, (MEASUREMENT_SPARSE_CELL,) * len(image_ids)
+                        )
+                    )
+                    for field in feature_fields
+                }
+            else:
+                indexes_by_image = defaultdict(list)
+                for index, row in enumerate(object_table.rows):
+                    indexes_by_image[int(row[image_id_field.name])].append(index)
+                feature_values = {
+                    field.name: ColumnarRows.column_array(
+                        tuple(
+                            row.get(field.name, MEASUREMENT_SPARSE_CELL)
+                            for row in object_table.rows
+                        )
+                    )
+                    for field in feature_fields
+                }
             for statistic_name, reducer in statistics:
                 for feature_field in feature_fields:
                     aggregate_field = row_projection.dialect.image_aggregate_field(
@@ -1848,14 +1967,23 @@ class CellProfilerAnalystProjectionBuilder:
                         feature_field,
                     )
                     aggregate_fields.append(aggregate_field)
-                    for image_number, rows in rows_by_image.items():
-                        values = np.asarray(
-                            [
-                                float(row[feature_field.name])
-                                for row in rows
-                                if row.get(feature_field.name) is not None
-                            ],
-                            dtype=float,
+                    source = feature_values[feature_field.name]
+                    for image_number, indexes in indexes_by_image.items():
+                        selected = source[indexes]
+                        values = (
+                            selected.astype(float, copy=False)
+                            if selected.dtype.kind in "biuf"
+                            else np.asarray(
+                                [
+                                    float(value)
+                                    for value in selected
+                                    if value is not None
+                                    and not is_structural_missing_measurement_cell(
+                                        value
+                                    )
+                                ],
+                                dtype=float,
+                            )
                         )
                         value = None if not values.size else float(reducer(values))
                         image_rows_by_number.setdefault(
@@ -1896,8 +2024,18 @@ class CellProfilerAnalystProjectionBuilder:
                     "double",
                 }
             )
+        if isinstance(rows, ColumnarRows):
+            source = (
+                rows.column_values(field_spec.name)
+                if field_spec.name in rows.columns
+                else ()
+            )
+        else:
+            source = (row[field_spec.name] for row in rows if field_spec.name in row)
         values = tuple(
-            row[field_spec.name] for row in rows if row.get(field_spec.name) is not None
+            value
+            for value in source
+            if value is not None and not is_structural_missing_measurement_cell(value)
         )
         return bool(values) and all(
             isinstance(value, Real) and not isinstance(value, bool) for value in values
@@ -1946,36 +2084,35 @@ class CellProfilerAnalystProjectionBuilder:
     def _merge_object_rows(
         *,
         table: MeasurementTable,
-        rows: tuple[Mapping[str, Any], ...],
+        rows: ColumnarRows,
         subject: MeasurementSubject,
         row_projection: CPATableRowProjection,
-        target: dict[tuple[int, int], dict[str, Any]],
+        target: list[ColumnarRows],
     ) -> None:
-        image_id_field = row_projection.image_id_field()
-        object_id_field = row_projection.object_id_field(subject)
-        for row in rows:
-            image_number = row_projection.required_int(
-                row,
-                image_id_field,
-                table.name,
+        if not rows.row_count():
+            return
+        identities = (
+            row_projection.image_id_field(),
+            row_projection.object_id_field(subject),
+        )
+        columns = {name: rows.column_values(name) for name in rows.columns}
+        for field_spec in identities:
+            if field_spec.name not in columns:
+                raise ValueError(
+                    f"CPA export requires field {field_spec.name!r} in table '{table.name}'."
+                )
+            columns[field_spec.name] = tuple(
+                row_projection.required_int(
+                    {field_spec.name: value}, field_spec, table.name
+                )
+                for value in columns[field_spec.name]
             )
-            object_number = row_projection.required_int(
-                row,
-                object_id_field,
-                table.name,
+        target.append(
+            MeasurementSparseColumnarRows(
+                MappingProxyType(columns),
+                fields=rows.fields,
             )
-            projected_row = target.setdefault(
-                (image_number, object_number),
-                {
-                    image_id_field.name: image_number,
-                    object_id_field.name: object_number,
-                },
-            )
-            _merge_projected_row_values(
-                projected_row,
-                row,
-                owner=f"CPA object row {(image_number, object_number)!r}",
-            )
+        )
 
     @staticmethod
     def _validate_image_channels(
@@ -2644,10 +2781,7 @@ class CPASQLiteRenderer:
         image_id = dialect.image_id_field()
         object_id = dialect.object_id_field()
         combined_columns: tuple[FieldSpec, ...] = (image_id, object_id)
-        combined: dict[
-            tuple[int, int],
-            dict[str, Any],
-        ] = {}
+        batches: list[ColumnarRows] = []
         for object_table in sorted(
             object_tables,
             key=lambda table: _required_table_subject_name(
@@ -2682,28 +2816,62 @@ class CPASQLiteRenderer:
             nullable_names = frozenset(
                 field_spec.name for field_spec in nullable_columns
             )
-            for row in object_table.rows:
-                key = (
-                    int(row[source_image_id.name]),
-                    int(row[source_object_id.name]),
-                )
-                additions = {
-                    field_name: value
-                    for field_name, value in row.items()
-                    if field_name in nullable_names
+            if isinstance(object_table.rows, ColumnarRows):
+                columns = {
+                    name: object_table.rows.column_values(name)
+                    for name in object_table.rows.columns
+                    if name in nullable_names
                 }
-                projected_row = combined.setdefault(
-                    key,
-                    {image_id.name: key[0], object_id.name: key[1]},
+                columns[image_id.name] = object_table.rows.column_values(
+                    source_image_id.name
                 )
-                _merge_projected_row_values(
-                    projected_row,
-                    additions,
-                    owner=f"CPA combined object row {key!r}",
+                columns[object_id.name] = object_table.rows.column_values(
+                    source_object_id.name
+                )
+                batch_fields = (image_id, object_id, *nullable_columns)
+                batch_fields = FieldSpec.merge_exact(
+                    (batch_fields,), context="CPA combined fields"
+                )
+                columns = {field.name: columns[field.name] for field in batch_fields}
+                batches.append(
+                    MeasurementSparseColumnarRows(
+                        MappingProxyType(columns),
+                        fields=batch_fields,
+                    )
+                )
+            else:
+                projected = tuple(
+                    {
+                        image_id.name: int(row[source_image_id.name]),
+                        object_id.name: int(row[source_object_id.name]),
+                        **{
+                            name: value
+                            for name, value in row.items()
+                            if name in nullable_names
+                        },
+                    }
+                    for row in object_table.rows
+                )
+                batches.append(
+                    MeasurementSparseColumnarRows.from_rows(
+                        projected, fields=(image_id, object_id, *nullable_columns)
+                    )
                 )
         return CellProfilerProjectedTable(
             table_name=table_name,
-            rows=tuple(combined.values()),
+            rows=MeasurementSparseColumnarRows.from_columnar_batches(
+                batches
+                or (
+                    MeasurementSparseColumnarRows(
+                        MappingProxyType(
+                            {field.name: () for field in combined_columns}
+                        ),
+                        fields=combined_columns,
+                    ),
+                ),
+                identity_fields=(image_id.name, object_id.name),
+                values_equal=lambda left, right: bool(left == right),
+            ),
             columns=combined_columns,
         )
 
@@ -2763,16 +2931,43 @@ class CPASQLiteRenderer:
             f"({', '.join(self._quote_identifier(name) for _field, name in rendered_columns)}) "
             f"VALUES ({placeholders})"
         )
-        connection.executemany(
-            insert_sql,
-            tuple(
+        if isinstance(table.rows, ColumnarRows):
+            values_by_column = []
+            for field_spec in columns:
+                if field_spec.name not in table.rows.columns:
+                    values_by_column.append([None] * table.rows.row_count())
+                    continue
+                array = ColumnarRows.column_array(
+                    table.rows.column_values(field_spec.name)
+                )
+                if array.dtype.kind in "biufUS":
+                    native_values = (
+                        array.astype(float, copy=False).tolist()
+                        if array.dtype.kind == "f"
+                        else array.tolist()
+                    )
+                    if array.dtype.kind == "b":
+                        native_values = [int(value) for value in native_values]
+                else:
+                    native_values = [
+                        (
+                            None
+                            if is_structural_missing_measurement_cell(value)
+                            else self._sqlite_value(value)
+                        )
+                        for value in array
+                    ]
+                values_by_column.append(native_values)
+            parameters = zip(*values_by_column, strict=True)
+        else:
+            parameters = (
                 tuple(
                     self._sqlite_value(row.get(field_spec.name))
                     for field_spec in columns
                 )
                 for row in table.rows
-            ),
-        )
+            )
+        connection.executemany(insert_sql, parameters)
 
     @staticmethod
     def _required_field(
@@ -3010,10 +3205,16 @@ class CPASQLiteRenderer:
         rows: Sequence[Mapping[str, Any]],
         field_name: str,
     ) -> str:
+        if isinstance(rows, ColumnarRows):
+            source = (
+                rows.column_values(field_name) if field_name in rows.columns else ()
+            )
+        else:
+            source = (row[field_name] for row in rows if field_name in row)
         values = tuple(
-            cls._sqlite_value(row[field_name])
-            for row in rows
-            if field_name in row and row[field_name] is not None
+            cls._sqlite_value(value)
+            for value in source
+            if value is not None and not is_structural_missing_measurement_cell(value)
         )
         if not values:
             return "TEXT"

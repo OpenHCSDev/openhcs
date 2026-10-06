@@ -13,11 +13,28 @@ from enum import Enum
 from types import UnionType
 from typing import Annotated, Any, Union, get_args, get_origin, get_type_hints
 
+import numpy as np
+
 
 class ColumnarRows(ABC):
     """Nominal ABC for schema-bearing table payloads exposing named columns."""
 
     object_row_identity: MeasurementObjectRowIdentity | None = None
+
+    @staticmethod
+    def column_array(values: Sequence[object]) -> np.ndarray:
+        """Retain each declared column cell as one atomic array entry.
+
+        Native one-dimensional arrays already carry that representation. Other
+        sequences may contain arrays, lists or ragged cells; their row count
+        cannot be changed by NumPy's nested-sequence shape discovery.
+        """
+        if isinstance(values, np.ndarray) and values.ndim == 1:
+            return values
+        result = np.empty(len(values), dtype=object)
+        for index, value in enumerate(values):
+            result[index] = value
+        return result
 
     @staticmethod
     def common_object_row_identity(
