@@ -86,6 +86,12 @@ class CsvOptions(FileOutputOptions, SourceOptions, TabularExtractionOptions):
         """Declare the CSV schema used for correlated partition composition."""
         return (tuple(field.name for field in rows.fields),)
 
+    def render_parts(self, rows: ColumnarRows) -> tuple[str, str]:
+        """Derive header and complete CSV through this writer's format owner."""
+        from openhcs.processing.materialization.core import _render_csv_rows
+
+        return _render_csv_rows((), self.header_rows(rows)[0]), self.render(rows)
+
     def render(self, data: Any) -> str:
         """Render through the existing CSV format owner."""
         from openhcs.processing.materialization.core import _render_csv

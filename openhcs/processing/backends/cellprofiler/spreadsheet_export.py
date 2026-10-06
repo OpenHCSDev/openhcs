@@ -398,15 +398,22 @@ class CellProfilerSpreadsheetCsvOptions(CsvOptions):
     def header_rows(self, rows: ColumnarRows) -> tuple[tuple[str, ...], ...]:
         return self.selection.header_rows(rows, active_subjects=self.active_subjects)
 
-    def render(self, data: ColumnarRows) -> str:
+    def render_parts(self, data: ColumnarRows) -> tuple[str, str]:
         row_mappings = tuple(data.iter_row_mappings())
         columns, headers = self.selection.csv_schema(
             row_mappings, active_subjects=self.active_subjects,
         )
-        return _render_native_csv(
-            row_mappings, columns, self.delimiter.value, Real,
+        policy = (
+            columns, self.delimiter.value, Real,
             self.nan_representation is SpreadsheetNanRepresentation.NULL, headers,
         )
+        return (
+            _render_native_csv((), *policy),
+            _render_native_csv(row_mappings, *policy),
+        )
+
+    def render(self, data: ColumnarRows) -> str:
+        return self.render_parts(data)[1]
 
 
 def cellprofiler_metadata_template(value: str) -> str:

@@ -522,6 +522,59 @@ class ColumnarCsvOutput(Output):
             image_numbers_by_axis=self.image_numbers_by_axis,
         )
 
+    def realized_for_composition(self) -> RenderedColumnarCsvOutput:
+        """Transfer a rendering-time scalar-row snapshot into its realized view.
+
+        Original producer arrays may subsequently be reused or released. The
+        realized view retains its own correlated columns, not a live mutable
+        source alias or a second independently maintained schema.
+        """
+        from numbers import Real
+        from openhcs.core.measurement_row_materialization import (
+            MeasurementProjectedColumnarRows,
+            is_structural_missing_measurement_cell,
+        )
+
+        columns = {}
+        for name in self.content.columns:
+            values = ColumnarRows.column_array(self.content.column_values(name))
+            if values.dtype.hasobject and any(
+                not (
+                    value is None
+                    or isinstance(value, (Real, str, bytes, bool))
+                    or is_structural_missing_measurement_cell(value)
+                )
+                for value in values
+            ):
+                raise TypeError(
+                    "CSV partition realization requires immutable scalar cells; "
+                    f"column {name!r} contains opaque mutable values."
+                )
+            snapshot = np.array(values, copy=True)
+            snapshot.flags.writeable = False
+            columns[name] = snapshot
+        source = replace(
+            self,
+            content=MeasurementProjectedColumnarRows(
+                MappingProxyType(columns),
+                fields=self.content.fields,
+                declared_object_measurement_domain_covered=(
+                    self.content.covers_declared_object_measurement_domain
+                ),
+                object_row_identity=self.content.object_row_identity,
+            ),
+        )
+        header, text = source.options.render_parts(source.content)
+        return RenderedColumnarCsvOutput(
+            path=self.path,
+            content=text.encode("utf-8"),
+            metadata=self.metadata,
+            variable_components=self.variable_components,
+            image_numbers_by_axis=self.image_numbers_by_axis,
+            source=source,
+            header_content=header.encode("utf-8"),
+        )
+
     @classmethod
     def compose(
         cls,
@@ -535,27 +588,43 @@ class ColumnarCsvOutput(Output):
         authority. This method does not infer independence from filenames, row
         count, subject names or an opaque byte stream.
         """
+        values = tuple(outputs)
+        if any(not isinstance(output, cls) for output in values):
+            raise TypeError("Only columnar CSV outputs can be composed.")
+        return cls._compose_with_headers(
+            tuple((output, output.options.header_rows(output.content)) for output in values),
+            partition_fields=partition_fields,
+        )
+
+    @classmethod
+    def _compose_with_headers(
+        cls,
+        outputs_and_headers: Sequence[tuple[ColumnarCsvOutput, object]],
+        *,
+        partition_fields: tuple[str, ...],
+    ) -> ColumnarCsvOutput:
+        """Admit partitions using the schema view owned by their current state."""
         from openhcs.core.measurement_row_materialization import (
             ConcatenatedColumnarRows,
             is_structural_missing_measurement_cell,
         )
 
-        values = tuple(outputs)
+        values = tuple(output for output, _header in outputs_and_headers)
         if not values or not partition_fields:
             raise ValueError("CSV composition requires outputs and partition fields.")
         first = values[0]
         if not isinstance(first, cls):
             raise TypeError("Only columnar CSV outputs can be composed.")
-        canonical_headers = first.options.header_rows(first.content)
+        canonical_headers = outputs_and_headers[0][1]
         canonical_fields = first.content.fields
         domains: set[tuple[object, ...]] = set()
-        for output in values:
+        for output, headers in outputs_and_headers:
             if not isinstance(output, cls):
                 raise TypeError("Only columnar CSV outputs can be composed.")
             if (
                 output.path != first.path
                 or output.options != first.options
-                or (output is not first and output.options.header_rows(output.content) != canonical_headers)
+                or headers != canonical_headers
                 or output.content.fields != canonical_fields
                 or output.metadata != first.metadata
                 or output.variable_components != first.variable_components
@@ -578,6 +647,46 @@ class ColumnarCsvOutput(Output):
             first,
             content=ConcatenatedColumnarRows(tuple(output.content for output in values)),
         )
+
+@dataclass(frozen=True, kw_only=True)
+class RenderedColumnarCsvOutput(Utf8TextOutput):
+    """Realized CSV bytes retaining their rendering-time columnar authority."""
+
+    source: ColumnarCsvOutput
+    header_content: bytes
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.source, ColumnarCsvOutput):
+            raise TypeError("Realized CSV must retain its columnar source owner.")
+        if not self.content.startswith(self.header_content):
+            raise ValueError("Realized CSV does not contain its rendered header.")
+
+    @classmethod
+    def compose(
+        cls,
+        outputs: Sequence[RenderedColumnarCsvOutput],
+        *,
+        partition_fields: tuple[str, ...],
+    ) -> RenderedColumnarCsvOutput:
+        """Compose validated realized bodies without rendering rows again."""
+        values = tuple(outputs)
+        if not values or any(not isinstance(output, cls) for output in values):
+            raise TypeError("CSV byte composition requires realized columnar outputs.")
+        first = values[0]
+        if any(output.header_content != first.header_content for output in values):
+            raise ValueError("Realized CSV partitions declare incompatible headers.")
+        source = ColumnarCsvOutput._compose_with_headers(
+            tuple((output.source, output.header_content) for output in values),
+            partition_fields=partition_fields,
+        )
+        return replace(
+            first,
+            source=source,
+            content=first.header_content + b"".join(
+                output.content[len(output.header_content):] for output in values
+            ),
+        )
+
 
 
 
