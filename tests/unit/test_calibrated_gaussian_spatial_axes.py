@@ -155,4 +155,4 @@ def test_original_cohort_composition_keeps_every_source_plane(physical_volume):
     )
     np.testing.assert_allclose(image_payload_data(result), expected)
     assert image_payload_metadata(result) == metadata
-    assert len(image_payload_metadata(result).source_provenance.planes) == 3
+    assert image_payload_metadata(result).source_provenance.source_plane_count == 3
