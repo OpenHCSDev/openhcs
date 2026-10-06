@@ -5,6 +5,8 @@ Issue980 preserves the original receiving25 failure and author source. No
 original execution is replayed or scientist prefix changed. This branch starts
 from actual merged main c882d5edc67bffe7ec7f2eb3a2eeb7fe64e9415a in the reused
 finished context-bounding checkout; foreign gitlinks and keepers are preserved.
+Current normal-main integration and capability ownership supersede that initial
+base as recorded in the final section below.
 
 Determining cause
 -----------------
@@ -139,3 +141,45 @@ Gaussian SHA256 remains
 df06de7964caf889ff6f5539da93ff7656864b9ebaeceba4654250e9d6301b35.
 Installed registered MCP pixels/provenance acceptance remains required and
 unclaimed. No current scientist, target or shared dependency was changed.
+
+Current-main capability integration
+-----------------------------------
+
+Normal merge 0d3bc97ca has parents79491d543 and current merged main
+c13028ecf46bbe68249e19939aa05a709eee0e0c. Merged990 already moved the channel
+normalizer and optional Y/X projection onto ImagePayloadAxisFields. The real
+runtime_image_values.py conflict was resolved in that existing capability:
+non_channel_axes lives there and spatial_axes_yx consumes it. The metadata
+copies of non_channel_axes, spatial_axes_yx and is_declared_source_channel_plane
+were deleted; the normalizer and plane/stack predicates are inherited without
+forwarding methods. This closes the IMPL-12 lead without copying the new base.
+
+Strict spatial_axes remains on ImagePayloadMetadata, composing the inherited
+non-channel projection with the existing SourceSpatialDomain.spatial_rank.
+No abstract source-domain property/default, new carrier or stored field was
+added to ImagePayloadAxisFields. This capability keeps its original abstract
+channel/plane declarations; metadata keeps its concrete dataclass defaults.
+The instantiated MRO control verifies inherited method identity and default
+source_channel_axis=None/plane_axis=None, not just successful AST parsing.
+
+Original controls07 session31394 is terminal0:149 passed in22.08s on the
+integrated source. Full process elapsed27.80s, peak549612KiB, zero swaps.
+The same Gaussian/geometry/saved-domain controls now include original metadata
+projection algebra and mixed-carrier intensity-domain/MRO controls. Receipts:
+/home/ts/wt/openhcs-issue-batch-20260929/engineering-gaussian980/controls07.log
+and controls07.time. Source was materialized at source-controls02 from the
+merge commit, using the unchanged receiving26 qualified dependency artifacts
+and native table extension; no prefix or scientist was modified.
+
+The determining diff against c13028ecf contains only this receipt, metadata's
+shared projection, Gaussian, and its focused controls. Current metadata SHA256:
+468abdc4c5d890ce1a9fb271bae0116620244d869396e6684ee7647d8d5d78b5.
+Gaussian SHA256 remains
+df06de7964caf889ff6f5539da93ff7656864b9ebaeceba4654250e9d6301b35.
+
+Receiving26 is frozen at its original77c3a34f candidate containing79491d543.
+Its qualification and acceptance remain evidence for that earlier combination,
+not installed proof of this main990 composition. Dewey is notified of the exact
+resolved head before merge/final package selection; integrated installed
+registered-MCP compiled pixels/provenance acceptance remains separately named
+and required. No original client is replayed and no receiving26 bytes relabelled.
