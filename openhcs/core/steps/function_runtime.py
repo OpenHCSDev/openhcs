@@ -1814,6 +1814,20 @@ class FunctionCoreExecutor:
             payload = project_declared_source_identity(payload, ref)
         elif edge.main_flow_projection is not MainFlowInputProjection.COMPLETE_PAYLOAD:
             return None
+        metadata = image_payload_metadata(payload)
+        if (
+            not metadata.persists_whole_image()
+            and metadata.plane_axis not in (None, RuntimePlaneAxis.RUNTIME_SLICE)
+        ):
+            # A remaining binding axis does not prove this source's ordered
+            # physical members. Resolve it through its declared origin owner.
+            return None
+        member_count = RuntimeSliceProjection.slice_count_from_values((payload,))
+        payload = SourceUniverseRequest.admit_source_artifact_cohort(
+            payload,
+            source_binding_plan=request.source_binding_plan,
+            member_count=member_count if member_count is not None else 1,
+        )
         projection = RuntimePlaneAxisValueProjection.from_projector(
             request.plane_projection, RuntimePlaneAxis.RUNTIME_SLICE, (),
         )
