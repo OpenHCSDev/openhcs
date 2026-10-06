@@ -1,6 +1,6 @@
 # Actual post-export matched checkpoint,6 October2026
 
-This archive currently contains **three complete9-assignment workflows on one and three workers**, not a complete new30-workflow or16-assignment figure pack. Actual runtime source was clean and unchanged `56c3da776ccc12688b4566f7b0c0ef728e6bc7c6`. Each workflow passed warmup and three measured repetitions with all five declared scientific difference inventories empty. Nine repeated source assignments reuse one biological source sample; they are not independent biological wells. In the serial mode, both engines used one numerical thread and one worker on CPU5. Native observations are genuine fresh serial measurements. The parallel mode uses three actual workers on CPU1/4/5, with one numerical thread per worker.
+This archive contains **all30 complete single-assignment workflows and three complete9-assignment workflows on one and three workers**. The16-assignment captures are pending. Actual runtime source was clean and unchanged `56c3da776ccc12688b4566f7b0c0ef728e6bc7c6`. Each workflow passed warmup and three measured repetitions with all five declared scientific difference inventories empty. Nine repeated source assignments reuse one biological source sample; they are not independent biological wells. In the serial mode, both engines used one numerical thread and one worker on CPU5. Native observations are genuine fresh serial measurements. The parallel mode uses three actual workers on CPU1/4/5, with one numerical thread per worker.
 
 The declared cohort retains the prior qualified single-well execution frontier Vitra, total frontier illumination correction Example3, and representative3D monolayer. It is frozen from the original selected manifest (`1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2`), not reselected after later timing ranks change.
 
@@ -17,9 +17,9 @@ The declared cohort retains the prior qualified single-well execution frontier V
 
 Execution compares native continuous pipeline execution, including preparation through cleanup, to the complete OpenHCS server job including ordinary exports and metadata publication. Native total covers the measured invocation excluding one-time CPPipe loading/JVM startup; OpenHCS total sums disjoint compile+execute client SUBMIT+WAIT phases. Startup/library/kernel readiness and scientific comparison are outside both scopes. Nested phase timings are retained, not double-counted. RAM is not measured.
 
-All summaries/custody, original native requests/reports, candidate reports, pilot provenance,12 original phase receipts, command, terminal, exact cohort manifest and converter were copied byte-for-byte. Original paths and source identity inside those records remain unchanged. Large images, measurement CSVs and databases are not duplicated; originals remain under `/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture`.
+For the9/1 capture, all summaries/custody, original native requests/reports, candidate reports, pilot provenance,12 original phase receipts, command, terminal, exact cohort manifest and converter were copied byte-for-byte. Original paths and source identity inside those records remain unchanged. Large images, measurement CSVs and databases are not duplicated; originals remain under `/home/ts/.local/state/openhcs-maintenance/20261006/measured-scaling-current-frontiers-preparation-v1/9assignments-1worker/capture`.
 
-The older [d867 checkpoint](../official30_matched_20261006/README.md) remains explicitly historical and unchanged. Actual16/1,16/4 and new single-assignment full30 data are pending. No pair or amortization figure is rendered until its corresponding captures fully qualify on the same source head.
+The older [d867 checkpoint](../official30_matched_20261006/README.md) remains explicitly historical and unchanged. Actual16/1 and16/4 data are pending; the new single-assignment full30 data are qualified below. No pair or amortization figure is rendered until its corresponding captures fully qualify on the same source head.
 
 ## Actual matched nine-assignment three-worker comparison
 
@@ -55,3 +55,20 @@ The CP efficiencies in the preceding matched-mode table compare native serial ti
 |cp_tutorial_3d_monolayer|123.242523s|45.977632s|89.350%|
 
 These efficiencies differ from the cross-capture82.579/54.265/92.657% figures above because they use different genuine serial observations. Neither native comparison establishes OpenHCS efficiency or biological replication.
+
+## Qualified all30 single-assignment checkpoint
+
+All30 original workflows completed warmup and three measured repetitions on clean unchanged56c3 source. Every declared CSV, database, image and output-inventory comparison was empty. Existing native complete-observation, original input and CPU/storage/environment guards admitted the genuine native reference observations; none was projected or retimed. One selected source sample, one worker and one numerical thread were used per workflow.
+
+Execution speedup has a **minimum of2.8641569× and median of4.3600681×**. The weakest execution result is ExampleTrackObjects: native continuous pipeline execution8.4006380s versus the full OpenHCS server job2.9330230s. Prepared-service total speedup has a **minimum of1.3994865× and median of3.3009166×**; illumination correction Example3 is weakest. All30 execution ratios exceed2× and all30 total ratios exceed native parity. The three total ratios below2× are illumination correction Example3, CombineObjects and PercentPositive.
+
+- [Actual all30 execution summary](data/singlewell/execution_summary.csv)
+- [Actual all30 total summary](data/singlewell/total_summary.csv)
+- [Original all30 qualification custody](data/singlewell/summary_custody.json)
+- [Captured full30 declarations](protocol/singlewell/original-full30-manifest.json)
+- [Execution distribution](../../../paper/figures/slas/matched_postexport_20261006/execution/measured_execution_speedup_cumulative_distribution_log.png)
+- [Total distribution](../../../paper/figures/slas/matched_postexport_20261006/total/measured_total_speedup_cumulative_distribution_log.png)
+
+The all30 lightweight archive retains byte-identical summaries/custody, command/terminal/full manifest, original native requests/reports, candidate reports, pilot provenance and all120 warmup/measured phase receipts. The same exact converter source is retained in protocol/. No scientific images, measurement CSVs or databases are duplicated. Originals remain under `/home/ts/.local/state/openhcs-maintenance/20261006/final-official30-singlewell-matched-v16`; retained native reports continue to declare their original observation locations. The figures consume the repo archival CSV through the existing May-style measured owner and retain exact input/output digests and original custody.
+
+Compared with the separately retained d867 checkpoint, the observed execution median changed from4.2127485× to4.3600681× and the total median from3.2624316× to3.3009166×. These are two dated complete observations, not a causal isolated-patch comparison. The nine-assignment cohort remains the prior frontiers plus representative3D, regardless of the new weakest all30 result. No final16-assignment amortization or accepted parallel-efficiency claim is made.
