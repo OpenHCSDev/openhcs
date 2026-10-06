@@ -37,8 +37,9 @@ dependency, worktree or environment were changed. First batched Qt observation
 identified three passing QWidget checks followed by the real VisPy case's
 unsupported offscreen QOpenGLWidget/GLX context creation (X BadValue), exit1.
 This is preserved as a platform failure, not source or native acceptance.
-Observation98605 runs the remaining non-OpenGL checks; its outcome is pending
-at this checkpoint. No scientific/native request is replayed.
+Observation98605 terminal0:65 passed, one OpenGL case deselected,17.85seconds.
+The accepted callback error and late queued snapshot controls passed on real
+Qt with installed dependencies. No scientific/native request is replayed.
 New checks cover deferred projection failure and original snapshot deadline
 with late queued Qt work. Full installed public native/control acceptance is
 still pending. Source tests alone will not be described as that acceptance.
