@@ -399,6 +399,22 @@ isolated mottled nucleus while a dim neighbour stayed joined. It identified
 both failures in its final review. These cases show useful stage-specific
 diagnosis and partial recovery, with inconsistent completion of the repair.
 
+A subsequent independent author completed all 16 paired BBBC007 fields,
+producing 1,413 nuclear and cell instances. Post-freeze comparison placed
+63,223 of 85,093 predicted internal boundary pixels within two pixels of
+the manual-outline union (0.743). On the same 12 development fields, the
+first and final pooled boundary fractions were 0.738 and 0.735, respectively.
+The final method recovered a severely under-detected field from 16 to 73
+nuclear instances, compared with 81 closed manual nuclear interiors, but
+the total prediction excess across those 12 fields increased from 28 to 100.
+Thus a useful local repair did not establish a general accuracy gain.
+The four fields reserved by this author contributed a final directed boundary
+fraction of 0.761 without further parameter changes. These directed scores
+do not measure boundary recall or exhaustive object correspondence; closed
+manual interiors also exclude open and frame-connected regions. Exact field
+identities, paired results and scoring definitions are retained in
+Supplementary Data 8.
+
 A later independent paired-field author retained its first scientific method
 and produced 55 nuclear instances after self-directed technical repairs.
 Matched DNA/actin review showed intact textured nuclei, a separated close pair
