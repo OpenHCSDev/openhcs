@@ -16,6 +16,7 @@ from openhcs.core.function_patterns import compile_function_pattern
 from openhcs.core.runtime_image_values import (
     ImagePayloadMetadata,
     image_payload_data,
+    image_payload_mask,
     image_payload_metadata,
 )
 from openhcs.core.source_bindings import CompiledSourceBindingPlan
@@ -314,7 +315,7 @@ def test_adapter_request_projects_live_fields_and_preserves_current_payload_epoc
     assert adapter.source_payload is current
     assert adapter.source_payload is not loaded.main_data_stack
     assert adapter.plane_projection is executor.plane_projection
-    assert adapter.source_load_plan is request.execution_plan.source_load_plan
+    assert adapter.execution_scope is executor
     assert adapter.variable_components == (VariableComponents.SITE,)
     assert adapter.axis_scope.fixed_component_values == loaded.fixed_component_values
     request.execution_plan.axis_id = "B02"
@@ -766,3 +767,103 @@ def test_same_step_primary_producer_is_not_queried_before_its_callable_runs():
         invocations=(invocation.with_artifact_input_edges((later_edge,)),),
     )
     assert plan.stored_primary_input_edges_for_group(group, None) is None
+
+
+@pytest.mark.parametrize("plane_index", (None, 1))
+@pytest.mark.parametrize("primary_only", (True, False))
+def test_initial_source_input_uses_loaded_declared_cohort_without_workspace_read(
+    monkeypatch, plane_index, primary_only,
+):
+    from openhcs.core.artifacts import ArtifactSpec, ArtifactSpecCollection, ImageArtifactType
+    from openhcs.core.pipeline.function_contracts import artifact_inputs
+    from openhcs.core.memory.decorators import numpy as numpy_memory
+    from openhcs.core.runtime_plane_projection import RuntimePlaneAxis, RuntimePlaneProjection
+    from openhcs.core.source_bindings import NamedSourceBinding, SourceBindingOrigin
+    from openhcs.core.step_dependencies import StepInputDependency
+
+    request, paths, payload = _fixture()
+    binding = NamedSourceBinding(alias="Raw", origin=SourceBindingOrigin.PIPELINE_START)
+    source = binding.input_spec()
+
+    @artifact_inputs(source)
+    @numpy_memory
+    def consume(image):
+        return image
+
+    from openhcs.core.component_set import ComponentSet
+    from openhcs.core.pipeline.path_planner import PathPlanner, PathPlannerArtifactStage
+
+    bindings = CompiledSourceBindingPlan(bindings=(binding,))
+    pattern = PathPlannerArtifactStage(
+        PathPlanner.__new__(PathPlanner)
+    ).compile_invocation_input_edges(
+        compile_function_pattern([consume, consume], {}, {}),
+        artifact_inputs={}, relation_source_scopes={},
+        execution_group_scope=ComponentGroupScope.dynamic(AllComponents.CHANNEL),
+        consumer_variable_components=ComponentSet((AllComponents.SITE,)),
+        main_flow_artifacts=ArtifactSpecCollection(
+            (source,) if primary_only else (source, ArtifactSpec.input("Other", ImageArtifactType)),
+        ),
+        source_bindings=bindings,
+    )
+    request.execution_plan.main_input_dependency = StepInputDependency.pipeline_start()
+    request.execution_plan.source_binding_plan = CompiledSourceBindingPlan(bindings=(binding,))
+    request.execution_plan.compiled_function_pattern = pattern
+    request = replace(request, compiled_group=pattern.default_group)
+    payload = image_payload_metadata(payload).replace_fields(
+        plane_axis=RuntimePlaneAxis.RUNTIME_SLICE,
+    ).payload_with(image_payload_data(payload), np.ones((2, 3, 4), dtype=bool))
+    payload = binding.apply_loaded_payload(payload, source_context=None)
+    loaded = PatternGroupData.from_loaded_group(request, paths, payload)
+    invocation = loaded.compiled_group.invocations[0]
+    edge = invocation.artifact_input_edges[0]
+    executor = FunctionCoreExecutor(
+        loaded, invocation, {edge.key: edge}, {}, None,
+        RuntimePlaneProjection.stack(2), payload, "numpy",
+    )
+    adapter = executor.runtime_adapter_request(payload)
+    adapter = replace(adapter, plane_projection=RuntimePlaneProjection(
+        plane_index=plane_index, plane_count=2,
+    ))
+
+    def forbidden_original_read(*args, **kwargs):
+        raise AssertionError("initial exact source input must use its held cohort")
+
+    monkeypatch.setattr(type(adapter), "source_artifact_payload", forbidden_original_read)
+    value = edge.resolve_unstored_payload(executor, payload, request=adapter)
+    expected = image_payload_data(payload)
+    if plane_index is not None:
+        expected = expected[plane_index]
+    np.testing.assert_array_equal(image_payload_data(value), expected)
+    np.testing.assert_array_equal(image_payload_mask(value), np.ones(expected.shape, dtype=bool))
+    assert image_payload_metadata(value).source_provenance.has_values
+    assert image_payload_metadata(value).plane_axis is (
+        RuntimePlaneAxis.RUNTIME_SLICE if plane_index is None else None
+    )
+
+    changed = replace(edge, main_flow_projection=None)
+    assert executor.loaded_source_artifact_payload(adapter, changed) is None
+    changed_binding = replace(adapter, source_binding_plan=CompiledSourceBindingPlan(
+        bindings=(replace(binding, load_as_mask=True),),
+    ))
+    assert executor.loaded_source_artifact_payload(changed_binding, edge) is None
+
+    # A same-chain predecessor is permitted to mutate the original buffer.
+    # Position one must still request original acquisition pixels, not that buffer.
+    later_invocation = loaded.compiled_group.invocations[1]
+    later_edge = later_invocation.artifact_input_edges[0]
+    later = replace(executor, invocation=later_invocation,
+                    artifact_inputs={later_edge.key: later_edge})
+    later_adapter = later.runtime_adapter_request(payload)
+    image_payload_data(payload)[...] = -10
+    original = object()
+    monkeypatch.setattr(type(adapter), "source_artifact_payload", lambda *args: original)
+    assert later_edge.resolve_unstored_payload(later, payload, request=later_adapter) is original
+    assert executor.runtime_adapter_request(payload).source_artifact_payload(source.ref()) is original
+
+    # A source role by itself cannot turn a predecessor's transformed pixels
+    # into the original pipeline-start source.
+    request.execution_plan.main_input_dependency = StepInputDependency.step_output(
+        source_step_index=0, source_step_scope_id="predecessor",
+    )
+    assert edge.resolve_unstored_payload(executor, payload, request=adapter) is original

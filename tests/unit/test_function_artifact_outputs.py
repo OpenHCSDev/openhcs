@@ -61,7 +61,6 @@ from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
     NamedSourceBinding,
 )
-from openhcs.core.source_load_plan import SourceLoadPlan
 from openhcs.core.source_metadata import (
     SOURCE_PLANE_COUNT_FIELD,
     SOURCE_PLANE_INDEX_FIELD,
@@ -233,7 +232,6 @@ def _execute_function_core(request: CoreExecutionRequest):
         axis_id=request.context.axis_id,
         input_memory_type=MEMORY_TYPE_NUMPY,
         source_binding_plan=CompiledSourceBindingPlan.empty(),
-        source_load_plan=SourceLoadPlan(),
         variable_components=(),
         execution_group_scope=request.execution_group_scope,
         compiled_function_pattern=compiled_pattern,
@@ -2942,7 +2940,6 @@ def _declared_source_executor(
             ),
             execution_plan=SimpleNamespace(
                 variable_components=(),
-                source_load_plan=SourceLoadPlan(),
             ),
         ),
         invocation=invocation,

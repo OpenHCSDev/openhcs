@@ -81,7 +81,6 @@ from openhcs.core.pipeline.path_planner import (
     PipelinePathPlanner,
 )
 from openhcs.core.source_matching import SourceImageSetIdentityPolicy
-from openhcs.core.source_load_plan import SourceLoadPlan
 from openhcs.core.pipeline.framework_device_assignment import (
     assign_framework_devices,
 )
@@ -371,9 +370,6 @@ class PipelineCompiler:
             current_plan.sequential_processing = step.processing_config
             current_plan.sequential_filter_plan = (
                 PipelineCompiler._compile_sequential_runtime_filter_plan(session)
-            )
-            current_plan.source_load_plan = SourceLoadPlan(
-                zarr_config=session.global_config.zarr_config
             )
 
     @staticmethod

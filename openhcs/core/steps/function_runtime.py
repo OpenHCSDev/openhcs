@@ -108,6 +108,7 @@ from openhcs.core.source_matching import (
 )
 from openhcs.core.source_bindings import (
     CompiledSourceBindingPlan,
+    SourceBindingOrigin,
     SOURCE_BINDING_ALIAS_METADATA_FIELD,
     SourceProjectionRole,
 )
@@ -130,6 +131,7 @@ from openhcs.core.runtime_tabular_values import ColumnarRows
 from openhcs.core.runtime_plane_projection import (
     RuntimePlaneAxis,
     RuntimePlaneAxisProjector,
+    RuntimePlaneAxisValueProjection,
     RuntimePlaneProjection,
 )
 from openhcs.core.step_dependencies import StepInputDependencyKind
@@ -1768,8 +1770,56 @@ class FunctionCoreExecutor:
             variable_components=tuple(
                 self.group_data.execution_plan.variable_components
             ),
-            source_load_plan=self.group_data.execution_plan.source_load_plan,
+            execution_scope=self,
         )
+
+    def loaded_source_artifact_payload(
+        self,
+        request: RuntimeAdapterRequest,
+        edge: InvocationArtifactInputEdgePlan,
+    ) -> RuntimePayload | None:
+        """Reuse a proved original primary cohort before its first callable.
+
+        Main-flow projection declares a source role, not pixel origin. Only the
+        initial invocation of a pipeline-start load owns pristine original pixels;
+        later calls may have mutated the shared loaded array in place. This is
+        an input-admission operation; post-call source reads use the origin owner.
+        Compiled input declarations remain stable for the lifetime of a loaded
+        cohort; independently changed request declarations must still match them.
+        """
+        binding = request.source_binding_plan.binding_for_artifact_ref(edge.spec.ref())
+        if (
+            binding is None
+            or self.invocation.key.position != 0
+            or self.group_data.execution_plan.main_input_dependency.kind
+            is not StepInputDependencyKind.PIPELINE_START
+            or binding.origin is not SourceBindingOrigin.PIPELINE_START
+            or request.context is not self.group_data.context
+        ):
+            return None
+        ref = edge.spec.ref()
+        if (
+            self.artifact_inputs.get(edge.key) is not edge
+            or request.artifact_inputs.get(edge.key) is not edge
+            or edge.storage_plan is not None
+            or edge.main_flow_projection is None
+            or self.group_data.main_flow_source_binding_plan.binding_for_artifact_ref(ref)
+            != binding
+        ):
+            return None
+        payload = self.invocation.convert_input(
+            self.group_data.main_data_stack, self.source_memory_type,
+        )
+        if edge.main_flow_projection is MainFlowInputProjection.DECLARED_SOURCE_IMAGE:
+            payload = project_declared_source_identity(payload, ref)
+        elif edge.main_flow_projection is not MainFlowInputProjection.COMPLETE_PAYLOAD:
+            return None
+        projection = RuntimePlaneAxisValueProjection.from_projector(
+            request.plane_projection, RuntimePlaneAxis.RUNTIME_SLICE, (),
+        )
+        if projection is not None and projection.plane_index is not None:
+            payload = RuntimeSliceProjection.value_for_slice(payload, projection)
+        return payload
 
     def declared_source_payload(
         self,
@@ -1777,6 +1827,7 @@ class FunctionCoreExecutor:
         primary_source_payload: RuntimePayload,
         *,
         loaded_artifact_payloads: Mapping[ArtifactSpecRef, RuntimePayload],
+        request: RuntimeAdapterRequest | None = None,
     ) -> RuntimePayload:
         input_spec = self.invocation.contract.artifact_inputs.by_ref(source_ref)
         if input_spec is None:
@@ -1785,9 +1836,11 @@ class FunctionCoreExecutor:
                 f"{source_ref!r}."
             )
         stored_payload = loaded_artifact_payloads.get(source_ref)
-        source_binding = self.group_data.source_binding_plan.binding_for_artifact_ref(
-            source_ref
+        source_binding_plan = (
+            self.group_data.source_binding_plan
+            if request is None else request.source_binding_plan
         )
+        source_binding = source_binding_plan.binding_for_artifact_ref(source_ref)
         main_flow_edges = tuple(
             edge
             for edge in self.artifact_inputs.values()
@@ -1814,8 +1867,9 @@ class FunctionCoreExecutor:
         if source_binding is not None:
             return cast(
                 RuntimePayload,
-                self.runtime_adapter_request(
-                    primary_source_payload
+                (
+                    self.runtime_adapter_request(primary_source_payload)
+                    if request is None else request
                 ).source_artifact_payload(source_ref),
             )
         if len(main_flow_edges) != 1:
