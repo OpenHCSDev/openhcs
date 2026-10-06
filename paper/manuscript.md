@@ -516,6 +516,14 @@ visible mask change from display changes. Possible splitting at the source
 border and incomplete weak-body coverage remained. This retained-run repair
 supports improved local geometry rather than a manual-count accuracy estimate.
 
+A later independent retinal repeat illustrates a failed repair rather than a
+uniform gain: gap filling recovered some soma support, but stronger marker
+suppression joined a neighbouring pair. Its final 106-region candidate retained
+plausible bright-body localisation alongside incomplete dim rims and uncertain
+instance boundaries. The author detected these conflicts and rejected a complete
+cell census. Independent matched-view review confirmed the local trade-off;
+manual-reference accuracy remains unmeasured (Supplementary Data 8).
+
 Public neurite-field authors recovered clear process segments while weak
 paths and ambiguous crossings remained difficult. One corrected false nuclear
 splits and traced a segment to the boundary but admitted nearby fragments.
