@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import inspect
 import threading
+from copy import copy
 from collections.abc import Callable, Iterator, Mapping
 from concurrent.futures import Future
 from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import Enum, auto
+from traceback import TracebackException
 from typing import TYPE_CHECKING
 
 from openhcs.core.function_contract_metadata import FunctionContractAttribute
@@ -20,6 +22,35 @@ from openhcs.processing.custom_functions.source_namespace import (
 
 if TYPE_CHECKING:
     from .source_namespace import CustomFunctionSourceRevision
+
+
+class CustomFunctionPreparationFuture(Future[FunctionMetadata]):
+    """Share source preparation, not the execution frames of its failure.
+
+    A failed revision remains terminal: later readers never execute it again.
+    Python's exception copy protocol preserves its type and declared values;
+    formatted traceback evidence preserves the original source/cause chain.
+    Each reader raises its own exception rather than extending a cached trace.
+    """
+
+    def set_exception(self, exception: BaseException) -> None:
+        evidence = "".join(
+            TracebackException.from_exception(exception, capture_locals=False).format()
+        )
+        failure = copy(exception)
+        failure.__traceback__ = None
+        failure.__cause__ = None
+        failure.__context__ = None
+        failure.__notes__ = ["Original custom-source preparation:\n" + evidence]
+        super().set_exception(failure)
+
+    def result(self, timeout: float | None = None) -> FunctionMetadata:
+        failure = self.exception(timeout=timeout)
+        if failure is None:
+            return super().result(timeout=timeout)
+        error = copy(failure)
+        error.__notes__ = list(failure.__notes__)
+        raise error from None
 
 
 class CustomFunctionMetadata(FunctionMetadata):
@@ -244,7 +275,7 @@ class CustomFunctionRuntimeRegistry:
             outcome = cls._preparation_outcomes.get(source)
             prepares = outcome is None
             if outcome is None:
-                outcome = Future()
+                outcome = CustomFunctionPreparationFuture()
                 cls._preparation_outcomes[source] = outcome
                 cls._preparation_threads[source] = current_thread
             elif (

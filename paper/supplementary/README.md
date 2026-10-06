@@ -555,11 +555,15 @@ analysis dataset.
 The separate visual storyboard is not retained in this archive. The
 [gallery capture record](../../website/assets/gallery/release-media-record.json)
 owns the source identities, published hashes and demonstration descriptions for
-the retained Fiji/napari panels. Figure 2 instead uses fresh matching captures
-from one development-checkout session. Its
+the retained Fiji/napari panels. Figure 2 panels A, C and D use matching captures
+from one OpenHCS 0.8.5 editing session. Its
 [native interaction record](../figures/slas/authoring_verified_roundtrip_provenance.json)
 contains the code/field round trip, widget observations and screenshot receipts.
-Both sets of captures are distinct from the original unattended agent run.
+Panel B is a separate OpenHCS 0.8.7 native capture of the ZeroMQ server browser
+on an isolated display; its [original MCP receipt](../figures/slas/authoring_server_browser_verified_capture_provenance.json)
+records the unmodified widget image and checksum. The browser lists observed
+endpoints; the status ticks alone do not establish client/server version compatibility.
+These captures are distinct from the original unattended agent run.
 
 `paper/figures/build_slas_visual_story.py` checks the published media hashes and
 records any UI-detail crop rectangles before assembling Figures 1, 2 and 6.
@@ -772,8 +776,43 @@ receive an accuracy percentage.
 - [Paired-channel analysis](task_only_analysis/h003-fresh26-qualified-completion.rst).
 - [Retinal soma localisation](task_only_analysis/retinal-fresh26-qualified-completion.rst).
 - [Personal nine-field mosaic](task_only_analysis/p001-allchannel25-qualified-completion.rst).
+- [Independent field-by-field laboratory neurite analysis](../../figure-collection-20261004/P001-FRESH13-NINE-FIELD-REVIEW.rst), with frozen pipeline and output identities, sampled raw/path review and remaining limitations.
 - [Public translocation assay](task_only_analysis/bbbc013-fresh23-qualified-completion.rst).
 - [Public neurite analysis](task_only_analysis/h004-fresh20-qualified-completion.rst).
+
+The [frozen nine-field pipeline source](task_only_analysis/pipelines/p001-fresh13.py)
+is supplied unchanged, with SHA256
+`8b9a70c205103ec9d1600b0592cfb9481bf989e449f049aee176803069f34203`.
+It retains the recorded output root and viewer endpoint; for reproduction,
+relocate only input/output destinations and use the source-document MCP
+validation, compilation and execution workflow with the recorded installation.
+Do not execute the file as an alternative analysis route. The input manifest
+and interpretation limits are identified in the linked review.
+
+The following source files are also supplied byte-for-byte from the authors'
+selected frozen attempts. Their run identities and original hashes remain in
+the linked analysis records; no candidate was reselected using reference scores.
+
+| Analysis and run | Selected attempt | Frozen pipeline |
+|---|---|---|
+| Bright objects, fresh25 | REPAIR02 | [Source](task_only_analysis/pipelines/h001-fresh25.py) |
+| Volume localisation, fresh23 | REPAIR05 | [Source](task_only_analysis/pipelines/h002-fresh23.py) |
+| DNA/actin, fresh26 | REPAIR03 | [Source](task_only_analysis/pipelines/h003-fresh26.py) |
+| Retinal somata, fresh26 | repair03 | [Source](task_only_analysis/pipelines/retina-fresh26.py) |
+| Public neurites, fresh20 | repair03 | [Source](task_only_analysis/pipelines/h004-fresh20.py) |
+| Translocation, fresh23 | FULL_S08 | [Source](task_only_analysis/pipelines/bbbc013-fresh23.py) |
+
+The volume pipeline also requires the original [centre-detection custom function](task_only_analysis/pipelines/h002-fresh23/custom_function.py).
+The translocation pipeline requires its original [compartment measurements](task_only_analysis/pipelines/bbbc013-fresh23/bbbc013_compartment_qc_v4.py),
+[assay statistics](task_only_analysis/pipelines/bbbc013-fresh23/bbbc013_assay_statistics_v1.py)
+and [dose-response summary](task_only_analysis/pipelines/bbbc013-fresh23/bbbc013_dose_response_v2.py)
+functions. Register these sources through MCP under their recorded function
+names before validating the corresponding pipeline. Reproduction also requires
+the recorded inputs, metadata and software version. Preserve scientific
+settings while relocating destinations and use an isolated viewer endpoint.
+These are frozen analysis artifacts, not additions to the processing library.
+The retinal and volume sources in this table correspond to Data 8's named
+trials, not the different trials illustrated in main Figures 7 and 9.
 
 The personal mosaic and explicitly labelled development examples retain assisted
 provenance; they are not counted as fresh unguided trials. Recovery of principal
