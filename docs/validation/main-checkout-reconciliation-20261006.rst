@@ -139,6 +139,51 @@ Determining dispositions
 Dependency source dispositions
 ------------------------------
 
+Remaining historical-source classification
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Hypatia completed the remaining source-family comparison against main888756;
+the coordinator checked the determining current declarations/history. The
+70-file manifest is the exact archived inventory, not a list of70 missing fixes.
+
+The old README addition and installed-smoke assertions belong to the archived
+generic CLI/MCP expected-axis-count exposure. Current measured-run submission
+and finalization already accept expected_axis_count, reject mismatches before
+writing a success receipt, and retain expected/observed counts. The older
+generic capability exposure is not a reason to compete with the current
+benchmark integration owner. Historical benchmark tests and the wrapper plan
+remain attached to that archived enhancement.
+
+Capability edits for artifact-plan write admission and camera/canvas visibility
+are integrated or superseded by the current typed declaration owners. The
+historical QA, context and packaged skill edits are retained through the later
+canonical guides, including analytical normalization and foreground/marker
+evidence; they are not a second skill version awaiting installation. Associated
+agent/server/context tests belong to those migrated families. The old geometry
+and compile-latency tests target replaced APIs and remain archival.
+
+Metadata partitioning is integrated on
+StreamImagePayloadMetadataProjector.partition_item_fields. The historical
+viewer-control wording belongs to the separately preserved sparse route-index
+enhancement; missing old method names do not establish a present consumer bug.
+BioFormats storage/adapter tests follow the producer-side singleton and current
+unit-decoder dispositions above. Runtime, streaming, materialization and ROI
+tests remain with their exact archived implementation families; no old tests
+were transplanted into current APIs or discarded to claim parity.
+
+The excluded untracked inventory contains exactly two acquisition/download
+files and297 benchmark/results paths. None is another excluded source tree.
+The13 selected untracked source/document/lock files are included in the
+published70-file custody inventory. Untracked results and both original
+downloads remain untouched. Derived lockfiles are historical installation
+metadata, not a request to downgrade the current dependency graph.
+
+Useful unpublished implementation is limited to the component-level
+seed/surface/split diagnostic and parent-label selective archive reader, plus
+the route-index/settlement patches whose current applicability remains
+unresolved. Their original source and tests are published in the recovery
+branch. No established current defect requires a wholesale transplant.
+
 Current main pins python-introspect 83c1efe5ff9933b0fbd8586d2af5c9e7dbbe80ff.
 Reading that exact upstream source confirms DocstringExtractor.extract consumes
 inspect.getdoc and calls _parse_docstring directly, without reading source.
@@ -242,6 +287,24 @@ current declarations rather than asking anyone to redo removed-object repair.
 
 Current runtime and reporting residuals
 --------------------------------------
+
+Issue432 CLOSED after following its remaining native blocker through448:
+PR437's singleton composition declaration is retained, the original installed
+public pipeline produced exact C2/65535 values and calibration, and449's actual
+native acceptance reopened that SAME failed singleton output. All64 pixels
+were sampled exactly and matched raw/result/combined camera/canvas captures
+were reviewed. This does not claim the separate grayscale-renaming recipe or
+raw-integer units. The final native receipt is448 comment5951807619.
+
+Issue169's source cause is implemented in current pinned ArrayBridge1e53d03d:
+ThreadGPUContext owns thread-local runtime storage outside the by-value callable
+globals. The real ObjectState/PipelineObjectStateBinding continuous save/load/
+undo test retains the unpickleable runtime handle and executes the restored
+historical callable. Its explicit installed desktop capture/restoration
+acceptance remains separate and unverified. The disposed H001 history cannot
+be reconstructed; Tristan accepted current-declaration export and closure.
+The issue now states that remaining scope, rather than calling its old source
+implementation missing or conflating it with131 causal retention.
 
 At main888756bbd, issue385 is a real OpenHCS consumer gap. Reading the EXACT
 main-pinned ZMQRuntime29e2a869f confirms VisualizerProcessManager already retains
