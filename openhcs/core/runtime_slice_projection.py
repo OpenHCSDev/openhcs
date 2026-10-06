@@ -630,6 +630,20 @@ class ImageOutputBundleRuntimeSliceProjectionStrategy(
 
     value_type = ImageOutputBundle
 
+    def resolve_aligned_kwarg(
+        self,
+        value: Any,
+        resolver: AlignedImageStackKwargResolver,
+    ) -> Any:
+        """Select a named outer argument without consuming its image planes."""
+        bundle = cast(ImageOutputBundle, value)
+        return resolver.resolve(
+            bundle.aligned_slice(
+                resolver.projection_axis.require_plane_index(),
+                resolver.projection_axis.axis_size,
+            )
+        )
+
     def value_for_slice(
         self,
         value: RuntimeProjectionData,
