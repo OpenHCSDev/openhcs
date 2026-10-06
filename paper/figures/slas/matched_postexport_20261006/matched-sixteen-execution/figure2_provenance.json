@@ -4,7 +4,7 @@
     "benchmark/results/matched_postexport_20261006/data/16assignments-4workers/execution_summary.csv": "4c312f300f7095162df30f1eefffab31ea92f848fd1565a007634b744f4a42f8",
     "benchmark/results/matched_postexport_20261006/data/16assignments-1worker/summary_custody.json": "2002376d84245f37619cab991612b28c00e4e29299084a9eaa2267a604f62a76",
     "benchmark/results/matched_postexport_20261006/data/16assignments-4workers/summary_custody.json": "76de70e798a7ff140a88bf76ca0b999f31c1c3059f217889b408eee06441583f",
-    "/home/ts/.local/state/openhcs-maintenance/20261006/final-measured-publication-v15/selected-three-case-manifest.json": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
+    "benchmark/results/matched_postexport_20261006/protocol/selected-three-case-manifest.json": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
     "benchmark/reports/cppipe_figures.py": "e4b1f9707ce292563949ae00e33ef77c42440049640585563025a82ed295c9db"
   },
   "generator_sha256": "75259b57e2929990e24de603f1c150a5c5a9b5c8f4ca20587420542e50bf4910",
@@ -6984,5 +6984,13 @@
     "ExampleIlluminationCorrection_Example3",
     "cp_tutorial_3d_monolayer"
   ],
-  "interpretation": "Qualified matched measurements rendered by the existing measured benchmark owner. Original clock boundaries, repetitions and source custody remain in matched_report_provenance. Each mode owns its actual native baseline; no projected throughput or RAM is supplied."
+  "interpretation": "Qualified matched measurements rendered by the existing measured benchmark owner. Original clock boundaries, repetitions and source custody remain in matched_report_provenance. Each mode owns its actual native baseline; no projected throughput or RAM is supplied.",
+  "source_path_origins": {
+    "benchmark/results/matched_postexport_20261006/protocol/selected-three-case-manifest.json": "/home/ts/.local/state/openhcs-maintenance/20261006/final-measured-publication-v15/selected-three-case-manifest.json"
+  },
+  "provenance_normalization": {
+    "original_receipt_sha256": "e8fd3a9dd8f7421f50b23dffd2a03eb0d32d336515c79e4e1dbdae8c804ce80c",
+    "writer_sha256": "a8afc37c09bf2ab678d595b9e4dc6db68d2b0361a6d6471518d95735ca67d348",
+    "scope": "Path-only correction to byte-identical retained inputs; original generator/output hashes preserved; no rerender or benchmark execution."
+  }
 }

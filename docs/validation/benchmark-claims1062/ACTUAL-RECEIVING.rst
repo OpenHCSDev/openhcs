@@ -47,3 +47,23 @@ with A parity, B execution, C total. The original build_slas_benchmark.py
 --publication-record route produces the whole bundle. Only an explicitly
 frozen record permits --frozen. Source and outputs are delivered on the existing
 paper/benchmark-claims-single-owner-20261006 branch for PR1063 integration.
+
+Postexport family correction
+---------------------------
+
+Parent's original full build run-20261006T180115-463992fd failed on an older
+matched_postexport receipt, distinct from the seven matched_final receipts.
+Five postexport receipts contained six absolute source references. All were
+corrected through the same write_provenance owner; the remaining two already
+had valid relative paths. The official30 manifest is byte-identical to the
+existing matched_final/protocol/singlewell archive (SHA 1d1b016aea7ff2ac0bc2441fff1140bb492bbf3b86048f8565694ccd45e4dff1).
+Its retired absolute original is absent; no source was fabricated or recovered
+through an alternate reader. The first correction stopped explicitly at that
+missing archival match; postexport-normalize02 retains this disposition.
+
+postexport-normalize03 passed all seven receipts, 111 unchanged output hashes,
+preserved historical generator hashes and all non-generator source hashes.
+All 18 materialized SLAS output receipts parse through the original strict
+FigureReceipt codec without absolute artifact keys. Original five receipts
+remain in original-postexport-receipts02. No plot rerender, benchmark execution,
+parent checkout mutation or full book build occurred in this correction.

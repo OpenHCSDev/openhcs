@@ -1,0 +1,9 @@
+PASS execution 19 unchanged outputs
+PASS matched-nine-execution 19 unchanged outputs
+PASS matched-nine-total 17 unchanged outputs
+PASS matched-sixteen-execution 19 unchanged outputs
+PASS matched-sixteen-total 17 unchanged outputs
+PASS single-core-amortization 3 unchanged outputs
+PASS total 17 unchanged outputs
+PASS five repaired receipts/six absolute references; all seven postexport receipts: 111 unchanged outputs
+PASS 18 materialized SLAS output receipts parse through original strict codec; no absolute artifact keys

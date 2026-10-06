@@ -1,36 +1,35 @@
 {
   "source_sha256": {
-    "benchmark/results/matched_postexport_20261006/data/9assignments-1worker/execution_summary.csv": "5b879cb6d521d32658aaa861e9fd92924d73dd11aaf147753fceedabbf5b4ffb",
-    "benchmark/results/matched_postexport_20261006/data/9assignments-3workers/execution_summary.csv": "c43a285e1e9d0a56b236c6b7bf52c6c83b7dee3f1adf6360d06639c5f995fd56",
+    "benchmark/results/matched_postexport_20261006/data/9assignments-1worker/total_summary.csv": "01c4f00ae645ffbd06c4ae2b9a4b5cca9b848c40bb672d366d5773ac58caf923",
+    "benchmark/results/matched_postexport_20261006/data/9assignments-3workers/total_summary.csv": "c6d295db83bd77293c657ce836210d9014e84436fc2d9d6591cd336e5586df5d",
     "benchmark/results/matched_postexport_20261006/data/9assignments-1worker/summary_custody.json": "238689638f795cb0e10aa1c842f1bd63cb38cf9eb5aaf893aa6e29b94621d5b3",
     "benchmark/results/matched_postexport_20261006/data/9assignments-3workers/summary_custody.json": "581a05673319a6fe89befffcd45b51f1b422f3afd0abbde60b9693ddc8287dec",
     "benchmark/results/matched_postexport_20261006/protocol/selected-three-case-manifest.json": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
+    "/home/ts/.local/state/openhcs-maintenance/20261006/final-measured-publication-v15/selected-three-case-manifest.json": "1085923452648828edc5de64d56b59e7e0e36608bcc4169041777f3112d9adc2",
     "benchmark/reports/cppipe_figures.py": "e4b1f9707ce292563949ae00e33ef77c42440049640585563025a82ed295c9db"
   },
   "generator_sha256": "75259b57e2929990e24de603f1c150a5c5a9b5c8f4ca20587420542e50bf4910",
   "output_sha256": {
-    "measured_execution_metrics_long.csv": "cef9442e27cbf7fc60216ec699f815e37525c7bf1db505a42f0127ba73f71e28",
-    "measured_execution_caption.md": "a8756c6d9718ceea3fe418174f66074d51edb305bcb00f62834f90f0383b441a",
-    "qualified_science_pass.png": "feb1e27076caf66d3301e161e97f877f21399bf437aafbe3f7a85d600cca8e89",
-    "qualified_science_pass.svg": "62b9c80c376c9c8ffa3e9ff583412f460c9d68f663c91d25f8d750453361c88d",
-    "measured_execution_seconds.png": "f8918a7702aebbe8ddabd2291669bfed3c47d22ee625bb126059e65528b9dc29",
-    "measured_execution_seconds.svg": "c58a499ba26f63e62c94579a88116a8ce8bde09afb79a82c37e3d18632f95da9",
-    "measured_execution_seconds_log.png": "07183a01d52b58c018c62706353d106a9b5745c378fd1f009761a4a08dab7229",
-    "measured_execution_seconds_log.svg": "fecd921b4feedcccc216db443b57822c3020fd3012969d28514c4e2e16074fc1",
-    "measured_execution_speedup.png": "66c130288ecdf94ec7d3448bc907b4bc35d4636739d7d8e1e912901d300d079d",
-    "measured_execution_speedup.svg": "28cbec3594fa619cd93ba1cbe373a37932e3f22b8008aa871442d4780842b0f2",
-    "measured_execution_speedup_log.png": "adfa60f238fffad24c88aa886402bb07e77efff934cad8732b2c5018bf800368",
-    "measured_execution_speedup_log.svg": "a5fbe4f0ae72a07ecc8333a96a24952e08bfd05b28e20deb203c4835c4528404",
-    "measured_execution_speedup_summary_statistics.csv": "16b09b5ab57b9845a1a3748026d0b34ed88ccdba1513e0c1469cf215f030d071",
-    "measured_execution_speedup_summary_statistics.md": "2f5ff3e72269a6a7268ea3c62fec790b8c55cb01d3046f30aa7c4366611f568a",
-    "measured_execution_speedup_cumulative_distribution.csv": "4d56f8d45258662fadf0f460b554f2ad0f22b888d36dca81e10412351cd988b2",
-    "measured_execution_speedup_cumulative_distribution.png": "b0f760d754dc1c4e4e42359b8a26bc0fa63ace9811cb568c644d704ad91414ac",
-    "measured_execution_speedup_cumulative_distribution.svg": "dab66ec5b3d76a046fe1c79ffe9dbb420b2d55f4db8d9d4b012775eac1c9741e",
-    "measured_execution_speedup_cumulative_distribution_log.png": "4843e47d06f87a7f051d17d41b4de047775fd7b1ac3c4ea866f8496b72ca0856",
-    "measured_execution_speedup_cumulative_distribution_log.svg": "8818ddc551df2960ed8bf423e7f4aa2e5e9ec145d26c9cd7695a45a5e96a5fd6"
+    "measured_total_metrics_long.csv": "6b47c5feb403fbaa859f80435974274b0f734abf953a1ee1134e689347da0fec",
+    "measured_total_caption.md": "18670c5a952920ef83a0a6c22325d668ed2c3f38241809013a5e142a742b5ec4",
+    "measured_total_seconds.png": "4ea0bba5883f587ab16addadfe05279f92c0c5333d0206fbc67c3361b0b03180",
+    "measured_total_seconds.svg": "c4ff9af6e913787ecbab67c159872e0ab55ad5d3103d96d5cf7f45edb44c740e",
+    "measured_total_seconds_log.png": "01b8736b99719707e2326fbce2dd35b364c4a7c46cbaa2ddaa45b455ce14f1fa",
+    "measured_total_seconds_log.svg": "720ffa90aa2e3ff93fbe033e1d1eb3d2470c515dbf4ec27537f5be51302c4cfd",
+    "measured_total_speedup.png": "9aa4578f2009c770735f2ed09de2674e5f6b885dd329a17691e3af802e5b0107",
+    "measured_total_speedup.svg": "ecffb27b81afa5bd1bf667995c0e8c717d5cffedb88ecc74c171080cab799dac",
+    "measured_total_speedup_log.png": "d5749d18b0568b59219f38054d9c1b82212bd971b1be571d2be1cf002f72736b",
+    "measured_total_speedup_log.svg": "c3f917900aa03c2dfd759dd632bfa2d2109f5e59373867f1554820149ead4415",
+    "measured_total_speedup_summary_statistics.csv": "604d8628354bc4029545ac13ab7039685f16be37a88cfcf7d31325d500dd9170",
+    "measured_total_speedup_summary_statistics.md": "68916ddfa5db5c3cea9ae5385c1ffe2d7a2ffddada60ae746cd647f658d3215d",
+    "measured_total_speedup_cumulative_distribution.csv": "4831e1ed4bee05bffabcaa12a9c2ce888f32ab6874e5cf5789f0a8b21af2f823",
+    "measured_total_speedup_cumulative_distribution.png": "61686d7b5565fb4a9e766ea5d38e5deb158a9b3e72b1863aba91fed912fae180",
+    "measured_total_speedup_cumulative_distribution.svg": "e52db610174c169d2aa14f38bd18094edf2c94ebded04f3a219c255f6cdc14fb",
+    "measured_total_speedup_cumulative_distribution_log.png": "6010932d9c84e6f42d06202285732179a18c1d49d6af3d747e94e47064b2a78d",
+    "measured_total_speedup_cumulative_distribution_log.svg": "e6c649bd97a94ccebd86715caf1658b325fca46cc5afa7a61c1d68354f267230"
   },
   "benchmark_mode": "measured",
-  "scope": "execution",
+  "scope": "total",
   "matched_report_provenance": [
     {
       "status": "PASS",
@@ -6855,13 +6854,5 @@
     "ExampleIlluminationCorrection_Example3",
     "cp_tutorial_3d_monolayer"
   ],
-  "interpretation": "Qualified matched measurements rendered by the existing measured benchmark owner. Original clock boundaries, repetitions and source custody remain in matched_report_provenance. Each mode owns its actual native baseline; no projected throughput or RAM is supplied.",
-  "source_path_origins": {
-    "benchmark/results/matched_postexport_20261006/protocol/selected-three-case-manifest.json": "/home/ts/.local/state/openhcs-maintenance/20261006/final-measured-publication-v15/selected-three-case-manifest.json"
-  },
-  "provenance_normalization": {
-    "original_receipt_sha256": "100f24be206a2fdd3f517d6250c56a3496b735f7558a991716607fa7a135048c",
-    "writer_sha256": "a8afc37c09bf2ab678d595b9e4dc6db68d2b0361a6d6471518d95735ca67d348",
-    "scope": "Path-only correction to byte-identical retained inputs; original generator/output hashes preserved; no rerender or benchmark execution."
-  }
+  "interpretation": "Qualified matched measurements rendered by the existing measured benchmark owner. Original clock boundaries, repetitions and source custody remain in matched_report_provenance. Each mode owns its actual native baseline; no projected throughput or RAM is supplied."
 }
