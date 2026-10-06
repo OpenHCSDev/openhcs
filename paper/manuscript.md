@@ -324,7 +324,7 @@ OpenHCS provides an analysis component for AI-guided laboratories in which estab
 
 ## Supplementary Data
 
-The [supplementary index](supplementary/README.md) links the retained files and describes their fields and interpretation.
+The supplementary package indexes retained files and describes their fields and interpretation. Archive DOI: [pending Zenodo publication].
 
 1. **CellProfiler workflow comparison:** unified 30-workflow current-source observations, reference inventory and exact run provenance; historical OpenHCS 0.8.5 release-CI evidence; the five-workflow export definitions and per-artifact audit; and separate historical timing records.
 2. **CellProfiler coverage:** module-to-workflow associations, individual setting handling, and archived processing-registration coverage.
@@ -341,7 +341,7 @@ OpenHCS source code: <https://github.com/OpenHCSDev/OpenHCS>.
 
 OpenHCS documentation: <https://openhcs.readthedocs.io/>.
 
-Benchmark scripts and records are indexed in the [supplementary data](supplementary/README.md). Figure-generation scripts and figures are located under `paper/figures/` in the source repository.
+The supplementary archive contains the figure inputs and generation scripts, frozen analysis pipelines, scoring records and benchmark evidence. Archive DOI: [pending Zenodo publication]. Repository copies are available at <https://github.com/OpenHCSDev/openhcs/tree/main/paper/supplementary> and <https://github.com/OpenHCSDev/openhcs/tree/main/benchmark/results>.
 
 The benchmark uses biological images and pipelines distributed by the CellProfiler project rather than OpenHCS-authored benchmark data. Original sources:
 
@@ -349,7 +349,7 @@ The benchmark uses biological images and pipelines distributed by the CellProfil
 - official CellProfiler tutorial pipelines and images: <https://github.com/CellProfiler/tutorials> [@CellProfilerTutorials]
 - CellProfiler 4 benchmark supplement: <https://github.com/carpenterlab/2021_Stirling_BMCBioInformatics> [@Stirling2021]
 
-The benchmark manifest maps workflows to pinned revisions of their source collections. The [matched timing and declared-output record](../benchmark/results/matched_final_20261006/README.md) preserves the fresh 30-workflow evaluation, three measured repetitions, original reports and figure inputs. The [unified comparison evidence](../benchmark/results/official30_unified_value_comparison_20260916/README.md) separately preserves earlier current-source observations, the selected reference inventory and submitted-pipeline and endpoint provenance for all 30 workflows. The [release CI evidence](supplementary/ci_official30_085/README.md) preserves the OpenHCS 0.8.5 package-level test, with checksums and links to its exact source revision and hosted job. Historical performance records and separately versioned agent demonstrations are indexed alongside them.
+The benchmark manifest pins the source collections. The selected matched record, [pending]{.benchmark-claim key=record_name}, retains the measured repetitions, original reports and figure inputs. Earlier unified comparisons and OpenHCS 0.8.5 release-CI evidence remain separately identified in the supplementary archive; they are not combined with the final matched timing record.
 
 Supplementary Table 1 links the source repositories for the eight reusable libraries.
 
