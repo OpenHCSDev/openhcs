@@ -698,6 +698,9 @@ class PipelineOrchestrator:
             plate_path=plate_path,
             metadata_handler=self.microscope_handler.metadata_handler,
             filemanager=self.filemanager,
+            source_bindings=source_bindings_defaults_to_base(
+                self.get_effective_config().source_bindings_config
+            ),
         ).projection_if_available()
         if projection is not None:
             return projection
@@ -829,6 +832,14 @@ class PipelineOrchestrator:
 
         # Convert to AllComponents for cache lookup (includes multiprocessing axis)
         component = convert_enum_by_value(component, AllComponents) or component
+
+        source_bindings = source_bindings_defaults_to_base(
+            self.get_effective_config().source_bindings_config
+        )
+        if source_bindings.source_filter_declarations:
+            available = self.source_workspace_projection().component_values(component)
+            requested = None if not component_filter else set(map(str, component_filter))
+            return [value for value in available if requested is None or value in requested]
 
         # Use component directly - let natural errors occur for wrong types
         component_name = component.value

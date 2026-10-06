@@ -22,6 +22,7 @@ from openhcs.core.runtime_array_values import RuntimeArrayData
 from openhcs.core.source_bindings import (
     SOURCE_BINDING_ALIAS_METADATA_FIELD,
     NamedSourceBinding,
+    SourceBindingsConfig,
     SourceProjectionRole,
 )
 from openhcs.core.source_metadata import (
@@ -522,6 +523,18 @@ class VirtualWorkspaceSourceProjection:
             return relative_virtual_paths
         return tuple(self.source_refs_by_virtual_path)
 
+    def component_values(self, component) -> tuple[str, ...]:
+        """Derive the execution component domain from admitted source metadata."""
+        return tuple(dict.fromkeys(
+            value
+            for path in self.relative_virtual_paths()
+            for value in source_component_metadata_values(
+                self.source_metadata_for(VirtualWorkspacePathLookup.from_paths(
+                    path, self._loadable_virtual_path(path)
+                )) or {}, component,
+            )
+        ))
+
     def filtered_by_axis(
         self,
         *,
@@ -764,6 +777,7 @@ class VirtualWorkspaceSourceProjectionAuthority:
     metadata_handler: "MetadataHandler"
     filemanager: "FileManager"
     cache: VirtualWorkspaceSourceProjectionCache | None = None
+    source_bindings: SourceBindingsConfig | None = None
     _workspace_metadata_handler: "OpenHCSMetadataHandler | None" = field(
         default=None, init=False, compare=False, repr=False,
     )
@@ -790,6 +804,7 @@ class VirtualWorkspaceSourceProjectionAuthority:
         metadata_handler: "MetadataHandler",
         filemanager: "FileManager",
         cache: VirtualWorkspaceSourceProjectionCache | None = None,
+        source_bindings: SourceBindingsConfig | None = None,
     ) -> "VirtualWorkspaceSourceProjectionAuthority":
         """Build projection authority from the plate-level metadata owners."""
 
@@ -798,6 +813,7 @@ class VirtualWorkspaceSourceProjectionAuthority:
             metadata_handler=metadata_handler,
             filemanager=filemanager,
             cache=DEFAULT_SOURCE_PROJECTION_CACHE if cache is None else cache,
+            source_bindings=source_bindings,
         )
 
     def is_bound_to_context(self, context: "ProcessingContext") -> bool:
@@ -844,11 +860,19 @@ class VirtualWorkspaceSourceProjectionAuthority:
             if not OpenHCSMetadataSubdirectories(metadata).has_workspace_mapping():
                 continue
             if self.cache is None:
-                return VirtualWorkspaceSourceProjection.from_openhcs_metadata(
+                projection = VirtualWorkspaceSourceProjection.from_openhcs_metadata(
                     self.plate_path,
                     metadata,
                 )
-            return self.cache.projection_for(self.plate_path, metadata)
+            else:
+                projection = self.cache.projection_for(self.plate_path, metadata)
+            if self.source_bindings is not None:
+                from openhcs.core.source_binding_workspace import SourceBindingWorkspaceProjector
+
+                projection = SourceBindingWorkspaceProjector(
+                    self.source_bindings
+                ).admit_prepared_projection(projection)
+            return projection
         return None
 
     def projection_or_empty(self) -> VirtualWorkspaceSourceProjection:
