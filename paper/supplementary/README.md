@@ -801,6 +801,22 @@ the linked analysis records; no candidate was reselected using reference scores.
 | Retinal somata, fresh26 | repair03 | [Source](task_only_analysis/pipelines/retina-fresh26.py) |
 | Public neurites, fresh20 | repair03 | [Source](task_only_analysis/pipelines/h004-fresh20.py) |
 | Translocation, fresh23 | FULL_S08 | [Source](task_only_analysis/pipelines/bbbc013-fresh23.py) |
+| BBBC039, fresh612 | final_full200 | [Source](task_only_analysis/pipelines/bbbc039-fresh612.py) |
+| BBBC039, fresh10 coverage | FULL200 | [Source](task_only_analysis/pipelines/bbbc039-fresh10.py) |
+| BBBC007, fresh26 | REPAIR05 | [Source](task_only_analysis/pipelines/bbbc007-fresh26.py) |
+
+The two BBBC039 sources correspond to the plotted full-200 result (pooled
+F1 0.906) and the independent coverage repeat (0.898), respectively. Both
+require the original [image metadata table](task_only_analysis/pipelines/bbbc039/source_manifest.csv);
+fresh10 also imports the supplied [source binding](task_only_analysis/pipelines/bbbc039/source_bindings.py).
+Relocate its original import directory and metadata location to these supplied
+files when reproducing the workflow. The binding's SHA256 is
+`fdbe5bd37084b6f03a10dd8617fb503e26dbc73e011cda655cb1b028a2597dcc`.
+It matches fresh10's original source-identity record and an identical copy in
+fresh612's frozen manifest, but is not directly listed in fresh10's final manifest.
+The BBBC007 source is the final REPAIR05 analysis of all 16 paired fields,
+not an earlier candidate; its relative `source_sets.csv` location refers to the
+supplied [paired-field metadata](task_only_analysis/pipelines/bbbc007/source_sets.csv).
 
 The volume pipeline also requires the original [centre-detection custom function](task_only_analysis/pipelines/h002-fresh23/custom_function.py).
 The translocation pipeline requires its original [compartment measurements](task_only_analysis/pipelines/bbbc013-fresh23/bbbc013_compartment_qc_v4.py),
