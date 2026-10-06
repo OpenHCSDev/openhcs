@@ -964,12 +964,7 @@ class ObjectLabelValueRuntimeSliceProjectionStrategy(
                 "Object-label source provenance must be absent or exactly match "
                 f"the declared plane axis: {source_plane_count} != {context.axis_size}."
             )
-        context.validate_shape(
-            labels.shape,
-            value_name="Object-label payload",
-        )
         plane_index = context.require_plane_index()
-        context.validate_plane_index(plane_index, labels.shape)
         return labels.project_source_plane(plane_index)
 
 
