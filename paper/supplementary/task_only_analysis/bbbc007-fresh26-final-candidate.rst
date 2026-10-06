@@ -67,3 +67,56 @@ and all four receiving listeners are closed. The recorded CLI exited2, retaining
 known earlier command failures; all sixteen selected scientific executions
 completed. No replay or clean-zero-exit claim is made. Complete outer author
 journals remain the harness's responsibility after the author process ends.
+
+Postfreeze manual-outline comparison
+-----------------------------------
+
+After the author exited, independent execution73200 completed exit0 using
+the existing score_007 and summarize_cell_partition, without changing their
+definitions or rerunning any pipeline. The evaluator source SHA256 is
+2d85d2bddb1b04c190cd06aae9ec1f7c18825f909aff1151932be7acd4a571c8.
+The source_set_id/channel reference manifest matches retained SHA256
+23d15c73878745a7d96ee738431f2e6fc3c318cb40b32b2bc897442a375f64fb.
+All32 reference planes match their exact official outline archive members;
+all32 selected prediction planes match the frozen payload inventory.
+
+Of89173 eligible adjacent-cell boundary pixels,65953 lie within two pixels
+of the manual-outline union: pooled fraction0.7396072802305631; mean field
+fraction0.7352022518557306. The previously reported final author's pooled
+fraction was0.742987084719072. This is approximately flat directed agreement,
+not improved boundary accuracy. The newer candidate supplies4080 additional
+scored boundary pixels,2730 of them near an outline. More boundary support
+does not itself prove anatomical extent or recovery of every manual boundary.
+
+The sixteen manual nuclear outlines contain1301 closed interiors, excluding
+16 open/frame-connected regions. Predicted nuclear count is1428, a net excess
+of127 against that nonexhaustive denominator. Count agreement cannot identify
+compensating misses/splits or establish instance precision/recall. Zero nuclei
+lack cell overlap and none share a predicted cell under the recorded association.
+The directed boundary measure is not instance F1 or boundary recall; incomplete
+foreground can score favourably. Reference findings were not returned to an
+author and did not determine the selected pipeline or thresholds.
+
+.. csv-table:: Final frozen candidate, all fields
+   :header: "Source", "Nuclei", "Closed manual interiors", "Eligible boundary pixels", "Within2pixels"
+
+   A01_5,111,90,6012,4470
+   A01_7,155,126,9465,6750
+   A01_9,151,146,8153,6318
+   A01_10,108,87,5927,4224
+   A02_1,78,81,5172,3445
+   A03_6,33,31,1698,1240
+   A03_7,88,79,6598,5058
+   A03_11,115,108,8537,6608
+   A03_13,52,49,3689,2815
+   A03_14,82,77,5921,4562
+   A04_2,100,101,7618,5862
+   A04_5,54,47,3133,2205
+   A04_7,84,78,4647,3254
+   A04_8,71,61,3776,2801
+   A04_10,67,60,2825,2010
+   A04_11,79,80,6002,4331
+
+The harness subsequently sealed the six original postwriter journals; independent
+sha256sum verification passed all six from their original run root. Outer author
+exit0 remains distinct from recorded MCP exit2 and successful scientific jobs.
